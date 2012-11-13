@@ -34,8 +34,9 @@ class PipeTransport(Transport):
     def _close(self):
         self.read_f.close()
         self.write_f.close()
-        os.unlink(self.filename_read)
-        os.unlink(self.filename_write)
+        if self.is_device:
+            os.unlink(self.filename_read)
+            os.unlink(self.filename_write)
 
     def _write(self, msg):
         try:
