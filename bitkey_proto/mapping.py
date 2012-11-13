@@ -22,6 +22,10 @@ map_type_to_class = {
        18: proto.PinRequest,
        19: proto.PinAck,
        20: proto.PinCancel,
+       21: proto.SignInput,
+       22: proto.SignedInput,
+       23: proto.TxInput,
+       24: proto.TxOutput,
 }
 
 map_class_to_type = {}
