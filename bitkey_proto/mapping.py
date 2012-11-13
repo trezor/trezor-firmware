@@ -26,6 +26,7 @@ map_type_to_class = {
        22: proto.SignedInput,
        23: proto.TxInput,
        24: proto.TxOutput,
+       25: proto.SetMaxFeeKb,
 }
 
 map_class_to_type = {}

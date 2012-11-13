@@ -17,12 +17,14 @@ message Features {
     optional bool otp = 2;
     optional bool pin = 3;
     optional bool spv = 4;
-    repeated Algorithm algo = 5;
+    optional uint64 maxfee_kb = 5;
+    repeated Algorithm algo = 6;
 }
 
 // Description: Test if another side is still alive.
 // Response: None or Success
 message Ping {
+    optional string message = 1;
 }
 
 // Description: Response message for previous request with given id.
@@ -73,6 +75,11 @@ message GetEntropy {
 
 message Entropy {
     required bytes entropy = 1;
+}
+
+// Response: Success, OtpRequest, PinRequest, Failure
+message SetMaxFeeKb {
+	required uint64 maxfee_kb= 1;
 }
 
 // Response: MasterPublicKey, Failure
