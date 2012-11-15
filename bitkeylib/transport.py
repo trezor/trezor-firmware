@@ -1,6 +1,6 @@
 import struct
-from bitkey_proto import bitkey_pb2 as proto
-from bitkey_proto import mapping
+import bitkey_pb2 as proto
+import mapping
 
 class Transport(object):
     def __init__(self, device, *args, **kwargs):

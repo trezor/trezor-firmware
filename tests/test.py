@@ -1,14 +1,16 @@
 #!/usr/bin/python
+import sys
+sys.path = ['../',] + sys.path
 
 import time
 
-from transport_pipe import PipeTransport
-from transport_serial import SerialTransport
-from bitkey_proto import bitkey_pb2 as proto
+from bitkeylib.transport_pipe import PipeTransport
+from bitkeylib.transport_serial import SerialTransport
+import bitkeylib.bitkey_pb2 as proto
 
-from client import BitkeyClient
+from bitkeylib.client import BitkeyClient
 
-bitkey = BitkeyClient('../bitkey-python/device.socket', debug=True)
+bitkey = BitkeyClient('../../bitkey-python/device.socket', debug=True)
 bitkey.open()
 bitkey.call(proto.Ping(message='ahoj!'))
 bitkey.call(proto.SetMaxFeeKb(maxfee_kb=200000))

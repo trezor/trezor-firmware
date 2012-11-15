@@ -1,6 +1,6 @@
 import os
 
-from bitkey_proto import bitkey_pb2 as proto
+import bitkey_pb2 as proto
 from transport_pipe import PipeTransport
 
 def show_message(message):
