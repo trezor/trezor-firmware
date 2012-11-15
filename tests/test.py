@@ -1,20 +1,37 @@
 #!/usr/bin/python
+'''
 import sys
 sys.path = ['../',] + sys.path
 
 import time
 
+ENABLE_DEBUG_LINK = True
+
 from bitkeylib.transport_pipe import PipeTransport
 from bitkeylib.transport_serial import SerialTransport
-import bitkeylib.bitkey_pb2 as proto
+from bitkeylib.transport_fake import FakeTransport
+from bitkeylib import proto
 
 from bitkeylib.client import BitkeyClient
+from bitkeylib.debuglink import DebugLink
 
-bitkey = BitkeyClient('../../bitkey-python/device.socket', debug=True)
-bitkey.open()
-bitkey.call(proto.Ping(message='ahoj!'))
-bitkey.call(proto.SetMaxFeeKb(maxfee_kb=200000))
-bitkey.close()
+transport = PipeTransport('../../bitkey-python/device.socket', is_device=False)
+
+if ENABLE_DEBUG_LINK:
+    debug_transport = PipeTransport('../../bitkey-python/device.socket.debug', is_device=False)
+    debuglink = DebugLink(debug_transport)
+else:
+    debuglink = None
+
+bitkey = BitkeyClient(transport, debuglink)
+
+print bitkey.call(proto.Initialize())
+#bitkey.call(proto.Ping(message='ahoj!'))
+#bitkey.call(proto.GetUUID())
+
+print bitkey.call(proto.GetEntropy(size=10), button=True)
+bitkey.call(proto.SetMaxFeeKb(maxfee_kb=100000), button=True, pin_correct=False)
+'''
 
 '''
 d = PipeTransport('../bitkey-python/device.socket', is_device=False)
