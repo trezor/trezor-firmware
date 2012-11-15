@@ -19,6 +19,7 @@ message Features {
     optional bool spv = 4;
     optional uint64 maxfee_kb = 5;
     repeated Algorithm algo = 6;
+    optional bool debug_link = 7;
 }
 
 // Description: Test if another side is still alive.
@@ -36,6 +37,10 @@ message Success {
 message Failure {
     optional int32 code = 1;
     optional string message = 2;
+}
+
+message DebugLinkDecision {
+	required bool yes_no = 1;
 }
 
 // Response: UUID or Failure
