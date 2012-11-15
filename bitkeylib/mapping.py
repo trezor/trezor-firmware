@@ -27,6 +27,7 @@ map_type_to_class = {
        23: proto.TxInput,
        24: proto.TxOutput,
        25: proto.SetMaxFeeKb,
+       100: proto.DebugLinkDecision,
 }
 
 map_class_to_type = {}
