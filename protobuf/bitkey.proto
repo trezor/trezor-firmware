@@ -1,0 +1,154 @@
+enum Algorithm {
+    BIP32 = 0;
+    ELECTRUM = 1;
+}
+ 
+enum ScriptType {
+    PAYTOADDRESS = 0;
+    PAYTOSCRIPTHASH = 1;
+} 
+
+// Response: None or Features
+message Initialize {
+}
+
+message Features {
+    optional string version = 1;
+    optional bool otp = 2;
+    optional bool pin = 3;
+    optional bool spv = 4;
+    optional uint64 maxfee_kb = 5;
+    repeated Algorithm algo = 6;
+}
+
+// Description: Test if another side is still alive.
+// Response: None or Success
+message Ping {
+    optional string message = 1;
+}
+
+// Description: Response message for previous request with given id.
+message Success {
+    optional string message = 1;
+}
+
+// Description: Response message for previous request with given id.
+message Failure {
+    optional int32 code = 1;
+    optional string message = 2;
+}
+
+// Response: UUID or Failure
+message GetUUID {
+}
+
+message UUID {
+    required bytes UUID = 1;
+}
+
+message OtpRequest {
+   optional string message = 1;
+}
+
+message OtpAck {
+    required string otp = 1;
+}
+
+message OtpCancel {
+}
+
+message PinRequest {
+   optional string message = 1;
+}
+
+message PinAck {
+    required string pin = 1;
+}
+
+message PinCancel {
+}
+
+// Response: OtpRequest, Entropy, Failure
+message GetEntropy {
+    required uint32 size = 1;
+}
+
+message Entropy {
+    required bytes entropy = 1;
+}
+
+// Response: Success, OtpRequest, PinRequest, Failure
+message SetMaxFeeKb {
+	required uint64 maxfee_kb= 1;
+}
+
+// Response: MasterPublicKey, Failure
+message GetMasterPublicKey {
+    required Algorithm algo = 1 [default=BIP32];
+}
+
+message MasterPublicKey {
+    required bytes key = 1;
+}
+
+// Response: Success, OtpRequest, Failure
+message LoadDevice {
+    required string seed = 1;
+    optional bool otp = 2 [default=true];
+    optional string pin = 3;
+    optional bool spv = 4 [default=true];
+}
+
+// Response: Success, OtpRequest, PinRequest, Failure
+message ResetDevice {
+}
+
+message TxOutput {
+    required string address = 1;
+    repeated uint32 address_n = 2;
+    required uint64 amount = 3;
+    required ScriptType script_type = 4;
+    repeated bytes script_args = 5;
+}
+
+// Response: Success, SignedInput, Failure
+message TxInput {
+    repeated uint32 address_n = 1;
+    required uint64 amount = 2;
+    required bytes prev_hash = 3;
+    required uint32 prev_index = 4;
+    optional bytes script_sig = 5;
+}
+
+// Response: SignedTx, Success, OtpRequest, PinRequest, Failure
+message SignTx {
+    required Algorithm algo = 1 [default=BIP32];
+    optional bool stream = 2; // enable streaming
+    required uint64 fee = 3;
+    repeated TxOutput outputs = 4;
+    repeated TxInput inputs = 5;
+    optional uint32 inputs_count = 6; // for streaming
+    optional bytes random = 7;
+}
+
+message SignedTx {
+   repeated bytes signature = 1;
+}
+
+/*
+inputs = [] # list of TxInput
+for i in inputs:
+    for x in inputs:
+        send(x)
+        
+	signature = send(SignInput(i))
+*/
+
+// Response: SignedInput, Failure
+message SignInput {
+	required TxInput input = 1;
+}
+
+message SignedInput {
+	required bytes signature = 1;
+}
