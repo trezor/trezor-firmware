@@ -19,6 +19,9 @@ class Transport(object):
     def _read(self):
         raise NotImplemented
     
+    def ready_to_read(self):
+        raise NotImplemented
+        
     def close(self):
         self._close()
         
@@ -26,7 +29,7 @@ class Transport(object):
         ser = msg.SerializeToString()
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
         self._write("##%s%s" % (header, ser))
-            
+
     def read(self):
         (msg_type, data) = self._read()
         inst = mapping.get_class(msg_type)()

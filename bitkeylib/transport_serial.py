@@ -3,7 +3,7 @@
 # Local serial port loopback: socat PTY,link=COM8 PTY,link=COM9
 
 import serial
-
+from select import select
 from transport import Transport
 
 class SerialTransport(Transport):
@@ -17,6 +17,10 @@ class SerialTransport(Transport):
     def _close(self):
         self.serial.close()
         self.serial = None
+    
+    def ready_to_read(self):
+        rlist, _, _ = select([self.serial], [], [], 0)
+        return len(rlist) > 0
     
     def _write(self, msg):
         try:
