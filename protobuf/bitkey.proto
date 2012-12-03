@@ -1,159 +1,235 @@
+/*
+	This file describes Protocol buffers messages for bitcoin hardware wallet devices.
+	
+	Author: slush <info@bitcoin.cz>
+*/
+
+// Specifies algorithm used for generating private/public keys from the seed.
 enum Algorithm {
     BIP32 = 0;
     ELECTRUM = 1;
 }
- 
+
+// Specifies which script will be used for given transaction output. 
 enum ScriptType {
     PAYTOADDRESS = 0;
     PAYTOSCRIPTHASH = 1;
 } 
 
-// Response: None or Features
+// Reset device's internal state
+//
+// Response: Features
 message Initialize {
+    required bytes session_id = 1; // Any value identifying current connection, will be echoed back in Features message
 }
 
+// Response object for Initialize. Contains list of available features on the device.
 message Features {
-    optional string version = 1;
-    optional bool otp = 2;
-    optional bool pin = 3;
-    optional bool spv = 4;
-    optional uint64 maxfee_kb = 5;
-    repeated Algorithm algo = 6;
-    optional bool debug_link = 7;
+    required bytes session_id = 1;	// Echoed back from Initialize message
+    optional string vendor = 2;	// Name of the manufacturer, e.g. "bitkey" 
+    optional uint32 major_version = 3; // Major version of the device, e.g. 1
+    optional uint32 minor_version = 4;  // Minor version of the device, e.g. 0
+    optional bool otp = 5;	// True when device will send OtpRequest on important action
+    optional bool pin = 6;	// True when device will send PinRequest on important action
+    optional bool spv = 7;	// True when device requires SPV verification of transaction inputs
+    optional uint64 maxfee_kb = 8;	// Maximum accepted fee per kilobyte of signed transaction 
+    repeated Algorithm algo = 9;	// List of key generation algorithms supported by the device
+    optional bool debug_link = 10;	// Indicates support for DebugLink connection  
 }
 
-// Description: Test if another side is still alive.
+// Test if device is live, device will send back the message on success
+//
 // Response: None or Success
 message Ping {
-    optional string message = 1;
+    optional string message = 1;	// Message will be sent back in Success message
 }
 
-// Description: Response message for previous request with given id.
-message Success {
-    optional string message = 1;
-}
-
-// Description: Response message for previous request with given id.
-message Failure {
-    optional int32 code = 1;
-    optional string message = 2;
-}
-
+// Virtually "press" the button on the device.
+// Message is available only on debugging connection and device must support "debug_link" feature.
+//
+// Response: Success  
 message DebugLinkDecision {
-	required bool yes_no = 1;
+	required bool yes_no = 1;	// True for "confirm", False for "cancel"
 }
 
-// Response: UUID or Failure
+// When sent over debug link connection, computer asks for some internal information of the device.
+//
+// Response: DebugLinkState
+message DebugLinkGetState {
+	optional bool layout = 1;	// Request raw buffer of display
+	optional bool otp = 2;		// Request current OTP
+	optional bool pin = 3;		// Request current PIN
+	optional bool seed = 4;		// Request current seed
+//	optional bool state = 5;	
+}
+
+// Response object reflecting device's current state. It can be received only over debug link connection.
+message DebugLinkState {
+	optional bytes layout = 1;	// Raw buffer of display
+	optional OtpAck otp = 2;	// Current OTP, blank if device is not waiting to OTP
+	optional PinAck pin = 3;	// Current PIN, blank if PIN is not set/enabled
+	optional string seed = 4;	// Current seed (in mnemonic format)
+//	optional string state = 5;
+}
+
+// Response object defining success of the previous request
+message Success {
+    optional string message = 1;	//	May contain human readable description of the action or request-specific payload
+}
+
+// Response object defining failure of the previous request
+message Failure {
+    optional int32 code = 1;		// May contain computer-readable definition of the error state
+    optional string message = 2;	// May contain human-readable message of the error state
+}
+
+// Ask device for unique identifier.
+//
+// Response: UUID 
 message GetUUID {
 }
 
+// Identifier of the device. This identifier must be composed from CPU serial number
+// or other persistent source and must be the same for consecutive requests.
 message UUID {
     required bytes UUID = 1;
 }
 
+// Message can be sent by the *device* as a response to any request.
+// Message asks computer to send back OtpAck with the password printed on the device's display.
+//
+// Response: OtpAck, OtpCancel
 message OtpRequest {
-   optional string message = 1;
+   optional string message = 1;	// Human readable message
 }
 
+// Message is sent by the computer as a response to OtpRequest previously sent by the device.
 message OtpAck {
-    required string otp = 1;
+    required string otp = 1;	// User must be asked for the otp, which is displayed on the device's display
 }
 
+// Message is sent as a response to OtpRequest by the computer, asking the device to cancel
+// pending action and reset to the default state.
 message OtpCancel {
 }
 
+// Message can be sent by the *device* as a response to any request.
+// Message asks computer to send back PinAck with the password associated with the device.
+//
+// Response: PinAck, PinCancel
 message PinRequest {
-   optional string message = 1;
+   optional string message = 1;	// Human readable message
 }
 
+// Message is sent by the computer as a response to PinRequest previously sent by the device.
 message PinAck {
-    required string pin = 1;
+    required string pin = 1;	// User must write down the password for accessing the device.
 }
 
+// Message is sent as a response to PinRequest by the computer, asking the device to cancel
+// pending action and reset to the default state.
 message PinCancel {
 }
 
-// Response: OtpRequest, Entropy, Failure
+// Request a sample of random data generated by hardware RNG. May be used
+// for tests of internal RNG.
+//
+// Response: OtpRequest, PinRequest, Entropy, Failure
 message GetEntropy {
-    required uint32 size = 1;
+    required uint32 size = 1;	// Size of randomly generated buffer
 }
 
+// Response to GetEntropy request contains random data generated by internal HRNG.
 message Entropy {
-    required bytes entropy = 1;
+    required bytes entropy = 1;	// Stream of generated bytes
 }
 
+// Set maximum allowed fee per kB of transaction. This is used by internal sanity checking
+// in SignTx method. Transaction won't be signed if requested transaction fees are above
+// current value.
+//
 // Response: Success, OtpRequest, PinRequest, Failure
 message SetMaxFeeKb {
-	required uint64 maxfee_kb= 1;
+	required uint64 maxfee_kb= 1;	// Maximum allowed transaction fee in satoshis per kB
 }
 
+// Ask device for it's current master public key. This may be used for generating
+// public keys on the computer independently to the device. API doesn't provide
+// any other way how to get bitcoin addresses from the device.
+//
 // Response: MasterPublicKey, Failure
 message GetMasterPublicKey {
-    required Algorithm algo = 1 [default=BIP32];
+    required Algorithm algo = 1 [default=BIP32]; // Used algorithm for generating master public key
 }
 
+// Contains master public key derived from device's seed.
 message MasterPublicKey {
-    required bytes key = 1;
+    required bytes key = 1;	// master public key of requested algorithm in binary format
 }
 
-// Response: Success, OtpRequest, Failure
+// Load seed and related internal settings from computer to the device. Existing seed is overwritten.
+//
+// Response: Success, OtpRequest, PinRequest, Failure
 message LoadDevice {
-    required string seed = 1;
-    optional bool otp = 2 [default=true];
-    optional string pin = 3;
-    optional bool spv = 4 [default=true];
+    required string seed = 1;	// Seed encoded as a mnemonic (12 english words)
+    optional bool otp = 2 [default=true];	// Enable OTP for important actions?
+    optional string pin = 3;				// Set PIN protection for important actions
+    optional bool spv = 4 [default=true];	// Enable SPV verification for transaction inputs (if available on device)
 }
 
+// Request device to do full-reset, to generate new seed
+// and ask user for new settings (OTP, PIN, SPV).
+// 
 // Response: Success, OtpRequest, PinRequest, Failure
 message ResetDevice {
+	optional bytes random = 7;	// Provide additional entropy for seed generation function.
+								// Recommended to provide 256 bytes of random data.
 }
 
-message TxOutput {
-    required string address = 1;
-    repeated uint32 address_n = 2;
-    required uint64 amount = 3;
-    required ScriptType script_type = 4;
-    repeated bytes script_args = 5;
-}
-
-// Response: Success, SignedInput, Failure
-message TxInput {
-    repeated uint32 address_n = 1;
-    required uint64 amount = 2;
-    required bytes prev_hash = 3;
-    required uint32 prev_index = 4;
-    optional bytes script_sig = 5;
-}
-
-// Response: SignedTx, Success, OtpRequest, PinRequest, Failure
+// Request the device to sign the transaction
+//
+// Response: InputRequest, OutputRequest, OtpRequest, PinRequest, Failure
 message SignTx {
-    required Algorithm algo = 1 [default=BIP32];
-    optional bool stream = 2; // enable streaming
-    required uint64 fee = 3;
-    repeated TxOutput outputs = 4;
-    repeated TxInput inputs = 5;
-    optional uint32 inputs_count = 6; // for streaming
-    optional bytes random = 7;
+    required Algorithm algo = 1 [default=BIP32];	// Algorithm using for key generation algorithm
+    repeated uint32 outputs_count = 3;		// Count of outputs of the transaction 
+    repeated uint32 inputs_count = 5; // Count of inputs of the transaction
+    optional bytes random = 6; 	// Provide additional entropy for signing function.
+    							// Recommended to provide 256 bytes of random data.
 }
 
-message SignedTx {
-   repeated bytes signature = 1;
+// Sent by the device as a response for SignTx.
+// If request_index is set, device asks for TxInput message with details of index's input.
+// If signed_index is set, 'signature' contains signed input of signed_index's input. 
+message InputRequest {
+	optional uint32 request_index = 1;	// If presented, device expects TxInput message from the computer 
+	optional uint32 signed_index = 2;	// If presented, 'signature' contains signed input of this input
+	optional bytes signature = 3;		// If presented, represent signature of the signed_index input
 }
 
-/*
-inputs = [] # list of TxInput
-for i in inputs:
-    for x in inputs:
-        send(x)
-        
-	signature = send(SignInput(i))
-*/
-
-// Response: SignedInput, Failure
-message SignInput {
-	required TxInput input = 1;
+// Sent by the device as a response for SignTx or TxInput.
+// Device asks for Tx
+message OutputRequest {
+	required uint32 request_index = 1;	// Device expects TxOutput message from the computer
 }
 
-message SignedInput {
-	required bytes signature = 1;
+// Transaction onput for SignTx workflow. It is response to InputRequest message sent by device.
+//
+// Response: InputRequest, OutputRequest, Failure
+message TxInput {
+	required uint32 index = 1;		// Position of input in proposed transaction
+    repeated uint32 address_n = 2;	// Parameter for address generation algorithm to derive the address from the master public key
+    required uint64 amount = 3;		// Amount to spend in satoshis. The rest will be used for transaction fees
+    required bytes prev_hash = 4;	// Hash of previous transaction spent by this input
+    required uint32 prev_index = 5;	// Index of previous spent output
+    optional bytes script_sig = 6;	// Script signature
+}
+
+// Transaction output for SignTx workflow. It is response to OutputRequest message sent by the device.
+message TxOutput {
+    required uint32 index = 1;			// Position of output in proposed transaction
+    required string address = 2;		// Target bitcoin address in base58 encoding
+    repeated uint32 address_n = 3;		// Has higher priority than "address". If the output is to myself, specify parameter for address generation algorithm.
+    required uint64 amount = 4;			// Amount to send in satoshis
+    required ScriptType script_type = 5;// Select output script type
+    repeated bytes script_args = 6;		// Provide additional parameters for the script (its script-depended)
 }

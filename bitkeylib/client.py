@@ -1,5 +1,6 @@
 import os
 import bitkey_pb2 as proto
+import random
 
 def show_message(message):
     print "MESSAGE FROM DEVICE:", message
@@ -11,22 +12,44 @@ def show_input(input_text, message=None):
 
 class BitkeyClient(object):
     
-    def __init__(self, transport, debuglink=None, message_func=show_message, input_func=show_input, debug=False):
-        self.master_public_key = None
-        self.transport = transport        
+    def __init__(self, transport, debuglink=None,
+                 algo=proto.BIP32, 
+                 message_func=show_message, input_func=show_input, debug=False):
+        self.transport = transport
         self.debuglink = debuglink
         
+        self.algo = algo
         self.message_func = message_func
         self.input_func = input_func
         self.debug = debug
-
-        self.features = self.call(proto.Initialize()) 
+        
+        self.setup_debuglink()
+        self.init_device()
+        
+    def init_device(self):
+        self.master_public_key = None
+        self.session_id = ''.join([ chr(random.randrange(0, 255, 1)) for _ in xrange(0, 16) ])
+        self.features = self.call(proto.Initialize(session_id=self.session_id))
         self.UUID = self.call(proto.GetUUID())
-                
+        
+    def get_master_public_key(self):
+        if self.master_public_key:
+            return self.master_public_key
+        
+        self.master_public_key = self.call(proto.GetMasterPublicKey(algo=self.algo))
+        return self.master_public_key
+        
+    def get_entropy(self, size):
+        return self.call(proto.GetEntropy(size=size)).entropy
+    
     def _pprint(self, msg):
         return "<%s>:\n%s" % (msg.__class__.__name__, msg)
 
-    def call(self, msg, tries=1, button=None, pin_correct=True, otp_correct=True):
+    def setup_debuglink(self, pin_correct=False, otp_correct=False):
+        self.debug_pin = pin_correct
+        self.debug_otp = otp_correct
+        
+    def call(self, msg, button=None, tries=1):
         if self.debug:
             print '----------------------'
             print "Sending", self._pprint(msg)
@@ -41,7 +64,7 @@ class BitkeyClient(object):
         if isinstance(resp, proto.OtpRequest):
             if self.debuglink:
                 otp = self.debuglink.read_otp()
-                if otp_correct:
+                if self.debug_otp:
                     self.transport.write(otp)
                 else:
                     self.transport.write(proto.OtpAck(otp='__42__'))
@@ -54,7 +77,7 @@ class BitkeyClient(object):
         if isinstance(resp, proto.PinRequest):
             if self.debuglink:
                 pin = self.debuglink.read_pin()
-                if pin_correct:
+                if self.debug_pin:
                     self.transport.write(pin)
                 else:
                     self.transport.write(proto.PinAck(pin='__42__'))
@@ -80,11 +103,7 @@ class BitkeyClient(object):
                     raise Exception("PIN is invalid, too many retries")
                 self.message_func("PIN is invalid, let's try again...")    
                 
-            return self.call(msg, tries-1,
-                             button=button,
-                             pin_correct=pin_correct,
-                             otp_correct=otp_correct)
-    
+            return self.call(msg, button, tries-1)    
         if isinstance(resp, proto.Failure):
             raise Exception(resp.code, resp.message)
         
@@ -93,39 +112,28 @@ class BitkeyClient(object):
             
         return resp
 
-    def sign_tx(self, algo, inputs, outputs, fee):
+    def get_uuid(self):
+        return self.call(proto.GetUUID())
+        
+    def sign_tx(self, inputs, outputs):
         '''
             inputs: list of TxInput
             outputs: list of TxOutput
         '''
-            
+        
         tx = proto.SignTx()
-        tx.algo = algo # Choose BIP32 or ELECTRUM way for deterministic keys
+        tx.algo = self.algo # Choose BIP32 or ELECTRUM way for deterministic keys
         tx.random = os.urandom(256) # Provide additional entropy to the device
-
-        for addr, amount in outputs:
-            if addr in self.addresses:
-                addr_n = self.addresses.index(addr)
-            else:
-                addr_n = None
+        tx.outputs.extend(outputs)
             
-            fee -= amount
-            output = tx.outputs.add()
-            output.address=addr
-            output.address_n.append(addr_n)
-            output.amount=amount
-            output.script_type=proto.PAYTOADDRESS
-            
-        print "FEE", fee
-        #print inputs2, outputs2
-        
-        tx.fee = fee
-        print "PBDATA", tx.SerializeToString().encode('hex')
+        return self.call(tx)
+        #print "PBDATA", tx.SerializeToString().encode('hex')
         
         #################
         #################
         #################
         
+        '''
         signatures = [('add550d6ba9ab7e01d37e17658f98b6e901208d241f24b08197b5e20dfa7f29f095ae01acbfa5c4281704a64053dcb80e9b089ecbe09f5871d67725803e36edd', '3045022100dced96eeb43836bc95676879eac303eabf39802e513f4379a517475c259da12502201fd36c90ecd91a32b2ca8fed2e1755a7f2a89c2d520eb0da10147802bc7ca217')]
         
         s_inputs = []
@@ -136,7 +144,7 @@ class BitkeyClient(object):
             s_inputs.append((addr, v, p_hash, p_pos, p_scriptPubKey, pubkey, sig))
         
         return s_inputs
-        '''        
+                
         s_inputs = []
         for i in range(len(inputs)):
             addr, v, p_hash, p_pos, p_scriptPubKey, _, _ = inputs[i]
@@ -149,3 +157,7 @@ class BitkeyClient(object):
             s_inputs.append( (addr, v, p_hash, p_pos, p_scriptPubKey, pubkey, sig) )
         return s_inputs
         '''
+
+    def load_device(self, seed, otp, pin, spv, button=None):
+        self.call(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv), button=button)
+        self.init_device()

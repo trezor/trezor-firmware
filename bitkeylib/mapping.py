@@ -17,17 +17,19 @@ map_type_to_class = {
        13: proto.LoadDevice,
        14: proto.ResetDevice,
        15: proto.SignTx,
-       16: proto.SignedTx,
+#       16: proto.SignedTx,
        17: proto.Features,
        18: proto.PinRequest,
        19: proto.PinAck,
        20: proto.PinCancel,
-       21: proto.SignInput,
-       22: proto.SignedInput,
+       21: proto.InputRequest,
+       22: proto.OutputRequest,
        23: proto.TxInput,
        24: proto.TxOutput,
        25: proto.SetMaxFeeKb,
        100: proto.DebugLinkDecision,
+       101: proto.DebugLinkGetState,
+       102: proto.DebugLinkState,
 }
 
 map_class_to_type = {}
