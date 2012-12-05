@@ -14,7 +14,7 @@ def parse_args(commands):
     parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='socket', help="Debuglink transport")
     parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='0.0.0.0:8001', help="Path used by the transport (usually serial port)")         
     parser.add_argument('-j', '--json', dest='json', action='store_true', help="Prints result as json object")
-#    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Enable low-level debugging messages')
+    parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='Enable low-level debugging')
 
     cmdparser = parser.add_subparsers(title='Available commands')
     
@@ -51,8 +51,8 @@ def get_transport(transport_string, path):
         return PipeTransport(path, is_device=False)
     
     if transport_string == 'socket':
-        from bitkeylib.transport_socket import SocketTransport
-        return SocketTransport(path, listen=False)
+        from bitkeylib.transport_socket import SocketTransportClient
+        return SocketTransportClient(path)
     
     if transport_string == 'fake':
         from bitkeylib.transport_fake import FakeTransport
@@ -74,18 +74,34 @@ class Commands(object):
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
     
+    def load_device(self, args):
+        seed = ' '.join(args.seed)
+
+        return self.client.load_device(seed, args.otp, args.pin, args.spv) 
+        
     get_entropy.help = 'Get example entropy'
     get_master_public_key.help = 'Get master public key'
+    load_device.help = 'Load custom configuration to the device'
     
     get_entropy.arguments = (
         (('size',), {'type': int}),
+    )
+    
+    load_device.arguments = (
+        (('-s', '--seed'), {'type': str, 'nargs': '+'}),
+        (('-n', '--pin'), {'type': str, 'default': ''}),
+        (('-o', '--otp'), {'action': 'store_true'}),
+        (('-p', '--spv'), {'action': 'store_true'}),
     )
     
 def main():
     args = parse_args(Commands)
     
     transport = get_transport(args.transport, args.path)
-    debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
+    if args.debug:
+        debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
+    else:
+        debuglink_transport = get_transport('fake', '')
     
     if args.algorithm == 'electrum':
         algo = proto.ELECTRUM
@@ -94,7 +110,7 @@ def main():
     else:
         raise Exception("Unknown algorithm")
     
-    client = BitkeyClient(transport, debuglink_transport, algo=algo)
+    client = BitkeyClient(transport, debuglink=None, algo=algo)
     cmds = Commands(client)
     
     res = args.func(cmds, args)
