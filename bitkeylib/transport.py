@@ -31,7 +31,14 @@ class Transport(object):
         self._write("##%s%s" % (header, ser))
 
     def read(self):
-        (msg_type, data) = self._read()
+        if not self.ready_to_read():
+            return None
+        
+        data = self._read()
+        if data == None:
+            return None
+        
+        (msg_type, data) = data
         inst = mapping.get_class(msg_type)()
         inst.ParseFromString(data)
         return inst

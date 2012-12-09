@@ -25,7 +25,6 @@ class SocketTransportClient(Transport):
         super(SocketTransportClient, self).__init__(device, *args, **kwargs)
     
     def _open(self):
-        print self.device
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.device)
         self.filelike = self.socket.makefile()
@@ -44,7 +43,6 @@ class SocketTransportClient(Transport):
         
     def _read(self):
         try:
-            print 'filelike', self.filelike
             (msg_type, datalen) = self._read_headers(self.filelike)
             return (msg_type, self.filelike.read(datalen))
         except socket.error:
@@ -66,14 +64,12 @@ class SocketTransport(Transport):
         super(SocketTransport, self).__init__(device, *args, **kwargs)
         
     def _open(self):
-        print self.device
-
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         #self.socket.setblocking(0)
         
         self.socket.bind(self.device)
-        self.socket.listen(1)
+        self.socket.listen(5)
         
     def _disconnect_client(self):
         if self.client != None:
@@ -94,8 +90,8 @@ class SocketTransport(Transport):
             # Waiting for connection
             rlist, _, _ = select([self.socket], [], [], 0)
             if len(rlist) > 0:
-                (self.client, _) = self.socket.accept()
-                print "Connected", self.client
+                (self.client, ipaddr) = self.socket.accept()
+                print "Connected", ipaddr[0]
                 self.filelike = self.client.makefile()#FakeRead(self.client)#self.client.makefile()
                 return self.ready_to_read()
             return False
@@ -109,11 +105,8 @@ class SocketTransport(Transport):
         
     def _read(self):
         try:
-            print 'filelike', self.filelike
             (msg_type, datalen) = self._read_headers(self.filelike)
-            x = (msg_type, self.filelike.read(datalen))
-            print x
-            return x
+            return (msg_type, self.filelike.read(datalen))
         except socket.error:
             print "Failed to read from device"
             raise
