@@ -1,5 +1,4 @@
 import struct
-import bitkey_pb2 as proto
 import mapping
 
 class Transport(object):
@@ -33,11 +32,22 @@ class Transport(object):
     def read(self):
         if not self.ready_to_read():
             return None
-        
+
         data = self._read()
         if data == None:
             return None
         
+        return self._parse_message(data)
+        
+    def read_blocking(self):
+        while True:
+            data = self._read()
+            if data != None:
+                break
+        
+        return self._parse_message(data)
+
+    def _parse_message(self, data):
         (msg_type, data) = data
         inst = mapping.get_class(msg_type)()
         inst.ParseFromString(data)
