@@ -45,21 +45,26 @@ class BitkeyClient(object):
     def _pprint(self, msg):
         return "<%s>:\n%s" % (msg.__class__.__name__, msg)
 
-    def setup_debuglink(self, pin_correct=False, otp_correct=False):
+    def setup_debuglink(self, button=None, pin_correct=False, otp_correct=False):
+        self.debug_button = button
         self.debug_pin = pin_correct
         self.debug_otp = otp_correct
         
-    def call(self, msg, button=None, tries=1):
+    def call(self, msg):
         if self.debug:
             print '----------------------'
             print "Sending", self._pprint(msg)
         
         self.transport.write(msg)
-        
-        if self.debuglink and button != None:
-            self.debuglink.press_button(button)
+        resp = self.transport.read_blocking()
 
-        resp = self.transport.read()
+        if isinstance(resp, proto.ButtonRequest):
+            if self.debuglink and self.debug_button:
+                print "Pressing button", self.debug_button
+                self.debuglink.press_button(self.debug_button)
+                
+            self.transport.write(proto.ButtonAck())
+            resp = self.transport.read_blocking()
                 
         if isinstance(resp, proto.OtpRequest):
             if self.debuglink:
@@ -72,7 +77,7 @@ class BitkeyClient(object):
                 otp = self.input_func("OTP required: ", resp.message)
                 msg2 = proto.OtpAck(otp=otp)
             
-            return self.call(msg2, button, tries)   
+            return self.call(msg2)   
     
         if isinstance(resp, proto.PinRequest):
             if self.debuglink:
@@ -85,27 +90,20 @@ class BitkeyClient(object):
                 pin = self.input_func("PIN required: ", resp.message)
                 msg2 = proto.PinAck(pin=pin)
                 
-            return self.call(msg2, button, tries)
+            return self.call(msg2)
         
         if isinstance(resp, proto.Failure):
             self.message_func(resp.message)
             
             if resp.code == 3:
-                if tries <= 1:
-                    raise Exception("OTP is invalid, too many retries")
-                self.message_func("OTP is invalid, let's try again...")
+                raise Exception("OTP is invalid")
                 
             elif resp.code == 4:    
                 raise Exception("Action cancelled by user")
                 
             elif resp.code == 6:
-                if tries <= 1:
-                    raise Exception("PIN is invalid, too many retries")
-                self.message_func("PIN is invalid, let's try again...")    
+                raise Exception("PIN is invalid")
                 
-            return self.call(msg, button, tries-1)   
-         
-        if isinstance(resp, proto.Failure):
             raise Exception(resp.code, resp.message)
         
         if self.debug:
@@ -121,6 +119,7 @@ class BitkeyClient(object):
             inputs: list of TxInput
             outputs: list of TxOutput
         '''
+        
         
         tx = proto.SignTx()
         tx.algo = self.algo # Choose BIP32 or ELECTRUM way for deterministic keys
@@ -159,6 +158,7 @@ class BitkeyClient(object):
         return s_inputs
         '''
 
-    def load_device(self, seed, otp, pin, spv, button=None):
-        self.call(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv), button=button)
+    def load_device(self, seed, otp, pin, spv):
+        resp = self.call(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv))
         self.init_device()
+        return isinstance(resp, proto.Success)        
