@@ -95,6 +95,21 @@ message UUID {
     required bytes UUID = 1;
 }
 
+// Message can be sent by the *device* as a resopnse to any request.
+// Device is waiting for HW button press. No action is required from computer
+// Computer should respond with ButtonAck message or ButtonCancel to cancel
+// the original request.
+message ButtonRequest {
+}
+
+// Computer agrees to wait for HW button press.
+message ButtonAck {
+}
+
+// Computer want to cancel current action (don't wait to HW button press)
+message ButtonCancel {
+}
+ 
 // Message can be sent by the *device* as a response to any request.
 // Message asks computer to send back OtpAck with the password printed on the device's display.
 //
