@@ -23,6 +23,8 @@ class TestSignTx(unittest.TestCase):
     def tearDown(self):
         self.debug_transport.close()
         self.transport.close()
-            
+
+'''            
     def test_signtx(self):
         print self.bitkey.sign_tx([], [])
+'''
