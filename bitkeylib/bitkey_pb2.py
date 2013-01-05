@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='bitkey.proto',
   package='',
-  serialized_pb='\n\x0c\x62itkey.proto\" \n\nInitialize\x12\x12\n\nsession_id\x18\x01 \x02(\x0c\"\xc4\x01\n\x08\x46\x65\x61tures\x12\x12\n\nsession_id\x18\x01 \x02(\x0c\x12\x0e\n\x06vendor\x18\x02 \x01(\t\x12\x15\n\rmajor_version\x18\x03 \x01(\r\x12\x15\n\rminor_version\x18\x04 \x01(\r\x12\x0b\n\x03otp\x18\x05 \x01(\x08\x12\x0b\n\x03pin\x18\x06 \x01(\x08\x12\x0b\n\x03spv\x18\x07 \x01(\x08\x12\x11\n\tmaxfee_kb\x18\x08 \x01(\x04\x12\x18\n\x04\x61lgo\x18\t \x03(\x0e\x32\n.Algorithm\x12\x12\n\ndebug_link\x18\n \x01(\x08\"\x17\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\t\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"K\n\x11\x44\x65\x62ugLinkGetState\x12\x0e\n\x06layout\x18\x01 \x01(\x08\x12\x0b\n\x03otp\x18\x02 \x01(\x08\x12\x0b\n\x03pin\x18\x03 \x01(\x08\x12\x0c\n\x04seed\x18\x04 \x01(\x08\"Z\n\x0e\x44\x65\x62ugLinkState\x12\x0e\n\x06layout\x18\x01 \x01(\x0c\x12\x14\n\x03otp\x18\x02 \x01(\x0b\x32\x07.OtpAck\x12\x14\n\x03pin\x18\x03 \x01(\x0b\x32\x07.PinAck\x12\x0c\n\x04seed\x18\x04 \x01(\t\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\t\"(\n\x07\x46\x61ilure\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\t\n\x07GetUUID\"\x14\n\x04UUID\x12\x0c\n\x04UUID\x18\x01 \x02(\x0c\"\x0f\n\rButtonRequest\"\x0b\n\tButtonAck\"\x0e\n\x0c\x42uttonCancel\"\x1d\n\nOtpRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x15\n\x06OtpAck\x12\x0b\n\x03otp\x18\x01 \x02(\t\"\x0b\n\tOtpCancel\"\x1d\n\nPinRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x15\n\x06PinAck\x12\x0b\n\x03pin\x18\x01 \x02(\t\"\x0b\n\tPinCancel\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\"\x1a\n\x07\x45ntropy\x12\x0f\n\x07\x65ntropy\x18\x01 \x02(\x0c\" \n\x0bSetMaxFeeKb\x12\x11\n\tmaxfee_kb\x18\x01 \x02(\x04\"5\n\x12GetMasterPublicKey\x12\x1f\n\x04\x61lgo\x18\x01 \x02(\x0e\x32\n.Algorithm:\x05\x42IP32\"\x1e\n\x0fMasterPublicKey\x12\x0b\n\x03key\x18\x01 \x02(\x0c\"M\n\nLoadDevice\x12\x0c\n\x04seed\x18\x01 \x02(\t\x12\x11\n\x03otp\x18\x02 \x01(\x08:\x04true\x12\x0b\n\x03pin\x18\x03 \x01(\t\x12\x11\n\x03spv\x18\x04 \x01(\x08:\x04true\"\x1d\n\x0bResetDevice\x12\x0e\n\x06random\x18\x07 \x01(\x0c\"f\n\x06SignTx\x12\x1f\n\x04\x61lgo\x18\x01 \x02(\x0e\x32\n.Algorithm:\x05\x42IP32\x12\x15\n\routputs_count\x18\x03 \x03(\r\x12\x14\n\x0cinputs_count\x18\x05 \x03(\r\x12\x0e\n\x06random\x18\x06 \x01(\x0c\"N\n\x0cInputRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\r\x12\x14\n\x0csigned_index\x18\x02 \x01(\r\x12\x11\n\tsignature\x18\x03 \x01(\x0c\"&\n\rOutputRequest\x12\x15\n\rrequest_index\x18\x01 \x02(\r\"v\n\x07TxInput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12\x11\n\tprev_hash\x18\x04 \x02(\x0c\x12\x12\n\nprev_index\x18\x05 \x02(\r\x12\x12\n\nscript_sig\x18\x06 \x01(\x0c\"\x84\x01\n\x08TxOutput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\t\x12\x11\n\taddress_n\x18\x03 \x03(\r\x12\x0e\n\x06\x61mount\x18\x04 \x02(\x04\x12 \n\x0bscript_type\x18\x05 \x02(\x0e\x32\x0b.ScriptType\x12\x13\n\x0bscript_args\x18\x06 \x03(\x0c*$\n\tAlgorithm\x12\t\n\x05\x42IP32\x10\x00\x12\x0c\n\x08\x45LECTRUM\x10\x01*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01')
+  serialized_pb='\n\x0c\x62itkey.proto\" \n\nInitialize\x12\x12\n\nsession_id\x18\x01 \x02(\x0c\"\xc4\x01\n\x08\x46\x65\x61tures\x12\x12\n\nsession_id\x18\x01 \x02(\x0c\x12\x0e\n\x06vendor\x18\x02 \x01(\t\x12\x15\n\rmajor_version\x18\x03 \x01(\r\x12\x15\n\rminor_version\x18\x04 \x01(\r\x12\x0b\n\x03otp\x18\x05 \x01(\x08\x12\x0b\n\x03pin\x18\x06 \x01(\x08\x12\x0b\n\x03spv\x18\x07 \x01(\x08\x12\x11\n\tmaxfee_kb\x18\x08 \x01(\x04\x12\x18\n\x04\x61lgo\x18\t \x03(\x0e\x32\n.Algorithm\x12\x12\n\ndebug_link\x18\n \x01(\x08\"\x17\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\t\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"K\n\x11\x44\x65\x62ugLinkGetState\x12\x0e\n\x06layout\x18\x01 \x01(\x08\x12\x0b\n\x03otp\x18\x02 \x01(\x08\x12\x0b\n\x03pin\x18\x03 \x01(\x08\x12\x0c\n\x04seed\x18\x04 \x01(\x08\"Z\n\x0e\x44\x65\x62ugLinkState\x12\x0e\n\x06layout\x18\x01 \x01(\x0c\x12\x14\n\x03otp\x18\x02 \x01(\x0b\x32\x07.OtpAck\x12\x14\n\x03pin\x18\x03 \x01(\x0b\x32\x07.PinAck\x12\x0c\n\x04seed\x18\x04 \x01(\t\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\t\"(\n\x07\x46\x61ilure\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\t\n\x07GetUUID\"\x14\n\x04UUID\x12\x0c\n\x04UUID\x18\x01 \x02(\x0c\"\x0f\n\rButtonRequest\"\x0b\n\tButtonAck\"\x0e\n\x0c\x42uttonCancel\"\x1d\n\nOtpRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x15\n\x06OtpAck\x12\x0b\n\x03otp\x18\x01 \x02(\t\"\x0b\n\tOtpCancel\"\x1d\n\nPinRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x15\n\x06PinAck\x12\x0b\n\x03pin\x18\x01 \x02(\t\"\x0b\n\tPinCancel\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\"\x1a\n\x07\x45ntropy\x12\x0f\n\x07\x65ntropy\x18\x01 \x02(\x0c\" \n\x0bSetMaxFeeKb\x12\x11\n\tmaxfee_kb\x18\x01 \x02(\x04\"5\n\x12GetMasterPublicKey\x12\x1f\n\x04\x61lgo\x18\x01 \x02(\x0e\x32\n.Algorithm:\x05\x42IP32\"\x1e\n\x0fMasterPublicKey\x12\x0b\n\x03key\x18\x01 \x02(\x0c\"@\n\nGetAddress\x12\x1f\n\x04\x61lgo\x18\x01 \x02(\x0e\x32\n.Algorithm:\x05\x42IP32\x12\x11\n\taddress_n\x18\x02 \x03(\r\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\t\"M\n\nLoadDevice\x12\x0c\n\x04seed\x18\x01 \x02(\t\x12\x11\n\x03otp\x18\x02 \x01(\x08:\x04true\x12\x0b\n\x03pin\x18\x03 \x01(\t\x12\x11\n\x03spv\x18\x04 \x01(\x08:\x04true\"\x1d\n\x0bResetDevice\x12\x0e\n\x06random\x18\x07 \x01(\x0c\"f\n\x06SignTx\x12\x1f\n\x04\x61lgo\x18\x01 \x02(\x0e\x32\n.Algorithm:\x05\x42IP32\x12\x15\n\routputs_count\x18\x03 \x03(\r\x12\x14\n\x0cinputs_count\x18\x05 \x03(\r\x12\x0e\n\x06random\x18\x06 \x01(\x0c\"N\n\x0cInputRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\r\x12\x14\n\x0csigned_index\x18\x02 \x01(\r\x12\x11\n\tsignature\x18\x03 \x01(\x0c\"&\n\rOutputRequest\x12\x15\n\rrequest_index\x18\x01 \x02(\r\"v\n\x07TxInput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12\x11\n\tprev_hash\x18\x04 \x02(\x0c\x12\x12\n\nprev_index\x18\x05 \x02(\r\x12\x12\n\nscript_sig\x18\x06 \x01(\x0c\"\x84\x01\n\x08TxOutput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\t\x12\x11\n\taddress_n\x18\x03 \x03(\r\x12\x0e\n\x06\x61mount\x18\x04 \x02(\x04\x12 \n\x0bscript_type\x18\x05 \x02(\x0e\x32\x0b.ScriptType\x12\x13\n\x0bscript_args\x18\x06 \x03(\x0c*$\n\tAlgorithm\x12\t\n\x05\x42IP32\x10\x00\x12\x0c\n\x08\x45LECTRUM\x10\x01*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01')
 
 _ALGORITHM = descriptor.EnumDescriptor(
   name='Algorithm',
@@ -30,8 +30,8 @@ _ALGORITHM = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1529,
-  serialized_end=1565,
+  serialized_start=1623,
+  serialized_end=1659,
 )
 
 
@@ -52,8 +52,8 @@ _SCRIPTTYPE = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1567,
-  serialized_end=1618,
+  serialized_start=1661,
+  serialized_end=1712,
 )
 
 
@@ -806,6 +806,69 @@ _MASTERPUBLICKEY = descriptor.Descriptor(
 )
 
 
+_GETADDRESS = descriptor.Descriptor(
+  name='GetAddress',
+  full_name='GetAddress',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    descriptor.FieldDescriptor(
+      name='algo', full_name='GetAddress.algo', index=0,
+      number=1, type=14, cpp_type=8, label=2,
+      has_default_value=True, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    descriptor.FieldDescriptor(
+      name='address_n', full_name='GetAddress.address_n', index=1,
+      number=2, type=13, cpp_type=3, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=940,
+  serialized_end=1004,
+)
+
+
+_ADDRESS = descriptor.Descriptor(
+  name='Address',
+  full_name='Address',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    descriptor.FieldDescriptor(
+      name='address', full_name='Address.address', index=0,
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=1006,
+  serialized_end=1032,
+)
+
+
 _LOADDEVICE = descriptor.Descriptor(
   name='LoadDevice',
   full_name='LoadDevice',
@@ -850,8 +913,8 @@ _LOADDEVICE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=940,
-  serialized_end=1017,
+  serialized_start=1034,
+  serialized_end=1111,
 )
 
 
@@ -878,8 +941,8 @@ _RESETDEVICE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1019,
-  serialized_end=1048,
+  serialized_start=1113,
+  serialized_end=1142,
 )
 
 
@@ -927,8 +990,8 @@ _SIGNTX = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1050,
-  serialized_end=1152,
+  serialized_start=1144,
+  serialized_end=1246,
 )
 
 
@@ -969,8 +1032,8 @@ _INPUTREQUEST = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1154,
-  serialized_end=1232,
+  serialized_start=1248,
+  serialized_end=1326,
 )
 
 
@@ -997,8 +1060,8 @@ _OUTPUTREQUEST = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1234,
-  serialized_end=1272,
+  serialized_start=1328,
+  serialized_end=1366,
 )
 
 
@@ -1060,8 +1123,8 @@ _TXINPUT = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1274,
-  serialized_end=1392,
+  serialized_start=1368,
+  serialized_end=1486,
 )
 
 
@@ -1123,14 +1186,15 @@ _TXOUTPUT = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1395,
-  serialized_end=1527,
+  serialized_start=1489,
+  serialized_end=1621,
 )
 
 _FEATURES.fields_by_name['algo'].enum_type = _ALGORITHM
 _DEBUGLINKSTATE.fields_by_name['otp'].message_type = _OTPACK
 _DEBUGLINKSTATE.fields_by_name['pin'].message_type = _PINACK
 _GETMASTERPUBLICKEY.fields_by_name['algo'].enum_type = _ALGORITHM
+_GETADDRESS.fields_by_name['algo'].enum_type = _ALGORITHM
 _SIGNTX.fields_by_name['algo'].enum_type = _ALGORITHM
 _TXOUTPUT.fields_by_name['script_type'].enum_type = _SCRIPTTYPE
 DESCRIPTOR.message_types_by_name['Initialize'] = _INITIALIZE
@@ -1157,6 +1221,8 @@ DESCRIPTOR.message_types_by_name['Entropy'] = _ENTROPY
 DESCRIPTOR.message_types_by_name['SetMaxFeeKb'] = _SETMAXFEEKB
 DESCRIPTOR.message_types_by_name['GetMasterPublicKey'] = _GETMASTERPUBLICKEY
 DESCRIPTOR.message_types_by_name['MasterPublicKey'] = _MASTERPUBLICKEY
+DESCRIPTOR.message_types_by_name['GetAddress'] = _GETADDRESS
+DESCRIPTOR.message_types_by_name['Address'] = _ADDRESS
 DESCRIPTOR.message_types_by_name['LoadDevice'] = _LOADDEVICE
 DESCRIPTOR.message_types_by_name['ResetDevice'] = _RESETDEVICE
 DESCRIPTOR.message_types_by_name['SignTx'] = _SIGNTX
@@ -1308,6 +1374,18 @@ class MasterPublicKey(message.Message):
   DESCRIPTOR = _MASTERPUBLICKEY
   
   # @@protoc_insertion_point(class_scope:MasterPublicKey)
+
+class GetAddress(message.Message):
+  __metaclass__ = reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _GETADDRESS
+  
+  # @@protoc_insertion_point(class_scope:GetAddress)
+
+class Address(message.Message):
+  __metaclass__ = reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _ADDRESS
+  
+  # @@protoc_insertion_point(class_scope:Address)
 
 class LoadDevice(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
