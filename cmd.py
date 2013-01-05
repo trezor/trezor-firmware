@@ -5,6 +5,7 @@ import json
 
 import bitkeylib.bitkey_pb2 as proto
 from bitkeylib.client import BitkeyClient
+from bitkeylib.debuglink import DebugLink
    
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Bitkey devices.')
@@ -67,21 +68,32 @@ class Commands(object):
     @classmethod
     def _list_commands(cls):
         return [ x for x in dir(cls) if not x.startswith('_') ]
-        
-    def get_master_public_key(self, args):
-        return 'ahoj'
-    
+   
+    def get_address(self, args):
+        return self.client.get_address(args.n)
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
+
+    def get_master_public_key(self, args):
+        return binascii.hexlify(self.client.get_master_public_key())
     
+    def get_uuid(self, args):
+        return binascii.hexlify(self.client.get_uuid())
+        
     def load_device(self, args):
         seed = ' '.join(args.seed)
 
         return self.client.load_device(seed, args.otp, args.pin, args.spv) 
         
+    get_address.help = 'Get bitcoin address in base58 encoding'
     get_entropy.help = 'Get example entropy'
+    get_uuid.help = 'Get device\'s unique identifier'
     get_master_public_key.help = 'Get master public key'
     load_device.help = 'Load custom configuration to the device'
+    
+    get_address.arguments = (
+        (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+    )
     
     get_entropy.arguments = (
         (('size',), {'type': int}),
@@ -100,8 +112,9 @@ def main():
     transport = get_transport(args.transport, args.path)
     if args.debug:
         debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
+        debuglink = DebugLink(debuglink_transport)    
     else:
-        debuglink_transport = get_transport('fake', '')
+        debuglink = None
     
     if args.algorithm == 'electrum':
         algo = proto.ELECTRUM
@@ -110,7 +123,8 @@ def main():
     else:
         raise Exception("Unknown algorithm")
     
-    client = BitkeyClient(transport, debuglink=None, algo=algo)
+    client = BitkeyClient(transport, debuglink=debuglink, algo=algo)
+    client.setup_debuglink(button=True, otp_correct=True, pin_correct=True)
     cmds = Commands(client)
     
     res = args.func(cmds, args)
