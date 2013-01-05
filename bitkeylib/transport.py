@@ -1,25 +1,28 @@
 import struct
 import mapping
 
+class NotImplementedException(Exception):
+    pass
+
 class Transport(object):
     def __init__(self, device, *args, **kwargs):
         self.device = device
         self._open()
     
     def _open(self):
-        raise NotImplemented
+        raise NotImplementedException("Not implemented")
     
     def _close(self):
-        raise NotImplemented
+        raise NotImplementedException("Not implemented")
     
     def _write(self, msg):
-        raise NotImplemented
+        raise NotImplementedException("Not implemented")
     
     def _read(self):
-        raise NotImplemented
+        raise NotImplementedException("Not implemented")
     
     def ready_to_read(self):
-        raise NotImplemented
+        raise NotImplementedException("Not implemented")
         
     def close(self):
         self._close()
