@@ -30,6 +30,8 @@ map_type_to_class = {
        26: proto.ButtonRequest,
        27: proto.ButtonAck,
        28: proto.ButtonCancel,
+       29: proto.GetAddress,
+       30: proto.Address,
        100: proto.DebugLinkDecision,
        101: proto.DebugLinkGetState,
        102: proto.DebugLinkState,

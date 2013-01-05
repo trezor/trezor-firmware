@@ -174,12 +174,21 @@ message SetMaxFeeKb {
 //
 // Response: MasterPublicKey, Failure
 message GetMasterPublicKey {
-    required Algorithm algo = 1 [default=BIP32]; // Used algorithm for generating master public key
+    required Algorithm algo = 1 [default=BIP32]; // Used algorithm for generating the master public key
 }
 
 // Contains master public key derived from device's seed.
 message MasterPublicKey {
     required bytes key = 1;	// master public key of requested algorithm in binary format
+}
+
+message GetAddress {
+    required Algorithm algo = 1 [default=BIP32]; // Used algorithm for generating the address
+    repeated uint32 address_n = 2;	// Parameter for address generation algorithm to derive the address from the master public key 
+}
+
+message Address {
+    required string address = 1; // Bitcoin address in base58 encoding corresponding to GetAddress(algo, n) call
 }
 
 // Load seed and related internal settings from computer to the device. Existing seed is overwritten.
