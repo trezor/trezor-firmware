@@ -1,4 +1,5 @@
 import bitkey_pb2 as proto
+from transport import NotImplementedException
 
 def otp_info(otp):
     print "Device asks for OTP %s" % otp.otp

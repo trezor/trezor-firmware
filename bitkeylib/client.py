@@ -36,8 +36,11 @@ class BitkeyClient(object):
         if self.master_public_key:
             return self.master_public_key
         
-        self.master_public_key = self.call(proto.GetMasterPublicKey(algo=self.algo))
+        self.master_public_key = self.call(proto.GetMasterPublicKey(algo=self.algo)).key
         return self.master_public_key
+        
+    def get_address(self, n):
+        return self.call(proto.GetAddress(algo=self.algo, address_n=n)).address
         
     def get_entropy(self, size):
         return self.call(proto.GetEntropy(size=size)).entropy
@@ -112,7 +115,7 @@ class BitkeyClient(object):
         return resp
 
     def get_uuid(self):
-        return self.call(proto.GetUUID())
+        return self.call(proto.GetUUID()).UUID
         
     def sign_tx(self, inputs, outputs):
         '''
