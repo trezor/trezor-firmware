@@ -1,7 +1,6 @@
 import unittest
 import common
 
-from bitkeylib import proto
 from bitkeylib.client import CallException, PinException, OtpException 
 
 class TestProtectCall(common.BitkeyTest):
