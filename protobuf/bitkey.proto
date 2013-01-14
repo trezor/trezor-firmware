@@ -215,8 +215,8 @@ message ResetDevice {
 // Response: InputRequest, OutputRequest, OtpRequest, PinRequest, Failure
 message SignTx {
     required Algorithm algo = 1 [default=BIP32];	// Algorithm using for key generation algorithm
-    repeated uint32 outputs_count = 3;		// Count of outputs of the transaction 
-    repeated uint32 inputs_count = 5; // Count of inputs of the transaction
+    required uint32 outputs_count = 3;		// Count of outputs of the transaction 
+    required uint32 inputs_count = 5; // Count of inputs of the transaction
     optional bytes random = 6; 	// Provide additional entropy for signing function.
     							// Recommended to provide 256 bytes of random data.
 }
@@ -225,9 +225,9 @@ message SignTx {
 // If request_index is set, device asks for TxInput message with details of index's input.
 // If signed_index is set, 'signature' contains signed input of signed_index's input. 
 message InputRequest {
-	optional uint32 request_index = 1;	// If presented, device expects TxInput message from the computer 
-	optional uint32 signed_index = 2;	// If presented, 'signature' contains signed input of this input
-	optional bytes signature = 3;		// If presented, represent signature of the signed_index input
+	optional int32 request_index = 1;	// If >=0, device expects TxInput message from the computer 
+	optional int32 signed_index = 2;	// If >=0, 'signature' contains signed input of this input
+	optional bytes signature = 3;		// If signed_index>=0, represent signature of the signed_index input
 }
 
 // Sent by the device as a response for SignTx or TxInput.
@@ -243,8 +243,8 @@ message TxInput {
 	required uint32 index = 1;		// Position of input in proposed transaction
     repeated uint32 address_n = 2;	// Parameter for address generation algorithm to derive the address from the master public key
     required uint64 amount = 3;		// Amount to spend in satoshis. The rest will be used for transaction fees
-    required bytes prev_hash = 4;	// Hash of previous transaction spent by this input
-    required uint32 prev_index = 5;	// Index of previous spent output
+    required bytes prev_hash = 4;	// Hash of previous transaction output to spend by this input
+    required uint32 prev_index = 5;	// Index of previous output to spend
     optional bytes script_sig = 6;	// Script signature
 }
 
