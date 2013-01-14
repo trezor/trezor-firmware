@@ -1,8 +1,6 @@
 import unittest
-import config
+import common
 
-from bitkeylib.client import BitkeyClient
-from bitkeylib.debuglink import DebugLink
 from bitkeylib import proto
 
 '''
@@ -14,25 +12,7 @@ from bitkeylib import proto
 
 '''
 
-class TestBasic(unittest.TestCase):
-
-    def setUp(self):
-        self.debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS)
-        self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS)
-        self.bitkey = BitkeyClient(self.transport, DebugLink(self.debug_transport), algo=proto.ELECTRUM, debug=True)
-        
-        self.bitkey.setup_debuglink(button=True, pin_correct=True, otp_correct=True)
-        
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
-            otp=True, pin='1234', spv=True)
-        
-        print "Setup finished"
-        print "--------------"
-        
-    def tearDown(self):
-        self.debug_transport.close()
-        self.transport.close()
-            
+class TestBasic(common.BitkeyTest):           
     def test_features(self):
         features = self.bitkey.call(proto.Initialize(session_id=self.bitkey.session_id))
         
@@ -50,7 +30,10 @@ class TestBasic(unittest.TestCase):
         uuid2 = self.bitkey.get_uuid()
         
         # UUID must be longer than 10 characters
-        self.assertGreater(len(uuid1.UUID), 10)
+        self.assertGreater(len(uuid1), 10)
         
         # Every resulf of UUID must be the same
         self.assertEqual(uuid1, uuid2)
+
+if __name__ == '__main__':
+    unittest.main()
