@@ -2,29 +2,58 @@ import unittest
 import common
 
 from bitkeylib import proto
+from bitkeylib.client import CallException, PinException, OtpException 
 
 class TestProtectCall(common.BitkeyTest):
-    def test_features(self):
-        features = self.bitkey.call(proto.Initialize(session_id=self.bitkey.session_id))
+    def _some_protected_call(self):
+        # This method perform any call which have protection in the device
+        entropy_len = 10
+        entropy = self.bitkey.get_entropy(entropy_len)
+        self.assertEqual(len(entropy), entropy_len)
         
-        # Result is the same as reported by BitkeyClient class
-        self.assertEqual(features, self.bitkey.features)
-         
-    def test_ping(self):
-        ping = self.bitkey.call(proto.Ping(message='ahoj!'))
+    def test_no_protection(self):
+        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+            otp=False, pin='', spv=False)
         
-        # Ping results in Success(message='Ahoj!')
-        self.assertEqual(ping, proto.Success(message='ahoj!'))
-        
-    def test_uuid(self):
-        uuid1 = self.bitkey.get_uuid()
-        uuid2 = self.bitkey.get_uuid()
-        
-        # UUID must be longer than 10 characters
-        self.assertGreater(len(uuid1), 10)
-        
-        # Every resulf of UUID must be the same
-        self.assertEqual(uuid1, uuid2)
+        self.assertEqual(self.bitkey.features.otp, False)
+        self.assertEqual(self.bitkey.features.pin, False)
+        self._some_protected_call()
 
+    def test_otp_only(self):
+        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+            otp=True, pin='', spv=False)
+
+        self.assertEqual(self.bitkey.features.otp, True)
+        self.assertEqual(self.bitkey.features.pin, False)
+        self._some_protected_call()
+        
+    def test_pin_only(self):
+        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+            otp=False, pin='2345', spv=False)
+
+        self.assertEqual(self.bitkey.features.otp, False)
+        self.assertEqual(self.bitkey.features.pin, True)
+        self._some_protected_call()
+        
+    def test_both(self):
+        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+            otp=True, pin='3456', spv=False)
+        
+        self.assertEqual(self.bitkey.features.otp, True)
+        self.assertEqual(self.bitkey.features.pin, True)
+        self._some_protected_call()
+
+    def test_incorrect_pin(self):
+        self.bitkey.setup_debuglink(button=True, pin_correct=False, otp_correct=True)
+        self.assertRaises(PinException, self._some_protected_call)
+
+    def test_incorrect_otp(self):
+        self.bitkey.setup_debuglink(button=True, pin_correct=True, otp_correct=False)
+        self.assertRaises(OtpException, self._some_protected_call)
+        
+    def test_incorrect_both(self):
+        self.bitkey.setup_debuglink(button=True, pin_correct=False, otp_correct=False)
+        self.assertRaises(CallException, self._some_protected_call)
+        
 if __name__ == '__main__':
     unittest.main()
