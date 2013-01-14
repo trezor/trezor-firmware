@@ -10,6 +10,15 @@ def show_input(input_text, message=None):
         print "QUESTION FROM DEVICE:", message
     return raw_input(input_text)
 
+class CallException(Exception):
+    pass
+
+class PinException(CallException):
+    pass
+
+class OtpException(CallException):
+    pass
+
 class BitkeyClient(object):
     
     def __init__(self, transport, debuglink=None,
@@ -65,9 +74,8 @@ class BitkeyClient(object):
             if self.debuglink and self.debug_button:
                 print "Pressing button", self.debug_button
                 self.debuglink.press_button(self.debug_button)
-                
-            self.transport.write(proto.ButtonAck())
-            resp = self.transport.read_blocking()
+            
+            return self.call(proto.ButtonAck())   
                 
         if isinstance(resp, proto.OtpRequest):
             if self.debuglink:
@@ -99,15 +107,15 @@ class BitkeyClient(object):
             self.message_func(resp.message)
             
             if resp.code == 3:
-                raise Exception("OTP is invalid")
+                raise OtpException("OTP is invalid")
                 
             elif resp.code == 4:    
-                raise Exception("Action cancelled by user")
+                raise CallException("Action cancelled by user")
                 
             elif resp.code == 6:
-                raise Exception("PIN is invalid")
+                raise PinException("PIN is invalid")
                 
-            raise Exception(resp.code, resp.message)
+            raise CallException(resp.code, resp.message)
         
         if self.debug:
             print "Received", self._pprint(resp)
