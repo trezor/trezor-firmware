@@ -34,6 +34,9 @@ class BitkeyClient(object):
         
         self.setup_debuglink()
         self.init_device()
+    
+    def _get_local_entropy(self):
+        return os.urandom(32)
         
     def init_device(self):
         self.master_public_key = None
@@ -129,15 +132,58 @@ class BitkeyClient(object):
         '''
             inputs: list of TxInput
             outputs: list of TxOutput
+            
+            proto.TxInput(index=0,
+                          address_n=0,
+                          amount=0,
+                          prev_hash='',
+                          prev_index=0,
+                          #script_sig=
+                          )
+            proto.TxOutput(index=0,
+                          address='1Bitkey',
+                          #address_n=[],
+                          amount=100000000,
+                          script_type=proto.PAYTOADDRESS,
+                          #script_args=
+                          )                                      
         '''
-        
-        
+    
+        # Prepare and send initial message
         tx = proto.SignTx()
         tx.algo = self.algo # Choose BIP32 or ELECTRUM way for deterministic keys
-        tx.random = os.urandom(256) # Provide additional entropy to the device
-        tx.outputs.extend(outputs)
+        tx.random = self._get_local_entropy() # Provide additional entropy to the device
+        tx.inputs_count = len(inputs)
+        tx.outputs_count = len(outputs)            
+        res = self.call(tx)
+
+        # Prepare structure for signatures
+        signatures = [None]*len(inputs)
+        
+        while True:
+            if isinstance(res, proto.OutputRequest):
+                res = self.call(outputs[res.request_index])
+                continue
             
-        return self.call(tx)
+            if isinstance(res, proto.InputRequest):
+                if res.signed_index >= 0:
+                    print "!!! SIGNED INPUT"
+                    signatures[res.signed_index] = res.signature
+        
+                if res.request_index >= 0:
+                    print "REQUESTING", res.request_index    
+                    res = self.call(inputs[res.request_index])
+                    continue
+                
+                # There was no request for another input,
+                # so we're done!
+                break
+            
+            if isinstance(res, proto.Failure):
+                raise CallException("Signing failed")
+        
+        return signatures
+                
         #print "PBDATA", tx.SerializeToString().encode('hex')
         
         #################
@@ -169,6 +215,11 @@ class BitkeyClient(object):
         return s_inputs
         '''
 
+    def reset_device(self):
+        resp = self.call(proto.ResetDevice(random=self._get_local_entropy()))
+        self.init_device()
+        return isinstance(resp, proto.Success)
+    
     def load_device(self, seed, otp, pin, spv):
         resp = self.call(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv))
         self.init_device()
