@@ -1,4 +1,6 @@
 import os
+import time
+
 import bitkey_pb2 as proto
 import random
 
@@ -42,7 +44,7 @@ class BitkeyClient(object):
         self.master_public_key = None
         self.session_id = ''.join([ chr(random.randrange(0, 255, 1)) for _ in xrange(0, 16) ])
         self.features = self.call(proto.Initialize(session_id=self.session_id))
-        self.UUID = self.call(proto.GetUUID())
+        self.uuid = self.get_uuid()
         
     def get_master_public_key(self):
         if self.master_public_key:
@@ -149,6 +151,8 @@ class BitkeyClient(object):
                           )                                      
         '''
     
+        start = time.time()
+        
         # Prepare and send initial message
         tx = proto.SignTx()
         tx.algo = self.algo # Choose BIP32 or ELECTRUM way for deterministic keys
@@ -159,30 +163,45 @@ class BitkeyClient(object):
 
         # Prepare structure for signatures
         signatures = [None]*len(inputs)
+        serialized_tx = ''
         
+        counter = 0
         while True:
-            if isinstance(res, proto.OutputRequest):
-                res = self.call(outputs[res.request_index])
-                continue
-            
-            if isinstance(res, proto.InputRequest):
-                if res.signed_index >= 0:
-                    print "!!! SIGNED INPUT"
-                    signatures[res.signed_index] = res.signature
-        
-                if res.request_index >= 0:
-                    print "REQUESTING", res.request_index    
-                    res = self.call(inputs[res.request_index])
-                    continue
-                
-                # There was no request for another input,
-                # so we're done!
-                break
+            counter += 1
             
             if isinstance(res, proto.Failure):
                 raise CallException("Signing failed")
+
+            if not isinstance(res, proto.TxRequest):
+                raise CallException("Unexpected message")
+
+            # If there's some part of signed transaction, let's add it
+            if res.serialized_tx:
+                print "!!! RECEIVED PART OF SERIALIED TX (%d BYTES)" % len(res.serialized_tx)
+                serialized_tx += res.serialized_tx
+
+            if res.signed_index >= 0 and res.signature:
+                print "!!! SIGNED INPUT", res.signed_index
+                signatures[res.signed_index] = res.signature
+                
+            if res.request_index < 0:
+                # Device didn't ask for more information, finish workflow
+                break
+            
+            # Device asked for one more information, let's process it.
+            if res.request_type == proto.TXOUTPUT:
+                res = self.call(outputs[res.request_index])
+                continue
+          
+            elif res.request_type == proto.TXINPUT:
+                print "REQUESTING", res.request_index    
+                res = self.call(inputs[res.request_index])
+                continue                
         
-        return signatures
+        print "SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" % \
+                (time.time() - start, counter, len(serialized_tx))
+                
+        return (signatures, serialized_tx)
                 
         #print "PBDATA", tx.SerializeToString().encode('hex')
         
