@@ -27,10 +27,11 @@ class TestBasic(common.BitkeyTest):
         
     def test_uuid(self):
         uuid1 = self.bitkey.get_uuid()
+        self.bitkey.init_device()
         uuid2 = self.bitkey.get_uuid()
         
         # UUID must be longer than 10 characters
-        self.assertGreater(len(uuid1), 10)
+        self.assertEqual(len(uuid1), 9)
         
         # Every resulf of UUID must be the same
         self.assertEqual(uuid1, uuid2)
