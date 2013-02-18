@@ -235,11 +235,16 @@ class BitkeyClient(object):
         '''
 
     def reset_device(self):
+        # Begin with device reset workflow
         resp = self.call(proto.ResetDevice(random=self._get_local_entropy()))
         self.init_device()
         return isinstance(resp, proto.Success)
     
     def load_device(self, seed, otp, pin, spv):
-        resp = self.call(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv))
+        if not self.debuglink:
+            raise Exception("DebugLink not available")
+        
+        if not self.debuglink.load_device(seed, otp, pin, spv):
+            return False
         self.init_device()
-        return isinstance(resp, proto.Success)        
+        return True

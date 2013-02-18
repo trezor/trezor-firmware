@@ -21,7 +21,12 @@ class DebugLink(object):
     def get_state(self, otp=False, pin=False):
         self.transport.write(proto.DebugLinkGetState(otp=otp, pin=pin))
         return self.transport.read_blocking()
-        
+
+    def load_device(self, seed, otp, pin, spv):
+        self.transport.write(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv))
+        resp = self.transport.read_blocking()
+        return isinstance(resp, proto.Success)        
+            
     def read_otp(self):
         obj = self.get_state(otp=True).otp
         print "Read OTP:", obj.otp
