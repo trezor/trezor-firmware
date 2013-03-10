@@ -9,6 +9,14 @@ DEVICE_IDS = [
     (0x08f7, 0x0002), # EasyTemp
 ]
 
+class FakeRead(object):
+    # Let's pretend we have a file-like interface
+    def __init__(self, func):
+        self.func = func
+        
+    def read(self, size):
+        return self.func(size)
+    
 class HidTransport(Transport):
     def __init__(self, device, *args, **kwargs):
         self.hid = None
@@ -51,7 +59,7 @@ class HidTransport(Transport):
             msg = msg[to_send:]
             
     def _read(self):
-        (msg_type, datalen) = self._read_headers(self._raw_read)
+        (msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
         return (msg_type, self._raw_read(datalen))
                     
     def _raw_read(self, length):        
