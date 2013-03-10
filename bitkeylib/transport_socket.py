@@ -4,15 +4,6 @@ import socket
 from select import select
 from transport import Transport
 
-class FakeRead(object):
-    # Because socket is the only transport which don't implement read()
-    
-    def __init__(self, socket):
-        self.socket = socket
-        
-    def read(self, size):
-        return self.socket.recv(size)
-
 class SocketTransportClient(Transport):
     def __init__(self, device, *args, **kwargs):
         device = device.split(':')
@@ -94,7 +85,7 @@ class SocketTransport(Transport):
             if len(rlist) > 0:
                 (self.client, ipaddr) = self.socket.accept()
                 print "Connected", ipaddr[0]
-                self.filelike = self.client.makefile()#FakeRead(self.client)#self.client.makefile()
+                self.filelike = self.client.makefile()
                 return self.ready_to_read()
             return False
         
