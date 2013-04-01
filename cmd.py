@@ -36,13 +36,15 @@ def parse_args(commands):
             item.add_argument(*arg[0], **arg[1])
             
         item.set_defaults(func=func)
+        item.set_defaults(cmd=cmd)
     
     return parser.parse_args()
 
 def get_transport(transport_string, path):
     if transport_string == 'usb':
-        raise NotImplemented("USB HID transport not implemented yet")
-    
+        from bitkeylib.transport_hid import HidTransport
+        return HidTransport(path)
+ 
     if transport_string == 'serial':
         from bitkeylib.transport_serial import SerialTransport
         return SerialTransport(path)
@@ -68,7 +70,11 @@ class Commands(object):
     @classmethod
     def _list_commands(cls):
         return [ x for x in dir(cls) if not x.startswith('_') ]
-   
+  
+    def list(self, args):
+        # Fake method for advertising 'list' command
+        pass
+ 
     def get_address(self, args):
         return self.client.get_address(args.n)
     def get_entropy(self, args):
@@ -85,6 +91,7 @@ class Commands(object):
 
         return self.client.load_device(seed, args.otp, args.pin, args.spv) 
         
+    list.help = 'List connected Trezor USB devices'
     get_address.help = 'Get bitcoin address in base58 encoding'
     get_entropy.help = 'Get example entropy'
     get_uuid.help = 'Get device\'s unique identifier'
@@ -108,7 +115,17 @@ class Commands(object):
     
 def main():
     args = parse_args(Commands)
-    
+
+    if args.cmd == 'list':
+        from bitkeylib.transport_hid import HidTransport
+        devices = HidTransport.enumerate()
+        if args.json:
+            print json.dumps(devices)
+        else:
+            for dev in devices:
+                print dev
+        return
+
     transport = get_transport(args.transport, args.path)
     if args.debug:
         debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
