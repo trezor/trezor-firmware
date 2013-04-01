@@ -32,13 +32,16 @@ class HidTransport(Transport):
             serial_number = d.get('serial_number')
             
             if (vendor_id, product_id) in DEVICE_IDS:
-                devices.append((vendor_id, product_id, serial_number))
+                devices.append("0x%04x:0x%04x:%s" % (vendor_id, product_id, serial_number))
                 
         return devices
     
     def _open(self):
         self.buffer = ''
-        self.hid = hid.device(self.device[0], self.device[1])#, self.device[2])
+        path = self.device.split(':')
+        self.hid = hid.device(int(path[0], 16), int(path[1], 16))#, path[2])
+        self.hid.send_feature_report([0x41, 0x01]) # enable UART
+        self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
     
     def _close(self):
         self.hid.close()
