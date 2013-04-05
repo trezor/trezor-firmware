@@ -9,7 +9,6 @@ from bitkeylib.debuglink import DebugLink
    
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Bitkey devices.')
-    parser.add_argument('-a', '--algorithm', dest='algorithm', choices=['bip32', 'electrum'], default='bip32', help='Key derivation algorithm')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='serial', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='/dev/ttyAMA0', help="Path used by the transport (usually serial port)")
     parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='socket', help="Debuglink transport")
@@ -132,15 +131,8 @@ def main():
         debuglink = DebugLink(debuglink_transport)    
     else:
         debuglink = None
-    
-    if args.algorithm == 'electrum':
-        algo = proto.ELECTRUM
-    elif args.algorithm == 'bip32':
-        algo = proto.BIP32
-    else:
-        raise Exception("Unknown algorithm")
-    
-    client = BitkeyClient(transport, debuglink=debuglink, algo=algo)
+        
+    client = BitkeyClient(transport, debuglink=debuglink)
     client.setup_debuglink(button=True, otp_correct=True, pin_correct=True)
     cmds = Commands(client)
     
