@@ -23,13 +23,11 @@ class OtpException(CallException):
 
 class BitkeyClient(object):
     
-    def __init__(self, transport, debuglink=None,
-                 algo=proto.BIP32, 
+    def __init__(self, transport, debuglink=None, 
                  message_func=show_message, input_func=show_input, debug=False):
         self.transport = transport
         self.debuglink = debuglink
         
-        self.algo = algo
         self.message_func = message_func
         self.input_func = input_func
         self.debug = debug
@@ -50,11 +48,11 @@ class BitkeyClient(object):
         if self.master_public_key:
             return self.master_public_key
         
-        self.master_public_key = self.call(proto.GetMasterPublicKey(algo=self.algo)).key
+        self.master_public_key = self.call(proto.GetMasterPublicKey()).key
         return self.master_public_key
         
     def get_address(self, n):
-        return self.call(proto.GetAddress(algo=self.algo, address_n=n)).address
+        return self.call(proto.GetAddress(address_n=n)).address
         
     def get_entropy(self, size):
         return self.call(proto.GetEntropy(size=size)).entropy
@@ -155,7 +153,6 @@ class BitkeyClient(object):
         
         # Prepare and send initial message
         tx = proto.SignTx()
-        tx.algo = self.algo # Choose BIP32 or ELECTRUM way for deterministic keys
         tx.random = self._get_local_entropy() # Provide additional entropy to the device
         tx.inputs_count = len(inputs)
         tx.outputs_count = len(outputs)            
