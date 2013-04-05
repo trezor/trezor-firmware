@@ -20,5 +20,6 @@ class BitkeyTest(unittest.TestCase):
         print "--------------"
         
     def tearDown(self):
+        self.bitkey.init_device()
         self.debug_transport.close()
         self.transport.close()
