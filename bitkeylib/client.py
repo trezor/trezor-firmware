@@ -237,11 +237,11 @@ class BitkeyClient(object):
         self.init_device()
         return isinstance(resp, proto.Success)
     
-    def load_device(self, seed, otp, pin, spv):
+    def load_device(self, algo, seed, otp, pin, spv):
         if not self.debuglink:
             raise Exception("DebugLink not available")
         
-        if not self.debuglink.load_device(seed, otp, pin, spv):
+        if not self.debuglink.load_device(algo, seed, otp, pin, spv):
             return False
         self.init_device()
         return True

@@ -22,8 +22,8 @@ class DebugLink(object):
         self.transport.write(proto.DebugLinkGetState(otp=otp, pin=pin))
         return self.transport.read_blocking()
 
-    def load_device(self, seed, otp, pin, spv):
-        self.transport.write(proto.LoadDevice(seed=seed, otp=otp, pin=pin, spv=spv))
+    def load_device(self, algo, seed, otp, pin, spv):
+        self.transport.write(proto.LoadDevice(algo=algo, seed=seed, otp=otp, pin=pin, spv=spv))
         resp = self.transport.read_blocking()
         return isinstance(resp, proto.Success)        
             
