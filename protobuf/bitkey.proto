@@ -199,10 +199,11 @@ message Address {
 //
 // Response: Success, OtpRequest, PinRequest, Failure
 message LoadDevice {
-    required string seed = 1;	// Seed encoded as a mnemonic (12 english words)
-    optional bool otp = 2 [default=true];	// Enable OTP for important actions?
-    optional string pin = 3;				// Set PIN protection for important actions
-    optional bool spv = 4 [default=true];	// Enable SPV verification for transaction inputs (if available on device)
+    optional Algorithm algo = 1 [default=BIP32]; // Choose address generation algorithm
+    required string seed = 2;	// Seed encoded as a mnemonic (12 english words)
+    optional bool otp = 3 [default=true];	// Enable OTP for important actions?
+    optional bytes pin = 4;				// Set PIN protection for important actions
+    optional bool spv = 5 [default=true];	// Enable SPV verification for transaction inputs (if available on device)
 }
 
 // Request device to do full-reset, to generate new seed
