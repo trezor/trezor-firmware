@@ -2,6 +2,7 @@ import unittest
 import common
 
 from bitkeylib.client import CallException, PinException, OtpException 
+from bitkeylib import proto
 
 class TestProtectCall(common.BitkeyTest):
     def _some_protected_call(self):
@@ -11,34 +12,38 @@ class TestProtectCall(common.BitkeyTest):
         self.assertEqual(len(entropy), entropy_len)
         
     def test_no_protection(self):
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+        self.bitkey.load_device(algo=proto.ELECTRUM,
+            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
             otp=False, pin='', spv=False)
         
-        self.assertEqual(self.bitkey.features.otp, False)
+        self.assertEqual(self.bitkey.features.has_otp, False)
         self.assertEqual(self.bitkey.features.pin, False)
         self._some_protected_call()
 
     def test_otp_only(self):
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+        self.bitkey.load_device(algo=proto.ELECTRUM,
+            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
             otp=True, pin='', spv=False)
 
-        self.assertEqual(self.bitkey.features.otp, True)
+        self.assertEqual(self.bitkey.features.has_otp, True)
         self.assertEqual(self.bitkey.features.pin, False)
         self._some_protected_call()
         
     def test_pin_only(self):
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+        self.bitkey.load_device(algo=proto.ELECTRUM,
+            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
             otp=False, pin='2345', spv=False)
 
-        self.assertEqual(self.bitkey.features.otp, False)
+        self.assertEqual(self.bitkey.features.has_otp, False)
         self.assertEqual(self.bitkey.features.pin, True)
         self._some_protected_call()
         
     def test_both(self):
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+        self.bitkey.load_device(algo=proto.ELECTRUM,
+            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
             otp=True, pin='3456', spv=False)
         
-        self.assertEqual(self.bitkey.features.otp, True)
+        self.assertEqual(self.bitkey.features.has_otp, True)
         self.assertEqual(self.bitkey.features.pin, True)
         self._some_protected_call()
 

@@ -5,7 +5,8 @@ import bitkeylib.bitkey_pb2 as proto
 
 class TestAddresses(common.BitkeyTest):
     def test_electrum_address(self):
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+        self.bitkey.load_device(algo=proto.ELECTRUM,
+            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
             otp=False, pin='', spv=False)
 
         self.bitkey.algo = proto.ELECTRUM
@@ -15,7 +16,8 @@ class TestAddresses(common.BitkeyTest):
         self.assertEqual(self.bitkey.get_address([9, 0]), "1C9DHmWBpvGcFKXEiWWC3EK3EY5Bj79nze")
 
     def test_electrum_change_address(self):
-        self.bitkey.load_device(seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+        self.bitkey.load_device(algo=proto.ELECTRUM,
+            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
             otp=False, pin='', spv=False)
 
         self.bitkey.algo = proto.ELECTRUM
