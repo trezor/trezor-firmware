@@ -1,0 +1,63 @@
+/**
+ * Copyright (c) 2013 Tomas Dzetkulic
+ * Copyright (c) 2013 Pavol Rusnak
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#ifndef __SECP256K1_H__
+#define __SECP256K1_H__
+
+#include <stdint.h>
+
+#define USE_PRECOMPUTED_IV 1
+#define USE_PRECOMPUTED_CP 1
+
+// bignum256 are 256 bits stored as 8*30 bit + 1*16 bit
+// val[0] are lowest 30 bits, val[8] highest 16 bits
+typedef struct {
+	uint32_t val[9];
+} bignum256;
+
+// curve point x and y
+typedef struct {
+	bignum256 x, y;
+} curve_point;
+
+// secp256k1 prime
+extern const bignum256 prime256k1;
+
+// secp256k1 initial curve point
+extern const curve_point G256k1;
+
+// secp256k1 order of G
+extern const bignum256 order256k1;
+
+// 3/2 in G_p
+extern const bignum256 three_over_two256k1;
+
+#ifdef USE_PRECOMPUTED_IV
+extern const bignum256 secp256k1_iv[256];
+#endif
+
+#ifdef USE_PRECOMPUTED_CP
+extern const curve_point secp256k1_cp[256];
+#endif
+
+#endif

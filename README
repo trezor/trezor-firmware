@@ -1,0 +1,6 @@
+MicroECDSA
+==========
+
+Heavily optimized ECDSA (secp256k1) signer for embedded devices.
+
+Distibuted under MIT License.
