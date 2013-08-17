@@ -4,3 +4,10 @@ MicroECDSA
 Heavily optimized ECDSA (secp256k1) signer for embedded devices.
 
 Distibuted under MIT License.
+
+Notes
+-----
+
+a) random generator in rand.c is using stdlib's rand() function.
+   you should replace this code with one that uses a hardware random
+   generator of your microcontroller.
