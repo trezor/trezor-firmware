@@ -39,10 +39,10 @@ void process_chunk(const uint8_t *chunk, uint32_t *hash)
 	};
 	uint32_t i, s0, s1, a, b, c, d, e, f, g, h, ch, temp, maj, w[64];
 
-	for (i = 0;i < 16;i++) {
+	for (i = 0; i < 16; i++) {
 		w[i] = read_be(chunk + 4 * i);
 	}
-	for (;i < 64;i++) {
+	for (; i < 64; i++) {
 		s0 = ror(w[i-15], 7) ^ ror(w[i-15], 18) ^ (w[i-15]>>3);
 		s1 = ror(w[i-2], 17) ^ ror(w[i-2], 19) ^ (w[i-2]>>10);
 		w[i] = w[i-16] + s0 + w[i-7] + s1;
@@ -55,7 +55,7 @@ void process_chunk(const uint8_t *chunk, uint32_t *hash)
 	f = hash[5];
 	g = hash[6];
 	h = hash[7];
-	for (i = 0;i < 64;i++) {
+	for (i = 0; i < 64; i++) {
 		s1 = ror(e, 6) ^ ror(e, 11) ^ ror(e, 25);
 		ch = (e & f) ^ ((~ e) & g);
 		temp = h + s1 + ch + k0[i] + w[i];
@@ -92,7 +92,7 @@ void sha256(const uint8_t *msg, const uint32_t len, uint8_t *hash)
 	};
 	uint32_t l = len, i, h[8];
 	uint8_t last_chunks[128]; //for storing last 1 or 2 chunks
-	for (i = 0;i < 8; i++) {
+	for (i = 0; i < 8; i++) {
 		h[i] = h0[i];
 	}
 	// process complete message chunks
@@ -102,13 +102,13 @@ void sha256(const uint8_t *msg, const uint32_t len, uint8_t *hash)
 		msg += 64;
 	}
 	// process rest of the message
-	for (i = 0;i < l; i++) {
+	for (i = 0; i < l; i++) {
 		last_chunks[i] = msg[i];
 	}
 	// add '1' bit
 	last_chunks[i++] = 0x80;
 	// pad message with zeroes
-	for (;(i & 63) != 56; i++) {
+	for (; (i & 63) != 56; i++) {
 		last_chunks[i]=0;
 	}
 	// add message length in bits
@@ -121,7 +121,7 @@ void sha256(const uint8_t *msg, const uint32_t len, uint8_t *hash)
 		process_chunk(last_chunks + 64, h);
 	}
 	// write the result
-	for (i = 0;i < 8; i++) {
+	for (i = 0; i < 8; i++) {
 		write_be(hash + 4 * i, h[i]);
 	}
 }

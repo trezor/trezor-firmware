@@ -61,7 +61,7 @@ int main()
 		i = buffer[8];
 		// extract key data
 		if (i > 32) {
-			for (j = 0;j < 32; j++) {
+			for (j = 0; j < 32; j++) {
 				priv_key[j] = buffer[j + i - 23];
 			}
 		} else {

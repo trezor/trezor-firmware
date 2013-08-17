@@ -49,7 +49,7 @@ void mod(bignum256 *x, bignum256 const *prime)
 		if (x->val[i] > prime->val[i]) {
 			// substract p from x
 			temp = 0x40000000u;
-			for (i = 0;i < 9; i++) {
+			for (i = 0; i < 9; i++) {
 				temp += x->val[i] - prime->val[i];
 				x->val[i] = temp & 0x3FFFFFFF;
 				temp >>= 30;
@@ -68,18 +68,18 @@ void multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 	uint32_t res[18], coef;
 
 	// compute lower half of long multiplication
-	for (i = 0;i < 9; i++)
+	for (i = 0; i < 9; i++)
 	{
-		for (j = 0;j <= i; j++) {
+		for (j = 0; j <= i; j++) {
 			temp += k->val[j] * (uint64_t)x->val[i-j];
 		}
 		res[i] = temp & 0x3FFFFFFFu;
 		temp >>= 30;
 	}
 	// compute upper half
-	for (;i < 17; i++)
+	for (; i < 17; i++)
 	{
-		for (j = i - 8; j < 9 ;j++) {
+		for (j = i - 8; j < 9 ; j++) {
 			temp += k->val[j] * (uint64_t)x->val[i-j];
 		}
 		res[i] = temp & 0x3FFFFFFFu;
@@ -87,7 +87,7 @@ void multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 	}
 	res[17] = temp;
 	// compute modulo p division is only estimated so this may give result greater than prime but not bigger than 2 * prime
-	for (i = 16;i >= 8; i--) {
+	for (i = 16; i >= 8; i--) {
 		// estimate (res / prime)
 		coef = (res[i] >> 16) + (res[i+1] << 14);
 		// substract (coef * prime) from res
@@ -100,7 +100,7 @@ void multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 		}
 	}
 	// store the result
-	for (i = 0;i < 9; i++) {
+	for (i = 0; i < 9; i++) {
 		x->val[i] = res[i];
 	}
 }
@@ -140,12 +140,12 @@ void inverse(bignum256 *x, bignum256 const *prime)
 	len2 = 1;
 	k = 0;
 	for (;;) {
-		for (i = 0;i < len1; i++) {
+		for (i = 0; i < len1; i++) {
 			if (v[i]) break;
 		}
 		if (i == len1) break;
 		for (;;) {
-			for (i = 0;i < 30; i++) {
+			for (i = 0; i < 30; i++) {
 				if (u[0] & (1 << i)) break;
 			}
 			if (i == 0) break;
@@ -167,7 +167,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 			k += i;
 		}
 		for (;;) {
-			for (i = 0;i < 30; i++) {
+			for (i = 0; i < 30; i++) {
 				if (v[0] & (1 << i)) break;
 			}
 			if (i == 0) break;
@@ -254,7 +254,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 		}
 	}
 	temp = 1;
-	for (i = 0;i < 9; i++) {
+	for (i = 0; i < 9; i++) {
 		temp += 0x3FFFFFFF + prime->val[i] - r[i];
 		r[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
@@ -276,7 +276,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 				temp = r[0] + prime->val[0];
 				r[0] = (temp >> 1) & 0x1FFFFFFF;
 				temp >>= 30;
-				for (i = 1;i < 9; i++) {
+				for (i = 1; i < 9; i++) {
 					temp += r[i] + prime->val[i];
 					r[i-1] += (temp & 1) << 29;
 					r[i] = (temp >> 1) & 0x1FFFFFFF;
@@ -321,7 +321,7 @@ void point_add(const curve_point *x1, curve_point *x2)
 	memcpy(&xr, &lambda, sizeof(bignum256));
 	multiply(&xr, &xr, &prime256k1);
 	temp = 0;
-	for (i = 0;i < 9; i++) {
+	for (i = 0; i < 9; i++) {
 		temp += xr.val[i] + 3u * prime256k1.val[i] - x1->x.val[i] - x2->x.val[i];
 		xr.val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
@@ -353,7 +353,7 @@ void point_double(curve_point *x)
 	memcpy(&xr, &lambda, sizeof(bignum256));
 	multiply(&xr, &xr, &prime256k1);
 	temp = 0;
-	for (i = 0;i < 9; i++) {
+	for (i = 0; i < 9; i++) {
 		temp += xr.val[i] + 3u * prime256k1.val[i] - 2u * x->x.val[i];
 		xr.val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
@@ -465,7 +465,7 @@ void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *s
 	z.val[8] = temp;
 	for (;;) {
 		// generate random number k
-		for (i = 0;i < 8; i++) {
+		for (i = 0; i < 8; i++) {
 			k.val[i] = random32() & 0x3FFFFFFF;
 		}
 		k.val[8]  =random32() & 0xFFFF;
@@ -477,7 +477,7 @@ void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *s
 		// r = (rx mod n)
 		mod(&R.x, &order256k1);
 		// if r is zero, we try different k
-		for (i = 0;i < 9; i++) {
+		for (i = 0; i < 9; i++) {
 			if (R.x.val[i] != 0) break;
 		}
 		if (i == 9) continue;
