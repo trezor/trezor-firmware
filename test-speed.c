@@ -52,7 +52,7 @@ int main()
 		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
 
 		cnt++;
-		if ((cnt % 100) == 0) printf("Speed: %f sig/s \n", 1.0f * cnt / ((float)(clock() - t) / CLOCKS_PER_SEC));
+		if ((cnt % 100) == 0) printf("Speed: %f sig/s\n", 1.0f * cnt / ((float)(clock() - t) / CLOCKS_PER_SEC));
 	}
 	return 0;
 }
