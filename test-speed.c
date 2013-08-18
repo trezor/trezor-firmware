@@ -21,80 +21,38 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <openssl/ecdsa.h>
-#include <openssl/obj_mac.h>
-#include <openssl/sha.h>
-#include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "ecdsa.h"
 #include "rand.h"
 
 int main()
 {
-	uint8_t sig[70], priv_key[32], msg[256], buffer[1000], hash[32], *p;
-	uint32_t sig_len, i, j, msg_len;
-	SHA256_CTX sha256;
-	EC_GROUP *ecgroup;
+	uint8_t sig[70], priv_key[32], msg[256];
+	uint32_t sig_len, i, msg_len;
 	int cnt = 0;
 
 	init_rand();
-	ecgroup = EC_GROUP_new_by_curve_name(NID_secp256k1);
 
+	clock_t t = clock();
 	for (;;) {
 		// random message len between 1 and 256
 		msg_len = (random32() & 0xFF) + 1;
 		// create random message
-		for (i = 0; i <msg_len; i++) {
+		for (i = 0; i < msg_len; i++) {
 			msg[i] = random32() & 0xFF;
 		}
-		// new ECDSA key
-		EC_KEY *eckey = EC_KEY_new();
-		EC_KEY_set_group(eckey, ecgroup);
-		
-		// generate the key
-		EC_KEY_generate_key(eckey);
-		p = buffer;
-		// copy key to buffer
-		i2d_ECPrivateKey(eckey, &p);
-
-		// size of the key is in buffer[8] and the key begins right after that
-		i = buffer[8];
-		// extract key data
-		if (i > 32) {
-			for (j = 0; j < 32; j++) {
-				priv_key[j] = buffer[j + i - 23];
-			}
-		} else {
-			for (j = 0; j < 32 - i; j++) {
-				priv_key[j] = 0;
-			}
-			for (j = 0; j < i; j++) {
-				priv_key[j + 32 - i] = buffer[j + 9];
-			}
+		// create random privkey
+		for (i = 0; i < 32; i++) {
+			priv_key[i] = random32() & 0xFF;
 		}
 
 		// use our ECDSA signer to sign the message with the key
 		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
 
-		// copy signature to the OpenSSL struct
-		p = sig;
-		ECDSA_SIG *signature = d2i_ECDSA_SIG(NULL, (const uint8_t **)&p, sig_len);
-
-		// compute the digest of the message
-		SHA256_Init(&sha256);
-		SHA256_Update(&sha256, msg, msg_len);
-		SHA256_Final(hash, &sha256);
-
-		// verify all went well, i.e. we can decrypt our signature with OpenSSL
-		if (ECDSA_do_verify(hash, 32, signature, eckey) != 1) {
-			printf("Verification failed\n");
-			break;
-		}
-		ECDSA_SIG_free(signature);
-		EC_KEY_free(eckey);
 		cnt++;
-		if ((cnt % 100) == 0) printf("Passed ... %d\n", cnt);
+		if ((cnt % 100) == 0) printf("Speed: %f sig/s \n", 1.0f * cnt / ((float)(clock() - t) / CLOCKS_PER_SEC));
 	}
-	EC_GROUP_free(ecgroup);
 	return 0;
 }
