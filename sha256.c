@@ -109,7 +109,7 @@ void sha256(const uint8_t *msg, const uint32_t len, uint8_t *hash)
 	last_chunks[i++] = 0x80;
 	// pad message with zeroes
 	for (; (i & 63) != 56; i++) {
-		last_chunks[i]=0;
+		last_chunks[i] = 0;
 	}
 	// add message length in bits
 	l = 8 * len;

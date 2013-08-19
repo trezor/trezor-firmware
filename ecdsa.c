@@ -39,7 +39,7 @@ void mod(bignum256 *x, bignum256 const *prime)
 	// compare numbers
 	while (i >= 0 && prime->val[i] == x->val[i]) --i;
 	// if equal
-	if (i==-1) {
+	if (i == -1) {
 		// set x to zero
 		for (i = 0; i < 9; i++) {
 			x->val[i] = 0;
@@ -149,19 +149,19 @@ void inverse(bignum256 *x, bignum256 const *prime)
 				if (u[0] & (1 << i)) break;
 			}
 			if (i == 0) break;
-			mask=(1 << i) - 1;
+			mask = (1 << i) - 1;
 			for (j = 0; j + 1 < len1; j++) {
 				u[j] = (u[j] >> i) | ((u[j + 1] & mask) << (30 - i));
 			}
 			u[j] = (u[j] >> i);
-			mask=(1 << (30 - i)) - 1;
+			mask = (1 << (30 - i)) - 1;
 			s[len2] = s[len2 - 1] >> (30 - i);
 			for (j = len2 - 1; j > 0; j--) {
 				s[j] = (s[j - 1] >> (30 - i)) | ((s[j] & mask) << i);
 			}
 			s[0] = (s[0] & mask) << i;
 			if (s[len2]) {
-				r[len2]=0;
+				r[len2] = 0;
 				len2++;
 			}
 			k += i;
@@ -176,14 +176,14 @@ void inverse(bignum256 *x, bignum256 const *prime)
 				v[j] = (v[j] >> i) | ((v[j + 1] & mask) << (30 - i));
 			}
 			v[j] = (v[j] >> i);
-			mask=(1 << (30 - i)) - 1;
+			mask = (1 << (30 - i)) - 1;
 			r[len2] = r[len2 - 1] >> (30 - i);
 			for (j = len2 - 1; j > 0; j--) {
 				r[j] = (r[j - 1] >> (30 - i)) | ((r[j] & mask) << i);
 			}
 			r[0] = (r[0] & mask) << i;
 			if (r[len2]) {
-				s[len2]=0;
+				s[len2] = 0;
 				len2++;
 			}
 			k += i;
@@ -240,7 +240,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 				len2++;
 			}
 		}
-		if (u[len1 - 1]==0 && v[len1 - 1]==0) len1--;
+		if (u[len1 - 1] == 0 && v[len1 - 1] == 0) len1--;
 		k++;
 	}
 	i = 8;
@@ -308,65 +308,65 @@ void fast_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
 	}
 }
 
-// x2 = x1 + x2;
-void point_add(const curve_point *x1, curve_point *x2)
+// cp2 = cp1 + cp2
+void point_add(const curve_point *cp1, curve_point *cp2)
 {
 	int i;
 	uint32_t temp;
 	bignum256 lambda, inv, xr, yr;
-	fast_substract(&(x2->x), &(x1->x), &inv);
+	fast_substract(&(cp2->x), &(cp1->x), &inv);
 	inverse(&inv, &prime256k1);
-	fast_substract(&(x2->y), &(x1->y), &lambda);
+	fast_substract(&(cp2->y), &(cp1->y), &lambda);
 	multiply(&inv, &lambda, &prime256k1);
 	memcpy(&xr, &lambda, sizeof(bignum256));
 	multiply(&xr, &xr, &prime256k1);
 	temp = 0;
 	for (i = 0; i < 9; i++) {
-		temp += xr.val[i] + 3u * prime256k1.val[i] - x1->x.val[i] - x2->x.val[i];
+		temp += xr.val[i] + 3u * prime256k1.val[i] - cp1->x.val[i] - cp2->x.val[i];
 		xr.val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}
 	fast_mod(&xr, &prime256k1);
-	fast_substract(&(x1->x), &xr, &yr);
+	fast_substract(&(cp1->x), &xr, &yr);
 	// no need to fast_mod here
 	// fast_mod(&yr);
 	multiply(&lambda, &yr, &prime256k1);
-	fast_substract(&yr, &(x1->y), &yr);
+	fast_substract(&yr, &(cp1->y), &yr);
 	fast_mod(&yr, &prime256k1);
-	memcpy(&(x2->x), &xr, sizeof(bignum256));
-	memcpy(&(x2->y), &yr, sizeof(bignum256));
+	memcpy(&(cp2->x), &xr, sizeof(bignum256));
+	memcpy(&(cp2->y), &yr, sizeof(bignum256));
 }
 
 #ifndef USE_PRECOMPUTED_CP
-// x = x + x;
-void point_double(curve_point *x)
+// cp = cp + cp
+void point_double(curve_point *cp)
 {
 	int i;
 	uint32_t temp;
 	bignum256 lambda, inverse_y, xr, yr;
-	memcpy(&inverse_y, &(x->y), sizeof(bignum256));
+	memcpy(&inverse_y, &(cp->y), sizeof(bignum256));
 	inverse(&inverse_y, &prime256k1);
 	memcpy(&lambda, &three_over_two256k1, sizeof(bignum256));
 	multiply(&inverse_y, &lambda, &prime256k1);
-	multiply(&(x->x), &lambda, &prime256k1);
-	multiply(&(x->x), &lambda, &prime256k1);
+	multiply(&(cp->x), &lambda, &prime256k1);
+	multiply(&(cp->x), &lambda, &prime256k1);
 	memcpy(&xr, &lambda, sizeof(bignum256));
 	multiply(&xr, &xr, &prime256k1);
 	temp = 0;
 	for (i = 0; i < 9; i++) {
-		temp += xr.val[i] + 3u * prime256k1.val[i] - 2u * x->x.val[i];
+		temp += xr.val[i] + 3u * prime256k1.val[i] - 2u * cp->x.val[i];
 		xr.val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}
 	fast_mod(&xr, &prime256k1);
-	fast_substract(&(x->x), &xr, &yr);
+	fast_substract(&(cp->x), &xr, &yr);
 	// no need to fast_mod here
 	// fast_mod(&yr);
 	multiply(&lambda, &yr, &prime256k1);
-	fast_substract(&yr, &(x->y), &yr);
+	fast_substract(&yr, &(cp->y), &yr);
 	fast_mod(&yr, &prime256k1);
-	memcpy(&(x->x), &xr, sizeof(bignum256));
-	memcpy(&(x->y), &yr, sizeof(bignum256));
+	memcpy(&(cp->x), &xr, sizeof(bignum256));
+	memcpy(&(cp->y), &yr, sizeof(bignum256));
 }
 #endif
 
@@ -438,12 +438,12 @@ void write_der(const bignum256 *x, uint8_t *buf)
 }
 
 // uses secp256k1 curve
-// private key is a 32 byte big endian stored number
-// message is a data to be signed
-// len is the message length
+// priv_key is a 32 byte big endian stored number
+// msg is a data to be signed
+// msg_len is the message length
 // sig is at least 70 bytes long array for the signature
 // sig_len is the pointer to a uint that will contain resulting signature length. note that ((*sig_len) == sig[1]+2)
-void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *sig, uint32_t *sig_len)
+void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
 {
 	uint32_t i;
 	uint64_t temp;
@@ -452,7 +452,7 @@ void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *s
 	bignum256 k, z;
 	bignum256 *da = &R.y;
 	// compute hash function of message
-	sha256(message, len, hash);
+	sha256(msg, msg_len, hash);
 	// if double hash is required uncomment the following line:
 	// sha256(hash, 32, hash);
 
@@ -468,10 +468,10 @@ void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *s
 		for (i = 0; i < 8; i++) {
 			k.val[i] = random32() & 0x3FFFFFFF;
 		}
-		k.val[8]  =random32() & 0xFFFF;
+		k.val[8] = random32() & 0xFFFF;
 		// if k is too big or too small, we don't like it
-		if (k.val[5] == 0x3FFFFFFF && k.val[6]==0x3FFFFFFF && k.val[7]==0x3FFFFFFF && k.val[8]==0xFFFF) continue;
-		if (k.val[5] == 0x0 && k.val[6]==0x0 && k.val[7]==0x0 && k.val[8]==0x0) continue;
+		if (k.val[5] == 0x3FFFFFFF && k.val[6] == 0x3FFFFFFF && k.val[7] == 0x3FFFFFFF && k.val[8] == 0xFFFF) continue;
+		if (k.val[5] == 0x0 && k.val[6] == 0x0 && k.val[7] == 0x0 && k.val[8] == 0x0) continue;
 		// compute k*G
 		scalar_multiply(&k, &R);
 		// r = (rx mod n)
@@ -483,8 +483,8 @@ void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *s
 		if (i == 9) continue;
 		inverse(&k, &order256k1);
 		temp = 0;
-		for (i=0; i<8; i++) {
-			temp += (((uint64_t)read_be(private_key + (7 - i) * 4)) << (2 * i));
+		for (i = 0; i < 8; i++) {
+			temp += (((uint64_t)read_be(priv_key + (7 - i) * 4)) << (2 * i));
 			da->val[i] = temp & 0x3FFFFFFF;
 			temp >>= 30;
 		}

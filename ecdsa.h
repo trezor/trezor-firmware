@@ -27,6 +27,6 @@
 #include <stdint.h>
 
 // uses secp256k1 curve
-void ecdsa_sign(uint8_t *private_key, uint8_t *message, uint32_t len, uint8_t *sig, uint32_t *sig_len);
+void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len);
 
 #endif
