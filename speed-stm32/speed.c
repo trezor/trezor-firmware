@@ -213,8 +213,8 @@ void test_sign(void)
 		priv_key[i] = random32() & 0xFF;
 	}
 
-	// use our ECDSA signer to sign the message with the key
-	for (i = 0; i < 100; i++) {
+	// use our ECDSA signer 10 times to sign the message with the key
+	for (i = 0; i < 10; i++) {
 		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
 	}
 }
@@ -258,6 +258,8 @@ int main(void)
 
 	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
 	rcc_peripheral_enable_clock(&RCC_AHB2ENR, RCC_AHB2ENR_OTGFSEN);
+	rcc_peripheral_enable_clock(&RCC_AHB2ENR, RCC_AHB2ENR_RNGEN);
+	init_rand();
 
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO11 | GPIO12);
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);

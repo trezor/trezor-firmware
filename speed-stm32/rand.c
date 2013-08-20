@@ -2,6 +2,7 @@
 #include "rand.h"
 
 void init_rand(void) {
+	RNG_CR |= RNG_CR_IE | RNG_CR_RNGEN;
 }
 
 uint32_t random32(void) {
