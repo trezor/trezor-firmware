@@ -197,39 +197,41 @@ static int cdcacm_control_request(usbd_device *usbd_dev, struct usb_setup_data *
 	return 0;
 }
 
-void test_sign(void)
-{
-	uint8_t sig[70], priv_key[32], msg[256];
-	uint32_t sig_len, i, msg_len;
-
-	// random message len between 1 and 256
-	msg_len = (random32() & 0xFF) + 1;
-	// create random message
-	for (i = 0; i < msg_len; i++) {
-		msg[i] = random32() & 0xFF;
-	}
-	// create random privkey
-	for (i = 0; i < 32; i++) {
-		priv_key[i] = random32() & 0xFF;
-	}
-
-	// use our ECDSA signer 10 times to sign the message with the key
-	for (i = 0; i < 10; i++) {
-		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
-	}
-}
-
 static void cdcacm_data_rx_cb(usbd_device *usbd_dev, uint8_t ep)
 {
 	(void)ep;
 
 	char buf[64];
+
 	int len = usbd_ep_read_packet(usbd_dev, 0x01, buf, 64);
 
 	if (len) {
+		uint8_t sig[70], priv_key[32], msg[256];
+		uint32_t sig_len, i, msg_len;
+
+		// random message len between 1 and 256
+		msg_len = (random32() & 0xFF) + 1;
+		// create random message
+		for (i = 0; i < msg_len; i++) {
+			msg[i] = random32() & 0xFF;
+		}
+		// create random privkey
+		for (i = 0; i < 8; i++) {
+			uint32_t r = random32();
+			priv_key[4 * i    ] = r & 0xFF;
+			priv_key[4 * i + 1] = (r >> 8) & 0xFF;
+			priv_key[4 * i + 2] = (r >> 16) & 0xFF;
+			priv_key[4 * i + 3] = (r >> 24) & 0xFF;
+		}
+
 		len = sprintf(buf, "Start\r\n");
 		usbd_ep_write_packet(usbd_dev, 0x82, buf, len);
-		test_sign();
+
+		// use our ECDSA signer 10 times to sign the message with the key
+		for (i = 0; i < 10; i++) {
+			ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
+		}
+
 		len = sprintf(buf, "Done!\r\n");
 		usbd_ep_write_packet(usbd_dev, 0x82, buf, len);
 	}

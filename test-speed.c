@@ -35,22 +35,25 @@ int main()
 
 	init_rand();
 
+	// random message len between 1 and 256
+	msg_len = (random32() & 0xFF) + 1;
+	// create random message
+	for (i = 0; i < msg_len; i++) {
+		msg[i] = random32() & 0xFF;
+	}
+	// create random privkey
+	for (i = 0; i < 8; i++) {
+		uint32_t r = random32();
+		priv_key[4 * i    ] = r & 0xFF;
+		priv_key[4 * i + 1] = (r >> 8) & 0xFF;
+		priv_key[4 * i + 2] = (r >> 16) & 0xFF;
+		priv_key[4 * i + 3] = (r >> 24) & 0xFF;
+	}
+
 	clock_t t = clock();
 	for (;;) {
-		// random message len between 1 and 256
-		msg_len = (random32() & 0xFF) + 1;
-		// create random message
-		for (i = 0; i < msg_len; i++) {
-			msg[i] = random32() & 0xFF;
-		}
-		// create random privkey
-		for (i = 0; i < 32; i++) {
-			priv_key[i] = random32() & 0xFF;
-		}
-
 		// use our ECDSA signer to sign the message with the key
 		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
-
 		cnt++;
 		if ((cnt % 100) == 0) printf("Speed: %f sig/s\n", 1.0f * cnt / ((float)(clock() - t) / CLOCKS_PER_SEC));
 	}
