@@ -1,6 +1,6 @@
-CC = gcc
-CFLAGS = -Wall
-OBJS = aux.o ecdsa.o secp256k1.o sha256.o rand.o
+CC     = gcc
+CFLAGS = -Wall -Os
+OBJS   = aux.o ecdsa.o secp256k1.o sha256.o rand.o
 
 all: test-speed test-verify
 
