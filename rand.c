@@ -21,16 +21,18 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <time.h>
+#include <stdio.h>
 
 #include "rand.h"
 
+static FILE *f;
+
 void init_rand(void) {
-	srand(time(NULL));
+	f = fopen("/dev/urandom", "r");
 }
 
 uint32_t random32(void) {
-	return (rand() & 0xFF) + ((rand() & 0xFF) << 8) + ((rand() & 0xFF) << 16) + ((rand() & 0xFF) << 24);
+	uint32_t r;
+	fread(&r, 1, sizeof(r), f);
+	return r;
 }
