@@ -8,7 +8,7 @@ all: test-speed test-verify
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 test-speed: test-speed.o $(OBJS)
-	gcc test-speed.o $(OBJS) -o test-speed -lcrypto
+	gcc test-speed.o $(OBJS) -o test-speed
 
 test-verify: test-verify.o $(OBJS)
 	gcc test-verify.o $(OBJS) -o test-verify -lcrypto
