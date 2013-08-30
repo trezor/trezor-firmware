@@ -9,10 +9,10 @@ from bitkeylib.debuglink import DebugLink
    
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Bitkey devices.')
-    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='serial', help="Transport used for talking with the device")
-    parser.add_argument('-p', '--path', dest='path', default='/dev/ttyAMA0', help="Path used by the transport (usually serial port)")
+    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
+    parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
     parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='socket', help="Debuglink transport")
-    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='0.0.0.0:8001', help="Path used by the transport (usually serial port)")         
+    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='127.0.0.1:2000', help="Path used by the transport (usually serial port)")         
     parser.add_argument('-j', '--json', dest='json', action='store_true', help="Prints result as json object")
     parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='Enable low-level debugging')
 
@@ -42,6 +42,10 @@ def parse_args(commands):
 def get_transport(transport_string, path):
     if transport_string == 'usb':
         from bitkeylib.transport_hid import HidTransport
+
+        if path == '':
+            path = list_usb()[0]
+
         return HidTransport(path)
  
     if transport_string == 'serial':
@@ -111,13 +115,17 @@ class Commands(object):
         (('-o', '--otp'), {'action': 'store_true'}),
         (('-p', '--spv'), {'action': 'store_true'}),
     )
-    
+
+def list_usb():
+    from bitkeylib.transport_hid import HidTransport
+    devices = HidTransport.enumerate()
+    return devices
+  
 def main():
     args = parse_args(Commands)
 
     if args.cmd == 'list':
-        from bitkeylib.transport_hid import HidTransport
-        devices = HidTransport.enumerate()
+        devices = list_usb()
         if args.json:
             print json.dumps(devices)
         else:
