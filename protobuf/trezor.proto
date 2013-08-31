@@ -4,12 +4,6 @@
 	Author: slush <info@bitcoin.cz>
 */
 
-// Specifies algorithm used for generating private/public keys from the seed.
-enum Algorithm {
-    BIP32 = 0;
-    ELECTRUM = 1;
-}
-
 // Specifies which script will be used for given transaction output. 
 enum ScriptType {
     PAYTOADDRESS = 0;
@@ -26,20 +20,13 @@ enum RequestType {
 //
 // Response: Features
 message Initialize {
-    required bytes session_id = 1; // Any value identifying current connection, will be echoed back in Features message
 }
 
-// Response object for Initialize. Contains list of available features on the device.
+// Response object for Initialize.
 message Features {
-    optional bytes session_id = 1;	// Echoed back from Initialize message
-    optional string vendor = 2;	// Name of the manufacturer, e.g. "bitkey" 
+    optional string vendor = 2;	// Name of the manufacturer, e.g. "trezor" 
     optional uint32 major_version = 3; // Major version of the device, e.g. 1
     optional uint32 minor_version = 4;  // Minor version of the device, e.g. 0
-    optional bool has_otp = 5;	// True when device will send OtpRequest on important action
-    optional bool has_spv = 6;	// True when device requires SPV verification of transaction inputs
-    optional bool pin = 7;	// True when device will send PinRequest on important action
-    optional Algorithm algo = 8; // Choosen generation algorithm
-    repeated Algorithm algo_available = 9;	// List of key generation algorithms supported by the device
     optional uint64 maxfee_kb = 10;	// Maximum accepted fee per kilobyte of signed transaction
 }
 
@@ -63,8 +50,7 @@ message DebugLinkDecision {
 // Response: DebugLinkState
 message DebugLinkGetState {
 	optional bool layout = 1;	// Request raw buffer of display
-	optional bool otp = 2;		// Request current OTP
-	optional bool pin = 3;		// Request current PIN
+	optional bool matrix = 3;	// Request current matrix
 	optional bool seed = 4;		// Request current seed
 //	optional bool state = 5;	
 }
@@ -72,21 +58,24 @@ message DebugLinkGetState {
 // Response object reflecting device's current state. It can be received only over debug link connection.
 message DebugLinkState {
 	optional bytes layout = 1;	// Raw buffer of display
-	optional OtpAck otp = 2;	// Current OTP, blank if device is not waiting to OTP
-	optional PinAck pin = 3;	// Current PIN, blank if PIN is not set/enabled
-	optional string seed = 4;	// Current seed (in mnemonic format)
-//	optional string state = 5;
+	optional PinMatrixAck pin = 3;	// Current PIN matrix, blank if PIN is not set/enabled
+	optional bytes seed = 4;	// Current seed (in mnemonic format)
+//	optional bytes state = 5;
+}
+
+// Ask device to shutdown/restart
+message DebugLinkStop {
 }
 
 // Response object defining success of the previous request
 message Success {
-    optional string message = 1;	//	May contain human readable description of the action or request-specific payload
+    optional bytes message = 1;	//	May contain human readable description of the action or request-specific payload
 }
 
 // Response object defining failure of the previous request
 message Failure {
     optional int32 code = 1;		// May contain computer-readable definition of the error state
-    optional string message = 2;	// May contain human-readable message of the error state
+    optional bytes message = 2;		// May contain human-readable message of the error state
 }
 
 // Ask device for unique identifier.
@@ -117,45 +106,27 @@ message ButtonCancel {
 }
  
 // Message can be sent by the *device* as a response to any request.
-// Message asks computer to send back OtpAck with the password printed on the device's display.
+// Message asks computer to send back PinMatrixAck with the password encoded in pin matrix scheme.
 //
-// Response: OtpAck, OtpCancel
-message OtpRequest {
-   optional string message = 1;	// Human readable message
+// Response: PinMatrixAck, PinMatrixCancel
+message PinMatrixRequest {
+   optional bytes message = 1;	// Human readable message
 }
 
-// Message is sent by the computer as a response to OtpRequest previously sent by the device.
-message OtpAck {
-    required string otp = 1;	// User must be asked for the otp, which is displayed on the device's display
+// Message is sent by the computer as a response to PinMatrixRequest previously sent by the device.
+message PinMatrixAck {
+    required bytes pin = 1;	// User must write down the password for accessing the device.
 }
 
-// Message is sent as a response to OtpRequest by the computer, asking the device to cancel
+// Message is sent as a response to PinMatrixRequest by the computer, asking the device to cancel
 // pending action and reset to the default state.
-message OtpCancel {
-}
-
-// Message can be sent by the *device* as a response to any request.
-// Message asks computer to send back PinAck with the password associated with the device.
-//
-// Response: PinAck, PinCancel
-message PinRequest {
-   optional string message = 1;	// Human readable message
-}
-
-// Message is sent by the computer as a response to PinRequest previously sent by the device.
-message PinAck {
-    required string pin = 1;	// User must write down the password for accessing the device.
-}
-
-// Message is sent as a response to PinRequest by the computer, asking the device to cancel
-// pending action and reset to the default state.
-message PinCancel {
+message PinMatrixCancel {
 }
 
 // Request a sample of random data generated by hardware RNG. May be used
 // for tests of internal RNG.
 //
-// Response: OtpRequest, PinRequest, Entropy, Failure
+// Response: PinMatrixRequest, Entropy, Failure
 message GetEntropy {
     required uint32 size = 1;	// Size of randomly generated buffer
 }
@@ -169,9 +140,9 @@ message Entropy {
 // in SignTx method. Transaction won't be signed if requested transaction fees are above
 // current value.
 //
-// Response: Success, OtpRequest, PinRequest, Failure
+// Response: Success, PinMatrixRequest, Failure
 message SetMaxFeeKb {
-	required uint64 maxfee_kb= 1;	// Maximum allowed transaction fee in satoshis per kB
+	required uint64 maxfee_kb = 1;	// Maximum allowed transaction fee in satoshis per kB
 }
 
 // Ask device for it's current master public key. This may be used for generating
@@ -197,19 +168,16 @@ message Address {
 
 // Load seed and related internal settings from computer to the device. Existing seed is overwritten.
 //
-// Response: Success, OtpRequest, PinRequest, Failure
+// Response: Success, PinMatrixRequest, Failure
 message LoadDevice {
-    optional Algorithm algo = 1 [default=BIP32]; // Choose address generation algorithm
-    required string seed = 2;	// Seed encoded as a mnemonic (12 english words)
-    optional bool otp = 3 [default=true];	// Enable OTP for important actions?
-    optional bytes pin = 4;				// Set PIN protection for important actions
-    optional bool spv = 5 [default=true];	// Enable SPV verification for transaction inputs (if available on device)
+    required string seed = 1;	// Seed encoded as a mnemonic (12 english words)
+    optional bytes pin = 2;				// Set PIN protection for important actions
 }
 
 // Request device to do full-reset, to generate new seed
-// and ask user for new settings (OTP, PIN, SPV).
+// and ask user for new settings (PIN).
 // 
-// Response: Success, OtpRequest, PinRequest, Failure
+// Response: Success, PinMatrixRequest, Failure
 message ResetDevice {
 	optional bytes random = 7;	// Provide additional entropy for seed generation function.
 								// Recommended to provide 256 bytes of random data.
@@ -217,12 +185,10 @@ message ResetDevice {
 
 // Request the device to sign the transaction
 //
-// Response: TxRequest, OtpRequest, PinRequest, Failure
+// Response: TxRequest, PinMatrixRequest, Failure
 message SignTx {
     required uint32 outputs_count = 3;		// Count of outputs of the transaction 
     required uint32 inputs_count = 5; // Count of inputs of the transaction
-    optional bytes random = 6; 	// Provide additional entropy for signing function.
-    							// Recommended to provide 256 bytes of random data.
 }
 
 // Sent by the device as a response for SignTx. Device asks for information for signing transaction.

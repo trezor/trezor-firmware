@@ -2,4 +2,4 @@
 
 cd `dirname $0`
 
-protoc --python_out=../bitkeylib/ bitkey.proto
+protoc --python_out=../bitkeylib/ trezor.proto
