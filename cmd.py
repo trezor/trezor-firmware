@@ -44,7 +44,10 @@ def get_transport(transport_string, path):
         from bitkeylib.transport_hid import HidTransport
 
         if path == '':
-            path = list_usb()[0]
+            try:
+                path = list_usb()[0]
+            except IndexError:
+                raise Exception("No Trezor found on USB")
 
         return HidTransport(path)
  
