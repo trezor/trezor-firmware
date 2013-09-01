@@ -1,8 +1,7 @@
 import os
 import time
 
-import bitkey_pb2 as proto
-import random
+import trezor_pb2 as proto
 
 def show_message(message):
     print "MESSAGE FROM DEVICE:", message
@@ -40,8 +39,7 @@ class BitkeyClient(object):
         
     def init_device(self):
         self.master_public_key = None
-        self.session_id = ''.join([ chr(random.randrange(0, 255, 1)) for _ in xrange(0, 16) ])
-        self.features = self.call(proto.Initialize(session_id=self.session_id))
+        self.features = self.call(proto.Initialize())
         self.uuid = self.get_uuid()
         
     def get_master_public_key(self):
@@ -60,10 +58,9 @@ class BitkeyClient(object):
     def _pprint(self, msg):
         return "<%s>:\n%s" % (msg.__class__.__name__, msg)
 
-    def setup_debuglink(self, button=None, pin_correct=False, otp_correct=False):
+    def setup_debuglink(self, button=None, pin_correct=False):
         self.debug_button = button
         self.debug_pin = pin_correct
-        self.debug_otp = otp_correct
         
     def call(self, msg):
         if self.debug:
@@ -79,40 +76,24 @@ class BitkeyClient(object):
                 self.debuglink.press_button(self.debug_button)
             
             return self.call(proto.ButtonAck())   
-                
-        if isinstance(resp, proto.OtpRequest):
+                   
+        if isinstance(resp, proto.PinMatrixRequest):
             if self.debuglink:
-                otp = self.debuglink.read_otp()
-                if self.debug_otp:
-                    msg2 = otp
-                else:
-                    msg2 = proto.OtpAck(otp='__42__')
-            else:
-                otp = self.input_func("OTP required: ", resp.message)
-                msg2 = proto.OtpAck(otp=otp)
-            
-            return self.call(msg2)   
-    
-        if isinstance(resp, proto.PinRequest):
-            if self.debuglink:
-                pin = self.debuglink.read_pin()
                 if self.debug_pin:
-                    msg2 = pin
+                    pin = self.debuglink.read_pin()
+                    msg2 = proto.PinMatrixAck(pin=pin)
                 else:
-                    msg2 = proto.PinAck(pin='__42__')
+                    msg2 = proto.PinMatrixAck(pin='__42__')
             else:
                 pin = self.input_func("PIN required: ", resp.message)
-                msg2 = proto.PinAck(pin=pin)
+                msg2 = proto.PinMatrixAck(pin=pin)
                 
             return self.call(msg2)
         
         if isinstance(resp, proto.Failure):
             self.message_func(resp.message)
             
-            if resp.code == 3:
-                raise OtpException("OTP is invalid")
-                
-            elif resp.code == 4:    
+            if resp.code == 4:    
                 raise CallException("Action cancelled by user")
                 
             elif resp.code == 6:
@@ -233,15 +214,12 @@ class BitkeyClient(object):
 
     def reset_device(self):
         # Begin with device reset workflow
+        raise Exception("Not implemented")
         resp = self.call(proto.ResetDevice(random=self._get_local_entropy()))
         self.init_device()
         return isinstance(resp, proto.Success)
     
-    def load_device(self, algo, seed, otp, pin, spv):
-        if not self.debuglink:
-            raise Exception("DebugLink not available")
-        
-        if not self.debuglink.load_device(algo, seed, otp, pin, spv):
-            return False
+    def load_device(self, seed, pin):        
+        resp = self.call(proto.LoadDevice(seed=seed, pin=pin))
         self.init_device()
-        return True
+        return isinstance(resp, proto.Success)
