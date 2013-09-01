@@ -34,7 +34,7 @@ message Features {
 //
 // Response: None or Success
 message Ping {
-    optional string message = 1;	// Message will be sent back in Success message
+    optional bytes message = 1;	// Message will be sent back in Success message
 }
 
 // Virtually "press" the button on the device.
@@ -50,7 +50,8 @@ message DebugLinkDecision {
 // Response: DebugLinkState
 message DebugLinkGetState {
 	optional bool layout = 1;	// Request raw buffer of display
-	optional bool matrix = 3;	// Request current matrix
+	optional bool pin = 2;		// Request current pin
+	optional bool matrix = 3;	// Request current pin matrix 
 	optional bool seed = 4;		// Request current seed
 //	optional bool state = 5;	
 }
@@ -58,7 +59,8 @@ message DebugLinkGetState {
 // Response object reflecting device's current state. It can be received only over debug link connection.
 message DebugLinkState {
 	optional bytes layout = 1;	// Raw buffer of display
-	optional PinMatrixAck pin = 3;	// Current PIN matrix, blank if PIN is not set/enabled
+	optional bytes pin = 2;	// Current PIN, blank if PIN is not set/enabled
+	optional bytes matrix = 3;	// Current PIN matrix
 	optional bytes seed = 4;	// Current seed (in mnemonic format)
 //	optional bytes state = 5;
 }
