@@ -17,9 +17,6 @@ class CallException(Exception):
 class PinException(CallException):
     pass
 
-class OtpException(CallException):
-    pass
-
 class BitkeyClient(object):
     
     def __init__(self, transport, debuglink=None, 
@@ -80,10 +77,10 @@ class BitkeyClient(object):
         if isinstance(resp, proto.PinMatrixRequest):
             if self.debuglink:
                 if self.debug_pin:
-                    pin = self.debuglink.read_pin()
+                    pin = self.debuglink.read_pin_encoded()
                     msg2 = proto.PinMatrixAck(pin=pin)
                 else:
-                    msg2 = proto.PinMatrixAck(pin='__42__')
+                    msg2 = proto.PinMatrixAck(pin='444444222222')
             else:
                 pin = self.input_func("PIN required: ", resp.message)
                 msg2 = proto.PinMatrixAck(pin=pin)
@@ -106,6 +103,9 @@ class BitkeyClient(object):
             
         return resp
 
+    def ping(self, msg):
+        return self.call(proto.Ping(message=msg)).message
+    
     def get_uuid(self):
         return self.call(proto.GetUUID()).UUID
         

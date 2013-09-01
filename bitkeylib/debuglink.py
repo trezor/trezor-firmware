@@ -20,11 +20,16 @@ class DebugLink(object):
         print "Read PIN:", obj.pin
         print "Read matrix:", obj.matrix
         
+        return (obj.pin, obj.matrix)
+    
+    def read_pin_encoded(self):
+        pin, matrix = self.read_pin()
+        
         # Now we have real PIN and PIN matrix.
         # We have to encode that into encoded pin,
         # because application must send back positions
         # on keypad, not a real PIN.
-        pin_encoded = ''.join([ str(obj.matrix.index(p) + 1) for p in obj.pin])
+        pin_encoded = ''.join([ str(matrix.index(p) + 1) for p in pin])
         
         print "Encoded PIN:", pin_encoded
         self.pin_func(pin_encoded)
