@@ -134,7 +134,6 @@ class BitkeyClient(object):
         
         # Prepare and send initial message
         tx = proto.SignTx()
-        tx.random = self._get_local_entropy() # Provide additional entropy to the device
         tx.inputs_count = len(inputs)
         tx.outputs_count = len(outputs)            
         res = self.call(tx)
