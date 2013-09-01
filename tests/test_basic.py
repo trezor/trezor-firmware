@@ -14,7 +14,7 @@ from bitkeylib import proto
 
 class TestBasic(common.BitkeyTest):           
     def test_features(self):
-        features = self.bitkey.call(proto.Initialize(session_id=self.bitkey.session_id))
+        features = self.bitkey.call(proto.Initialize())
         
         # Result is the same as reported by BitkeyClient class
         self.assertEqual(features, self.bitkey.features)
