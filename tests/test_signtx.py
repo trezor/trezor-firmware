@@ -2,7 +2,7 @@ import unittest
 import common
 import binascii
 
-import bitkeylib.bitkey_pb2 as proto
+import bitkeylib.trezor_pb2 as proto
 
 '''
 ./electrum -w ~/.electrum-bitkey mktx 1FQVPnjrbkPWeA8poUoEnX9U3n9DyhAVtv 0.001
