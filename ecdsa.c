@@ -513,3 +513,23 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 	sig[1] = i;
 	*sig_len = i + 2;
 }
+
+void ecdsa_pubkey(uint8_t *priv_key, uint8_t *public_key_x, uint8_t *public_key_y)
+{
+	uint32_t i;
+	uint64_t temp;
+	curve_point G;
+	bignum256 da;
+	temp = 0;
+
+	for (i = 0; i < 8; i++) {
+		temp += (((uint64_t)read_be(priv_key + (7 - i) * 4)) << (2 * i));
+		da.val[i] = temp & 0x3FFFFFFF;
+		temp >>= 30;
+	}
+	da.val[8] = temp;
+	scalar_multiply(&da, &G);
+	write_der(&G.x, public_key_x);
+	write_der(&G.y, public_key_y);
+}
+
