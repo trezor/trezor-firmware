@@ -1,7 +1,9 @@
 /*
 	This file describes Protocol buffers messages for bitcoin hardware wallet devices.
 	
-	Author: slush <info@bitcoin.cz>
+	Author: Marek "slush" Palatinus <info@bitcoin.cz>
+	
+	Version: 0.1
 */
 
 // Specifies which script will be used for given transaction output. 
@@ -16,7 +18,7 @@ enum RequestType {
     TXOUTPUT = 1;
 }
 
-// Reset device's internal state
+// Ask for device details
 //
 // Response: Features
 message Initialize {
@@ -24,10 +26,10 @@ message Initialize {
 
 // Response object for Initialize.
 message Features {
-    optional string vendor = 2;	// Name of the manufacturer, e.g. "trezor" 
-    optional uint32 major_version = 3; // Major version of the device, e.g. 1
-    optional uint32 minor_version = 4;  // Minor version of the device, e.g. 0
-    optional uint64 maxfee_kb = 10;	// Maximum accepted fee per kilobyte of signed transaction
+    optional bytes vendor = 1;	// Name of the manufacturer, e.g. "trezor" 
+    optional uint32 major_version = 2; // Major version of the device, e.g. 1
+    optional uint32 minor_version = 3;  // Minor version of the device, e.g. 0
+    optional uint64 maxfee_kb = 4;	// Maximum accepted fee per kilobyte of signed transaction
 }
 
 // Test if device is live, device will send back the message on success
@@ -165,14 +167,14 @@ message GetAddress {
 }
 
 message Address {
-    required string address = 1; // Bitcoin address in base58 encoding corresponding to GetAddress(n) call
+    required bytes address = 1; // Bitcoin address in base58 encoding corresponding to GetAddress(n) call
 }
 
 // Load seed and related internal settings from computer to the device. Existing seed is overwritten.
 //
 // Response: Success, PinMatrixRequest, Failure
 message LoadDevice {
-    required string seed = 1;	// Seed encoded as a mnemonic (12 english words)
+    required bytes seed = 1;	// Seed encoded as a mnemonic (12 english words)
     optional bytes pin = 2;				// Set PIN protection for important actions
 }
 
@@ -220,7 +222,7 @@ message TxInput {
 // Transaction output for SignTx workflow. It is response to TxRequest message sent by the device.
 message TxOutput {
     required uint32 index = 1;			// Position of output in proposed transaction
-    required string address = 2;		// Target bitcoin address in base58 encoding
+    required bytes address = 2;			// Target bitcoin address in base58 encoding
     repeated uint32 address_n = 3;		// Has higher priority than "address". If the output is to myself, specify parameter for address generation algorithm.
     required uint64 amount = 4;			// Amount to send in satoshis
     required ScriptType script_type = 5;// Select output script type
