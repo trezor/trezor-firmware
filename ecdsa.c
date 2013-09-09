@@ -39,7 +39,7 @@ void mod(bignum256 *x, bignum256 const *prime)
 	int i = 8;
 	uint32_t temp;
 	// compare numbers
-	while (i >= 0 && prime->val[i] == x->val[i]) --i;
+	while (i >= 0 && prime->val[i] == x->val[i]) i--;
 	// if equal
 	if (i == -1) {
 		// set x to zero
@@ -73,7 +73,7 @@ void multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 	for (i = 0; i < 9; i++)
 	{
 		for (j = 0; j <= i; j++) {
-			temp += k->val[j] * (uint64_t)x->val[i-j];
+			temp += k->val[j] * (uint64_t)x->val[i - j];
 		}
 		res[i] = temp & 0x3FFFFFFFu;
 		temp >>= 30;
@@ -82,7 +82,7 @@ void multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 	for (; i < 17; i++)
 	{
 		for (j = i - 8; j < 9 ; j++) {
-			temp += k->val[j] * (uint64_t)x->val[i-j];
+			temp += k->val[j] * (uint64_t)x->val[i - j];
 		}
 		res[i] = temp & 0x3FFFFFFFu;
 		temp >>= 30;
@@ -91,13 +91,13 @@ void multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 	// compute modulo p division is only estimated so this may give result greater than prime but not bigger than 2 * prime
 	for (i = 16; i >= 8; i--) {
 		// estimate (res / prime)
-		coef = (res[i] >> 16) + (res[i+1] << 14);
+		coef = (res[i] >> 16) + (res[i + 1] << 14);
 		// substract (coef * prime) from res
-		temp = 0x1000000000000000llu + res[i-8] - prime->val[0] * (uint64_t)coef;
-		res[i-8] = temp & 0x3FFFFFFF;
+		temp = 0x1000000000000000llu + res[i - 8] - prime->val[0] * (uint64_t)coef;
+		res[i - 8] = temp & 0x3FFFFFFF;
 		for (j = 1; j < 9; j++) {
 			temp >>= 30;
-			temp += 0xFFFFFFFC0000000llu + res[i-8+j] - prime->val[j] * (uint64_t)coef;
+			temp += 0xFFFFFFFC0000000llu + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
 			res[i - 8 + j] = temp & 0x3FFFFFFF;
 		}
 	}
@@ -136,14 +136,14 @@ void inverse(bignum256 *x, bignum256 const *prime)
 	uint32_t i, j, limb;
 	bignum256 res;
 	res.val[0] = 1;
-	for (i = 1; i < 9;i++) {
+	for (i = 1; i < 9; i++) {
 		res.val[i] = 0;
 	}
-	for (i = 0; i < 9;i++) {
+	for (i = 0; i < 9; i++) {
 		limb = prime->val[i];
 		// this is not enough in general but fine for secp256k1 because prime->val[0] > 1
 		if (i == 0) limb -= 2;
-		for (j = 0;j < 30; j++) {
+		for (j = 0; j < 30; j++) {
 			if (i == 8 && limb == 0) break;
 			if (limb & 1) {
 				multiply(x, &res, prime);
@@ -225,14 +225,14 @@ void inverse(bignum256 *x, bignum256 const *prime)
 		}
 		
 		i = len1 - 1;
-		while (i>0 && u[i] == v[i]) i--;
+		while (i > 0 && u[i] == v[i]) i--;
 		if (u[i] > v[i]) {
 			temp = 0x40000000u + u[0] - v[0];
 			u[0] = (temp >> 1) & 0x1FFFFFFF;
 			temp >>= 30;
 			for (i = 1; i < len1; i++) {
 				temp += 0x3FFFFFFFu + u[i] - v[i];
-				u[i-1] += (temp & 1) << 29;
+				u[i - 1] += (temp & 1) << 29;
 				u[i] = (temp >> 1) & 0x1FFFFFFF;
 				temp >>= 30;
 			}
@@ -256,7 +256,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 			temp >>= 30;
 			for (i = 1; i < len1; i++) {
 				temp += 0x3FFFFFFFu + v[i] - u[i];
-				v[i-1] += (temp & 1) << 29;
+				v[i - 1] += (temp & 1) << 29;
 				v[i] = (temp >> 1) & 0x1FFFFFFF;
 				temp >>= 30;
 			}
@@ -279,7 +279,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 		k++;
 	}
 	i = 8;
-	while (i>0 && r[i] == prime->val[i]) i--;
+	while (i > 0 && r[i] == prime->val[i]) i--;
 	if (r[i] >= prime->val[i]) {
 		temp = 1;
 		for (i = 0; i < 9; i++) {
@@ -313,13 +313,13 @@ void inverse(bignum256 *x, bignum256 const *prime)
 				temp >>= 30;
 				for (i = 1; i < 9; i++) {
 					temp += r[i] + prime->val[i];
-					r[i-1] += (temp & 1) << 29;
+					r[i - 1] += (temp & 1) << 29;
 					r[i] = (temp >> 1) & 0x1FFFFFFF;
 					temp >>= 30;
 				}
 			} else {
 				for (i = 0; i < 8; i++) {
-					r[i] = (r[i] >> 1) | ((r[i+1] & 1) << 29);
+					r[i] = (r[i] >> 1) | ((r[i + 1] & 1) << 29);
 				}
 				r[8] = r[8] >> 1;
 			}
@@ -420,7 +420,7 @@ void scalar_multiply(bignum256 *k, curve_point *res)
 	for (i = 0; i < 9; i++) {
 		for (j = 0; j < 30; j++) {
 			if (i == 8 && (k->val[i] >> j) == 0) break;
-			if (k->val[i] & (1u<<j)) {
+			if (k->val[i] & (1u << j)) {
 				if (is_zero) {
 #ifdef USE_PRECOMPUTED_CP
 					memcpy(res, secp256k1_cp + exp, sizeof(curve_point));
@@ -541,7 +541,7 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 		multiply(&R.x, da, &order256k1);
 		for (i = 0; i < 8; i++) {
 			da->val[i] += z.val[i];
-			da->val[i+1] += (da->val[i] >> 30);
+			da->val[i + 1] += (da->val[i] >> 30);
 			da->val[i] &= 0x3FFFFFFF;
 		}
 		da->val[8] += z.val[8];
@@ -557,7 +557,7 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 	write_der(&R.x, sig + 2);
 	i = sig[3] + 2;
 	write_der(&k, sig + 2 + i);
-	i += sig[3+i] + 2;
+	i += sig[3 + i] + 2;
 	sig[0] = 0x30;
 	sig[1] = i;
 	*sig_len = i + 2;
@@ -578,7 +578,7 @@ void ecdsa_get_public_key(uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key
 	write_der(&R.x, pub_key + 2);
 	i = pub_key[3] + 2;
 	write_der(&R.y, pub_key + 2 + i);
-	i += pub_key[3+i] + 2;
+	i += pub_key[3 + i] + 2;
 	pub_key[0] = 0x30;
 	pub_key[1] = i;
 	*pub_key_len = i + 2;
@@ -597,7 +597,7 @@ void read_der_single(uint8_t *der, bignum256 *elem)
 		val[j] = der[i];
 		i--; j--;
 	}
-	for (i = 0;i <= j; i++) {
+	for (i = 0; i <= j; i++) {
 		val[i] = 0;
 	}
 	read_32byte_big_endian(val, elem);
@@ -614,16 +614,16 @@ void read_der_pair(uint8_t *der, bignum256 *elem1, bignum256 *elem2)
 int is_zero(const bignum256 *a)
 {
 	int i;
-	for (i = 0;i < 9; i++) {
+	for (i = 0; i < 9; i++) {
 		if (a->val[i] != 0) return 0;
 	}
 	return 1;
 }
 
-int bignum256_less(const bignum256 *a, const bignum256 *b)
+int is_less(const bignum256 *a, const bignum256 *b)
 {
 	int i;
-	for (i = 8;i >= 0; i--) {
+	for (i = 8; i >= 0; i--) {
 		if (a->val[i] < b->val[i]) return 1;
 		if (a->val[i] > b->val[i]) return 0;
 	}
@@ -640,7 +640,7 @@ int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t ms
 {
 	int i, j;
 	uint8_t hash[32];
-	curve_point pub,res;
+	curve_point pub, res;
 	bignum256 r, s, z;
 	int res_is_zero = 0;
 	// compute hash function of message
@@ -654,8 +654,8 @@ int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t ms
 
 	if (is_zero(&r) ||
 	    is_zero(&s) ||
-	    (!bignum256_less(&r,&order256k1)) ||
-	    (!bignum256_less(&s,&order256k1))) return 1;
+	    (!is_less(&r, &order256k1)) ||
+	    (!is_less(&s, &order256k1))) return 1;
 
 	inverse(&s, &order256k1); // s^-1
 	multiply(&s, &z, &order256k1); // z*s^-1
@@ -683,7 +683,7 @@ int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t ms
 
 	mod(&(res.x), &prime256k1);
 	mod(&(res.x), &order256k1);
-	for (i = 0;i < 9; i++) {
+	for (i = 0; i < 9; i++) {
 		if (res.x.val[i] != r.val[i]) {
 			return 1;
 		}

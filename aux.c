@@ -40,6 +40,6 @@ inline void write_be(uint8_t *data, uint32_t x)
 {
 	data[0] = x >> 24;
 	data[1] = x >> 16;
-	data[2] = x >>8;
+	data[2] = x >> 8;
 	data[3] = x;
 }

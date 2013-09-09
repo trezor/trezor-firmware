@@ -43,9 +43,9 @@ void process_chunk(const uint8_t *chunk, uint32_t *hash)
 		w[i] = read_be(chunk + 4 * i);
 	}
 	for (; i < 64; i++) {
-		s0 = ror(w[i-15], 7) ^ ror(w[i-15], 18) ^ (w[i-15]>>3);
-		s1 = ror(w[i-2], 17) ^ ror(w[i-2], 19) ^ (w[i-2]>>10);
-		w[i] = w[i-16] + s0 + w[i-7] + s1;
+		s0 = ror(w[i - 15], 7) ^ ror(w[i - 15], 18) ^ (w[i - 15] >> 3);
+		s1 = ror(w[i - 2], 17) ^ ror(w[i - 2], 19) ^ (w[i - 2] >> 10);
+		w[i] = w[i - 16] + s0 + w[i - 7] + s1;
 	}
 	a = hash[0];
 	b = hash[1];
