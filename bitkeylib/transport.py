@@ -7,6 +7,7 @@ class NotImplementedException(Exception):
 class Transport(object):
     def __init__(self, device, *args, **kwargs):
         self.device = device
+        self.session_depth = 0
         self._open()
     
     def _open(self):
@@ -21,8 +22,25 @@ class Transport(object):
     def _read(self):
         raise NotImplementedException("Not implemented")
     
+    def _session_begin(self):
+        pass
+    
+    def _session_end(self):
+        pass
+    
     def ready_to_read(self):
         raise NotImplementedException("Not implemented")
+    
+    def session_begin(self):
+        if self.session_depth == 0:
+            self._session_begin()
+        self.session_depth += 1
+    
+    def session_end(self):
+        self.session_depth -= 1
+        self.session_depth = max(0, self.session_depth)
+        if self.session_depth == 0:
+            self._session_end()
         
     def close(self):
         self._close()
