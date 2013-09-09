@@ -32,8 +32,8 @@
 
 int main()
 {
-	uint8_t sig[70], priv_key[32], msg[256], buffer[1000], hash[32], *p;
-	uint32_t sig_len, i, j, msg_len;
+	uint8_t sig[70], pub_key[70], priv_key[32], msg[256], buffer[1000], hash[32], *p;
+	uint32_t sig_len, pub_key_len, i, j, msg_len;
 	SHA256_CTX sha256;
 	EC_GROUP *ecgroup;
 	int cnt = 0;
@@ -77,6 +77,15 @@ int main()
 		// use our ECDSA signer to sign the message with the key
 		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
 
+		// generate public key from private key
+		ecdsa_get_public_key(priv_key, pub_key, &pub_key_len);
+
+		// use our ECDSA verifier to verify the message signature
+		if (ecdsa_verify(pub_key, sig, msg, msg_len) != 0) {
+			printf("MicroECDSA verification failed\n");
+			break;
+		}
+
 		// copy signature to the OpenSSL struct
 		p = sig;
 		ECDSA_SIG *signature = d2i_ECDSA_SIG(NULL, (const uint8_t **)&p, sig_len);
@@ -88,7 +97,7 @@ int main()
 
 		// verify all went well, i.e. we can decrypt our signature with OpenSSL
 		if (ECDSA_do_verify(hash, 32, signature, eckey) != 1) {
-			printf("Verification failed\n");
+			printf("OpenSSL verification failed\n");
 			break;
 		}
 		ECDSA_SIG_free(signature);

@@ -31,6 +31,8 @@
 #include "secp256k1.h"
 #include "aux.h"
 
+#define INVERSE_FAST 1
+
 // assumes x < 2*prime
 void mod(bignum256 *x, bignum256 const *prime)
 {
@@ -123,7 +125,40 @@ void fast_mod(bignum256 *x, bignum256 const *prime)
 	}
 }
 
-// in field G_prime
+#ifndef INVERSE_FAST
+
+#ifdef USE_PRECOMPUTED_IV
+#warning USE_PRECOMPUTED_IV will not be used, please undef
+#endif
+// in field G_prime, small but slow
+void inverse(bignum256 *x, bignum256 const *prime)
+{
+	uint32_t i, j, limb;
+	bignum256 res;
+	res.val[0] = 1;
+	for (i = 1; i < 9;i++) {
+		res.val[i] = 0;
+	}
+	for (i = 0; i < 9;i++) {
+		limb = prime->val[i];
+		// this is not enough in general but fine for secp256k1 because prime->val[0] > 1
+		if (i == 0) limb -= 2;
+		for (j = 0;j < 30; j++) {
+			if (i == 8 && limb == 0) break;
+			if (limb & 1) {
+				multiply(x, &res, prime);
+			}
+			limb >>= 1;
+			multiply(x, x, prime);
+		}
+	}
+	mod(&res, prime);
+	memcpy(x, &res, sizeof(bignum256));
+}
+
+#else
+
+// in field G_prime, big but fast
 void inverse(bignum256 *x, bignum256 const *prime)
 {
 	int i, j, k, len1, len2, mask;
@@ -294,6 +329,7 @@ void inverse(bignum256 *x, bignum256 const *prime)
 		}
 	}
 }
+#endif
 
 // res = a - b
 // b < 2*prime; result not normalized
@@ -337,7 +373,6 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 	memcpy(&(cp2->y), &yr, sizeof(bignum256));
 }
 
-#ifndef USE_PRECOMPUTED_CP
 // cp = cp + cp
 void point_double(curve_point *cp)
 {
@@ -368,7 +403,6 @@ void point_double(curve_point *cp)
 	memcpy(&(cp->x), &xr, sizeof(bignum256));
 	memcpy(&(cp->y), &yr, sizeof(bignum256));
 }
-#endif
 
 // res = k * G
 void scalar_multiply(bignum256 *k, curve_point *res)
@@ -437,6 +471,19 @@ void write_der(const bignum256 *x, uint8_t *buf)
 	buf[1] = len;
 }
 
+void read_32byte_big_endian(uint8_t *in_number, bignum256 *out_number)
+{
+	uint32_t i;
+	uint64_t temp;
+	temp = 0;
+	for (i = 0; i < 8; i++) {
+		temp += (((uint64_t)read_be(in_number + (7 - i) * 4)) << (2 * i));
+		out_number->val[i]= temp & 0x3FFFFFFF;
+		temp >>= 30;
+	}
+	out_number->val[8] = temp;
+}
+
 // uses secp256k1 curve
 // priv_key is a 32 byte big endian stored number
 // msg is a data to be signed
@@ -446,7 +493,6 @@ void write_der(const bignum256 *x, uint8_t *buf)
 void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
 {
 	uint32_t i;
-	uint64_t temp;
 	uint8_t hash[32];
 	curve_point R;
 	bignum256 k, z;
@@ -456,13 +502,7 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 	// if double hash is required uncomment the following line:
 	// sha256(hash, 32, hash);
 
-	temp = 0;
-	for (i = 0; i < 8; i++) {
-		temp += (((uint64_t)read_be(hash + (7 - i) * 4)) << (2 * i));
-		z.val[i]= temp & 0x3FFFFFFF;
-		temp >>= 30;
-	}
-	z.val[8] = temp;
+	read_32byte_big_endian(hash, &z);
 	for (;;) {
 		// generate random number k
 		for (i = 0; i < 8; i++) {
@@ -482,13 +522,7 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 		}
 		if (i == 9) continue;
 		inverse(&k, &order256k1);
-		temp = 0;
-		for (i = 0; i < 8; i++) {
-			temp += (((uint64_t)read_be(priv_key + (7 - i) * 4)) << (2 * i));
-			da->val[i] = temp & 0x3FFFFFFF;
-			temp >>= 30;
-		}
-		da->val[8] = temp;
+		read_32byte_big_endian(priv_key, da);
 		multiply(&R.x, da, &order256k1);
 		for (i = 0; i < 8; i++) {
 			da->val[i] += z.val[i];
@@ -514,22 +548,130 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 	*sig_len = i + 2;
 }
 
-void ecdsa_pubkey(uint8_t *priv_key, uint8_t *public_key_x, uint8_t *public_key_y)
+// uses secp256k1 curve
+// priv_key is a 32 byte big endian stored number
+// pub_key is at least 70 bytes long array for the public key
+void ecdsa_get_public_key(uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len)
 {
 	uint32_t i;
-	uint64_t temp;
-	curve_point G;
-	bignum256 da;
-	temp = 0;
+	curve_point R;
+	bignum256 k;
 
-	for (i = 0; i < 8; i++) {
-		temp += (((uint64_t)read_be(priv_key + (7 - i) * 4)) << (2 * i));
-		da.val[i] = temp & 0x3FFFFFFF;
-		temp >>= 30;
-	}
-	da.val[8] = temp;
-	scalar_multiply(&da, &G);
-	write_der(&G.x, public_key_x);
-	write_der(&G.y, public_key_y);
+	read_32byte_big_endian(priv_key, &k);
+	// compute k*G
+	scalar_multiply(&k, &R);
+	write_der(&R.x, pub_key + 2);
+	i = pub_key[3] + 2;
+	write_der(&R.y, pub_key + 2 + i);
+	i += pub_key[3+i] + 2;
+	pub_key[0] = 0x30;
+	pub_key[1] = i;
+	*pub_key_len = i + 2;
 }
 
+// does not validate that this is valid der encoding
+// assumes it is der encoding containing 1 number
+void read_der_single(uint8_t *der, bignum256 *elem)
+{
+	int i, j;
+	uint8_t val[32];
+	i = 1 + der[1];
+	j = 31;
+	// we ignore all bytes after 32nd. if there are any, those are either zero or invalid for secp256k1
+	while (i > 1 && j >= 0) {
+		val[j] = der[i];
+		i--; j--;
+	}
+	for (i = 0;i <= j; i++) {
+		val[i] = 0;
+	}
+	read_32byte_big_endian(val, elem);
+}
+
+// does not validate that this is valid der encoding
+// assumes it is der encoding containing 2 numbers (either public key or ecdsa signature)
+void read_der_pair(uint8_t *der, bignum256 *elem1, bignum256 *elem2)
+{
+	read_der_single(der + 2, elem1);
+	read_der_single(der + 4 + der[3], elem2);
+}
+
+int is_zero(const bignum256 *a)
+{
+	int i;
+	for (i = 0;i < 9; i++) {
+		if (a->val[i] != 0) return 0;
+	}
+	return 1;
+}
+
+int bignum256_less(const bignum256 *a, const bignum256 *b)
+{
+	int i;
+	for (i = 8;i >= 0; i--) {
+		if (a->val[i] < b->val[i]) return 1;
+		if (a->val[i] > b->val[i]) return 0;
+	}
+	return 0;
+}
+
+// uses secp256k1 curve
+// pub_key and signature are DER encoded
+// msg is a data that was signed
+// msg_len is the message length
+// returns 0 if verification succeeded
+// it is assumed that public key is valid otherwise calling this does not make much sense
+int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t msg_len)
+{
+	int i, j;
+	uint8_t hash[32];
+	curve_point pub,res;
+	bignum256 r, s, z;
+	int res_is_zero = 0;
+	// compute hash function of message
+	sha256(msg, msg_len, hash);
+	// if double hash is required uncomment the following line:
+	// sha256(hash, 32, hash);
+
+	read_32byte_big_endian(hash, &z);
+	read_der_pair(pub_key, &pub.x, &pub.y);
+	read_der_pair(signature, &r, &s);
+
+	if (is_zero(&r) ||
+	    is_zero(&s) ||
+	    (!bignum256_less(&r,&order256k1)) ||
+	    (!bignum256_less(&s,&order256k1))) return 1;
+
+	inverse(&s, &order256k1); // s^-1
+	multiply(&s, &z, &order256k1); // z*s^-1
+	mod(&z, &order256k1);
+	multiply(&r, &s, &order256k1); // r*s^-1
+	mod(&s, &order256k1);
+	if (is_zero(&z)) {
+		// our message hashes to zero
+		// I don't expect this to happen any time soon
+		res_is_zero = 1;
+	} else {
+		scalar_multiply(&z, &res);
+	}
+
+	// TODO both pub and res can be infinity, can have y = 0 OR can be equal
+	for (i = 0; i < 9; i++) {
+		for (j = 0; j < 30; j++) {
+			if (i == 8 && (s.val[i] >> j) == 0) break;
+			if (s.val[i] & (1u << j)) {
+				point_add(&pub, &res);
+			}
+			point_double(&pub);
+		}
+	}
+
+	mod(&(res.x), &prime256k1);
+	mod(&(res.x), &order256k1);
+	for (i = 0;i < 9; i++) {
+		if (res.x.val[i] != r.val[i]) {
+			return 1;
+		}
+	}
+	return 0;
+}

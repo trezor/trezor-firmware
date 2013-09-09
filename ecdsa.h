@@ -28,6 +28,7 @@
 
 // uses secp256k1 curve
 void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len);
-void ecdsa_pubkey(uint8_t *priv_key, uint8_t *public_key_x, uint8_t *public_key_y);
+void ecdsa_get_public_key(uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len);
+int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t msg_len);
 
 #endif
