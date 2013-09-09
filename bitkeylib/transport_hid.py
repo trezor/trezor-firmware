@@ -22,7 +22,7 @@ class HidTransport(Transport):
         self.hid = None
         self.buffer = ''
         super(HidTransport, self).__init__(device, *args, **kwargs)
-        
+
     @classmethod
     def enumerate(cls):
         devices = []
@@ -35,7 +35,7 @@ class HidTransport(Transport):
                 devices.append("0x%04x:0x%04x:%s" % (vendor_id, product_id, serial_number))
                 
         return devices
-    
+        
     def _open(self):
         self.buffer = ''
         path = self.device.split(':')
@@ -53,13 +53,10 @@ class HidTransport(Transport):
     
     def _write(self, msg):
         msg = bytearray(msg)
-        while len(msg):
-            to_send = min(63, len(msg))
-            
-            #print [to_send,] + list(msg[:to_send])
-            self.hid.write([to_send,] + list(msg[:to_send]))
-            
-            msg = msg[to_send:]
+        while len(msg):            
+            # Report ID, data padded to 62 bytes
+            self.hid.write([63,] + list(msg[:63]) + [0]*(63-len(msg[0:63])))
+            msg = msg[63:]
             
     def _read(self):
         (msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
@@ -68,14 +65,15 @@ class HidTransport(Transport):
     def _raw_read(self, length):        
         while len(self.buffer) < length:
             data = self.hid.read(64)
+
             report_id = data[0]
             
             if report_id > 63:
                 # Command report
                 raise Exception("Not implemented")
-                            
-            # Payload received
-            self.buffer += str(bytearray(data[1:report_id+1]))
+                                     
+            # Payload received, skip the report ID
+            self.buffer += str(bytearray(data[1:64]))
 
         ret = self.buffer[:length]
         self.buffer = self.buffer[length:]
