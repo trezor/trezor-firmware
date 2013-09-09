@@ -3,7 +3,7 @@ import binascii
 import argparse
 import json
 
-import bitkeylib.bitkey_pb2 as proto
+import bitkeylib.trezor_pb2 as proto
 from bitkeylib.client import BitkeyClient
 from bitkeylib.debuglink import DebugLink
    
@@ -83,6 +83,7 @@ class Commands(object):
  
     def get_address(self, args):
         return self.client.get_address(args.n)
+    
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
 
@@ -95,7 +96,7 @@ class Commands(object):
     def load_device(self, args):
         seed = ' '.join(args.seed)
 
-        return self.client.load_device(seed, args.otp, args.pin, args.spv) 
+        return self.client.load_device(seed, args.pin) 
         
     list.help = 'List connected Trezor USB devices'
     get_address.help = 'Get bitcoin address in base58 encoding'
@@ -115,8 +116,6 @@ class Commands(object):
     load_device.arguments = (
         (('-s', '--seed'), {'type': str, 'nargs': '+'}),
         (('-n', '--pin'), {'type': str, 'default': ''}),
-        (('-o', '--otp'), {'action': 'store_true'}),
-        (('-p', '--spv'), {'action': 'store_true'}),
     )
 
 def list_usb():
@@ -144,7 +143,7 @@ def main():
         debuglink = None
         
     client = BitkeyClient(transport, debuglink=debuglink)
-    client.setup_debuglink(button=True, otp_correct=True, pin_correct=True)
+    client.setup_debuglink(button=True, pin_correct=True)
     cmds = Commands(client)
     
     res = args.func(cmds, args)
