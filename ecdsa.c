@@ -484,6 +484,27 @@ void read_32byte_big_endian(uint8_t *in_number, bignum256 *out_number)
 	out_number->val[8] = temp;
 }
 
+// generate random K for signing
+void generate_k_random(bignum256 *k) {
+	int i;
+	for (;;) {
+		for (i = 0; i < 8; i++) {
+			k->val[i] = random32() & 0x3FFFFFFF;
+		}
+		k->val[8] = random32() & 0xFFFF;
+		// if k is too big or too small, we don't like it
+		if (k->val[5] == 0x3FFFFFFF && k->val[6] == 0x3FFFFFFF && k->val[7] == 0x3FFFFFFF && k->val[8] == 0xFFFF) continue;
+		if (k->val[5] == 0x0 && k->val[6] == 0x0 && k->val[7] == 0x0 && k->val[8] == 0x0) continue;
+		return;
+	}
+}
+
+// generate K in a deterministic way, according to RFC6979
+// http://tools.ietf.org/html/rfc6979
+void generate_k_rfc6979(bignum256 *k, uint8_t *priv_key, uint8_t *hash) {
+	// TODO
+}
+
 // uses secp256k1 curve
 // priv_key is a 32 byte big endian stored number
 // msg is a data to be signed
@@ -492,7 +513,7 @@ void read_32byte_big_endian(uint8_t *in_number, bignum256 *out_number)
 // sig_len is the pointer to a uint that will contain resulting signature length. note that ((*sig_len) == sig[1]+2)
 void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
 {
-	uint32_t i;
+	int i;
 	uint8_t hash[32];
 	curve_point R;
 	bignum256 k, z;
@@ -505,13 +526,7 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 	read_32byte_big_endian(hash, &z);
 	for (;;) {
 		// generate random number k
-		for (i = 0; i < 8; i++) {
-			k.val[i] = random32() & 0x3FFFFFFF;
-		}
-		k.val[8] = random32() & 0xFFFF;
-		// if k is too big or too small, we don't like it
-		if (k.val[5] == 0x3FFFFFFF && k.val[6] == 0x3FFFFFFF && k.val[7] == 0x3FFFFFFF && k.val[8] == 0xFFFF) continue;
-		if (k.val[5] == 0x0 && k.val[6] == 0x0 && k.val[7] == 0x0 && k.val[8] == 0x0) continue;
+		generate_k_random(&k);
 		// compute k*G
 		scalar_multiply(&k, &R);
 		// r = (rx mod n)
