@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include "rand.h"
-#include "sha256.h"
+#include "sha2.h"
 #include "ecdsa.h"
 #include "secp256k1.h"
 #include "aux.h"
@@ -519,9 +519,9 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 	bignum256 k, z;
 	bignum256 *da = &R.y;
 	// compute hash function of message
-	sha256(msg, msg_len, hash);
+	SHA256_Raw(msg, msg_len, hash);
 	// if double hash is required uncomment the following line:
-	// sha256(hash, 32, hash);
+	// SHA256_Raw(hash, 32, hash);
 
 	read_32byte_big_endian(hash, &z);
 	for (;;) {
@@ -644,9 +644,9 @@ int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t ms
 	bignum256 r, s, z;
 	int res_is_zero = 0;
 	// compute hash function of message
-	sha256(msg, msg_len, hash);
+	SHA256_Raw(msg, msg_len, hash);
 	// if double hash is required uncomment the following line:
-	// sha256(hash, 32, hash);
+	// SHA256_Raw(hash, 32, hash);
 
 	read_32byte_big_endian(hash, &z);
 	read_der_pair(pub_key, &pub.x, &pub.y);
