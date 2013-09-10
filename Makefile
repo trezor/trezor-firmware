@@ -1,6 +1,6 @@
 CC     = gcc
 CFLAGS = -Wall -Os
-OBJS   = aux.o ecdsa.o secp256k1.o sha2.o rand.o
+OBJS   = aux.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o
 
 all: test-speed test-verify
 
