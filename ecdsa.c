@@ -27,8 +27,8 @@
 
 #include "rand.h"
 #include "sha2.h"
+#include "hmac.h"
 #include "ecdsa.h"
-#include "secp256k1.h"
 #include "aux.h"
 
 #define INVERSE_FAST 1
@@ -471,17 +471,47 @@ void write_der(const bignum256 *x, uint8_t *buf)
 	buf[1] = len;
 }
 
-void read_32byte_big_endian(uint8_t *in_number, bignum256 *out_number)
+void read_32byte_big_endian(const uint8_t *in_number, bignum256 *out_number)
 {
-	uint32_t i;
-	uint64_t temp;
-	temp = 0;
+	int i;
+	uint64_t temp = 0;
 	for (i = 0; i < 8; i++) {
 		temp += (((uint64_t)read_be(in_number + (7 - i) * 4)) << (2 * i));
 		out_number->val[i]= temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}
 	out_number->val[8] = temp;
+}
+
+void write_32byte_big_endian(const bignum256 *in_number, uint8_t *out_number)
+{
+	int i, shift = 30 + 16 - 32;
+	uint64_t temp = in_number->val[8];
+	for (i = 0; i < 8; i++) {
+		temp <<= 30;
+		temp |= in_number->val[7 - i];
+		write_be(out_number + i * 4, temp >> shift);
+		shift -= 2;
+	}
+}
+
+int is_zero(const bignum256 *a)
+{
+	int i;
+	for (i = 0; i < 9; i++) {
+		if (a->val[i] != 0) return 0;
+	}
+	return 1;
+}
+
+int is_less(const bignum256 *a, const bignum256 *b)
+{
+	int i;
+	for (i = 8; i >= 0; i--) {
+		if (a->val[i] < b->val[i]) return 1;
+		if (a->val[i] > b->val[i]) return 0;
+	}
+	return 0;
 }
 
 // generate random K for signing
@@ -501,8 +531,42 @@ void generate_k_random(bignum256 *k) {
 
 // generate K in a deterministic way, according to RFC6979
 // http://tools.ietf.org/html/rfc6979
-void generate_k_rfc6979(bignum256 *k, uint8_t *priv_key, uint8_t *hash) {
-	// TODO
+void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash)
+{
+	uint8_t v[32], k[32], bx[2*32], buf[32 + 1 + sizeof(bx)], t[32];
+	bignum256 z1;
+
+	memcpy(bx, priv_key, 32);
+	read_32byte_big_endian(hash, &z1);
+	mod(&z1, &order256k1);
+	write_32byte_big_endian(&z1, bx + 32);
+
+	memset(v, 1, sizeof(v));
+	memset(k, 0, sizeof(k));
+
+	memcpy(buf, v, sizeof(v));
+	buf[sizeof(v)] = 0x00;
+	memcpy(buf + sizeof(v) + 1, bx, 64);
+	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
+	hmac_sha256(k, sizeof(k), v, sizeof(v), v);
+
+	memcpy(buf, v, sizeof(v));
+	buf[sizeof(v)] = 0x01;
+	memcpy(buf + sizeof(v) + 1, bx, 64);
+	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
+	hmac_sha256(k, sizeof(k), v, sizeof(k), v);
+
+	for (;;) {
+		hmac_sha256(k, sizeof(k), v, sizeof(v), t);
+		read_32byte_big_endian(t, secret);
+		if ( !is_zero(secret) && is_less(secret, &order256k1) ) {
+			return;
+		}
+		memcpy(buf, v, sizeof(v));
+		buf[sizeof(v)] = 0x00;
+		hmac_sha256(k, sizeof(k), buf, sizeof(v) + 1, k);
+		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
+	}
 }
 
 // uses secp256k1 curve
@@ -511,7 +575,7 @@ void generate_k_rfc6979(bignum256 *k, uint8_t *priv_key, uint8_t *hash) {
 // msg_len is the message length
 // sig is at least 70 bytes long array for the signature
 // sig_len is the pointer to a uint that will contain resulting signature length. note that ((*sig_len) == sig[1]+2)
-void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
+void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
 {
 	int i;
 	uint8_t hash[32];
@@ -525,8 +589,13 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 
 	read_32byte_big_endian(hash, &z);
 	for (;;) {
+
 		// generate random number k
-		generate_k_random(&k);
+		//generate_k_random(&k);
+
+		// generate K deterministically
+		generate_k_rfc6979(&k, priv_key, hash);
+
 		// compute k*G
 		scalar_multiply(&k, &R);
 		// r = (rx mod n)
@@ -566,7 +635,7 @@ void ecdsa_sign(uint8_t *priv_key, uint8_t *msg, uint32_t msg_len, uint8_t *sig,
 // uses secp256k1 curve
 // priv_key is a 32 byte big endian stored number
 // pub_key is at least 70 bytes long array for the public key
-void ecdsa_get_public_key(uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len)
+void ecdsa_get_public_key(const uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len)
 {
 	uint32_t i;
 	curve_point R;
@@ -586,7 +655,7 @@ void ecdsa_get_public_key(uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key
 
 // does not validate that this is valid der encoding
 // assumes it is der encoding containing 1 number
-void read_der_single(uint8_t *der, bignum256 *elem)
+void read_der_single(const uint8_t *der, bignum256 *elem)
 {
 	int i, j;
 	uint8_t val[32];
@@ -605,29 +674,10 @@ void read_der_single(uint8_t *der, bignum256 *elem)
 
 // does not validate that this is valid der encoding
 // assumes it is der encoding containing 2 numbers (either public key or ecdsa signature)
-void read_der_pair(uint8_t *der, bignum256 *elem1, bignum256 *elem2)
+void read_der_pair(const uint8_t *der, bignum256 *elem1, bignum256 *elem2)
 {
 	read_der_single(der + 2, elem1);
 	read_der_single(der + 4 + der[3], elem2);
-}
-
-int is_zero(const bignum256 *a)
-{
-	int i;
-	for (i = 0; i < 9; i++) {
-		if (a->val[i] != 0) return 0;
-	}
-	return 1;
-}
-
-int is_less(const bignum256 *a, const bignum256 *b)
-{
-	int i;
-	for (i = 8; i >= 0; i--) {
-		if (a->val[i] < b->val[i]) return 1;
-		if (a->val[i] > b->val[i]) return 0;
-	}
-	return 0;
 }
 
 // uses secp256k1 curve
@@ -636,7 +686,7 @@ int is_less(const bignum256 *a, const bignum256 *b)
 // msg_len is the message length
 // returns 0 if verification succeeded
 // it is assumed that public key is valid otherwise calling this does not make much sense
-int ecdsa_verify(uint8_t *pub_key, uint8_t *signature, uint8_t *msg, uint32_t msg_len)
+int ecdsa_verify(const uint8_t *pub_key, const uint8_t *signature, const uint8_t *msg, uint32_t msg_len)
 {
 	int i, j;
 	uint8_t hash[32];

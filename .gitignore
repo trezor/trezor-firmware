@@ -1,3 +1,4 @@
 *.o
+test-rfc6979
 test-speed
 test-verify

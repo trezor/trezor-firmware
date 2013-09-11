@@ -11,6 +11,8 @@ Notes
 a) the signer only understands secp256k1 elliptic curve
 
 b) there are executables:
+   * test-rfc6979
+     - check RFC 6979 algorithm for generating deterministic K
    * test-speed
      - check signing speed (sign 100x and compute speed from duration)
    * test-verify

@@ -27,12 +27,12 @@
 #include <stdint.h>
 
 // rotate uint32 right
-inline uint32_t ror(const uint32_t x, const int n);
+uint32_t ror(const uint32_t x, const int n);
 
 // read 4 big endian bytes into uint32
-inline uint32_t read_be(const uint8_t *data);
+uint32_t read_be(const uint8_t *data);
 
 // write 4 big endian bytes
-inline void write_be(uint8_t *data, uint32_t x);
+void write_be(uint8_t *data, uint32_t x);
 
 #endif

@@ -1,5 +1,4 @@
 /**
- * Copyright (c) 2013 Tomas Dzetkulic
  * Copyright (c) 2013 Pavol Rusnak
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -21,16 +20,32 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __ECDSA_H__
-#define __ECDSA_H__
+#include <stdio.h>
+#include "ecdsa.h"
+#include "sha2.h"
 
-#include <stdint.h>
+bignum256 k;
+uint8_t kb[32];
+uint8_t priv[32] = {0xcc, 0xa9, 0xfb, 0xcc, 0x1b, 0x41, 0xe5, 0xa9, 0x5d, 0x36, 0x9e, 0xaa, 0x6d, 0xdc, 0xff, 0x73, 0xb6, 0x1a, 0x4e, 0xfa, 0xa2, 0x79, 0xcf, 0xc6, 0x56, 0x7e, 0x8d, 0xaa, 0x39, 0xcb, 0xaf, 0x50};
+uint8_t hash[32];
 
-#include "secp256k1.h"
+void write_32byte_big_endian(const bignum256 *in_number, uint8_t *out_number);
+void generate_k_rfc6979(bignum256 *k, const uint8_t *priv_key, const uint8_t *hash);
 
-// uses secp256k1 curve
-void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len);
-void ecdsa_get_public_key(const uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len);
-int ecdsa_verify(const uint8_t *pub_key, const uint8_t *signature, const uint8_t *msg, uint32_t msg_len);
+int main()
+{
+	int i;
 
-#endif
+	SHA256_Raw((uint8_t *)"sample", 6, hash);
+	printf("hash     : ");
+	for (i = 0; i < 32; i++) printf("%02x", hash[i]); printf("\n");
+	generate_k_rfc6979(&k, priv, hash);
+	write_32byte_big_endian(&k, kb);
+
+	printf("expected : 2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3\n");
+	printf("got      : ");
+	for (i = 0; i < 32; i++) printf("%02x", kb[i]);
+	printf("\n");
+
+	return 0;
+}
