@@ -37,7 +37,6 @@ class BitkeyClient(object):
     def init_device(self):
         self.master_public_key = None
         self.features = self.call(proto.Initialize())
-        self.uuid = self.get_uuid()
         
     def get_master_public_key(self):
         if self.master_public_key:
@@ -51,7 +50,23 @@ class BitkeyClient(object):
         
     def get_entropy(self, size):
         return self.call(proto.GetEntropy(size=size)).entropy
-    
+
+    def ping(self, msg):
+        return self.call(proto.Ping(message=msg)).message
+
+    def get_serial_number(self):
+        return self.features.serial_number
+
+    def apply_settings(self, label=None, coin_shortcut=None, language=None):
+        settings = proto.ApplySettings()
+        if label:
+            settings.label = label
+        if coin_shortcut:
+            settings.coin_shortcut = coin_shortcut
+        if language:
+            settings.language = language
+        return self.call(settings).message
+
     def _pprint(self, msg):
         return "<%s>:\n%s" % (msg.__class__.__name__, msg)
 
@@ -108,12 +123,6 @@ class BitkeyClient(object):
             print "Received", self._pprint(resp)
             
         return resp
-
-    def ping(self, msg):
-        return self.call(proto.Ping(message=msg)).message
-    
-    def get_uuid(self):
-        return self.call(proto.GetUUID()).UUID
         
     def sign_tx(self, inputs, outputs):
         '''

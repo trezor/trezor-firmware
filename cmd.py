@@ -3,10 +3,10 @@ import binascii
 import argparse
 import json
 
-import bitkeylib.trezor_pb2 as proto
 from bitkeylib.client import BitkeyClient
 from bitkeylib.debuglink import DebugLink
-   
+from bitkeylib.protobuf_json import pb2json
+
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Bitkey devices.')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
@@ -87,22 +87,38 @@ class Commands(object):
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
 
+    def get_features(self, args):
+        return pb2json(self.client.features)
+
+    def ping(self, args):
+        return self.client.ping(args.msg)
+
     def get_master_public_key(self, args):
         return binascii.hexlify(self.client.get_master_public_key())
     
-    def get_uuid(self, args):
-        return binascii.hexlify(self.client.get_uuid())
-        
+    def get_serial_number(self, args):
+        return binascii.hexlify(self.client.get_serial_number())
+
+    def set_label(self, args):
+        return self.client.apply_settings(label=args.label)
+
+    def set_coin(self, args):
+        return self.client.apply_settings(coin_shortcut=args.coin_shortcut)
+
     def load_device(self, args):
         seed = ' '.join(args.seed)
 
         return self.client.load_device(seed, args.pin) 
         
     list.help = 'List connected Trezor USB devices'
+    ping.help = 'Send ping message'
     get_address.help = 'Get bitcoin address in base58 encoding'
     get_entropy.help = 'Get example entropy'
-    get_uuid.help = 'Get device\'s unique identifier'
+    get_features.help = 'Retrieve device features and settings'
+    get_serial_number.help = 'Get device\'s unique identifier'
     get_master_public_key.help = 'Get master public key'
+    set_label.help = 'Set new wallet label'
+    set_coin.help = 'Switch device to another crypto currency'
     load_device.help = 'Load custom configuration to the device'
     
     get_address.arguments = (
@@ -112,7 +128,21 @@ class Commands(object):
     get_entropy.arguments = (
         (('size',), {'type': int}),
     )
+
+    get_features.arguments = ()
+
+    ping.arguments = (
+        (('msg',), {'type': str}),
+    )
     
+    set_label.arguments = (
+        (('label',), {'type': str}),
+    )
+
+    set_coin.arguments = (
+        (('coin_shortcut',), {'type': str}),
+    )
+
     load_device.arguments = (
         (('-s', '--seed'), {'type': str, 'nargs': '+'}),
         (('-n', '--pin'), {'type': str, 'default': ''}),
@@ -149,7 +179,7 @@ def main():
     res = args.func(cmds, args)
     
     if args.json:
-        print json.dumps(res)
+        print json.dumps(res, sort_keys=True, indent=4)
     else:
         print res
     

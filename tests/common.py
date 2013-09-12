@@ -14,7 +14,7 @@ class BitkeyTest(unittest.TestCase):
         self.bitkey.setup_debuglink(button=True, pin_correct=True)
         
         self.bitkey.load_device(
-            seed='beyond neighbor scratch swirl embarrass doll cause also stick softly physical nice',
+            seed='soda country ghost glove unusual dose blouse cope bless medal block car',
             pin='1234')
         
         print "Setup finished"
