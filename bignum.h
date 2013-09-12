@@ -54,13 +54,15 @@ int bn_is_zero(const bignum256 *a);
 
 int bn_is_less(const bignum256 *a, const bignum256 *b);
 
-void bn_mod(bignum256 *x, bignum256 const *prime);
+void bn_mod(bignum256 *x, const bignum256 *prime);
 
-void bn_multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime);
+void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);
 
-void bn_fast_mod(bignum256 *x, bignum256 const *prime);
+void bn_fast_mod(bignum256 *x, const bignum256 *prime);
 
-void bn_inverse(bignum256 *x, bignum256 const *prime);
+void bn_inverse(bignum256 *x, const bignum256 *prime);
+
+void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime);
 
 void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res);
 

@@ -1,4 +1,6 @@
 *.o
+test-bip32
+test-pubkey
 test-rfc6979
 test-speed
 test-verify

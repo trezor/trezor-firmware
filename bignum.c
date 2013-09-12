@@ -83,8 +83,8 @@ int bn_is_less(const bignum256 *a, const bignum256 *b)
 	return 0;
 }
 
-// assumes x < 2*prime
-void bn_mod(bignum256 *x, bignum256 const *prime)
+// assumes x < 2*prime, result < prime
+void bn_mod(bignum256 *x, const bignum256 *prime)
 {
 	int i = 8;
 	uint32_t temp;
@@ -113,7 +113,7 @@ void bn_mod(bignum256 *x, bignum256 const *prime)
 
 // x = k * x
 // both inputs and result may be bigger than prime but not bigger than 2 * prime
-void bn_multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
+void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 {
 	int i, j;
 	uint64_t temp = 0;
@@ -157,7 +157,8 @@ void bn_multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
 	}
 }
 
-void bn_fast_mod(bignum256 *x, bignum256 const *prime)
+// result is smaller than 2*prime
+void bn_fast_mod(bignum256 *x, const bignum256 *prime)
 {
 	int j;
 	uint32_t coef;
@@ -182,7 +183,7 @@ void bn_fast_mod(bignum256 *x, bignum256 const *prime)
 #endif
 
 // in field G_prime, small but slow
-void bn_inverse(bignum256 *x, bignum256 const *prime)
+void bn_inverse(bignum256 *x, const bignum256 *prime)
 {
 	uint32_t i, j, limb;
 	bignum256 res;
@@ -210,7 +211,7 @@ void bn_inverse(bignum256 *x, bignum256 const *prime)
 #else
 
 // in field G_prime, big but fast
-void bn_inverse(bignum256 *x, bignum256 const *prime)
+void bn_inverse(bignum256 *x, const bignum256 *prime)
 {
 	int i, j, k, len1, len2, mask;
 	uint32_t u[9], v[9], s[10], r[10], temp, temp2;
@@ -381,6 +382,23 @@ void bn_inverse(bignum256 *x, bignum256 const *prime)
 	}
 }
 #endif
+
+
+void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
+{
+	int i;
+	uint32_t carry = 0;
+	for (i = 0; i < 9; i++) {
+		a->val[i] += b->val[i] + carry;
+		if (a->val[i] > 0x3FFFFFFF) {
+			carry = a->val[i] >> 30;
+			a->val[i] &= 0x3FFFFFFF;
+		} else {
+			carry = 0;
+		}
+	}
+	bn_mod(a, prime);
+}
 
 // res = a - b
 // b < 2*prime; result not normalized

@@ -306,7 +306,7 @@ void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, u
 // uses secp256k1 curve
 // priv_key is a 32 byte big endian stored number
 // pub_key is at least 70 bytes long array for the public key
-void ecdsa_get_public_key(const uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len)
+void ecdsa_get_public_key_der(const uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len)
 {
 	uint32_t i;
 	curve_point R;
@@ -322,6 +322,20 @@ void ecdsa_get_public_key(const uint8_t *priv_key, uint8_t *pub_key, uint32_t *p
 	pub_key[0] = 0x30;
 	pub_key[1] = i;
 	*pub_key_len = i + 2;
+}
+
+
+// pub_key is always 33 bytes long
+void ecdsa_get_public_key_compressed(const uint8_t *priv_key, uint8_t *pub_key)
+{
+	curve_point R;
+	bignum256 k;
+
+	bn_read_be(priv_key, &k);
+	// compute k*G
+	scalar_multiply(&k, &R);
+	pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
+	bn_write_be(&R.x, pub_key + 1);
 }
 
 // uses secp256k1 curve

@@ -78,7 +78,7 @@ int main()
 		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
 
 		// generate public key from private key
-		ecdsa_get_public_key(priv_key, pub_key, &pub_key_len);
+		ecdsa_get_public_key_der(priv_key, pub_key, &pub_key_len);
 
 		// use our ECDSA verifier to verify the message signature
 		if (ecdsa_verify(pub_key, sig, msg, msg_len) != 0) {
