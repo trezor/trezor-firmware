@@ -1,6 +1,6 @@
 CC     = gcc
 CFLAGS = -Wall -Os
-OBJS   = aux.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o
+OBJS   = bignum.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o
 
 all: test-rfc6979 test-speed test-verify
 
@@ -17,4 +17,4 @@ test-verify: test-verify.o $(OBJS)
 	gcc test-verify.o $(OBJS) -o test-verify -lcrypto
 
 clean:
-	rm -f $(OBJS) test-speed test-verify
+	rm -f $(OBJS) test-rfc6979 test-speed test-verify

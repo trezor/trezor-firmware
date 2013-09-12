@@ -1,0 +1,396 @@
+/**
+ * Copyright (c) 2013 Tomas Dzetkulic
+ * Copyright (c) 2013 Pavol Rusnak
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#include "bignum.h"
+#include "secp256k1.h"
+
+inline uint32_t read_be(const uint8_t *data)
+{
+	return (((uint32_t)data[0]) << 24) |
+	       (((uint32_t)data[1]) << 16) |
+	       (((uint32_t)data[2]) << 8)  |
+	       (((uint32_t)data[3]));
+}
+
+inline void write_be(uint8_t *data, uint32_t x)
+{
+	data[0] = x >> 24;
+	data[1] = x >> 16;
+	data[2] = x >> 8;
+	data[3] = x;
+}
+
+void bn_read_be(const uint8_t *in_number, bignum256 *out_number)
+{
+	int i;
+	uint64_t temp = 0;
+	for (i = 0; i < 8; i++) {
+		temp += (((uint64_t)read_be(in_number + (7 - i) * 4)) << (2 * i));
+		out_number->val[i]= temp & 0x3FFFFFFF;
+		temp >>= 30;
+	}
+	out_number->val[8] = temp;
+}
+
+void bn_write_be(const bignum256 *in_number, uint8_t *out_number)
+{
+	int i, shift = 30 + 16 - 32;
+	uint64_t temp = in_number->val[8];
+	for (i = 0; i < 8; i++) {
+		temp <<= 30;
+		temp |= in_number->val[7 - i];
+		write_be(out_number + i * 4, temp >> shift);
+		shift -= 2;
+	}
+}
+
+int bn_is_zero(const bignum256 *a)
+{
+	int i;
+	for (i = 0; i < 9; i++) {
+		if (a->val[i] != 0) return 0;
+	}
+	return 1;
+}
+
+int bn_is_less(const bignum256 *a, const bignum256 *b)
+{
+	int i;
+	for (i = 8; i >= 0; i--) {
+		if (a->val[i] < b->val[i]) return 1;
+		if (a->val[i] > b->val[i]) return 0;
+	}
+	return 0;
+}
+
+// assumes x < 2*prime
+void bn_mod(bignum256 *x, bignum256 const *prime)
+{
+	int i = 8;
+	uint32_t temp;
+	// compare numbers
+	while (i >= 0 && prime->val[i] == x->val[i]) i--;
+	// if equal
+	if (i == -1) {
+		// set x to zero
+		for (i = 0; i < 9; i++) {
+			x->val[i] = 0;
+		}
+	} else {
+		// if x is greater
+		if (x->val[i] > prime->val[i]) {
+			// substract p from x
+			temp = 0x40000000u;
+			for (i = 0; i < 9; i++) {
+				temp += x->val[i] - prime->val[i];
+				x->val[i] = temp & 0x3FFFFFFF;
+				temp >>= 30;
+				temp += 0x3FFFFFFFu;
+			}
+		}
+	}
+}
+
+// x = k * x
+// both inputs and result may be bigger than prime but not bigger than 2 * prime
+void bn_multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime)
+{
+	int i, j;
+	uint64_t temp = 0;
+	uint32_t res[18], coef;
+
+	// compute lower half of long multiplication
+	for (i = 0; i < 9; i++)
+	{
+		for (j = 0; j <= i; j++) {
+			temp += k->val[j] * (uint64_t)x->val[i - j];
+		}
+		res[i] = temp & 0x3FFFFFFFu;
+		temp >>= 30;
+	}
+	// compute upper half
+	for (; i < 17; i++)
+	{
+		for (j = i - 8; j < 9 ; j++) {
+			temp += k->val[j] * (uint64_t)x->val[i - j];
+		}
+		res[i] = temp & 0x3FFFFFFFu;
+		temp >>= 30;
+	}
+	res[17] = temp;
+	// compute modulo p division is only estimated so this may give result greater than prime but not bigger than 2 * prime
+	for (i = 16; i >= 8; i--) {
+		// estimate (res / prime)
+		coef = (res[i] >> 16) + (res[i + 1] << 14);
+		// substract (coef * prime) from res
+		temp = 0x1000000000000000llu + res[i - 8] - prime->val[0] * (uint64_t)coef;
+		res[i - 8] = temp & 0x3FFFFFFF;
+		for (j = 1; j < 9; j++) {
+			temp >>= 30;
+			temp += 0xFFFFFFFC0000000llu + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
+			res[i - 8 + j] = temp & 0x3FFFFFFF;
+		}
+	}
+	// store the result
+	for (i = 0; i < 9; i++) {
+		x->val[i] = res[i];
+	}
+}
+
+void bn_fast_mod(bignum256 *x, bignum256 const *prime)
+{
+	int j;
+	uint32_t coef;
+	uint64_t temp;
+
+	coef = x->val[8] >> 16;
+	if (!coef) return;
+	// substract (coef * prime) from x
+	temp = 0x1000000000000000llu + x->val[0] - prime->val[0] * (uint64_t)coef;
+	x->val[0] = temp & 0x3FFFFFFF;
+	for (j = 1; j < 9; j++) {
+		temp >>= 30;
+		temp += 0xFFFFFFFC0000000llu + x->val[j] - prime->val[j] * (uint64_t)coef;
+		x->val[j] = temp & 0x3FFFFFFF;
+	}
+}
+
+#ifndef INVERSE_FAST
+
+#ifdef USE_PRECOMPUTED_IV
+#warning USE_PRECOMPUTED_IV will not be used, please undef
+#endif
+
+// in field G_prime, small but slow
+void bn_inverse(bignum256 *x, bignum256 const *prime)
+{
+	uint32_t i, j, limb;
+	bignum256 res;
+	res.val[0] = 1;
+	for (i = 1; i < 9; i++) {
+		res.val[i] = 0;
+	}
+	for (i = 0; i < 9; i++) {
+		limb = prime->val[i];
+		// this is not enough in general but fine for secp256k1 because prime->val[0] > 1
+		if (i == 0) limb -= 2;
+		for (j = 0; j < 30; j++) {
+			if (i == 8 && limb == 0) break;
+			if (limb & 1) {
+				multiply(x, &res, prime);
+			}
+			limb >>= 1;
+			multiply(x, x, prime);
+		}
+	}
+	bn_mod(&res, prime);
+	memcpy(x, &res, sizeof(bignum256));
+}
+
+#else
+
+// in field G_prime, big but fast
+void bn_inverse(bignum256 *x, bignum256 const *prime)
+{
+	int i, j, k, len1, len2, mask;
+	uint32_t u[9], v[9], s[10], r[10], temp, temp2;
+	bn_fast_mod(x, prime);
+	bn_mod(x, prime);
+	for (i = 0; i < 9; i++) {
+		u[i] = prime->val[i];
+		v[i] = x->val[i];
+	}
+	len1 = 9;
+	s[0] = 1;
+	r[0] = 0;
+	len2 = 1;
+	k = 0;
+	for (;;) {
+		for (i = 0; i < len1; i++) {
+			if (v[i]) break;
+		}
+		if (i == len1) break;
+		for (;;) {
+			for (i = 0; i < 30; i++) {
+				if (u[0] & (1 << i)) break;
+			}
+			if (i == 0) break;
+			mask = (1 << i) - 1;
+			for (j = 0; j + 1 < len1; j++) {
+				u[j] = (u[j] >> i) | ((u[j + 1] & mask) << (30 - i));
+			}
+			u[j] = (u[j] >> i);
+			mask = (1 << (30 - i)) - 1;
+			s[len2] = s[len2 - 1] >> (30 - i);
+			for (j = len2 - 1; j > 0; j--) {
+				s[j] = (s[j - 1] >> (30 - i)) | ((s[j] & mask) << i);
+			}
+			s[0] = (s[0] & mask) << i;
+			if (s[len2]) {
+				r[len2] = 0;
+				len2++;
+			}
+			k += i;
+		}
+		for (;;) {
+			for (i = 0; i < 30; i++) {
+				if (v[0] & (1 << i)) break;
+			}
+			if (i == 0) break;
+			mask = (1 << i) - 1;
+			for (j = 0; j + 1 < len1; j++) {
+				v[j] = (v[j] >> i) | ((v[j + 1] & mask) << (30 - i));
+			}
+			v[j] = (v[j] >> i);
+			mask = (1 << (30 - i)) - 1;
+			r[len2] = r[len2 - 1] >> (30 - i);
+			for (j = len2 - 1; j > 0; j--) {
+				r[j] = (r[j - 1] >> (30 - i)) | ((r[j] & mask) << i);
+			}
+			r[0] = (r[0] & mask) << i;
+			if (r[len2]) {
+				s[len2] = 0;
+				len2++;
+			}
+			k += i;
+		}
+		
+		i = len1 - 1;
+		while (i > 0 && u[i] == v[i]) i--;
+		if (u[i] > v[i]) {
+			temp = 0x40000000u + u[0] - v[0];
+			u[0] = (temp >> 1) & 0x1FFFFFFF;
+			temp >>= 30;
+			for (i = 1; i < len1; i++) {
+				temp += 0x3FFFFFFFu + u[i] - v[i];
+				u[i - 1] += (temp & 1) << 29;
+				u[i] = (temp >> 1) & 0x1FFFFFFF;
+				temp >>= 30;
+			}
+			temp = temp2 = 0;
+			for (i = 0; i < len2; i++) {
+				temp += s[i] + r[i];
+				temp2 += s[i] << 1;
+				r[i] = temp & 0x3FFFFFFF;
+				s[i] = temp2 & 0x3FFFFFFF;
+				temp >>= 30;
+				temp2 >>= 30;
+			}
+			if (temp != 0 || temp2 != 0) {
+				r[len2] = temp;
+				s[len2] = temp2;
+				len2++;
+			}
+		} else {
+			temp = 0x40000000u + v[0] - u[0];
+			v[0] = (temp >> 1) & 0x1FFFFFFF;
+			temp >>= 30;
+			for (i = 1; i < len1; i++) {
+				temp += 0x3FFFFFFFu + v[i] - u[i];
+				v[i - 1] += (temp & 1) << 29;
+				v[i] = (temp >> 1) & 0x1FFFFFFF;
+				temp >>= 30;
+			}
+			temp = temp2 = 0;
+			for (i = 0; i < len2; i++) {
+				temp += s[i] + r[i];
+				temp2 += r[i] << 1;
+				s[i] = temp & 0x3FFFFFFF;
+				r[i] = temp2 & 0x3FFFFFFF;
+				temp >>= 30;
+				temp2 >>= 30;
+			}
+			if (temp != 0 || temp2 != 0) {
+				s[len2] = temp;
+				r[len2] = temp2;
+				len2++;
+			}
+		}
+		if (u[len1 - 1] == 0 && v[len1 - 1] == 0) len1--;
+		k++;
+	}
+	i = 8;
+	while (i > 0 && r[i] == prime->val[i]) i--;
+	if (r[i] >= prime->val[i]) {
+		temp = 1;
+		for (i = 0; i < 9; i++) {
+			temp += 0x3FFFFFFF + r[i] - prime->val[i];
+			r[i] = temp & 0x3FFFFFFF;
+			temp >>= 30;
+		}
+	}
+	temp = 1;
+	for (i = 0; i < 9; i++) {
+		temp += 0x3FFFFFFF + prime->val[i] - r[i];
+		r[i] = temp & 0x3FFFFFFF;
+		temp >>= 30;
+	}
+	int done = 0;
+#ifdef USE_PRECOMPUTED_IV
+	if (prime == &prime256k1) {
+		for (j = 0; j < 9; j++) {
+			x->val[j] = r[j];
+		}
+		bn_multiply(secp256k1_iv + k - 256, x, prime);
+		bn_fast_mod(x, prime);
+		done = 1;
+	}
+#endif
+	if (!done) {
+		for (j = 0; j < k; j++) {
+			if (r[0] & 1) {
+				temp = r[0] + prime->val[0];
+				r[0] = (temp >> 1) & 0x1FFFFFFF;
+				temp >>= 30;
+				for (i = 1; i < 9; i++) {
+					temp += r[i] + prime->val[i];
+					r[i - 1] += (temp & 1) << 29;
+					r[i] = (temp >> 1) & 0x1FFFFFFF;
+					temp >>= 30;
+				}
+			} else {
+				for (i = 0; i < 8; i++) {
+					r[i] = (r[i] >> 1) | ((r[i + 1] & 1) << 29);
+				}
+				r[8] = r[8] >> 1;
+			}
+		}
+		for (j = 0; j < 9; j++) {
+			x->val[j] = r[j];
+		}
+	}
+}
+#endif
+
+// res = a - b
+// b < 2*prime; result not normalized
+void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
+{
+	int i;
+	uint32_t temp = 0;
+	for (i = 0; i < 9; i++) {
+		temp += a->val[i] + 2u *prime256k1.val[i] - b->val[i];
+		res->val[i] = temp & 0x3FFFFFFF;
+		temp >>= 30;
+	}
+}

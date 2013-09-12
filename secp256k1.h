@@ -26,17 +26,7 @@
 
 #include <stdint.h>
 
-// use precomputed Inverse Values of powers of two
-#define USE_PRECOMPUTED_IV 1
-
-// use precomputed Curve Points (some scalar multiples of curve base point G)
-#define USE_PRECOMPUTED_CP 1
-
-// bignum256 are 256 bits stored as 8*30 bit + 1*16 bit
-// val[0] are lowest 30 bits, val[8] highest 16 bits
-typedef struct {
-	uint32_t val[9];
-} bignum256;
+#include "bignum.h"
 
 // curve point x and y
 typedef struct {

@@ -21,25 +21,47 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "aux.h"
+#ifndef __BIGNUM_H__
+#define __BIGNUM_H__
 
-inline uint32_t ror(const uint32_t x, const int n)
-{
-	return (x >> n) | (x << (32 - n));
-}
+#include <stdint.h>
 
-inline uint32_t read_be(const uint8_t *data)
-{
-	return (((uint32_t)data[0]) << 24) |
-	       (((uint32_t)data[1]) << 16) |
-	       (((uint32_t)data[2]) << 8)  |
-	       (((uint32_t)data[3]));
-}
+// use precomputed Inverse Values of powers of two
+#define USE_PRECOMPUTED_IV 1
 
-inline void write_be(uint8_t *data, uint32_t x)
-{
-	data[0] = x >> 24;
-	data[1] = x >> 16;
-	data[2] = x >> 8;
-	data[3] = x;
-}
+// use precomputed Curve Points (some scalar multiples of curve base point G)
+#define USE_PRECOMPUTED_CP 1
+
+#define INVERSE_FAST 1
+
+// bignum256 are 256 bits stored as 8*30 bit + 1*16 bit
+// val[0] are lowest 30 bits, val[8] highest 16 bits
+typedef struct {
+	uint32_t val[9];
+} bignum256;
+
+// read 4 big endian bytes into uint32
+uint32_t read_be(const uint8_t *data);
+
+// write 4 big endian bytes
+void write_be(uint8_t *data, uint32_t x);
+
+void bn_read_be(const uint8_t *in_number, bignum256 *out_number);
+
+void bn_write_be(const bignum256 *in_number, uint8_t *out_number);
+
+int bn_is_zero(const bignum256 *a);
+
+int bn_is_less(const bignum256 *a, const bignum256 *b);
+
+void bn_mod(bignum256 *x, bignum256 const *prime);
+
+void bn_multiply(const bignum256 *k, bignum256 *x, bignum256 const *prime);
+
+void bn_fast_mod(bignum256 *x, bignum256 const *prime);
+
+void bn_inverse(bignum256 *x, bignum256 const *prime);
+
+void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res);
+
+#endif
