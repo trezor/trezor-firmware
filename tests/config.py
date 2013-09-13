@@ -1,9 +1,9 @@
 import sys
 sys.path = ['../',] + sys.path
 
-from bitkeylib.transport_pipe import PipeTransport
-from bitkeylib.transport_hid import HidTransport
-from bitkeylib.transport_socket import SocketTransportClient
+from trezorlib.transport_pipe import PipeTransport
+from trezorlib.transport_hid import HidTransport
+from trezorlib.transport_socket import SocketTransportClient
 
 TRANSPORT = PipeTransport
 TRANSPORT_ARGS = ('../../trezor-emu/pipe.trezor', False)
