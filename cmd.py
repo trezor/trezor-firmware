@@ -3,12 +3,12 @@ import binascii
 import argparse
 import json
 
-from bitkeylib.client import BitkeyClient
-from bitkeylib.debuglink import DebugLink
-from bitkeylib.protobuf_json import pb2json
+from trezorlib.client import TrezorClient
+from trezorlib.debuglink import DebugLink
+from trezorlib.protobuf_json import pb2json
 
 def parse_args(commands):
-    parser = argparse.ArgumentParser(description='Commandline tool for Bitkey devices.')
+    parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
     parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='socket', help="Debuglink transport")
@@ -41,7 +41,7 @@ def parse_args(commands):
 
 def get_transport(transport_string, path):
     if transport_string == 'usb':
-        from bitkeylib.transport_hid import HidTransport
+        from trezorlib.transport_hid import HidTransport
 
         if path == '':
             try:
@@ -52,19 +52,19 @@ def get_transport(transport_string, path):
         return HidTransport(path)
  
     if transport_string == 'serial':
-        from bitkeylib.transport_serial import SerialTransport
+        from trezorlib.transport_serial import SerialTransport
         return SerialTransport(path)
 
     if transport_string == 'pipe':
-        from bitkeylib.transport_pipe import PipeTransport
+        from trezorlib.transport_pipe import PipeTransport
         return PipeTransport(path, is_device=False)
     
     if transport_string == 'socket':
-        from bitkeylib.transport_socket import SocketTransportClient
+        from trezorlib.transport_socket import SocketTransportClient
         return SocketTransportClient(path)
     
     if transport_string == 'fake':
-        from bitkeylib.transport_fake import FakeTransport
+        from trezorlib.transport_fake import FakeTransport
         return FakeTransport(path)
     
     raise NotImplemented("Unknown transport")
@@ -149,7 +149,7 @@ class Commands(object):
     )
 
 def list_usb():
-    from bitkeylib.transport_hid import HidTransport
+    from trezorlib.transport_hid import HidTransport
     devices = HidTransport.enumerate()
     return devices
   
@@ -172,7 +172,7 @@ def main():
     else:
         debuglink = None
         
-    client = BitkeyClient(transport, debuglink=debuglink)
+    client = TrezorClient(transport, debuglink=debuglink)
     client.setup_debuglink(button=True, pin_correct=True)
     cmds = Commands(client)
     
