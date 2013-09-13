@@ -2,7 +2,7 @@ import unittest
 import common
 import binascii
 
-import bitkeylib.trezor_pb2 as proto
+import trezorlib.trezor_pb2 as proto
 
 '''
 ./electrum -w ~/.electrum-bitkey mktx 1FQVPnjrbkPWeA8poUoEnX9U3n9DyhAVtv 0.001
@@ -16,7 +16,7 @@ a62964699995f6e018cfbeb7a71a66d4c64fa38875d79ead0a9ac66f59c1c8b3a3ffffffff
 0250c30000000000001976a91444ce5c6789b0bb0e8a9ab9a4769fe181cb274c4688aca086
 0100000000001976a9149e03078026388661b197129a43f0f64f88379ce688ac00000000
 '''
-class TestSignTx(common.BitkeyTest):
+class TestSignTx(common.TrezorTest):
     def test_signtx(self):
         expected_tx = '01000000012de70f7d6ffed0db70f8882f3fca90db9bb09f0e99bce27468c23d3c994fcd56' \
             '010000008b4830450221009b985e14d53cfeed3496846db6ddaa77a0206138d0df4c2ccd3b' \
@@ -27,7 +27,7 @@ class TestSignTx(common.BitkeyTest):
             '0100000000001976a9149e03078026388661b197129a43f0f64f88379ce688ac00000000'
 
         inp1 = proto.TxInput(index=0,
-                             address_n=[1,0],
+                             address_n=[1, 0],
                              amount=200000, # 0.002 BTC
                              prev_hash=binascii.unhexlify('56cd4f993c3dc26874e2bc990e9fb09bdb90ca3f2f88f870dbd0fe6f7d0fe72d'),
                              prev_index=1,
@@ -35,7 +35,7 @@ class TestSignTx(common.BitkeyTest):
                              )      
 
         out1 = proto.TxOutput(index=0,
-                              address='17GpAFnkHRjWKePkX4kxHaHy49V8EHTr7i',
+                              address='1GnnT11aZeH6QZCtT7EjCvRF3EXHoY3owE',
                               address_n=[0, 1],
                               amount=50000, # 0.0005 BTC
                               script_type=proto.PAYTOADDRESS,
@@ -50,7 +50,7 @@ class TestSignTx(common.BitkeyTest):
                               #script_args=
                               )
 
-        print binascii.hexlify(self.bitkey.sign_tx([inp1], [out1, out2])[1])
+        print binascii.hexlify(self.client.sign_tx([inp1], [out1, out2])[1])
 
     '''    
     def test_workflow(self):
@@ -87,11 +87,11 @@ class TestSignTx(common.BitkeyTest):
         # Prepare and send initial message
         tx = proto.SignTx()
         tx.algo = proto.ELECTRUM
-        tx.random = self.bitkey._get_local_entropy()
+        tx.random = self.client._get_local_entropy()
         tx.inputs_count = 2
         tx.outputs_count = 2            
 
-        res = self.bitkey.call(tx)
+        res = self.client.call(tx)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXINPUT)
         self.assertEqual(res.request_index, 0)
@@ -99,28 +99,28 @@ class TestSignTx(common.BitkeyTest):
         self.assertEqual(res.serialized_tx, '')
         
         # FIRST SIGNATURE
-        res = self.bitkey.call(inp1)
+        res = self.client.call(inp1)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXINPUT)
         self.assertEqual(res.request_index, 1)
         self.assertEqual(res.signature, '')
         self.assertEqual(res.serialized_tx, '')
         
-        res = self.bitkey.call(inp2)
+        res = self.client.call(inp2)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, 0)
         self.assertEqual(res.signature, '')
         self.assertEqual(res.serialized_tx, '')
 
-        res = self.bitkey.call(out1)
+        res = self.client.call(out1)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, 1)
         self.assertEqual(res.signature, '')
         self.assertEqual(res.serialized_tx, '')
 
-        res = self.bitkey.call(out2)
+        res = self.client.call(out2)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXINPUT)
         self.assertEqual(res.request_index, 0)
@@ -129,28 +129,28 @@ class TestSignTx(common.BitkeyTest):
         serialized += res.serialized_tx
         
         # SECOND SIGNATURE
-        res = self.bitkey.call(inp1)
+        res = self.client.call(inp1)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXINPUT)
         self.assertEqual(res.request_index, 1)
         self.assertEqual(res.signature, '')
         self.assertEqual(res.serialized_tx, '')
         
-        res = self.bitkey.call(inp2)
+        res = self.client.call(inp2)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, 0)
         self.assertEqual(res.signature, '')
         self.assertEqual(res.serialized_tx, '')
 
-        res = self.bitkey.call(out1)
+        res = self.client.call(out1)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, 1)
         self.assertEqual(res.signature, '')
         self.assertEqual(res.serialized_tx, '')
 
-        res = self.bitkey.call(out2)
+        res = self.client.call(out2)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, 0)
@@ -159,7 +159,7 @@ class TestSignTx(common.BitkeyTest):
         serialized += res.serialized_tx
         
         # FINALIZING OUTPUTS
-        res = self.bitkey.call(out1)
+        res = self.client.call(out1)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, 1)
@@ -167,7 +167,7 @@ class TestSignTx(common.BitkeyTest):
         self.assertNotEqual(res.serialized_tx, '')
         serialized += res.serialized_tx
         
-        res = self.bitkey.call(out2)
+        res = self.client.call(out2)
         self.assertIsInstance(res, proto.TxRequest)
         self.assertEqual(res.request_type, proto.TXOUTPUT)
         self.assertEqual(res.request_index, -1)

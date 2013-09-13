@@ -1,7 +1,7 @@
 import unittest
 import common
 
-from bitkeylib import proto
+from trezorlib import proto
 
 '''
     TODO:
@@ -12,26 +12,26 @@ from bitkeylib import proto
 
 '''
 
-class TestBasic(common.BitkeyTest):           
+class TestBasic(common.TrezorTest):           
     def test_features(self):
-        features = self.bitkey.call(proto.Initialize())
+        features = self.client.call(proto.Initialize())
         
         # Result is the same as reported by BitkeyClient class
-        self.assertEqual(features, self.bitkey.features)
+        self.assertEqual(features, self.client.features)
          
     def test_ping(self):
-        ping = self.bitkey.call(proto.Ping(message='ahoj!'))
+        ping = self.client.call(proto.Ping(message='ahoj!'))
         
         # Ping results in Success(message='Ahoj!')
         self.assertEqual(ping, proto.Success(message='ahoj!'))
         
     def test_uuid(self):
-        uuid1 = self.bitkey.get_uuid()
-        self.bitkey.init_device()
-        uuid2 = self.bitkey.get_uuid()
+        uuid1 = self.client.get_serial_number()
+        self.client.init_device()
+        uuid2 = self.client.get_serial_number()
         
         # UUID must be longer than 10 characters
-        self.assertEqual(len(uuid1), 9)
+        self.assertEqual(len(uuid1), 12)
         
         # Every resulf of UUID must be the same
         self.assertEqual(uuid1, uuid2)
