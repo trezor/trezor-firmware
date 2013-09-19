@@ -64,6 +64,14 @@ void bn_write_be(const bignum256 *in_number, uint8_t *out_number)
 	}
 }
 
+void bn_zero(bignum256 *a)
+{
+	int i;
+	for (i = 0; i < 9; i++) {
+		a->val[i] = 0;
+	}
+}
+
 int bn_is_zero(const bignum256 *a)
 {
 	int i;
@@ -83,6 +91,34 @@ int bn_is_less(const bignum256 *a, const bignum256 *b)
 	return 0;
 }
 
+int bn_bits(const bignum256 *a) {
+	int i, r = 0;
+	for (i = 0; i < 256; i++) {
+		if (a->val[i / 30] & (1 << (i % 30))) {
+			r = i;
+		}
+	}
+	return r;
+}
+
+void bn_lshift(bignum256 *a)
+{
+	int i;
+	for (i = 8; i > 0; i--) {
+		a->val[i] = ((a->val[i] << 1) & 0x3FFFFFFF) | ((a->val[i - 1] & 0x20000000) >> 29);
+	}
+	a->val[0] = (a->val[0] << 1) & 0x3FFFFFFF;
+}
+
+void bn_rshift(bignum256 *a)
+{
+	int i;
+	for (i = 0; i < 8; i++) {
+		a->val[i] = (a->val[i] >> 1) | ((a->val[i + 1] & 1) << 29);
+	}
+	a->val[8] >>= 1;
+}
+
 // assumes x < 2*prime, result < prime
 void bn_mod(bignum256 *x, const bignum256 *prime)
 {
@@ -93,9 +129,7 @@ void bn_mod(bignum256 *x, const bignum256 *prime)
 	// if equal
 	if (i == -1) {
 		// set x to zero
-		for (i = 0; i < 9; i++) {
-			x->val[i] = 0;
-		}
+		bn_zero(x);
 	} else {
 		// if x is greater
 		if (x->val[i] > prime->val[i]) {
@@ -188,9 +222,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	uint32_t i, j, limb;
 	bignum256 res;
 	res.val[0] = 1;
-	for (i = 1; i < 9; i++) {
-		res.val[i] = 0;
-	}
+	bn_zero(&res);
 	for (i = 0; i < 9; i++) {
 		limb = prime->val[i];
 		// this is not enough in general but fine for secp256k1 because prime->val[0] > 1
@@ -383,13 +415,11 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 }
 #endif
 
-
-void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
-{
+void bn_normalize(bignum256 *a) {
 	int i;
 	uint32_t carry = 0;
 	for (i = 0; i < 9; i++) {
-		a->val[i] += b->val[i] + carry;
+		a->val[i] += carry;
 		if (a->val[i] > 0x3FFFFFFF) {
 			carry = a->val[i] >> 30;
 			a->val[i] &= 0x3FFFFFFF;
@@ -397,6 +427,15 @@ void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
 			carry = 0;
 		}
 	}
+}
+
+void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
+{
+	int i;
+	for (i = 0; i < 9; i++) {
+		a->val[i] += b->val[i];
+	}
+	bn_normalize(a);
 	bn_mod(a, prime);
 }
 
@@ -407,7 +446,7 @@ void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
 	int i;
 	uint32_t temp = 0;
 	for (i = 0; i < 9; i++) {
-		temp += a->val[i] + 2u *prime256k1.val[i] - b->val[i];
+		temp += a->val[i] + 2u * prime256k1.val[i] - b->val[i];
 		res->val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}

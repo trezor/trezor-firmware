@@ -50,9 +50,17 @@ void bn_read_be(const uint8_t *in_number, bignum256 *out_number);
 
 void bn_write_be(const bignum256 *in_number, uint8_t *out_number);
 
+void bn_zero(bignum256 *a);
+
 int bn_is_zero(const bignum256 *a);
 
 int bn_is_less(const bignum256 *a, const bignum256 *b);
+
+int bn_bits(const bignum256 *a);
+
+void bn_lshift(bignum256 *a);
+
+void bn_rshift(bignum256 *a);
 
 void bn_mod(bignum256 *x, const bignum256 *prime);
 
@@ -61,6 +69,8 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);
 void bn_fast_mod(bignum256 *x, const bignum256 *prime);
 
 void bn_inverse(bignum256 *x, const bignum256 *prime);
+
+void bn_normalize(bignum256 *a);
 
 void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime);
 
