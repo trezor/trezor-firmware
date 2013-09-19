@@ -56,7 +56,7 @@ int bn_is_zero(const bignum256 *a);
 
 int bn_is_less(const bignum256 *a, const bignum256 *b);
 
-int bn_bits(const bignum256 *a);
+int bn_bitlen(const bignum256 *a);
 
 void bn_lshift(bignum256 *a);
 
@@ -75,5 +75,11 @@ void bn_normalize(bignum256 *a);
 void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime);
 
 void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res);
+
+void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res);
+
+void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r);
+
+void bn_print(const bignum256 *a);
 
 #endif

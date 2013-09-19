@@ -21,6 +21,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdio.h>
 #include "bignum.h"
 #include "secp256k1.h"
 
@@ -91,7 +92,7 @@ int bn_is_less(const bignum256 *a, const bignum256 *b)
 	return 0;
 }
 
-int bn_bits(const bignum256 *a) {
+int bn_bitlen(const bignum256 *a) {
 	int i, r = 0;
 	for (i = 0; i < 256; i++) {
 		if (a->val[i / 30] & (1 << (i % 30))) {
@@ -450,4 +451,69 @@ void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
 		res->val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}
+}
+
+// res = a - b ; a > b
+void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res)
+{
+	int i;
+	char carry = 0;
+	for (i = 0; i < 8; i++) {
+		if (a->val[i] >= b->val[i] + carry) {
+			res->val[i] = a->val[i] - b->val[i] - carry;
+			carry = 0;
+		} else {
+			res->val[i] = a->val[i] + 0x40000000 - b->val[i];
+			carry = 1;
+		}
+	}
+	res->val[8] = a->val[8] - b->val[8] - carry;
+}
+
+// a / 58 = q (+r)
+void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r)
+{
+	bignum256 i58, rem;
+	int na, i;
+
+	bn_zero(q);
+	bn_zero(&i58); i58.val[0] = 58;
+
+	if (bn_is_less(a, &i58)) {
+		*r = a->val[0];
+	}
+
+	na = bn_bitlen(a);
+
+	for (i = 0; i < 9; i++) {
+		rem.val[i] = a->val[i];
+	}
+
+	for (i = 0; i <= na - 6; i++) {
+		bn_lshift(&i58);
+	}
+
+	for (i = na - 5; i >= 0; --i) {
+		bn_lshift(q);
+		if (!bn_is_less(&rem, &i58)) {
+			bn_substract_noprime(&rem, &i58, &rem);
+			q->val[0] |= 1;
+		}
+		bn_rshift(&i58);
+	}
+
+	*r = rem.val[0];
+}
+
+void bn_print(const bignum256 *a)
+{
+	printf("%04x", a->val[8] & 0x0000FFFF);
+	printf("%08x", (a->val[7] << 2) | ((a->val[6] & 0x30000000) >> 28));
+	printf("%07x", a->val[6] & 0x0FFFFFFF);
+	printf("%08x", (a->val[5] << 2) | ((a->val[4] & 0x30000000) >> 28));
+	printf("%07x", a->val[4] & 0x0FFFFFFF);
+	printf("%08x", (a->val[3] << 2) | ((a->val[2] & 0x30000000) >> 28));
+	printf("%07x", a->val[2] & 0x0FFFFFFF);
+	printf("%08x", (a->val[1] << 2) | ((a->val[0] & 0x30000000) >> 28));
+	printf("%07x", a->val[0] & 0x0FFFFFFF);
 }

@@ -4,7 +4,7 @@ OBJS   = bignum.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o bip32.o ripemd160.o
 
 all: test-bip32 test-pubkey test-rfc6979 test-speed test-verify
 
-%.o: %.c
+%.o: %.c %.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 test-bip32: test-bip32.o $(OBJS)

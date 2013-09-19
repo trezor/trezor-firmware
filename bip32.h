@@ -11,6 +11,7 @@ typedef struct {
 	uint8_t private_key[32]; // private_key + chain_code have to
 	uint8_t chain_code[32];  // form a continuous 64 byte block
 	uint8_t public_key[33];
+	char address[35];
 } xprv;
 
 void xprv_from_seed(uint8_t *seed, int seed_len, xprv *out);
