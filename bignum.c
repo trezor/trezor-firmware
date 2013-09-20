@@ -21,7 +21,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <stdio.h>
 #include "bignum.h"
 #include "secp256k1.h"
 
@@ -503,17 +502,4 @@ void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r)
 	}
 
 	*r = rem.val[0];
-}
-
-void bn_print(const bignum256 *a)
-{
-	printf("%04x", a->val[8] & 0x0000FFFF);
-	printf("%08x", (a->val[7] << 2) | ((a->val[6] & 0x30000000) >> 28));
-	printf("%07x", a->val[6] & 0x0FFFFFFF);
-	printf("%08x", (a->val[5] << 2) | ((a->val[4] & 0x30000000) >> 28));
-	printf("%07x", a->val[4] & 0x0FFFFFFF);
-	printf("%08x", (a->val[3] << 2) | ((a->val[2] & 0x30000000) >> 28));
-	printf("%07x", a->val[2] & 0x0FFFFFFF);
-	printf("%08x", (a->val[1] << 2) | ((a->val[0] & 0x30000000) >> 28));
-	printf("%07x", a->val[0] & 0x0FFFFFFF);
 }
