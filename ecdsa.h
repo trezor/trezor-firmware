@@ -35,4 +35,6 @@ void ecdsa_get_public_key_compressed(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr);
 int ecdsa_verify(const uint8_t *pub_key, const uint8_t *signature, const uint8_t *msg, uint32_t msg_len);
 
+void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
+
 #endif
