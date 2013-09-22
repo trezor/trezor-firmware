@@ -249,7 +249,7 @@ void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_
 // sig_len is the pointer to a uint that will contain resulting signature length. note that ((*sig_len) == sig[1]+2)
 void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
 {
-	int i;
+	uint32_t i;
 	uint8_t hash[32];
 	curve_point R;
 	bignum256 k, z;

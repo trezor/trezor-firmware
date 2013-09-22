@@ -1,4 +1,5 @@
 /**
+ * Copyright (c) 2013 Tomas Dzetkulic
  * Copyright (c) 2013 Pavol Rusnak
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -22,6 +23,8 @@
 
 #include <check.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "bignum.h"
 #include "bip32.h"
@@ -181,6 +184,48 @@ START_TEST(test_rfc6979)
 }
 END_TEST
 
+START_TEST(test_sign_speed)
+{
+	uint8_t sig[70], priv_key[32], msg[256];
+	uint32_t sig_len;
+	int i;
+
+	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
+
+	for (i = 0; i < sizeof(msg); i++) {
+		msg[i] = i * 1103515245;
+	}
+
+	clock_t t = clock();
+	for (i = 0 ; i < 500; i++) {
+		// use our ECDSA signer to sign the message with the key
+		ecdsa_sign(priv_key, msg, sizeof(msg), sig, &sig_len);
+	}
+	printf("Signing speed: %0.2f sig/s\n", 1.0f * i / ((float)(clock() - t) / CLOCKS_PER_SEC));
+}
+END_TEST
+
+START_TEST(test_verify_speed)
+{
+	uint8_t sig[70], pub_key[33], msg[256];
+	int i;
+
+	memcpy(sig, fromhex("3044022088dc0db6bc5efa762e75fbcc802af69b9f1fcdbdffce748d403f687f855556e6022010ee8035414099ac7d89cff88a3fa246d332dfa3c78d82c801394112dda039c2"), 70);
+	memcpy(pub_key, fromhex("024054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a0974"), 33);
+
+	for (i = 0; i < sizeof(msg); i++) {
+		msg[i] = i * 1103515245;
+	}
+
+	clock_t t = clock();
+	for (i = 0 ; i < 150; i++) {
+		// use our ECDSA verifier to verify the message with the key
+		ecdsa_verify(pub_key, sig, msg, sizeof(msg));
+	}
+	printf("Verifying speed: %0.2f sig/s\n", 1.0f * i / ((float)(clock() - t) / CLOCKS_PER_SEC));
+}
+END_TEST
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -196,6 +241,11 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_rfc6979);
 	suite_add_tcase(s, tc);
 
+	tc = tcase_create("speed");
+	tcase_add_test(tc, test_sign_speed);
+	tcase_add_test(tc, test_verify_speed);
+	suite_add_tcase(s, tc);
+
 	return s;
 }
 
@@ -205,7 +255,7 @@ int main()
 	int number_failed;
 	Suite *s = test_suite();
 	SRunner *sr = srunner_create(s);
-	srunner_run_all(sr, CK_NORMAL);
+	srunner_run_all(sr, CK_VERBOSE);
 	number_failed = srunner_ntests_failed(sr);
 	srunner_free(sr);
 	return number_failed;
