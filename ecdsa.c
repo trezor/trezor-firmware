@@ -135,57 +135,6 @@ void scalar_multiply(bignum256 *k, curve_point *res)
 	bn_mod(&(res->y), &prime256k1);
 }
 
-// does not validate that this is valid der encoding
-// assumes it is der encoding containing 1 number
-void der_read_single(const uint8_t *der, bignum256 *elem)
-{
-	int i, j;
-	uint8_t val[32];
-	i = 1 + der[1];
-	j = 31;
-	// we ignore all bytes after 32nd. if there are any, those are either zero or invalid for secp256k1
-	while (i > 1 && j >= 0) {
-		val[j] = der[i];
-		i--; j--;
-	}
-	for (i = 0; i <= j; i++) {
-		val[i] = 0;
-	}
-	bn_read_be(val, elem);
-}
-
-// does not validate that this is valid der encoding
-// assumes it is der encoding containing 2 numbers (either public key or ecdsa signature)
-void der_read_pair(const uint8_t *der, bignum256 *elem1, bignum256 *elem2)
-{
-	der_read_single(der + 2, elem1);
-	der_read_single(der + 4 + der[3], elem2);
-}
-
-// write DER encoding of number to buffer
-void der_write(const bignum256 *x, uint8_t *buf)
-{
-	int i, j = 8, k = 8, len = 0;
-	uint8_t r = 0, temp;
-	buf[0] = 2;
-	for (i = 0; i < 32; i++) {
-		temp = (x->val[j] >> k) + r;
-		k -= 8;
-		if (k < 0) {
-			r = (x->val[j]) << (-k);
-			k += 30;
-			j--;
-		} else {
-			r = 0;
-		}
-		if (len || temp) {
-			buf[2 + len] = temp;
-			len++;
-		}
-	}
-	buf[1] = len;
-}
-
 // generate random K for signing
 void generate_k_random(bignum256 *k) {
 	int i;
@@ -245,9 +194,8 @@ void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_
 // priv_key is a 32 byte big endian stored number
 // msg is a data to be signed
 // msg_len is the message length
-// sig is at least 70 bytes long array for the signature
-// sig_len is the pointer to a uint that will contain resulting signature length. note that ((*sig_len) == sig[1]+2)
-void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint32_t *sig_len)
+// sig is 64 bytes long array for the signature
+void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
 {
 	uint32_t i;
 	uint8_t hash[32];
@@ -295,39 +243,12 @@ void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, u
 		// we are done, R.x and k is the result signature
 		break;
 	}
-	der_write(&R.x, sig + 2);
-	i = sig[3] + 2;
-	der_write(&k, sig + 2 + i);
-	i += sig[3 + i] + 2;
-	sig[0] = 0x30;
-	sig[1] = i;
-	*sig_len = i + 2;
+
+	bn_write_be(&R.x, sig);
+	bn_write_be(&k, sig + 32);
 }
 
-// uses secp256k1 curve
-// priv_key is a 32 byte big endian stored number
-// pub_key is at least 70 bytes long array for the public key
-void ecdsa_get_public_key_der(const uint8_t *priv_key, uint8_t *pub_key, uint32_t *pub_key_len)
-{
-	uint32_t i;
-	curve_point R;
-	bignum256 k;
-
-	bn_read_be(priv_key, &k);
-	// compute k*G
-	scalar_multiply(&k, &R);
-	der_write(&R.x, pub_key + 2);
-	i = pub_key[3] + 2;
-	der_write(&R.y, pub_key + 2 + i);
-	i += pub_key[3 + i] + 2;
-	pub_key[0] = 0x30;
-	pub_key[1] = i;
-	*pub_key_len = i + 2;
-}
-
-
-// pub_key is always 33 bytes long
-void ecdsa_get_public_key_compressed(const uint8_t *priv_key, uint8_t *pub_key)
+void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key)
 {
 	curve_point R;
 	bignum256 k;
@@ -337,6 +258,19 @@ void ecdsa_get_public_key_compressed(const uint8_t *priv_key, uint8_t *pub_key)
 	scalar_multiply(&k, &R);
 	pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
 	bn_write_be(&R.x, pub_key + 1);
+}
+
+void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key)
+{
+	curve_point R;
+	bignum256 k;
+
+	bn_read_be(priv_key, &k);
+	// compute k*G
+	scalar_multiply(&k, &R);
+	pub_key[0] = 0x04;
+	bn_write_be(&R.x, pub_key + 1);
+	bn_write_be(&R.y, pub_key + 33);
 }
 
 void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr)
@@ -387,12 +321,13 @@ void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr)
 }
 
 // uses secp256k1 curve
-// pub_key and signature are DER encoded
+// pub_key - 65 bytes uncompressed key
+// signature - 64 bytes signature
 // msg is a data that was signed
 // msg_len is the message length
 // returns 0 if verification succeeded
 // it is assumed that public key is valid otherwise calling this does not make much sense
-int ecdsa_verify(const uint8_t *pub_key, const uint8_t *signature, const uint8_t *msg, uint32_t msg_len)
+int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
 {
 	int i, j;
 	uint8_t hash[32];
@@ -404,14 +339,19 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *signature, const uint8_t
 	// if double hash is required uncomment the following line:
 	// SHA256_Raw(hash, 32, hash);
 
+	if (pub_key[0] != 0x04) return 1;
+	bn_read_be(pub_key + 1, &pub.x);
+	bn_read_be(pub_key + 33, &pub.y);
+
+	bn_read_be(sig, &r);
+	bn_read_be(sig + 32, &s);
+
 	bn_read_be(hash, &z);
-	der_read_pair(pub_key, &pub.x, &pub.y);
-	der_read_pair(signature, &r, &s);
 
 	if (bn_is_zero(&r) ||
 	    bn_is_zero(&s) ||
 	    (!bn_is_less(&r, &order256k1)) ||
-	    (!bn_is_less(&s, &order256k1))) return 1;
+	    (!bn_is_less(&s, &order256k1))) return 2;
 
 	bn_inverse(&s, &order256k1); // s^-1
 	bn_multiply(&s, &z, &order256k1); // z*s^-1
@@ -441,7 +381,7 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *signature, const uint8_t
 	bn_mod(&(res.x), &order256k1);
 	for (i = 0; i < 9; i++) {
 		if (res.x.val[i] != r.val[i]) {
-			return 1;
+			return 3;
 		}
 	}
 	return 0;

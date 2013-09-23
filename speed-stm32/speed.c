@@ -206,8 +206,8 @@ static void cdcacm_data_rx_cb(usbd_device *usbd_dev, uint8_t ep)
 	int len = usbd_ep_read_packet(usbd_dev, 0x01, buf, 64);
 
 	if (len) {
-		uint8_t sig[70], priv_key[32], msg[256];
-		uint32_t sig_len, i, msg_len;
+		uint8_t sig[64], priv_key[32], msg[256];
+		uint32_t i, msg_len;
 
 		// random message len between 1 and 256
 		msg_len = (random32() & 0xFF) + 1;
@@ -229,7 +229,7 @@ static void cdcacm_data_rx_cb(usbd_device *usbd_dev, uint8_t ep)
 
 		// use our ECDSA signer 10 times to sign the message with the key
 		for (i = 0; i < 10; i++) {
-			ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
+			ecdsa_sign(priv_key, msg, msg_len, sig);
 		}
 
 		len = sprintf(buf, "Done!\r\n");

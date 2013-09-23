@@ -49,7 +49,7 @@ uint8_t *fromhex(const char *str)
 
 char *tohex(const uint8_t *bin, size_t l)
 {
-	static char buf[257], digits[] = "0123456789abcdef";
+	static char buf[256], digits[] = "0123456789abcdef";
 	size_t i;
 	for (i = 0; i < l; i++) {
 		buf[i*2  ] = digits[(bin[i] >> 4) & 0xF];
@@ -186,8 +186,7 @@ END_TEST
 
 START_TEST(test_sign_speed)
 {
-	uint8_t sig[70], priv_key[32], msg[256];
-	uint32_t sig_len;
+	uint8_t sig[64], priv_key[32], msg[256];
 	int i;
 
 	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
@@ -199,7 +198,7 @@ START_TEST(test_sign_speed)
 	clock_t t = clock();
 	for (i = 0 ; i < 500; i++) {
 		// use our ECDSA signer to sign the message with the key
-		ecdsa_sign(priv_key, msg, sizeof(msg), sig, &sig_len);
+		ecdsa_sign(priv_key, msg, sizeof(msg), sig);
 	}
 	printf("Signing speed: %0.2f sig/s\n", 1.0f * i / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
@@ -207,11 +206,10 @@ END_TEST
 
 START_TEST(test_verify_speed)
 {
-	uint8_t sig[70], pub_key[33], msg[256];
-	int i;
-
-	memcpy(sig, fromhex("3044022088dc0db6bc5efa762e75fbcc802af69b9f1fcdbdffce748d403f687f855556e6022010ee8035414099ac7d89cff88a3fa246d332dfa3c78d82c801394112dda039c2"), 70);
-	memcpy(pub_key, fromhex("024054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a0974"), 33);
+	uint8_t sig[64], pub_key[65], msg[256];
+	int i, res;
+	memcpy(sig, fromhex("88dc0db6bc5efa762e75fbcc802af69b9f1fcdbdffce748d403f687f855556e610ee8035414099ac7d89cff88a3fa246d332dfa3c78d82c801394112dda039c2"), 70);
+	memcpy(pub_key, fromhex("044054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a09746c7083ed2097011b1223a17a644e81f59aa3de22dac119fd980b36a8ff29a244"), 65);
 
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
@@ -220,7 +218,8 @@ START_TEST(test_verify_speed)
 	clock_t t = clock();
 	for (i = 0 ; i < 150; i++) {
 		// use our ECDSA verifier to verify the message with the key
-		ecdsa_verify(pub_key, sig, msg, sizeof(msg));
+		res = ecdsa_verify(pub_key, sig, msg, sizeof(msg));
+		ck_assert_int_eq(res, 0);
 	}
 	printf("Verifying speed: %0.2f sig/s\n", 1.0f * i / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }

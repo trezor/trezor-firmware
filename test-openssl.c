@@ -32,8 +32,8 @@
 
 int main()
 {
-	uint8_t sig[70], pub_key[70], priv_key[32], msg[256], buffer[1000], hash[32], *p;
-	uint32_t sig_len, pub_key_len, i, j, msg_len;
+	uint8_t sig[64], pub_key[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
+	uint32_t i, j, msg_len;
 	SHA256_CTX sha256;
 	EC_GROUP *ecgroup;
 	int cnt = 0;
@@ -51,11 +51,11 @@ int main()
 		// new ECDSA key
 		EC_KEY *eckey = EC_KEY_new();
 		EC_KEY_set_group(eckey, ecgroup);
-		
+
 		// generate the key
 		EC_KEY_generate_key(eckey);
-		p = buffer;
 		// copy key to buffer
+		p = buffer;
 		i2d_ECPrivateKey(eckey, &p);
 
 		// size of the key is in buffer[8] and the key begins right after that
@@ -75,10 +75,10 @@ int main()
 		}
 
 		// use our ECDSA signer to sign the message with the key
-		ecdsa_sign(priv_key, msg, msg_len, sig, &sig_len);
+		ecdsa_sign(priv_key, msg, msg_len, sig);
 
 		// generate public key from private key
-		ecdsa_get_public_key_der(priv_key, pub_key, &pub_key_len);
+		ecdsa_get_public_key65(priv_key, pub_key);
 
 		// use our ECDSA verifier to verify the message signature
 		if (ecdsa_verify(pub_key, sig, msg, msg_len) != 0) {
@@ -87,8 +87,9 @@ int main()
 		}
 
 		// copy signature to the OpenSSL struct
-		p = sig;
-		ECDSA_SIG *signature = d2i_ECDSA_SIG(NULL, (const uint8_t **)&p, sig_len);
+		ECDSA_SIG *signature = ECDSA_SIG_new();
+		BN_bin2bn(sig, 32, signature->r);
+		BN_bin2bn(sig + 32, 32, signature->s);
 
 		// compute the digest of the message
 		SHA256_Init(&sha256);

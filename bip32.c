@@ -14,7 +14,7 @@ void xprv_from_seed(uint8_t *seed, int seed_len, xprv *out)
 	// this can be done because private_key[32] and chain_code[32]
 	// form a continuous 64 byte block in the memory
 	hmac_sha512((uint8_t *)"Bitcoin seed", 12, seed, seed_len, out->private_key);
-	ecdsa_get_public_key_compressed(out->private_key, out->public_key);
+	ecdsa_get_public_key33(out->private_key, out->public_key);
 	ecdsa_get_address(out->public_key, 0, out->address);
 }
 
@@ -27,7 +27,7 @@ void xprv_descent(xprv *inout, uint32_t i)
 		data[0] = 0;
 		memcpy(data + 1, inout->private_key, 32);
 	} else {
-		ecdsa_get_public_key_compressed(inout->private_key, data);
+		ecdsa_get_public_key33(inout->private_key, data);
 	}
 	write_be(data + 33, i);
 
@@ -44,6 +44,6 @@ void xprv_descent(xprv *inout, uint32_t i)
 	inout->child_num = i;
 	bn_write_be(&a, inout->private_key);
 
-	ecdsa_get_public_key_compressed(inout->private_key, inout->public_key);
+	ecdsa_get_public_key33(inout->private_key, inout->public_key);
 	ecdsa_get_address(inout->public_key, 0, inout->address);
 }
