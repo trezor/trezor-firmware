@@ -68,16 +68,24 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);
 
 void bn_fast_mod(bignum256 *x, const bignum256 *prime);
 
+void bn_sqrt(bignum256 *x, const bignum256 *prime);
+
 void bn_inverse(bignum256 *x, const bignum256 *prime);
 
 void bn_normalize(bignum256 *a);
 
 void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime);
 
+void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime);
+
 void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res);
 
 void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res);
 
 void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r);
+
+#if 0
+void bn_print(const bignum256 *a);
+#endif
 
 #endif

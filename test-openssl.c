@@ -32,7 +32,7 @@
 
 int main()
 {
-	uint8_t sig[64], pub_key[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
+	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
 	uint32_t i, j, msg_len;
 	SHA256_CTX sha256;
 	EC_GROUP *ecgroup;
@@ -78,11 +78,16 @@ int main()
 		ecdsa_sign(priv_key, msg, msg_len, sig);
 
 		// generate public key from private key
-		ecdsa_get_public_key65(priv_key, pub_key);
+		ecdsa_get_public_key33(priv_key, pub_key33);
+		ecdsa_get_public_key65(priv_key, pub_key65);
 
 		// use our ECDSA verifier to verify the message signature
-		if (ecdsa_verify(pub_key, sig, msg, msg_len) != 0) {
-			printf("MicroECDSA verification failed\n");
+		if (ecdsa_verify(pub_key65, sig, msg, msg_len) != 0) {
+			printf("MicroECDSA verification failed (pub_key_len = 65)\n");
+			break;
+		}
+		if (ecdsa_verify(pub_key33, sig, msg, msg_len) != 0) {
+			printf("MicroECDSA verification failed (pub_key_len = 33)\n");
 			break;
 		}
 

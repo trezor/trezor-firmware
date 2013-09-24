@@ -49,12 +49,13 @@ uint8_t *fromhex(const char *str)
 
 char *tohex(const uint8_t *bin, size_t l)
 {
-	static char buf[256], digits[] = "0123456789abcdef";
+	static char buf[257], digits[] = "0123456789abcdef";
 	size_t i;
 	for (i = 0; i < l; i++) {
 		buf[i*2  ] = digits[(bin[i] >> 4) & 0xF];
 		buf[i*2+1] = digits[bin[i] & 0xF];
 	}
+	buf[l * 2] = 0;
 	return buf;
 }
 
@@ -189,39 +190,60 @@ START_TEST(test_sign_speed)
 	uint8_t sig[64], priv_key[32], msg[256];
 	int i;
 
-	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
-
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
 	}
 
 	clock_t t = clock();
-	for (i = 0 ; i < 500; i++) {
-		// use our ECDSA signer to sign the message with the key
+
+	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
+	for (i = 0 ; i < 250; i++) {
 		ecdsa_sign(priv_key, msg, sizeof(msg), sig);
 	}
-	printf("Signing speed: %0.2f sig/s\n", 1.0f * i / ((float)(clock() - t) / CLOCKS_PER_SEC));
+
+	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
+	for (i = 0 ; i < 250; i++) {
+		ecdsa_sign(priv_key, msg, sizeof(msg), sig);
+	}
+
+	printf("Signing speed: %0.2f sig/s\n", 500.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
 END_TEST
 
 START_TEST(test_verify_speed)
 {
-	uint8_t sig[64], pub_key[65], msg[256];
+	uint8_t sig[64], pub_key33[33], pub_key65[65], msg[256];
 	int i, res;
-	memcpy(sig, fromhex("88dc0db6bc5efa762e75fbcc802af69b9f1fcdbdffce748d403f687f855556e610ee8035414099ac7d89cff88a3fa246d332dfa3c78d82c801394112dda039c2"), 70);
-	memcpy(pub_key, fromhex("044054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a09746c7083ed2097011b1223a17a644e81f59aa3de22dac119fd980b36a8ff29a244"), 65);
 
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
 	}
 
 	clock_t t = clock();
-	for (i = 0 ; i < 150; i++) {
-		// use our ECDSA verifier to verify the message with the key
-		res = ecdsa_verify(pub_key, sig, msg, sizeof(msg));
+
+	memcpy(sig, fromhex("88dc0db6bc5efa762e75fbcc802af69b9f1fcdbdffce748d403f687f855556e610ee8035414099ac7d89cff88a3fa246d332dfa3c78d82c801394112dda039c2"), 64);
+	memcpy(pub_key33, fromhex("024054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a0974"), 33);
+	memcpy(pub_key65, fromhex("044054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a09746c7083ed2097011b1223a17a644e81f59aa3de22dac119fd980b36a8ff29a244"), 65);
+
+	for (i = 0 ; i < 50; i++) {
+		res = ecdsa_verify(pub_key65, sig, msg, sizeof(msg));
+		ck_assert_int_eq(res, 0);
+		res = ecdsa_verify(pub_key33, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
 	}
-	printf("Verifying speed: %0.2f sig/s\n", 1.0f * i / ((float)(clock() - t) / CLOCKS_PER_SEC));
+
+	memcpy(sig, fromhex("067040a2adb3d9deefeef95dae86f69671968a0b90ee72c2eab54369612fd524eb6756c5a1bb662f1175a5fa888763cddc3a07b8a045ef6ab358d8d5d1a9a745"), 64);
+	memcpy(pub_key33, fromhex("03ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d45719"), 33);
+	memcpy(pub_key65, fromhex("04ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d457196235193a15778062ddaa44aef7e6901b781763e52147f2504e268b2d572bf197"), 65);
+
+	for (i = 0 ; i < 50; i++) {
+		res = ecdsa_verify(pub_key65, sig, msg, sizeof(msg));
+		ck_assert_int_eq(res, 0);
+		res = ecdsa_verify(pub_key33, sig, msg, sizeof(msg));
+		ck_assert_int_eq(res, 0);
+	}
+
+	printf("Verifying speed: %0.2f sig/s\n", 200.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
 END_TEST
 

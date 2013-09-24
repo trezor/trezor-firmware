@@ -21,6 +21,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdio.h>
+#include <string.h>
 #include "bignum.h"
 #include "secp256k1.h"
 
@@ -210,6 +212,32 @@ void bn_fast_mod(bignum256 *x, const bignum256 *prime)
 	}
 }
 
+// square root of x = x^((p+1)/4)
+// http://en.wikipedia.org/wiki/Quadratic_residue#Prime_or_prime_power_modulus
+void bn_sqrt(bignum256 *x, const bignum256 *prime)
+{
+	uint32_t i, j, limb;
+	bignum256 res, p;
+	bn_zero(&res); res.val[0] = 1;
+	memcpy(&p, prime, sizeof(bignum256));
+	p.val[0] += 1;
+	bn_rshift(&p);
+	bn_rshift(&p);
+	for (i = 0; i < 9; i++) {
+		limb = p.val[i];
+		for (j = 0; j < 30; j++) {
+			if (i == 8 && limb == 0) break;
+			if (limb & 1) {
+				bn_multiply(x, &res, prime);
+			}
+			limb >>= 1;
+			bn_multiply(x, x, prime);
+		}
+	}
+	bn_mod(&res, prime);
+	memcpy(x, &res, sizeof(bignum256));
+}
+
 #ifndef INVERSE_FAST
 
 #ifdef USE_PRECOMPUTED_IV
@@ -221,8 +249,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 {
 	uint32_t i, j, limb;
 	bignum256 res;
-	res.val[0] = 1;
-	bn_zero(&res);
+	bn_zero(&res); res.val[0] = 1;
 	for (i = 0; i < 9; i++) {
 		limb = prime->val[i];
 		// this is not enough in general but fine for secp256k1 because prime->val[0] > 1
@@ -230,10 +257,10 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		for (j = 0; j < 30; j++) {
 			if (i == 8 && limb == 0) break;
 			if (limb & 1) {
-				multiply(x, &res, prime);
+				bn_multiply(x, &res, prime);
 			}
 			limb >>= 1;
-			multiply(x, x, prime);
+			bn_multiply(x, x, prime);
 		}
 	}
 	bn_mod(&res, prime);
@@ -439,6 +466,12 @@ void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
 	bn_mod(a, prime);
 }
 
+void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime) {
+	a->val[0] += b;
+	bn_normalize(a);
+	bn_mod(a, prime);
+}
+
 // res = a - b
 // b < 2*prime; result not normalized
 void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
@@ -503,3 +536,18 @@ void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r)
 
 	*r = rem.val[0];
 }
+
+#if 0
+void bn_print(const bignum256 *a)
+{
+	printf("%04x", a->val[8] & 0x0000FFFF);
+	printf("%08x", (a->val[7] << 2) | ((a->val[6] & 0x30000000) >> 28));
+	printf("%07x", a->val[6] & 0x0FFFFFFF);
+	printf("%08x", (a->val[5] << 2) | ((a->val[4] & 0x30000000) >> 28));
+	printf("%07x", a->val[4] & 0x0FFFFFFF);
+	printf("%08x", (a->val[3] << 2) | ((a->val[2] & 0x30000000) >> 28));
+	printf("%07x", a->val[2] & 0x0FFFFFFF);
+	printf("%08x", (a->val[1] << 2) | ((a->val[0] & 0x30000000) >> 28));
+	printf("%07x", a->val[0] & 0x0FFFFFFF);
+}
+#endif
