@@ -1,6 +1,7 @@
 '''USB HID implementation of Transport.'''
 
 import hid
+import time
 from transport import Transport, NotImplementedException
 
 DEVICE_IDS = [
@@ -40,6 +41,7 @@ class HidTransport(Transport):
         self.buffer = ''
         path = self.device.split(':')
         self.hid = hid.device(int(path[0], 16), int(path[1], 16))#, path[2])
+        self.hid.set_nonblocking(True)
         self.hid.send_feature_report([0x41, 0x01]) # enable UART
         self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
     
@@ -54,8 +56,8 @@ class HidTransport(Transport):
     def _write(self, msg):
         msg = bytearray(msg)
         while len(msg):            
-            # Report ID, data padded to 62 bytes
-            self.hid.write([63,] + list(msg[:63]) + [0]*(63-len(msg[0:63])))
+            # Report ID, data padded to 63 bytes
+            self.hid.write([63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
             msg = msg[63:]
             
     def _read(self):
@@ -65,6 +67,9 @@ class HidTransport(Transport):
     def _raw_read(self, length):        
         while len(self.buffer) < length:
             data = self.hid.read(64)
+            if not len(data):
+                time.sleep(0.05)
+                continue
 
             report_id = data[0]
             
@@ -73,7 +78,7 @@ class HidTransport(Transport):
                 raise Exception("Not implemented")
                                      
             # Payload received, skip the report ID
-            self.buffer += str(bytearray(data[1:64]))
+            self.buffer += str(bytearray(data[1:]))
 
         ret = self.buffer[:length]
         self.buffer = self.buffer[length:]

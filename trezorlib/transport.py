@@ -81,11 +81,13 @@ class Transport(object):
 
             # Align cursor to the beginning of the header ("##")
             c = read_f.read(1)
+            i = 0
             while c != '#':
-                if c == '':
+                i += 1
+                if i >= 64:
                     # timeout
                     raise Exception("Timed out while waiting for the magic character")
-                print "Warning: Aligning to magic characters"
+                #print "Aligning to magic characters"
                 c = read_f.read(1)
 
             if read_f.read(1) != "#":
