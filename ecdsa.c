@@ -279,7 +279,7 @@ void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr)
 	char *p = addr, s;
 	uint8_t a[32], b[21];
 	uint32_t r;
-	bignum256 c, q;
+	bignum256 c;
 	int i, l;
 
 	SHA256_Raw(pub_key, 33, a);
@@ -296,12 +296,9 @@ void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr)
 	bn_read_be(a, &c);
 
 	while (!bn_is_zero(&c)) {
-		bn_divmod58(&c, &q, &r);
+		bn_divmod58(&c, &r);
 		*p = code[r];
 		p++;
-		for (i = 0; i < 9; i++) {
-			c.val[i] = q.val[i];
-		}
 	}
 
 	if (a[0] == 0) {

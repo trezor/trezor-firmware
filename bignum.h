@@ -82,7 +82,7 @@ void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res);
 
 void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res);
 
-void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r);
+void bn_divmod58(bignum256 *a, uint32_t *r);
 
 #if 0
 void bn_print(const bignum256 *a);

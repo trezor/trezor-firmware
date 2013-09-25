@@ -502,40 +502,22 @@ void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res
 	res->val[8] = a->val[8] - b->val[8] - carry;
 }
 
-// a / 58 = q (+r)
-void bn_divmod58(const bignum256 *a, bignum256 *q, uint32_t *r)
+// a / 58 = a (+r)
+void bn_divmod58(bignum256 *a, uint32_t *r)
 {
-	bignum256 i58, rem;
-	int na, i;
-
-	bn_zero(q);
-	bn_zero(&i58); i58.val[0] = 58;
-
-	if (bn_is_less(a, &i58)) {
-		*r = a->val[0];
+	int i;
+	uint32_t rem, tmp;
+	rem = a->val[8] % 58;
+	a->val[8] /= 58;
+	for (i = 7; i >= 0; i--) {
+		// 2^30 == 18512790*58 + 4
+		tmp = rem * 4 + a->val[i];
+		a->val[i] = rem * 18512790 + (tmp / 58);
+		rem = tmp % 58;
 	}
-
-	na = bn_bitlen(a);
-
-	for (i = 0; i < 9; i++) {
-		rem.val[i] = a->val[i];
-	}
-
-	for (i = 0; i <= na - 6; i++) {
-		bn_lshift(&i58);
-	}
-
-	for (i = na - 5; i >= 0; --i) {
-		bn_lshift(q);
-		if (!bn_is_less(&rem, &i58)) {
-			bn_substract_noprime(&rem, &i58, &rem);
-			q->val[0] |= 1;
-		}
-		bn_rshift(&i58);
-	}
-
-	*r = rem.val[0];
+	*r = rem;
 }
+
 
 #if 0
 void bn_print(const bignum256 *a)
