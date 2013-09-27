@@ -94,13 +94,12 @@ int bn_is_less(const bignum256 *a, const bignum256 *b)
 }
 
 int bn_bitlen(const bignum256 *a) {
-	int i, r = 0;
-	for (i = 0; i < 256; i++) {
-		if (a->val[i / 30] & (1 << (i % 30))) {
-			r = i;
-		}
-	}
-	return r;
+	int i = 8, j;
+	while (i >= 0 && a->val[i] == 0) i--;
+	if (i == -1) return 0;
+	j = 29;
+	while ((a->val[i] & (1 << j)) == 0) j--;
+	return i * 30 + j + 1;
 }
 
 void bn_lshift(bignum256 *a)
@@ -444,15 +443,11 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 
 void bn_normalize(bignum256 *a) {
 	int i;
-	uint32_t carry = 0;
+	uint32_t tmp = 0;
 	for (i = 0; i < 9; i++) {
-		a->val[i] += carry;
-		if (a->val[i] > 0x3FFFFFFF) {
-			carry = a->val[i] >> 30;
-			a->val[i] &= 0x3FFFFFFF;
-		} else {
-			carry = 0;
-		}
+		tmp += a->val[i];
+		a->val[i] = tmp & 0x3FFFFFFF;
+		tmp >>= 30;
 	}
 }
 
@@ -463,12 +458,14 @@ void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
 		a->val[i] += b->val[i];
 	}
 	bn_normalize(a);
+	bn_fast_mod(a, prime);
 	bn_mod(a, prime);
 }
 
 void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime) {
 	a->val[0] += b;
 	bn_normalize(a);
+	bn_fast_mod(a, prime);
 	bn_mod(a, prime);
 }
 
@@ -489,17 +486,12 @@ void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
 void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res)
 {
 	int i;
-	char carry = 0;
-	for (i = 0; i < 8; i++) {
-		if (a->val[i] >= b->val[i] + carry) {
-			res->val[i] = a->val[i] - b->val[i] - carry;
-			carry = 0;
-		} else {
-			res->val[i] = a->val[i] + 0x40000000 - b->val[i];
-			carry = 1;
-		}
+	uint32_t tmp = 1;
+	for (i = 0; i < 9; i++) {
+		tmp += 0x3FFFFFFF + a->val[i] - b->val[i];
+		res->val[i] = tmp & 0x3FFFFFFF;
+		tmp >>= 30;
 	}
-	res->val[8] = a->val[8] - b->val[8] - carry;
 }
 
 // a / 58 = a (+r)

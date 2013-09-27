@@ -195,7 +195,7 @@ void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_
 // msg is a data to be signed
 // msg_len is the message length
 // sig is 64 bytes long array for the signature
-void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
+int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
 {
 	uint32_t i;
 	uint8_t hash[32];
@@ -224,7 +224,9 @@ void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, u
 		for (i = 0; i < 9; i++) {
 			if (R.x.val[i] != 0) break;
 		}
-		if (i == 9) continue;
+		if (i == 9) {
+			return 1;
+		}
 		bn_inverse(&k, &order256k1);
 		bn_read_be(priv_key, da);
 		bn_multiply(&R.x, da, &order256k1);
@@ -239,13 +241,17 @@ void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, u
 		for (i = 0; i < 9; i++) {
 			if (k.val[i] != 0) break;
 		}
-		if (i == 9) continue;
+		if (i == 9) {
+			return 2;
+		}
 		// we are done, R.x and k is the result signature
 		break;
 	}
 
 	bn_write_be(&R.x, sig);
 	bn_write_be(&k, sig + 32);
+
+	return 0;
 }
 
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key)

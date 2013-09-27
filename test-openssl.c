@@ -75,7 +75,10 @@ int main()
 		}
 
 		// use our ECDSA signer to sign the message with the key
-		ecdsa_sign(priv_key, msg, msg_len, sig);
+		if (ecdsa_sign(priv_key, msg, msg_len, sig) != 0) {
+			printf("MicroECDSA signing failed\n");
+			break;
+		}
 
 		// generate public key from private key
 		ecdsa_get_public_key33(priv_key, pub_key33);

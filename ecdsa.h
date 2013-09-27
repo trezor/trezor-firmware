@@ -29,7 +29,7 @@
 #include "secp256k1.h"
 
 // all functions use secp256k1 curve
-void ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
+int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr);
