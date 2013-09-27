@@ -136,9 +136,9 @@ void scalar_multiply(bignum256 *k, curve_point *res)
 }
 
 // generate random K for signing
-void generate_k_random(bignum256 *k) {
-	int i;
-	for (;;) {
+int generate_k_random(bignum256 *k) {
+	int i, j;
+	for (j = 0; j < 10000; j++) {
 		for (i = 0; i < 8; i++) {
 			k->val[i] = random32() & 0x3FFFFFFF;
 		}
@@ -146,14 +146,17 @@ void generate_k_random(bignum256 *k) {
 		// if k is too big or too small, we don't like it
 		if (k->val[5] == 0x3FFFFFFF && k->val[6] == 0x3FFFFFFF && k->val[7] == 0x3FFFFFFF && k->val[8] == 0xFFFF) continue;
 		if (k->val[5] == 0x0 && k->val[6] == 0x0 && k->val[7] == 0x0 && k->val[8] == 0x0) continue;
-		return;
+		return 0; // good number - no error
 	}
+	// we generated 10000 numbers, none of them is good -> fail
+	return 1;
 }
 
 // generate K in a deterministic way, according to RFC6979
 // http://tools.ietf.org/html/rfc6979
-void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash)
+int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash)
 {
+	int i;
 	uint8_t v[32], k[32], bx[2*32], buf[32 + 1 + sizeof(bx)], t[32];
 	bignum256 z1;
 
@@ -177,17 +180,19 @@ void generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_
 	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
 	hmac_sha256(k, sizeof(k), v, sizeof(k), v);
 
-	for (;;) {
+	for (i = 0; i < 10000; i++) {
 		hmac_sha256(k, sizeof(k), v, sizeof(v), t);
 		bn_read_be(t, secret);
 		if ( !bn_is_zero(secret) && bn_is_less(secret, &order256k1) ) {
-			return;
+			return 0; // good number -> no error
 		}
 		memcpy(buf, v, sizeof(v));
 		buf[sizeof(v)] = 0x00;
 		hmac_sha256(k, sizeof(k), buf, sizeof(v) + 1, k);
 		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
 	}
+	// we generated 10000 numbers, none of them is good -> fail
+	return 1;
 }
 
 // uses secp256k1 curve
@@ -208,46 +213,48 @@ int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, ui
 	// SHA256_Raw(hash, 32, hash);
 
 	bn_read_be(hash, &z);
-	for (;;) {
 
-		// generate random number k
-		//generate_k_random(&k);
+	// generate random number k
+	//if (generate_k_random(&k) != 0) {
+	//	return 1;
+	//}
 
-		// generate K deterministically
-		generate_k_rfc6979(&k, priv_key, hash);
-
-		// compute k*G
-		scalar_multiply(&k, &R);
-		// r = (rx mod n)
-		bn_mod(&R.x, &order256k1);
-		// if r is zero, we try different k
-		for (i = 0; i < 9; i++) {
-			if (R.x.val[i] != 0) break;
-		}
-		if (i == 9) {
-			return 1;
-		}
-		bn_inverse(&k, &order256k1);
-		bn_read_be(priv_key, da);
-		bn_multiply(&R.x, da, &order256k1);
-		for (i = 0; i < 8; i++) {
-			da->val[i] += z.val[i];
-			da->val[i + 1] += (da->val[i] >> 30);
-			da->val[i] &= 0x3FFFFFFF;
-		}
-		da->val[8] += z.val[8];
-		bn_multiply(da, &k, &order256k1);
-		bn_mod(&k, &order256k1);
-		for (i = 0; i < 9; i++) {
-			if (k.val[i] != 0) break;
-		}
-		if (i == 9) {
-			return 2;
-		}
-		// we are done, R.x and k is the result signature
-		break;
+	// generate K deterministically
+	if (generate_k_rfc6979(&k, priv_key, hash) != 0) {
+		return 1;
 	}
 
+	// compute k*G
+	scalar_multiply(&k, &R);
+	// r = (rx mod n)
+	bn_mod(&R.x, &order256k1);
+	// if r is zero, we fail
+	for (i = 0; i < 9; i++) {
+		if (R.x.val[i] != 0) break;
+	}
+	if (i == 9) {
+		return 2;
+	}
+	bn_inverse(&k, &order256k1);
+	bn_read_be(priv_key, da);
+	bn_multiply(&R.x, da, &order256k1);
+	for (i = 0; i < 8; i++) {
+		da->val[i] += z.val[i];
+		da->val[i + 1] += (da->val[i] >> 30);
+		da->val[i] &= 0x3FFFFFFF;
+	}
+	da->val[8] += z.val[8];
+	bn_multiply(da, &k, &order256k1);
+	bn_mod(&k, &order256k1);
+	for (i = 0; i < 9; i++) {
+		if (k.val[i] != 0) break;
+	}
+	// if k is zero, we fail
+	if (i == 9) {
+		return 3;
+	}
+
+	// we are done, R.x and k is the result signature
 	bn_write_be(&R.x, sig);
 	bn_write_be(&k, sig + 32);
 

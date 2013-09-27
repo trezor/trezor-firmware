@@ -174,13 +174,15 @@ END_TEST
 
 START_TEST(test_rfc6979)
 {
+	int res;
 	bignum256 k;
 	uint8_t buf[32];
 
 	SHA256_Raw((uint8_t *)"sample", 6, buf);
-	generate_k_rfc6979(&k, fromhex("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50"), buf);
-	bn_write_be(&k, buf);
+	res = generate_k_rfc6979(&k, fromhex("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50"), buf);
+	ck_assert_int_eq(res, 0);
 
+	bn_write_be(&k, buf);
 	ck_assert_mem_eq(buf, fromhex("2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3"), 32);
 }
 END_TEST
