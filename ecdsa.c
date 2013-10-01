@@ -326,7 +326,7 @@ void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr)
 	for (i = 0; i < l / 2; i++) {
 		s = addr[i];
 		addr[i] = addr[l - 1 - i];
-		addr[l - 1 - i] = s;;
+		addr[l - 1 - i] = s;
 	}
 }
 
@@ -343,7 +343,6 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	uint8_t hash[32];
 	curve_point pub, res;
 	bignum256 r, s, z;
-	int res_is_zero = 0;
 	// compute hash function of message
 	SHA256_Raw(msg, msg_len, hash);
 	// if double hash is required uncomment the following line:
@@ -386,7 +385,7 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	if (bn_is_zero(&z)) {
 		// our message hashes to zero
 		// I don't expect this to happen any time soon
-		res_is_zero = 1;
+		return 3;
 	} else {
 		scalar_multiply(&z, &res);
 	}
