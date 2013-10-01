@@ -13,6 +13,3 @@ a) the signer only understands secp256k1 elliptic curve
 b) unit tests using Check (check.sf.net) are in tests.c
 
 c) tests against OpenSSL are in test-openssl.c
-
-d) directory speed-stm32 contains project for deploying the code
-   on STM32 microcontroller and checking signing speed there
