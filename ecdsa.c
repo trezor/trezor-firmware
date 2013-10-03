@@ -98,7 +98,7 @@ void scalar_multiply(bignum256 *k, curve_point *res)
 	int i, j;
 	// result is zero
 	int is_zero = 1;
-#ifdef USE_PRECOMPUTED_CP
+#if USE_PRECOMPUTED_CP
 	int exp = 0;
 #else
 	curve_point curr;
@@ -110,21 +110,21 @@ void scalar_multiply(bignum256 *k, curve_point *res)
 			if (i == 8 && (k->val[i] >> j) == 0) break;
 			if (k->val[i] & (1u << j)) {
 				if (is_zero) {
-#ifdef USE_PRECOMPUTED_CP
+#if USE_PRECOMPUTED_CP
 					memcpy(res, secp256k1_cp + exp, sizeof(curve_point));
 #else
 					memcpy(res, &curr, sizeof(curve_point));
 #endif
 					is_zero = 0;
 				} else {
-#ifdef USE_PRECOMPUTED_CP
+#if USE_PRECOMPUTED_CP
 					point_add(secp256k1_cp + exp, res);
 #else
 					point_add(&curr, res);
 #endif
 				}
 			}
-#ifdef USE_PRECOMPUTED_CP
+#if USE_PRECOMPUTED_CP
 			exp++;
 #else
 			point_double(&curr);

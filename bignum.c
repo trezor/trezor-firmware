@@ -237,10 +237,10 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 	memcpy(x, &res, sizeof(bignum256));
 }
 
-#ifndef INVERSE_FAST
+#if ! USE_INVERSE_FAST
 
-#ifdef USE_PRECOMPUTED_IV
-#warning USE_PRECOMPUTED_IV will not be used, please undef
+#if USE_PRECOMPUTED_IV
+#warning USE_PRECOMPUTED_IV will not be used
 #endif
 
 // in field G_prime, small but slow
@@ -405,7 +405,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		temp >>= 30;
 	}
 	int done = 0;
-#ifdef USE_PRECOMPUTED_IV
+#if USE_PRECOMPUTED_IV
 	if (prime == &prime256k1) {
 		for (j = 0; j < 9; j++) {
 			x->val[j] = r[j];
@@ -509,7 +509,6 @@ void bn_divmod58(bignum256 *a, uint32_t *r)
 	}
 	*r = rem;
 }
-
 
 #if 0
 void bn_print(const bignum256 *a)

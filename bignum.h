@@ -27,12 +27,19 @@
 #include <stdint.h>
 
 // use precomputed Inverse Values of powers of two
+#ifndef USE_PRECOMPUTED_IV
 #define USE_PRECOMPUTED_IV 1
+#endif
 
 // use precomputed Curve Points (some scalar multiples of curve base point G)
+#ifndef USE_PRECOMPUTED_CP
 #define USE_PRECOMPUTED_CP 1
+#endif
 
-#define INVERSE_FAST 1
+// use fast inverse method
+#ifndef USE_INVERSE_FAST
+#define USE_INVERSE_FAST 1
+#endif
 
 // bignum256 are 256 bits stored as 8*30 bit + 1*16 bit
 // val[0] are lowest 30 bits, val[8] highest 16 bits

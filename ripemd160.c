@@ -61,10 +61,6 @@
       (c) = ROL((c), 10);\
    }
 
-
-static void compress(uint32_t *MDbuf, uint32_t *X);
-
-
 static void compress(uint32_t *MDbuf, uint32_t *X)
 {
 	uint32_t aa = MDbuf[0],  bb = MDbuf[1],  cc = MDbuf[2], dd = MDbuf[3],  ee = MDbuf[4];
