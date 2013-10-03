@@ -144,9 +144,9 @@ int generate_k_random(bignum256 *k) {
 		}
 		k->val[8] = random32() & 0xFFFF;
 		// if k is too big or too small, we don't like it
-		if (k->val[5] == 0x3FFFFFFF && k->val[6] == 0x3FFFFFFF && k->val[7] == 0x3FFFFFFF && k->val[8] == 0xFFFF) continue;
-		if (k->val[5] == 0x0 && k->val[6] == 0x0 && k->val[7] == 0x0 && k->val[8] == 0x0) continue;
-		return 0; // good number - no error
+		if ( !bn_is_zero(k) && bn_is_less(k, &order256k1) ) {
+			return 0; // good number - no error
+		}
 	}
 	// we generated 10000 numbers, none of them is good -> fail
 	return 1;
@@ -214,15 +214,17 @@ int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, ui
 
 	bn_read_be(hash, &z);
 
-	// generate random number k
-	//if (generate_k_random(&k) != 0) {
-	//	return 1;
-	//}
-
+#if USE_RFC6979
 	// generate K deterministically
 	if (generate_k_rfc6979(&k, priv_key, hash) != 0) {
 		return 1;
 	}
+#else
+	// generate random number k
+	if (generate_k_random(&k) != 0) {
+		return 1;
+	}
+#endif
 
 	// compute k*G
 	scalar_multiply(&k, &R);
