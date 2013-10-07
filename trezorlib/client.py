@@ -11,6 +11,9 @@ def show_input(input_text, message=None):
         print "QUESTION FROM DEVICE:", message
     return raw_input(input_text)
 
+def pin_func(input_text, message=None):
+    return show_input(input_text, message)
+
 class CallException(Exception):
     pass
 
@@ -20,12 +23,13 @@ class PinException(CallException):
 class TrezorClient(object):
     
     def __init__(self, transport, debuglink=None, 
-                 message_func=show_message, input_func=show_input, debug=False):
+                 message_func=show_message, input_func=show_input, pin_func=pin_func, debug=False):
         self.transport = transport
         self.debuglink = debuglink
         
         self.message_func = message_func
         self.input_func = input_func
+        self.pin_func = pin_func
         self.debug = debug
         
         self.setup_debuglink()
@@ -104,7 +108,7 @@ class TrezorClient(object):
                     else:
                         msg2 = proto.PinMatrixAck(pin='444444222222')
                 else:
-                    pin = self.input_func("PIN required: ", resp.message)
+                    pin = self.pin_func("PIN required: ", resp.message)
                     msg2 = proto.PinMatrixAck(pin=pin)
                     
                 return self.call(msg2)
