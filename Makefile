@@ -1,6 +1,6 @@
 CC     = gcc
 CFLAGS = -Wall -Os
-OBJS   = bignum.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o bip32.o ripemd160.o
+OBJS   = bignum.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o bip32.o ripemd160.o blowfish.o
 
 all: tests test-openssl
 

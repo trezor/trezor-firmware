@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "blowfish.h"
 #include "bignum.h"
 #include "bip32.h"
 #include "ecdsa.h"
@@ -274,6 +275,20 @@ START_TEST(test_verify_speed)
 }
 END_TEST
 
+// test vectors from https://www.schneier.com/code/vectors.txt
+START_TEST(test_blowfish)
+{
+	uint8_t key[8];
+	uint8_t data[8];
+
+	memcpy(key, fromhex("0000000000000000"), 8);
+	memcpy(data, fromhex("0000000000000000"), 8);
+	blowfish_setkey(key, 8);
+	blowfish_encrypt(data, 8);
+	ck_assert_mem_eq(data, fromhex("4ef997456198dd78"), 8);
+}
+END_TEST
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -292,6 +307,10 @@ Suite *test_suite(void)
 	tc = tcase_create("speed");
 	tcase_add_test(tc, test_sign_speed);
 	tcase_add_test(tc, test_verify_speed);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("blowfish");
+	tcase_add_test(tc, test_blowfish);
 	suite_add_tcase(s, tc);
 
 	return s;
