@@ -1,7 +1,7 @@
 import sys
 from PyQt4.Qt import QApplication, QWidget, QGridLayout, QVBoxLayout
 from PyQt4.QtGui import QPushButton, QLineEdit, QSizePolicy, QRegExpValidator
-from PyQt4.QtCore import QObject, SIGNAL, QRegExp
+from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt
 
 class PinButton(QPushButton):
     def __init__(self, password, encoded_value):
@@ -35,6 +35,7 @@ class PinMatrixWidget(QWidget):
         for x in range(9):
             button = PinButton(self.password, x + 1)
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            button.setFocusPolicy(Qt.NoFocus)
             self.buttons.append(button)
             grid.addWidget(button, x / 3, x % 3)
 
