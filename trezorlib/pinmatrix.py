@@ -24,8 +24,6 @@ class PinMatrixWidget(QWidget):
     def __init__(self, parent=None):
         super(PinMatrixWidget, self).__init__(parent)
         
-        self.buttons = []
-
         self.password = QLineEdit()
         self.password.setValidator(QRegExpValidator(QRegExp('[1-9]+'), None))
         self.password.setEchoMode(QLineEdit.Password)
@@ -36,15 +34,12 @@ class PinMatrixWidget(QWidget):
             button = PinButton(self.password, x + 1)
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             button.setFocusPolicy(Qt.NoFocus)
-            self.buttons.append(button)
             grid.addWidget(button, x / 3, x % 3)
 
         vbox = QVBoxLayout()
         vbox.addLayout(grid)
         vbox.addWidget(self.password)
-
         self.setLayout(vbox)
-        self.move(300, 150)
 
     def get_value(self):
         return self.password.text()
@@ -70,6 +65,7 @@ if __name__ == '__main__':
 
     w = QWidget()
     w.setLayout(vbox)
+    w.move(100, 100)
     w.show()
 
     a.exec_()
