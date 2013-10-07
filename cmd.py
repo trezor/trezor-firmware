@@ -1,11 +1,14 @@
 #!/usr/bin/python
+import os
 import binascii
 import argparse
 import json
+import threading
 
-from trezorlib.client import TrezorClient
+from trezorlib.client import TrezorClient, pin_func
 from trezorlib.debuglink import DebugLink
 from trezorlib.protobuf_json import pb2json
+from trezorlib.pinmatrix import PinMatrixWidget
 
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
@@ -152,7 +155,61 @@ def list_usb():
     from trezorlib.transport_hid import HidTransport
     devices = HidTransport.enumerate()
     return devices
-  
+
+class PinMatrixThread(threading.Thread):
+    '''
+        Hacked PinMatrixWidget into command line tool :-).
+    '''
+    def __init__(self, input_text, message):
+        super(PinMatrixThread, self).__init__()
+        self.input_text = input_text
+        self.message = message
+        self.pin_value = ''
+
+    def run(self):
+        import sys
+        from PyQt4.Qt import QApplication, QWidget, QVBoxLayout
+        from PyQt4.QtGui import QPushButton, QLabel
+        from PyQt4.QtCore import QObject, SIGNAL
+
+        a = QApplication(sys.argv)
+        matrix = PinMatrixWidget()
+
+        def clicked():
+            self.pin_value = str(matrix.get_value())
+            a.closeAllWindows()
+
+        ok = QPushButton('OK')
+        QObject.connect(ok, SIGNAL('clicked()'), clicked)
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(QLabel(self.input_text + self.message))
+        vbox.addWidget(matrix)
+        vbox.addWidget(ok)
+
+        w = QWidget()
+        w.setLayout(vbox)
+        w.move(100, 100)
+        w.show()
+
+        a.exec_()
+
+def qt_pin_func(input_text, message=None):
+    '''
+        This is a hack to display Qt window in non-qt application.
+        Qt window just asks for PIN and closes itself, which trigger join().
+    '''
+    if os.getenv('DISPLAY'):
+        # Let's hope that system is configured properly and this won't crash
+        t = PinMatrixThread(input_text, message)
+        t.start()
+        t.join()
+        return t.pin_value
+    else:
+        # Most likely no X is running,
+        # let's fallback to default pin_func implementation
+        return pin_func(input_text, message)
+
 def main():
     args = parse_args(Commands)
 
@@ -172,7 +229,7 @@ def main():
     else:
         debuglink = None
         
-    client = TrezorClient(transport, debuglink=debuglink)
+    client = TrezorClient(transport, pin_func=qt_pin_func, debuglink=debuglink)
     client.setup_debuglink(button=True, pin_correct=True)
     cmds = Commands(client)
     
