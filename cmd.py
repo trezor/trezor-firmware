@@ -97,7 +97,7 @@ class Commands(object):
         return self.client.ping(args.msg)
 
     def get_master_public_key(self, args):
-        return binascii.hexlify(self.client.get_master_public_key())
+        return self.client.get_master_public_key()
     
     def get_serial_number(self, args):
         return binascii.hexlify(self.client.get_serial_number())
