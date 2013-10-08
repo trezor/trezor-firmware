@@ -6,9 +6,10 @@ Heavily optimized cryptography algorithms for embedded devices.
 These include:
 - Big Number (256 bit) Arithmetics
 - BIP32 Hierarchical Deterministic Wallets
-- Blowfish encrypt/decrypt
-- ECDSA signer/verifier (only secp256k1 curve)
-- ECDSA public key derivation and Base58 address representation
+- Blowfish encryption/decryption (ECB)
+- ECDSA signing/verifying (only hardcoded secp256k1 curve,
+  uses RFC6979 for deterministic signatures)
+- ECDSA public key derivation + Base58 address representation
 - HMAC-SHA256 and HMAC-SHA512
 - RIPEMD-160
 - SHA256/SHA512
