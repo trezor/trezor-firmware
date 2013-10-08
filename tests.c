@@ -298,7 +298,7 @@ END_TEST
 // define test suite and cases
 Suite *test_suite(void)
 {
-	Suite *s = suite_create("MicroECDSA");
+	Suite *s = suite_create("trezor-crypto");
 	TCase *tc;
 
 	tc = tcase_create("bip32");

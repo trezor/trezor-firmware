@@ -76,7 +76,7 @@ int main()
 
 		// use our ECDSA signer to sign the message with the key
 		if (ecdsa_sign(priv_key, msg, msg_len, sig) != 0) {
-			printf("MicroECDSA signing failed\n");
+			printf("trezor-crypto signing failed\n");
 			break;
 		}
 
@@ -86,11 +86,11 @@ int main()
 
 		// use our ECDSA verifier to verify the message signature
 		if (ecdsa_verify(pub_key65, sig, msg, msg_len) != 0) {
-			printf("MicroECDSA verification failed (pub_key_len = 65)\n");
+			printf("trezor-crypto verification failed (pub_key_len = 65)\n");
 			break;
 		}
 		if (ecdsa_verify(pub_key33, sig, msg, msg_len) != 0) {
-			printf("MicroECDSA verification failed (pub_key_len = 33)\n");
+			printf("trezor-crypto verification failed (pub_key_len = 33)\n");
 			break;
 		}
 
