@@ -208,6 +208,12 @@ START_TEST(test_rfc6979)
 	ck_assert_int_eq(res, 0);
 	bn_write_be(&k, buf);
 	ck_assert_mem_eq(buf, fromhex("38aa22d72376b4dbc472e06c3ba403ee0a394da63fc58d88686c611aba98d6b3"), 32);
+
+	SHA256_Raw((uint8_t *)"There is a computer disease that anybody who works with computers knows about. It's a very serious disease and it interferes completely with the work. The trouble with computers is that you 'play' with them!", 207, buf);
+	res = generate_k_rfc6979(&k, fromhex("e91671c46231f833a6406ccbea0e3e392c76c167bac1cb013f6f1013980455c2"), buf);
+	ck_assert_int_eq(res, 0);
+	bn_write_be(&k, buf);
+	ck_assert_mem_eq(buf, fromhex("1f4b84c23a86a221d233f2521be018d9318639d5b8bbd6374a8a59232d16ad3d"), 32);
 }
 END_TEST
 

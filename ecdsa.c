@@ -256,6 +256,11 @@ int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, ui
 		return 3;
 	}
 
+	// if S > order/2 => S = -S
+	if (bn_is_less(&order256k1_half, &k)) {
+		bn_substract_noprime(&order256k1, &k, &k);
+	}
+
 	// we are done, R.x and k is the result signature
 	bn_write_be(&R.x, sig);
 	bn_write_be(&k, sig + 32);

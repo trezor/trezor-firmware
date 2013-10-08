@@ -42,6 +42,9 @@ extern const curve_point G256k1;
 // secp256k1 order of G
 extern const bignum256 order256k1;
 
+// secp256k1 order of G / 2
+extern const bignum256 order256k1_half;
+
 // 3/2 in G_p
 extern const bignum256 three_over_two256k1;
 
