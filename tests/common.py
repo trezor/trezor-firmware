@@ -11,8 +11,8 @@ class TrezorTest(unittest.TestCase):
         self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS)
         self.client = TrezorClient(self.transport, DebugLink(self.debug_transport), debug=True)
 
-        self.mnemonic1 = 'panda tree planet type cinnamon digital always essence grocery poor tree slot'
-        self.mnemonic2 = 'glory vanish past debate cricket extra receive spring scatter rebound bat expect'
+        self.mnemonic1 = 'juice enrich pool orbit brick prevent system chronic people industry insane private'
+        self.mnemonic2 = 'bark depend buffalo library lonely syrup exact trip kitten yellow arch into damage phone toy wild color soon suit move opinion type replace donate'
         self.pin1 = '1234'
         self.pin2 = '43211'
 
