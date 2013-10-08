@@ -281,17 +281,74 @@ START_TEST(test_verify_speed)
 }
 END_TEST
 
+#define test_bfsh(KEY, CLEAR, CIPHER) do { \
+	memcpy(key, fromhex(KEY), strlen(KEY)/2); \
+	memcpy(data, fromhex(CLEAR), strlen(CLEAR)/2); \
+	blowfish_setkey(key, strlen(KEY)/2); \
+	blowfish_encrypt(data, strlen(CLEAR)/2); \
+	ck_assert_mem_eq(data, fromhex(CIPHER), strlen(CIPHER)/2); \
+} while (0)
+
 // test vectors from https://www.schneier.com/code/vectors.txt
-START_TEST(test_blowfish)
+START_TEST(test_blowfish_1)
 {
 	uint8_t key[8];
 	uint8_t data[8];
+	test_bfsh("0000000000000000", "0000000000000000", "4ef997456198dd78");
+	test_bfsh("ffffffffffffffff", "ffffffffffffffff", "51866fd5b85ecb8a");
+	test_bfsh("3000000000000000", "1000000000000001", "7d856f9a613063f2");
+	test_bfsh("1111111111111111", "1111111111111111", "2466dd878b963c9d");
+	test_bfsh("0123456789abcdef", "1111111111111111", "61f9c3802281b096");
+	test_bfsh("1111111111111111", "0123456789abcdef", "7d0cc630afda1ec7");
+	test_bfsh("0000000000000000", "0000000000000000", "4ef997456198dd78");
+	test_bfsh("fedcba9876543210", "0123456789abcdef", "0aceab0fc6a0a28d");
+	test_bfsh("7ca110454a1a6e57", "01a1d6d039776742", "59c68245eb05282b");
+	test_bfsh("0131d9619dc1376e", "5cd54ca83def57da", "b1b8cc0b250f09a0");
+	test_bfsh("07a1133e4a0b2686", "0248d43806f67172", "1730e5778bea1da4");
+	test_bfsh("3849674c2602319e", "51454b582ddf440a", "a25e7856cf2651eb");
+	test_bfsh("04b915ba43feb5b6", "42fd443059577fa2", "353882b109ce8f1a");
+	test_bfsh("0113b970fd34f2ce", "059b5e0851cf143a", "48f4d0884c379918");
+	test_bfsh("0170f175468fb5e6", "0756d8e0774761d2", "432193b78951fc98");
+	test_bfsh("43297fad38e373fe", "762514b829bf486a", "13f04154d69d1ae5");
+	test_bfsh("07a7137045da2a16", "3bdd119049372802", "2eedda93ffd39c79");
+	test_bfsh("04689104c2fd3b2f", "26955f6835af609a", "d887e0393c2da6e3");
+	test_bfsh("37d06bb516cb7546", "164d5e404f275232", "5f99d04f5b163969");
+	test_bfsh("1f08260d1ac2465e", "6b056e18759f5cca", "4a057a3b24d3977b");
+	test_bfsh("584023641aba6176", "004bd6ef09176062", "452031c1e4fada8e");
+	test_bfsh("025816164629b007", "480d39006ee762f2", "7555ae39f59b87bd");
+	test_bfsh("49793ebc79b3258f", "437540c8698f3cfa", "53c55f9cb49fc019");
+	test_bfsh("4fb05e1515ab73a7", "072d43a077075292", "7a8e7bfa937e89a3");
+	test_bfsh("49e95d6d4ca229bf", "02fe55778117f12a", "cf9c5d7a4986adb5");
+	test_bfsh("018310dc409b26d6", "1d9d5c5018f728c2", "d1abb290658bc778");
+	test_bfsh("1c587f1c13924fef", "305532286d6f295a", "55cb3774d13ef201");
+	test_bfsh("0101010101010101", "0123456789abcdef", "fa34ec4847b268b2");
+	test_bfsh("1f1f1f1f0e0e0e0e", "0123456789abcdef", "a790795108ea3cae");
+	test_bfsh("e0fee0fef1fef1fe", "0123456789abcdef", "c39e072d9fac631d");
+	test_bfsh("0000000000000000", "ffffffffffffffff", "014933e0cdaff6e4");
+	test_bfsh("ffffffffffffffff", "0000000000000000", "f21e9a77b71c49bc");
+	test_bfsh("0123456789abcdef", "0000000000000000", "245946885754369a");
+	test_bfsh("fedcba9876543210", "ffffffffffffffff", "6b5c5a9c5d9e0a5a");
+}
+END_TEST
 
-	memcpy(key, fromhex("0000000000000000"), 8);
-	memcpy(data, fromhex("0000000000000000"), 8);
-	blowfish_setkey(key, 8);
-	blowfish_encrypt(data, 8);
-	ck_assert_mem_eq(data, fromhex("4ef997456198dd78"), 8);
+// mnemonic test vectors
+START_TEST(test_blowfish_2)
+{
+	uint8_t key[24];
+	uint8_t data[24];
+	// 6d6e656d6f6e6963 = "mnemonic"
+	test_bfsh("6d6e656d6f6e6963", "0000000000000000", "e6b5de53efaec3a5");
+	test_bfsh("6d6e656d6f6e6963", "00000000000000000000000000000000", "e6b5de53efaec3a5e6b5de53efaec3a5");
+	test_bfsh("6d6e656d6f6e6963", "000000000000000000000000000000000000000000000000", "e6b5de53efaec3a5e6b5de53efaec3a5e6b5de53efaec3a5");
+	test_bfsh("6d6e656d6f6e6963", "7f7f7f7f7f7f7f7f", "cb21e7cd6313594b");
+	test_bfsh("6d6e656d6f6e6963", "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f", "cb21e7cd6313594bcb21e7cd6313594b");
+	test_bfsh("6d6e656d6f6e6963", "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f", "cb21e7cd6313594bcb21e7cd6313594bcb21e7cd6313594b");
+	test_bfsh("6d6e656d6f6e6963", "8080808080808080", "8800e1df66298ae6");
+	test_bfsh("6d6e656d6f6e6963", "80808080808080808080808080808080", "8800e1df66298ae68800e1df66298ae6");
+	test_bfsh("6d6e656d6f6e6963", "808080808080808080808080808080808080808080808080", "8800e1df66298ae68800e1df66298ae68800e1df66298ae6");
+	test_bfsh("6d6e656d6f6e6963", "ffffffffffffffff", "4c8be56fcf3de4cf");
+	test_bfsh("6d6e656d6f6e6963", "ffffffffffffffffffffffffffffffff", "4c8be56fcf3de4cf4c8be56fcf3de4cf");
+	test_bfsh("6d6e656d6f6e6963", "ffffffffffffffffffffffffffffffffffffffffffffffff", "4c8be56fcf3de4cf4c8be56fcf3de4cf4c8be56fcf3de4cf");
 }
 END_TEST
 
@@ -316,7 +373,8 @@ Suite *test_suite(void)
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("blowfish");
-	tcase_add_test(tc, test_blowfish);
+	tcase_add_test(tc, test_blowfish_1);
+	tcase_add_test(tc, test_blowfish_2);
 	suite_add_tcase(s, tc);
 
 	return s;
