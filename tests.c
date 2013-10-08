@@ -175,47 +175,26 @@ END_TEST
 
 int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
 
+#define test_deterministic(KEY, MSG, K) do { \
+	SHA256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
+	res = generate_k_rfc6979(&k, fromhex(KEY), buf); \
+	ck_assert_int_eq(res, 0); \
+	bn_write_be(&k, buf); \
+	ck_assert_mem_eq(buf, fromhex(K), 32); \
+} while (0)
+
 START_TEST(test_rfc6979)
 {
 	int res;
 	bignum256 k;
 	uint8_t buf[32];
 
-	SHA256_Raw((uint8_t *)"sample", 6, buf);
-	res = generate_k_rfc6979(&k, fromhex("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50"), buf);
-	ck_assert_int_eq(res, 0);
-	bn_write_be(&k, buf);
-	ck_assert_mem_eq(buf, fromhex("2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3"), 32);
-
-	SHA256_Raw((uint8_t *)"Satoshi Nakamoto", 16, buf);
-	res = generate_k_rfc6979(&k, fromhex("0000000000000000000000000000000000000000000000000000000000000001"), buf);
-	ck_assert_int_eq(res, 0);
-	bn_write_be(&k, buf);
-	ck_assert_mem_eq(buf, fromhex("8f8a276c19f4149656b280621e358cce24f5f52542772691ee69063b74f15d15"), 32);
-
-	SHA256_Raw((uint8_t *)"Satoshi Nakamoto", 16, buf);
-	res = generate_k_rfc6979(&k, fromhex("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140"), buf);
-	ck_assert_int_eq(res, 0);
-	bn_write_be(&k, buf);
-	ck_assert_mem_eq(buf, fromhex("33a19b60e25fb6f4435af53a3d42d493644827367e6453928554f43e49aa6f90"), 32);
-
-	SHA256_Raw((uint8_t *)"Alan Turing", 11, buf);
-	res = generate_k_rfc6979(&k, fromhex("f8b8af8ce3c7cca5e300d33939540c10d45ce001b8f252bfbc57ba0342904181"), buf);
-	ck_assert_int_eq(res, 0);
-	bn_write_be(&k, buf);
-	ck_assert_mem_eq(buf, fromhex("525a82b70e67874398067543fd84c83d30c175fdc45fdeee082fe13b1d7cfdf1"), 32);
-
-	SHA256_Raw((uint8_t *)"All those moments will be lost in time, like tears in rain. Time to die...", 74, buf);
-	res = generate_k_rfc6979(&k, fromhex("0000000000000000000000000000000000000000000000000000000000000001"), buf);
-	ck_assert_int_eq(res, 0);
-	bn_write_be(&k, buf);
-	ck_assert_mem_eq(buf, fromhex("38aa22d72376b4dbc472e06c3ba403ee0a394da63fc58d88686c611aba98d6b3"), 32);
-
-	SHA256_Raw((uint8_t *)"There is a computer disease that anybody who works with computers knows about. It's a very serious disease and it interferes completely with the work. The trouble with computers is that you 'play' with them!", 207, buf);
-	res = generate_k_rfc6979(&k, fromhex("e91671c46231f833a6406ccbea0e3e392c76c167bac1cb013f6f1013980455c2"), buf);
-	ck_assert_int_eq(res, 0);
-	bn_write_be(&k, buf);
-	ck_assert_mem_eq(buf, fromhex("1f4b84c23a86a221d233f2521be018d9318639d5b8bbd6374a8a59232d16ad3d"), 32);
+	test_deterministic("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50", "sample", "2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3");
+	test_deterministic("0000000000000000000000000000000000000000000000000000000000000001", "Satoshi Nakamoto", "8f8a276c19f4149656b280621e358cce24f5f52542772691ee69063b74f15d15");
+	test_deterministic("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140", "Satoshi Nakamoto", "33a19b60e25fb6f4435af53a3d42d493644827367e6453928554f43e49aa6f90");
+	test_deterministic("f8b8af8ce3c7cca5e300d33939540c10d45ce001b8f252bfbc57ba0342904181", "Alan Turing", "525a82b70e67874398067543fd84c83d30c175fdc45fdeee082fe13b1d7cfdf1");
+	test_deterministic("0000000000000000000000000000000000000000000000000000000000000001", "All those moments will be lost in time, like tears in rain. Time to die...", "38aa22d72376b4dbc472e06c3ba403ee0a394da63fc58d88686c611aba98d6b3");
+	test_deterministic("e91671c46231f833a6406ccbea0e3e392c76c167bac1cb013f6f1013980455c2", "There is a computer disease that anybody who works with computers knows about. It's a very serious disease and it interferes completely with the work. The trouble with computers is that you 'play' with them!", "1f4b84c23a86a221d233f2521be018d9318639d5b8bbd6374a8a59232d16ad3d");
 }
 END_TEST
 
