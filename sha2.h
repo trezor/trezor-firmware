@@ -32,6 +32,7 @@
 #define __SHA2_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define SHA256_BLOCK_LENGTH		64
 #define SHA256_DIGEST_LENGTH		32

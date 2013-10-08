@@ -32,13 +32,10 @@
 #define USE_RFC6979 1
 #endif
 
-// all functions use secp256k1 curve
 int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr);
 int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
-
-int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
 
 #endif

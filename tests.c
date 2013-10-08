@@ -173,6 +173,8 @@ START_TEST(test_bip32_vector_2)
 }
 END_TEST
 
+int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
+
 START_TEST(test_rfc6979)
 {
 	int res;
