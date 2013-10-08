@@ -46,7 +46,7 @@ class TrezorClient(object):
         if self.master_public_key:
             return self.master_public_key
         
-        self.master_public_key = self.call(proto.GetMasterPublicKey()).key
+        self.master_public_key = self.call(proto.GetMasterPublicKey()).mpk
         return self.master_public_key
         
     def get_address(self, n):
@@ -58,8 +58,8 @@ class TrezorClient(object):
     def ping(self, msg):
         return self.call(proto.Ping(message=msg)).message
 
-    def get_serial_number(self):
-        return self.features.serial_number
+    def get_device_id(self):
+        return self.features.device_id
 
     def apply_settings(self, label=None, coin_shortcut=None, language=None):
         settings = proto.ApplySettings()
