@@ -1,10 +1,66 @@
 /*
 	This file describes Protocol buffers messages for bitcoin hardware wallet devices.
 	
-	Author: Marek "slush" Palatinus <info@bitcoin.cz>
+	Author: Marek Palatinus <slush@satoshilabs.com>
 	
-	Version: 0.4
+	Version: 0.5
 */
+
+import "google/protobuf/descriptor.proto";
+
+/*
+	Mapping between Trezor wire identifier (int) and protobuf message
+*/
+enum MessageType {
+    MessageType_Initialize = 0;
+    MessageType_Ping = 1;
+    MessageType_Success = 2;
+    MessageType_Failure = 3;
+    MessageType_ChangePin = 4;
+    MessageType_WipeDevice = 5;
+    MessageType_GetEntropy = 9;
+    MessageType_Entropy = 10;
+    MessageType_GetMasterPublicKey = 11;
+    MessageType_MasterPublicKey = 12;
+    MessageType_LoadDevice = 13;
+    MessageType_ResetDevice = 14;
+    MessageType_SignTx = 15;
+    MessageType_SimpleSignTx = 16;
+    MessageType_Features = 17;
+    MessageType_PinMatrixRequest = 18;
+    MessageType_PinMatrixAck = 19;
+    MessageType_PinMatrixCancel = 20;
+    MessageType_TxRequest = 21;
+    MessageType_TxInput = 23;
+    MessageType_TxOutput = 24;
+    MessageType_ApplySettings = 25;
+    MessageType_ButtonRequest = 26;
+    MessageType_ButtonAck = 27;
+    MessageType_ButtonCancel = 28;
+    MessageType_GetAddress = 29;
+    MessageType_Address = 30;
+    MessageType_SettingsType = 31;
+    MessageType_XprvType = 32;
+    MessageType_CoinType = 33;
+    MessageType_XpubType = 34;
+    MessageType_EntropyRequest = 35;
+    MessageType_EntropyAck = 36;
+    MessageType_DebugLinkDecision = 100;
+    MessageType_DebugLinkGetState = 101;
+    MessageType_DebugLinkState = 102;
+    MessageType_DebugLinkStop = 103;
+}
+
+// Such option indicates that the message field has binary payload
+extend google.protobuf.FieldOptions {
+	optional bool binary = 50001;
+}
+
+
+// ****************************************************************************
+//
+// Definition of custom field types
+//
 
 // Specifies which script will be used for given transaction output. 
 enum ScriptType {
@@ -21,19 +77,29 @@ enum RequestType {
 // Structure for BIP32-encoded node
 // Used for imports into the device
 message XprvType {
-	required bytes version = 1;
+	required uint32 version = 1;
 	required uint32 depth = 2;
 	required uint32 fingerprint = 3;
 	required uint32 child_num = 4;
-	required bytes chain_code = 5;
-	required bytes private_key = 6;	
+	required bytes chain_code = 5 [(binary) = true];
+	required bytes private_key = 6 [(binary) = true];
+}
+
+// Structure returned by GetMasterPublicKey
+message XpubType {
+	required uint32 version = 1;
+	required uint32 depth = 2;
+	required uint32 fingerprint = 3;
+	required uint32 child_num = 4;
+	required bytes chain_code = 5 [(binary) = true];
+	required bytes public_key = 6 [(binary) = true];
 }
 
 message CoinType {
-	optional bytes coin_name = 2;
-	optional bytes coin_shortcut = 3;
-	optional uint32 address_type = 4;
-	optional uint64 maxfee_kb = 5;
+	optional bytes coin_name = 1;
+	optional bytes coin_shortcut = 2;
+	optional uint32 address_type = 3;
+	optional uint64 maxfee_kb = 4;
 }
 
 message SettingsType {
@@ -41,6 +107,11 @@ message SettingsType {
 	optional CoinType coin = 2;
 	optional bytes label = 3;		// Human readable wallet name
 }
+
+// ****************************************************************************
+//
+// Basic message
+//
 
 // Reset device to default state and ask for device details
 //
@@ -54,7 +125,9 @@ message Features {
     optional uint32 major_version = 2; // Major version of the device, e.g. 1
     optional uint32 minor_version = 3;  // Minor version of the device, e.g. 0
     optional SettingsType settings = 4;	// User-level settings of the device
-    optional bytes serial_number = 5;	// Device's unique identifier
+    optional bytes device_id = 5 [(binary) = true];	// Device's unique identifier
+    optional bytes mpk_hash = 6 [(binary) = true];	// Hash of master public key (sha256(XpubType.public_key).digest())
+    optional bool pin_protection = 7;   // True if Trezor is covered by PIN
 }
 
 // Overwrites only filled fields of the structure
@@ -64,43 +137,17 @@ message ApplySettings {
 	optional bytes label = 3;
 }
 
+// Starts workflow for setting/changing the PIN
+// Response: ButtonRequest, PinMatrixRequest
+message ChangePin {
+    optional bool remove = 1;	// Set True if want to remove PIN protection
+}
+
 // Test if device is live, device will send back the message on success
 //
 // Response: None or Success
 message Ping {
     optional bytes message = 1;	// Message will be sent back in Success message
-}
-
-// Virtually "press" the button on the device.
-// Message is available only on debugging connection and device must support "debug_link" feature.
-//
-// Response: Success  
-message DebugLinkDecision {
-	required bool yes_no = 1;	// True for "confirm", False for "cancel"
-}
-
-// When sent over debug link connection, computer asks for some internal information of the device.
-//
-// Response: DebugLinkState
-message DebugLinkGetState {
-	optional bool layout = 1;	// Request raw buffer of display
-	optional bool pin = 2;		// Request current pin
-	optional bool matrix = 3;	// Request current pin matrix 
-	optional bool seed = 4;		// Request current seed
-//	optional bool state = 5;	
-}
-
-// Response object reflecting device's current state. It can be received only over debug link connection.
-message DebugLinkState {
-	optional bytes layout = 1;	// Raw buffer of display
-	optional bytes pin = 2;	// Current PIN, blank if PIN is not set/enabled
-	optional bytes matrix = 3;	// Current PIN matrix
-	optional bytes seed = 4;	// Current seed (in mnemonic format)
-//	optional bytes state = 5;
-}
-
-// Ask device to shutdown/restart
-message DebugLinkStop {
 }
 
 // Response object defining success of the previous request
@@ -157,7 +204,7 @@ message GetEntropy {
 
 // Response to GetEntropy request contains random data generated by internal HRNG.
 message Entropy {
-    required bytes entropy = 1;	// Stream of generated bytes
+    required bytes entropy = 1 [(binary) = true];	// Stream of generated bytes
 }
 
 // Ask device for it's current master public key. This may be used for generating
@@ -170,7 +217,7 @@ message GetMasterPublicKey {
 
 // Contains master public key derived from device's seed.
 message MasterPublicKey {
-    required bytes key = 1;	// master public key of requested algorithm in binary format
+    required XpubType mpk = 1;	// BIP32 node public key + chaincode
 }
 
 message GetAddress {
@@ -181,9 +228,16 @@ message Address {
     required bytes address = 1; // Bitcoin address in base58 encoding corresponding to GetAddress(n) call
 }
 
+// Request device to wipe all sensitive data and settings.
+// Device will be turned to uninitialized state.
+//
+// Response: ButtonRequest
+message WipeDevice {
+}
+
 // Load seed and related internal settings from computer to the device. Existing seed is overwritten.
 //
-// Response: Success, PinMatrixRequest, Failure
+// Response: Success, ButtonRequest, PinMatrixRequest, Failure
 message LoadDevice {
     optional bytes seed = 1;	// Seed encoded as a mnemonic (12 english words)
     optional XprvType xprv = 2;
@@ -192,12 +246,30 @@ message LoadDevice {
 
 // Request device to do full-reset, to generate new seed
 // and ask user for new settings (PIN).
+// Workflow is splitted into ResetDevice/EntropyRequest to be sure
+// that entropy provided by device isn't calculated on base of computer provided
+// entropy. 
+//
 // 
-// Response: Success, PinMatrixRequest, Failure
+// Response: EntropyRequest, PinMatrixRequest, Failure
 message ResetDevice {
-	optional bytes random = 7;	// Provide additional entropy for seed generation function.
-								// Recommended to provide 256 bytes of random data.
+	optional bool display_random = 1; // If set, displays entropy generated by the device used
+									  // for generating the seed *before* asking for additional entropy from computer
 }
+
+// Asks for additional Entropy from host computer
+message EntropyRequest {
+}
+
+// Provide additional entropy for seed generation function.
+message EntropyAck {
+	optional bytes entropy = 1 [(binary) = true];	// Recommended to provide 256 bytes of random data.
+}
+
+// ****************************************************************************
+//
+// Messages related to transaction signing
+//
 
 // Request the device to sign the transaction
 //
@@ -232,8 +304,8 @@ message TxRequest {
 	optional int32 request_index = 1;	// If >=0, device expects TxInput/TxOutput message from the computer
 	optional RequestType request_type = 2; // Ask for TxInput or TxOutput?
 	optional int32 signed_index = 3;	// If >=0, 'signature' contains signed input of this input
-	optional bytes signature = 4;		// If signed_index>=0, represent signature of the signed_index input
-	optional bytes serialized_tx = 5;   // Part of serialized and signed transaction
+	optional bytes signature = 4 [(binary) = true];		// If signed_index>=0, represent signature of the signed_index input
+	optional bytes serialized_tx = 5 [(binary) = true];   // Part of serialized and signed transaction
 }
 
 // Transaction onput for SignTx workflow. It is response to TxRequest message sent by device.
@@ -243,9 +315,9 @@ message TxInput {
 	required uint32 index = 1;		// Position of input in proposed transaction
     repeated uint32 address_n = 2;	// Parameter for address generation algorithm to derive the address from the master public key
     required uint64 amount = 3;		// Amount to spend in satoshis. The rest will be used for transaction fees
-    required bytes prev_hash = 4;	// Hash of previous transaction output to spend by this input
+    required bytes prev_hash = 4 [(binary) = true];	// Hash of previous transaction output to spend by this input
     required uint32 prev_index = 5;	// Index of previous output to spend
-    optional bytes script_sig = 6;	// Script signature
+    optional bytes script_sig = 6 [(binary) = true];	// Script signature
 }
 
 // Transaction output for SignTx workflow. It is response to TxRequest message sent by the device.
@@ -255,5 +327,42 @@ message TxOutput {
     repeated uint32 address_n = 3;		// Has higher priority than "address". If the output is to myself, specify parameter for address generation algorithm.
     required uint64 amount = 4;			// Amount to send in satoshis
     required ScriptType script_type = 5;// Select output script type
-    repeated bytes script_args = 6;		// Provide additional parameters for the script (its script-depended)
+    repeated bytes script_args = 6 [(binary) = true];		// Provide additional parameters for the script (its script-depended)
+}
+
+// ****************************************************************************
+//
+//	Debug* messages are used only on DebugLink interface (separated from USB HID)
+//
+
+// Virtually "press" the button on the device.
+// Message is available only on debugging connection and device must support "debug_link" feature.
+//
+// Response: Success
+message DebugLinkDecision {
+	required bool yes_no = 1;	// True for "confirm", False for "cancel"
+}
+
+// When sent over debug link connection, computer asks for some internal information of the device.
+//
+// Response: DebugLinkState
+message DebugLinkGetState {
+	optional bool layout = 1;	// Request raw buffer of display
+	optional bool pin = 2;		// Request current pin
+	optional bool matrix = 3;	// Request current pin matrix
+	optional bool seed = 4;		// Request current seed
+//	optional bool state = 5;
+}
+
+// Response object reflecting device's current state. It can be received only over debug link connection.
+message DebugLinkState {
+	optional bytes layout = 1 [(binary) = true];	// Raw buffer of display
+	optional bytes pin = 2;	// Current PIN, blank if PIN is not set/enabled
+	optional bytes matrix = 3;	// Current PIN matrix
+	optional bytes seed = 4;	// Current seed (in mnemonic format)
+//	optional bytes state = 5 [(binary) = true];
+}
+
+// Ask device to shutdown/restart
+message DebugLinkStop {
 }
