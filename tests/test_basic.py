@@ -26,9 +26,9 @@ class TestBasic(common.TrezorTest):
         self.assertEqual(ping, proto.Success(message='ahoj!'))
         
     def test_uuid(self):
-        uuid1 = self.client.get_serial_number()
+        uuid1 = self.client.get_device_id()
         self.client.init_device()
-        uuid2 = self.client.get_serial_number()
+        uuid2 = self.client.get_device_id()
         
         # UUID must be longer than 10 characters
         self.assertEqual(len(uuid1), 12)
