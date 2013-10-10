@@ -26,6 +26,10 @@ class TestProtectCall(common.TrezorTest):
     def test_incorrect_pin(self):
         self.client.setup_debuglink(button=True, pin_correct=False)
         self.assertRaises(PinException, self._some_protected_call)
+
+    def test_cancelled_pin(self):
+        self.client.setup_debuglink(button=True, pin_correct=-1)  # PIN cancel
+        self.assertRaises(PinException, self._some_protected_call)
         
 if __name__ == '__main__':
     unittest.main()

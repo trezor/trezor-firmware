@@ -102,11 +102,14 @@ class TrezorClient(object):
                        
             if isinstance(resp, proto.PinMatrixRequest):
                 if self.debuglink:
-                    if self.debug_pin:
+                    if self.debug_pin == 1:
                         pin = self.debuglink.read_pin_encoded()
                         msg2 = proto.PinMatrixAck(pin=pin)
+                    elif self.debug_pin == -1:
+                        msg2 = proto.PinMatrixCancel()
                     else:
                         msg2 = proto.PinMatrixAck(pin='444444222222')
+
                 else:
                     pin = self.pin_func("PIN required: ", resp.message)
                     msg2 = proto.PinMatrixAck(pin=pin)
@@ -118,7 +121,7 @@ class TrezorClient(object):
         
         if isinstance(resp, proto.Failure):
             self.message_func(resp.message)
-            
+
             if resp.code == 4:    
                 raise CallException("Action cancelled by user")
                 
