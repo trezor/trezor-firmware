@@ -41,7 +41,12 @@ class TrezorClient(object):
     def init_device(self):
         self.master_public_key = None
         self.features = self.call(proto.Initialize())
-        
+
+    def close(self):
+        self.transport.close()
+        if self.debuglink:
+            self.debuglink.transport.close()
+
     def get_master_public_key(self):
         if self.master_public_key:
             return self.master_public_key

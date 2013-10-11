@@ -46,3 +46,6 @@ class DebugLink(object):
     
     def press_no(self):
         self.press_button(False)
+
+    def stop(self):
+        self.transport.write(proto.DebugLinkStop())
