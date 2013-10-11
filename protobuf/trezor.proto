@@ -18,6 +18,7 @@ enum MessageType {
     MessageType_Failure = 3;
     MessageType_ChangePin = 4;
     MessageType_WipeDevice = 5;
+    MessageType_FirmwareUpdate = 6;
     MessageType_GetEntropy = 9;
     MessageType_Entropy = 10;
     MessageType_GetMasterPublicKey = 11;
@@ -121,13 +122,15 @@ message Initialize {
 
 // Response object for Initialize.
 message Features {
-    optional bytes vendor = 1;	// Name of the manufacturer, e.g. "trezor" 
+    optional bytes vendor = 1;	// Name of the manufacturer, e.g. "bitcointrezor.com" 
     optional uint32 major_version = 2; // Major version of the device, e.g. 1
     optional uint32 minor_version = 3;  // Minor version of the device, e.g. 0
-    optional SettingsType settings = 4;	// User-level settings of the device
-    optional bytes device_id = 5 [(binary) = true];	// Device's unique identifier
-    optional bytes mpk_hash = 6 [(binary) = true];	// Hash of master public key (sha256(XpubType.public_key).digest())
-    optional bool pin_protection = 7;   // True if Trezor is covered by PIN
+    optional uint32 bugfix_version = 4;
+    optional bool bootloader_mode = 5;
+    optional SettingsType settings = 6;	// User-level settings of the device
+    optional bytes device_id = 7 [(binary) = true];	// Device's unique identifier
+    optional bytes mpk_hash = 8 [(binary) = true];	// Hash of master public key (sha256(XpubType.public_key).digest())
+    optional bool pin_protection = 9;   // True if Trezor is covered by PIN
 }
 
 // Overwrites only filled fields of the structure
@@ -328,6 +331,16 @@ message TxOutput {
     required uint64 amount = 4;			// Amount to send in satoshis
     required ScriptType script_type = 5;// Select output script type
     repeated bytes script_args = 6 [(binary) = true];		// Provide additional parameters for the script (its script-depended)
+}
+
+// ****************************************************************************
+//
+// Bootloader messages
+//
+
+message FirmwareUpdate {
+	optional bool force = 1;	// Force update, suppress message about wiping storage area
+	optional bytes payload = 2 [(binary) = true];	// Firmware to flash into device
 }
 
 // ****************************************************************************
