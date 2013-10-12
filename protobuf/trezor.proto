@@ -63,6 +63,17 @@ extend google.protobuf.FieldOptions {
 // Definition of custom field types
 //
 
+enum FailureType {
+	Failure_UnexpectedMessage = 1;
+	Failure_ButtonExpected = 2;
+	Failure_SyntaxError = 3;
+	Failure_ActionCancelled = 4;
+	Failure_PinExpected = 5;
+	Failure_PinCancelled = 6;
+	Failure_PinInvalid = 7;
+	Failure_FirmwareDataIncompatibility = 99;
+}
+
 // Specifies which script will be used for given transaction output. 
 enum ScriptType {
     PAYTOADDRESS = 0;
@@ -160,7 +171,7 @@ message Success {
 
 // Response object defining failure of the previous request
 message Failure {
-    optional int32 code = 1;		// May contain computer-readable definition of the error state
+    optional FailureType code = 1;		// May contain computer-readable definition of the error state
     optional bytes message = 2;		// May contain human-readable message of the error state
 }
 
