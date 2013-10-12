@@ -127,10 +127,10 @@ class TrezorClient(object):
         if isinstance(resp, proto.Failure):
             self.message_func(resp.message)
 
-            if resp.code == 4:    
+            if resp.code == proto.Failure_ActionCancelled:
                 raise CallException("Action cancelled by user")
                 
-            elif resp.code == 6:
+            elif resp.code == proto.Failure_PinInvalid:
                 raise PinException("PIN is invalid")
                 
             raise CallException(resp.code, resp.message)
@@ -259,3 +259,16 @@ class TrezorClient(object):
         resp = self.call(proto.LoadDevice(seed=seed, pin=pin))
         self.init_device()
         return isinstance(resp, proto.Success)
+
+    def firmware_update(self, fp, force=False):
+        if self.features.bootloader_mode == False:
+            raise Exception("Device must be in bootloader mode")
+
+        resp = self.call(proto.FirmwareUpdate(force=force, payload=fp.read()))
+        if isinstance(resp, proto.Success):
+            return True
+
+        elif isinstance(resp, proto.Failure) and resp.code == proto.Failure_FirmwareDataIncompatibility:
+            return False
+
+        raise Exception("Unexpected result " % resp)
