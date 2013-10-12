@@ -112,7 +112,15 @@ class Commands(object):
         seed = ' '.join(args.seed)
 
         return self.client.load_device(seed, args.pin) 
-        
+
+    def firmware_update(self, args):
+        fp = open(args.file, 'r')
+        if fp.read(4) != 'TRZR':
+            raise Exception("Trezor firmware header expected")
+
+        fp.seek(0)
+        return self.client.firmware_update(fp=open(args.file, 'r'), force=args.force)
+
     list.help = 'List connected Trezor USB devices'
     ping.help = 'Send ping message'
     get_address.help = 'Get bitcoin address in base58 encoding'
@@ -123,7 +131,8 @@ class Commands(object):
     set_label.help = 'Set new wallet label'
     set_coin.help = 'Switch device to another crypto currency'
     load_device.help = 'Load custom configuration to the device'
-    
+    firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
+
     get_address.arguments = (
         (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
     )
@@ -149,6 +158,11 @@ class Commands(object):
     load_device.arguments = (
         (('-s', '--seed'), {'type': str, 'nargs': '+'}),
         (('-n', '--pin'), {'type': str, 'default': ''}),
+    )
+
+    firmware_update.arguments = (
+        (('-f', '--file'), {'type': str}),
+        (('-o', '--force'), {'type': bool, 'default': False})
     )
 
 def list_usb():
