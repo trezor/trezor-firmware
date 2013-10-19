@@ -114,6 +114,8 @@ class Commands(object):
         return self.client.load_device(seed, args.pin) 
 
     def firmware_update(self, args):
+        if not args.file:
+            raise Exception("Must provide firmware filename")
         fp = open(args.file, 'r')
         if fp.read(4) != 'TRZR':
             raise Exception("Trezor firmware header expected")

@@ -40,7 +40,8 @@ class HidTransport(Transport):
     def _open(self):
         self.buffer = ''
         path = self.device.split(':')
-        self.hid = hid.device(int(path[0], 16), int(path[1], 16))#, path[2])
+        self.hid = hid.device()
+        self.hid.open(int(path[0], 16), int(path[1], 16))
         self.hid.set_nonblocking(True)
         self.hid.send_feature_report([0x41, 0x01]) # enable UART
         self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
