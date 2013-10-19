@@ -5,9 +5,9 @@ import time
 from transport import Transport, NotImplementedException
 
 DEVICE_IDS = [
-    (0x1cbe, 0xcaf3), # Trezor
     (0x10c4, 0xea80), # Trezor Pi
-    (0x08f7, 0x0002), # EasyTemp
+    (0x534c, 0x0000), # Trezor - Bootloader Mode
+    (0x534c, 0x0001), # Trezor - Regular Mode
 ]
 
 class FakeRead(object):
