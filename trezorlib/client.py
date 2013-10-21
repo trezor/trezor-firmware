@@ -260,11 +260,11 @@ class TrezorClient(object):
         self.init_device()
         return isinstance(resp, proto.Success)
 
-    def firmware_update(self, fp, force=False):
+    def firmware_update(self, fp):
         if self.features.bootloader_mode == False:
             raise Exception("Device must be in bootloader mode")
 
-        resp = self.call(proto.FirmwareUpdate(force=force, payload=fp.read()))
+        resp = self.call(proto.FirmwareUpdate(payload=fp.read()))
         if isinstance(resp, proto.Success):
             return True
 

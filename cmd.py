@@ -121,7 +121,7 @@ class Commands(object):
             raise Exception("Trezor firmware header expected")
 
         fp.seek(0)
-        return self.client.firmware_update(fp=open(args.file, 'r'), force=args.force)
+        return self.client.firmware_update(fp=open(args.file, 'r'))
 
     list.help = 'List connected Trezor USB devices'
     ping.help = 'Send ping message'
@@ -164,7 +164,6 @@ class Commands(object):
 
     firmware_update.arguments = (
         (('-f', '--file'), {'type': str}),
-        (('-o', '--force'), {'type': bool, 'default': False})
     )
 
 def list_usb():

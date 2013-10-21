@@ -350,8 +350,7 @@ message TxOutput {
 //
 
 message FirmwareUpdate {
-	required bool force = 1;	// Force update, suppress message about wiping storage area
-	required bytes payload = 2 [(binary) = true];	// Firmware to flash into device
+	required bytes payload = 1 [(binary) = true];	// Firmware to flash into device
 }
 
 // ****************************************************************************
