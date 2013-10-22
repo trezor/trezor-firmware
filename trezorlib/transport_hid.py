@@ -6,8 +6,7 @@ from transport import Transport, NotImplementedException
 
 DEVICE_IDS = [
     (0x10c4, 0xea80), # Trezor Pi
-    (0x534c, 0x0000), # Trezor - Bootloader Mode
-    (0x534c, 0x0001), # Trezor - Regular Mode
+    (0x534c, 0x0001), # Trezor
 ]
 
 class FakeRead(object):
