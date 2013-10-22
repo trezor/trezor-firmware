@@ -18,7 +18,8 @@ enum MessageType {
     MessageType_Failure = 3;
     MessageType_ChangePin = 4;
     MessageType_WipeDevice = 5;
-    MessageType_FirmwareUpdate = 6;
+    MessageType_FirmwareErase = 6;
+    MessageType_FirmwareUpload = 7;
     MessageType_GetEntropy = 9;
     MessageType_Entropy = 10;
     MessageType_GetMasterPublicKey = 11;
@@ -71,7 +72,7 @@ enum FailureType {
 	Failure_PinExpected = 5;
 	Failure_PinCancelled = 6;
 	Failure_PinInvalid = 7;
-	Failure_FirmwareDataIncompatibility = 99;
+	Failure_FirmwareError = 99;
 }
 
 // Specifies which script will be used for given transaction output. 
@@ -349,7 +350,10 @@ message TxOutput {
 // Bootloader messages
 //
 
-message FirmwareUpdate {
+message FirmwareErase {
+}
+
+message FirmwareUpload {
 	required bytes payload = 1 [(binary) = true];	// Firmware to flash into device
 }
 

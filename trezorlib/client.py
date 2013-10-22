@@ -264,11 +264,15 @@ class TrezorClient(object):
         if self.features.bootloader_mode == False:
             raise Exception("Device must be in bootloader mode")
 
-        resp = self.call(proto.FirmwareUpdate(payload=fp.read()))
+        resp = self.call(proto.FirmwareErase())
+        if isinstance(resp, proto.Failure) and resp.code == proto.Failure_FirmwareError:
+            return False
+
+        resp = self.call(proto.FirmwareUpload(payload=fp.read()))
         if isinstance(resp, proto.Success):
             return True
 
-        elif isinstance(resp, proto.Failure) and resp.code == proto.Failure_FirmwareDataIncompatibility:
+        elif isinstance(resp, proto.Failure) and resp.code == proto.Failure_FirmwareError:
             return False
 
         raise Exception("Unexpected result " % resp)
