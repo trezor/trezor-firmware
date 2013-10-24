@@ -379,8 +379,7 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 
 	bn_read_be(hash, &z);
 
-	if (bn_is_zero(&r) ||
-	    bn_is_zero(&s) ||
+	if (bn_is_zero(&r) || bn_is_zero(&s) ||
 	    (!bn_is_less(&r, &order256k1)) ||
 	    (!bn_is_less(&s, &order256k1))) return 2;
 
@@ -410,10 +409,14 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 
 	bn_mod(&(res.x), &prime256k1);
 	bn_mod(&(res.x), &order256k1);
+
+	// signature does not match
 	for (i = 0; i < 9; i++) {
 		if (res.x.val[i] != r.val[i]) {
-			return 3;
+			return 4;
 		}
 	}
+
+	// all OK
 	return 0;
 }
