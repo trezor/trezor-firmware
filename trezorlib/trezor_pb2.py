@@ -15,7 +15,7 @@ import google.protobuf.descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='trezor.proto',
   package='',
-  serialized_pb='\n\x0ctrezor.proto\x1a google/protobuf/descriptor.proto\"\x87\x01\n\x08XprvType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x19\n\x0bprivate_key\x18\x06 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x86\x01\n\x08XpubType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\npublic_key\x18\x06 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"]\n\x08\x43oinType\x12\x11\n\tcoin_name\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\x14\n\x0c\x61\x64\x64ress_type\x18\x03 \x01(\r\x12\x11\n\tmaxfee_kb\x18\x04 \x01(\x04\"H\n\x0cSettingsType\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x17\n\x04\x63oin\x18\x02 \x01(\x0b\x32\t.CoinType\x12\r\n\x05label\x18\x03 \x01(\x0c\"\x0c\n\nInitialize\"\xe3\x01\n\x08\x46\x65\x61tures\x12\x0e\n\x06vendor\x18\x01 \x01(\x0c\x12\x15\n\rmajor_version\x18\x02 \x01(\r\x12\x15\n\rminor_version\x18\x03 \x01(\r\x12\x16\n\x0e\x62ugfix_version\x18\x04 \x01(\r\x12\x17\n\x0f\x62ootloader_mode\x18\x05 \x01(\x08\x12\x1f\n\x08settings\x18\x06 \x01(\x0b\x32\r.SettingsType\x12\x17\n\tdevice_id\x18\x07 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x08mpk_hash\x18\x08 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x0epin_protection\x18\t \x01(\x08\"G\n\rApplySettings\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\r\n\x05label\x18\x03 \x01(\x0c\"\x1b\n\tChangePin\x12\x0e\n\x06remove\x18\x01 \x01(\x08\"\x17\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"6\n\x07\x46\x61ilure\x12\x1a\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0c.FailureType\x12\x0f\n\x07message\x18\x02 \x01(\x0c\"\x0f\n\rButtonRequest\"\x0b\n\tButtonAck\"\x0e\n\x0c\x42uttonCancel\"#\n\x10PinMatrixRequest\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1b\n\x0cPinMatrixAck\x12\x0b\n\x03pin\x18\x01 \x02(\x0c\"\x11\n\x0fPinMatrixCancel\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\" \n\x07\x45ntropy\x12\x15\n\x07\x65ntropy\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x14\n\x12GetMasterPublicKey\")\n\x0fMasterPublicKey\x12\x16\n\x03mpk\x18\x01 \x02(\x0b\x32\t.XpubType\"\x1f\n\nGetAddress\x12\x11\n\taddress_n\x18\x01 \x03(\r\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\"\x0c\n\nWipeDevice\"@\n\nLoadDevice\x12\x0c\n\x04seed\x18\x01 \x01(\x0c\x12\x17\n\x04xprv\x18\x02 \x01(\x0b\x32\t.XprvType\x12\x0b\n\x03pin\x18\x03 \x01(\x0c\"%\n\x0bResetDevice\x12\x16\n\x0e\x64isplay_random\x18\x01 \x01(\x08\"\x10\n\x0e\x45ntropyRequest\"#\n\nEntropyAck\x12\x15\n\x07\x65ntropy\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"5\n\x06SignTx\x12\x15\n\routputs_count\x18\x03 \x02(\r\x12\x14\n\x0cinputs_count\x18\x05 \x02(\r\"D\n\x0cSimpleSignTx\x12\x18\n\x06inputs\x18\x01 \x03(\x0b\x32\x08.TxInput\x12\x1a\n\x07outputs\x18\x02 \x03(\x0b\x32\t.TxOutput\"\x92\x01\n\tTxRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\x05\x12\"\n\x0crequest_type\x18\x02 \x01(\x0e\x32\x0c.RequestType\x12\x14\n\x0csigned_index\x18\x03 \x01(\x05\x12\x17\n\tsignature\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1b\n\rserialized_tx\x18\x05 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x82\x01\n\x07TxInput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12\x17\n\tprev_hash\x18\x04 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x12\n\nprev_index\x18\x05 \x02(\r\x12\x18\n\nscript_sig\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x8a\x01\n\x08TxOutput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\x0c\x12\x11\n\taddress_n\x18\x03 \x03(\r\x12\x0e\n\x06\x61mount\x18\x04 \x02(\x04\x12 \n\x0bscript_type\x18\x05 \x02(\x0e\x32\x0b.ScriptType\x12\x19\n\x0bscript_args\x18\x06 \x03(\x0c\x42\x04\x88\xb5\x18\x01\"\x0f\n\rFirmwareErase\"\'\n\x0e\x46irmwareUpload\x12\x15\n\x07payload\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"N\n\x11\x44\x65\x62ugLinkGetState\x12\x0e\n\x06layout\x18\x01 \x01(\x08\x12\x0b\n\x03pin\x18\x02 \x01(\x08\x12\x0e\n\x06matrix\x18\x03 \x01(\x08\x12\x0c\n\x04seed\x18\x04 \x01(\x08\"Q\n\x0e\x44\x65\x62ugLinkState\x12\x14\n\x06layout\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0b\n\x03pin\x18\x02 \x01(\x0c\x12\x0e\n\x06matrix\x18\x03 \x01(\x0c\x12\x0c\n\x04seed\x18\x04 \x01(\x0c\"\x0f\n\rDebugLinkStop*\xf2\x08\n\x0bMessageType\x12\x1a\n\x16MessageType_Initialize\x10\x00\x12\x14\n\x10MessageType_Ping\x10\x01\x12\x17\n\x13MessageType_Success\x10\x02\x12\x17\n\x13MessageType_Failure\x10\x03\x12\x19\n\x15MessageType_ChangePin\x10\x04\x12\x1a\n\x16MessageType_WipeDevice\x10\x05\x12\x1d\n\x19MessageType_FirmwareErase\x10\x06\x12\x1e\n\x1aMessageType_FirmwareUpload\x10\x07\x12\x1a\n\x16MessageType_GetEntropy\x10\t\x12\x17\n\x13MessageType_Entropy\x10\n\x12\"\n\x1eMessageType_GetMasterPublicKey\x10\x0b\x12\x1f\n\x1bMessageType_MasterPublicKey\x10\x0c\x12\x1a\n\x16MessageType_LoadDevice\x10\r\x12\x1b\n\x17MessageType_ResetDevice\x10\x0e\x12\x16\n\x12MessageType_SignTx\x10\x0f\x12\x1c\n\x18MessageType_SimpleSignTx\x10\x10\x12\x18\n\x14MessageType_Features\x10\x11\x12 \n\x1cMessageType_PinMatrixRequest\x10\x12\x12\x1c\n\x18MessageType_PinMatrixAck\x10\x13\x12\x1f\n\x1bMessageType_PinMatrixCancel\x10\x14\x12\x19\n\x15MessageType_TxRequest\x10\x15\x12\x17\n\x13MessageType_TxInput\x10\x17\x12\x18\n\x14MessageType_TxOutput\x10\x18\x12\x1d\n\x19MessageType_ApplySettings\x10\x19\x12\x1d\n\x19MessageType_ButtonRequest\x10\x1a\x12\x19\n\x15MessageType_ButtonAck\x10\x1b\x12\x1c\n\x18MessageType_ButtonCancel\x10\x1c\x12\x1a\n\x16MessageType_GetAddress\x10\x1d\x12\x17\n\x13MessageType_Address\x10\x1e\x12\x1c\n\x18MessageType_SettingsType\x10\x1f\x12\x18\n\x14MessageType_XprvType\x10 \x12\x18\n\x14MessageType_CoinType\x10!\x12\x18\n\x14MessageType_XpubType\x10\"\x12\x1e\n\x1aMessageType_EntropyRequest\x10#\x12\x1a\n\x16MessageType_EntropyAck\x10$\x12!\n\x1dMessageType_DebugLinkDecision\x10\x64\x12!\n\x1dMessageType_DebugLinkGetState\x10\x65\x12\x1e\n\x1aMessageType_DebugLinkState\x10\x66\x12\x1d\n\x19MessageType_DebugLinkStop\x10g*\xe4\x01\n\x0b\x46\x61ilureType\x12\x1d\n\x19\x46\x61ilure_UnexpectedMessage\x10\x01\x12\x1a\n\x16\x46\x61ilure_ButtonExpected\x10\x02\x12\x17\n\x13\x46\x61ilure_SyntaxError\x10\x03\x12\x1b\n\x17\x46\x61ilure_ActionCancelled\x10\x04\x12\x17\n\x13\x46\x61ilure_PinExpected\x10\x05\x12\x18\n\x14\x46\x61ilure_PinCancelled\x10\x06\x12\x16\n\x12\x46\x61ilure_PinInvalid\x10\x07\x12\x19\n\x15\x46\x61ilure_FirmwareError\x10\x63*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01*(\n\x0bRequestType\x12\x0b\n\x07TXINPUT\x10\x00\x12\x0c\n\x08TXOUTPUT\x10\x01:/\n\x06\x62inary\x12\x1d.google.protobuf.FieldOptions\x18\xd1\x86\x03 \x01(\x08')
+  serialized_pb='\n\x0ctrezor.proto\x1a google/protobuf/descriptor.proto\"\x87\x01\n\x08XprvType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x19\n\x0bprivate_key\x18\x06 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x86\x01\n\x08XpubType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\npublic_key\x18\x06 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"]\n\x08\x43oinType\x12\x11\n\tcoin_name\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\x14\n\x0c\x61\x64\x64ress_type\x18\x03 \x01(\r\x12\x11\n\tmaxfee_kb\x18\x04 \x01(\x04\"H\n\x0cSettingsType\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x17\n\x04\x63oin\x18\x02 \x01(\x0b\x32\t.CoinType\x12\r\n\x05label\x18\x03 \x01(\x0c\"\x0c\n\nInitialize\"\xe3\x01\n\x08\x46\x65\x61tures\x12\x0e\n\x06vendor\x18\x01 \x01(\x0c\x12\x15\n\rmajor_version\x18\x02 \x01(\r\x12\x15\n\rminor_version\x18\x03 \x01(\r\x12\x16\n\x0e\x62ugfix_version\x18\x04 \x01(\r\x12\x17\n\x0f\x62ootloader_mode\x18\x05 \x01(\x08\x12\x1f\n\x08settings\x18\x06 \x01(\x0b\x32\r.SettingsType\x12\x17\n\tdevice_id\x18\x07 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x08mpk_hash\x18\x08 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x0epin_protection\x18\t \x01(\x08\"G\n\rApplySettings\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\r\n\x05label\x18\x03 \x01(\x0c\"\x1b\n\tChangePin\x12\x0e\n\x06remove\x18\x01 \x01(\x08\"\x17\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"6\n\x07\x46\x61ilure\x12\x1a\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0c.FailureType\x12\x0f\n\x07message\x18\x02 \x01(\x0c\"\x0f\n\rButtonRequest\"\x0b\n\tButtonAck\"\x0e\n\x0c\x42uttonCancel\"#\n\x10PinMatrixRequest\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1b\n\x0cPinMatrixAck\x12\x0b\n\x03pin\x18\x01 \x02(\x0c\"\x11\n\x0fPinMatrixCancel\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\" \n\x07\x45ntropy\x12\x15\n\x07\x65ntropy\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x14\n\x12GetMasterPublicKey\")\n\x0fMasterPublicKey\x12\x16\n\x03mpk\x18\x01 \x02(\x0b\x32\t.XpubType\"\x1f\n\nGetAddress\x12\x11\n\taddress_n\x18\x01 \x03(\r\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\"\x0c\n\nWipeDevice\"@\n\nLoadDevice\x12\x0c\n\x04seed\x18\x01 \x01(\x0c\x12\x17\n\x04xprv\x18\x02 \x01(\x0b\x32\t.XprvType\x12\x0b\n\x03pin\x18\x03 \x01(\x0c\"%\n\x0bResetDevice\x12\x16\n\x0e\x64isplay_random\x18\x01 \x01(\x08\"\x10\n\x0e\x45ntropyRequest\"#\n\nEntropyAck\x12\x15\n\x07\x65ntropy\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"5\n\x06SignTx\x12\x15\n\routputs_count\x18\x03 \x02(\r\x12\x14\n\x0cinputs_count\x18\x05 \x02(\r\"D\n\x0cSimpleSignTx\x12\x18\n\x06inputs\x18\x01 \x03(\x0b\x32\x08.TxInput\x12\x1a\n\x07outputs\x18\x02 \x03(\x0b\x32\t.TxOutput\"\x92\x01\n\tTxRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\x05\x12\"\n\x0crequest_type\x18\x02 \x01(\x0e\x32\x0c.RequestType\x12\x14\n\x0csigned_index\x18\x03 \x01(\x05\x12\x17\n\tsignature\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1b\n\rserialized_tx\x18\x05 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x82\x01\n\x07TxInput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12\x17\n\tprev_hash\x18\x04 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x12\n\nprev_index\x18\x05 \x02(\r\x12\x18\n\nscript_sig\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x8a\x01\n\x08TxOutput\x12\r\n\x05index\x18\x01 \x02(\r\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x02(\x0c\x12\x11\n\taddress_n\x18\x03 \x03(\r\x12\x0e\n\x06\x61mount\x18\x04 \x02(\x04\x12 \n\x0bscript_type\x18\x05 \x02(\x0e\x32\x0b.ScriptType\x12\x19\n\x0bscript_args\x18\x06 \x03(\x0c\x42\x04\x88\xb5\x18\x01\"\x0f\n\rFirmwareErase\"\'\n\x0e\x46irmwareUpload\x12\x15\n\x07payload\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"N\n\x11\x44\x65\x62ugLinkGetState\x12\x0e\n\x06layout\x18\x01 \x01(\x08\x12\x0b\n\x03pin\x18\x02 \x01(\x08\x12\x0e\n\x06matrix\x18\x03 \x01(\x08\x12\x0c\n\x04seed\x18\x04 \x01(\x08\"Q\n\x0e\x44\x65\x62ugLinkState\x12\x14\n\x06layout\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0b\n\x03pin\x18\x02 \x01(\x0c\x12\x0e\n\x06matrix\x18\x03 \x01(\x0c\x12\x0c\n\x04seed\x18\x04 \x01(\x0c\"\x0f\n\rDebugLinkStop*\xc4\n\n\x0bMessageType\x12 \n\x16MessageType_Initialize\x10\x00\x1a\x04\x90\xb5\x18\x01\x12\x1a\n\x10MessageType_Ping\x10\x01\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Success\x10\x02\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_Failure\x10\x03\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ChangePin\x10\x04\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_WipeDevice\x10\x05\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_FirmwareErase\x10\x06\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetEntropy\x10\t\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Entropy\x10\n\x1a\x04\x98\xb5\x18\x01\x12(\n\x1eMessageType_GetMasterPublicKey\x10\x0b\x1a\x04\x90\xb5\x18\x01\x12%\n\x1bMessageType_MasterPublicKey\x10\x0c\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_LoadDevice\x10\r\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_ResetDevice\x10\x0e\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_SignTx\x10\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_SimpleSignTx\x10\x10\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_Features\x10\x11\x1a\x04\x98\xb5\x18\x01\x12&\n\x1cMessageType_PinMatrixRequest\x10\x12\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_PinMatrixAck\x10\x13\x1a\x04\x90\xb5\x18\x01\x12%\n\x1bMessageType_PinMatrixCancel\x10\x14\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_TxRequest\x10\x15\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_TxInput\x10\x17\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_TxOutput\x10\x18\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ApplySettings\x10\x19\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ButtonRequest\x10\x1a\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ButtonAck\x10\x1b\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_ButtonCancel\x10\x1c\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetAddress\x10\x1d\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Address\x10\x1e\x1a\x04\x98\xb5\x18\x01\x12\x1c\n\x18MessageType_SettingsType\x10\x1f\x12\x18\n\x14MessageType_XprvType\x10 \x12\x18\n\x14MessageType_CoinType\x10!\x12\x18\n\x14MessageType_XpubType\x10\"\x12$\n\x1aMessageType_EntropyRequest\x10#\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_EntropyAck\x10$\x1a\x04\x90\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkDecision\x10\x64\x1a\x04\xa0\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkGetState\x10\x65\x1a\x04\xa0\xb5\x18\x01\x12$\n\x1aMessageType_DebugLinkState\x10\x66\x1a\x04\xa8\xb5\x18\x01\x12#\n\x19MessageType_DebugLinkStop\x10g\x1a\x04\xa0\xb5\x18\x01*\xe4\x01\n\x0b\x46\x61ilureType\x12\x1d\n\x19\x46\x61ilure_UnexpectedMessage\x10\x01\x12\x1a\n\x16\x46\x61ilure_ButtonExpected\x10\x02\x12\x17\n\x13\x46\x61ilure_SyntaxError\x10\x03\x12\x1b\n\x17\x46\x61ilure_ActionCancelled\x10\x04\x12\x17\n\x13\x46\x61ilure_PinExpected\x10\x05\x12\x18\n\x14\x46\x61ilure_PinCancelled\x10\x06\x12\x16\n\x12\x46\x61ilure_PinInvalid\x10\x07\x12\x19\n\x15\x46\x61ilure_FirmwareError\x10\x63*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01*(\n\x0bRequestType\x12\x0b\n\x07TXINPUT\x10\x00\x12\x0c\n\x08TXOUTPUT\x10\x01:/\n\x06\x62inary\x12\x1d.google.protobuf.FieldOptions\x18\xd1\x86\x03 \x01(\x08:4\n\x07wire_in\x12!.google.protobuf.EnumValueOptions\x18\xd2\x86\x03 \x01(\x08:5\n\x08wire_out\x12!.google.protobuf.EnumValueOptions\x18\xd3\x86\x03 \x01(\x08::\n\rwire_debug_in\x12!.google.protobuf.EnumValueOptions\x18\xd4\x86\x03 \x01(\x08:;\n\x0ewire_debug_out\x12!.google.protobuf.EnumValueOptions\x18\xd5\x86\x03 \x01(\x08')
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
   name='MessageType',
@@ -25,119 +25,119 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='MessageType_Initialize', index=0, number=0,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_Ping', index=1, number=1,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_Success', index=2, number=2,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_Failure', index=3, number=3,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_ChangePin', index=4, number=4,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_WipeDevice', index=5, number=5,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_FirmwareErase', index=6, number=6,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_FirmwareUpload', index=7, number=7,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_GetEntropy', index=8, number=9,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_Entropy', index=9, number=10,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_GetMasterPublicKey', index=10, number=11,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_MasterPublicKey', index=11, number=12,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_LoadDevice', index=12, number=13,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_ResetDevice', index=13, number=14,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_SignTx', index=14, number=15,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_SimpleSignTx', index=15, number=16,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_Features', index=16, number=17,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_PinMatrixRequest', index=17, number=18,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_PinMatrixAck', index=18, number=19,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_PinMatrixCancel', index=19, number=20,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_TxRequest', index=20, number=21,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_TxInput', index=21, number=23,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_TxOutput', index=22, number=24,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_ApplySettings', index=23, number=25,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_ButtonRequest', index=24, number=26,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_ButtonAck', index=25, number=27,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_ButtonCancel', index=26, number=28,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_GetAddress', index=27, number=29,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_Address', index=28, number=30,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_SettingsType', index=29, number=31,
@@ -157,33 +157,33 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_EntropyRequest', index=33, number=35,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_EntropyAck', index=34, number=36,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_DebugLinkDecision', index=35, number=100,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_DebugLinkGetState', index=36, number=101,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_DebugLinkState', index=37, number=102,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\250\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_DebugLinkStop', index=38, number=103,
-      options=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001'),
       type=None),
   ],
   containing_type=None,
   options=None,
   serialized_start=2266,
-  serialized_end=3404,
+  serialized_end=3614,
 )
 
 MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
@@ -228,8 +228,8 @@ _FAILURETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=3407,
-  serialized_end=3635,
+  serialized_start=3617,
+  serialized_end=3845,
 )
 
 FailureType = enum_type_wrapper.EnumTypeWrapper(_FAILURETYPE)
@@ -250,8 +250,8 @@ _SCRIPTTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=3637,
-  serialized_end=3688,
+  serialized_start=3847,
+  serialized_end=3898,
 )
 
 ScriptType = enum_type_wrapper.EnumTypeWrapper(_SCRIPTTYPE)
@@ -272,8 +272,8 @@ _REQUESTTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=3690,
-  serialized_end=3730,
+  serialized_start=3900,
+  serialized_end=3940,
 )
 
 RequestType = enum_type_wrapper.EnumTypeWrapper(_REQUESTTYPE)
@@ -333,6 +333,38 @@ BINARY_FIELD_NUMBER = 50001
 binary = _descriptor.FieldDescriptor(
   name='binary', full_name='binary', index=0,
   number=50001, type=8, cpp_type=7, label=1,
+  has_default_value=False, default_value=False,
+  message_type=None, enum_type=None, containing_type=None,
+  is_extension=True, extension_scope=None,
+  options=None)
+WIRE_IN_FIELD_NUMBER = 50002
+wire_in = _descriptor.FieldDescriptor(
+  name='wire_in', full_name='wire_in', index=1,
+  number=50002, type=8, cpp_type=7, label=1,
+  has_default_value=False, default_value=False,
+  message_type=None, enum_type=None, containing_type=None,
+  is_extension=True, extension_scope=None,
+  options=None)
+WIRE_OUT_FIELD_NUMBER = 50003
+wire_out = _descriptor.FieldDescriptor(
+  name='wire_out', full_name='wire_out', index=2,
+  number=50003, type=8, cpp_type=7, label=1,
+  has_default_value=False, default_value=False,
+  message_type=None, enum_type=None, containing_type=None,
+  is_extension=True, extension_scope=None,
+  options=None)
+WIRE_DEBUG_IN_FIELD_NUMBER = 50004
+wire_debug_in = _descriptor.FieldDescriptor(
+  name='wire_debug_in', full_name='wire_debug_in', index=3,
+  number=50004, type=8, cpp_type=7, label=1,
+  has_default_value=False, default_value=False,
+  message_type=None, enum_type=None, containing_type=None,
+  is_extension=True, extension_scope=None,
+  options=None)
+WIRE_DEBUG_OUT_FIELD_NUMBER = 50005
+wire_debug_out = _descriptor.FieldDescriptor(
+  name='wire_debug_out', full_name='wire_debug_out', index=4,
+  number=50005, type=8, cpp_type=7, label=1,
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
@@ -1994,7 +2026,81 @@ class DebugLinkStop(_message.Message):
   # @@protoc_insertion_point(class_scope:DebugLinkStop)
 
 google.protobuf.descriptor_pb2.FieldOptions.RegisterExtension(binary)
+google.protobuf.descriptor_pb2.EnumValueOptions.RegisterExtension(wire_in)
+google.protobuf.descriptor_pb2.EnumValueOptions.RegisterExtension(wire_out)
+google.protobuf.descriptor_pb2.EnumValueOptions.RegisterExtension(wire_debug_in)
+google.protobuf.descriptor_pb2.EnumValueOptions.RegisterExtension(wire_debug_out)
 
+_MESSAGETYPE.values_by_name["MessageType_Initialize"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Initialize"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_Ping"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Ping"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_Success"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Success"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_Failure"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Failure"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_ChangePin"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_ChangePin"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_WipeDevice"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_WipeDevice"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_FirmwareErase"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_FirmwareErase"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_FirmwareUpload"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_FirmwareUpload"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_GetEntropy"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_GetEntropy"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_Entropy"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Entropy"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_GetMasterPublicKey"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_GetMasterPublicKey"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_MasterPublicKey"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_MasterPublicKey"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_LoadDevice"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_LoadDevice"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_ResetDevice"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_ResetDevice"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_SignTx"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_SignTx"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_SimpleSignTx"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_SimpleSignTx"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_Features"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Features"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_PinMatrixRequest"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_PinMatrixRequest"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_PinMatrixAck"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_PinMatrixAck"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_PinMatrixCancel"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_PinMatrixCancel"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_TxRequest"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_TxRequest"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_TxInput"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_TxInput"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_TxOutput"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_TxOutput"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_ApplySettings"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_ApplySettings"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_ButtonRequest"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_ButtonRequest"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_ButtonAck"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_ButtonAck"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_ButtonCancel"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_ButtonCancel"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_GetAddress"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_GetAddress"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_Address"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_Address"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_EntropyRequest"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_EntropyRequest"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_EntropyAck"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_EntropyAck"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkDecision"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkDecision"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkGetState"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkGetState"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkState"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkState"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\250\265\030\001')
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkStop"].has_options = True
+_MESSAGETYPE.values_by_name["MessageType_DebugLinkStop"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001')
 _XPRVTYPE.fields_by_name['chain_code'].has_options = True
 _XPRVTYPE.fields_by_name['chain_code']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
 _XPRVTYPE.fields_by_name['private_key'].has_options = True

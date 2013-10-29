@@ -8,56 +8,61 @@
 
 import "google/protobuf/descriptor.proto";
 
+extend google.protobuf.FieldOptions {
+	optional bool binary = 50001;	// message field has binary payload
+}
+
+extend google.protobuf.EnumValueOptions {
+	optional bool wire_in = 50002;	// message can be transmitted via wire from PC to TREZOR
+	optional bool wire_out = 50003;	// message can be transmitted via wire from TREZOR to PC
+	optional bool wire_debug_in = 50004;	// message can be transmitted via debug wire from PC to TREZOR
+	optional bool wire_debug_out = 50005;	// message can be transmitted via debug wire from TREZOR to PC
+}
+
 /*
 	Mapping between Trezor wire identifier (int) and protobuf message
 */
 enum MessageType {
-	MessageType_Initialize = 0;
-	MessageType_Ping = 1;
-	MessageType_Success = 2;
-	MessageType_Failure = 3;
-	MessageType_ChangePin = 4;
-	MessageType_WipeDevice = 5;
-	MessageType_FirmwareErase = 6;
-	MessageType_FirmwareUpload = 7;
-	MessageType_GetEntropy = 9;
-	MessageType_Entropy = 10;
-	MessageType_GetMasterPublicKey = 11;
-	MessageType_MasterPublicKey = 12;
-	MessageType_LoadDevice = 13;
-	MessageType_ResetDevice = 14;
-	MessageType_SignTx = 15;
-	MessageType_SimpleSignTx = 16;
-	MessageType_Features = 17;
-	MessageType_PinMatrixRequest = 18;
-	MessageType_PinMatrixAck = 19;
-	MessageType_PinMatrixCancel = 20;
-	MessageType_TxRequest = 21;
-	MessageType_TxInput = 23;
-	MessageType_TxOutput = 24;
-	MessageType_ApplySettings = 25;
-	MessageType_ButtonRequest = 26;
-	MessageType_ButtonAck = 27;
-	MessageType_ButtonCancel = 28;
-	MessageType_GetAddress = 29;
-	MessageType_Address = 30;
+	MessageType_Initialize = 0 [(wire_in) = true];
+	MessageType_Ping = 1 [(wire_in) = true];
+	MessageType_Success = 2 [(wire_out) = true];
+	MessageType_Failure = 3 [(wire_out) = true];
+	MessageType_ChangePin = 4 [(wire_in) = true];
+	MessageType_WipeDevice = 5 [(wire_in) = true];
+	MessageType_FirmwareErase = 6 [(wire_in) = true];
+	MessageType_FirmwareUpload = 7 [(wire_in) = true];
+	MessageType_GetEntropy = 9 [(wire_in) = true];
+	MessageType_Entropy = 10 [(wire_out) = true];
+	MessageType_GetMasterPublicKey = 11 [(wire_in) = true];
+	MessageType_MasterPublicKey = 12 [(wire_out) = true];
+	MessageType_LoadDevice = 13 [(wire_in) = true];
+	MessageType_ResetDevice = 14 [(wire_in) = true];
+	MessageType_SignTx = 15 [(wire_in) = true];
+	MessageType_SimpleSignTx = 16 [(wire_in) = true];
+	MessageType_Features = 17 [(wire_out) = true];
+	MessageType_PinMatrixRequest = 18 [(wire_out) = true];
+	MessageType_PinMatrixAck = 19 [(wire_in) = true];
+	MessageType_PinMatrixCancel = 20 [(wire_in) = true];
+	MessageType_TxRequest = 21 [(wire_out) = true];
+	MessageType_TxInput = 23 [(wire_in) = true];
+	MessageType_TxOutput = 24 [(wire_in) = true];
+	MessageType_ApplySettings = 25 [(wire_in) = true];
+	MessageType_ButtonRequest = 26 [(wire_out) = true];
+	MessageType_ButtonAck = 27 [(wire_in) = true];
+	MessageType_ButtonCancel = 28 [(wire_in) = true];
+	MessageType_GetAddress = 29 [(wire_in) = true];
+	MessageType_Address = 30 [(wire_out) = true];
 	MessageType_SettingsType = 31;
 	MessageType_XprvType = 32;
 	MessageType_CoinType = 33;
 	MessageType_XpubType = 34;
-	MessageType_EntropyRequest = 35;
-	MessageType_EntropyAck = 36;
-	MessageType_DebugLinkDecision = 100;
-	MessageType_DebugLinkGetState = 101;
-	MessageType_DebugLinkState = 102;
-	MessageType_DebugLinkStop = 103;
+	MessageType_EntropyRequest = 35 [(wire_out) = true];
+	MessageType_EntropyAck = 36 [(wire_in) = true];
+	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
+	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
+	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
+	MessageType_DebugLinkStop = 103 [(wire_debug_in) = true];
 }
-
-// Such option indicates that the message field has binary payload
-extend google.protobuf.FieldOptions {
-	optional bool binary = 50001;
-}
-
 
 // ****************************************************************************
 //
