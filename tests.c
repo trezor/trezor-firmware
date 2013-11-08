@@ -29,6 +29,7 @@
 #include "aes.h"
 #include "bignum.h"
 #include "bip32.h"
+#include "bip39.h"
 #include "ecdsa.h"
 #include "sha2.h"
 
@@ -290,6 +291,87 @@ START_TEST(test_rijndael)
 }
 END_TEST
 
+START_TEST(test_mnemonic)
+{
+	static const char *vectors[] = {
+		"00000000000000000000000000000000",
+		"risk tiger venture dinner age assume float denial penalty hello game wing",
+		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+		"truth chase learn pretty right casual acoustic frozen betray main slogan method",
+		"80808080808080808080808080808080",
+		"olive garment twenty drill people finish hat own usual level milk usage",
+		"ffffffffffffffffffffffffffffffff",
+		"laundry faint system client frog vanish plug shell slot cable large embrace",
+		"000000000000000000000000000000000000000000000000",
+		"giant twelve seat embark ostrich jazz leader lunch budget hover much weapon vendor build truth garden year list",
+		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+		"awful faint gun mean fuel side slogan marine glad donkey velvet oyster movie real type digital dress federal",
+		"808080808080808080808080808080808080808080808080",
+		"bless carpet daughter animal hospital pave faculty escape fortune song sign twin unknown bread mobile normal agent use",
+		"ffffffffffffffffffffffffffffffffffffffffffffffff",
+		"saddle curve flight drama client resemble venture arch will ordinary enrich clutch razor shallow trophy tumble dice outer",
+		"0000000000000000000000000000000000000000000000000000000000000000",
+		"supreme army trim onion neglect coach squirrel spider device glass cabbage giant web digital floor able social magnet only fork fuel embrace salt fence",
+		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+		"cloth video uncle switch year captain artist country adjust edit inherit ocean tennis soda baby express hospital forest panel actual profit boy spice elite",
+		"8080808080808080808080808080808080808080808080808080808080808080",
+		"fence twin prize extra choose mask twist deny cereal quarter can power term ostrich leg staff nature nut swift sausage amateur aim script wisdom",
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		"moon fiscal evidence exile rifle series neglect giant exclude banana glance frown kangaroo globe turtle hat fitness casual sudden select idle arctic best unlock",
+		"449ea2d7249c6e0d8d295424fb8894cf",
+		"choice barrel artefact cram increase sell veteran matrix mirror hollow walk pave",
+		"75fc3f44a7ff8e2b8af05aa18bded3827a3796df406763dd",
+		"crack outside teach chat praise client manual scorpion predict chalk decrease casino lunch garbage enable ball when bamboo",
+		"1cce2f8c2c6a7f2d8473ebf1c32ce13b36737835d7a8768f44dcf96d64782c0e",
+		"muffin evoke all fiber night guard black quote neck expire dial tenant leisure have dragon neck notable peace captain insane nice uphold shine angry",
+		"3daa82dd08bd144ec9fb9f77c6ece3d2",
+		"foil dawn net enroll turtle bird vault trumpet service fun immune unveil",
+		"9720239c0039f8446d44334daec325f3c24b3a490315d6d9",
+		"damp all desert dash insane pear debate easily soup enough goddess make friend plug violin pact wealth insect",
+		"fe58c6644bc3fad95832d4400cea0cce208c8b19bb4734a26995440b7fae7600",
+		"wet sniff asthma once gap enrich pumpkin define trust rude gesture keen grass fine emerge census immense smooth ritual spirit rescue problem beef choice",
+		"99fe82c94edadffe75e1cc64cbd7ada7",
+		"thing real emerge verify domain cloud lens teach travel radio effort glad",
+		"4fd6e8d06d55b4700130f8f462f7f9bfc6188da83e3faadb",
+		"diary opinion lobster code orange odor insane permit spirit evolve upset final antique grant friend dutch say enroll",
+		"7a547fb59606e89ba88188013712946f6cb31c3e0ca606a7ee1ff23f57272c63",
+		"layer owner legal stadium glance oyster element spell episode eager wagon stand pride old defense black print junior fade easy topic ready galaxy debris",
+		"e5fc62d20e0e5d9b2756e8d4d91cbb80",
+		"flat make unit discover rifle armed unit acquire group panel nerve want",
+		"d29be791a9e4b6a48ff79003dbf31d6afabdc4290a273765",
+		"absurd valve party disorder basket injury make blanket vintage ancient please random theory cart retire odor borrow belt",
+		"c87c135433c16f1ecbf9919dc53dd9f30f85824dc7264d4e1bd644826c902be2",
+		"upper will wisdom term once bean blur inquiry used bamboo frequent hamster amazing cake attack any author mimic leopard day token joy install company",
+		0,
+		0,
+	};
+
+	const char **d, **s, *m;
+
+	// check encode
+	d = vectors;
+	s = vectors + 1;
+	while (*d && *s) {
+		m = mnemonic_encode(fromhex(*d), strlen(*d) / 2, 0);
+		ck_assert_ptr_ne(m, 0);
+		ck_assert_str_eq(m, *s);
+		d += 2; s += 2;
+	}
+
+	// check decode
+	d = vectors;
+	s = vectors + 1;
+	uint8_t data[32];
+	int len;
+	while (*d && *s) {
+		len = mnemonic_decode(*s, data, 0);
+		ck_assert_int_eq(len, strlen(*d) / 2);
+		ck_assert_mem_eq(fromhex(*d), data, len);
+		d += 2; s += 2;
+	}
+}
+END_TEST
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -312,6 +394,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("rijndael");
 	tcase_add_test(tc, test_rijndael);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("bip39");
+	tcase_add_test(tc, test_mnemonic);
 	suite_add_tcase(s, tc);
 
 	return s;
