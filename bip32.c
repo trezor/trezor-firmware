@@ -5,7 +5,7 @@
 #include "ecdsa.h"
 #include "bip32.h"
 
-void xprv_from_seed(uint8_t *seed, int seed_len, xprv *out)
+void xprv_from_seed(uint8_t *seed, int seed_len, XprvNode *out)
 {
 	out->version = 0x0488ADE4; // main-net
 	out->depth = 0;
@@ -18,7 +18,7 @@ void xprv_from_seed(uint8_t *seed, int seed_len, xprv *out)
 	ecdsa_get_address(out->public_key, 0, out->address);
 }
 
-void xprv_descent(xprv *inout, uint32_t i)
+void xprv_descent(XprvNode *inout, uint32_t i)
 {
 	uint8_t data[1 + 32 + 4];
 	bignum256 a, b;
