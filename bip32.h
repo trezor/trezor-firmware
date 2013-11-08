@@ -20,4 +20,6 @@ void xprv_from_seed(uint8_t *seed, int seed_len, XprvNode *out);
 
 void xprv_descent(XprvNode *inout, uint32_t i);
 
+void xprv_fill_public(XprvNode *xprv);
+
 #endif

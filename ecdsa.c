@@ -293,7 +293,7 @@ void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key)
 	bn_write_be(&R.y, pub_key + 33);
 }
 
-void ecdsa_get_address(const uint8_t *pub_key, char version, char *addr)
+void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 {
 	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 	char *p = addr, s;
