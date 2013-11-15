@@ -5,8 +5,8 @@ import time
 from transport import Transport, NotImplementedException
 
 DEVICE_IDS = [
-    (0x10c4, 0xea80), # Trezor Pi
-    (0x534c, 0x0001), # Trezor
+    (0x10c4, 0xea80),  # Shield
+    (0x534c, 0x0001),  # Trezor
 ]
 
 class FakeRead(object):
@@ -21,6 +21,8 @@ class HidTransport(Transport):
     def __init__(self, device, *args, **kwargs):
         self.hid = None
         self.buffer = ''
+        if bool(kwargs.get('debug_link')):
+            device = device[:-2] + '01'
         super(HidTransport, self).__init__(device, *args, **kwargs)
 
     @classmethod
@@ -29,18 +31,18 @@ class HidTransport(Transport):
         for d in hid.enumerate(0, 0):
             vendor_id = d.get('vendor_id')
             product_id = d.get('product_id')
-            serial_number = d.get('serial_number')
-            
-            if (vendor_id, product_id) in DEVICE_IDS:
-                devices.append("0x%04x:0x%04x:%s" % (vendor_id, product_id, serial_number))
+            path = d.get('path')
+
+            if (vendor_id, product_id) in DEVICE_IDS and path.endswith(':00'):
+                devices.append(path)
                 
         return devices
         
     def _open(self):
         self.buffer = ''
-        path = self.device.split(':')
+        print self.device
         self.hid = hid.device()
-        self.hid.open(int(path[0], 16), int(path[1], 16))
+        self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)
         self.hid.send_feature_report([0x41, 0x01]) # enable UART
         self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs

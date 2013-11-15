@@ -14,8 +14,8 @@ def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
-    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='socket', help="Debuglink transport")
-    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='127.0.0.1:2000', help="Path used by the transport (usually serial port)")         
+    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
+    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
     parser.add_argument('-j', '--json', dest='json', action='store_true', help="Prints result as json object")
     parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='Enable low-level debugging')
 
@@ -42,7 +42,7 @@ def parse_args(commands):
     
     return parser.parse_args()
 
-def get_transport(transport_string, path):
+def get_transport(transport_string, path, **kwargs):
     if transport_string == 'usb':
         from trezorlib.transport_hid import HidTransport
 
@@ -52,23 +52,23 @@ def get_transport(transport_string, path):
             except IndexError:
                 raise Exception("No Trezor found on USB")
 
-        return HidTransport(path)
+        return HidTransport(path, **kwargs)
  
     if transport_string == 'serial':
         from trezorlib.transport_serial import SerialTransport
-        return SerialTransport(path)
+        return SerialTransport(path, **kwargs)
 
     if transport_string == 'pipe':
         from trezorlib.transport_pipe import PipeTransport
-        return PipeTransport(path, is_device=False)
+        return PipeTransport(path, is_device=False, **kwargs)
     
     if transport_string == 'socket':
         from trezorlib.transport_socket import SocketTransportClient
-        return SocketTransportClient(path)
+        return SocketTransportClient(path, **kwargs)
     
     if transport_string == 'fake':
         from trezorlib.transport_fake import FakeTransport
-        return FakeTransport(path)
+        return FakeTransport(path, **kwargs)
     
     raise NotImplemented("Unknown transport")
 
@@ -96,8 +96,8 @@ class Commands(object):
     def ping(self, args):
         return self.client.ping(args.msg)
 
-    def get_master_public_key(self, args):
-        return self.client.get_master_public_key()
+    def get_public_node(self, args):
+        return self.client.get_public_node(args.n)
     
     def get_serial_number(self, args):
         return binascii.hexlify(self.client.get_serial_number())
@@ -112,6 +112,9 @@ class Commands(object):
         seed = ' '.join(args.seed)
 
         return self.client.load_device(seed, args.pin) 
+
+    def sign_message(self, args):
+        return self.client.sign_message(args.n, args.message)
 
     def firmware_update(self, args):
         if not args.file:
@@ -129,10 +132,11 @@ class Commands(object):
     get_entropy.help = 'Get example entropy'
     get_features.help = 'Retrieve device features and settings'
     get_serial_number.help = 'Get device\'s unique identifier'
-    get_master_public_key.help = 'Get master public key'
+    get_public_node.help = 'Get public node of given path'
     set_label.help = 'Set new wallet label'
     set_coin.help = 'Switch device to another crypto currency'
     load_device.help = 'Load custom configuration to the device'
+    sign_message.help = 'Sign message using address of given path'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     get_address.arguments = (
@@ -160,6 +164,15 @@ class Commands(object):
     load_device.arguments = (
         (('-s', '--seed'), {'type': str, 'nargs': '+'}),
         (('-n', '--pin'), {'type': str, 'default': ''}),
+    )
+
+    sign_message.arguments = (
+        (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+        (('message',), {'type': str}),
+    )
+
+    get_public_node.arguments = (
+        (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
     )
 
     firmware_update.arguments = (
@@ -239,7 +252,10 @@ def main():
 
     transport = get_transport(args.transport, args.path)
     if args.debug:
-        debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
+        if args.debuglink_transport == 'usb' and args.debuglink_path == '':
+            debuglink_transport = get_transport('usb', args.path, debug_link=True)
+        else:
+            debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
         debuglink = DebugLink(debuglink_transport)    
     else:
         debuglink = None
