@@ -1,11 +1,13 @@
 #ifndef __BIP39_H__
 #define __BIP39_H__
 
-#include <stdbool.h>
 #include <stdint.h>
 
-const char *mnemonic_encode(uint8_t *data, int len, char *passphrase);
 
-int mnemonic_decode(const char *mnemonic, uint8_t *data, char *passphrase);
+const char *mnemonic_generate(int strength);	// strength in bits
+
+const char *mnemonic_from_data(const uint8_t *data, int len);
+
+void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t *seed);
 
 #endif

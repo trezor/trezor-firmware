@@ -68,8 +68,8 @@ char *tohex(const uint8_t *bin, size_t l)
   ck_assert_msg(0 OP memcmp(_ck_y, _ck_x, _ck_l), \
     "Assertion '"#X#OP#Y"' failed: "#X"==\"%s\"", tohex(_ck_x, _ck_l)); \
 } while (0)
-#define ck_assert_mem_eq(X, Y, L) _ck_assert_mem(X, Y, L, ==)
-#define ck_assert_mem_ne(X, Y, L) _ck_assert_mem(X, Y, L, !=)
+#define ck_assert_mem_eq(X, Y, L) _ck_assert_mem((X), (Y), (L), ==)
+#define ck_assert_mem_ne(X, Y, L) _ck_assert_mem((X), (Y), (L), !=)
 
 // test vector 1 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
 START_TEST(test_bip32_vector_1)
@@ -294,79 +294,94 @@ START_TEST(test_mnemonic)
 {
 	static const char *vectors[] = {
 		"00000000000000000000000000000000",
-		"risk tiger venture dinner age assume float denial penalty hello game wing",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+		"6ca6a10baeaeff4b9b2e0dbc9f880dd8428c61168caa8cdf57234e87b7ace148ee4531ef37d518439c42392ee3878f74efec1d677b0327bca7378bfd009722a1",
 		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-		"truth chase learn pretty right casual acoustic frozen betray main slogan method",
+		"legal winner thank year wave sausage worth useful legal winner thank yellow",
+		"f0eee1f28591edfad85f47ccd64f1ba18c9b3d31d5c28bf05f296f323ffd22c94edfdbe9494a094d96e8099adb80cdcc4e6b564e04ee38515d35b3d6fb9b91be",
 		"80808080808080808080808080808080",
-		"olive garment twenty drill people finish hat own usual level milk usage",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage above",
+		"14949034b83876cc10b4624c2f7489499c68df72aeea503195ef2cb1686c1767fe41b854fbb0ac2596e4ba8235c27395297039578d5e7b4921e5bf7eafe28a27",
 		"ffffffffffffffffffffffffffffffff",
-		"laundry faint system client frog vanish plug shell slot cable large embrace",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+		"d430f6f2fd8573c2aac937cb5eb88486cce4fd06a4c632bc58b8b24f60697e2a158e3e51290360175b38c71ca90971cbcfa26049c1cb14f3d44e031d8d18e634",
 		"000000000000000000000000000000000000000000000000",
-		"giant twelve seat embark ostrich jazz leader lunch budget hover much weapon vendor build truth garden year list",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent",
+		"6836b4fb07e82f99f157d5abec7a6bc3fae25e6aaed44b547b6e64d9bfae955cde245db6b06decb2429b5c5f849563108d7f799734b6cfb86f797c1c74d20cca",
 		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-		"awful faint gun mean fuel side slogan marine glad donkey velvet oyster movie real type digital dress federal",
+		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal will",
+		"6b5d7995263e58421531e0c9c4084c0d5738bc2eef5306cc267e496f263256aa93f0adb51ab92b26bfaf00d448e896f8564fca91e66b7cfb2ac2c7cb1e59cb0f",
 		"808080808080808080808080808080808080808080808080",
-		"bless carpet daughter animal hospital pave faculty escape fortune song sign twin unknown bread mobile normal agent use",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter always",
+		"f3e672575342c0c0544593f76706214ab6e78098e9632b979807b1d3e0632fee8661146f740289036a831311b4e28c11601d29aec0e52ca4ee19476a0e03231e",
 		"ffffffffffffffffffffffffffffffffffffffffffffffff",
-		"saddle curve flight drama client resemble venture arch will ordinary enrich clutch razor shallow trophy tumble dice outer",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo when",
+		"1a4e1e5532e8d34da0c4e225745840af7f80b6e22adf9443b424965deeab3e287a45f4ccfbc6b0a4ae9945bfd0eccef65ddb05115ff6829f051cb58e2ce02227",
 		"0000000000000000000000000000000000000000000000000000000000000000",
-		"supreme army trim onion neglect coach squirrel spider device glass cabbage giant web digital floor able social magnet only fork fuel embrace salt fence",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+		"aae9cdd3667c7ab3169bc755c868f65980ae5cc02ab57fcea08e43b3d1652c4da748dfcaacc707f146e785e0c75fdd2935c99db986703a24ffc5961158f67c23",
 		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
-		"cloth video uncle switch year captain artist country adjust edit inherit ocean tennis soda baby express hospital forest panel actual profit boy spice elite",
+		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title",
+		"217b6d8b54552deb05701e1f7478431f528e82e590bf68cd8c6236fb9c2fa16bbb9d759fa68cb8e3f17a0525596de2c645aee8a2b0b071d78411d2147fdef443",
 		"8080808080808080808080808080808080808080808080808080808080808080",
-		"fence twin prize extra choose mask twist deny cereal quarter can power term ostrich leg staff nature nut swift sausage amateur aim script wisdom",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic bless",
+		"d5432ff9f0a0dc85373635a658056b04b8ad96069c79c953151de03496c81f772301acbd1b4bc87f0ef07fdcf070ea7384c1c86ec324fab11ac8851d7bc7122f",
 		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-		"moon fiscal evidence exile rifle series neglect giant exclude banana glance frown kangaroo globe turtle hat fitness casual sudden select idle arctic best unlock",
-		"449ea2d7249c6e0d8d295424fb8894cf",
-		"choice barrel artefact cram increase sell veteran matrix mirror hollow walk pave",
-		"75fc3f44a7ff8e2b8af05aa18bded3827a3796df406763dd",
-		"crack outside teach chat praise client manual scorpion predict chalk decrease casino lunch garbage enable ball when bamboo",
-		"1cce2f8c2c6a7f2d8473ebf1c32ce13b36737835d7a8768f44dcf96d64782c0e",
-		"muffin evoke all fiber night guard black quote neck expire dial tenant leisure have dragon neck notable peace captain insane nice uphold shine angry",
-		"3daa82dd08bd144ec9fb9f77c6ece3d2",
-		"foil dawn net enroll turtle bird vault trumpet service fun immune unveil",
-		"9720239c0039f8446d44334daec325f3c24b3a490315d6d9",
-		"damp all desert dash insane pear debate easily soup enough goddess make friend plug violin pact wealth insect",
-		"fe58c6644bc3fad95832d4400cea0cce208c8b19bb4734a26995440b7fae7600",
-		"wet sniff asthma once gap enrich pumpkin define trust rude gesture keen grass fine emerge census immense smooth ritual spirit rescue problem beef choice",
-		"99fe82c94edadffe75e1cc64cbd7ada7",
-		"thing real emerge verify domain cloud lens teach travel radio effort glad",
-		"4fd6e8d06d55b4700130f8f462f7f9bfc6188da83e3faadb",
-		"diary opinion lobster code orange odor insane permit spirit evolve upset final antique grant friend dutch say enroll",
-		"7a547fb59606e89ba88188013712946f6cb31c3e0ca606a7ee1ff23f57272c63",
-		"layer owner legal stadium glance oyster element spell episode eager wagon stand pride old defense black print junior fade easy topic ready galaxy debris",
-		"e5fc62d20e0e5d9b2756e8d4d91cbb80",
-		"flat make unit discover rifle armed unit acquire group panel nerve want",
-		"d29be791a9e4b6a48ff79003dbf31d6afabdc4290a273765",
-		"absurd valve party disorder basket injury make blanket vintage ancient please random theory cart retire odor borrow belt",
-		"c87c135433c16f1ecbf9919dc53dd9f30f85824dc7264d4e1bd644826c902be2",
-		"upper will wisdom term once bean blur inquiry used bamboo frequent hamster amazing cake attack any author mimic leopard day token joy install company",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote",
+		"faed83f0823ee9958d35e9514b497729776f675ce5ce7a14d1ab47efc70d71bc7bad208c3df16ab0cce19ec2ad115fe78c93d4245028f82215c0d278616c07e7",
+		"b4950b98f22cdff09bd809960771012b",
+		"region portion tower tone social weapon hunt abuse noodle describe doctor fit",
+		"8917cbe312d2122616df35a4f92cc81c67063200acd2ac530502e28d01e9247b6e6c87495ead957733001096b6679ff9a63f762f07a07f9834cac326f7249926",
+		"e4dcab3716ef913118a8d51675c7ce8b460b5d33587c4bad",
+		"tooth torch soccer column weekend obtain glance boy biology purchase victory bird gaze purse sniff auto entry hundred",
+		"dc645f9c8d11ee5b372993b710540c59bdc4693b253dd207998811df4fbcbce711247361582a9042482a445a2123be514a2602913b5984336271879d1c36bc55",
+		"7874365a015417bf86b2e6e68c4fb332afcaf344ac1c5b514869bdc4503f07f5",
+		"journey payment notable actor door thank bracket fresh track give under grab witness keen bargain logic forget medal bounce knee eagle buzz cabin salute",
+		"fe49079843bb0461496faeafd6c6e18e058c6b54403d085616863bca32a8a3ec59bca20c4f68e5f300098faf7cf592e52493ee358add5161befeef601a0984b9",
+		"dd36b9581bef791e27dea2349d99f111",
+		"tag remind figure daughter wasp monitor panda stairs cruel under labor carry",
+		"db8870c20d22f8fd43baf8675a30567745b908c56404b65da6b940b89dee1623a207385073da5931e202006971eb0460f0c86da7be233917fde24137a5d0b4c7",
+		"f268b3d9a0504f7a93602f58aca5e3b296a386d1b867a271",
+		"venue easily wait doll agent run eternal album flavor gown jump gown health sell eight artefact pen melody",
+		"f4afc4679667969b2a051e530c10bda028fc66fecdf6db416f6e5b834bfd26314591f3303a6f0a607fbeb0b7072a42fde064d76d362c796284107656981ad1d2",
+		"575fab7f9a24cb9edd664541d491349ba1ee64ca3982ffaf0d951ffb3c03b104",
+		"firm wool that crowd erosion sorry intact silly dove pig essay dance bus crash cigar core zero journey grab divide record achieve series outdoor",
+		"000607026976a77b840eb314461bb8799ece12ce4844c452c39b6d94aa8c9f8f55f668786099add17a32e63338576316c93161e350ec9726d2384aa2d5ea884e",
+		"7499a884c8dc8d854996a42046764af7",
+		"innocent snap cancel museum silver section chaos stand cake crisp naive until",
+		"0a256d3cd41423b084717335a43b58ff522a41f254448304e6b80f572b09e5709dfd88ba190c43aef3b4366016212e67d85e7f48d91c2b37306ba6792f779652",
+		"4b87f573b3710d6551115c148698974849caeaef46baf41a",
+		"entire distance friend group awkward razor dust clog behind crumble chair mountain original install rug struggle village spice",
+		"cbe978501edc014868011032069d730947a1a37f305ad401847796c157f9039d322a0b8ba5c4e34b6ea6ea90b408249e960df501685ae720ed1d78dc8495b682",
+		"1eb272608649d7ca5118174f6c71bb5a9684af1dd9159a9707803c5df8c6a229",
+		"burger near oblige arrive output topple dutch actual exhaust glory human release hair fiscal jazz cargo once return theme judge test globe master clerk",
+		"7dcdf57089ca467e023bcb6d97872317b9c3b120b6363d7986a95d42555e1036f914f4f19c2f381e346d24cfa5204f8cbe6b96146f39012b0740ce5ae21e625b",
+		"b45c6ab5b78e98d0ec2b8cb77cf2eecb",
+		"reform today pulp humor trumpet half radar immense resist travel roof nurse",
+		"5118a62d70721d83e5525e7fdef5f049843900a60bc6bdc408feb0104f9fd5237000f166b811de432c27011a739578d8f9266d2882b290345ee04dae908d77d4",
+		"3b80180f9abebbbf9a45c5620dc711426c1a3b0ede191608",
+		"describe absorb advance cube two thank harbor reward ginger hotel session luggage script budget derive segment bid early",
+		"80c58137ee8a3f0fae6d4bc2ea366f95929efe2fba063a676ea7559a383c38d1cdd5a04dd09bc29c21bf7334b3f492d6b7ce0f3ba5e78ef06337f2056aacc11b",
+		"1fdc34f4457c1adddb0ff2de01b92817f4ffe7c82bef6719e4742a54d0463efc",
+		"cabin ticket dial memory script humble history wrestle task assist energy copper exit view camera law grow song brown feed escape cart winner maple",
+		"eae75edd758d1b65e317d15682ce76d6625251ab618dbbce179caa3aaf29e4f88e0ab97cd070c80b480bad3d50cfc458005a06949ab31d8702f95f6863eae176",
+		0,
 		0,
 		0,
 	};
 
-	const char **d, **s, *m;
+	const char **a, **b, **c, *m;
+	uint8_t seed[64];
 
-	// check encode
-	d = vectors;
-	s = vectors + 1;
-	while (*d && *s) {
-		m = mnemonic_encode(fromhex(*d), strlen(*d) / 2, 0);
-		ck_assert_ptr_ne(m, 0);
-		ck_assert_str_eq(m, *s);
-		d += 2; s += 2;
-	}
-
-	// check decode
-	d = vectors;
-	s = vectors + 1;
-	uint8_t data[32];
-	int len;
-	while (*d && *s) {
-		len = mnemonic_decode(*s, data, 0);
-		ck_assert_int_eq(len, strlen(*d) / 2);
-		ck_assert_mem_eq(fromhex(*d), data, len);
-		d += 2; s += 2;
+	a = vectors;
+	b = vectors + 1;
+	c = vectors + 2;
+	while (*a && *b && *c) {
+		m = mnemonic_from_data(fromhex(*a), strlen(*a) / 2);
+		ck_assert_str_eq(m, *b);
+		mnemonic_to_seed(m, "", seed);
+		ck_assert_mem_eq(seed, fromhex(*c), strlen(*c) / 2);
+		a += 3; b += 3; c += 3;
 	}
 }
 END_TEST
