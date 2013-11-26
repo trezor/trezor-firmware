@@ -116,6 +116,9 @@ class Commands(object):
     def sign_message(self, args):
         return self.client.sign_message(args.n, args.message)
 
+    def verify_message(self, args):
+        return self.client.verify_message(args.address, args.signature, args.message)
+
     def firmware_update(self, args):
         if not args.file:
             raise Exception("Must provide firmware filename")
@@ -137,6 +140,7 @@ class Commands(object):
     set_coin.help = 'Switch device to another crypto currency'
     load_device.help = 'Load custom configuration to the device'
     sign_message.help = 'Sign message using address of given path'
+    verify_message.help = 'Verify message'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     get_address.arguments = (
@@ -168,6 +172,12 @@ class Commands(object):
 
     sign_message.arguments = (
         (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+        (('message',), {'type': str}),
+    )
+
+    verify_message.arguments = (
+        (('address',), {'type': str}),
+        (('signature',), {'type': str}),
         (('message',), {'type': str}),
     )
 

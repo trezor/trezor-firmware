@@ -1,6 +1,7 @@
 import os
 import time
 
+import ckd_public
 import trezor_pb2 as proto
 
 def show_message(message):
@@ -39,7 +40,6 @@ class TrezorClient(object):
         return os.urandom(32)
         
     def init_device(self):
-        self.master_public_key = None
         self.features = self.call(proto.Initialize())
 
     def close(self):
@@ -47,12 +47,9 @@ class TrezorClient(object):
         if self.debuglink:
             self.debuglink.transport.close()
 
-    def get_master_public_key(self):
-        if self.master_public_key:
-            return self.master_public_key
-        
-        self.master_public_key = self.call(proto.GetMasterPublicKey()).mpk
-        return self.master_public_key
+    def get_public_node(self, n):
+        # print self.bip32_ckd(self.call(proto.GetPublicKey(address_n=n)).node, [2, ])
+        return self.call(proto.GetPublicKey(address_n=n)).node
         
     def get_address(self, n):
         return self.call(proto.GetAddress(address_n=n)).address
@@ -139,7 +136,20 @@ class TrezorClient(object):
             print "Received", self._pprint(resp)
             
         return resp
-        
+
+    def sign_message(self, n, message):
+        return self.call(proto.SignMessage(address_n=n, message=message))
+
+    def verify_message(self, address, signature, message):
+        try:
+            resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
+            if isinstance(resp, proto.Success):
+                return True
+        except CallException:
+            pass
+
+        return False
+
     def sign_tx(self, inputs, outputs):
         '''
             inputs: list of TxInput
@@ -259,6 +269,18 @@ class TrezorClient(object):
         resp = self.call(proto.LoadDevice(seed=seed, pin=pin))
         self.init_device()
         return isinstance(resp, proto.Success)
+
+    def bip32_ckd(self, public_node, n):
+        if not isinstance(n, list):
+            raise Exception('Parameter must be a list')
+
+        node = proto.HDNodeType()
+        node.CopyFrom(public_node)
+
+        for i in n:
+            node.CopyFrom(ckd_public.get_subnode(node, i))
+
+        return node
 
     def firmware_update(self, fp):
         if self.features.bootloader_mode == False:
