@@ -63,12 +63,6 @@ message CoinType {
 	optional uint64 maxfee_kb = 4;
 }
 
-message SettingsType {
-	optional bytes language = 1;		// Trezor uses 'english' as default
-	optional CoinType coin = 2;
-	optional bytes label = 3;		// Human readable wallet name
-}
-
 message TxInputType {
 //	required uint32 index = 1;				// Position of input in proposed transaction
 //	required uint64 amount = 3;				// Amount to spend in satoshis. The rest will be used for transaction fees

@@ -72,17 +72,19 @@ message Features {
 	optional uint32 minor_version = 3;			// Minor version of the device, e.g. 0
 	optional uint32 bugfix_version = 4;
 	optional bool bootloader_mode = 5;
-	optional SettingsType settings = 6;			// User-level settings of the device
-	optional bytes device_id = 7 [(binary) = true];		// Device's unique identifier
-	optional bool pin_protection = 8;			// True if Trezor is covered by PIN
-	optional bool passphrase_protection = 9;                // True if Trezor seed is covered by passphrase
+	optional bytes device_id = 6 [(binary) = true];		// Device's unique identifier
+	optional bool pin_protection = 7;			// True if Trezor is covered by PIN
+	optional bool passphrase_protection = 8;                // True if Trezor seed is covered by passphrase
+	optional bytes language = 9;
+	optional bytes label = 10 [(binary) = true];
+	repeated CoinType coins = 11;
 }
 
 // Overwrites only filled fields of the structure
 message ApplySettings {
 	optional bytes language = 1;
 	optional bytes coin_shortcut = 2;
-	optional bytes label = 3;
+	optional bytes label = 3 [(binary) = true];
 }
 
 // Starts workflow for setting/changing the PIN

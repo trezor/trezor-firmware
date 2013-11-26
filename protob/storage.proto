@@ -10,13 +10,17 @@ import "types.proto";
 
 message Storage {
 	required uint32 version = 1;
-	optional HDNodeType seed = 2;
-	optional bool seed_encrypted = 3;
-	optional uint32 pin_failed_attempts = 4;
-	optional bytes pin = 5;
-	optional SettingsType settings = 6;
+	optional bytes node_serialized = 2 [(binary) = true];
+	optional bytes mnemonic = 3 [(binary) = true];
+	optional bool encrypted = 4;	// whether node_serialized or mnemonic are encrypted (protected by passphrase)
+	optional uint32 pin_failed_attempts = 5;
+	optional bytes pin = 6;
+	optional bytes language = 7;
+	optional bytes label = 8 [(binary) = true];
 }
 
 message Session {
 	optional bytes passphrase = 1 [(binary) = true];
+	optional CoinType coin = 2;
+	optional HDNodeType node = 3;
 }
