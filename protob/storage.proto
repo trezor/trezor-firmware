@@ -6,7 +6,7 @@
 	Version: 0.1
 */
 
-import "trezor.proto";
+import "types.proto";
 
 message Storage {
 	required uint32 version = 1;
@@ -15,4 +15,8 @@ message Storage {
 	optional uint32 pin_failed_attempts = 4;
 	optional bytes pin = 5;
 	optional SettingsType settings = 6;
+}
+
+message Session {
+	optional bytes passphrase = 1 [(binary) = true];
 }

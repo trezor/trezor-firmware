@@ -6,18 +6,7 @@
 	Version: 0.6
 */
 
-import "google/protobuf/descriptor.proto";
-
-extend google.protobuf.FieldOptions {
-	optional bool binary = 50001;	// message field has binary payload
-}
-
-extend google.protobuf.EnumValueOptions {
-	optional bool wire_in = 50002;	// message can be transmitted via wire from PC to TREZOR
-	optional bool wire_out = 50003;	// message can be transmitted via wire from TREZOR to PC
-	optional bool wire_debug_in = 50004;	// message can be transmitted via debug wire from PC to TREZOR
-	optional bool wire_debug_out = 50005;	// message can be transmitted via debug wire from TREZOR to PC
-}
+import "types.proto";
 
 /*
 	Mapping between Trezor wire identifier (int) and protobuf message
@@ -42,89 +31,27 @@ enum MessageType {
 	MessageType_Features = 17 [(wire_out) = true];
 	MessageType_PinMatrixRequest = 18 [(wire_out) = true];
 	MessageType_PinMatrixAck = 19 [(wire_in) = true];
-	MessageType_PinMatrixCancel = 20 [(wire_in) = true];
+	MessageType_Cancel = 20 [(wire_in) = true];
 	MessageType_TxRequest = 21 [(wire_out) = true];
 	MessageType_TxInput = 23 [(wire_in) = true];
 	MessageType_TxOutput = 24 [(wire_in) = true];
 	MessageType_ApplySettings = 25 [(wire_in) = true];
 	MessageType_ButtonRequest = 26 [(wire_out) = true];
 	MessageType_ButtonAck = 27 [(wire_in) = true];
-	MessageType_ButtonCancel = 28 [(wire_in) = true];
 	MessageType_GetAddress = 29 [(wire_in) = true];
 	MessageType_Address = 30 [(wire_out) = true];
-	MessageType_SettingsType = 31;
-	MessageType_HDNodeType = 32; // BIP32 structure, what a funny coincidence :-)
-	MessageType_CoinType = 33;
-	MessageType_TxOutputBin = 34;
 	MessageType_EntropyRequest = 35 [(wire_out) = true];
 	MessageType_EntropyAck = 36 [(wire_in) = true];
-	MessageType_TransactionType = 37;
 	MessageType_SignMessage = 38 [(wire_in) = true];
 	MessageType_VerifyMessage = 39 [(wire_in) = true];
 	MessageType_MessageSignature = 40 [(wire_out) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
 	MessageType_PassphraseAck = 42 [(wire_in) = true];
-	MessageType_PassphraseCancel = 43 [(wire_in) = true];
 
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
 	MessageType_DebugLinkStop = 103 [(wire_debug_in) = true];
-}
-
-// ****************************************************************************
-//
-// Definition of custom field types
-//
-
-enum FailureType {
-	Failure_UnexpectedMessage = 1;
-	Failure_ButtonExpected = 2;
-	Failure_SyntaxError = 3;
-	Failure_ActionCancelled = 4;
-	Failure_PinExpected = 5;
-	Failure_PinCancelled = 6;
-	Failure_PinInvalid = 7;
-	Failure_InvalidSignature = 8;
-	Failure_FirmwareError = 99;
-}
-
-// Specifies which script will be used for given transaction output.
-enum ScriptType {
-	PAYTOADDRESS = 0;
-	PAYTOSCRIPTHASH = 1;
-}
-
-// Specifies which kind of information is required by transaction signing process
-enum RequestType {
-	TXINPUT = 0;
-	TXOUTPUT = 1;
-}
-
-// Structure of BIP32 (hierarchical deterministic) node
-// Used for imports of private key into the device and exporting public key out of device
-message HDNodeType {
-	required uint32 version = 1;
-	required uint32 depth = 2;
-	required uint32 fingerprint = 3;
-	required uint32 child_num = 4;
-	required bytes chain_code = 5 [(binary) = true];
-	optional bytes private_key = 6 [(binary) = true];
-	optional bytes public_key = 7 [(binary) = true];
-	optional bytes address = 8;
-}
-
-message CoinType {
-	optional bytes coin_name = 1;
-	optional bytes coin_shortcut = 2;
-	optional uint32 address_type = 3;
-	optional uint64 maxfee_kb = 4;
-}
-
-message SettingsType {
-	optional bytes language = 1;		// Trezor uses 'english' as default
-	optional CoinType coin = 2;
-	optional bytes label = 3;		// Human readable wallet name
 }
 
 // ****************************************************************************
@@ -184,7 +111,7 @@ message Failure {
 
 // Message can be sent by the *device* as a resopnse to any request.
 // Device is waiting for HW button press. No action is required from computer
-// Computer should respond with ButtonAck message or ButtonCancel to cancel
+// Computer should respond with ButtonAck message or Cancel to cancel
 // the original request.
 message ButtonRequest {
 }
@@ -193,14 +120,10 @@ message ButtonRequest {
 message ButtonAck {
 }
 
-// Computer want to cancel current action (don't wait to HW button press)
-message ButtonCancel {
-}
-
 // Message can be sent by the *device* as a response to any request.
 // Message asks computer to send back PinMatrixAck with the password encoded in pin matrix scheme.
 //
-// Response: PinMatrixAck, PinMatrixCancel
+// Response: PinMatrixAck, Cancel
 message PinMatrixRequest {
 	optional bytes message = 1;	// Human readable message
 }
@@ -210,9 +133,8 @@ message PinMatrixAck {
 	required bytes pin = 1;		// User must write down the password for accessing the device.
 }
 
-// Message is sent as a response to PinMatrixRequest by the computer, asking the device to cancel
-// pending action and reset to the default state.
-message PinMatrixCancel {
+// Message is sent as a cancel response to ButtonRequest, PinMatrixRequest and PassphraseRequest
+message Cancel {
 }
 
 // Device request encryption passphrase
@@ -222,10 +144,6 @@ message PassphraseRequest {
 // Computer sends passphrase to device.
 message PassphraseAck {
 	required bytes passphrase = 1 [(binary) = true];
-}
-
-// Computer want to cancel current action
-message PassphraseCancel {
 }
 
 // Request a sample of random data generated by hardware RNG. May be used
@@ -363,39 +281,13 @@ message TxRequest {
 //
 // Response: TxRequest, Failure
 message TxInput {
-//	required uint32 index = 1;				// Position of input in proposed transaction
-//	required uint64 amount = 3;				// Amount to spend in satoshis. The rest will be used for transaction fees
-	repeated uint32 address_n = 1;			// Parameter for address generation algorithm to derive the address from the master node
-	required bytes prev_hash = 2 [(binary) = true];		// Hash of previous transaction output to spend by this input
-	required uint32 prev_index = 3;			// Index of previous output to spend
-	optional bytes script_sig = 4 [(binary) = true];	// Script signature
-	optional uint32 sequence = 5 [default=0xffffffff];
+	required TxInputType input = 1;
 }
 
 // Transaction output for SignTx workflow. It is response to TxRequest message sent by the device.
 // This contains all data necessary to build transaction output (script_pubkey).
 message TxOutput {
-//	required uint32 index = 1;				// Position of output in proposed transaction
-	required bytes address = 1;				// Target bitcoin address in base58 encoding
-	repeated uint32 address_n = 2;			// Has higher priority than "address".
-	required uint64 amount = 3;				// Amount to send in satoshis
-	required ScriptType script_type = 4;	// Select output script type
-	repeated bytes script_args = 5 [(binary) = true];	// Provide additional parameters for the script (its script-depended)
-}
-
-// Transaction output with script pubkey in binary form.
-// This is used for obtaining hashes of existing transactions
-// and for compiling TxOutput for signing.
-message TxOutputBin {
-	required uint64 amount = 1;
-	required bytes script_pubkey = 2 [(binary) = true];
-}
-
-message TransactionType {
-	optional uint32 version = 1 [default=1];
-	repeated TxInput inputs = 2;
-	repeated TxOutputBin outputs = 3;
-	optional uint32 lock_time = 4 [default=0];
+	required TxOutputType output = 1;
 }
 
 // ****************************************************************************
