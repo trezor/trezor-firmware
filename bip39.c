@@ -28,6 +28,10 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 	static char bits[256 + 8];
 	static char mnemo[24 * 10];
 
+	if (len % 4 || len < 16 || len > 32) {
+		return 0;
+	}
+
 	SHA256_Raw((const uint8_t *)data, len, hash);
 
 	for (i = 0; i < len; i++) {
