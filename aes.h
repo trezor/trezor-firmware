@@ -55,7 +55,7 @@
     version that provides variable block length is compiled.
 */
 
-// #define BLOCK_SIZE  16
+#define BLOCK_SIZE  16
 
 /* key schedule length (in 32-bit words)    */
 
