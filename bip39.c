@@ -63,10 +63,9 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 	return mnemo;
 }
 
-void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t *seed)
+void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8])
 {
 	static uint8_t k[8 + 256];
-	uint8_t *m = seed;
 	int i, kl;
 
 	kl = strlen(passphrase);
@@ -74,8 +73,8 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t *see
 	memcpy(k + 8, passphrase, kl);
 	kl += 8;
 
-	hmac_sha512(k, kl, (const uint8_t *)mnemonic, strlen(mnemonic), m);
+	hmac_sha512(k, kl, (const uint8_t *)mnemonic, strlen(mnemonic), seed);
 	for (i = 1; i < HMAC_ROUNDS; i++) {
-		hmac_sha512(k, kl, m, 512 / 8, m);
+		hmac_sha512(k, kl, seed, 512 / 8, seed);
 	}
 }
