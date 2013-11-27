@@ -74,7 +74,7 @@ message Features {
 	optional bool bootloader_mode = 5;
 	optional bytes device_id = 6 [(binary) = true];		// Device's unique identifier
 	optional bool pin_protection = 7;			// True if Trezor is covered by PIN
-	optional bool passphrase_protection = 8;                // True if Trezor seed is covered by passphrase
+	optional bool passphrase_protection = 8;		// True if node/mnemonic is covered by passphrase
 	optional bytes language = 9;
 	optional bytes label = 10 [(binary) = true];
 	repeated CoinType coins = 11;
@@ -193,7 +193,7 @@ message WipeDevice {
 //
 // Response: Success, ButtonRequest, PinMatrixRequest, Failure
 message LoadDevice {
-	optional bytes seed = 1;	// Seed encoded as a mnemonic (12 english words)
+	optional bytes mnemonic = 1;	// Seed encoded as a mnemonic (12 english words)
 	optional HDNodeType node = 2;
 	optional bytes pin = 3;		// Set PIN protection for important actions
 }
@@ -321,11 +321,6 @@ message DebugLinkDecision {
 //
 // Response: DebugLinkState
 message DebugLinkGetState {
-	optional bool layout = 1;	// Request raw buffer of display
-	optional bool pin = 2;		// Request current pin
-	optional bool matrix = 3;	// Request current pin matrix
-	optional bool seed = 4;		// Request current seed
-//	optional bool state = 5;
 }
 
 // Response object reflecting device's current state. It can be received only over debug link connection.
@@ -333,8 +328,9 @@ message DebugLinkState {
 	optional bytes layout = 1 [(binary) = true];		// Raw buffer of display
 	optional bytes pin = 2;					// Current PIN, blank if PIN is not set/enabled
 	optional bytes matrix = 3;				// Current PIN matrix
-	optional bytes seed = 4;				// Current seed (in mnemonic format)
-//	optional bytes state = 5 [(binary) = true];
+	optional bytes mnemonic = 4;				// current mnemonic format
+	optional HDNodeType node = 5;				// current node (BIP32 format)
+//	optional bytes state = 6 [(binary) = true];
 }
 
 // Ask device to shutdown/restart
