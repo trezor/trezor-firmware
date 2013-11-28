@@ -196,6 +196,7 @@ message LoadDevice {
 	optional bytes mnemonic = 1;	// Seed encoded as a mnemonic (12 english words)
 	optional HDNodeType node = 2;
 	optional bytes pin = 3;		// Set PIN protection for important actions
+	optional bool passphrase_protection = 4;
 }
 
 // Request device to do full-reset, to generate new seed
