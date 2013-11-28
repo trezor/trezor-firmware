@@ -331,7 +331,7 @@ message DebugLinkState {
 	optional bytes matrix = 3;				// Current PIN matrix
 	optional bytes mnemonic = 4;				// current mnemonic format
 	optional HDNodeType node = 5;				// current node (BIP32 format)
-//	optional bytes state = 6 [(binary) = true];
+	optional bool passphrase_protection = 6;
 }
 
 // Ask device to shutdown/restart
