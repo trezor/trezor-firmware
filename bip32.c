@@ -5,6 +5,8 @@
 #include "ecdsa.h"
 #include "bip32.h"
 
+uint8_t hdnode_coin_version = 0x00;
+
 void hdnode_from_pub(uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
 {
 	out->version = version;
@@ -14,7 +16,7 @@ void hdnode_from_pub(uint32_t version, uint32_t depth, uint32_t fingerprint, uin
 	memcpy(out->chain_code, chain_code, 32);
 	memcpy(out->public_key, public_key, 33);
 	memset(out->private_key, 0, 32);
-	hdnode_fill_address(out, 0x00);
+	hdnode_fill_address(out);
 }
 
 void hdnode_from_seed(uint8_t *seed, int seed_len, HDNode *out)
@@ -27,7 +29,7 @@ void hdnode_from_seed(uint8_t *seed, int seed_len, HDNode *out)
 	// form a continuous 64 byte block in the memory
 	hmac_sha512((uint8_t *)"Bitcoin seed", 12, seed, seed_len, out->private_key);
 	hdnode_fill_public_key(out);
-	hdnode_fill_address(out, 0x00);
+	hdnode_fill_address(out);
 }
 
 void hdnode_descent(HDNode *inout, uint32_t i)
@@ -57,7 +59,7 @@ void hdnode_descent(HDNode *inout, uint32_t i)
 	bn_write_be(&a, inout->private_key);
 
 	hdnode_fill_public_key(inout);
-	hdnode_fill_address(inout, 0x00);
+	hdnode_fill_address(inout);
 }
 
 void hdnode_fill_public_key(HDNode *xprv)
@@ -65,7 +67,7 @@ void hdnode_fill_public_key(HDNode *xprv)
 	ecdsa_get_public_key33(xprv->private_key, xprv->public_key);
 }
 
-void hdnode_fill_address(HDNode *xprv, uint8_t version)
+void hdnode_fill_address(HDNode *xprv)
 {
-	ecdsa_get_address(xprv->public_key, version, xprv->address);
+	ecdsa_get_address(xprv->public_key, hdnode_coin_version, xprv->address);
 }

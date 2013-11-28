@@ -14,6 +14,8 @@ typedef struct {
 	char address[35];
 } HDNode;
 
+extern uint8_t hdnode_coin_version;
+
 void hdnode_from_pub(uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out);
 
 void hdnode_from_seed(uint8_t *seed, int seed_len, HDNode *out);
@@ -24,6 +26,6 @@ void hdnode_descent(HDNode *inout, uint32_t i);
 
 void hdnode_fill_public_key(HDNode *xprv);
 
-void hdnode_fill_address(HDNode *xprv, uint8_t version);
+void hdnode_fill_address(HDNode *xprv);
 
 #endif
