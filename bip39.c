@@ -4,9 +4,10 @@
 #include "hmac.h"
 #include "rand.h"
 #include "sha2.h"
+#include "pbkdf2.h"
 #include "bip39_english.h"
 
-#define HMAC_ROUNDS 10000
+#define ROUNDS 10000
 
 const char *mnemonic_generate(int strength)
 {
@@ -65,16 +66,10 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8])
 {
-	static uint8_t k[8 + 256];
-	int i, kl;
-
-	kl = strlen(passphrase);
-	memcpy(k, "mnemonic", 8);
-	memcpy(k + 8, passphrase, kl);
-	kl += 8;
-
-	hmac_sha512(k, kl, (const uint8_t *)mnemonic, strlen(mnemonic), seed);
-	for (i = 1; i < HMAC_ROUNDS; i++) {
-		hmac_sha512(k, kl, seed, 512 / 8, seed);
-	}
+	static uint8_t salt[8 + 256 + 4];
+	int saltlen = strlen(passphrase);
+	memcpy(salt, "mnemonic", 8);
+	memcpy(salt + 8, passphrase, saltlen);
+	saltlen += 8;
+	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, ROUNDS, seed, 512 / 8);
 }

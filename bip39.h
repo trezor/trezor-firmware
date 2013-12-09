@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-
 const char *mnemonic_generate(int strength);	// strength in bits
 
 const char *mnemonic_from_data(const uint8_t *data, int len);

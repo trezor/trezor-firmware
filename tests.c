@@ -24,6 +24,7 @@
 #include <check.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 #include "aes.h"
@@ -31,6 +32,7 @@
 #include "bip32.h"
 #include "bip39.h"
 #include "ecdsa.h"
+#include "pbkdf2.h"
 #include "sha2.h"
 
 uint8_t *fromhex(const char *str)
@@ -49,9 +51,10 @@ uint8_t *fromhex(const char *str)
 	return buf;
 }
 
-char *tohex(const uint8_t *bin, size_t l)
+inline char *tohex(const uint8_t *bin, size_t l)
 {
-	static char buf[257], digits[] = "0123456789abcdef";
+	char *buf = (char *)malloc(l * 2 + 1);
+	static char digits[] = "0123456789abcdef";
 	size_t i;
 	for (i = 0; i < l; i++) {
 		buf[i*2  ] = digits[(bin[i] >> 4) & 0xF];
@@ -66,10 +69,10 @@ char *tohex(const uint8_t *bin, size_t l)
   const void* _ck_y = (Y); \
   size_t _ck_l = (L); \
   ck_assert_msg(0 OP memcmp(_ck_y, _ck_x, _ck_l), \
-    "Assertion '"#X#OP#Y"' failed: "#X"==\"%s\"", tohex(_ck_x, _ck_l)); \
+    "Assertion '"#X#OP#Y"' failed: "#X"==\"%s\", "#Y"==\"%s\"", tohex(_ck_x, _ck_l), tohex(_ck_y, _ck_l)); \
 } while (0)
-#define ck_assert_mem_eq(X, Y, L) _ck_assert_mem((X), (Y), (L), ==)
-#define ck_assert_mem_ne(X, Y, L) _ck_assert_mem((X), (Y), (L), !=)
+#define ck_assert_mem_eq(X, Y, L) _ck_assert_mem(X, Y, L, ==)
+#define ck_assert_mem_ne(X, Y, L) _ck_assert_mem(X, Y, L, !=)
 
 // test vector 1 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
 START_TEST(test_bip32_vector_1)
@@ -289,81 +292,104 @@ START_TEST(test_rijndael)
 }
 END_TEST
 
+// test vectors from http://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
+START_TEST(test_pbkdf2)
+{
+	uint8_t k[64], s[64];
+
+	strcpy((char *)s, "salt");
+	pbkdf2((uint8_t *)"password", 8, s, 4, 1, k, 64);
+	ck_assert_mem_eq(k, fromhex("867f70cf1ade02cff3752599a3a53dc4af34c7a669815ae5d513554e1c8cf252c02d470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce"), 64);
+
+	strcpy((char *)s, "salt");
+	pbkdf2((uint8_t *)"password", 8, s, 4, 2, k, 64);
+	ck_assert_mem_eq(k, fromhex("e1d9c16aa681708a45f5c7c4e215ceb66e011a2e9f0040713f18aefdb866d53cf76cab2868a39b9f7840edce4fef5a82be67335c77a6068e04112754f27ccf4e"), 64);
+
+	strcpy((char *)s, "salt");
+	pbkdf2((uint8_t *)"password", 8, s, 4, 4096, k, 64);
+	ck_assert_mem_eq(k, fromhex("d197b1b33db0143e018b12f3d1d1479e6cdebdcc97c5c0f87f6902e072f457b5143f30602641b3d55cd335988cb36b84376060ecd532e039b742a239434af2d5"), 64);
+
+	strcpy((char *)s, "saltSALTsaltSALTsaltSALTsaltSALTsalt");
+	pbkdf2((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 64);
+	ck_assert_mem_eq(k, fromhex("8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868c005174dc4ee71115b59f9e60cd9532fa33e0f75aefe30225c583a186cd82bd4daea9724a3d3b8"), 64);
+}
+END_TEST
+
 START_TEST(test_mnemonic)
 {
 	static const char *vectors[] = {
 		"00000000000000000000000000000000",
 		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-		"cb5e7230ce8229de990674f6aa4288325fd4d8181f761734bd8b5cc944fedc2a4300e64422864b565352de7ffbc5ad0fafdf5344489f3a83e4a4bb5271cafaae",
+		"a3c9324fab99733ef7b5f9313e49cd45a134ee77da9aa176a84458d4b73e46f00a59361709d71d6b68338c957366937942b8f2ce2bd306b4ab0ae63c6b4ff7f5",
 		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
 		"legal winner thank year wave sausage worth useful legal winner thank yellow",
-		"de1277934939d6969519f44b7b3757a905d7f635be41e1e88022c346bc52ad26c0a3e9578e73e9b89066873266f285a5891d27d28cb27fccfe26d92bbd7ee364",
+		"f48f158e9689580f91ae0c813f4353ba2f90cd242e811ec27b2d79f97eb21fcfaf54a0b546c27c3b0a60285df2b064b3eef84fa7269d93ab013af10a20adc758",
 		"80808080808080808080808080808080",
 		"letter advice cage absurd amount doctor acoustic avoid letter advice cage above",
-		"8863bccef9cfffeacef1e4c6fc97bba8227ab0fc7e8e162be7467282689a13521ea364d7c4bc8cd241b59f53c5147a89c18a47248a96592ab9a2c1f1870b026c",
+		"7804de4eb059484ebd7c384e3bd99654763ff1f736abf4e8a5053b12594ea7389beefd967031f03416fa03994cf6be7d3f2fbe37709a27cd091f9e3d310f16d0",
 		"ffffffffffffffffffffffffffffffff",
 		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
-		"7a29e57c7a1532af1bddb7e02b892cfccc6a57b74fe9784324ea89fab8a66dc64fde79c31166b159685116f4e93c1795496f20ffdc2d3a69d3439931dabde86e",
+		"ce2467164ca78cbce7c368bf35a390474d0e3af6afc4cc47214d215dcfc52ee567fd9921e66c32fc34e8f37abc468e7ba6cc744a96e815c95c583ad849d1c372",
 		"000000000000000000000000000000000000000000000000",
 		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent",
-		"c3e382025b6a22a901505cf393faea450eb6c4a5f2a8c8f0596285b2bd84688877a6cc7231420e2bbdd2428e62ed549a78fa215b3adafd8dea075dabfc704d5e",
+		"e6fa0d745f5b841a4c90f1487dea80d5e5cc64c46c7aebe115b10ac333066f37b6d34ae514b8a1acb21b38c3836c248aec81c10874c2323bee98e70443cb2e2c",
 		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
 		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal will",
-		"c82666e40eb097bf6eb05fecd7dc2ddfb6bbdc6071900f4b3fd3c3e635db69aa2094f1f450c98e8dc6103aa72df635abdfcc3b6d6ec5261a9208a07a35a3f1c8",
+		"b829d8809875e7cae49114971e6ab87f13bd133c8d676972fb7a7ce8a9604b57759137091f21018ecd757906331c7e5466c8d9bc31b705e96e959beba111acc5",
 		"808080808080808080808080808080808080808080808080",
 		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter always",
-		"e90681c67c55504afadca009ce4042819341fa0e90300b6d32b4f2e8e8a6678ff7e7fc1da663ae194dc7a2ef7ec7b50112d1a5efce47bfd00c66eec82f2265b5",
+		"e8716279b6e74e876477061b83c4b29eeab288ea85ea196d95281dc0504c3edb1c70c86042e66f56ad27fb93d24c0a64294eac9668f0bba6d13a13882de542dd",
 		"ffffffffffffffffffffffffffffffffffffffffffffffff",
 		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo when",
-		"2a372547df962742942674170a7cef495ea0b97f4864de16d0f3ee82eb577ca1eca345e601cc2df7c626c5bc51c52c28a3b4294224b685c958c7450bee6769e6",
+		"417b80e3489de48dc644d9bf8e32ed907f918efdaf78541c219e6e1b6e7e17ed38448e7d2ef311ad4446f8be779507d288285eb5eff32ce723d4b3692a26d6a4",
 		"0000000000000000000000000000000000000000000000000000000000000000",
 		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
-		"58cb9c5555d67ecc7b32305a78d1a2fcf0c9b22f1af761cfafc65eb1d3909f63ee2cab84996a7478cfd3e864cda5efb0caf580d56cf49739c6b3638d94e758c1",
+		"c716b0c6e051b60f819ba04bc5c402ac15e3aa4071c99735dfecce05d41b550155ae3511789a0ccf2cb245050f53e48292e8d88864e7c46eaa2fe626373e6fc8",
 		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
 		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title",
-		"0093cb3ed6d1302d3cf498017f8cb1c7dc2fdbd62ec57fc49e4b2a4dd47a23e44e0b309517d5a3e7b0f4f0ef0ed132818cf120a098a92e572ad086f1a90ccb7f",
+		"8d80646b3677f02a56efc2977dc5972dadddd96dc34309119fbd44f5f939344df0e6c0aa924fabfe858c123283f904e1fcb24a5e20b70d69ec82a40e3e010c12",
 		"8080808080808080808080808080808080808080808080808080808080808080",
 		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic bless",
-		"8a21e46b9d264328c63e707e3d38ed4eb21508deda309fa2ef57cc8eca8b351ca3018758844ba9fb5851bab15d026a61cabace53a9a39bc91dc2c51407542cf5",
+		"fd544f531a25958d2980925b10e7146290dd8615fd9241a66b0681cf3afb44e607a279cc88fa4afe65779b07b3ba441dcfb13be42266642c474fb4787683556c",
 		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote",
-		"5c8a1a284ab2844daf02cab322df3996574c9d53cbd36159c493441990f0d2a6bc9bc1502e3a067943d8ec67324663cbfb9667b57fed220e3f28335e26a90f93",
-		"1083fa24dbb0afa4e7b327d23f666567",
-		"awesome cabin matrix resist april sponsor paddle gossip split will off soon",
-		"467406b36a0176e40e013393e5ecef1f5b4019980b502eda9db1db06f7786e088b206f045f2bfcf93bd3b17a598335b078fcc5890115857ff741bd154b54f049",
-		"d8cbcd1ac2153ecd74048480c2732f637d642b21f0dd40df",
-		"sugar fury effort loud fault grit source mountain liar bean slim shoulder stone better march brick dolphin zero",
-		"f60180ea5047659cbb17ed6ef79c974de86c0170c7a1962b205329eb8fe9dcdd148615d35c515c4ec8da25f4cf54d5b7cd8cd5bf8dc4059df3a7900ca25f8306",
-		"2952f95cefe041616f6f379ab649cf8b702ecf8e4acceaebdda4cc50e2bf1d7b",
-		"citizen oak fire thank advice radar sad tragic one rather initial black actual guitar decrease flower turtle galaxy hard obvious athlete garbage invest have",
-		"eff4b6a15bb55fcf4bbfa2b3b9e24e7dc4bed8319ef7703f1786d472c73666922925778eaa5a06f8a26d2c7e7240be746fd69edfaf197e0dae12d7e0b550cfc8",
-		"f5e82717078a6ddc538a03e825f91bed",
-		"vote donkey shift audit plug until evolve document trial cool eight swarm",
-		"83dad22293225780a914083fc1a69bfe1d910f5b5962b0364820132a42ae1bd567a1fb4d5a19ad3d64539e38a7ee3d6429fac2b74e72b020913131c5eadb7db4",
-		"16b59b6a426f2f302f73049a32ab8572394278982212357a",
-		"birth proud surround luggage very object saddle gauge olive next throw tongue neither detail gauge drastic cube strategy",
-		"38ceb07e0dad221f612631843be6ae44a650aaf789c8ebea9313e07498d7864385227d25c7a8268a5b850367eef31639632e9218acadead20980b864b1cd477e",
-		"95b6cb48c7bc9c2a54496ae3eea790824b57e52b9637058f084555bc1b809b2f",
-		"noble rent split month six benefit eye coil token inside tomorrow afraid rely verb purity shoulder airport joke bacon problem script scare hole trumpet",
-		"e33e3d32e467877596a18ac60050488a0ec1557fda6bf95bad3d33d964c5e99dcd97d378403cc2723ed1c85c12b42bc59f15458d970d7a9d015f556109c146b0",
-		"7f93397f750f70a26513de2732ed95ee",
-		"legend oil garlic tube warfare eye nephew knock cheese number grace tackle",
-		"7f92ad63e4cdf4f15c23740556ad81e7f8cbd67cc672c93894c9c0d4fb171539eed5ab29f366570ed9940b816f45a539c3816f7ac19511794b752c5c1ec0e732",
-		"14c29fe840dd1c9f05d392ba13e4e1466b32ed0726a15f89",
-		"below belt wheel like spike exhibit blanket inch ring palace debate mimic rebel isolate broken stage garbage enhance",
-		"7bae6e54f8bad645f18f574b310bd3e6fde126dabcaf63a889940380e4798810e48c8151fc56bb2389c07498deacef025f03cbf8fc57ea3ec68f6421b0fcb649",
-		"cb30610d175ffeab8357d5190d31923997752a7f9815087bfcad5eb0b43f6468",
-		"sleep loan drive concert zoo fiction ask wide boil hat goose industry jar news wrist actor anchor that clip runway area cabbage museum abuse",
-		"b922030609e7626696b9cf5ca4c06cd99290be30b1052770f6a60c5f26532d178f287a4285d7a2add2845dc89a816b26fdba1c830067d130740f64c0ab5cfbe1",
-		"a30b50a5439dcd1774f412ea5ec33403",
-		"perfect fold citizen mango system merry stable liquid tumble voyage snack alter",
-		"aae175f26848370c4d5d3d0640597e2bf1b28e95908dd877259b3eac5d71ffe3140739a3ed80180f88159571df84441985620e6b2fb0696e5cba1aa7b8d10b98",
-		"70044da2175ad681d0ebbf2da83cf407eb9c8fd91fc0a8c9",
-		"hybrid carbon hammer concert pulp domain dry jewel color draft dial average right elevator good way potato energy",
-		"a3dffe3a31a2e949d1b04af7495a5b59db17e41d93b985feeaaae89260a9c86c6dcdf7cb32eaba61c2f4f0340f0f17d1ebb67af11657286b2ffd66ec4e05a8b7",
-		"0e0bab4df9669b97ba3f75a50b2e92423bbe6e91a1b01dbbf3ba200a917c9106",
-		"asthma front square version have slim trophy upgrade pink floor pig love room dance educate current buffalo test update divorce poverty salad dune scheme",
-		"2eb4d85fbd8deaf9b06bf9cdb3e5f36e8da040d110312075eb32e776fc8e505b94be3e63c1525ad41f5e5968a263853001dc7c40ea3af8e8b0cfb7effd5f408c",
+		"024a5866efbd866885915e8eb2fc743af294c1b69285d2d62efff4228d6b3eb53bfc2ecd97048fc9691b200ee4f11af4e51fab23aa0ac674dd187235b4e3283f",
+		"7dce4ed2284c9134d026608ab684c05c",
+		"lava include region explain simple omit dog slot melt reflect copy reward",
+		"bf010975d766bec901a632c0eadc9461de1ff89c20e37e49a67ae03730681a08122004304ed92bff0592db5271254967de4bc7f3a20de9b3becc5ab951c28d7c",
+		"0ce452419635c1a5faf44d60f2029f73fdc43419b4de1f03",
+		"artefact card motor cluster foster spray type meadow genius mosquito pond tree sword borrow grocery orange business burger",
+		"fd81692c4b0341a73bdb479ad5f572444658c68e11e693c06cafbda8d27f31eed03f32fa6e02744fcf902b8383253c64f98ffd659ba12fcb7dff47991d811fb0",
+		"00ac97c48106f0aeb8ba061e0250a559b3251dc35854e694780ba51d53a50120",
+		"absent gorilla van acoustic humor firm title dolphin bulk barely citizen recall crane moment aspect appear track phrase actual enforce steel spoon afraid benefit",
+		"97a796e70d1ba31176e0ace6feffa6bdcda6233648deb83b7a92e0dd01ad133d0b545a4d1283e5d5bef984b6b055fe9ebb99f4063607a7f17cdcee20a5fde35f",
+		"5baf069620eff15c71dd97c9a6ee328f",
+		"forum join pitch dove yellow purchase shuffle real situate danger million bunker",
+		"8e6416b101bc429d59becfdeef9b4ca40b4dd938efca1d3dabb54dfcbd48a78a65a2a28fdf4732f94806f2e8aa2e40fadff71fa7060883ce50eea7a90fbe4bd3",
+		"977f8287f9ed670b8489838ab0476a63b65d4df12f406e68",
+		"number winter peanut video stool magic banana corn melt lion surround shuffle grape plunge seven trend hover dwarf",
+		"bb63f0b3e0f9a1ed6afa0a694e6e3673f669ec8ac16b36bb6c3d273db387357b83e0c09e05c9dfc58b09a226a84e93a6bba558050b7b73c3a9b8f1bd8f3b7c33",
+		"3edc83b60740d77af3afa2fcb82c2f1bc541ee4e2518ddef4996d32453f54a3c",
+		"disagree tomato unique attend aspect runway solid violin witness scrap armed daring favorite warm decade perfect target kid grant play early wide cigar night",
+		"fdd3a53afaaf299cb3c5c1f9a2bb69627a03da65106deca4301859cda102d34eece0ad49558f145fb8986cf39b4ce88aad96c21ae9be2894da97a6379659ad25",
+		"63deb1e7f0c3de56f4ab43c9d2ae6c86",
+		"glow void ketchup thunder digital clock sport half six nice open artefact",
+		"68ce9777c0adc97c85ff636fd0c677b00c5f1dab44c4090a5f60c516ccb50a8b8a3f59afeaf85a935d986ad37dcea8e921e9ecde3bb6649c4cbc843b19e2b8a5",
+		"e77c6500b49072aefdf0a8aa787cf557d1920e94103e0597",
+		"trash tobacco dizzy hard already first water bench price sentence diary quick bomb also expect amazing airport royal",
+		"4c9e646357ea442fb2734018662e7473b5870ef7dc9f5048f9460ec22f08aeea561def3664e8f8a96759eaf1aeedb2b113fb820b96e8dc5853fd7de6293568de",
+		"89bb4bc5555992cdaf3444c5e7ca5a6e9f27efab894f1990bae41be8b2a26ea4",
+		"meadow surge vanish primary odor grocery rubber mass shine dinner notable tag venue water purchase clarify book magic ribbon daughter menu eye ritual orchard",
+		"71ce132d69f9bd4ebd7a3f8b4c45d057341670f9093fb22ce4855ee1672119d6a430f203ebcde5767e53f7c3ff64a5ad29ccd41f31d5d4f9db59e21f65b02cd0",
+		"00641669f095b433a304ed0f953f28eb",
+		"about camera omit thrive forget border metal oval auto prepare sketch stomach",
+		"016837c6355b0e8998a2fe8e10294a8b5dc0d9bc87e545e38f1ae77b4ade3247998a101ac1146f52414c9c8e0442f610fd7f0af25b60823fd044dc6902c865c8",
+		"b8b0ff94389d3ec591c7d2fb72d8d3666e4e52b8cdf5471d",
+		"reward margin topic illness stadium glare either where window nothing crumble smoke top citizen tobacco salt either truth",
+		"366e1ba1ab99d840505b94a20d9c63f1e17ec330ff77a7e2db399b57be5d34971ca33d7dea361f5bc9f3e6c939f0624f7231d62f53b9963d9632c8926a031abe",
+		"911fec0fbd88029f6fa99164896c18d898c9232af18bdcca3e42d53b86493104",
+		"much youth advance kitchen lens exile salt cram goose enter alert raise milk muscle profit cousin system faint mouse price reveal cause series long",
+		"ed60c0f8ee61d91be8c96dbe8fd999c21d77c162e682fff73e904bf138d6f4b48e69becf69d4c72fd0e630179238acc9dd037eaec55eca077e0ad379249dc456",
 		0,
 		0,
 		0,
@@ -407,6 +433,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("rijndael");
 	tcase_add_test(tc, test_rijndael);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("pbkdf2");
+	tcase_add_test(tc, test_pbkdf2);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("bip39");
