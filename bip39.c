@@ -7,7 +7,7 @@
 #include "pbkdf2.h"
 #include "bip39_english.h"
 
-#define ROUNDS 10000
+#define PBKDF2_ROUNDS 4096
 
 const char *mnemonic_generate(int strength)
 {
@@ -71,5 +71,5 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	memcpy(salt, "mnemonic", 8);
 	memcpy(salt + 8, passphrase, saltlen);
 	saltlen += 8;
-	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, ROUNDS, seed, 512 / 8);
+	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, PBKDF2_ROUNDS, seed, 512 / 8);
 }
