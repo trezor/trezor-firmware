@@ -15,11 +15,7 @@ import types_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='messages.proto',
   package='',
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_pb='\n\x0ctrezor.proto\x1a google/protobuf/descriptor.proto\"\xa3\x01\n\nHDNodeType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x19\n\x0bprivate_key\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\npublic_key\x18\x07 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"]\n\x08\x43oinType\x12\x11\n\tcoin_name\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\x14\n\x0c\x61\x64\x64ress_type\x18\x03 \x01(\r\x12\x11\n\tmaxfee_kb\x18\x04 \x01(\x04\"H\n\x0cSettingsType\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x17\n\x04\x63oin\x18\x02 \x01(\x0b\x32\t.CoinType\x12\r\n\x05label\x18\x03 \x01(\x0c\"\x0c\n\nInitialize\"\xe3\x01\n\x08\x46\x65\x61tures\x12\x0e\n\x06vendor\x18\x01 \x01(\x0c\x12\x15\n\rmajor_version\x18\x02 \x01(\r\x12\x15\n\rminor_version\x18\x03 \x01(\r\x12\x16\n\x0e\x62ugfix_version\x18\x04 \x01(\r\x12\x17\n\x0f\x62ootloader_mode\x18\x05 \x01(\x08\x12\x1f\n\x08settings\x18\x06 \x01(\x0b\x32\r.SettingsType\x12\x17\n\tdevice_id\x18\x07 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x08mpk_hash\x18\x08 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x0epin_protection\x18\t \x01(\x08\"G\n\rApplySettings\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\r\n\x05label\x18\x03 \x01(\x0c\"\x1b\n\tChangePin\x12\x0e\n\x06remove\x18\x01 \x01(\x08\"\x17\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"6\n\x07\x46\x61ilure\x12\x1a\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0c.FailureType\x12\x0f\n\x07message\x18\x02 \x01(\x0c\"\x0f\n\rButtonRequest\"\x0b\n\tButtonAck\"\x0e\n\x0c\x42uttonCancel\"#\n\x10PinMatrixRequest\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1b\n\x0cPinMatrixAck\x12\x0b\n\x03pin\x18\x01 \x02(\x0c\"\x11\n\x0fPinMatrixCancel\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\" \n\x07\x45ntropy\x12\x15\n\x07\x65ntropy\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"!\n\x0cGetPublicKey\x12\x11\n\taddress_n\x18\x01 \x03(\r\"%\n\tPublicKey\x12\x18\n\x03mpk\x18\x01 \x02(\x0b\x32\x0b.HDNodeType\"\x1f\n\nGetAddress\x12\x11\n\taddress_n\x18\x01 \x03(\r\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\"\x0c\n\nWipeDevice\"B\n\nLoadDevice\x12\x0c\n\x04seed\x18\x01 \x01(\x0c\x12\x19\n\x04node\x18\x02 \x01(\x0b\x32\x0b.HDNodeType\x12\x0b\n\x03pin\x18\x03 \x01(\x0c\"%\n\x0bResetDevice\x12\x16\n\x0e\x64isplay_random\x18\x01 \x01(\x08\"\x10\n\x0e\x45ntropyRequest\"#\n\nEntropyAck\x12\x15\n\x07\x65ntropy\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"5\n\x06SignTx\x12\x15\n\routputs_count\x18\x03 \x02(\r\x12\x14\n\x0cinputs_count\x18\x05 \x02(\r\"D\n\x0cSimpleSignTx\x12\x18\n\x06inputs\x18\x01 \x03(\x0b\x32\x08.TxInput\x12\x1a\n\x07outputs\x18\x02 \x03(\x0b\x32\t.TxOutput\"\x92\x01\n\tTxRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\x05\x12\"\n\x0crequest_type\x18\x02 \x01(\x0e\x32\x0c.RequestType\x12\x14\n\x0csigned_index\x18\x03 \x01(\x05\x12\x17\n\tsignature\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1b\n\rserialized_tx\x18\x05 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x81\x01\n\x07TxInput\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x17\n\tprev_hash\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x12\n\nprev_index\x18\x03 \x02(\r\x12\x18\n\nscript_sig\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1c\n\x08sequence\x18\x05 \x01(\r:\n4294967295\"{\n\x08TxOutput\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12 \n\x0bscript_type\x18\x04 \x02(\x0e\x32\x0b.ScriptType\x12\x19\n\x0bscript_args\x18\x05 \x03(\x0c\x42\x04\x88\xb5\x18\x01\"\xc0\x01\n\x0fTransactionType\x12\x12\n\x07version\x18\x01 \x01(\r:\x01\x31\x12\x18\n\x06inputs\x18\x02 \x03(\x0b\x32\x08.TxInput\x12-\n\x07outputs\x18\x03 \x03(\x0b\x32\x1c.TransactionType.TxOutputBin\x12\x14\n\tlock_time\x18\x04 \x01(\r:\x01\x30\x1a:\n\x0bTxOutputBin\x12\x0e\n\x06\x61mount\x18\x01 \x02(\x04\x12\x1b\n\rscript_pubkey\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x0f\n\rFirmwareErase\"\'\n\x0e\x46irmwareUpload\x12\x15\n\x07payload\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"N\n\x11\x44\x65\x62ugLinkGetState\x12\x0e\n\x06layout\x18\x01 \x01(\x08\x12\x0b\n\x03pin\x18\x02 \x01(\x08\x12\x0e\n\x06matrix\x18\x03 \x01(\x08\x12\x0c\n\x04seed\x18\x04 \x01(\x08\"Q\n\x0e\x44\x65\x62ugLinkState\x12\x14\n\x06layout\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0b\n\x03pin\x18\x02 \x01(\x0c\x12\x0e\n\x06matrix\x18\x03 \x01(\x0c\x12\x0c\n\x04seed\x18\x04 \x01(\x0c\"\x0f\n\rDebugLinkStop*\xc1\n\n\x0bMessageType\x12 \n\x16MessageType_Initialize\x10\x00\x1a\x04\x90\xb5\x18\x01\x12\x1a\n\x10MessageType_Ping\x10\x01\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Success\x10\x02\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_Failure\x10\x03\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ChangePin\x10\x04\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_WipeDevice\x10\x05\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_FirmwareErase\x10\x06\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetEntropy\x10\t\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Entropy\x10\n\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_GetPublicKey\x10\x0b\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_PublicKey\x10\x0c\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_LoadDevice\x10\r\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_ResetDevice\x10\x0e\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_SignTx\x10\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_SimpleSignTx\x10\x10\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_Features\x10\x11\x1a\x04\x98\xb5\x18\x01\x12&\n\x1cMessageType_PinMatrixRequest\x10\x12\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_PinMatrixAck\x10\x13\x1a\x04\x90\xb5\x18\x01\x12%\n\x1bMessageType_PinMatrixCancel\x10\x14\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_TxRequest\x10\x15\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_TxInput\x10\x17\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_TxOutput\x10\x18\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ApplySettings\x10\x19\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ButtonRequest\x10\x1a\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ButtonAck\x10\x1b\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_ButtonCancel\x10\x1c\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetAddress\x10\x1d\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Address\x10\x1e\x1a\x04\x98\xb5\x18\x01\x12\x1c\n\x18MessageType_SettingsType\x10\x1f\x12\x1a\n\x16MessageType_HDNodeType\x10 \x12\x18\n\x14MessageType_CoinType\x10!\x12$\n\x1aMessageType_EntropyRequest\x10#\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_EntropyAck\x10$\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x1bMessageType_TransactionType\x10%\x12\'\n\x1dMessageType_DebugLinkDecision\x10\x64\x1a\x04\xa0\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkGetState\x10\x65\x1a\x04\xa0\xb5\x18\x01\x12$\n\x1aMessageType_DebugLinkState\x10\x66\x1a\x04\xa8\xb5\x18\x01\x12#\n\x19MessageType_DebugLinkStop\x10g\x1a\x04\xa0\xb5\x18\x01*\xe4\x01\n\x0b\x46\x61ilureType\x12\x1d\n\x19\x46\x61ilure_UnexpectedMessage\x10\x01\x12\x1a\n\x16\x46\x61ilure_ButtonExpected\x10\x02\x12\x17\n\x13\x46\x61ilure_SyntaxError\x10\x03\x12\x1b\n\x17\x46\x61ilure_ActionCancelled\x10\x04\x12\x17\n\x13\x46\x61ilure_PinExpected\x10\x05\x12\x18\n\x14\x46\x61ilure_PinCancelled\x10\x06\x12\x16\n\x12\x46\x61ilure_PinInvalid\x10\x07\x12\x19\n\x15\x46\x61ilure_FirmwareError\x10\x63*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01*(\n\x0bRequestType\x12\x0b\n\x07TXINPUT\x10\x00\x12\x0c\n\x08TXOUTPUT\x10\x01:/\n\x06\x62inary\x12\x1d.google.protobuf.FieldOptions\x18\xd1\x86\x03 \x01(\x08:4\n\x07wire_in\x12!.google.protobuf.EnumValueOptions\x18\xd2\x86\x03 \x01(\x08:5\n\x08wire_out\x12!.google.protobuf.EnumValueOptions\x18\xd3\x86\x03 \x01(\x08::\n\rwire_debug_in\x12!.google.protobuf.EnumValueOptions\x18\xd4\x86\x03 \x01(\x08:;\n\x0ewire_debug_out\x12!.google.protobuf.EnumValueOptions\x18\xd5\x86\x03 \x01(\x08')
-=======
   serialized_pb='\n\x0emessages.proto\x1a\x0btypes.proto\"\x0c\n\nInitialize\"\x8a\x02\n\x08\x46\x65\x61tures\x12\x0e\n\x06vendor\x18\x01 \x01(\x0c\x12\x15\n\rmajor_version\x18\x02 \x01(\r\x12\x15\n\rminor_version\x18\x03 \x01(\r\x12\x16\n\x0e\x62ugfix_version\x18\x04 \x01(\r\x12\x17\n\x0f\x62ootloader_mode\x18\x05 \x01(\x08\x12\x17\n\tdevice_id\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x0epin_protection\x18\x07 \x01(\x08\x12\x1d\n\x15passphrase_protection\x18\x08 \x01(\x08\x12\x10\n\x08language\x18\t \x01(\x0c\x12\x13\n\x05label\x18\n \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\x05\x63oins\x18\x0b \x03(\x0b\x32\t.CoinType\"M\n\rApplySettings\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\x13\n\x05label\x18\x03 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x1b\n\tChangePin\x12\x0e\n\x06remove\x18\x01 \x01(\x08\"\x17\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"6\n\x07\x46\x61ilure\x12\x1a\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0c.FailureType\x12\x0f\n\x07message\x18\x02 \x01(\x0c\"\x0f\n\rButtonRequest\"\x0b\n\tButtonAck\"#\n\x10PinMatrixRequest\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1b\n\x0cPinMatrixAck\x12\x0b\n\x03pin\x18\x01 \x02(\x0c\"\x08\n\x06\x43\x61ncel\"\x13\n\x11PassphraseRequest\")\n\rPassphraseAck\x12\x18\n\npassphrase\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\" \n\x07\x45ntropy\x12\x15\n\x07\x65ntropy\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"!\n\x0cGetPublicKey\x12\x11\n\taddress_n\x18\x01 \x03(\r\"&\n\tPublicKey\x12\x19\n\x04node\x18\x01 \x02(\x0b\x32\x0b.HDNodeType\"\x1f\n\nGetAddress\x12\x11\n\taddress_n\x18\x01 \x03(\r\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\"\x0c\n\nWipeDevice\"B\n\nLoadDevice\x12\x0c\n\x04seed\x18\x01 \x01(\x0c\x12\x19\n\x04node\x18\x02 \x01(\x0b\x32\x0b.HDNodeType\x12\x0b\n\x03pin\x18\x03 \x01(\x0c\"%\n\x0bResetDevice\x12\x16\n\x0e\x64isplay_random\x18\x01 \x01(\x08\"\x10\n\x0e\x45ntropyRequest\"#\n\nEntropyAck\x12\x15\n\x07\x65ntropy\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"7\n\x0bSignMessage\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x15\n\x07message\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"J\n\rVerifyMessage\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0c\x12\x11\n\tsignature\x18\x02 \x01(\x0c\x12\x15\n\x07message\x18\x03 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"6\n\x10MessageSignature\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0c\x12\x11\n\tsignature\x18\x02 \x01(\x0c\"5\n\x06SignTx\x12\x15\n\routputs_count\x18\x03 \x02(\r\x12\x14\n\x0cinputs_count\x18\x05 \x02(\r\"D\n\x0cSimpleSignTx\x12\x18\n\x06inputs\x18\x01 \x03(\x0b\x32\x08.TxInput\x12\x1a\n\x07outputs\x18\x02 \x03(\x0b\x32\t.TxOutput\"\x92\x01\n\tTxRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\x05\x12\"\n\x0crequest_type\x18\x02 \x01(\x0e\x32\x0c.RequestType\x12\x14\n\x0csigned_index\x18\x03 \x01(\x05\x12\x17\n\tsignature\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1b\n\rserialized_tx\x18\x05 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"&\n\x07TxInput\x12\x1b\n\x05input\x18\x01 \x02(\x0b\x32\x0c.TxInputType\")\n\x08TxOutput\x12\x1d\n\x06output\x18\x01 \x02(\x0b\x32\r.TxOutputType\"\x0f\n\rFirmwareErase\"\'\n\x0e\x46irmwareUpload\x12\x15\n\x07payload\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"N\n\x11\x44\x65\x62ugLinkGetState\x12\x0e\n\x06layout\x18\x01 \x01(\x08\x12\x0b\n\x03pin\x18\x02 \x01(\x08\x12\x0e\n\x06matrix\x18\x03 \x01(\x08\x12\x0c\n\x04seed\x18\x04 \x01(\x08\"Q\n\x0e\x44\x65\x62ugLinkState\x12\x14\n\x06layout\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0b\n\x03pin\x18\x02 \x01(\x0c\x12\x0e\n\x06matrix\x18\x03 \x01(\x0c\x12\x0c\n\x04seed\x18\x04 \x01(\x0c\"\x0f\n\rDebugLinkStop*\xdd\n\n\x0bMessageType\x12 \n\x16MessageType_Initialize\x10\x00\x1a\x04\x90\xb5\x18\x01\x12\x1a\n\x10MessageType_Ping\x10\x01\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Success\x10\x02\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_Failure\x10\x03\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ChangePin\x10\x04\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_WipeDevice\x10\x05\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_FirmwareErase\x10\x06\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetEntropy\x10\t\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Entropy\x10\n\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_GetPublicKey\x10\x0b\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_PublicKey\x10\x0c\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_LoadDevice\x10\r\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_ResetDevice\x10\x0e\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_SignTx\x10\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_SimpleSignTx\x10\x10\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_Features\x10\x11\x1a\x04\x98\xb5\x18\x01\x12&\n\x1cMessageType_PinMatrixRequest\x10\x12\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_PinMatrixAck\x10\x13\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_Cancel\x10\x14\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_TxRequest\x10\x15\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_TxInput\x10\x17\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_TxOutput\x10\x18\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ApplySettings\x10\x19\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ButtonRequest\x10\x1a\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ButtonAck\x10\x1b\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetAddress\x10\x1d\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Address\x10\x1e\x1a\x04\x98\xb5\x18\x01\x12$\n\x1aMessageType_EntropyRequest\x10#\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_EntropyAck\x10$\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_SignMessage\x10&\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_VerifyMessage\x10\'\x1a\x04\x90\xb5\x18\x01\x12&\n\x1cMessageType_MessageSignature\x10(\x1a\x04\x98\xb5\x18\x01\x12\'\n\x1dMessageType_PassphraseRequest\x10)\x1a\x04\x98\xb5\x18\x01\x12#\n\x19MessageType_PassphraseAck\x10*\x1a\x04\x90\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkDecision\x10\x64\x1a\x04\xa0\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkGetState\x10\x65\x1a\x04\xa0\xb5\x18\x01\x12$\n\x1aMessageType_DebugLinkState\x10\x66\x1a\x04\xa8\xb5\x18\x01\x12#\n\x19MessageType_DebugLinkStop\x10g\x1a\x04\xa0\xb5\x18\x01')
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
   name='MessageType',
@@ -148,26 +144,14 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
       options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-      name='MessageType_HDNodeType', index=30, number=32,
-      options=None,
-=======
       name='MessageType_SignMessage', index=30, number=38,
       options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_VerifyMessage', index=31, number=39,
       options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
       type=None),
     _descriptor.EnumValueDescriptor(
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-      name='MessageType_EntropyRequest', index=32, number=35,
-      options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='MessageType_EntropyAck', index=33, number=36,
-=======
       name='MessageType_MessageSignature', index=32, number=40,
       options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\230\265\030\001'),
       type=None),
@@ -177,12 +161,7 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_PassphraseAck', index=34, number=42,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
       options=_descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\220\265\030\001'),
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='MessageType_TransactionType', index=34, number=37,
-      options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='MessageType_DebugLinkDecision', index=35, number=100,
@@ -203,109 +182,11 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2346,
-  serialized_end=3691,
-)
-
-MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
-_FAILURETYPE = _descriptor.EnumDescriptor(
-  name='FailureType',
-  full_name='FailureType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='Failure_UnexpectedMessage', index=0, number=1,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_ButtonExpected', index=1, number=2,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_SyntaxError', index=2, number=3,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_ActionCancelled', index=3, number=4,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_PinExpected', index=4, number=5,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_PinCancelled', index=5, number=6,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_PinInvalid', index=6, number=7,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='Failure_FirmwareError', index=7, number=99,
-      options=None,
-      type=None),
-  ],
-  containing_type=None,
-  options=None,
-  serialized_start=3694,
-  serialized_end=3922,
-)
-
-FailureType = enum_type_wrapper.EnumTypeWrapper(_FAILURETYPE)
-_SCRIPTTYPE = _descriptor.EnumDescriptor(
-  name='ScriptType',
-  full_name='ScriptType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='PAYTOADDRESS', index=0, number=0,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='PAYTOSCRIPTHASH', index=1, number=1,
-      options=None,
-      type=None),
-  ],
-  containing_type=None,
-  options=None,
-  serialized_start=3924,
-  serialized_end=3975,
-)
-
-ScriptType = enum_type_wrapper.EnumTypeWrapper(_SCRIPTTYPE)
-_REQUESTTYPE = _descriptor.EnumDescriptor(
-  name='RequestType',
-  full_name='RequestType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='TXINPUT', index=0, number=0,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='TXOUTPUT', index=1, number=1,
-      options=None,
-      type=None),
-  ],
-  containing_type=None,
-  options=None,
-  serialized_start=3977,
-  serialized_end=4017,
-)
-
-RequestType = enum_type_wrapper.EnumTypeWrapper(_REQUESTTYPE)
-=======
   serialized_start=1897,
   serialized_end=3270,
 )
 
 MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 MessageType_Initialize = 0
 MessageType_Ping = 1
 MessageType_Success = 2
@@ -334,14 +215,6 @@ MessageType_ButtonRequest = 26
 MessageType_ButtonAck = 27
 MessageType_GetAddress = 29
 MessageType_Address = 30
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-MessageType_SettingsType = 31
-MessageType_HDNodeType = 32
-MessageType_CoinType = 33
-MessageType_EntropyRequest = 35
-MessageType_EntropyAck = 36
-MessageType_TransactionType = 37
-=======
 MessageType_EntropyRequest = 35
 MessageType_EntropyAck = 36
 MessageType_SignMessage = 38
@@ -349,229 +222,11 @@ MessageType_VerifyMessage = 39
 MessageType_MessageSignature = 40
 MessageType_PassphraseRequest = 41
 MessageType_PassphraseAck = 42
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 MessageType_DebugLinkDecision = 100
 MessageType_DebugLinkGetState = 101
 MessageType_DebugLinkState = 102
 MessageType_DebugLinkStop = 103
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-Failure_UnexpectedMessage = 1
-Failure_ButtonExpected = 2
-Failure_SyntaxError = 3
-Failure_ActionCancelled = 4
-Failure_PinExpected = 5
-Failure_PinCancelled = 6
-Failure_PinInvalid = 7
-Failure_FirmwareError = 99
-PAYTOADDRESS = 0
-PAYTOSCRIPTHASH = 1
-TXINPUT = 0
-TXOUTPUT = 1
 
-BINARY_FIELD_NUMBER = 50001
-binary = _descriptor.FieldDescriptor(
-  name='binary', full_name='binary', index=0,
-  number=50001, type=8, cpp_type=7, label=1,
-  has_default_value=False, default_value=False,
-  message_type=None, enum_type=None, containing_type=None,
-  is_extension=True, extension_scope=None,
-  options=None)
-WIRE_IN_FIELD_NUMBER = 50002
-wire_in = _descriptor.FieldDescriptor(
-  name='wire_in', full_name='wire_in', index=1,
-  number=50002, type=8, cpp_type=7, label=1,
-  has_default_value=False, default_value=False,
-  message_type=None, enum_type=None, containing_type=None,
-  is_extension=True, extension_scope=None,
-  options=None)
-WIRE_OUT_FIELD_NUMBER = 50003
-wire_out = _descriptor.FieldDescriptor(
-  name='wire_out', full_name='wire_out', index=2,
-  number=50003, type=8, cpp_type=7, label=1,
-  has_default_value=False, default_value=False,
-  message_type=None, enum_type=None, containing_type=None,
-  is_extension=True, extension_scope=None,
-  options=None)
-WIRE_DEBUG_IN_FIELD_NUMBER = 50004
-wire_debug_in = _descriptor.FieldDescriptor(
-  name='wire_debug_in', full_name='wire_debug_in', index=3,
-  number=50004, type=8, cpp_type=7, label=1,
-  has_default_value=False, default_value=False,
-  message_type=None, enum_type=None, containing_type=None,
-  is_extension=True, extension_scope=None,
-  options=None)
-WIRE_DEBUG_OUT_FIELD_NUMBER = 50005
-wire_debug_out = _descriptor.FieldDescriptor(
-  name='wire_debug_out', full_name='wire_debug_out', index=4,
-  number=50005, type=8, cpp_type=7, label=1,
-  has_default_value=False, default_value=False,
-  message_type=None, enum_type=None, containing_type=None,
-  is_extension=True, extension_scope=None,
-  options=None)
-
-
-_HDNODETYPE = _descriptor.Descriptor(
-  name='HDNodeType',
-  full_name='HDNodeType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='version', full_name='HDNodeType.version', index=0,
-      number=1, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='depth', full_name='HDNodeType.depth', index=1,
-      number=2, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='fingerprint', full_name='HDNodeType.fingerprint', index=2,
-      number=3, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='child_num', full_name='HDNodeType.child_num', index=3,
-      number=4, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='chain_code', full_name='HDNodeType.chain_code', index=4,
-      number=5, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-    _descriptor.FieldDescriptor(
-      name='private_key', full_name='HDNodeType.private_key', index=5,
-      number=6, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-    _descriptor.FieldDescriptor(
-      name='public_key', full_name='HDNodeType.public_key', index=6,
-      number=7, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=51,
-  serialized_end=214,
-)
-
-
-_COINTYPE = _descriptor.Descriptor(
-  name='CoinType',
-  full_name='CoinType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='coin_name', full_name='CoinType.coin_name', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='coin_shortcut', full_name='CoinType.coin_shortcut', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='address_type', full_name='CoinType.address_type', index=2,
-      number=3, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='maxfee_kb', full_name='CoinType.maxfee_kb', index=3,
-      number=4, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=216,
-  serialized_end=309,
-)
-
-
-_SETTINGSTYPE = _descriptor.Descriptor(
-  name='SettingsType',
-  full_name='SettingsType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='language', full_name='SettingsType.language', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='coin', full_name='SettingsType.coin', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='label', full_name='SettingsType.label', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=311,
-  serialized_end=383,
-)
-=======
-
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 
 
 _INITIALIZE = _descriptor.Descriptor(
@@ -590,13 +245,8 @@ _INITIALIZE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=385,
-  serialized_end=397,
-=======
   serialized_start=31,
   serialized_end=43,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -693,13 +343,8 @@ _FEATURES = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=400,
-  serialized_end=627,
-=======
   serialized_start=46,
   serialized_end=312,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -740,13 +385,8 @@ _APPLYSETTINGS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=629,
-  serialized_end=700,
-=======
   serialized_start=314,
   serialized_end=391,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -773,13 +413,8 @@ _CHANGEPIN = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=702,
-  serialized_end=729,
-=======
   serialized_start=393,
   serialized_end=420,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -806,13 +441,8 @@ _PING = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=731,
-  serialized_end=754,
-=======
   serialized_start=422,
   serialized_end=445,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -839,13 +469,8 @@ _SUCCESS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=756,
-  serialized_end=782,
-=======
   serialized_start=447,
   serialized_end=473,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -879,13 +504,8 @@ _FAILURE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=784,
-  serialized_end=838,
-=======
   serialized_start=475,
   serialized_end=529,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -905,13 +525,8 @@ _BUTTONREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=840,
-  serialized_end=855,
-=======
   serialized_start=531,
   serialized_end=546,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -931,13 +546,8 @@ _BUTTONACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=857,
-  serialized_end=868,
-=======
   serialized_start=548,
   serialized_end=559,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -964,13 +574,8 @@ _PINMATRIXREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=870,
-  serialized_end=884,
-=======
   serialized_start=561,
   serialized_end=596,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -997,13 +602,8 @@ _PINMATRIXACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=886,
-  serialized_end=921,
-=======
   serialized_start=598,
   serialized_end=625,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1044,13 +644,8 @@ _PASSPHRASEREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=923,
-  serialized_end=950,
-=======
   serialized_start=637,
   serialized_end=656,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1077,13 +672,8 @@ _PASSPHRASEACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=952,
-  serialized_end=969,
-=======
   serialized_start=658,
   serialized_end=699,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1110,13 +700,8 @@ _GETENTROPY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=971,
-  serialized_end=997,
-=======
   serialized_start=701,
   serialized_end=727,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1143,13 +728,8 @@ _ENTROPY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=999,
-  serialized_end=1031,
-=======
   serialized_start=729,
   serialized_end=761,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1176,13 +756,8 @@ _GETPUBLICKEY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1033,
-  serialized_end=1066,
-=======
   serialized_start=763,
   serialized_end=796,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1194,11 +769,7 @@ _PUBLICKEY = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-      name='mpk', full_name='PublicKey.mpk', index=0,
-=======
       name='node', full_name='PublicKey.node', index=0,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
       number=1, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -1213,13 +784,8 @@ _PUBLICKEY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1068,
-  serialized_end=1105,
-=======
   serialized_start=798,
   serialized_end=836,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1246,13 +812,8 @@ _GETADDRESS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1107,
-  serialized_end=1138,
-=======
   serialized_start=838,
   serialized_end=869,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1279,13 +840,8 @@ _ADDRESS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1140,
-  serialized_end=1166,
-=======
   serialized_start=871,
   serialized_end=897,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1305,13 +861,8 @@ _WIPEDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1168,
-  serialized_end=1180,
-=======
   serialized_start=899,
   serialized_end=911,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1352,13 +903,8 @@ _LOADDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1182,
-  serialized_end=1248,
-=======
   serialized_start=913,
   serialized_end=979,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1385,13 +931,8 @@ _RESETDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1250,
-  serialized_end=1287,
-=======
   serialized_start=981,
   serialized_end=1018,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1411,13 +952,8 @@ _ENTROPYREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1289,
-  serialized_end=1305,
-=======
   serialized_start=1020,
   serialized_end=1036,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1444,10 +980,6 @@ _ENTROPYACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1307,
-  serialized_end=1342,
-=======
   serialized_start=1038,
   serialized_end=1073,
 )
@@ -1562,7 +1094,6 @@ _MESSAGESIGNATURE = _descriptor.Descriptor(
   extension_ranges=[],
   serialized_start=1208,
   serialized_end=1262,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1596,13 +1127,8 @@ _SIGNTX = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1344,
-  serialized_end=1397,
-=======
   serialized_start=1264,
   serialized_end=1317,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1636,13 +1162,8 @@ _SIMPLESIGNTX = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1399,
-  serialized_end=1467,
-=======
   serialized_start=1319,
   serialized_end=1387,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1697,13 +1218,8 @@ _TXREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1470,
-  serialized_end=1616,
-=======
   serialized_start=1390,
   serialized_end=1536,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1715,43 +1231,9 @@ _TXINPUT = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-      name='address_n', full_name='TxInput.address_n', index=0,
-      number=1, type=13, cpp_type=3, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='prev_hash', full_name='TxInput.prev_hash', index=1,
-      number=2, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-    _descriptor.FieldDescriptor(
-      name='prev_index', full_name='TxInput.prev_index', index=2,
-      number=3, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='script_sig', full_name='TxInput.script_sig', index=3,
-      number=4, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-    _descriptor.FieldDescriptor(
-      name='sequence', full_name='TxInput.sequence', index=4,
-      number=5, type=13, cpp_type=3, label=1,
-      has_default_value=True, default_value=4294967295,
-=======
       name='input', full_name='TxInput.input', index=0,
       number=1, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1764,13 +1246,8 @@ _TXINPUT = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=1619,
-  serialized_end=1748,
-=======
   serialized_start=1538,
   serialized_end=1576,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1782,84 +1259,12 @@ _TXOUTPUT = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-      name='address', full_name='TxOutput.address', index=0,
-      number=1, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='address_n', full_name='TxOutput.address_n', index=1,
-      number=2, type=13, cpp_type=3, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='amount', full_name='TxOutput.amount', index=2,
-      number=3, type=4, cpp_type=4, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='script_type', full_name='TxOutput.script_type', index=3,
-      number=4, type=14, cpp_type=8, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='script_args', full_name='TxOutput.script_args', index=4,
-      number=5, type=12, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=1750,
-  serialized_end=1873,
-)
-
-
-_TRANSACTIONTYPE_TXOUTPUTBIN = _descriptor.Descriptor(
-  name='TxOutputBin',
-  full_name='TransactionType.TxOutputBin',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='amount', full_name='TransactionType.TxOutputBin.amount', index=0,
-      number=1, type=4, cpp_type=4, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='script_pubkey', full_name='TransactionType.TxOutputBin.script_pubkey', index=1,
-      number=2, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
-=======
       name='output', full_name='TxOutput.output', index=0,
       number=1, type=11, cpp_type=10, label=2,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
   ],
   extensions=[
   ],
@@ -1869,61 +1274,8 @@ _TRANSACTIONTYPE_TXOUTPUTBIN = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2010,
-  serialized_end=2068,
-)
-
-_TRANSACTIONTYPE = _descriptor.Descriptor(
-  name='TransactionType',
-  full_name='TransactionType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='version', full_name='TransactionType.version', index=0,
-      number=1, type=13, cpp_type=3, label=1,
-      has_default_value=True, default_value=1,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='inputs', full_name='TransactionType.inputs', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='outputs', full_name='TransactionType.outputs', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='lock_time', full_name='TransactionType.lock_time', index=3,
-      number=4, type=13, cpp_type=3, label=1,
-      has_default_value=True, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[_TRANSACTIONTYPE_TXOUTPUTBIN, ],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=1876,
-  serialized_end=2068,
-=======
   serialized_start=1578,
   serialized_end=1619,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1943,13 +1295,8 @@ _FIRMWAREERASE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2070,
-  serialized_end=2085,
-=======
   serialized_start=1621,
   serialized_end=1636,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -1976,13 +1323,8 @@ _FIRMWAREUPLOAD = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2087,
-  serialized_end=2126,
-=======
   serialized_start=1638,
   serialized_end=1677,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -2009,13 +1351,8 @@ _DEBUGLINKDECISION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2128,
-  serialized_end=2163,
-=======
   serialized_start=1679,
   serialized_end=1714,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -2063,13 +1400,8 @@ _DEBUGLINKGETSTATE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2165,
-  serialized_end=2243,
-=======
   serialized_start=1716,
   serialized_end=1794,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -2117,13 +1449,8 @@ _DEBUGLINKSTATE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2245,
-  serialized_end=2326,
-=======
   serialized_start=1796,
   serialized_end=1877,
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 )
 
 
@@ -2143,27 +1470,6 @@ _DEBUGLINKSTOP = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-  serialized_start=2328,
-  serialized_end=2343,
-)
-
-_SETTINGSTYPE.fields_by_name['coin'].message_type = _COINTYPE
-_FEATURES.fields_by_name['settings'].message_type = _SETTINGSTYPE
-_FAILURE.fields_by_name['code'].enum_type = _FAILURETYPE
-_PUBLICKEY.fields_by_name['mpk'].message_type = _HDNODETYPE
-_LOADDEVICE.fields_by_name['node'].message_type = _HDNODETYPE
-_SIMPLESIGNTX.fields_by_name['inputs'].message_type = _TXINPUT
-_SIMPLESIGNTX.fields_by_name['outputs'].message_type = _TXOUTPUT
-_TXREQUEST.fields_by_name['request_type'].enum_type = _REQUESTTYPE
-_TXOUTPUT.fields_by_name['script_type'].enum_type = _SCRIPTTYPE
-_TRANSACTIONTYPE_TXOUTPUTBIN.containing_type = _TRANSACTIONTYPE;
-_TRANSACTIONTYPE.fields_by_name['inputs'].message_type = _TXINPUT
-_TRANSACTIONTYPE.fields_by_name['outputs'].message_type = _TRANSACTIONTYPE_TXOUTPUTBIN
-DESCRIPTOR.message_types_by_name['HDNodeType'] = _HDNODETYPE
-DESCRIPTOR.message_types_by_name['CoinType'] = _COINTYPE
-DESCRIPTOR.message_types_by_name['SettingsType'] = _SETTINGSTYPE
-=======
   serialized_start=1879,
   serialized_end=1894,
 )
@@ -2177,7 +1483,6 @@ _SIMPLESIGNTX.fields_by_name['outputs'].message_type = _TXOUTPUT
 _TXREQUEST.fields_by_name['request_type'].enum_type = types_pb2._REQUESTTYPE
 _TXINPUT.fields_by_name['input'].message_type = types_pb2._TXINPUTTYPE
 _TXOUTPUT.fields_by_name['output'].message_type = types_pb2._TXOUTPUTTYPE
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 DESCRIPTOR.message_types_by_name['Initialize'] = _INITIALIZE
 DESCRIPTOR.message_types_by_name['Features'] = _FEATURES
 DESCRIPTOR.message_types_by_name['ApplySettings'] = _APPLYSETTINGS
@@ -2211,7 +1516,6 @@ DESCRIPTOR.message_types_by_name['SimpleSignTx'] = _SIMPLESIGNTX
 DESCRIPTOR.message_types_by_name['TxRequest'] = _TXREQUEST
 DESCRIPTOR.message_types_by_name['TxInput'] = _TXINPUT
 DESCRIPTOR.message_types_by_name['TxOutput'] = _TXOUTPUT
-DESCRIPTOR.message_types_by_name['TransactionType'] = _TRANSACTIONTYPE
 DESCRIPTOR.message_types_by_name['FirmwareErase'] = _FIRMWAREERASE
 DESCRIPTOR.message_types_by_name['FirmwareUpload'] = _FIRMWAREUPLOAD
 DESCRIPTOR.message_types_by_name['DebugLinkDecision'] = _DEBUGLINKDECISION
@@ -2219,27 +1523,6 @@ DESCRIPTOR.message_types_by_name['DebugLinkGetState'] = _DEBUGLINKGETSTATE
 DESCRIPTOR.message_types_by_name['DebugLinkState'] = _DEBUGLINKSTATE
 DESCRIPTOR.message_types_by_name['DebugLinkStop'] = _DEBUGLINKSTOP
 
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-class HDNodeType(_message.Message):
-  __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _HDNODETYPE
-
-  # @@protoc_insertion_point(class_scope:HDNodeType)
-
-class CoinType(_message.Message):
-  __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _COINTYPE
-
-  # @@protoc_insertion_point(class_scope:CoinType)
-
-class SettingsType(_message.Message):
-  __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _SETTINGSTYPE
-
-  # @@protoc_insertion_point(class_scope:SettingsType)
-
-=======
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 class Initialize(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _INITIALIZE
@@ -2438,18 +1721,6 @@ class TxOutput(_message.Message):
 
   # @@protoc_insertion_point(class_scope:TxOutput)
 
-class TransactionType(_message.Message):
-  __metaclass__ = _reflection.GeneratedProtocolMessageType
-
-  class TxOutputBin(_message.Message):
-    __metaclass__ = _reflection.GeneratedProtocolMessageType
-    DESCRIPTOR = _TRANSACTIONTYPE_TXOUTPUTBIN
-
-    # @@protoc_insertion_point(class_scope:TransactionType.TxOutputBin)
-  DESCRIPTOR = _TRANSACTIONTYPE
-
-  # @@protoc_insertion_point(class_scope:TransactionType)
-
 class FirmwareErase(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
   DESCRIPTOR = _FIRMWAREERASE
@@ -2565,15 +1836,6 @@ _MESSAGETYPE.values_by_name["MessageType_DebugLinkState"].has_options = True
 _MESSAGETYPE.values_by_name["MessageType_DebugLinkState"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\250\265\030\001')
 _MESSAGETYPE.values_by_name["MessageType_DebugLinkStop"].has_options = True
 _MESSAGETYPE.values_by_name["MessageType_DebugLinkStop"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001')
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-_HDNODETYPE.fields_by_name['chain_code'].has_options = True
-_HDNODETYPE.fields_by_name['chain_code']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_HDNODETYPE.fields_by_name['private_key'].has_options = True
-_HDNODETYPE.fields_by_name['private_key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_HDNODETYPE.fields_by_name['public_key'].has_options = True
-_HDNODETYPE.fields_by_name['public_key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-=======
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 _FEATURES.fields_by_name['device_id'].has_options = True
 _FEATURES.fields_by_name['device_id']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
 _FEATURES.fields_by_name['label'].has_options = True
@@ -2594,17 +1856,6 @@ _TXREQUEST.fields_by_name['signature'].has_options = True
 _TXREQUEST.fields_by_name['signature']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
 _TXREQUEST.fields_by_name['serialized_tx'].has_options = True
 _TXREQUEST.fields_by_name['serialized_tx']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-<<<<<<< HEAD:trezorlib/trezor_pb2.py
-_TXINPUT.fields_by_name['prev_hash'].has_options = True
-_TXINPUT.fields_by_name['prev_hash']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_TXINPUT.fields_by_name['script_sig'].has_options = True
-_TXINPUT.fields_by_name['script_sig']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_TXOUTPUT.fields_by_name['script_args'].has_options = True
-_TXOUTPUT.fields_by_name['script_args']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_TRANSACTIONTYPE_TXOUTPUTBIN.fields_by_name['script_pubkey'].has_options = True
-_TRANSACTIONTYPE_TXOUTPUTBIN.fields_by_name['script_pubkey']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-=======
->>>>>>> Protobuf moved to trezor-common repository:trezorlib/messages_pb2.py
 _FIRMWAREUPLOAD.fields_by_name['payload'].has_options = True
 _FIRMWAREUPLOAD.fields_by_name['payload']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
 _DEBUGLINKSTATE.fields_by_name['layout'].has_options = True
