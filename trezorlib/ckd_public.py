@@ -4,7 +4,7 @@ import hashlib
 from ecdsa.util import string_to_number
 from ecdsa.curves import SECP256k1
 
-import trezor_pb2 as proto
+import messages_pb2 as proto
 
 PRIME_DERIVATION_FLAG = 0x80000000
 

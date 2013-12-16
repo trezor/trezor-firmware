@@ -1,4 +1,4 @@
-import trezor_pb2 as proto
+import messages_pb2 as proto
 from transport import NotImplementedException
 
 def pin_info(pin):

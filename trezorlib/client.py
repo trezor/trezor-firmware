@@ -2,7 +2,7 @@ import os
 import time
 
 import ckd_public
-import trezor_pb2 as proto
+import messages_pb2 as proto
 
 def show_message(message):
     print "MESSAGE FROM DEVICE:", message

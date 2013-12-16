@@ -1,3 +1,8 @@
 #!/bin/bash
-cd ./trezor-common/protob
-protoc --python_out=../../trezorlib/ -I/usr/include -I. -I. trezor.proto
+CURDIR=$(pwd)
+
+cd $CURDIR/../trezor-common/protob
+
+for i in messages types ; do
+    protoc --python_out=$CURDIR/trezorlib/ -I/usr/include -I. $i.proto
+done
