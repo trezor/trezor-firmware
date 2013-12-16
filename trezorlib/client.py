@@ -3,6 +3,7 @@ import time
 
 import ckd_public
 import messages_pb2 as proto
+import types_pb2 as types
 
 def show_message(message):
     print "MESSAGE FROM DEVICE:", message
@@ -108,7 +109,7 @@ class TrezorClient(object):
                         pin = self.debuglink.read_pin_encoded()
                         msg2 = proto.PinMatrixAck(pin=pin)
                     elif self.debug_pin == -1:
-                        msg2 = proto.PinMatrixCancel()
+                        msg2 = proto.Cancel()
                     else:
                         msg2 = proto.PinMatrixAck(pin='444444222222')
 
@@ -124,10 +125,10 @@ class TrezorClient(object):
         if isinstance(resp, proto.Failure):
             self.message_func(resp.message)
 
-            if resp.code == proto.Failure_ActionCancelled:
+            if resp.code == types.Failure_ActionCancelled:
                 raise CallException("Action cancelled by user")
                 
-            elif resp.code == proto.Failure_PinInvalid:
+            elif resp.code == types.Failure_PinInvalid:
                 raise PinException("PIN is invalid")
                 
             raise CallException(resp.code, resp.message)
@@ -210,11 +211,11 @@ class TrezorClient(object):
                     break
                 
                 # Device asked for one more information, let's process it.
-                if res.request_type == proto.TXOUTPUT:
+                if res.request_type == types.TXOUTPUT:
                     res = self.call(outputs[res.request_index])
                     continue
               
-                elif res.request_type == proto.TXINPUT:
+                elif res.request_type == types.TXINPUT:
                     print "REQUESTING", res.request_index    
                     res = self.call(inputs[res.request_index])
                     continue                
@@ -274,7 +275,7 @@ class TrezorClient(object):
         if not isinstance(n, list):
             raise Exception('Parameter must be a list')
 
-        node = proto.HDNodeType()
+        node = types.HDNodeType()
         node.CopyFrom(public_node)
 
         for i in n:
@@ -287,14 +288,14 @@ class TrezorClient(object):
             raise Exception("Device must be in bootloader mode")
 
         resp = self.call(proto.FirmwareErase())
-        if isinstance(resp, proto.Failure) and resp.code == proto.Failure_FirmwareError:
+        if isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
             return False
 
         resp = self.call(proto.FirmwareUpload(payload=fp.read()))
         if isinstance(resp, proto.Success):
             return True
 
-        elif isinstance(resp, proto.Failure) and resp.code == proto.Failure_FirmwareError:
+        elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
             return False
 
         raise Exception("Unexpected result " % resp)
