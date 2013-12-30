@@ -2,6 +2,7 @@ import os
 import time
 
 import ckd_public
+import tools
 import messages_pb2 as proto
 import types_pb2 as types
 
@@ -22,6 +23,8 @@ class CallException(Exception):
 class PinException(CallException):
     pass
 
+PRIME_DERIVATION_FLAG = 0x80000000
+
 class TrezorClient(object):
     
     def __init__(self, transport, debuglink=None, 
@@ -39,6 +42,10 @@ class TrezorClient(object):
     
     def _get_local_entropy(self):
         return os.urandom(32)
+
+    def _convert_prime(self, n):
+        # Convert minus signs to uint32 with flag
+        return [ int(abs(x) | PRIME_DERIVATION_FLAG) if x < 0 else x for x in n ]
         
     def init_device(self):
         self.features = self.call(proto.Initialize())
@@ -49,10 +56,11 @@ class TrezorClient(object):
             self.debuglink.transport.close()
 
     def get_public_node(self, n):
-        # print self.bip32_ckd(self.call(proto.GetPublicKey(address_n=n)).node, [2, ])
+        n = self._convert_prime(n)
         return self.call(proto.GetPublicKey(address_n=n)).node
         
     def get_address(self, n):
+        n = self._convert_prime(n)
         return self.call(proto.GetAddress(address_n=n)).address
         
     def get_entropy(self, size):
@@ -139,6 +147,7 @@ class TrezorClient(object):
         return resp
 
     def sign_message(self, n, message):
+        n = self._convert_prime(n)
         return self.call(proto.SignMessage(address_n=n, message=message))
 
     def verify_message(self, address, signature, message):
@@ -266,8 +275,42 @@ class TrezorClient(object):
         self.init_device()
         return isinstance(resp, proto.Success)
     
-    def load_device(self, seed, pin):        
-        resp = self.call(proto.LoadDevice(seed=seed, pin=pin))
+    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection):
+        resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin, passphrase_protection=passphrase_protection))
+        self.init_device()
+        return isinstance(resp, proto.Success)
+
+    def load_device_by_xprv(self, xprv, pin, passphrase_protection):
+        if xprv[0:4] not in ('xprv', 'tprv'):
+            raise Exception("Unknown type of xprv")
+
+        if len(xprv) < 100 and len(xprv) > 112:
+            raise Exception("Invalid length of xprv")
+
+        node = types.HDNodeType()
+        data = tools.b58decode(xprv, None).encode('hex')
+
+        if data[90:92] != '00':
+            raise Exception("Contain invalid private key")
+
+        # version 0488ade4
+        # depth 00
+        # fingerprint 00000000
+        # child_num 00000000
+        # chaincode 873dff81c02f525623fd1fe5167eac3a55a049de3d314bb42ee227ffed37d508
+        # privkey   00e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35
+        # wtf is this? e77e9d71
+
+        node.version = int(data[0:8], 16)
+        node.depth = int(data[8:10], 16)
+        node.fingerprint = int(data[10:18], 16)
+        node.child_num = int(data[18:26], 16)
+        node.chain_code = data[26:90].decode('hex')
+        node.private_key = data[92:156].decode('hex')  # skip 0x00 indicating privkey
+        print 'wtf is this?', len(data[156:])
+        # FIXME
+        
+        resp = self.call(proto.LoadDevice(node=node, pin=pin, passphrase_protection=passphrase_protection))
         self.init_device()
         return isinstance(resp, proto.Success)
 

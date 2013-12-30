@@ -1,7 +1,7 @@
 import unittest
 import common
 
-from trezorlib import proto
+from trezorlib import messages_pb2 as messages
 
 '''
     TODO:
@@ -14,16 +14,16 @@ from trezorlib import proto
 
 class TestBasic(common.TrezorTest):           
     def test_features(self):
-        features = self.client.call(proto.Initialize())
+        features = self.client.call(messages.Initialize())
         
         # Result is the same as reported by BitkeyClient class
         self.assertEqual(features, self.client.features)
          
     def test_ping(self):
-        ping = self.client.call(proto.Ping(message='ahoj!'))
+        ping = self.client.call(messages.Ping(message='ahoj!'))
         
         # Ping results in Success(message='Ahoj!')
-        self.assertEqual(ping, proto.Success(message='ahoj!'))
+        self.assertEqual(ping, messages.Success(message='ahoj!'))
         
     def test_uuid(self):
         uuid1 = self.client.get_device_id()

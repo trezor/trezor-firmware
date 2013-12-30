@@ -99,9 +99,6 @@ class Commands(object):
     def get_public_node(self, args):
         return self.client.get_public_node(args.n)
     
-    def get_serial_number(self, args):
-        return binascii.hexlify(self.client.get_serial_number())
-
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
 
@@ -109,9 +106,14 @@ class Commands(object):
         return self.client.apply_settings(coin_shortcut=args.coin_shortcut)
 
     def load_device(self, args):
-        seed = ' '.join(args.seed)
+        if not args.mnemonic and not args.xprv:
+            raise Exception("Please provide mnemonic or xprv")
 
-        return self.client.load_device(seed, args.pin) 
+        if args.mnemonic:
+            mnemonic = ' '.join(args.mnemonic)
+            return self.client.load_device_by_mnemonic(mnemonic, args.pin, args.passphrase_protection)
+
+        return self.client.load_device_by_xprv(args.xprv, args.pin, args.passphrase_protection)
 
     def sign_message(self, args):
         return self.client.sign_message(args.n, args.message)
@@ -134,7 +136,6 @@ class Commands(object):
     get_address.help = 'Get bitcoin address in base58 encoding'
     get_entropy.help = 'Get example entropy'
     get_features.help = 'Retrieve device features and settings'
-    get_serial_number.help = 'Get device\'s unique identifier'
     get_public_node.help = 'Get public node of given path'
     set_label.help = 'Set new wallet label'
     set_coin.help = 'Switch device to another crypto currency'
@@ -166,8 +167,10 @@ class Commands(object):
     )
 
     load_device.arguments = (
-        (('-s', '--seed'), {'type': str, 'nargs': '+'}),
-        (('-n', '--pin'), {'type': str, 'default': ''}),
+        (('-m', '--mnemonic'), {'type': str, 'nargs': '+'}),
+        (('-x', '--xprv'), {'type': str}),
+        (('-p', '--pin'), {'type': str, 'default': ''}),
+        (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
     )
 
     sign_message.arguments = (

@@ -3,7 +3,6 @@ import config
 
 from trezorlib.client import TrezorClient
 from trezorlib.debuglink import DebugLink
-from trezorlib import proto
 
 class TrezorTest(unittest.TestCase):
     def setUp(self):
@@ -19,7 +18,7 @@ class TrezorTest(unittest.TestCase):
         self.client.setup_debuglink(button=True, pin_correct=True)
         
         self.client.load_device(
-            seed=self.mnemonic1,
+            mnemonic=self.mnemonic1,
             pin=self.pin1)
 
         self.client.apply_settings(label='unit testing', coin_shortcut='BTC', language='english')
