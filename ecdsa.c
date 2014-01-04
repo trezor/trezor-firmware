@@ -396,11 +396,18 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 		scalar_multiply(&z, &res);
 	}
 
-	// TODO both pub and res can be infinity, can have y = 0 OR can be equal
+	// both pub and res can be infinity, can have y = 0 OR can be equal -> false negative
 	for (i = 0; i < 9; i++) {
 		for (j = 0; j < 30; j++) {
 			if (i == 8 && (s.val[i] >> j) == 0) break;
 			if (s.val[i] & (1u << j)) {
+				bn_mod(&(pub.y), &prime256k1);
+				bn_mod(&(res.y), &prime256k1);
+				if (bn_is_equal(&(pub.y), &(res.y))) {
+					// this is not a failure, but a very inprobable case
+					// that we don't handle because of its inprobability
+					return 4;
+				}
 				point_add(&pub, &res);
 			}
 			point_double(&pub);
@@ -413,7 +420,7 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	// signature does not match
 	for (i = 0; i < 9; i++) {
 		if (res.x.val[i] != r.val[i]) {
-			return 4;
+			return 5;
 		}
 	}
 

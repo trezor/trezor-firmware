@@ -93,6 +93,14 @@ int bn_is_less(const bignum256 *a, const bignum256 *b)
 	return 0;
 }
 
+int bn_is_equal(const bignum256 *a, const bignum256 *b) {
+	int i;
+	for (i = 0; i < 9; i++) {
+		if (a->val[i] != b->val[i]) return 0;
+	}
+	return 1;
+}
+
 int bn_bitlen(const bignum256 *a) {
 	int i = 8, j;
 	while (i >= 0 && a->val[i] == 0) i--;
