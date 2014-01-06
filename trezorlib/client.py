@@ -1,5 +1,6 @@
 import os
 import time
+import binascii
 
 import ckd_public
 import tools
@@ -268,19 +269,36 @@ class TrezorClient(object):
         return s_inputs
         '''
 
-    def reset_device(self):
+    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label):
         # Begin with device reset workflow
-        raise Exception("Not implemented")
-        resp = self.call(proto.ResetDevice(random=self._get_local_entropy()))
-        self.init_device()
+        msg = proto.ResetDevice(display_random=display_random,
+                                           strength=strength,
+                                           language='english',
+                                           passphrase_protection=bool(passphrase_protection),
+                                           pin_protection=bool(pin_protection),
+                                           label=label
+                                           )
+        print msg
+        resp = self.call(msg)
+        if not isinstance(resp, proto.EntropyRequest):
+            raise Exception("Invalid response, expected EntropyRequest")
+
+        external_entropy = self._get_local_entropy()
+        print "Computer generated entropy:", binascii.hexlify(external_entropy)
+        resp = self.call(proto.EntropyAck(entropy=external_entropy))
+
+
         return isinstance(resp, proto.Success)
     
-    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection):
-        resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin, passphrase_protection=passphrase_protection))
+    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label):
+        resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
+                                          passphrase_protection=passphrase_protection,
+                                          language='english',
+                                          label=label))
         self.init_device()
         return isinstance(resp, proto.Success)
 
-    def load_device_by_xprv(self, xprv, pin, passphrase_protection):
+    def load_device_by_xprv(self, xprv, pin, passphrase_protection, label):
         if xprv[0:4] not in ('xprv', 'tprv'):
             raise Exception("Unknown type of xprv")
 
@@ -310,7 +328,11 @@ class TrezorClient(object):
         print 'wtf is this?', len(data[156:])
         # FIXME
         
-        resp = self.call(proto.LoadDevice(node=node, pin=pin, passphrase_protection=passphrase_protection))
+        resp = self.call(proto.LoadDevice(node=node,
+                                          pin=pin,
+                                          passphrase_protection=passphrase_protection,
+                                          language='english',
+                                          label=label))
         self.init_device()
         return isinstance(resp, proto.Success)
 

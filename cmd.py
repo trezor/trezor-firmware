@@ -111,9 +111,13 @@ class Commands(object):
 
         if args.mnemonic:
             mnemonic = ' '.join(args.mnemonic)
-            return self.client.load_device_by_mnemonic(mnemonic, args.pin, args.passphrase_protection)
+            return self.client.load_device_by_mnemonic(mnemonic, args.pin, args.passphrase_protection, args.label)
 
-        return self.client.load_device_by_xprv(args.xprv, args.pin, args.passphrase_protection)
+        else:
+            return self.client.load_device_by_xprv(args.xprv, args.pin, args.passphrase_protection, args.label)
+
+    def reset_device(self, args):
+        return self.client.reset_device(True, args.strength, args.passphrase, args.pin, args.label)
 
     def sign_message(self, args):
         return self.client.sign_message(args.n, args.message)
@@ -140,6 +144,7 @@ class Commands(object):
     set_label.help = 'Set new wallet label'
     set_coin.help = 'Switch device to another crypto currency'
     load_device.help = 'Load custom configuration to the device'
+    reset_device.help = 'Perform factory reset of the device and generate new seed'
     sign_message.help = 'Sign message using address of given path'
     verify_message.help = 'Verify message'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
@@ -171,6 +176,14 @@ class Commands(object):
         (('-x', '--xprv'), {'type': str}),
         (('-p', '--pin'), {'type': str, 'default': ''}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
+        (('-l', '--label'), {'type': str, 'default': ''}),
+    )
+
+    reset_device.arguments = (
+        (('-t', '--strength'), {'type': int, 'choices': [128, 192, 256], 'default': 128}),
+        (('-p', '--pin'), {'action': 'store_true', 'default': False}),
+        (('-r', '--passphrase'), {'action': 'store_true', 'default': False}),
+        (('-l', '--label'), {'type': str, 'default': ''}),
     )
 
     sign_message.arguments = (
@@ -214,6 +227,7 @@ class PinMatrixThread(threading.Thread):
         from PyQt4.QtCore import QObject, SIGNAL
 
         a = QApplication(sys.argv)
+
         matrix = PinMatrixWidget()
 
         def clicked():
@@ -240,7 +254,7 @@ def qt_pin_func(input_text, message=None):
         This is a hack to display Qt window in non-qt application.
         Qt window just asks for PIN and closes itself, which trigger join().
     '''
-    if os.getenv('DISPLAY'):
+    if False:  # os.getenv('DISPLAY'):
         # Let's hope that system is configured properly and this won't crash
         t = PinMatrixThread(input_text, message)
         t.start()
