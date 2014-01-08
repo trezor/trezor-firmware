@@ -1,6 +1,7 @@
 import os
 import time
 import binascii
+import hashlib
 
 import ckd_public
 import tools
@@ -311,13 +312,17 @@ class TrezorClient(object):
         if data[90:92] != '00':
             raise Exception("Contain invalid private key")
 
+        checksum = hashlib.sha256(hashlib.sha256(binascii.unhexlify(data[:156])).digest()).hexdigest()[:8]
+        if checksum != data[156:]:
+            raise Exception("Checksum doesn't match")
+
         # version 0488ade4
         # depth 00
         # fingerprint 00000000
         # child_num 00000000
         # chaincode 873dff81c02f525623fd1fe5167eac3a55a049de3d314bb42ee227ffed37d508
         # privkey   00e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35
-        # wtf is this? e77e9d71
+        # checksum e77e9d71
 
         node.version = int(data[0:8], 16)
         node.depth = int(data[8:10], 16)
@@ -325,9 +330,7 @@ class TrezorClient(object):
         node.child_num = int(data[18:26], 16)
         node.chain_code = data[26:90].decode('hex')
         node.private_key = data[92:156].decode('hex')  # skip 0x00 indicating privkey
-        print 'wtf is this?', len(data[156:])
-        # FIXME
-        
+
         resp = self.call(proto.LoadDevice(node=node,
                                           pin=pin,
                                           passphrase_protection=passphrase_protection,
