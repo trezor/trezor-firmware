@@ -170,7 +170,8 @@ class Commands(object):
     )
     
     set_label.arguments = (
-        (('label',), {'type': str}),
+        (('-l', '--label',), {'type': str, 'default': ''}),
+#        (('-c', '--clear'), {'action': 'store_true', 'default': False})
     )
 
     load_device.arguments = (

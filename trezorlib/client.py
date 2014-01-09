@@ -56,20 +56,25 @@ class TrezorClient(object):
     def expand_path(self, n):
         # Convert string of bip32 path to list of uint32 integers with prime flags
         # 0/-1/1' -> [0, 0x80000001, 0x80000001]
+        if not n:
+            return []
+
         n = n.split('/')
         path = []
         for x in n:
             prime = False
-            if '\'' in x:
+            if x.endswith("'"):
                 x = x.replace('\'', '')
                 prime = True
-            if '-' in x:
+            if x.startswith('-'):
                 prime = True
+
+            x = abs(int(x))
                 
             if prime:
-                path.append(abs(int(x)) | PRIME_DERIVATION_FLAG)
-            else:
-                path.append(abs(int(x)))
+                x |= PRIME_DERIVATION_FLAG
+
+            path.append(x)
 
         return path
 
@@ -96,12 +101,10 @@ class TrezorClient(object):
     def get_device_id(self):
         return self.features.device_id
 
-    def apply_settings(self, label=None, coin_shortcut=None, language=None):
+    def apply_settings(self, label=None, language=None):
         settings = proto.ApplySettings()
-        if label:
+        if label != None:
             settings.label = label
-        if coin_shortcut:
-            settings.coin_shortcut = coin_shortcut
         if language:
             settings.language = language
 
@@ -306,7 +309,6 @@ class TrezorClient(object):
                                            pin_protection=bool(pin_protection),
                                            label=label
                                            )
-        print msg
         resp = self.call(msg)
         if not isinstance(resp, proto.EntropyRequest):
             raise Exception("Invalid response, expected EntropyRequest")
