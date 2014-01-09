@@ -19,6 +19,9 @@ def show_input(input_text, message=None):
 def pin_func(input_text, message=None):
     return show_input(input_text, message)
 
+def passphrase_func(input_text):
+    return show_input(input_text)
+
 class CallException(Exception):
     pass
 
@@ -30,13 +33,14 @@ PRIME_DERIVATION_FLAG = 0x80000000
 class TrezorClient(object):
     
     def __init__(self, transport, debuglink=None, 
-                 message_func=show_message, input_func=show_input, pin_func=pin_func, debug=False):
+                 message_func=show_message, input_func=show_input, pin_func=pin_func, passphrase_func=passphrase_func, debug=False):
         self.transport = transport
         self.debuglink = debuglink
         
         self.message_func = message_func
         self.input_func = input_func
         self.pin_func = pin_func
+        self.passphrase_func = passphrase_func
         self.debug = debug
         
         self.setup_debuglink()
@@ -49,6 +53,26 @@ class TrezorClient(object):
         # Convert minus signs to uint32 with flag
         return [ int(abs(x) | PRIME_DERIVATION_FLAG) if x < 0 else x for x in n ]
         
+    def expand_path(self, n):
+        # Convert string of bip32 path to list of uint32 integers with prime flags
+        # 0/-1/1' -> [0, 0x80000001, 0x80000001]
+        n = n.split('/')
+        path = []
+        for x in n:
+            prime = False
+            if '\'' in x:
+                x = x.replace('\'', '')
+                prime = True
+            if '-' in x:
+                prime = True
+                
+            if prime:
+                path.append(abs(int(x)) | PRIME_DERIVATION_FLAG)
+            else:
+                path.append(abs(int(x)))
+
+        return path
+
     def init_device(self):
         self.features = self.call(proto.Initialize())
 
@@ -58,12 +82,10 @@ class TrezorClient(object):
             self.debuglink.transport.close()
 
     def get_public_node(self, n):
-        n = self._convert_prime(n)
         return self.call(proto.GetPublicKey(address_n=n)).node
         
-    def get_address(self, n):
-        n = self._convert_prime(n)
-        return self.call(proto.GetAddress(address_n=n)).address
+    def get_address(self, coin_name, n):
+        return self.call(proto.GetAddress(address_n=n, coin_name=coin_name)).address
         
     def get_entropy(self, size):
         return self.call(proto.GetEntropy(size=size)).entropy
@@ -127,6 +149,11 @@ class TrezorClient(object):
                     pin = self.pin_func("PIN required: ", resp.message)
                     msg2 = proto.PinMatrixAck(pin=pin)
                     
+                return self.call(msg2)
+            
+            if isinstance(resp, proto.PassphraseRequest):
+                passphrase = self.passphrase_func("Passphrase required: ")
+                msg2 = proto.PassphraseAck(passphrase=passphrase)
                 return self.call(msg2)
 
         finally:

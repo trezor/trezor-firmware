@@ -85,25 +85,27 @@ class Commands(object):
         pass
  
     def get_address(self, args):
-        return self.client.get_address(args.n)
+        address_n = self.client.expand_path(args.n)
+        return self.client.get_address(args.coin, address_n)
     
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
 
     def get_features(self, args):
-        return pb2json(self.client.features)
+        return self.client.features
+
+    def list_coins(self, args):
+        return [ coin.coin_name for coin in self.client.features.coins ]
 
     def ping(self, args):
         return self.client.ping(args.msg)
 
     def get_public_node(self, args):
-        return self.client.get_public_node(args.n)
+        address_n = self.client.expand_path(args.n)
+        return self.client.get_public_node(address_n)
     
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
-
-    def set_coin(self, args):
-        return self.client.apply_settings(coin_shortcut=args.coin_shortcut)
 
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
@@ -120,7 +122,7 @@ class Commands(object):
         return self.client.reset_device(True, args.strength, args.passphrase, args.pin, args.label)
 
     def sign_message(self, args):
-        return self.client.sign_message(args.n, args.message)
+        return pb2json(self.client.sign_message(args.n, args.message), {'message': args.message})
 
     def verify_message(self, args):
         return self.client.verify_message(args.address, args.signature, args.message)
@@ -142,7 +144,7 @@ class Commands(object):
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
     set_label.help = 'Set new wallet label'
-    set_coin.help = 'Switch device to another crypto currency'
+    list_coins.help = 'List all supported coin types by the device'
     load_device.help = 'Load custom configuration to the device'
     reset_device.help = 'Perform factory reset of the device and generate new seed'
     sign_message.help = 'Sign message using address of given path'
@@ -150,7 +152,9 @@ class Commands(object):
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     get_address.arguments = (
-        (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+        (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
+        # (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+        (('-n', '-address'), {'type': str}),
     )
     
     get_entropy.arguments = (
@@ -159,16 +163,14 @@ class Commands(object):
 
     get_features.arguments = ()
 
+    list_coins.arguments = ()
+
     ping.arguments = (
         (('msg',), {'type': str}),
     )
     
     set_label.arguments = (
         (('label',), {'type': str}),
-    )
-
-    set_coin.arguments = (
-        (('coin_shortcut',), {'type': str}),
     )
 
     load_device.arguments = (
@@ -198,7 +200,7 @@ class Commands(object):
     )
 
     get_public_node.arguments = (
-        (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+        (('-n', '-address'), {'type': str}),
     )
 
     firmware_update.arguments = (
