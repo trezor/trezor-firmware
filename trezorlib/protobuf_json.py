@@ -76,9 +76,8 @@ def json2pb(pb, js):
 
 
 
-def pb2json(pb):
+def pb2json(pb, js={}):
     ''' convert google.protobuf.descriptor instance to JSON string '''
-    js = {}
     # fields = pb.DESCRIPTOR.fields #all fields
     fields = pb.ListFields()  # only filled (including extensions)
     for field, value in fields:
