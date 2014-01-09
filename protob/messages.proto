@@ -52,6 +52,7 @@ enum MessageType {
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
 	MessageType_DebugLinkStop = 103 [(wire_debug_in) = true];
+	MessageType_DebugLinkLog = 104 [(wire_debug_out) = true];
 }
 
 // ****************************************************************************
@@ -343,4 +344,10 @@ message DebugLinkState {
 
 // Ask device to shutdown/restart
 message DebugLinkStop {
+}
+
+message DebugLinkLog {
+	optional uint32 level = 1;
+	optional bytes bucket = 2;
+	optional bytes text = 3;
 }
