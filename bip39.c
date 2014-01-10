@@ -7,7 +7,7 @@
 #include "pbkdf2.h"
 #include "bip39_english.h"
 
-#define PBKDF2_ROUNDS 4096
+#define PBKDF2_ROUNDS 2048
 
 const char *mnemonic_generate(int strength)
 {
