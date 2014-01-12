@@ -15,7 +15,7 @@ class DebugLink(object):
         self.button_func = button_func
             
     def read_pin(self):
-        self.transport.write(proto.DebugLinkGetState(pin=True, matrix=True))
+        self.transport.write(proto.DebugLinkGetState())
         obj = self.transport.read_blocking()
         print "Read PIN:", obj.pin
         print "Read matrix:", obj.matrix
