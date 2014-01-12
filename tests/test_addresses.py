@@ -3,30 +3,39 @@ import common
 
 class TestAddresses(common.TrezorTest):
     def test_btc(self):
-        self.client.load_device(seed=self.mnemonic1, pin='')
-        self.client.apply_settings(coin_shortcut='BTC')
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
+                                            pin='',
+                                            passphrase_protection=False,
+                                            label='test',
+                                            language='english')
 
-        self.assertEqual(self.client.get_address([]), '1GBDQapuquKZGPxWTB39s5bayLDTv5sD77')
-        self.assertEqual(self.client.get_address([1]), '13HWRT9JtftSF6uv65eMrQowHn3CioKegP')
-        self.assertEqual(self.client.get_address([0, 1]), '1GnnT11aZeH6QZCtT7EjCvRF3EXHoY3owE')
-        self.assertEqual(self.client.get_address([9, 0]), '1KeRRK74ARTxnby8dYsm2UreAx5tBGbbY7')
-        self.assertEqual(self.client.get_address([0, 9999999]), '1JeDAdRMxeuWCQ8ohWySCD5KEPoN2sEanK')
+        self.assertEqual(self.client.get_address('Bitcoin', []), '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK')
+        self.assertEqual(self.client.get_address('Bitcoin', [1]), '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb')
+        self.assertEqual(self.client.get_address('Bitcoin', [0, -1]), '1JVq66pzRBvqaBRFeU9SPVvg3er4ZDgoMs')
+        self.assertEqual(self.client.get_address('Bitcoin', [-9, 0]), '1F4YdQdL9ZQwvcNTuy5mjyQxXkyCfMcP2P')
+        self.assertEqual(self.client.get_address('Bitcoin', [0, 9999999]), '1GS8X3yc7ntzwGw9vXwj9wqmBWZkTFewBV')
 
     def test_ltc(self):
-        self.client.load_device(seed=self.mnemonic1, pin='')
-        self.client.apply_settings(coin_shortcut='LTC')
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
+                                            pin='',
+                                            passphrase_protection=False,
+                                            label='test',
+                                            language='english')
 
-        self.assertEqual(self.client.get_address([]), 'LaQAfo8jvZZcXCefdK2T96fMBYak5XomhR')
-        self.assertEqual(self.client.get_address([1]), 'LMWTgfT8yL8VVuc5GDdf8RshVzQUw9AoUK')
-        self.assertEqual(self.client.get_address([0, 1]), 'Lb1jiDKQeJX9fMu3dFE2UwV1FStZwvijfE')
-        self.assertEqual(self.client.get_address([9, 0]), 'LdsNgXQtF5i23QfHogs4JVvQPATAFbfWYA')
-        self.assertEqual(self.client.get_address([0, 9999999]), 'LcsARqjC3K9ZTCpxsexjUE95ScAeEPqR69')
+        self.assertEqual(self.client.get_address('Litecoin', []), 'LYtGrdDeqYUQnTkr5sHT2DKZLG7Hqg7HTK')
+        self.assertEqual(self.client.get_address('Litecoin', [1]), 'LKRGNecThFP3Q6c5fosLVA53Z2hUDb1qnE')
+        self.assertEqual(self.client.get_address('Litecoin', [0, -1]), 'LcinMK8pVrAtpz7Qpc8jfWzSFsDLgLYfG6')
+        self.assertEqual(self.client.get_address('Litecoin', [-9, 0]), 'LZHVtcwAEDf1BR4d67551zUijyLUpDF9EX')
+        self.assertEqual(self.client.get_address('Litecoin', [0, 9999999]), 'Laf5nGHSCT94C5dK6fw2RxuXPiw2ZuRR9S')
 
     def test_tbtc(self):
-        self.client.load_device(seed=self.mnemonic1, pin='')
-        self.client.apply_settings(coin_shortcut='tBTC')
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
+                                            pin='',
+                                            passphrase_protection=False,
+                                            label='test',
+                                            language='english')
 
-        self.assertEqual(self.client.get_address([111, 42]), 'mypL2oDrCj4196uuvtC6QJnsetu3YMUdB7')
+        self.assertEqual(self.client.get_address('Testnet', [111, 42]), 'moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa')
  
 if __name__ == '__main__':
     unittest.main()        

@@ -10,18 +10,22 @@ class TrezorTest(unittest.TestCase):
         self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS)
         self.client = TrezorClient(self.transport, DebugLink(self.debug_transport), debug=True)
 
-        self.mnemonic1 = 'juice enrich pool orbit brick prevent system chronic people industry insane private'
-        self.mnemonic2 = 'bark depend buffalo library lonely syrup exact trip kitten yellow arch into damage phone toy wild color soon suit move opinion type replace donate'
+        self.mnemonic1 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
+        self.mnemonic2 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
         self.pin1 = '1234'
         self.pin2 = '43211'
 
         self.client.setup_debuglink(button=True, pin_correct=True)
         
-        self.client.load_device(
+        self.client.load_device_by_mnemonic(
             mnemonic=self.mnemonic1,
-            pin=self.pin1)
+            pin=self.pin1,
+            passphrase_protection=False,
+            label='test',
+            language='english',
+        )
 
-        self.client.apply_settings(label='unit testing', coin_shortcut='BTC', language='english')
+        # self.client.apply_settings(label='unit testing', coin_shortcut='BTC', language='english')
 
         print "Setup finished"
         print "--------------"

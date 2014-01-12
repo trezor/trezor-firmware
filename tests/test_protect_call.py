@@ -2,8 +2,8 @@ import time
 import unittest
 import common
 
-from trezorlib.client import CallException, PinException 
-from trezorlib import proto
+from trezorlib.client import PinException
+# from trezorlib import messages_pb2 as proto
 
 class TestProtectCall(common.TrezorTest):
     def _some_protected_call(self):
@@ -13,13 +13,23 @@ class TestProtectCall(common.TrezorTest):
         self.assertEqual(len(entropy), entropy_len)
 
     def test_no_protection(self):
-        self.client.load_device(seed=self.mnemonic1, pin='')
+        self.client.load_device_by_mnemonic(
+            mnemonic=self.mnemonic1,
+            pin='',
+            passphrase_protection=False,
+            label='test',
+            language='english',
+        )
         
         self.assertEqual(self.client.debuglink.read_pin()[0], '')
         self._some_protected_call()
 
     def test_pin(self):
-        self.client.load_device(seed=self.mnemonic1, pin=self.pin2)
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
+                                            pin=self.pin2,
+                                            passphrase_protection=False,
+                                            label='test',
+                                            language='english')
 
         self.assertEqual(self.client.debuglink.read_pin()[0], self.pin2)
         self._some_protected_call()
@@ -48,6 +58,7 @@ class TestProtectCall(common.TrezorTest):
             self.assertRaises(PinException, self._some_protected_call)
             test_backoff(attempt, start)
 
+        '''
         # Unplug Trezor now
         self.client.debuglink.stop()
         self.client.close()
@@ -64,6 +75,7 @@ class TestProtectCall(common.TrezorTest):
         print "Expected reboot time at least %s seconds" % expected
         print "Rebooted in %s seconds" % took
         self.assertLessEqual(expected, time.time() - start, "Bootup took %s seconds, expected %s seconds or more!" % (took, expected))
+        '''
 
 if __name__ == '__main__':
     unittest.main()
