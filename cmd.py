@@ -113,10 +113,12 @@ class Commands(object):
 
         if args.mnemonic:
             mnemonic = ' '.join(args.mnemonic)
-            return self.client.load_device_by_mnemonic(mnemonic, args.pin, args.passphrase_protection, args.label)
+            return self.client.load_device_by_mnemonic(mnemonic, args.pin,
+                        args.passphrase_protection, args.label, 'english')
 
         else:
-            return self.client.load_device_by_xprv(args.xprv, args.pin, args.passphrase_protection, args.label)
+            return self.client.load_device_by_xprv(args.xprv, args.pin,
+                        args.passphrase_protection, args.label, 'english')
 
     def reset_device(self, args):
         return self.client.reset_device(True, args.strength, args.passphrase, args.pin, args.label)

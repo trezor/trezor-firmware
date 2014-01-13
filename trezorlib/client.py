@@ -7,6 +7,7 @@ import ckd_public
 import tools
 import messages_pb2 as proto
 import types_pb2 as types
+from api_blockchain import BlockchainApi
 
 def show_message(message):
     print "MESSAGE FROM DEVICE:", message
@@ -33,7 +34,9 @@ PRIME_DERIVATION_FLAG = 0x80000000
 class TrezorClient(object):
     
     def __init__(self, transport, debuglink=None, 
-                 message_func=show_message, input_func=show_input, pin_func=pin_func, passphrase_func=passphrase_func, debug=False):
+                 message_func=show_message, input_func=show_input,
+                 pin_func=pin_func, passphrase_func=passphrase_func,
+                 blockchain_api=None, debug=False):
         self.transport = transport
         self.debuglink = debuglink
         
@@ -41,8 +44,14 @@ class TrezorClient(object):
         self.input_func = input_func
         self.pin_func = pin_func
         self.passphrase_func = passphrase_func
+
         self.debug = debug
         
+        if blockchain_api:
+            self.blockchain = blockchain_api
+        else:
+            self.blockchain = BlockchainApi()
+
         self.setup_debuglink()
         self.init_device()
     
@@ -90,6 +99,7 @@ class TrezorClient(object):
         return self.call(proto.GetPublicKey(address_n=n)).node
         
     def get_address(self, coin_name, n):
+        n = self._convert_prime(n)
         return self.call(proto.GetAddress(address_n=n, coin_name=coin_name)).address
         
     def get_entropy(self, size):
@@ -168,7 +178,8 @@ class TrezorClient(object):
             if resp.code == types.Failure_ActionCancelled:
                 raise CallException("Action cancelled by user")
                 
-            elif resp.code == types.Failure_PinInvalid:
+            elif resp.code in (types.Failure_PinInvalid,
+                types.Failure_PinCancelled, types.Failure_PinExpected):
                 raise PinException("PIN is invalid")
                 
             raise CallException(resp.code, resp.message)
@@ -192,7 +203,24 @@ class TrezorClient(object):
 
         return False
 
-    def sign_tx(self, inputs, outputs):
+    def simple_sign_tx(self, coin_name, inputs, outputs):
+        msg = proto.SimpleSignTx()
+        msg.coin_name = coin_name
+        msg.inputs.extend(inputs)
+        msg.outputs.extend(outputs)
+
+        known_hashes = []
+        for inp in inputs:
+            if inp.prev_hash in known_hashes:
+                continue
+
+            tx = msg.transactions.add()
+            tx.CopyFrom(self.blockchain.get_tx(binascii.hexlify(inp.prev_hash)))
+            known_hashes.append(inp.prev_hash)
+
+        return self.call(msg)
+        
+    def sign_tx(self, coin_name, inputs, outputs):
         '''
             inputs: list of TxInput
             outputs: list of TxOutput
@@ -300,11 +328,11 @@ class TrezorClient(object):
         return s_inputs
         '''
 
-    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label):
+    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language):
         # Begin with device reset workflow
         msg = proto.ResetDevice(display_random=display_random,
                                            strength=strength,
-                                           language='english',
+                                           language=language,
                                            passphrase_protection=bool(passphrase_protection),
                                            pin_protection=bool(pin_protection),
                                            label=label
@@ -320,10 +348,10 @@ class TrezorClient(object):
 
         return isinstance(resp, proto.Success)
     
-    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label):
+    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language):
         resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
                                           passphrase_protection=passphrase_protection,
-                                          language='english',
+                                          language=language,
                                           label=label))
         self.init_device()
         return isinstance(resp, proto.Success)
@@ -369,6 +397,8 @@ class TrezorClient(object):
         return isinstance(resp, proto.Success)
 
     def bip32_ckd(self, public_node, n):
+        raise Exception("Unfinished code")
+
         if not isinstance(n, list):
             raise Exception('Parameter must be a list')
 

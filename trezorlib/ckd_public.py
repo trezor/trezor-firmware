@@ -6,6 +6,8 @@ from ecdsa.curves import SECP256k1
 
 import messages_pb2 as proto
 
+# FIXME, this isn't finished yet
+
 PRIME_DERIVATION_FLAG = 0x80000000
 
 def is_prime(n):

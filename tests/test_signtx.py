@@ -3,20 +3,30 @@ import common
 import binascii
 
 import trezorlib.messages_pb2 as proto
+import trezorlib.types_pb2 as proto_types
 
-'''
-./electrum -w ~/.electrum-bitkey mktx 1FQVPnjrbkPWeA8poUoEnX9U3n9DyhAVtv 0.001
---fromaddr 13jqMdrZAzMYkaFqHGv5GbJavdZpoKDkSL --changeaddr 17GpAFnkHRjWKePkX4kxHaHy49V8EHTr7i --fee 0.0005
-
-01000000012de70f7d6ffed0db70f8882f3fca90db9bb09f0e99bce27468c23d3c994fcd56
-010000008b4830450221009b985e14d53cfeed3496846db6ddaa77a0206138d0df4c2ccd3b
-759e91bae3e1022004c76e10f99ccac8ced761719181a96bae25a74829eab3ecb8f29eb07f
-e18f7e01410436ae8595f03a7324d1d1482ede8560a4508c767fbc662559482d5759b32209
-a62964699995f6e018cfbeb7a71a66d4c64fa38875d79ead0a9ac66f59c1c8b3a3ffffffff
-0250c30000000000001976a91444ce5c6789b0bb0e8a9ab9a4769fe181cb274c4688aca086
-0100000000001976a9149e03078026388661b197129a43f0f64f88379ce688ac00000000
-'''
 class TestSignTx(common.TrezorTest):
+
+    def test_simplesigntx(self):
+        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
+        # input 0: 0.0039 BTC
+
+        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+                             # amount=390000,
+                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_index=0,
+                             )
+
+        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+                              amount=380000,
+                              script_type=proto_types.PAYTOADDRESS,
+                              )
+
+        tx = self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
+        print binascii.hexlify(tx.serialized_tx)
+        self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
+
+    '''
     def test_signtx(self):
         expected_tx = '01000000012de70f7d6ffed0db70f8882f3fca90db9bb09f0e99bce27468c23d3c994fcd56' \
             '010000008b4830450221009b985e14d53cfeed3496846db6ddaa77a0206138d0df4c2ccd3b' \
@@ -51,7 +61,7 @@ class TestSignTx(common.TrezorTest):
                               )
 
         print binascii.hexlify(self.client.sign_tx([inp1], [out1, out2])[1])
-
+    '''
     '''    
     def test_workflow(self):
         inp1 = proto.TxInput(index=0,
