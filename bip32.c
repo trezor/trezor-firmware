@@ -4,6 +4,8 @@
 #include "hmac.h"
 #include "ecdsa.h"
 #include "bip32.h"
+#include "sha2.h"
+#include "ripemd160.h"
 
 uint8_t hdnode_coin_version = 0x00;
 
@@ -36,6 +38,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 {
 	uint8_t data[1 + 32 + 4];
 	uint8_t I[32 + 32];
+	uint8_t fingerprint[32];
 	bignum256 a, b;
 
 	if (i & 0x80000000) { // private derivation
@@ -45,6 +48,10 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 		memcpy(data, inout->public_key, 33);
 	}
 	write_be(data + 33, i);
+
+	SHA256_Raw(inout->public_key, 33, fingerprint);
+	ripemd160(fingerprint, 32, fingerprint);
+	inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) + (fingerprint[2] << 8) + fingerprint[3];
 
 	bn_read_be(inout->private_key, &a);
 
@@ -68,6 +75,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 {
 	uint8_t data[1 + 32 + 4];
 	uint8_t I[32 + 32];
+	uint8_t fingerprint[32];
 	curve_point a, b;
 	bignum256 c;
 
@@ -77,6 +85,10 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 		memcpy(data, inout->public_key, 33);
 	}
 	write_be(data + 33, i);
+
+	SHA256_Raw(inout->public_key, 33, fingerprint);
+	ripemd160(fingerprint, 32, fingerprint);
+	inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) + (fingerprint[2] << 8) + fingerprint[3];
 
 	memset(inout->private_key, 0, 32);
 	if (!ecdsa_read_pubkey(inout->public_key, &a)) {
