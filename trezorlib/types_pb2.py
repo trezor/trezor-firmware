@@ -15,7 +15,7 @@ import google.protobuf.descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='types.proto',
   package='',
-  serialized_pb='\n\x0btypes.proto\x1a google/protobuf/descriptor.proto\"\xb4\x01\n\nHDNodeType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x19\n\x0bprivate_key\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\npublic_key\x18\x07 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0f\n\x07\x61\x64\x64ress\x18\x08 \x01(\x0c\"]\n\x08\x43oinType\x12\x11\n\tcoin_name\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\x14\n\x0c\x61\x64\x64ress_type\x18\x03 \x01(\r\x12\x11\n\tmaxfee_kb\x18\x04 \x01(\x04\"\x85\x01\n\x0bTxInputType\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x17\n\tprev_hash\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x12\n\nprev_index\x18\x03 \x02(\r\x12\x18\n\nscript_sig\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1c\n\x08sequence\x18\x05 \x01(\r:\n4294967295\"\x7f\n\x0cTxOutputType\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12 \n\x0bscript_type\x18\x04 \x02(\x0e\x32\x0b.ScriptType\x12\x19\n\x0bscript_args\x18\x05 \x03(\x0c\x42\x04\x88\xb5\x18\x01\">\n\x0fTxOutputBinType\x12\x0e\n\x06\x61mount\x18\x01 \x02(\x04\x12\x1b\n\rscript_pubkey\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"|\n\x0fTransactionType\x12\x12\n\x07version\x18\x01 \x01(\r:\x01\x31\x12\x1c\n\x06inputs\x18\x02 \x03(\x0b\x32\x0c.TxInputType\x12!\n\x07outputs\x18\x03 \x03(\x0b\x32\x10.TxOutputBinType\x12\x14\n\tlock_time\x18\x04 \x01(\r:\x01\x30*\x9a\x02\n\x0b\x46\x61ilureType\x12\x1d\n\x19\x46\x61ilure_UnexpectedMessage\x10\x01\x12\x1a\n\x16\x46\x61ilure_ButtonExpected\x10\x02\x12\x17\n\x13\x46\x61ilure_SyntaxError\x10\x03\x12\x1b\n\x17\x46\x61ilure_ActionCancelled\x10\x04\x12\x17\n\x13\x46\x61ilure_PinExpected\x10\x05\x12\x18\n\x14\x46\x61ilure_PinCancelled\x10\x06\x12\x16\n\x12\x46\x61ilure_PinInvalid\x10\x07\x12\x1c\n\x18\x46\x61ilure_InvalidSignature\x10\x08\x12\x16\n\x12\x46\x61ilure_FeeTooHigh\x10\t\x12\x19\n\x15\x46\x61ilure_FirmwareError\x10\x63*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01*(\n\x0bRequestType\x12\x0b\n\x07TXINPUT\x10\x00\x12\x0c\n\x08TXOUTPUT\x10\x01:/\n\x06\x62inary\x12\x1d.google.protobuf.FieldOptions\x18\xd1\x86\x03 \x01(\x08:4\n\x07wire_in\x12!.google.protobuf.EnumValueOptions\x18\xd2\x86\x03 \x01(\x08:5\n\x08wire_out\x12!.google.protobuf.EnumValueOptions\x18\xd3\x86\x03 \x01(\x08::\n\rwire_debug_in\x12!.google.protobuf.EnumValueOptions\x18\xd4\x86\x03 \x01(\x08:;\n\x0ewire_debug_out\x12!.google.protobuf.EnumValueOptions\x18\xd5\x86\x03 \x01(\x08')
+  serialized_pb='\n\x0btypes.proto\x1a google/protobuf/descriptor.proto\"\xb4\x01\n\nHDNodeType\x12\x0f\n\x07version\x18\x01 \x02(\r\x12\r\n\x05\x64\x65pth\x18\x02 \x02(\r\x12\x13\n\x0b\x66ingerprint\x18\x03 \x02(\r\x12\x11\n\tchild_num\x18\x04 \x02(\r\x12\x18\n\nchain_code\x18\x05 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x19\n\x0bprivate_key\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\npublic_key\x18\x07 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0f\n\x07\x61\x64\x64ress\x18\x08 \x01(\x0c\"\x86\x01\n\x08\x43oinType\x12\x11\n\tcoin_name\x18\x01 \x01(\x0c\x12\x15\n\rcoin_shortcut\x18\x02 \x01(\x0c\x12\x14\n\x0c\x61\x64\x64ress_type\x18\x03 \x01(\r\x12\x11\n\tmaxfee_kb\x18\x04 \x01(\x04\x12\x13\n\x0bser_private\x18\x05 \x01(\r\x12\x12\n\nser_public\x18\x06 \x01(\r\"\x85\x01\n\x0bTxInputType\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x17\n\tprev_hash\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x12\n\nprev_index\x18\x03 \x02(\r\x12\x18\n\nscript_sig\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1c\n\x08sequence\x18\x05 \x01(\r:\n4294967295\"\x7f\n\x0cTxOutputType\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\x12\x11\n\taddress_n\x18\x02 \x03(\r\x12\x0e\n\x06\x61mount\x18\x03 \x02(\x04\x12 \n\x0bscript_type\x18\x04 \x02(\x0e\x32\x0b.ScriptType\x12\x19\n\x0bscript_args\x18\x05 \x03(\x0c\x42\x04\x88\xb5\x18\x01\">\n\x0fTxOutputBinType\x12\x0e\n\x06\x61mount\x18\x01 \x02(\x04\x12\x1b\n\rscript_pubkey\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"|\n\x0fTransactionType\x12\x12\n\x07version\x18\x01 \x01(\r:\x01\x31\x12\x1c\n\x06inputs\x18\x02 \x03(\x0b\x32\x0c.TxInputType\x12!\n\x07outputs\x18\x03 \x03(\x0b\x32\x10.TxOutputBinType\x12\x14\n\tlock_time\x18\x04 \x01(\r:\x01\x30*\x9a\x02\n\x0b\x46\x61ilureType\x12\x1d\n\x19\x46\x61ilure_UnexpectedMessage\x10\x01\x12\x1a\n\x16\x46\x61ilure_ButtonExpected\x10\x02\x12\x17\n\x13\x46\x61ilure_SyntaxError\x10\x03\x12\x1b\n\x17\x46\x61ilure_ActionCancelled\x10\x04\x12\x17\n\x13\x46\x61ilure_PinExpected\x10\x05\x12\x18\n\x14\x46\x61ilure_PinCancelled\x10\x06\x12\x16\n\x12\x46\x61ilure_PinInvalid\x10\x07\x12\x1c\n\x18\x46\x61ilure_InvalidSignature\x10\x08\x12\x16\n\x12\x46\x61ilure_FeeTooHigh\x10\t\x12\x19\n\x15\x46\x61ilure_FirmwareError\x10\x63*3\n\nScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\x00\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01*(\n\x0bRequestType\x12\x0b\n\x07TXINPUT\x10\x00\x12\x0c\n\x08TXOUTPUT\x10\x01:/\n\x06\x62inary\x12\x1d.google.protobuf.FieldOptions\x18\xd1\x86\x03 \x01(\x08:4\n\x07wire_in\x12!.google.protobuf.EnumValueOptions\x18\xd2\x86\x03 \x01(\x08:5\n\x08wire_out\x12!.google.protobuf.EnumValueOptions\x18\xd3\x86\x03 \x01(\x08::\n\rwire_debug_in\x12!.google.protobuf.EnumValueOptions\x18\xd4\x86\x03 \x01(\x08:;\n\x0ewire_debug_out\x12!.google.protobuf.EnumValueOptions\x18\xd5\x86\x03 \x01(\x08')
 
 _FAILURETYPE = _descriptor.EnumDescriptor(
   name='FailureType',
@@ -66,8 +66,8 @@ _FAILURETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=783,
-  serialized_end=1065,
+  serialized_start=825,
+  serialized_end=1107,
 )
 
 FailureType = enum_type_wrapper.EnumTypeWrapper(_FAILURETYPE)
@@ -88,8 +88,8 @@ _SCRIPTTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1067,
-  serialized_end=1118,
+  serialized_start=1109,
+  serialized_end=1160,
 )
 
 ScriptType = enum_type_wrapper.EnumTypeWrapper(_SCRIPTTYPE)
@@ -110,8 +110,8 @@ _REQUESTTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1120,
-  serialized_end=1160,
+  serialized_start=1162,
+  serialized_end=1202,
 )
 
 RequestType = enum_type_wrapper.EnumTypeWrapper(_REQUESTTYPE)
@@ -284,6 +284,20 @@ _COINTYPE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='ser_private', full_name='CoinType.ser_private', index=4,
+      number=5, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='ser_public', full_name='CoinType.ser_public', index=5,
+      number=6, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -293,8 +307,8 @@ _COINTYPE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=232,
-  serialized_end=325,
+  serialized_start=233,
+  serialized_end=367,
 )
 
 
@@ -349,8 +363,8 @@ _TXINPUTTYPE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=328,
-  serialized_end=461,
+  serialized_start=370,
+  serialized_end=503,
 )
 
 
@@ -405,8 +419,8 @@ _TXOUTPUTTYPE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=463,
-  serialized_end=590,
+  serialized_start=505,
+  serialized_end=632,
 )
 
 
@@ -440,8 +454,8 @@ _TXOUTPUTBINTYPE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=592,
-  serialized_end=654,
+  serialized_start=634,
+  serialized_end=696,
 )
 
 
@@ -489,8 +503,8 @@ _TRANSACTIONTYPE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=656,
-  serialized_end=780,
+  serialized_start=698,
+  serialized_end=822,
 )
 
 _TXOUTPUTTYPE.fields_by_name['script_type'].enum_type = _SCRIPTTYPE
