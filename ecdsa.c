@@ -337,6 +337,33 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 	}
 }
 
+int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
+{
+	if (pub_key[0] == 0x04) {
+		bn_read_be(pub_key + 1, &(pub->x));
+		bn_read_be(pub_key + 33, &(pub->y));
+		return 1;
+	}
+
+	if (pub_key[0] == 0x02 || pub_key[0] == 0x03) { // compute missing y coords
+		// y^2 = x^3 + 0*x + 7
+		bn_read_be(pub_key + 1, &(pub->x));
+		bn_read_be(pub_key + 1, &(pub->y));          // y is x
+		bn_multiply(&(pub->x), &(pub->y), &prime256k1); // y is x^2
+		bn_multiply(&(pub->x), &(pub->y), &prime256k1); // y is x^3
+		bn_addmodi(&(pub->y), 7, &prime256k1);       // y is x^3 + 7
+		bn_sqrt(&(pub->y), &prime256k1);             // y = sqrt(y)
+		if ((pub_key[0] & 0x01) != (pub->y.val[0] & 1)) {
+			bn_substract(&prime256k1, &(pub->y), &(pub->y)); // y = -y
+			bn_mod(&(pub->y), &prime256k1);
+		}
+		return 1;
+	}
+
+	// error
+	return 0;
+}
+
 // uses secp256k1 curve
 // pub_key - 65 bytes uncompressed key
 // signature - 64 bytes signature
@@ -355,24 +382,9 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	// if double hash is required uncomment the following line:
 	// SHA256_Raw(hash, 32, hash);
 
-	if (pub_key[0] == 0x04) {
-		bn_read_be(pub_key + 1, &pub.x);
-		bn_read_be(pub_key + 33, &pub.y);
-	} else
-	if (pub_key[0] == 0x02 || pub_key[0] == 0x03) { // compute missing y coords
-		// y^2 = x^3 + 0*x + 7
-		bn_read_be(pub_key + 1, &pub.x);
-		bn_read_be(pub_key + 1, &pub.y);          // y is x
-		bn_multiply(&pub.x, &pub.y, &prime256k1); // y is x^2
-		bn_multiply(&pub.x, &pub.y, &prime256k1); // y is x^3
-		bn_addmodi(&pub.y, 7, &prime256k1);       // y is x^3 + 7
-		bn_sqrt(&pub.y, &prime256k1);             // y = sqrt(y)
-		if ((pub_key[0] & 0x01) != (pub.y.val[0] & 1)) {
-			bn_substract(&prime256k1, &pub.y, &pub.y); // y = -y
-			bn_mod(&pub.y, &prime256k1);
-		}
-	} else
-	return 1;
+	if (!ecdsa_read_pubkey(pub_key, &pub)) {
+		return 1;
+	}
 
 	bn_read_be(sig, &r);
 	bn_read_be(sig + 32, &s);

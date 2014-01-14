@@ -32,10 +32,15 @@
 #define USE_RFC6979 1
 #endif
 
+void point_add(const curve_point *cp1, curve_point *cp2);
+void point_double(curve_point *cp);
+void scalar_multiply(bignum256 *k, curve_point *res);
+
 int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr);
+int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub);
 int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
 
 #endif
