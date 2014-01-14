@@ -396,20 +396,6 @@ class TrezorClient(object):
         self.init_device()
         return isinstance(resp, proto.Success)
 
-    def bip32_ckd(self, public_node, n):
-        raise Exception("Unfinished code")
-
-        if not isinstance(n, list):
-            raise Exception('Parameter must be a list')
-
-        node = types.HDNodeType()
-        node.CopyFrom(public_node)
-
-        for i in n:
-            node.CopyFrom(ckd_public.get_subnode(node, i))
-
-        return node
-
     def firmware_update(self, fp):
         if self.features.bootloader_mode == False:
             raise Exception("Device must be in bootloader mode")

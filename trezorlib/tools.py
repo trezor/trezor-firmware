@@ -1,6 +1,33 @@
+import hashlib
+
+Hash = lambda x: hashlib.sha256(hashlib.sha256(x).digest()).digest()
+
+def hash_160(public_key):
+    md = hashlib.new('ripemd160')
+    md.update(hashlib.sha256(public_key).digest())
+    return md.digest()
+
+
+def hash_160_to_bc_address(h160, address_type):
+    vh160 = chr(address_type) + h160
+    h = Hash(vh160)
+    addr = vh160 + h[0:4]
+    return b58encode(addr)
+
+def compress_pubkey(public_key):
+    if public_key[0] == '\x04':
+        return chr((ord(public_key[64]) & 1) + 2) + public_key[1:33]
+    raise Exception("Pubkey is already compressed")
+
+def public_key_to_bc_address(public_key, address_type, compress=True):
+    if public_key[0] == '\x04' and compress:
+        public_key = compress_pubkey(public_key)
+
+    h160 = hash_160(public_key)
+    return hash_160_to_bc_address(h160, address_type)
+
 __b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 __b58base = len(__b58chars)
-
 
 def b58encode(v):
     """ encode v, which is a string of bytes, to base58."""

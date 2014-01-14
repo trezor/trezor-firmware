@@ -1,25 +1,63 @@
 import struct
 import hmac
 import hashlib
-from ecdsa.util import string_to_number
+
+import ecdsa
+from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
+from ecdsa.ellipticcurve import Point, INFINITY
 
-import messages_pb2 as proto
-
-# FIXME, this isn't finished yet
+import msqrt
+import tools
+import types_pb2 as proto_types
 
 PRIME_DERIVATION_FLAG = 0x80000000
+
+def point_to_pubkey(point):
+    order = SECP256k1.order
+    x_str = number_to_string(point.x(), order)
+    y_str = number_to_string(point.y(), order)
+    vk = x_str + y_str
+    return chr((ord(vk[63]) & 1) + 2) + vk[0:32]  # To compressed key 
+
+def sec_to_public_pair(pubkey):
+    """Convert a public key in sec binary format to a public pair."""
+    x = string_to_number(pubkey[1:33])
+    sec0 = pubkey[:1]
+    if sec0 not in (b'\2', b'\3'):
+        raise Exception("Compressed pubkey expected")
+
+    def public_pair_for_x(generator, x, is_even):
+        curve = generator.curve()
+        p = curve.p()
+        alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
+        beta = msqrt.modular_sqrt(alpha, p)
+        if is_even == bool(beta & 1):
+            return (x, p - beta)
+        return (x, beta)
+
+    return public_pair_for_x(ecdsa.ecdsa.generator_secp256k1, x, is_even=(sec0 == b'\2'))
 
 def is_prime(n):
     return (bool)(n & PRIME_DERIVATION_FLAG)
 
-def hash_160(public_key):
-    md = hashlib.new('ripemd160')
-    md.update(hashlib.sha256(public_key).digest())
-    return md.digest()
-
 def fingerprint(pubkey):
-    return string_to_number(hash_160(pubkey)[:4])
+    return string_to_number(tools.hash_160(pubkey)[:4])
+
+def get_address(public_node, address_type):
+    return tools.public_key_to_bc_address(public_node.public_key, address_type)
+
+def public_ckd(public_node, n):
+    if not isinstance(n, list):
+        raise Exception('Parameter must be a list')
+
+    node = proto_types.HDNodeType()
+    node.CopyFrom(public_node)
+
+    for i in n:
+        node.CopyFrom(get_subnode(node, i))
+
+    return node
 
 def get_subnode(node, i):
     # Public Child key derivation (CKD) algorithm of BIP32
@@ -34,16 +72,22 @@ def get_subnode(node, i):
     I64 = hmac.HMAC(key=node.chain_code, msg=data, digestmod=hashlib.sha512).digest()
     I_left_as_exponent = string_to_number(I64[:32])
 
-    node_out = proto.HDNodeType()
+    node_out = proto_types.HDNodeType()
     node_out.version = node.version
     node_out.depth = node.depth + 1
     node_out.child_num = i
     node_out.chain_code = I64[32:]
     node_out.fingerprint = fingerprint(node.public_key)
 
-    # FIXME
-    # node_out.public_key = cls._get_pubkey(node_out.private_key)
-    # x, y = self.public_pair
-    # the_point = I_left_as_exponent * ecdsa.generator_secp256k1 + ecdsa.Point(ecdsa.generator_secp256k1.curve(), x, y, SECP256k1.generator.order())
+    # BIP32 magic converts old public key to new public point
+    x, y = sec_to_public_pair(node.public_key)
+    point = I_left_as_exponent * SECP256k1.generator + \
+            Point(SECP256k1.curve, x, y, SECP256k1.order)
+
+    if point == INFINITY:
+        raise Exception("Point cannot be INFINITY")
+
+    # Convert public point to compressed public key
+    node_out.public_key = point_to_pubkey(point)
 
     return node_out

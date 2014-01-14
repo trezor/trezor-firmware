@@ -1,5 +1,7 @@
 import unittest
 import common
+import trezorlib.ckd_public as bip32
+from trezorlib import tools
 
 class TestAddresses(common.TrezorTest):
     def test_btc(self):
@@ -36,6 +38,29 @@ class TestAddresses(common.TrezorTest):
                                             language='english')
 
         self.assertEqual(self.client.get_address('Testnet', [111, 42]), 'moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa')
- 
+
+    def test_public_ckd(self):
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
+                                            pin='',
+                                            passphrase_protection=False,
+                                            label='test',
+                                            language='english')
+
+        node = self.client.get_public_node([])
+        node_sub1 = self.client.get_public_node([1])
+        node_sub2 = bip32.public_ckd(node, [1])
+
+        print node_sub1
+        print node_sub2
+
+        self.assertEqual(node_sub1.chain_code, node_sub2.chain_code)
+        self.assertEqual(node_sub1.public_key, node_sub2.public_key)
+
+        address1 = self.client.get_address('Bitcoin', [1])
+        address2 = bip32.get_address(node_sub2, 0)
+
+        self.assertEqual(address2, '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb')
+        self.assertEqual(address1, address2)
+
 if __name__ == '__main__':
     unittest.main()        
