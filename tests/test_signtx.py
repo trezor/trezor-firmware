@@ -6,8 +6,6 @@ import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 
 class TestSignTx(common.TrezorTest):
-
-    '''
     def test_simplesigntx(self):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
@@ -19,19 +17,37 @@ class TestSignTx(common.TrezorTest):
                              )
 
         out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=380000,
+                              amount=390000 - 10000,
                               script_type=proto_types.PAYTOADDRESS,
                               )
 
         tx = self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
-        print binascii.hexlify(tx.serialized_tx)
+        # print binascii.hexlify(tx.serialized_tx)
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
+
+    def test_estimate_size(self):
+        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+                             # amount=390000,
+                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_index=0,
+                             )
+
+        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+                              amount=390000 - 10000,
+                              script_type=proto_types.PAYTOADDRESS,
+                              )
+
+
+        est_size = self.client.estimate_tx_size('Bitcoin', [inp1, ], [out1, ])
+        self.assertEqual(est_size, 194)
+
+        tx = self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
+        real_size = len(tx.serialized_tx)
+
+        self.assertGreaterEqual(est_size, real_size)
+
     '''
-
-
     def test_simplesigntx_testnet(self):
-        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-        # input 0: 0.0039 BTC
         self.client.load_device_by_xprv('xprv9s21ZrQH143K3zttRjiQmYwyugvd13pnd2VzefWrfSouRfnj5oSkJgBQXxtn18E9mqrDop7fQ8Xnb9JCLPE4vghzhpU4dT33ZJ7frjzTEW8',
                                         '', False, 'testnet')
 
@@ -49,10 +65,8 @@ class TestSignTx(common.TrezorTest):
         rawtx = {'d83b27f16ce5069e0c8e4a02813f252500e257744d5b00c9b6128be7189117b1': '01000000013b21cc65080c57793d0e47045a24d8e92262dc47efdc425fd5cad9a25e928f6c000000006b483045022100bde591f2c997bafa8388916663b148f4093914851a33a9903da69ad97afa6f470220138c6ff11321339974bac9c0992d7b9d72aef0c2d098f26267ec9f05d532c859012103edcc8dc5cac7dca6ed191d812621fb300863fea0dd5d14180b482b917a35acc4ffffffff020800c604000000001976a91453958011070469e2ef5e1115f34f509717d6884288acf8c99502000000001976a9141e2ba9407a6920246d0f345beecb89ed47c99a7788ac00000000'}
         tx = self.client.simple_sign_tx('Testnet', [inp1, ], [out1, ])
         print binascii.hexlify(tx.serialized_tx)
-        # self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
+        self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
 
-
-    '''
     def test_signtx(self):
         expected_tx = '01000000012de70f7d6ffed0db70f8882f3fca90db9bb09f0e99bce27468c23d3c994fcd56' \
             '010000008b4830450221009b985e14d53cfeed3496846db6ddaa77a0206138d0df4c2ccd3b' \

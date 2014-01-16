@@ -203,6 +203,14 @@ class TrezorClient(object):
 
         return False
 
+    def estimate_tx_size(self, coin_name, inputs, outputs):
+        msg = proto.EstimateTxSize()
+        msg.coin_name = coin_name
+        msg.inputs_count = len(inputs)
+        msg.outputs_count = len(outputs)
+        res = self.call(msg)
+        return res.tx_size
+
     def simple_sign_tx(self, coin_name, inputs, outputs):
         msg = proto.SimpleSignTx()
         msg.coin_name = coin_name
@@ -219,7 +227,7 @@ class TrezorClient(object):
             known_hashes.append(inp.prev_hash)
 
         return self.call(msg)
-        
+
     def sign_tx(self, coin_name, inputs, outputs):
         '''
             inputs: list of TxInput
@@ -249,7 +257,7 @@ class TrezorClient(object):
             # Prepare and send initial message
             tx = proto.SignTx()
             tx.inputs_count = len(inputs)
-            tx.outputs_count = len(outputs)            
+            tx.outputs_count = len(outputs)
             res = self.call(tx)
     
             # Prepare structure for signatures

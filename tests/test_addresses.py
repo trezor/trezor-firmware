@@ -50,9 +50,6 @@ class TestAddresses(common.TrezorTest):
         node_sub1 = self.client.get_public_node([1])
         node_sub2 = bip32.public_ckd(node, [1])
 
-        print node_sub1
-        print node_sub2
-
         self.assertEqual(node_sub1.chain_code, node_sub2.chain_code)
         self.assertEqual(node_sub1.public_key, node_sub2.public_key)
 
