@@ -47,7 +47,8 @@ enum MessageType {
 	MessageType_MessageSignature = 40 [(wire_out) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
 	MessageType_PassphraseAck = 42 [(wire_in) = true];
-
+	MessageType_EstimateTxSize = 43 [(wire_in) = true];
+	MessageType_TxSize = 44 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -84,8 +85,7 @@ message Features {
 // Overwrites only filled fields of the structure
 message ApplySettings {
 	optional bytes language = 1;
-	optional bytes coin_shortcut = 2;
-	optional bytes label = 3 [(binary) = true];
+	optional bytes label = 2 [(binary) = true];
 }
 
 // Starts workflow for setting/changing the PIN
@@ -168,6 +168,7 @@ message Entropy {
 // Response: PublicKey, Failure
 message GetPublicKey {
 	repeated uint32 address_n = 1;
+	optional bytes coin_name = 2 [default='Bitcoin'];
 }
 
 // Contains public key derived from device's seed.
@@ -177,6 +178,7 @@ message PublicKey {
 
 message GetAddress {
 	repeated uint32 address_n = 1;	// Parameter for address generation algorithm to derive the address from the master node
+	optional bytes coin_name = 2 [default='Bitcoin'];
 }
 
 message Address {
@@ -238,6 +240,7 @@ message EntropyAck {
 message SignMessage {
 	repeated uint32 address_n = 1;
 	required bytes message = 2 [(binary) = true];
+	optional bytes coin_name = 3 [default='Bitcoin'];
 }
 
 message VerifyMessage {
@@ -251,12 +254,32 @@ message MessageSignature {
 	optional bytes signature = 2;
 }
 
+// Estimate size of the transaction
+// This call behaves exactly like SignTx,
+// which means that it can ask for TxInput and TxInput.
+// This call is non-blocking (except possible PassphraseRequest
+// to unlock the seed) and returns estimated size of transaction
+// in bytes.
+//
+// Response: TxRequest, TxSize, Failure
+message EstimateTxSize {
+	required uint32 outputs_count = 1;		// Count of outputs of the transaction
+	required uint32 inputs_count = 2;		// Count of inputs of the transaction
+	optional bytes coin_name = 3 [default='Bitcoin'];
+}
+
+// Result of EstimateTxSize
+message TxSize {
+	optional uint32 tx_size = 1;	// Size of transaction in bytes
+}
+
 // Request the device to sign the transaction
 //
 // Response: TxRequest, PinMatrixRequest, Failure
 message SignTx {
-	required uint32 outputs_count = 3;		// Count of outputs of the transaction
-	required uint32 inputs_count = 5;		// Count of inputs of the transaction
+	required uint32 outputs_count = 1;		// Count of outputs of the transaction
+	required uint32 inputs_count = 2;		// Count of inputs of the transaction
+	optional bytes coin_name = 3 [default='Bitcoin'];
 }
 
 // Request a simplified workflow of signing.
@@ -272,8 +295,10 @@ message SignTx {
 //
 // Response: Success, PinMatrixRequest, Failure
 message SimpleSignTx {
-	repeated TxInput inputs = 1;
-	repeated TxOutput outputs = 2;
+	repeated TxInputType inputs = 1;
+	repeated TxOutputType outputs = 2;
+	repeated TransactionType transactions = 3;
+	optional bytes coin_name = 4 [default='Bitcoin'];
 }
 
 // Sent by the device as a response for SignTx. Device asks for information for signing transaction.

@@ -28,6 +28,7 @@ enum FailureType {
 	Failure_PinCancelled = 6;
 	Failure_PinInvalid = 7;
 	Failure_InvalidSignature = 8;
+	Failure_Other = 9;
 	Failure_FirmwareError = 99;
 }
 
@@ -61,6 +62,8 @@ message CoinType {
 	optional bytes coin_shortcut = 2;
 	optional uint32 address_type = 3;
 	optional uint64 maxfee_kb = 4;
+	optional uint32 ser_private = 5; // bip32 serialization for privkey
+	optional uint32 ser_public = 6; // bip32 serialization for pubkey
 }
 
 message TxInputType {
@@ -75,7 +78,7 @@ message TxInputType {
 
 message TxOutputType {
 //	required uint32 index = 1;				// Position of output in proposed transaction
-	required bytes address = 1;				// Target bitcoin address in base58 encoding
+	optional bytes address = 1;				// Target bitcoin address in base58 encoding
 	repeated uint32 address_n = 2;			// Has higher priority than "address".
 	required uint64 amount = 3;				// Amount to send in satoshis
 	required ScriptType script_type = 4;	// Select output script type
