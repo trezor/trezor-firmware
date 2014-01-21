@@ -7,30 +7,44 @@
 #include "sha2.h"
 #include "ripemd160.h"
 
-uint8_t hdnode_coin_version = 0x00;
-
-void hdnode_from_pub(uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
+void hdnode_from_xpub(uint8_t version_byte, uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
 {
 	out->version = version;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
-	memset(out->private_key, 0, 32);
 	memcpy(out->chain_code, chain_code, 32);
+	memset(out->private_key, 0, 32);
 	memcpy(out->public_key, public_key, 33);
+	out->version_byte = version_byte;
 	hdnode_fill_address(out);
 }
 
-void hdnode_from_seed(uint8_t *seed, int seed_len, HDNode *out)
+void hdnode_from_xprv(uint8_t version_byte, uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out)
 {
-	out->version = 0x0488ADE4; // main-net
+	out->version = version;
+	out->depth = depth;
+	out->fingerprint = fingerprint;
+	out->child_num = child_num;
+	memcpy(out->chain_code, chain_code, 32);
+	memcpy(out->private_key, private_key, 32);
+	hdnode_fill_public_key(out);
+	out->version_byte = version_byte;
+	hdnode_fill_address(out);
+}
+
+void hdnode_from_seed(uint8_t version_byte, uint32_t version, uint8_t *seed, int seed_len, HDNode *out)
+{
+	uint8_t I[32 + 32];
+	out->version = version;
 	out->depth = 0;
 	out->fingerprint = 0x00000000;
 	out->child_num = 0;
-	// this can be done because private_key[32] and chain_code[32]
-	// form a continuous 64 byte block in the memory
-	hmac_sha512((uint8_t *)"Bitcoin seed", 12, seed, seed_len, out->private_key);
+	hmac_sha512((uint8_t *)"Bitcoin seed", 12, seed, seed_len, I);
+	memcpy(out->chain_code, I + 32, 32);
+	memcpy(out->private_key, I, 32);
 	hdnode_fill_public_key(out);
+	out->version_byte = version_byte;
 	hdnode_fill_address(out);
 }
 
@@ -56,8 +70,8 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	bn_read_be(inout->private_key, &a);
 
 	hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
-	memcpy(inout->private_key, I, 32);
 	memcpy(inout->chain_code, I + 32, 32);
+	memcpy(inout->private_key, I, 32);
 
 	bn_read_be(inout->private_key, &b);
 	bn_addmod(&a, &b, &order256k1);
@@ -110,12 +124,12 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-void hdnode_fill_public_key(HDNode *xprv)
+void hdnode_fill_public_key(HDNode *node)
 {
-	ecdsa_get_public_key33(xprv->private_key, xprv->public_key);
+	ecdsa_get_public_key33(node->private_key, node->public_key);
 }
 
-void hdnode_fill_address(HDNode *xprv)
+void hdnode_fill_address(HDNode *node)
 {
-	ecdsa_get_address(xprv->public_key, hdnode_coin_version, xprv->address);
+	ecdsa_get_address(node->public_key, node->version_byte, node->address);
 }
