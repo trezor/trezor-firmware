@@ -21,6 +21,5 @@ message Storage {
 
 message Session {
 	optional bytes passphrase = 1 [(binary) = true];
-	optional CoinType coin = 2;
-	optional HDNodeType node = 3;
+	optional HDNodeType node = 2;
 }
