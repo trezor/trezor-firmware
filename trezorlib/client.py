@@ -229,6 +229,10 @@ class TrezorClient(object):
         return self.call(msg)
 
     def sign_tx(self, coin_name, inputs, outputs):
+        # Temporary solution, until streaming is implemented in the firmware
+        return self.simple_sign_tx(coin_name, inputs, outputs)
+
+    def _sign_tx(self, coin_name, inputs, outputs):
         '''
             inputs: list of TxInput
             outputs: list of TxOutput
@@ -248,7 +252,6 @@ class TrezorClient(object):
                           #script_args=
                           )                                      
         '''
-    
         start = time.time()
         
         try:    
@@ -304,37 +307,6 @@ class TrezorClient(object):
                 (time.time() - start, counter, len(serialized_tx))
                 
         return (signatures, serialized_tx)
-                
-        #print "PBDATA", tx.SerializeToString().encode('hex')
-        
-        #################
-        #################
-        #################
-        
-        '''
-        signatures = [('add550d6ba9ab7e01d37e17658f98b6e901208d241f24b08197b5e20dfa7f29f095ae01acbfa5c4281704a64053dcb80e9b089ecbe09f5871d67725803e36edd', '3045022100dced96eeb43836bc95676879eac303eabf39802e513f4379a517475c259da12502201fd36c90ecd91a32b2ca8fed2e1755a7f2a89c2d520eb0da10147802bc7ca217')]
-        
-        s_inputs = []
-        for i in range(len(inputs)):
-            addr, v, p_hash, p_pos, p_scriptPubKey, _, _ = inputs[i]
-            pubkey = signatures[i][0].decode('hex')
-            sig = signatures[i][1].decode('hex')
-            s_inputs.append((addr, v, p_hash, p_pos, p_scriptPubKey, pubkey, sig))
-        
-        return s_inputs
-                
-        s_inputs = []
-        for i in range(len(inputs)):
-            addr, v, p_hash, p_pos, p_scriptPubKey, _, _ = inputs[i]
-            private_key = ecdsa.SigningKey.from_string( self.get_private_key(addr, password), curve = SECP256k1 )
-            public_key = private_key.get_verifying_key()
-            pubkey = public_key.to_string()
-            tx = filter( raw_tx( inputs, outputs, for_sig = i ) )
-            sig = private_key.sign_digest( Hash( tx.decode('hex') ), sigencode = ecdsa.util.sigencode_der )
-            assert public_key.verify_digest( sig, Hash( tx.decode('hex') ), sigdecode = ecdsa.util.sigdecode_der)
-            s_inputs.append( (addr, v, p_hash, p_pos, p_scriptPubKey, pubkey, sig) )
-        return s_inputs
-        '''
 
     def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language):
         # Begin with device reset workflow
