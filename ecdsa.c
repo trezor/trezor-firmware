@@ -302,7 +302,11 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 	bignum256 c;
 	int i, l;
 
-	SHA256_Raw(pub_key, 33, a);
+	if (pub_key[0] == 0x04) {
+		SHA256_Raw(pub_key, 65, a);
+	} else {
+		SHA256_Raw(pub_key, 33, a);
+	}
 	b[0] = version;
 	ripemd160(a, 32, b + 1);
 
@@ -321,9 +325,10 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 		p++;
 	}
 
-	if (a[0] == 0) {
-		*p = '1';
-		p++;
+	i = 7;
+	while (a[i] == 0) {
+		*p = code[0];
+		p++; i++;
 	}
 
 	*p = 0;
