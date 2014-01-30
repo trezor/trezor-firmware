@@ -342,6 +342,32 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 	}
 }
 
+int ecdsa_address_to_hash160(const char *addr, uint8_t *hash)
+{
+	if (!addr) return 0;
+	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+	bignum256 num;
+	uint8_t buf[32];
+	bn_zero(&num);
+	uint32_t k;
+	int i;
+	for (i = 0; i < strlen(addr); i++) {
+		bn_muli(&num, 58);
+		for (k = 0; k <= strlen(code); k++) {
+			if (code[k] == 0) { // char not found -> invalid address
+				return 0;
+			}
+			if (addr[i] == code[k]) {
+				bn_addi(&num, k);
+				break;
+			}
+		}
+	}
+	bn_write_be(&num, buf);
+	memcpy(hash, buf + 8, 20);
+	return 1;
+}
+
 int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 {
 	if (pub_key[0] == 0x04) {

@@ -154,6 +154,29 @@ void bn_mod(bignum256 *x, const bignum256 *prime)
 	}
 }
 
+// a = a + b
+void bn_addi(bignum256 *a, uint32_t b)
+{
+	uint64_t t = a->val[0];
+	t += b;
+	a->val[0] = t & 0x3FFFFFFFu;
+	t >>= 30;
+	a->val[1] += t;
+}
+
+// a = a * b
+void bn_muli(bignum256 *a, uint32_t b)
+{
+	uint64_t t = 0;
+	int i;
+	for (i = 0; i < 8; i++) {
+		t = (uint64_t)(a->val[i]) * b + t;
+		a->val[i] = t & 0x3FFFFFFFu;
+		t >>= 30;
+	}
+	a->val[8] += t;
+}
+
 // x = k * x
 // both inputs and result may be bigger than prime but not bigger than 2 * prime
 void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
