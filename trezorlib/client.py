@@ -123,6 +123,11 @@ class TrezorClient(object):
 
         return out
 
+    def change_pin(self, remove=False):
+        ret = self.call(proto.ChangePin(remove=remove))
+        self.init_device()  # Re-read features
+        return ret
+
     def _pprint(self, msg):
         return "<%s>:\n%s" % (msg.__class__.__name__, msg)
 

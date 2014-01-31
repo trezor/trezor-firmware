@@ -15,6 +15,7 @@ class PinButton(QPushButton):
 
     def _pressed(self):
         self.password.setText(self.password.text() + str(self.encoded_value))
+        print self.encoded_value
         self.password.setFocus()
 
 class PinMatrixWidget(QWidget):
@@ -40,11 +41,12 @@ class PinMatrixWidget(QWidget):
 
         grid = QGridLayout()
         grid.setSpacing(0)
-        for x in range(9):
-            button = PinButton(self.password, x + 1)
-            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            button.setFocusPolicy(Qt.NoFocus)
-            grid.addWidget(button, x / 3, x % 3)
+        for y in range(3)[::-1]:
+            for x in range(3):
+                button = PinButton(self.password, x + y * 3 + 1)
+                button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                button.setFocusPolicy(Qt.NoFocus)
+                grid.addWidget(button, 3 - y, x)
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.password)

@@ -107,6 +107,9 @@ class Commands(object):
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
 
+    def change_pin(self, args):
+        return self.client.change_pin(args.remove)
+
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
             raise Exception("Please provide mnemonic or xprv")
@@ -146,6 +149,7 @@ class Commands(object):
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
     set_label.help = 'Set new wallet label'
+    change_pin.help = 'Change new PIN or remove existing'
     list_coins.help = 'List all supported coin types by the device'
     load_device.help = 'Load custom configuration to the device'
     reset_device.help = 'Perform factory reset of the device and generate new seed'
@@ -176,6 +180,10 @@ class Commands(object):
 #        (('-c', '--clear'), {'action': 'store_true', 'default': False})
     )
 
+    change_pin.arguments = (
+         (('-r', '--remove'), {'action': 'store_true', 'default': False}),
+    )
+    
     load_device.arguments = (
         (('-m', '--mnemonic'), {'type': str, 'nargs': '+'}),
         (('-x', '--xprv'), {'type': str}),

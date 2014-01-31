@@ -5,8 +5,8 @@ from trezorlib.transport_pipe import PipeTransport
 from trezorlib.transport_hid import HidTransport
 from trezorlib.transport_socket import SocketTransportClient
 
-use_real = True
-use_pipe = False
+use_real = False
+use_pipe = True
 
 if use_real:
 
