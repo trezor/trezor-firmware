@@ -491,22 +491,53 @@ START_TEST(test_address)
 }
 END_TEST
 
-START_TEST(test_address_to_hash)
+START_TEST(test_address_decode)
 {
-	uint8_t hash[20];
+	int res;
+	uint8_t decode[21];
+	// byte      0 : address type
+	// bytes  1-20 : pubkey hash 160
+	res = ecdsa_address_decode("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("00c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 21);
 
-	ecdsa_address_to_hash160("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T", hash); ck_assert_mem_eq(hash, fromhex("c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 20);
-	ecdsa_address_to_hash160("myTPjxggahXyAzuMcYp5JTkbybANyLsYBW", hash); ck_assert_mem_eq(hash, fromhex("c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 20);
-	ecdsa_address_to_hash160("NEWoeZ6gh4CGvRgFAoAGh4hBqpxizGT6gZ", hash); ck_assert_mem_eq(hash, fromhex("c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 20);
-	ecdsa_address_to_hash160("LdAPi7uXrLLmeh7u57pzkZc3KovxEDYRJq", hash); ck_assert_mem_eq(hash, fromhex("c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 20);
+	res = ecdsa_address_decode("myTPjxggahXyAzuMcYp5JTkbybANyLsYBW", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("6fc4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 21);
 
-	ecdsa_address_to_hash160("1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8", hash); ck_assert_mem_eq(hash, fromhex("79fbfc3f34e7745860d76137da68f362380c606c"), 20);
-	ecdsa_address_to_hash160("mrdwvWkma2D6n9mGsbtkazedQQuoksnqJV", hash); ck_assert_mem_eq(hash, fromhex("79fbfc3f34e7745860d76137da68f362380c606c"), 20);
-	ecdsa_address_to_hash160("N7hMq7AmgNsQXaYARrEwybbDGei9mcPNqr", hash); ck_assert_mem_eq(hash, fromhex("79fbfc3f34e7745860d76137da68f362380c606c"), 20);
-	ecdsa_address_to_hash160("LWLwtfycqf1uFqypLAug36W4kdgNwrZdNs", hash); ck_assert_mem_eq(hash, fromhex("79fbfc3f34e7745860d76137da68f362380c606c"), 20);
+	res = ecdsa_address_decode("NEWoeZ6gh4CGvRgFAoAGh4hBqpxizGT6gZ", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("34c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 21);
+
+	res = ecdsa_address_decode("LdAPi7uXrLLmeh7u57pzkZc3KovxEDYRJq", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("30c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 21);
+
+	res = ecdsa_address_decode("1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("0079fbfc3f34e7745860d76137da68f362380c606c"), 21);
+
+	res = ecdsa_address_decode("mrdwvWkma2D6n9mGsbtkazedQQuoksnqJV", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("6f79fbfc3f34e7745860d76137da68f362380c606c"), 21);
+
+	res = ecdsa_address_decode("N7hMq7AmgNsQXaYARrEwybbDGei9mcPNqr", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("3479fbfc3f34e7745860d76137da68f362380c606c"), 21);
+
+	res = ecdsa_address_decode("LWLwtfycqf1uFqypLAug36W4kdgNwrZdNs", decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("3079fbfc3f34e7745860d76137da68f362380c606c"), 21);
+
+	// invalid char
+	res = ecdsa_address_decode("1JwSSubhmg6i000jtyqhUYYH7bZg3Lfy1T", decode);
+	ck_assert_int_eq(res, 0);
+
+	// invalid address
+	res = ecdsa_address_decode("1111Subhmg6iPtRjtyqhUYYH7bZg3Lfy1T", decode);
+	ck_assert_int_eq(res, 0);
 }
 END_TEST
-
 
 // define test suite and cases
 Suite *test_suite(void)
@@ -532,8 +563,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_address);
 	suite_add_tcase(s, tc);
 
-	tc = tcase_create("address_to_hash");
-	tcase_add_test(tc, test_address_to_hash);
+	tc = tcase_create("address_decode");
+	tcase_add_test(tc, test_address_decode);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rijndael");

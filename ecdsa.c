@@ -342,12 +342,12 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 	}
 }
 
-int ecdsa_address_to_hash160(const char *addr, uint8_t *hash)
+int ecdsa_address_decode(const char *addr, uint8_t *out)
 {
 	if (!addr) return 0;
 	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 	bignum256 num;
-	uint8_t buf[32];
+	uint8_t buf[32], check[32];
 	bn_zero(&num);
 	uint32_t k;
 	int i;
@@ -364,7 +364,14 @@ int ecdsa_address_to_hash160(const char *addr, uint8_t *hash)
 		}
 	}
 	bn_write_be(&num, buf);
-	memcpy(hash, buf + 8, 20);
+	// compute address hash
+	SHA256_Raw(buf + 7, 21, check);
+	SHA256_Raw(check, 32, check);
+	// check if valid
+	if (memcmp(buf + 7 + 21, check, 4) != 0) {
+		return 0;
+	}
+	memcpy(out, buf + 7, 21);
 	return 1;
 }
 
