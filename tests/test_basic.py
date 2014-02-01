@@ -25,16 +25,24 @@ class TestBasic(common.TrezorTest):
         # Ping results in Success(message='Ahoj!')
         self.assertEqual(ping, messages.Success(message='ahoj!'))
 
-    def test_uuid(self):
-        uuid1 = self.client.get_device_id()
+    def test_device_id_same(self):
+        id1 = self.client.get_device_id()
         self.client.init_device()
-        uuid2 = self.client.get_device_id()
+        id2 = self.client.get_device_id()
 
-        # UUID must be at least 12 characters
-        self.assertTrue(len(uuid1) >= 12)
+        # ID must be at least 12 characters
+        self.assertTrue(len(id1) >= 12)
 
         # Every resulf of UUID must be the same
-        self.assertEqual(uuid1, uuid2)
+        self.assertEqual(id1, id2)
+
+    def test_device_id_different(self):
+        id1 = self.client.get_device_id()
+        self.client.wipe_device()
+        id2 = self.client.get_device_id()
+
+        # Device ID must be fresh after every reset
+        self.assertNotEqual(id1, id2)
 
 if __name__ == '__main__':
     unittest.main()

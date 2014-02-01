@@ -320,7 +320,15 @@ class TrezorClient(object):
 
         return (signatures, serialized_tx)
 
+    def wipe_device(self):
+        ret = self.call(proto.WipeDevice())
+        self.init_device()
+        return ret
+
     def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language):
+        if self.features.initialized:
+            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+
         # Begin with device reset workflow
         msg = proto.ResetDevice(display_random=display_random,
                                            strength=strength,
@@ -341,6 +349,9 @@ class TrezorClient(object):
         return isinstance(resp, proto.Success)
 
     def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language):
+        if self.features.initialized:
+            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+
         resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
                                           passphrase_protection=passphrase_protection,
                                           language=language,
@@ -349,6 +360,9 @@ class TrezorClient(object):
         return isinstance(resp, proto.Success)
 
     def load_device_by_xprv(self, xprv, pin, passphrase_protection, label):
+        if self.features.initialized:
+            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+
         if xprv[0:4] not in ('xprv', 'tprv'):
             raise Exception("Unknown type of xprv")
 

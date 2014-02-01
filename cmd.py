@@ -110,6 +110,9 @@ class Commands(object):
     def change_pin(self, args):
         return self.client.change_pin(args.remove)
 
+    def wipe_device(self, args):
+        return self.client.wipe_device()
+
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
             raise Exception("Please provide mnemonic or xprv")
@@ -151,8 +154,9 @@ class Commands(object):
     set_label.help = 'Set new wallet label'
     change_pin.help = 'Change new PIN or remove existing'
     list_coins.help = 'List all supported coin types by the device'
+    wipe_device.help = 'Reset device to factory defaults and remove all private data.'
     load_device.help = 'Load custom configuration to the device'
-    reset_device.help = 'Perform factory reset of the device and generate new seed'
+    reset_device.help = 'Perform device setup and generate new seed'
     sign_message.help = 'Sign message using address of given path'
     verify_message.help = 'Verify message'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
@@ -184,6 +188,8 @@ class Commands(object):
          (('-r', '--remove'), {'action': 'store_true', 'default': False}),
     )
     
+    wipe_device.arguments = ()
+
     load_device.arguments = (
         (('-m', '--mnemonic'), {'type': str, 'nargs': '+'}),
         (('-x', '--xprv'), {'type': str}),

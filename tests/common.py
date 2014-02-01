@@ -17,6 +17,7 @@ class TrezorTest(unittest.TestCase):
 
         self.client.setup_debuglink(button=True, pin_correct=True)
         
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(
             mnemonic=self.mnemonic1,
             pin=self.pin1,
