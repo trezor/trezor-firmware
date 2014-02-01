@@ -80,6 +80,7 @@ message Features {
 	optional bytes language = 9;
 	optional bytes label = 10 [(binary) = true];
 	repeated CoinType coins = 11;
+	optional bool initialized = 12;			// True if device cointains seed
 }
 
 // Overwrites only filled fields of the structure
