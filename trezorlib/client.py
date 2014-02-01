@@ -9,21 +9,8 @@ import messages_pb2 as proto
 import types_pb2 as types
 from api_blockchain import BlockchainApi
 
-# === start monkeypatching: text formatting of protobuf messages
-import google.protobuf.text_format
-import google.protobuf.descriptor
-
-_oldPrintFieldValue = google.protobuf.text_format.PrintFieldValue
-
-def _customPrintFieldValue(field, value, out, indent=0, as_utf8=False, as_one_line=False):
-    if field.cpp_type == google.protobuf.descriptor.FieldDescriptor.CPPTYPE_STRING:
-        if str(field.GetOptions()).strip() == '[binary]:': # binary option set
-            _oldPrintFieldValue(field, 'hex(%s)' % binascii.hexlify(value), out, indent, as_utf8, as_one_line)
-        else:
-            _oldPrintFieldValue(field, value, out, indent, as_utf8, as_one_line)
-
-google.protobuf.text_format.PrintFieldValue = _customPrintFieldValue
-# === end of monkeypatching
+# monkeypatching: text formatting of protobuf messages
+tools.monkeypatch_google_protobuf_text_format()
 
 def show_message(message):
     print "MESSAGE FROM DEVICE:", message

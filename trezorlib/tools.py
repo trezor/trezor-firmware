@@ -1,4 +1,5 @@
 import hashlib
+import binascii
 
 Hash = lambda x: hashlib.sha256(hashlib.sha256(x).digest()).digest()
 
@@ -54,7 +55,6 @@ def b58encode(v):
 
     return (__b58chars[0] * nPad) + result
 
-
 def b58decode(v, length):
     """ decode v into a string of len bytes."""
     long_value = 0L
@@ -80,3 +80,21 @@ def b58decode(v, length):
         return None
 
     return result
+
+def monkeypatch_google_protobuf_text_format():
+    # monkeypatching: text formatting of protobuf messages
+    import google.protobuf.text_format
+    import google.protobuf.descriptor
+
+    _oldPrintFieldValue = google.protobuf.text_format.PrintFieldValue
+
+    def _customPrintFieldValue(field, value, out, indent=0, as_utf8=False, as_one_line=False):
+        if field.cpp_type == google.protobuf.descriptor.FieldDescriptor.CPPTYPE_STRING and \
+            str(field.GetOptions()).strip() == '[binary]:':  # binary option set
+                _oldPrintFieldValue(field, 'hex(%s) str(%s)' % (binascii.hexlify(value), value), out, indent, as_utf8, as_one_line)
+
+        else:
+            _oldPrintFieldValue(field, value, out, indent, as_utf8, as_one_line)
+
+    google.protobuf.text_format.PrintFieldValue = _customPrintFieldValue
+
