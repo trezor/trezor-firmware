@@ -127,7 +127,7 @@ class Commands(object):
                         args.passphrase_protection, args.label, 'english')
 
     def reset_device(self, args):
-        return self.client.reset_device(True, args.strength, args.passphrase, args.pin, args.label)
+        return self.client.reset_device(True, args.strength, args.passphrase, args.pin, args.label, 'english')
 
     def sign_message(self, args):
         return pb2json(self.client.sign_message(args.n, args.message), {'message': args.message})
