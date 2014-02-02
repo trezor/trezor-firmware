@@ -6,6 +6,10 @@
 	Version: 0.6
 */
 
+// Some sugar for easier handling in Multibit
+option java_package = "org.multibit.hd.hardware.trezor.protobuf";
+option java_outer_classname = "TrezorTypes";
+
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.FieldOptions {

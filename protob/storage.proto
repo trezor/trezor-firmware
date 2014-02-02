@@ -6,6 +6,10 @@
 	Version: 0.1
 */
 
+// Some sugar for easier handling in Multibit
+option java_package = "org.multibit.hd.hardware.trezor.protobuf";
+option java_outer_classname = "TrezorStorage";
+
 import "types.proto";
 
 message Storage {
