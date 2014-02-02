@@ -54,6 +54,9 @@ enum MessageType {
 	MessageType_PassphraseAck = 42 [(wire_in) = true];
 	MessageType_EstimateTxSize = 43 [(wire_in) = true];
 	MessageType_TxSize = 44 [(wire_out) = true];
+	MessageType_RecoveryDevice = 45 [(wire_in) = true];
+	MessageType_WordRequest = 46 [(wire_out) = true];
+	MessageType_WordAck = 47 [(wire_in) = true];	
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -236,6 +239,26 @@ message EntropyRequest {
 // Provide additional entropy for seed generation function.
 message EntropyAck {
 	optional bytes entropy = 1 [(binary) = true];	// Recommended to provide 256 bytes of random data.
+}
+
+// Starts workflow of asking user for specific words of his mnemonic.
+// This may be used for safe recovery of lost device
+// using mnemonic on untrusted computer.
+message RecoveryDevice {
+	optional uint32 word_count = 1;	// How many words is in mnemonic sentence?
+	optional bool passphrase_protection = 2;
+	optional bool pin_protection = 3;
+	optional bytes language = 4 [default='english'];
+	optional bytes label = 5 [(binary) = true];						
+}
+
+// This message indicates that device is asking user for some word of his mnemonic.
+// Position of the word is displayed only on device's internal display.
+message WordRequest {
+}
+
+message WordAck {
+	required bytes word = 1 [(binary)=true];	// One word of mnemonic on asked position
 }
 
 // ****************************************************************************
