@@ -3,6 +3,11 @@
     Use this script to cross-check that TREZOR generated valid
     mnemonic sentence for given internal (TREZOR-generated)
     and external (computer-generated) entropy.
+
+    Keep in mind that you're entering secret information to this script.
+    Hijacking of these information may lead to stealing your bitcoins
+    from your wallet! We strongly recommend to run this script only on
+    offline computer (ideally live linux distribution without internet connection).
 '''
 
 import binascii
