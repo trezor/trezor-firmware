@@ -490,3 +490,31 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	// all OK
 	return 0;
 }
+
+int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der)
+{
+	int p1, p2;
+	p1 = sig[0] >= 0x80;
+	p2 = sig[32] >= 0x80;
+	der[0] = 0x30; // sequence
+	der[1] = (1 + 1 + p1 + 32) + (1 + 1 + p2 + 32); // total len
+	der[2] = 0x02; // int
+	if (p1) {
+		der[3] = 33;
+		der[4] = 0x00;
+		memcpy(der + 5, sig, 32);
+	} else {
+		der[3] = 32;
+		memcpy(der + 4, sig, 32);
+	}
+	der[36 + p1] = 0x02; // int
+	if (p2) {
+		der[37 + p1] = 33;
+		der[38 + p1] = 0x00;
+		memcpy(der + 39 + p1, sig + 32, 32);
+	} else {
+		der[37 + p1] = 32;
+		memcpy(der + 38 + p1, sig + 32, 32);
+	}
+	return der[1] + 2;
+}

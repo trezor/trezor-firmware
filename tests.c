@@ -539,6 +539,44 @@ START_TEST(test_address_decode)
 }
 END_TEST
 
+START_TEST(test_ecdsa_der)
+{
+	uint8_t sig[64], der[70];
+	int res;
+
+	memcpy(sig,      fromhex("9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771"), 32);
+	memcpy(sig + 32, fromhex("2b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 71);
+	ck_assert_mem_eq(der, fromhex("30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781"), 71);
+
+	memcpy(sig,      fromhex("6666666666666666666666666666666666666666666666666666666666666666"), 32);
+	memcpy(sig + 32, fromhex("7777777777777777777777777777777777777777777777777777777777777777"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 70);
+	ck_assert_mem_eq(der, fromhex("30440220666666666666666666666666666666666666666666666666666666666666666602207777777777777777777777777777777777777777777777777777777777777777"), 70);
+
+	memcpy(sig,      fromhex("6666666666666666666666666666666666666666666666666666666666666666"), 32);
+	memcpy(sig + 32, fromhex("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 71);
+	ck_assert_mem_eq(der, fromhex("304502206666666666666666666666666666666666666666666666666666666666666666022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"), 71);
+
+	memcpy(sig,      fromhex("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"), 32);
+	memcpy(sig + 32, fromhex("7777777777777777777777777777777777777777777777777777777777777777"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 71);
+	ck_assert_mem_eq(der, fromhex("3045022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee02207777777777777777777777777777777777777777777777777777777777777777"), 71);
+
+	memcpy(sig,      fromhex("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"), 32);
+	memcpy(sig + 32, fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 72);
+	ck_assert_mem_eq(der, fromhex("3046022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee022100ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), 72);
+}
+END_TEST
+
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -565,6 +603,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("address_decode");
 	tcase_add_test(tc, test_address_decode);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("ecdsa_der");
+	tcase_add_test(tc, test_ecdsa_der);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rijndael");
