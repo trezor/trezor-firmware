@@ -195,28 +195,41 @@ int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t
 	return 1;
 }
 
-// uses secp256k1 curve
-// priv_key is a 32 byte big endian stored number
 // msg is a data to be signed
 // msg_len is the message length
-// sig is 64 bytes long array for the signature
 int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
 {
-	uint32_t i;
 	uint8_t hash[32];
+	SHA256_Raw(msg, msg_len, hash);
+	return ecdsa_sign_digest(priv_key, hash, sig);
+}
+
+// msg is a data to be signed
+// msg_len is the message length
+int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
+{
+	uint8_t hash[32];
+	SHA256_Raw(msg, msg_len, hash);
+	SHA256_Raw(hash, 32, hash);
+	return ecdsa_sign_digest(priv_key, hash, sig);
+}
+
+// uses secp256k1 curve
+// priv_key is a 32 byte big endian stored number
+// sig is 64 bytes long array for the signature
+// digest is 32 bytes of digest
+int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig)
+{
+	uint32_t i;
 	curve_point R;
 	bignum256 k, z;
 	bignum256 *da = &R.y;
-	// compute hash function of message
-	SHA256_Raw(msg, msg_len, hash);
-	// if double hash is required uncomment the following line:
-	// SHA256_Raw(hash, 32, hash);
 
-	bn_read_be(hash, &z);
+	bn_read_be(digest, &z);
 
 #if USE_RFC6979
 	// generate K deterministically
-	if (generate_k_rfc6979(&k, priv_key, hash) != 0) {
+	if (generate_k_rfc6979(&k, priv_key, digest) != 0) {
 		return 1;
 	}
 #else
