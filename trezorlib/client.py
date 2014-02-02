@@ -26,6 +26,9 @@ def pin_func(input_text, message=None):
 def passphrase_func(input_text):
     return show_input(input_text)
 
+def word_func():
+    return raw_input("Enter one word of mnemonic: ")
+
 class CallException(Exception):
     pass
 
@@ -39,7 +42,7 @@ class TrezorClient(object):
     def __init__(self, transport, debuglink=None,
                  message_func=show_message, input_func=show_input,
                  pin_func=pin_func, passphrase_func=passphrase_func,
-                 blockchain_api=None, debug=False):
+                 word_func=word_func, blockchain_api=None, debug=False):
         self.transport = transport
         self.debuglink = debuglink
 
@@ -47,6 +50,7 @@ class TrezorClient(object):
         self.input_func = input_func
         self.pin_func = pin_func
         self.passphrase_func = passphrase_func
+        self.word_func = word_func
 
         self.debug = debug
 
@@ -325,18 +329,38 @@ class TrezorClient(object):
         self.init_device()
         return ret
 
+    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language):
+        if word_count not in (12, 18, 24):
+            raise Exception("Invalid word count. Use 12/18/24")
+        
+        res = self.call(proto.RecoveryDevice(word_count=int(word_count),
+                                   passphrase_protection=bool(passphrase_protection),
+                                   pin_protection=bool(pin_protection),
+                                   label=label,
+                                   language=language))
+
+        while isinstance(res, proto.WordRequest):
+            word = self.word_func()
+            res = self.call(proto.WordAck(word=word))
+
+        if not isinstance(res, proto.Success):
+            raise Exception("Recovery device failed")
+
+        self.init_device()
+        return True
+
     def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language):
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
         # Begin with device reset workflow
         msg = proto.ResetDevice(display_random=display_random,
-                                           strength=strength,
-                                           language=language,
-                                           passphrase_protection=bool(passphrase_protection),
-                                           pin_protection=bool(pin_protection),
-                                           label=label
-                                           )
+                                strength=strength,
+                                language=language,
+                                passphrase_protection=bool(passphrase_protection),
+                                pin_protection=bool(pin_protection),
+                                label=label)
+
         resp = self.call(msg)
         if not isinstance(resp, proto.EntropyRequest):
             raise Exception("Invalid response, expected EntropyRequest")

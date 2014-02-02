@@ -113,6 +113,10 @@ class Commands(object):
     def wipe_device(self, args):
         return self.client.wipe_device()
 
+    def recovery_device(self, args):
+        return self.client.recovery_device(args.words, args.passphrase_protection,
+                                    args.pin_protection, args.label, 'english')
+
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
             raise Exception("Please provide mnemonic or xprv")
@@ -127,7 +131,8 @@ class Commands(object):
                         args.passphrase_protection, args.label, 'english')
 
     def reset_device(self, args):
-        return self.client.reset_device(True, args.strength, args.passphrase, args.pin, args.label, 'english')
+        return self.client.reset_device(True, args.strength, args.passphrase_protection,
+                                        args.pin_protection, args.label, 'english')
 
     def sign_message(self, args):
         return pb2json(self.client.sign_message(args.n, args.message), {'message': args.message})
@@ -155,6 +160,7 @@ class Commands(object):
     change_pin.help = 'Change new PIN or remove existing'
     list_coins.help = 'List all supported coin types by the device'
     wipe_device.help = 'Reset device to factory defaults and remove all private data.'
+    recovery_device.help = 'Start safe recovery workflow'
     load_device.help = 'Load custom configuration to the device'
     reset_device.help = 'Perform device setup and generate new seed'
     sign_message.help = 'Sign message using address of given path'
@@ -190,6 +196,13 @@ class Commands(object):
     
     wipe_device.arguments = ()
 
+    recovery_device.arguments = (
+        (('-w', '--words'), {'type': int}),
+        (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
+        (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
+        (('-l', '--label'), {'type': str, 'default': ''}),
+    )
+
     load_device.arguments = (
         (('-m', '--mnemonic'), {'type': str, 'nargs': '+'}),
         (('-x', '--xprv'), {'type': str}),
@@ -200,8 +213,8 @@ class Commands(object):
 
     reset_device.arguments = (
         (('-t', '--strength'), {'type': int, 'choices': [128, 192, 256], 'default': 128}),
-        (('-p', '--pin'), {'action': 'store_true', 'default': False}),
-        (('-r', '--passphrase'), {'action': 'store_true', 'default': False}),
+        (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
+        (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
     )
 
