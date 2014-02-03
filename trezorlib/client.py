@@ -135,7 +135,8 @@ class TrezorClient(object):
         return ret
 
     def _pprint(self, msg):
-        return "<%s>:\n%s" % (msg.__class__.__name__, msg)
+        ser = msg.SerializeToString()
+        return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, len(ser), msg)
 
     def setup_debuglink(self, button=None, pin_correct=False):
         self.debug_button = button
