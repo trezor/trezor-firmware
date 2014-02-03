@@ -2,6 +2,7 @@
 
 import hid
 import time
+import platform
 from transport import Transport, NotImplementedException
 
 DEVICE_IDS = [
@@ -21,26 +22,49 @@ class HidTransport(Transport):
     def __init__(self, device, *args, **kwargs):
         self.hid = None
         self.buffer = ''
-        if bool(kwargs.get('debug_link')):
-            device = device[:-2] + '01'
+        device = device[int(bool(kwargs.get('debug_link')))]
         super(HidTransport, self).__init__(device, *args, **kwargs)
 
     @classmethod
-    def enumerate(cls):
-        devices = []
-        for d in hid.enumerate(0, 0):
-            vendor_id = d.get('vendor_id')
-            product_id = d.get('product_id')
-            path = d.get('path')
+    def _detect_debuglink(cls, path):
+        # Takes platform-specific path of USB and
+        # decide if the HID interface is normal transport
+        # or debuglink
+        
+        if platform.system() in ('Linux', 'Darwin'):
+            # Sample: 0003:0017:00
+            if path.endswith(':00'):
+                return False
+            return True
+        
+        elif platform.system() == 'Windows':
+            # Sample: \\\\?\\hid#vid_534c&pid_0001&mi_01#7&1d71791f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}
+            # Note: 'mi' parameter is optional and might be unset
+            if '&mi_01#' in path:  # ,,,<o.O>,,,~
+                return True
+            return False
 
-            if (vendor_id, product_id) in DEVICE_IDS and path.endswith(':00'):
-                devices.append(path)
+        else:
+            raise Exception("USB interface detection not implemented for %s" % platform.system())
+
+    @classmethod
+    def enumerate(cls):
+        devices = {}
+        for d in hid.enumerate(0, 0):
+            vendor_id = d['vendor_id']
+            product_id = d['product_id']
+            serial_number = d['serial_number']
+            path = d['path']
+
+            if (vendor_id, product_id) in DEVICE_IDS:
+                devices.setdefault(serial_number, [None, None])
+                devices[serial_number][int(bool(cls._detect_debuglink(path)))] = path
                 
-        return devices
+        # List of two-tuples (path_normal, path_debuglink)
+        return devices.values()
         
     def _open(self):
         self.buffer = ''
-        print self.device
         self.hid = hid.device()
         self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)

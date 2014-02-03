@@ -47,11 +47,16 @@ def get_transport(transport_string, path, **kwargs):
 
         if path == '':
             try:
-                path = list_usb()[0]
+                path = list_usb()[0][0]
             except IndexError:
                 raise Exception("No Trezor found on USB")
 
-        return HidTransport(path, **kwargs)
+        for d in HidTransport.enumerate():
+            # Two-tuple of (normal_interface, debug_interface)
+            if path in d:
+                return HidTransport(d, **kwargs)
+
+        raise Exception("Device not found")
  
     if transport_string == 'serial':
         from trezorlib.transport_serial import SerialTransport
@@ -238,8 +243,7 @@ class Commands(object):
 
 def list_usb():
     from trezorlib.transport_hid import HidTransport
-    devices = HidTransport.enumerate()
-    return devices
+    return HidTransport.enumerate()
 
 class PinMatrixThread(threading.Thread):
     '''
@@ -307,19 +311,23 @@ def main():
             print json.dumps(devices)
         else:
             for dev in devices:
-                print dev
+                if dev[1] != None:
+                    print "%s - debuglink enabled" % dev[0]
+                else:
+                    print dev[0]
         return
 
-    transport = get_transport(args.transport, args.path)
     if args.debug:
         if args.debuglink_transport == 'usb' and args.debuglink_path == '':
             debuglink_transport = get_transport('usb', args.path, debug_link=True)
         else:
-            debuglink_transport = get_transport(args.debuglink_transport, args.debuglink_path)
+            debuglink_transport = get_transport(args.debuglink_transport,
+                                        args.debuglink_path, debug_link=True)
         debuglink = DebugLink(debuglink_transport)    
     else:
         debuglink = None
-        
+
+    transport = get_transport(args.transport, args.path)
     client = TrezorClient(transport, pin_func=qt_pin_func, debuglink=debuglink)
     client.setup_debuglink(button=True, pin_correct=True)
     cmds = Commands(client)
