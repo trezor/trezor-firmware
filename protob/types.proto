@@ -8,7 +8,7 @@
 
 // Some sugar for easier handling in Multibit
 option java_package = "org.multibit.hd.hardware.trezor.protobuf";
-option java_outer_classname = "TrezorTypes";
+option java_outer_classname = "TrezorType";
 
 import "google/protobuf/descriptor.proto";
 

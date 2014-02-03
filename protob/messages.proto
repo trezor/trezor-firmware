@@ -126,6 +126,8 @@ message Failure {
 // Computer should respond with ButtonAck message or Cancel to cancel
 // the original request.
 message ButtonRequest {
+	optional string code = 1;
+	optional string data = 2;
 }
 
 // Computer agrees to wait for HW button press.
