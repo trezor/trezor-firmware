@@ -1,13 +1,14 @@
 #!/usr/bin/python
-'''
+__doc__ = '''
     Use this script to cross-check that TREZOR generated valid
     mnemonic sentence for given internal (TREZOR-generated)
     and external (computer-generated) entropy.
 
     Keep in mind that you're entering secret information to this script.
-    Hijacking of these information may lead to stealing your bitcoins
+    Leaking of these information may lead to stealing your bitcoins
     from your wallet! We strongly recommend to run this script only on
-    offline computer (ideally live linux distribution without internet connection).
+    highly secured computer (ideally live linux distribution
+    without an internet connection).
 '''
 
 import binascii
@@ -43,6 +44,8 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     return entropy_stripped
 
 def main():
+    print __doc__
+
     comp = binascii.unhexlify(raw_input("Please enter computer-generated entropy (in hex): ").strip())
     trzr = binascii.unhexlify(raw_input("Please enter TREZOR-generated entropy (in hex): ").strip())
     word_count = int(raw_input("How many words your mnemonic has? "))
