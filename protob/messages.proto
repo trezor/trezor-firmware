@@ -274,13 +274,13 @@ message SignMessage {
 
 message VerifyMessage {
 	optional bytes address = 1;
-	optional bytes signature = 2;
+	optional bytes signature = 2 [(binary) = true];
 	optional bytes message = 3 [(binary) = true];
 }
 
 message MessageSignature {
 	optional bytes address = 1;
-	optional bytes signature = 2;
+	optional bytes signature = 2 [(binary) = true];
 }
 
 // Estimate size of the transaction
