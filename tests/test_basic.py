@@ -3,15 +3,6 @@ import common
 
 from trezorlib import messages_pb2 as messages
 
-'''
-    TODO:
-        * Features reflects all variations of LoadDevice
-        * Maxfee settings
-        * Client requires OTP
-        * Client requires PIN
-
-'''
-
 class TestBasic(common.TrezorTest):
     def test_features(self):
         features = self.client.call(messages.Initialize())

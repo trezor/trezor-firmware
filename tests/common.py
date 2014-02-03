@@ -9,6 +9,7 @@ class TrezorTest(unittest.TestCase):
         self.debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS)
         self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS)
         self.client = TrezorClient(self.transport, DebugLink(self.debug_transport), debug=True)
+        # self.client = TrezorClient(self.transport, debug=False)
 
         self.mnemonic1 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
         self.mnemonic2 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'

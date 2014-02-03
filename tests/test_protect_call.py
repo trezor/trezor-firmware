@@ -3,16 +3,17 @@ import unittest
 import common
 
 from trezorlib.client import PinException
-# from trezorlib import messages_pb2 as proto
+
+# FIXME TODO Add passphrase tests
 
 class TestProtectCall(common.TrezorTest):
     def _some_protected_call(self):
         # This method perform any call which have protection in the device
-        entropy_len = 10
-        entropy = self.client.get_entropy(entropy_len)
-        self.assertEqual(len(entropy), entropy_len)
+        res = self.client.ping('random data', pin_protection=True, passphrase_protection=True)
+        self.assertEqual(res, 'random data')
 
     def test_no_protection(self):
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(
             mnemonic=self.mnemonic1,
             pin='',
@@ -25,6 +26,7 @@ class TestProtectCall(common.TrezorTest):
         self._some_protected_call()
 
     def test_pin(self):
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
                                             pin=self.pin2,
                                             passphrase_protection=False,
@@ -53,7 +55,7 @@ class TestProtectCall(common.TrezorTest):
             print msg
             self.assertLessEqual(expected, got, msg)
 
-        for attempt in range(1, 6):
+        for attempt in range(1, 4):
             start = time.time()
             self.assertRaises(PinException, self._some_protected_call)
             test_backoff(attempt, start)
