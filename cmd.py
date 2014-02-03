@@ -8,7 +8,6 @@ import threading
 from trezorlib.client import TrezorClient, pin_func
 from trezorlib.debuglink import DebugLink
 from trezorlib.protobuf_json import pb2json
-from trezorlib.pinmatrix import PinMatrixWidget
 
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
@@ -253,6 +252,8 @@ class PinMatrixThread(threading.Thread):
         self.pin_value = ''
 
     def run(self):
+        from trezorlib.pinmatrix import PinMatrixWidget
+
         import sys
         from PyQt4.Qt import QApplication, QWidget, QVBoxLayout
         from PyQt4.QtGui import QPushButton, QLabel
