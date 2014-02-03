@@ -3,7 +3,6 @@ import time
 import binascii
 import hashlib
 
-import ckd_public
 import tools
 import messages_pb2 as proto
 import types_pb2 as types
