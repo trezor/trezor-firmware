@@ -108,6 +108,9 @@ message ChangePin {
 // Response: None or Success
 message Ping {
 	optional bytes message = 1;	// Message will be sent back in Success message
+	optional bool button_protection = 2; // Ask for button press
+	optional bool pin_protection = 3;	// Ask for PIN if set
+	optional bool passphrase_protection = 4;	// Ask for passphrase if set
 }
 
 // Response object defining success of the previous request
