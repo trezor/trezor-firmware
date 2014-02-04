@@ -35,6 +35,7 @@
 void point_add(const curve_point *cp1, curve_point *cp2);
 void point_double(curve_point *cp);
 void scalar_multiply(bignum256 *k, curve_point *res);
+void uncompress_coords(uint8_t odd, const bignum256 *x, bignum256 *y);
 
 int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
 int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
