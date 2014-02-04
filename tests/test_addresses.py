@@ -5,6 +5,7 @@ from trezorlib import tools
 
 class TestAddresses(common.TrezorTest):
     def test_btc(self):
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
                                             pin='',
                                             passphrase_protection=False,
@@ -18,6 +19,7 @@ class TestAddresses(common.TrezorTest):
         self.assertEqual(self.client.get_address('Bitcoin', [0, 9999999]), '1GS8X3yc7ntzwGw9vXwj9wqmBWZkTFewBV')
 
     def test_ltc(self):
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
                                             pin='',
                                             passphrase_protection=False,
@@ -31,6 +33,7 @@ class TestAddresses(common.TrezorTest):
         self.assertEqual(self.client.get_address('Litecoin', [0, 9999999]), 'Laf5nGHSCT94C5dK6fw2RxuXPiw2ZuRR9S')
 
     def test_tbtc(self):
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
                                             pin='',
                                             passphrase_protection=False,
@@ -40,6 +43,7 @@ class TestAddresses(common.TrezorTest):
         self.assertEqual(self.client.get_address('Testnet', [111, 42]), 'moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa')
 
     def test_public_ckd(self):
+        self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
                                             pin='',
                                             passphrase_protection=False,

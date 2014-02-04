@@ -5,18 +5,18 @@ from trezorlib.transport_pipe import PipeTransport
 from trezorlib.transport_hid import HidTransport
 from trezorlib.transport_socket import SocketTransportClient
 
-use_real = False
-use_pipe = True
+use_real = True
+use_pipe = False
 
 if use_real:
 
     devices = HidTransport.enumerate()
     TRANSPORT = HidTransport
-    TRANSPORT_ARGS = (devices[0], )
+    TRANSPORT_ARGS = (devices[0],)
     TRANSPORT_KWARGS = {'debug_link': False}
 
     DEBUG_TRANSPORT = HidTransport
-    DEBUG_TRANSPORT_ARGS = (devices[0], )
+    DEBUG_TRANSPORT_ARGS = (devices[0],)
     DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
 
 elif use_pipe:
@@ -33,7 +33,7 @@ else:
 
     devices = HidTransport.enumerate()
     TRANSPORT = HidTransport
-    TRANSPORT_ARGS = (devices[0], )
+    TRANSPORT_ARGS = (devices[0][0],)
     TRANSPORT_KWARGS = {'debug_link': False}
 
     DEBUG_TRANSPORT = SocketTransportClient

@@ -6,8 +6,8 @@ from trezorlib.debuglink import DebugLink
 
 class TrezorTest(unittest.TestCase):
     def setUp(self):
-        self.debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS)
-        self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS)
+        self.debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS, **config.DEBUG_TRANSPORT_KWARGS)
+        self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS, **config.TRANSPORT_KWARGS)
         self.client = TrezorClient(self.transport, DebugLink(self.debug_transport), debug=True)
         # self.client = TrezorClient(self.transport, debug=False)
 
