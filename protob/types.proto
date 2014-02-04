@@ -48,6 +48,10 @@ enum RequestType {
 	TXOUTPUT = 1;
 }
 
+enum ButtonRequestType {
+	ButtonRequest_FeeOverThreshold = 1;
+}
+
 // Structure of BIP32 (hierarchical deterministic) node
 // Used for imports of private key into the device and exporting public key out of device
 message HDNodeType {
