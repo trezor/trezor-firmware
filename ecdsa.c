@@ -423,18 +423,29 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 // signature - 64 bytes signature
 // msg is a data that was signed
 // msg_len is the message length
-// returns 0 if verification succeeded
-// it is assumed that public key is valid otherwise calling this does not make much sense
+
 int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
 {
-	int i, j;
 	uint8_t hash[32];
+	SHA256_Raw(msg, msg_len, hash);
+	return ecdsa_verify_digest(pub_key, sig, hash);
+}
+
+int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
+{
+	uint8_t hash[32];
+	SHA256_Raw(msg, msg_len, hash);
+	SHA256_Raw(hash, 32, hash);
+	return ecdsa_verify_digest(pub_key, sig, hash);
+}
+
+// returns 0 if verification succeeded
+// it is assumed that public key is valid otherwise calling this does not make much sense
+int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest)
+{
+	int i, j;
 	curve_point pub, res;
 	bignum256 r, s, z;
-	// compute hash function of message
-	SHA256_Raw(msg, msg_len, hash);
-	// if double hash is required uncomment the following line:
-	// SHA256_Raw(hash, 32, hash);
 
 	if (!ecdsa_read_pubkey(pub_key, &pub)) {
 		return 1;
@@ -443,7 +454,7 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	bn_read_be(sig, &r);
 	bn_read_be(sig + 32, &s);
 
-	bn_read_be(hash, &z);
+	bn_read_be(digest, &z);
 
 	if (bn_is_zero(&r) || bn_is_zero(&s) ||
 	    (!bn_is_less(&r, &order256k1)) ||

@@ -46,6 +46,8 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr);
 int ecdsa_address_decode(const char *addr, uint8_t *out);
 int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub);
 int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
+int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
+int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest);
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 
 #endif
