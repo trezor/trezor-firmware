@@ -111,10 +111,11 @@ class TrezorClient(object):
     def get_entropy(self, size):
         return self.call(proto.GetEntropy(size=size), proto.Entropy).entropy
 
-    def ping(self, msg, pin_protection=False, passphrase_protection=False):
+    def ping(self, msg, button_protection=True, pin_protection=True, passphrase_protection=True):
         msg = proto.Ping(message=msg,
-                   pin_protection=pin_protection,
-                   passphrase_protection=passphrase_protection)
+                         button_protection=button_protection,
+                         pin_protection=pin_protection,
+                         passphrase_protection=passphrase_protection)
         
         return self.call(msg, proto.Success).message
 
