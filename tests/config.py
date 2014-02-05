@@ -33,7 +33,7 @@ else:
 
     devices = HidTransport.enumerate()
     TRANSPORT = HidTransport
-    TRANSPORT_ARGS = (devices[0][0],)
+    TRANSPORT_ARGS = (devices[0],)
     TRANSPORT_KWARGS = {'debug_link': False}
 
     DEBUG_TRANSPORT = SocketTransportClient
