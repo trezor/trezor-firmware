@@ -92,8 +92,35 @@ void point_double(curve_point *cp)
 	memcpy(&(cp->y), &yr, sizeof(bignum256));
 }
 
+// res = k * p
+void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
+{
+	int i, j;
+	// result is zero
+	int is_zero = 1;
+	curve_point curr;
+	// initial res
+	memcpy(&curr, p, sizeof(curve_point));
+	for (i = 0; i < 9; i++) {
+		for (j = 0; j < 30; j++) {
+			if (i == 8 && (k->val[i] >> j) == 0) break;
+			if (k->val[i] & (1u << j)) {
+				if (is_zero) {
+					memcpy(res, &curr, sizeof(curve_point));
+					is_zero = 0;
+				} else {
+					point_add(&curr, res);
+				}
+			}
+			point_double(&curr);
+		}
+	}
+	bn_mod(&(res->x), &prime256k1);
+	bn_mod(&(res->y), &prime256k1);
+}
+
 // res = k * G
-void scalar_multiply(bignum256 *k, curve_point *res)
+void scalar_multiply(const bignum256 *k, curve_point *res)
 {
 	int i, j;
 	// result is zero
@@ -397,8 +424,7 @@ void uncompress_coords(uint8_t odd, const bignum256 *x, bignum256 *y)
 	bn_addmodi(y, 7, &prime256k1);         // y is x^3 + 7
 	bn_sqrt(y, &prime256k1);               // y = sqrt(y)
 	if ((odd & 0x01) != (y->val[0] & 1)) {
-		bn_substract(&prime256k1, y, y);   // y = -y
-		bn_mod(y, &prime256k1);
+		bn_substract_noprime(&prime256k1, y, y);   // y = -y
 	}
 }
 
