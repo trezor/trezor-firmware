@@ -10,8 +10,9 @@ import types_pb2 as proto_types
 class BlockchainApi(object):
     def _raw_tx(self, txhash):
         # Download tx data from blockchain.info
-        f = urllib2.urlopen('http://blockchain.info/rawtx/%s?scripts=true' % txhash)
-        print 'got', txhash
+        url = 'http://blockchain.info/rawtx/%s?scripts=true' % txhash
+        print "Downloading", url
+        f = urllib2.urlopen(url)
         return json.load(f)
 
     def submit(self, tx):
