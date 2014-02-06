@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     test_suite='tests',
     dependency_links=['https://github.com/trezor/python-mnemonic/archive/master.zip#egg=mnemonic-0.6'],
-    install_requires=['ecdsa>=0.9', 'protobuf', 'mnemonic>=0.6', 'hidapi'],
+    install_requires=['ecdsa>=0.9', 'protobuf', 'mnemonic>=0.6', 'hidapi>=0.7.99'],
     include_package_data=True,
     zip_safe=False,
     classifiers=[
