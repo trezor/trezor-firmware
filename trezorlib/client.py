@@ -147,7 +147,11 @@ class TrezorClient(object):
         self.debug_button = button
         self.debug_pin = pin_correct
 
-    def call(self, msg, expected = None):
+    def _get_buttonrequest_value(self, code):
+        return [ k for k, v in types.ButtonRequestType.items() if v == code][0]
+
+    def call(self, msg, expected=None, expected_buttonrequests=None):
+        # TODO split this into normal and debug mode
         if self.debug:
             print '----------------------'
             print "Sending", self._pprint(msg)
@@ -159,6 +163,18 @@ class TrezorClient(object):
             resp = self.transport.read_blocking()
 
             if isinstance(resp, proto.ButtonRequest):
+                if expected_buttonrequests != None:
+                    try:
+                        exp = expected_buttonrequests.pop(0)
+                        if resp.code != exp:
+                            raise CallException("Expected %s, got %s" % \
+                                    (self._get_buttonrequest_value(exp),
+                                    self._get_buttonrequest_value(resp.code)))
+                    except IndexError:
+                        raise CallException("Got %s, but no ButtonRequest has been expected" % \
+                                            self._get_buttonrequest_value(resp.code))
+
+                print "ButtonRequest code:", self._get_buttonrequest_value(resp.code)
                 if self.debuglink and self.debug_button:
                     print "Pressing button", self.debug_button
                     self.debuglink.press_button(self.debug_button)
@@ -179,12 +195,12 @@ class TrezorClient(object):
                     pin = self.pin_func("PIN required: ", resp.message)
                     msg2 = proto.PinMatrixAck(pin=pin)
 
-                return self.call(msg2)
+                return self.call(msg2, expected=expected, expected_buttonrequests=expected_buttonrequests)
 
             if isinstance(resp, proto.PassphraseRequest):
                 passphrase = self.passphrase_func("Passphrase required: ")
                 msg2 = proto.PassphraseAck(passphrase=passphrase)
-                return self.call(msg2)
+                return self.call(msg2, expected=expected, expected_buttonrequests=expected_buttonrequests)
 
         finally:
             self.transport.session_end()
