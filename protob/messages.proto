@@ -254,7 +254,8 @@ message RecoveryDevice {
 	optional bool passphrase_protection = 2;
 	optional bool pin_protection = 3;
 	optional bytes language = 4 [default='english'];
-	optional bytes label = 5 [(binary) = true];						
+	optional bytes label = 5 [(binary) = true];
+	optional bool enforce_wordlist = 6;	// Trezor enforces BIP39 wordlist						
 }
 
 // This message indicates that device is asking user for some word of his mnemonic.
