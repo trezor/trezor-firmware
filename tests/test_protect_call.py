@@ -2,15 +2,26 @@ import time
 import unittest
 import common
 
+from trezorlib import messages_pb2 as proto
+from trezorlib import types_pb2 as types
 from trezorlib.client import PinException
 
 # FIXME TODO Add passphrase tests
 
 class TestProtectCall(common.TrezorTest):
-    def _some_protected_call(self):
+    def _some_protected_call(self, expected_buttonrequests):
         # This method perform any call which have protection in the device
+
         res = self.client.ping('random data', pin_protection=True, passphrase_protection=True)
         self.assertEqual(res, 'random data')
+
+        msg = proto.Ping(message='random data',
+                 button_protection=True,
+                 pin_protection=True,
+                 passphrase_protection=True)
+
+        return self.client.call(msg, expected=proto.Success,
+                    expected_buttonrequests=expected_buttonrequests).message
 
     def test_no_protection(self):
         self.client.wipe_device()
@@ -23,8 +34,9 @@ class TestProtectCall(common.TrezorTest):
         )
         
         self.assertEqual(self.client.debuglink.read_pin()[0], '')
-        self._some_protected_call()
+        self._some_protected_call([])
 
+    '''
     def test_pin(self):
         self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
@@ -59,8 +71,8 @@ class TestProtectCall(common.TrezorTest):
             start = time.time()
             self.assertRaises(PinException, self._some_protected_call)
             test_backoff(attempt, start)
-
-        '''
+    '''
+    '''
         # Unplug Trezor now
         self.client.debuglink.stop()
         self.client.close()
