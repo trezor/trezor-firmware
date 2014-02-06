@@ -14,6 +14,10 @@ TODO:
   * PassphraseRequest/PassphraseAck workflow (vyvolat napr. pomocou GetAddress)
 
 * rozsirit test_sign.tx o viac transakcii (zlozitejsich)
+    * fee over threshold
+    * not enough funds
+    * viac ako jeden vstup a jeden vystup
+    * iny cointype ako 0
 
 - chceme v tomto release(?)
   * SignMessage workflow
