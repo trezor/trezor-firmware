@@ -7,7 +7,6 @@ from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
 from ecdsa.ellipticcurve import Point, INFINITY
 
-import msqrt
 import tools
 import types_pb2 as proto_types
 
@@ -31,7 +30,7 @@ def sec_to_public_pair(pubkey):
         curve = generator.curve()
         p = curve.p()
         alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
-        beta = msqrt.modular_sqrt(alpha, p)
+        beta = ecdsa.number_theory.square_root_mod_prime(alpha, p)
         if is_even == bool(beta & 1):
             return (x, p - beta)
         return (x, beta)
