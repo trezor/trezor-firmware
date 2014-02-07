@@ -30,7 +30,7 @@ def sec_to_public_pair(pubkey):
         curve = generator.curve()
         p = curve.p()
         alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
-        beta = ecdsa.number_theory.square_root_mod_prime(alpha, p)
+        beta = ecdsa.numbertheory.square_root_mod_prime(alpha, p)
         if is_even == bool(beta & 1):
             return (x, p - beta)
         return (x, beta)

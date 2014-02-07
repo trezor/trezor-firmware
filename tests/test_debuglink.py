@@ -11,15 +11,15 @@ class TestDebugLink(common.TrezorTest):
 
     def test_layout(self):
         layout = self.client.debuglink.read_layout()
-        print binascii.hexlify(layout)
+        self.assertEqual(len(layout), 1024)
 
     def test_mnemonic(self):
         mnemonic = self.client.debuglink.read_mnemonic()
-        print mnemonic
+        self.assertEqual(mnemonic, self.mnemonic1)
 
     def test_node(self):
         node = self.client.debuglink.read_node()
-        print node
+        self.assertIsNotNone(node)
 
 if __name__ == '__main__':
     unittest.main()
