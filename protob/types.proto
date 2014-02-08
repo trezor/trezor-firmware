@@ -33,6 +33,7 @@ enum FailureType {
 	Failure_PinInvalid = 7;
 	Failure_InvalidSignature = 8;
 	Failure_Other = 9;
+	Failure_NotEnoughFunds = 10;
 	Failure_FirmwareError = 99;
 }
 
