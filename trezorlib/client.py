@@ -178,7 +178,7 @@ class TrezorClient(object):
                     print "Pressing button", self.debug_button
                     self.debuglink.press_button(self.debug_button)
 
-                return self.call(proto.ButtonAck())
+                return self.call(proto.ButtonAck(), expected_buttonrequests=expected_buttonrequests)
 
             if isinstance(resp, proto.PinMatrixRequest):
                 if self.debuglink:
@@ -222,6 +222,10 @@ class TrezorClient(object):
         if expected and not isinstance(resp, expected):
             raise CallException("Expected %s message, got %s message" % (expected.DESCRIPTOR.name, resp.DESCRIPTOR.name))
 
+        if expected_buttonrequests != None and len(expected_buttonrequests):
+            raise CallException("Following ButtonRequests were not in use: %s" % \
+                    [ self._get_buttonrequest_value(x) for x in expected_buttonrequests])
+
         return resp
 
     def sign_message(self, n, message):
@@ -246,7 +250,7 @@ class TrezorClient(object):
         res = self.call(msg)
         return res.tx_size
 
-    def simple_sign_tx(self, coin_name, inputs, outputs):
+    def _prepare_simple_sign_tx(self, coin_name, inputs, outputs):
         msg = proto.SimpleSignTx()
         msg.coin_name = coin_name
         msg.inputs.extend(inputs)
@@ -261,6 +265,10 @@ class TrezorClient(object):
             tx.CopyFrom(self.blockchain.get_tx(binascii.hexlify(inp.prev_hash)))
             known_hashes.append(inp.prev_hash)
 
+        return msg
+
+    def simple_sign_tx(self, coin_name, inputs, outputs):
+        msg = self._prepare_simple_sign_tx(coin_name, inputs, outputs)
         return self.call(msg)
 
     def sign_tx(self, coin_name, inputs, outputs):
@@ -357,7 +365,8 @@ class TrezorClient(object):
                                    passphrase_protection=bool(passphrase_protection),
                                    pin_protection=bool(pin_protection),
                                    label=label,
-                                   language=language))
+                                   language=language,
+                                   enforce_wordlist=True))
 
         while isinstance(res, proto.WordRequest):
             word = self.word_func()
@@ -462,3 +471,5 @@ class TrezorClient(object):
             return False
 
         raise Exception("Unexpected result " % resp)
+    
+# class TrezorDebugClient(TrezorClient):
