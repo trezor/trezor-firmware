@@ -29,4 +29,6 @@ TODO:
 * Maxfee settings
 * Client requires OTP
 * Client requires PIN
+
+x Zero signature test
 '''
