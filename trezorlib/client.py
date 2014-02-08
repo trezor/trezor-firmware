@@ -29,7 +29,9 @@ def word_func():
     return raw_input("Enter one word of mnemonic: ")
 
 class CallException(Exception):
-    pass
+    def __init__(self, code, message):
+        super(CallException, self).__init__()
+        self.args = [code, message]
 
 class PinException(CallException):
     pass
@@ -166,11 +168,12 @@ class TrezorClient(object):
                     try:
                         exp = expected_buttonrequests.pop(0)
                         if resp.code != exp:
-                            raise CallException("Expected %s, got %s" % \
+                            raise CallException(types.Failure_Other, "Expected %s, got %s" % \
                                     (self._get_buttonrequest_value(exp),
                                     self._get_buttonrequest_value(resp.code)))
                     except IndexError:
-                        raise CallException("Got %s, but no ButtonRequest has been expected" % \
+                        raise CallException(types.Failure_Other,
+                                            "Got %s, but no ButtonRequest has been expected" % \
                                             self._get_buttonrequest_value(resp.code))
 
                 print "ButtonRequest code:", self._get_buttonrequest_value(resp.code)
@@ -207,12 +210,9 @@ class TrezorClient(object):
         if isinstance(resp, proto.Failure):
             self.message_func(resp.message)
 
-            if resp.code == types.Failure_ActionCancelled:
-                raise CallException("Action cancelled by user")
-
-            elif resp.code in (types.Failure_PinInvalid,
+            if resp.code in (types.Failure_PinInvalid,
                 types.Failure_PinCancelled, types.Failure_PinExpected):
-                raise PinException("PIN is invalid")
+                raise PinException(resp.code, resp.message)
 
             raise CallException(resp.code, resp.message)
 
@@ -223,7 +223,8 @@ class TrezorClient(object):
             raise CallException("Expected %s message, got %s message" % (expected.DESCRIPTOR.name, resp.DESCRIPTOR.name))
 
         if expected_buttonrequests != None and len(expected_buttonrequests):
-            raise CallException("Following ButtonRequests were not in use: %s" % \
+            raise CallException(types.Failure_Other,
+                    "Following ButtonRequests were not in use: %s" % \
                     [ self._get_buttonrequest_value(x) for x in expected_buttonrequests])
 
         return resp
