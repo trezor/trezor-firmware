@@ -533,28 +533,37 @@ int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der)
 {
-	int p1, p2;
-	p1 = sig[0] >= 0x80;
-	p2 = sig[32] >= 0x80;
-	der[0] = 0x30; // sequence
-	der[1] = (1 + 1 + p1 + 32) + (1 + 1 + p2 + 32); // total len
-	der[2] = 0x02; // int
-	if (p1) {
-		der[3] = 33;
-		der[4] = 0x00;
-		memcpy(der + 5, sig, 32);
-	} else {
-		der[3] = 32;
-		memcpy(der + 4, sig, 32);
+	int i;
+	uint8_t *p = der, *len, *len1, *len2;
+	*p = 0x30; p++;                        // sequence
+	*p = 0x00; len = p; p++;               // len(sequence)
+
+	*p = 0x02; p++;                        // integer
+	*p = 0x00; len1 = p; p++;              // len(integer)
+
+	// process R
+	i = 0;
+	while (sig[i] == 0 && i < 32) { i++; } // skip leading zeroes
+	if (sig[i] >= 0x80) { // put zero in output if MSB set
+		*p = 0x00; p++; *len1 = *len1 + 1;
 	}
-	der[36 + p1] = 0x02; // int
-	if (p2) {
-		der[37 + p1] = 33;
-		der[38 + p1] = 0x00;
-		memcpy(der + 39 + p1, sig + 32, 32);
-	} else {
-		der[37 + p1] = 32;
-		memcpy(der + 38 + p1, sig + 32, 32);
+	while (i < 32) { // copy bytes to output
+		*p = sig[i]; p++; *len1 = *len1 + 1; i++;
 	}
-	return der[1] + 2;
+
+	*p = 0x02; p++;                        // integer
+	*p = 0x00; len2 = p; p++;              // len(integer)
+
+	// process S
+	i = 32;
+	while (sig[i] == 0 && i < 64) { i++; } // skip leading zeroes
+	if (sig[i] >= 0x80) { // put zero in output if MSB set
+		*p = 0x00; p++; *len2 = *len2 + 1;
+	}
+	while (i < 64) { // copy bytes to output
+		*p = sig[i]; p++; *len2 = *len2 + 1; i++;
+	}
+
+	*len = *len1 + *len2 + 4;
+	return *len + 2;
 }

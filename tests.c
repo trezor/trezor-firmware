@@ -573,6 +573,30 @@ START_TEST(test_ecdsa_der)
 	res = ecdsa_sig_to_der(sig, der);
 	ck_assert_int_eq(res, 72);
 	ck_assert_mem_eq(der, fromhex("3046022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee022100ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), 72);
+
+	memcpy(sig,      fromhex("0000000000000000000000000000000000000000000000000000000000000066"), 32);
+	memcpy(sig + 32, fromhex("0000000000000000000000000000000000000000000000000000000000000077"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 8);
+	ck_assert_mem_eq(der, fromhex("3006020166020177"), 8);
+
+	memcpy(sig,      fromhex("0000000000000000000000000000000000000000000000000000000000000066"), 32);
+	memcpy(sig + 32, fromhex("00000000000000000000000000000000000000000000000000000000000000ee"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 9);
+	ck_assert_mem_eq(der, fromhex("3007020166020200ee"), 9);
+
+	memcpy(sig,      fromhex("00000000000000000000000000000000000000000000000000000000000000ee"), 32);
+	memcpy(sig + 32, fromhex("0000000000000000000000000000000000000000000000000000000000000077"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 9);
+	ck_assert_mem_eq(der, fromhex("3007020200ee020177"), 9);
+
+	memcpy(sig,      fromhex("00000000000000000000000000000000000000000000000000000000000000ee"), 32);
+	memcpy(sig + 32, fromhex("00000000000000000000000000000000000000000000000000000000000000ff"), 32);
+	res = ecdsa_sig_to_der(sig, der);
+	ck_assert_int_eq(res, 10);
+	ck_assert_mem_eq(der, fromhex("3008020200ee020200ff"), 10);
 }
 END_TEST
 
