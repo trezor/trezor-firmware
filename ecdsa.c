@@ -390,7 +390,7 @@ int ecdsa_address_decode(const char *addr, uint8_t *out)
 	uint8_t buf[32], check[32];
 	bn_zero(&num);
 	uint32_t k;
-	int i;
+	size_t i;
 	for (i = 0; i < strlen(addr); i++) {
 		bn_muli(&num, 58);
 		for (k = 0; k <= strlen(code); k++) {

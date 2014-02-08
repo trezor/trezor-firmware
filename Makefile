@@ -1,5 +1,5 @@
 CC     = gcc
-CFLAGS = -Wall -Os
+CFLAGS = -Wall -Wextra -Os
 OBJS   = bignum.o ecdsa.o secp256k1.o sha2.o rand.o hmac.o bip32.o ripemd160.o bip39.o pbkdf2.o
 OBJS  += aescrypt.o aeskey.o aestab.o
 

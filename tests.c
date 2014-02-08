@@ -235,7 +235,8 @@ END_TEST
 START_TEST(test_sign_speed)
 {
 	uint8_t sig[64], priv_key[32], msg[256];
-	int i, res;
+	size_t i;
+	int res;
 
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
@@ -262,7 +263,8 @@ END_TEST
 START_TEST(test_verify_speed)
 {
 	uint8_t sig[64], pub_key33[33], pub_key65[65], msg[256];
-	int i, res;
+	size_t i;
+	int res;
 
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
