@@ -1,2 +1,3 @@
 *.pyc
 *.bin
+*.py.cache

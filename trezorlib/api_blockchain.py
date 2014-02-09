@@ -4,6 +4,14 @@
 import binascii
 import urllib2
 import json
+try:
+    from filecache import filecache, MONTH
+except:
+    def filecache(x):
+        def _inner(y):
+            return y
+        return _inner
+    MONTH = None
 
 import types_pb2 as proto_types
 
@@ -18,6 +26,7 @@ class BlockchainApi(object):
     def submit(self, tx):
         raise Exception("Not implemented yet")
 
+    @filecache(MONTH)
     def get_tx(self, txhash):
         # Build protobuf transaction structure from blockchain.info
         d = self._raw_tx(txhash)
