@@ -12,6 +12,8 @@ class TestAddresses(common.TrezorTest):
                                             label='test',
                                             language='english')
 
+        self.client.get_address('Bitcoin', [0]) # to compute root node via BIP39
+
         for depth in range(8):
             start = time.time()
             self.client.get_address('Bitcoin', range(depth))
@@ -27,6 +29,8 @@ class TestAddresses(common.TrezorTest):
                                             passphrase_protection=False,
                                             label='test',
                                             language='english')
+
+        self.client.get_address('Bitcoin', [0]) # to compute root node via BIP39
 
         for depth in range(8):
             start = time.time()
