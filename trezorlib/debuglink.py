@@ -14,6 +14,9 @@ class DebugLink(object):
         self.pin_func = pin_func
         self.button_func = button_func
 
+    def close(self):
+        self.transport.close()
+        
     def read_pin(self):
         self.transport.write(proto.DebugLinkGetState())
         obj = self.transport.read_blocking()
