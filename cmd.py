@@ -3,7 +3,7 @@ import os
 import binascii
 import argparse
 import json
-import threading
+import base64
 
 from trezorlib.client import TrezorClient
 from trezorlib.api_blockchain import BlockchainApi
@@ -135,10 +135,17 @@ class Commands(object):
                                         args.pin_protection, args.label, 'english')
 
     def sign_message(self, args):
-        return pb2json(self.client.sign_message(args.n, args.message), {'message': args.message})
+        ret = self.client.sign_message(args.n, args.message)
+        output = {
+            'message': args.message,
+            'address': ret.address,
+            'signature': base64.b64encode(ret.signature)
+        }
+        return output
 
     def verify_message(self, args):
-        return self.client.verify_message(args.address, args.signature, args.message)
+        signature = base64.b64decode(args.signature)
+        return self.client.verify_message(args.address, signature, args.message)
 
     def firmware_update(self, args):
         if not args.file:
