@@ -14,6 +14,10 @@ def get_buttonrequest_value(code):
     # Converts integer code to its string representation of ButtonRequestType
     return [ k for k, v in types.ButtonRequestType.items() if v == code][0]
 
+def pprint(msg):
+    ser = msg.SerializeToString()
+    return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, len(ser), msg)
+
 class CallException(Exception):
     def __init__(self, code, message):
         super(CallException, self).__init__()
@@ -54,9 +58,9 @@ class expect(object):
 class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
-    def __init__(self, transport, *args, **kwargs):
+    def __init__(self, transport, **kwargs):
         self.transport = transport
-        super(BaseClient, self).__init__(*args, **kwargs)
+        super(BaseClient, self).__init__()  # *args, **kwargs)
 
     def call(self, msg):
         try:
@@ -96,6 +100,9 @@ class TextUIMixin(object):
     # You can implement similar functionality
     # by implementing your own GuiMixin with
     # graphical widgets for every type of these callbacks.
+
+    def __init__(self, *args, **kwargs):
+        super(TextUIMixin, self).__init__(*args, **kwargs)
 
     def callback_ButtonRequest(self, msg):
         print "Sending ButtonAck for %s " % get_buttonrequest_value(msg.code)
@@ -148,6 +155,12 @@ class DebugLinkMixin(object):
     def setup_debuglink(self, button, pin_correct):
         self.button = button  # True -> YES button, False -> NO button
         self.pin_correct = pin_correct
+
+    def call(self, msg):
+        print "SENDING", pprint(msg)
+        ret = super(DebugLinkMixin, self).call(msg)
+        print "RECEIVED", pprint(ret)
+        return ret
         
     def callback_ButtonRequest(self, msg):
         if self.expected_buttonrequests != None:
@@ -177,16 +190,16 @@ class DebugLinkMixin(object):
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
-        pass
+        raise Exception("Not implemented yet")
 
     def callback_WordRequest(self, msg):
-        pass
+        raise Exception("Not implemented yet")
 
 class ProtocolMixin(object):
     PRIME_DERIVATION_FLAG = 0x80000000
 
     def __init__(self, *args, **kwargs):
-        super(ProtocolMixin, self).__init__()  # *args, **kwargs)
+        super(ProtocolMixin, self).__init__(*args, **kwargs)
         self.init_device()
         
         def get_tx_func_placeholder(txhash):
@@ -453,10 +466,10 @@ class ProtocolMixin(object):
 
         raise Exception("Unexpected result " % resp)
 
-class TrezorClient(BaseClient, ProtocolMixin, TextUIMixin):
+class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
 
-class TrezorDebugClient(BaseClient, ProtocolMixin, DebugLinkMixin):
+class TrezorDebugClient(ProtocolMixin, DebugLinkMixin, BaseClient):
     pass
 
 '''
@@ -478,7 +491,9 @@ class TrezorClient(object):
             resp = self.transport.read_blocking()
 
             if isinstance(resp, proto.ButtonRequest):
-                if expected_buttonrequests != None:
+           _pprint(self, msg):
+        ser = msg.SerializeToString()
+             if expected_buttonrequests != None:
                     try:
                         exp = expected_buttonrequests.pop(0)
                         if resp.code != exp:

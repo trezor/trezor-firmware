@@ -32,5 +32,4 @@ class TrezorTest(unittest.TestCase):
         print "--------------"
         
     def tearDown(self):
-        self.debug_transport.close()
-        self.transport.close()
+        self.client.close()
