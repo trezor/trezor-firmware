@@ -10,15 +10,15 @@ from trezorlib.client import PinException
 class TestDebugLink(common.TrezorTest):
 
     def test_layout(self):
-        layout = self.client.debuglink.read_layout()
+        layout = self.client.debug.read_layout()
         self.assertEqual(len(layout), 1024)
 
     def test_mnemonic(self):
-        mnemonic = self.client.debuglink.read_mnemonic()
+        mnemonic = self.client.debug.read_mnemonic()
         self.assertEqual(mnemonic, self.mnemonic1)
 
     def test_node(self):
-        node = self.client.debuglink.read_node()
+        node = self.client.debug.read_node()
         self.assertIsNotNone(node)
 
 if __name__ == '__main__':

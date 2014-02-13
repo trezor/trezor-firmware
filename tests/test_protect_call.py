@@ -9,19 +9,13 @@ from trezorlib.client import PinException
 # FIXME TODO Add passphrase tests
 
 class TestProtectCall(common.TrezorTest):
-    def _some_protected_call(self, expected_buttonrequests):
+    def _some_protected_call(self, button, pin, passphrase):
         # This method perform any call which have protection in the device
-
-        res = self.client.ping('random data', pin_protection=True, passphrase_protection=True)
+        res = self.client.ping('random data',
+                                button_protection=button,
+                                pin_protection=pin,
+                                passphrase_protection=passphrase)
         self.assertEqual(res, 'random data')
-
-        msg = proto.Ping(message='random data',
-                 button_protection=True,
-                 pin_protection=True,
-                 passphrase_protection=True)
-
-        return self.client.call(msg, expected=proto.Success,
-                    expected_buttonrequests=expected_buttonrequests).message
 
     def test_no_protection(self):
         self.client.wipe_device()
@@ -33,28 +27,30 @@ class TestProtectCall(common.TrezorTest):
             language='english',
         )
         
-        self.assertEqual(self.client.debuglink.read_pin()[0], '')
-        self._some_protected_call([])
+        self.assertEqual(self.client.debug.read_pin()[0], '')
+        self.client.set_expected_buttonrequests([])
+        self._some_protected_call(False, True, True)
 
-    '''
     def test_pin(self):
         self.client.wipe_device()
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
                                             pin=self.pin2,
-                                            passphrase_protection=False,
+                                            passphrase_protection=True,
                                             label='test',
                                             language='english')
 
-        self.assertEqual(self.client.debuglink.read_pin()[0], self.pin2)
-        self._some_protected_call()
-        
+        self.assertEqual(self.client.debug.read_pin()[0], self.pin2)
+        self.client.setup_debuglink(button=True, pin_correct=True)
+        self.client.set_expected_buttonrequests([types.ButtonRequest_Other])
+        self._some_protected_call(True, True, False)
+
     def test_incorrect_pin(self):
         self.client.setup_debuglink(button=True, pin_correct=False)
-        self.assertRaises(PinException, self._some_protected_call)
+        self.assertRaises(PinException, self._some_protected_call, False, True, False)
 
     def test_cancelled_pin(self):
-        self.client.setup_debuglink(button=True, pin_correct=-1)  # PIN cancel
-        self.assertRaises(PinException, self._some_protected_call)
+        self.client.setup_debuglink(button=True, pin_correct=False)  # PIN cancel
+        self.assertRaises(PinException, self._some_protected_call, False, True, False)
 
     def test_exponential_backoff_with_reboot(self):
         self.client.setup_debuglink(button=True, pin_correct=False)
@@ -69,9 +65,9 @@ class TestProtectCall(common.TrezorTest):
 
         for attempt in range(1, 4):
             start = time.time()
-            self.assertRaises(PinException, self._some_protected_call)
+            self.assertRaises(PinException, self._some_protected_call, False, True, False)
             test_backoff(attempt, start)
-    '''
+
     '''
         # Unplug Trezor now
         self.client.debuglink.stop()

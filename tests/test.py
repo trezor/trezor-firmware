@@ -24,7 +24,7 @@ TODO:
   * VerifyMessage workflow
 
 * otestovat session handling (tento test bude zrejme failovat na RPi)
-
+* Failure_NotInitialized
 * Features reflects all variations of LoadDevice
 * Maxfee settings
 * Client requires OTP
