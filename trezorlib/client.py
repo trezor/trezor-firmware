@@ -71,7 +71,7 @@ class BaseClient(object):
             if handler != None:
                 msg = handler(resp)
                 if msg == None:
-                    raise Exception("Callback %s must return protobug message, not None" % handler)
+                    raise Exception("Callback %s must return protobuf message, not None" % handler)
 
                 resp = self.call(msg)
 
