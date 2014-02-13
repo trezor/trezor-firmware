@@ -31,7 +31,7 @@ class HidTransport(Transport):
         # decide if the HID interface is normal transport
         # or debuglink
         
-        if platform.system() in ('Linux', 'Darwin'):
+        if platform.system() == 'Linux':
             # Sample: 0003:0017:00
             if path.endswith(':00'):
                 return False
@@ -42,6 +42,10 @@ class HidTransport(Transport):
             # Note: 'mi' parameter is optional and might be unset
             if '&mi_01#' in path:  # ,,,<o.O>,,,~
                 return True
+            return False
+
+        elif platform.system() == 'Darwin':
+            # DebugLink doesn't work on Mac
             return False
 
         else:
@@ -55,6 +59,11 @@ class HidTransport(Transport):
             product_id = d['product_id']
             serial_number = d['serial_number']
             path = d['path']
+
+            # HIDAPI on Mac cannot detect correct HID interfaces, so device with
+            # DebugLink doesn't work on Mac...
+            if devices.get(serial_number) != None and devices[serial_number][0] == path:
+                raise Exception("Two devices with the same path and S/N found. This is Mac, right? :-/")
 
             if (vendor_id, product_id) in DEVICE_IDS:
                 devices.setdefault(serial_number, [None, None])
