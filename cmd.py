@@ -5,27 +5,23 @@ import argparse
 import json
 import threading
 
-from trezorlib.client import TrezorClient, pin_func
-from trezorlib.debuglink import DebugLink
+from trezorlib.client import TrezorClient
+from trezorlib.api_blockchain import BlockchainApi
 from trezorlib.protobuf_json import pb2json
 
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
-    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
-    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
+#    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
+#    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
     parser.add_argument('-j', '--json', dest='json', action='store_true', help="Prints result as json object")
-    parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='Enable low-level debugging')
+#    parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='Enable low-level debugging')
 
     cmdparser = parser.add_subparsers(title='Available commands')
     
     for cmd in commands._list_commands():
         func = object.__getattribute__(commands, cmd)
-        try:
-            help = func.help
-        except AttributeError:
-            help = ''
             
         try:
             arguments = func.arguments
@@ -245,10 +241,9 @@ def list_usb():
     from trezorlib.transport_hid import HidTransport
     return HidTransport.enumerate()
 
+'''
 class PinMatrixThread(threading.Thread):
-    '''
-        Hacked PinMatrixWidget into command line tool :-).
-    '''
+    # Hacked PinMatrixWidget into command line tool :-).
     def __init__(self, input_text, message):
         super(PinMatrixThread, self).__init__()
         self.input_text = input_text
@@ -287,10 +282,8 @@ class PinMatrixThread(threading.Thread):
         a.exec_()
 
 def qt_pin_func(input_text, message=None):
-    '''
-        This is a hack to display Qt window in non-qt application.
-        Qt window just asks for PIN and closes itself, which trigger join().
-    '''
+    # This is a hack to display Qt window in non-qt application.
+    # Qt window just asks for PIN and closes itself, which trigger join().
     if False:  # os.getenv('DISPLAY'):
         # Let's hope that system is configured properly and this won't crash
         t = PinMatrixThread(input_text, message)
@@ -301,7 +294,8 @@ def qt_pin_func(input_text, message=None):
         # Most likely no X is running,
         # let's fallback to default pin_func implementation
         return pin_func(input_text, message)
-
+'''
+    
 def main():
     args = parse_args(Commands)
 
@@ -317,19 +311,9 @@ def main():
                     print dev[0]
         return
 
-    if args.debug:
-        if args.debuglink_transport == 'usb' and args.debuglink_path == '':
-            debuglink_transport = get_transport('usb', args.path, debug_link=True)
-        else:
-            debuglink_transport = get_transport(args.debuglink_transport,
-                                        args.debuglink_path, debug_link=True)
-        debuglink = DebugLink(debuglink_transport)    
-    else:
-        debuglink = None
-
     transport = get_transport(args.transport, args.path)
-    client = TrezorClient(transport, pin_func=qt_pin_func, debuglink=debuglink)
-    client.setup_debuglink(button=True, pin_correct=True)
+    client = TrezorClient(transport)
+    client.set_tx_func(BlockchainApi().get_tx)
     cmds = Commands(client)
     
     res = args.func(cmds, args)
