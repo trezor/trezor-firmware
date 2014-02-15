@@ -4,7 +4,7 @@ import common
 
 from trezorlib import messages_pb2 as proto
 from trezorlib import types_pb2 as types
-from trezorlib.client import PinException
+from trezorlib.client import PinException, CallException
 
 # FIXME TODO Add passphrase tests
 
@@ -17,6 +17,37 @@ class TestProtectCall(common.TrezorTest):
                                 passphrase_protection=passphrase)
         self.assertEqual(res, 'random data')
 
+    def test_expected_responses(self):
+        # This is low-level test of set_expected_responses()
+        # feature of debugging client
+
+        # Scenario 1 - Received unexpected message
+        self.client.set_expected_responses([])
+        self.assertRaises(CallException, self._some_protected_call, True, True, True)
+
+        # Scenario 2 - Received other than expected message
+        self.client.set_expected_responses([proto.Success()])
+        self.assertRaises(CallException, self._some_protected_call, True, True, True)
+
+        # Scenario 3 - Not received expected message
+        self.client.set_expected_responses([proto.ButtonRequest(),
+                                            proto.Success(),
+                                            proto.Success()])  # This is expected, but not received
+        self.assertRaises(Exception, self._some_protected_call, True, False, False)
+
+        # Scenario 4 - Received what expected
+        self.client.set_expected_responses([proto.ButtonRequest(),
+                                            proto.PinMatrixRequest(),
+                                            # proto.PassphraseRequest(), # passhrase is already in session
+                                            proto.Success(message='random data')])
+        self._some_protected_call(True, True, True)
+
+        # Scenario 5 - Failed message by field filter
+        self.client.set_expected_responses([proto.ButtonRequest(),
+                                            proto.PinMatrixRequest(),
+                                            proto.Success(message='wrong data')])
+        self.assertRaises(CallException, self._some_protected_call, True, True, True)
+
     def test_no_protection(self):
         self.client.wipe_device()
         self.client.load_device_by_mnemonic(
@@ -28,7 +59,7 @@ class TestProtectCall(common.TrezorTest):
         )
         
         self.assertEqual(self.client.debug.read_pin()[0], '')
-        self.client.set_expected_buttonrequests([])
+        self.client.set_expected_responses([proto.Success()])
         self._some_protected_call(False, True, True)
 
     def test_pin(self):
@@ -41,7 +72,9 @@ class TestProtectCall(common.TrezorTest):
 
         self.assertEqual(self.client.debug.read_pin()[0], self.pin2)
         self.client.setup_debuglink(button=True, pin_correct=True)
-        self.client.set_expected_buttonrequests([types.ButtonRequest_Other])
+        self.client.set_expected_responses([proto.ButtonRequest(),
+                                            proto.PinMatrixRequest(),
+                                            proto.Success()])
         self._some_protected_call(True, True, False)
 
     def test_incorrect_pin(self):
@@ -67,8 +100,7 @@ class TestProtectCall(common.TrezorTest):
             start = time.time()
             self.assertRaises(PinException, self._some_protected_call, False, True, False)
             test_backoff(attempt, start)
-
-    '''
+'''
         # Unplug Trezor now
         self.client.debuglink.stop()
         self.client.close()

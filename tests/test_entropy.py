@@ -2,8 +2,6 @@ import unittest
 import common
 import math
 
-from trezorlib import messages_pb2 as messages
-
 def entropy(data):
     counts = {}
     for c in data:
@@ -12,7 +10,7 @@ def entropy(data):
         else:
             counts[c] = 1
     e = 0
-    for k,v in counts.iteritems():
+    for _, v in counts.iteritems():
         p = 1.0 * v / len(data)
         e -= p * math.log(p, 256)
     return e

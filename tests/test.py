@@ -20,8 +20,8 @@ TODO:
     x iny cointype ako 0
 
 - chceme v tomto release(?)
-  * SignMessage workflow
-  * VerifyMessage workflow
+  x SignMessage workflow
+  x VerifyMessage workflow
 
 * otestovat session handling (tento test bude zrejme failovat na RPi)
 * Failure_NotInitialized
@@ -31,4 +31,6 @@ TODO:
 * Client requires PIN
 
 x Zero signature test
+
+* test bip39, utf, passphrase
 '''
