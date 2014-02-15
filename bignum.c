@@ -209,11 +209,11 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 		// estimate (res / prime)
 		coef = (res[i] >> 16) + (res[i + 1] << 14);
 		// substract (coef * prime) from res
-		temp = 0x1000000000000000llu + res[i - 8] - prime->val[0] * (uint64_t)coef;
+		temp = 0x1000000000000000ull + res[i - 8] - prime->val[0] * (uint64_t)coef;
 		res[i - 8] = temp & 0x3FFFFFFF;
 		for (j = 1; j < 9; j++) {
 			temp >>= 30;
-			temp += 0xFFFFFFFC0000000llu + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
+			temp += 0xFFFFFFFC0000000ull + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
 			res[i - 8 + j] = temp & 0x3FFFFFFF;
 		}
 	}
@@ -233,11 +233,11 @@ void bn_fast_mod(bignum256 *x, const bignum256 *prime)
 	coef = x->val[8] >> 16;
 	if (!coef) return;
 	// substract (coef * prime) from x
-	temp = 0x1000000000000000llu + x->val[0] - prime->val[0] * (uint64_t)coef;
+	temp = 0x1000000000000000ull + x->val[0] - prime->val[0] * (uint64_t)coef;
 	x->val[0] = temp & 0x3FFFFFFF;
 	for (j = 1; j < 9; j++) {
 		temp >>= 30;
-		temp += 0xFFFFFFFC0000000llu + x->val[j] - prime->val[j] * (uint64_t)coef;
+		temp += 0xFFFFFFFC0000000ull + x->val[j] - prime->val[j] * (uint64_t)coef;
 		x->val[j] = temp & 0x3FFFFFFF;
 	}
 }
