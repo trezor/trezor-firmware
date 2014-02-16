@@ -243,7 +243,7 @@ message EntropyRequest {
 
 // Provide additional entropy for seed generation function.
 message EntropyAck {
-	optional bytes entropy = 1 [(binary) = true];	// Recommended to provide 256 bytes of random data.
+	optional bytes entropy = 1 [(binary) = true];	// Recommended to provide 256 bits (32 bytes) of random data.
 }
 
 // Starts workflow of asking user for specific words of his mnemonic.
