@@ -1,0 +1,5 @@
+set(SOURCES bignum.c ecdsa.c secp256k1.c sha2.c rand.c hmac.c bip32.c ripemd160.c bip39.c pbkdf2.c)
+if(MSVC)
+  set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CXX)
+endif(MSVC)
+add_library(TrezorCrypto STATIC ${SOURCES})
