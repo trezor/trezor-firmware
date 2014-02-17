@@ -34,7 +34,7 @@ class TestPing(common.TrezorTest):
         self.assertEqual(res, 'random data')
 
         # pin and passphrase are cached
-        self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other)])
+        self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other),proto.Success()])
         res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
         self.assertEqual(res, 'random data')
 
