@@ -12,24 +12,24 @@ class TrezorTest(unittest.TestCase):
         self.client.set_debuglink(self.debug_transport)
         self.client.set_tx_func(BlockchainApi().get_tx)
 
-        self.mnemonic1 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
-        self.mnemonic2 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
-        self.pin1 = '1234'
-        self.pin2 = '43211'
+        self.mnemonic12 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
+        self.mnemonic18 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
+        self.mnemonic24 = 'dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic'
+
+        self.pin4 = '1234'
+        self.pin6 = '789456'
+        self.pin8 = '45678978'
 
         self.client.wipe_device()
-        self.client.load_device_by_mnemonic(
-            mnemonic=self.mnemonic1,
-            pin=self.pin1,
-            passphrase_protection=False,
-            label='test',
-            language='english',
-        )
-
-        # self.client.apply_settings(label='unit testing', coin_shortcut='BTC', language='english')
 
         print "Setup finished"
         print "--------------"
-        
+
+    def setup_mnemonic_nopin_nopassphrase(self):
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin='', passphrase_protection=False, label='test', language='english')
+
+    def setup_mnemonic_pin_passphrase(self):
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=True, label='test', language='english')
+
     def tearDown(self):
         self.client.close()

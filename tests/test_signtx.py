@@ -39,6 +39,8 @@ class FakeTestnetBlockchain(object):
 class TestSignTx(common.TrezorTest):
 
     def test_one_one_fee(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
@@ -62,6 +64,8 @@ class TestSignTx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
 
     def test_testnet_one_two_fee(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: 6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54
         # input 1: 10.00000000 BTC
         inp1 = proto_types.TxInputType(address_n=[0],  # mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL
@@ -90,6 +94,8 @@ class TestSignTx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '0100000001549d2977998f899a63c0a9da30dedb2841e33fef561097b05822eccbc7f3906f010000006b4830450221009c2d30385519fdb13dce13d5ac038be07d7b2dad0b0f7b2c1c339d7255bcf553022056a2f5bceab3cd0ffed4d388387e631f419d67ff9ce7798e3d7dfe6a6d6ec4bd0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0280ce341d000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac0065cd1d000000001976a9142db345c36563122e2fd0f5485fb7ea9bbf7cb5a288ac00000000')
 
     def test_testnet_fee_too_high(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: 6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54
         # input 1: 10.00000000 BTC
         inp1 = proto_types.TxInputType(address_n=[0],  # mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL
@@ -119,6 +125,8 @@ class TestSignTx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '0100000001549d2977998f899a63c0a9da30dedb2841e33fef561097b05822eccbc7f3906f010000006b483045022100d74e9fa5c7ff5966d52bce8d1d772c1e3ef1376395fb85a0bbf910e723bd606d02204cb8df6debd7c4c076632011bb1e180495bcf3630d2471c354bed56c2e45a2180121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0200389c1c000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac0065cd1d000000001976a9142db345c36563122e2fd0f5485fb7ea9bbf7cb5a288ac00000000')
 
     def test_one_two_fee(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
@@ -147,6 +155,8 @@ class TestSignTx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b483045022100c1400d8485d3bdcae7413e123148f35ece84806fc387ab88c66b469df89aef1702201d481d04216b319dc549ffe2333143629ba18828a4e2d1783ab719a6aa263eb70121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff02e0930400000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac80380100000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac00000000')
 
     def test_one_three_fee(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
@@ -181,11 +191,13 @@ class TestSignTx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b483045022100e695e2c530c7c0fc32e6b79b7cff56a7f70a8c9da787534f46b4204070f914fc02207b0879a81408a11e23b11d4c7965c62b5fc6d5c2d92340f5ee2da7b40e99314a0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0300650400000000001976a914de9b2a8da088824e8fe51debea566617d851537888ace02e0000000000001976a9141fe1d337fb81afca42818051e12fd18245d1b17288ac80380100000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac00000000')
 
     def test_two_two(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c
         # input 1: 0.0010 BTC
         # tx: 58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e
         # input 1: 0.0011 BTC
-        
+
         inp1 = proto_types.TxInputType(address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
                              # amount=100000,
                              prev_hash=binascii.unhexlify('c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c'),
@@ -219,6 +231,8 @@ class TestSignTx(common.TrezorTest):
 
     '''
     def test_255_outputs(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # Tests if device implements serialization of len(outputs) correctly
 
         # tx: c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
@@ -255,6 +269,8 @@ class TestSignTx(common.TrezorTest):
     '''
 
     def test_fee_too_high(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
@@ -278,6 +294,8 @@ class TestSignTx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(tx.serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006a4730440220361b8268718533055682f4532d30c553ce778f70b217457a9aa1956e457c5aac0220538ae285bb340484bb09a67635d29192a14e61d8a8385b8b090a92e3e97e1c010121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0120300500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
 
     def test_not_enough_funds(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 

@@ -18,6 +18,8 @@ class TestProtectCall(common.TrezorTest):
         self.assertEqual(res, 'random data')
 
     def test_expected_responses(self):
+        self.setup_mnemonic_pin_passphrase()
+
         # This is low-level test of set_expected_responses()
         # feature of debugging client
 
@@ -49,28 +51,16 @@ class TestProtectCall(common.TrezorTest):
         self.assertRaises(CallException, self._some_protected_call, True, True, True)
 
     def test_no_protection(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(
-            mnemonic=self.mnemonic1,
-            pin='',
-            passphrase_protection=False,
-            label='test',
-            language='english',
-        )
-        
+        self.setup_mnemonic_nopin_nopassphrase()
+
         self.assertEqual(self.client.debug.read_pin()[0], '')
         self.client.set_expected_responses([proto.Success()])
         self._some_protected_call(False, True, True)
 
     def test_pin(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin=self.pin2,
-                                            passphrase_protection=True,
-                                            label='test',
-                                            language='english')
+        self.setup_mnemonic_pin_passphrase()
 
-        self.assertEqual(self.client.debug.read_pin()[0], self.pin2)
+        self.assertEqual(self.client.debug.read_pin()[0], self.pin4)
         self.client.setup_debuglink(button=True, pin_correct=True)
         self.client.set_expected_responses([proto.ButtonRequest(),
                                             proto.PinMatrixRequest(),
@@ -78,16 +68,20 @@ class TestProtectCall(common.TrezorTest):
         self._some_protected_call(True, True, False)
 
     def test_incorrect_pin(self):
+        self.setup_mnemonic_pin_passphrase()
         self.client.setup_debuglink(button=True, pin_correct=False)
         self.assertRaises(PinException, self._some_protected_call, False, True, False)
 
     def test_cancelled_pin(self):
+        self.setup_mnemonic_pin_passphrase()
         self.client.setup_debuglink(button=True, pin_correct=False)  # PIN cancel
         self.assertRaises(PinException, self._some_protected_call, False, True, False)
 
     def test_exponential_backoff_with_reboot(self):
+        self.setup_mnemonic_pin_passphrase()
+
         self.client.setup_debuglink(button=True, pin_correct=False)
-        
+
         def test_backoff(attempts, start):
             expected = 1.8 ** attempts
             got = time.time() - start

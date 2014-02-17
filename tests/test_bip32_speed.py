@@ -5,12 +5,7 @@ from trezorlib import tools
 
 class TestAddresses(common.TrezorTest):
     def test_public_ckd(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin='',
-                                            passphrase_protection=False,
-                                            label='test',
-                                            language='english')
+        self.setup_mnemonic_nopin_nopassphrase()
 
         self.client.get_address('Bitcoin', [])  # to compute root node via BIP39
 
@@ -23,12 +18,7 @@ class TestAddresses(common.TrezorTest):
             self.assertLessEqual(delay, expected)
 
     def test_private_ckd(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin='',
-                                            passphrase_protection=False,
-                                            label='test',
-                                            language='english')
+        self.setup_mnemonic_nopin_nopassphrase()
 
         self.client.get_address('Bitcoin', [])  # to compute root node via BIP39
 

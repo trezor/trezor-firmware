@@ -31,7 +31,7 @@ class TestZeroSig(common.TrezorTest):
             msg.outputs.extend([out1, ])
 
             tx = self.client.call(msg)
-    
+
             siglen = ord(tx.serialized_tx[44])
             print siglen
             if siglen < 67:
@@ -41,6 +41,8 @@ class TestZeroSig(common.TrezorTest):
     '''
 
     def test_one_zero_signature(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
                              prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
@@ -61,6 +63,8 @@ class TestZeroSig(common.TrezorTest):
         self.assertEqual(siglen, 67)
 
     def test_two_zero_signature(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
                              prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
@@ -79,6 +83,6 @@ class TestZeroSig(common.TrezorTest):
 
         # Trezor must strip leading zero from signature
         self.assertEqual(siglen, 66)
-        
+
 if __name__ == '__main__':
     unittest.main()

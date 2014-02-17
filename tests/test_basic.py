@@ -4,16 +4,13 @@ import common
 from trezorlib import messages_pb2 as messages
 
 class TestBasic(common.TrezorTest):
+
     def test_features(self):
         features = self.client.call(messages.Initialize())
-
-        # Result is the same as reported by BitkeyClient class
         self.assertEqual(features, self.client.features)
 
     def test_ping(self):
         ping = self.client.call(messages.Ping(message='ahoj!'))
-
-        # Ping results in Success(message='Ahoj!')
         self.assertEqual(ping, messages.Success(message='ahoj!'))
 
     def test_device_id_same(self):

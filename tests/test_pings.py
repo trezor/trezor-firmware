@@ -8,14 +8,7 @@ from trezorlib import types_pb2 as proto_types
 class TestPing(common.TrezorTest):
 
     def test_ping(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(
-            mnemonic=self.mnemonic1,
-            pin=self.pin1,
-            passphrase_protection=True,
-            label='test',
-            language='english',
-        )
+        self.setup_mnemonic_pin_passphrase()
 
         self.client.set_expected_responses([proto.Success()])
         res = self.client.ping('random data')
@@ -34,14 +27,7 @@ class TestPing(common.TrezorTest):
         self.assertEqual(res, 'random data')
 
     def test_ping_caching(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(
-            mnemonic=self.mnemonic1,
-            pin=self.pin1,
-            passphrase_protection=True,
-            label='test',
-            language='english',
-        )
+        self.setup_mnemonic_pin_passphrase()
 
         self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other),proto.PinMatrixRequest(),proto.PassphraseRequest(),proto.Success()])
         res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)

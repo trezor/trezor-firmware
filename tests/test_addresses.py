@@ -4,14 +4,9 @@ import trezorlib.ckd_public as bip32
 from trezorlib import tools
 
 class TestAddresses(common.TrezorTest):
-    def test_btc(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin='',
-                                            passphrase_protection=False,
-                                            label='test',
-                                            language='english')
 
+    def test_btc(self):
+        self.setup_mnemonic_nopin_nopassphrase()
         self.assertEqual(self.client.get_address('Bitcoin', []), '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK')
         self.assertEqual(self.client.get_address('Bitcoin', [1]), '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb')
         self.assertEqual(self.client.get_address('Bitcoin', [0, -1]), '1JVq66pzRBvqaBRFeU9SPVvg3er4ZDgoMs')
@@ -19,13 +14,7 @@ class TestAddresses(common.TrezorTest):
         self.assertEqual(self.client.get_address('Bitcoin', [0, 9999999]), '1GS8X3yc7ntzwGw9vXwj9wqmBWZkTFewBV')
 
     def test_ltc(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin='',
-                                            passphrase_protection=False,
-                                            label='test',
-                                            language='english')
-
+        self.setup_mnemonic_nopin_nopassphrase()
         self.assertEqual(self.client.get_address('Litecoin', []), 'LYtGrdDeqYUQnTkr5sHT2DKZLG7Hqg7HTK')
         self.assertEqual(self.client.get_address('Litecoin', [1]), 'LKRGNecThFP3Q6c5fosLVA53Z2hUDb1qnE')
         self.assertEqual(self.client.get_address('Litecoin', [0, -1]), 'LcinMK8pVrAtpz7Qpc8jfWzSFsDLgLYfG6')
@@ -33,22 +22,11 @@ class TestAddresses(common.TrezorTest):
         self.assertEqual(self.client.get_address('Litecoin', [0, 9999999]), 'Laf5nGHSCT94C5dK6fw2RxuXPiw2ZuRR9S')
 
     def test_tbtc(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin='',
-                                            passphrase_protection=False,
-                                            label='test',
-                                            language='english')
-
+        self.setup_mnemonic_nopin_nopassphrase()
         self.assertEqual(self.client.get_address('Testnet', [111, 42]), 'moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa')
 
     def test_public_ckd(self):
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic1,
-                                            pin='',
-                                            passphrase_protection=False,
-                                            label='test',
-                                            language='english')
+        self.setup_mnemonic_nopin_nopassphrase()
 
         node = self.client.get_public_node([])
         node_sub1 = self.client.get_public_node([1])
@@ -64,4 +42,4 @@ class TestAddresses(common.TrezorTest):
         self.assertEqual(address1, address2)
 
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()

@@ -14,10 +14,12 @@ class TestDebugLink(common.TrezorTest):
         self.assertEqual(len(layout), 1024)
 
     def test_mnemonic(self):
+        self.setup_mnemonic_nopin_nopassphrase()
         mnemonic = self.client.debug.read_mnemonic()
-        self.assertEqual(mnemonic, self.mnemonic1)
+        self.assertEqual(mnemonic, self.mnemonic12)
 
     def test_node(self):
+        self.setup_mnemonic_nopin_nopassphrase()
         node = self.client.debug.read_node()
         self.assertIsNotNone(node)
 
