@@ -54,6 +54,11 @@ class DebugLink(object):
         obj = self.transport.read_blocking()
         return obj.node
 
+    def read_passphrase_protection(self):
+        self.transport.write(proto.DebugLinkGetState())
+        obj = self.transport.read_blocking()
+        return obj.passphrase_protection
+
     def press_button(self, yes_no):
         print "Pressing", yes_no
         self.button_func(yes_no)

@@ -322,6 +322,8 @@ class TestSignTx(common.TrezorTest):
             self.assert_(False, "types.Failure_NotEnoughFunds expected")
 
     def test_estimate_size(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
                              prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
