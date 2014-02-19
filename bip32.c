@@ -71,7 +71,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	}
 	write_be(data + 33, i);
 
-	SHA256_Raw(inout->public_key, 33, fingerprint);
+	sha256_Raw(inout->public_key, 33, fingerprint);
 	ripemd160(fingerprint, 32, fingerprint);
 	inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) + (fingerprint[2] << 8) + fingerprint[3];
 
@@ -111,7 +111,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	}
 	write_be(data + 33, i);
 
-	SHA256_Raw(inout->public_key, 33, fingerprint);
+	sha256_Raw(inout->public_key, 33, fingerprint);
 	ripemd160(fingerprint, 32, fingerprint);
 	inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) + (fingerprint[2] << 8) + fingerprint[3];
 

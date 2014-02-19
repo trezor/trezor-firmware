@@ -11,7 +11,7 @@ void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 
 	memset(buf, 0, SHA256_BLOCK_LENGTH);
 	if (keylen > SHA256_BLOCK_LENGTH) {
-		SHA256_Raw(key, keylen, buf);
+		sha256_Raw(key, keylen, buf);
 	} else {
 		memcpy(buf, key, keylen);
 	}
@@ -21,15 +21,15 @@ void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 		i_key_pad[i] = buf[i] ^ 0x36;
 	}
 
-	SHA256_Init(&ctx);
-	SHA256_Update(&ctx, i_key_pad, SHA256_BLOCK_LENGTH);
-	SHA256_Update(&ctx, msg, msglen);
-	SHA256_Final(buf, &ctx);
+	sha256_Init(&ctx);
+	sha256_Update(&ctx, i_key_pad, SHA256_BLOCK_LENGTH);
+	sha256_Update(&ctx, msg, msglen);
+	sha256_Final(buf, &ctx);
 
-	SHA256_Init(&ctx);
-	SHA256_Update(&ctx, o_key_pad, SHA256_BLOCK_LENGTH);
-	SHA256_Update(&ctx, buf, SHA256_DIGEST_LENGTH);
-	SHA256_Final(hmac, &ctx);
+	sha256_Init(&ctx);
+	sha256_Update(&ctx, o_key_pad, SHA256_BLOCK_LENGTH);
+	sha256_Update(&ctx, buf, SHA256_DIGEST_LENGTH);
+	sha256_Final(hmac, &ctx);
 }
 
 void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, const uint32_t msglen, uint8_t *hmac)
@@ -40,7 +40,7 @@ void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 
 	memset(buf, 0, SHA512_BLOCK_LENGTH);
 	if (keylen > SHA512_BLOCK_LENGTH) {
-		SHA512_Raw(key, keylen, buf);
+		sha512_Raw(key, keylen, buf);
 	} else {
 		memcpy(buf, key, keylen);
 	}
@@ -50,13 +50,13 @@ void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 		i_key_pad[i] = buf[i] ^ 0x36;
 	}
 
-	SHA512_Init(&ctx);
-	SHA512_Update(&ctx, i_key_pad, SHA512_BLOCK_LENGTH);
-	SHA512_Update(&ctx, msg, msglen);
-	SHA512_Final(buf, &ctx);
+	sha512_Init(&ctx);
+	sha512_Update(&ctx, i_key_pad, SHA512_BLOCK_LENGTH);
+	sha512_Update(&ctx, msg, msglen);
+	sha512_Final(buf, &ctx);
 
-	SHA512_Init(&ctx);
-	SHA512_Update(&ctx, o_key_pad, SHA512_BLOCK_LENGTH);
-	SHA512_Update(&ctx, buf, SHA512_DIGEST_LENGTH);
-	SHA512_Final(hmac, &ctx);
+	sha512_Init(&ctx);
+	sha512_Update(&ctx, o_key_pad, SHA512_BLOCK_LENGTH);
+	sha512_Update(&ctx, buf, SHA512_DIGEST_LENGTH);
+	sha512_Final(hmac, &ctx);
 }

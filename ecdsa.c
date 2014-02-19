@@ -227,7 +227,7 @@ int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t
 int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
 {
 	uint8_t hash[32];
-	SHA256_Raw(msg, msg_len, hash);
+	sha256_Raw(msg, msg_len, hash);
 	return ecdsa_sign_digest(priv_key, hash, sig);
 }
 
@@ -236,8 +236,8 @@ int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, ui
 int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
 {
 	uint8_t hash[32];
-	SHA256_Raw(msg, msg_len, hash);
-	SHA256_Raw(hash, 32, hash);
+	sha256_Raw(msg, msg_len, hash);
+	sha256_Raw(hash, 32, hash);
 	return ecdsa_sign_digest(priv_key, hash, sig);
 }
 
@@ -343,15 +343,15 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 	int i, l;
 
 	if (pub_key[0] == 0x04) {
-		SHA256_Raw(pub_key, 65, a);
+		sha256_Raw(pub_key, 65, a);
 	} else {
-		SHA256_Raw(pub_key, 33, a);
+		sha256_Raw(pub_key, 33, a);
 	}
 	b[0] = version;
 	ripemd160(a, 32, b + 1);
 
-	SHA256_Raw(b, 21, a);
-	SHA256_Raw(a, 32, a);
+	sha256_Raw(b, 21, a);
+	sha256_Raw(a, 32, a);
 
 	memcpy(a + 28, a, 4); // checksum
 	memset(a, 0, 7);      // zeroes
@@ -405,8 +405,8 @@ int ecdsa_address_decode(const char *addr, uint8_t *out)
 	}
 	bn_write_be(&num, buf);
 	// compute address hash
-	SHA256_Raw(buf + 7, 21, check);
-	SHA256_Raw(check, 32, check);
+	sha256_Raw(buf + 7, 21, check);
+	sha256_Raw(check, 32, check);
 	// check if valid
 	if (memcmp(buf + 7 + 21, check, 4) != 0) {
 		return 0;
@@ -453,15 +453,15 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
 {
 	uint8_t hash[32];
-	SHA256_Raw(msg, msg_len, hash);
+	sha256_Raw(msg, msg_len, hash);
 	return ecdsa_verify_digest(pub_key, sig, hash);
 }
 
 int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
 {
 	uint8_t hash[32];
-	SHA256_Raw(msg, msg_len, hash);
-	SHA256_Raw(hash, 32, hash);
+	sha256_Raw(msg, msg_len, hash);
+	sha256_Raw(hash, 32, hash);
 	return ecdsa_verify_digest(pub_key, sig, hash);
 }
 

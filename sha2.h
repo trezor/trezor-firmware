@@ -52,18 +52,18 @@ typedef struct _SHA512_CTX {
 	uint8_t	buffer[SHA512_BLOCK_LENGTH];
 } SHA512_CTX;
 
-void SHA256_Init(SHA256_CTX *);
-void SHA256_Update(SHA256_CTX*, const uint8_t*, size_t);
-void SHA256_Final(uint8_t[SHA256_DIGEST_LENGTH], SHA256_CTX*);
-char* SHA256_End(SHA256_CTX*, char[SHA256_DIGEST_STRING_LENGTH]);
-void SHA256_Raw(const uint8_t*, size_t, uint8_t[SHA256_DIGEST_LENGTH]);
-char* SHA256_Data(const uint8_t*, size_t, char[SHA256_DIGEST_STRING_LENGTH]);
+void sha256_Init(SHA256_CTX *);
+void sha256_Update(SHA256_CTX*, const uint8_t*, size_t);
+void sha256_Final(uint8_t[SHA256_DIGEST_LENGTH], SHA256_CTX*);
+char* sha256_End(SHA256_CTX*, char[SHA256_DIGEST_STRING_LENGTH]);
+void sha256_Raw(const uint8_t*, size_t, uint8_t[SHA256_DIGEST_LENGTH]);
+char* sha256_Data(const uint8_t*, size_t, char[SHA256_DIGEST_STRING_LENGTH]);
 
-void SHA512_Init(SHA512_CTX*);
-void SHA512_Update(SHA512_CTX*, const uint8_t*, size_t);
-void SHA512_Final(uint8_t[SHA512_DIGEST_LENGTH], SHA512_CTX*);
-char* SHA512_End(SHA512_CTX*, char[SHA512_DIGEST_STRING_LENGTH]);
-void SHA512_Raw(const uint8_t*, size_t, uint8_t[SHA512_DIGEST_LENGTH]);
-char* SHA512_Data(const uint8_t*, size_t, char[SHA512_DIGEST_STRING_LENGTH]);
+void sha512_Init(SHA512_CTX*);
+void sha512_Update(SHA512_CTX*, const uint8_t*, size_t);
+void sha512_Final(uint8_t[SHA512_DIGEST_LENGTH], SHA512_CTX*);
+char* sha512_End(SHA512_CTX*, char[SHA512_DIGEST_STRING_LENGTH]);
+void sha512_Raw(const uint8_t*, size_t, uint8_t[SHA512_DIGEST_LENGTH]);
+char* sha512_Data(const uint8_t*, size_t, char[SHA512_DIGEST_STRING_LENGTH]);
 
 #endif

@@ -33,7 +33,7 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 		return 0;
 	}
 
-	SHA256_Raw((const uint8_t *)data, len, hash);
+	sha256_Raw((const uint8_t *)data, len, hash);
 
 	for (i = 0; i < len; i++) {
 		for (j = 0; j < 8; j++) {

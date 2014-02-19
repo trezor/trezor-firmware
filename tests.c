@@ -210,7 +210,7 @@ END_TEST
 int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
 
 #define test_deterministic(KEY, MSG, K) do { \
-	SHA256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
+	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
 	res = generate_k_rfc6979(&k, fromhex(KEY), buf); \
 	ck_assert_int_eq(res, 0); \
 	bn_write_be(&k, buf); \
@@ -299,7 +299,7 @@ START_TEST(test_verify_speed)
 END_TEST
 
 #define test_aes(KEY, BLKLEN, IN, OUT) do { \
-	SHA256_Raw((uint8_t *)KEY, strlen(KEY), key); \
+	sha256_Raw((uint8_t *)KEY, strlen(KEY), key); \
 	aes_enc_key(key, 32, &ctx); \
 	memcpy(in, fromhex(IN), BLKLEN); \
 	aes_enc_blk(in, out, &ctx); \
