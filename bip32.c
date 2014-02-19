@@ -7,9 +7,11 @@
 #include "sha2.h"
 #include "ripemd160.h"
 
-void hdnode_from_xpub(uint8_t version_byte, uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
+void hdnode_from_xpub(uint8_t version_byte, uint32_t version_private, uint32_t version_public, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
 {
-	out->version = version;
+	out->version = version_public;
+	out->version_private = version_private;
+	out->version_public = version_public;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -20,9 +22,11 @@ void hdnode_from_xpub(uint8_t version_byte, uint32_t version, uint32_t depth, ui
 	hdnode_fill_address(out);
 }
 
-void hdnode_from_xprv(uint8_t version_byte, uint32_t version, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out)
+void hdnode_from_xprv(uint8_t version_byte, uint32_t version_private, uint32_t version_public, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out)
 {
-	out->version = version;
+	out->version = version_private;
+	out->version_private = version_private;
+	out->version_public = version_public;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -33,10 +37,12 @@ void hdnode_from_xprv(uint8_t version_byte, uint32_t version, uint32_t depth, ui
 	hdnode_fill_address(out);
 }
 
-void hdnode_from_seed(uint8_t version_byte, uint32_t version, uint8_t *seed, int seed_len, HDNode *out)
+void hdnode_from_seed(uint8_t version_byte, uint32_t version_private, uint32_t version_public, uint8_t *seed, int seed_len, HDNode *out)
 {
 	uint8_t I[32 + 32];
-	out->version = version;
+	out->version = version_private;
+	out->version_private = version_private;
+	out->version_public = version_public;
 	out->depth = 0;
 	out->fingerprint = 0x00000000;
 	out->child_num = 0;
@@ -54,6 +60,8 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	uint8_t I[32 + 32];
 	uint8_t fingerprint[32];
 	bignum256 a, b;
+
+	inout->version = inout->version_private;
 
 	if (i & 0x80000000) { // private derivation
 		data[0] = 0;
@@ -82,6 +90,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
 	hdnode_fill_public_key(inout);
 	hdnode_fill_address(inout);
+
 	return 1;
 }
 
@@ -92,6 +101,8 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	uint8_t fingerprint[32];
 	curve_point a, b;
 	bignum256 c;
+
+	inout->version = inout->version_public;
 
 	if (i & 0x80000000) { // private derivation
 		return 0;
