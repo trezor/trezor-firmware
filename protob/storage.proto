@@ -22,8 +22,3 @@ message Storage {
 	optional bytes language = 7;
 	optional bytes label = 8 [(binary) = true];
 }
-
-message Session {
-	optional bytes passphrase = 1 [(binary) = true];
-	optional HDNodeType node = 2;
-}
