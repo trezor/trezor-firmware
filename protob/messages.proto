@@ -400,6 +400,8 @@ message DebugLinkState {
 	optional bytes mnemonic = 4;				// current mnemonic format
 	optional HDNodeType node = 5;				// current node (BIP32 format)
 	optional bool passphrase_protection = 6;
+	optional bytes word = 7;		// What word is on display in RecoveryDevice/ResetDevice workflow
+	optional int32 word_pos = 8;	// Which word of mnemonic do the device expect
 }
 
 // Ask device to shutdown/restart
