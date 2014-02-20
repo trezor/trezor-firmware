@@ -63,10 +63,12 @@ class BaseClient(object):
 
     def call_raw(self, msg):
         try:
+            print "SENDING", pprint(msg)
             self.transport.session_begin()
 
             self.transport.write(msg)
             resp = self.transport.read_blocking()
+            print "RECEIVED", pprint(resp)
 
         finally:
             self.transport.session_end()
