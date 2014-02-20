@@ -122,7 +122,7 @@ class TextUIMixin(object):
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
-        passphrase = raw_input("Passphrase required: %s " % msg.message)
+        passphrase = raw_input("Passphrase required: ")
         return proto.PassphraseAck(passphrase=passphrase)
 
     def callback_WordRequest(self, msg):
