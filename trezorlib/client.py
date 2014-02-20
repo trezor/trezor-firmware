@@ -63,13 +63,9 @@ class BaseClient(object):
 
     def call_raw(self, msg):
         try:
-            print "SENDING", pprint(msg)
             self.transport.session_begin()
-
             self.transport.write(msg)
             resp = self.transport.read_blocking()
-            print "RECEIVED", pprint(resp)
-
         finally:
             self.transport.session_end()
 
@@ -104,6 +100,13 @@ class BaseClient(object):
 
     def close(self):
         self.transport.close()
+
+class DebugWireMixin(object):
+    def call_raw(self, msg):
+        print "SENDING", pprint(msg)
+        resp = super(DebugWireMixin, self).call_raw(msg)
+        print "RECEIVED", pprint(resp)
+        return resp
 
 class TextUIMixin(object):
     # This class demonstrates easy test-based UI
@@ -179,9 +182,7 @@ class DebugLinkMixin(object):
         return resp
 
     def call(self, msg):
-        print "SENDING", pprint(msg)
         ret = super(DebugLinkMixin, self).call(msg)
-        print "RECEIVED", pprint(ret)
 
         if self.expected_responses != None and len(self.expected_responses):
             raise Exception("Some of expected responses didn't come from device: %s" % \
@@ -501,7 +502,10 @@ class ProtocolMixin(object):
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
 
-class TrezorDebugClient(ProtocolMixin, DebugLinkMixin, BaseClient):
+class TrezorClientDebug(ProtocolMixin, TextUIMixin, DebugWireMixin, BaseClient):
+    pass
+
+class TrezorDebugClient(ProtocolMixin, DebugLinkMixin, DebugWireMixin, BaseClient):
     pass
 
 '''
