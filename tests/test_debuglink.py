@@ -23,5 +23,20 @@ class TestDebugLink(common.TrezorTest):
         node = self.client.debug.read_node()
         self.assertIsNotNone(node)
 
+    def test_pin(self):
+        self.setup_mnemonic_pin_passphrase()
+
+        # Manually trigger PinMatrixRequest
+        resp = self.client.call_raw(proto.Ping(message='test', pin_protection=True))
+        self.assertIsInstance(resp, proto.PinMatrixRequest)
+
+        pin = self.client.debug.read_pin()
+        self.assertEqual(pin[0], '1234')
+        self.assertNotEqual(pin[1], '')
+
+        pin_encoded = self.client.debug.read_pin_encoded()
+        resp = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        self.assertIsInstance(resp, proto.Success)
+
 if __name__ == '__main__':
     unittest.main()

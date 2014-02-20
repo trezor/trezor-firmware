@@ -26,7 +26,13 @@ class DebugLink(object):
         return (obj.pin, obj.matrix)
 
     def read_pin_encoded(self):
-        pin, matrix = self.read_pin()
+        pin, _ = self.read_pin()
+        pin_encoded = self.encode_pin(pin)
+        self.pin_func(pin_encoded)
+        return pin_encoded
+
+    def encode_pin(self, pin):
+        _, matrix = self.read_pin()
 
         # Now we have real PIN and PIN matrix.
         # We have to encode that into encoded pin,
@@ -35,10 +41,8 @@ class DebugLink(object):
         pin_encoded = ''.join([ str(matrix.index(p) + 1) for p in pin])
 
         print "Encoded PIN:", pin_encoded
-        self.pin_func(pin_encoded)
-
         return pin_encoded
-
+        
     def read_layout(self):
         self.transport.write(proto.DebugLinkGetState())
         obj = self.transport.read_blocking()
@@ -53,6 +57,16 @@ class DebugLink(object):
         self.transport.write(proto.DebugLinkGetState())
         obj = self.transport.read_blocking()
         return obj.node
+
+    def read_word(self):
+        self.transport.write(proto.DebugLinkGetState())
+        obj = self.transport.read_blocking()
+        return (obj.word, obj.word_pos)
+
+    def read_entropy(self):
+        self.transport.write(proto.DebugLinkGetState())
+        obj = self.transport.read_blocking()
+        return obj.entropy
 
     def read_passphrase_protection(self):
         self.transport.write(proto.DebugLinkGetState())

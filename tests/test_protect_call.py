@@ -40,7 +40,7 @@ class TestProtectCall(common.TrezorTest):
         # Scenario 4 - Received what expected
         self.client.set_expected_responses([proto.ButtonRequest(),
                                             proto.PinMatrixRequest(),
-                                            # proto.PassphraseRequest(), # passhrase is already in session
+                                            proto.PassphraseRequest(),
                                             proto.Success(message='random data')])
         self._some_protected_call(True, True, True)
 
