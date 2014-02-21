@@ -21,6 +21,8 @@ x SimpleSignTx
 FirmwareErase
 FirmwareUpload
 
+protection levels
+
 - zrejme v sucinnosti s inymi testami
   x ButtonRequest/ButtonAck workflow
   x PinMatrixRequest/PinMatrixAck workflow

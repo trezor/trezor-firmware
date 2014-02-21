@@ -3,7 +3,7 @@ import common
 import trezorlib.ckd_public as bip32
 from trezorlib import tools
 
-class TestAddresses(common.TrezorTest):
+class TestMsgGetaddress(common.TrezorTest):
 
     def test_btc(self):
         self.setup_mnemonic_nopin_nopassphrase()
