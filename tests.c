@@ -207,6 +207,35 @@ START_TEST(test_bip32_vector_2)
 }
 END_TEST
 
+START_TEST(test_bip32_compare)
+{
+	HDNode node1, node2, node3;
+	int i, r;
+	hdnode_from_seed(0x00, fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
+	hdnode_from_seed(0x00, fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
+	for (i = 0; i < 300; i++) {
+		memcpy(&node3, &node1, sizeof(HDNode));
+		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
+		r = hdnode_public_ckd(&node2, i);  ck_assert_int_eq(r, 1);
+		r = hdnode_public_ckd(&node3, i);  ck_assert_int_eq(r, 1);
+		ck_assert_int_eq(node1.depth,       node2.depth);
+		ck_assert_int_eq(node1.depth,       node3.depth);
+		ck_assert_int_eq(node1.fingerprint, node2.fingerprint);
+		ck_assert_int_eq(node1.fingerprint, node3.fingerprint);
+		ck_assert_int_eq(node1.child_num,   node2.child_num);
+		ck_assert_int_eq(node1.child_num,   node3.child_num);
+		ck_assert_mem_eq(node1.chain_code,  node2.chain_code, 32);
+		ck_assert_mem_eq(node1.chain_code,  node3.chain_code, 32);
+		ck_assert_mem_eq(node2.private_key, fromhex("0000000000000000000000000000000000000000000000000000000000000000"), 32);
+		ck_assert_mem_eq(node3.private_key, fromhex("0000000000000000000000000000000000000000000000000000000000000000"), 32);
+		ck_assert_mem_eq(node1.public_key,  node2.public_key, 33);
+		ck_assert_mem_eq(node1.public_key,  node3.public_key, 33);
+		ck_assert_str_eq(node1.address,     node2.address);
+		ck_assert_str_eq(node1.address,     node3.address);
+	}
+}
+END_TEST
+
 int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
 
 #define test_deterministic(KEY, MSG, K) do { \
@@ -612,6 +641,7 @@ Suite *test_suite(void)
 	tc = tcase_create("bip32");
 	tcase_add_test(tc, test_bip32_vector_1);
 	tcase_add_test(tc, test_bip32_vector_2);
+	tcase_add_test(tc, test_bip32_compare);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rfc6979");
