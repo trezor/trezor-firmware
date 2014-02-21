@@ -43,6 +43,7 @@ int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_
 int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig);
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key);
+void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash);
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr);
 int ecdsa_address_decode(const char *addr, uint8_t *out);
 int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub);

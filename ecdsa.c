@@ -333,6 +333,17 @@ void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key)
 	bn_write_be(&R.y, pub_key + 33);
 }
 
+void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
+{
+	uint8_t h[32];
+	if (pub_key[0] == 0x04) {
+		sha256_Raw(pub_key, 65, h);
+	} else {
+		sha256_Raw(pub_key, 33, h);
+	}
+	ripemd160(h, 32, pubkeyhash);
+}
+
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 {
 	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -342,13 +353,8 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 	bignum256 c;
 	int i, l;
 
-	if (pub_key[0] == 0x04) {
-		sha256_Raw(pub_key, 65, a);
-	} else {
-		sha256_Raw(pub_key, 33, a);
-	}
 	b[0] = version;
-	ripemd160(a, 32, b + 1);
+	ecdsa_get_pubkeyhash(pub_key, b + 1);
 
 	sha256_Raw(b, 21, a);
 	sha256_Raw(a, 32, a);
