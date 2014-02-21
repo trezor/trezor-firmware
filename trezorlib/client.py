@@ -323,9 +323,9 @@ class ProtocolMixin(object):
 
     @field('node')
     @expect(proto.PublicKey)
-    def get_public_node(self, coin_name, n):
+    def get_public_node(self, n):
         n = self._convert_prime(n)
-        return self.call(proto.GetPublicKey(address_n=n, coin_name=coin_name))
+        return self.call(proto.GetPublicKey(address_n=n))
 
     @field('address')
     @expect(proto.Address)
@@ -538,7 +538,6 @@ class ProtocolMixin(object):
         # privkey   00e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35
         # checksum e77e9d71
 
-        node.version = int(data[0:8], 16)
         node.depth = int(data[8:10], 16)
         node.fingerprint = int(data[10:18], 16)
         node.child_num = int(data[18:26], 16)

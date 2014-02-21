@@ -91,9 +91,9 @@ def get_subnode(node, i):
 
     return node_out
 
-def serialize(node):
+def serialize(node, version=0x0488B21E):
     s = ''
-    s += struct.pack('>I', node.version)
+    s += struct.pack('>I', version)
     s += struct.pack('>B', node.depth)
     s += struct.pack('>I', node.fingerprint)
     s += struct.pack('>I', node.child_num)
