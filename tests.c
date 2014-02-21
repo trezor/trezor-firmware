@@ -80,7 +80,7 @@ START_TEST(test_bip32_vector_1)
 	HDNode node;
 
 	// init m
-	hdnode_from_seed(0x00, 0x0488ADE4, 0x0488B21E, fromhex("000102030405060708090a0b0c0d0e0f"), 16, &node);
+	hdnode_from_seed(0x00, fromhex("000102030405060708090a0b0c0d0e0f"), 16, &node);
 
 	// [Chain m]
 	ck_assert_int_eq(node.fingerprint, 0x00000000);
@@ -138,7 +138,7 @@ START_TEST(test_bip32_vector_2)
 	int r;
 
 	// init m
-	hdnode_from_seed(0x00, 0x0488ADE4, 0x0488B21E, fromhex("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"), 64, &node);
+	hdnode_from_seed(0x00, fromhex("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"), 64, &node);
 
 	// [Chain m]
 	ck_assert_int_eq(node.fingerprint, 0x00000000);
@@ -193,7 +193,7 @@ START_TEST(test_bip32_vector_2)
 	ck_assert_str_eq(node.address,     "14UKfRV9ZPUp6ZC9PLhqbRtxdihW9em3xt");
 
 	// init m
-	hdnode_from_seed(0x00, 0x0488ADE4, 0x0488B21E, fromhex("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"), 64, &node);
+	hdnode_from_seed(0x00, fromhex("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"), 64, &node);
 
 	// test public derivation
 	// [Chain m/0]

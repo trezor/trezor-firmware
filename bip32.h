@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct {
-	uint32_t version;
+//	uint32_t version;
 	uint32_t depth;
 	uint32_t fingerprint;
 	uint32_t child_num;
@@ -13,15 +13,13 @@ typedef struct {
 	uint8_t public_key[33];
 	char address[35];
 	uint8_t version_byte;
-	uint32_t version_private;
-	uint32_t version_public;
 } HDNode;
 
-void hdnode_from_xpub(uint8_t version_byte, uint32_t version_private, uint32_t version_public, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out);
+void hdnode_from_xpub(uint8_t version_byte, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out);
 
-void hdnode_from_xprv(uint8_t version_byte, uint32_t version_private, uint32_t version_public, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out);
+void hdnode_from_xprv(uint8_t version_byte, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out);
 
-void hdnode_from_seed(uint8_t version_byte, uint32_t version_private, uint32_t version_public, uint8_t *seed, int seed_len, HDNode *out);
+void hdnode_from_seed(uint8_t version_byte, uint8_t *seed, int seed_len, HDNode *out);
 
 #define hdnode_private_ckd_prime(X, I) hdnode_private_ckd((X), ((I) | 0x80000000))
 
