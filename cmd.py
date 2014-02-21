@@ -102,7 +102,7 @@ class Commands(object):
 
     def get_public_node(self, args):
         address_n = self.client.expand_path(args.n)
-        return self.client.get_public_node(address_n)
+        return self.client.get_public_node(args.coin, address_n)
     
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
@@ -238,6 +238,7 @@ class Commands(object):
     )
 
     get_public_node.arguments = (
+        (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
         (('-n', '-address'), {'type': str}),
     )
 

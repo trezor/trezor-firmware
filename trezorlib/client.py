@@ -306,8 +306,9 @@ class ProtocolMixin(object):
 
     @field('node')
     @expect(proto.PublicKey)
-    def get_public_node(self, n):
-        return self.call(proto.GetPublicKey(address_n=n))
+    def get_public_node(self, coin_name, n):
+        n = self._convert_prime(n)
+        return self.call(proto.GetPublicKey(address_n=n, coin_name=coin_name))
 
     @field('address')
     @expect(proto.Address)

@@ -1,7 +1,6 @@
 import unittest
 import common
 import trezorlib.ckd_public as bip32
-from trezorlib import tools
 
 class TestMsgGetaddress(common.TrezorTest):
 

@@ -90,3 +90,17 @@ def get_subnode(node, i):
     node_out.public_key = point_to_pubkey(point)
 
     return node_out
+
+def serialize(node):
+    s = ''
+    s += struct.pack('>I', node.version)
+    s += struct.pack('>B', node.depth)
+    s += struct.pack('>I', node.fingerprint)
+    s += struct.pack('>I', node.child_num)
+    s += node.chain_code
+    if node.private_key:
+        s += '\x00' + node.private_key
+    else :
+        s += node.public_key
+    s += tools.Hash(s)[:4]
+    return tools.b58encode(s)
