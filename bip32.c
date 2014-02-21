@@ -7,7 +7,7 @@
 #include "sha2.h"
 #include "ripemd160.h"
 
-void hdnode_from_xpub(uint8_t version_byte, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
+void hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
 {
 	out->depth = depth;
 	out->fingerprint = fingerprint;
@@ -15,11 +15,9 @@ void hdnode_from_xpub(uint8_t version_byte, uint32_t depth, uint32_t fingerprint
 	memcpy(out->chain_code, chain_code, 32);
 	memset(out->private_key, 0, 32);
 	memcpy(out->public_key, public_key, 33);
-	out->version_byte = version_byte;
-	hdnode_fill_address(out);
 }
 
-void hdnode_from_xprv(uint8_t version_byte, uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out)
+void hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out)
 {
 	out->depth = depth;
 	out->fingerprint = fingerprint;
@@ -27,11 +25,9 @@ void hdnode_from_xprv(uint8_t version_byte, uint32_t depth, uint32_t fingerprint
 	memcpy(out->chain_code, chain_code, 32);
 	memcpy(out->private_key, private_key, 32);
 	hdnode_fill_public_key(out);
-	out->version_byte = version_byte;
-	hdnode_fill_address(out);
 }
 
-void hdnode_from_seed(uint8_t version_byte, uint8_t *seed, int seed_len, HDNode *out)
+void hdnode_from_seed(uint8_t *seed, int seed_len, HDNode *out)
 {
 	uint8_t I[32 + 32];
 	out->depth = 0;
@@ -41,8 +37,6 @@ void hdnode_from_seed(uint8_t version_byte, uint8_t *seed, int seed_len, HDNode 
 	memcpy(out->chain_code, I + 32, 32);
 	memcpy(out->private_key, I, 32);
 	hdnode_fill_public_key(out);
-	out->version_byte = version_byte;
-	hdnode_fill_address(out);
 }
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i)
@@ -78,7 +72,6 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	bn_write_be(&a, inout->private_key);
 
 	hdnode_fill_public_key(inout);
-	hdnode_fill_address(inout);
 
 	return 1;
 }
@@ -118,16 +111,10 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	inout->depth++;
 	inout->child_num = i;
 
-	hdnode_fill_address(inout);
 	return 1;
 }
 
 void hdnode_fill_public_key(HDNode *node)
 {
 	ecdsa_get_public_key33(node->private_key, node->public_key);
-}
-
-void hdnode_fill_address(HDNode *node)
-{
-	ecdsa_get_address(node->public_key, node->version_byte, node->address);
 }
