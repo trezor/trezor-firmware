@@ -17,7 +17,10 @@ def get_buttonrequest_value(code):
     return [ k for k, v in types.ButtonRequestType.items() if v == code][0]
 
 def pprint(msg):
-    return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
+    if isinstance(msg, proto.FirmwareUpload):
+        return "<%s> (%d bytes):\n" % (msg.__class__.__name__, msg.ByteSize())
+    else:
+        return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
 
 class CallException(Exception):
     def __init__(self, code, message):
