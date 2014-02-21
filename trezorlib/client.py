@@ -190,9 +190,14 @@ class DebugLinkMixin(object):
         self.in_with_statement += 1
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, _type, value, traceback):
         self.in_with_statement -= 1
 
+        if _type != None:
+            # Another exception raised
+            return False
+
+        # return isinstance(value, TypeError)
         # Evaluate missed responses in 'with' statement
         if self.expected_responses != None and len(self.expected_responses):
             raise Exception("Some of expected responses didn't come from device: %s" % \
@@ -212,7 +217,10 @@ class DebugLinkMixin(object):
         self.pin_correct = pin_correct
 
     def set_passphrase(self, passphrase):
-        self.passphrase = str(bytearray(passphrase, 'utf-8'))
+        self.passphrase = str(bytearray(Mnemonic.normalize_string(passphrase), 'utf-8'))
+
+    def set_mnemonic(self, mnemonic):
+        self.mnemonic = str(bytearray(Mnemonic.normalize_string(mnemonic), 'utf-8')).split(' ')
 
     def call_raw(self, msg):
         resp = super(DebugLinkMixin, self).call_raw(msg)
@@ -256,7 +264,13 @@ class DebugLinkMixin(object):
         return proto.PassphraseAck(passphrase=self.passphrase)
 
     def callback_WordRequest(self, msg):
-        raise Exception("Not implemented yet")
+        (word, pos) = self.debug.read_word()
+        if word != '':
+            return proto.WordAck(word=word)
+        if pos != 0:
+            return proto.WordAck(word=self.mnemonic[pos - 1])
+
+        raise Exception("Unexpected call")
 
 class ProtocolMixin(object):
     PRIME_DERIVATION_FLAG = 0x80000000
@@ -466,7 +480,9 @@ class ProtocolMixin(object):
 
         external_entropy = self._get_local_entropy()
         print "Computer generated entropy:", binascii.hexlify(external_entropy)
-        return self.call(proto.EntropyAck(entropy=external_entropy))
+        ret = self.call(proto.EntropyAck(entropy=external_entropy))
+        self.init_device()
+        return ret
 
     @field('message')
     @expect(proto.Success)
