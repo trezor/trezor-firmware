@@ -4,14 +4,14 @@
 TODO:
 
 * ApplySettings workflow, zistit cez Features ci sa zmeny aplikovali
-* WipeDevice workflow, zistit cez Features ci to prebehlo
-* LoadDevice workflow, zistit cez Features ci to prebehlo
+x WipeDevice workflow, zistit cez Features ci to prebehlo
+x LoadDevice workflow, zistit cez Features ci to prebehlo
 x ResetDevice workflow
 
 - zrejme v sucinnosti s inymi testami
-  * ButtonRequest/ButtonAck workflow (vyvolat napr. pomocou GetEntropy, myslim ze ten GetEntropy vyzaduje PIN, ale ja by som to dal na button)
-  * PinMatrixRequest/PinMatrixAck workflow (vyvolat napr. pomocou ChangePin)
-  * PassphraseRequest/PassphraseAck workflow (vyvolat napr. pomocou GetAddress)
+  x ButtonRequest/ButtonAck workflow
+  x PinMatrixRequest/PinMatrixAck workflow
+  x PassphraseRequest/PassphraseAck workflow
 
 * rozsirit test_sign.tx o viac transakcii (zlozitejsich)
     x fee over threshold
@@ -32,6 +32,6 @@ x ResetDevice workflow
 
 x Zero signature test
 
-* test bip39, utf, passphrase
+x test bip39, utf, passphrase
 x Clear session on ChangePin
 '''
