@@ -216,6 +216,7 @@ message LoadDevice {
 	optional bool passphrase_protection = 4;
 	optional bytes language = 5 [default='english'];
 	optional bytes label = 6 [(binary) = true];
+	optional bool skip_checksum = 7; // Do not test mnemonic for valid BIP39 checksum
 }
 
 // Request device to do full-reset, to generate new seed
@@ -402,6 +403,7 @@ message DebugLinkState {
 	optional bool passphrase_protection = 6;
 	optional bytes word = 7;		// What word is on display in RecoveryDevice/ResetDevice workflow
 	optional int32 word_pos = 8;	// Which word of mnemonic do the device expect
+	optional bytes entropy = 9;		// Return current entropy of ResetDevice workflow
 }
 
 // Ask device to shutdown/restart
