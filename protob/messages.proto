@@ -182,7 +182,6 @@ message Entropy {
 // Response: PublicKey, Failure
 message GetPublicKey {
 	repeated uint32 address_n = 1;
-	optional bytes coin_name = 2 [default='Bitcoin'];
 }
 
 // Contains public key derived from device's seed.

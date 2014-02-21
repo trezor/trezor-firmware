@@ -63,14 +63,13 @@ enum ButtonRequestType {
 // Structure of BIP32 (hierarchical deterministic) node
 // Used for imports of private key into the device and exporting public key out of device
 message HDNodeType {
-	required uint32 version = 1;
-	required uint32 depth = 2;
-	required uint32 fingerprint = 3;
-	required uint32 child_num = 4;
-	required bytes chain_code = 5 [(binary) = true];
-	optional bytes private_key = 6 [(binary) = true];
-	optional bytes public_key = 7 [(binary) = true];
-	optional bytes address = 8;
+	required uint32 depth = 1;
+	required uint32 fingerprint = 2;
+	required uint32 child_num = 3;
+	required bytes chain_code = 4 [(binary) = true];
+	optional bytes private_key = 5 [(binary) = true];
+	optional bytes public_key = 6 [(binary) = true];
+	optional bytes address = 7;
 }
 
 message CoinType {
@@ -78,8 +77,6 @@ message CoinType {
 	optional bytes coin_shortcut = 2;
 	optional uint32 address_type = 3;
 	optional uint64 maxfee_kb = 4;
-	optional uint32 ser_private = 5; // bip32 serialization for privkey
-	optional uint32 ser_public = 6; // bip32 serialization for pubkey
 }
 
 message TxInputType {
