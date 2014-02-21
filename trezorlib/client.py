@@ -1,6 +1,7 @@
 import os
 import binascii
 import hashlib
+import unicodedata
 
 import tools
 import messages_pb2 as proto
@@ -54,6 +55,17 @@ class expect(object):
                 raise Exception("Got %s, expected %s" % (ret.__class__, self.expected))
             return ret
         return wrapped_f
+
+def normalize_nfc(txt):
+    # Normalize string to UTF8 NFC for sign_message
+    if isinstance(txt, str):
+        utxt = txt.decode('utf8')
+    elif isinstance(txt, unicode):
+        utxt = txt
+    else:
+        raise Exception("String value expected")
+
+    return unicodedata.normalize('NFC', utxt)
 
 class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
@@ -329,11 +341,24 @@ class ProtocolMixin(object):
         return ret
 
     @expect(proto.MessageSignature)
-    def sign_message(self, n, message):
+    def sign_message(self, coin_name, n, message):
         n = self._convert_prime(n)
-        return self.call(proto.SignMessage(address_n=n, message=message))
+
+        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
+        message = normalize_nfc(message)
+
+        # Convert message to ASCII stream
+        message = str(bytearray(message, 'utf-8'))
+
+        return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message))
 
     def verify_message(self, address, signature, message):
+        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
+        message = normalize_nfc(message)
+
+        # Convert message to ASCII stream
+        message = str(bytearray(message, 'utf-8'))
+
         try:
             resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
         except CallException as e:
