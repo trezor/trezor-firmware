@@ -72,7 +72,6 @@ def get_subnode(node, i):
     I_left_as_exponent = string_to_number(I64[:32])
 
     node_out = proto_types.HDNodeType()
-    node_out.version = node.version
     node_out.depth = node.depth + 1
     node_out.child_num = i
     node_out.chain_code = I64[32:]

@@ -22,6 +22,7 @@ FirmwareErase
 FirmwareUpload
 
 protection levels
+neuspesna zmena pinu
 
 - zrejme v sucinnosti s inymi testami
   x ButtonRequest/ButtonAck workflow
