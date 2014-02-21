@@ -127,5 +127,41 @@ class TestMsgChangepin(common.TrezorTest):
         ret = self.client.call_raw(proto.Ping(pin_protection=True))
         self.assertIsInstance(ret, proto.Success)
         
+    def test_set_failed(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+        features = self.client.call_raw(proto.Initialize())
+        self.assertFalse(features.pin_protection)
+
+        # Check that there's no PIN protection
+        ret = self.client.call_raw(proto.Ping(pin_protection=True))
+        self.assertIsInstance(ret, proto.Success)
+
+        # Let's set new PIN
+        ret = self.client.call_raw(proto.ChangePin())
+        self.assertIsInstance(ret, proto.ButtonRequest)
+
+        # Press button
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Send the PIN for first time
+        self.assertIsInstance(ret, proto.PinMatrixRequest)
+        pin_encoded = self.client.debug.encode_pin(self.pin6)
+        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+
+        # Send the PIN for second time, but with typo
+        self.assertIsInstance(ret, proto.PinMatrixRequest)
+        pin_encoded = self.client.debug.encode_pin(self.pin4)
+        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+
+        # Now it should fail, because pins are different
+        self.assertIsInstance(ret, proto.Failure)
+
+        # Check that there's still no PIN protection now
+        features = self.client.call_raw(proto.Initialize())
+        self.assertFalse(features.pin_protection)
+        ret = self.client.call_raw(proto.Ping(pin_protection=True))
+        self.assertIsInstance(ret, proto.Success)
+
 if __name__ == '__main__':
     unittest.main()
