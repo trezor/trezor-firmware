@@ -6,6 +6,7 @@ import tools
 import messages_pb2 as proto
 import types_pb2 as types
 from trezorlib.debuglink import DebugLink
+from mnemonic import Mnemonic
 
 # monkeypatching: text formatting of protobuf messages
 tools.monkeypatch_google_protobuf_text_format()
@@ -128,6 +129,8 @@ class TextUIMixin(object):
 
     def callback_PassphraseRequest(self, msg):
         passphrase = raw_input("Passphrase required: ")
+        passphrase = str(bytearray(passphrase, 'utf-8'))
+
         return proto.PassphraseAck(passphrase=passphrase)
 
     def callback_WordRequest(self, msg):
@@ -174,7 +177,7 @@ class DebugLinkMixin(object):
         self.pin_correct = pin_correct
 
     def set_passphrase(self, passphrase):
-        self.passphrase = passphrase
+        self.passphrase = str(bytearray(passphrase, 'utf-8'))
 
     def call_raw(self, msg):
         resp = super(DebugLinkMixin, self).call_raw(msg)
@@ -426,14 +429,25 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language):
+    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language, skip_checksum=False):
+        m = Mnemonic('english')
+        if not skip_checksum and not m.check(mnemonic):
+            raise Exception("Invalid mnemonic checksum")
+
+        # Convert mnemonic to UTF8 NKFD
+        mnemonic = Mnemonic.normalize_string(mnemonic)
+
+        # Convert mnemonic to ASCII stream
+        mnemonic = str(bytearray(mnemonic, 'utf-8'))
+
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
         resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
                                           passphrase_protection=passphrase_protection,
                                           language=language,
-                                          label=label))
+                                          label=label,
+                                          skip_checksum=skip_checksum))
         self.init_device()
         return resp
 
