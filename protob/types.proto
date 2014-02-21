@@ -69,7 +69,6 @@ message HDNodeType {
 	required bytes chain_code = 4 [(binary) = true];
 	optional bytes private_key = 5 [(binary) = true];
 	optional bytes public_key = 6 [(binary) = true];
-	optional bytes address = 7;
 }
 
 message CoinType {
