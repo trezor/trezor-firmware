@@ -98,7 +98,7 @@ class Commands(object):
         return [ coin.coin_name for coin in self.client.features.coins ]
 
     def ping(self, args):
-        return self.client.ping(args.msg)
+        return self.client.ping(args.msg, button_protection=args.button_protection, pin_protection=args.pin_protection, passphrase_protection=args.passphrase_protection)
 
     def get_public_node(self, args):
         address_n = self.client.expand_path(args.n)
@@ -190,6 +190,9 @@ class Commands(object):
 
     ping.arguments = (
         (('msg',), {'type': str}),
+        (('-b', '--button-protection'), {'action': 'store_true', 'default': False}),
+        (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
+        (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
     )
     
     set_label.arguments = (
