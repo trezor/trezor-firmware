@@ -3,26 +3,26 @@
 
 TODO:
 
-ApplySettings
+x ApplySettings
 x ChangePin
 x Ping
 x GetEntropy
-GetPublicKey
+x GetPublicKey
 x GetAddress
 x WipeDevice
 x LoadDevice
 x ResetDevice
-RecoveryDevice
+x RecoveryDevice
 x SignMessage
 x VerifyMessage
-EstimateTxSize
+x EstimateTxSize
 - SignTx
 x SimpleSignTx
-FirmwareErase
-FirmwareUpload
+- FirmwareErase
+- FirmwareUpload
 
-protection levels
-neuspesna zmena pinu
+x protection levels
+x neuspesna zmena pinu
 
 - zrejme v sucinnosti s inymi testami
   x ButtonRequest/ButtonAck workflow
@@ -42,9 +42,6 @@ neuspesna zmena pinu
 otestovat session handling (tento test bude zrejme failovat na RPi)
 Failure_NotInitialized
 Features reflects all variations of LoadDevice
-Maxfee settings
-Client requires OTP
-Client requires PIN
 
 x Zero signature test
 

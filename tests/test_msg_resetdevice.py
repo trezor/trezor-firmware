@@ -34,7 +34,6 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     return entropy_stripped
 
 class TestDeviceReset(common.TrezorTest):
-
     def test_reset_device(self):
         # No PIN, no passphrase
         external_entropy = 'zlutoucky kun upel divoke ody' * 2
@@ -170,6 +169,41 @@ class TestDeviceReset(common.TrezorTest):
         # Do PIN-protected action, PinRequest should be raised
         resp = self.client.call_raw(proto.Ping(pin_protection=True))
         self.assertIsInstance(resp, proto.PinMatrixRequest)
+
+    def test_failed_pin(self):
+        external_entropy = 'zlutoucky kun upel divoke ody' * 2
+        strength = 128
+
+        ret = self.client.call_raw(proto.ResetDevice(display_random=True,
+                                               strength=strength,
+                                               passphrase_protection=True,
+                                               pin_protection=True,
+                                               language='english',
+                                               label='test'))
+
+        self.assertIsInstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        self.assertIsInstance(ret, proto.EntropyRequest)
+        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
+
+        self.assertIsInstance(ret, proto.PinMatrixRequest)
+
+        # Enter PIN for first time
+        pin_encoded = self.client.debug.encode_pin(self.pin4)
+        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        self.assertIsInstance(ret, proto.PinMatrixRequest)
+
+        # Enter PIN for second time
+        pin_encoded = self.client.debug.encode_pin(self.pin6)
+        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+
+        self.assertIsInstance(ret, proto.Failure)
         
+    def test_already_initialized(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+        self.assertRaises(Exception, self.client.reset_device, False, 128, True, True, 'label', 'english')
+
 if __name__ == '__main__':
     unittest.main()
