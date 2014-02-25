@@ -7,6 +7,9 @@ def pin_info(pin):
 def button_press(yes_no):
     print "User pressed", '"y"' if yes_no else '"n"'
 
+def pprint(msg):
+    return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
+
 class DebugLink(object):
     def __init__(self, transport, pin_func=pin_info, button_func=button_press):
         self.transport = transport
@@ -17,9 +20,17 @@ class DebugLink(object):
     def close(self):
         self.transport.close()
         
+    def _call(self, msg, nowait=False):
+        print "DEBUGLINK SEND", pprint(msg)
+        self.transport.write(msg)
+        if nowait:
+            return
+        ret = self.transport.read_blocking()
+        print "DEBUGLINK RECV", pprint(ret)
+        return ret
+
     def read_pin(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         print "Read PIN:", obj.pin
         print "Read matrix:", obj.matrix
 
@@ -44,39 +55,33 @@ class DebugLink(object):
         return pin_encoded
         
     def read_layout(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         return obj.layout
 
     def read_mnemonic(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         return obj.mnemonic
 
     def read_node(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         return obj.node
 
     def read_word(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         return (obj.word, obj.word_pos)
 
     def read_entropy(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         return obj.entropy
 
     def read_passphrase_protection(self):
-        self.transport.write(proto.DebugLinkGetState())
-        obj = self.transport.read_blocking()
+        obj = self._call(proto.DebugLinkGetState())
         return obj.passphrase_protection
 
     def press_button(self, yes_no):
         print "Pressing", yes_no
         self.button_func(yes_no)
-        self.transport.write(proto.DebugLinkDecision(yes_no=yes_no))
+        self._call(proto.DebugLinkDecision(yes_no=yes_no), nowait=True)
 
     def press_yes(self):
         self.press_button(True)
@@ -85,4 +90,4 @@ class DebugLink(object):
         self.press_button(False)
 
     def stop(self):
-        self.transport.write(proto.DebugLinkStop())
+        self._call(proto.DebugLinkStop(), nowait=True)
