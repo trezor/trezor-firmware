@@ -15,7 +15,7 @@ import types_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='messages.proto',
   package='',
-  serialized_pb='\n\x0emessages.proto\x1a\x0btypes.proto\"\x0c\n\nInitialize\"\x9f\x02\n\x08\x46\x65\x61tures\x12\x0e\n\x06vendor\x18\x01 \x01(\x0c\x12\x15\n\rmajor_version\x18\x02 \x01(\r\x12\x15\n\rminor_version\x18\x03 \x01(\r\x12\x16\n\x0e\x62ugfix_version\x18\x04 \x01(\r\x12\x17\n\x0f\x62ootloader_mode\x18\x05 \x01(\x08\x12\x17\n\tdevice_id\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x16\n\x0epin_protection\x18\x07 \x01(\x08\x12\x1d\n\x15passphrase_protection\x18\x08 \x01(\x08\x12\x10\n\x08language\x18\t \x01(\x0c\x12\x13\n\x05label\x18\n \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\x05\x63oins\x18\x0b \x03(\x0b\x32\t.CoinType\x12\x13\n\x0binitialized\x18\x0c \x01(\x08\"6\n\rApplySettings\x12\x10\n\x08language\x18\x01 \x01(\x0c\x12\x13\n\x05label\x18\x02 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x1b\n\tChangePin\x12\x0e\n\x06remove\x18\x01 \x01(\x08\"i\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\x0c\x12\x19\n\x11\x62utton_protection\x18\x02 \x01(\x08\x12\x16\n\x0epin_protection\x18\x03 \x01(\x08\x12\x1d\n\x15passphrase_protection\x18\x04 \x01(\x08\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"6\n\x07\x46\x61ilure\x12\x1a\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0c.FailureType\x12\x0f\n\x07message\x18\x02 \x01(\x0c\"E\n\rButtonRequest\x12 \n\x04\x63ode\x18\x01 \x01(\x0e\x32\x12.ButtonRequestType\x12\x12\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x0b\n\tButtonAck\"#\n\x10PinMatrixRequest\x12\x0f\n\x07message\x18\x01 \x01(\x0c\"\x1b\n\x0cPinMatrixAck\x12\x0b\n\x03pin\x18\x01 \x02(\x0c\"\x08\n\x06\x43\x61ncel\"\x13\n\x11PassphraseRequest\")\n\rPassphraseAck\x12\x18\n\npassphrase\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\" \n\x07\x45ntropy\x12\x15\n\x07\x65ntropy\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"!\n\x0cGetPublicKey\x12\x11\n\taddress_n\x18\x01 \x03(\r\"&\n\tPublicKey\x12\x19\n\x04node\x18\x01 \x02(\x0b\x32\x0b.HDNodeType\";\n\nGetAddress\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x1a\n\tcoin_name\x18\x02 \x01(\x0c:\x07\x42itcoin\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\x0c\"\x0c\n\nWipeDevice\"\xac\x01\n\nLoadDevice\x12\x10\n\x08mnemonic\x18\x01 \x01(\x0c\x12\x19\n\x04node\x18\x02 \x01(\x0b\x32\x0b.HDNodeType\x12\x0b\n\x03pin\x18\x03 \x01(\x0c\x12\x1d\n\x15passphrase_protection\x18\x04 \x01(\x08\x12\x19\n\x08language\x18\x05 \x01(\x0c:\x07\x65nglish\x12\x13\n\x05label\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x15\n\rskip_checksum\x18\x07 \x01(\x08\"\xa3\x01\n\x0bResetDevice\x12\x16\n\x0e\x64isplay_random\x18\x01 \x01(\x08\x12\x15\n\x08strength\x18\x02 \x01(\r:\x03\x31\x32\x38\x12\x1d\n\x15passphrase_protection\x18\x03 \x01(\x08\x12\x16\n\x0epin_protection\x18\x04 \x01(\x08\x12\x19\n\x08language\x18\x05 \x01(\x0c:\x07\x65nglish\x12\x13\n\x05label\x18\x06 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\x10\n\x0e\x45ntropyRequest\"#\n\nEntropyAck\x12\x15\n\x07\x65ntropy\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"\xa5\x01\n\x0eRecoveryDevice\x12\x12\n\nword_count\x18\x01 \x01(\r\x12\x1d\n\x15passphrase_protection\x18\x02 \x01(\x08\x12\x16\n\x0epin_protection\x18\x03 \x01(\x08\x12\x19\n\x08language\x18\x04 \x01(\x0c:\x07\x65nglish\x12\x13\n\x05label\x18\x05 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x18\n\x10\x65nforce_wordlist\x18\x06 \x01(\x08\"\r\n\x0bWordRequest\"\x1d\n\x07WordAck\x12\x12\n\x04word\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"S\n\x0bSignMessage\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x15\n\x07message\x18\x02 \x02(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1a\n\tcoin_name\x18\x03 \x01(\x0c:\x07\x42itcoin\"P\n\rVerifyMessage\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0c\x12\x17\n\tsignature\x18\x02 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x15\n\x07message\x18\x03 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"<\n\x10MessageSignature\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0c\x12\x17\n\tsignature\x18\x02 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"Y\n\x0e\x45stimateTxSize\x12\x15\n\routputs_count\x18\x01 \x02(\r\x12\x14\n\x0cinputs_count\x18\x02 \x02(\r\x12\x1a\n\tcoin_name\x18\x03 \x01(\x0c:\x07\x42itcoin\"\x19\n\x06TxSize\x12\x0f\n\x07tx_size\x18\x01 \x01(\r\"Q\n\x06SignTx\x12\x15\n\routputs_count\x18\x01 \x02(\r\x12\x14\n\x0cinputs_count\x18\x02 \x02(\r\x12\x1a\n\tcoin_name\x18\x03 \x01(\x0c:\x07\x42itcoin\"\x90\x01\n\x0cSimpleSignTx\x12\x1c\n\x06inputs\x18\x01 \x03(\x0b\x32\x0c.TxInputType\x12\x1e\n\x07outputs\x18\x02 \x03(\x0b\x32\r.TxOutputType\x12&\n\x0ctransactions\x18\x03 \x03(\x0b\x32\x10.TransactionType\x12\x1a\n\tcoin_name\x18\x04 \x01(\x0c:\x07\x42itcoin\"\x92\x01\n\tTxRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\x05\x12\"\n\x0crequest_type\x18\x02 \x01(\x0e\x32\x0c.RequestType\x12\x14\n\x0csigned_index\x18\x03 \x01(\x05\x12\x17\n\tsignature\x18\x04 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x1b\n\rserialized_tx\x18\x05 \x01(\x0c\x42\x04\x88\xb5\x18\x01\"&\n\x07TxInput\x12\x1b\n\x05input\x18\x01 \x02(\x0b\x32\x0c.TxInputType\")\n\x08TxOutput\x12\x1d\n\x06output\x18\x01 \x02(\x0b\x32\r.TxOutputType\"\x0f\n\rFirmwareErase\"\'\n\x0e\x46irmwareUpload\x12\x15\n\x07payload\x18\x01 \x02(\x0c\x42\x04\x88\xb5\x18\x01\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"\x13\n\x11\x44\x65\x62ugLinkGetState\"\xc0\x01\n\x0e\x44\x65\x62ugLinkState\x12\x14\n\x06layout\x18\x01 \x01(\x0c\x42\x04\x88\xb5\x18\x01\x12\x0b\n\x03pin\x18\x02 \x01(\x0c\x12\x0e\n\x06matrix\x18\x03 \x01(\x0c\x12\x10\n\x08mnemonic\x18\x04 \x01(\x0c\x12\x19\n\x04node\x18\x05 \x01(\x0b\x32\x0b.HDNodeType\x12\x1d\n\x15passphrase_protection\x18\x06 \x01(\x08\x12\x0c\n\x04word\x18\x07 \x01(\x0c\x12\x10\n\x08word_pos\x18\x08 \x01(\x05\x12\x0f\n\x07\x65ntropy\x18\t \x01(\x0c\"\x0f\n\rDebugLinkStop\";\n\x0c\x44\x65\x62ugLinkLog\x12\r\n\x05level\x18\x01 \x01(\r\x12\x0e\n\x06\x62ucket\x18\x02 \x01(\x0c\x12\x0c\n\x04text\x18\x03 \x01(\x0c*\xad\x0c\n\x0bMessageType\x12 \n\x16MessageType_Initialize\x10\x00\x1a\x04\x90\xb5\x18\x01\x12\x1a\n\x10MessageType_Ping\x10\x01\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Success\x10\x02\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_Failure\x10\x03\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ChangePin\x10\x04\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_WipeDevice\x10\x05\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_FirmwareErase\x10\x06\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetEntropy\x10\t\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Entropy\x10\n\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_GetPublicKey\x10\x0b\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_PublicKey\x10\x0c\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_LoadDevice\x10\r\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_ResetDevice\x10\x0e\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_SignTx\x10\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_SimpleSignTx\x10\x10\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_Features\x10\x11\x1a\x04\x98\xb5\x18\x01\x12&\n\x1cMessageType_PinMatrixRequest\x10\x12\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_PinMatrixAck\x10\x13\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_Cancel\x10\x14\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_TxRequest\x10\x15\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_TxInput\x10\x17\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_TxOutput\x10\x18\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ApplySettings\x10\x19\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ButtonRequest\x10\x1a\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ButtonAck\x10\x1b\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetAddress\x10\x1d\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Address\x10\x1e\x1a\x04\x98\xb5\x18\x01\x12$\n\x1aMessageType_EntropyRequest\x10#\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_EntropyAck\x10$\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_SignMessage\x10&\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_VerifyMessage\x10\'\x1a\x04\x90\xb5\x18\x01\x12&\n\x1cMessageType_MessageSignature\x10(\x1a\x04\x98\xb5\x18\x01\x12\'\n\x1dMessageType_PassphraseRequest\x10)\x1a\x04\x98\xb5\x18\x01\x12#\n\x19MessageType_PassphraseAck\x10*\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_EstimateTxSize\x10+\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_TxSize\x10,\x1a\x04\x98\xb5\x18\x01\x12$\n\x1aMessageType_RecoveryDevice\x10-\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_WordRequest\x10.\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_WordAck\x10/\x1a\x04\x90\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkDecision\x10\x64\x1a\x04\xa0\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkGetState\x10\x65\x1a\x04\xa0\xb5\x18\x01\x12$\n\x1aMessageType_DebugLinkState\x10\x66\x1a\x04\xa8\xb5\x18\x01\x12#\n\x19MessageType_DebugLinkStop\x10g\x1a\x04\xa0\xb5\x18\x01\x12\"\n\x18MessageType_DebugLinkLog\x10h\x1a\x04\xa8\xb5\x18\x01\x42\x39\n(org.multibit.hd.hardware.trezor.protobufB\rTrezorMessage')
+  serialized_pb='\n\x0emessages.proto\x1a\x0btypes.proto\"\x0c\n\nInitialize\"\x93\x02\n\x08\x46\x65\x61tures\x12\x0e\n\x06vendor\x18\x01 \x01(\t\x12\x15\n\rmajor_version\x18\x02 \x01(\r\x12\x15\n\rminor_version\x18\x03 \x01(\r\x12\x16\n\x0e\x62ugfix_version\x18\x04 \x01(\r\x12\x17\n\x0f\x62ootloader_mode\x18\x05 \x01(\x08\x12\x11\n\tdevice_id\x18\x06 \x01(\t\x12\x16\n\x0epin_protection\x18\x07 \x01(\x08\x12\x1d\n\x15passphrase_protection\x18\x08 \x01(\x08\x12\x10\n\x08language\x18\t \x01(\t\x12\r\n\x05label\x18\n \x01(\t\x12\x18\n\x05\x63oins\x18\x0b \x03(\x0b\x32\t.CoinType\x12\x13\n\x0binitialized\x18\x0c \x01(\x08\"0\n\rApplySettings\x12\x10\n\x08language\x18\x01 \x01(\t\x12\r\n\x05label\x18\x02 \x01(\t\"\x1b\n\tChangePin\x12\x0e\n\x06remove\x18\x01 \x01(\x08\"i\n\x04Ping\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x19\n\x11\x62utton_protection\x18\x02 \x01(\x08\x12\x16\n\x0epin_protection\x18\x03 \x01(\x08\x12\x1d\n\x15passphrase_protection\x18\x04 \x01(\x08\"\x1a\n\x07Success\x12\x0f\n\x07message\x18\x01 \x01(\t\"6\n\x07\x46\x61ilure\x12\x1a\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0c.FailureType\x12\x0f\n\x07message\x18\x02 \x01(\t\"?\n\rButtonRequest\x12 \n\x04\x63ode\x18\x01 \x01(\x0e\x32\x12.ButtonRequestType\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\"\x0b\n\tButtonAck\"#\n\x10PinMatrixRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1b\n\x0cPinMatrixAck\x12\x0b\n\x03pin\x18\x01 \x02(\t\"\x08\n\x06\x43\x61ncel\"\x13\n\x11PassphraseRequest\"#\n\rPassphraseAck\x12\x12\n\npassphrase\x18\x01 \x02(\t\"\x1a\n\nGetEntropy\x12\x0c\n\x04size\x18\x01 \x02(\r\"\x1a\n\x07\x45ntropy\x12\x0f\n\x07\x65ntropy\x18\x01 \x02(\x0c\"!\n\x0cGetPublicKey\x12\x11\n\taddress_n\x18\x01 \x03(\r\"&\n\tPublicKey\x12\x19\n\x04node\x18\x01 \x02(\x0b\x32\x0b.HDNodeType\";\n\nGetAddress\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x1a\n\tcoin_name\x18\x02 \x01(\t:\x07\x42itcoin\"\x1a\n\x07\x41\x64\x64ress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x02(\t\"\x0c\n\nWipeDevice\"\xa6\x01\n\nLoadDevice\x12\x10\n\x08mnemonic\x18\x01 \x01(\t\x12\x19\n\x04node\x18\x02 \x01(\x0b\x32\x0b.HDNodeType\x12\x0b\n\x03pin\x18\x03 \x01(\t\x12\x1d\n\x15passphrase_protection\x18\x04 \x01(\x08\x12\x19\n\x08language\x18\x05 \x01(\t:\x07\x65nglish\x12\r\n\x05label\x18\x06 \x01(\t\x12\x15\n\rskip_checksum\x18\x07 \x01(\x08\"\x9d\x01\n\x0bResetDevice\x12\x16\n\x0e\x64isplay_random\x18\x01 \x01(\x08\x12\x15\n\x08strength\x18\x02 \x01(\r:\x03\x31\x32\x38\x12\x1d\n\x15passphrase_protection\x18\x03 \x01(\x08\x12\x16\n\x0epin_protection\x18\x04 \x01(\x08\x12\x19\n\x08language\x18\x05 \x01(\t:\x07\x65nglish\x12\r\n\x05label\x18\x06 \x01(\t\"\x10\n\x0e\x45ntropyRequest\"\x1d\n\nEntropyAck\x12\x0f\n\x07\x65ntropy\x18\x01 \x01(\x0c\"\x9f\x01\n\x0eRecoveryDevice\x12\x12\n\nword_count\x18\x01 \x01(\r\x12\x1d\n\x15passphrase_protection\x18\x02 \x01(\x08\x12\x16\n\x0epin_protection\x18\x03 \x01(\x08\x12\x19\n\x08language\x18\x04 \x01(\t:\x07\x65nglish\x12\r\n\x05label\x18\x05 \x01(\t\x12\x18\n\x10\x65nforce_wordlist\x18\x06 \x01(\x08\"\r\n\x0bWordRequest\"\x17\n\x07WordAck\x12\x0c\n\x04word\x18\x01 \x02(\t\"M\n\x0bSignMessage\x12\x11\n\taddress_n\x18\x01 \x03(\r\x12\x0f\n\x07message\x18\x02 \x02(\x0c\x12\x1a\n\tcoin_name\x18\x03 \x01(\t:\x07\x42itcoin\"D\n\rVerifyMessage\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x11\n\tsignature\x18\x02 \x01(\x0c\x12\x0f\n\x07message\x18\x03 \x01(\x0c\"6\n\x10MessageSignature\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\x11\n\tsignature\x18\x02 \x01(\x0c\"Y\n\x0e\x45stimateTxSize\x12\x15\n\routputs_count\x18\x01 \x02(\r\x12\x14\n\x0cinputs_count\x18\x02 \x02(\r\x12\x1a\n\tcoin_name\x18\x03 \x01(\t:\x07\x42itcoin\"\x19\n\x06TxSize\x12\x0f\n\x07tx_size\x18\x01 \x01(\r\"Q\n\x06SignTx\x12\x15\n\routputs_count\x18\x01 \x02(\r\x12\x14\n\x0cinputs_count\x18\x02 \x02(\r\x12\x1a\n\tcoin_name\x18\x03 \x01(\t:\x07\x42itcoin\"\x90\x01\n\x0cSimpleSignTx\x12\x1c\n\x06inputs\x18\x01 \x03(\x0b\x32\x0c.TxInputType\x12\x1e\n\x07outputs\x18\x02 \x03(\x0b\x32\r.TxOutputType\x12&\n\x0ctransactions\x18\x03 \x03(\x0b\x32\x10.TransactionType\x12\x1a\n\tcoin_name\x18\x04 \x01(\t:\x07\x42itcoin\"\x86\x01\n\tTxRequest\x12\x15\n\rrequest_index\x18\x01 \x01(\x05\x12\"\n\x0crequest_type\x18\x02 \x01(\x0e\x32\x0c.RequestType\x12\x14\n\x0csigned_index\x18\x03 \x01(\x05\x12\x11\n\tsignature\x18\x04 \x01(\x0c\x12\x15\n\rserialized_tx\x18\x05 \x01(\x0c\"&\n\x07TxInput\x12\x1b\n\x05input\x18\x01 \x02(\x0b\x32\x0c.TxInputType\")\n\x08TxOutput\x12\x1d\n\x06output\x18\x01 \x02(\x0b\x32\r.TxOutputType\"\x0f\n\rFirmwareErase\"!\n\x0e\x46irmwareUpload\x12\x0f\n\x07payload\x18\x01 \x02(\x0c\"#\n\x11\x44\x65\x62ugLinkDecision\x12\x0e\n\x06yes_no\x18\x01 \x02(\x08\"\x13\n\x11\x44\x65\x62ugLinkGetState\"\xba\x01\n\x0e\x44\x65\x62ugLinkState\x12\x0e\n\x06layout\x18\x01 \x01(\x0c\x12\x0b\n\x03pin\x18\x02 \x01(\t\x12\x0e\n\x06matrix\x18\x03 \x01(\t\x12\x10\n\x08mnemonic\x18\x04 \x01(\t\x12\x19\n\x04node\x18\x05 \x01(\x0b\x32\x0b.HDNodeType\x12\x1d\n\x15passphrase_protection\x18\x06 \x01(\x08\x12\x0c\n\x04word\x18\x07 \x01(\t\x12\x10\n\x08word_pos\x18\x08 \x01(\x05\x12\x0f\n\x07\x65ntropy\x18\t \x01(\x0c\"\x0f\n\rDebugLinkStop\";\n\x0c\x44\x65\x62ugLinkLog\x12\r\n\x05level\x18\x01 \x01(\r\x12\x0e\n\x06\x62ucket\x18\x02 \x01(\t\x12\x0c\n\x04text\x18\x03 \x01(\t*\xad\x0c\n\x0bMessageType\x12 \n\x16MessageType_Initialize\x10\x00\x1a\x04\x90\xb5\x18\x01\x12\x1a\n\x10MessageType_Ping\x10\x01\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Success\x10\x02\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_Failure\x10\x03\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ChangePin\x10\x04\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_WipeDevice\x10\x05\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_FirmwareErase\x10\x06\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetEntropy\x10\t\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Entropy\x10\n\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_GetPublicKey\x10\x0b\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_PublicKey\x10\x0c\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_LoadDevice\x10\r\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_ResetDevice\x10\x0e\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_SignTx\x10\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x18MessageType_SimpleSignTx\x10\x10\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_Features\x10\x11\x1a\x04\x98\xb5\x18\x01\x12&\n\x1cMessageType_PinMatrixRequest\x10\x12\x1a\x04\x98\xb5\x18\x01\x12\"\n\x18MessageType_PinMatrixAck\x10\x13\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_Cancel\x10\x14\x1a\x04\x90\xb5\x18\x01\x12\x1f\n\x15MessageType_TxRequest\x10\x15\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_TxInput\x10\x17\x1a\x04\x90\xb5\x18\x01\x12\x1e\n\x14MessageType_TxOutput\x10\x18\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ApplySettings\x10\x19\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_ButtonRequest\x10\x1a\x1a\x04\x98\xb5\x18\x01\x12\x1f\n\x15MessageType_ButtonAck\x10\x1b\x1a\x04\x90\xb5\x18\x01\x12 \n\x16MessageType_GetAddress\x10\x1d\x1a\x04\x90\xb5\x18\x01\x12\x1d\n\x13MessageType_Address\x10\x1e\x1a\x04\x98\xb5\x18\x01\x12$\n\x1aMessageType_EntropyRequest\x10#\x1a\x04\x98\xb5\x18\x01\x12 \n\x16MessageType_EntropyAck\x10$\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_SignMessage\x10&\x1a\x04\x90\xb5\x18\x01\x12#\n\x19MessageType_VerifyMessage\x10\'\x1a\x04\x90\xb5\x18\x01\x12&\n\x1cMessageType_MessageSignature\x10(\x1a\x04\x98\xb5\x18\x01\x12\'\n\x1dMessageType_PassphraseRequest\x10)\x1a\x04\x98\xb5\x18\x01\x12#\n\x19MessageType_PassphraseAck\x10*\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_EstimateTxSize\x10+\x1a\x04\x90\xb5\x18\x01\x12\x1c\n\x12MessageType_TxSize\x10,\x1a\x04\x98\xb5\x18\x01\x12$\n\x1aMessageType_RecoveryDevice\x10-\x1a\x04\x90\xb5\x18\x01\x12!\n\x17MessageType_WordRequest\x10.\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x13MessageType_WordAck\x10/\x1a\x04\x90\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkDecision\x10\x64\x1a\x04\xa0\xb5\x18\x01\x12\'\n\x1dMessageType_DebugLinkGetState\x10\x65\x1a\x04\xa0\xb5\x18\x01\x12$\n\x1aMessageType_DebugLinkState\x10\x66\x1a\x04\xa8\xb5\x18\x01\x12#\n\x19MessageType_DebugLinkStop\x10g\x1a\x04\xa0\xb5\x18\x01\x12\"\n\x18MessageType_DebugLinkLog\x10h\x1a\x04\xa8\xb5\x18\x01\x42\x39\n(org.multibit.hd.hardware.trezor.protobufB\rTrezorMessage')
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
   name='MessageType',
@@ -206,8 +206,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=2884,
-  serialized_end=4465,
+  serialized_start=2770,
+  serialized_end=4351,
 )
 
 MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
@@ -289,8 +289,8 @@ _FEATURES = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='vendor', full_name='Features.vendor', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -324,11 +324,11 @@ _FEATURES = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='device_id', full_name='Features.device_id', index=5,
-      number=6, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='pin_protection', full_name='Features.pin_protection', index=6,
       number=7, type=8, cpp_type=7, label=1,
@@ -345,18 +345,18 @@ _FEATURES = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='language', full_name='Features.language', index=8,
-      number=9, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='label', full_name='Features.label', index=9,
-      number=10, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=10, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='coins', full_name='Features.coins', index=10,
       number=11, type=11, cpp_type=10, label=3,
@@ -381,7 +381,7 @@ _FEATURES = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=46,
-  serialized_end=333,
+  serialized_end=321,
 )
 
 
@@ -394,18 +394,18 @@ _APPLYSETTINGS = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='language', full_name='ApplySettings.language', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='label', full_name='ApplySettings.label', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -415,8 +415,8 @@ _APPLYSETTINGS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=335,
-  serialized_end=389,
+  serialized_start=323,
+  serialized_end=371,
 )
 
 
@@ -443,8 +443,8 @@ _CHANGEPIN = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=391,
-  serialized_end=418,
+  serialized_start=373,
+  serialized_end=400,
 )
 
 
@@ -457,8 +457,8 @@ _PING = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='message', full_name='Ping.message', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -492,8 +492,8 @@ _PING = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=420,
-  serialized_end=525,
+  serialized_start=402,
+  serialized_end=507,
 )
 
 
@@ -506,8 +506,8 @@ _SUCCESS = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='message', full_name='Success.message', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -520,8 +520,8 @@ _SUCCESS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=527,
-  serialized_end=553,
+  serialized_start=509,
+  serialized_end=535,
 )
 
 
@@ -541,8 +541,8 @@ _FAILURE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='message', full_name='Failure.message', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -555,8 +555,8 @@ _FAILURE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=555,
-  serialized_end=609,
+  serialized_start=537,
+  serialized_end=591,
 )
 
 
@@ -576,11 +576,11 @@ _BUTTONREQUEST = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='data', full_name='ButtonRequest.data', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -590,8 +590,8 @@ _BUTTONREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=611,
-  serialized_end=680,
+  serialized_start=593,
+  serialized_end=656,
 )
 
 
@@ -611,8 +611,8 @@ _BUTTONACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=682,
-  serialized_end=693,
+  serialized_start=658,
+  serialized_end=669,
 )
 
 
@@ -625,8 +625,8 @@ _PINMATRIXREQUEST = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='message', full_name='PinMatrixRequest.message', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -639,8 +639,8 @@ _PINMATRIXREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=695,
-  serialized_end=730,
+  serialized_start=671,
+  serialized_end=706,
 )
 
 
@@ -653,8 +653,8 @@ _PINMATRIXACK = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='pin', full_name='PinMatrixAck.pin', index=0,
-      number=1, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -667,8 +667,8 @@ _PINMATRIXACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=732,
-  serialized_end=759,
+  serialized_start=708,
+  serialized_end=735,
 )
 
 
@@ -688,8 +688,8 @@ _CANCEL = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=761,
-  serialized_end=769,
+  serialized_start=737,
+  serialized_end=745,
 )
 
 
@@ -709,8 +709,8 @@ _PASSPHRASEREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=771,
-  serialized_end=790,
+  serialized_start=747,
+  serialized_end=766,
 )
 
 
@@ -723,11 +723,11 @@ _PASSPHRASEACK = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='passphrase', full_name='PassphraseAck.passphrase', index=0,
-      number=1, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -737,8 +737,8 @@ _PASSPHRASEACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=792,
-  serialized_end=833,
+  serialized_start=768,
+  serialized_end=803,
 )
 
 
@@ -765,8 +765,8 @@ _GETENTROPY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=835,
-  serialized_end=861,
+  serialized_start=805,
+  serialized_end=831,
 )
 
 
@@ -783,7 +783,7 @@ _ENTROPY = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -793,8 +793,8 @@ _ENTROPY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=863,
-  serialized_end=895,
+  serialized_start=833,
+  serialized_end=859,
 )
 
 
@@ -821,8 +821,8 @@ _GETPUBLICKEY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=897,
-  serialized_end=930,
+  serialized_start=861,
+  serialized_end=894,
 )
 
 
@@ -849,8 +849,8 @@ _PUBLICKEY = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=932,
-  serialized_end=970,
+  serialized_start=896,
+  serialized_end=934,
 )
 
 
@@ -870,8 +870,8 @@ _GETADDRESS = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='coin_name', full_name='GetAddress.coin_name', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="Bitcoin",
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("Bitcoin", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -884,8 +884,8 @@ _GETADDRESS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=972,
-  serialized_end=1031,
+  serialized_start=936,
+  serialized_end=995,
 )
 
 
@@ -898,8 +898,8 @@ _ADDRESS = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='address', full_name='Address.address', index=0,
-      number=1, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -912,8 +912,8 @@ _ADDRESS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1033,
-  serialized_end=1059,
+  serialized_start=997,
+  serialized_end=1023,
 )
 
 
@@ -933,8 +933,8 @@ _WIPEDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1061,
-  serialized_end=1073,
+  serialized_start=1025,
+  serialized_end=1037,
 )
 
 
@@ -947,8 +947,8 @@ _LOADDEVICE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='mnemonic', full_name='LoadDevice.mnemonic', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -961,8 +961,8 @@ _LOADDEVICE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='pin', full_name='LoadDevice.pin', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -975,18 +975,18 @@ _LOADDEVICE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='language', full_name='LoadDevice.language', index=4,
-      number=5, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="english",
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("english", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='label', full_name='LoadDevice.label', index=5,
-      number=6, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='skip_checksum', full_name='LoadDevice.skip_checksum', index=6,
       number=7, type=8, cpp_type=7, label=1,
@@ -1003,8 +1003,8 @@ _LOADDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1076,
-  serialized_end=1248,
+  serialized_start=1040,
+  serialized_end=1206,
 )
 
 
@@ -1045,18 +1045,18 @@ _RESETDEVICE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='language', full_name='ResetDevice.language', index=4,
-      number=5, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="english",
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("english", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='label', full_name='ResetDevice.label', index=5,
-      number=6, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1066,8 +1066,8 @@ _RESETDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1251,
-  serialized_end=1414,
+  serialized_start=1209,
+  serialized_end=1366,
 )
 
 
@@ -1087,8 +1087,8 @@ _ENTROPYREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1416,
-  serialized_end=1432,
+  serialized_start=1368,
+  serialized_end=1384,
 )
 
 
@@ -1105,7 +1105,7 @@ _ENTROPYACK = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1115,8 +1115,8 @@ _ENTROPYACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1434,
-  serialized_end=1469,
+  serialized_start=1386,
+  serialized_end=1415,
 )
 
 
@@ -1150,18 +1150,18 @@ _RECOVERYDEVICE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='language', full_name='RecoveryDevice.language', index=3,
-      number=4, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="english",
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("english", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='label', full_name='RecoveryDevice.label', index=4,
-      number=5, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='enforce_wordlist', full_name='RecoveryDevice.enforce_wordlist', index=5,
       number=6, type=8, cpp_type=7, label=1,
@@ -1178,8 +1178,8 @@ _RECOVERYDEVICE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1472,
-  serialized_end=1637,
+  serialized_start=1418,
+  serialized_end=1577,
 )
 
 
@@ -1199,8 +1199,8 @@ _WORDREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1639,
-  serialized_end=1652,
+  serialized_start=1579,
+  serialized_end=1592,
 )
 
 
@@ -1213,11 +1213,11 @@ _WORDACK = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='word', full_name='WordAck.word', index=0,
-      number=1, type=12, cpp_type=9, label=2,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1227,8 +1227,8 @@ _WORDACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1654,
-  serialized_end=1683,
+  serialized_start=1594,
+  serialized_end=1617,
 )
 
 
@@ -1252,11 +1252,11 @@ _SIGNMESSAGE = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='coin_name', full_name='SignMessage.coin_name', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="Bitcoin",
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("Bitcoin", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1269,8 +1269,8 @@ _SIGNMESSAGE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1685,
-  serialized_end=1768,
+  serialized_start=1619,
+  serialized_end=1696,
 )
 
 
@@ -1283,8 +1283,8 @@ _VERIFYMESSAGE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='address', full_name='VerifyMessage.address', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1294,14 +1294,14 @@ _VERIFYMESSAGE = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='message', full_name='VerifyMessage.message', index=2,
       number=3, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1311,8 +1311,8 @@ _VERIFYMESSAGE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1770,
-  serialized_end=1850,
+  serialized_start=1698,
+  serialized_end=1766,
 )
 
 
@@ -1325,8 +1325,8 @@ _MESSAGESIGNATURE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='address', full_name='MessageSignature.address', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1336,7 +1336,7 @@ _MESSAGESIGNATURE = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1346,8 +1346,8 @@ _MESSAGESIGNATURE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1852,
-  serialized_end=1912,
+  serialized_start=1768,
+  serialized_end=1822,
 )
 
 
@@ -1374,8 +1374,8 @@ _ESTIMATETXSIZE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='coin_name', full_name='EstimateTxSize.coin_name', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="Bitcoin",
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("Bitcoin", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1388,8 +1388,8 @@ _ESTIMATETXSIZE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1914,
-  serialized_end=2003,
+  serialized_start=1824,
+  serialized_end=1913,
 )
 
 
@@ -1416,8 +1416,8 @@ _TXSIZE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2005,
-  serialized_end=2030,
+  serialized_start=1915,
+  serialized_end=1940,
 )
 
 
@@ -1444,8 +1444,8 @@ _SIGNTX = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='coin_name', full_name='SignTx.coin_name', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="Bitcoin",
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("Bitcoin", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1458,8 +1458,8 @@ _SIGNTX = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2032,
-  serialized_end=2113,
+  serialized_start=1942,
+  serialized_end=2023,
 )
 
 
@@ -1493,8 +1493,8 @@ _SIMPLESIGNTX = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='coin_name', full_name='SimpleSignTx.coin_name', index=3,
-      number=4, type=12, cpp_type=9, label=1,
-      has_default_value=True, default_value="Bitcoin",
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=True, default_value=unicode("Bitcoin", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1507,8 +1507,8 @@ _SIMPLESIGNTX = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2116,
-  serialized_end=2260,
+  serialized_start=2026,
+  serialized_end=2170,
 )
 
 
@@ -1546,14 +1546,14 @@ _TXREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='serialized_tx', full_name='TxRequest.serialized_tx', index=4,
       number=5, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1563,8 +1563,8 @@ _TXREQUEST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2263,
-  serialized_end=2409,
+  serialized_start=2173,
+  serialized_end=2307,
 )
 
 
@@ -1591,8 +1591,8 @@ _TXINPUT = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2411,
-  serialized_end=2449,
+  serialized_start=2309,
+  serialized_end=2347,
 )
 
 
@@ -1619,8 +1619,8 @@ _TXOUTPUT = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2451,
-  serialized_end=2492,
+  serialized_start=2349,
+  serialized_end=2390,
 )
 
 
@@ -1640,8 +1640,8 @@ _FIRMWAREERASE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2494,
-  serialized_end=2509,
+  serialized_start=2392,
+  serialized_end=2407,
 )
 
 
@@ -1658,7 +1658,7 @@ _FIRMWAREUPLOAD = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
   ],
   extensions=[
   ],
@@ -1668,8 +1668,8 @@ _FIRMWAREUPLOAD = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2511,
-  serialized_end=2550,
+  serialized_start=2409,
+  serialized_end=2442,
 )
 
 
@@ -1696,8 +1696,8 @@ _DEBUGLINKDECISION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2552,
-  serialized_end=2587,
+  serialized_start=2444,
+  serialized_end=2479,
 )
 
 
@@ -1717,8 +1717,8 @@ _DEBUGLINKGETSTATE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2589,
-  serialized_end=2608,
+  serialized_start=2481,
+  serialized_end=2500,
 )
 
 
@@ -1735,25 +1735,25 @@ _DEBUGLINKSTATE = _descriptor.Descriptor(
       has_default_value=False, default_value="",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')),
+      options=None),
     _descriptor.FieldDescriptor(
       name='pin', full_name='DebugLinkState.pin', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='matrix', full_name='DebugLinkState.matrix', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='mnemonic', full_name='DebugLinkState.mnemonic', index=3,
-      number=4, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1773,8 +1773,8 @@ _DEBUGLINKSTATE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='word', full_name='DebugLinkState.word', index=6,
-      number=7, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=7, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1801,8 +1801,8 @@ _DEBUGLINKSTATE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2611,
-  serialized_end=2803,
+  serialized_start=2503,
+  serialized_end=2689,
 )
 
 
@@ -1822,8 +1822,8 @@ _DEBUGLINKSTOP = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2805,
-  serialized_end=2820,
+  serialized_start=2691,
+  serialized_end=2706,
 )
 
 
@@ -1843,15 +1843,15 @@ _DEBUGLINKLOG = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='bucket', full_name='DebugLinkLog.bucket', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='text', full_name='DebugLinkLog.text', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value="",
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -1864,8 +1864,8 @@ _DEBUGLINKLOG = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=2822,
-  serialized_end=2881,
+  serialized_start=2708,
+  serialized_end=2767,
 )
 
 _FEATURES.fields_by_name['coins'].message_type = types_pb2._COINTYPE
@@ -2289,42 +2289,4 @@ _MESSAGETYPE.values_by_name["MessageType_DebugLinkStop"].has_options = True
 _MESSAGETYPE.values_by_name["MessageType_DebugLinkStop"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\240\265\030\001')
 _MESSAGETYPE.values_by_name["MessageType_DebugLinkLog"].has_options = True
 _MESSAGETYPE.values_by_name["MessageType_DebugLinkLog"]._options = _descriptor._ParseOptions(descriptor_pb2.EnumValueOptions(), '\250\265\030\001')
-_FEATURES.fields_by_name['device_id'].has_options = True
-_FEATURES.fields_by_name['device_id']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_FEATURES.fields_by_name['label'].has_options = True
-_FEATURES.fields_by_name['label']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_APPLYSETTINGS.fields_by_name['label'].has_options = True
-_APPLYSETTINGS.fields_by_name['label']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_BUTTONREQUEST.fields_by_name['data'].has_options = True
-_BUTTONREQUEST.fields_by_name['data']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_PASSPHRASEACK.fields_by_name['passphrase'].has_options = True
-_PASSPHRASEACK.fields_by_name['passphrase']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_ENTROPY.fields_by_name['entropy'].has_options = True
-_ENTROPY.fields_by_name['entropy']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_LOADDEVICE.fields_by_name['label'].has_options = True
-_LOADDEVICE.fields_by_name['label']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_RESETDEVICE.fields_by_name['label'].has_options = True
-_RESETDEVICE.fields_by_name['label']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_ENTROPYACK.fields_by_name['entropy'].has_options = True
-_ENTROPYACK.fields_by_name['entropy']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_RECOVERYDEVICE.fields_by_name['label'].has_options = True
-_RECOVERYDEVICE.fields_by_name['label']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_WORDACK.fields_by_name['word'].has_options = True
-_WORDACK.fields_by_name['word']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_SIGNMESSAGE.fields_by_name['message'].has_options = True
-_SIGNMESSAGE.fields_by_name['message']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_VERIFYMESSAGE.fields_by_name['signature'].has_options = True
-_VERIFYMESSAGE.fields_by_name['signature']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_VERIFYMESSAGE.fields_by_name['message'].has_options = True
-_VERIFYMESSAGE.fields_by_name['message']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_MESSAGESIGNATURE.fields_by_name['signature'].has_options = True
-_MESSAGESIGNATURE.fields_by_name['signature']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_TXREQUEST.fields_by_name['signature'].has_options = True
-_TXREQUEST.fields_by_name['signature']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_TXREQUEST.fields_by_name['serialized_tx'].has_options = True
-_TXREQUEST.fields_by_name['serialized_tx']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_FIRMWAREUPLOAD.fields_by_name['payload'].has_options = True
-_FIRMWAREUPLOAD.fields_by_name['payload']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
-_DEBUGLINKSTATE.fields_by_name['layout'].has_options = True
-_DEBUGLINKSTATE.fields_by_name['layout']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), '\210\265\030\001')
 # @@protoc_insertion_point(module_scope)

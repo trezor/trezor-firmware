@@ -144,7 +144,7 @@ class TextUIMixin(object):
 
     def callback_PassphraseRequest(self, msg):
         passphrase = raw_input("Passphrase required: ")
-        passphrase = str(bytearray(passphrase, 'utf-8'))
+        passphrase = unicode(str(bytearray(passphrase, 'utf-8')), 'utf-8')
 
         return proto.PassphraseAck(passphrase=passphrase)
 
@@ -217,10 +217,10 @@ class DebugLinkMixin(object):
         self.pin_correct = pin_correct
 
     def set_passphrase(self, passphrase):
-        self.passphrase = str(bytearray(Mnemonic.normalize_string(passphrase), 'utf-8'))
+        self.passphrase = unicode(str(bytearray(Mnemonic.normalize_string(passphrase), 'utf-8')), 'utf-8')
 
     def set_mnemonic(self, mnemonic):
-        self.mnemonic = str(bytearray(Mnemonic.normalize_string(mnemonic), 'utf-8')).split(' ')
+        self.mnemonic = unicode(str(bytearray(Mnemonic.normalize_string(mnemonic), 'utf-8')), 'utf-8').split(' ')
 
     def call_raw(self, msg):
         resp = super(DebugLinkMixin, self).call_raw(msg)
@@ -495,7 +495,7 @@ class ProtocolMixin(object):
         mnemonic = Mnemonic.normalize_string(mnemonic)
 
         # Convert mnemonic to ASCII stream
-        mnemonic = str(bytearray(mnemonic, 'utf-8'))
+        mnemonic = unicode(str(bytearray(mnemonic, 'utf-8')), 'utf-8')
 
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
