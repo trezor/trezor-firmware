@@ -54,6 +54,7 @@ enum ButtonRequestType {
 	ButtonRequest_ConfirmWord = 5;
 	ButtonRequest_WipeDevice = 6;
 	ButtonRequest_ProtectCall = 7;
+	ButtonRequest_SignTx = 8;
 }
 
 // Structure of BIP32 (hierarchical deterministic) node
