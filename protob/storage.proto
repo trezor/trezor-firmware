@@ -15,10 +15,10 @@ import "types.proto";
 message Storage {
 	required uint32 version = 1;
 	optional HDNodeType node = 2;
-	optional bytes mnemonic = 3 [(binary) = true];
+	optional string mnemonic = 3;
 	optional bool passphrase_protection = 4;	// whether node_serialized or mnemonic are encrypted (protected by passphrase)
 	optional uint32 pin_failed_attempts = 5;
-	optional bytes pin = 6;
-	optional bytes language = 7;
-	optional bytes label = 8 [(binary) = true];
+	optional string pin = 6;
+	optional string language = 7;
+	optional string label = 8;
 }
