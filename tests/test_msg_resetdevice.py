@@ -50,16 +50,17 @@ class TestDeviceReset(common.TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Provide entropy
         self.assertIsInstance(ret, proto.EntropyRequest)
+        internal_entropy = self.client.debug.read_entropy()
         ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
 
-        # Read internal entropy and generate mnemonic locally
-        internal_entropy = self.client.debug.read_entropy()
+        # Generate mnemonic locally
         entropy = generate_entropy(strength, internal_entropy, external_entropy)
         expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
 
         mnemonic = []
-        for _ in range(12):
+        for _ in range(strength/32*3):
             self.assertIsInstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_word()[0])
             self.client.debug.press_yes()
@@ -71,7 +72,7 @@ class TestDeviceReset(common.TrezorTest):
         self.assertEqual(mnemonic, expected_mnemonic)
 
         mnemonic = []
-        for _ in range(12):
+        for _ in range(strength/32*3):
             self.assertIsInstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_word()[0])
             self.client.debug.press_yes()
@@ -83,7 +84,7 @@ class TestDeviceReset(common.TrezorTest):
 
         # Compare that second pass printed out the same mnemonic once again
         self.assertEqual(mnemonic, expected_mnemonic)
-        
+
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
         self.assertFalse(resp.pin_protection)
@@ -112,9 +113,6 @@ class TestDeviceReset(common.TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
-        self.assertIsInstance(ret, proto.EntropyRequest)
-        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
-
         self.assertIsInstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
@@ -126,13 +124,17 @@ class TestDeviceReset(common.TrezorTest):
         pin_encoded = self.client.debug.encode_pin('654')
         ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
-        # Read internal entropy and generate mnemonic locally
+        # Provide entropy
+        self.assertIsInstance(ret, proto.EntropyRequest)
         internal_entropy = self.client.debug.read_entropy()
+        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
+
+        # Generate mnemonic locally
         entropy = generate_entropy(strength, internal_entropy, external_entropy)
         expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
 
         mnemonic = []
-        for _ in range(12):
+        for _ in range(strength/32*3):
             self.assertIsInstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_word()[0])
             self.client.debug.press_yes()
@@ -144,7 +146,7 @@ class TestDeviceReset(common.TrezorTest):
         self.assertEqual(mnemonic, expected_mnemonic)
 
         mnemonic = []
-        for _ in range(12):
+        for _ in range(strength/32*3):
             self.assertIsInstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_word()[0])
             self.client.debug.press_yes()
@@ -165,10 +167,12 @@ class TestDeviceReset(common.TrezorTest):
         # Do passphrase-protected action, PassphraseRequest should be raised
         resp = self.client.call_raw(proto.Ping(passphrase_protection=True))
         self.assertIsInstance(resp, proto.PassphraseRequest)
+        self.client.call_raw(proto.Cancel())
 
         # Do PIN-protected action, PinRequest should be raised
         resp = self.client.call_raw(proto.Ping(pin_protection=True))
         self.assertIsInstance(resp, proto.PinMatrixRequest)
+        self.client.call_raw(proto.Cancel())
 
     def test_failed_pin(self):
         external_entropy = 'zlutoucky kun upel divoke ody' * 2
@@ -185,9 +189,6 @@ class TestDeviceReset(common.TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
-        self.assertIsInstance(ret, proto.EntropyRequest)
-        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
-
         self.assertIsInstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
@@ -200,7 +201,7 @@ class TestDeviceReset(common.TrezorTest):
         ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         self.assertIsInstance(ret, proto.Failure)
-        
+
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         self.assertRaises(Exception, self.client.reset_device, False, 128, True, True, 'label', 'english')
