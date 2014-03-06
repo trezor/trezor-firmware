@@ -90,7 +90,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
             self.client.set_tx_func(FakeTestnetBlockchain().get_tx)
             msg = self.client._prepare_simple_sign_tx('Testnet', [inp1, ], [out1, out2])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                                                # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
                                                 proto.TxRequest()])
             tx = self.client.call(msg)
@@ -122,7 +122,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
             self.client.set_tx_func(FakeTestnetBlockchain().get_tx)
             msg = self.client._prepare_simple_sign_tx('Testnet', [inp1, ], [out1, out2])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                                                # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_FeeOverThreshold),
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
                                                 proto.TxRequest()])
@@ -155,7 +155,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
         with self.client:
             msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1, ], [out1, out2])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                                                # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
                                                 proto.TxRequest()])
             tx = self.client.call(msg)
@@ -193,7 +193,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
             msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1, ], [out1, out2, out3])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                                                # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
                                                 proto.TxRequest()])
             tx = self.client.call(msg)
@@ -233,7 +233,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
         with self.client:
             msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1, inp2], [out1, out2])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                                                # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
                                                 proto.TxRequest()])
             tx = self.client.call(msg)
@@ -266,7 +266,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
 
         outputs = []
         for _ in range(255):
-            out = proto_types.TxOutputType(address_n=[4],  # 1NwN6UduuVkJi6sw3gSiKZaCY5rHgVXC2h
+            out = proto_types.TxOutputType(address='1NwN6UduuVkJi6sw3gSiKZaCY5rHgVXC2h',
                               amount=10200,
                               script_type=proto_types.PAYTOADDRESS,
                               )
