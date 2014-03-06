@@ -89,6 +89,17 @@ class TestMsgVerifymessage(common.TrezorTest):
 
         self.assertTrue(res_nfkd)
         self.assertTrue(res_nfc)
-        
+
+    def test_verify_bitcoind(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        res = self.client.verify_message(
+            '1KzXE97kV7DrpxCViCN3HbGbiKhzzPM7TQ',
+            binascii.unhexlify('1cc694f0f23901dfe3603789142f36a3fc582d0d5c0ec7215cf2ccd641e4e37228504f3d4dc3eea28bbdbf5da27c49d4635c097004d9f228750ccd836a8e1460c0'),
+            u'\u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy'
+        )
+
+        self.assertTrue(res)
+
 if __name__ == '__main__':
     unittest.main()
