@@ -60,10 +60,12 @@ class TestDeviceRecovery(common.TrezorTest):
         # Do passphrase-protected action, PassphraseRequest should be raised
         resp = self.client.call_raw(proto.Ping(passphrase_protection=True))
         self.assertIsInstance(resp, proto.PassphraseRequest)
+        self.client.call_raw(proto.Cancel())
 
         # Do PIN-protected action, PinRequest should be raised
         resp = self.client.call_raw(proto.Ping(pin_protection=True))
         self.assertIsInstance(resp, proto.PinMatrixRequest)
+        self.client.call_raw(proto.Cancel())
 
     def test_nopin_nopassphrase(self):
         mnemonic = self.mnemonic12.split(' ')
@@ -127,15 +129,15 @@ class TestDeviceRecovery(common.TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        self.assertIsInstance(ret, proto.WordRequest)
         for _ in range(int(12 * 1.5)):
-            self.assertIsInstance(ret, proto.WordRequest)
             (word, pos) = self.client.debug.read_recovery_word()
-
             if pos != 0:
-                ret = self.client.call_raw(proto.WordAck('kwyjibo'))
+                ret = self.client.call_raw(proto.WordAck(word='kwyjibo'))
                 self.assertIsInstance(ret, proto.Failure)
+                break
             else:
-                ret = self.client.call_raw(proto.WordAck(word=word))
+                self.client.call_raw(proto.WordAck(word=word))
 
     def test_pin_fail(self):
         ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
