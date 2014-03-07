@@ -32,7 +32,7 @@ class TestDeviceRecovery(common.TrezorTest):
         fakes = 0
         for _ in range(int(12 * 1.5)):
             self.assertIsInstance(ret, proto.WordRequest)
-            (word, pos) = self.client.debug.read_word()
+            (word, pos) = self.client.debug.read_recovery_word()
 
             if pos != 0:
                 ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
@@ -82,7 +82,7 @@ class TestDeviceRecovery(common.TrezorTest):
         fakes = 0
         for _ in range(int(12 * 1.5)):
             self.assertIsInstance(ret, proto.WordRequest)
-            (word, pos) = self.client.debug.read_recvery_word()
+            (word, pos) = self.client.debug.read_recovery_word()
 
             if pos != 0:
                 ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
