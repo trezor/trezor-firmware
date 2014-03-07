@@ -394,15 +394,16 @@ message DebugLinkGetState {
 
 // Response object reflecting device's current state. It can be received only over debug link connection.
 message DebugLinkState {
-	optional bytes layout = 1;				// Raw buffer of display
+	optional bytes layout = 1;					// Raw buffer of display
 	optional string pin = 2;					// Current PIN, blank if PIN is not set/enabled
-	optional string matrix = 3;				// Current PIN matrix
-	optional string mnemonic = 4;				// current mnemonic format
-	optional HDNodeType node = 5;				// current node (BIP32 format)
-	optional bool passphrase_protection = 6;
-	optional string word = 7;		// What word is on display in RecoveryDevice/ResetDevice workflow
-	optional int32 word_pos = 8;	// Which word of mnemonic do the device expect
-	optional bytes entropy = 9;		// Return current entropy of ResetDevice workflow
+	optional string matrix = 3;					// Current PIN matrix
+	optional string mnemonic = 4;				// Current mnemonic format
+	optional HDNodeType node = 5;				// Current node (BIP32 format)
+	optional bool passphrase_protection = 6;	// Is passphrase_protection set?
+	optional string reset_word = 7;				// Word on display during ResetDevice workflow
+	optional bytes reset_entropy = 8;			// Current entropy of ResetDevice workflow
+	optional string recovery_fake_word = 9;		// (Fake) Word on display during RecoveryDevice workflow
+	optional uint32 recovery_word_pos = 10;		// Index of mnemonic word the device is expecting
 }
 
 // Ask device to shutdown/restart
