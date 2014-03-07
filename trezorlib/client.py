@@ -510,7 +510,7 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def load_device_by_xprv(self, xprv, pin, passphrase_protection, label):
+    def load_device_by_xprv(self, xprv, pin, passphrase_protection, label, language):
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
@@ -547,7 +547,7 @@ class ProtocolMixin(object):
         resp = self.call(proto.LoadDevice(node=node,
                                           pin=pin,
                                           passphrase_protection=passphrase_protection,
-                                          language='english',
+                                          language=language,
                                           label=label))
         self.init_device()
         return resp
