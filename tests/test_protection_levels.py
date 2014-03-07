@@ -75,8 +75,7 @@ class TestProtectionLevels(common.TrezorTest):
 
     def test_load_device(self):
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.Success(),
+            self.client.set_expected_responses([proto.Success(),
                                       proto.Features()])
             self.client.load_device_by_mnemonic('this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
 
@@ -86,8 +85,7 @@ class TestProtectionLevels(common.TrezorTest):
 
     def test_reset_device(self):
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.EntropyRequest()] +\
+            self.client.set_expected_responses([proto.EntropyRequest()] + \
                                      [proto.ButtonRequest()] * 24 + \
                                      [proto.Success(),
                                       proto.Features()])
@@ -99,8 +97,7 @@ class TestProtectionLevels(common.TrezorTest):
     def test_recovery_device(self):
         with self.client:
             self.client.set_mnemonic(self.mnemonic12)
-            self.client.set_expected_responses([proto.ButtonRequest(), ] + \
-                                     [proto.WordRequest()] * int(12 * 1.5) + \
+            self.client.set_expected_responses([proto.WordRequest()] * int(12 * 1.5) + \
                                      [proto.Success(),
                                       proto.Features()])
             self.client.recovery_device(12, False, False, 'label', 'english')

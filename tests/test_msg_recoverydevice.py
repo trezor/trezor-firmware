@@ -13,11 +13,6 @@ class TestDeviceRecovery(common.TrezorTest):
                                    language='english',
                                    enforce_wordlist=True))
 
-
-        self.assertIsInstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
         self.assertIsInstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
@@ -76,11 +71,6 @@ class TestDeviceRecovery(common.TrezorTest):
                                    language='english',
                                    enforce_wordlist=True))
 
-
-        self.assertIsInstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
         fakes = 0
         for _ in range(int(12 * 1.5)):
             self.assertIsInstance(ret, proto.WordRequest)
@@ -125,10 +115,6 @@ class TestDeviceRecovery(common.TrezorTest):
                                    language='english',
                                    enforce_wordlist=True))
 
-        self.assertIsInstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
         self.assertIsInstance(ret, proto.WordRequest)
         for _ in range(int(12 * 1.5)):
             (word, pos) = self.client.debug.read_recovery_word()
@@ -146,11 +132,6 @@ class TestDeviceRecovery(common.TrezorTest):
                                    label='label',
                                    language='english',
                                    enforce_wordlist=True))
-
-
-        self.assertIsInstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
 
         self.assertIsInstance(ret, proto.PinMatrixRequest)
 
