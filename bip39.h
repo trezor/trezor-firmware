@@ -9,4 +9,6 @@ const char *mnemonic_from_data(const uint8_t *data, int len);
 
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8]);
 
+const char **mnemonic_wordlist(void);
+
 #endif

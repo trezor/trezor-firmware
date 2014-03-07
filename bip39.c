@@ -73,3 +73,8 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	saltlen += 8;
 	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, PBKDF2_ROUNDS, seed, 512 / 8);
 }
+
+const char **mnemonic_wordlist(void)
+{
+	return wordlist;
+}
