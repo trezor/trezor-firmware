@@ -115,6 +115,28 @@ class TestDeviceRecovery(common.TrezorTest):
         resp = self.client.call_raw(proto.Ping(pin_protection=True))
         self.assertIsInstance(resp, proto.Success)
     
+    def test_word_fail(self):
+        ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
+                                   passphrase_protection=False,
+                                   pin_protection=False,
+                                   label='label',
+                                   language='english',
+                                   enforce_wordlist=True))
+
+        self.assertIsInstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        for _ in range(int(12 * 1.5)):
+            self.assertIsInstance(ret, proto.WordRequest)
+            (word, pos) = self.client.debug.read_recovery_word()
+
+            if pos != 0:
+                ret = self.client.call_raw(proto.WordAck('kwyjibo'))
+                self.assertIsInstance(ret, proto.Failure)
+            else:
+                ret = self.client.call_raw(proto.WordAck(word=word))
+
     def test_pin_fail(self):
         ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
                                    passphrase_protection=True,
