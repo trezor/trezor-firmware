@@ -46,10 +46,6 @@ class TestDeviceReset(common.TrezorTest):
                                                language='english',
                                                label='test'))
 
-        self.assertIsInstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
         # Provide entropy
         self.assertIsInstance(ret, proto.EntropyRequest)
         internal_entropy = self.client.debug.read_reset_entropy()
