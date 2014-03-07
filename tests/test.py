@@ -24,6 +24,8 @@ x SimpleSignTx
 x protection levels
 x neuspesna zmena pinu
 
+pin backoff predelat pred zadanim pinu
+
 - zrejme v sucinnosti s inymi testami
   x ButtonRequest/ButtonAck workflow
   x PinMatrixRequest/PinMatrixAck workflow
@@ -47,4 +49,6 @@ x Zero signature test
 
 x test bip39, utf, passphrase
 x Clear session on ChangePin
+
+Test s invalid adresou pro vystup
 '''
