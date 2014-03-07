@@ -12,6 +12,7 @@ class TrezorTest(unittest.TestCase):
         self.client.set_debuglink(self.debug_transport)
         self.client.set_tx_func(BlockchainApi().get_tx)
 
+        #                     1      2     3    4      5      6      7     8      9    10    11    12
         self.mnemonic12 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
         self.mnemonic18 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
         self.mnemonic24 = 'dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic'
