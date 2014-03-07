@@ -264,7 +264,7 @@ class DebugLinkMixin(object):
         return proto.PassphraseAck(passphrase=self.passphrase)
 
     def callback_WordRequest(self, msg):
-        (word, pos) = self.debug.read_word()
+        (word, pos) = self.debug.read_recovery_word()
         if word != '':
             return proto.WordAck(word=word)
         if pos != 0:

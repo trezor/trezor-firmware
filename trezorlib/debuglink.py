@@ -66,13 +66,17 @@ class DebugLink(object):
         obj = self._call(proto.DebugLinkGetState())
         return obj.node
 
-    def read_word(self):
+    def read_recovery_word(self):
         obj = self._call(proto.DebugLinkGetState())
-        return (obj.word, obj.word_pos)
+        return (obj.recovery_fake_word, obj.recovery_word_pos)
 
-    def read_entropy(self):
+    def read_reset_word(self):
         obj = self._call(proto.DebugLinkGetState())
-        return obj.entropy
+        return obj.reset_word
+
+    def read_reset_entropy(self):
+        obj = self._call(proto.DebugLinkGetState())
+        return obj.reset_entropy
 
     def read_passphrase_protection(self):
         obj = self._call(proto.DebugLinkGetState())

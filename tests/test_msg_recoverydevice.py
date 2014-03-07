@@ -32,13 +32,13 @@ class TestDeviceRecovery(common.TrezorTest):
         fakes = 0
         for _ in range(int(12 * 1.5)):
             self.assertIsInstance(ret, proto.WordRequest)
-            word = self.client.debug.read_word()
+            (word, pos) = self.client.debug.read_word()
 
-            if word[1] != 0:
-                ret = self.client.call_raw(proto.WordAck(word=mnemonic[word[1] - 1]))
-                mnemonic[word[1] - 1] = None
+            if pos != 0:
+                ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+                mnemonic[pos - 1] = None
             else:
-                ret = self.client.call_raw(proto.WordAck(word=word[0]))
+                ret = self.client.call_raw(proto.WordAck(word=word))
                 fakes += 1
 
             print mnemonic
@@ -82,13 +82,13 @@ class TestDeviceRecovery(common.TrezorTest):
         fakes = 0
         for _ in range(int(12 * 1.5)):
             self.assertIsInstance(ret, proto.WordRequest)
-            word = self.client.debug.read_word()
+            (word, pos) = self.client.debug.read_recvery_word()
 
-            if word[1] != 0:
-                ret = self.client.call_raw(proto.WordAck(word=mnemonic[word[1] - 1]))
-                mnemonic[word[1] - 1] = None
+            if pos != 0:
+                ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+                mnemonic[pos - 1] = None
             else:
-                ret = self.client.call_raw(proto.WordAck(word=word[0]))
+                ret = self.client.call_raw(proto.WordAck(word=word))
                 fakes += 1
 
             print mnemonic
