@@ -1,0 +1,29 @@
+//
+// This file defines the configuration format for initializing the
+// Trezor browser plugin.
+//
+
+import "google/protobuf/descriptor.proto";
+
+message DeviceDescriptor {
+    optional uint32 vendor_id = 1;
+    optional uint32 product_id = 2;
+    optional bytes serial_number = 3;
+    optional bytes path = 4;
+}
+
+message Configuration {
+    // regexes of allowed/forbidden urls
+    repeated bytes whitelist_urls = 1;
+    repeated bytes blacklist_urls = 2;
+
+    // compiled specification of the wire protocol, serialized
+    // FileDescriptorSet can be generated with `protoc -o`
+    required google.protobuf.FileDescriptorSet wire_protocol = 3;
+
+    // descriptors of allowed devices
+    repeated DeviceDescriptor known_devices = 4;
+
+    // timestamp of expiration
+    optional int32 valid_until = 5;
+}
