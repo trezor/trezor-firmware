@@ -57,6 +57,12 @@ enum ButtonRequestType {
 	ButtonRequest_SignTx = 8;
 }
 
+enum PinMatrixRequestType {
+	PinMatrixRequestType_Current = 1;
+	PinMatrixRequestType_NewFirst = 2;
+	PinMatrixRequestType_NewSecond = 3;
+}
+
 // Structure of BIP32 (hierarchical deterministic) node
 // Used for imports of private key into the device and exporting public key out of device
 message HDNodeType {

@@ -142,7 +142,7 @@ message ButtonAck {
 //
 // Response: PinMatrixAck, Cancel
 message PinMatrixRequest {
-	optional string message = 1;	// Human readable message
+	optional PinMatrixRequestType type = 1;
 }
 
 // Message is sent by the computer as a response to PinMatrixRequest previously sent by the device.
