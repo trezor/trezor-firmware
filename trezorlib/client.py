@@ -374,20 +374,24 @@ class ProtocolMixin(object):
     def sign_message(self, coin_name, n, message):
         n = self._convert_prime(n)
 
-        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message)
-
-        # Convert message to ASCII stream
-        message = str(bytearray(message, 'utf-8'))
+        try:
+            # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
+            message = normalize_nfc(message)
+            # Convert message to ASCII stream
+            message = str(bytearray(message, 'utf-8'))
+        except:
+            pass # it was not UTF8 string
 
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message))
 
     def verify_message(self, address, signature, message):
-        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message)
-
+        try:
+            # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
+            message = normalize_nfc(message)
         # Convert message to ASCII stream
-        message = str(bytearray(message, 'utf-8'))
+            message = str(bytearray(message, 'utf-8'))
+        except:
+            pass # it was not UTF8 string
 
         try:
             resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
