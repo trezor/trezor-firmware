@@ -4,6 +4,6 @@
 #include <stdint.h>
 
 // salt needs to have 4 extra bytes available beyond saltlen
-void pbkdf2(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen);
+void pbkdf2(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total));
 
 #endif

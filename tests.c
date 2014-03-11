@@ -345,19 +345,19 @@ START_TEST(test_pbkdf2)
 	uint8_t k[64], s[64];
 
 	strcpy((char *)s, "salt");
-	pbkdf2((uint8_t *)"password", 8, s, 4, 1, k, 64);
+	pbkdf2((uint8_t *)"password", 8, s, 4, 1, k, 64, 0);
 	ck_assert_mem_eq(k, fromhex("867f70cf1ade02cff3752599a3a53dc4af34c7a669815ae5d513554e1c8cf252c02d470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce"), 64);
 
 	strcpy((char *)s, "salt");
-	pbkdf2((uint8_t *)"password", 8, s, 4, 2, k, 64);
+	pbkdf2((uint8_t *)"password", 8, s, 4, 2, k, 64, 0);
 	ck_assert_mem_eq(k, fromhex("e1d9c16aa681708a45f5c7c4e215ceb66e011a2e9f0040713f18aefdb866d53cf76cab2868a39b9f7840edce4fef5a82be67335c77a6068e04112754f27ccf4e"), 64);
 
 	strcpy((char *)s, "salt");
-	pbkdf2((uint8_t *)"password", 8, s, 4, 4096, k, 64);
+	pbkdf2((uint8_t *)"password", 8, s, 4, 4096, k, 64, 0);
 	ck_assert_mem_eq(k, fromhex("d197b1b33db0143e018b12f3d1d1479e6cdebdcc97c5c0f87f6902e072f457b5143f30602641b3d55cd335988cb36b84376060ecd532e039b742a239434af2d5"), 64);
 
 	strcpy((char *)s, "saltSALTsaltSALTsaltSALTsaltSALTsalt");
-	pbkdf2((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 64);
+	pbkdf2((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 64, 0);
 	ck_assert_mem_eq(k, fromhex("8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868c005174dc4ee71115b59f9e60cd9532fa33e0f75aefe30225c583a186cd82bd4daea9724a3d3b8"), 64);
 }
 END_TEST
@@ -451,7 +451,7 @@ START_TEST(test_mnemonic)
 	while (*a && *b && *c) {
 		m = mnemonic_from_data(fromhex(*a), strlen(*a) / 2);
 		ck_assert_str_eq(m, *b);
-		mnemonic_to_seed(m, "TREZOR", seed);
+		mnemonic_to_seed(m, "TREZOR", seed, 0);
 		ck_assert_mem_eq(seed, fromhex(*c), strlen(*c) / 2);
 		a += 3; b += 3; c += 3;
 	}

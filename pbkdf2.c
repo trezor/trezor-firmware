@@ -5,7 +5,7 @@
 #define HMACFUNC hmac_sha512
 #define HMACLEN  (512/8)
 
-void pbkdf2(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen)
+void pbkdf2(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total))
 {
 	uint32_t i, j, k;
 	uint8_t f[HMACLEN], g[HMACLEN];
@@ -24,6 +24,9 @@ void pbkdf2(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32
 			HMACFUNC(pass, passlen, g, HMACLEN, g);
 			for (k = 0; k < HMACLEN; k++) {
 				f[k] ^= g[k];
+			}
+			if (progress_callback && j % 256 == 255) {
+				progress_callback(j + 1, iterations);
 			}
 		}
 		if (i == blocks - 1 && (keylen & (HMACLEN - 1))) {
