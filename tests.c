@@ -458,6 +458,104 @@ START_TEST(test_mnemonic)
 }
 END_TEST
 
+START_TEST(test_mnemonic_check)
+{
+	static const char *vectors_ok[] = {
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+		"legal winner thank year wave sausage worth useful legal winner thank yellow",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage above",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent",
+		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal will",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter always",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo when",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic bless",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote",
+		"jelly better achieve collect unaware mountain thought cargo oxygen act hood bridge",
+		"renew stay biology evidence goat welcome casual join adapt armor shuffle fault little machine walk stumble urge swap",
+		"dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic",
+		"afford alter spike radar gate glance object seek swamp infant panel yellow",
+		"indicate race push merry suffer human cruise dwarf pole review arch keep canvas theme poem divorce alter left",
+		"clutch control vehicle tonight unusual clog visa ice plunge glimpse recipe series open hour vintage deposit universe tip job dress radar refuse motion taste",
+		"turtle front uncle idea crush write shrug there lottery flower risk shell",
+		"kiss carry display unusual confirm curtain upgrade antique rotate hello void custom frequent obey nut hole price segment",
+		"exile ask congress lamp submit jacket era scheme attend cousin alcohol catch course end lucky hurt sentence oven short ball bird grab wing top",
+		"board flee heavy tunnel powder denial science ski answer betray cargo cat",
+		"board blade invite damage undo sun mimic interest slam gaze truly inherit resist great inject rocket museum chief",
+		"beyond stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
+		0,
+	};
+	static const char *vectors_fail[] = {
+		"above abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+		"above winner thank year wave sausage worth useful legal winner thank yellow",
+		"above advice cage absurd amount doctor acoustic avoid letter advice cage above",
+		"above zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+		"above abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent",
+		"above winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal will",
+		"above advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter always",
+		"above zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo when",
+		"above abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+		"above winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title",
+		"above advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic bless",
+		"above zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote",
+		"above better achieve collect unaware mountain thought cargo oxygen act hood bridge",
+		"above stay biology evidence goat welcome casual join adapt armor shuffle fault little machine walk stumble urge swap",
+		"above pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic",
+		"above alter spike radar gate glance object seek swamp infant panel yellow",
+		"above race push merry suffer human cruise dwarf pole review arch keep canvas theme poem divorce alter left",
+		"above control vehicle tonight unusual clog visa ice plunge glimpse recipe series open hour vintage deposit universe tip job dress radar refuse motion taste",
+		"above front uncle idea crush write shrug there lottery flower risk shell",
+		"above carry display unusual confirm curtain upgrade antique rotate hello void custom frequent obey nut hole price segment",
+		"above ask congress lamp submit jacket era scheme attend cousin alcohol catch course end lucky hurt sentence oven short ball bird grab wing top",
+		"above flee heavy tunnel powder denial science ski answer betray cargo cat",
+		"above blade invite damage undo sun mimic interest slam gaze truly inherit resist great inject rocket museum chief",
+		"above stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+		"winner thank year wave sausage worth useful legal winner thank yellow",
+		"advice cage absurd amount doctor acoustic avoid letter advice cage above",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent",
+		"winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal will",
+		"advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter always",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo when",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+		"winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title",
+		"advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic bless",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote",
+		"better achieve collect unaware mountain thought cargo oxygen act hood bridge",
+		"stay biology evidence goat welcome casual join adapt armor shuffle fault little machine walk stumble urge swap",
+		"pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic",
+		"alter spike radar gate glance object seek swamp infant panel yellow",
+		"race push merry suffer human cruise dwarf pole review arch keep canvas theme poem divorce alter left",
+		"control vehicle tonight unusual clog visa ice plunge glimpse recipe series open hour vintage deposit universe tip job dress radar refuse motion taste",
+		"front uncle idea crush write shrug there lottery flower risk shell",
+		"carry display unusual confirm curtain upgrade antique rotate hello void custom frequent obey nut hole price segment",
+		"ask congress lamp submit jacket era scheme attend cousin alcohol catch course end lucky hurt sentence oven short ball bird grab wing top",
+		"flee heavy tunnel powder denial science ski answer betray cargo cat",
+		"blade invite damage undo sun mimic interest slam gaze truly inherit resist great inject rocket museum chief",
+		"stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
+		0,
+	};
+
+	const char **m;
+	int r;
+	m = vectors_ok;
+	while (*m) {
+		r = mnemonic_check(*m);
+		ck_assert_int_eq(r, 1);
+		m++;
+	}
+	m = vectors_fail;
+	while (*m) {
+		r = mnemonic_check(*m);
+		ck_assert_int_eq(r, 0);
+		m++;
+	}
+}
+END_TEST
+
 START_TEST(test_address)
 {
 	char address[35];
@@ -660,6 +758,7 @@ Suite *test_suite(void)
 
 	tc = tcase_create("bip39");
 	tcase_add_test(tc, test_mnemonic);
+	tcase_add_test(tc, test_mnemonic_check);
 	suite_add_tcase(s, tc);
 
 	return s;

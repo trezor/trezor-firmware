@@ -14,12 +14,9 @@ const char *mnemonic_generate(int strength)
 	if (strength % 32 || strength < 128 || strength > 256) {
 		return 0;
 	}
-	int i;
-	static uint32_t data[16];
-	for (i = 0; i < 16; i++) {
-		data[i] = random32();
-	}
-	return mnemonic_from_data((const uint8_t *)data, strength / 8);
+	static uint8_t data[32];
+	random_buffer(data, 32);
+	return mnemonic_from_data(data, strength / 8);
 }
 
 const char *mnemonic_from_data(const uint8_t *data, int len)
@@ -28,31 +25,23 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 		return 0;
 	}
 
-	int i, j;
-	char bits[256 + 8];
-	for (i = 0; i < len; i++) {
-		for (j = 0; j < 8; j++) {
-			bits[8 * i + j] = (data[i] & (1 << (7 - j))) > 0;
-		}
-	}
+	uint8_t bits[32 + 1];
+	memcpy(bits, data, len);
 
-	uint8_t hash[32];
-	sha256_Raw((const uint8_t *)data, len, hash);
-
-	char hlen = len / 4;
-	for (i = 0; i < hlen; i++) {
-		char c = (hash[0] & (1 << (7 - i))) > 0;
-		bits[8 * len + i] = c;
-	}
+	sha256_Raw(data, len, bits);
+	bits[len] = bits[0];
+	memcpy(bits, data, len);
 
 	int mlen = len * 3 / 4;
 	static char mnemo[24 * 10];
 
+	int i, j, idx;
 	char *p = mnemo;
 	for (i = 0; i < mlen; i++) {
-		int idx = 0;
+		idx = 0;
 		for (j = 0; j < 11; j++) {
-			idx += bits[i * 11 + j] << (10 - j);
+			idx <<= 1;
+			idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
 		}
 		strcpy(p, wordlist[idx]);
 		p += strlen(wordlist[idx]);
@@ -65,9 +54,73 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 
 int mnemonic_check(const char *mnemonic)
 {
-	// TODO: add proper check
-	(void)mnemonic;
-	return 1;
+	if (!mnemonic) {
+		return 0;
+	}
+
+	uint32_t i, n;
+
+	i = 0; n = 0;
+	while (mnemonic[i]) {
+		if (mnemonic[i] == ' ') {
+			n++;
+		}
+		i++;
+	}
+	n++;
+	// check number of words
+	if (n != 12 && n != 18 && n != 24) {
+		return 0;
+	}
+
+	char current_word[10];
+	uint32_t j, k, ki, bi;
+	uint8_t bits[32 + 1];
+	memset(bits, 0, sizeof(bits));
+	i = 0; bi = 0;
+	while (mnemonic[i]) {
+		j = 0;
+		while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
+			if (j >= sizeof(current_word)) {
+				return 0;
+			}
+			current_word[j] = mnemonic[i];
+			i++; j++;
+		}
+		current_word[j] = 0;
+		if (mnemonic[i] != 0) i++;
+		k = 0;
+		for (;;) {
+			if (!wordlist[k]) { // word not found
+				return 0;
+			}
+			if (strcmp(current_word, wordlist[k]) == 0) { // word found on index k
+				for (ki = 0; ki < 11; ki++) {
+					if (k & (1 << (10 - ki))) {
+						bits[bi / 8] |= 1 << (7 - (bi % 8));
+					}
+					bi++;
+				}
+				break;
+			}
+			k++;
+		}
+	}
+	if (bi != n * 11) {
+		return 0;
+	}
+	bits[32] = bits[n * 4 / 3];
+	sha256_Raw(bits, n * 4 / 3, bits);
+	if (n == 12) {
+		return (bits[0] & 0xF0) == (bits[32] & 0xF0); // compare first 4 bits
+	} else
+	if (n == 18) {
+		return (bits[0] & 0xFC) == (bits[32] & 0xFC); // compare first 6 bits
+	} else
+	if (n == 24) {
+		return bits[0] == bits[32]; // compare 8 bits
+	}
+	return 0;
 }
 
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total))

@@ -27,12 +27,19 @@
 
 static FILE *f;
 
-void init_rand(void) {
+void init_rand(void)
+{
 	f = fopen("/dev/urandom", "r");
 }
 
-uint32_t random32(void) {
+uint32_t random32(void)
+{
 	uint32_t r;
 	fread(&r, 1, sizeof(r), f);
 	return r;
+}
+
+void random_buffer(uint8_t *buf, uint32_t len)
+{
+	fread(buf, 1, len, f);
 }

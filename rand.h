@@ -28,5 +28,6 @@
 
 void init_rand(void);
 uint32_t random32(void);
+void random_buffer(uint8_t *buf, uint32_t len);
 
 #endif
