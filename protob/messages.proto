@@ -89,6 +89,7 @@ message Features {
 	optional string label = 10;
 	repeated CoinType coins = 11;
 	optional bool initialized = 12;			// True if device cointains seed
+	optional string revision = 13;
 }
 
 // Overwrites only filled fields of the structure
