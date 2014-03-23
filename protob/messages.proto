@@ -80,7 +80,7 @@ message Features {
 	optional string vendor = 1;				// Name of the manufacturer, e.g. "bitcointrezor.com"
 	optional uint32 major_version = 2;			// Major version of the device, e.g. 1
 	optional uint32 minor_version = 3;			// Minor version of the device, e.g. 0
-	optional uint32 bugfix_version = 4;
+	optional uint32 patch_version = 4;			// Patch version of the device, e.g. 0
 	optional bool bootloader_mode = 5;
 	optional string device_id = 6;				// Device's unique identifier
 	optional bool pin_protection = 7;			// True if Trezor is covered by PIN
