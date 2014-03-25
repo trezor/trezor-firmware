@@ -9,7 +9,7 @@
 	],
 	"known_devices": [
 		["0x534c", "0x0001", "Trezor"],
-		["0x10c4", "0xea80", "Trezor Shield"] 
+		["0x10c4", "0xea80", "Trezor Shield"]
 	],
 	"valid_days": 15
 }

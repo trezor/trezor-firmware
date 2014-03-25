@@ -1,24 +1,30 @@
-/*
-	Types for TREZOR communication
+/**
+ * Types for TREZOR communication
+ *
+ * @author	Marek Palatinus <slush@satoshilabs.com>
+ * @version	0.6
+ */
 
-	Author: Marek Palatinus <slush@satoshilabs.com>
-
-	Version: 0.6
-*/
-
-// Some sugar for easier handling in Multibit
+// Sugar for easier handling in Multibit
 option java_package = "org.multibit.hd.hardware.trezor.protobuf";
 option java_outer_classname = "TrezorType";
 
 import "google/protobuf/descriptor.proto";
 
+/**
+ * Options for specifying message direction and type of wire (normal/debug)
+ */
 extend google.protobuf.EnumValueOptions {
-	optional bool wire_in = 50002;	// message can be transmitted via wire from PC to TREZOR
-	optional bool wire_out = 50003;	// message can be transmitted via wire from TREZOR to PC
+	optional bool wire_in = 50002;		// message can be transmitted via wire from PC to TREZOR
+	optional bool wire_out = 50003;		// message can be transmitted via wire from TREZOR to PC
 	optional bool wire_debug_in = 50004;	// message can be transmitted via debug wire from PC to TREZOR
 	optional bool wire_debug_out = 50005;	// message can be transmitted via debug wire from TREZOR to PC
 }
 
+/**
+ * Type of failures returned by Failure message
+ * @used_in Failure
+ */
 enum FailureType {
 	Failure_UnexpectedMessage = 1;
 	Failure_ButtonExpected = 2;
@@ -34,18 +40,29 @@ enum FailureType {
 	Failure_FirmwareError = 99;
 }
 
-// Specifies which script will be used for given transaction output.
+/**
+ * Type of script which will be used for transaction output
+ * @used_in TxOutputType
+ */
 enum ScriptType {
 	PAYTOADDRESS = 0;
 	PAYTOSCRIPTHASH = 1;
 }
 
-// Specifies which kind of information is required by transaction signing process
+/**
+ * Type of information required by transaction signing process
+ * @used_in TxRequest
+ */
 enum RequestType {
 	TXINPUT = 0;
 	TXOUTPUT = 1;
+	TXMETA = 2;
 }
 
+/**
+ * Type of button request
+ * @used_in ButtonRequest
+ */
 enum ButtonRequestType {
 	ButtonRequest_Other = 1;
 	ButtonRequest_FeeOverThreshold = 2;
@@ -57,14 +74,24 @@ enum ButtonRequestType {
 	ButtonRequest_SignTx = 8;
 }
 
+/**
+ * Type of PIN request
+ * @used_in PinMatrixRequest
+ */
 enum PinMatrixRequestType {
 	PinMatrixRequestType_Current = 1;
 	PinMatrixRequestType_NewFirst = 2;
 	PinMatrixRequestType_NewSecond = 3;
 }
 
-// Structure of BIP32 (hierarchical deterministic) node
-// Used for imports of private key into the device and exporting public key out of device
+/**
+ * Structure representing BIP32 (hierarchical deterministic) node
+ * Used for imports of private key into the device and exporting public key out of device
+ * @used_in PublicKey
+ * @used_in LoadDevice
+ * @used_in DebugLinkState
+ * @used_in Storage
+ */
 message HDNodeType {
 	required uint32 depth = 1;
 	required uint32 fingerprint = 2;
@@ -74,6 +101,10 @@ message HDNodeType {
 	optional bytes public_key = 6;
 }
 
+/**
+ * Structure representing Coin
+ * @used_in Features
+ */
 message CoinType {
 	optional string coin_name = 1;
 	optional string coin_shortcut = 2;
@@ -81,33 +112,49 @@ message CoinType {
 	optional uint64 maxfee_kb = 4;
 }
 
+/**
+ * Structure representing transaction input
+ * @used_in SimpleSignTx
+ * @used_in TransactionType
+ */
 message TxInputType {
-	repeated uint32 address_n = 1;			// Parameter for address generation algorithm to derive the address from the master node
-	required bytes prev_hash = 2;		// Hash of previous transaction output to spend by this input
-	required uint32 prev_index = 3;			// Index of previous output to spend
-	optional bytes script_sig = 4;	// Script signature
-	optional uint32 sequence = 5 [default=0xffffffff];
+	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
+	required bytes prev_hash = 2;				// hash of previous transaction output to spend by this input
+	required uint32 prev_index = 3;				// index of previous output to spend
+	optional bytes script_sig = 4;				// script signature
+	optional uint32 sequence = 5 [default=0xffffffff];	// sequence
 }
 
+/**
+ * Structure representing transaction output
+ * @used_in SimpleSignTx
+ * @used_in TransactionType
+ */
 message TxOutputType {
-	optional string address = 1;				// Target bitcoin address in base58 encoding
-	repeated uint32 address_n = 2;			// Has higher priority than "address".
-	required uint64 amount = 3;				// Amount to send in satoshis
-	required ScriptType script_type = 4;	// Select output script type
-	repeated bytes script_args = 5;	// Provide additional parameters for the script (its script-depended)
+	optional string address = 1;		// target coin address in Base58 encoding
+	repeated uint32 address_n = 2;		// BIP-32 path to derive the key from master node; has higher priority than "address"
+	required uint64 amount = 3;		// amount to spend in satoshis
+	required ScriptType script_type = 4;	// output script type
+	repeated bytes script_args = 5;		// additional parameters for the script (script-dependent)
 }
 
-// Transaction output with script pubkey in binary form.
-// This is used for obtaining hashes of existing transactions
-// and for compiling TxOutput for signing.
+/**
+ * Structure representing compiled transaction output
+ * @used_in TransactionType
+ */
 message TxOutputBinType {
 	required uint64 amount = 1;
 	required bytes script_pubkey = 2;
 }
 
+/**
+ * Structure representing transaction
+ * @used_in SimpleSignTx
+ */
 message TransactionType {
-	optional uint32 version = 1 [default=1];
+	optional uint32 version = 1;
 	repeated TxInputType inputs = 2;
 	repeated TxOutputBinType outputs = 3;
-	optional uint32 lock_time = 4 [default=0];
+	repeated TxOutputType our_outputs = 4;
+	optional uint32 lock_time = 5;
 }

@@ -1,24 +1,26 @@
-/*
-	Structure of Storage area of TREZOR
+/**
+ * Storage area of TREZOR
+ *
+ * @author	Marek Palatinus <slush@satoshilabs.com>
+ * @version	1
+ */
 
-	Author: Marek Palatinus <slush@satoshilabs.com>
-
-	Version: 0.1
-*/
-
-// Some sugar for easier handling in Multibit
+// Sugar for easier handling in Multibit
 option java_package = "org.multibit.hd.hardware.trezor.protobuf";
 option java_outer_classname = "TrezorStorage";
 
 import "types.proto";
 
+/**
+ * Internal persistent storage of device
+ */
 message Storage {
-	required uint32 version = 1;
-	optional HDNodeType node = 2;
-	optional string mnemonic = 3;
-	optional bool passphrase_protection = 4;	// whether node_serialized or mnemonic are encrypted (protected by passphrase)
-	optional uint32 pin_failed_attempts = 5;
-	optional string pin = 6;
-	optional string language = 7;
-	optional string label = 8;
+	required uint32 version = 1;			// version of storage
+	optional HDNodeType node = 2;			// BIP-32 node (mnemonic cannot be used if this is present)
+	optional string mnemonic = 3;			// BIP-39 mnemonic (node cannot be used if this is present)
+	optional bool passphrase_protection = 4;	// whether to require passphrase to decrypt node or stretch mnemonic
+	optional uint32 pin_failed_attempts = 5;	// number of failed PIN attempts
+	optional string pin = 6;			// current PIN
+	optional string language = 7;			// current language
+	optional string label = 8;			// device label
 }
