@@ -27,8 +27,8 @@ if len(devices) > 0:
 else:
     print 'Using Emulator'
     TRANSPORT = PipeTransport
-    TRANSPORT_ARGS = ('../../trezor-emu/pipe.trezor', False)
+    TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
     TRANSPORT_KWARGS = {}
     DEBUG_TRANSPORT = PipeTransport
-    DEBUG_TRANSPORT_ARGS = ('../../trezor-emu/pipe.trezor_debug', False)
+    DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
     DEBUG_TRANSPORT_KWARGS = {}

@@ -30,7 +30,7 @@ class BlockchainApi(object):
     def get_tx(self, txhash):
         # Build protobuf transaction structure from blockchain.info
         d = self._raw_tx(txhash)
-        t = proto_types.TransactionType(version = 1, lock_time = 0)
+        t = proto_types.TransactionType()
 
         for inp in d['inputs']:
             di = self._raw_tx(inp['prev_out']['tx_index'])
@@ -44,6 +44,8 @@ class BlockchainApi(object):
             o.amount = output['value']
             o.script_pubkey = binascii.unhexlify(output['script'])
 
+        t.version = 1
+        t.lock_time = 0
         return t
 
 if __name__ == '__main__':

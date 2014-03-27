@@ -14,7 +14,7 @@ class FakeTestnetBlockchain(object):
         if txhash != '6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54':
             raise Exception("Unexpected hash")
 
-        t = proto_types.TransactionType(version = 1, lock_time = 0)
+        t = proto_types.TransactionType()
 
         i = t.inputs.add()
         i.prev_hash = binascii.unhexlify('ee336e79153d51f4f3e45278f1f77ab29fd5bb135dce467282e2aff22cb9c570')
@@ -34,6 +34,8 @@ class FakeTestnetBlockchain(object):
         o.amount = 1000000000
         o.script_pubkey = binascii.unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac')
 
+        t.version = 1
+        t.lock_time = 0
         return t
 
 class TestMsgSimplesigntx(common.TrezorTest):
