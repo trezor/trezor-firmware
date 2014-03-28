@@ -30,7 +30,10 @@ def bitcore_tx(url):
     for vout in data['vout']:
         o = t.outputs.add()
         o.amount = int(vout['value'] * 100000000)
-        asm = vout['scriptPubKey']['asm'].split(' ') # we suppose it's OP_DUP OP_HASH160 pubkey OP_EQUALVERIFY OP_CHECKSIG
+        asm = vout['scriptPubKey']['asm'].split(' ')
+        # we suppose it's OP_DUP OP_HASH160 pubkey OP_EQUALVERIFY OP_CHECKSIG
+        if len(asm) != 5 or asm[0] != 'OP_DUP' or asm[1] != 'OP_HASH160' or asm[3] != 'OP_EQUALVERIFY' or asm[4] != 'OP_CHECKSIG':
+            raise Exception('Unknown scriptPubKey asm: %s' % asm)
         o.script_pubkey = binascii.unhexlify('76a914' + asm[2] + '88ac')
 
     return t
