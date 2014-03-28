@@ -286,13 +286,10 @@ class ProtocolMixin(object):
     def __init__(self, *args, **kwargs):
         super(ProtocolMixin, self).__init__(*args, **kwargs)
         self.init_device()
-        
-        def get_tx_func_placeholder(txhash):
-            raise Exception("Please call set_tx_func() first.")
-        self.get_tx_func = get_tx_func_placeholder
+        self.tx_api = None
 
-    def set_tx_func(self, tx_func):
-        self.get_tx_func = tx_func
+    def set_tx_api(self, tx_api):
+        self.tx_api = tx_api
 
     def init_device(self):
         self.features = expect(proto.Features)(self.call)(proto.Initialize())
@@ -430,7 +427,7 @@ class ProtocolMixin(object):
                 continue
 
             tx = msg.transactions.add()
-            tx.CopyFrom(self.get_tx_func(binascii.hexlify(inp.prev_hash)))
+            tx.CopyFrom(self.tx_api.get_tx(binascii.hexlify(inp.prev_hash)))
             known_hashes.append(inp.prev_hash)
 
         return msg
