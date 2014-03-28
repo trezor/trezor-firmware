@@ -139,7 +139,15 @@ class TextUIMixin(object):
         return proto.ButtonAck()
 
     def callback_PinMatrixRequest(self, msg):
-        pin = raw_input("PIN required: %s " % msg.message)
+        if msg.type == 1:
+          desc = 'old PIN'
+        elif msg.type == 2:
+          desc = 'new PIN'
+        elif msg.type == 3:
+          desc = 'new PIN again'
+        else:
+          desc = 'PIN'
+        pin = raw_input("Please enter %s: " % desc)
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
