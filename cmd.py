@@ -6,7 +6,7 @@ import json
 import base64
 
 from trezorlib.client import TrezorClientDebug
-from trezorlib.tx_api import TXAPIBlockchain
+from trezorlib.tx_api import TXAPIBitcoin
 from trezorlib.protobuf_json import pb2json
 
 def parse_args(commands):
@@ -324,7 +324,7 @@ def main():
 
     transport = get_transport(args.transport, args.path)
     client = TrezorClientDebug(transport)
-    client.set_tx_api(TXAPIBlockchain())
+    client.set_tx_api(TXAPIBitcoin())
     cmds = Commands(client)
     
     res = args.func(cmds, args)

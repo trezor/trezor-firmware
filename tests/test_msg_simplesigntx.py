@@ -8,7 +8,7 @@ import binascii
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
-from trezorlib.tx_api import TXAPITestnetFake
+from trezorlib.tx_api import TXAPITestnet
 
 class TestMsgSimplesigntx(common.TrezorTest):
 
@@ -61,7 +61,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPITestnetFake())
+            self.client.set_tx_api(TXAPITestnet())
             msg = self.client._prepare_simple_sign_tx('Testnet', [inp1, ], [out1, out2])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                                                 # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
@@ -93,7 +93,7 @@ class TestMsgSimplesigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPITestnetFake())
+            self.client.set_tx_api(TXAPITestnet())
             msg = self.client._prepare_simple_sign_tx('Testnet', [inp1, ], [out1, out2])
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                                                 # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
