@@ -54,6 +54,7 @@ def bitcore_tx(url):
         asm = vin['scriptSig']['asm'].split(' ')
         asm = [ opcode_serialize(x) for x in asm ]
         i.script_sig = ''.join(asm)
+        i.sequence = vin['sequence']
 
     for vout in data['vout']:
         o = t.outputs.add()
