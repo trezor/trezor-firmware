@@ -361,7 +361,7 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 
 	memcpy(a + 28, a, 4); // checksum
 	memset(a, 0, 7);      // zeroes
-	memcpy(a + 7, b, 21); // ripemd160(sha256(version + pubkey)
+	memcpy(a + 7, b, 21); // version || ripemd160(sha256(pubkey))
 
 	bn_read_be(a, &c);
 

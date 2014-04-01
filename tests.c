@@ -655,7 +655,7 @@ END_TEST
 
 START_TEST(test_ecdsa_der)
 {
-	uint8_t sig[64], der[70];
+	uint8_t sig[64], der[72];
 	int res;
 
 	memcpy(sig,      fromhex("9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771"), 32);
