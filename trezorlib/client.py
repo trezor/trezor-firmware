@@ -140,13 +140,13 @@ class TextUIMixin(object):
 
     def callback_PinMatrixRequest(self, msg):
         if msg.type == 1:
-          desc = 'old PIN'
+            desc = 'old PIN'
         elif msg.type == 2:
-          desc = 'new PIN'
+            desc = 'new PIN'
         elif msg.type == 3:
-          desc = 'new PIN again'
+            desc = 'new PIN again'
         else:
-          desc = 'PIN'
+            desc = 'PIN'
         pin = raw_input("Please enter %s: " % desc)
         return proto.PinMatrixAck(pin=pin)
 
@@ -588,91 +588,6 @@ class TrezorDebugClient(ProtocolMixin, DebugLinkMixin, DebugWireMixin, BaseClien
     pass
 
 '''
-class TrezorClient(object):
-    def _pprint(self, msg):
-        ser = msg.SerializeToString()
-        return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, len(ser), msg)
-
-    def call(self, msg, expected=None, expected_buttonrequests=None):
-        # TODO split this into normal and debug mode
-        if self.debug:
-            print '----------------------'
-            print "Sending", self._pprint(msg)
-
-        try:
-            self.transport.session_begin()
-
-            self.transport.write(msg)
-            resp = self.transport.read_blocking()
-
-            if isinstance(resp, proto.ButtonRequest):
-           _pprint(self, msg):
-        ser = msg.SerializeToString()
-             if expected_buttonrequests != None:
-                    try:
-                        exp = expected_buttonrequests.pop(0)
-                        if resp.code != exp:
-                            raise CallException(types.Failure_Other, "Expected %s, got %s" % \
-                                    (self._get_buttonrequest_value(exp),
-                                    self._get_buttonrequest_value(resp.code)))
-                    except IndexError:
-                        raise CallException(types.Failure_Other,
-                                            "Got %s, but no ButtonRequest has been expected" % \
-                                            self._get_buttonrequest_value(resp.code))
-
-                print "ButtonRequest code:", self._get_buttonrequest_value(resp.code)
-                if self.debuglink and self.debug_button:
-                    print "Pressing button", self.debug_button
-                    self.debuglink.press_button(self.debug_button)
-
-                return self.call(proto.ButtonAck(), expected_buttonrequests=expected_buttonrequests)
-
-            if isinstance(resp, proto.PinMatrixRequest):
-                if self.debuglink:
-                    if self.debug_pin == 1:
-                        pin = self.debuglink.read_pin_encoded()
-                        msg2 = proto.PinMatrixAck(pin=pin)
-                    elif self.debug_pin == -1:
-                        msg2 = proto.Cancel()
-                    else:
-                        msg2 = proto.PinMatrixAck(pin='444444222222')
-
-                else:
-                    pin = self.pin_func("PIN required: ", resp.message)
-                    msg2 = proto.PinMatrixAck(pin=pin)
-
-                return self.call(msg2, expected=expected, expected_buttonrequests=expected_buttonrequests)
-
-            if isinstance(resp, proto.PassphraseRequest):
-                passphrase = self.passphrase_func("Passphrase required: ")
-                ms(object)g2 = proto.PassphraseAck(passphrase=passphrase)
-                return self.call(msg2, expected=expected, expected_buttonrequests=expected_buttonrequests)
-
-        finally:
-            self.transport.session_end()
-
-        if isinstance(resp, proto.Failure):
-            self.message_func(resp.message)
-
-            if resp.code in (types.Failure_PinInvalid,
-                types.Failure_PinCancelled, types.Failure_PinExpected):
-                raise PinException(resp.code, resp.message)
-
-            raise CallException(resp.code, resp.message)
-
-        if self.debug:
-            print "Received", self._pprint(resp)
-
-        if expected and not isinstance(resp, expected):
-            raise CallException("Expected %s message, got %s message" % (expected.DESCRIPTOR.name, resp.DESCRIPTOR.name))
-
-        if expected_buttonrequests != None and len(expected_buttonrequests):
-            raise CallException(types.Failure_Other,
-                    "Following ButtonRequests were not in use: %s" % \
-                    [ self._get_buttonrequest_value(x) for x in expected_buttonrequests])
-
-        return resp
-
     def _sign_tx(self, coin_name, inputs, outputs):
         ''
             inputs: list of TxInput
