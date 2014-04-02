@@ -28,6 +28,8 @@ def opcode_serialize(opcode):
         return '\x76'
     if opcode == 'OP_HASH160':
         return '\xa9'
+    if opcode == 'OP_EQUAL':
+        return '\x87'
     if opcode == 'OP_EQUALVERIFY':
         return '\x88'
     if opcode == 'OP_CHECKSIG':
