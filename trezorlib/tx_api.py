@@ -12,32 +12,41 @@ except:
 
 import types_pb2 as proto_types
 
-def op_push(i):
-    if i<0x4c:
-        return chr(i)
-    elif i<0xff:
-        return '\x4c' + chr(i)
-    elif i<0xffff:
-        return '\x4d' + struct.pack("<H", i)
+def op_push_data(data):
+    l = len(data)
+    if l < 0x4C:
+        return chr(l) + data
+    elif i < 0xFF:
+        return '\x4C' + chr(l) + data
+    elif i < 0xFFFF:
+        return '\x4D' + struct.pack("<H", i) + data
     else:
-        return '\x4e' + struct.pack("<I", i)
+        return '\x4E' + struct.pack("<I", i) + data
 
 def opcode_serialize(opcode):
-    # TODO: this function supports just small subset of script for now (enough for most transactions)
-    if opcode == 'OP_DUP':
-        return '\x76'
-    if opcode == 'OP_HASH160':
-        return '\xa9'
-    if opcode == 'OP_EQUAL':
-        return '\x87'
-    if opcode == 'OP_EQUALVERIFY':
-        return '\x88'
-    if opcode == 'OP_CHECKSIG':
-        return '\xac'
+    mapping = {
+        'OP_TRUE'                : '\x51',
+        'OP_RETURN'              : '\x6A',
+        'OP_DUP'                 : '\x76',
+        'OP_EQUAL'               : '\x87',
+        'OP_EQUALVERIFY'         : '\x88',
+        'OP_RIPEMD160'           : '\xA6',
+        'OP_SHA1'                : '\xA7',
+        'OP_SHA256'              : '\xA8',
+        'OP_HASH160'             : '\xA9',
+        'OP_HASH256'             : '\xAA',
+        'OP_CHECKSIG'            : '\xAC',
+        'OP_CHECKSIGVERIFY'      : '\xAD',
+        'OP_CHECKMULTISIG'       : '\xAE',
+        'OP_CHECKMULTISIGVERIFY' : '\xAF',
+    }
+    # check if it is known opcode
+    if mapping.has_key(opcode):
+        return mapping[opcode]
     # it's probably hex data
     try:
         x = binascii.unhexlify(opcode)
-        return op_push(len(x)) + x
+        return op_push_data(x)
     except:
         raise Exception('Unknown script opcode: %s' % opcode)
 
