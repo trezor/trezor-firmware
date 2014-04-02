@@ -154,7 +154,7 @@ message TxOutputBinType {
 message TransactionType {
 	optional uint32 version = 1;
 	repeated TxInputType inputs = 2;
-	repeated TxOutputBinType outputs = 3;
-	repeated TxOutputType our_outputs = 4;
-	optional uint32 lock_time = 5;
+	repeated TxOutputBinType bin_outputs = 3;
+	repeated TxOutputType outputs = 5;
+	optional uint32 lock_time = 4;
 }
