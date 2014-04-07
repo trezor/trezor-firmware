@@ -68,7 +68,7 @@ def bitcore_tx(url):
         i.sequence = vin['sequence']
 
     for vout in data['vout']:
-        o = t.outputs.add()
+        o = t.bin_outputs.add()
         o.amount = int(vout['value'] * 100000000)
         asm = vout['scriptPubKey']['asm'].split(' ')
         asm = [ opcode_serialize(x) for x in asm ]
