@@ -5,8 +5,8 @@
  * @version	0.6
  */
 
-// Sugar for easier handling in Multibit
-option java_package = "org.multibit.hd.hardware.trezor.protobuf";
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.protobuf";
 option java_outer_classname = "TrezorMessage";
 
 import "types.proto";
