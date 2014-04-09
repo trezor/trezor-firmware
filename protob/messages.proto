@@ -441,8 +441,8 @@ message SimpleSignTx {
  */
 message TxRequest {
 	optional RequestType request_type = 1;		// what should be filled in TxAck message?
-        optional TxRequestDetails details = 2;
-        optional TxRequestSerialized serialized = 3;
+	optional TxRequestDetails details = 2;		// request for tx details
+	optional TxRequestSerialized serialized = 3;	// serialized data and request for next
 }
 
 message TxRequestDetails {
@@ -453,7 +453,7 @@ message TxRequestDetails {
 message TxRequestSerialized {
 	optional uint32 signature_index = 1;		// 'signature' field contains signed input of this index
 	optional bytes signature = 2;			// signature of the signature_index input
-        optional bytes serialized_tx = 3;		// part of serialized and signed transaction
+	optional bytes serialized_tx = 3;		// part of serialized and signed transaction
 }
 
 /**
