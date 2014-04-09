@@ -440,13 +440,20 @@ message SimpleSignTx {
  * @prev TxAck
  */
 message TxRequest {
+	optional RequestType request_type = 1;		// what should be filled in TxAck message?
+        optional TxRequestDetails details = 2;
+        optional TxRequestSerialized serialized = 3;
+}
+
+message TxRequestDetails {
 	optional uint32 request_index = 1;		// device expects TxAck message from the computer
-	optional RequestType request_type = 2;		// what should be filled in TxAck message?
-	optional uint32 signature_index = 3;		// 'signature' field contains signed input of this index
-	optional bytes signature = 4;			// signature of the signature_index input
-	optional bytes serialized_tx = 5;		// part of serialized and signed transaction
-	optional bytes tx_hash = 6;			// tx_hash of requested transaction
-	optional bool finished = 7;			// is this the last TxRequest?
+	optional bytes tx_hash = 2;			// tx_hash of requested transaction
+}
+
+message TxRequestSerialized {
+	optional uint32 signature_index = 1;		// 'signature' field contains signed input of this index
+	optional bytes signature = 2;			// signature of the signature_index input
+        optional bytes serialized_tx = 3;		// part of serialized and signed transaction
 }
 
 /**
