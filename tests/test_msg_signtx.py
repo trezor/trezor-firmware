@@ -1,3 +1,57 @@
+# tx 4a7b7e0403ae5607e473949cfa03f09f2cd8b0f404bf99ce10b7303d86280bf7
+# 100 UTXO for spending for unittests
+
+import unittest
+import common
+import binascii
+
+import trezorlib.messages_pb2 as proto
+import trezorlib.types_pb2 as proto_types
+from trezorlib.client import CallException
+from trezorlib.tx_api import TXAPITestnet, TXAPIBitcoin
+
+class TestMsgSigntx(common.TrezorTest):
+    def test_two_two(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        # tx: c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c
+        # input 1: 0.0010 BTC
+        # tx: 58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e
+        # input 1: 0.0011 BTC
+
+        inp1 = proto_types.TxInputType(address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
+                             # amount=100000,
+                             prev_hash=binascii.unhexlify('c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c'),
+                             prev_index=1,
+                             )
+
+        inp2 = proto_types.TxInputType(address_n=[2],  # 15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG
+                             # amount=110000,
+                             prev_hash=binascii.unhexlify('58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e'),
+                             prev_index=1,
+                             )
+
+        out1 = proto_types.TxOutputType(address='15Jvu3nZNP7u2ipw2533Q9VVgEu2Lu9F2B',
+                              amount=210000 - 100000 - 10000,
+                              script_type=proto_types.PAYTOADDRESS,
+                              )
+
+        out2 = proto_types.TxOutputType(address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
+                              amount=100000,
+                              script_type=proto_types.PAYTOADDRESS,
+                              )
+
+        with self.client:
+            # self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+            #                                    # proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput), # don't confirm change
+            #                                    proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+            #                                    proto.TxRequest(finished=True)])
+            (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, inp2], [out1, out2])
+
+        # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
+        self.assertEqual(binascii.hexlify(serialized_tx), '01000000021c032e5715d1da8115a2fe4f57699e15742fe113b0d2d1ca3b594649d322bec6010000006b483045022100f773c403b2f85a5c1d6c9c4ad69c43de66930fff4b1bc818eb257af98305546a0220443bde4be439f276a6ce793664b463580e210ec6c9255d68354449ac0443c76501210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6ffffffff6ea42cd8d9c8e5441c4c5f85bfe50311078730d2881494f11f4d2257777a4958010000006b48304502210090cff1c1911e771605358a8cddd5ae94c7b60cc96e50275908d9bf9d6367c79f02202bfa72e10260a146abd59d0526e1335bacfbb2b4401780e9e3a7441b0480c8da0121038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3ffffffff02a0860100000000001976a9142f4490d5263906e4887ca2996b9e207af3e7824088aca0860100000000001976a914812c13d97f9159e54e326b481b8f88a73df8507a88ac00000000')
+
+
 '''
     def test_signtx(self):
         expected_tx = '01000000012de70f7d6ffed0db70f8882f3fca90db9bb09f0e99bce27468c23d3c994fcd56' \
@@ -33,8 +87,7 @@
                               )
 
         print binascii.hexlify(self.client.sign_tx([inp1], [out1, out2])[1])
-    '''
-    '''    
+
     def test_workflow(self):
         inp1 = proto.TxInput(index=0,
                              address_n=[1,0],
@@ -159,3 +212,6 @@
         
         print binascii.hexlify(serialized)
 '''
+
+if __name__ == '__main__':
+    unittest.main()
