@@ -5,6 +5,7 @@ import base64
 
 from trezorlib.client import CallException
 
+'''
 class TestMsgVerifymessage(common.TrezorTest):
     def test_too_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -103,3 +104,4 @@ class TestMsgVerifymessage(common.TrezorTest):
 
 if __name__ == '__main__':
     unittest.main()
+'''
