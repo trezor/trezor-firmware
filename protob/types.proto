@@ -159,3 +159,14 @@ message TransactionType {
 	repeated TxOutputType outputs = 5;
 	optional uint32 lock_time = 4;
 }
+
+message TxRequestDetailsType {
+        optional uint32 request_index = 1;              // device expects TxAck message from the computer
+        optional bytes tx_hash = 2;                     // tx_hash of requested transaction
+}
+
+message TxRequestSerializedType {
+        optional uint32 signature_index = 1;            // 'signature' field contains signed input of this index
+        optional bytes signature = 2;                   // signature of the signature_index input
+        optional bytes serialized_tx = 3;               // part of serialized and signed transaction
+}
