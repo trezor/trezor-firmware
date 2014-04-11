@@ -56,8 +56,8 @@ class TestZeroSig(common.TrezorTest):
                               )
 
         msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1], [out1])
-        tx = self.client.call(msg)   
-        siglen = ord(tx.serialized_tx[44])
+        tx = self.client.call(msg)
+        siglen = ord(tx.serialized.serialized_tx[44])
 
         # Trezor must strip leading zero from signature
         self.assertEqual(siglen, 67)
@@ -79,7 +79,7 @@ class TestZeroSig(common.TrezorTest):
 
         msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1], [out1])
         tx = self.client.call(msg)
-        siglen = ord(tx.serialized_tx[44])
+        siglen = ord(tx.serialized.serialized_tx[44])
 
         # Trezor must strip leading zero from signature
         self.assertEqual(siglen, 66)

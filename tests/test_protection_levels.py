@@ -150,7 +150,7 @@ class TestProtectionLevels(common.TrezorTest):
                                                 proto.PassphraseRequest(),
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
-                                                proto.TxRequest(finished=True)])
+                                                proto.TxRequest(request_type=proto_types.TXFINISHED)])
             self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
 
     # def test_firmware_erase(self):
