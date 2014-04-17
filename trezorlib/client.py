@@ -443,7 +443,7 @@ class ProtocolMixin(object):
     def _prepare_sign_tx(self, coin_name, inputs, outputs):
         tx = types.TransactionType()
         tx.inputs.extend(inputs)
-        tx.outputs.extend (outputs)
+        tx.outputs.extend(outputs)
 
         txes = {}
         txes[''] = tx
@@ -490,40 +490,48 @@ class ProtocolMixin(object):
                     raise CallException("Unexpected message")
 
                 # If there's some part of signed transaction, let's add it
-                if res.HasField('serialized_tx'):
-                    print "!!! RECEIVED PART OF SERIALIED TX (%d BYTES)" % len(res.serialized_tx)
-                    serialized_tx += res.serialized_tx
+                if res.HasField('serialized') and res.serialized.HasField('serialized_tx'):
+                    print "!!! RECEIVED PART OF SERIALIED TX (%d BYTES)" % len(res.serialized.serialized_tx)
+                    serialized_tx += res.serialized.serialized_tx
 
-                if res.HasField('signature_index') and res.HasField('signature'):
-                    print "!!! SIGNED INPUT", res.signature_index
-                    signatures[res.signature_index] = res.signature
+                if res.HasField('serialized') and res.serialized.HasField('signature_index'):
+                    print "!!! SIGNED INPUT", res.serialized.signature_index
+                    signatures[res.serialized.signature_index] = res.serialized.signature
 
                 if res.request_type == types.TXFINISHED:
                     # Device didn't ask for more information, finish workflow
                     break
 
                 # Device asked for one more information, let's process it.
-                current_tx = txes[res.tx_hash]
+                current_tx = txes[res.details.tx_hash]
 
                 if res.request_type == types.TXMETA:
-                    print "REQUESTING META OF", binascii.hexlify(res.tx_hash)
+                    print "REQUESTING META OF", binascii.hexlify(res.details.tx_hash)
                     msg = types.TransactionType()
                     msg.version = current_tx.version
                     msg.lock_time = current_tx.lock_time
+                    msg.inputs_count = len(current_tx.inputs)
+                    if res.details.tx_hash:
+                        msg.outputs_count = len(current_tx.bin_outputs)
+                    else:
+                        msg.outputs_count = len(current_tx.outputs)
                     res = self.call(proto.TxAck(tx=msg))
                     continue
 
                 elif res.request_type == types.TXINPUT:
-                    print "REQUESTING INPUT", res.request_index, "OF", binascii.hexlify(res.tx_hash)
+                    print "REQUESTING INPUT", res.details.request_index, "OF", binascii.hexlify(res.details.tx_hash)
                     msg = types.TransactionType()
-                    msg.inputs.extend([current_tx.inputs[res.request_index], ])
+                    msg.inputs.extend([current_tx.inputs[res.details.request_index], ])
                     res = self.call(proto.TxAck(tx=msg))
                     continue
 
                 elif res.request_type == types.TXOUTPUT:
-                    print "REQUESTING OUTOUT", res.request_index, "OF", binascii.hexlify(res.tx_hash)
+                    print "REQUESTING OUTOUT", res.details.request_index, "OF", binascii.hexlify(res.details.tx_hash)
                     msg = types.TransactionType()
-                    msg.outputs.extend([current_tx.outputs[res.request_index], ])
+                    if res.details.tx_hash:
+                        msg.bin_outputs.extend([current_tx.bin_outputs[res.details.request_index], ])
+                    else:
+                        msg.outputs.extend([current_tx.outputs[res.details.request_index], ])
                     res = self.call(proto.TxAck(tx=msg))
                     continue
 
