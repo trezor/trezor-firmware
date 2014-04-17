@@ -158,6 +158,8 @@ message TransactionType {
 	repeated TxOutputBinType bin_outputs = 3;
 	repeated TxOutputType outputs = 5;
 	optional uint32 lock_time = 4;
+	optional uint32 inputs_count = 6;
+	optional uint32 outputs_count = 7;
 }
 
 message TxRequestDetailsType {
