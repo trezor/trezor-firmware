@@ -433,12 +433,9 @@ class ProtocolMixin(object):
 
         return msg
 
-    @field('serialized_tx')
-    @expect(types.TxRequestSerializedType)
     def simple_sign_tx(self, coin_name, inputs, outputs):
-        # TODO Deserialize tx and check if inputs/outputs fits
         msg = self._prepare_simple_sign_tx(coin_name, inputs, outputs)
-        return self.call(msg).serialized
+        return self.call(msg).serialized.serialized_tx
 
     def _prepare_sign_tx(self, coin_name, inputs, outputs):
         tx = types.TransactionType()
@@ -459,8 +456,6 @@ class ProtocolMixin(object):
         return txes
 
     def sign_tx(self, coin_name, inputs, outputs):
-        # Temporary solution, until streaming is implemented in the firmware
-        # return self.simple_sign_tx(coin_name, inputs, outputs)
 
         start = time.time()
         txes = self._prepare_sign_tx(coin_name, inputs, outputs)
