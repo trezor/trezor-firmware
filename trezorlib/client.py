@@ -486,7 +486,7 @@ class ProtocolMixin(object):
 
                 # If there's some part of signed transaction, let's add it
                 if res.HasField('serialized') and res.serialized.HasField('serialized_tx'):
-                    print "RECEIVED PART OF SERIALIED TX (%d BYTES)" % len(res.serialized.serialized_tx)
+                    print "RECEIVED PART OF SERIALIZED TX (%d BYTES)" % len(res.serialized.serialized_tx)
                     serialized_tx += res.serialized.serialized_tx
 
                 if res.HasField('serialized') and res.serialized.HasField('signature_index'):
