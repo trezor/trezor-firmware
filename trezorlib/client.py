@@ -490,6 +490,8 @@ class ProtocolMixin(object):
                     serialized_tx += res.serialized.serialized_tx
 
                 if res.HasField('serialized') and res.serialized.HasField('signature_index'):
+                    if signatures[res.serialized.signature_index] != None:
+                        raise Exception("Signature for index %d already filled" % res.serialized.signature_index)
                     signatures[res.serialized.signature_index] = res.serialized.signature
 
                 if res.request_type == types.TXFINISHED:
@@ -528,6 +530,9 @@ class ProtocolMixin(object):
 
         finally:
             self.transport.session_end()
+
+        if None in signatures:
+            raise Exception("Some signatures are missing!")
 
         print "SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" % \
                 (time.time() - start, counter, len(serialized_tx))
