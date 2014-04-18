@@ -455,7 +455,7 @@ class ProtocolMixin(object):
 
         return txes
 
-    def sign_tx(self, coin_name, inputs, outputs):
+    def sign_tx(self, coin_name, inputs, outputs, debug_processor=None):
 
         start = time.time()
         txes = self._prepare_sign_tx(coin_name, inputs, outputs)
@@ -525,6 +525,13 @@ class ProtocolMixin(object):
                         msg.bin_outputs.extend([current_tx.bin_outputs[res.details.request_index], ])
                     else:
                         msg.outputs.extend([current_tx.outputs[res.details.request_index], ])
+
+                    if debug_processor != None:
+                        # If debug_processor function is provided,
+                        # pass thru it the request and prepared response.
+                        # This is useful for unit tests, see test_msg_signtx
+                        msg = debug_processor(res, msg)
+
                     res = self.call(proto.TxAck(tx=msg))
                     continue
 
