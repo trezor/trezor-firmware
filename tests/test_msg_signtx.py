@@ -11,7 +11,6 @@ from trezorlib.client import CallException
 from trezorlib.tx_api import TXAPITestnet, TXAPIBitcoin
 
 class TestMsgSigntx(common.TrezorTest):
-
     def test_one_one_fee(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -209,8 +208,6 @@ class TestMsgSigntx(common.TrezorTest):
         # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
         self.assertEqual(binascii.hexlify(serialized_tx), '01000000021c032e5715d1da8115a2fe4f57699e15742fe113b0d2d1ca3b594649d322bec6010000006b483045022100f773c403b2f85a5c1d6c9c4ad69c43de66930fff4b1bc818eb257af98305546a0220443bde4be439f276a6ce793664b463580e210ec6c9255d68354449ac0443c76501210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6ffffffff6ea42cd8d9c8e5441c4c5f85bfe50311078730d2881494f11f4d2257777a4958010000006b48304502210090cff1c1911e771605358a8cddd5ae94c7b60cc96e50275908d9bf9d6367c79f02202bfa72e10260a146abd59d0526e1335bacfbb2b4401780e9e3a7441b0480c8da0121038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3ffffffff02a0860100000000001976a9142f4490d5263906e4887ca2996b9e207af3e7824088aca0860100000000001976a914812c13d97f9159e54e326b481b8f88a73df8507a88ac00000000')
 
-    '''
-
     def test_255_outputs(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -248,8 +245,6 @@ class TestMsgSigntx(common.TrezorTest):
             (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, inp2], outputs)
 
         self.assertEqual(binascii.hexlify(serialized_tx), '0100000002fb792f470a58993e14964c9bd46cdf37cb4bbc3f61540cb651580c82ed243ec6010000006b483045022100969da46f94a81f34f3717b014e0c3e1826eda1b0022ec2f9ce39f3d750ab9235022026da269770993211a1503413566a339bbb4389a482fffcf8e1f76713fc3b94f5012103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902ffffffffe56582d2119100cb1d3da8232291e053f71e25fb669c87b32a667749959ea239010000006a473044022052e1419bb237b9db400ab5e3df16db6355619d545fde9030924a360763ae9ad40220704beab04d72ecaeb42eca7d98faca7a0941e65f2e1341f183be2b83e6b09e1c012103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902fffffffffdff00' + 'd8270000000000001976a914f0a2b64e56ee2ff57126232f84af6e3a41d4055088ac' * 255 + '00000000')
-
-    '''
 
     def test_fee_too_high(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -329,166 +324,66 @@ class TestMsgSigntx(common.TrezorTest):
         # Accepted by network: tx 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
         self.assertEqual(binascii.hexlify(serialized_tx), '0100000001a3fb2d38322c3b327e54005cebc0686d52fcdf536e53bb5ef481a7de8056aa54010000006b4830450221009e020b0390ccad533b73b552f8a99a9d827212c558e4f755503674d07c92ad4502202d606f7316990e0461c51d4add25054f19c697aa3e3c2ced4d568f0b2c57e62f0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0170f305000000000017a9147f844bdb0b8fd54b64e3d16c85dc1170f1ff97c18700000000')
 
-'''
-    def test_signtx(self):
-        expected_tx = '01000000012de70f7d6ffed0db70f8882f3fca90db9bb09f0e99bce27468c23d3c994fcd56' \
-            '010000008b4830450221009b985e14d53cfeed3496846db6ddaa77a0206138d0df4c2ccd3b' \
-            '759e91bae3e1022004c76e10f99ccac8ced761719181a96bae25a74829eab3ecb8f29eb07f' \
-            'e18f7e01410436ae8595f03a7324d1d1482ede8560a4508c767fbc662559482d5759b32209' \
-            'a62964699995f6e018cfbeb7a71a66d4c64fa38875d79ead0a9ac66f59c1c8b3a3ffffffff' \
-            '0250c30000000000001976a91444ce5c6789b0bb0e8a9ab9a4769fe181cb274c4688aca086' \
-            '0100000000001976a9149e03078026388661b197129a43f0f64f88379ce688ac00000000'
+    def test_attack_change_outputs(self):
+        # This unit test attempts to modify data sent during ping-pong of streaming signing.
+        # Because device is asking for human confirmation only during first pass (first input),
+        # device must detect that data has been modified during other passes and fail to sign
+        # such modified data (which has not been confirmed by the user).
 
-        inp1 = proto.TxInput(index=0,
-                             address_n=[1, 0],
-                             amount=200000, # 0.002 BTC
-                             prev_hash=binascii.unhexlify('56cd4f993c3dc26874e2bc990e9fb09bdb90ca3f2f88f870dbd0fe6f7d0fe72d'),
+        # Test firstly prepare normal transaction and send it to device. Then it send the same
+        # transaction again, but change amount of output 1 during signing the second input.
+
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        inp1 = proto_types.TxInputType(address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
+                             # amount=100000,
+                             prev_hash=binascii.unhexlify('c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c'),
                              prev_index=1,
-                             #script_sig=
-                             )      
+                             )
 
-        out1 = proto.TxOutput(index=0,
-                              address='1GnnT11aZeH6QZCtT7EjCvRF3EXHoY3owE',
-                              address_n=[0, 1],
-                              amount=50000, # 0.0005 BTC
-                              script_type=proto.PAYTOADDRESS,
-                              #script_args=
-                              )        
-                   
-        out2 = proto.TxOutput(index=1,
-                              address='1FQVPnjrbkPWeA8poUoEnX9U3n9DyhAVtv',
-                              #address_n=[],
-                              amount=100000, # 0.001 BTC
-                              script_type=proto.PAYTOADDRESS,
-                              #script_args=
+        inp2 = proto_types.TxInputType(address_n=[2],  # 15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG
+                             # amount=110000,
+                             prev_hash=binascii.unhexlify('58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e'),
+                             prev_index=1,
+                             )
+
+        out1 = proto_types.TxOutputType(address='15Jvu3nZNP7u2ipw2533Q9VVgEu2Lu9F2B',
+                              amount=210000 - 100000 - 10000,
+                              script_type=proto_types.PAYTOADDRESS,
                               )
 
-        print binascii.hexlify(self.client.sign_tx([inp1], [out1, out2])[1])
-
-    def test_workflow(self):
-        inp1 = proto.TxInput(index=0,
-                             address_n=[1,0],
-                             amount=100000000,
-                             prev_hash='prevhash1234354346543456543654',
-                             prev_index=11,
-                             )      
-
-        inp2 = proto.TxInput(index=1,
-                             address_n=[2,0],
-                             amount=100000000,
-                             prev_hash='prevhash2222254346543456543654',
-                             prev_index=11,
-                             )      
-                   
-        out1 = proto.TxOutput(index=0,
-                              address='1BitkeyP2nDd5oa647AjvBbbwST54W5Zmx',
-                              amount=100000000,
-                              script_type=proto.PAYTOADDRESS,
+        out2 = proto_types.TxOutputType(address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
+                              amount=100000,
+                              script_type=proto_types.PAYTOADDRESS,
                               )
 
-        out2 = proto.TxOutput(index=1,
-                              address='1BitkeyP2nDd5oa647AjvBbbwST54W5Zmx',
-                              #address_n=[],
-                              amount=100000000,
-                              script_type=proto.PAYTOADDRESS,
-                              #script_args=
-                              )
+        global run_attack
+        run_attack = False
 
-        serialized = ''
-                
-        # Prepare and send initial message
-        tx = proto.SignTx()
-        tx.algo = proto.ELECTRUM
-        tx.random = self.client._get_local_entropy()
-        tx.inputs_count = 2
-        tx.outputs_count = 2            
+        def attack_processor(req, msg):
+            global run_attack
 
-        res = self.client.call(tx)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXINPUT)
-        self.assertEqual(res.request_index, 0)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
-        
-        # FIRST SIGNATURE
-        res = self.client.call(inp1)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXINPUT)
-        self.assertEqual(res.request_index, 1)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
-        
-        res = self.client.call(inp2)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, 0)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
+            if req.details.tx_hash != '':
+                return msg
 
-        res = self.client.call(out1)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, 1)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
+            if req.details.request_index != 1:
+                return msg
 
-        res = self.client.call(out2)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXINPUT)
-        self.assertEqual(res.request_index, 0)
-        self.assertNotEqual(res.signature, '')
-        self.assertNotEqual(res.serialized_tx, '')
-        serialized += res.serialized_tx
-        
-        # SECOND SIGNATURE
-        res = self.client.call(inp1)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXINPUT)
-        self.assertEqual(res.request_index, 1)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
-        
-        res = self.client.call(inp2)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, 0)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
+            if not run_attack:
+                run_attack = True
+                return msg
 
-        res = self.client.call(out1)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, 1)
-        self.assertEqual(res.signature, '')
-        self.assertEqual(res.serialized_tx, '')
+            msg.outputs[0].amount = 9999999  # Sign output with another amount
+            return msg
 
-        res = self.client.call(out2)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, 0)
-        self.assertNotEqual(res.signature, '')
-        self.assertNotEqual(res.serialized_tx, '')
-        serialized += res.serialized_tx
-        
-        # FINALIZING OUTPUTS
-        res = self.client.call(out1)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, 1)
-        self.assertEqual(res.signature, '')
-        self.assertNotEqual(res.serialized_tx, '')
-        serialized += res.serialized_tx
-        
-        res = self.client.call(out2)
-        self.assertIsInstance(res, proto.TxRequest)
-        self.assertEqual(res.request_type, proto.TXOUTPUT)
-        self.assertEqual(res.request_index, -1)
-        self.assertEqual(res.signature, '')
-        self.assertNotEqual(res.serialized_tx, '')
-        serialized += res.serialized_tx
-        
-        print binascii.hexlify(serialized)
-'''
+        # Test if the transaction can be signed normally
+        (_, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, inp2], [out1, out2])
+
+        # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
+        self.assertEqual(binascii.hexlify(serialized_tx), '01000000021c032e5715d1da8115a2fe4f57699e15742fe113b0d2d1ca3b594649d322bec6010000006b483045022100f773c403b2f85a5c1d6c9c4ad69c43de66930fff4b1bc818eb257af98305546a0220443bde4be439f276a6ce793664b463580e210ec6c9255d68354449ac0443c76501210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6ffffffff6ea42cd8d9c8e5441c4c5f85bfe50311078730d2881494f11f4d2257777a4958010000006b48304502210090cff1c1911e771605358a8cddd5ae94c7b60cc96e50275908d9bf9d6367c79f02202bfa72e10260a146abd59d0526e1335bacfbb2b4401780e9e3a7441b0480c8da0121038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3ffffffff02a0860100000000001976a9142f4490d5263906e4887ca2996b9e207af3e7824088aca0860100000000001976a914812c13d97f9159e54e326b481b8f88a73df8507a88ac00000000')
+
+        # Now run the attack, must trigger the exception
+        self.assertRaises(CallException, self.client.sign_tx, 'Bitcoin', [inp1, inp2], [out1, out2], attack_processor)
 
 if __name__ == '__main__':
     unittest.main()
