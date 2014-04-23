@@ -29,9 +29,20 @@ class TestMsgSigntx(common.TrezorTest):
                               )
 
         with self.client:
-            # self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-            #                                     proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
-            #                                     proto.TxRequest(request_type=proto_types.TXFINISHED)])
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXFINISHED),
+            ])
+
             (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
 
         # Accepted by network: tx fd79435246dee76b2f159d2db08032d666c95adc544de64c8c49f474df4a7fee
