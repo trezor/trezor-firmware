@@ -153,6 +153,38 @@ class TestProtectionLevels(common.TrezorTest):
                                                 proto.TxRequest(request_type=proto_types.TXFINISHED)])
             self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
 
+    def test_signtx(self):
+        self.setup_mnemonic_pin_passphrase()
+
+        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_index=0,
+                             )
+
+        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+                              amount=390000 - 10000,
+                              script_type=proto_types.PAYTOADDRESS,
+                              )
+
+        with self.client:
+
+            self.client.set_expected_responses([
+                proto.PinMatrixRequest(),
+                proto.PassphraseRequest(),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXFINISHED),
+            ])
+            self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+
     # def test_firmware_erase(self):
     #    pass
 
