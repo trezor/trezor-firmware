@@ -16,7 +16,7 @@ class TestPing(common.TrezorTest):
             self.assertEqual(res, 'random data')
 
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other), proto.Success()])
+            self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.Success()])
             res = self.client.ping('random data', button_protection=True)
             self.assertEqual(res, 'random data')
 
@@ -34,13 +34,13 @@ class TestPing(common.TrezorTest):
         self.setup_mnemonic_pin_passphrase()
 
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other), proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Success()])
+            self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
             self.assertEqual(res, 'random data')
 
         with self.client:
             # pin and passphrase are cached
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other), proto.Success()])
+            self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
             self.assertEqual(res, 'random data')
 

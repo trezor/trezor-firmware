@@ -23,7 +23,7 @@ class TestMsgGetentropy(common.TrezorTest):
     def test_entropy(self):
         for l in [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 32, 33, 64, 65, 128, 129, 256, 257, 512, 513, 1024]:
             with self.client:
-                self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_Other), proto.Entropy()])
+                self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.Entropy()])
                 ent = self.client.get_entropy(l)
                 self.assertTrue(len(ent) >= l)
                 print 'entropy = ', entropy(ent)
