@@ -1,0 +1,105 @@
+/*
+ * This file is part of the TREZOR project.
+ *
+ * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ *
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <string.h>
+
+#include "layout.h"
+#include "oled.h"
+
+void layoutDialog(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
+{
+	int left = 0;
+	oledClear();
+	switch (icon) {
+		case DIALOG_NOICON:
+			break;
+		case DIALOG_ICON_ERROR:
+			oledDrawBitmap(0, 0, &bmp_icon_error);
+			left = 20;
+			break;
+		case DIALOG_ICON_INFO:
+			oledDrawBitmap(0, 0, &bmp_icon_info);
+			left = 20;
+			break;
+		case DIALOG_ICON_QUESTION:
+			oledDrawBitmap(0, 0, &bmp_icon_question);
+			left = 20;
+			break;
+		case DIALOG_ICON_WARNING:
+			oledDrawBitmap(0, 0, &bmp_icon_warning);
+			left = 20;
+			break;
+		case DIALOG_ICON_OK:
+			oledDrawBitmap(0, 0, &bmp_icon_ok);
+			left = 20;
+			break;
+	}
+	if (line1) oledDrawString(left, 0 * 9, line1);
+	if (line2) oledDrawString(left, 1 * 9, line2);
+	if (line3) oledDrawString(left, 2 * 9, line3);
+	if (line4) oledDrawString(left, 3 * 9, line4);
+	if (desc) {
+		oledDrawStringCenter(OLED_HEIGHT - 2 * 9 - 1, desc);
+		if (btnYes || btnNo) {
+			oledHLine(OLED_HEIGHT - 21);
+		}
+	} else {
+		if (line5) oledDrawString(left, 4 * 9, line5);
+		if (line6) oledDrawString(left, 5 * 9, line6);
+		if (btnYes || btnNo) {
+			oledHLine(OLED_HEIGHT - 13);
+		}
+	}
+	if (btnNo) {
+		oledDrawString(1, OLED_HEIGHT - 8, "{");
+		oledDrawString(fontCharWidth('{') + 3, OLED_HEIGHT - 8, btnNo);
+		oledInvert(0, OLED_HEIGHT - 9, fontCharWidth('{') + fontStringWidth(btnNo) + 2, OLED_HEIGHT - 1);
+	}
+	if (btnYes) {
+		oledDrawString(OLED_WIDTH - fontCharWidth('}') - 1, OLED_HEIGHT - 8, "}");
+		oledDrawString(OLED_WIDTH - fontStringWidth(btnYes) - fontCharWidth('}') - 3, OLED_HEIGHT - 8, btnYes);
+		oledInvert(OLED_WIDTH - fontStringWidth(btnYes) - fontCharWidth('}') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+	}
+	oledRefresh();
+}
+
+void layoutProgress(const char *desc, int permil, int gearstep)
+{
+	const BITMAP *bmp_gears[4] = { &bmp_gears0, &bmp_gears1, &bmp_gears2, &bmp_gears3 };
+	oledClear();
+	oledDrawBitmap(40, 0, bmp_gears[gearstep % 4]);
+	// progressbar
+	oledFrame(0, OLED_HEIGHT - 8, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+	oledBox(1, OLED_HEIGHT - 7, OLED_WIDTH - 2, OLED_HEIGHT - 2, 0);
+	permil = permil * (OLED_WIDTH - 4) / 1000;
+	if (permil < 0) {
+		permil = 0;
+	}
+	if (permil > OLED_WIDTH - 4) {
+		permil = OLED_WIDTH - 4;
+	}
+	oledBox(2, OLED_HEIGHT - 6, 1 + permil, OLED_HEIGHT - 3, 1);
+
+	// text
+	oledBox(0, OLED_HEIGHT - 16, OLED_WIDTH - 1, OLED_HEIGHT - 16 + 7, 0);
+	if (desc) {
+		oledDrawStringCenter(OLED_HEIGHT - 16, desc);
+	}
+	oledRefresh();
+}

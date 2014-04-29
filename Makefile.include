@@ -1,0 +1,123 @@
+PREFIX ?= arm-none-eabi-
+CC      = $(PREFIX)gcc
+LD      = $(PREFIX)gcc
+OBJCOPY = $(PREFIX)objcopy
+OBJDUMP = $(PREFIX)objdump
+FLASH   = st-flash
+OPENOCD = openocd
+TOP_DIR = /home/stick/work/trezor/trezor-mcu
+TOOLCHAIN_DIR = $(TOP_DIR)/../libopencm3
+
+OPTFLAGS  = -Os -g
+
+CFLAGS   += $(OPTFLAGS) \
+            -W \
+            -Wall \
+            -Wextra \
+            -Wimplicit-function-declaration \
+            -Wredundant-decls \
+            -Wstrict-prototypes \
+            -Wundef \
+            -Wshadow \
+            -Wpointer-arith \
+            -Wformat \
+            -Wreturn-type \
+            -Wsign-compare \
+            -Wmultichar \
+            -Wformat-nonliteral \
+            -Winit-self \
+            -Wuninitialized \
+            -Wformat-security \
+            -Werror \
+            -fno-common \
+            -fno-exceptions \
+            -fvisibility=internal \
+            -mcpu=cortex-m3 \
+            -mthumb \
+            -msoft-float \
+            -DSTM32F2 \
+            -I$(TOOLCHAIN_DIR)/include \
+            -I$(TOP_DIR) \
+            -I$(TOP_DIR)/gen \
+            -I$(TOP_DIR)/trezor-crypto \
+
+ifdef APPVER
+CFLAGS   += -DAPPVER=$(APPVER)
+LDSCRIPT  = $(TOP_DIR)/memory_app_$(APPVER).ld
+else
+LDSCRIPT  = $(TOP_DIR)/memory.ld
+endif
+
+LDFLAGS  += --static \
+            -Wl,--start-group \
+            -lc \
+            -lgcc \
+            -lnosys \
+            -Wl,--end-group \
+            -L$(TOP_DIR) \
+            -L$(TOOLCHAIN_DIR)/lib \
+            -L$(TOOLCHAIN_DIR)/lib/stm32/f2 \
+            -T$(LDSCRIPT) \
+            -nostartfiles \
+            -Wl,--gc-sections \
+            -mthumb \
+            -march=armv7 \
+            -mfix-cortex-m3-ldrd \
+            -msoft-float
+
+all: $(NAME).bin
+
+flash: $(NAME).bin
+	$(FLASH) write $(NAME).bin 0x8000000
+
+flash2: $(NAME).hex
+	$(OPENOCD) -f board/stm32f4discovery.cfg \
+		-c "init" \
+		-c "reset init" \
+		-c "stm32f2x mass_erase 0" \
+		-c "flash write_image $(NAME).hex" \
+		-c "reset" \
+		-c "shutdown"
+
+upload:
+	../../python-trezor/cmd.py firmware_update -f $(NAME).bin
+
+sign: $(NAME).bin
+	../bootloader/firmware_sign.py -f $(NAME).bin
+
+release: $(NAME).bin
+	../bootloader/firmware_sign.py -f $(NAME).bin
+	cp $(NAME).bin $(NAME)-$(APPVER).bin
+	chmod -x $(NAME)-$(APPVER).bin
+	xxd -p $(NAME)-$(APPVER).bin | tr -d '\n' > $(NAME)-$(APPVER).bin.hex
+
+$(NAME).bin: $(NAME).elf
+	$(OBJCOPY) -Obinary $(NAME).elf $(NAME).bin
+
+$(NAME).hex: $(NAME).elf
+	$(OBJCOPY) -Oihex $(NAME).elf $(NAME).hex
+
+$(NAME).srec: $(NAME).elf
+	$(OBJCOPY) -Osrec $(NAME).elf $(NAME).srec
+
+$(NAME).list: $(NAME).elf
+	$(OBJDUMP) -S $(NAME).elf > $(NAME).list
+
+$(NAME).elf: $(OBJS) $(LDSCRIPT) $(TOOLCHAIN_DIR)/lib/libopencm3_stm32f2.a $(TOP_DIR)/libtrezor.a
+	$(LD) -o $(NAME).elf $(OBJS) -ltrezor -lopencm3_stm32f2 $(LDFLAGS)
+
+%.o: %.c Makefile
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%.small.o: %.c Makefile
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+clean:
+	rm -f $(OBJS)
+	rm -f *.a
+	rm -f *.d
+	rm -f *.elf
+	rm -f *.bin
+	rm -f *.hex
+	rm -f *.srec
+	rm -f *.list

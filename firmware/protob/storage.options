@@ -1,0 +1,4 @@
+Storage.mnemonic	max_size:241
+Storage.pin		max_size:10
+Storage.language	max_size:17
+Storage.label		max_size:33
