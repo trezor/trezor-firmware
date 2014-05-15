@@ -28,4 +28,6 @@ void hdnode_fill_public_key(HDNode *node);
 
 void hdnode_fill_address(HDNode *node);
 
+void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, uint8_t *buffer);
+
 #endif

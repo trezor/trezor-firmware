@@ -118,3 +118,35 @@ void hdnode_fill_public_key(HDNode *node)
 {
 	ecdsa_get_public_key33(node->private_key, node->public_key);
 }
+
+void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, uint8_t *buffer)
+{
+	uint8_t node_data[82], a[32];
+	int i,j;
+	uint32_t rem, tmp;
+	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+	write_be(node_data, version);
+	node_data[4] = node->depth;
+	write_be(node_data + 5, node->fingerprint);
+	write_be(node_data + 9, node->child_num);
+	memcpy(node_data + 13, node->chain_code, 32);
+	if (use_public) {
+		memcpy(node_data + 45, node->public_key, 33);
+	} else {
+		node_data[45] = 0;
+		memcpy(node_data + 46, node->private_key, 32);
+	}
+	sha256_Raw(node_data, 78, a);
+	sha256_Raw(a, 32, a);
+	memcpy(node_data + 78, a, 4); // checksum
+	for (j = 110; j >= 0; j--) {
+		rem = node_data[0] % 58;
+		node_data[0] /= 58;
+		for (i = 1; i < 82; i++) {
+			tmp = rem * 24 + node_data[i]; // 2^8 == 4*58 + 24
+			node_data[i] = rem * 4 + (tmp / 58);
+			rem = tmp % 58;
+		}
+		buffer[j] = code[rem];
+	}
+}
