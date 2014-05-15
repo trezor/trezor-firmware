@@ -151,3 +151,13 @@ void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, cha
 	}
 	buffer[111] = 0;
 }
+
+void hdnode_serialize_public(const HDNode *node, char *buffer)
+{
+	hdnode_serialize(node, 0x0488B21E, 1, buffer);
+}
+
+void hdnode_serialize_private(const HDNode *node, char *buffer)
+{
+	hdnode_serialize(node, 0x0488ADE4, 0, buffer);
+}
