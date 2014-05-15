@@ -119,7 +119,7 @@ void hdnode_fill_public_key(HDNode *node)
 	ecdsa_get_public_key33(node->private_key, node->public_key);
 }
 
-void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, uint8_t *buffer)
+void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *buffer)
 {
 	uint8_t node_data[82], a[32];
 	int i,j;
@@ -149,4 +149,5 @@ void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, uin
 		}
 		buffer[j] = code[rem];
 	}
+	buffer[111] = 0;
 }

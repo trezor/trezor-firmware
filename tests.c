@@ -78,7 +78,7 @@ inline char *tohex(const uint8_t *bin, size_t l)
 START_TEST(test_bip32_vector_1)
 {
 	HDNode node;
-	uint8_t buffer[113];
+	char buffer[112];
 
 	// init m
 	hdnode_from_seed(fromhex("000102030405060708090a0b0c0d0e0f"), 16, &node);
@@ -154,7 +154,7 @@ END_TEST
 START_TEST(test_bip32_vector_2)
 {
 	HDNode node;
-	uint8_t buffer[113];
+	char buffer[112];
 	int r;
 
 	// init m
