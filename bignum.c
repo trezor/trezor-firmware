@@ -303,14 +303,20 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 void bn_inverse(bignum256 *x, const bignum256 *prime)
 {
 	int i, j, k, len1, len2, mask;
-	uint32_t u[9], v[9], s[10], r[10], temp, temp2;
+	uint8_t buf[32];
+	uint32_t u[8], v[8], s[9], r[10], temp32;
+	uint64_t temp, temp2;
 	bn_fast_mod(x, prime);
 	bn_mod(x, prime);
-	for (i = 0; i < 9; i++) {
-		u[i] = prime->val[i];
-		v[i] = x->val[i];
+	bn_write_be(prime, buf);
+	for (i = 0; i < 8; i++) {
+		u[i] = read_be(buf + 28 - i * 4);
 	}
-	len1 = 9;
+	bn_write_be(x, buf);
+	for (i = 0; i < 8; i++) {
+		v[i] = read_be(buf + 28 - i * 4);
+	}
+	len1 = 8;
 	s[0] = 1;
 	r[0] = 0;
 	len2 = 1;
@@ -327,13 +333,13 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 			if (i == 0) break;
 			mask = (1 << i) - 1;
 			for (j = 0; j + 1 < len1; j++) {
-				u[j] = (u[j] >> i) | ((u[j + 1] & mask) << (30 - i));
+				u[j] = (u[j] >> i) | ((u[j + 1] & mask) << (32 - i));
 			}
 			u[j] = (u[j] >> i);
-			mask = (1 << (30 - i)) - 1;
-			s[len2] = s[len2 - 1] >> (30 - i);
+			mask = (1 << (32 - i)) - 1;
+			s[len2] = s[len2 - 1] >> (32 - i);
 			for (j = len2 - 1; j > 0; j--) {
-				s[j] = (s[j - 1] >> (30 - i)) | ((s[j] & mask) << i);
+				s[j] = (s[j - 1] >> (32 - i)) | ((s[j] & mask) << i);
 			}
 			s[0] = (s[0] & mask) << i;
 			if (s[len2]) {
@@ -349,13 +355,13 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 			if (i == 0) break;
 			mask = (1 << i) - 1;
 			for (j = 0; j + 1 < len1; j++) {
-				v[j] = (v[j] >> i) | ((v[j + 1] & mask) << (30 - i));
+				v[j] = (v[j] >> i) | ((v[j + 1] & mask) << (32 - i));
 			}
 			v[j] = (v[j] >> i);
-			mask = (1 << (30 - i)) - 1;
-			r[len2] = r[len2 - 1] >> (30 - i);
+			mask = (1 << (32 - i)) - 1;
+			r[len2] = r[len2 - 1] >> (32 - i);
 			for (j = len2 - 1; j > 0; j--) {
-				r[j] = (r[j - 1] >> (30 - i)) | ((r[j] & mask) << i);
+				r[j] = (r[j - 1] >> (32 - i)) | ((r[j] & mask) << i);
 			}
 			r[0] = (r[0] & mask) << i;
 			if (r[len2]) {
@@ -368,23 +374,25 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		i = len1 - 1;
 		while (i > 0 && u[i] == v[i]) i--;
 		if (u[i] > v[i]) {
-			temp = 0x40000000u + u[0] - v[0];
-			u[0] = (temp >> 1) & 0x1FFFFFFF;
-			temp >>= 30;
+			temp = 0x100000000ull + u[0] - v[0];
+			u[0] = (temp >> 1) & 0x7FFFFFFF;
+			temp >>= 32;
 			for (i = 1; i < len1; i++) {
-				temp += 0x3FFFFFFFu + u[i] - v[i];
-				u[i - 1] += (temp & 1) << 29;
-				u[i] = (temp >> 1) & 0x1FFFFFFF;
-				temp >>= 30;
+				temp += 0xFFFFFFFFull + u[i] - v[i];
+				u[i - 1] += (temp & 1) << 31;
+				u[i] = (temp >> 1) & 0x7FFFFFFF;
+				temp >>= 32;
 			}
 			temp = temp2 = 0;
 			for (i = 0; i < len2; i++) {
-				temp += s[i] + r[i];
-				temp2 += s[i] << 1;
-				r[i] = temp & 0x3FFFFFFF;
-				s[i] = temp2 & 0x3FFFFFFF;
-				temp >>= 30;
-				temp2 >>= 30;
+				temp += s[i];
+				temp += r[i];
+				temp2 += s[i];
+				temp2 += s[i];
+				r[i] = temp;
+				s[i] = temp2;
+				temp >>= 32;
+				temp2 >>= 32;
 			}
 			if (temp != 0 || temp2 != 0) {
 				r[len2] = temp;
@@ -392,23 +400,25 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 				len2++;
 			}
 		} else {
-			temp = 0x40000000u + v[0] - u[0];
-			v[0] = (temp >> 1) & 0x1FFFFFFF;
-			temp >>= 30;
+			temp = 0x100000000ull + v[0] - u[0];
+			v[0] = (temp >> 1) & 0x7FFFFFFF;
+			temp >>= 32;
 			for (i = 1; i < len1; i++) {
-				temp += 0x3FFFFFFFu + v[i] - u[i];
-				v[i - 1] += (temp & 1) << 29;
-				v[i] = (temp >> 1) & 0x1FFFFFFF;
-				temp >>= 30;
+				temp += 0xFFFFFFFFull + v[i] - u[i];
+				v[i - 1] += (temp & 1) << 31;
+				v[i] = (temp >> 1) & 0x7FFFFFFF;
+				temp >>= 32;
 			}
 			temp = temp2 = 0;
 			for (i = 0; i < len2; i++) {
-				temp += s[i] + r[i];
-				temp2 += r[i] << 1;
-				s[i] = temp & 0x3FFFFFFF;
-				r[i] = temp2 & 0x3FFFFFFF;
-				temp >>= 30;
-				temp2 >>= 30;
+				temp += s[i];
+				temp += r[i];
+				temp2 += r[i];
+				temp2 += r[i];
+				s[i] = temp;
+				r[i] = temp2;
+				temp >>= 32;
+				temp2 >>= 32;
 			}
 			if (temp != 0 || temp2 != 0) {
 				s[len2] = temp;
@@ -419,21 +429,33 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		if (u[len1 - 1] == 0 && v[len1 - 1] == 0) len1--;
 		k++;
 	}
+
+	j = r[0] >> 30;
+	r[0] = r[0] & 0x3FFFFFFFu;
+	for (i = 1; i < len2; i++) {
+		uint32_t q = r[i] >> (30 - 2 * i);
+		r[i] = ((r[i] << (2 * i)) & 0x3FFFFFFFu) + j;
+		j=q;
+	}
+	r[i] = j;
+	i++;
+	for (; i < 9; i++) r[i] = 0;
+
 	i = 8;
 	while (i > 0 && r[i] == prime->val[i]) i--;
 	if (r[i] >= prime->val[i]) {
-		temp = 1;
+		temp32 = 1;
 		for (i = 0; i < 9; i++) {
-			temp += 0x3FFFFFFF + r[i] - prime->val[i];
-			r[i] = temp & 0x3FFFFFFF;
-			temp >>= 30;
+			temp32 += 0x3FFFFFFF + r[i] - prime->val[i];
+			r[i] = temp32 & 0x3FFFFFFF;
+			temp32 >>= 30;
 		}
 	}
-	temp = 1;
+	temp32 = 1;
 	for (i = 0; i < 9; i++) {
-		temp += 0x3FFFFFFF + prime->val[i] - r[i];
-		r[i] = temp & 0x3FFFFFFF;
-		temp >>= 30;
+		temp32 += 0x3FFFFFFF + prime->val[i] - r[i];
+		r[i] = temp32 & 0x3FFFFFFF;
+		temp32 >>= 30;
 	}
 	int done = 0;
 #if USE_PRECOMPUTED_IV
@@ -449,14 +471,14 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	if (!done) {
 		for (j = 0; j < k; j++) {
 			if (r[0] & 1) {
-				temp = r[0] + prime->val[0];
-				r[0] = (temp >> 1) & 0x1FFFFFFF;
-				temp >>= 30;
+				temp32 = r[0] + prime->val[0];
+				r[0] = (temp32 >> 1) & 0x1FFFFFFF;
+				temp32 >>= 30;
 				for (i = 1; i < 9; i++) {
-					temp += r[i] + prime->val[i];
-					r[i - 1] += (temp & 1) << 29;
-					r[i] = (temp >> 1) & 0x1FFFFFFF;
-					temp >>= 30;
+					temp32 += r[i] + prime->val[i];
+					r[i - 1] += (temp32 & 1) << 29;
+					r[i] = (temp32 >> 1) & 0x1FFFFFFF;
+					temp32 >>= 30;
 				}
 			} else {
 				for (i = 0; i < 8; i++) {
