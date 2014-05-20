@@ -29,6 +29,8 @@
 #include "util.h"
 #include "debug.h"
 
+bool protectAbortedByInitialize = false;
+
 bool protectButton(ButtonRequestType type, bool confirm_only)
 {
 	ButtonRequest resp;
@@ -66,7 +68,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 
 		if (msg_tiny_id == MessageType_MessageType_Cancel || msg_tiny_id == MessageType_MessageType_Initialize) {
 			if (msg_tiny_id == MessageType_MessageType_Initialize) {
-				fsm_msgInitialize((Initialize *)msg_tiny);
+				protectAbortedByInitialize = true;
 			}
 			msg_tiny_id = 0xFFFF;
 			result = false;
@@ -115,7 +117,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 		if (msg_tiny_id == MessageType_MessageType_Cancel || msg_tiny_id == MessageType_MessageType_Initialize) {
 			pinmatrix_done(0);
 			if (msg_tiny_id == MessageType_MessageType_Initialize) {
-				fsm_msgInitialize((Initialize *)msg_tiny);
+				protectAbortedByInitialize = true;
 			}
 			msg_tiny_id = 0xFFFF;
 			usbTiny(0);
@@ -209,7 +211,7 @@ bool protectPassphrase(void)
 		}
 		if (msg_tiny_id == MessageType_MessageType_Cancel || msg_tiny_id == MessageType_MessageType_Initialize) {
 			if (msg_tiny_id == MessageType_MessageType_Initialize) {
-				fsm_msgInitialize((Initialize *)msg_tiny);
+				protectAbortedByInitialize = true;
 			}
 			msg_tiny_id = 0xFFFF;
 			result = false;

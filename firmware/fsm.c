@@ -57,6 +57,11 @@ void fsm_sendSuccess(const char *text)
 
 void fsm_sendFailure(FailureType code, const char *text)
 {
+	if (protectAbortedByInitialize) {
+		fsm_msgInitialize((Initialize *)0);
+		protectAbortedByInitialize = false;
+		return;
+	}
 	RESP_INIT(Failure);
 	resp->has_code = true;
 	resp->code = code;
