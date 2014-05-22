@@ -728,6 +728,25 @@ START_TEST(test_address)
 }
 END_TEST
 
+START_TEST(test_wif)
+{
+	uint8_t priv_key[32];
+	char wif[53];
+
+	memcpy(priv_key, fromhex("1111111111111111111111111111111111111111111111111111111111111111"), 32);
+	ecdsa_get_wif(priv_key, 0x80, wif); ck_assert_str_eq(wif, "KwntMbt59tTsj8xqpqYqRRWufyjGunvhSyeMo3NTYpFYzZbXJ5Hp");
+	ecdsa_get_wif(priv_key, 0xEF, wif); ck_assert_str_eq(wif, "cN9spWsvaxA8taS7DFMxnk1yJD2gaF2PX1npuTpy3vuZFJdwavaw");
+
+	memcpy(priv_key, fromhex("dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"), 32);
+	ecdsa_get_wif(priv_key, 0x80, wif); ck_assert_str_eq(wif, "L4ezQvyC6QoBhxB4GVs9fAPhUKtbaXYUn8YTqoeXwbevQq4U92vN");
+	ecdsa_get_wif(priv_key, 0xEF, wif); ck_assert_str_eq(wif, "cV1ysqy3XUVSsPeKeugH2Utm6ZC1EyeArAgvxE73SiJvfa6AJng7");
+
+	memcpy(priv_key, fromhex("47f7616ea6f9b923076625b4488115de1ef1187f760e65f89eb6f4f7ff04b012"), 32);
+	ecdsa_get_wif(priv_key, 0x80, wif); ck_assert_str_eq(wif, "KydbzBtk6uc7M6dXwEgTEH2sphZxSPbmDSz6kUUHi4eUpSQuhEbq");
+	ecdsa_get_wif(priv_key, 0xEF, wif); ck_assert_str_eq(wif, "cPzbT6tbXyJNWY6oKeVabbXwSvsN6qhTHV8ZrtvoDBJV5BRY1G5Q");
+}
+END_TEST
+
 START_TEST(test_address_decode)
 {
 	int res;
@@ -865,6 +884,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("address_decode");
 	tcase_add_test(tc, test_address_decode);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("wif");
+	tcase_add_test(tc, test_wif);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("ecdsa_der");

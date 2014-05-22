@@ -32,8 +32,8 @@ int base58_encode_check(const uint8_t *data, int len, char *str)
 		case 78: // xpub/xprv 78
 			outlen = 111;
 			break;
-		case 34: // WIF privkey 1+32
-			outlen = 51;
+		case 34: // WIF privkey 1+32+1
+			outlen = 52;
 			break;
 		case 21: // address 1+20
 			outlen = 34;
@@ -57,9 +57,20 @@ int base58_encode_check(const uint8_t *data, int len, char *str)
 			mydata[i] = rem * 4 + (tmp / 58);
 			rem = tmp % 58;
 		}
-		str[outlen - 1 - j] = code[rem];
+		str[j] = code[rem];
+	}
+	// remove duplicite 1s at the end
+	while (outlen > 1 && str[outlen - 1] == code[0] && str[outlen - 2] == code[0]) {
+		outlen--;
 	}
 	str[outlen] = 0;
+	char s;
+	// reverse string
+	for (i = 0; i < outlen / 2; i++) {
+		s = str[i];
+		str[i] = str[outlen - 1 - i];
+		str[outlen - 1 - i] = s;
+	}
 	return outlen;
 }
 
@@ -83,8 +94,8 @@ int base58_decode_check(const char *str, uint8_t *data)
 		case 111: // xpub/xprv
 			outlen = 78;
 			break;
-		case 51: // WIF privkey
-			outlen = 34;
+		case 52: // WIF privkey
+			outlen = 35;
 			break;
 		case 27: // address
 		case 28:

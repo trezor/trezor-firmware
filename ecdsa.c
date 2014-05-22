@@ -31,6 +31,7 @@
 #include "ripemd160.h"
 #include "hmac.h"
 #include "ecdsa.h"
+#include "base58.h"
 
 // cp2 = cp1 + cp2
 void point_add(const curve_point *cp1, curve_point *cp2)
@@ -347,79 +348,25 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 {
-	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-	char *p = addr, s;
-	uint8_t a[32], b[21];
-	uint32_t r;
-	bignum256 c;
-	int i, l;
+	uint8_t data[21];
+	data[0] = version;
+	ecdsa_get_pubkeyhash(pub_key, data + 1);
+	base58_encode_check(data, 21, addr);
+}
 
-	b[0] = version;
-	ecdsa_get_pubkeyhash(pub_key, b + 1);
-
-	sha256_Raw(b, 21, a);
-	sha256_Raw(a, 32, a);
-
-	memcpy(a + 28, a, 4); // checksum
-	memset(a, 0, 7);      // zeroes
-	memcpy(a + 7, b, 21); // version || ripemd160(sha256(pubkey))
-
-	bn_read_be(a, &c);
-
-	while (!bn_is_zero(&c)) {
-		bn_divmod58(&c, &r);
-		*p = code[r];
-		p++;
-	}
-
-	i = 7;
-	while (a[i] == 0) {
-		*p = code[0];
-		p++; i++;
-	}
-
-	*p = 0;
-
-	l = strlen(addr);
-
-	for (i = 0; i < l / 2; i++) {
-		s = addr[i];
-		addr[i] = addr[l - 1 - i];
-		addr[l - 1 - i] = s;
-	}
+void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif)
+{
+	uint8_t data[34];
+	data[0] = version;
+	memcpy(data + 1, priv_key, 32);
+	data[33 ] = 0x01;
+	base58_encode_check(data, 34, wif);
 }
 
 int ecdsa_address_decode(const char *addr, uint8_t *out)
 {
 	if (!addr) return 0;
-	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-	bignum256 num;
-	uint8_t buf[32], check[32];
-	bn_zero(&num);
-	uint32_t k;
-	size_t i;
-	for (i = 0; i < strlen(addr); i++) {
-		bn_muli(&num, 58);
-		for (k = 0; k <= strlen(code); k++) {
-			if (code[k] == 0) { // char not found -> invalid address
-				return 0;
-			}
-			if (addr[i] == code[k]) {
-				bn_addi(&num, k);
-				break;
-			}
-		}
-	}
-	bn_write_be(&num, buf);
-	// compute address hash
-	sha256_Raw(buf + 7, 21, check);
-	sha256_Raw(check, 32, check);
-	// check if valid
-	if (memcmp(buf + 7 + 21, check, 4) != 0) {
-		return 0;
-	}
-	memcpy(out, buf + 7, 21);
-	return 1;
+	return base58_decode_check(addr, out) == 21;
 }
 
 void uncompress_coords(uint8_t odd, const bignum256 *x, bignum256 *y)
