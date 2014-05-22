@@ -29,6 +29,7 @@
 #include "bip32.h"
 #include "sha2.h"
 #include "ripemd160.h"
+#include "base58.h"
 
 void hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
 {
@@ -145,10 +146,7 @@ void hdnode_fill_public_key(HDNode *node)
 
 void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str)
 {
-	uint8_t node_data[82], a[32];
-	int i,j;
-	uint32_t rem, tmp;
-	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+	uint8_t node_data[78];
 	write_be(node_data, version);
 	node_data[4] = node->depth;
 	write_be(node_data + 5, node->fingerprint);
@@ -160,20 +158,7 @@ void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, cha
 		node_data[45] = 0;
 		memcpy(node_data + 46, node->private_key, 32);
 	}
-	sha256_Raw(node_data, 78, a);
-	sha256_Raw(a, 32, a);
-	memcpy(node_data + 78, a, 4); // checksum
-	for (j = 110; j >= 0; j--) {
-		rem = node_data[0] % 58;
-		node_data[0] /= 58;
-		for (i = 1; i < 82; i++) {
-			tmp = rem * 24 + node_data[i]; // 2^8 == 4*58 + 24
-			node_data[i] = rem * 4 + (tmp / 58);
-			rem = tmp % 58;
-		}
-		str[j] = code[rem];
-	}
-	str[111] = 0;
+	base58_encode_check(node_data, 78, str);
 }
 
 void hdnode_serialize_public(const HDNode *node, char *str)
@@ -189,55 +174,22 @@ void hdnode_serialize_private(const HDNode *node, char *str)
 // check for validity of curve point in case of public data not performed
 int hdnode_deserialize(const char *str, HDNode *node)
 {
-	uint8_t node_data[82], a[32];
-	const char decode[] = {
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3,
-		4, 5, 6, 7, 8, -1, -1, -1, -1, -1, -1, -1, 9, 10, 11,
-		12, 13, 14, 15, 16, -1, 17, 18, 19, 20, 21, -1, 22,
-		23, 24, 25, 26, 27, 28, 29, 30, 31, 32, -1, -1, -1,
-		-1, -1, -1, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
-		43, -1, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
-		55, 56, 57
-	};
+	uint8_t node_data[78];
 	memset(node, 0, sizeof(HDNode));
-	memset(node_data, 0, sizeof(node_data));
-	if (strlen(str) != 111) { // invalid data length
+	if (!base58_decode_check(str, node_data)) {
 		return -1;
-	}
-	int i, j, k;
-	for (i = 0; i < 111; i++) {
-		if (str[i] < 0 || str[i] >= (int)sizeof(decode)) { // invalid character
-			return -2;
-		}
-		k = decode[(int)str[i]];
-		if (k == -1) { // invalid character
-			return -2;
-		}
-		for (j = 81; j >= 0; j--) {
-			k += node_data[j] * 58;
-			node_data[j] = k & 0xFF;
-			k >>= 8;
-		}
-	}
-	sha256_Raw(node_data, 78, a);
-	sha256_Raw(a, 32, a);
-	if (memcmp(node_data + 78, a, 4)) { // wrong checksum
-		 return -3;
 	}
 	uint32_t version = read_be(node_data);
 	if (version == 0x0488B21E) { // public node
 		memcpy(node->public_key, node_data + 45, 33);
 	} else if (version == 0x0488ADE4) { // private node
 		if (node_data[45]) { // invalid data
-			return -4;
+			return -2;
 		}
 		memcpy(node->private_key, node_data + 46, 32);
 		hdnode_fill_public_key(node);
 	} else {
-		return -5; // invalid version
+		return -3; // invalid version
 	}
 	node->depth = node_data[4];
 	node->fingerprint = read_be(node_data + 5);
