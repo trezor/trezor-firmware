@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2000-2001 Aaron D. Gifford
- * Copyright (c) 2013 Pavol Rusnak
+ * Copyright (c) 2013-2014 Pavol Rusnak
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2013 Tomas Dzetkulic
- * Copyright (c) 2013 Pavol Rusnak
+ * Copyright (c) 2013-2014 Tomas Dzetkulic
+ * Copyright (c) 2013-2014 Pavol Rusnak
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
