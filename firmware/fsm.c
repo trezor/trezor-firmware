@@ -109,7 +109,7 @@ void fsm_msgInitialize(Initialize *msg)
 	resp->has_patch_version = true;  resp->patch_version = VERSION_PATCH;
 	resp->has_device_id = true;      strlcpy(resp->device_id, storage_uuid_str, sizeof(resp->device_id));
 	resp->has_pin_protection = true; resp->pin_protection = storage.has_pin;
-	resp->has_passphrase_protection = true; resp->passphrase_protection = storage.passphrase_protection;
+	resp->has_passphrase_protection = true; resp->passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
 #ifdef SCM_REVISION
 	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, sizeof(resp->revision)); resp->revision.size = SCM_REVISION_LEN;
 #endif
@@ -124,7 +124,8 @@ void fsm_msgInitialize(Initialize *msg)
 	}
 	resp->coins_count = COINS_COUNT;
 	memcpy(resp->coins, coins, COINS_COUNT * sizeof(CoinType));
-	resp->has_initialized = true;  resp->initialized = storage_isInitialized();
+	resp->has_initialized = true; resp->initialized = storage_isInitialized();
+	resp->has_imported = true; resp->imported = storage.has_imported && storage.imported;
 	msg_write(MessageType_MessageType_Features, resp);
 }
 

@@ -141,6 +141,9 @@ void storage_loadDevice(LoadDevice *msg)
 {
 	storage_reset();
 
+	storage.has_imported = true;
+	storage.imported = true;
+
 	if (msg->has_pin > 0) {
 		storage_setPin(msg->pin);
 	}
@@ -212,7 +215,7 @@ bool storage_getRootNode(HDNode *node)
 			return false;
 		}
 		hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode);
-		if (storage.has_passphrase_protection > 0) {
+		if (storage.has_passphrase_protection && storage.passphrase_protection) {
 			// decrypt hd node
 			aes_ctx ctx;
 			aes_enc_key((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), &ctx);
