@@ -281,6 +281,13 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 		return;
 	}
 
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "I take the risk", NULL, "Loading private seed", "is not recommended.", "Continue only if you", "know what you are", "doing!", NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Load cancelled");
+		layoutHome();
+		return;
+	}
+
 	storage_loadDevice(msg);
 	storage_commit();
 	fsm_sendSuccess("Device loaded");
