@@ -23,4 +23,5 @@ message Storage {
 	optional string pin = 6;			// current PIN
 	optional string language = 7;			// current language
 	optional string label = 8;			// device label
+	optional bool imported = 9;		// was storage imported from an external source?
 }
