@@ -530,7 +530,6 @@ class TestMsgSigntx(common.TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-
         inp1 = proto_types.TxInputType(address_n=[1],  # mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV
                              # amount=390000,
                              prev_hash=binascii.unhexlify('d6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236'),
