@@ -135,7 +135,8 @@ class Commands(object):
                                         args.pin_protection, args.label, 'english')
 
     def sign_message(self, args):
-        ret = self.client.sign_message(args.coin, args.n, args.message)
+        address_n = self.client.expand_path(args.n)
+        ret = self.client.sign_message(args.coin, address_n, args.message)
         output = {
             'message': args.message,
             'address': ret.address,
@@ -230,7 +231,7 @@ class Commands(object):
 
     sign_message.arguments = (
         (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
-        (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
+        (('-n', '-address'), {'type': str}),
         (('message',), {'type': str}),
     )
 
