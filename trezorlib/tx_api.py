@@ -1,6 +1,7 @@
 import binascii
 import urllib2
 import json
+from decimal import Decimal
 try:
     from filecache import filecache, MONTH
 except:
@@ -60,16 +61,23 @@ def bitcore_tx(url):
 
     for vin in data['vin']:
         i = t.inputs.add()
-        i.prev_hash = binascii.unhexlify(vin['txid'])
-        i.prev_index = vin['vout']
-        asm = vin['scriptSig']['asm'].split(' ')
-        asm = [ opcode_serialize(x) for x in asm ]
-        i.script_sig = ''.join(asm)
-        i.sequence = vin['sequence']
+        if 'coinbase' in vin.keys():
+            i.prev_hash = "\0"*32
+            i.prev_index = 0xffffffff # signed int -1
+            i.script_sig = binascii.unhexlify(vin['coinbase'])
+            i.sequence = vin['sequence']
+            
+        else:        
+            i.prev_hash = binascii.unhexlify(vin['txid'])
+            i.prev_index = vin['vout']
+            asm = vin['scriptSig']['asm'].split(' ')
+            asm = [ opcode_serialize(x) for x in asm ]
+            i.script_sig = ''.join(asm)
+            i.sequence = vin['sequence']
 
     for vout in data['vout']:
         o = t.bin_outputs.add()
-        o.amount = int(vout['value'] * 100000000)
+        o.amount = int(Decimal(vout['value']) * 100000000)
         asm = vout['scriptPubKey']['asm'].split(' ')
         asm = [ opcode_serialize(x) for x in asm ]
         o.script_pubkey = ''.join(asm)
