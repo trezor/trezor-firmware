@@ -19,6 +19,13 @@ class TestMsgSignmessage(common.TrezorTest):
         self.assertEqual(sig.address, 'mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL')
         self.assertEqual(binascii.hexlify(sig.signature), '209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80')
 
+    def test_too_long(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        # Message cannot be longer than 255 bytes
+        self.assertRaises(CallException, self.client.sign_message, 'Bitcoin', [0], '1' * 256)
+
+    """
     def test_sign_utf(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -32,12 +39,7 @@ class TestMsgSignmessage(common.TrezorTest):
         sig_nfc = self.client.sign_message('Bitcoin', [0], words_nfc)
         self.assertEqual(sig_nfc.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
         self.assertEqual(binascii.hexlify(sig_nfc.signature), '1fd0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda4e39588e4ec2b6a22dda4ec4f562f06e91129eea9a844a7193812de82d47c496b')
-
-    def test_too_long(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # Message cannot be longer than 255 bytes
-        self.assertRaises(CallException, self.client.sign_message, 'Bitcoin', [0], '1' * 256)
+    """
 
 if __name__ == '__main__':
     unittest.main()

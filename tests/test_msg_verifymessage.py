@@ -5,11 +5,10 @@ import base64
 
 from trezorlib.client import CallException
 
-'''
 class TestMsgVerifymessage(common.TrezorTest):
+
     def test_too_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
-
         ret = self.client.verify_message('1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T',
             binascii.unhexlify('1ba77e01a9e17ba158b962cfef5f13dfed676ffc2b4bada24e58f784458b52b97421470d001d53d5880cf5e10e76f02be3e80bf21e18398cbd41e8c3b4af74c8c2'),
             '1' * 256
@@ -17,12 +16,14 @@ class TestMsgVerifymessage(common.TrezorTest):
         self.assertFalse(ret)
 
     def test_message_testnet(self):
+        self.setup_mnemonic_nopin_nopassphrase()
         sig = base64.b64decode('IFP/nvQalDo9lWCI7kScOzRkz/fiiScdkw7tFAKPoGbl6S8AY3wEws43s2gR57AfwZP8/8y7+F+wvGK9phQghN4=')
         ret = self.client.verify_message('moRDikgmxcpouFtqnKnVVzLYgkDD2gQ3sk', sig, 'Ahoj')
-
         self.assertTrue(ret)
 
     def test_message_verify(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
         # uncompressed pubkey - OK
         res = self.client.verify_message(
             '1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T',
@@ -70,6 +71,18 @@ class TestMsgVerifymessage(common.TrezorTest):
         )
         self.assertFalse(res)
 
+    """
+    def test_verify_bitcoind(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        res = self.client.verify_message(
+            '1KzXE97kV7DrpxCViCN3HbGbiKhzzPM7TQ',
+            binascii.unhexlify('1cc694f0f23901dfe3603789142f36a3fc582d0d5c0ec7215cf2ccd641e4e37228504f3d4dc3eea28bbdbf5da27c49d4635c097004d9f228750ccd836a8e1460c0'),
+            u'\u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy'
+        )
+
+        self.assertTrue(res)
+
     def test_verify_utf(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -90,18 +103,7 @@ class TestMsgVerifymessage(common.TrezorTest):
 
         self.assertTrue(res_nfkd)
         self.assertTrue(res_nfc)
-
-    def test_verify_bitcoind(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        res = self.client.verify_message(
-            '1KzXE97kV7DrpxCViCN3HbGbiKhzzPM7TQ',
-            binascii.unhexlify('1cc694f0f23901dfe3603789142f36a3fc582d0d5c0ec7215cf2ccd641e4e37228504f3d4dc3eea28bbdbf5da27c49d4635c097004d9f228750ccd836a8e1460c0'),
-            u'\u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy'
-        )
-
-        self.assertTrue(res)
+    """
 
 if __name__ == '__main__':
     unittest.main()
-'''
