@@ -189,3 +189,45 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 		ascii ? "Sign text message?" : "Sign binary message?",
 		str[0], str[1], str[2], str[3], NULL);
 }
+
+void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
+{
+	bool ascii = true;
+	uint32_t i;
+	for (i = 0; i < len; i++) {
+		if (msg[i] < 0x20 || msg[i] >= 0x80) {
+			ascii = false;
+			break;
+		}
+	}
+
+	char str[4][17];
+	memset(str, 0, sizeof(str));
+	if (ascii) {
+		strlcpy(str[0], (char *)msg, 17);
+		if (len > 16) {
+			strlcpy(str[1], (char *)msg + 16, 17);
+		}
+		if (len > 32) {
+			strlcpy(str[2], (char *)msg + 32, 17);
+		}
+		if (len > 48) {
+			strlcpy(str[3], (char *)msg + 48, 17);
+		}
+	} else {
+		data2hex(msg, len > 8 ? 8 : len, str[0]);
+		if (len > 8) {
+			data2hex(msg + 8, len > 16 ? 8 : len - 8, str[1]);
+		}
+		if (len > 16) {
+			data2hex(msg + 16, len > 24 ? 8 : len - 16, str[2]);
+		}
+		if (len > 24) {
+			data2hex(msg + 24, len > 32 ? 8 : len - 24, str[3]);
+		}
+	}
+
+	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK", NULL,
+		ascii ? "Message contents:" : "Bin message contents:",
+		str[0], str[1], str[2], str[3], NULL);
+}

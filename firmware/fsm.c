@@ -591,9 +591,8 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 {
 	const char *address = msg->has_address ? msg->address : 0;
 	if (msg->signature.size == 65 && transactionMessageVerify(msg->message.bytes, msg->message.size, msg->signature.bytes, address)) {
-		// TODO: show verified message & wait for button
-		// layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK", NULL, "Verified message", NULL, NULL, NULL, NULL, NULL);
-		// protectButton(ButtonRequestType_ButtonRequest_Other, true);
+		layoutVerifyMessage(msg->message.bytes, msg->message.size);
+		protectButton(ButtonRequestType_ButtonRequest_Other, true);
 		fsm_sendSuccess("Message verified");
 	} else {
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid signature");
