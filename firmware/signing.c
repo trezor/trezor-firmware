@@ -222,7 +222,7 @@ void signing_txack(TransactionType *tx)
 
 	switch (signing_stage) {
 		case STAGE_REQUEST_1_INPUT:
-			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
+			layoutProgress("Preparing", 1000 * progress / progress_total, progress); progress++;
 			memcpy(&input, tx->inputs, sizeof(TxInputType));
 			send_req_2_prev_meta();
 			return;
@@ -270,7 +270,7 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_3_INPUT:
-			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
+			layoutProgress("Preparing", 1000 * progress / progress_total, progress); progress++;
 			if (!tx_hash_input(&tc, tx->inputs)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
 				signing_abort();
