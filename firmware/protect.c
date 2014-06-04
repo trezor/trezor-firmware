@@ -140,12 +140,12 @@ bool protectPin(bool use_cached)
 	const char *pin;
 	uint32_t wait = storage_getPinFails();
 	if (wait) {
-		if (wait > 4) {
+		if (wait > 2) {
 			layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait ...", NULL, NULL, NULL);
 		}
 		wait = (wait < 32) ? (1u << wait) : 0xFFFFFFFF;
 		while (--wait > 0) {
-			delay(1000000);
+			delay(10000000);
 		}
 	}
 	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, "Please enter current PIN:");

@@ -7,7 +7,7 @@ CoinType.coin_shortcut		max_size:9
 
 TxInputType.address_n		max_count:8
 TxInputType.prev_hash		max_size:32
-TxInputType.script_sig		max_size:256
+TxInputType.script_sig		max_size:520
 
 TxOutputType.address		max_size:35
 TxOutputType.address_n		max_count:8
