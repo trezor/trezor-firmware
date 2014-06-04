@@ -75,8 +75,9 @@ class TestProtectionLevels(common.TrezorTest):
 
     def test_load_device(self):
         with self.client:
-            self.client.set_expected_responses([proto.Success(),
-                                      proto.Features()])
+            self.client.set_expected_responses([proto.ButtonRequest(),
+                                                proto.Success(),
+                                                proto.Features()])
             self.client.load_device_by_mnemonic('this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
 
         # This must fail, because device is already initialized

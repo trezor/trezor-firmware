@@ -9,6 +9,7 @@ from trezorlib.client import PinException, CallException
 # FIXME TODO Add passphrase tests
 
 class TestProtectCall(common.TrezorTest):
+
     def _some_protected_call(self, button, pin, passphrase):
         # This method perform any call which have protection in the device
         res = self.client.ping('random data',
@@ -17,6 +18,7 @@ class TestProtectCall(common.TrezorTest):
                                 passphrase_protection=passphrase)
         self.assertEqual(res, 'random data')
 
+    """
     def test_expected_responses(self):
         self.setup_mnemonic_pin_passphrase()
 
@@ -57,6 +59,7 @@ class TestProtectCall(common.TrezorTest):
                                                     proto.Success(message='wrong data')])
                 self._some_protected_call(True, True, True)
         self.assertRaises(CallException, scenario5)
+    """
 
     def test_no_protection(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -93,36 +96,17 @@ class TestProtectCall(common.TrezorTest):
         self.client.setup_debuglink(button=True, pin_correct=False)
 
         def test_backoff(attempts, start):
-            expected = 1.8 ** attempts
+            expected = 0.2 * (2 ** attempts)
             got = time.time() - start
 
             msg = "Pin delay expected to be at least %s seconds, got %s" % (expected, got)
             print msg
             self.assertLessEqual(expected, got, msg)
 
-        for attempt in range(1, 4):
+        for attempt in range(1, 6):
             start = time.time()
             self.assertRaises(PinException, self._some_protected_call, False, True, False)
             test_backoff(attempt, start)
-
-'''
-        # Unplug Trezor now
-        self.client.debuglink.stop()
-        self.client.close()
-
-        # Give it some time to reboot (it may take some time on RPi)
-        boot_delay = 20
-        time.sleep(boot_delay)
-
-        # Connect to Trezor again
-        start = time.time()
-        self.setUp()
-        expected = 1.8 ** attempt / 2  # This test isn't accurate, let's expect at least some delay
-        took = time.time() - start
-        print "Expected reboot time at least %s seconds" % expected
-        print "Rebooted in %s seconds" % took
-        self.assertLessEqual(expected, time.time() - start, "Bootup took %s seconds, expected %s seconds or more!" % (took, expected))
-        '''
 
 if __name__ == '__main__':
     unittest.main()
