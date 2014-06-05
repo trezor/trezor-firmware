@@ -162,11 +162,17 @@ message TransactionType {
 	optional uint32 outputs_cnt = 7;
 }
 
+/*
+ * @used_in TxRequest
+ */
 message TxRequestDetailsType {
 	optional uint32 request_index = 1;	// device expects TxAck message from the computer
 	optional bytes tx_hash = 2;		// tx_hash of requested transaction
 }
 
+/*
+ * @used_in TxRequest
+ */
 message TxRequestSerializedType {
 	optional uint32 signature_index = 1;	// 'signature' field contains signed input of this index
 	optional bytes signature = 2;		// signature of the signature_index input
