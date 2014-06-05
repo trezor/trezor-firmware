@@ -2,7 +2,7 @@
  * Messages for TREZOR communication
  *
  * @author	Marek Palatinus <slush@satoshilabs.com>
- * @version	0.6
+ * @version	1.2
  */
 
 // Sugar for easier handling in Java
@@ -37,6 +37,7 @@ enum MessageType {
 	MessageType_Cancel = 20 [(wire_in) = true];
 	MessageType_TxRequest = 21 [(wire_out) = true];
 	MessageType_TxAck = 22 [(wire_in) = true];
+	MessageType_CipherKeyValue = 23 [(wire_in) = true];
 	MessageType_ApplySettings = 25 [(wire_in) = true];
 	MessageType_ButtonRequest = 26 [(wire_out) = true];
 	MessageType_ButtonAck = 27 [(wire_in) = true];
@@ -91,7 +92,7 @@ message Features {
 	optional bool initialized = 12;			// does device contain seed?
 	optional bytes revision = 13;			// SCM revision of firmware
 	optional bytes bootloader_hash = 14;		// hash of the bootloader
-	optional bool imported = 15;		// was storage imported from an external source?
+	optional bool imported = 15;			// was storage imported from an external source?
 }
 
 /**
@@ -131,6 +132,7 @@ message Ping {
  */
 message Success {
 	optional string message = 1;	// human readable description of action or request-specific payload
+	optional bytes payload = 2;	// request-specific binary payload
 }
 
 /**
@@ -378,6 +380,24 @@ message MessageSignature {
 	optional bytes signature = 2;				// signature of the message
 }
 
+///////////////////////////
+// Encryption/decryption //
+///////////////////////////
+
+/**
+ * Request: Ask device to encrypt or decrypt value of given key
+ * @next Success
+ * @next Failure
+ */
+message CipherKeyValue {
+	repeated uint32 address_n = 1;
+	optional string key = 2;
+	optional bytes value = 3;
+	optional bool encrypt = 4;		// are we encrypting (True) or decrypting (False)?
+	optional bool ask_on_encrypt = 5;	// should we ask on encrypt operation?
+	optional bool ask_on_decrypt = 6;	// should we ask on decrypt operation?
+}
+
 //////////////////////////////////
 // Transaction signing messages //
 //////////////////////////////////
@@ -441,7 +461,7 @@ message SimpleSignTx {
  * @prev TxAck
  */
 message TxRequest {
-	optional RequestType request_type = 1;		// what should be filled in TxAck message?
+	optional RequestType request_type = 1;			// what should be filled in TxAck message?
 	optional TxRequestDetailsType details = 2;		// request for tx details
 	optional TxRequestSerializedType serialized = 3;	// serialized data and request for next
 }
