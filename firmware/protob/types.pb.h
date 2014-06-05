@@ -24,10 +24,15 @@ typedef enum _FailureType {
     FailureType_Failure_FirmwareError = 99
 } FailureType;
 
-typedef enum _ScriptType {
-    ScriptType_PAYTOADDRESS = 0,
-    ScriptType_PAYTOSCRIPTHASH = 1
-} ScriptType;
+typedef enum _OutputScriptType {
+    OutputScriptType_PAYTOADDRESS = 0,
+    OutputScriptType_PAYTOSCRIPTHASH = 1
+} OutputScriptType;
+
+typedef enum _InputScriptType {
+    InputScriptType_SPENDADDRESS = 0,
+    InputScriptType_SPENDMULTISIG = 1
+} InputScriptType;
 
 typedef enum _RequestType {
     RequestType_TXINPUT = 0,
@@ -93,24 +98,20 @@ typedef struct _HDNodeType {
 
 typedef struct {
     size_t size;
-    uint8_t bytes[32];
-} TxInputType_prev_hash_t;
+    uint8_t bytes[33];
+} MultisigRedeemScriptType_pubkeys_t;
 
 typedef struct {
     size_t size;
-    uint8_t bytes[256];
-} TxInputType_script_sig_t;
+    uint8_t bytes[80];
+} MultisigRedeemScriptType_signatures_t;
 
-typedef struct _TxInputType {
-    size_t address_n_count;
-    uint32_t address_n[8];
-    TxInputType_prev_hash_t prev_hash;
-    uint32_t prev_index;
-    bool has_script_sig;
-    TxInputType_script_sig_t script_sig;
-    bool has_sequence;
-    uint32_t sequence;
-} TxInputType;
+typedef struct _MultisigRedeemScriptType {
+    size_t pubkeys_count;
+    MultisigRedeemScriptType_pubkeys_t pubkeys[5];
+    size_t signatures_count;
+    MultisigRedeemScriptType_signatures_t signatures[4];
+} MultisigRedeemScriptType;
 
 typedef struct {
     size_t size;
@@ -122,20 +123,13 @@ typedef struct _TxOutputBinType {
     TxOutputBinType_script_pubkey_t script_pubkey;
 } TxOutputBinType;
 
-typedef struct {
-    size_t size;
-    uint8_t bytes[16];
-} TxOutputType_script_args_t;
-
 typedef struct _TxOutputType {
     bool has_address;
     char address[35];
     size_t address_n_count;
     uint32_t address_n[8];
     uint64_t amount;
-    ScriptType script_type;
-    size_t script_args_count;
-    TxOutputType_script_args_t script_args[3];
+    OutputScriptType script_type;
 } TxOutputType;
 
 typedef struct {
@@ -169,17 +163,42 @@ typedef struct _TxRequestSerializedType {
     TxRequestSerializedType_serialized_tx_t serialized_tx;
 } TxRequestSerializedType;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} TxInputType_prev_hash_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[520];
+} TxInputType_script_sig_t;
+
+typedef struct _TxInputType {
+    size_t address_n_count;
+    uint32_t address_n[8];
+    TxInputType_prev_hash_t prev_hash;
+    uint32_t prev_index;
+    bool has_script_sig;
+    TxInputType_script_sig_t script_sig;
+    bool has_sequence;
+    uint32_t sequence;
+    bool has_script_type;
+    InputScriptType script_type;
+    bool has_multisig;
+    MultisigRedeemScriptType multisig;
+} TxInputType;
+
 typedef struct _TransactionType {
     bool has_version;
     uint32_t version;
     size_t inputs_count;
-    TxInputType inputs[8];
+    TxInputType inputs[1];
     size_t bin_outputs_count;
-    TxOutputBinType bin_outputs[4];
+    TxOutputBinType bin_outputs[1];
     bool has_lock_time;
     uint32_t lock_time;
     size_t outputs_count;
-    TxOutputType outputs[4];
+    TxOutputType outputs[1];
     bool has_inputs_cnt;
     uint32_t inputs_cnt;
     bool has_outputs_cnt;
@@ -194,6 +213,7 @@ extern const pb_extension_type_t wire_debug_out;
 
 /* Default values for struct fields */
 extern const uint32_t TxInputType_sequence_default;
+extern const InputScriptType TxInputType_script_type_default;
 
 /* Field tags (for use in manual encoding/decoding) */
 #define CoinType_coin_name_tag                   1
@@ -206,23 +226,26 @@ extern const uint32_t TxInputType_sequence_default;
 #define HDNodeType_chain_code_tag                4
 #define HDNodeType_private_key_tag               5
 #define HDNodeType_public_key_tag                6
-#define TxInputType_address_n_tag                1
-#define TxInputType_prev_hash_tag                2
-#define TxInputType_prev_index_tag               3
-#define TxInputType_script_sig_tag               4
-#define TxInputType_sequence_tag                 5
+#define MultisigRedeemScriptType_pubkeys_tag     1
+#define MultisigRedeemScriptType_signatures_tag  2
 #define TxOutputBinType_amount_tag               1
 #define TxOutputBinType_script_pubkey_tag        2
 #define TxOutputType_address_tag                 1
 #define TxOutputType_address_n_tag               2
 #define TxOutputType_amount_tag                  3
 #define TxOutputType_script_type_tag             4
-#define TxOutputType_script_args_tag             5
 #define TxRequestDetailsType_request_index_tag   1
 #define TxRequestDetailsType_tx_hash_tag         2
 #define TxRequestSerializedType_signature_index_tag 1
 #define TxRequestSerializedType_signature_tag    2
 #define TxRequestSerializedType_serialized_tx_tag 3
+#define TxInputType_address_n_tag                1
+#define TxInputType_prev_hash_tag                2
+#define TxInputType_prev_index_tag               3
+#define TxInputType_script_sig_tag               4
+#define TxInputType_sequence_tag                 5
+#define TxInputType_script_type_tag              6
+#define TxInputType_multisig_tag                 7
 #define TransactionType_version_tag              1
 #define TransactionType_inputs_tag               2
 #define TransactionType_bin_outputs_tag          3
@@ -238,8 +261,9 @@ extern const uint32_t TxInputType_sequence_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t HDNodeType_fields[7];
 extern const pb_field_t CoinType_fields[5];
-extern const pb_field_t TxInputType_fields[6];
-extern const pb_field_t TxOutputType_fields[6];
+extern const pb_field_t MultisigRedeemScriptType_fields[3];
+extern const pb_field_t TxInputType_fields[8];
+extern const pb_field_t TxOutputType_fields[5];
 extern const pb_field_t TxOutputBinType_fields[3];
 extern const pb_field_t TransactionType_fields[8];
 extern const pb_field_t TxRequestDetailsType_fields[3];
@@ -248,10 +272,11 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
 #define CoinType_size                            47
-#define TxInputType_size                         353
-#define TxOutputType_size                        156
+#define MultisigRedeemScriptType_size            503
+#define TxInputType_size                         1129
+#define TxOutputType_size                        102
 #define TxOutputBinType_size                     270
-#define TransactionType_size                     4600
+#define TransactionType_size                     1533
 #define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             1115
 

@@ -29,11 +29,6 @@
 #include "pb_encode.h"
 #include "messages.pb.h"
 
-// SimpleSignTx_size is the largest message we operate with
-#if MSG_IN_SIZE < SimpleSignTx_size
-#error "MSG_IN_SIZE is too small!"
-#endif
-
 struct MessagesMap_t {
 	char type;	// n = normal, d = debug
 	char dir; 	// i = in, o = out
@@ -55,7 +50,6 @@ static const struct MessagesMap_t MessagesMap[] = {
 	{'n', 'i', MessageType_MessageType_LoadDevice,			LoadDevice_fields,			(void (*)(void *))fsm_msgLoadDevice},
 	{'n', 'i', MessageType_MessageType_ResetDevice,			ResetDevice_fields,			(void (*)(void *))fsm_msgResetDevice},
 	{'n', 'i', MessageType_MessageType_SignTx,				SignTx_fields,				(void (*)(void *))fsm_msgSignTx},
-	{'n', 'i', MessageType_MessageType_SimpleSignTx,		SimpleSignTx_fields,		(void (*)(void *))fsm_msgSimpleSignTx},
 //	{'n', 'i', MessageType_MessageType_PinMatrixAck,		PinMatrixAck_fields,		(void (*)(void *))fsm_msgPinMatrixAck},
 	{'n', 'i', MessageType_MessageType_Cancel,				Cancel_fields,				(void (*)(void *))fsm_msgCancel},
 	{'n', 'i', MessageType_MessageType_TxAck,				TxAck_fields,				(void (*)(void *))fsm_msgTxAck},

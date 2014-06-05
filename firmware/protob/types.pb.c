@@ -4,6 +4,7 @@
 #include "types.pb.h"
 
 const uint32_t TxInputType_sequence_default = 4294967295u;
+const InputScriptType TxInputType_script_type_default = InputScriptType_SPENDADDRESS;
 
 
 const pb_field_t HDNodeType_fields[7] = {
@@ -24,21 +25,28 @@ const pb_field_t CoinType_fields[5] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t TxInputType_fields[6] = {
+const pb_field_t MultisigRedeemScriptType_fields[3] = {
+    PB_FIELD2(  1, BYTES   , REPEATED, STATIC  , FIRST, MultisigRedeemScriptType, pubkeys, pubkeys, 0),
+    PB_FIELD2(  2, BYTES   , REPEATED, STATIC  , OTHER, MultisigRedeemScriptType, signatures, pubkeys, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t TxInputType_fields[8] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, TxInputType, address_n, address_n, 0),
     PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, TxInputType, prev_hash, address_n, 0),
     PB_FIELD2(  3, UINT32  , REQUIRED, STATIC  , OTHER, TxInputType, prev_index, prev_hash, 0),
     PB_FIELD2(  4, BYTES   , OPTIONAL, STATIC  , OTHER, TxInputType, script_sig, prev_index, 0),
     PB_FIELD2(  5, UINT32  , OPTIONAL, STATIC  , OTHER, TxInputType, sequence, script_sig, &TxInputType_sequence_default),
+    PB_FIELD2(  6, ENUM    , OPTIONAL, STATIC  , OTHER, TxInputType, script_type, sequence, &TxInputType_script_type_default),
+    PB_FIELD2(  7, MESSAGE , OPTIONAL, STATIC  , OTHER, TxInputType, multisig, script_type, &MultisigRedeemScriptType_fields),
     PB_LAST_FIELD
 };
 
-const pb_field_t TxOutputType_fields[6] = {
+const pb_field_t TxOutputType_fields[5] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, TxOutputType, address, address, 0),
     PB_FIELD2(  2, UINT32  , REPEATED, STATIC  , OTHER, TxOutputType, address_n, address, 0),
     PB_FIELD2(  3, UINT64  , REQUIRED, STATIC  , OTHER, TxOutputType, amount, address_n, 0),
     PB_FIELD2(  4, ENUM    , REQUIRED, STATIC  , OTHER, TxOutputType, script_type, amount, 0),
-    PB_FIELD2(  5, BYTES   , REPEATED, STATIC  , OTHER, TxOutputType, script_args, script_type, 0),
     PB_LAST_FIELD
 };
 
@@ -134,7 +142,7 @@ const pb_extension_type_t wire_debug_out = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(TransactionType, inputs[0]) < 65536 && pb_membersize(TransactionType, bin_outputs[0]) < 65536 && pb_membersize(TransactionType, outputs[0]) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_HDNodeType_CoinType_TxInputType_TxOutputType_TxOutputBinType_TransactionType_TxRequestDetailsType_TxRequestSerializedType)
+STATIC_ASSERT((pb_membersize(TxInputType, multisig) < 65536 && pb_membersize(TransactionType, inputs[0]) < 65536 && pb_membersize(TransactionType, bin_outputs[0]) < 65536 && pb_membersize(TransactionType, outputs[0]) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_HDNodeType_CoinType_MultisigRedeemScriptType_TxInputType_TxOutputType_TxOutputBinType_TransactionType_TxRequestDetailsType_TxRequestSerializedType)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)

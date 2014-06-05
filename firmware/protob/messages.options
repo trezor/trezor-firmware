@@ -9,9 +9,10 @@ Features.bootloader_hash		max_size:32
 ApplySettings.language			max_size:17
 ApplySettings.label			max_size:33
 
-Ping.message 				max_size:256
+Ping.message				max_size:256
 
-Success.message 			max_size:256
+Success.message				max_size:256
+Success.payload				max_size:1024
 
 Failure.message				max_size:256
 
@@ -56,16 +57,26 @@ VerifyMessage.message			max_size:256
 MessageSignature.address		max_size:35
 MessageSignature.signature		max_size:65
 
+EncryptKeyValue.address_n		max_count:8
+EncryptKeyValue.key			max_size:256
+EncryptKeyValue.value			max_size:1024
+
+DecryptKeyValue.address_n		max_count:8
+DecryptKeyValue.key			max_size:256
+DecryptKeyValue.value			max_size:1024
+
 EstimateTxSize.coin_name		max_size:17
 
 SignTx.coin_name			max_size:17
 
-SimpleSignTx.inputs			max_count:4
-SimpleSignTx.outputs			max_count:4
-SimpleSignTx.transactions		max_count:4
+# not used in firmware
+SimpleSignTx.inputs			max_count:0
+SimpleSignTx.outputs			max_count:0
+SimpleSignTx.transactions		max_count:0
 SimpleSignTx.coin_name			max_size:17
 
-FirmwareUpload.payload			max_size:0	# not used in firmware
+# not used in firmware
+FirmwareUpload.payload			max_size:0
 
 DebugLinkState.layout			max_size:1024
 DebugLinkState.pin			max_size:10

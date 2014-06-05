@@ -343,131 +343,6 @@ void fsm_msgSignTx(SignTx *msg)
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node);
 }
 
-void fsm_msgSimpleSignTx(SimpleSignTx *msg)
-{
-	RESP_INIT(TxRequest);
-
-	if (msg->inputs_count < 1) {
-		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one input");
-		layoutHome();
-		return;
-	}
-
-	if (msg->outputs_count < 1) {
-		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one output");
-		layoutHome();
-		return;
-	}
-
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
-
-	HDNode *node = fsm_getRootNode();
-	if (!node) return;
-	const CoinType *coin = coinByName(msg->coin_name);
-	if (!coin) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
-		layoutHome();
-		return;
-	}
-
-	uint32_t version = 1;
-	uint32_t lock_time = 0;
-	int tx_size = transactionSimpleSign(coin, node, msg->inputs, msg->inputs_count, msg->outputs, msg->outputs_count, version, lock_time, resp->serialized.serialized_tx.bytes);
-	if (tx_size < 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
-		layoutHome();
-		return;
-	}
-	if (tx_size == 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Error signing transaction");
-		layoutHome();
-		return;
-	}
-
-	size_t i, j;
-
-	// determine change address
-	uint64_t change_spend = 0;
-	for (i = 0; i < msg->outputs_count; i++) {
-		if (msg->outputs[i].address_n_count > 0) { // address_n set -> change address
-			if (change_spend == 0) { // not set
-				change_spend = msg->outputs[i].amount;
-			} else {
-				fsm_sendFailure(FailureType_Failure_Other, "Only one change output allowed");
-				layoutHome();
-				return;
-			}
-		}
-	}
-
-	// check origin transactions
-	uint8_t prev_hashes[ pb_arraysize(SimpleSignTx, transactions) ][32];
-	for (i = 0; i < msg->transactions_count; i++) {
-		if (!transactionHash(&(msg->transactions[i]), prev_hashes[i])) {
-			memset(prev_hashes[i], 0, 32);
-		}
-	}
-
-	// calculate spendings
-	uint64_t to_spend = 0;
-	bool found;
-	for (i = 0; i < msg->inputs_count; i++) {
-		found = false;
-		for (j = 0; j < msg->transactions_count; j++) {
-			if (memcmp(msg->inputs[i].prev_hash.bytes, prev_hashes[j], 32) == 0) { // found prev TX
-				if (msg->inputs[i].prev_index < msg->transactions[j].bin_outputs_count) {
-					to_spend += msg->transactions[j].bin_outputs[msg->inputs[i].prev_index].amount;
-					found = true;
-					break;
-				}
-			}
-		}
-		if (!found) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid prevhash");
-			layoutHome();
-			return;
-		}
-	}
-
-	uint64_t spending = 0;
-	for (i = 0; i < msg->outputs_count; i++) {
-		spending += msg->outputs[i].amount;
-	}
-	if (spending > to_spend) {
-		fsm_sendFailure(FailureType_Failure_NotEnoughFunds, "Not enough funds");
-		layoutHome();
-		return;
-	}
-
-	uint64_t fee = to_spend - spending;
-	if (fee > (((uint64_t)tx_size + 999) / 1000) * coin->maxfee_kb) {
-		layoutFeeOverThreshold(coin, fee, ((uint64_t)tx_size + 999) / 1000);
-		if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Fee over threshold. Signing cancelled.");
-			layoutHome();
-			return;
-		}
-	}
-
-	// last confirmation
-	layoutConfirmTx(coin, to_spend - change_spend - fee, fee);
-	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
-	} else {
-		resp->has_request_type = true;
-		resp->request_type = RequestType_TXFINISHED;
-		resp->has_serialized = true;
-		resp->serialized.has_serialized_tx = true;
-		resp->serialized.serialized_tx.size = (uint32_t)tx_size;
-		msg_write(MessageType_MessageType_TxRequest, resp);
-	}
-
-	layoutHome();
-}
-
 void fsm_msgCancel(Cancel *msg)
 {
 	(void)msg;
@@ -636,9 +511,9 @@ void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
 	(void)msg;
 	RESP_INIT(DebugLinkState);
 
-//	resp->has_layout = true;
-//	resp->layout.size = OLED_BUFSIZE;
-//	memcpy(resp->layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
+	resp->has_layout = true;
+	resp->layout.size = OLED_BUFSIZE;
+	memcpy(resp->layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
 
 	if (storage.has_pin) {
 		resp->has_pin = true;

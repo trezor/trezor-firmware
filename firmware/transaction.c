@@ -98,7 +98,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 	memset(out, 0, sizeof(TxOutputBinType));
 	out->amount = in->amount;
 
-	if (in->script_type == ScriptType_PAYTOADDRESS) {
+	if (in->script_type == OutputScriptType_PAYTOADDRESS) {
 		out->script_pubkey.bytes[0] = 0x76; // OP_DUP
 		out->script_pubkey.bytes[1] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[2] = 0x14; // pushing 20 bytes
@@ -113,7 +113,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		return 25;
 	}
 
-	if (in->script_type == ScriptType_PAYTOSCRIPTHASH) {
+	if (in->script_type == OutputScriptType_PAYTOSCRIPTHASH) {
 		out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
 		uint8_t decoded[21];
@@ -273,80 +273,6 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 		hash[31 - i] = hash[i];
 		hash[i] = k;
 	}
-}
-
-bool transactionHash(TransactionType *tx, uint8_t *hash)
-{
-	TxStruct t;
-	uint32_t i;
-	tx_init(&t, tx->inputs_count, tx->bin_outputs_count, tx->version, tx->lock_time, false);
-	for (i = 0; i < tx->inputs_count; i++) {
-		if (!tx_hash_input(&t, &(tx->inputs[i]))) return false;
-	}
-	for (i = 0; i < tx->bin_outputs_count; i++) {
-		if (!tx_hash_output(&t, &(tx->bin_outputs[i]))) return false;
-	}
-	tx_hash_final(&t, hash, true);
-	return true;
-}
-
-int transactionSimpleSign(const CoinType *coin, HDNode *root, TxInputType *inputs, uint32_t inputs_count, TxOutputType *outputs, uint32_t outputs_count, uint32_t version, uint32_t lock_time, uint8_t *out)
-{
-	uint32_t idx, i, k, r = 0;
-	TxStruct ti, to;
-	uint8_t buf[512];
-	TxInputType input;
-	TxOutputBinType output;
-	HDNode node;
-	uint8_t privkey[32], pubkey[33], hash[32], sig[64];
-
-	layoutProgressSwipe("Signing", 0, 0);
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, false);
-	for (idx = 0; idx < inputs_count; idx++) {
-		// compute inner transaction
-		memcpy(&input, &(inputs[idx]), sizeof(TxInputType));
-		tx_init(&ti, inputs_count, outputs_count, version, lock_time, true);
-		memset(privkey, 0, 32);
-		memset(pubkey, 0, 33);
-		for (i = 0; i < inputs_count; i++) {
-			if (i == idx) {
-				memcpy(&node, root, sizeof(HDNode));
-				for (k = 0; k < inputs[i].address_n_count; k++) {
-					hdnode_private_ckd(&node, inputs[i].address_n[k]);
-				}
-				ecdsa_get_pubkeyhash(node.public_key, hash);
-				inputs[i].script_sig.size = compile_script_sig(coin->address_type, hash, inputs[i].script_sig.bytes);
-				if (inputs[i].script_sig.size == 0) {
-					return 0;
-				}
-				memcpy(privkey, node.private_key, 32);
-				memcpy(pubkey, node.public_key, 33);
-			} else {
-				inputs[i].script_sig.size = 0;
-			}
-			if (!tx_hash_input(&ti, &(inputs[i]))) return 0;
-		}
-		for (i = 0; i < outputs_count; i++) {
-			int co = compile_output(coin, root, &(outputs[i]), &output, idx == 0);
-			if (co <= 0) {
-				return co;
-			}
-			if (!tx_hash_output(&ti, &output)) return 0;
-		}
-		tx_hash_final(&ti, hash, false);
-		ecdsa_sign_digest(privkey, hash, sig);
-		int der_len = ecdsa_sig_to_der(sig, buf);
-		input.script_sig.size = serialize_script_sig(buf, der_len, pubkey, 33, input.script_sig.bytes);
-		r += tx_serialize_input(&to, input.prev_hash.bytes, input.prev_index, input.script_sig.bytes, input.script_sig.size, input.sequence, out + r);
-		layoutProgress("Signing", 1000 * idx / inputs_count, idx);
-	}
-	for (i = 0; i < outputs_count; i++) {
-		if (compile_output(coin, root, &(outputs[i]), &output, false) <= 0) {
-			return 0;
-		}
-		r += tx_serialize_output(&to, output.amount, output.script_pubkey.bytes, output.script_pubkey.size, out + r);
-	}
-	return r;
 }
 
 uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs)

@@ -24,7 +24,7 @@
 #include <stdbool.h>
 #include "trezor.h"
 
-#define MSG_IN_SIZE (24*1024)
+#define MSG_IN_SIZE (9*1024)
 
 #define MSG_OUT_SIZE (9*1024)
 
@@ -34,7 +34,7 @@ uint8_t *msg_out_data(void);
 
 #if DEBUG_LINK
 
-#define MSG_DEBUG_OUT_SIZE (2*1024)
+#define MSG_DEBUG_OUT_SIZE (4*1024)
 
 #define msg_debug_read(buf, len) msg_read_common('d', (buf), (len))
 #define msg_debug_write(id, ptr) msg_write_common('d', (id), (ptr))

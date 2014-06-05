@@ -34,6 +34,8 @@ typedef enum _MessageType {
     MessageType_MessageType_Cancel = 20,
     MessageType_MessageType_TxRequest = 21,
     MessageType_MessageType_TxAck = 22,
+    MessageType_MessageType_EncryptKeyValue = 23,
+    MessageType_MessageType_DecryptKeyValue = 24,
     MessageType_MessageType_ApplySettings = 25,
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
@@ -167,6 +169,34 @@ typedef struct _DebugLinkState {
     bool has_recovery_word_pos;
     uint32_t recovery_word_pos;
 } DebugLinkState;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} DecryptKeyValue_value_t;
+
+typedef struct _DecryptKeyValue {
+    size_t address_n_count;
+    uint32_t address_n[8];
+    bool has_key;
+    char key[256];
+    bool has_value;
+    DecryptKeyValue_value_t value;
+} DecryptKeyValue;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} EncryptKeyValue_value_t;
+
+typedef struct _EncryptKeyValue {
+    size_t address_n_count;
+    uint32_t address_n[8];
+    bool has_key;
+    char key[256];
+    bool has_value;
+    EncryptKeyValue_value_t value;
+} EncryptKeyValue;
 
 typedef struct {
     size_t size;
@@ -378,18 +408,25 @@ typedef struct _SignTx {
 
 typedef struct _SimpleSignTx {
     size_t inputs_count;
-    TxInputType inputs[4];
+    TxInputType inputs[0];
     size_t outputs_count;
-    TxOutputType outputs[4];
+    TxOutputType outputs[0];
     size_t transactions_count;
-    TransactionType transactions[4];
+    TransactionType transactions[0];
     bool has_coin_name;
     char coin_name[17];
 } SimpleSignTx;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} Success_payload_t;
+
 typedef struct _Success {
     bool has_message;
     char message[256];
+    bool has_payload;
+    Success_payload_t payload;
 } Success;
 
 typedef struct _TxAck {
@@ -466,6 +503,12 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define DebugLinkState_reset_entropy_tag         8
 #define DebugLinkState_recovery_fake_word_tag    9
 #define DebugLinkState_recovery_word_pos_tag     10
+#define DecryptKeyValue_address_n_tag            1
+#define DecryptKeyValue_key_tag                  2
+#define DecryptKeyValue_value_tag                3
+#define EncryptKeyValue_address_n_tag            1
+#define EncryptKeyValue_key_tag                  2
+#define EncryptKeyValue_value_tag                3
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
 #define EstimateTxSize_outputs_count_tag         1
@@ -533,6 +576,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SimpleSignTx_transactions_tag            3
 #define SimpleSignTx_coin_name_tag               4
 #define Success_message_tag                      1
+#define Success_payload_tag                      2
 #define TxAck_tx_tag                             1
 #define TxRequest_request_type_tag               1
 #define TxRequest_details_tag                    2
@@ -549,7 +593,7 @@ extern const pb_field_t Features_fields[16];
 extern const pb_field_t ApplySettings_fields[3];
 extern const pb_field_t ChangePin_fields[2];
 extern const pb_field_t Ping_fields[5];
-extern const pb_field_t Success_fields[2];
+extern const pb_field_t Success_fields[3];
 extern const pb_field_t Failure_fields[3];
 extern const pb_field_t ButtonRequest_fields[3];
 extern const pb_field_t ButtonAck_fields[1];
@@ -575,6 +619,8 @@ extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
+extern const pb_field_t EncryptKeyValue_fields[4];
+extern const pb_field_t DecryptKeyValue_fields[4];
 extern const pb_field_t EstimateTxSize_fields[4];
 extern const pb_field_t TxSize_fields[2];
 extern const pb_field_t SignTx_fields[4];
@@ -595,7 +641,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define ApplySettings_size                       54
 #define ChangePin_size                           2
 #define Ping_size                                265
-#define Success_size                             259
+#define Success_size                             1286
 #define Failure_size                             265
 #define ButtonRequest_size                       265
 #define ButtonAck_size                           0
@@ -621,10 +667,12 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SignMessage_size                         326
 #define VerifyMessage_size                       363
 #define MessageSignature_size                    104
+#define EncryptKeyValue_size                     1334
+#define DecryptKeyValue_size                     1334
 #define EstimateTxSize_size                      31
 #define TxSize_size                              6
 #define SignTx_size                              31
-#define SimpleSignTx_size                        (91 + 4*TxInputType_size + 4*TxOutputType_size + 4*TransactionType_size)
+#define SimpleSignTx_size                        (19 + 0*TxInputType_size + 0*TxOutputType_size + 0*TransactionType_size)
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
 #define FirmwareErase_size                       0

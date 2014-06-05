@@ -56,8 +56,9 @@ const pb_field_t Ping_fields[5] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t Success_fields[2] = {
+const pb_field_t Success_fields[3] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, Success, message, message, 0),
+    PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, Success, payload, message, 0),
     PB_LAST_FIELD
 };
 
@@ -204,6 +205,20 @@ const pb_field_t MessageSignature_fields[3] = {
     PB_LAST_FIELD
 };
 
+const pb_field_t EncryptKeyValue_fields[4] = {
+    PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, EncryptKeyValue, address_n, address_n, 0),
+    PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, EncryptKeyValue, key, address_n, 0),
+    PB_FIELD2(  3, BYTES   , OPTIONAL, STATIC  , OTHER, EncryptKeyValue, value, key, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t DecryptKeyValue_fields[4] = {
+    PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, DecryptKeyValue, address_n, address_n, 0),
+    PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, DecryptKeyValue, key, address_n, 0),
+    PB_FIELD2(  3, BYTES   , OPTIONAL, STATIC  , OTHER, DecryptKeyValue, value, key, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t EstimateTxSize_fields[4] = {
     PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, EstimateTxSize, outputs_count, outputs_count, 0),
     PB_FIELD2(  2, UINT32  , REQUIRED, STATIC  , OTHER, EstimateTxSize, inputs_count, outputs_count, 0),
@@ -296,11 +311,11 @@ const pb_field_t DebugLinkLog_fields[4] = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_Features_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_Address_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog)
+STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_Features_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_Address_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EncryptKeyValue_DecryptKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)
-#error Field descriptor for Entropy.entropy is too large. Define PB_FIELD_16BIT to fix this.
+#error Field descriptor for Success.payload is too large. Define PB_FIELD_16BIT to fix this.
 #endif
 
 

@@ -52,10 +52,6 @@ bool tx_hash_input(TxStruct *t, TxInputType *input);
 bool tx_hash_output(TxStruct *t, TxOutputBinType *output);
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
 
-bool transactionHash(TransactionType *tx, uint8_t *hash);
-
-int transactionSimpleSign(const CoinType *coin, HDNode *root, TxInputType *inputs, uint32_t inputs_count, TxOutputType *outputs, uint32_t outputs_count, uint32_t version, uint32_t lock_time, uint8_t *out);
-
 uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs);
 
 uint32_t transactionEstimateSizeKb(uint32_t inputs, uint32_t outputs);

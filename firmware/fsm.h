@@ -38,7 +38,6 @@ void fsm_msgGetPublicKey(GetPublicKey *msg);
 void fsm_msgLoadDevice(LoadDevice *msg);
 void fsm_msgResetDevice(ResetDevice *msg);
 void fsm_msgSignTx(SignTx *msg);
-void fsm_msgSimpleSignTx(SimpleSignTx *msg);
 //void fsm_msgPinMatrixAck(PinMatrixAck *msg);
 void fsm_msgCancel(Cancel *msg);
 void fsm_msgTxAck(TxAck *msg);
