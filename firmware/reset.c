@@ -94,11 +94,11 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	memset(int_entropy, 0, 32);
 	awaiting_entropy = false;
 
-	int pass, idx, i = 0, j;
+	int pass, word_pos, i = 0, j;
 
 	for (pass = 0; pass < 2; pass++) {
 		i = 0;
-		for (idx = 0; idx < (int)strength/32*3; idx++) {
+		for (word_pos = 1; word_pos <= (int)strength/32*3; word_pos++) {
 			// copy current_word
 			j = 0;
 			while (storage.mnemonic[i] != ' ' && storage.mnemonic[i] != 0 && j + 1 < (int)sizeof(current_word)) {
@@ -106,25 +106,33 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 				i++; j++;
 			}
 			current_word[j] = 0; if (storage.mnemonic[i] != 0) i++;
-			char descbuf[] = "__. word is:";
-			char *desc = descbuf;
-			if (idx + 1 < 10) {
-				desc++;
+			char desc[] = "##th word";
+			if (word_pos < 10) {
+				desc[0] = ' ';
 			} else {
-				descbuf[0] = '0' + (idx + 1) / 10;
+				desc[0] = '0' + word_pos / 10;
 			}
-			descbuf[1] = '0' + (idx + 1) % 10;
-			if (idx + 1 == (int)strength/32*3) { // last word
+			desc[1] = '0' + word_pos % 10;
+			if (word_pos == 1 || word_pos == 21) {
+				desc[2] = 's'; desc[3] = 't';
+			} else
+			if (word_pos == 2 || word_pos == 22) {
+				desc[2] = 'n'; desc[3] = 'd';
+			} else
+			if (word_pos == 3 || word_pos == 23) {
+				desc[2] = 'r'; desc[3] = 'd';
+			}
+			if (word_pos == (int)strength/32*3) { // last word
 				if (pass == 1) {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Finish", NULL, "Please check the seed", NULL, desc, NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Finish", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
 				} else {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Again", NULL, "Write down the seed", NULL, desc, NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Again", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
 				}
 			} else {
 				if (pass == 1) {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Please check the seed", NULL, desc, NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
 				} else {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Write down the seed", NULL, desc, NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
 				}
 			}
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
