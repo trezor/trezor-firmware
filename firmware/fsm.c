@@ -111,7 +111,8 @@ void fsm_msgInitialize(Initialize *msg)
 	resp->has_pin_protection = true; resp->pin_protection = storage.has_pin;
 	resp->has_passphrase_protection = true; resp->passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
 #ifdef SCM_REVISION
-	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, sizeof(resp->revision)); resp->revision.size = SCM_REVISION_LEN;
+	int len = sizeof(SCM_REVISION) - 1;
+	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, len); resp->revision.size = len;
 #endif
 	resp->has_bootloader_hash = true; resp->bootloader_hash.size = memory_bootloader_hash(resp->bootloader_hash.bytes);
 	if (storage.has_language) {

@@ -290,6 +290,8 @@ void msg_read_common(char type, uint8_t *buf, int len)
 	static uint32_t msg_pos = 0;
 	static const pb_field_t *fields = 0;
 
+	if (len != 64) return;
+
 	if (read_state == READSTATE_IDLE) {
 		if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {	// invalid start - discard
 			return;
@@ -299,7 +301,7 @@ void msg_read_common(char type, uint8_t *buf, int len)
 
 		fields = MessageFields(type, 'i', msg_id);
 		if (!fields) { // unknown message
-			// fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Unknown message");
+			fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Unknown message");
 			return;
 		}
 		if (msg_size > MSG_IN_SIZE) { // message is too big :(
@@ -355,7 +357,7 @@ uint16_t msg_tiny_id = 0xFFFF;
 
 void msg_read_tiny(uint8_t *buf, int len)
 {
-	if (len < 9) return;
+	if (len != 64) return;
 	if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
 		return;
 	}
@@ -402,7 +404,7 @@ void msg_read_tiny(uint8_t *buf, int len)
 			msg_tiny_id = 0xFFFF;
 		}
 	} else {
-		// fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Unknown message");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Unknown message");
 		msg_tiny_id = 0xFFFF;
 	}
 }

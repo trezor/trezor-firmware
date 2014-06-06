@@ -34,8 +34,11 @@ bool protectAbortedByInitialize = false;
 bool protectButton(ButtonRequestType type, bool confirm_only)
 {
 	ButtonRequest resp;
-	bool result;
+	bool result = false;
 	bool acked = false;
+#if DEBUG_LINK
+	bool debug_decided = false;
+#endif
 
 	memset(&resp, 0, sizeof(ButtonRequest));
 	resp.has_code = true;
@@ -46,7 +49,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 	for (;;) {
 		usbPoll();
 
-		// wait for ButtonAck
+		// check for ButtonAck
 		if (msg_tiny_id == MessageType_MessageType_ButtonAck) {
 			msg_tiny_id = 0xFFFF;
 			acked = true;
@@ -66,6 +69,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 			}
 		}
 
+		// check for Cancel / Initialize
 		if (msg_tiny_id == MessageType_MessageType_Cancel || msg_tiny_id == MessageType_MessageType_Initialize) {
 			if (msg_tiny_id == MessageType_MessageType_Initialize) {
 				protectAbortedByInitialize = true;
@@ -75,12 +79,16 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 			break;
 		}
 
-		// check debug link
 #if DEBUG_LINK
+		// check DebugLink
 		if (msg_tiny_id == MessageType_MessageType_DebugLinkDecision) {
 			msg_tiny_id = 0xFFFF;
 			DebugLinkDecision *dld = (DebugLinkDecision *)msg_tiny;
 			result = dld->yes_no;
+			debug_decided = true;
+		}
+
+		if (acked && debug_decided) {
 			break;
 		}
 

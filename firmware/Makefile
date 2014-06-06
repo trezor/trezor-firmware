@@ -45,4 +45,3 @@ CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
 CFLAGS += -DDEBUG_LINK=0
 CFLAGS += -DDEBUG_LOG=0
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
-CFLAGS += -DSCM_REVISION_LEN=20
