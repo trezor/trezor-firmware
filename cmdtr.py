@@ -5,12 +5,13 @@ import argparse
 import json
 import base64
 
-from trezorlib.client import TrezorClient
+from trezorlib.client import TrezorClient, TrezorClientDebug
 from trezorlib.tx_api import TXAPIBitcoin
 from trezorlib.protobuf_json import pb2json
 
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
 #    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
@@ -349,7 +350,11 @@ def main():
         return
 
     transport = get_transport(args.transport, args.path)
-    client = TrezorClient(transport)
+    if args.verbose:
+        client = TrezorClientDebug(transport)
+    else:
+        client = TrezorClient(transport)
+
     client.set_tx_api(TXAPIBitcoin())
     cmds = Commands(client)
     
