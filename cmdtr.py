@@ -5,7 +5,7 @@ import argparse
 import json
 import base64
 
-from trezorlib.client import TrezorClientDebug
+from trezorlib.client import TrezorClient
 from trezorlib.tx_api import TXAPIBitcoin
 from trezorlib.protobuf_json import pb2json
 
@@ -148,6 +148,17 @@ class Commands(object):
         signature = base64.b64decode(args.signature)
         return self.client.verify_message(args.address, signature, args.message)
 
+    def encrypt(self, args):
+        address_n = self.client.expand_path(args.n)
+        ret = self.client.encrypt_keyvalue(address_n, args.key, args.value)
+        return binascii.hexlify(ret)
+
+    def decrypt(self, args):
+        address_n = self.client.expand_path(args.n)
+        value = binascii.unhexlify(args.value)
+        ret = self.client.decrypt_keyvalue(address_n, args.key, value)
+        return ret
+
     def firmware_update(self, args):
         if not args.file:
             raise Exception("Must provide firmware filename")
@@ -173,6 +184,8 @@ class Commands(object):
     reset_device.help = 'Perform device setup and generate new seed'
     sign_message.help = 'Sign message using address of given path'
     verify_message.help = 'Verify message'
+    encrypt.help = 'Encrypt value by given key and path'
+    decrypt.help = 'Decrypt value by given key and path'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     get_address.arguments = (
@@ -241,6 +254,18 @@ class Commands(object):
         (('message',), {'type': str}),
     )
 
+    encrypt.arguments = (
+        (('-n', '-address'), {'type': str}),
+        (('key',), {'type': str}),
+        (('value',), {'type': str}),
+    )
+
+    decrypt.arguments = (
+        (('-n', '-address'), {'type': str}),
+        (('key',), {'type': str}),
+        (('value',), {'type': str}),
+    )
+
     get_public_node.arguments = (
         (('-n', '-address'), {'type': str}),
     )
@@ -271,7 +296,7 @@ class PinMatrixThread(threading.Thread):
         from PyQt4.QtCore import QObject, SIGNAL
 
         a = QApplication(sys.argv)
-
+pass
         matrix = PinMatrixWidget()
 
         def clicked():
@@ -324,7 +349,7 @@ def main():
         return
 
     transport = get_transport(args.transport, args.path)
-    client = TrezorClientDebug(transport)
+    client = TrezorClient(transport)
     client.set_tx_api(TXAPIBitcoin())
     cmds = Commands(client)
     

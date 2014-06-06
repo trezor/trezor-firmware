@@ -407,6 +407,28 @@ class ProtocolMixin(object):
             return True
         return False
 
+    @field('payload')
+    @expect(proto.Success)
+    def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True):
+        n = self._convert_prime(n)
+        return self.call(proto.CipherKeyValue(address_n=n,
+                                              key=key,
+                                              value=value,
+                                              encrypt=True,
+                                              ask_on_encrypt=ask_on_encrypt,
+                                              ask_on_decrypt=ask_on_decrypt))
+
+    @field('payload')
+    @expect(proto.Success)
+    def decrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True):
+        n = self._convert_prime(n)
+        return self.call(proto.CipherKeyValue(address_n=n,
+                                              key=key,
+                                              value=value,
+                                              encrypt=False,
+                                              ask_on_encrypt=ask_on_encrypt,
+                                              ask_on_decrypt=ask_on_decrypt))
+
     @field('tx_size')
     @expect(proto.TxSize)
     def estimate_tx_size(self, coin_name, inputs, outputs):
