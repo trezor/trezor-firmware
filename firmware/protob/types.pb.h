@@ -98,7 +98,7 @@ typedef struct _HDNodeType {
 
 typedef struct {
     size_t size;
-    uint8_t bytes[33];
+    uint8_t bytes[65];
 } MultisigRedeemScriptType_pubkeys_t;
 
 typedef struct {
@@ -115,7 +115,7 @@ typedef struct _MultisigRedeemScriptType {
 
 typedef struct {
     size_t size;
-    uint8_t bytes[256];
+    uint8_t bytes[520];
 } TxOutputBinType_script_pubkey_t;
 
 typedef struct _TxOutputBinType {
@@ -272,11 +272,11 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
 #define CoinType_size                            47
-#define MultisigRedeemScriptType_size            503
-#define TxInputType_size                         1129
+#define MultisigRedeemScriptType_size            663
+#define TxInputType_size                         1289
 #define TxOutputType_size                        102
-#define TxOutputBinType_size                     270
-#define TransactionType_size                     1533
+#define TxOutputBinType_size                     534
+#define TransactionType_size                     1957
 #define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             1115
 
