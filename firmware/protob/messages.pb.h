@@ -34,8 +34,7 @@ typedef enum _MessageType {
     MessageType_MessageType_Cancel = 20,
     MessageType_MessageType_TxRequest = 21,
     MessageType_MessageType_TxAck = 22,
-    MessageType_MessageType_EncryptKeyValue = 23,
-    MessageType_MessageType_DecryptKeyValue = 24,
+    MessageType_MessageType_CipherKeyValue = 23,
     MessageType_MessageType_ApplySettings = 25,
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
@@ -124,6 +123,26 @@ typedef struct _ChangePin {
     bool remove;
 } ChangePin;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} CipherKeyValue_value_t;
+
+typedef struct _CipherKeyValue {
+    size_t address_n_count;
+    uint32_t address_n[8];
+    bool has_key;
+    char key[256];
+    bool has_value;
+    CipherKeyValue_value_t value;
+    bool has_encrypt;
+    bool encrypt;
+    bool has_ask_on_encrypt;
+    bool ask_on_encrypt;
+    bool has_ask_on_decrypt;
+    bool ask_on_decrypt;
+} CipherKeyValue;
+
 typedef struct _DebugLinkDecision {
     bool yes_no;
 } DebugLinkDecision;
@@ -169,34 +188,6 @@ typedef struct _DebugLinkState {
     bool has_recovery_word_pos;
     uint32_t recovery_word_pos;
 } DebugLinkState;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[1024];
-} DecryptKeyValue_value_t;
-
-typedef struct _DecryptKeyValue {
-    size_t address_n_count;
-    uint32_t address_n[8];
-    bool has_key;
-    char key[256];
-    bool has_value;
-    DecryptKeyValue_value_t value;
-} DecryptKeyValue;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[1024];
-} EncryptKeyValue_value_t;
-
-typedef struct _EncryptKeyValue {
-    size_t address_n_count;
-    uint32_t address_n[8];
-    bool has_key;
-    char key[256];
-    bool has_value;
-    EncryptKeyValue_value_t value;
-} EncryptKeyValue;
 
 typedef struct {
     size_t size;
@@ -489,6 +480,12 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define ButtonRequest_code_tag                   1
 #define ButtonRequest_data_tag                   2
 #define ChangePin_remove_tag                     1
+#define CipherKeyValue_address_n_tag             1
+#define CipherKeyValue_key_tag                   2
+#define CipherKeyValue_value_tag                 3
+#define CipherKeyValue_encrypt_tag               4
+#define CipherKeyValue_ask_on_encrypt_tag        5
+#define CipherKeyValue_ask_on_decrypt_tag        6
 #define DebugLinkDecision_yes_no_tag             1
 #define DebugLinkLog_level_tag                   1
 #define DebugLinkLog_bucket_tag                  2
@@ -503,12 +500,6 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define DebugLinkState_reset_entropy_tag         8
 #define DebugLinkState_recovery_fake_word_tag    9
 #define DebugLinkState_recovery_word_pos_tag     10
-#define DecryptKeyValue_address_n_tag            1
-#define DecryptKeyValue_key_tag                  2
-#define DecryptKeyValue_value_tag                3
-#define EncryptKeyValue_address_n_tag            1
-#define EncryptKeyValue_key_tag                  2
-#define EncryptKeyValue_value_tag                3
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
 #define EstimateTxSize_outputs_count_tag         1
@@ -619,8 +610,7 @@ extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
-extern const pb_field_t EncryptKeyValue_fields[4];
-extern const pb_field_t DecryptKeyValue_fields[4];
+extern const pb_field_t CipherKeyValue_fields[7];
 extern const pb_field_t EstimateTxSize_fields[4];
 extern const pb_field_t TxSize_fields[2];
 extern const pb_field_t SignTx_fields[4];
@@ -667,8 +657,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SignMessage_size                         326
 #define VerifyMessage_size                       363
 #define MessageSignature_size                    104
-#define EncryptKeyValue_size                     1334
-#define DecryptKeyValue_size                     1334
+#define CipherKeyValue_size                      1340
 #define EstimateTxSize_size                      31
 #define TxSize_size                              6
 #define SignTx_size                              31
