@@ -44,15 +44,23 @@ void next_word(void) {
 		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the word", NULL, fake_word, NULL, "on your computer", NULL);
 	} else {
 		fake_word[0] = 0;
-		char descbuf[] = "__. word";
-		char *desc = descbuf;
+		char desc[] = "##th word";
 		if (word_pos < 10) {
-			desc++;
+			desc[0] = ' ';
 		} else {
-			descbuf[0] = '0' + word_pos / 10;
+			desc[0] = '0' + word_pos / 10;
 		}
-		descbuf[1] = '0' + word_pos % 10;
-		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the", NULL, desc, NULL, "of your mnemonic", NULL);
+		desc[1] = '0' + word_pos % 10;
+		if (word_pos == 1 || word_pos == 21) {
+			desc[2] = 's'; desc[3] = 't';
+		} else
+		if (word_pos == 2 || word_pos == 22) {
+			desc[2] = 'n'; desc[3] = 'd';
+		} else
+		if (word_pos == 3 || word_pos == 23) {
+			desc[2] = 'r'; desc[3] = 'd';
+		}
+		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, "of your mnemonic", NULL);
 	}
 	WordRequest resp;
 	memset(&resp, 0, sizeof(WordRequest));
