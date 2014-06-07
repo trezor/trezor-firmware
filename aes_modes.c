@@ -941,6 +941,16 @@ AES_RETURN aes_ctr_crypt(const unsigned char *ibuf, unsigned char *obuf,
     return EXIT_SUCCESS;
 }
 
+void aes_ctr_cbuf_inc(unsigned char *cbuf)
+{
+	int i = 15;
+	while (i >= 0) {
+		cbuf[i]++;
+		if (cbuf[i]) return; // if there was no overflow
+		i--;
+	}
+}
+
 #if defined(__cplusplus)
 }
 #endif

@@ -437,22 +437,12 @@ START_TEST(test_verify_speed)
 }
 END_TEST
 
-void aes_ctr_counter_inc(uint8_t *ctr)
-{
-	int i = 15;
-	while (i >= 0) {
-		ctr[i]++;
-		if (ctr[i]) return; // if there was no overflow
-		i--;
-	}
-}
-
 // test vectors from http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
 START_TEST(test_aes)
 {
 	aes_encrypt_ctx ctxe;
 	aes_decrypt_ctx ctxd;
-	uint8_t ibuf[16], obuf[16], iv[16], cntr[16];
+	uint8_t ibuf[16], obuf[16], iv[16], cbuf[16];
 	const char **ivp, **plainp, **cipherp;
 
 	// ECB
@@ -574,22 +564,22 @@ START_TEST(test_aes)
 	// encrypt
 	plainp = ctr_vector;
 	cipherp = ctr_vector + 1;
-	memcpy(cntr, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
+	memcpy(cbuf, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
 	aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
 	while (*plainp && *cipherp) {
 		memcpy(ibuf, fromhex(*plainp), 16);
-		aes_ctr_encrypt(ibuf, obuf, 16, cntr, aes_ctr_counter_inc, &ctxe);
+		aes_ctr_encrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
 		ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
 		plainp += 2; cipherp += 2;
 	}
 	// decrypt (uses encryption)
 	plainp = ctr_vector;
 	cipherp = ctr_vector + 1;
-	memcpy(cntr, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
+	memcpy(cbuf, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
 	aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
 	while (*plainp && *cipherp) {
 		memcpy(ibuf, fromhex(*cipherp), 16);
-		aes_ctr_decrypt(ibuf, obuf, 16, cntr, aes_ctr_counter_inc, &ctxe);
+		aes_ctr_decrypt(ibuf, obuf, 16, cbuf, aes_ctr_cbuf_inc, &ctxe);
 		ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
 		plainp += 2; cipherp += 2;
 	}
