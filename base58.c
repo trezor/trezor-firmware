@@ -88,8 +88,7 @@ int base58_decode_check(const char *str, uint8_t *data)
 		43, -1, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
 		55, 56, 57
 	};
-	uint8_t mydata[82], hash[32];
-	int j, k, outlen;
+	int outlen;
 	switch (strlen(str)) {
 		case 111: // xpub/xprv
 			outlen = 78;
@@ -110,12 +109,15 @@ int base58_decode_check(const char *str, uint8_t *data)
 		default:
 			return 0;
 	}
+	uint8_t mydata[82], hash[32];
 	memset(mydata, 0, sizeof(mydata));
+	int i, j, k;
 	while (*str) {
-		if (*str < 0 || *str >= (int)sizeof(decode)) { // invalid character
+		i = *str;
+		if (i < 0 || i >= (int)sizeof(decode)) { // invalid character
 			return 0;
 		}
-		k = decode[(int)*str];
+		k = decode[i];
 		if (k == -1) { // invalid character
 			return 0;
 		}
