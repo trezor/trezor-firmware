@@ -44,8 +44,10 @@ uint8_t *fromhex(const char *str)
 		c = 0;
 		if (str[i*2] >= '0' && str[i*2] <= '9') c += (str[i*2] - '0') << 4;
 		if (str[i*2] >= 'a' && str[i*2] <= 'f') c += (10 + str[i*2] - 'a') << 4;
+		if (str[i*2] >= 'A' && str[i*2] <= 'F') c += (10 + str[i*2] - 'A') << 4;
 		if (str[i*2+1] >= '0' && str[i*2+1] <= '9') c += (str[i*2+1] - '0');
 		if (str[i*2+1] >= 'a' && str[i*2+1] <= 'f') c += (10 + str[i*2+1] - 'a');
+		if (str[i*2+1] >= 'A' && str[i*2+1] <= 'F') c += (10 + str[i*2+1] - 'A');
 		buf[i] = c;
 	}
 	return buf;
@@ -435,30 +437,162 @@ START_TEST(test_verify_speed)
 }
 END_TEST
 
-#define test_aes(KEY, BLKLEN, IN, OUT) do { \
-	sha256_Raw((uint8_t *)KEY, strlen(KEY), key); \
-	aes_enc_key(key, 32, &ctx); \
-	memcpy(in, fromhex(IN), BLKLEN); \
-	aes_enc_blk(in, out, &ctx); \
-	ck_assert_mem_eq(out, fromhex(OUT), BLKLEN); \
-} while (0)
-
-START_TEST(test_rijndael)
+void aes_ctr_counter_inc(uint8_t *ctr)
 {
-	aes_ctx ctx;
-	uint8_t key[32], in[32], out[32];
+	int i = 15;
+	while (i >= 0) {
+		ctr[i]++;
+		if (ctr[i]) return; // if there was no overflow
+		i--;
+	}
+}
 
-	test_aes("mnemonic", 16, "00000000000000000000000000000000", "a3af8b7d326a2d47bd7576012e07d103");
-//	test_aes("mnemonic", 24, "000000000000000000000000000000000000000000000000", "7b8704678f263c316ddd1746d8377a4046a99dd9e5687d59");
-//	test_aes("mnemonic", 32, "0000000000000000000000000000000000000000000000000000000000000000", "7c0575db9badc9960441c6b8dcbd5ebdfec522ede5309904b7088d0e77c2bcef");
+// test vectors from http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
+START_TEST(test_aes)
+{
+	aes_encrypt_ctx ctxe;
+	aes_decrypt_ctx ctxd;
+	uint8_t ibuf[16], obuf[16], iv[16], cntr[16];
+	const char **ivp, **plainp, **cipherp;
 
-	test_aes("mnemonic", 16, "686f6a6461686f6a6461686f6a6461686f6a6461", "9c3bb85af2122cc2df449033338beb56");
-//	test_aes("mnemonic", 24, "686f6a6461686f6a6461686f6a6461686f6a6461686f6a64", "0d7009c589869eaa1d7398bffc7660cce32207a520d6cafe");
-//	test_aes("mnemonic", 32, "686f6a6461686f6a6461686f6a6461686f6a6461686f6a6461686f6a6461686f", "b1a4d05e3827611c5986ea4c207679a6934f20767434218029c4b3b7a53806a3");
+	// ECB
+	static const char *ecb_vector[] = {
+		// plain                            cipher
+		"6bc1bee22e409f96e93d7e117393172a", "f3eed1bdb5d2a03c064b5a7e3db181f8",
+		"ae2d8a571e03ac9c9eb76fac45af8e51", "591ccb10d410ed26dc5ba74a31362870",
+		"30c81c46a35ce411e5fbc1191a0a52ef", "b6ed21b99ca6f4f9f153e7b1beafed1d",
+		"f69f2445df4f9b17ad2b417be66c3710", "23304b7a39f9f3ff067d8d8f9e24ecc7",
+		0, 0,
+	};
+	plainp = ecb_vector;
+	cipherp = ecb_vector + 1;
+	while (*plainp && *cipherp) {
+		// encrypt
+		aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+		memcpy(ibuf, fromhex(*plainp), 16);
+		aes_ecb_encrypt(ibuf, obuf, 16, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
+		// decrypt
+		aes_decrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxd);
+		memcpy(ibuf, fromhex(*cipherp), 16);
+		aes_ecb_decrypt(ibuf, obuf, 16, &ctxd);
+		ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
+		plainp += 2; cipherp += 2;
+	}
 
-	test_aes("mnemonic", 16, "ffffffffffffffffffffffffffffffff", "e720f4474b7dabe382eec0529e2b1128");
-//	test_aes("mnemonic", 24, "ffffffffffffffffffffffffffffffffffffffffffffffff", "14dfe4c7a93e14616dce6c793110baee0b8bb404f3bec6c5");
-//	test_aes("mnemonic", 32, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "ccf498fd9a57f872a4d274549fab474cbacdbd9d935ca31b06e3025526a704fb");
+	// CBC
+	static const char *cbc_vector[] = {
+		// iv                               plain                               cipher
+		"000102030405060708090A0B0C0D0E0F", "6bc1bee22e409f96e93d7e117393172a", "f58c4c04d6e5f1ba779eabfb5f7bfbd6",
+		"F58C4C04D6E5F1BA779EABFB5F7BFBD6", "ae2d8a571e03ac9c9eb76fac45af8e51", "9cfc4e967edb808d679f777bc6702c7d",
+		"9CFC4E967EDB808D679F777BC6702C7D", "30c81c46a35ce411e5fbc1191a0a52ef", "39f23369a9d9bacfa530e26304231461",
+		"39F23369A9D9BACFA530E26304231461", "f69f2445df4f9b17ad2b417be66c3710", "b2eb05e2c39be9fcda6c19078c6a9d1b",
+		0, 0, 0,
+	};
+	ivp = cbc_vector;
+	plainp = cbc_vector + 1;
+	cipherp = cbc_vector + 2;
+	while (*plainp && *cipherp) {
+		// encrypt
+		aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+		memcpy(iv, fromhex(*ivp), 16);
+		memcpy(ibuf, fromhex(*plainp), 16);
+		aes_cbc_encrypt(ibuf, obuf, 16, iv, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
+		// decrypt
+		aes_decrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxd);
+		memcpy(iv, fromhex(*ivp), 16);
+		memcpy(ibuf, fromhex(*cipherp), 16);
+		aes_cbc_decrypt(ibuf, obuf, 16, iv, &ctxd);
+		ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
+		ivp += 3; plainp += 3; cipherp += 3;
+	}
+
+	// CFB
+	static const char *cfb_vector[] = {
+		"000102030405060708090A0B0C0D0E0F", "6bc1bee22e409f96e93d7e117393172a", "DC7E84BFDA79164B7ECD8486985D3860",
+		"DC7E84BFDA79164B7ECD8486985D3860", "ae2d8a571e03ac9c9eb76fac45af8e51", "39ffed143b28b1c832113c6331e5407b",
+		"39FFED143B28B1C832113C6331E5407B", "30c81c46a35ce411e5fbc1191a0a52ef", "df10132415e54b92a13ed0a8267ae2f9",
+		"DF10132415E54B92A13ED0A8267AE2F9", "f69f2445df4f9b17ad2b417be66c3710", "75a385741ab9cef82031623d55b1e471",
+		0, 0, 0,
+	};
+	ivp = cfb_vector;
+	plainp = cfb_vector + 1;
+	cipherp = cfb_vector + 2;
+	while (*plainp && *cipherp) {
+		// encrypt
+		aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+		memcpy(iv, fromhex(*ivp), 16);
+		memcpy(ibuf, fromhex(*plainp), 16);
+		aes_cfb_encrypt(ibuf, obuf, 16, iv, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
+		// decrypt (uses encryption)
+		aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+		memcpy(iv, fromhex(*ivp), 16);
+		memcpy(ibuf, fromhex(*cipherp), 16);
+		aes_cfb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
+		ivp += 3; plainp += 3; cipherp += 3;
+	}
+
+	// OFB
+	static const char *ofb_vector[] = {
+		"000102030405060708090A0B0C0D0E0F", "6bc1bee22e409f96e93d7e117393172a", "dc7e84bfda79164b7ecd8486985d3860",
+		"B7BF3A5DF43989DD97F0FA97EBCE2F4A", "ae2d8a571e03ac9c9eb76fac45af8e51", "4febdc6740d20b3ac88f6ad82a4fb08d",
+		"E1C656305ED1A7A6563805746FE03EDC", "30c81c46a35ce411e5fbc1191a0a52ef", "71ab47a086e86eedf39d1c5bba97c408",
+		"41635BE625B48AFC1666DD42A09D96E7", "f69f2445df4f9b17ad2b417be66c3710", "0126141d67f37be8538f5a8be740e484",
+		0, 0, 0,
+	};
+	ivp = ofb_vector;
+	plainp = ofb_vector + 1;
+	cipherp = ofb_vector + 2;
+	while (*plainp && *cipherp) {
+		// encrypt
+		aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+		memcpy(iv, fromhex(*ivp), 16);
+		memcpy(ibuf, fromhex(*plainp), 16);
+		aes_ofb_encrypt(ibuf, obuf, 16, iv, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
+		// decrypt (uses encryption)
+		aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+		memcpy(iv, fromhex(*ivp), 16);
+		memcpy(ibuf, fromhex(*cipherp), 16);
+		aes_ofb_decrypt(ibuf, obuf, 16, iv, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
+		ivp += 3; plainp += 3; cipherp += 3;
+	}
+
+	// CTR
+	static const char *ctr_vector[] = {
+		// plain                            cipher
+		"6bc1bee22e409f96e93d7e117393172a", "601ec313775789a5b7a7f504bbf3d228",
+		"ae2d8a571e03ac9c9eb76fac45af8e51", "f443e3ca4d62b59aca84e990cacaf5c5",
+		"30c81c46a35ce411e5fbc1191a0a52ef", "2b0930daa23de94ce87017ba2d84988d",
+		"f69f2445df4f9b17ad2b417be66c3710", "dfc9c58db67aada613c2dd08457941a6",
+		0, 0,
+	};
+	// encrypt
+	plainp = ctr_vector;
+	cipherp = ctr_vector + 1;
+	memcpy(cntr, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
+	aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+	while (*plainp && *cipherp) {
+		memcpy(ibuf, fromhex(*plainp), 16);
+		aes_ctr_encrypt(ibuf, obuf, 16, cntr, aes_ctr_counter_inc, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*cipherp), 16);
+		plainp += 2; cipherp += 2;
+	}
+	// decrypt (uses encryption)
+	plainp = ctr_vector;
+	cipherp = ctr_vector + 1;
+	memcpy(cntr, fromhex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"), 16);
+	aes_encrypt_key256(fromhex("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"), &ctxe);
+	while (*plainp && *cipherp) {
+		memcpy(ibuf, fromhex(*cipherp), 16);
+		aes_ctr_decrypt(ibuf, obuf, 16, cntr, aes_ctr_counter_inc, &ctxe);
+		ck_assert_mem_eq(obuf, fromhex(*plainp), 16);
+		plainp += 2; cipherp += 2;
+	}
 }
 END_TEST
 
@@ -894,8 +1028,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_ecdsa_der);
 	suite_add_tcase(s, tc);
 
-	tc = tcase_create("rijndael");
-	tcase_add_test(tc, test_rijndael);
+	tc = tcase_create("aes");
+	tcase_add_test(tc, test_aes);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("pbkdf2");

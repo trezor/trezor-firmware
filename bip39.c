@@ -30,8 +30,6 @@
 #include "pbkdf2.h"
 #include "bip39_english.h"
 
-#define PBKDF2_ROUNDS 2048
-
 const char *mnemonic_generate(int strength)
 {
 	if (strength % 32 || strength < 128 || strength > 256) {
@@ -153,7 +151,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	memcpy(salt, "mnemonic", 8);
 	memcpy(salt + 8, passphrase, saltlen);
 	saltlen += 8;
-	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, PBKDF2_ROUNDS, seed, 512 / 8, progress_callback);
+	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, BIP39_PBKDF2_ROUNDS, seed, 512 / 8, progress_callback);
 }
 
 const char **mnemonic_wordlist(void)

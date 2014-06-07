@@ -1,100 +1,200 @@
 /*
- -------------------------------------------------------------------------
- Copyright (c) 2001, Dr Brian Gladman <                 >, Worcester, UK.
- All rights reserved.
+---------------------------------------------------------------------------
+Copyright (c) 1998-2013, Brian Gladman, Worcester, UK. All rights reserved.
 
- LICENSE TERMS
+The redistribution and use of this software (with or without changes)
+is allowed without the payment of fees or royalties provided that:
 
- The free distribution and use of this software in both source and binary
- form is allowed (with or without changes) provided that:
+  source code distributions include the above copyright notice, this
+  list of conditions and the following disclaimer;
 
-   1. distributions of this source code include the above copyright
-      notice, this list of conditions and the following disclaimer;
+  binary distributions include the above copyright notice, this list
+  of conditions and the following disclaimer in their documentation.
 
-   2. distributions in binary form include the above copyright
-      notice, this list of conditions and the following disclaimer
-      in the documentation and/or other associated materials;
+This software is provided 'as is' with no explicit or implied warranties
+in respect of its operation, including, but not limited to, correctness
+and fitness for purpose.
+---------------------------------------------------------------------------
+Issue Date: 20/12/2007
 
-   3. the copyright holder's name is not used to endorse products
-      built using this software without specific written permission.
-
- DISCLAIMER
-
- This software is provided 'as is' with no explicit or implied warranties
- in respect of its properties, including, but not limited to, correctness
- and fitness for purpose.
- -------------------------------------------------------------------------
- Issue Date: 29/07/2002
-
- This file contains the definitions required to use AES (Rijndael) in C.
+ This file contains the definitions required to use AES in C. See aesopt.h
+ for optimisation details.
 */
 
 #ifndef _AES_H
 #define _AES_H
 
-/*  This include is used only to find 8 and 32 bit unsigned integer types   */
+#include <stdlib.h>
 
-#include "limits.h"
-
-#if UCHAR_MAX == 0xff       /* an unsigned 8 bit type for internal AES use  */
-  typedef unsigned char      aes_08t;
-#else
-#error Please define an unsigned 8 bit type in aes.h
-#endif
-
-#if UINT_MAX == 0xffffffff  /* an unsigned 32 bit type for internal AES use */
-  typedef   unsigned int     aes_32t;
-#elif ULONG_MAX == 0xffffffff
-  typedef   unsigned long    aes_32t;
-#else
-#error Please define an unsigned 32 bit type in aes.h
-#endif
-
-/*  BLOCK_SIZE is in BYTES: 16, 24, 32 or undefined for aes.c and 16, 20,
-    24, 28, 32 or undefined for aespp.c.  When left undefined a slower
-    version that provides variable block length is compiled.
-*/
-
-#define BLOCK_SIZE  16
-
-/* key schedule length (in 32-bit words)    */
-
-#if !defined(BLOCK_SIZE)
-#define KS_LENGTH   128
-#else
-#define KS_LENGTH   4 * BLOCK_SIZE
-#endif
+/*  This include is used to find 8 & 32 bit unsigned integer types  */
+#include "brg_types.h"
 
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
 
-typedef unsigned int aes_fret;   /* type for function return value       */
-#define aes_bad      0           /* bad function return value            */
-#define aes_good     1           /* good function return value           */
-#ifndef AES_DLL                  /* implement normal or DLL functions    */
-#define aes_rval     aes_fret
+// #define AES_128     /* if a fast 128 bit key scheduler is needed    */
+// #define AES_192     /* if a fast 192 bit key scheduler is needed    */
+#define AES_256     /* if a fast 256 bit key scheduler is needed    */
+// #define AES_VAR     /* if variable key size scheduler is needed     */
+#define AES_MODES   /* if support is needed for modes               */
+
+/* The following must also be set in assembler files if being used  */
+
+#define AES_ENCRYPT /* if support for encryption is needed          */
+#define AES_DECRYPT /* if support for decryption is needed          */
+
+#define AES_BLOCK_SIZE  16  /* the AES block size in bytes          */
+#define N_COLS           4  /* the number of columns in the state   */
+
+/* The key schedule length is 11, 13 or 15 16-byte blocks for 128,  */
+/* 192 or 256-bit keys respectively. That is 176, 208 or 240 bytes  */
+/* or 44, 52 or 60 32-bit words.                                    */
+
+#if defined( AES_VAR ) || defined( AES_256 )
+#define KS_LENGTH       60
+#elif defined( AES_192 )
+#define KS_LENGTH       52
 #else
-#define aes_rval     aes_fret __declspec(dllexport) _stdcall
+#define KS_LENGTH       44
 #endif
 
+#define AES_RETURN INT_RETURN
 
-typedef struct                     /* the AES context for encryption   */
-{   aes_32t    k_sch[KS_LENGTH];   /* the encryption key schedule      */
-    aes_32t    n_rnd;              /* the number of cipher rounds      */
-    aes_32t    n_blk;              /* the number of bytes in the state */
-} aes_ctx;
+/* the character array 'inf' in the following structures is used    */
+/* to hold AES context information. This AES code uses cx->inf.b[0] */
+/* to hold the number of rounds multiplied by 16. The other three   */
+/* elements can be used by code that implements additional modes    */
 
-#if !defined(BLOCK_SIZE)
-aes_rval aes_blk_len(unsigned int blen, aes_ctx cx[1]);
+typedef union
+{   uint32_t l;
+    uint8_t b[4];
+} aes_inf;
+
+#ifdef _WIN64
+__declspec(align(16))
+#endif 
+typedef struct
+{   uint32_t ks[KS_LENGTH];
+    aes_inf inf;
+} aes_encrypt_ctx;
+
+#ifdef _WIN64
+__declspec(align(16))
+#endif 
+typedef struct
+{   uint32_t ks[KS_LENGTH];
+    aes_inf inf;
+} aes_decrypt_ctx;
+
+/* This routine must be called before first use if non-static       */
+/* tables are being used                                            */
+
+AES_RETURN aes_init(void);
+
+/* Key lengths in the range 16 <= key_len <= 32 are given in bytes, */
+/* those in the range 128 <= key_len <= 256 are given in bits       */
+
+#if defined( AES_ENCRYPT )
+
+#if defined( AES_128 ) || defined( AES_VAR)
+AES_RETURN aes_encrypt_key128(const unsigned char *key, aes_encrypt_ctx cx[1]);
 #endif
 
-aes_rval aes_enc_key(const unsigned char in_key[], unsigned int klen, aes_ctx cx[1]);
-aes_rval aes_enc_blk(const unsigned char in_blk[], unsigned char out_blk[], const aes_ctx cx[1]);
+#if defined( AES_192 ) || defined( AES_VAR)
+AES_RETURN aes_encrypt_key192(const unsigned char *key, aes_encrypt_ctx cx[1]);
+#endif
 
-aes_rval aes_dec_key(const unsigned char in_key[], unsigned int klen, aes_ctx cx[1]);
-aes_rval aes_dec_blk(const unsigned char in_blk[], unsigned char out_blk[], const aes_ctx cx[1]);
+#if defined( AES_256 ) || defined( AES_VAR)
+AES_RETURN aes_encrypt_key256(const unsigned char *key, aes_encrypt_ctx cx[1]);
+#endif
+
+#if defined( AES_VAR )
+AES_RETURN aes_encrypt_key(const unsigned char *key, int key_len, aes_encrypt_ctx cx[1]);
+#endif
+
+AES_RETURN aes_encrypt(const unsigned char *in, unsigned char *out, const aes_encrypt_ctx cx[1]);
+
+#endif
+
+#if defined( AES_DECRYPT )
+
+#if defined( AES_128 ) || defined( AES_VAR)
+AES_RETURN aes_decrypt_key128(const unsigned char *key, aes_decrypt_ctx cx[1]);
+#endif
+
+#if defined( AES_192 ) || defined( AES_VAR)
+AES_RETURN aes_decrypt_key192(const unsigned char *key, aes_decrypt_ctx cx[1]);
+#endif
+
+#if defined( AES_256 ) || defined( AES_VAR)
+AES_RETURN aes_decrypt_key256(const unsigned char *key, aes_decrypt_ctx cx[1]);
+#endif
+
+#if defined( AES_VAR )
+AES_RETURN aes_decrypt_key(const unsigned char *key, int key_len, aes_decrypt_ctx cx[1]);
+#endif
+
+AES_RETURN aes_decrypt(const unsigned char *in, unsigned char *out, const aes_decrypt_ctx cx[1]);
+
+#endif
+
+#if defined( AES_MODES )
+
+/* Multiple calls to the following subroutines for multiple block   */
+/* ECB, CBC, CFB, OFB and CTR mode encryption can be used to handle */
+/* long messages incrementally provided that the context AND the iv */
+/* are preserved between all such calls.  For the ECB and CBC modes */
+/* each individual call within a series of incremental calls must   */
+/* process only full blocks (i.e. len must be a multiple of 16) but */
+/* the CFB, OFB and CTR mode calls can handle multiple incremental  */
+/* calls of any length. Each mode is reset when a new AES key is    */
+/* set but ECB and CBC operations can be reset without setting a    */
+/* new key by setting a new IV value.  To reset CFB, OFB and CTR    */
+/* without setting the key, aes_mode_reset() must be called and the */
+/* IV must be set.  NOTE: All these calls update the IV on exit so  */
+/* this has to be reset if a new operation with the same IV as the  */
+/* previous one is required (or decryption follows encryption with  */
+/* the same IV array).                                              */
+
+AES_RETURN aes_test_alignment_detection(unsigned int n);
+
+AES_RETURN aes_ecb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, const aes_encrypt_ctx cx[1]);
+
+AES_RETURN aes_ecb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, const aes_decrypt_ctx cx[1]);
+
+AES_RETURN aes_cbc_encrypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, unsigned char *iv, const aes_encrypt_ctx cx[1]);
+
+AES_RETURN aes_cbc_decrypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, unsigned char *iv, const aes_decrypt_ctx cx[1]);
+
+AES_RETURN aes_mode_reset(aes_encrypt_ctx cx[1]);
+
+AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, unsigned char *iv, aes_encrypt_ctx cx[1]);
+
+AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, unsigned char *iv, aes_encrypt_ctx cx[1]);
+
+#define aes_ofb_encrypt aes_ofb_crypt
+#define aes_ofb_decrypt aes_ofb_crypt
+
+AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
+                    int len, unsigned char *iv, aes_encrypt_ctx cx[1]);
+
+typedef void cbuf_inc(unsigned char *cbuf);
+
+#define aes_ctr_encrypt aes_ctr_crypt
+#define aes_ctr_decrypt aes_ctr_crypt
+
+AES_RETURN aes_ctr_crypt(const unsigned char *ibuf, unsigned char *obuf,
+            int len, unsigned char *cbuf, cbuf_inc ctr_inc, aes_encrypt_ctx cx[1]);
+
+#endif
 
 #if defined(__cplusplus)
 }
