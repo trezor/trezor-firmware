@@ -22,15 +22,19 @@ OBJS += debug.o
 OBJS += ../trezor-crypto/bignum.o
 OBJS += ../trezor-crypto/ecdsa.o
 OBJS += ../trezor-crypto/secp256k1.o
-OBJS += ../trezor-crypto/sha2.o
 OBJS += ../trezor-crypto/hmac.o
 OBJS += ../trezor-crypto/bip32.o
-OBJS += ../trezor-crypto/ripemd160.o
 OBJS += ../trezor-crypto/bip39.o
 OBJS += ../trezor-crypto/pbkdf2.o
+OBJS += ../trezor-crypto/base58.o
+
+OBJS += ../trezor-crypto/ripemd160.o
+OBJS += ../trezor-crypto/sha2.o
+
 OBJS += ../trezor-crypto/aescrypt.o
 OBJS += ../trezor-crypto/aeskey.o
 OBJS += ../trezor-crypto/aestab.o
+OBJS += ../trezor-crypto/aes_modes.o
 
 OBJS += protob/pb_decode.o
 OBJS += protob/pb_encode.o
@@ -41,6 +45,7 @@ OBJS += protob/types.pb.o
 include ../Makefile.include
 
 # CFLAGS += -fstack-protector -fstack-protector-all
+CFLAGS += -Wno-sequence-point
 CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
 CFLAGS += -DDEBUG_LINK=0
 CFLAGS += -DDEBUG_LOG=0

@@ -231,3 +231,23 @@ void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 		ascii ? "Message contents:" : "Bin message contents:",
 		str[0], str[1], str[2], str[3], NULL);
 }
+
+void layoutCipherKeyValue(bool encrypt, const char *key)
+{
+	int len = strlen(key);
+	char str[4][17];
+	memset(str, 0, sizeof(str));
+	strlcpy(str[0], (char *)key, 17);
+	if (len > 16) {
+		strlcpy(str[1], (char *)key + 16, 17);
+	}
+	if (len > 32) {
+		strlcpy(str[2], (char *)key + 32, 17);
+	}
+	if (len > 48) {
+		strlcpy(str[3], (char *)key + 48, 17);
+	}
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+		encrypt ? "Encrypt?" : "Decrypt?",
+		str[0], str[1], str[2], str[3], NULL);
+}

@@ -38,6 +38,8 @@
 #include "usb.h"
 #include "util.h"
 #include "signing.h"
+#include "aes.h"
+#include "hmac.h"
 
 // message methods
 
@@ -358,6 +360,63 @@ void fsm_msgTxAck(TxAck *msg)
 	} else {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No transaction provided");
 	}
+}
+
+void fsm_msgCipherKeyValue(CipherKeyValue *msg)
+{
+	if (!msg->has_key) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No key provided");
+		return;
+	}
+	if (!msg->has_value) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No value provided");
+		return;
+	}
+	if (msg->value.size % 16) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "Value length must be a multiple of 16");
+		return;
+	}
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+	HDNode *node = fsm_getRootNode();
+	if (!node) return;
+	fsm_deriveKey(node, msg->address_n, msg->address_n_count);
+
+	bool encrypt = msg->has_encrypt && msg->encrypt;
+	bool ask_on_encrypt = msg->has_ask_on_encrypt && msg->ask_on_encrypt;
+	bool ask_on_decrypt = msg->has_ask_on_decrypt && msg->ask_on_decrypt;
+	if ((encrypt && ask_on_encrypt) || (!encrypt && ask_on_decrypt)) {
+		layoutCipherKeyValue(encrypt, msg->key);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "CipherKeyValue cancelled");
+			layoutHome();
+			return;
+		}
+	}
+
+	uint8_t data[256 + 4];
+	strlcpy((char *)data, msg->key, sizeof(data));
+	strlcat((char *)data, ask_on_encrypt ? "E1" : "E0", sizeof(data));
+	strlcat((char *)data, ask_on_decrypt ? "D1" : "D0", sizeof(data));
+
+	hmac_sha512(node->private_key, 32, data, strlen((char *)data), data);
+
+	RESP_INIT(Success);
+	if (encrypt) {
+		aes_encrypt_ctx ctx;
+		aes_encrypt_key256(data, &ctx);
+		aes_cbc_encrypt(msg->value.bytes, resp->payload.bytes, msg->value.size, data + 32, &ctx);
+	} else {
+		aes_decrypt_ctx ctx;
+		aes_decrypt_key256(data, &ctx);
+		aes_cbc_decrypt(msg->value.bytes, resp->payload.bytes, msg->value.size, data + 32, &ctx);
+	}
+	resp->has_payload = true;
+	resp->payload.size = msg->value.size;
+	msg_write(MessageType_MessageType_Success, resp);
+	layoutHome();
 }
 
 void fsm_msgApplySettings(ApplySettings *msg)

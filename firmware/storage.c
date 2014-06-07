@@ -26,7 +26,9 @@
 #include "storage.pb.h"
 
 #include "trezor.h"
+#include "sha2.h"
 #include "aes.h"
+#include "pbkdf2.h"
 #include "bip32.h"
 #include "bip39.h"
 #include "util.h"
@@ -217,12 +219,13 @@ bool storage_getRootNode(HDNode *node)
 		hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode);
 		if (storage.has_passphrase_protection && storage.passphrase_protection) {
 			// decrypt hd node
-			aes_ctx ctx;
-			aes_enc_key((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), &ctx);
-			aes_enc_blk(sessionRootNode.chain_code, sessionRootNode.chain_code, &ctx);
-			aes_enc_blk(sessionRootNode.chain_code + 16, sessionRootNode.chain_code + 16, &ctx);
-			aes_enc_blk(sessionRootNode.private_key, sessionRootNode.private_key, &ctx);
-			aes_enc_blk(sessionRootNode.private_key + 16, sessionRootNode.private_key + 16, &ctx);
+			uint8_t secret[64];
+			layoutProgressSwipe("Waking up", 0, 0);
+			pbkdf2((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), (uint8_t *)"TREZORHD", 8, BIP39_PBKDF2_ROUNDS, secret, 64, get_root_node_callback);
+			aes_decrypt_ctx ctx;
+			aes_decrypt_key256(secret, &ctx);
+			aes_cbc_decrypt(sessionRootNode.chain_code, sessionRootNode.chain_code, 32, secret + 32, &ctx);
+			aes_cbc_decrypt(sessionRootNode.private_key, sessionRootNode.private_key, 32, secret + 32, &ctx);
 		}
 		memcpy(node, &sessionRootNode, sizeof(HDNode));
 		sessionRootNodeCached = true;

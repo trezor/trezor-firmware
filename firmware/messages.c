@@ -53,6 +53,7 @@ static const struct MessagesMap_t MessagesMap[] = {
 //	{'n', 'i', MessageType_MessageType_PinMatrixAck,		PinMatrixAck_fields,		(void (*)(void *))fsm_msgPinMatrixAck},
 	{'n', 'i', MessageType_MessageType_Cancel,				Cancel_fields,				(void (*)(void *))fsm_msgCancel},
 	{'n', 'i', MessageType_MessageType_TxAck,				TxAck_fields,				(void (*)(void *))fsm_msgTxAck},
+	{'n', 'i', MessageType_MessageType_CipherKeyValue,		CipherKeyValue_fields,		(void (*)(void *))fsm_msgCipherKeyValue},
 	{'n', 'i', MessageType_MessageType_ApplySettings,		ApplySettings_fields,		(void (*)(void *))fsm_msgApplySettings},
 //	{'n', 'i', MessageType_MessageType_ButtonAck,			ButtonAck_fields,			(void (*)(void *))fsm_msgButtonAck},
 	{'n', 'i', MessageType_MessageType_GetAddress,			GetAddress_fields,			(void (*)(void *))fsm_msgGetAddress},
