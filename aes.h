@@ -25,14 +25,16 @@ Issue Date: 20/12/2007
 #define _AES_H
 
 #include <stdlib.h>
-
-/*  This include is used to find 8 & 32 bit unsigned integer types  */
-#include "brg_types.h"
+#include <stdint.h>
 
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
+
+#define ALIGN_OFFSET(x,n)	(((intptr_t)(x)) & ((n) - 1))
+#define ALIGN_FLOOR(x,n)	((uint8_t*)(x) - ( ((intptr_t)(x)) & ((n) - 1)))
+#define ALIGN_CEIL(x,n)		((uint8_t*)(x) + (-((intptr_t)(x)) & ((n) - 1)))
 
 // #define AES_128     /* if a fast 128 bit key scheduler is needed    */
 // #define AES_192     /* if a fast 192 bit key scheduler is needed    */
@@ -60,7 +62,7 @@ extern "C"
 #define KS_LENGTH       44
 #endif
 
-#define AES_RETURN INT_RETURN
+#define AES_RETURN int
 
 /* the character array 'inf' in the following structures is used    */
 /* to hold AES context information. This AES code uses cx->inf.b[0] */
