@@ -6,8 +6,6 @@ from trezorlib import messages_pb2 as proto
 from trezorlib import types_pb2 as proto_types
 
 class TestProtectionLevels(common.TrezorTest):
-    # Tests protection levels of all messages as defined here: 
-    # https://github.com/trezor/documentation/wiki/Protection-Levels    
 
     def test_initialize(self):
         with self.client:
@@ -130,9 +128,7 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.set_expected_responses([proto.TxSize()])
             self.client.estimate_tx_size('Bitcoin', [], [])
 
-    #def test_signtx(self):
-    #    pass
-
+    """
     def test_simplesigntx(self):
         self.setup_mnemonic_pin_passphrase()
 
@@ -153,6 +149,7 @@ class TestProtectionLevels(common.TrezorTest):
                                                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
                                                 proto.TxRequest(request_type=proto_types.TXFINISHED)])
             self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
+    """
 
     def test_signtx(self):
         self.setup_mnemonic_pin_passphrase()

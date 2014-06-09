@@ -25,7 +25,7 @@ class TestMsgEstimatetxsize(common.TrezorTest):
         est_size = self.client.estimate_tx_size('Bitcoin', [inp1, ], [out1, ])
         self.assertEqual(est_size, 194)
 
-        tx = self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
+        (_, tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
         real_size = len(tx)
 
         self.assertGreaterEqual(est_size, real_size)

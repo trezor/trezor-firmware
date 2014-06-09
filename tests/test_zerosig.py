@@ -20,7 +20,7 @@ class TestZeroSig(common.TrezorTest):
                              prev_index=0,
                              )
 
-        msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1, ], [])
+        msg = self.client._prepare_sign_tx('Bitcoin', [inp1, ], [])
 
         for n in range(3500, 200000):
             out1 = proto_types.TxOutputType(address_n=[n],
@@ -55,9 +55,8 @@ class TestZeroSig(common.TrezorTest):
                               script_type=proto_types.PAYTOADDRESS,
                               )
 
-        msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1], [out1])
-        tx = self.client.call(msg)
-        siglen = ord(tx.serialized.serialized_tx[44])
+        (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        siglen = ord(serialized_tx[44])
 
         # Trezor must strip leading zero from signature
         self.assertEqual(siglen, 67)
@@ -77,9 +76,8 @@ class TestZeroSig(common.TrezorTest):
                               script_type=proto_types.PAYTOADDRESS,
                               )
 
-        msg = self.client._prepare_simple_sign_tx('Bitcoin', [inp1], [out1])
-        tx = self.client.call(msg)
-        siglen = ord(tx.serialized.serialized_tx[44])
+        (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        siglen = ord(serialized_tx[44])
 
         # Trezor must strip leading zero from signature
         self.assertEqual(siglen, 66)
