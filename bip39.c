@@ -35,7 +35,7 @@ const char *mnemonic_generate(int strength)
 	if (strength % 32 || strength < 128 || strength > 256) {
 		return 0;
 	}
-	static uint8_t data[32];
+	uint8_t data[32];
 	random_buffer(data, 32);
 	return mnemonic_from_data(data, strength / 8);
 }
@@ -47,10 +47,11 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 	}
 
 	uint8_t bits[32 + 1];
-	memcpy(bits, data, len);
 
 	sha256_Raw(data, len, bits);
+	// checksum
 	bits[len] = bits[0];
+	// data
 	memcpy(bits, data, len);
 
 	int mlen = len * 3 / 4;
@@ -146,7 +147,7 @@ int mnemonic_check(const char *mnemonic)
 
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total))
 {
-	static uint8_t salt[8 + 256 + 4];
+	uint8_t salt[8 + 256 + 4];
 	int saltlen = strlen(passphrase);
 	memcpy(salt, "mnemonic", 8);
 	memcpy(salt + 8, passphrase, saltlen);
