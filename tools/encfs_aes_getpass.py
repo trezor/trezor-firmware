@@ -10,10 +10,12 @@ encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
 
 import os
 import sys
+import json
 import base64
+import hashlib
 import binascii
 
-from trezorlib.client import TrezorClient
+from trezorlib.client import TrezorClient, TrezorClientDebug
 from trezorlib.transport_hid import HidTransport
 
 def wait_for_devices():
@@ -50,7 +52,8 @@ def list_devices(devices):
 
     try:
         device_id = int(raw_input())
-        HidTransport(devices[device_id])
+        t = HidTransport(devices[device_id])
+        t.close()
     except:
         raise Exception("Invalid choice, exiting...")
 
@@ -74,8 +77,9 @@ def main():
     if os.path.exists(passw_file):
         # Existing encfs drive, let's load password
 
-        label, passw_encrypted = open(passw_file, 'r').read().split(',')
-        passw = client.decrypt_keyvalue([10, 0],
+        sys.stderr.write('Please confirm action on your device.\n')
+        label, passw_encrypted, bip32_path = open(passw_file, 'r').read().split(',')
+        passw = client.decrypt_keyvalue(json.loads(binascii.unhexlify(bip32_path)),
                     binascii.unhexlify(label),
                     binascii.unhexlify(passw_encrypted),
                     False, True)
@@ -87,16 +91,23 @@ def main():
         sys.stderr.write('Please provide label for new drive: ')
         label = raw_input()
 
-        passw = base64.b64encode(os.urandom(24))  # 32 bytes in base64, good for AES
+        sys.stderr.write('Computer asked Trezor for new strong password.\nPlease confirm action on your device.\n')
+
+        # 32 bytes, good for AES
+        trezor_entropy = client.get_entropy(32)
+        urandom_entropy = os.urandom(32)
+        passw = hashlib.sha256(trezor_entropy + urandom_entropy).digest()
 
         if len(passw) != 32:
             raise Exception("32 bytes password expected")
 
-        passw_encrypted = client.encrypt_keyvalue([10, 0],
+        bip32_path = [10, 0]
+        passw_encrypted = client.encrypt_keyvalue(bip32_path,
                     label, passw, False, True)
 
         f = open(passw_file, 'wb')
-        f.write(binascii.hexlify(label) + ',' + binascii.hexlify(passw_encrypted))
+        f.write(binascii.hexlify(label) + ',' + binascii.hexlify(passw_encrypted) + \
+            ',' + binascii.hexlify(json.dumps(bip32_path)))
         f.close()
 
         print passw
