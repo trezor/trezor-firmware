@@ -72,18 +72,7 @@ def main():
     rootdir = os.environ['encfs_root']  # Read "man encfs" for more
     passw_file = os.path.join(rootdir, 'password.dat')
 
-    if os.path.exists(passw_file):
-        # Existing encfs drive, let's load password
-
-        sys.stderr.write('Please confirm action on your device.\n')
-        label, passw_encrypted, bip32_path = open(passw_file, 'r').read().split(',')
-        passw = client.decrypt_keyvalue(json.loads(binascii.unhexlify(bip32_path)),
-                    binascii.unhexlify(label),
-                    binascii.unhexlify(passw_encrypted),
-                    False, True)
-        print passw
-
-    else:
+    if not os.path.exists(passw_file):
         # New encfs drive, let's generate password
 
         sys.stderr.write('Please provide label for new drive: ')
@@ -108,7 +97,16 @@ def main():
             ',' + binascii.hexlify(json.dumps(bip32_path)))
         f.close()
 
-        print passw
+    # Let's load password
+
+    sys.stderr.write('Please confirm action on your device.\n')
+    label, passw_encrypted, bip32_path = open(passw_file, 'r').read().split(',')
+    passw = client.decrypt_keyvalue(json.loads(binascii.unhexlify(bip32_path)),
+                binascii.unhexlify(label),
+                binascii.unhexlify(passw_encrypted),
+                False, True)
+    print passw
+
 
 if __name__ == '__main__':
     main()
