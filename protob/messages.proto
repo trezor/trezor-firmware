@@ -48,6 +48,8 @@ enum MessageType {
 	MessageType_SignMessage = 38 [(wire_in) = true];
 	MessageType_VerifyMessage = 39 [(wire_in) = true];
 	MessageType_MessageSignature = 40 [(wire_out) = true];
+	MessageType_EncryptMessage = 48 [(wire_in) = true];
+	MessageType_DecryptMessage = 49 [(wire_in) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
 	MessageType_PassphraseAck = 42 [(wire_in) = true];
 	MessageType_EstimateTxSize = 43 [(wire_in) = true];
@@ -385,14 +387,37 @@ message MessageSignature {
 ///////////////////////////
 
 /**
+ * Request: Ask device to encrypt message
+ * @next Success
+ * @next Failure
+ */
+message EncryptMessage {
+	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
+	optional bytes pubkey = 2;				// public key
+	optional bytes message = 3;				// message to encrypt
+}
+
+/**
+ * Request: Ask device to decrypt message
+ * @next Success
+ * @next Failure
+ */
+message DecryptMessage {
+	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
+	optional bytes pubkey = 2;				// public key
+	optional bytes message = 3;				// message to decrypt
+	optional bool show_only = 4;				// show just on display? (don't send back via wire)
+}
+
+/**
  * Request: Ask device to encrypt or decrypt value of given key
  * @next Success
  * @next Failure
  */
 message CipherKeyValue {
-	repeated uint32 address_n = 1;
-	optional string key = 2;
-	optional bytes value = 3;
+	repeated uint32 address_n = 1;		// BIP-32 path to derive the key from master node
+	optional string key = 2;		// key component of key:value
+	optional bytes value = 3;		// value component of key:value
 	optional bool encrypt = 4;		// are we encrypting (True) or decrypting (False)?
 	optional bool ask_on_encrypt = 5;	// should we ask on encrypt operation?
 	optional bool ask_on_decrypt = 6;	// should we ask on decrypt operation?

@@ -122,7 +122,7 @@ message CoinType {
 	optional uint64 maxfee_kb = 4;
 }
 
-/*
+/**
  * Type of redeem script used in input
  * @used_in TxInputType
  */
@@ -181,7 +181,8 @@ message TransactionType {
 	optional uint32 outputs_cnt = 7;
 }
 
-/*
+/**
+ * Structure representing request details
  * @used_in TxRequest
  */
 message TxRequestDetailsType {
@@ -189,7 +190,8 @@ message TxRequestDetailsType {
 	optional bytes tx_hash = 2;		// tx_hash of requested transaction
 }
 
-/*
+/**
+ * Structure representing serialized data
  * @used_in TxRequest
  */
 message TxRequestSerializedType {
