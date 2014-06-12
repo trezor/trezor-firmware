@@ -149,6 +149,19 @@ class Commands(object):
         signature = base64.b64decode(args.signature)
         return self.client.verify_message(args.address, signature, args.message)
 
+    def encrypt_message(self, args):
+        address_n = self.client.expand_path(args.n)
+        pubkey = binascii.unhexlify(args.pubkey)
+        ret = self.client.encrypt_message(address_n, pubkey, args.message)
+        return binascii.hexlify(ret)
+
+    def decrypt_message(self, args):
+        address_n = self.client.expand_path(args.n)
+        pubkey = binascii.unhexlify(args.pubkey)
+        message = binascii.unhexlify(args.message)
+        ret = self.client.decrypt_message(address_n, pubkey, message, args.show_only)
+        return ret
+
     def encrypt_keyvalue(self, args):
         address_n = self.client.expand_path(args.n)
         ret = self.client.encrypt_keyvalue(address_n, args.key, args.value)
@@ -156,7 +169,6 @@ class Commands(object):
 
     def decrypt_keyvalue(self, args):
         address_n = self.client.expand_path(args.n)
-        value = binascii.unhexlify(args.value)
         ret = self.client.decrypt_keyvalue(address_n, args.key, value)
         return ret
 
@@ -185,6 +197,8 @@ class Commands(object):
     reset_device.help = 'Perform device setup and generate new seed'
     sign_message.help = 'Sign message using address of given path'
     verify_message.help = 'Verify message'
+    encrypt_message.help = 'Encrypt message'
+    decrypt_message.help = 'Decrypt message'
     encrypt_keyvalue.help = 'Encrypt value by given key and path'
     decrypt_keyvalue.help = 'Decrypt value by given key and path'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
@@ -247,6 +261,19 @@ class Commands(object):
         (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
         (('-n', '-address'), {'type': str}),
         (('message',), {'type': str}),
+    )
+
+    encrypt_message.arguments = (
+        (('-n', '-address'), {'type': str}),
+        (('pubkey',), {'type': str}),
+        (('message',), {'type': str}),
+    )
+
+    decrypt_message.arguments = (
+        (('-n', '-address'), {'type': str}),
+        (('pubkey',), {'type': str}),
+        (('message',), {'type': str}),
+        (('-s', '--show-only'), {'action': 'store_true', 'default': False}),
     )
 
     verify_message.arguments = (
