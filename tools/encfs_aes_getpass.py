@@ -48,7 +48,7 @@ def list_devices(devices):
         i += 1
 
     sys.stderr.write("----------------------------\n")
-    sys.stderr.write("Please choice device to use: ")
+    sys.stderr.write("Please choose device to use: ")
 
     try:
         device_id = int(raw_input())
