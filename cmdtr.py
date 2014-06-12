@@ -149,12 +149,12 @@ class Commands(object):
         signature = base64.b64decode(args.signature)
         return self.client.verify_message(args.address, signature, args.message)
 
-    def encrypt(self, args):
+    def encrypt_keyvalue(self, args):
         address_n = self.client.expand_path(args.n)
         ret = self.client.encrypt_keyvalue(address_n, args.key, args.value)
         return binascii.hexlify(ret)
 
-    def decrypt(self, args):
+    def decrypt_keyvalue(self, args):
         address_n = self.client.expand_path(args.n)
         value = binascii.unhexlify(args.value)
         ret = self.client.decrypt_keyvalue(address_n, args.key, value)
@@ -185,8 +185,8 @@ class Commands(object):
     reset_device.help = 'Perform device setup and generate new seed'
     sign_message.help = 'Sign message using address of given path'
     verify_message.help = 'Verify message'
-    encrypt.help = 'Encrypt value by given key and path'
-    decrypt.help = 'Decrypt value by given key and path'
+    encrypt_keyvalue.help = 'Encrypt value by given key and path'
+    decrypt_keyvalue.help = 'Decrypt value by given key and path'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     get_address.arguments = (
@@ -255,13 +255,13 @@ class Commands(object):
         (('message',), {'type': str}),
     )
 
-    encrypt.arguments = (
+    encrypt_keyvalue.arguments = (
         (('-n', '-address'), {'type': str}),
         (('key',), {'type': str}),
         (('value',), {'type': str}),
     )
 
-    decrypt.arguments = (
+    decrypt_keyvalue.arguments = (
         (('-n', '-address'), {'type': str}),
         (('key',), {'type': str}),
         (('value',), {'type': str}),
