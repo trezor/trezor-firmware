@@ -141,7 +141,7 @@ class TextUIMixin(object):
         super(TextUIMixin, self).__init__(*args, **kwargs)
 
     def callback_ButtonRequest(self, msg):
-        log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
+        # log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
         return proto.ButtonAck()
 
     def callback_PinMatrixRequest(self, msg):
@@ -153,17 +153,21 @@ class TextUIMixin(object):
             desc = 'new PIN again'
         else:
             desc = 'PIN'
-        pin = raw_input("Please enter %s: " % desc)
+
+        log("Please enter %s: " % desc)
+        pin = raw_input()
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
-        passphrase = raw_input("Passphrase required: ")
+        log("Passphrase required: ")
+        passphrase = raw_input()
         passphrase = unicode(str(bytearray(passphrase, 'utf-8')), 'utf-8')
 
         return proto.PassphraseAck(passphrase=passphrase)
 
     def callback_WordRequest(self, msg):
-        word = raw_input("Enter one word of mnemonic: ")
+        log("Enter one word of mnemonic: ")
+        word = raw_input()
         return proto.WordAck(word=word)
 
 class DebugLinkMixin(object):
