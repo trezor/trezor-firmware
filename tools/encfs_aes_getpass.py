@@ -27,7 +27,7 @@ def wait_for_devices():
 
     return devices
 
-def list_devices(devices):
+def choose_device(devices):
     i = 0
     sys.stderr.write("----------------------------\n")
     sys.stderr.write("Available devices:\n")
@@ -52,23 +52,21 @@ def list_devices(devices):
 
     try:
         device_id = int(raw_input())
-        t = HidTransport(devices[device_id])
-        t.close()
+        transport = HidTransport(devices[device_id])
     except:
         raise Exception("Invalid choice, exiting...")
 
-    return device_id
+    return transport
 
 def main():
 
     devices = wait_for_devices()
 
     if len(devices) > 1:
-        device_id = list_devices(devices)
+        transport = choose_device(devices)
     else:
-        device_id = 0
+        transport = HidTransport(devices[0])
 
-    transport = HidTransport(devices[device_id])
     client = TrezorClient(transport)
 
     rootdir = os.environ['encfs_root']  # Read "man encfs" for more
