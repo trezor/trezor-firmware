@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import binascii
 import hashlib
@@ -22,6 +23,10 @@ def pprint(msg):
         return "<%s> (%d bytes):\n" % (msg.__class__.__name__, msg.ByteSize())
     else:
         return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
+
+def log(msg):
+    sys.stderr.write("%s\n" % msg)
+    sys.stderr.flush()
 
 class CallException(Exception):
     def __init__(self, code, message):
@@ -120,9 +125,9 @@ class BaseClient(object):
 
 class DebugWireMixin(object):
     def call_raw(self, msg):
-        print "SENDING", pprint(msg)
+        log("SENDING " + pprint(msg))
         resp = super(DebugWireMixin, self).call_raw(msg)
-        print "RECEIVED", pprint(resp)
+        log("RECEIVED" + pprint(resp))
         return resp
 
 class TextUIMixin(object):
@@ -136,7 +141,7 @@ class TextUIMixin(object):
         super(TextUIMixin, self).__init__(*args, **kwargs)
 
     def callback_ButtonRequest(self, msg):
-        print "Sending ButtonAck for %s " % get_buttonrequest_value(msg.code)
+        log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
         return proto.ButtonAck()
 
     def callback_PinMatrixRequest(self, msg):
@@ -255,9 +260,9 @@ class DebugLinkMixin(object):
                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
             
     def callback_ButtonRequest(self, msg):
-        print "ButtonRequest code:", get_buttonrequest_value(msg.code)
+        log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
 
-        print "Pressing button", self.button
+        log("Pressing button " + self.button)
         self.debug.press_button(self.button)
         return proto.ButtonAck()
 
@@ -269,7 +274,7 @@ class DebugLinkMixin(object):
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
-        print "Provided passphrase: '%s'" % self.passphrase
+        log("Provided passphrase: '%s'" % self.passphrase)
         return proto.PassphraseAck(passphrase=self.passphrase)
 
     def callback_WordRequest(self, msg):
@@ -508,7 +513,7 @@ class ProtocolMixin(object):
 
                 # If there's some part of signed transaction, let's add it
                 if res.HasField('serialized') and res.serialized.HasField('serialized_tx'):
-                    print "RECEIVED PART OF SERIALIZED TX (%d BYTES)" % len(res.serialized.serialized_tx)
+                    log("RECEIVED PART OF SERIALIZED TX (%d BYTES)" % len(res.serialized.serialized_tx))
                     serialized_tx += res.serialized.serialized_tx
 
                 if res.HasField('serialized') and res.serialized.HasField('signature_index'):
@@ -563,8 +568,8 @@ class ProtocolMixin(object):
         if None in signatures:
             raise Exception("Some signatures are missing!")
 
-        print "SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" % \
-                (time.time() - start, counter, len(serialized_tx))
+        log("SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" % \
+                (time.time() - start, counter, len(serialized_tx)))
 
         return (signatures, serialized_tx)
 
@@ -613,7 +618,7 @@ class ProtocolMixin(object):
             raise Exception("Invalid response, expected EntropyRequest")
 
         external_entropy = self._get_local_entropy()
-        print "Computer generated entropy:", binascii.hexlify(external_entropy)
+        log("Computer generated entropy: " + binascii.hexlify(external_entropy))
         ret = self.call(proto.EntropyAck(entropy=external_entropy))
         self.init_device()
         return ret
