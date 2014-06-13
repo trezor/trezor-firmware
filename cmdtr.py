@@ -150,16 +150,14 @@ class Commands(object):
         return self.client.verify_message(args.address, signature, args.message)
 
     def encrypt_message(self, args):
-        address_n = self.client.expand_path(args.n)
         pubkey = binascii.unhexlify(args.pubkey)
-        ret = self.client.encrypt_message(address_n, pubkey, args.message)
+        ret = self.client.encrypt_message(pubkey, args.message, args.display_only)
         return binascii.hexlify(ret)
 
     def decrypt_message(self, args):
         address_n = self.client.expand_path(args.n)
-        pubkey = binascii.unhexlify(args.pubkey)
         message = binascii.unhexlify(args.message)
-        ret = self.client.decrypt_message(address_n, pubkey, message, args.show_only)
+        ret = self.client.decrypt_message(address_n, message)
         return ret
 
     def encrypt_keyvalue(self, args):
@@ -264,16 +262,14 @@ class Commands(object):
     )
 
     encrypt_message.arguments = (
-        (('-n', '-address'), {'type': str}),
         (('pubkey',), {'type': str}),
         (('message',), {'type': str}),
+        (('-d', '--display-only'), {'action': 'store_true', 'default': False}),
     )
 
     decrypt_message.arguments = (
         (('-n', '-address'), {'type': str}),
-        (('pubkey',), {'type': str}),
         (('message',), {'type': str}),
-        (('-s', '--show-only'), {'action': 'store_true', 'default': False}),
     )
 
     verify_message.arguments = (
