@@ -266,7 +266,7 @@ class DebugLinkMixin(object):
     def callback_ButtonRequest(self, msg):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
 
-        log("Pressing button " + self.button)
+        log("Pressing button " + str(self.button))
         self.debug.press_button(self.button)
         return proto.ButtonAck()
 
