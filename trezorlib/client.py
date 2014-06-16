@@ -127,7 +127,7 @@ class DebugWireMixin(object):
     def call_raw(self, msg):
         log("SENDING " + pprint(msg))
         resp = super(DebugWireMixin, self).call_raw(msg)
-        log("RECEIVED" + pprint(resp))
+        log("RECEIVED " + pprint(resp))
         return resp
 
 class TextUIMixin(object):
