@@ -109,6 +109,11 @@ void storage_reset(void)
 	// reset storage struct
 	memset(&storage, 0, sizeof(storage));
 	storage.version = STORAGE_VERSION;
+	session_clear();
+}
+
+void session_clear(void)
+{
 	sessionRootNodeCached = false;   memset(&sessionRootNode, 0, sizeof(sessionRootNode));
 	sessionPassphraseCached = false; memset(&sessionPassphrase, 0, sizeof(sessionPassphrase));
 	sessionPinCached = false;        memset(&sessionPin, 0, sizeof(sessionPin));

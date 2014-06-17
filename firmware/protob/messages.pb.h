@@ -35,6 +35,7 @@ typedef enum _MessageType {
     MessageType_MessageType_TxRequest = 21,
     MessageType_MessageType_TxAck = 22,
     MessageType_MessageType_CipherKeyValue = 23,
+    MessageType_MessageType_ClearSession = 24,
     MessageType_MessageType_ApplySettings = 25,
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
@@ -45,6 +46,8 @@ typedef enum _MessageType {
     MessageType_MessageType_SignMessage = 38,
     MessageType_MessageType_VerifyMessage = 39,
     MessageType_MessageType_MessageSignature = 40,
+    MessageType_MessageType_EncryptMessage = 48,
+    MessageType_MessageType_DecryptMessage = 49,
     MessageType_MessageType_PassphraseRequest = 41,
     MessageType_MessageType_PassphraseAck = 42,
     MessageType_MessageType_EstimateTxSize = 43,
@@ -67,6 +70,10 @@ typedef struct _ButtonAck {
 typedef struct _Cancel {
     uint8_t dummy_field;
 } Cancel;
+
+typedef struct _ClearSession {
+    uint8_t dummy_field;
+} ClearSession;
 
 typedef struct _DebugLinkGetState {
     uint8_t dummy_field;
@@ -188,6 +195,18 @@ typedef struct _DebugLinkState {
     bool has_recovery_word_pos;
     uint32_t recovery_word_pos;
 } DebugLinkState;
+
+typedef struct _DecryptMessage {
+    pb_callback_t address_n;
+    pb_callback_t message;
+} DecryptMessage;
+
+typedef struct _EncryptMessage {
+    pb_callback_t pubkey;
+    pb_callback_t message;
+    bool has_display_only;
+    bool display_only;
+} EncryptMessage;
 
 typedef struct {
     size_t size;
@@ -500,6 +519,11 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define DebugLinkState_reset_entropy_tag         8
 #define DebugLinkState_recovery_fake_word_tag    9
 #define DebugLinkState_recovery_word_pos_tag     10
+#define DecryptMessage_address_n_tag             1
+#define DecryptMessage_message_tag               2
+#define EncryptMessage_pubkey_tag                1
+#define EncryptMessage_message_tag               2
+#define EncryptMessage_display_only_tag          3
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
 #define EstimateTxSize_outputs_count_tag         1
@@ -581,6 +605,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t Features_fields[16];
+extern const pb_field_t ClearSession_fields[1];
 extern const pb_field_t ApplySettings_fields[3];
 extern const pb_field_t ChangePin_fields[2];
 extern const pb_field_t Ping_fields[5];
@@ -610,6 +635,8 @@ extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
+extern const pb_field_t EncryptMessage_fields[4];
+extern const pb_field_t DecryptMessage_fields[3];
 extern const pb_field_t CipherKeyValue_fields[7];
 extern const pb_field_t EstimateTxSize_fields[4];
 extern const pb_field_t TxSize_fields[2];
@@ -628,6 +655,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define Features_size                            (224 + 4*CoinType_size)
+#define ClearSession_size                        0
 #define ApplySettings_size                       54
 #define ChangePin_size                           2
 #define Ping_size                                265

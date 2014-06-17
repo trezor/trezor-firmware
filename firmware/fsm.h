@@ -42,6 +42,7 @@ void fsm_msgSignTx(SignTx *msg);
 void fsm_msgCancel(Cancel *msg);
 void fsm_msgTxAck(TxAck *msg);
 void fsm_msgCipherKeyValue(CipherKeyValue *msg);
+void fsm_msgClearSession(ClearSession *msg);
 void fsm_msgApplySettings(ApplySettings *msg);
 //void fsm_msgButtonAck(ButtonAck *msg);
 void fsm_msgGetAddress(GetAddress *msg);

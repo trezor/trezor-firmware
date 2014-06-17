@@ -419,6 +419,13 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 	layoutHome();
 }
 
+void fsm_msgClearSession(ClearSession *msg)
+{
+	(void)msg;
+	session_clear();
+	fsm_sendSuccess("Session cleared");
+}
+
 void fsm_msgApplySettings(ApplySettings *msg)
 {
 	if (msg->has_label && msg->has_language) {
