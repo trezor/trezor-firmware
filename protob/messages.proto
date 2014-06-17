@@ -38,6 +38,7 @@ enum MessageType {
 	MessageType_TxRequest = 21 [(wire_out) = true];
 	MessageType_TxAck = 22 [(wire_in) = true];
 	MessageType_CipherKeyValue = 23 [(wire_in) = true];
+	MessageType_ClearSession = 24 [(wire_in) = true];
 	MessageType_ApplySettings = 25 [(wire_in) = true];
 	MessageType_ButtonRequest = 26 [(wire_out) = true];
 	MessageType_ButtonAck = 27 [(wire_in) = true];
@@ -95,6 +96,13 @@ message Features {
 	optional bytes revision = 13;			// SCM revision of firmware
 	optional bytes bootloader_hash = 14;		// hash of the bootloader
 	optional bool imported = 15;			// was storage imported from an external source?
+}
+
+/**
+ * Request: clear session (removes cached PIN, passphrase, etc).
+ * @next Success
+ */
+message ClearSession {
 }
 
 /**
