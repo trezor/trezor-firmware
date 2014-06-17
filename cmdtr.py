@@ -108,6 +108,9 @@ class Commands(object):
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
 
+    def clear_session(self, args):
+        return self.client.clear_session()
+
     def change_pin(self, args):
         return self.client.change_pin(args.remove)
 
@@ -187,6 +190,7 @@ class Commands(object):
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
     set_label.help = 'Set new wallet label'
+    clear_session.help = 'Clear session (remove cached PIN, passphrase, etc.)'
     change_pin.help = 'Change new PIN or remove existing'
     list_coins.help = 'List all supported coin types by the device'
     wipe_device.help = 'Reset device to factory defaults and remove all private data.'

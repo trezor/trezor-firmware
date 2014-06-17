@@ -380,6 +380,11 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
+    def clear_session(self):
+        return self.call(proto.ClearSession())
+
+    @field('message')
+    @expect(proto.Success)
     def change_pin(self, remove=False):
         ret = self.call(proto.ChangePin(remove=remove))
         self.init_device()  # Re-read features
