@@ -17,9 +17,9 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libopencm3/stm32/f2/rcc.h>
-#include <libopencm3/stm32/f2/gpio.h>
-#include <libopencm3/stm32/f2/spi.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/f2/rng.h>
 
 void setup(void)

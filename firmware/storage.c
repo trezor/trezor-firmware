@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include <libopencm3/stm32/f2/flash.h>
+#include <libopencm3/stm32/flash.h>
 
 #include "messages.pb.h"
 #include "storage.pb.h"

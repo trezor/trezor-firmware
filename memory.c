@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libopencm3/stm32/f2/flash.h>
+#include <libopencm3/stm32/flash.h>
 #include <stdint.h>
 #include "memory.h"
 #include "sha2.h"
