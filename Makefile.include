@@ -1,3 +1,6 @@
+TOP_DIR       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+TOOLCHAIN_DIR := $(TOP_DIR)/../libopencm3
+
 PREFIX ?= arm-none-eabi-
 CC      = $(PREFIX)gcc
 LD      = $(PREFIX)gcc
@@ -5,8 +8,6 @@ OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 FLASH   = st-flash
 OPENOCD = openocd
-TOP_DIR = /home/stick/work/trezor/trezor-mcu
-TOOLCHAIN_DIR = $(TOP_DIR)/../libopencm3
 
 OPTFLAGS  = -Os -g
 
