@@ -33,6 +33,8 @@ CFLAGS   += $(OPTFLAGS) \
             -fno-common \
             -fno-exceptions \
             -fvisibility=internal \
+            -ffunction-sections \
+            -fdata-sections \
             -mcpu=cortex-m3 \
             -mthumb \
             -msoft-float \
