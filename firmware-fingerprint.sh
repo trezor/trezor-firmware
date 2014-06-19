@@ -7,5 +7,6 @@ if [ "x$MAGIC" != "xTRZR" ]; then
     exit 1
 fi
 
+echo "---------------------"
 echo "Firmware fingerprint:"
 tail -c +257 $1 | sha256sum

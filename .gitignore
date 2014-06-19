@@ -1,10 +1,10 @@
+*.o
 *.a
 *.d
-*.o
 *.bin
 *.elf
 *.hex
 *.list
 *.srec
-usb.pb*
+*.log
 bootloader

@@ -3,10 +3,10 @@
 dirname $0
 
 # Build trezor firmware
-docker build . | tee docker.log
+docker build . | tee firmware-docker-build.log
 
 # Parse image name
-IMAGE=`grep "Successfully built" docker.log | tail -n1 | cut -d' ' -f3`
+IMAGE=`grep "Successfully built" firmware-docker-build.log | tail -n1 | cut -d' ' -f3`
 echo "IMAGE NAME: $IMAGE"
 
 docker run -t $IMAGE true
@@ -17,8 +17,7 @@ echo "CONTAINER NAME: $CONTAINER"
 
 docker cp $CONTAINER:/trezor-mcu/firmware/trezor.bin .
 
-echo "-------------------------"
-echo ""
-echo "SHA256 hash:"
+echo "---------------------"
+echo "Firmware fingerprint:"
 
 sha256sum trezor.bin
