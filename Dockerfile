@@ -4,7 +4,7 @@ FROM ubuntu:14.04
 
 # add and update package repositories
 
-RUN echo "deb http://ppa.launchpad.net/terry.guo/gcc-arm-embedded/ubuntu trusty main" >> /etc/apt/sources.list && apt-get update
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A3421AFB && echo "deb http://ppa.launchpad.net/terry.guo/gcc-arm-embedded/ubuntu trusty main" >> /etc/apt/sources.list && apt-get update
 
 # install build tools and dependencies
 
