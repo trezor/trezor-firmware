@@ -518,6 +518,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 	fsm_deriveKey(node, msg->address_n, msg->address_n_count);
 
 	ecdsa_get_address(node->public_key, coin->address_type, resp->address);
+	layoutProgressSwipe("Signing", 0, 0);
 	if (transactionMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->address, resp->signature.bytes)) {
 		resp->has_address = true;
 		resp->has_signature = true;
@@ -532,6 +533,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 void fsm_msgVerifyMessage(VerifyMessage *msg)
 {
 	const char *address = msg->has_address ? msg->address : 0;
+	layoutProgressSwipe("Verifying", 0, 0);
 	if (msg->signature.size == 65 && transactionMessageVerify(msg->message.bytes, msg->message.size, msg->signature.bytes, address)) {
 		layoutVerifyMessage(msg->message.bytes, msg->message.size);
 		protectButton(ButtonRequestType_ButtonRequest_Other, true);

@@ -185,9 +185,9 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 		}
 	}
 
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
 		ascii ? "Sign text message?" : "Sign binary message?",
-		str[0], str[1], str[2], str[3], NULL);
+		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
@@ -227,9 +227,9 @@ void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 		}
 	}
 
-	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK", NULL,
-		ascii ? "Message contents:" : "Bin message contents:",
-		str[0], str[1], str[2], str[3], NULL);
+	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
+		ascii ? "Message contents" : "Binary message contents",
+		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
 void layoutCipherKeyValue(bool encrypt, const char *key)
@@ -247,7 +247,7 @@ void layoutCipherKeyValue(bool encrypt, const char *key)
 	if (len > 48) {
 		strlcpy(str[3], (char *)key + 48, 17);
 	}
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL,
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
 		encrypt ? "Encrypt?" : "Decrypt?",
-		str[0], str[1], str[2], str[3], NULL);
+		str[0], str[1], str[2], str[3], NULL, NULL);
 }
