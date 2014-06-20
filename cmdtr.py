@@ -170,7 +170,7 @@ class Commands(object):
 
     def decrypt_keyvalue(self, args):
         address_n = self.client.expand_path(args.n)
-        ret = self.client.decrypt_keyvalue(address_n, args.key, value)
+        ret = self.client.decrypt_keyvalue(address_n, args.key, args.value)
         return ret
 
     def firmware_update(self, args):
