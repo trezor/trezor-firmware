@@ -57,7 +57,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 
 		// button acked - check buttons
 		if (acked) {
-			delay(50000);
+			delay(100000);
 			buttonUpdate();
 			if (button.YesUp) {
 				result = true;
