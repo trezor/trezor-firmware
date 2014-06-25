@@ -4,7 +4,7 @@ FROM ubuntu:14.04
 
 # add and update package repositories
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A3421AFB && echo "deb http://ppa.launchpad.net/terry.guo/gcc-arm-embedded/ubuntu trusty main" >> /etc/apt/sources.list && apt-get update
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FE324A81C208C89497EFC6246D1D8367A3421AFB && echo "deb http://ppa.launchpad.net/terry.guo/gcc-arm-embedded/ubuntu trusty main" >> /etc/apt/sources.list && apt-get update
 
 # define used versions for pinning
 
