@@ -4,10 +4,13 @@ import time
 import binascii
 import hashlib
 import unicodedata
+import mapping
+import json
 
 import tools
 import messages_pb2 as proto
 import types_pb2 as types
+import protobuf_json
 from trezorlib.debuglink import DebugLink
 from mnemonic import Mnemonic
 
@@ -19,10 +22,17 @@ def get_buttonrequest_value(code):
     return [ k for k, v in types.ButtonRequestType.items() if v == code][0]
 
 def pprint(msg):
+    msg_class = msg.__class__.__name__
+    msg_size = msg.ByteSize()
+    """
+    msg_ser = msg.SerializeToString()
+    msg_id = mapping.get_type(msg)
+    msg_json = json.dumps(protobuf_json.pb2json(msg))
+    """
     if isinstance(msg, proto.FirmwareUpload):
-        return "<%s> (%d bytes):\n" % (msg.__class__.__name__, msg.ByteSize())
+        return "<%s> (%d bytes):\n" % (msg_class, msg_size)
     else:
-        return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
+        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
 
 def log(msg):
     sys.stderr.write("%s\n" % msg)
