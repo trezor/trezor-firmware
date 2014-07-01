@@ -8,9 +8,9 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FE324A81C208C89497E
 
 # define used versions for pinning
 
-ENV GCC_ARM_VERSION    4-8-2014q2-0trusty9
-ENV LIBOPENCM3_GITREV  c01f9ee323d06b5325d77cda593a46dfe76ba341
-ENV TREZOR_MCU_GITREV  e9fd756daad713525fa30bc3a08df4127548383f
+ENV GCC_ARM_VERSION    4-8-2014q2-0trusty10
+ENV LIBOPENCM3_GITREV  f6b6d62ec5628ebb0602c466ee9fd7a6070ef1f0
+ENV TREZOR_MCU_GITREV  v1.2.0
 
 # install build tools and dependencies
 
