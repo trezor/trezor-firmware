@@ -338,10 +338,12 @@ void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key)
 void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 {
 	uint8_t h[32];
-	if (pub_key[0] == 0x04) {
+	if (pub_key[0] == 0x04) {  // uncompressed format
 		sha256_Raw(pub_key, 65, h);
+	} else if (pub_key[0] == 0x00) { // point at infinity
+		sha256_Raw(pub_key, 1, h);
 	} else {
-		sha256_Raw(pub_key, 33, h);
+		sha256_Raw(pub_key, 33, h); // expecting compressed format
 	}
 	ripemd160(h, 32, pubkeyhash);
 }
