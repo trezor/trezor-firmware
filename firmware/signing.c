@@ -374,8 +374,9 @@ void signing_txack(TransactionType *tx)
 						return;
 					}
 					uint64_t fee = to_spend - spending;
-					if (fee > (((uint64_t)tc.size + 999) / 1000) * coin->maxfee_kb) {
-						layoutFeeOverThreshold(coin, fee, ((uint64_t)tc.size + 999) / 1000);
+					uint32_t tx_est_size = transactionEstimateSizeKb(inputs_count, outputs_count);
+					if (fee > (uint64_t)tx_est_size * coin->maxfee_kb) {
+						layoutFeeOverThreshold(coin, fee, tx_est_size);
 						if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold, false)) {
 							fsm_sendFailure(FailureType_Failure_ActionCancelled, "Fee over threshold. Signing cancelled.");
 							layoutHome();
