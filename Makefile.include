@@ -123,5 +123,5 @@ clean:
 	rm -f *.elf
 	rm -f *.hex
 	rm -f *.list
-	rm -r *.log
+	rm -f *.log
 	rm -f *.srec

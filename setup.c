@@ -29,16 +29,18 @@ void setup(void)
 	rcc_clock_setup_hse_3v3(&clock);
 
 	// enable GPIO clock - A (oled), B(oled), C (buttons)
-	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN | RCC_AHB1ENR_IOPBEN | RCC_AHB1ENR_IOPCEN);
+	rcc_periph_clock_enable(RCC_GPIOA);
+	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOC);
 
 	// enable SPI clock
-	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_SPI1EN);
+	rcc_periph_clock_enable(RCC_SPI1);
 
 	// enable OTG FS clock
-	rcc_peripheral_enable_clock(&RCC_AHB2ENR, RCC_AHB2ENR_OTGFSEN);
+	rcc_periph_clock_enable(RCC_OTGFS);
 
 	// enable RNG
-	rcc_peripheral_enable_clock(&RCC_AHB2ENR, RCC_AHB2ENR_RNGEN);
+	rcc_periph_clock_enable(RCC_RNG);
 	RNG_CR |= RNG_CR_IE | RNG_CR_RNGEN;
 
 	// set GPIO for buttons
@@ -61,6 +63,6 @@ void setup(void)
 	spi_enable(SPI1);
 
 	// enable OTG_FS
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO11 | GPIO12);
-	gpio_set_af(GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
 }
