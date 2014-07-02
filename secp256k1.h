@@ -54,7 +54,6 @@ extern const bignum256 secp256k1_iv[256];
 
 #if USE_PRECOMPUTED_CP
 extern const curve_point secp256k1_cp[256];
-extern const curve_point secp256k1_cp2[255];
 #endif
 
 #endif
