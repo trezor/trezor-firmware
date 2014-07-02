@@ -729,7 +729,11 @@ class ProtocolMixin(object):
         if isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
             return False
 
-        resp = self.call(proto.FirmwareUpload(payload=fp.read()))
+        data = fp.read()
+        fingerprint = hashlib.sha256(data[256:]).hexdigest()
+        log("Firmware fingerprint: " + fingerprint)
+        resp = self.call(proto.FirmwareUpload(payload=data))
+
         if isinstance(resp, proto.Success):
             return True
 
