@@ -82,6 +82,7 @@ enum ButtonRequestType {
 	ButtonRequest_WipeDevice = 6;
 	ButtonRequest_ProtectCall = 7;
 	ButtonRequest_SignTx = 8;
+	ButtonRequest_FirmwareCheck = 9;
 }
 
 /**
