@@ -123,38 +123,39 @@ void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
 // res = k * G
 void scalar_multiply(const bignum256 *k, curve_point *res)
 {
-	int i, j;
+	int i;
 	// result is zero
 	int is_zero = 1;
-#if USE_PRECOMPUTED_CP
-	int exp = 0;
-#else
 	curve_point curr;
 	// initial res
 	memcpy(&curr, &G256k1, sizeof(curve_point));
-#endif
-	for (i = 0; i < 9; i++) {
-		for (j = 0; j < 30; j++) {
-			if (i == 8 && (k->val[i] >> j) == 0) break;
-			if (k->val[i] & (1u << j)) {
-				if (is_zero) {
+	for (i = 0; i < 256; i++) {
+		if (k->val[i / 30] & (1u << (i % 30))) {
+			if (is_zero) {
 #if USE_PRECOMPUTED_CP
-					memcpy(res, secp256k1_cp + exp, sizeof(curve_point));
-#else
-					memcpy(res, &curr, sizeof(curve_point));
-#endif
-					is_zero = 0;
+				if (i < 255 && (k->val[(i + 1) / 30] & (1u << ((i + 1) % 30)))) {
+					memcpy(res, secp256k1_cp2 + i, sizeof(curve_point));
+					i++;
 				} else {
-#if USE_PRECOMPUTED_CP
-					point_add(secp256k1_cp + exp, res);
-#else
-					point_add(&curr, res);
-#endif
+					memcpy(res, secp256k1_cp + i, sizeof(curve_point));
 				}
-			}
-#if USE_PRECOMPUTED_CP
-			exp++;
 #else
+				memcpy(res, &curr, sizeof(curve_point));
+#endif
+				is_zero = 0;
+			} else {
+#if USE_PRECOMPUTED_CP
+				if (i < 255 && (k->val[(i + 1) / 30] & (1u << ((i + 1) % 30)))) {
+					point_add(secp256k1_cp2 + i, res);
+					i++;
+				} else {
+					point_add(secp256k1_cp + i, res);
+				}
+#else
+				point_add(&curr, res);
+#endif
+			}
+#if ! USE_PRECOMPUTED_CP
 			point_double(&curr);
 #endif
 		}
