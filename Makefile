@@ -1,5 +1,8 @@
 CC     = gcc
 CFLAGS = -Wall -Wextra -Os -Wno-sequence-point
+ifdef SMALL
+CFLAGS += -DUSE_PRECOMPUTED_IV=0 -DUSE_PRECOMPUTED_CP=0
+endif
 OBJS   = bignum.o ecdsa.o secp256k1.o rand.o hmac.o bip32.o bip39.o pbkdf2.o base58.o
 OBJS  += ripemd160.o
 OBJS  += sha2.o
