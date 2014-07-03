@@ -155,10 +155,10 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 				point_add(&curr, res);
 #endif
 			}
-#if ! USE_PRECOMPUTED_CP
-			point_double(&curr);
-#endif
 		}
+#if ! USE_PRECOMPUTED_CP
+		point_double(&curr);
+#endif
 	}
 	bn_mod(&(res->x), &prime256k1);
 	bn_mod(&(res->y), &prime256k1);

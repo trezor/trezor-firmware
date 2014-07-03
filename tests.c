@@ -325,7 +325,7 @@ START_TEST(test_bip32_compare)
 	int i, r;
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
-	for (i = 0; i < 300; i++) {
+	for (i = 0; i < 100; i++) {
 		memcpy(&node3, &node1, sizeof(HDNode));
 		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
 		r = hdnode_public_ckd(&node2, i);  ck_assert_int_eq(r, 1);
