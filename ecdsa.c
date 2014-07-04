@@ -33,12 +33,38 @@
 #include "ecdsa.h"
 #include "base58.h"
 
+// Set cp2 = cp1
+void point_copy(const curve_point *cp1, curve_point *cp2)
+{
+	memcpy(&(cp2->x),  &(cp1->x), sizeof(bignum256));
+	memcpy(&(cp2->y),  &(cp1->y), sizeof(bignum256));
+}
+
 // cp2 = cp1 + cp2
 void point_add(const curve_point *cp1, curve_point *cp2)
 {
 	int i;
 	uint32_t temp;
 	bignum256 lambda, inv, xr, yr;
+
+	if (point_is_infinity(cp1)) {
+		return;
+	}
+	if (point_is_infinity(cp2)) {
+		point_copy(cp1, cp2);
+		return;
+	}
+	if (point_is_equal(cp1, cp2)) {
+		point_double(cp2);
+		return;
+	}
+	if (point_is_negative_of(cp1, cp2)) {
+		// set to point at infinity
+		bn_zero(&(cp2->x));
+		bn_zero(&(cp2->y));
+		return;
+	}
+
 	bn_substract(&(cp2->x), &(cp1->x), &inv);
 	bn_inverse(&inv, &prime256k1);
 	bn_substract(&(cp2->y), &(cp1->y), &lambda);
@@ -68,6 +94,11 @@ void point_double(curve_point *cp)
 	int i;
 	uint32_t temp;
 	bignum256 lambda, inverse_y, xr, yr;
+
+	if (point_is_infinity(cp)) {
+		return;
+	}
+
 	memcpy(&inverse_y, &(cp->y), sizeof(bignum256));
 	bn_inverse(&inverse_y, &prime256k1);
 	memcpy(&lambda, &three_over_two256k1, sizeof(bignum256));
@@ -118,6 +149,35 @@ void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
 	}
 	bn_mod(&(res->x), &prime256k1);
 	bn_mod(&(res->y), &prime256k1);
+}
+
+// return true iff p represent point at infinity
+// both coords are zero in internal representation
+int point_is_infinity(const curve_point *p)
+{
+	return bn_is_zero(&(p->x)) && bn_is_zero(&(p->y));
+}
+
+// return true iff both points are equal
+int point_is_equal(const curve_point *p, const curve_point *q)
+{
+	return bn_is_equal(&(p->x), &(q->x)) && bn_is_equal(&(p->y), &(q->y));
+}
+
+// returns true iff p == -q
+int point_is_negative_of(const curve_point *p, const curve_point *q)
+{
+	// if P == (x, y), then -P would be (x, -y) on this curve
+	bignum256 y_added;
+
+	if (!bn_is_equal(&(p->x), &(q->x))) {
+		return 0;
+	}
+
+	memcpy(&y_added, &(p->y), sizeof(bignum256));
+	bn_addmod(&y_added, &(q->y), &prime256k1);
+
+	return bn_is_zero(&y_added);
 }
 
 // res = k * G
