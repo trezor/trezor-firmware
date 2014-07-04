@@ -54,14 +54,12 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 		point_copy(cp1, cp2);
 		return;
 	}
-	if (point_is_equal(cp1, cp2)) {
-		point_double(cp2);
+	if (point_is_negative_of(cp1, cp2)) {
+		point_set_infinity(cp2);
 		return;
 	}
-	if (point_is_negative_of(cp1, cp2)) {
-		// set to point at infinity
-		bn_zero(&(cp2->x));
-		bn_zero(&(cp2->y));
+	if (point_is_equal(cp1, cp2)) {
+		point_double(cp2);
 		return;
 	}
 
@@ -96,6 +94,10 @@ void point_double(curve_point *cp)
 	bignum256 lambda, inverse_y, xr, yr;
 
 	if (point_is_infinity(cp)) {
+		return;
+	}
+	if (bn_is_zero(&(cp->y))) {
+		point_set_infinity(cp);
 		return;
 	}
 
@@ -149,6 +151,13 @@ void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
 	}
 	bn_mod(&(res->x), &prime256k1);
 	bn_mod(&(res->y), &prime256k1);
+}
+
+// set point to internal representation of point at infinity
+void point_set_infinity(curve_point *p)
+{
+	bn_zero(&(p->x));
+	bn_zero(&(p->y));
 }
 
 // return true iff p represent point at infinity

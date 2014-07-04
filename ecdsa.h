@@ -36,6 +36,7 @@ void point_copy(const curve_point *cp1, curve_point *cp2);
 void point_add(const curve_point *cp1, curve_point *cp2);
 void point_double(curve_point *cp);
 void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res);
+void point_set_infinity(curve_point *p);
 int point_is_infinity(const curve_point *p);
 int point_is_equal(const curve_point *p, const curve_point *q);
 int point_is_negative_of(const curve_point *p, const curve_point *q);
