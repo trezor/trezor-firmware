@@ -8,8 +8,10 @@ OBJS  += ripemd160.o
 OBJS  += sha2.o
 OBJS  += aescrypt.o aeskey.o aestab.o aes_modes.o
 
+# Required libraries for Linux
 TESTLIBS = -lcheck -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
+
 
 all: tests test-openssl
 
