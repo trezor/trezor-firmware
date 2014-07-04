@@ -460,9 +460,9 @@ int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 		for (j = 0; j < 30; j++) {
 			if (i == 8 && (s.val[i] >> j) == 0) break;
 			if (s.val[i] & (1u << j)) {
-				bn_mod(&(pub.y), &prime256k1);
-				bn_mod(&(res.y), &prime256k1);
-				if (bn_is_equal(&(pub.y), &(res.y))) {
+				bn_mod(&(pub.x), &prime256k1);
+				bn_mod(&(res.x), &prime256k1);
+				if (bn_is_equal(&(pub.x), &(res.x))) {
 					// this is not a failure, but a very inprobable case
 					// that we don't handle because of its inprobability
 					return 4;
