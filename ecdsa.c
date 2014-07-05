@@ -54,12 +54,12 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 		point_copy(cp1, cp2);
 		return;
 	}
-	if (point_is_negative_of(cp1, cp2)) {
-		point_set_infinity(cp2);
-		return;
-	}
 	if (point_is_equal(cp1, cp2)) {
 		point_double(cp2);
+		return;
+	}
+	if (point_is_negative_of(cp1, cp2)) {
+		point_set_infinity(cp2);
 		return;
 	}
 
@@ -84,6 +84,8 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 	bn_fast_mod(&yr, &prime256k1);
 	memcpy(&(cp2->x), &xr, sizeof(bignum256));
 	memcpy(&(cp2->y), &yr, sizeof(bignum256));
+	bn_mod(&(cp2->x), &prime256k1);
+	bn_mod(&(cp2->y), &prime256k1);
 }
 
 // cp = cp + cp
@@ -124,6 +126,8 @@ void point_double(curve_point *cp)
 	bn_fast_mod(&yr, &prime256k1);
 	memcpy(&(cp->x), &xr, sizeof(bignum256));
 	memcpy(&(cp->y), &yr, sizeof(bignum256));
+	bn_mod(&(cp->x), &prime256k1);
+	bn_mod(&(cp->y), &prime256k1);
 }
 
 // res = k * p
@@ -174,19 +178,20 @@ int point_is_equal(const curve_point *p, const curve_point *q)
 }
 
 // returns true iff p == -q
+// expects p and q be valid points on curve other than point at infinity
 int point_is_negative_of(const curve_point *p, const curve_point *q)
 {
 	// if P == (x, y), then -P would be (x, -y) on this curve
-	bignum256 y_added;
-
 	if (!bn_is_equal(&(p->x), &(q->x))) {
 		return 0;
 	}
-
-	memcpy(&y_added, &(p->y), sizeof(bignum256));
-	bn_addmod(&y_added, &(q->y), &prime256k1);
-
-	return bn_is_zero(&y_added);
+	
+	// we shouldn't hit this for a valid point
+	if (bn_is_zero(&(p->y))) {
+		return 0;
+	}
+	
+	return !bn_is_equal(&(p->y), &(q->y));
 }
 
 // res = k * G
