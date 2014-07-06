@@ -153,8 +153,6 @@ void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
 			point_double(&curr);
 		}
 	}
-	bn_mod(&(res->x), &prime256k1);
-	bn_mod(&(res->y), &prime256k1);
 }
 
 // set point to internal representation of point at infinity
@@ -234,8 +232,6 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 		point_double(&curr);
 #endif
 	}
-	bn_mod(&(res->x), &prime256k1);
-	bn_mod(&(res->y), &prime256k1);
 }
 
 // generate random K for signing
@@ -540,7 +536,6 @@ int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 		}
 	}
 
-	bn_mod(&(res.x), &prime256k1);
 	bn_mod(&(res.x), &order256k1);
 
 	// signature does not match
