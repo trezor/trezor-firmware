@@ -33,12 +33,36 @@
 #include "ecdsa.h"
 #include "base58.h"
 
+// Set cp2 = cp1
+void point_copy(const curve_point *cp1, curve_point *cp2)
+{
+	memcpy(&(cp2->x),  &(cp1->x), sizeof(bignum256));
+	memcpy(&(cp2->y),  &(cp1->y), sizeof(bignum256));
+}
+
 // cp2 = cp1 + cp2
 void point_add(const curve_point *cp1, curve_point *cp2)
 {
 	int i;
 	uint32_t temp;
 	bignum256 lambda, inv, xr, yr;
+
+	if (point_is_infinity(cp1)) {
+		return;
+	}
+	if (point_is_infinity(cp2)) {
+		point_copy(cp1, cp2);
+		return;
+	}
+	if (point_is_equal(cp1, cp2)) {
+		point_double(cp2);
+		return;
+	}
+	if (point_is_negative_of(cp1, cp2)) {
+		point_set_infinity(cp2);
+		return;
+	}
+
 	bn_substract(&(cp2->x), &(cp1->x), &inv);
 	bn_inverse(&inv, &prime256k1);
 	bn_substract(&(cp2->y), &(cp1->y), &lambda);
@@ -60,6 +84,8 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 	bn_fast_mod(&yr, &prime256k1);
 	memcpy(&(cp2->x), &xr, sizeof(bignum256));
 	memcpy(&(cp2->y), &yr, sizeof(bignum256));
+	bn_mod(&(cp2->x), &prime256k1);
+	bn_mod(&(cp2->y), &prime256k1);
 }
 
 // cp = cp + cp
@@ -68,6 +94,15 @@ void point_double(curve_point *cp)
 	int i;
 	uint32_t temp;
 	bignum256 lambda, inverse_y, xr, yr;
+
+	if (point_is_infinity(cp)) {
+		return;
+	}
+	if (bn_is_zero(&(cp->y))) {
+		point_set_infinity(cp);
+		return;
+	}
+
 	memcpy(&inverse_y, &(cp->y), sizeof(bignum256));
 	bn_inverse(&inverse_y, &prime256k1);
 	memcpy(&lambda, &three_over_two256k1, sizeof(bignum256));
@@ -91,6 +126,8 @@ void point_double(curve_point *cp)
 	bn_fast_mod(&yr, &prime256k1);
 	memcpy(&(cp->x), &xr, sizeof(bignum256));
 	memcpy(&(cp->y), &yr, sizeof(bignum256));
+	bn_mod(&(cp->x), &prime256k1);
+	bn_mod(&(cp->y), &prime256k1);
 }
 
 // res = k * p
@@ -116,8 +153,43 @@ void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
 			point_double(&curr);
 		}
 	}
-	bn_mod(&(res->x), &prime256k1);
-	bn_mod(&(res->y), &prime256k1);
+}
+
+// set point to internal representation of point at infinity
+void point_set_infinity(curve_point *p)
+{
+	bn_zero(&(p->x));
+	bn_zero(&(p->y));
+}
+
+// return true iff p represent point at infinity
+// both coords are zero in internal representation
+int point_is_infinity(const curve_point *p)
+{
+	return bn_is_zero(&(p->x)) && bn_is_zero(&(p->y));
+}
+
+// return true iff both points are equal
+int point_is_equal(const curve_point *p, const curve_point *q)
+{
+	return bn_is_equal(&(p->x), &(q->x)) && bn_is_equal(&(p->y), &(q->y));
+}
+
+// returns true iff p == -q
+// expects p and q be valid points on curve other than point at infinity
+int point_is_negative_of(const curve_point *p, const curve_point *q)
+{
+	// if P == (x, y), then -P would be (x, -y) on this curve
+	if (!bn_is_equal(&(p->x), &(q->x))) {
+		return 0;
+	}
+	
+	// we shouldn't hit this for a valid point
+	if (bn_is_zero(&(p->y))) {
+		return 0;
+	}
+	
+	return !bn_is_equal(&(p->y), &(q->y));
 }
 
 // res = k * G
@@ -160,8 +232,6 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 		point_double(&curr);
 #endif
 	}
-	bn_mod(&(res->x), &prime256k1);
-	bn_mod(&(res->y), &prime256k1);
 }
 
 // generate random K for signing
@@ -460,20 +530,12 @@ int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 		for (j = 0; j < 30; j++) {
 			if (i == 8 && (s.val[i] >> j) == 0) break;
 			if (s.val[i] & (1u << j)) {
-				bn_mod(&(pub.x), &prime256k1);
-				bn_mod(&(res.x), &prime256k1);
-				if (bn_is_equal(&(pub.x), &(res.x))) {
-					// this is not a failure, but a very inprobable case
-					// that we don't handle because of its inprobability
-					return 4;
-				}
 				point_add(&pub, &res);
 			}
 			point_double(&pub);
 		}
 	}
 
-	bn_mod(&(res.x), &prime256k1);
 	bn_mod(&(res.x), &order256k1);
 
 	// signature does not match
