@@ -8,16 +8,19 @@ OBJS  += ripemd160.o
 OBJS  += sha2.o
 OBJS  += aescrypt.o aeskey.o aestab.o aes_modes.o
 
+TESTLIBS = -lcheck -lrt -lpthread -lm
+TESTSSLLIBS = -lcrypto
+
 all: tests test-openssl
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 tests: tests.o $(OBJS)
-	gcc tests.o $(OBJS) -lcheck -o tests
+	gcc tests.o $(OBJS) $(TESTLIBS) -o tests
 
 test-openssl: test-openssl.o $(OBJS)
-	gcc test-openssl.o $(OBJS) -o test-openssl -lcrypto
+	gcc test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
 
 clean:
 	rm -f *.o tests test-openssl
