@@ -459,7 +459,7 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 	if (pub_key[0] == 0x04) {
 		bn_read_be(pub_key + 1, &(pub->x));
 		bn_read_be(pub_key + 33, &(pub->y));
-#ifdef USE_PUBKEY_VALIDATE
+#if USE_PUBKEY_VALIDATE
 		return ecdsa_validate_pubkey(pub);
 #else
 		return 1;
@@ -468,7 +468,7 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 	if (pub_key[0] == 0x02 || pub_key[0] == 0x03) { // compute missing y coords
 		bn_read_be(pub_key + 1, &(pub->x));
 		uncompress_coords(pub_key[0], &(pub->x), &(pub->y));
-#ifdef USE_PUBKEY_VALIDATE
+#if USE_PUBKEY_VALIDATE
 		return ecdsa_validate_pubkey(pub);
 #else
 		return 1;
@@ -502,6 +502,8 @@ int ecdsa_validate_pubkey(const curve_point *pub)
 
 	// y^2
 	bn_multiply(&(pub->y), &y_2, &prime256k1);
+	bn_mod(&y_2, &prime256k1);
+
 	// x^3 + b
 	bn_multiply(&(pub->x), &x_3_b, &prime256k1);
 	bn_multiply(&(pub->x), &x_3_b, &prime256k1);
@@ -542,7 +544,6 @@ int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 }
 
 // returns 0 if verification succeeded
-// it is assumed that public key is valid otherwise calling this does not make much sense
 int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest)
 {
 	int i, j;
