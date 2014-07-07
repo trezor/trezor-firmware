@@ -503,7 +503,6 @@ int ecdsa_validate_pubkey(const curve_point *pub)
 		return 0;
 	}
 
-	point_copy(pub, &temp);
 	point_multiply(&order256k1, pub, &temp);
 
 	if (!point_is_infinity(&temp)) {
