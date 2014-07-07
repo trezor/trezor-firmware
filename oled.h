@@ -29,11 +29,7 @@
 #define OLED_HEIGHT  64
 #define OLED_BUFSIZE (OLED_WIDTH * OLED_HEIGHT / 8)
 
-#ifdef APPVER
-#define oledInit() do{}while(0)
-#else
 void oledInit(void);
-#endif
 void oledClear(void);
 void oledRefresh(void);
 

@@ -29,8 +29,12 @@
 
 int main(void)
 {
+#ifndef APPVER
 	setup();
 	oledInit();
+#else
+	setupApp();
+#endif
 //	__stack_chk_guard_setup();
 #if DEBUG_LINK
 	oledSetDebug(1);

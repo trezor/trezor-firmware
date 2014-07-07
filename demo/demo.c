@@ -241,8 +241,10 @@ void usbInit(void)
 
 int main(void)
 {
+#ifndef APPVER
 	setup();
 	oledInit();
+#endif
 	usbInit();
 
 	passlen = strlen((char *)pass);
