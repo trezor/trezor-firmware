@@ -2,20 +2,15 @@
 
 dirname $0
 
-# Build trezor firmware
-docker build . | tee firmware-docker-build.log
+IMAGETAG=trezor-mcu-build
+docker rmi $IMAGETAG || :
+docker build -t $IMAGETAG .
 
-# Parse image name
-IMAGE=`grep "Successfully built" firmware-docker-build.log | tail -n1 | cut -d' ' -f3`
-echo "IMAGE NAME: $IMAGE"
+CONTAINERTAG=trezor-mcu-build
+docker rm $CONTAINERTAG || :
+docker run --name $CONTAINERTAG $IMAGETAG true
 
-docker run -t $IMAGE true
-
-# Parse container name
-CONTAINER=`docker ps -a | grep true | head -n1 | cut -d' ' -f1`
-echo "CONTAINER NAME: $CONTAINER"
-
-docker cp $CONTAINER:/trezor-mcu/firmware/trezor.bin .
+docker cp $CONTAINERTAG:/trezor-mcu/firmware/trezor.bin .
 
 echo "---------------------"
 echo "Firmware fingerprint:"
