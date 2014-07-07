@@ -1090,7 +1090,7 @@ Suite *test_suite(void)
 }
 
 // run suite
-int main()
+int main(void)
 {
 	int number_failed;
 	Suite *s = test_suite();

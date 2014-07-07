@@ -30,7 +30,7 @@
 #include "ecdsa.h"
 #include "rand.h"
 
-int main()
+int main(void)
 {
 	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
 	uint32_t i, j, msg_len;
