@@ -563,7 +563,7 @@ void bn_divmod58(bignum256 *a, uint32_t *r)
 	*r = rem;
 }
 
-#if BN_PRINT
+#if USE_BN_PRINT
 void bn_print(const bignum256 *a)
 {
 	printf("%04x", a->val[8] & 0x0000FFFF);

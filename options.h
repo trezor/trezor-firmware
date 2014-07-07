@@ -39,8 +39,8 @@
 #endif
 
 // support for printing bignum256 structures via printf
-#ifndef BN_PRINT
-#define BN_PRINT 0
+#ifndef USE_BN_PRINT
+#define USE_BN_PRINT 0
 #endif
 
 // use deterministic signatures

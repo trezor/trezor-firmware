@@ -1,5 +1,5 @@
 CC     = gcc
-CFLAGS = -Wall -Wextra -Os -Wno-sequence-point
+CFLAGS = -Os -Wall -Wextra -Wno-sequence-point -Wundef
 ifdef SMALL
 CFLAGS += -DUSE_PRECOMPUTED_IV=0 -DUSE_PRECOMPUTED_CP=0 -DUSE_PUBKEY_VALIDATE=0
 endif
