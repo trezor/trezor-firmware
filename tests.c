@@ -34,6 +34,7 @@
 #include "ecdsa.h"
 #include "pbkdf2.h"
 #include "sha2.h"
+#include "options.h"
 
 uint8_t *fromhex(const char *str)
 {
@@ -415,7 +416,7 @@ START_TEST(test_verify_speed)
 	memcpy(pub_key33, fromhex("024054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a0974"), 33);
 	memcpy(pub_key65, fromhex("044054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a09746c7083ed2097011b1223a17a644e81f59aa3de22dac119fd980b36a8ff29a244"), 65);
 
-	for (i = 0 ; i < 50; i++) {
+	for (i = 0 ; i < 25; i++) {
 		res = ecdsa_verify(pub_key65, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
 		res = ecdsa_verify(pub_key33, sig, msg, sizeof(msg));
@@ -426,14 +427,14 @@ START_TEST(test_verify_speed)
 	memcpy(pub_key33, fromhex("03ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d45719"), 33);
 	memcpy(pub_key65, fromhex("04ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d457196235193a15778062ddaa44aef7e6901b781763e52147f2504e268b2d572bf197"), 65);
 
-	for (i = 0 ; i < 50; i++) {
+	for (i = 0 ; i < 25; i++) {
 		res = ecdsa_verify(pub_key65, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
 		res = ecdsa_verify(pub_key33, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
 	}
 
-	printf("Verifying speed: %0.2f sig/s\n", 200.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
+	printf("Verifying speed: %0.2f sig/s\n", 100.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
 END_TEST
 
@@ -886,6 +887,7 @@ START_TEST(test_pubkey_validity)
 	res = ecdsa_read_pubkey(pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
+#ifdef USE_PUBKEY_VALIDATE
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b826b8f40b92719086238e1bebf00000000"), 65);
 	res = ecdsa_read_pubkey(pub_key, &pub);
 	ck_assert_int_eq(res, 0);
@@ -893,6 +895,7 @@ START_TEST(test_pubkey_validity)
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b8211111111111111111111111111111111"), 65);
 	res = ecdsa_read_pubkey(pub_key, &pub);
 	ck_assert_int_eq(res, 0);
+#endif
 
 	memcpy(pub_key, fromhex("00"), 1);
 	res = ecdsa_read_pubkey(pub_key, &pub);

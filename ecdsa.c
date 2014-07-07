@@ -459,12 +459,20 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 	if (pub_key[0] == 0x04) {
 		bn_read_be(pub_key + 1, &(pub->x));
 		bn_read_be(pub_key + 33, &(pub->y));
+#ifdef USE_PUBKEY_VALIDATE
 		return ecdsa_validate_pubkey(pub);
+#else
+		return 1;
+#endif
 	}
 	if (pub_key[0] == 0x02 || pub_key[0] == 0x03) { // compute missing y coords
 		bn_read_be(pub_key + 1, &(pub->x));
 		uncompress_coords(pub_key[0], &(pub->x), &(pub->y));
+#ifdef USE_PUBKEY_VALIDATE
 		return ecdsa_validate_pubkey(pub);
+#else
+		return 1;
+#endif
 	}
 	// error
 	return 0;

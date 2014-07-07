@@ -25,21 +25,7 @@
 #define __BIGNUM_H__
 
 #include <stdint.h>
-
-// use precomputed Inverse Values of powers of two
-#ifndef USE_PRECOMPUTED_IV
-#define USE_PRECOMPUTED_IV 1
-#endif
-
-// use precomputed Curve Points (some scalar multiples of curve base point G)
-#ifndef USE_PRECOMPUTED_CP
-#define USE_PRECOMPUTED_CP 1
-#endif
-
-// use fast inverse method
-#ifndef USE_INVERSE_FAST
-#define USE_INVERSE_FAST 1
-#endif
+#include "options.h"
 
 // bignum256 are 256 bits stored as 8*30 bit + 1*16 bit
 // val[0] are lowest 30 bits, val[8] highest 16 bits
@@ -96,10 +82,6 @@ void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res);
 void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res);
 
 void bn_divmod58(bignum256 *a, uint32_t *r);
-
-#ifndef BN_PRINT
-#define BN_PRINT 0
-#endif
 
 #if BN_PRINT
 void bn_print(const bignum256 *a);

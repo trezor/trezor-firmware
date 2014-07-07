@@ -25,12 +25,8 @@
 #define __ECDSA_H__
 
 #include <stdint.h>
-
+#include "options.h"
 #include "secp256k1.h"
-
-#ifndef USE_RFC6979
-#define USE_RFC6979 1
-#endif
 
 void point_copy(const curve_point *cp1, curve_point *cp2);
 void point_add(const curve_point *cp1, curve_point *cp2);
