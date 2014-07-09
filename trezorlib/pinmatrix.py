@@ -7,7 +7,7 @@ from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt
 
 class PinButton(QPushButton):
     def __init__(self, password, encoded_value):
-        super(PinButton, self).__init__()
+        super(PinButton, self).__init__('?')
         self.password = password
         self.encoded_value = encoded_value
 
