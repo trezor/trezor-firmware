@@ -3,7 +3,7 @@
 import hid
 import time
 import platform
-from transport import Transport, NotImplementedException
+from transport import Transport, ConnectionError, NotImplementedException
 
 DEVICE_IDS = [
     (0x10c4, 0xea80),  # Shield
@@ -17,11 +17,12 @@ class FakeRead(object):
         
     def read(self, size):
         return self.func(size)
-    
+
 class HidTransport(Transport):
     def __init__(self, device, *args, **kwargs):
         self.hid = None
         self.buffer = ''
+        # self.read_timeout = kwargs.get('read_timeout')
         device = device[int(bool(kwargs.get('debug_link')))]
         super(HidTransport, self).__init__(device, *args, **kwargs)
 
@@ -71,6 +72,13 @@ class HidTransport(Transport):
                 
         # List of two-tuples (path_normal, path_debuglink)
         return devices.values()
+
+    def is_connected(self):
+        # Check if the device is still connected
+        for d in hid.enumerate(0, 0):
+            if d['path'] == self.device:
+                return True
+        return False
         
     def _open(self):
         self.buffer = ''
@@ -99,10 +107,16 @@ class HidTransport(Transport):
         (msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
         return (msg_type, self._raw_read(datalen))
                     
-    def _raw_read(self, length):        
+    def _raw_read(self, length):
+        start = time.time()
         while len(self.buffer) < length:
             data = self.hid.read(64)
             if not len(data):
+                if time.time() - start > 10 and not self.is_connected():
+                    # Over 10 of no response, let's check if
+                    # device is still alive
+                    raise ConnectionError("Connection failed")
+
                 time.sleep(0.05)
                 continue
 
