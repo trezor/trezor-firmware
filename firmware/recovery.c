@@ -33,7 +33,7 @@ static bool enforce_wordlist;
 static char fake_word[12];
 static uint32_t word_pos;
 static uint32_t word_index;
-static char word_order[36];
+static char word_order[24];
 static char words[24][12];
 
 void next_word(void) {
@@ -94,12 +94,12 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	for (i = 0; i < word_count; i++) {
 		word_order[i] = i + 1;
 	}
-	for (i = word_count; i < word_count + word_count / 2; i++) {
+	for (i = word_count; i < 24; i++) {
 		word_order[i] = 0;
 	}
 	for (i = 0; i < 10000; i++) {
-		j = random32() % (word_count + word_count / 2);
-		k = random32() % (word_count + word_count / 2);
+		j = random32() % 24;
+		k = random32() % 24;
 		t = word_order[j];
 		word_order[j] = word_order[k];
 		word_order[k] = t;
@@ -145,7 +145,7 @@ void recovery_word(const char *word)
 		strlcpy(words[word_pos - 1], word, sizeof(words[word_pos - 1]));
 	}
 
-	if (word_index + 1 == word_count + word_count / 2) { // last one
+	if (word_index + 1 == 24) { // last one
 		uint32_t i;
 		strlcpy(storage.mnemonic, words[0], sizeof(storage.mnemonic));
 		for (i = 1; i < word_count; i++) {
