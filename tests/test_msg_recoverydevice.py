@@ -25,7 +25,7 @@ class TestDeviceRecovery(common.TrezorTest):
         ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         fakes = 0
-        for _ in range(int(12 * 1.5)):
+        for _ in range(int(12 * 2)):
             self.assertIsInstance(ret, proto.WordRequest)
             (word, pos) = self.client.debug.read_recovery_word()
 
@@ -41,8 +41,8 @@ class TestDeviceRecovery(common.TrezorTest):
         # Workflow succesfully ended
         self.assertIsInstance(ret, proto.Success)
 
-        # 6 expected fake words and all words of mnemonic are used
-        self.assertEqual(fakes, 6)
+        # 12 expected fake words and all words of mnemonic are used
+        self.assertEqual(fakes, 12)
         self.assertEqual(mnemonic, [None] * 12)
 
         # Mnemonic is the same
@@ -72,7 +72,7 @@ class TestDeviceRecovery(common.TrezorTest):
                                    enforce_wordlist=True))
 
         fakes = 0
-        for _ in range(int(12 * 1.5)):
+        for _ in range(int(12 * 2)):
             self.assertIsInstance(ret, proto.WordRequest)
             (word, pos) = self.client.debug.read_recovery_word()
 
@@ -88,8 +88,8 @@ class TestDeviceRecovery(common.TrezorTest):
         # Workflow succesfully ended
         self.assertIsInstance(ret, proto.Success)
 
-        # 6 expected fake words and all words of mnemonic are used
-        self.assertEqual(fakes, 6)
+        # 12 expected fake words and all words of mnemonic are used
+        self.assertEqual(fakes, 12)
         self.assertEqual(mnemonic, [None] * 12)
 
         # Mnemonic is the same
@@ -116,7 +116,7 @@ class TestDeviceRecovery(common.TrezorTest):
                                    enforce_wordlist=True))
 
         self.assertIsInstance(ret, proto.WordRequest)
-        for _ in range(int(12 * 1.5)):
+        for _ in range(int(12 * 2)):
             (word, pos) = self.client.debug.read_recovery_word()
             if pos != 0:
                 ret = self.client.call_raw(proto.WordAck(word='kwyjibo'))
