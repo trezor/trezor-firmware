@@ -22,6 +22,7 @@
  */
 
 #include <stdio.h>
+#include <assert.h>
 
 #include "rand.h"
 
@@ -35,11 +36,14 @@ void init_rand(void)
 uint32_t random32(void)
 {
 	uint32_t r;
-	fread(&r, 1, sizeof(r), f);
+	size_t len = sizeof(r);
+	size_t len_read = fread(&r, 1, len, f);
+	assert(len_read == len);
 	return r;
 }
 
-void random_buffer(uint8_t *buf, uint32_t len)
+void random_buffer(uint8_t *buf, size_t len)
 {
-	fread(buf, 1, len, f);
+	size_t len_read = fread(buf, 1, len, f);
+	assert(len_read == len);
 }
