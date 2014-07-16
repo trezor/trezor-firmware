@@ -54,7 +54,7 @@ uint8_t *fromhex(const char *str)
 	return buf;
 }
 
-inline char *tohex(const uint8_t *bin, size_t l)
+char *tohex(const uint8_t *bin, size_t l)
 {
 	char *buf = (char *)malloc(l * 2 + 1);
 	static char digits[] = "0123456789abcdef";

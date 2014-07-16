@@ -30,7 +30,7 @@
 #include "ecdsa.h"
 #include "rand.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
 	uint32_t i, j, msg_len;
@@ -41,7 +41,14 @@ int main(void)
 	init_rand();
 	ecgroup = EC_GROUP_new_by_curve_name(NID_secp256k1);
 
-	for (;;) {
+	unsigned long max_iterations = -1;
+	if (argc == 2) {
+		sscanf(argv[1], "%lu", &max_iterations);
+	} else if (argc > 2) {
+		puts("Zero or one command-line arguments only, exiting....");
+	}
+	unsigned long iterations = 0;
+	while (argc == 1 || iterations < max_iterations) {
 		// random message len between 1 and 256
 		msg_len = (random32() & 0xFF) + 1;
 		// create random message
@@ -113,6 +120,7 @@ int main(void)
 		EC_KEY_free(eckey);
 		cnt++;
 		if ((cnt % 100) == 0) printf("Passed ... %d\n", cnt);
+            ++iterations;
 	}
 	EC_GROUP_free(ecgroup);
 	return 0;
