@@ -21,8 +21,9 @@
 #define __RNG_H__
 
 #include <stdint.h>
+#include <stdlib.h>
 
 uint32_t random32(void);
-void random_buffer(uint8_t *buf, uint32_t len);
+void random_buffer(uint8_t *buf, size_t len);
 
 #endif

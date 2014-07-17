@@ -35,9 +35,10 @@ uint32_t random32(void)
 	return new;
 }
 
-void random_buffer(uint8_t *buf, uint32_t len)
+void random_buffer(uint8_t *buf, size_t len)
 {
-	uint32_t i, r = 0;
+	size_t i;
+	uint32_t r = 0;
 	for (i = 0; i < len; i++) {
 		if (i % 4 == 0) {
 			r = random32();
