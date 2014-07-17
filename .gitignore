@@ -1,3 +1,5 @@
 *.o
+*.exe
+*~
 test-openssl
 tests
