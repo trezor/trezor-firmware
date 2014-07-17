@@ -185,7 +185,7 @@ Issue Date: 20/12/2007
 	AES_REV_DKS must NOT be defined when such assembler files are
 	built
 */
-#if 1 && defined( _WIN64 ) && defined( _MSC_VER )
+#if 0 && defined( _WIN64 ) && defined( _MSC_VER )
 #  define INTEL_AES_POSSIBLE
 #endif
 
@@ -210,7 +210,7 @@ Issue Date: 20/12/2007
 	AES_REV_DKS must be set for assembler code used with a VIA ACE build
 */
 
-#if 1 && defined( VIA_ACE_POSSIBLE ) && !defined( USE_VIA_ACE_IF_PRESENT )
+#if 0 && defined( VIA_ACE_POSSIBLE ) && !defined( USE_VIA_ACE_IF_PRESENT )
 #  define USE_VIA_ACE_IF_PRESENT
 #endif
 
