@@ -1,3 +1,8 @@
+build/
+dist/
+python_trezor.egg-info/
 *.pyc
 *.bin
 *.py.cache
+distribute-*.egg
+distribute-*.tar.gz
