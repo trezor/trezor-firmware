@@ -87,11 +87,7 @@ Issue Date: 20/12/2007
 #if !defined( _AESOPT_H )
 #define _AESOPT_H
 
-#if defined( __cplusplus )
-#include "aescpp.h"
-#else
 #include "aes.h"
-#endif
 
 /*  PLATFORM SPECIFIC INCLUDES */
 
