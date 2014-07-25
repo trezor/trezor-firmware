@@ -1,7 +1,7 @@
 {
 	"whitelist_urls": [
-		"https?://localhost\\/.*",
- 		"https://.*\\.mytrezor\\.com\\/.*",
+ 		"https?://localhost:?.*\\/.*",
+		"https://.*\\.mytrezor\\.com\\/.*",
 		"https://mytrezor\\.com\\/.*",
 		"https://.*\\.greenaddress\\.it\\/.*",
 		"https://greenaddress\\.it\\/.*"
