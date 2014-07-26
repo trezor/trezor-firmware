@@ -11,6 +11,9 @@ import messages_pb2 as proto
 TREZORD_HOST = 'http://localhost:21324'
 CONFIG_URL = 'https://mytrezor.com/data/plugin/config_signed.bin'
 
+def get_error(resp):
+    return ' (error=%d str=%s)' % (resp.status_code, resp.json()['error'])
+
 class BridgeTransport(Transport):
     def __init__(self, device, *args, **kwargs):
 
@@ -22,11 +25,11 @@ class BridgeTransport(Transport):
 
         r = requests.post(TREZORD_HOST + '/configure', data=config)
         if r.status_code != 200:
-            raise Exception('trezord: Could not configure')
+            raise Exception('trezord: Could not configure' + get_error(r))
 
         r = requests.get(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
-            raise Exception('trezord: Could not enumerate devices')
+            raise Exception('trezord: Could not enumerate devices' + get_error(r))
         enum = r.json()
 
         if len(enum) < 1:
@@ -41,14 +44,14 @@ class BridgeTransport(Transport):
     def _open(self):
         r = requests.post(TREZORD_HOST + '/acquire/%s' % self.path)
         if r.status_code != 200:
-            raise Exception('trezord: Could not acquire session')
+            raise Exception('trezord: Could not acquire session' + get_error(r))
         resp = r.json()
         self.session = resp['session']
 
     def _close(self):
         r = requests.post(TREZORD_HOST + '/release/%s' % self.session)
         if r.status_code != 200:
-            raise Exception('trezord: Could not release session')
+            raise Exception('trezord: Could not release session' + get_error(r))
         else:
             self.session = None
 
@@ -61,7 +64,7 @@ class BridgeTransport(Transport):
         payload = '{"type": "%s","message": %s}' % (cls, json.dumps(msg))
         r = requests.post(TREZORD_HOST + '/call/%s' % self.session, data=payload)
         if r.status_code != 200:
-            raise Exception('trezord: Could not write message')
+            raise Exception('trezord: Could not write message' + get_error(r))
         else:
             self.response = r.json()
 

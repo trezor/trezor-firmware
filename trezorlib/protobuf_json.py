@@ -85,6 +85,8 @@ def pb2json(pb):
     for field,value in fields:
         if field.type == FD.TYPE_MESSAGE:
             ftype = pb2json
+        elif field.type == FD.TYPE_ENUM:
+            ftype = lambda x: field.enum_type.values[x].name
         elif field.type in _ftype2js:
             ftype = _ftype2js[field.type]
         else:
@@ -109,10 +111,10 @@ _ftype2js = {
     FD.TYPE_FIXED32: float,
     FD.TYPE_BOOL: bool,
     FD.TYPE_STRING: unicode,
-    #FD.TYPE_MESSAGE: pb2json,        #handled specially
+    #FD.TYPE_MESSAGE handled specially
     FD.TYPE_BYTES: lambda x: binascii.hexlify(x),
     FD.TYPE_UINT32: int,
-    FD.TYPE_ENUM: str,
+    # FD.TYPE_ENUM: handled specially
     FD.TYPE_SFIXED32: float,
     FD.TYPE_SFIXED64: float,
     FD.TYPE_SINT32: int,
@@ -129,7 +131,7 @@ _js2ftype = {
     FD.TYPE_FIXED32: float,
     FD.TYPE_BOOL: bool,
     FD.TYPE_STRING: unicode,
-    # FD.TYPE_MESSAGE: json2pb,    #handled specially
+    # FD.TYPE_MESSAGE handled specially
     FD.TYPE_BYTES: lambda x: binascii.unhexlify(x),
     FD.TYPE_UINT32: int,
     FD.TYPE_ENUM: lambda x: getattr(types, x),
