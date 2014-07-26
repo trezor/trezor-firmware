@@ -1,5 +1,5 @@
-trezorlib-python
-================
+python-trezor
+=============
 
 Client side implementation for Trezor-compatible Bitcoin hardware wallets.
 

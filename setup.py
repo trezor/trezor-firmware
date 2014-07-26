@@ -1,14 +1,13 @@
-from setuptools import setup, find_packages
-from os.path import dirname, join
+#!/usr/bin/env python
+from setuptools import setup
 
-here = dirname(__file__)
 setup(
-    name='python-trezor',
+    name='trezor',
     version='0.5.0',
     author='Bitcoin TREZOR',
     author_email='info@bitcointrezor.com',
-    description='Python library for handling TREZOR hardware bitcoin wallet',
-    long_description=open(join(here, 'README.rst')).read(),
+    description='Python library for communicating with TREZOR Bitcoin Hardware Wallet',
+    url='https://github.com/trezor/python-trezor',
     py_modules=[
         'trezorlib.ckd_public',
         'trezorlib.client',
@@ -28,13 +27,13 @@ setup(
         'trezorlib.types_pb2',
     ],
     test_suite='tests',
-    dependency_links=['https://github.com/trezor/python-mnemonic/archive/master.zip#egg=mnemonic-0.8'],
     install_requires=['ecdsa>=0.9', 'protobuf', 'mnemonic>=0.8', 'hidapi>=0.7.99'],
     include_package_data=True,
     zip_safe=False,
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: POSIX :: Linux',
-        'Operating System :: POSIX :: Windows',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: MacOS :: MacOS X',
     ],
 )
