@@ -41,10 +41,10 @@ __version__='0.0.5'
 __author__='Paul Dovbush <dpp@dpp.su>'
 
 
-import json    # py2.6+ TODO: add support for other JSON serialization modules
+import json
 from google.protobuf.descriptor import FieldDescriptor as FD
 import binascii
-
+import types_pb2 as types
 
 class ParseError(Exception): pass
 
@@ -112,7 +112,7 @@ _ftype2js = {
     #FD.TYPE_MESSAGE: pb2json,        #handled specially
     FD.TYPE_BYTES: lambda x: binascii.hexlify(x),
     FD.TYPE_UINT32: int,
-    FD.TYPE_ENUM: int,
+    FD.TYPE_ENUM: str,
     FD.TYPE_SFIXED32: float,
     FD.TYPE_SFIXED64: float,
     FD.TYPE_SINT32: int,
@@ -132,7 +132,7 @@ _js2ftype = {
     # FD.TYPE_MESSAGE: json2pb,    #handled specially
     FD.TYPE_BYTES: lambda x: binascii.unhexlify(x),
     FD.TYPE_UINT32: int,
-    FD.TYPE_ENUM: int,
+    FD.TYPE_ENUM: lambda x: getattr(types, x),
     FD.TYPE_SFIXED32: float,
     FD.TYPE_SFIXED64: float,
     FD.TYPE_SINT32: int,

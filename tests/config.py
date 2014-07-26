@@ -4,13 +4,14 @@ sys.path = ['../',] + sys.path
 from trezorlib.transport_pipe import PipeTransport
 from trezorlib.transport_hid import HidTransport
 from trezorlib.transport_socket import SocketTransportClient
+from trezorlib.transport_bridge import BridgeTransport
 
 devices = HidTransport.enumerate()
 
 if len(devices) > 0:
     if devices[0][1] != None:
         print 'Using TREZOR'
-        TRANSPORT = HidTransport
+        TRANSPORT = BridgeTransport
         TRANSPORT_ARGS = (devices[0],)
         TRANSPORT_KWARGS = {'debug_link': False}
         DEBUG_TRANSPORT = HidTransport

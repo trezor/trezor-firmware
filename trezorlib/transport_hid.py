@@ -96,7 +96,7 @@ class HidTransport(Transport):
     def ready_to_read(self):
         return False
     
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         msg = bytearray(msg)
         while len(msg):            
             # Report ID, data padded to 63 bytes

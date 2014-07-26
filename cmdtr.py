@@ -12,7 +12,7 @@ from trezorlib.protobuf_json import pb2json
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
-    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Transport used for talking with the device")
+    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket', 'bridge'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
 #    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
 #    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
@@ -66,6 +66,10 @@ def get_transport(transport_string, path, **kwargs):
     if transport_string == 'socket':
         from trezorlib.transport_socket import SocketTransportClient
         return SocketTransportClient(path, **kwargs)
+
+    if transport_string == 'bridge':
+        from trezorlib.transport_bridge import BridgeTransport
+        return BridgeTransport(path, **kwargs)
     
     if transport_string == 'fake':
         from trezorlib.transport_fake import FakeTransport

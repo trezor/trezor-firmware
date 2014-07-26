@@ -22,7 +22,7 @@ class SerialTransport(Transport):
         rlist, _, _ = select([self.serial], [], [], 0)
         return len(rlist) > 0
     
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         try:
             self.serial.write(msg)
             self.serial.flush()

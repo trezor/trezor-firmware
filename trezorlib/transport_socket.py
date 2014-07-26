@@ -29,7 +29,7 @@ class SocketTransportClient(Transport):
         rlist, _, _ = select([self.socket], [], [], 0)
         return len(rlist) > 0        
     
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         self.socket.sendall(msg)
         
     def _read(self):
@@ -89,7 +89,7 @@ class SocketTransport(Transport):
                 return self.ready_to_read()
             return False
         
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         if self.filelike:
             # None on disconnected client
             

@@ -1,4 +1,4 @@
-'''TransportFake implements fake wire transport over local named pipe.
+'''PipeTransport implements fake wire transport over local named pipe.
 Use this transport for talking with trezor simulator.'''
 
 import os
@@ -42,7 +42,7 @@ class PipeTransport(Transport):
         rlist, _, _ = select([self.read_f], [], [], 0)
         return len(rlist) > 0
     
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         try:
             self.write_f.write(msg)
             self.write_f.flush()

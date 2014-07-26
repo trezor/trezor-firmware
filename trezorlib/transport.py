@@ -19,7 +19,7 @@ class Transport(object):
     def _close(self):
         raise NotImplementedException("Not implemented")
     
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         raise NotImplementedException("Not implemented")
     
     def _read(self):
@@ -51,7 +51,7 @@ class Transport(object):
     def write(self, msg):
         ser = msg.SerializeToString()
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
-        self._write("##%s%s" % (header, ser))
+        self._write("##%s%s" % (header, ser), msg)
 
     def read(self):
         if not self.ready_to_read():
@@ -73,9 +73,12 @@ class Transport(object):
 
     def _parse_message(self, data):
         (msg_type, data) = data
-        inst = mapping.get_class(msg_type)()
-        inst.ParseFromString(data)
-        return inst
+        if msg_type == 'protobuf':
+            return data
+        else:
+            inst = mapping.get_class(msg_type)()
+            inst.ParseFromString(data)
+            return inst
     
     def _read_headers(self, read_f):
         # Try to read headers until some sane value are detected

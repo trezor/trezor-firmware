@@ -17,7 +17,7 @@ class FakeTransport(Transport):
     def ready_to_read(self):
         return False
     
-    def _write(self, msg):
+    def _write(self, msg, protobuf_msg):
         pass
         
     def _read(self):
