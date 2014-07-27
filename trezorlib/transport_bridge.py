@@ -1,6 +1,5 @@
 '''BridgeTransport implements transport TREZOR Bridge (aka trezord).'''
 
-import binascii
 import requests
 import protobuf_json
 import json
@@ -21,7 +20,7 @@ class BridgeTransport(Transport):
         if r.status_code != 200:
             raise Exception('Could not fetch config from %s' % CONFIG_URL)
 
-        config = binascii.unhexlify(r.text)
+        config = r.text
 
         r = requests.post(TREZORD_HOST + '/configure', data=config)
         if r.status_code != 200:
@@ -61,7 +60,7 @@ class BridgeTransport(Transport):
     def _write(self, msg, protobuf_msg):
         cls = protobuf_msg.__class__.__name__
         msg = protobuf_json.pb2json(protobuf_msg)
-        payload = '{"type": "%s","message": %s}' % (cls, json.dumps(msg))
+        payload = '{"type": "%s", "message": %s}' % (cls, json.dumps(msg))
         r = requests.post(TREZORD_HOST + '/call/%s' % self.session, data=payload)
         if r.status_code != 200:
             raise Exception('trezord: Could not write message' + get_error(r))
