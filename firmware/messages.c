@@ -364,13 +364,13 @@ void msg_read_tiny(uint8_t *buf, int len)
 		return;
 	}
 	uint16_t msg_id = (buf[3] << 8) + buf[4];
-	uint32_t msg_size = (buf[5] << 24)+ (buf[6] << 16) + (buf[7] << 8) + buf[8];
+	uint32_t msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
 	if (msg_size > 64 || len - msg_size < 9) {
 		return;
 	}
 
 	const pb_field_t *fields = 0;
-	pb_istream_t stream = pb_istream_from_buffer(buf + 9, len - 9);
+	pb_istream_t stream = pb_istream_from_buffer(buf + 9, msg_size);
 
 	switch (msg_id) {
 		case MessageType_MessageType_PinMatrixAck:
