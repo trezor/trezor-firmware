@@ -11,7 +11,7 @@ devices = HidTransport.enumerate()
 if len(devices) > 0:
     if devices[0][1] != None:
         print 'Using TREZOR'
-        TRANSPORT = BridgeTransport
+        TRANSPORT = HidTransport
         TRANSPORT_ARGS = (devices[0],)
         TRANSPORT_KWARGS = {'debug_link': False}
         DEBUG_TRANSPORT = HidTransport
