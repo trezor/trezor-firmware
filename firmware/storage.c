@@ -63,12 +63,15 @@ static char sessionPassphrase[51];
  0x0010 |  ?          |  Storage structure
  */
 
-#define STORAGE_VERSION 1
+#define STORAGE_VERSION 2
 
 void storage_from_flash(uint32_t version)
 {
 	switch (version) {
-		case 1:
+		case 1: // copy
+			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
+			break;
+		case 2: // copy
 			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
 			break;
 	}

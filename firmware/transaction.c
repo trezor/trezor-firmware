@@ -246,7 +246,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 
 bool tx_hash_input(TxStruct *t, TxInputType *input)
 {
-	uint8_t buf[512];
+	uint8_t buf[1024];
 	uint32_t r = tx_serialize_input(t, input->prev_hash.bytes, input->prev_index, input->script_sig.bytes, input->script_sig.size, input->sequence, buf);
 	if (!r) return false;
 	sha256_Update(&(t->ctx), buf, r);
@@ -255,7 +255,7 @@ bool tx_hash_input(TxStruct *t, TxInputType *input)
 
 bool tx_hash_output(TxStruct *t, TxOutputBinType *output)
 {
-	uint8_t buf[512];
+	uint8_t buf[1024];
 	uint32_t r = tx_serialize_output(t, output->amount, output->script_pubkey.bytes, output->script_pubkey.size, buf);
 	if (!r) return false;
 	sha256_Update(&(t->ctx), buf, r);

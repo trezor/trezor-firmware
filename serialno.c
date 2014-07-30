@@ -20,27 +20,17 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <libopencm3/stm32/desig.h>
+
 #include "serialno.h"
 #include "util.h"
 #include "sha2.h"
 
-#if defined(STM32F4) || defined(STM32F2)
-#define UNIQUE_SERIAL_ADDR 0x1FFF7A10
-#elif defined(STM32F3)
-#define UNIQUE_SERIAL_ADDR 0x1FFFF7AC
-#elif defined(STM32L1)
-#define UNIQUE_SERIAL_ADDR 0x1FF80050
-#else // STM32F1
-#define UNIQUE_SERIAL_ADDR 0x1FFFF7E8
-#endif
-
 void fill_serialno_fixed(char *s)
 {
 	uint8_t uuid[32];
-	memcpy(uuid, (uint8_t *)UNIQUE_SERIAL_ADDR, 12);
-	memcpy(uuid + 12, (uint8_t *)UNIQUE_SERIAL_ADDR, 12);
-	memcpy(uuid + 24, (uint8_t *)UNIQUE_SERIAL_ADDR, 8);
-	sha256_Raw(uuid, 32, uuid);
+	desig_get_unique_id((uint32_t *)uuid);
+	sha256_Raw(uuid, 12, uuid);
 	sha256_Raw(uuid, 32, uuid);
 	data2hex(uuid, 12, s);
 }

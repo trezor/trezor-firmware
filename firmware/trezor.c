@@ -24,18 +24,27 @@
 #include "usb.h"
 #include "setup.h"
 #include "storage.h"
+#include "layout.h"
 #include "layout2.h"
-#include "ssp.h"
+#include "rng.h"
+
+uint32_t __stack_chk_guard;
+
+void __attribute__((noreturn)) __stack_chk_fail(void)
+{
+	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
+	for (;;) {} // loop forever
+}
 
 int main(void)
 {
+	__stack_chk_guard = random32();
 #ifndef APPVER
 	setup();
 	oledInit();
 #else
 	setupApp();
 #endif
-//	__stack_chk_guard_setup();
 #if DEBUG_LINK
 	oledSetDebug(1);
 	storage_reset(); // wipe storage if debug link
