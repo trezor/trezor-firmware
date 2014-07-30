@@ -96,7 +96,7 @@ class TestProtectionLevels(common.TrezorTest):
     def test_recovery_device(self):
         with self.client:
             self.client.set_mnemonic(self.mnemonic12)
-            self.client.set_expected_responses([proto.WordRequest()] * int(12 * 1.5) + \
+            self.client.set_expected_responses([proto.WordRequest()] * 24 + \
                                      [proto.Success(),
                                       proto.Features()])
             self.client.recovery_device(12, False, False, 'label', 'english')
