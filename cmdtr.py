@@ -257,7 +257,7 @@ class Commands(object):
     )
 
     reset_device.arguments = (
-        (('-t', '--strength'), {'type': int, 'choices': [128, 192, 256], 'default': 128}),
+        (('-t', '--strength'), {'type': int, 'choices': [128, 192, 256], 'default': 256}),
         (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
