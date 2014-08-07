@@ -120,8 +120,9 @@ const pb_field_t GetPublicKey_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t PublicKey_fields[2] = {
+const pb_field_t PublicKey_fields[3] = {
     PB_FIELD2(  1, MESSAGE , REQUIRED, STATIC  , FIRST, PublicKey, node, node, &HDNodeType_fields),
+    PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, PublicKey, xpub, node, 0),
     PB_LAST_FIELD
 };
 

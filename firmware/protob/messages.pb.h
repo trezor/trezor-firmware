@@ -364,6 +364,8 @@ typedef struct _Ping {
 
 typedef struct _PublicKey {
     HDNodeType node;
+    bool has_xpub;
+    char xpub[113];
 } PublicKey;
 
 typedef struct _RecoveryDevice {
@@ -568,6 +570,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Ping_pin_protection_tag                  3
 #define Ping_passphrase_protection_tag           4
 #define PublicKey_node_tag                       1
+#define PublicKey_xpub_tag                       2
 #define RecoveryDevice_word_count_tag            1
 #define RecoveryDevice_passphrase_protection_tag 2
 #define RecoveryDevice_pin_protection_tag        3
@@ -621,7 +624,7 @@ extern const pb_field_t PassphraseAck_fields[2];
 extern const pb_field_t GetEntropy_fields[2];
 extern const pb_field_t Entropy_fields[2];
 extern const pb_field_t GetPublicKey_fields[2];
-extern const pb_field_t PublicKey_fields[2];
+extern const pb_field_t PublicKey_fields[3];
 extern const pb_field_t GetAddress_fields[3];
 extern const pb_field_t Address_fields[2];
 extern const pb_field_t WipeDevice_fields[1];
@@ -671,7 +674,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define GetEntropy_size                          6
 #define Entropy_size                             1027
 #define GetPublicKey_size                        48
-#define PublicKey_size                           (6 + HDNodeType_size)
+#define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          67
 #define Address_size                             37
 #define WipeDevice_size                          0

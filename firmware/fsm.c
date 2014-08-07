@@ -273,7 +273,8 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
 	memcpy(resp->node.public_key.bytes, node->public_key, 33);
-
+	resp->has_xpub = true;
+	hdnode_serialize_public(node, resp->xpub);
 	msg_write(MessageType_MessageType_PublicKey, resp);
 	layoutHome();
 }
