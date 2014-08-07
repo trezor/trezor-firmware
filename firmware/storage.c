@@ -225,7 +225,7 @@ bool storage_getRootNode(HDNode *node)
 			return false;
 		}
 		hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode);
-		if (storage.has_passphrase_protection && storage.passphrase_protection) {
+		if (storage.has_passphrase_protection && storage.passphrase_protection && strlen(sessionPassphrase)) {
 			// decrypt hd node
 			uint8_t secret[64];
 			layoutProgressSwipe("Waking up", 0, 0);
