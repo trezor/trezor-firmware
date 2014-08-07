@@ -346,7 +346,6 @@ class ProtocolMixin(object):
 
         return path
 
-    @field('node')
     @expect(proto.PublicKey)
     def get_public_node(self, n):
         n = self._convert_prime(n)
