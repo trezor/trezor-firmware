@@ -246,6 +246,7 @@ message GetPublicKey {
  */
 message PublicKey {
 	required HDNodeType node = 1;		// BIP32 public node
+	optional string xpub = 2;		// serialized form of public node
 }
 
 /**
