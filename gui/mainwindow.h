@@ -18,7 +18,7 @@ public:
 
 private slots:
     void on_buttonLoad_clicked();
-    void on_listAccount_clicked(const QModelIndex &index);
+    void on_spinAccount_valueChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;

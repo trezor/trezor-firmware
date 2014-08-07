@@ -7,6 +7,7 @@ extern "C" {
 #include "../ecdsa.h"
 }
 
+bool root_set = false;
 HDNode root;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -28,7 +29,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_buttonLoad_clicked()
 {
-    ui->listAccount->clear();
     if (!mnemonic_check(ui->editMnemonic->text().toLocal8Bit().data())) {
         QMessageBox::critical(this, "Error", "Text is not a valid BIP39 mnemonic.", QMessageBox::Ok);
         return;
@@ -36,22 +36,26 @@ void MainWindow::on_buttonLoad_clicked()
     uint8_t seed[64];
     mnemonic_to_seed(ui->editMnemonic->text().toLocal8Bit().data(), ui->editPassphrase->text().toLocal8Bit().data(), seed, 0);
     hdnode_from_seed(seed, 64, &root);
-    for (int i = 1; i <= 10; i++) {
-        ui->listAccount->addItem(QString("Account #") + QString::number(i));
-    }
+    root_set = true;
+    ui->spinAccount->setValue(1);
+    on_spinAccount_valueChanged(1);
 }
 
-void MainWindow::on_listAccount_clicked(const QModelIndex &index)
+void MainWindow::on_spinAccount_valueChanged(int arg1)
 {
+    if (!root_set) return;
     const char addr_version = 0x00, wif_version = 0x80;
-    char buf[64];
+    char buf[128];
     HDNode node;
     // external chain
     for (int chain = 0; chain < 2; chain++) {
         QTableWidget *list = chain == 0 ? ui->listAddress : ui->listChange;
         node = root;
         hdnode_private_ckd(&node, 44 | 0x80000000);
-        hdnode_private_ckd(&node, index.row() | 0x80000000);
+        hdnode_private_ckd(&node, 0 | 0x80000000); // bitcoin
+        hdnode_private_ckd(&node, (arg1 - 1) | 0x80000000);
+        hdnode_serialize_private(&node, buf); QString xprv = QString(buf); ui->lineXprv->setText(xprv);
+        hdnode_serialize_public(&node, buf); QString xpub = QString(buf); ui->lineXpub->setText(xpub);
         hdnode_private_ckd(&node, chain); // external / internal
         for (int i = 0; i < 100; i++) {
             HDNode node2 = node;
