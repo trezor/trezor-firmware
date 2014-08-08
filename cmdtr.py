@@ -91,7 +91,7 @@ class Commands(object):
  
     def get_address(self, args):
         address_n = self.client.expand_path(args.n)
-        return self.client.get_address(args.coin, address_n)
+        return self.client.get_address(args.coin, address_n, args.show_display)
     
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
@@ -211,8 +211,8 @@ class Commands(object):
 
     get_address.arguments = (
         (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
-        # (('n',), {'metavar': 'N', 'type': int, 'nargs': '+'}),
         (('-n', '-address'), {'type': str}),
+        (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
     )
     
     get_entropy.arguments = (

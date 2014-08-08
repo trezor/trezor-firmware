@@ -353,9 +353,9 @@ class ProtocolMixin(object):
 
     @field('address')
     @expect(proto.Address)
-    def get_address(self, coin_name, n):
+    def get_address(self, coin_name, n, show_display=False):
         n = self._convert_prime(n)
-        return self.call(proto.GetAddress(address_n=n, coin_name=coin_name))
+        return self.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display))
 
     @field('entropy')
     @expect(proto.Entropy)
