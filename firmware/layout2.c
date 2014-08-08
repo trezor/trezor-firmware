@@ -26,6 +26,7 @@
 #include "bitmaps.h"
 #include "string.h"
 #include "util.h"
+#include "qr_encode.h"
 
 void *layoutLast = layoutHome;
 
@@ -250,4 +251,56 @@ void layoutCipherKeyValue(bool encrypt, const char *key)
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
 		encrypt ? "Encrypt?" : "Decrypt?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
+}
+
+void layoutAddress(const char *address)
+{
+	oledSwipeLeft();
+	layoutLast = layoutAddress;
+
+	static unsigned char bitdata[QR_MAX_BITDATA];
+	int a, i, j;
+	int side = qr_encode(QR_LEVEL_M, 0, address, 0, bitdata);
+
+	if (side > 0 && side <= 29) {
+		oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
+		for (i = 0; i < side; i++) {
+			for (j = 0; j< side; j++) {
+				a = i * side + j;
+				if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+					oledClearPixel(2 + i * 2, 2 + j * 2);
+					oledClearPixel(3 + i * 2, 2 + j * 2);
+					oledClearPixel(2 + i * 2, 3 + j * 2);
+					oledClearPixel(3 + i * 2, 3 + j * 2);
+				}
+			}
+		}
+	}
+
+	int len = strlen(address);
+	char str[4][10];
+	memset(str, 0, sizeof(str));
+
+	strlcpy(str[0], (char *)address, 10);
+	if (len > 9) {
+		strlcpy(str[1], (char *)address + 9, 10);
+	}
+	if (len > 18) {
+		strlcpy(str[2], (char *)address + 18, 10);
+	}
+	if (len > 27) {
+		strlcpy(str[3], (char *)address + 27, 10);
+	}
+
+	oledDrawString(68, 0 * 9, str[0]);
+	oledDrawString(68, 1 * 9, str[1]);
+	oledDrawString(68, 2 * 9, str[2]);
+	oledDrawString(68, 3 * 9, str[3]);
+
+	static const char *btnYes = "Continue";
+	oledDrawString(OLED_WIDTH - fontCharWidth('}') - 1, OLED_HEIGHT - 8, "}");
+	oledDrawString(OLED_WIDTH - fontStringWidth(btnYes) - fontCharWidth('}') - 3, OLED_HEIGHT - 8, btnYes);
+	oledInvert(OLED_WIDTH - fontStringWidth(btnYes) - fontCharWidth('}') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+
+	oledRefresh();
 }

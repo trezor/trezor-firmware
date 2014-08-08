@@ -478,6 +478,15 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	ecdsa_get_address(node->public_key, coin->address_type, resp->address);
 
+	if (msg->has_show_display && msg->show_display) {
+		layoutAddress(resp->address);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+			layoutHome();
+			return;
+		}
+	}
+
 	msg_write(MessageType_MessageType_Address, resp);
 	layoutHome();
 }

@@ -35,6 +35,8 @@ OBJS += ../trezor-crypto/aeskey.o
 OBJS += ../trezor-crypto/aestab.o
 OBJS += ../trezor-crypto/aes_modes.o
 
+OBJS += ../trezor-qrenc/qr_encode.o
+
 OBJS += protob/pb_decode.o
 OBJS += protob/pb_encode.o
 OBJS += protob/messages.pb.o
@@ -43,9 +45,9 @@ OBJS += protob/types.pb.o
 
 include ../Makefile.include
 
-# CFLAGS += -fstack-protector -fstack-protector-all
 CFLAGS += -Wno-sequence-point
 CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
+CFLAGS += -DQR_MAX_VERSION=0
 CFLAGS += -DDEBUG_LINK=0
 CFLAGS += -DDEBUG_LOG=0
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'

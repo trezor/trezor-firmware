@@ -126,9 +126,10 @@ const pb_field_t PublicKey_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t GetAddress_fields[3] = {
+const pb_field_t GetAddress_fields[4] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, GetAddress, address_n, address_n, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, GetAddress, coin_name, address_n, &GetAddress_coin_name_default),
+    PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, GetAddress, show_display, coin_name, 0),
     PB_LAST_FIELD
 };
 

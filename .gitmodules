@@ -4,3 +4,6 @@
 [submodule "trezor-common"]
 	path = trezor-common
 	url = https://github.com/trezor/trezor-common.git
+[submodule "trezor-qrenc"]
+	path = trezor-qrenc
+	url = https://github.com/trezor/trezor-qrenc.git
