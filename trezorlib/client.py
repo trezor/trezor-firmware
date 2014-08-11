@@ -739,7 +739,7 @@ class ProtocolMixin(object):
         elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
             return False
 
-        raise Exception("Unexpected result " % resp)
+        raise Exception("Unexpected result %s" % resp)
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
