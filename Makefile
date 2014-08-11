@@ -44,10 +44,10 @@ all: tests test-openssl
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 tests: tests.o $(OBJS)
-	gcc tests.o $(OBJS) $(TESTLIBS) -o tests
+	$(CC) tests.o $(OBJS) $(TESTLIBS) -o tests
 
 test-openssl: test-openssl.o $(OBJS)
-	gcc test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
+	$(CC) test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
 
 clean:
 	rm -f *.o tests test-openssl
