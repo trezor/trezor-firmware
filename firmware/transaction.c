@@ -106,6 +106,9 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		if (!ecdsa_address_decode(in->address, decoded)) {
 			return 0;
 		}
+		if (decoded[0] != coin->address_type) {
+			return 0;
+		}
 		memcpy(out->script_pubkey.bytes + 3, decoded + 1, 20);
 		out->script_pubkey.bytes[23] = 0x88; // OP_EQUALVERIFY
 		out->script_pubkey.bytes[24] = 0xAC; // OP_CHECKSIG
@@ -118,6 +121,9 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
 		uint8_t decoded[21];
 		if (!ecdsa_address_decode(in->address, decoded)) {
+			return 0;
+		}
+		if (decoded[0] != 0x05) { // 0x05 is P2SH
 			return 0;
 		}
 		memcpy(out->script_pubkey.bytes + 2, decoded + 1, 20);
