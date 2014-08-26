@@ -10,6 +10,6 @@ To get a list of TREZORs that are currently plugged into our computer, we use th
 
 We can now interact with our TREZORs by creating a :doc:`TrezorClient <client>` object.
 
-.. automodule:: trezorlib.transport_hid
+.. autoclass:: trezorlib.transport_hid.HidTransport
   :members:
   :undoc-members:
