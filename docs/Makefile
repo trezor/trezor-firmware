@@ -10,3 +10,4 @@ html:
 
 clean:
 	rm -rf _build/
+
