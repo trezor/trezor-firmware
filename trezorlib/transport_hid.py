@@ -54,6 +54,9 @@ class HidTransport(Transport):
 
     @classmethod
     def enumerate(cls):
+        """
+        Return a list of available TREZOR devices.
+        """
         devices = {}
         for d in hid.enumerate(0, 0):
             vendor_id = d['vendor_id']
@@ -74,7 +77,9 @@ class HidTransport(Transport):
         return devices.values()
 
     def is_connected(self):
-        # Check if the device is still connected
+        """
+        Check if the device is still connected.
+        """
         for d in hid.enumerate(0, 0):
             if d['path'] == self.device:
                 return True
