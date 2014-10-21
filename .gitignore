@@ -1,6 +1,7 @@
 build/
 dist/
 python_trezor.egg-info/
+trezor.egg-info/
 *.pyc
 *.bin
 *.py.cache

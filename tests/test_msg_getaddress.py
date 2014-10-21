@@ -27,8 +27,8 @@ class TestMsgGetaddress(common.TrezorTest):
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        node = self.client.get_public_node([])
-        node_sub1 = self.client.get_public_node([1])
+        node = self.client.get_public_node([]).node
+        node_sub1 = self.client.get_public_node([1]).node
         node_sub2 = bip32.public_ckd(node, [1])
 
         self.assertEqual(node_sub1.chain_code, node_sub2.chain_code)
