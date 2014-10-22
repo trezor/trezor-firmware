@@ -211,16 +211,17 @@ const pb_field_t MessageSignature_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t EncryptMessage_fields[4] = {
-    PB_FIELD2(  1, BYTES   , OPTIONAL, CALLBACK, FIRST, EncryptMessage, pubkey, pubkey, 0),
-    PB_FIELD2(  2, BYTES   , OPTIONAL, CALLBACK, OTHER, EncryptMessage, message, pubkey, 0),
+const pb_field_t EncryptMessage_fields[5] = {
+    PB_FIELD2(  1, BYTES   , OPTIONAL, STATIC  , FIRST, EncryptMessage, pubkey, pubkey, 0),
+    PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, EncryptMessage, message, pubkey, 0),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, EncryptMessage, display_only, message, 0),
+    PB_FIELD2(  4, UINT32  , REPEATED, STATIC  , OTHER, EncryptMessage, address_n, display_only, 0),
     PB_LAST_FIELD
 };
 
 const pb_field_t DecryptMessage_fields[3] = {
-    PB_FIELD2(  1, UINT32  , REPEATED, CALLBACK, FIRST, DecryptMessage, address_n, address_n, 0),
-    PB_FIELD2(  2, BYTES   , OPTIONAL, CALLBACK, OTHER, DecryptMessage, message, address_n, 0),
+    PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, DecryptMessage, address_n, address_n, 0),
+    PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, DecryptMessage, message, address_n, 0),
     PB_LAST_FIELD
 };
 

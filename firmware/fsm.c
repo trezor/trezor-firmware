@@ -554,6 +554,61 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	layoutHome();
 }
 
+void fsm_msgEncryptMessage(EncryptMessage *msg)
+{
+	if (!msg->has_pubkey) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No public key provided");
+		return;
+	}
+	if (!msg->has_message) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message provided");
+		return;
+	}
+	curve_point pubkey;
+	if ((msg->pubkey.size != 33 && msg->pubkey.size != 65) || ecdsa_read_pubkey(msg->pubkey.bytes, &pubkey) == 0) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid public key provided");
+		return;
+	}
+
+	if (msg->address_n_count) {
+		if (!protectPin(true)) {
+			layoutHome();
+			return;
+		}
+		HDNode *node = fsm_getRootNode();
+		if (!node) return;
+		fsm_deriveKey(node, msg->address_n, msg->address_n_count);
+	}
+
+	// TODO
+
+	layoutHome();
+}
+
+void fsm_msgDecryptMessage(DecryptMessage *msg)
+{
+	if (!msg->has_message) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message provided");
+		return;
+	}
+	if (msg->message.size % 16) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "Message length must be a multiple of 16");
+		return;
+	}
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+	HDNode *node = fsm_getRootNode();
+	if (!node) return;
+	fsm_deriveKey(node, msg->address_n, msg->address_n_count);
+
+	// TODO
+
+	layoutHome();
+}
+
 void fsm_msgEstimateTxSize(EstimateTxSize *msg)
 {
 	RESP_INIT(TxSize);

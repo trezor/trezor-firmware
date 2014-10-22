@@ -49,6 +49,8 @@ void fsm_msgGetAddress(GetAddress *msg);
 void fsm_msgEntropyAck(EntropyAck *msg);
 void fsm_msgSignMessage(SignMessage *msg);
 void fsm_msgVerifyMessage(VerifyMessage *msg);
+void fsm_msgEncryptMessage(EncryptMessage *msg);
+void fsm_msgDecryptMessage(DecryptMessage *msg);
 //void fsm_msgPassphraseAck(PassphraseAck *msg);
 void fsm_msgEstimateTxSize(EstimateTxSize *msg);
 void fsm_msgRecoveryDevice(RecoveryDevice *msg);

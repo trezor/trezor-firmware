@@ -196,16 +196,37 @@ typedef struct _DebugLinkState {
     uint32_t recovery_word_pos;
 } DebugLinkState;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} DecryptMessage_message_t;
+
 typedef struct _DecryptMessage {
-    pb_callback_t address_n;
-    pb_callback_t message;
+    size_t address_n_count;
+    uint32_t address_n[8];
+    bool has_message;
+    DecryptMessage_message_t message;
 } DecryptMessage;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[65];
+} EncryptMessage_pubkey_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} EncryptMessage_message_t;
+
 typedef struct _EncryptMessage {
-    pb_callback_t pubkey;
-    pb_callback_t message;
+    bool has_pubkey;
+    EncryptMessage_pubkey_t pubkey;
+    bool has_message;
+    EncryptMessage_message_t message;
     bool has_display_only;
     bool display_only;
+    size_t address_n_count;
+    uint32_t address_n[8];
 } EncryptMessage;
 
 typedef struct {
@@ -528,6 +549,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define EncryptMessage_pubkey_tag                1
 #define EncryptMessage_message_tag               2
 #define EncryptMessage_display_only_tag          3
+#define EncryptMessage_address_n_tag             4
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
 #define EstimateTxSize_outputs_count_tag         1
@@ -641,7 +663,7 @@ extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
-extern const pb_field_t EncryptMessage_fields[4];
+extern const pb_field_t EncryptMessage_fields[5];
 extern const pb_field_t DecryptMessage_fields[3];
 extern const pb_field_t CipherKeyValue_fields[7];
 extern const pb_field_t EstimateTxSize_fields[4];
@@ -691,6 +713,8 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SignMessage_size                         326
 #define VerifyMessage_size                       363
 #define MessageSignature_size                    104
+#define EncryptMessage_size                      1144
+#define DecryptMessage_size                      1075
 #define CipherKeyValue_size                      1340
 #define EstimateTxSize_size                      31
 #define TxSize_size                              6
