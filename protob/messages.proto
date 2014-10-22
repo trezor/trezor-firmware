@@ -405,6 +405,7 @@ message EncryptMessage {
 	optional bytes pubkey = 1;				// public key
 	optional bytes message = 2;				// message to encrypt
 	optional bool display_only = 3;				// show just on display? (don't send back via wire)
+	repeated uint32 address_n = 4;				// BIP-32 path to derive the signing key from master node
 }
 
 /**
@@ -413,7 +414,7 @@ message EncryptMessage {
  * @next Failure
  */
 message DecryptMessage {
-	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
+	repeated uint32 address_n = 1;				// BIP-32 path to derive the decryption key from master node
 	optional bytes message = 2;				// message to decrypt
 }
 
