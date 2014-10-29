@@ -227,6 +227,8 @@ typedef struct _EncryptMessage {
     bool display_only;
     size_t address_n_count;
     uint32_t address_n[8];
+    bool has_coin_name;
+    char coin_name[17];
 } EncryptMessage;
 
 typedef struct {
@@ -513,6 +515,7 @@ extern const uint32_t ResetDevice_strength_default;
 extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
 extern const char SignMessage_coin_name_default[17];
+extern const char EncryptMessage_coin_name_default[17];
 extern const char EstimateTxSize_coin_name_default[17];
 extern const char SignTx_coin_name_default[17];
 extern const char SimpleSignTx_coin_name_default[17];
@@ -550,6 +553,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define EncryptMessage_message_tag               2
 #define EncryptMessage_display_only_tag          3
 #define EncryptMessage_address_n_tag             4
+#define EncryptMessage_coin_name_tag             5
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
 #define EstimateTxSize_outputs_count_tag         1
@@ -663,7 +667,7 @@ extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[4];
 extern const pb_field_t MessageSignature_fields[3];
-extern const pb_field_t EncryptMessage_fields[5];
+extern const pb_field_t EncryptMessage_fields[6];
 extern const pb_field_t DecryptMessage_fields[3];
 extern const pb_field_t CipherKeyValue_fields[7];
 extern const pb_field_t EstimateTxSize_fields[4];
@@ -713,7 +717,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SignMessage_size                         326
 #define VerifyMessage_size                       363
 #define MessageSignature_size                    104
-#define EncryptMessage_size                      1144
+#define EncryptMessage_size                      1163
 #define DecryptMessage_size                      1075
 #define CipherKeyValue_size                      1340
 #define EstimateTxSize_size                      31

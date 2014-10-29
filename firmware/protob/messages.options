@@ -62,6 +62,7 @@ MessageSignature.signature		max_size:65
 EncryptMessage.pubkey			max_size:65
 EncryptMessage.message			max_size:1024
 EncryptMessage.address_n		max_count:8
+EncryptMessage.coin_name		max_size:17
 
 DecryptMessage.address_n		max_count:8
 DecryptMessage.message			max_size:1024
