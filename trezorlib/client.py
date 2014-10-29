@@ -432,8 +432,9 @@ class ProtocolMixin(object):
 
     @field('payload')
     @expect(proto.Success)
-    def encrypt_message(self, pubkey, message, display_only):
-        return self.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only))
+    def encrypt_message(self, pubkey, message, display_only, coin_name, n):
+        n = self._convert_prime(n)
+        return self.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only, coin_name=coin_name, address_n=n))
 
     @field('payload')
     @expect(proto.Success)
