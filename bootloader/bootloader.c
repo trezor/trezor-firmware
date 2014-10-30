@@ -32,6 +32,7 @@
 #include "signatures.h"
 #include "layout.h"
 #include "serialno.h"
+#include "rng.h"
 
 #ifdef APPVER
 #error Bootloader cannot be used in app mode
@@ -102,8 +103,17 @@ void check_firmware_sanity(void)
 	}
 }
 
+uint32_t __stack_chk_guard;
+
+void __attribute__((noreturn)) __stack_chk_fail(void)
+{
+	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
+	for (;;) {} // loop forever
+}
+
 int main(void)
 {
+	__stack_chk_guard = random32();
 	setup();
 	memory_protect();
 	oledInit();
