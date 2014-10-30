@@ -152,7 +152,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	memcpy(salt, "mnemonic", 8);
 	memcpy(salt + 8, passphrase, saltlen);
 	saltlen += 8;
-	pbkdf2((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, BIP39_PBKDF2_ROUNDS, seed, 512 / 8, progress_callback);
+	pbkdf2_hmac_sha512((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, BIP39_PBKDF2_ROUNDS, seed, 512 / 8, progress_callback);
 }
 
 const char **mnemonic_wordlist(void)
