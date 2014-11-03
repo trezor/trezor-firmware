@@ -430,20 +430,18 @@ class ProtocolMixin(object):
             return True
         return False
 
-    @field('payload')
-    @expect(proto.Success)
+    @expect(proto.EncryptedMessage)
     def encrypt_message(self, pubkey, message, display_only, coin_name, n):
         n = self._convert_prime(n)
         return self.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only, coin_name=coin_name, address_n=n))
 
-    @field('payload')
-    @expect(proto.Success)
-    def decrypt_message(self, n, message):
+    @expect(proto.DecryptedMessage)
+    def decrypt_message(self, n, nonce, message, msg_hmac):
         n = self._convert_prime(n)
-        return self.call(proto.DecryptMessage(address_n=n, message=message))
+        return self.call(proto.DecryptMessage(address_n=n, nonce=nonce, message=message, hmac=msg_hmac))
 
-    @field('payload')
-    @expect(proto.Success)
+    @field('value')
+    @expect(proto.CipheredKeyValue)
     def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True):
         n = self._convert_prime(n)
         return self.call(proto.CipherKeyValue(address_n=n,
@@ -453,8 +451,8 @@ class ProtocolMixin(object):
                                               ask_on_encrypt=ask_on_encrypt,
                                               ask_on_decrypt=ask_on_decrypt))
 
-    @field('payload')
-    @expect(proto.Success)
+    @field('value')
+    @expect(proto.CipheredKeyValue)
     def decrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True):
         n = self._convert_prime(n)
         return self.call(proto.CipherKeyValue(address_n=n,
