@@ -451,7 +451,10 @@ class ProtocolMixin(object):
             pass # it was not UTF8 string
 
         try:
-            resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
+            if address:
+                resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
+            else:
+                resp = self.call(proto.VerifyMessage(signature=signature, message=message))
         except CallException as e:
             resp = e
         if isinstance(resp, proto.Success):
