@@ -6,6 +6,7 @@ import hashlib
 import unicodedata
 import mapping
 import json
+import getpass
 
 import tools
 import messages_pb2 as proto
@@ -165,15 +166,19 @@ class TextUIMixin(object):
             desc = 'PIN'
 
         log("Please enter %s: " % desc)
-        pin = raw_input()
+        pin = getpass.getpass('')
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
         log("Passphrase required: ")
-        passphrase = raw_input()
-        passphrase = unicode(str(bytearray(passphrase, 'utf-8')), 'utf-8')
-
-        return proto.PassphraseAck(passphrase=passphrase)
+        passphrase = getpass.getpass('')
+        log("Confirm your Passphrase: ")
+        if passphrase == getpass(''):
+            passphrase = unicode(str(bytearray(passphrase, 'utf-8')), 'utf-8')
+            return proto.PassphraseAck(passphrase=passphrase)
+        else:
+            log("Passphrase did not match! ")
+            exit()
 
     def callback_WordRequest(self, msg):
         log("Enter one word of mnemonic: ")
