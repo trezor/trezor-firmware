@@ -15,6 +15,15 @@ import protobuf_json
 from trezorlib.debuglink import DebugLink
 from mnemonic import Mnemonic
 
+
+# try:
+#     from PIL import Image
+#     SCREENSHOT = True
+# except:
+#     SCREENSHOT = False
+
+SCREENSHOT = False
+
 # monkeypatching: text formatting of protobuf messages
 tools.monkeypatch_google_protobuf_text_format()
 
@@ -200,6 +209,7 @@ class DebugLinkMixin(object):
         super(DebugLinkMixin, self).__init__(*args, **kwargs)
         self.debug = None
         self.in_with_statement = 0
+        self.screenshot_id = 0
 
         # Always press Yes and provide correct pin
         self.setup_debuglink(True, True)
@@ -256,6 +266,19 @@ class DebugLinkMixin(object):
         self.mnemonic = unicode(str(bytearray(Mnemonic.normalize_string(mnemonic), 'utf-8')), 'utf-8').split(' ')
 
     def call_raw(self, msg):
+
+        if SCREENSHOT and self.debug:
+            layout = self.debug.read_layout()
+            im = Image.new("RGB", (128, 64))
+            pix = im.load()
+            for x in range(128):
+                for y in range(64):
+                    rx, ry = 127 - x, 63 - y
+                    if (ord(layout[rx + (ry / 8) * 128]) & (1 << (ry % 8))) > 0:
+                        pix[x, y] = (255, 255, 255)
+            im.save('scr%05d.png' % self.screenshot_id)
+            self.screenshot_id += 1
+
         resp = super(DebugLinkMixin, self).call_raw(msg)
         self._check_request(resp)
         return resp
