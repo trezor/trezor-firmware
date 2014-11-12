@@ -19,11 +19,11 @@ class TestMsgSignmessage(common.TrezorTest):
         self.assertEqual(sig.address, 'mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL')
         self.assertEqual(binascii.hexlify(sig.signature), '209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80')
 
-    def test_too_long(self):
+    def test_sign_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
-
-        # Message cannot be longer than 255 bytes
-        self.assertRaises(CallException, self.client.sign_message, 'Bitcoin', [0], '1' * 256)
+        sig = self.client.sign_message('Bitcoin', [0], "VeryLongMessage!" * 64)
+        self.assertEqual(sig.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
+        self.assertEqual(binascii.hexlify(sig.signature), '205ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed')
 
     """
     def test_sign_utf(self):

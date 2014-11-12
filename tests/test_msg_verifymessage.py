@@ -7,13 +7,13 @@ from trezorlib.client import CallException
 
 class TestMsgVerifymessage(common.TrezorTest):
 
-    def test_too_long(self):
+    def test_message_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.verify_message('1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T',
-            binascii.unhexlify('1ba77e01a9e17ba158b962cfef5f13dfed676ffc2b4bada24e58f784458b52b97421470d001d53d5880cf5e10e76f02be3e80bf21e18398cbd41e8c3b4af74c8c2'),
-            '1' * 256
+            binascii.unhexlify('1bddc0aed9cf4e10dc9f57770934f4fb72a27c4510a0f4a81e09c163552416f799cd3f211ffeed0f411e9af9b927407d67115fb6d0ab1897137048efe33417fcc1'),
+            "VeryLongMessage!" * 64
         )
-        self.assertFalse(ret)
+        self.assertTrue(ret)
 
     def test_message_testnet(self):
         self.setup_mnemonic_nopin_nopassphrase()
