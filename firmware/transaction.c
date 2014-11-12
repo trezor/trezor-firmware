@@ -372,16 +372,14 @@ bool transactionMessageVerify(uint8_t *message, uint32_t message_len, uint8_t *s
 	pubkey[0] = 0x04;
 	bn_write_be(&cp.x, pubkey + 1);
 	bn_write_be(&cp.y, pubkey + 33);
-	// check if the address is correct when provided
-	if (address) {
-		ecdsa_address_decode(address, decoded);
-		if (compressed) {
-			pubkey[0] = 0x02 | (cp.y.val[0] & 0x01);
-		}
-		ecdsa_get_address(pubkey, decoded[0], addr);
-		if (strcmp(addr, address) != 0) {
-			return false;
-		}
+	// check if the address is correct
+	ecdsa_address_decode(address, decoded);
+	if (compressed) {
+		pubkey[0] = 0x02 | (cp.y.val[0] & 0x01);
+	}
+	ecdsa_get_address(pubkey, decoded[0], addr);
+	if (strcmp(addr, address) != 0) {
+		return false;
 	}
 	// check if signature verifies the digest
 	if (ecdsa_verify_digest(pubkey, signature + 1, hash) != 0) {

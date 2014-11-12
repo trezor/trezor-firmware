@@ -37,6 +37,7 @@ OBJS += ../trezor-crypto/aes_modes.o
 
 OBJS += ../trezor-qrenc/qr_encode.o
 
+OBJS += protob/pb_common.o
 OBJS += protob/pb_decode.o
 OBJS += protob/pb_encode.o
 OBJS += protob/messages.pb.o

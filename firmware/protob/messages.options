@@ -12,7 +12,6 @@ ApplySettings.label			max_size:33
 Ping.message				max_size:256
 
 Success.message				max_size:256
-Success.payload				max_size:1024
 
 Failure.message				max_size:256
 
@@ -49,12 +48,12 @@ RecoveryDevice.label			max_size:33
 WordAck.word				max_size:12
 
 SignMessage.address_n			max_count:8
-SignMessage.message			max_size:256
+SignMessage.message			max_size:1024
 SignMessage.coin_name			max_size:17
 
 VerifyMessage.address			max_size:35
 VerifyMessage.signature			max_size:65
-VerifyMessage.message			max_size:256
+VerifyMessage.message			max_size:1024
 
 MessageSignature.address		max_size:35
 MessageSignature.signature		max_size:65
@@ -64,12 +63,23 @@ EncryptMessage.message			max_size:1024
 EncryptMessage.address_n		max_count:8
 EncryptMessage.coin_name		max_size:17
 
+EncryptedMessage.nonce			max_size:33
+EncryptedMessage.message		max_size:1120
+EncryptedMessage.hmac			max_size:8
+
 DecryptMessage.address_n		max_count:8
-DecryptMessage.message			max_size:1024
+DecryptMessage.nonce			max_size:33
+DecryptMessage.message			max_size:1120 # 1 + 9 + 1024 + 21 + 65
+DecryptMessage.hmac			max_size:8
+
+DecryptedMessage.address		max_size:35
+DecryptedMessage.message		max_size:1024
 
 CipherKeyValue.address_n		max_count:8
 CipherKeyValue.key			max_size:256
 CipherKeyValue.value			max_size:1024
+
+CipheredKeyValue.value			max_size:1024
 
 EstimateTxSize.coin_name		max_size:17
 
