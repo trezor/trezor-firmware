@@ -15,6 +15,7 @@ OBJS += layout2.o
 OBJS += recovery.o
 OBJS += reset.o
 OBJS += signing.o
+OBJS += crypto.o
 
 OBJS += debug.o
 

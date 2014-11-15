@@ -25,28 +25,8 @@
 #include "debug.h"
 #include "protect.h"
 #include "layout2.h"
+#include "crypto.h"
 #include "messages.pb.h"
-
-// aux methods
-
-uint32_t ser_length(uint32_t len, uint8_t *out) {
-	if (len < 253) {
-		out[0] = len & 0xFF;
-		return 1;
-	}
-	if (len < 0x10000) {
-		out[0] = 253;
-		out[1] = len & 0xFF;
-		out[2] = (len >> 8) & 0xFF;
-		return 3;
-	}
-	out[0] = 254;
-	out[1] = len & 0xFF;
-	out[2] = (len >> 8) & 0xFF;
-	out[3] = (len >> 16) & 0xFF;
-	out[4] = (len >> 24) & 0xFF;
-	return 5;
-}
 
 uint32_t op_push(uint32_t i, uint8_t *out) {
 	if (i < 0x4C) {
@@ -289,101 +269,4 @@ uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs)
 uint32_t transactionEstimateSizeKb(uint32_t inputs, uint32_t outputs)
 {
 	return (transactionEstimateSize(inputs, outputs) + 999) / 1000;
-}
-
-bool transactionMessageSign(uint8_t *message, uint32_t message_len, uint8_t *privkey, const char *address, uint8_t *signature)
-{
-	if (message_len >= 256) {
-		return false;
-	}
-
-	SHA256_CTX ctx;
-	uint8_t i, hash[32];
-
-	sha256_Init(&ctx);
-	sha256_Update(&ctx, (const uint8_t *)"\x18" "Bitcoin Signed Message:" "\n", 25);
-	i = message_len;
-	sha256_Update(&ctx, &i, 1);
-	sha256_Update(&ctx, message, message_len);
-	sha256_Final(hash, &ctx);
-	sha256_Raw(hash, 32, hash);
-
-	ecdsa_sign_digest(privkey, hash, signature + 1);
-	for (i = 27 + 4; i < 27 + 4 + 4; i++) {
-		signature[0] = i;
-		if (transactionMessageVerify(message, message_len, signature, address)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool transactionMessageVerify(uint8_t *message, uint32_t message_len, uint8_t *signature, const char *address)
-{
-	if (message_len >= 256) {
-		return false;
-	}
-
-	bool compressed;
-	uint8_t nV = signature[0];
-	bignum256 r, s, e;
-	curve_point cp, cp2;
-	SHA256_CTX ctx;
-	uint8_t i, pubkey[65], decoded[21], hash[32];
-	char addr[35];
-
-	if (nV < 27 || nV >= 35) {
-		return false;
-	}
-	compressed = (nV >= 31);
-	if (compressed) {
-		nV -= 4;
-	}
-	uint8_t recid = nV - 27;
-	// read r and s
-	bn_read_be(signature + 1, &r);
-	bn_read_be(signature + 33, &s);
-	// x = r + (recid / 2) * order
-	bn_zero(&cp.x);
-	for (i = 0; i < recid / 2; i++) {
-		bn_addmod(&cp.x, &order256k1, &prime256k1);
-	}
-	bn_addmod(&cp.x, &r, &prime256k1);
-	// compute y from x
-	uncompress_coords(recid % 2, &cp.x, &cp.y);
-	// calculate hash
-	sha256_Init(&ctx);
-	sha256_Update(&ctx, (const uint8_t *)"\x18" "Bitcoin Signed Message:" "\n", 25);
-	i = message_len;
-	sha256_Update(&ctx, &i, 1);
-	sha256_Update(&ctx, message, message_len);
-	sha256_Final(hash, &ctx);
-	sha256_Raw(hash, 32, hash);
-	// e = -hash
-	bn_read_be(hash, &e);
-	bn_substract_noprime(&order256k1, &e, &e);
-	// r = r^-1
-	bn_inverse(&r, &order256k1);
-	point_multiply(&s, &cp, &cp);
-	scalar_multiply(&e, &cp2);
-	point_add(&cp2, &cp);
-	point_multiply(&r, &cp, &cp);
-	pubkey[0] = 0x04;
-	bn_write_be(&cp.x, pubkey + 1);
-	bn_write_be(&cp.y, pubkey + 33);
-	// check if the address is correct
-	ecdsa_address_decode(address, decoded);
-	if (compressed) {
-		pubkey[0] = 0x02 | (cp.y.val[0] & 0x01);
-	}
-	ecdsa_get_address(pubkey, decoded[0], addr);
-	if (strcmp(addr, address) != 0) {
-		return false;
-	}
-	// check if signature verifies the digest
-	if (ecdsa_verify_digest(pubkey, signature + 1, hash) != 0) {
-		return false;
-	}
-	return true;
 }

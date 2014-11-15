@@ -56,8 +56,4 @@ uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs);
 
 uint32_t transactionEstimateSizeKb(uint32_t inputs, uint32_t outputs);
 
-bool transactionMessageSign(uint8_t *message, uint32_t message_len, uint8_t *privkey, const char *address, uint8_t *signature);
-
-bool transactionMessageVerify(uint8_t *message, uint32_t message_len, uint8_t *signature, const char *address);
-
 #endif

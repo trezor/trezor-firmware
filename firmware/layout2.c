@@ -304,3 +304,23 @@ void layoutAddress(const char *address)
 
 	oledRefresh();
 }
+
+void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing)
+{
+	// TODO: finish
+	(void)msg;
+	(void)len;
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
+		signing ? "Encrypt message?" : "Encrypt+sign message?",
+		NULL, NULL, NULL, NULL, NULL, NULL);
+}
+
+void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
+{
+	// TODO: finish
+	(void)msg;
+	(void)len;
+	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
+		address ? "Signed message contents" : "Message contents",
+		NULL, NULL, NULL, NULL, NULL, NULL);
+}
