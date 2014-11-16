@@ -418,12 +418,17 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 	ripemd160(h, 32, pubkeyhash);
 }
 
+void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *addr_raw)
+{
+	addr_raw[0] = version;
+	ecdsa_get_pubkeyhash(pub_key, addr_raw + 1);
+}
+
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
 {
-	uint8_t data[21];
-	data[0] = version;
-	ecdsa_get_pubkeyhash(pub_key, data + 1);
-	base58_encode_check(data, 21, addr);
+	uint8_t raw[21];
+	ecdsa_get_address_raw(pub_key, version, raw);
+	base58_encode_check(raw, 21, addr);
 }
 
 void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif)
