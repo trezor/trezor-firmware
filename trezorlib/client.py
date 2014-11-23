@@ -182,7 +182,7 @@ class TextUIMixin(object):
         log("Passphrase required: ")
         passphrase = getpass.getpass('')
         log("Confirm your Passphrase: ")
-        if passphrase == getpass(''):
+        if passphrase == getpass.getpass(''):
             passphrase = unicode(str(bytearray(passphrase, 'utf-8')), 'utf-8')
             return proto.PassphraseAck(passphrase=passphrase)
         else:
