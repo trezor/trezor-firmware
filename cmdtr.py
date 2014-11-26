@@ -158,13 +158,21 @@ class Commands(object):
 
     def encrypt_message(self, args):
         pubkey = binascii.unhexlify(args.pubkey)
-        ret = self.client.encrypt_message(pubkey, args.message, args.display_only)
-        return binascii.hexlify(ret)
+        address_n = self.client.expand_path(args.n)
+        ret = self.client.encrypt_message(pubkey, args.message, args.display_only, args.coin, address_n)
+        output = {
+            'nonce': binascii.hexlify(ret.nonce),
+            'message': binascii.hexlify(ret.message),
+            'hmac': binascii.hexlify(ret.hmac),
+            'payload': base64.b64encode(ret.nonce + ret.message + ret.hmac),
+        }
+        return output
 
     def decrypt_message(self, args):
         address_n = self.client.expand_path(args.n)
-        message = binascii.unhexlify(args.message)
-        ret = self.client.decrypt_message(address_n, message)
+        payload = base64.b64decode(args.payload)
+        nonce, message, msg_hmac = payload[:33], payload[33:-8], payload[-8:]
+        ret = self.client.decrypt_message(address_n, nonce, message, msg_hmac)
         return ret
 
     def encrypt_keyvalue(self, args):
@@ -273,11 +281,13 @@ class Commands(object):
         (('pubkey',), {'type': str}),
         (('message',), {'type': str}),
         (('-d', '--display-only'), {'action': 'store_true', 'default': False}),
+        (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
+        (('-n', '-address'), {'type': str}),
     )
 
     decrypt_message.arguments = (
         (('-n', '-address'), {'type': str}),
-        (('message',), {'type': str}),
+        (('payload',), {'type': str}),
     )
 
     verify_message.arguments = (
