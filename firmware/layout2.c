@@ -149,41 +149,23 @@ void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee, uint32_t kb)
 	);
 }
 
-// split longer message into 4 rows, 16 chars each
-const char **prepare_message(const uint8_t *msg, uint32_t len)
+// split longer string into 4 rows, rowlen chars each
+const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 {
-	bool binary = false;
-	uint32_t i;
-	for (i = 0; i < len; i++) {
-		if (msg[i] < 0x20) {
-			binary = true;
-			break;
-		}
+	static char str[4][32 + 1];
+	if (rowlen > 32) {
+		rowlen = 32;
 	}
-	static char str[4][17];
 	memset(str, 0, sizeof(str));
-	if (!binary) {
-		strlcpy(str[0], (char *)msg, 17);
-		if (len > 16) {
-			strlcpy(str[1], (char *)msg + 16, 17);
-		}
-		if (len > 32) {
-			strlcpy(str[2], (char *)msg + 32, 17);
-		}
-		if (len > 48) {
-			strlcpy(str[3], (char *)msg + 48, 17);
-		}
-	} else {
-		data2hex(msg, len > 8 ? 8 : len, str[0]);
-		if (len > 8) {
-			data2hex(msg + 8, len > 16 ? 8 : len - 8, str[1]);
-		}
-		if (len > 16) {
-			data2hex(msg + 16, len > 24 ? 8 : len - 16, str[2]);
-		}
-		if (len > 24) {
-			data2hex(msg + 24, len > 32 ? 8 : len - 24, str[3]);
-		}
+	strlcpy(str[0], (char *)msg, rowlen + 1);
+	if (len > rowlen) {
+		strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
+	}
+	if (len > rowlen * 2) {
+		strlcpy(str[2], (char *)msg + rowlen * 2, rowlen + 1);
+	}
+	if (len > rowlen * 3) {
+		strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
 	}
 	static const char *ret[4] = { str[0], str[1], str[2], str[3] };
 	return ret;
@@ -191,7 +173,7 @@ const char **prepare_message(const uint8_t *msg, uint32_t len)
 
 void layoutSignMessage(const uint8_t *msg, uint32_t len)
 {
-	const char **str = prepare_message(msg, len);
+	const char **str = split_message(msg, len, 16);
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
 		"Sign message?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
@@ -199,7 +181,7 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 {
-	const char **str = prepare_message(msg, len);
+	const char **str = split_message(msg, len, 16);
 	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
 		"Verified message",
 		str[0], str[1], str[2], str[3], NULL, NULL);
@@ -207,15 +189,15 @@ void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 
 void layoutCipherKeyValue(bool encrypt, const char *key)
 {
-	const char **str = prepare_message((const uint8_t *)key, strlen(key));
+	const char **str = split_message((const uint8_t *)key, strlen(key), 16);
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
-		encrypt ? "Encrypt?" : "Decrypt?",
+		encrypt ? "Encode value of this key?" : "Decode value of this key?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing)
 {
-	const char **str = prepare_message(msg, len);
+	const char **str = split_message(msg, len, 16);
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
 		signing ? "Encrypt+Sign message?" : "Encrypt message?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
@@ -223,7 +205,7 @@ void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing)
 
 void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 {
-	const char **str = prepare_message(msg, len);
+	const char **str = split_message(msg, len, 16);
 	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
 		address ? "Decrypted signed message" : "Decrypted message",
 		str[0], str[1], str[2], str[3], NULL, NULL);
@@ -253,20 +235,7 @@ void layoutAddress(const char *address)
 		}
 	}
 
-	int len = strlen(address);
-	char str[4][10];
-	memset(str, 0, sizeof(str));
-
-	strlcpy(str[0], (char *)address, 10);
-	if (len > 9) {
-		strlcpy(str[1], (char *)address + 9, 10);
-	}
-	if (len > 18) {
-		strlcpy(str[2], (char *)address + 18, 10);
-	}
-	if (len > 27) {
-		strlcpy(str[3], (char *)address + 27, 10);
-	}
+	const char **str = split_message((const uint8_t *)address, strlen(address), 9);
 
 	oledDrawString(68, 0 * 9, str[0]);
 	oledDrawString(68, 1 * 9, str[1]);
