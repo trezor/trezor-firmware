@@ -51,7 +51,7 @@ def opcode_serialize(opcode):
     except:
         raise Exception('Unknown script opcode: %s' % opcode)
 
-def bitcore_tx(url):
+def insight_tx(url):
     f = urllib2.urlopen(url)
     data = json.load(f)
 
@@ -66,8 +66,8 @@ def bitcore_tx(url):
             i.prev_index = 0xffffffff # signed int -1
             i.script_sig = binascii.unhexlify(vin['coinbase'])
             i.sequence = vin['sequence']
-            
-        else:        
+
+        else:
             i.prev_hash = binascii.unhexlify(vin['txid'])
             i.prev_index = vin['vout']
             asm = vin['scriptSig']['asm'].split(' ')
@@ -88,12 +88,12 @@ class TXAPIBitcoin(object):
 
     @filecache(MONTH)
     def get_tx(self, txhash):
-        url = 'http://live.bitcore.io/api/tx/%s' % txhash
-        return bitcore_tx(url)
+        url = 'https://insight.bitpay.com/api/tx/%s' % txhash
+        return insight_tx(url)
 
 class TXAPITestnet(object):
 
     @filecache(MONTH)
     def get_tx(self, txhash):
-        url = 'http://test.bitcore.io/api/tx/%s' % txhash
-        return bitcore_tx(url)
+        url = 'https://insight.bitpay.com/api/tx/%s' % txhash
+        return insight_tx(url)
