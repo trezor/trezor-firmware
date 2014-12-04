@@ -131,6 +131,7 @@ message CoinType {
 message MultisigRedeemScriptType {
 	repeated bytes pubkeys = 1;						// pubkeys from multisig address (sorted lexicographically)
 	repeated bytes signatures = 2;						// existing signatures for partially signed input
+	optional uint32 m = 3;							// "m" from n, how many valid signatures is necessary for spending
 }
 
 /**
