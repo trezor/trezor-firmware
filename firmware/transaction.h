@@ -42,7 +42,9 @@ typedef struct {
 } TxStruct;
 
 uint32_t compile_script_sig(uint8_t address_type, const uint8_t *pubkeyhash, uint8_t *out);
-int serialize_script_sig(uint8_t *signature, uint32_t signature_len, uint8_t *pubkey, uint32_t pubkey_len, uint8_t *out);
+uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out);
+uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, const uint8_t *pubkey, uint32_t pubkey_len, uint8_t *out);
+uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out);
 int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm);
 uint32_t tx_serialize_input(TxStruct *tx, uint8_t *prev_hash, uint32_t prev_index, uint8_t *script_sig, uint32_t script_sig_len, uint32_t sequence, uint8_t *out);
 uint32_t tx_serialize_output(TxStruct *tx, uint64_t amount, uint8_t *script_pubkey, uint32_t script_pubkey_len, uint8_t *out);

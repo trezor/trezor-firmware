@@ -102,6 +102,8 @@ typedef struct _MultisigRedeemScriptType {
     MultisigRedeemScriptType_pubkeys_t pubkeys[5];
     pb_size_t signatures_count;
     MultisigRedeemScriptType_signatures_t signatures[4];
+    bool has_m;
+    uint32_t m;
 } MultisigRedeemScriptType;
 
 typedef PB_BYTES_ARRAY_T(520) TxOutputBinType_script_pubkey_t;
@@ -191,7 +193,7 @@ extern const InputScriptType TxInputType_script_type_default;
 /* Initializer values for message structs */
 #define HDNodeType_init_default                  {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define CoinType_init_default                    {false, "", false, "", false, 0, false, 0}
-#define MultisigRedeemScriptType_init_default    {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}}
+#define MultisigRedeemScriptType_init_default    {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default}
 #define TxOutputType_init_default                {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0}
 #define TxOutputBinType_init_default             {0, {0, {0}}}
@@ -200,7 +202,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define TxRequestSerializedType_init_default     {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0}
-#define MultisigRedeemScriptType_init_zero       {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}}
+#define MultisigRedeemScriptType_init_zero       {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero}
 #define TxOutputType_init_zero                   {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0}
 #define TxOutputBinType_init_zero                {0, {0, {0}}}
@@ -221,6 +223,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define HDNodeType_public_key_tag                6
 #define MultisigRedeemScriptType_pubkeys_tag     1
 #define MultisigRedeemScriptType_signatures_tag  2
+#define MultisigRedeemScriptType_m_tag           3
 #define TxOutputBinType_amount_tag               1
 #define TxOutputBinType_script_pubkey_tag        2
 #define TxOutputType_address_tag                 1
@@ -254,7 +257,7 @@ extern const InputScriptType TxInputType_script_type_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t HDNodeType_fields[7];
 extern const pb_field_t CoinType_fields[5];
-extern const pb_field_t MultisigRedeemScriptType_fields[3];
+extern const pb_field_t MultisigRedeemScriptType_fields[4];
 extern const pb_field_t TxInputType_fields[8];
 extern const pb_field_t TxOutputType_fields[5];
 extern const pb_field_t TxOutputBinType_fields[3];
@@ -265,11 +268,11 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
 #define CoinType_size                            47
-#define MultisigRedeemScriptType_size            663
-#define TxInputType_size                         1289
+#define MultisigRedeemScriptType_size            669
+#define TxInputType_size                         1295
 #define TxOutputType_size                        102
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     1957
+#define TransactionType_size                     1963
 #define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             1115
 

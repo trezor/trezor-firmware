@@ -130,7 +130,37 @@ uint32_t compile_script_sig(uint8_t address_type, const uint8_t *pubkeyhash, uin
 	}
 }
 
-int serialize_script_sig(uint8_t *signature, uint32_t signature_len, uint8_t *pubkey, uint32_t pubkey_len, uint8_t *out)
+// if out == NULL just compute the length
+uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out)
+{
+	if (!multisig->has_m) return 0;
+	uint32_t m = multisig->m;
+	uint32_t n = multisig->pubkeys_count;
+	if (m < 2 || m > 3) return 0;
+	if (n < 2 || n > 3) return 0;
+	uint32_t i, r = 0;
+	if (out) {
+		out[r] = 0x50 + m; r++;
+		for (i = 0; i < n; i++) {
+			r += op_push(multisig->pubkeys[i].size, out + r);
+			memcpy(out + r, multisig->pubkeys[i].bytes, multisig->pubkeys[i].size); r += multisig->pubkeys[i].size;
+		}
+		out[r] = 0x50 + n; r++;
+		out[r] = 0xAE; r++; // OP_CHECKMULTISIG
+	} else {
+		r++;
+		for (i = 0; i < n; i++) {
+			uint8_t dummy[8];
+			r += op_push(multisig->pubkeys[i].size, dummy);
+			r += multisig->pubkeys[i].size;
+		}
+		r++;
+		r++;
+	}
+	return r;
+}
+
+uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, const uint8_t *pubkey, uint32_t pubkey_len, uint8_t *out)
 {
 	uint32_t r = 0;
 	r += op_push(signature_len + 1, out + r);
@@ -138,6 +168,24 @@ int serialize_script_sig(uint8_t *signature, uint32_t signature_len, uint8_t *pu
 	out[r] = 0x01; r++;
 	r += op_push(pubkey_len, out + r);
 	memcpy(out + r, pubkey, pubkey_len); r += pubkey_len;
+	return r;
+}
+
+uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out)
+{
+	uint32_t i, r = 0;
+	out[r] = 0x00; r++;
+	for (i = 0; i < multisig->signatures_count; i++) {
+		if (multisig->signatures[i].size == 0) {
+			continue;
+		}
+		r += op_push(multisig->signatures[i].size + 1, out + r);
+		memcpy(out + r, multisig->signatures[i].bytes, multisig->signatures[i].size); r += multisig->signatures[i].size;
+		out[r] = 0x01; r++;
+	}
+	uint32_t script_len = compile_script_multisig(multisig, 0);
+	r += op_push(script_len, out + r);
+	r += compile_script_multisig(multisig, out + r);
 	return r;
 }
 

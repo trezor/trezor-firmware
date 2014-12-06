@@ -29,9 +29,10 @@ const pb_field_t CoinType_fields[5] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t MultisigRedeemScriptType_fields[3] = {
+const pb_field_t MultisigRedeemScriptType_fields[4] = {
     PB_FIELD(  1, BYTES   , REPEATED, STATIC  , FIRST, MultisigRedeemScriptType, pubkeys, pubkeys, 0),
     PB_FIELD(  2, BYTES   , REPEATED, STATIC  , OTHER, MultisigRedeemScriptType, signatures, pubkeys, 0),
+    PB_FIELD(  3, UINT32  , OPTIONAL, STATIC  , OTHER, MultisigRedeemScriptType, m, signatures, 0),
     PB_LAST_FIELD
 };
 
