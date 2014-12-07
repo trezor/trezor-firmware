@@ -282,9 +282,14 @@ void signing_txack(TransactionType *tx)
 				for (k = 0; k < tx->inputs[0].address_n_count; k++) {
 					hdnode_private_ckd(&node, tx->inputs[0].address_n[k]);
 				}
-				if (tx->inputs[0].has_multisig) {
+				if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG) {
+					if (!tx->inputs[0].has_multisig) {
+						fsm_sendFailure(FailureType_Failure_Other, "Multisig info not provided");
+						signing_abort();
+						return;
+					}
 					tx->inputs[0].script_sig.size = compile_script_multisig(&(tx->inputs[0].multisig), tx->inputs[0].script_sig.bytes);
-				} else {
+				} else { // SPENDADDRESS
 					ecdsa_get_pubkeyhash(node.public_key, hash);
 					tx->inputs[0].script_sig.size = compile_script_sig(coin->address_type, hash, tx->inputs[0].script_sig.bytes);
 				}
@@ -366,7 +371,12 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.has_serialized_tx = true;
 				ecdsa_sign_digest(privkey, hash, sig);
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
-				if (input.has_multisig) {
+				if (input.script_type == InputScriptType_SPENDMULTISIG) {
+					if (!input.has_multisig) {
+						fsm_sendFailure(FailureType_Failure_Other, "Multisig info not provided");
+						signing_abort();
+						return;
+					}
 					// fill in the signature
 					int i, pubkey_idx = -1;
 					for (i = 0; i < input.multisig.pubkeys_count; i++) {
@@ -383,7 +393,7 @@ void signing_txack(TransactionType *tx)
 					memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
 					input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
 					input.script_sig.size = serialize_script_multisig(&(input.multisig), input.script_sig.bytes);
-				} else {
+				} else { // SPENDADDRESS
 					input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, input.script_sig.bytes);
 				}
 				resp.serialized.serialized_tx.size = tx_serialize_input(&to, input.prev_hash.bytes, input.prev_index, input.script_sig.bytes, input.script_sig.size, input.sequence, resp.serialized.serialized_tx.bytes);
