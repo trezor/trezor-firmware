@@ -42,6 +42,7 @@
 #include "hmac.h"
 #include "crypto.h"
 #include "base58.h"
+#include "bip39.h"
 
 // message methods
 
@@ -293,6 +294,14 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Load cancelled");
 		layoutHome();
 		return;
+	}
+
+	if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum) ) {
+		if (!mnemonic_check(msg->mnemonic)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Mnemonic with wrong checksum provided");
+			layoutHome();
+			return;
+		}
 	}
 
 	storage_loadDevice(msg);
