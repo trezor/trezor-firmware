@@ -296,28 +296,28 @@ int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
+int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby)
 {
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
-	return ecdsa_sign_digest(priv_key, hash, sig);
+	return ecdsa_sign_digest(priv_key, hash, sig, pby);
 }
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig)
+int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby)
 {
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
 	sha256_Raw(hash, 32, hash);
-	return ecdsa_sign_digest(priv_key, hash, sig);
+	return ecdsa_sign_digest(priv_key, hash, sig, pby);
 }
 
 // uses secp256k1 curve
 // priv_key is a 32 byte big endian stored number
 // sig is 64 bytes long array for the signature
 // digest is 32 bytes of digest
-int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig)
+int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig, uint8_t *pby)
 {
 	uint32_t i;
 	curve_point R;
@@ -340,6 +340,9 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 
 	// compute k*G
 	scalar_multiply(&k, &R);
+	if (pby) {
+		*pby = R.y.val[0] & 1;
+	}
 	// r = (rx mod n)
 	bn_mod(&R.x, &order256k1);
 	// if r is zero, we fail

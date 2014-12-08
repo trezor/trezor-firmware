@@ -39,9 +39,9 @@ int point_is_negative_of(const curve_point *p, const curve_point *q);
 void scalar_multiply(const bignum256 *k, curve_point *res);
 void uncompress_coords(uint8_t odd, const bignum256 *x, bignum256 *y);
 
-int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
-int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig);
-int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig);
+int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
+int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
+int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig, uint8_t *pby);
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash);

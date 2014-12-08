@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 		}
 
 		// use our ECDSA signer to sign the message with the key
-		if (ecdsa_sign(priv_key, msg, msg_len, sig) != 0) {
+		if (ecdsa_sign(priv_key, msg, msg_len, sig, 0) != 0) {
 			printf("trezor-crypto signing failed\n");
 			break;
 		}

@@ -386,13 +386,13 @@ START_TEST(test_sign_speed)
 
 	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(priv_key, msg, sizeof(msg), sig);
+		res = ecdsa_sign(priv_key, msg, sizeof(msg), sig, 0);
 		ck_assert_int_eq(res, 0);
 	}
 
 	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(priv_key, msg, sizeof(msg), sig);
+		res = ecdsa_sign(priv_key, msg, sizeof(msg), sig, 0);
 		ck_assert_int_eq(res, 0);
 	}
 
