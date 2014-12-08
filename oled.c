@@ -193,7 +193,11 @@ void oledDrawChar(int x, int y, char c)
 
 	if ((x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
 
-	if ((c < FONT_START) || (c > FONT_END)) {
+	if (c < FONT_START) {
+		c = ' ';
+	}
+
+	if (c > FONT_END) {
 		c = '_';
 	}
 
