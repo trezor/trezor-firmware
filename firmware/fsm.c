@@ -537,12 +537,12 @@ void fsm_msgSignMessage(SignMessage *msg)
 	}
 
 	fsm_deriveKey(node, msg->address_n, msg->address_n_count);
-	uint8_t addr_raw[21];
-	ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
-	base58_encode_check(addr_raw, 21, resp->address);
 	layoutProgressSwipe("Signing", 0, 0);
-	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, addr_raw, resp->signature.bytes) == 0) {
+	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
 		resp->has_address = true;
+		uint8_t addr_raw[21];
+		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
+		base58_encode_check(addr_raw, 21, resp->address);
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);

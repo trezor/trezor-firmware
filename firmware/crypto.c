@@ -63,7 +63,7 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out)
 	return 1 + 8;
 }
 
-int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8_t *privkey, const uint8_t *address_raw, uint8_t *signature)
+int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8_t *privkey, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -75,15 +75,10 @@ int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8
 	uint8_t hash[32];
 	sha256_Final(hash, &ctx);
 	sha256_Raw(hash, 32, hash);
-	ecdsa_sign_digest(privkey, hash, signature + 1);
-	uint8_t i;
-	for (i = 27 + 4; i < 27 + 4 + 4; i++) {
-		signature[0] = i;
-		if (cryptoMessageVerify(message, message_len, address_raw, signature) == 0) {
-			return 0;
-		}
-	}
-	return 1;
+	uint8_t pby;
+	ecdsa_sign_digest(privkey, hash, signature + 1, &pby);
+	signature[0] = 27 + pby + 4;
+	return 0;
 }
 
 int cryptoMessageVerify(const uint8_t *message, pb_size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
@@ -106,13 +101,8 @@ int cryptoMessageVerify(const uint8_t *message, pb_size_t message_len, const uin
 	// read r and s
 	bn_read_be(signature + 1, &r);
 	bn_read_be(signature + 33, &s);
-	// x = r + (recid / 2) * order
-	bn_zero(&cp.x);
-	uint8_t i;
-	for (i = 0; i < recid / 2; i++) {
-		bn_addmod(&cp.x, &order256k1, &prime256k1);
-	}
-	bn_addmod(&cp.x, &r, &prime256k1);
+	// x = r
+	memcpy(&cp.x, &r, sizeof(bignum256));
 	// compute y from x
 	uncompress_coords(recid % 2, &cp.x, &cp.y);
 	// calculate hash
@@ -161,7 +151,7 @@ int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, pb_size_t msg_
 		uint32_t l = ser_length(msg_size, payload + 1);
 		memcpy(payload + 1 + l, msg, msg_size);
 		memcpy(payload + 1 + l + msg_size, address_raw, 21);
-		if (cryptoMessageSign(msg, msg_size, privkey, address_raw, payload + 1 + l + msg_size + 21) != 0) {
+		if (cryptoMessageSign(msg, msg_size, privkey, payload + 1 + l + msg_size + 21) != 0) {
 			return 1;
 		}
 		*payload_len = 1 + l + msg_size + 21 + 65;

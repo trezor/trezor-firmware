@@ -28,7 +28,7 @@
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
 
-int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8_t *privkey, const uint8_t *address_raw, uint8_t *signature);
+int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8_t *privkey, uint8_t *signature);
 
 int cryptoMessageVerify(const uint8_t *message, pb_size_t message_len, const uint8_t *address_raw, const uint8_t *signature);
 
