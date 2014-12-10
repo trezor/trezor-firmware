@@ -251,3 +251,14 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, pb_size_t payload
 	*msg_len = o;
 	return 0;
 }
+
+int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey, uint32_t pubkey_len)
+{
+	int i;
+	for (i = 0; i < multisig->pubkeys_count; i++) {
+		if (multisig->pubkeys[i].size == pubkey_len && memcmp(multisig->pubkeys[i].bytes, pubkey, pubkey_len) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}

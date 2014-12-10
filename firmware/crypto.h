@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <secp256k1.h>
 #include <pb.h>
+#include "types.pb.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
 
@@ -37,5 +38,7 @@ int cryptoMessageVerify(const uint8_t *message, pb_size_t message_len, const uin
 int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, pb_size_t msg_size, bool display_only, uint8_t *nonce, pb_size_t *nonce_len, uint8_t *payload, pb_size_t *payload_len, uint8_t *hmac, pb_size_t *hmac_len, const uint8_t *privkey, const uint8_t *address_raw);
 
 int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, pb_size_t payload_len, const uint8_t *hmac, pb_size_t hmac_len, const uint8_t *privkey, uint8_t *msg, pb_size_t *msg_len, bool *display_only, bool *signing, uint8_t *address_raw);
+
+int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey, uint32_t pubkey_len);
 
 #endif

@@ -24,6 +24,7 @@
 #include "transaction.h"
 #include "ecdsa.h"
 #include "protect.h"
+#include "crypto.h"
 
 static uint32_t inputs_count;
 static uint32_t outputs_count;
@@ -378,14 +379,8 @@ void signing_txack(TransactionType *tx)
 						return;
 					}
 					// fill in the signature
-					int i, pubkey_idx = -1;
-					for (i = 0; i < input.multisig.pubkeys_count; i++) {
-						if (input.multisig.pubkeys[i].size == 33 && memcmp(input.multisig.pubkeys[i].bytes, pubkey, 33) == 0) {
-							pubkey_idx = i;
-							break;
-						}
-					}
-					if (pubkey_idx == -1) {
+					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey, 33);
+					if (pubkey_idx < 0) {
 						fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
 						signing_abort();
 						return;
