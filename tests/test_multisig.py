@@ -14,7 +14,8 @@ from trezorlib.tx_api import TXAPITestnet, TXAPIBitcoin
 #
 
 class TestMultisig(common.TrezorTest):
-    def test_first_sig(self):
+
+    def test_2_of_3(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         #key1 = self.client.get_public_node([1])
