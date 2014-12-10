@@ -336,6 +336,8 @@ typedef struct _GetAddress {
     char coin_name[17];
     bool has_show_display;
     bool show_display;
+    bool has_multisig;
+    MultisigRedeemScriptType multisig;
 } GetAddress;
 
 typedef struct _GetEntropy {
@@ -534,7 +536,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Entropy_init_default                     {{0, {0}}}
 #define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}}
 #define PublicKey_init_default                   {HDNodeType_init_default, false, ""}
-#define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0}
+#define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default}
 #define Address_init_default                     {""}
 #define WipeDevice_init_default                  {0}
 #define LoadDevice_init_default                  {false, "", false, HDNodeType_init_default, false, "", false, 0, false, "english", false, "", false, 0}
@@ -585,7 +587,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Entropy_init_zero                        {{0, {0}}}
 #define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}}
 #define PublicKey_init_zero                      {HDNodeType_init_zero, false, ""}
-#define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
+#define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero}
 #define Address_init_zero                        {""}
 #define WipeDevice_init_zero                     {0}
 #define LoadDevice_init_zero                     {false, "", false, HDNodeType_init_zero, false, "", false, 0, false, "", false, "", false, 0}
@@ -686,6 +688,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define GetAddress_address_n_tag                 1
 #define GetAddress_coin_name_tag                 2
 #define GetAddress_show_display_tag              3
+#define GetAddress_multisig_tag                  4
 #define GetEntropy_size_tag                      1
 #define GetPublicKey_address_n_tag               1
 #define LoadDevice_mnemonic_tag                  1
@@ -759,7 +762,7 @@ extern const pb_field_t GetEntropy_fields[2];
 extern const pb_field_t Entropy_fields[2];
 extern const pb_field_t GetPublicKey_fields[2];
 extern const pb_field_t PublicKey_fields[3];
-extern const pb_field_t GetAddress_fields[4];
+extern const pb_field_t GetAddress_fields[5];
 extern const pb_field_t Address_fields[2];
 extern const pb_field_t WipeDevice_fields[1];
 extern const pb_field_t LoadDevice_fields[8];
@@ -812,7 +815,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define Entropy_size                             1027
 #define GetPublicKey_size                        48
 #define PublicKey_size                           (121 + HDNodeType_size)
-#define GetAddress_size                          69
+#define GetAddress_size                          (75 + MultisigRedeemScriptType_size)
 #define Address_size                             37
 #define WipeDevice_size                          0
 #define LoadDevice_size                          (320 + HDNodeType_size)
