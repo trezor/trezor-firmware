@@ -209,6 +209,7 @@ class DebugLinkMixin(object):
         super(DebugLinkMixin, self).__init__(*args, **kwargs)
         self.debug = None
         self.in_with_statement = 0
+        self.button_wait = 0
         self.screenshot_id = 0
 
         # Always press Yes and provide correct pin
@@ -227,6 +228,9 @@ class DebugLinkMixin(object):
 
     def set_debuglink(self, debug_transport):
         self.debug = DebugLink(debug_transport)
+
+    def set_buttonwait(self, secs):
+        self.button_wait = secs
 
     def __enter__(self):
         # For usage in with/expected_responses
@@ -305,6 +309,9 @@ class DebugLinkMixin(object):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
 
         log("Pressing button " + str(self.button))
+        if self.button_wait:
+            log("Waiting %d seconds " % self.button_wait)
+            time.sleep(self.button_wait)
         self.debug.press_button(self.button)
         return proto.ButtonAck()
 
