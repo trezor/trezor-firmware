@@ -58,7 +58,7 @@ VerifyMessage.message			max_size:1024
 MessageSignature.address		max_size:35
 MessageSignature.signature		max_size:65
 
-EncryptMessage.pubkey			max_size:65
+EncryptMessage.pubkey			max_size:33
 EncryptMessage.message			max_size:1024
 EncryptMessage.address_n		max_count:8
 EncryptMessage.coin_name		max_size:17

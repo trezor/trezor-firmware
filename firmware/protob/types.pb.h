@@ -93,15 +93,15 @@ typedef struct _HDNodeType {
     HDNodeType_public_key_t public_key;
 } HDNodeType;
 
-typedef PB_BYTES_ARRAY_T(65) MultisigRedeemScriptType_pubkeys_t;
+typedef PB_BYTES_ARRAY_T(33) MultisigRedeemScriptType_pubkeys_t;
 
-typedef PB_BYTES_ARRAY_T(80) MultisigRedeemScriptType_signatures_t;
+typedef PB_BYTES_ARRAY_T(73) MultisigRedeemScriptType_signatures_t;
 
 typedef struct _MultisigRedeemScriptType {
     pb_size_t pubkeys_count;
-    MultisigRedeemScriptType_pubkeys_t pubkeys[5];
+    MultisigRedeemScriptType_pubkeys_t pubkeys[15];
     pb_size_t signatures_count;
-    MultisigRedeemScriptType_signatures_t signatures[4];
+    MultisigRedeemScriptType_signatures_t signatures[15];
     bool has_m;
     uint32_t m;
 } MultisigRedeemScriptType;
@@ -131,9 +131,9 @@ typedef struct _TxRequestDetailsType {
     TxRequestDetailsType_tx_hash_t tx_hash;
 } TxRequestDetailsType;
 
-typedef PB_BYTES_ARRAY_T(80) TxRequestSerializedType_signature_t;
+typedef PB_BYTES_ARRAY_T(73) TxRequestSerializedType_signature_t;
 
-typedef PB_BYTES_ARRAY_T(1024) TxRequestSerializedType_serialized_tx_t;
+typedef PB_BYTES_ARRAY_T(2048) TxRequestSerializedType_serialized_tx_t;
 
 typedef struct _TxRequestSerializedType {
     bool has_signature_index;
@@ -146,7 +146,7 @@ typedef struct _TxRequestSerializedType {
 
 typedef PB_BYTES_ARRAY_T(32) TxInputType_prev_hash_t;
 
-typedef PB_BYTES_ARRAY_T(520) TxInputType_script_sig_t;
+typedef PB_BYTES_ARRAY_T(1650) TxInputType_script_sig_t;
 
 typedef struct _TxInputType {
     pb_size_t address_n_count;
@@ -193,7 +193,7 @@ extern const InputScriptType TxInputType_script_type_default;
 /* Initializer values for message structs */
 #define HDNodeType_init_default                  {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define CoinType_init_default                    {false, "", false, "", false, 0, false, 0}
-#define MultisigRedeemScriptType_init_default    {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
+#define MultisigRedeemScriptType_init_default    {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default}
 #define TxOutputType_init_default                {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0}
 #define TxOutputBinType_init_default             {0, {0, {0}}}
@@ -202,7 +202,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define TxRequestSerializedType_init_default     {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0}
-#define MultisigRedeemScriptType_init_zero       {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
+#define MultisigRedeemScriptType_init_zero       {0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero}
 #define TxOutputType_init_zero                   {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0}
 #define TxOutputBinType_init_zero                {0, {0, {0}}}
@@ -268,13 +268,13 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
 #define CoinType_size                            47
-#define MultisigRedeemScriptType_size            669
-#define TxInputType_size                         1295
+#define MultisigRedeemScriptType_size            1656
+#define TxInputType_size                         3412
 #define TxOutputType_size                        102
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     1963
+#define TransactionType_size                     4080
 #define TxRequestDetailsType_size                40
-#define TxRequestSerializedType_size             1115
+#define TxRequestSerializedType_size             2132
 
 #ifdef __cplusplus
 } /* extern "C" */

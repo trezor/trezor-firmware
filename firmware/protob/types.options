@@ -7,7 +7,7 @@ CoinType.coin_shortcut			max_size:9
 
 TxInputType.address_n			max_count:8
 TxInputType.prev_hash			max_size:32
-TxInputType.script_sig			max_size:520
+TxInputType.script_sig			max_size:1650
 
 TxOutputType.address			max_size:35
 TxOutputType.address_n			max_count:8
@@ -20,8 +20,8 @@ TransactionType.outputs			max_count:1
 
 TxRequestDetailsType.tx_hash		max_size:32
 
-TxRequestSerializedType.signature	max_size:80
-TxRequestSerializedType.serialized_tx	max_size:1024
+TxRequestSerializedType.signature	max_size:73
+TxRequestSerializedType.serialized_tx	max_size:2048
 
-MultisigRedeemScriptType.pubkeys	max_count:5 max_size:65
-MultisigRedeemScriptType.signatures	max_count:4 max_size:80
+MultisigRedeemScriptType.pubkeys	max_count:15 max_size:33
+MultisigRedeemScriptType.signatures	max_count:15 max_size:73

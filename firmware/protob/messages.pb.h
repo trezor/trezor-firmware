@@ -227,7 +227,7 @@ typedef struct _DecryptedMessage {
     char address[35];
 } DecryptedMessage;
 
-typedef PB_BYTES_ARRAY_T(65) EncryptMessage_pubkey_t;
+typedef PB_BYTES_ARRAY_T(33) EncryptMessage_pubkey_t;
 
 typedef PB_BYTES_ARRAY_T(1024) EncryptMessage_message_t;
 
@@ -828,7 +828,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SignMessage_size                         1094
 #define VerifyMessage_size                       1131
 #define MessageSignature_size                    104
-#define EncryptMessage_size                      1163
+#define EncryptMessage_size                      1131
 #define EncryptedMessage_size                    1168
 #define DecryptMessage_size                      1216
 #define DecryptedMessage_size                    1064

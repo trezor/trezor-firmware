@@ -606,7 +606,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 		return;
 	}
 	curve_point pubkey;
-	if ((msg->pubkey.size != 33 && msg->pubkey.size != 65) || ecdsa_read_pubkey(msg->pubkey.bytes, &pubkey) == 0) {
+	if (msg->pubkey.size != 33 || ecdsa_read_pubkey(msg->pubkey.bytes, &pubkey) == 0) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid public key provided");
 		return;
 	}

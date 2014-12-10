@@ -136,8 +136,8 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 	if (!multisig->has_m) return 0;
 	uint32_t m = multisig->m;
 	uint32_t n = multisig->pubkeys_count;
-	if (m < 2 || m > 3) return 0;
-	if (n < 2 || n > 3) return 0;
+	if (m < 1 || m > 15) return 0;
+	if (n < 1 || n > 15) return 0;
 	uint32_t i, r = 0;
 	if (out) {
 		out[r] = 0x50 + m; r++;
@@ -165,8 +165,8 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	if (!multisig->has_m) return 0;
 	uint32_t m = multisig->m;
 	uint32_t n = multisig->pubkeys_count;
-	if (m < 2 || m > 3) return 0;
-	if (n < 2 || n > 3) return 0;
+	if (m < 1 || m > 15) return 0;
+	if (n < 1 || n > 15) return 0;
 
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
