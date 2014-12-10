@@ -258,9 +258,10 @@ message PublicKey {
  * @next Failure
  */
 message GetAddress {
-	repeated uint32 address_n = 1;		// BIP-32 path to derive the key from master node
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
 	optional string coin_name = 2 [default='Bitcoin'];
 	optional bool show_display = 3;
+	optional MultisigRedeemScriptType multisig = 4;	// Filled if we are showing a multisig address
 }
 
 /**
