@@ -4,6 +4,7 @@ import binascii
 import itertools
 
 import trezorlib.messages_pb2 as proto
+import trezorlib.ckd_public as ckd_public
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
 from trezorlib.tx_api import TXAPITestnet, TXAPIBitcoin
@@ -22,10 +23,14 @@ class TestMultisig(common.TrezorTest):
         #key2 = self.client.get_public_node([2])
         #key3 = self.client.get_public_node([3])
 
+        # xpub:
+        # print ckd_public.serialize(self.client.get_public_node([]).node)
+        # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
+
         # pubkeys:
-        #    0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6
-        #    038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3
-        #    03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902
+        #    xpub/1: 0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6
+        #    xpub/2: 038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3
+        #    xpub/3: 03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902
 
         # redeem script:
         # 52210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a621038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e32103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a790253ae
@@ -35,10 +40,12 @@ class TestMultisig(common.TrezorTest):
         # tx: c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52
         # input 1: 0.001 BTC
 
+        node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[binascii.unhexlify('0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6'),
-                                     binascii.unhexlify('038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3'),
-                                     binascii.unhexlify('03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902')],
+                            pubkeys=[proto_types.HDPubkeyType(node=node, address_n=[1]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[2]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[3])],
                             signatures=['', '', ''],
                             m=2,
                             )
@@ -79,9 +86,9 @@ class TestMultisig(common.TrezorTest):
         # Let's do second signature using 3rd key
 
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[binascii.unhexlify('0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6'),
-                                     binascii.unhexlify('038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3'),
-                                     binascii.unhexlify('03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902')],
+                            pubkeys=[proto_types.HDPubkeyType(node=node, address_n=[1]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[2]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[3])],
                             signatures=[signatures1[0], '', ''], # Fill signature from previous signing process
                             m=2,
                             )
@@ -118,26 +125,29 @@ class TestMultisig(common.TrezorTest):
     def test_15_of_15(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        '''
+        """
         pubs = []
         for x in range(15):
             pubs.append(binascii.hexlify(self.client.get_public_node([x]).node.public_key))
-        '''
-        pubs = ['023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43d',
-                '0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6',
-                '038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3',
-                '03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902',
-                '03fe91eca10602d7dad4c9dab2b2a0858f71e25a219a6940749ce7a48118480dae',
-                '0234716c01c2dd03fa7ee302705e2b8fbd1311895d94b1dca15e62eedea9b0968f',
-                '0341fb2ead334952cf60f4481ba435c4693d0be649be01d2cfe9b02018e483e7bd',
-                '02dad8b2bce360a705c16e74a50a36459b4f8f4b78f9cd67def29d54ef6f7c7cf9',
-                '0222dbe3f5f197a34a1d50e2cbe2a1085cac2d605c9e176f9a240e0fd0c669330d',
-                '03fb41afab56c9cdb013fda63d777d4938ddc3cb2ad939712da688e3ed333f9598',
-                '02435f177646bdc717cb3211bf46656ca7e8d642726144778c9ce816b8b8c36ccf',
-                '02158d8e20095364031d923c7e9f7f08a14b1be1ddee21fe1a5431168e31345e55',
-                '026259794892428ca0818c8fb61d2d459ddfe20e57f50803c7295e6f4e2f558665',
-                '02815f910a8689151db627e6e262e0a2075ad5ec2993a6bc1b876a9d420923d681',
-                '0318f54647f645ff01bd49fedc0219343a6a22d3ea3180a3c3d3097e4b888a8db4']
+        """
+
+        # xpub:
+        # print ckd_public.serialize(self.client.get_public_node([]).node)
+        # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
+        node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+
+        multisig = proto_types.MultisigRedeemScriptType(
+                            pubkeys=[proto_types.HDPubkeyType(node=node, address_n=[1]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[2]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[3])],
+                            signatures=['', '', ''],
+                            m=2,
+                            )
+
+        
+        pubs = []
+        for x in range(15):
+            pubs.append(proto_types.HDPubkeyType(node=node, address_n=[x]))
 
         # redeeemscript
         # 5f21023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43d210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a621038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e32103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a79022103fe91eca10602d7dad4c9dab2b2a0858f71e25a219a6940749ce7a48118480dae210234716c01c2dd03fa7ee302705e2b8fbd1311895d94b1dca15e62eedea9b0968f210341fb2ead334952cf60f4481ba435c4693d0be649be01d2cfe9b02018e483e7bd2102dad8b2bce360a705c16e74a50a36459b4f8f4b78f9cd67def29d54ef6f7c7cf9210222dbe3f5f197a34a1d50e2cbe2a1085cac2d605c9e176f9a240e0fd0c669330d2103fb41afab56c9cdb013fda63d777d4938ddc3cb2ad939712da688e3ed333f95982102435f177646bdc717cb3211bf46656ca7e8d642726144778c9ce816b8b8c36ccf2102158d8e20095364031d923c7e9f7f08a14b1be1ddee21fe1a5431168e31345e5521026259794892428ca0818c8fb61d2d459ddfe20e57f50803c7295e6f4e2f5586652102815f910a8689151db627e6e262e0a2075ad5ec2993a6bc1b876a9d420923d681210318f54647f645ff01bd49fedc0219343a6a22d3ea3180a3c3d3097e4b888a8db45fae
@@ -153,7 +163,7 @@ class TestMultisig(common.TrezorTest):
 
         for x in range(15):
             multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[binascii.unhexlify(p) for p in pubs],
+                            pubkeys=pubs,
                             signatures=signatures,
                             m=15,
                             )
@@ -187,10 +197,15 @@ class TestMultisig(common.TrezorTest):
 
         # multisig address: 3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz
 
+        # xpub:
+        # print ckd_public.serialize(self.client.get_public_node([]).node)
+        # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
+        node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[binascii.unhexlify('0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6'),
-                                     binascii.unhexlify('038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3'),
-                                     binascii.unhexlify('03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902')],
+                            pubkeys=[proto_types.HDPubkeyType(node=node, address_n=[1]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[2]),
+                                     proto_types.HDPubkeyType(node=node, address_n=[3])],
                             signatures=['', '', ''],
                             m=2,
                             )
@@ -210,6 +225,7 @@ class TestMultisig(common.TrezorTest):
         with self.client:
             # It should throw Failure 'Pubkey not found in multisig script'
             self.assertRaises(CallException, self.client.sign_tx, 'Bitcoin', [inp1, ], [out1, ])
+
 
 if __name__ == '__main__':
     unittest.main()

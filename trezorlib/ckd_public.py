@@ -103,3 +103,23 @@ def serialize(node, version=0x0488B21E):
         s += node.public_key
     s += tools.Hash(s)[:4]
     return tools.b58encode(s)
+
+def deserialize(xpub):
+    data = tools.b58decode(xpub, None)
+
+    if tools.Hash(data[:-4])[:4] != data[-4:]:
+        raise Exception("Checksum failed")
+
+    node = proto_types.HDNodeType()
+    node.depth = struct.unpack('>B', data[4:5])[0]
+    node.fingerprint = struct.unpack('>I', data[5:9])[0]
+    node.child_num = struct.unpack('>I', data[9:13])[0]
+    node.chain_code = data[13:45]
+    
+    key = data[45:-4]
+    if key[0] == '\x00':
+        node.private_key = key[1:]
+    else:
+        node.public_key = key
+
+    return node
