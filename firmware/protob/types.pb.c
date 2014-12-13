@@ -21,6 +21,12 @@ const pb_field_t HDNodeType_fields[7] = {
     PB_LAST_FIELD
 };
 
+const pb_field_t HDNodePathType_fields[3] = {
+    PB_FIELD(  1, MESSAGE , REQUIRED, STATIC  , FIRST, HDNodePathType, node, node, &HDNodeType_fields),
+    PB_FIELD(  2, UINT32  , REPEATED, STATIC  , OTHER, HDNodePathType, address_n, node, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t CoinType_fields[5] = {
     PB_FIELD(  1, STRING  , OPTIONAL, STATIC  , FIRST, CoinType, coin_name, coin_name, 0),
     PB_FIELD(  2, STRING  , OPTIONAL, STATIC  , OTHER, CoinType, coin_shortcut, coin_name, 0),
@@ -30,7 +36,7 @@ const pb_field_t CoinType_fields[5] = {
 };
 
 const pb_field_t MultisigRedeemScriptType_fields[4] = {
-    PB_FIELD(  1, BYTES   , REPEATED, STATIC  , FIRST, MultisigRedeemScriptType, pubkeys, pubkeys, 0),
+    PB_FIELD(  1, MESSAGE , REPEATED, STATIC  , FIRST, MultisigRedeemScriptType, pubkeys, pubkeys, &HDNodePathType_fields),
     PB_FIELD(  2, BYTES   , REPEATED, STATIC  , OTHER, MultisigRedeemScriptType, signatures, pubkeys, 0),
     PB_FIELD(  3, UINT32  , OPTIONAL, STATIC  , OTHER, MultisigRedeemScriptType, m, signatures, 0),
     PB_LAST_FIELD
@@ -47,11 +53,12 @@ const pb_field_t TxInputType_fields[8] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t TxOutputType_fields[5] = {
+const pb_field_t TxOutputType_fields[6] = {
     PB_FIELD(  1, STRING  , OPTIONAL, STATIC  , FIRST, TxOutputType, address, address, 0),
     PB_FIELD(  2, UINT32  , REPEATED, STATIC  , OTHER, TxOutputType, address_n, address, 0),
     PB_FIELD(  3, UINT64  , REQUIRED, STATIC  , OTHER, TxOutputType, amount, address_n, 0),
     PB_FIELD(  4, ENUM    , REQUIRED, STATIC  , OTHER, TxOutputType, script_type, amount, 0),
+    PB_FIELD(  5, MESSAGE , OPTIONAL, STATIC  , OTHER, TxOutputType, multisig, script_type, &MultisigRedeemScriptType_fields),
     PB_LAST_FIELD
 };
 
@@ -147,7 +154,7 @@ const pb_extension_type_t wire_debug_out = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-PB_STATIC_ASSERT((pb_membersize(TxInputType, multisig) < 65536 && pb_membersize(TransactionType, inputs[0]) < 65536 && pb_membersize(TransactionType, bin_outputs[0]) < 65536 && pb_membersize(TransactionType, outputs[0]) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_HDNodeType_CoinType_MultisigRedeemScriptType_TxInputType_TxOutputType_TxOutputBinType_TransactionType_TxRequestDetailsType_TxRequestSerializedType)
+PB_STATIC_ASSERT((pb_membersize(HDNodePathType, node) < 65536 && pb_membersize(MultisigRedeemScriptType, pubkeys[0]) < 65536 && pb_membersize(TxInputType, multisig) < 65536 && pb_membersize(TxOutputType, multisig) < 65536 && pb_membersize(TransactionType, inputs[0]) < 65536 && pb_membersize(TransactionType, bin_outputs[0]) < 65536 && pb_membersize(TransactionType, outputs[0]) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_HDNodeType_HDNodePathType_CoinType_MultisigRedeemScriptType_TxInputType_TxOutputType_TxOutputBinType_TransactionType_TxRequestDetailsType_TxRequestSerializedType)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)

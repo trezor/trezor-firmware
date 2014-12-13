@@ -39,6 +39,9 @@ int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, pb_size_t msg_
 
 int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, pb_size_t payload_len, const uint8_t *hmac, pb_size_t hmac_len, const uint8_t *privkey, uint8_t *msg, pb_size_t *msg_len, bool *display_only, bool *signing, uint8_t *address_raw);
 
-int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey, uint32_t pubkey_len);
+uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath);
+
+int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey);
+
 
 #endif

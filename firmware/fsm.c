@@ -503,7 +503,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	fsm_deriveKey(node, msg->address_n, msg->address_n_count);
 
 	if (msg->has_multisig) {
-		if (cryptoMultisigPubkeyIndex(&(msg->multisig), node->public_key, 33) < 0) {
+		if (cryptoMultisigPubkeyIndex(&(msg->multisig), node->public_key) < 0) {
 			fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
 			layoutHome();
 			return;

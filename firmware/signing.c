@@ -379,7 +379,7 @@ void signing_txack(TransactionType *tx)
 						return;
 					}
 					// fill in the signature
-					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey, 33);
+					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey);
 					if (pubkey_idx < 0) {
 						fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
 						signing_abort();

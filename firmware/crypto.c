@@ -24,6 +24,7 @@
 #include "pbkdf2.h"
 #include "aes.h"
 #include "hmac.h"
+#include "bip32.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -252,11 +253,22 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, pb_size_t payload
 	return 0;
 }
 
-int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey, uint32_t pubkey_len)
+uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
+{
+	static HDNode node;
+	hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.fingerprint, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, &node);
+	uint32_t i;
+	for (i = 0; i < hdnodepath->address_n_count; i++) {
+		hdnode_public_ckd(&node, hdnodepath->address_n[i]);
+	}
+	return node.public_key;
+}
+
+int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey)
 {
 	int i;
 	for (i = 0; i < multisig->pubkeys_count; i++) {
-		if (multisig->pubkeys[i].size == pubkey_len && memcmp(multisig->pubkeys[i].bytes, pubkey, pubkey_len) == 0) {
+		if (memcmp(cryptoHDNodePathToPubkey(&(multisig->pubkeys[i])), pubkey, 33) == 0) {
 			return i;
 		}
 	}
