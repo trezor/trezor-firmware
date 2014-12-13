@@ -113,6 +113,11 @@ message HDNodeType {
 	optional bytes public_key = 6;
 }
 
+message HDPubkeyType {
+	required HDNodeType node = 1;						// BIP-32 node in deserialized form
+	repeated uint32 address_n = 2;						// BIP-32 path to derive the key from node
+}
+
 /**
  * Structure representing Coin
  * @used_in Features
@@ -129,7 +134,7 @@ message CoinType {
  * @used_in TxInputType
  */
 message MultisigRedeemScriptType {
-	repeated bytes pubkeys = 1;						// pubkeys from multisig address (sorted lexicographically)
+	repeated HDPubkeyType pubkeys = 1;						// pubkeys from multisig address (sorted lexicographically)
 	repeated bytes signatures = 2;						// existing signatures for partially signed input
 	optional uint32 m = 3;							// "m" from n, how many valid signatures is necessary for spending
 }

@@ -118,6 +118,7 @@ message ClearSession {
 message ApplySettings {
 	optional string language = 1;
 	optional string label = 2;
+	optional bool use_passphrase = 3;
 }
 
 /**
