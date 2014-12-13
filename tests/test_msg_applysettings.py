@@ -15,7 +15,7 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.PinMatrixRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings('new label', 'english')
+            self.client.apply_settings(label='new label')
 
         self.assertEqual(self.client.features.label, 'new label')
 
@@ -28,7 +28,7 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.PinMatrixRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings('new label', 'nonexistent')
+            self.client.apply_settings(language='nonexistent')
 
         self.assertEqual(self.client.features.language, 'english')
 
