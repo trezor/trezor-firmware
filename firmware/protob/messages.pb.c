@@ -46,9 +46,10 @@ const pb_field_t ClearSession_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t ApplySettings_fields[3] = {
+const pb_field_t ApplySettings_fields[4] = {
     PB_FIELD(  1, STRING  , OPTIONAL, STATIC  , FIRST, ApplySettings, language, language, 0),
     PB_FIELD(  2, STRING  , OPTIONAL, STATIC  , OTHER, ApplySettings, label, language, 0),
+    PB_FIELD(  3, BOOL    , OPTIONAL, STATIC  , OTHER, ApplySettings, use_passphrase, label, 0),
     PB_LAST_FIELD
 };
 

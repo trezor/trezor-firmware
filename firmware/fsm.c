@@ -441,21 +441,32 @@ void fsm_msgClearSession(ClearSession *msg)
 
 void fsm_msgApplySettings(ApplySettings *msg)
 {
-	if (msg->has_label && msg->has_language) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "and language to", msg->language, "?");
-	} else
 	if (msg->has_label) {
 		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "?", NULL, NULL);
-	} else
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			layoutHome();
+			return;
+		}
+	}
 	if (msg->has_language) {
 		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change language to", msg->language, "?", NULL, NULL);
-	} else {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No setting provided");
-		return;
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			layoutHome();
+			return;
+		}
 	}
-	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
-		layoutHome();
+	if (msg->has_use_passphrase) {
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", msg->use_passphrase ? "enable passphrase" : "disable passphrase", "protection?", NULL, NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			layoutHome();
+			return;
+		}
+	}
+	if (!msg->has_label && !msg->has_language && !msg->has_use_passphrase) {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No setting provided");
 		return;
 	}
 	if (!protectPin(true)) {
@@ -467,6 +478,9 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	}
 	if (msg->has_language) {
 		storage_setLanguage(msg->language);
+	}
+	if (msg->has_use_passphrase) {
+		storage_setPassphraseProtection(msg->use_passphrase);
 	}
 	storage_commit();
 	fsm_sendSuccess("Settings applied");

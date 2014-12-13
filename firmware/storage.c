@@ -205,6 +205,15 @@ void storage_setLanguage(const char *lang)
 	}
 }
 
+void storage_setPassphraseProtection(bool passphrase_protection)
+{
+	sessionRootNodeCached = false;
+	sessionPassphraseCached = false;
+
+	storage.has_passphrase_protection = true;
+	storage.passphrase_protection = passphrase_protection;
+}
+
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
 	static uint8_t i;

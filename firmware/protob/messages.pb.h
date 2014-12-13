@@ -123,6 +123,8 @@ typedef struct _ApplySettings {
     char language[17];
     bool has_label;
     char label[33];
+    bool has_use_passphrase;
+    bool use_passphrase;
 } ApplySettings;
 
 typedef struct _ButtonRequest {
@@ -520,7 +522,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Initialize_init_default                  {0}
 #define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0}
 #define ClearSession_init_default                {0}
-#define ApplySettings_init_default               {false, "", false, ""}
+#define ApplySettings_init_default               {false, "", false, "", false, 0}
 #define ChangePin_init_default                   {false, 0}
 #define Ping_init_default                        {false, "", false, 0, false, 0, false, 0}
 #define Success_init_default                     {false, ""}
@@ -571,7 +573,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Initialize_init_zero                     {0}
 #define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0}
 #define ClearSession_init_zero                   {0}
-#define ApplySettings_init_zero                  {false, "", false, ""}
+#define ApplySettings_init_zero                  {false, "", false, "", false, 0}
 #define ChangePin_init_zero                      {false, 0}
 #define Ping_init_zero                           {false, "", false, 0, false, 0, false, 0}
 #define Success_init_zero                        {false, ""}
@@ -624,6 +626,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Address_address_tag                      1
 #define ApplySettings_language_tag               1
 #define ApplySettings_label_tag                  2
+#define ApplySettings_use_passphrase_tag         3
 #define ButtonRequest_code_tag                   1
 #define ButtonRequest_data_tag                   2
 #define ChangePin_remove_tag                     1
@@ -746,7 +749,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t Features_fields[16];
 extern const pb_field_t ClearSession_fields[1];
-extern const pb_field_t ApplySettings_fields[3];
+extern const pb_field_t ApplySettings_fields[4];
 extern const pb_field_t ChangePin_fields[2];
 extern const pb_field_t Ping_fields[5];
 extern const pb_field_t Success_fields[2];
@@ -799,7 +802,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define Initialize_size                          0
 #define Features_size                            (230 + 5*CoinType_size)
 #define ClearSession_size                        0
-#define ApplySettings_size                       54
+#define ApplySettings_size                       56
 #define ChangePin_size                           2
 #define Ping_size                                265
 #define Success_size                             259
