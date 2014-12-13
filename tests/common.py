@@ -30,6 +30,9 @@ class TrezorTest(unittest.TestCase):
     def setup_mnemonic_nopin_nopassphrase(self):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin='', passphrase_protection=False, label='test', language='english')
 
+    def setup_mnemonic_pin_nopassphrase(self):
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=False, label='test', language='english')
+
     def setup_mnemonic_pin_passphrase(self):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=True, label='test', language='english')
 

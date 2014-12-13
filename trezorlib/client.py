@@ -414,12 +414,14 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def apply_settings(self, label=None, language=None):
+    def apply_settings(self, label=None, language=None, use_passphrase=None):
         settings = proto.ApplySettings()
         if label != None:
             settings.label = label
         if language:
             settings.language = language
+        if use_passphrase != None:
+            settings.use_passphrase = use_passphrase
 
         out = self.call(settings)
         self.init_device()  # Reload Features
