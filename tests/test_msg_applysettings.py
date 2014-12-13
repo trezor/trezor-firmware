@@ -48,7 +48,6 @@ class TestMsgApplysettings(common.TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([proto.ButtonRequest(),
-                                                proto.PinMatrixRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
             self.client.apply_settings(use_passphrase=False)
@@ -57,7 +56,6 @@ class TestMsgApplysettings(common.TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([proto.ButtonRequest(),
-                                                proto.PinMatrixRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
             self.client.apply_settings(use_passphrase=True)
