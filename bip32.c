@@ -31,7 +31,7 @@
 #include "ripemd160.h"
 #include "base58.h"
 
-int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *public_key, HDNode *out)
+int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out)
 {
 	curve_point c;
 	if (!ecdsa_read_pubkey(public_key, &c)) { // invalid pubkey
@@ -46,7 +46,7 @@ int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, u
 	return 1;
 }
 
-int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, uint8_t *chain_code, uint8_t *private_key, HDNode *out)
+int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, HDNode *out)
 {
 	bignum256 a;
 	bn_read_be(private_key, &a);
@@ -62,7 +62,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, u
 	return 1;
 }
 
-int hdnode_from_seed(uint8_t *seed, int seed_len, HDNode *out)
+int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
 {
 	uint8_t I[32 + 32];
 	memset(out, 0, sizeof(HDNode));
