@@ -113,7 +113,7 @@ message HDNodeType {
 	optional bytes public_key = 6;
 }
 
-message HDPubkeyType {
+message HDNodePathType {
 	required HDNodeType node = 1;						// BIP-32 node in deserialized form
 	repeated uint32 address_n = 2;						// BIP-32 path to derive the key from node
 }
@@ -134,7 +134,7 @@ message CoinType {
  * @used_in TxInputType
  */
 message MultisigRedeemScriptType {
-	repeated HDPubkeyType pubkeys = 1;						// pubkeys from multisig address (sorted lexicographically)
+	repeated HDNodePathType pubkeys = 1;						// pubkeys from multisig address (sorted lexicographically)
 	repeated bytes signatures = 2;						// existing signatures for partially signed input
 	optional uint32 m = 3;							// "m" from n, how many valid signatures is necessary for spending
 }
@@ -164,6 +164,7 @@ message TxOutputType {
 	repeated uint32 address_n = 2;			// BIP-32 path to derive the key from master node; has higher priority than "address"
 	required uint64 amount = 3;			// amount to spend in satoshis
 	required OutputScriptType script_type = 4;	// output script type
+	repeated MultisigRedeemScriptType multisig = 5; // Defines multisig address; when filled, it has priority over address/address_n
 }
 
 /**
