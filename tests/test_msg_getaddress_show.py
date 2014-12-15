@@ -17,9 +17,9 @@ class TestMsgGetaddress(common.TrezorTest):
 
         node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[proto_types.HDPubkeyType(node=node, address_n=[1]),
-                                     proto_types.HDPubkeyType(node=node, address_n=[2]),
-                                     proto_types.HDPubkeyType(node=node, address_n=[3])],
+                            pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
+                                     proto_types.HDNodePathType(node=node, address_n=[2]),
+                                     proto_types.HDNodePathType(node=node, address_n=[3])],
                             signatures=['', '', ''],
                             m=2,
                             )
@@ -34,7 +34,7 @@ class TestMsgGetaddress(common.TrezorTest):
 
         pubs = []
         for x in range(15):
-            pubs.append(proto_types.HDPubkeyType(node=node, address_n=[x]))
+            pubs.append(proto_types.HDNodePathType(node=node, address_n=[x]))
 
 
         multisig = proto_types.MultisigRedeemScriptType(
