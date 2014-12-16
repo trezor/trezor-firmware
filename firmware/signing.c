@@ -281,7 +281,11 @@ void signing_txack(TransactionType *tx)
 				memcpy(&node, root, sizeof(HDNode));
 				uint32_t k;
 				for (k = 0; k < tx->inputs[0].address_n_count; k++) {
-					hdnode_private_ckd(&node, tx->inputs[0].address_n[k]);
+					if (hdnode_private_ckd(&node, tx->inputs[0].address_n[k]) == 0) {
+						fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
+						signing_abort();
+						return;
+					}
 				}
 				if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG) {
 					if (!tx->inputs[0].has_multisig) {

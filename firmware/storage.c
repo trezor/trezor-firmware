@@ -233,7 +233,9 @@ bool storage_getRootNode(HDNode *node)
 		if (!protectPassphrase()) {
 			return false;
 		}
-		hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode);
+		if (hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode) == 0) {
+			return false;
+		}
 		if (storage.has_passphrase_protection && storage.passphrase_protection && strlen(sessionPassphrase)) {
 			// decrypt hd node
 			uint8_t secret[64];
@@ -257,7 +259,9 @@ bool storage_getRootNode(HDNode *node)
 		uint8_t seed[64];
 		layoutProgressSwipe("Waking up", 0, 0);
 		mnemonic_to_seed(storage.mnemonic, sessionPassphrase, seed, get_root_node_callback); // BIP-0039
-		hdnode_from_seed(seed, sizeof(seed), &sessionRootNode);
+		if (hdnode_from_seed(seed, sizeof(seed), &sessionRootNode) == 0) {
+			return false;
+		}
 		memcpy(node, &sessionRootNode, sizeof(HDNode));
 		sessionRootNodeCached = true;
 		return true;

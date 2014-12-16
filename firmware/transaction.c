@@ -60,7 +60,9 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		uint32_t k;
 		memcpy(&node, root, sizeof(HDNode));
 		for (k = 0; k < in->address_n_count; k++) {
-			hdnode_private_ckd(&node, in->address_n[k]);
+			if (hdnode_private_ckd(&node, in->address_n[k]) == 0) {
+				return 0;
+			}
 		}
 		ecdsa_get_address(node.public_key, coin->address_type, in->address);
 	} else

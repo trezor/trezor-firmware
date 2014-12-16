@@ -256,10 +256,14 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, pb_size_t payload
 uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
 {
 	static HDNode node;
-	hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.fingerprint, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, &node);
+	if (hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.fingerprint, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, &node) == 0) {
+		return 0;
+	}
 	uint32_t i;
 	for (i = 0; i < hdnodepath->address_n_count; i++) {
-		hdnode_public_ckd(&node, hdnodepath->address_n[i]);
+		if (hdnode_public_ckd(&node, hdnodepath->address_n[i]) == 0) {
+			return 0;
+		};
 	}
 	return node.public_key;
 }
