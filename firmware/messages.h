@@ -24,9 +24,9 @@
 #include <stdbool.h>
 #include "trezor.h"
 
-#define MSG_IN_SIZE (9*1024)
+#define MSG_IN_SIZE (12*1024)
 
-#define MSG_OUT_SIZE (9*1024)
+#define MSG_OUT_SIZE (12*1024)
 
 #define msg_read(buf, len) msg_read_common('n', (buf), (len))
 #define msg_write(id, ptr) msg_write_common('n', (id), (ptr))

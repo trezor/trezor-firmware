@@ -145,7 +145,9 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 		out[r] = 0x50 + m; r++;
 		for (i = 0; i < n; i++) {
 			out[r] = 33; r++; // OP_PUSH 33
-			memcpy(out + r, cryptoHDNodePathToPubkey(&(multisig->pubkeys[i])), 33); r += 33;
+			const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
+			if (!pubkey) return 0;
+			memcpy(out + r, pubkey, 33); r += 33;
 		}
 		out[r] = 0x50 + n; r++;
 		out[r] = 0xAE; r++; // OP_CHECKMULTISIG
@@ -171,7 +173,9 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	uint32_t i;
 	for (i = 0; i < n; i++) {
 		d = 33; sha256_Update(&ctx, &d, 1); // OP_PUSH 33
-		sha256_Update(&ctx, cryptoHDNodePathToPubkey(&(multisig->pubkeys[i])), 33);
+		const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
+		if (!pubkey) return 0;
+		sha256_Update(&ctx, pubkey, 33);
 	}
 	d = 0x50 + n; sha256_Update(&ctx, &d, 1);
 	d = 0xAE;     sha256_Update(&ctx, &d, 1);
