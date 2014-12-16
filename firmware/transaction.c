@@ -134,8 +134,8 @@ uint32_t compile_script_sig(uint8_t address_type, const uint8_t *pubkeyhash, uin
 uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out)
 {
 	if (!multisig->has_m) return 0;
-	uint32_t m = multisig->m;
-	uint32_t n = multisig->pubkeys_count;
+	const uint32_t m = multisig->m;
+	const uint32_t n = multisig->pubkeys_count;
 	if (m < 1 || m > 15) return 0;
 	if (n < 1 || n > 15) return 0;
 	uint32_t i, r = 0;
@@ -156,8 +156,8 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, uint8_t *hash)
 {
 	if (!multisig->has_m) return 0;
-	uint32_t m = multisig->m;
-	uint32_t n = multisig->pubkeys_count;
+	const uint32_t m = multisig->m;
+	const uint32_t n = multisig->pubkeys_count;
 	if (m < 1 || m > 15) return 0;
 	if (n < 1 || n > 15) return 0;
 
