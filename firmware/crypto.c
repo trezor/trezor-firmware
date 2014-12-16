@@ -280,3 +280,44 @@ int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const ui
 	}
 	return -1;
 }
+
+int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t *hash)
+{
+	const uint32_t n = multisig->pubkeys_count;
+	const int max_pubkeys = pb_arraysize(MultisigRedeemScriptType, pubkeys);
+	uint8_t order[max_pubkeys], swap;
+	uint32_t i, j;
+	const HDNodeType *a, *b;
+	// check sanity
+	for (i = 0; i < n; i++) {
+		order[i] = i;
+		a = &(multisig->pubkeys[i].node);
+		if (!a->has_public_key || a->public_key.size != 33) return 0;
+		if (a->chain_code.size != 32) return 0;
+	}
+	// (bubble) sort according to pubkey
+	for (i = 0; i < n; i++) {
+		for (j = i; j < n; j++) {
+			a = &(multisig->pubkeys[order[i]].node);
+			b = &(multisig->pubkeys[order[j]].node);
+			if (memcmp(a->public_key.bytes, b->public_key.bytes, 33) > 0) {
+				swap = order[i];
+				order[i] = order[j];
+				order[j] = swap;
+			}
+		}
+	}
+	// hash sorted nodes
+	SHA256_CTX ctx;
+	sha256_Init(&ctx);
+	for (i = 0; i < n; i++) {
+		a = &(multisig->pubkeys[order[i]].node);
+		sha256_Update(&ctx, (const uint8_t *)a->depth, sizeof(uint32_t));
+		sha256_Update(&ctx, (const uint8_t *)a->fingerprint, sizeof(uint32_t));
+		sha256_Update(&ctx, (const uint8_t *)a->child_num, sizeof(uint32_t));
+		sha256_Update(&ctx, a->chain_code.bytes, 32);
+		sha256_Update(&ctx, a->public_key.bytes, 33);
+	}
+	sha256_Final(hash, &ctx);
+	return 1;
+}

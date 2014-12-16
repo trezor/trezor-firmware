@@ -43,5 +43,6 @@ uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath);
 
 int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey);
 
+int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t *hash);
 
 #endif
