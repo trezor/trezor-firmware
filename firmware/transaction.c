@@ -26,6 +26,8 @@
 #include "protect.h"
 #include "layout2.h"
 #include "crypto.h"
+#include "ripemd160.h"
+#include "base58.h"
 #include "messages.pb.h"
 
 uint32_t op_push(uint32_t i, uint8_t *out) {
@@ -54,44 +56,45 @@ uint32_t op_push(uint32_t i, uint8_t *out) {
 
 int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm)
 {
-	// address_n provided-> change address -> calculate from address_n
-	if (in->address_n_count > 0) {
-		HDNode node;
-		uint32_t k;
-		memcpy(&node, root, sizeof(HDNode));
-		for (k = 0; k < in->address_n_count; k++) {
-			if (hdnode_private_ckd(&node, in->address_n[k]) == 0) {
-				return 0;
-			}
-		}
-		ecdsa_get_address(node.public_key, coin->address_type, in->address);
-	} else
-	if (in->has_address) { // address provided -> regular output
-		if (needs_confirm) {
-			layoutConfirmOutput(coin, in);
-			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
-				return -1;
-			}
-		}
-	} else { // does not have address_n neither address
-		return 0;
-	}
-
 	memset(out, 0, sizeof(TxOutputBinType));
 	out->amount = in->amount;
+	uint8_t addr_raw[21];
 
 	if (in->script_type == OutputScriptType_PAYTOADDRESS) {
+
+		// address_n provided-> change address -> calculate from address_n
+		if (in->address_n_count > 0) {
+			HDNode node;
+			uint32_t k;
+			memcpy(&node, root, sizeof(HDNode));
+			for (k = 0; k < in->address_n_count; k++) {
+				if (hdnode_private_ckd(&node, in->address_n[k]) == 0) {
+					return 0;
+				}
+			}
+			ecdsa_get_address_raw(node.public_key, coin->address_type, addr_raw);
+		} else
+		if (in->has_address) { // address provided -> regular output
+			if (needs_confirm) {
+				layoutConfirmOutput(coin, in);
+				if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+					return -1;
+				}
+			}
+			if (!ecdsa_address_decode(in->address, addr_raw)) {
+				return 0;
+			}
+			if (addr_raw[0] != coin->address_type) {
+				return 0;
+			}
+		} else { // does not have address_n neither address -> error
+			return 0;
+		}
+
 		out->script_pubkey.bytes[0] = 0x76; // OP_DUP
 		out->script_pubkey.bytes[1] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[2] = 0x14; // pushing 20 bytes
-		uint8_t decoded[21];
-		if (!ecdsa_address_decode(in->address, decoded)) {
-			return 0;
-		}
-		if (decoded[0] != coin->address_type) {
-			return 0;
-		}
-		memcpy(out->script_pubkey.bytes + 3, decoded + 1, 20);
+		memcpy(out->script_pubkey.bytes + 3, addr_raw + 1, 20);
 		out->script_pubkey.bytes[23] = 0x88; // OP_EQUALVERIFY
 		out->script_pubkey.bytes[24] = 0xAC; // OP_CHECKSIG
 		out->script_pubkey.size = 25;
@@ -99,16 +102,46 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 	}
 
 	if (in->script_type == OutputScriptType_PAYTOSCRIPTHASH) {
+		if (!in->has_address || !ecdsa_address_decode(in->address, addr_raw)) {
+			return 0;
+		}
+		if (addr_raw[0] != 0x05) { // 0x05 is P2SH
+			return 0;
+		}
+		if (needs_confirm) {
+			layoutConfirmOutput(coin, in);
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+				return -1;
+			}
+		}
 		out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
-		uint8_t decoded[21];
-		if (!ecdsa_address_decode(in->address, decoded)) {
+		memcpy(out->script_pubkey.bytes + 2, addr_raw + 1, 20);
+		out->script_pubkey.bytes[22] = 0x87; // OP_EQUAL
+		out->script_pubkey.size = 23;
+		return 23;
+	}
+
+	if (in->script_type == OutputScriptType_PAYTOMULTISIG) {
+		uint8_t buf[32];
+		if (!in->has_multisig) {
 			return 0;
 		}
-		if (decoded[0] != 0x05) { // 0x05 is P2SH
+		if (compile_script_multisig_hash(&(in->multisig), buf) == 0) {
 			return 0;
 		}
-		memcpy(out->script_pubkey.bytes + 2, decoded + 1, 20);
+		addr_raw[0] = 0x05;
+		ripemd160(buf, 32, addr_raw + 1);
+		if (needs_confirm) {
+			base58_encode_check(addr_raw, 21, in->address);
+			layoutConfirmOutput(coin, in);
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+				return -1;
+			}
+		}
+		out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
+		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
+		memcpy(out->script_pubkey.bytes + 2, addr_raw + 1, 20);
 		out->script_pubkey.bytes[22] = 0x87; // OP_EQUAL
 		out->script_pubkey.size = 23;
 		return 23;
