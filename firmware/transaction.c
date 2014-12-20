@@ -209,6 +209,9 @@ uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uin
 		out[r] = 0x01; r++;
 	}
 	uint32_t script_len = compile_script_multisig(multisig, 0);
+	if (script_len == 0) {
+		return 0;
+	}
 	r += op_push(script_len, out + r);
 	r += compile_script_multisig(multisig, out + r);
 	return r;

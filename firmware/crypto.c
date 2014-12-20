@@ -25,6 +25,7 @@
 #include "aes.h"
 #include "hmac.h"
 #include "bip32.h"
+#include "layout2.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -264,7 +265,7 @@ uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
 	for (i = 0; i < hdnodepath->address_n_count; i++) {
 		if (hdnode_public_ckd(&node, hdnodepath->address_n[i]) == 0) {
 			return 0;
-		};
+		}
 	}
 	return node.public_key;
 }

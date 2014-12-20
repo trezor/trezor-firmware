@@ -323,6 +323,7 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_3_OUTPUT:
 			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
 			co = compile_output(coin, root, tx->outputs, &bin_output, idx1i == 0);
+			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
 			if (co < 0) {
 				fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
 				signing_abort();
@@ -392,6 +393,11 @@ void signing_txack(TransactionType *tx)
 					memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
 					input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
 					input.script_sig.size = serialize_script_multisig(&(input.multisig), input.script_sig.bytes);
+					if (input.script_sig.size == 0) {
+						fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize multisig script");
+						signing_abort();
+						return;
+					}
 				} else { // SPENDADDRESS
 					input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, input.script_sig.bytes);
 				}
@@ -422,6 +428,7 @@ void signing_txack(TransactionType *tx)
 						signing_abort();
 						return;
 					}
+					layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
 					send_req_4_output();
 				}
 			}
