@@ -322,7 +322,26 @@ void signing_txack(TransactionType *tx)
 			return;
 		case STAGE_REQUEST_3_OUTPUT:
 			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
-			co = compile_output(coin, root, tx->outputs, &bin_output, idx1i == 0);
+			bool is_change = false;
+			if (idx1i == 0) {
+				if (tx->outputs[0].has_multisig) {
+					is_change = false; // TODO: detect when not needed
+				} else
+				if (tx->outputs[0].address_n_count > 0) { // address_n set -> change address
+					is_change = true;
+				}
+				if (is_change) {
+					if (change_spend == 0) { // not set
+						change_spend = tx->outputs[0].amount;
+					} else {
+						fsm_sendFailure(FailureType_Failure_Other, "Only one change output allowed");
+						signing_abort();
+						return;
+					}
+				}
+				spending += tx->outputs[0].amount;
+			}
+			co = compile_output(coin, root, tx->outputs, &bin_output, idx1i == 0 && !is_change);
 			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
 			if (co < 0) {
 				fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
@@ -342,18 +361,6 @@ void signing_txack(TransactionType *tx)
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
 				signing_abort();
 				return;
-			}
-			if (idx1i == 0) {
-				if (tx->outputs[0].address_n_count > 0) { // address_n set -> change address
-					if (change_spend == 0) { // not set
-						change_spend = tx->outputs[0].amount;
-					} else {
-						fsm_sendFailure(FailureType_Failure_Other, "Only one change output allowed");
-						signing_abort();
-						return;
-					}
-				}
-				spending += tx->outputs[0].amount;
 			}
 			if (idx3o < outputs_count - 1) {
 				idx3o++;
