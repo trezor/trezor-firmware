@@ -33,6 +33,12 @@ void init_rand(void)
 	f = fopen("/dev/urandom", "r");
 }
 
+void finalize_rand(void)
+{
+    fclose(f);
+    f = NULL;
+}
+
 uint32_t random32(void)
 {
 	uint32_t r;
