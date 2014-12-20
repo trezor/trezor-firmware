@@ -27,7 +27,7 @@
 #include <stdint.h>
 
 void init_rand(void);
-void finalize_rand(void);
+int finalize_rand(void);
 uint32_t random32(void);
 void random_buffer(uint8_t *buf, size_t len);
 
