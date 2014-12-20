@@ -36,7 +36,6 @@ class TestMsgGetaddress(common.TrezorTest):
         for x in range(15):
             pubs.append(proto_types.HDNodePathType(node=node, address_n=[x]))
 
-
         multisig = proto_types.MultisigRedeemScriptType(
                         pubkeys=pubs,
                         signatures=[''] * 15,

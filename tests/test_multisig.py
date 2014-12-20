@@ -119,7 +119,7 @@ class TestMultisig(common.TrezorTest):
 
         self.assertEqual(binascii.hexlify(signatures2[0]), '3045022100f5428fe0531b3095675b40d87cab607ee036fac823b22e8dcec35b65aff6e52b022032129b4577ff923d321a1c70db5a6cec5bcc142cb2c51901af8b989cced23e0d')
 
-        # Accepted by network: tx 8382a2b2e3ec8788800c1d46d285dfa9dd4051edddd75982fad166b9273e5ac6 
+        # Accepted by network: tx 8382a2b2e3ec8788800c1d46d285dfa9dd4051edddd75982fad166b9273e5ac6
         self.assertEqual(binascii.hexlify(serialized_tx), '010000000152ba4dfcde9c4bed88f55479cdea03e711ae586e9a89352a98230c4cdf1a09c601000000fdfe0000483045022100985cc1ba316d140eb4b2d4028d8cd1c451f87bff8ff679858732e516ad04cd3402207af6edda99972af0baa7702a3b7448517c8242e7bca669f6861771cdd16ee05801483045022100f5428fe0531b3095675b40d87cab607ee036fac823b22e8dcec35b65aff6e52b022032129b4577ff923d321a1c70db5a6cec5bcc142cb2c51901af8b989cced23e0d014c6952210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a621038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e32103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a790253aeffffffff01a0860100000000001976a91412e8391ad256dcdc023365978418d658dfecba1c88ac00000000')
 
     def test_15_of_15(self):
@@ -136,15 +136,6 @@ class TestMultisig(common.TrezorTest):
         # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
         node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
 
-        multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
-                                     proto_types.HDNodePathType(node=node, address_n=[2]),
-                                     proto_types.HDNodePathType(node=node, address_n=[3])],
-                            signatures=['', '', ''],
-                            m=2,
-                            )
-
-        
         pubs = []
         for x in range(15):
             pubs.append(proto_types.HDNodePathType(node=node, address_n=[x]))
@@ -167,7 +158,6 @@ class TestMultisig(common.TrezorTest):
                             signatures=signatures,
                             m=15,
                             )
-
 
             inp1 = proto_types.TxInputType(address_n=[x],
                                  prev_hash=binascii.unhexlify('6189e3febb5a21cee8b725aa1ef04ffce7e609448446d3a8d6f483c634ef5315'),
@@ -217,7 +207,7 @@ class TestMultisig(common.TrezorTest):
                              script_type=proto_types.SPENDMULTISIG,
                              multisig=multisig,
                              )
-        
+
         out1 = proto_types.TxOutputType(address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
                               amount=100000,
                               script_type=proto_types.PAYTOADDRESS)
