@@ -52,7 +52,10 @@ def opcode_serialize(opcode):
         raise Exception('Unknown script opcode: %s' % opcode)
 
 def insight_tx(url):
-    f = urllib2.urlopen(url)
+    try:
+        f = urllib2.urlopen(url)
+    except:
+        raise Exception('URL error: %s' % url)
     data = json.load(f)
 
     t = proto_types.TransactionType()
