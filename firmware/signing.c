@@ -248,7 +248,7 @@ void signing_txack(TransactionType *tx)
 			send_req_2_prev_input();
 			return;
 		case STAGE_REQUEST_2_PREV_INPUT:
-			if (!tx_hash_input(&tp, tx->inputs)) {
+			if (!tx_serialize_input_hash(&tp, tx->inputs)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
 				signing_abort();
 				return;
@@ -261,7 +261,7 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_OUTPUT:
-			if (!tx_hash_output(&tp, tx->bin_outputs)) {
+			if (!tx_serialize_output_hash(&tp, tx->bin_outputs)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
 				signing_abort();
 				return;
@@ -288,7 +288,7 @@ void signing_txack(TransactionType *tx)
 			return;
 		case STAGE_REQUEST_3_INPUT:
 			progress++;
-			if (!tx_hash_input(&tc, tx->inputs)) {
+			if (!tx_serialize_input_hash(&tc, tx->inputs)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
 				signing_abort();
 				return;
@@ -347,7 +347,7 @@ void signing_txack(TransactionType *tx)
 			} else {
 				tx->inputs[0].script_sig.size = 0;
 			}
-			if (!tx_hash_input(&ti, tx->inputs)) {
+			if (!tx_serialize_input_hash(&ti, tx->inputs)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
 				signing_abort();
 				return;
@@ -406,12 +406,12 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			if (!tx_hash_output(&tc, &bin_output)) {
+			if (!tx_serialize_output_hash(&tc, &bin_output)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
 				signing_abort();
 				return;
 			}
-			if (!tx_hash_output(&ti, &bin_output)) {
+			if (!tx_serialize_output_hash(&ti, &bin_output)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
 				signing_abort();
 				return;
@@ -462,7 +462,7 @@ void signing_txack(TransactionType *tx)
 				} else { // SPENDADDRESS
 					input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, input.script_sig.bytes);
 				}
-				resp.serialized.serialized_tx.size = tx_serialize_input(&to, input.prev_hash.bytes, input.prev_index, input.script_sig.bytes, input.script_sig.size, input.sequence, resp.serialized.serialized_tx.bytes);
+				resp.serialized.serialized_tx.size = tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
 				if (idx1i < inputs_count - 1) {
 					idx1i++;
 					send_req_1_input();
@@ -502,7 +502,7 @@ void signing_txack(TransactionType *tx)
 			}
 			resp.has_serialized = true;
 			resp.serialized.has_serialized_tx = true;
-			resp.serialized.serialized_tx.size = tx_serialize_output(&to, bin_output.amount, bin_output.script_pubkey.bytes, bin_output.script_pubkey.size, resp.serialized.serialized_tx.bytes);
+			resp.serialized.serialized_tx.size = tx_serialize_output(&to, &bin_output, resp.serialized.serialized_tx.bytes);
 			if (idx4o < outputs_count - 1) {
 				idx4o++;
 				send_req_4_output();

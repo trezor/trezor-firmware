@@ -47,6 +47,24 @@ uint32_t ser_length(uint32_t len, uint8_t *out)
 	return 5;
 }
 
+uint32_t ser_length_hash(SHA256_CTX *ctx, uint32_t len)
+{
+	if (len < 253) {
+		sha256_Update(ctx, (const uint8_t *)&len, 1);
+		return 1;
+	}
+	if (len < 0x10000) {
+		uint8_t d = 253;
+		sha256_Update(ctx, &d, 1);
+		sha256_Update(ctx, (const uint8_t *)&len, 2);
+		return 3;
+	}
+	uint8_t d = 254;
+	sha256_Update(ctx, &d, 1);
+	sha256_Update(ctx, (const uint8_t *)&len, 4);
+	return 5;
+}
+
 uint32_t deser_length(const uint8_t *in, uint32_t *out)
 {
 	if (in[0] < 253) {

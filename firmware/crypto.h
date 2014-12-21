@@ -24,10 +24,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <secp256k1.h>
+#include <sha2.h>
 #include <pb.h>
 #include "types.pb.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
+
+uint32_t ser_length_hash(SHA256_CTX *ctx, uint32_t len);
 
 int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8_t *privkey, uint8_t *signature);
 

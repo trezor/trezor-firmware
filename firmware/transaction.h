@@ -47,12 +47,12 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, const uint8_t *pubkey, uint32_t pubkey_len, uint8_t *out);
 uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out);
 int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm);
-uint32_t tx_serialize_input(TxStruct *tx, uint8_t *prev_hash, uint32_t prev_index, uint8_t *script_sig, uint32_t script_sig_len, uint32_t sequence, uint8_t *out);
-uint32_t tx_serialize_output(TxStruct *tx, uint64_t amount, uint8_t *script_pubkey, uint32_t script_pubkey_len, uint8_t *out);
+uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out);
+uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_t *out);
 
 void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, bool add_hash_type);
-bool tx_hash_input(TxStruct *t, TxInputType *input);
-bool tx_hash_output(TxStruct *t, TxOutputBinType *output);
+uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input);
+uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output);
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
 
 uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs);
