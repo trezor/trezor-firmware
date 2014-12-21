@@ -79,11 +79,21 @@ void layoutDialog(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, 
 	oledRefresh();
 }
 
-void layoutProgress(const char *desc, int permil, int gearstep)
+void layoutProgressUpdate(bool refresh)
 {
+	static uint8_t step = 0;
 	const BITMAP *bmp_gears[4] = { &bmp_gears0, &bmp_gears1, &bmp_gears2, &bmp_gears3 };
+	oledDrawBitmap(40, 0, bmp_gears[step]);
+	step = (step + 1) % 4;
+	if (refresh) {
+		oledRefresh();
+	}
+}
+
+void layoutProgress(const char *desc, int permil)
+{
 	oledClear();
-	oledDrawBitmap(40, 0, bmp_gears[gearstep % 4]);
+	layoutProgressUpdate(false);
 	// progressbar
 	oledFrame(0, OLED_HEIGHT - 8, OLED_WIDTH - 1, OLED_HEIGHT - 1);
 	oledBox(1, OLED_HEIGHT - 7, OLED_WIDTH - 2, OLED_HEIGHT - 2, 0);

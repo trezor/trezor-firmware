@@ -216,8 +216,7 @@ void storage_setPassphraseProtection(bool passphrase_protection)
 
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
-	static uint8_t i;
-	layoutProgress("Waking up", 1000 * iter / total, i++);
+	layoutProgress("Waking up", 1000 * iter / total);
 }
 
 bool storage_getRootNode(HDNode *node)
@@ -239,7 +238,7 @@ bool storage_getRootNode(HDNode *node)
 		if (storage.has_passphrase_protection && storage.passphrase_protection && strlen(sessionPassphrase)) {
 			// decrypt hd node
 			uint8_t secret[64];
-			layoutProgressSwipe("Waking up", 0, 0);
+			layoutProgressSwipe("Waking up", 0);
 			pbkdf2_hmac_sha512((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), (uint8_t *)"TREZORHD", 8, BIP39_PBKDF2_ROUNDS, secret, 64, get_root_node_callback);
 			aes_decrypt_ctx ctx;
 			aes_decrypt_key256(secret, &ctx);
@@ -257,7 +256,7 @@ bool storage_getRootNode(HDNode *node)
 			return false;
 		}
 		uint8_t seed[64];
-		layoutProgressSwipe("Waking up", 0, 0);
+		layoutProgressSwipe("Waking up", 0);
 		mnemonic_to_seed(storage.mnemonic, sessionPassphrase, seed, get_root_node_callback); // BIP-0039
 		if (hdnode_from_seed(seed, sizeof(seed), &sessionRootNode) == 0) {
 			return false;

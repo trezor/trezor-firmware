@@ -67,10 +67,12 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 			HDNode node;
 			uint32_t k;
 			memcpy(&node, root, sizeof(HDNode));
+			layoutProgressUpdate(true);
 			for (k = 0; k < in->address_n_count; k++) {
 				if (hdnode_private_ckd(&node, in->address_n[k]) == 0) {
 					return 0;
 				}
+				layoutProgressUpdate(true);
 			}
 			ecdsa_get_address_raw(node.public_key, coin->address_type, addr_raw);
 		} else
@@ -201,17 +203,18 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
 
-	uint8_t d;
-	d = 0x50 + m; sha256_Update(&ctx, &d, 1);
+	uint8_t d[2];
+	d[0] = 0x50 + m; sha256_Update(&ctx, d, 1);
 	uint32_t i;
 	for (i = 0; i < n; i++) {
-		d = 33; sha256_Update(&ctx, &d, 1); // OP_PUSH 33
+		d[0] = 33; sha256_Update(&ctx, d, 1); // OP_PUSH 33
 		const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
 		if (!pubkey) return 0;
 		sha256_Update(&ctx, pubkey, 33);
 	}
-	d = 0x50 + n; sha256_Update(&ctx, &d, 1);
-	d = 0xAE;     sha256_Update(&ctx, &d, 1);
+	d[0] = 0x50 + n;
+	d[1] = 0xAE;
+	sha256_Update(&ctx, d, 2);
 
 	sha256_Final(hash, &ctx);
 

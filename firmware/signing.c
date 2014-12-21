@@ -51,6 +51,8 @@ static uint64_t to_spend, spending, change_spend;
 const uint32_t version = 1;
 const uint32_t lock_time = 0;
 static uint32_t progress, progress_total;
+static bool multisig_fp_set, multisig_fp_mismatch;
+static uint8_t multisig_fp[32];
 
 /*
 Workflow of streamed signing
@@ -96,6 +98,7 @@ foreach I:
 
 void send_req_1_input(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	idx2i = idx2o = idx3i = idx3o = 0;
 	signing_stage = STAGE_REQUEST_1_INPUT;
 	resp.has_request_type = true;
@@ -108,6 +111,7 @@ void send_req_1_input(void)
 
 void send_req_2_prev_meta(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	signing_stage = STAGE_REQUEST_2_PREV_META;
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXMETA;
@@ -120,6 +124,7 @@ void send_req_2_prev_meta(void)
 
 void send_req_2_prev_input(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	signing_stage = STAGE_REQUEST_2_PREV_INPUT;
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXINPUT;
@@ -134,6 +139,7 @@ void send_req_2_prev_input(void)
 
 void send_req_2_prev_output(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	signing_stage = STAGE_REQUEST_2_PREV_OUTPUT;
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXOUTPUT;
@@ -148,6 +154,7 @@ void send_req_2_prev_output(void)
 
 void send_req_3_input(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	signing_stage = STAGE_REQUEST_3_INPUT;
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXINPUT;
@@ -159,6 +166,7 @@ void send_req_3_input(void)
 
 void send_req_3_output(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	signing_stage = STAGE_REQUEST_3_OUTPUT;
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXOUTPUT;
@@ -170,6 +178,7 @@ void send_req_3_output(void)
 
 void send_req_4_output(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	signing_stage = STAGE_REQUEST_4_OUTPUT;
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXOUTPUT;
@@ -181,6 +190,7 @@ void send_req_4_output(void)
 
 void send_req_finished(void)
 {
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 	resp.has_request_type = true;
 	resp.request_type = RequestType_TXFINISHED;
 	msg_write(MessageType_MessageType_TxRequest, &resp);
@@ -202,9 +212,14 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinTyp
 
 	signing = true;
 	progress = 1;
-	progress_total = inputs_count * (1 + inputs_count + outputs_count) + outputs_count;
+	progress_total = inputs_count * (1 + inputs_count + outputs_count) + outputs_count + 1;
+
+	multisig_fp_set = false;
+	multisig_fp_mismatch = false;
 
 	tx_init(&to, inputs_count, outputs_count, version, lock_time, false);
+
+	layoutProgressSwipe("Signing transaction", 0);
 
 	send_req_1_input();
 }
@@ -217,18 +232,15 @@ void signing_txack(TransactionType *tx)
 		return;
 	}
 
-	int co;
-	static bool multisig_fp_set, multisig_fp_mismatch;
-	static uint8_t multisig_fp[32];
+	layoutProgress("Signing transaction", 1000 * progress / progress_total);
 
+	int co;
 	memset(&resp, 0, sizeof(TxRequest));
 
 	switch (signing_stage) {
 		case STAGE_REQUEST_1_INPUT:
-			layoutProgress("Preparing", 1000 * progress / progress_total, progress); progress++;
+			progress++;
 			memcpy(&input, tx->inputs, sizeof(TxInputType));
-			multisig_fp_set = false;
-			multisig_fp_mismatch = false;
 			send_req_2_prev_meta();
 			return;
 		case STAGE_REQUEST_2_PREV_META:
@@ -275,7 +287,7 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_3_INPUT:
-			layoutProgress("Preparing", 1000 * progress / progress_total, progress); progress++;
+			progress++;
 			if (!tx_hash_input(&tc, tx->inputs)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
 				signing_abort();
@@ -348,9 +360,9 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_3_OUTPUT:
-			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
-			bool is_change = false;
+			progress++;
 			if (idx1i == 0) {
+				bool is_change = false;
 				if (tx->outputs[0].script_type == OutputScriptType_PAYTOMULTISIG &&
 				    tx->outputs[0].has_multisig &&
 				    multisig_fp_set && !multisig_fp_mismatch) {
@@ -378,9 +390,13 @@ void signing_txack(TransactionType *tx)
 					}
 				}
 				spending += tx->outputs[0].amount;
+				co = compile_output(coin, root, tx->outputs, &bin_output, !is_change);
+				if (!is_change) {
+					layoutProgress("Signing transaction", 1000 * progress / progress_total);
+				}
+			} else {
+				co = compile_output(coin, root, tx->outputs, &bin_output, false);
 			}
-			co = compile_output(coin, root, tx->outputs, &bin_output, idx1i == 0 && !is_change);
-			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
 			if (co < 0) {
 				fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
 				signing_abort();
@@ -473,13 +489,12 @@ void signing_txack(TransactionType *tx)
 						signing_abort();
 						return;
 					}
-					layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
 					send_req_4_output();
 				}
 			}
 			return;
 		case STAGE_REQUEST_4_OUTPUT:
-			layoutProgress("Signing", 1000 * progress / progress_total, progress); progress++;
+			progress++;
 			if (compile_output(coin, root, tx->outputs, &bin_output, false) <= 0) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to compile output");
 				signing_abort();

@@ -320,7 +320,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				buttonUpdate();
 			} while (!button.YesUp && !button.NoUp);
 			if (button.YesUp) {
-				layoutProgress("INSTALLING ... Please wait", 0, 0);
+				layoutProgress("INSTALLING ... Please wait", 0);
 				// backup metadata
 				memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
 				flash_unlock();
@@ -392,7 +392,9 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		p = buf + 1;
-		layoutProgress("INSTALLING ... Please wait", 1000 * flash_pos / flash_len, flash_anim / 8);
+		if (flash_anim % 8 == 4) {
+			layoutProgress("INSTALLING ... Please wait", 1000 * flash_pos / flash_len);
+		}
 		flash_anim++;
 		flash_unlock();
 		while (p < buf + 64 && flash_pos < flash_len) {
@@ -440,7 +442,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 		bool hash_check_ok = button.YesUp;
 
-		layoutProgress("INSTALLING ... Please wait", 1000, 0);
+		layoutProgress("INSTALLING ... Please wait", 1000);
 		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
 		// check if to restore old storage area but only if signatures are ok
 		if ((flags & 0x01) && signatures_ok()) {
