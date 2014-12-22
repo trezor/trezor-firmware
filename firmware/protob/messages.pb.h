@@ -115,7 +115,7 @@ typedef struct _WordRequest {
 } WordRequest;
 
 typedef struct _Address {
-    char address[35];
+    char address[36];
 } Address;
 
 typedef struct _ApplySettings {
@@ -226,7 +226,7 @@ typedef struct _DecryptedMessage {
     bool has_message;
     DecryptedMessage_message_t message;
     bool has_address;
-    char address[35];
+    char address[36];
 } DecryptedMessage;
 
 typedef PB_BYTES_ARRAY_T(33) EncryptMessage_pubkey_t;
@@ -372,7 +372,7 @@ typedef PB_BYTES_ARRAY_T(65) MessageSignature_signature_t;
 
 typedef struct _MessageSignature {
     bool has_address;
-    char address[35];
+    char address[36];
     bool has_signature;
     MessageSignature_signature_t signature;
 } MessageSignature;
@@ -495,7 +495,7 @@ typedef PB_BYTES_ARRAY_T(1024) VerifyMessage_message_t;
 
 typedef struct _VerifyMessage {
     bool has_address;
-    char address[35];
+    char address[36];
     bool has_signature;
     VerifyMessage_signature_t signature;
     bool has_message;
@@ -819,7 +819,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define GetPublicKey_size                        48
 #define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          (75 + MultisigRedeemScriptType_size)
-#define Address_size                             37
+#define Address_size                             38
 #define WipeDevice_size                          0
 #define LoadDevice_size                          (320 + HDNodeType_size)
 #define ResetDevice_size                         66
@@ -829,12 +829,12 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define WordRequest_size                         0
 #define WordAck_size                             14
 #define SignMessage_size                         1094
-#define VerifyMessage_size                       1131
-#define MessageSignature_size                    104
+#define VerifyMessage_size                       1132
+#define MessageSignature_size                    105
 #define EncryptMessage_size                      1131
 #define EncryptedMessage_size                    1168
 #define DecryptMessage_size                      1216
-#define DecryptedMessage_size                    1064
+#define DecryptedMessage_size                    1065
 #define CipherKeyValue_size                      1340
 #define CipheredKeyValue_size                    1027
 #define EstimateTxSize_size                      31

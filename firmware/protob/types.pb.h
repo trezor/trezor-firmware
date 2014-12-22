@@ -161,7 +161,7 @@ typedef struct _TxInputType {
 
 typedef struct _TxOutputType {
     bool has_address;
-    char address[35];
+    char address[36];
     pb_size_t address_n_count;
     uint32_t address_n[8];
     uint64_t amount;
@@ -284,9 +284,9 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 #define CoinType_size                            47
 #define MultisigRedeemScriptType_size            3741
 #define TxInputType_size                         5497
-#define TxOutputType_size                        3846
+#define TxOutputType_size                        3847
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     9910
+#define TransactionType_size                     9911
 #define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             2132
 

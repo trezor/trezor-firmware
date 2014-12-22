@@ -11,7 +11,7 @@ TxInputType.address_n			max_count:8
 TxInputType.prev_hash			max_size:32
 TxInputType.script_sig			max_size:1650
 
-TxOutputType.address			max_size:35
+TxOutputType.address			max_size:36
 TxOutputType.address_n			max_count:8
 
 TxOutputBinType.script_pubkey		max_size:520
