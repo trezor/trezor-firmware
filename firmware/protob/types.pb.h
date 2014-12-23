@@ -75,6 +75,8 @@ typedef struct _CoinType {
     uint32_t address_type;
     bool has_maxfee_kb;
     uint64_t maxfee_kb;
+    bool has_address_type_p2sh;
+    uint32_t address_type_p2sh;
 } CoinType;
 
 typedef PB_BYTES_ARRAY_T(32) HDNodeType_chain_code_t;
@@ -194,13 +196,15 @@ extern const pb_extension_type_t wire_debug_in;
 extern const pb_extension_type_t wire_debug_out;
 
 /* Default values for struct fields */
+extern const uint32_t CoinType_address_type_default;
+extern const uint32_t CoinType_address_type_p2sh_default;
 extern const uint32_t TxInputType_sequence_default;
 extern const InputScriptType TxInputType_script_type_default;
 
 /* Initializer values for message structs */
 #define HDNodeType_init_default                  {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define HDNodePathType_init_default              {HDNodeType_init_default, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
-#define CoinType_init_default                    {false, "", false, "", false, 0, false, 0}
+#define CoinType_init_default                    {false, "", false, "", false, 0u, false, 0, false, 5u}
 #define MultisigRedeemScriptType_init_default    {0, {HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default}
 #define TxOutputType_init_default                {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_default}
@@ -210,7 +214,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define TxRequestSerializedType_init_default     {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define HDNodePathType_init_zero                 {HDNodeType_init_zero, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
-#define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0}
+#define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0, false, 0}
 #define MultisigRedeemScriptType_init_zero       {0, {HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero}
 #define TxOutputType_init_zero                   {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_zero}
@@ -224,6 +228,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define CoinType_coin_shortcut_tag               2
 #define CoinType_address_type_tag                3
 #define CoinType_maxfee_kb_tag                   4
+#define CoinType_address_type_p2sh_tag           5
 #define HDNodeType_depth_tag                     1
 #define HDNodeType_fingerprint_tag               2
 #define HDNodeType_child_num_tag                 3
@@ -269,7 +274,7 @@ extern const InputScriptType TxInputType_script_type_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t HDNodeType_fields[7];
 extern const pb_field_t HDNodePathType_fields[3];
-extern const pb_field_t CoinType_fields[5];
+extern const pb_field_t CoinType_fields[6];
 extern const pb_field_t MultisigRedeemScriptType_fields[4];
 extern const pb_field_t TxInputType_fields[8];
 extern const pb_field_t TxOutputType_fields[6];
@@ -281,7 +286,7 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
 #define HDNodePathType_size                      171
-#define CoinType_size                            47
+#define CoinType_size                            53
 #define MultisigRedeemScriptType_size            3741
 #define TxInputType_size                         5497
 #define TxOutputType_size                        3847

@@ -108,7 +108,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		if (!in->has_address || !ecdsa_address_decode(in->address, addr_raw)) {
 			return 0;
 		}
-		if (addr_raw[0] != 0x05) { // 0x05 is P2SH
+		if (addr_raw[0] != coin->address_type_p2sh) {
 			return 0;
 		}
 		if (needs_confirm) {
@@ -133,10 +133,10 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		if (compile_script_multisig_hash(&(in->multisig), buf) == 0) {
 			return 0;
 		}
-		addr_raw[0] = 0x05;
+		addr_raw[0] = coin->address_type_p2sh;
 		ripemd160(buf, 32, addr_raw + 1);
 		if (needs_confirm) {
-			base58_encode_check(addr_raw, 21, in->address);
+			base58_encode_check(addr_raw, 21, in->address, sizeof(in->address));
 			layoutConfirmOutput(coin, in);
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 				return -1;

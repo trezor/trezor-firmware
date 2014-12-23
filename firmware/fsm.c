@@ -282,7 +282,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	resp->node.public_key.size = 33;
 	memcpy(resp->node.public_key.bytes, node->public_key, 33);
 	resp->has_xpub = true;
-	hdnode_serialize_public(node, resp->xpub);
+	hdnode_serialize_public(node, resp->xpub, sizeof(resp->xpub));
 	msg_write(MessageType_MessageType_PublicKey, resp);
 	layoutHome();
 }
@@ -506,6 +506,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	if (fsm_deriveKey(node, msg->address_n, msg->address_n_count) == 0) return;
 
 	if (msg->has_multisig) {
+		layoutProgressSwipe("Preparing", 0);
 		if (cryptoMultisigPubkeyIndex(&(msg->multisig), node->public_key) < 0) {
 			fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
 			layoutHome();
@@ -518,10 +519,10 @@ void fsm_msgGetAddress(GetAddress *msg)
 			return;
 		}
 		ripemd160(buf, 32, buf + 1);
-		buf[0] = 0x05; // multisig cointype
-		base58_encode_check(buf, 21, resp->address);
+		buf[0] = coin->address_type_p2sh; // multisig cointype
+		base58_encode_check(buf, 21, resp->address, sizeof(resp->address));
 	} else {
-		ecdsa_get_address(node->public_key, coin->address_type, resp->address);
+		ecdsa_get_address(node->public_key, coin->address_type, resp->address, sizeof(resp->address));
 	}
 
 	if (msg->has_show_display && msg->show_display) {
@@ -577,7 +578,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 		resp->has_address = true;
 		uint8_t addr_raw[21];
 		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
-		base58_encode_check(addr_raw, 21, resp->address);
+		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);
@@ -707,7 +708,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 		return;
 	}
 	if (signing) {
-		base58_encode_check(address_raw, 21, resp->address);
+		base58_encode_check(address_raw, 21, resp->address, sizeof(resp->address));
 	}
 	layoutDecryptMessage(resp->message.bytes, resp->message.size, signing ? resp->address : 0);
 	protectButton(ButtonRequestType_ButtonRequest_Other, true);

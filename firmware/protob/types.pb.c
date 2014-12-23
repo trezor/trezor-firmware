@@ -7,6 +7,8 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
+const uint32_t CoinType_address_type_default = 0u;
+const uint32_t CoinType_address_type_p2sh_default = 5u;
 const uint32_t TxInputType_sequence_default = 4294967295u;
 const InputScriptType TxInputType_script_type_default = InputScriptType_SPENDADDRESS;
 
@@ -27,11 +29,12 @@ const pb_field_t HDNodePathType_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t CoinType_fields[5] = {
+const pb_field_t CoinType_fields[6] = {
     PB_FIELD(  1, STRING  , OPTIONAL, STATIC  , FIRST, CoinType, coin_name, coin_name, 0),
     PB_FIELD(  2, STRING  , OPTIONAL, STATIC  , OTHER, CoinType, coin_shortcut, coin_name, 0),
-    PB_FIELD(  3, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type, coin_shortcut, 0),
+    PB_FIELD(  3, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type, coin_shortcut, &CoinType_address_type_default),
     PB_FIELD(  4, UINT64  , OPTIONAL, STATIC  , OTHER, CoinType, maxfee_kb, address_type, 0),
+    PB_FIELD(  5, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2sh, maxfee_kb, &CoinType_address_type_p2sh_default),
     PB_LAST_FIELD
 };
 
