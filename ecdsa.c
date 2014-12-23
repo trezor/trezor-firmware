@@ -364,6 +364,9 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 	// if S > order/2 => S = -S
 	if (bn_is_less(&order256k1_half, &k)) {
 		bn_substract_noprime(&order256k1, &k, &k);
+		if (pby) {
+			*pby = !*pby;
+		}
 	}
 
 	// we are done, R.x and k is the result signature
