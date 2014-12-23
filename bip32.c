@@ -181,7 +181,7 @@ void hdnode_fill_public_key(HDNode *node)
 	ecdsa_get_public_key33(node->private_key, node->public_key);
 }
 
-void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str)
+void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize)
 {
 	uint8_t node_data[78];
 	write_be(node_data, version);
@@ -195,17 +195,17 @@ void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, cha
 		node_data[45] = 0;
 		memcpy(node_data + 46, node->private_key, 32);
 	}
-	base58_encode_check(node_data, 78, str);
+	base58_encode_check(node_data, 78, str, strsize);
 }
 
-void hdnode_serialize_public(const HDNode *node, char *str)
+void hdnode_serialize_public(const HDNode *node, char *str, int strsize)
 {
-	hdnode_serialize(node, 0x0488B21E, 1, str);
+	hdnode_serialize(node, 0x0488B21E, 1, str, strsize);
 }
 
-void hdnode_serialize_private(const HDNode *node, char *str)
+void hdnode_serialize_private(const HDNode *node, char *str, int strsize)
 {
-	hdnode_serialize(node, 0x0488ADE4, 0, str);
+	hdnode_serialize(node, 0x0488ADE4, 0, str, strsize);
 }
 
 // check for validity of curve point in case of public data not performed
@@ -213,7 +213,7 @@ int hdnode_deserialize(const char *str, HDNode *node)
 {
 	uint8_t node_data[78];
 	memset(node, 0, sizeof(HDNode));
-	if (!base58_decode_check(str, node_data)) {
+	if (!base58_decode_check(str, node_data, sizeof(node_data))) {
 		return -1;
 	}
 	uint32_t version = read_be(node_data);

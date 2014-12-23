@@ -417,26 +417,26 @@ void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *add
 	ecdsa_get_pubkeyhash(pub_key, addr_raw + 1);
 }
 
-void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr)
+void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr, int addrsize)
 {
 	uint8_t raw[21];
 	ecdsa_get_address_raw(pub_key, version, raw);
-	base58_encode_check(raw, 21, addr);
+	base58_encode_check(raw, 21, addr, addrsize);
 }
 
-void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif)
+void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif, int wifsize)
 {
 	uint8_t data[34];
 	data[0] = version;
 	memcpy(data + 1, priv_key, 32);
-	data[33 ] = 0x01;
-	base58_encode_check(data, 34, wif);
+	data[33] = 0x01;
+	base58_encode_check(data, 34, wif, wifsize);
 }
 
 int ecdsa_address_decode(const char *addr, uint8_t *out)
 {
 	if (!addr) return 0;
-	return base58_decode_check(addr, out) == 21;
+	return base58_decode_check(addr, out, 21) == 21;
 }
 
 void uncompress_coords(uint8_t odd, const bignum256 *x, bignum256 *y)

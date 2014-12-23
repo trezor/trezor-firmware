@@ -49,9 +49,9 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i);
 
 void hdnode_fill_public_key(HDNode *node);
 
-void hdnode_serialize_public(const HDNode *node, char *str);
+void hdnode_serialize_public(const HDNode *node, char *str, int strsize);
 
-void hdnode_serialize_private(const HDNode *node, char *str);
+void hdnode_serialize_private(const HDNode *node, char *str, int strsize);
 
 int hdnode_deserialize(const char *str, HDNode *node);
 

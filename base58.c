@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-2014 Tomas Dzetkulic
+ * Copyright (c) 2012-2014 Luke Dashjr
  * Copyright (c) 2013-2014 Pavol Rusnak
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -22,117 +22,202 @@
  */
 
 #include <string.h>
+#include <stdbool.h>
+#include <sys/types.h>
 #include "base58.h"
 #include "sha2.h"
 
-int base58_encode_check(const uint8_t *data, int len, char *str)
+static const int8_t b58digits_map[] = {
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1, 0, 1, 2, 3, 4, 5, 6, 7, 8,-1,-1,-1,-1,-1,-1,
+	-1, 9,10,11,12,13,14,15,16,-1,17,18,19,20,21,-1,
+	22,23,24,25,26,27,28,29,30,31,32,-1,-1,-1,-1,-1,
+	-1,33,34,35,36,37,38,39,40,41,42,43,-1,44,45,46,
+	47,48,49,50,51,52,53,54,55,56,57,-1,-1,-1,-1,-1,
+};
+
+bool b58tobin(void *bin, size_t *binszp, const char *b58)
 {
-	int outlen;
-	switch (len) {
-		case 78: // xpub/xprv 78
-			outlen = 111;
-			break;
-		case 34: // WIF privkey 1+32+1
-			outlen = 52;
-			break;
-		case 21: // address 1+20
-			outlen = 34;
-			break;
-		default:
-			return 0;
-	}
-	uint8_t mydata[82], hash[32];
-	sha256_Raw(data, len, hash);
-	sha256_Raw(hash, 32, hash);
-	memcpy(mydata, data, len);
-	memcpy(mydata + len, hash, 4); // checksum
-	uint32_t rem, tmp;
-	const char code[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-	int i, j;
-	for (j = 0; j < outlen; j++) {
-		rem = mydata[0] % 58;
-		mydata[0] /= 58;
-		for (i = 1; i < len + 4; i++) {
-			tmp = rem * 24 + mydata[i]; // 2^8 == 4*58 + 24
-			mydata[i] = rem * 4 + (tmp / 58);
-			rem = tmp % 58;
+	size_t binsz = *binszp;
+	const unsigned char *b58u = (void*)b58;
+	unsigned char *binu = bin;
+	size_t outisz = (binsz + 3) / 4;
+	uint32_t outi[outisz];
+	uint64_t t;
+	uint32_t c;
+	size_t i, j;
+	uint8_t bytesleft = binsz % 4;
+	uint32_t zeromask = bytesleft ? (0xffffffff << (bytesleft * 8)) : 0;
+	unsigned zerocount = 0;
+	size_t b58sz;
+
+	b58sz = strlen(b58);
+
+	memset(outi, 0, outisz * sizeof(*outi));
+
+	// Leading zeros, just count
+	for (i = 0; i < b58sz && !b58digits_map[b58u[i]]; ++i)
+		++zerocount;
+
+	for ( ; i < b58sz; ++i)
+	{
+		if (b58u[i] & 0x80)
+			// High-bit set on invalid digit
+			return false;
+		if (b58digits_map[b58u[i]] == -1)
+			// Invalid base58 digit
+			return false;
+		c = (unsigned)b58digits_map[b58u[i]];
+		for (j = outisz; j--; )
+		{
+			t = ((uint64_t)outi[j]) * 58 + c;
+			c = (t & 0x3f00000000) >> 32;
+			outi[j] = t & 0xffffffff;
 		}
-		str[j] = code[rem];
+		if (c)
+			// Output number too big (carry to the next int32)
+			return false;
+		if (outi[0] & zeromask)
+			// Output number too big (last int32 filled too far)
+			return false;
 	}
-	// remove duplicite 1s at the end
-	while (outlen > 1 && str[outlen - 1] == code[0] && str[outlen - 2] == code[0]) {
-		outlen--;
+
+	j = 0;
+	switch (bytesleft) {
+		case 3:
+			*(binu++) = (outi[0] &   0xff0000) >> 16;
+		case 2:
+			*(binu++) = (outi[0] &     0xff00) >>  8;
+		case 1:
+			*(binu++) = (outi[0] &       0xff);
+			++j;
+		default:
+			break;
 	}
-	str[outlen] = 0;
-	char s;
-	// reverse string
-	for (i = 0; i < outlen / 2; i++) {
-		s = str[i];
-		str[i] = str[outlen - 1 - i];
-		str[outlen - 1 - i] = s;
+
+	for (; j < outisz; ++j)
+	{
+		*(binu++) = (outi[j] >> 0x18) & 0xff;
+		*(binu++) = (outi[j] >> 0x10) & 0xff;
+		*(binu++) = (outi[j] >>    8) & 0xff;
+		*(binu++) = (outi[j] >>    0) & 0xff;
 	}
-	return outlen;
+
+	// Count canonical base58 byte count
+	binu = bin;
+	for (i = 0; i < binsz; ++i)
+	{
+		if (binu[i])
+			break;
+		--*binszp;
+	}
+	*binszp += zerocount;
+
+	return true;
 }
 
-int base58_decode_check(const char *str, uint8_t *data)
+int b58check(const void *bin, size_t binsz, const char *base58str)
 {
-	const char decode[] = {
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3,
-		4, 5, 6, 7, 8, -1, -1, -1, -1, -1, -1, -1, 9, 10, 11,
-		12, 13, 14, 15, 16, -1, 17, 18, 19, 20, 21, -1, 22,
-		23, 24, 25, 26, 27, 28, 29, 30, 31, 32, -1, -1, -1,
-		-1, -1, -1, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
-		43, -1, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
-		55, 56, 57
-	};
-	int outlen;
-	switch (strlen(str)) {
-		case 111: // xpub/xprv
-			outlen = 78;
-			break;
-		case 52: // WIF privkey
-			outlen = 35;
-			break;
-		case 27: // address
-		case 28:
-		case 29:
-		case 30:
-		case 31:
-		case 32:
-		case 33:
-		case 34:
-			outlen = 21;
-			break;
-		default:
-			return 0;
+	unsigned char buf[32];
+	const uint8_t *binc = bin;
+	unsigned i;
+	if (binsz < 4)
+		return -4;
+	sha256_Raw(bin, binsz - 4, buf);
+	sha256_Raw(buf, 32, buf);
+	if (memcmp(&binc[binsz - 4], buf, 4))
+		return -1;
+
+	// Check number of zeros is correct AFTER verifying checksum (to avoid possibility of accessing base58str beyond the end)
+	for (i = 0; binc[i] == '\0' && base58str[i] == '1'; ++i)
+	{}  // Just finding the end of zeros, nothing to do in loop
+	if (binc[i] == '\0' || base58str[i] == '1')
+		return -3;
+
+	return binc[0];
+}
+
+static const char b58digits_ordered[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz)
+{
+	const uint8_t *bin = data;
+	int carry;
+	ssize_t i, j, high, zcount = 0;
+	size_t size;
+
+	while (zcount < (ssize_t)binsz && !bin[zcount])
+		++zcount;
+
+	size = (binsz - zcount) * 138 / 100 + 1;
+	uint8_t buf[size];
+	memset(buf, 0, size);
+
+	for (i = zcount, high = size - 1; i < (ssize_t)binsz; ++i, high = j)
+	{
+		for (carry = bin[i], j = size - 1; (j > high) || carry; --j)
+		{
+			carry += 256 * buf[j];
+			buf[j] = carry % 58;
+			carry /= 58;
+		}
 	}
-	uint8_t mydata[82], hash[32];
-	memset(mydata, 0, sizeof(mydata));
-	int i, j, k;
-	while (*str) {
-		i = *str;
-		if (i < 0 || i >= (int)sizeof(decode)) { // invalid character
-			return 0;
-		}
-		k = decode[i];
-		if (k == -1) { // invalid character
-			return 0;
-		}
-		for (j = outlen + 4 - 1; j >= 0; j--) {
-			k += mydata[j] * 58;
-			mydata[j] = k & 0xFF;
-			k >>= 8;
-		}
-		str++;
+
+	for (j = 0; j < (ssize_t)size && !buf[j]; ++j);
+
+	if (*b58sz <= zcount + size - j)
+	{
+		*b58sz = zcount + size - j + 1;
+		return false;
 	}
-	sha256_Raw(mydata, outlen, hash);
-	sha256_Raw(hash, 32, hash);
-	if (memcmp(mydata + outlen, hash, 4)) { // wrong checksum
+
+	if (zcount)
+		memset(b58, '1', zcount);
+	for (i = zcount; j < (ssize_t)size; ++i, ++j)
+		b58[i] = b58digits_ordered[buf[j]];
+	b58[i] = '\0';
+	*b58sz = i + 1;
+
+	return true;
+}
+
+#include <stdio.h>
+
+int base58_encode_check(const uint8_t *data, int datalen, char *str, int strsize)
+{
+	if (datalen > 128) {
 		return 0;
 	}
-	memcpy(data, mydata, outlen);
-	return outlen;
+	uint8_t buf[datalen + 32];
+	uint8_t *hash = buf + datalen;
+	memcpy(buf, data, datalen);
+	sha256_Raw(data, datalen, hash);
+	sha256_Raw(hash, 32, hash);
+	size_t res = strsize;
+	if (b58enc(str, &res, buf, datalen + 4) != true) {
+		return 0;
+	}
+	return res;
+}
+
+int base58_decode_check(const char *str, uint8_t *data, int datalen)
+{
+	if (datalen > 128) {
+		return 0;
+	}
+	uint8_t d[datalen + 4];
+	size_t res = datalen + 4;
+	if (b58tobin(d, &res, str) != true) {
+		return 0;
+	}
+	if (res != (size_t)datalen + 4) {
+		return 0;
+	}
+	if (b58check(d, res, str) < 0) {
+		return 0;
+	}
+	memcpy(data, d, datalen);
+	return datalen;
 }
