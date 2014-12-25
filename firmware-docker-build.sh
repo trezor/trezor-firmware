@@ -1,16 +1,9 @@
 #!/bin/bash
-
-dirname $0
-
 IMAGETAG=trezor-mcu-build
+
 docker rmi $IMAGETAG || :
 docker build -t $IMAGETAG .
-
-CONTAINERTAG=trezor-mcu-build
-docker rm $CONTAINERTAG || :
-docker run --name $CONTAINERTAG $IMAGETAG true
-
-docker cp $CONTAINERTAG:/trezor-mcu/firmware/trezor.bin .
+docker run -t -v $(pwd):/output $IMAGETAG /bin/cp /trezor-mcu/firmware/trezor.bin /output
 
 echo "---------------------"
 echo "Firmware fingerprint:"
