@@ -83,7 +83,7 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out)
 	return 1 + 8;
 }
 
-int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8_t *privkey, uint8_t *signature)
+int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -101,7 +101,7 @@ int cryptoMessageSign(const uint8_t *message, pb_size_t message_len, const uint8
 	return 0;
 }
 
-int cryptoMessageVerify(const uint8_t *message, pb_size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
+int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
 {
 	bignum256 r, s, e;
 	curve_point cp, cp2;
@@ -164,7 +164,7 @@ int cryptoMessageVerify(const uint8_t *message, pb_size_t message_len, const uin
 // internal from ecdsa.c
 int generate_k_random(bignum256 *k);
 
-int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, pb_size_t msg_size, bool display_only, uint8_t *nonce, pb_size_t *nonce_len, uint8_t *payload, pb_size_t *payload_len, uint8_t *hmac, pb_size_t *hmac_len, const uint8_t *privkey, const uint8_t *address_raw)
+int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, const uint8_t *address_raw)
 {
 	if (privkey && address_raw) { // signing == true
 		payload[0] = display_only ? 0x81 : 0x01;
@@ -216,7 +216,7 @@ int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, pb_size_t msg_
 	return 0;
 }
 
-int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, pb_size_t payload_len, const uint8_t *hmac, pb_size_t hmac_len, const uint8_t *privkey, uint8_t *msg, pb_size_t *msg_len, bool *display_only, bool *signing, uint8_t *address_raw)
+int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_len, const uint8_t *hmac, size_t hmac_len, const uint8_t *privkey, uint8_t *msg, size_t *msg_len, bool *display_only, bool *signing, uint8_t *address_raw)
 {
 	if (hmac_len != 8) {
 		return 1;
@@ -292,7 +292,7 @@ uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
 
 int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey)
 {
-	int i;
+	size_t i;
 	for (i = 0; i < multisig->pubkeys_count; i++) {
 		const uint8_t *node_pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
 		if (node_pubkey && memcmp(node_pubkey, pubkey, 33) == 0) {

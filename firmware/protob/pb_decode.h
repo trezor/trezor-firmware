@@ -3,8 +3,8 @@
  * field descriptions created by nanopb_generator.py.
  */
 
-#ifndef PB_DECODE_H_INCLUDED
-#define PB_DECODE_H_INCLUDED
+#ifndef _PB_DECODE_H_
+#define _PB_DECODE_H_
 
 #include "pb.h"
 
@@ -25,7 +25,7 @@ extern "C" {
  *    is different than from the main stream. Don't use bytes_left to compute
  *    any pointers.
  */
-struct pb_istream_s
+struct _pb_istream_t
 {
 #ifdef PB_BUFFER_ONLY
     /* Callback pointer is not used in buffer-only configuration.

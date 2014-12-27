@@ -2,8 +2,8 @@
  * stuff. For the high-level interface, see pb_encode.h and pb_decode.h.
  */
 
-#ifndef PB_H_INCLUDED
-#define PB_H_INCLUDED
+#ifndef _PB_H_
+#define _PB_H_
 
 /*****************************************************************
  * Nanopb compilation time options. You can change these here by *
@@ -46,7 +46,7 @@
 
 /* Version of the nanopb library. Just in case you want to check it in
  * your own program. */
-#define NANOPB_VERSION nanopb-0.3.1
+#define NANOPB_VERSION nanopb-0.2.9.1
 
 /* Include all the system headers needed by nanopb. You will need the
  * definitions of the following:
@@ -98,27 +98,23 @@
 #endif
 
 /* Handly macro for suppressing unreferenced-parameter compiler warnings. */
-#ifndef PB_UNUSED
-#define PB_UNUSED(x) (void)(x)
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
 #endif
 
 /* Compile-time assertion, used for checking compatible compilation options.
- * If this does not work properly on your compiler, use
- * #define PB_NO_STATIC_ASSERT to disable it.
+ * If this does not work properly on your compiler, use #define STATIC_ASSERT
+ * to disable it.
  *
  * But before doing that, check carefully the error message / place where it
  * comes from to see if the error has a real cause. Unfortunately the error
  * message is not always very clear to read, but you can see the reason better
- * in the place where the PB_STATIC_ASSERT macro was called.
+ * in the place where the STATIC_ASSERT macro was called.
  */
-#ifndef PB_NO_STATIC_ASSERT
-#ifndef PB_STATIC_ASSERT
-#define PB_STATIC_ASSERT(COND,MSG) typedef char PB_STATIC_ASSERT_MSG(MSG, __LINE__, __COUNTER__)[(COND)?1:-1];
-#define PB_STATIC_ASSERT_MSG(MSG, LINE, COUNTER) PB_STATIC_ASSERT_MSG_(MSG, LINE, COUNTER)
-#define PB_STATIC_ASSERT_MSG_(MSG, LINE, COUNTER) pb_static_assertion_##MSG##LINE##COUNTER
-#endif
-#else
-#define PB_STATIC_ASSERT(COND,MSG)
+#ifndef STATIC_ASSERT
+#define STATIC_ASSERT(COND,MSG) typedef char STATIC_ASSERT_MSG(MSG, __LINE__, __COUNTER__)[(COND)?1:-1];
+#define STATIC_ASSERT_MSG(MSG, LINE, COUNTER) STATIC_ASSERT_MSG_(MSG, LINE, COUNTER)
+#define STATIC_ASSERT_MSG_(MSG, LINE, COUNTER) static_assertion_##MSG##LINE##COUNTER
 #endif
 
 /* Number of required fields to keep track of. */
@@ -191,15 +187,12 @@ typedef uint8_t pb_type_t;
  * and array counts.
  */
 #if defined(PB_FIELD_32BIT)
-#define PB_SIZE_MAX ((uint32_t)-1)
     typedef uint32_t pb_size_t;
     typedef int32_t pb_ssize_t;
 #elif defined(PB_FIELD_16BIT)
-#define PB_SIZE_MAX ((uint16_t)-1)
     typedef uint16_t pb_size_t;
     typedef int16_t pb_ssize_t;
 #else
-#define PB_SIZE_MAX ((uint8_t)-1)
     typedef uint8_t pb_size_t;
     typedef int8_t pb_ssize_t;
 #endif
@@ -213,8 +206,8 @@ typedef uint8_t pb_type_t;
  * PB_FIELD_32BIT.
  */
 PB_PACKED_STRUCT_START
-typedef struct pb_field_s pb_field_t;
-struct pb_field_s {
+typedef struct _pb_field_t pb_field_t;
+struct _pb_field_t {
     pb_size_t tag;
     pb_type_t type;
     pb_size_t data_offset; /* Offset of field data, relative to previous field. */
@@ -235,27 +228,27 @@ PB_PACKED_STRUCT_END
  * If you get errors here, it probably means that your stdint.h is not
  * correct for your platform.
  */
-PB_STATIC_ASSERT(sizeof(int8_t) == 1, INT8_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint8_t) == 1, UINT8_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(int16_t) == 2, INT16_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint16_t) == 2, UINT16_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(int32_t) == 4, INT32_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint32_t) == 4, UINT32_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(int64_t) == 8, INT64_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint64_t) == 8, UINT64_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(int8_t) == 1, INT8_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(uint8_t) == 1, UINT8_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(int16_t) == 2, INT16_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(uint16_t) == 2, UINT16_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(int32_t) == 4, INT32_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(uint32_t) == 4, UINT32_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(int64_t) == 8, INT64_T_WRONG_SIZE)
+STATIC_ASSERT(sizeof(uint64_t) == 8, UINT64_T_WRONG_SIZE)
 
 /* This structure is used for 'bytes' arrays.
  * It has the number of bytes in the beginning, and after that an array.
  * Note that actual structs used will have a different length of bytes array.
  */
-#define PB_BYTES_ARRAY_T(n) struct { pb_size_t size; uint8_t bytes[n]; }
+#define PB_BYTES_ARRAY_T(n) struct { size_t size; uint8_t bytes[n]; }
 #define PB_BYTES_ARRAY_T_ALLOCSIZE(n) ((size_t)n + offsetof(pb_bytes_array_t, bytes))
 
-struct pb_bytes_array_s {
-    pb_size_t size;
+struct _pb_bytes_array_t {
+    size_t size;
     uint8_t bytes[1];
 };
-typedef struct pb_bytes_array_s pb_bytes_array_t;
+typedef struct _pb_bytes_array_t pb_bytes_array_t;
 
 /* This structure is used for giving the callback function.
  * It is stored in the message structure and filled in by the method that
@@ -275,10 +268,10 @@ typedef struct pb_bytes_array_s pb_bytes_array_t;
  *
  * The callback can be null if you want to skip a field.
  */
-typedef struct pb_istream_s pb_istream_t;
-typedef struct pb_ostream_s pb_ostream_t;
-typedef struct pb_callback_s pb_callback_t;
-struct pb_callback_s {
+typedef struct _pb_istream_t pb_istream_t;
+typedef struct _pb_ostream_t pb_ostream_t;
+typedef struct _pb_callback_t pb_callback_t;
+struct _pb_callback_t {
 #ifdef PB_OLD_CALLBACK_STYLE
     /* Deprecated since nanopb-0.2.1 */
     union {
@@ -311,9 +304,9 @@ typedef enum {
  * if you want to catch all unknown fields, you can also create a custom
  * pb_extension_type_t with your own callback.
  */
-typedef struct pb_extension_type_s pb_extension_type_t;
-typedef struct pb_extension_s pb_extension_t;
-struct pb_extension_type_s {
+typedef struct _pb_extension_type_t pb_extension_type_t;
+typedef struct _pb_extension_t pb_extension_t;
+struct _pb_extension_type_t {
     /* Called for each unknown field in the message.
      * If you handle the field, read off all of its data and return true.
      * If you do not handle the field, do not read anything and return true.
@@ -335,7 +328,7 @@ struct pb_extension_type_s {
     const void *arg;
 };
 
-struct pb_extension_s {
+struct _pb_extension_t {
     /* Type describing the extension field. Usually you'll initialize
      * this to a pointer to the automatically generated structure. */
     const pb_extension_type_t *type;
@@ -364,9 +357,6 @@ struct pb_extension_s {
 #       define pb_free(ptr) free(ptr)
 #   endif
 #endif
-
-/* This is used to inform about need to regenerate .pb.h/.pb.c files. */
-#define PB_PROTO_HEADER_VERSION 30
 
 /* These macros are used to declare pb_field_t's in the constant array. */
 /* Size of a structure member, in bytes. */
@@ -479,15 +469,26 @@ struct pb_extension_s {
  *                 SINT32, SINT64, STRING, UINT32, UINT64 or EXTENSION
  * - Field rules:  REQUIRED, OPTIONAL or REPEATED
  * - Allocation:   STATIC or CALLBACK
- * - Placement: FIRST or OTHER, depending on if this is the first field in structure.
  * - Message name
  * - Field name
  * - Previous field name (or field name again for first field)
  * - Pointer to default value or submsg fields.
  */
 
-#define PB_FIELD(tag, type, rules, allocation, placement, message, field, prevfield, ptr) \
-        PB_ ## rules ## _ ## allocation(tag, message, field, \
+#define PB_FIELD(tag, type, rules, allocation, message, field, prevfield, ptr) \
+    PB_ ## rules ## _ ## allocation(tag, message, field, \
+        PB_DATAOFFSET_CHOOSE(message, field, prevfield), \
+        PB_LTYPE_MAP_ ## type, ptr)
+
+/* This is a new version of the macro used by nanopb generator from
+ * version 0.2.3 onwards. It avoids the use of a ternary expression in
+ * the initialization, which confused some compilers.
+ *
+ * - Placement: FIRST or OTHER, depending on if this is the first field in structure.
+ *
+ */
+#define PB_FIELD2(tag, type, rules, allocation, placement, message, field, prevfield, ptr) \
+    PB_ ## rules ## _ ## allocation(tag, message, field, \
         PB_DATAOFFSET_ ## placement(message, field, prevfield), \
         PB_LTYPE_MAP_ ## type, ptr)
 
@@ -501,7 +502,7 @@ struct pb_extension_s {
 #ifdef PB_NO_ERRMSG
 #define PB_RETURN_ERROR(stream,msg) \
     do {\
-        PB_UNUSED(stream); \
+        UNUSED(stream); \
         return false; \
     } while(0)
 #define PB_GET_ERROR(stream) "(errmsg disabled)"

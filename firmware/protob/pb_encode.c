@@ -5,7 +5,6 @@
 
 #include "pb.h"
 #include "pb_encode.h"
-#include "pb_common.h"
 
 /* Use the GCC warn_unused_result attribute to check that all return values
  * are propagated correctly. On other compilers and gcc before 3.4.0 just
@@ -246,7 +245,7 @@ static bool checkreturn encode_basic_field(pb_ostream_t *stream,
             break;
         
         case PB_HTYPE_REPEATED:
-            if (!encode_array(stream, field, pData, *(const pb_size_t*)pSize, func))
+            if (!encode_array(stream, field, pData, *(const size_t*)pSize, func))
                 return false;
             break;
         
@@ -311,7 +310,7 @@ static bool checkreturn encode_extension_field(pb_ostream_t *stream,
     const pb_field_t *field, const void *pData)
 {
     const pb_extension_t *extension = *(const pb_extension_t* const *)pData;
-    PB_UNUSED(field);
+    UNUSED(field);
     
     while (extension)
     {
@@ -334,38 +333,42 @@ static bool checkreturn encode_extension_field(pb_ostream_t *stream,
  * Encode all fields *
  *********************/
 
-static void *remove_const(const void *p)
-{
-    /* Note: this casts away const, in order to use the common field iterator
-     * logic for both encoding and decoding. */
-    union {
-        void *p1;
-        const void *p2;
-    } t;
-    t.p2 = p;
-    return t.p1;
-}
-
 bool checkreturn pb_encode(pb_ostream_t *stream, const pb_field_t fields[], const void *src_struct)
 {
-    pb_field_iter_t iter;
-    if (!pb_field_iter_begin(&iter, fields, remove_const(src_struct)))
-        return true; /* Empty message type */
+    const pb_field_t *field = fields;
+    const void *pData = src_struct;
+    size_t prev_size = 0;
     
-    do {
-        if (PB_LTYPE(iter.pos->type) == PB_LTYPE_EXTENSION)
+    while (field->tag != 0)
+    {
+        pData = (const char*)pData + prev_size + field->data_offset;
+        if (PB_ATYPE(field->type) == PB_ATYPE_POINTER)
+            prev_size = sizeof(const void*);
+        else
+            prev_size = field->data_size;
+        
+        /* Special case for static arrays */
+        if (PB_ATYPE(field->type) == PB_ATYPE_STATIC &&
+            PB_HTYPE(field->type) == PB_HTYPE_REPEATED)
+        {
+            prev_size *= field->array_size;
+        }
+        
+        if (PB_LTYPE(field->type) == PB_LTYPE_EXTENSION)
         {
             /* Special case for the extension field placeholder */
-            if (!encode_extension_field(stream, iter.pos, iter.pData))
+            if (!encode_extension_field(stream, field, pData))
                 return false;
         }
         else
         {
             /* Regular field */
-            if (!encode_field(stream, iter.pos, iter.pData))
+            if (!encode_field(stream, field, pData))
                 return false;
         }
-    } while (pb_field_iter_next(&iter));
+    
+        field++;
+    }
     
     return true;
 }
@@ -599,13 +602,13 @@ static bool checkreturn pb_enc_svarint(pb_ostream_t *stream, const pb_field_t *f
 
 static bool checkreturn pb_enc_fixed64(pb_ostream_t *stream, const pb_field_t *field, const void *src)
 {
-    PB_UNUSED(field);
+    UNUSED(field);
     return pb_encode_fixed64(stream, src);
 }
 
 static bool checkreturn pb_enc_fixed32(pb_ostream_t *stream, const pb_field_t *field, const void *src)
 {
-    PB_UNUSED(field);
+    UNUSED(field);
     return pb_encode_fixed32(stream, src);
 }
 
@@ -630,6 +633,7 @@ static bool checkreturn pb_enc_bytes(pb_ostream_t *stream, const pb_field_t *fie
 
 static bool checkreturn pb_enc_string(pb_ostream_t *stream, const pb_field_t *field, const void *src)
 {
+    /* strnlen() is not always available, so just use a loop */
     size_t size = 0;
     size_t max_size = field->data_size;
     const char *p = (const char*)src;
@@ -643,7 +647,6 @@ static bool checkreturn pb_enc_string(pb_ostream_t *stream, const pb_field_t *fi
     }
     else
     {
-        /* strnlen() is not always available, so just use a loop */
         while (size < max_size && *p != '\0')
         {
             size++;
