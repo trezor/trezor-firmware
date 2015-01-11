@@ -23,6 +23,8 @@ CFLAGS   += $(OPTFLAGS) \
             -Werror \
             -I..
 
+CFLAGS += -DUSE_PUBKEY_VALIDATE=0
+
 all: xpubaddrgen
 
 OBJS = ../bip32.o ../ecdsa.o ../sha2.o ../bignum.o ../base58.o ../secp256k1.o ../ripemd160.o ../hmac.o ../rand.o
