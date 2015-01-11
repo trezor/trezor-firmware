@@ -29,7 +29,7 @@ int main(void)
 	uint32_t jobid, change, from, to;
 	int r;
 	for (;;) {
-		fgets(line, sizeof(line), stdin);
+		if (!fgets(line, sizeof(line), stdin)) break;
 		r = sscanf(line, "%u %s %u %u %u\n", &jobid, xpub, &change, &from, &to);
 		if (r < 1) {
 			printf("error\n");
