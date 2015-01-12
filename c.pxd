@@ -1,6 +1,6 @@
 from libc.stdint cimport uint32_t, uint8_t
 
-cdef extern from "../bip32.h":
+cdef extern from "bip32.h":
 
 	ctypedef struct HDNode:
 		uint8_t public_key[33]
@@ -17,6 +17,6 @@ cdef extern from "../bip32.h":
 
 	int hdnode_deserialize(const char *str, HDNode *node)
 
-cdef extern from "../ecdsa.h":
+cdef extern from "ecdsa.h":
 
 	void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr, int addrsize)
