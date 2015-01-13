@@ -3,7 +3,7 @@
 # Put this file to /lib/udev/rules.d/
 
 # TREZOR
-SUBSYSTEM=="usb", ATTR{idVendor}=="534c", ATTR{idProduct}=="0001", MODE="0666", GROUP="dialout", SYMLINK+="trezor%n"
+SUBSYSTEM=="usb", ATTR{idVendor}=="534c", ATTR{idProduct}=="0001", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="trezor%n"
 
 # TREZOR Raspberry Pi Shield
-SUBSYSTEM=="usb", ATTR{idVendor}=="10c4", ATTR{idProduct}=="ea80", MODE="0666", GROUP="dialout", SYMLINK+="trezor%n"
+SUBSYSTEM=="usb", ATTR{idVendor}=="10c4", ATTR{idProduct}=="ea80", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="trezor%n"
