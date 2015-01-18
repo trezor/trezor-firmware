@@ -222,9 +222,10 @@ void layoutAddress(const char *address)
 
 	if (side > 0 && side <= 29) {
 		oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
+		//not 100% sure why this is transponed
 		for (i = 0; i < side; i++) {
 			for (j = 0; j< side; j++) {
-				a = i * side + j;
+				a = j * side + i;
 				if (bitdata[a / 8] & (1 << (7 - a % 8))) {
 					oledClearPixel(2 + i * 2, 2 + j * 2);
 					oledClearPixel(3 + i * 2, 2 + j * 2);
