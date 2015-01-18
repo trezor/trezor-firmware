@@ -224,7 +224,7 @@ void layoutAddress(const char *address)
 		oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
 		for (i = 0; i < side; i++) {
 			for (j = 0; j< side; j++) {
-				a = i * side + j;
+				a = j * side + i;
 				if (bitdata[a / 8] & (1 << (7 - a % 8))) {
 					oledClearPixel(2 + i * 2, 2 + j * 2);
 					oledClearPixel(3 + i * 2, 2 + j * 2);
