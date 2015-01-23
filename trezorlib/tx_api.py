@@ -98,5 +98,5 @@ class TXAPITestnet(object):
 
     @filecache(MONTH)
     def get_tx(self, txhash):
-        url = 'https://insight.bitpay.com/api/tx/%s' % txhash
+        url = 'https://test-insight.bitpay.com/api/tx/%s' % txhash
         return insight_tx(url)
