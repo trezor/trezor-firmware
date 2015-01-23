@@ -25,6 +25,7 @@
 #define __BASE58_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 int base58_encode_check(const uint8_t *data, int len, char *str, int strsize);
 int base58_decode_check(const char *str, uint8_t *data, int datalen);
