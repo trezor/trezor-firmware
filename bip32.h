@@ -55,4 +55,7 @@ void hdnode_serialize_private(const HDNode *node, char *str, int strsize);
 
 int hdnode_deserialize(const char *str, HDNode *node);
 
+// Private
+void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize);
+
 #endif

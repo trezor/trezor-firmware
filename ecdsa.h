@@ -56,4 +56,8 @@ int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest);
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 
+// Private
+int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
+int generate_k_random(bignum256 *k);
+
 #endif
