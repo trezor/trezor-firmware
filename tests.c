@@ -427,8 +427,6 @@ START_TEST(test_bip32_compare)
 }
 END_TEST
 
-int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);
-
 #define test_deterministic(KEY, MSG, K) do { \
 	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
 	res = generate_k_rfc6979(&k, fromhex(KEY), buf); \
