@@ -66,15 +66,11 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		// address_n provided-> change address -> calculate from address_n
 		if (in->address_n_count > 0) {
 			HDNode node;
-			uint32_t k;
 			memcpy(&node, root, sizeof(HDNode));
-			layoutProgressUpdate(true);
-			for (k = 0; k < in->address_n_count; k++) {
-				if (hdnode_private_ckd(&node, in->address_n[k]) == 0) {
-					return 0;
-				}
-				layoutProgressUpdate(true);
+			if (hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count) == 0) {
+				return 0;
 			}
+			layoutProgressUpdate(true);
 			ecdsa_get_address_raw(node.public_key, coin->address_type, addr_raw);
 		} else
 		if (in->has_address) { // address provided -> regular output

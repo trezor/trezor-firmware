@@ -100,19 +100,10 @@ const HDNode *fsm_getDerivedNode(uint32_t *address_n, size_t address_n_count)
 	if (!address_n || address_n_count == 0) {
 		return &node;
 	}
-	size_t i;
-	if (address_n_count > 3) {
-		layoutProgressSwipe("Preparing keys", 0);
-	}
-	for (i = 0; i < address_n_count; i++) {
-		if (hdnode_private_ckd(&node, address_n[i]) == 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
-			layoutHome();
-			return 0;
-		}
-		if (address_n_count > 3) {
-			layoutProgress("Preparing keys", 1000 * i / address_n_count);
-		}
+	if (hdnode_private_ckd_cached(&node, address_n, address_n_count) == 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
+		layoutHome();
+		return 0;
 	}
 	return &node;
 }

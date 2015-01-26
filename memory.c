@@ -32,8 +32,8 @@ void memory_protect(void)
 		return; // already set up correctly - bail out
 	}
 	flash_unlock_option_bytes();
-	//                                 WRP +    RDP
-	flash_program_option_bytes( 0xFFFC0000 + 0xCCFF);
+	//                                WRP +    RDP
+	flash_program_option_bytes(0xFFFC0000 + 0xCCFF);
 	flash_lock_option_bytes();
 }
 
