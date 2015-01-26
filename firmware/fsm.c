@@ -78,12 +78,23 @@ void fsm_sendFailure(FailureType code, const char *text)
 	msg_write(MessageType_MessageType_Failure, resp);
 }
 
+const CoinType *fsm_getCoin(const char *name)
+{
+	const CoinType *coin = coinByName(name);
+	if (!coin) {
+		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
+		layoutHome();
+		return 0;
+	}
+	return coin;
+}
+
 HDNode *fsm_getRootNode(void)
 {
 	static HDNode node;
 	if (!storage_getRootNode(&node)) {
-		layoutHome();
 		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled");
+		layoutHome();
 		return 0;
 	}
 	return &node;
@@ -351,14 +362,10 @@ void fsm_msgSignTx(SignTx *msg)
 		return;
 	}
 
+	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	if (!coin) return;
 	HDNode *node = fsm_getRootNode();
 	if (!node) return;
-	const CoinType *coin = coinByName(msg->coin_name);
-	if (!coin) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
-		layoutHome();
-		return;
-	}
 
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node);
 }
@@ -495,14 +502,10 @@ void fsm_msgGetAddress(GetAddress *msg)
 {
 	RESP_INIT(Address);
 
+	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	if (!coin) return;
 	HDNode *node = fsm_getRootNode();
 	if (!node) return;
-	const CoinType *coin = coinByName(msg->coin_name);
-	if (!coin) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
-		layoutHome();
-		return;
-	}
 	if (fsm_deriveKey(node, msg->address_n, msg->address_n_count) == 0) return;
 
 	if (msg->has_multisig) {
@@ -563,14 +566,10 @@ void fsm_msgSignMessage(SignMessage *msg)
 		return;
 	}
 
+	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	if (!coin) return;
 	HDNode *node = fsm_getRootNode();
 	if (!node) return;
-	const CoinType *coin = coinByName(msg->coin_name);
-	if (!coin) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
-		layoutHome();
-		return;
-	}
 	if (fsm_deriveKey(node, msg->address_n, msg->address_n_count) == 0) return;
 
 	layoutProgressSwipe("Signing", 0);

@@ -30,6 +30,7 @@ const CoinType coins[COINS_COUNT] = {
 
 const CoinType *coinByShortcut(const char *shortcut)
 {
+	if (!shortcut) return 0;
 	int i;
 	for (i = 0; i < COINS_COUNT; i++) {
 		if (strcmp(shortcut, coins[i].coin_shortcut) == 0) {
@@ -41,6 +42,7 @@ const CoinType *coinByShortcut(const char *shortcut)
 
 const CoinType *coinByName(const char *name)
 {
+	if (!name) return 0;
 	int i;
 	for (i = 0; i < COINS_COUNT; i++) {
 		if (strcmp(name, coins[i].coin_name) == 0) {
