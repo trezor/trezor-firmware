@@ -25,6 +25,7 @@
 #define __BIP32_H__
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "options.h"
 
 typedef struct {
