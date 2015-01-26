@@ -25,7 +25,7 @@
 #include "bip32.h"
 #include "types.pb.h"
 
-void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinType *_coin, HDNode *_root);
+void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinType *_coin, const HDNode *_root);
 void signing_abort(void);
 void signing_txack(TransactionType *tx);
 
