@@ -4,6 +4,7 @@ import time
 from trezorlib import tools
 
 class TestBip32Speed(common.TrezorTest):
+
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -34,12 +35,12 @@ class TestBip32Speed(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         start = time.time()
-        for x in range(2):
+        for x in range(10):
             self.client.get_address('Bitcoin', [x, 2, 3, 4, 5, 6, 7, 8])
         nocache_time = time.time() - start
 
         start = time.time()
-        for x in range(2):
+        for x in range(10):
             self.client.get_address('Bitcoin', [1, 2, 3, 4, 5, 6, 7, x])
         cache_time = time.time() - start
 
