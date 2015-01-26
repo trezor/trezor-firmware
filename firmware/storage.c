@@ -130,6 +130,7 @@ void storage_commit(void)
 	uint32_t *w;
 	// backup meta
 	memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
+	flash_clear_status_flags();
 	flash_unlock();
 	// erase storage
 	for (i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
@@ -145,6 +146,11 @@ void storage_commit(void)
 		flash_program_word(FLASH_META_START + i * 4, *w);
 	}
 	flash_lock();
+	// flash operation failed
+	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
+		layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
+		for (;;) { }
+	}
 }
 
 void storage_loadDevice(LoadDevice *msg)
