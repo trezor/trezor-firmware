@@ -25,6 +25,7 @@
 #define __BIP32_H__
 
 #include <stdint.h>
+#include "options.h"
 
 typedef struct {
 	uint32_t depth;
@@ -46,6 +47,12 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out);
 int hdnode_private_ckd(HDNode *inout, uint32_t i);
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i);
+
+#if USE_BIP32_CACHE
+
+int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count);
+
+#endif
 
 void hdnode_fill_public_key(HDNode *node);
 

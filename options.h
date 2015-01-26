@@ -53,4 +53,11 @@
 #define USE_PUBKEY_VALIDATE 1
 #endif
 
+// implement BIP32 caching
+#ifndef USE_BIP32_CACHE
+#define USE_BIP32_CACHE 1
+#define BIP32_CACHE_SIZE 10
+#define BIP32_CACHE_MAXDEPTH 8
+#endif
+
 #endif

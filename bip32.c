@@ -22,6 +22,7 @@
  */
 
 #include <string.h>
+#include <stdbool.h>
 
 #include "bignum.h"
 #include "hmac.h"
@@ -175,6 +176,73 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 
 	return 1;
 }
+
+#if USE_BIP32_CACHE
+
+static bool private_ckd_cache_root_set = false;
+static HDNode private_ckd_cache_root;
+static int private_ckd_cache_index = 0;
+
+static struct {
+	bool set;
+	size_t depth;
+	uint32_t i[BIP32_CACHE_MAXDEPTH];
+	HDNode node;
+} private_ckd_cache[BIP32_CACHE_SIZE];
+
+int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
+{
+	if (i_count == 0) {
+		return 1;
+	}
+	if (i_count == 1) {
+		if (hdnode_private_ckd(inout, i[0]) == 0) return 0;
+		return 1;
+	}
+
+	bool found = false;
+	// if root is not set or not the same
+	if (!private_ckd_cache_root_set || memcmp(&private_ckd_cache_root, inout, sizeof(HDNode)) != 0) {
+		// clear the cache
+		private_ckd_cache_index = 0;
+		memset(private_ckd_cache, 0, sizeof(private_ckd_cache));
+		// setup new root
+		memcpy(&private_ckd_cache_root, inout, sizeof(HDNode));
+		private_ckd_cache_root_set = true;
+	} else {
+		// try to find parent
+		int j;
+		for (j = 0; j < BIP32_CACHE_SIZE; j++) {
+			if (private_ckd_cache[j].set &&
+			    private_ckd_cache[j].depth == i_count - 1 &&
+			    memcmp(private_ckd_cache[j].i, i, (i_count - 1) * sizeof(uint32_t)) == 0) {
+				memcpy(inout, &(private_ckd_cache[j].node), sizeof(HDNode));
+				found = true;
+				break;
+			}
+		}
+	}
+
+	// else derive parent
+	if (!found) {
+		size_t k;
+		for (k = 0; k < i_count - 1; k++) {
+			if (hdnode_private_ckd(inout, i[k]) == 0) return 0;
+		}
+		// and save it
+		private_ckd_cache[private_ckd_cache_index].set = true;
+		private_ckd_cache[private_ckd_cache_index].depth = i_count - 1;
+		memcpy(private_ckd_cache[private_ckd_cache_index].i, i, (i_count - 1) * sizeof(uint32_t));
+		memcpy(&(private_ckd_cache[private_ckd_cache_index].node), inout, sizeof(HDNode));
+		private_ckd_cache_index = (private_ckd_cache_index + 1) % BIP32_CACHE_SIZE;
+	}
+
+	if (hdnode_private_ckd(inout, i[i_count - 1]) == 0) return 0;
+
+	return 1;
+}
+
+#endif
 
 void hdnode_fill_public_key(HDNode *node)
 {

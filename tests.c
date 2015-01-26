@@ -427,6 +427,52 @@ START_TEST(test_bip32_compare)
 }
 END_TEST
 
+START_TEST(test_bip32_cache)
+{
+	HDNode node1, node2;
+	int r;
+
+	// test 1 .. 8
+	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
+	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
+
+	uint32_t i;
+	for (i = 1; i < 8; i++) {
+		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
+	}
+	r = hdnode_private_ckd(&node1, 8); ck_assert_int_eq(r, 1);
+
+	uint32_t ii[] = {1, 2, 3, 4, 5, 6, 7, 8};
+	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
+	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
+
+	// test 1 .. 7, 20
+	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
+	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
+
+	for (i = 1; i < 8; i++) {
+		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
+	}
+	r = hdnode_private_ckd(&node1, 20); ck_assert_int_eq(r, 1);
+
+	ii[7] = 20;
+	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
+	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
+
+	// test different root node
+	hdnode_from_seed(fromhex("000000002ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
+	hdnode_from_seed(fromhex("000000002ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
+
+	for (i = 1; i < 8; i++) {
+		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
+	}
+	r = hdnode_private_ckd(&node1, 20); ck_assert_int_eq(r, 1);
+
+	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
+	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
+}
+END_TEST
+
 #define test_deterministic(KEY, MSG, K) do { \
 	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
 	res = generate_k_rfc6979(&k, fromhex(KEY), buf); \
@@ -1139,6 +1185,7 @@ Suite *test_suite(void)
 	Suite *s = suite_create("trezor-crypto");
 	TCase *tc;
 
+
 	tc = tcase_create("base58");
 	tcase_add_test(tc, test_base58);
 	suite_add_tcase(s, tc);
@@ -1147,6 +1194,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_vector_1);
 	tcase_add_test(tc, test_bip32_vector_2);
 	tcase_add_test(tc, test_bip32_compare);
+	tcase_add_test(tc, test_bip32_cache);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rfc6979");
