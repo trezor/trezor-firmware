@@ -30,5 +30,24 @@ class TestBip32Speed(common.TrezorTest):
             print "DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay
             self.assertLessEqual(delay, expected)
 
+    def test_cache(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        start = time.time()
+        for x in range(2):
+            self.client.get_address('Bitcoin', [x, 2, 3, 4, 5, 6, 7, 8])
+        nocache_time = time.time() - start
+
+        start = time.time()
+        for x in range(2):
+            self.client.get_address('Bitcoin', [1, 2, 3, 4, 5, 6, 7, x])
+        cache_time = time.time() - start
+
+        print "NOCACHE TIME", nocache_time
+        print "CACHED TIME", cache_time
+
+        # Cached time expected to be at least 2x faster
+        self.assertLessEqual(cache_time, nocache_time / 2.)
+
 if __name__ == '__main__':
     unittest.main()
