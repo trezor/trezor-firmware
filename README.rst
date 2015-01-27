@@ -57,14 +57,7 @@ How to install (Windows)
 
 How to install (Debian-Ubuntu)
 ------------------------------
-* sudo apt-get install python-dev python-setuptools cython
+* sudo apt-get install python-dev python-setuptools cython libusb-1.0-0-dev libudev-dev
 * git clone https://github.com/trezor/python-trezor.git
 * cd python-trezor
 * python setup.py install (or develop)
-
-Internal note:
---------------
-* Clone cython-hidapi from github.com/trezor/cython-hidapi
-* Go to cython-hidapi directory
-* Run "git submodule init" in Git Bash (TortoiseGit)
-* Run "git submodule update" in Git Bash (TortoiseGit)
