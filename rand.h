@@ -24,6 +24,7 @@
 #ifndef __RAND_H__
 #define __RAND_H__
 
+#include <stdlib.h>
 #include <stdint.h>
 
 void init_rand(void);
