@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='trezor',
-    version='0.6.0',
+    version='0.6.1',
     author='Bitcoin TREZOR',
     author_email='info@bitcointrezor.com',
     description='Python library for communicating with TREZOR Bitcoin Hardware Wallet',
@@ -31,7 +31,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     classifiers=[
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: POSIX :: Linux',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
