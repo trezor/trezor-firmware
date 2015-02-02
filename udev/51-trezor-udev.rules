@@ -7,3 +7,5 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="534c", ATTR{idProduct}=="0001", TAG+="uaccess
 
 # TREZOR Raspberry Pi Shield
 SUBSYSTEM=="usb", ATTR{idVendor}=="10c4", ATTR{idProduct}=="ea80", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="trezor%n"
+
+# use MODE="0666", GROUP="dialout", instead of TAG+= when using a distribution with obsolete udev
