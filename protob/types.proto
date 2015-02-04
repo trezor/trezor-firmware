@@ -48,6 +48,7 @@ enum OutputScriptType {
 	PAYTOADDRESS = 0;
 	PAYTOSCRIPTHASH = 1;
 	PAYTOMULTISIG = 2;
+	PAYTOOPRETURN = 3;
 }
 
 /**
@@ -166,7 +167,8 @@ message TxOutputType {
 	repeated uint32 address_n = 2;			// BIP-32 path to derive the key from master node; has higher priority than "address"
 	required uint64 amount = 3;			// amount to spend in satoshis
 	required OutputScriptType script_type = 4;	// output script type
-	optional MultisigRedeemScriptType multisig = 5; // Defines multisig address; script_type must be PAYTOMULTISIG
+	optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
+	optional bytes op_return_data = 6;		// defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
 }
 
 /**
