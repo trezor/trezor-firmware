@@ -57,11 +57,20 @@ void layoutHome(void)
 		oledSwipeLeft();
 	}
 	const char *label = storage_getLabel();
-	if (label && strlen(label) > 0) {
-		oledDrawBitmap(44, 4, &bmp_logo48);
-		oledDrawStringCenter(OLED_HEIGHT - 8, label);
+	const uint8_t *homescreen = storage_getHomescreen();
+	if (homescreen) {
+		BITMAP b;
+		b.width = 128;
+		b.height = 64;
+		b.data = homescreen;
+		oledDrawBitmap(0, 0, &b);
 	} else {
-		oledDrawBitmap(40, 0, &bmp_logo64);
+		if (label && strlen(label) > 0) {
+			oledDrawBitmap(44, 4, &bmp_logo48);
+			oledDrawStringCenter(OLED_HEIGHT - 8, label);
+		} else {
+			oledDrawBitmap(40, 0, &bmp_logo64);
+		}
 	}
 	oledRefresh();
 }

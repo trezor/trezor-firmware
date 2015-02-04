@@ -220,6 +220,19 @@ void storage_setPassphraseProtection(bool passphrase_protection)
 	storage.passphrase_protection = passphrase_protection;
 }
 
+void storage_setHomescreen(const uint8_t *data, uint32_t size)
+{
+	if (data && size == 1024) {
+		storage.has_homescreen = true;
+		memcpy(storage.homescreen.bytes, data, size);
+		storage.homescreen.size = size;
+	} else {
+		storage.has_homescreen = false;
+		memset(storage.homescreen.bytes, 0, sizeof(storage.homescreen.bytes));
+		storage.homescreen.size = 0;
+	}
+}
+
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
 	layoutProgress("Waking up", 1000 * iter / total);
@@ -283,6 +296,11 @@ const char *storage_getLabel(void)
 const char *storage_getLanguage(void)
 {
 	return storage.has_language ? storage.language : 0;
+}
+
+const uint8_t *storage_getHomescreen(void)
+{
+	return (storage.has_homescreen && storage.homescreen.size == 1024) ? storage.homescreen.bytes : 0;
 }
 
 bool storage_isPinCorrect(const char *pin)

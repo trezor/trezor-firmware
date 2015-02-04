@@ -12,6 +12,11 @@ extern "C" {
 
 /* Enum definitions */
 /* Struct definitions */
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} Storage_homescreen_t;
+
 typedef struct _Storage {
     uint32_t version;
     bool has_node;
@@ -30,13 +35,15 @@ typedef struct _Storage {
     char label[33];
     bool has_imported;
     bool imported;
+    bool has_homescreen;
+    Storage_homescreen_t homescreen;
 } Storage;
 
 /* Default values for struct fields */
 
 /* Initializer values for message structs */
-#define Storage_init_default                     {0, false, HDNodeType_init_default, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0}
-#define Storage_init_zero                        {0, false, HDNodeType_init_zero, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0}
+#define Storage_init_default                     {0, false, HDNodeType_init_default, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}}
+#define Storage_init_zero                        {0, false, HDNodeType_init_zero, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Storage_version_tag                      1
@@ -48,12 +55,13 @@ typedef struct _Storage {
 #define Storage_language_tag                     7
 #define Storage_label_tag                        8
 #define Storage_imported_tag                     9
+#define Storage_homescreen_tag                   10
 
 /* Struct field encoding specification for nanopb */
-extern const pb_field_t Storage_fields[10];
+extern const pb_field_t Storage_fields[11];
 
 /* Maximum encoded size of messages (where known) */
-#define Storage_size                             (332 + HDNodeType_size)
+#define Storage_size                             (1359 + HDNodeType_size)
 
 #ifdef __cplusplus
 } /* extern "C" */

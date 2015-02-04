@@ -43,6 +43,9 @@ void storage_setLanguage(const char *lang);
 
 void storage_setPassphraseProtection(bool passphrase_protection);
 
+const uint8_t *storage_getHomescreen(void);
+void storage_setHomescreen(const uint8_t *data, uint32_t size);
+
 void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
 

@@ -463,7 +463,15 @@ void fsm_msgApplySettings(ApplySettings *msg)
 			return;
 		}
 	}
-	if (!msg->has_label && !msg->has_language && !msg->has_use_passphrase) {
+	if (msg->has_homescreen) {
+		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change the home", "screen ?", NULL, NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			layoutHome();
+			return;
+		}
+	}
+	if (!msg->has_label && !msg->has_language && !msg->has_use_passphrase && !msg->has_homescreen) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No setting provided");
 		return;
 	}
@@ -479,6 +487,9 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	}
 	if (msg->has_use_passphrase) {
 		storage_setPassphraseProtection(msg->use_passphrase);
+	}
+	if (msg->has_homescreen) {
+		storage_setHomescreen(msg->homescreen.bytes, msg->homescreen.size);
 	}
 	storage_commit();
 	fsm_sendSuccess("Settings applied");

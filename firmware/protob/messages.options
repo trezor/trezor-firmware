@@ -8,6 +8,7 @@ Features.bootloader_hash		max_size:32
 
 ApplySettings.language			max_size:17
 ApplySettings.label			max_size:33
+ApplySettings.homescreen		max_size:1024
 
 Ping.message				max_size:256
 
