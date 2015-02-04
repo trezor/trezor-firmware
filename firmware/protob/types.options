@@ -13,6 +13,7 @@ TxInputType.script_sig			max_size:1650
 
 TxOutputType.address			max_size:36
 TxOutputType.address_n			max_count:8
+TxOutputType.op_return_data		max_size:80
 
 TxOutputBinType.script_pubkey		max_size:520
 

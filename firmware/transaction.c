@@ -146,6 +146,16 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		return 23;
 	}
 
+	if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
+		if (in->amount != 0) return 0; // only 0 satoshi allowed for OP_RETURN
+		uint32_t r = 0;
+		out->script_pubkey.bytes[0] = 0x6A; r++; // OP_RETURN
+		r += op_push(in->op_return_data.size, out->script_pubkey.bytes + r);
+		memcpy(out->script_pubkey.bytes + r, in->op_return_data.bytes, in->op_return_data.size); r += in->op_return_data.size;
+		out->script_pubkey.size = r;
+		return r;
+	}
+
 	return 0;
 }
 

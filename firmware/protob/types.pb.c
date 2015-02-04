@@ -52,12 +52,13 @@ const pb_field_t TxInputType_fields[8] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t TxOutputType_fields[6] = {
+const pb_field_t TxOutputType_fields[7] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, TxOutputType, address, address, 0),
     PB_FIELD2(  2, UINT32  , REPEATED, STATIC  , OTHER, TxOutputType, address_n, address, 0),
     PB_FIELD2(  3, UINT64  , REQUIRED, STATIC  , OTHER, TxOutputType, amount, address_n, 0),
     PB_FIELD2(  4, ENUM    , REQUIRED, STATIC  , OTHER, TxOutputType, script_type, amount, 0),
     PB_FIELD2(  5, MESSAGE , OPTIONAL, STATIC  , OTHER, TxOutputType, multisig, script_type, &MultisigRedeemScriptType_fields),
+    PB_FIELD2(  6, BYTES   , OPTIONAL, STATIC  , OTHER, TxOutputType, op_return_data, multisig, 0),
     PB_LAST_FIELD
 };
 

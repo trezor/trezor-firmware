@@ -126,7 +126,7 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 		"Really send",
 		str_out,
 		"from your wallet?",
-		"Fee will be",
+		"Fee included:",
 		str_fee,
 		NULL
 	);

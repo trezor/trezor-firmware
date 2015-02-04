@@ -480,7 +480,7 @@ void signing_txack(TransactionType *tx)
 						}
 					}
 					// last confirmation
-					layoutConfirmTx(coin, to_spend - change_spend - fee, fee);
+					layoutConfirmTx(coin, to_spend - change_spend, fee);
 					if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 						fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
 						signing_abort();
