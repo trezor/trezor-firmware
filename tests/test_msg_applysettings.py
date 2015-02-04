@@ -62,5 +62,15 @@ class TestMsgApplysettings(common.TrezorTest):
 
         self.assertEqual(self.client.features.passphrase_protection, True)
 
+    def test_apply_homescreen(self):
+        self.setup_mnemonic_pin_passphrase()
+
+        with self.client:
+            self.client.set_expected_responses([proto.ButtonRequest(),
+                                                proto.PinMatrixRequest(),
+                                                proto.Success(),
+                                                proto.Features()])
+            self.client.apply_settings(homescreen=1024*'\xf0')
+
 if __name__ == '__main__':
     unittest.main()

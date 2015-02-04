@@ -417,7 +417,7 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def apply_settings(self, label=None, language=None, use_passphrase=None):
+    def apply_settings(self, label=None, language=None, use_passphrase=None, homescreen=None):
         settings = proto.ApplySettings()
         if label != None:
             settings.label = label
@@ -425,6 +425,8 @@ class ProtocolMixin(object):
             settings.language = language
         if use_passphrase != None:
             settings.use_passphrase = use_passphrase
+        if homescreen != None:
+            settings.homescreen = homescreen
 
         out = self.call(settings)
         self.init_device()  # Reload Features
