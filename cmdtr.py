@@ -112,6 +112,23 @@ class Commands(object):
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
 
+    def set_homescreen(self,args):
+        if args.filename:
+            from PIL import Image
+            im = Image.open(args.filename)
+            if im.size != (128,64):
+                raise Exception('Wrong size of the image')
+            im = im.convert('1')
+            pix = im.load()
+            img = ''
+            for j in range(64):
+                for i in range(128):
+                    img += '1' if pix[i, j] else '0'
+            img = ''.join(chr(int(img[i:i + 8], 2)) for i in range(0, len(img), 8))
+        else:
+            img = '\x00'
+        return self.client.apply_settings(homescreen=img)
+
     def clear_session(self, args):
         return self.client.clear_session()
 
@@ -202,6 +219,7 @@ class Commands(object):
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
     set_label.help = 'Set new wallet label'
+    set_homescreen.help = 'Set new homescreen'
     clear_session.help = 'Clear session (remove cached PIN, passphrase, etc.)'
     change_pin.help = 'Change new PIN or remove existing'
     list_coins.help = 'List all supported coin types by the device'
@@ -243,6 +261,9 @@ class Commands(object):
 #        (('-c', '--clear'), {'action': 'store_true', 'default': False})
     )
 
+    set_homescreen.arguments = (
+        (('-f', '--filename',), {'type': str, 'default': ''}),
+    )
     change_pin.arguments = (
          (('-r', '--remove'), {'action': 'store_true', 'default': False}),
     )
