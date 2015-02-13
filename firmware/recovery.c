@@ -40,7 +40,7 @@ void next_word(void) {
 	word_pos = word_order[word_index];
 	if (word_pos == 0) {
 		const char **wl = mnemonic_wordlist();
-		strlcpy(fake_word, wl[random32() & 0x7FF], sizeof(fake_word));
+		strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
 		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the word", NULL, fake_word, NULL, "on your computer", NULL);
 	} else {
 		fake_word[0] = 0;
@@ -89,21 +89,14 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	storage_setLanguage(language);
 	storage_setLabel(label);
 
-	uint32_t i, j, k;
-	char t;
+	uint32_t i;
 	for (i = 0; i < word_count; i++) {
 		word_order[i] = i + 1;
 	}
 	for (i = word_count; i < 24; i++) {
 		word_order[i] = 0;
 	}
-	for (i = 0; i < 10000; i++) {
-		j = random32() % 24;
-		k = random32() % 24;
-		t = word_order[j];
-		word_order[j] = word_order[k];
-		word_order[k] = t;
-	}
+	random_permute(word_order, 24);
 	awaiting_word = true;
 	word_index = 0;
 	next_word();

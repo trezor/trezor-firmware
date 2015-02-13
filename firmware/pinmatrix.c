@@ -49,20 +49,12 @@ void pinmatrix_draw(const char *text)
 
 void pinmatrix_start(const char *text)
 {
-	int i, j, k;
-	char t;
-
+	int i;
 	for (i = 0; i < 9; i++) {
 		pinmatrix_perm[i] = '1' + i;
 	}
 	pinmatrix_perm[9] = 0;
-	for (i = 0; i < 10000; i++) {
-		j = random32() % 9;
-		k = random32() % 9;
-		t = pinmatrix_perm[j];
-		pinmatrix_perm[j] = pinmatrix_perm[k];
-		pinmatrix_perm[k] = t;
-	}
+	random_permute(pinmatrix_perm, 9);
 	pinmatrix_draw(text);
 }
 
