@@ -207,11 +207,25 @@ void oledDrawChar(int x, int y, char c)
 	}
 }
 
+char oledConvertChar(const char c) {
+	uint8_t a = c;
+	if (a < 0x80) return c;
+	// UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
+	// bytes 11xxxxxx are first byte of UTF-8 characters
+	// bytes 10xxxxxx are successive UTF-8 characters
+	if (a >= 0xC0) return '_';
+	return 0;
+}
+
 int oledStringWidth(const char *text) {
 	if (!text) return 0;
 	int l = 0;
+	char c;
 	for (; *text; text++) {
-		l += fontCharWidth(*text) + 1;
+		c = oledConvertChar(*text);
+		if (c) {
+			l += fontCharWidth(c) + 1;
+		}
 	}
 	return l;
 }
@@ -220,9 +234,13 @@ void oledDrawString(int x, int y, const char* text)
 {
 	if (!text) return;
 	int l = 0;
+	char c;
 	for (; *text; text++) {
-		oledDrawChar(x + l, y, *text);
-		l += fontCharWidth(*text) + 1;
+		c = oledConvertChar(*text);
+		if (c) {
+			oledDrawChar(x + l, y, c);
+			l += fontCharWidth(c) + 1;
+		}
 	}
 }
 
