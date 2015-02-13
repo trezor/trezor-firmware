@@ -100,7 +100,7 @@ const uint8_t *font_data[256] = {
 	/* 0x60 ` */ (uint8_t *)"\x02\x80\x40",
 	/* 0x61 a */ (uint8_t *)"\x05\x04\x2e\x2a\x3e\x1e",
 	/* 0x62 b */ (uint8_t *)"\x05\xfe\xfe\x22\x3e\x1c",
-	/* 0x63 c */ (uint8_t *)"\x04\x1c\x3e\x22\x22",
+	/* 0x63 c */ (uint8_t *)"\x05\x1c\x3e\x22\x22\x14",
 	/* 0x64 d */ (uint8_t *)"\x05\x1c\x3e\x22\xfe\xfe",
 	/* 0x65 e */ (uint8_t *)"\x05\x1c\x3e\x2a\x3a\x1a",
 	/* 0x66 f */ (uint8_t *)"\x03\x7e\xfe\xa0",
