@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define FONT_START 32
-#define FONT_END 128
+#define FONT_END 132
 #define FONT_HEIGHT 8
 
 int fontCharWidth(char c);
