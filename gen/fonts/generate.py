@@ -20,12 +20,15 @@ class Img(object):
 
 img = Img('font.png')
 cur = ''
+idx = 0
 
 for i in range(img.w):
     if img.pixel(i, 0) == None:
         cur = '\\x%02x' % (len(cur) / 4) + cur
-        print '\t(uint8_t *)"%s",' % cur
+        ch = chr(idx) if idx >= 32 and idx <= 126 else '_'
+        print '\t/* 0x%02x %c */ (uint8_t *)"%s",' % (idx, ch , cur)
         cur = ''
+        idx += 1
         continue
     val = img.pixel(i, 0) + img.pixel(i, 1) + img.pixel(i, 2) + img.pixel(i, 3) + img.pixel(i, 4) + img.pixel(i, 5) + img.pixel(i, 6) + img.pixel(i, 7)
     cur += '\\x%02x' % int(val, 2)

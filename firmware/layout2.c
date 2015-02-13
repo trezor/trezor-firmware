@@ -252,9 +252,9 @@ void layoutAddress(const char *address)
 	oledDrawString(68, 3 * 9, str[3]);
 
 	static const char *btnYes = "Continue";
-	oledDrawString(OLED_WIDTH - fontCharWidth('}') - 1, OLED_HEIGHT - 8, "}");
-	oledDrawString(OLED_WIDTH - fontStringWidth(btnYes) - fontCharWidth('}') - 3, OLED_HEIGHT - 8, btnYes);
-	oledInvert(OLED_WIDTH - fontStringWidth(btnYes) - fontCharWidth('}') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+	oledDrawString(OLED_WIDTH - fontCharWidth('\xff') - 1, OLED_HEIGHT - 8, "\xff");
+	oledDrawString(OLED_WIDTH - oledStringWidth(btnYes) - fontCharWidth('\xff') - 3, OLED_HEIGHT - 8, btnYes);
+	oledInvert(OLED_WIDTH - oledStringWidth(btnYes) - fontCharWidth('\xff') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
 
 	oledRefresh();
 }

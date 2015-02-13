@@ -39,6 +39,7 @@ const uint8_t *oledGetBuffer(void);
 void oledDrawPixel(int x, int y);
 void oledClearPixel(int x, int y);
 void oledDrawChar(int x, int y, char c);
+int oledStringWidth(const char *text);
 void oledDrawString(int x, int y, const char* text);
 void oledDrawStringCenter(int y, const char* text);
 void oledDrawStringRight(int x, int y, const char* text);

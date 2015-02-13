@@ -189,51 +189,52 @@ void oledClearPixel(int x, int y)
 
 void oledDrawChar(int x, int y, char c)
 {
-	uint8_t width, *column;
+	int char_width;
+	const uint8_t *char_data;
 
 	if ((x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
 
-	if (c < FONT_START) {
-		c = ' ';
-	}
-
-	if (c > FONT_END) {
-		c = '_';
-	}
-
-	width = font_data[(int)(c - FONT_START)][0];
-	column = (uint8_t *)(font_data[(int)(c - FONT_START)] + 1);
+	char_width = fontCharWidth(c);
+	char_data = fontCharData(c);
 
 	int xoffset, yoffset;
-	for (xoffset = 0; xoffset < width; xoffset++) {
+	for (xoffset = 0; xoffset < char_width; xoffset++) {
 		for (yoffset = 0; yoffset < FONT_HEIGHT; yoffset++) {
-			if (column[xoffset] & (1 << (FONT_HEIGHT - 1 - yoffset))) {
+			if (char_data[xoffset] & (1 << (FONT_HEIGHT - 1 - yoffset))) {
 				oledDrawPixel(x + xoffset, y + yoffset);
 			}
 		}
 	}
 }
 
+int oledStringWidth(const char *text) {
+	if (!text) return 0;
+	int l = 0;
+	for (; *text; text++) {
+		l += fontCharWidth(*text) + 1;
+	}
+	return l;
+}
+
 void oledDrawString(int x, int y, const char* text)
 {
 	if (!text) return;
-	const char *c;
 	int l = 0;
-	for (c = text; *c; c++) {
-		oledDrawChar(x + l, y, *c);
-		l += fontCharWidth(*c) + 1;
+	for (; *text; text++) {
+		oledDrawChar(x + l, y, *text);
+		l += fontCharWidth(*text) + 1;
 	}
 }
 
 void oledDrawStringCenter(int y, const char* text)
 {
-	int x = ( OLED_WIDTH - fontStringWidth(text) ) / 2;
+	int x = ( OLED_WIDTH - oledStringWidth(text) ) / 2;
 	oledDrawString(x, y, text);
 }
 
 void oledDrawStringRight(int x, int y, const char* text)
 {
-	x -= fontStringWidth(text);
+	x -= oledStringWidth(text);
 	oledDrawString(x, y, text);
 }
 
