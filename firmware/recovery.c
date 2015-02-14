@@ -39,7 +39,7 @@ static char words[24][12];
 void next_word(void) {
 	word_pos = word_order[word_index];
 	if (word_pos == 0) {
-		const char **wl = mnemonic_wordlist();
+		const char * const *wl = mnemonic_wordlist();
 		strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
 		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the word", NULL, fake_word, NULL, "on your computer", NULL);
 	} else {
@@ -119,7 +119,7 @@ void recovery_word(const char *word)
 		}
 	} else { // real word
 		if (enforce_wordlist) { // check if word is valid
-			const char **wl = mnemonic_wordlist();
+			const char * const *wl = mnemonic_wordlist();
 			bool found = false;
 			while (*wl) {
 				if (strcmp(word, *wl) == 0) {
