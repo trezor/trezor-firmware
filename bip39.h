@@ -36,6 +36,6 @@ int mnemonic_check(const char *mnemonic);
 
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total));
 
-const char **mnemonic_wordlist(void);
+const char * const *mnemonic_wordlist(void);
 
 #endif

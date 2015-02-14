@@ -155,7 +155,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	pbkdf2_hmac_sha512((const uint8_t *)mnemonic, strlen(mnemonic), salt, saltlen, BIP39_PBKDF2_ROUNDS, seed, 512 / 8, progress_callback);
 }
 
-const char **mnemonic_wordlist(void)
+const char * const *mnemonic_wordlist(void)
 {
 	return wordlist;
 }
