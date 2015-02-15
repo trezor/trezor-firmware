@@ -20,7 +20,7 @@ class TestProtectionLevels(common.TrezorTest):
                                       proto.PinMatrixRequest(),
                                       proto.Success(),
                                       proto.Features()])  # TrezorClient reinitializes device
-            self.client.apply_settings('nazdar', 'english')
+            self.client.apply_settings(label='nazdar')
 
     def test_change_pin(self):
         with self.client:
