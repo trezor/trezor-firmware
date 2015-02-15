@@ -5,7 +5,7 @@
 
 #define FONT_HEIGHT 8
 
-extern const uint8_t *font_data[256];
+extern const uint8_t * const font_data[256];
 
 int fontCharWidth(char c);
 const uint8_t *fontCharData(char c);

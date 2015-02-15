@@ -301,11 +301,11 @@ int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const ui
 
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t *hash)
 {
+	static const HDNodePathType *ptr[15], *swap;
 	const uint32_t n = multisig->pubkeys_count;
 	if (n > 15) {
 		return 0;
 	}
-	const HDNodePathType *ptr[n], *swap;
 	uint32_t i, j;
 	// check sanity
 	for (i = 0; i < n; i++) {

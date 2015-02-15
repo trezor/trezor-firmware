@@ -82,8 +82,20 @@ void layoutDialog(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, 
 void layoutProgressUpdate(bool refresh)
 {
 	static uint8_t step = 0;
-	const BITMAP *bmp_gears[4] = { &bmp_gears0, &bmp_gears1, &bmp_gears2, &bmp_gears3 };
-	oledDrawBitmap(40, 0, bmp_gears[step]);
+	switch (step) {
+		case 0:
+			oledDrawBitmap(40, 0, &bmp_gears0);
+			break;
+		case 1:
+			oledDrawBitmap(40, 0, &bmp_gears1);
+			break;
+		case 2:
+			oledDrawBitmap(40, 0, &bmp_gears2);
+			break;
+		case 3:
+			oledDrawBitmap(40, 0, &bmp_gears3);
+			break;
+	}
 	step = (step + 1) % 4;
 	if (refresh) {
 		oledRefresh();

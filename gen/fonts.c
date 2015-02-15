@@ -1,6 +1,6 @@
 #include "fonts.h"
 
-const uint8_t *font_data[256] = {
+const uint8_t * const font_data[256] = {
 	/* 0x00 _ */ (uint8_t *)"\x01\x00",
 	/* 0x01 _ */ (uint8_t *)"\x01\x00",
 	/* 0x02 _ */ (uint8_t *)"\x01\x00",
