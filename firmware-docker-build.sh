@@ -1,6 +1,6 @@
 #!/bin/bash
 IMAGETAG=trezor-mcu-build
-FIRMWARETAG=v1.3.0
+FIRMWARETAG=v1.3.1
 
 docker build -t $IMAGETAG .
 docker run -t -v $(pwd):/output $IMAGETAG /bin/sh -c "\
