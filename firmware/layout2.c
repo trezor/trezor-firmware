@@ -220,7 +220,7 @@ void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
-void layoutAddress(const char *address)
+void layoutAddress(const char *address, const char *desc)
 {
 	oledSwipeLeft();
 	layoutLast = layoutAddress;
@@ -246,10 +246,13 @@ void layoutAddress(const char *address)
 
 	const char **str = split_message((const uint8_t *)address, strlen(address), 9);
 
-	oledDrawString(68, 0 * 9, str[0]);
-	oledDrawString(68, 1 * 9, str[1]);
-	oledDrawString(68, 2 * 9, str[2]);
-	oledDrawString(68, 3 * 9, str[3]);
+	if (desc) {
+		oledDrawString(68, 0 * 9, desc);
+	}
+	oledDrawString(68, 1 * 9 + 4, str[0]);
+	oledDrawString(68, 2 * 9 + 4, str[1]);
+	oledDrawString(68, 3 * 9 + 4, str[2]);
+	oledDrawString(68, 4 * 9 + 4, str[3]);
 
 	static const char *btnYes = "Continue";
 	oledDrawString(OLED_WIDTH - fontCharWidth('\x06') - 1, OLED_HEIGHT - 8, "\x06");

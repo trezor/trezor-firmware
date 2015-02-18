@@ -526,7 +526,19 @@ void fsm_msgGetAddress(GetAddress *msg)
 	}
 
 	if (msg->has_show_display && msg->show_display) {
-		layoutAddress(resp->address);
+		char desc[16];
+		if (msg->has_multisig) {
+			strlcpy(desc, "Msig __ of __:", sizeof(desc));
+			const uint32_t m = msg->multisig.m;
+			const uint32_t n = msg->multisig.pubkeys_count;
+			desc[5] = (m < 10) ? ' ': ('0' + (m / 10));
+			desc[6] = '0' + (m % 10);
+			desc[11] = (n < 10) ? ' ': ('0' + (n / 10));
+			desc[12] = '0' + (n % 10);
+		} else {
+			strlcpy(desc, "Address:", sizeof(desc));
+		}
+		layoutAddress(resp->address, desc);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
 			layoutHome();

@@ -308,6 +308,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t 
 	}
 	uint32_t i, j;
 	// check sanity
+	if (!multisig->has_m || multisig->m < 1 || multisig->m > 15) return 0;
 	for (i = 0; i < n; i++) {
 		ptr[i] = &(multisig->pubkeys[i]);
 		if (!ptr[i]->node.has_public_key || ptr[i]->node.public_key.size != 33) return 0;
@@ -326,6 +327,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t 
 	// hash sorted nodes
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
+	sha256_Update(&ctx, (const uint8_t *)&(multisig->m), sizeof(uint32_t));
 	for (i = 0; i < n; i++) {
 		sha256_Update(&ctx, (const uint8_t *)&(ptr[i]->node.depth), sizeof(uint32_t));
 		sha256_Update(&ctx, (const uint8_t *)&(ptr[i]->node.fingerprint), sizeof(uint32_t));
@@ -333,6 +335,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t 
 		sha256_Update(&ctx, ptr[i]->node.chain_code.bytes, 32);
 		sha256_Update(&ctx, ptr[i]->node.public_key.bytes, 33);
 	}
+	sha256_Update(&ctx, (const uint8_t *)&n, sizeof(uint32_t));
 	sha256_Final(hash, &ctx);
 	layoutProgressUpdate(true);
 	return 1;
