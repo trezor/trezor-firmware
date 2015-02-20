@@ -102,6 +102,21 @@ typedef struct _HDNodeType {
     HDNodeType_public_key_t public_key;
 } HDNodeType;
 
+typedef struct _IdentityType {
+    bool has_proto;
+    char proto[9];
+    bool has_user;
+    char user[64];
+    bool has_host;
+    char host[64];
+    bool has_port;
+    char port[6];
+    bool has_path;
+    char path[256];
+    bool has_index;
+    uint32_t index;
+} IdentityType;
+
 typedef struct {
     size_t size;
     uint8_t bytes[520];
@@ -234,6 +249,7 @@ extern const uint32_t CoinType_address_type_default;
 extern const uint32_t CoinType_address_type_p2sh_default;
 extern const uint32_t TxInputType_sequence_default;
 extern const InputScriptType TxInputType_script_type_default;
+extern const uint32_t IdentityType_index_default;
 
 /* Initializer values for message structs */
 #define HDNodeType_init_default                  {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -246,6 +262,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define TransactionType_init_default             {false, 0, 0, {TxInputType_init_default}, 0, {TxOutputBinType_init_default}, false, 0, 0, {TxOutputType_init_default}, false, 0, false, 0}
 #define TxRequestDetailsType_init_default        {false, 0, false, {0, {0}}}
 #define TxRequestSerializedType_init_default     {false, 0, false, {0, {0}}, false, {0, {0}}}
+#define IdentityType_init_default                {false, "", false, "", false, "", false, "", false, "", false, 0u}
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define HDNodePathType_init_zero                 {HDNodeType_init_zero, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
 #define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0, false, 0}
@@ -256,6 +273,7 @@ extern const InputScriptType TxInputType_script_type_default;
 #define TransactionType_init_zero                {false, 0, 0, {TxInputType_init_zero}, 0, {TxOutputBinType_init_zero}, false, 0, 0, {TxOutputType_init_zero}, false, 0, false, 0}
 #define TxRequestDetailsType_init_zero           {false, 0, false, {0, {0}}}
 #define TxRequestSerializedType_init_zero        {false, 0, false, {0, {0}}, false, {0, {0}}}
+#define IdentityType_init_zero                   {false, "", false, "", false, "", false, "", false, "", false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define CoinType_coin_name_tag                   1
@@ -269,6 +287,12 @@ extern const InputScriptType TxInputType_script_type_default;
 #define HDNodeType_chain_code_tag                4
 #define HDNodeType_private_key_tag               5
 #define HDNodeType_public_key_tag                6
+#define IdentityType_proto_tag                   1
+#define IdentityType_user_tag                    2
+#define IdentityType_host_tag                    3
+#define IdentityType_port_tag                    4
+#define IdentityType_path_tag                    5
+#define IdentityType_index_tag                   6
 #define TxOutputBinType_amount_tag               1
 #define TxOutputBinType_script_pubkey_tag        2
 #define TxRequestDetailsType_request_index_tag   1
@@ -317,6 +341,7 @@ extern const pb_field_t TxOutputBinType_fields[3];
 extern const pb_field_t TransactionType_fields[8];
 extern const pb_field_t TxRequestDetailsType_fields[3];
 extern const pb_field_t TxRequestSerializedType_fields[4];
+extern const pb_field_t IdentityType_fields[7];
 
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
@@ -329,6 +354,7 @@ extern const pb_field_t TxRequestSerializedType_fields[4];
 #define TransactionType_size                     9993
 #define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             2132
+#define IdentityType_size                        416
 
 #ifdef __cplusplus
 } /* extern "C" */

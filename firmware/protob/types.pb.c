@@ -7,6 +7,7 @@ const uint32_t CoinType_address_type_default = 0u;
 const uint32_t CoinType_address_type_p2sh_default = 5u;
 const uint32_t TxInputType_sequence_default = 4294967295u;
 const InputScriptType TxInputType_script_type_default = InputScriptType_SPENDADDRESS;
+const uint32_t IdentityType_index_default = 0u;
 
 
 const pb_field_t HDNodeType_fields[7] = {
@@ -92,6 +93,16 @@ const pb_field_t TxRequestSerializedType_fields[4] = {
     PB_LAST_FIELD
 };
 
+const pb_field_t IdentityType_fields[7] = {
+    PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, IdentityType, proto, proto, 0),
+    PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, IdentityType, user, proto, 0),
+    PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, IdentityType, host, user, 0),
+    PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, IdentityType, port, host, 0),
+    PB_FIELD2(  5, STRING  , OPTIONAL, STATIC  , OTHER, IdentityType, path, port, 0),
+    PB_FIELD2(  6, UINT32  , OPTIONAL, STATIC  , OTHER, IdentityType, index, path, &IdentityType_index_default),
+    PB_LAST_FIELD
+};
+
 typedef struct {
     bool wire_in;
 } wire_in_struct;
@@ -154,7 +165,7 @@ const pb_extension_type_t wire_debug_out = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(HDNodePathType, node) < 65536 && pb_membersize(MultisigRedeemScriptType, pubkeys[0]) < 65536 && pb_membersize(TxInputType, multisig) < 65536 && pb_membersize(TxOutputType, multisig) < 65536 && pb_membersize(TransactionType, inputs[0]) < 65536 && pb_membersize(TransactionType, bin_outputs[0]) < 65536 && pb_membersize(TransactionType, outputs[0]) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_HDNodeType_HDNodePathType_CoinType_MultisigRedeemScriptType_TxInputType_TxOutputType_TxOutputBinType_TransactionType_TxRequestDetailsType_TxRequestSerializedType)
+STATIC_ASSERT((pb_membersize(HDNodePathType, node) < 65536 && pb_membersize(MultisigRedeemScriptType, pubkeys[0]) < 65536 && pb_membersize(TxInputType, multisig) < 65536 && pb_membersize(TxOutputType, multisig) < 65536 && pb_membersize(TransactionType, inputs[0]) < 65536 && pb_membersize(TransactionType, bin_outputs[0]) < 65536 && pb_membersize(TransactionType, outputs[0]) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_HDNodeType_HDNodePathType_CoinType_MultisigRedeemScriptType_TxInputType_TxOutputType_TxOutputBinType_TransactionType_TxRequestDetailsType_TxRequestSerializedType_IdentityType)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)

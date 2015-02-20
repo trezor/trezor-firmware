@@ -35,7 +35,6 @@ typedef enum _MessageType {
     MessageType_MessageType_TxRequest = 21,
     MessageType_MessageType_TxAck = 22,
     MessageType_MessageType_CipherKeyValue = 23,
-    MessageType_MessageType_CipheredKeyValue = 48,
     MessageType_MessageType_ClearSession = 24,
     MessageType_MessageType_ApplySettings = 25,
     MessageType_MessageType_ButtonRequest = 26,
@@ -47,10 +46,6 @@ typedef enum _MessageType {
     MessageType_MessageType_SignMessage = 38,
     MessageType_MessageType_VerifyMessage = 39,
     MessageType_MessageType_MessageSignature = 40,
-    MessageType_MessageType_EncryptMessage = 49,
-    MessageType_MessageType_EncryptedMessage = 50,
-    MessageType_MessageType_DecryptMessage = 51,
-    MessageType_MessageType_DecryptedMessage = 52,
     MessageType_MessageType_PassphraseRequest = 41,
     MessageType_MessageType_PassphraseAck = 42,
     MessageType_MessageType_EstimateTxSize = 43,
@@ -58,6 +53,13 @@ typedef enum _MessageType {
     MessageType_MessageType_RecoveryDevice = 45,
     MessageType_MessageType_WordRequest = 46,
     MessageType_MessageType_WordAck = 47,
+    MessageType_MessageType_CipheredKeyValue = 48,
+    MessageType_MessageType_EncryptMessage = 49,
+    MessageType_MessageType_EncryptedMessage = 50,
+    MessageType_MessageType_DecryptMessage = 51,
+    MessageType_MessageType_DecryptedMessage = 52,
+    MessageType_MessageType_SignIdentity = 53,
+    MessageType_MessageType_SignedIdentity = 54,
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
@@ -499,6 +501,20 @@ typedef struct _ResetDevice {
 
 typedef struct {
     size_t size;
+    uint8_t bytes[64];
+} SignIdentity_challenge_hidden_t;
+
+typedef struct _SignIdentity {
+    bool has_identity;
+    IdentityType identity;
+    bool has_challenge_hidden;
+    SignIdentity_challenge_hidden_t challenge_hidden;
+    bool has_challenge_visual;
+    char challenge_visual[64];
+} SignIdentity;
+
+typedef struct {
+    size_t size;
     uint8_t bytes[1024];
 } SignMessage_message_t;
 
@@ -516,6 +532,25 @@ typedef struct _SignTx {
     bool has_coin_name;
     char coin_name[17];
 } SignTx;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[33];
+} SignedIdentity_public_key_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[65];
+} SignedIdentity_signature_t;
+
+typedef struct _SignedIdentity {
+    bool has_address;
+    char address[36];
+    bool has_public_key;
+    SignedIdentity_public_key_t public_key;
+    bool has_signature;
+    SignedIdentity_signature_t signature;
+} SignedIdentity;
 
 typedef struct _SimpleSignTx {
     size_t inputs_count;
@@ -632,6 +667,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SimpleSignTx_init_default                {0, {}, 0, {}, 0, {}, false, "Bitcoin"}
 #define TxRequest_init_default                   {false, (RequestType)0, false, TxRequestDetailsType_init_default, false, TxRequestSerializedType_init_default}
 #define TxAck_init_default                       {false, TransactionType_init_default}
+#define SignIdentity_init_default                {false, IdentityType_init_default, false, {0, {0}}, false, ""}
+#define SignedIdentity_init_default              {false, "", false, {0, {0}}, false, {0, {0}}}
 #define FirmwareErase_init_default               {0}
 #define FirmwareUpload_init_default              {{0, {0}}}
 #define DebugLinkDecision_init_default           {0}
@@ -683,6 +720,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SimpleSignTx_init_zero                   {0, {}, 0, {}, 0, {}, false, ""}
 #define TxRequest_init_zero                      {false, (RequestType)0, false, TxRequestDetailsType_init_zero, false, TxRequestSerializedType_init_zero}
 #define TxAck_init_zero                          {false, TransactionType_init_zero}
+#define SignIdentity_init_zero                   {false, IdentityType_init_zero, false, {0, {0}}, false, ""}
+#define SignedIdentity_init_zero                 {false, "", false, {0, {0}}, false, {0, {0}}}
 #define FirmwareErase_init_zero                  {0}
 #define FirmwareUpload_init_zero                 {{0, {0}}}
 #define DebugLinkDecision_init_zero              {0}
@@ -794,12 +833,18 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define ResetDevice_pin_protection_tag           4
 #define ResetDevice_language_tag                 5
 #define ResetDevice_label_tag                    6
+#define SignIdentity_identity_tag                1
+#define SignIdentity_challenge_hidden_tag        2
+#define SignIdentity_challenge_visual_tag        3
 #define SignMessage_address_n_tag                1
 #define SignMessage_message_tag                  2
 #define SignMessage_coin_name_tag                3
 #define SignTx_outputs_count_tag                 1
 #define SignTx_inputs_count_tag                  2
 #define SignTx_coin_name_tag                     3
+#define SignedIdentity_address_tag               1
+#define SignedIdentity_public_key_tag            2
+#define SignedIdentity_signature_tag             3
 #define SimpleSignTx_inputs_tag                  1
 #define SimpleSignTx_outputs_tag                 2
 #define SimpleSignTx_transactions_tag            3
@@ -860,6 +905,8 @@ extern const pb_field_t SignTx_fields[4];
 extern const pb_field_t SimpleSignTx_fields[5];
 extern const pb_field_t TxRequest_fields[4];
 extern const pb_field_t TxAck_fields[2];
+extern const pb_field_t SignIdentity_fields[4];
+extern const pb_field_t SignedIdentity_fields[4];
 extern const pb_field_t FirmwareErase_fields[1];
 extern const pb_field_t FirmwareUpload_fields[2];
 extern const pb_field_t DebugLinkDecision_fields[2];
@@ -913,6 +960,8 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SimpleSignTx_size                        (19 + 0*TxInputType_size + 0*TxOutputType_size + 0*TransactionType_size)
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
+#define SignIdentity_size                        (138 + IdentityType_size)
+#define SignedIdentity_size                      140
 #define FirmwareErase_size                       0
 #define FirmwareUpload_size                      2
 #define DebugLinkDecision_size                   2
