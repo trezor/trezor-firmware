@@ -48,4 +48,6 @@ int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const ui
 
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t *hash);
 
+int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash);
+
 #endif

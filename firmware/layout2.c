@@ -261,3 +261,15 @@ void layoutAddress(const char *address, const char *desc)
 
 	oledRefresh();
 }
+
+void layoutSignIdentity(const IdentityType *identity, const char *challenge)
+{
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
+		"Sign identity?",
+		identity->has_proto ? identity->proto : NULL,
+		identity->has_user ? identity->user : NULL,
+		identity->has_host ? identity->host : NULL,
+		challenge,
+		NULL,
+		NULL);
+}

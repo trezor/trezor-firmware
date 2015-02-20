@@ -340,3 +340,30 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t 
 	layoutProgressUpdate(true);
 	return 1;
 }
+
+int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash)
+{
+	SHA256_CTX ctx;
+	sha256_Init(&ctx);
+	sha256_Update(&ctx, (const uint8_t *)&(identity->index), sizeof(uint32_t));
+	if (identity->has_proto && identity->proto[0]) {
+		sha256_Update(&ctx, (const uint8_t *)(identity->proto), strlen(identity->proto));
+		sha256_Update(&ctx, (const uint8_t *)"://", 3);
+	}
+	if (identity->has_user && identity->user[0]) {
+		sha256_Update(&ctx, (const uint8_t *)(identity->user), strlen(identity->user));
+		sha256_Update(&ctx, (const uint8_t *)"@", 1);
+	}
+	if (identity->has_host && identity->host[0]) {
+		sha256_Update(&ctx, (const uint8_t *)(identity->host), strlen(identity->host));
+	}
+	if (identity->has_port && identity->port[0]) {
+		sha256_Update(&ctx, (const uint8_t *)":", 1);
+		sha256_Update(&ctx, (const uint8_t *)(identity->port), strlen(identity->port));
+	}
+	if (identity->has_path && identity->path[0]) {
+		sha256_Update(&ctx, (const uint8_t *)(identity->path), strlen(identity->path));
+	}
+	sha256_Final(hash, &ctx);
+	return 1;
+}

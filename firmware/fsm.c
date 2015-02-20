@@ -620,6 +620,61 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	layoutHome();
 }
 
+void fsm_msgSignIdentity(SignIdentity *msg)
+{
+	RESP_INIT(SignedIdentity);
+
+	layoutSignIdentity(&(msg->identity), msg->has_challenge_visual ? msg->challenge_visual : 0);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign identity cancelled");
+		layoutHome();
+		return;
+	}
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
+	uint8_t hash[32];
+	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Invalid identity");
+		layoutHome();
+		return;
+	}
+	uint32_t address_n[5];
+	address_n[0] = 0x80000000 | 46;
+	address_n[1] = 0x80000000 | hash[ 0] | (hash[ 1] << 8) | (hash[ 2] << 16) | (hash[ 3] << 24);
+	address_n[2] = 0x80000000 | hash[ 4] | (hash[ 5] << 8) | (hash[ 6] << 16) | (hash[ 7] << 24);
+	address_n[3] = 0x80000000 | hash[ 8] | (hash[ 9] << 8) | (hash[10] << 16) | (hash[11] << 24);
+	address_n[4] = 0x80000000 | hash[12] | (hash[13] << 8) | (hash[14] << 16) | (hash[15] << 24);
+
+	const HDNode *node = fsm_getDerivedNode(address_n, 5);
+	if (!node) return;
+
+	uint8_t message[128];
+	memcpy(message, msg->challenge_hidden.bytes, msg->challenge_hidden.size);
+	const int len = strlen(msg->challenge_visual);
+	memcpy(message + msg->challenge_hidden.size, msg->challenge_visual, len);
+
+	layoutProgressSwipe("Signing", 0);
+	if (cryptoMessageSign(message, msg->challenge_hidden.size + len, node->private_key, resp->signature.bytes) == 0) {
+		resp->has_address = true;
+		uint8_t addr_raw[21];
+		ecdsa_get_address_raw(node->public_key, 0x00, addr_raw); // hardcoded Bitcoin address type
+		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+		resp->has_public_key = true;
+		resp->public_key.size = 33;
+		memcpy(resp->public_key.bytes, node->public_key, 33);
+		resp->has_signature = true;
+		resp->signature.size = 65;
+		msg_write(MessageType_MessageType_SignedIdentity, resp);
+	} else {
+		fsm_sendFailure(FailureType_Failure_Other, "Error signing identity");
+	}
+	layoutHome();
+}
+
 void fsm_msgEncryptMessage(EncryptMessage *msg)
 {
 	if (!msg->has_pubkey) {
