@@ -38,7 +38,6 @@ enum MessageType {
 	MessageType_TxRequest = 21 [(wire_out) = true];
 	MessageType_TxAck = 22 [(wire_in) = true];
 	MessageType_CipherKeyValue = 23 [(wire_in) = true];
-	MessageType_CipheredKeyValue = 48 [(wire_out) = true];
 	MessageType_ClearSession = 24 [(wire_in) = true];
 	MessageType_ApplySettings = 25 [(wire_in) = true];
 	MessageType_ButtonRequest = 26 [(wire_out) = true];
@@ -50,10 +49,6 @@ enum MessageType {
 	MessageType_SignMessage = 38 [(wire_in) = true];
 	MessageType_VerifyMessage = 39 [(wire_in) = true];
 	MessageType_MessageSignature = 40 [(wire_out) = true];
-	MessageType_EncryptMessage = 49 [(wire_in) = true];
-	MessageType_EncryptedMessage = 50 [(wire_out) = true];
-	MessageType_DecryptMessage = 51 [(wire_in) = true];
-	MessageType_DecryptedMessage = 52 [(wire_out) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
 	MessageType_PassphraseAck = 42 [(wire_in) = true];
 	MessageType_EstimateTxSize = 43 [(wire_in) = true];
@@ -61,6 +56,13 @@ enum MessageType {
 	MessageType_RecoveryDevice = 45 [(wire_in) = true];
 	MessageType_WordRequest = 46 [(wire_out) = true];
 	MessageType_WordAck = 47 [(wire_in) = true];
+	MessageType_CipheredKeyValue = 48 [(wire_out) = true];
+	MessageType_EncryptMessage = 49 [(wire_in) = true];
+	MessageType_EncryptedMessage = 50 [(wire_out) = true];
+	MessageType_DecryptMessage = 51 [(wire_in) = true];
+	MessageType_DecryptedMessage = 52 [(wire_out) = true];
+	MessageType_SignIdentity = 53 [(wire_in) = true];
+	MessageType_SignedIdentity = 54 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -542,6 +544,31 @@ message TxRequest {
  */
 message TxAck {
 	optional TransactionType tx = 1;
+}
+
+///////////////////////
+// Identity messages //
+///////////////////////
+
+/**
+ * Request: Ask device to sign identity
+ * @next SignedIdentity
+ * @next Failure
+ */
+message SignIdentity {
+	optional IdentityType identity = 1;		// identity
+	optional bytes challenge_hidden = 2;		// non-visible challenge
+	optional string challenge_visual = 3;		// challenge shown on display (e.g. date+time)
+}
+
+/**
+ * Response: Device provides signed identity
+ * @prev SignIdentity
+ */
+message SignedIdentity {
+	optional string address = 1;			// identity address
+	optional bytes public_key = 2;			// identity public key
+	optional bytes signature = 3;			// signature of the identity data
 }
 
 /////////////////////////

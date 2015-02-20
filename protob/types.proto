@@ -212,3 +212,16 @@ message TxRequestSerializedType {
 	optional bytes signature = 2;		// signature of the signature_index input
 	optional bytes serialized_tx = 3;	// part of serialized and signed transaction
 }
+
+/**
+ * Structure representing identity data
+ * @used_in IdentityType
+ */
+message IdentityType {
+	optional string proto = 1;			// proto part of URI
+	optional string user = 2;			// user part of URI
+	optional string host = 3;			// host part of URI
+	optional string port = 4;			// port part of URI
+	optional string path = 5;			// path part of URI
+	optional uint32 index = 6 [default=0];		// identity index
+}
