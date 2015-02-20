@@ -458,6 +458,10 @@ class ProtocolMixin(object):
 
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message))
 
+    @expect(proto.SignedIdentity)
+    def sign_identity(self, identity, challenge_hidden, challenge_visual):
+        return self.call(proto.SignIdentity(identity=identity, challenge_hidden=challenge_hidden, challenge_visual=challenge_visual))
+
     def verify_message(self, address, signature, message):
         try:
             # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
