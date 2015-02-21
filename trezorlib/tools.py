@@ -88,7 +88,7 @@ def monkeypatch_google_protobuf_text_format():
 
     _oldPrintFieldValue = google.protobuf.text_format.PrintFieldValue
 
-    def _customPrintFieldValue(field, value, out, indent=0, as_utf8=False, as_one_line=False):
+    def _customPrintFieldValue(field, value, out, indent=0, as_utf8=False, as_one_line=False, pointy_brackets=False, float_format=None):
         if field.type == google.protobuf.descriptor.FieldDescriptor.TYPE_BYTES:
             _oldPrintFieldValue(field, 'hex(%s)' % binascii.hexlify(value), out, indent, as_utf8, as_one_line)
         else:
