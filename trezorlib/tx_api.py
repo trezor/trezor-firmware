@@ -3,13 +3,14 @@ import urllib2
 import json
 from decimal import Decimal
 try:
-    from filecache import filecache, MONTH
+    raise Exception() # remove this line to enable caching
+    from filecache import filecache, DAY
 except:
     def filecache(x):
         def _inner(y):
             return y
         return _inner
-    MONTH = None
+    DAY = None
 
 import types_pb2 as proto_types
 
@@ -89,14 +90,14 @@ def insight_tx(url):
 
 class TXAPIBitcoin(object):
 
-    @filecache(MONTH)
+    @filecache(DAY)
     def get_tx(self, txhash):
         url = 'https://insight.bitpay.com/api/tx/%s' % txhash
         return insight_tx(url)
 
 class TXAPITestnet(object):
 
-    @filecache(MONTH)
+    @filecache(DAY)
     def get_tx(self, txhash):
         url = 'https://test-insight.bitpay.com/api/tx/%s' % txhash
         return insight_tx(url)
