@@ -156,16 +156,16 @@ bool protectPin(bool use_cached)
 			delay(10000000);
 		}
 	}
-	storage_increasePinFails();
-	bool increase_failed = (fails >= storage_getPinFails());
 	const char *pin;
 	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, "Please enter current PIN:");
 	if (!pin) {
 		fsm_sendFailure(FailureType_Failure_PinCancelled, "PIN Cancelled");
 		return false;
 	}
+	storage_increasePinFails();
+	bool increase_failed = (fails >= storage_getPinFails());
 	if (storage_isPinCorrect(pin) && !increase_failed) {
-		session_cachePin(pin);
+		session_cachePin();
 		storage_resetPinFails();
 		return true;
 	} else {
