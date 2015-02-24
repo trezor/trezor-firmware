@@ -279,26 +279,29 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_1_INPUT:
 			/* compute multisig fingerprint */
 			/* (if all input share the same fingerprint, outputs having the same fingerprint will be considered as change outputs) */
-			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG &&
-			    tx->inputs[0].has_multisig && !multisig_fp_mismatch) {
-				if (multisig_fp_set) {
-					uint8_t h[32];
-					if (cryptoMultisigFingerprint(&(tx->inputs[0].multisig), h) == 0) {
-						fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingeprint");
-						signing_abort();
-						return;
+			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG) {
+				if (tx->inputs[0].has_multisig && !multisig_fp_mismatch) {
+					if (multisig_fp_set) {
+						uint8_t h[32];
+						if (cryptoMultisigFingerprint(&(tx->inputs[0].multisig), h) == 0) {
+							fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingeprint");
+							signing_abort();
+							return;
+						}
+						if (memcmp(multisig_fp, h, 32) != 0) {
+							multisig_fp_mismatch = true;
+						}
+					} else {
+						if (cryptoMultisigFingerprint(&(tx->inputs[0].multisig), multisig_fp) == 0) {
+							fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingeprint");
+							signing_abort();
+							return;
+						}
+						multisig_fp_set = true;
 					}
-					if (memcmp(multisig_fp, h, 32) != 0) {
-						multisig_fp_mismatch = true;
-					}
-				} else {
-					if (cryptoMultisigFingerprint(&(tx->inputs[0].multisig), multisig_fp) == 0) {
-						fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingeprint");
-						signing_abort();
-						return;
-					}
-					multisig_fp_set = true;
 				}
+			} else { // InputScriptType_SPENDADDRESS
+				multisig_fp_mismatch = true;
 			}
 			sha256_Update(&tc, (const uint8_t *)tx->inputs, sizeof(TxInputType));
 			memcpy(&input, tx->inputs, sizeof(TxInputType));
