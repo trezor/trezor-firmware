@@ -46,7 +46,8 @@ static uint32_t idx1, idx2;
 static TxRequest resp;
 static TxInputType input;
 static TxOutputBinType bin_output;
-static TxStruct to, tp, ti, tc;
+static TxStruct to, tp, ti;
+static SHA256_CTX tc;
 static uint8_t hash[32], hash_check[32], privkey[32], pubkey[33], sig[64];
 static uint64_t to_spend, spending, change_spend;
 const uint32_t version = 1;
@@ -246,7 +247,11 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinTyp
 	multisig_fp_mismatch = false;
 
 	tx_init(&to, inputs_count, outputs_count, version, lock_time, false);
-	tx_init(&tc, inputs_count, outputs_count, version, lock_time, false);
+	sha256_Init(&tc);
+	sha256_Update(&tc, (const uint8_t *)&inputs_count, sizeof(inputs_count));
+	sha256_Update(&tc, (const uint8_t *)&outputs_count, sizeof(outputs_count));
+	sha256_Update(&tc, (const uint8_t *)&version, sizeof(version));
+	sha256_Update(&tc, (const uint8_t *)&lock_time, sizeof(lock_time));
 
 	layoutProgressSwipe("Signing transaction", 0);
 
@@ -295,11 +300,7 @@ void signing_txack(TransactionType *tx)
 					multisig_fp_set = true;
 				}
 			}
-			if (!tx_serialize_input_hash(&tc, tx->inputs)) {
-				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
-				signing_abort();
-				return;
-			}
+			sha256_Update(&tc, (const uint8_t *)tx->inputs, sizeof(TxInputType));
 			memcpy(&input, tx->inputs, sizeof(TxInputType));
 			send_req_2_prev_meta();
 			return;
@@ -401,17 +402,12 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			if (!tx_serialize_output_hash(&tc, &bin_output)) {
-				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
-				signing_abort();
-				return;
-			}
+			sha256_Update(&tc, (const uint8_t *)&bin_output, sizeof(TxOutputBinType));
 			if (idx1 < outputs_count - 1) {
 				idx1++;
 				send_req_3_output();
 			} else {
-				tx_hash_final(&tc, hash_check, false);
-
+				sha256_Final(hash_check, &tc);
 				// check fees
 				if (spending > to_spend) {
 					fsm_sendFailure(FailureType_Failure_NotEnoughFunds, "Not enough funds");
@@ -448,15 +444,15 @@ void signing_txack(TransactionType *tx)
 			progress = 500 + ((idx1 * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
 				tx_init(&ti, inputs_count, outputs_count, version, lock_time, true);
-				tx_init(&tc, inputs_count, outputs_count, version, lock_time, false);
+				sha256_Init(&tc);
+				sha256_Update(&tc, (const uint8_t *)&inputs_count, sizeof(inputs_count));
+				sha256_Update(&tc, (const uint8_t *)&outputs_count, sizeof(outputs_count));
+				sha256_Update(&tc, (const uint8_t *)&version, sizeof(version));
+				sha256_Update(&tc, (const uint8_t *)&lock_time, sizeof(lock_time));
 				memset(privkey, 0, 32);
 				memset(pubkey, 0, 33);
 			}
-			if (!tx_serialize_input_hash(&tc, tx->inputs)) {
-				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize input");
-				signing_abort();
-				return;
-			}
+			sha256_Update(&tc, (const uint8_t *)tx->inputs, sizeof(TxInputType));
 			if (idx2 == idx1) {
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
 				memcpy(&node, root, sizeof(HDNode));
@@ -511,11 +507,7 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			if (!tx_serialize_output_hash(&tc, &bin_output)) {
-				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
-				signing_abort();
-				return;
-			}
+			sha256_Update(&tc, (const uint8_t *)&bin_output, sizeof(TxOutputBinType));
 			if (!tx_serialize_output_hash(&ti, &bin_output)) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize output");
 				signing_abort();
@@ -525,7 +517,7 @@ void signing_txack(TransactionType *tx)
 				idx2++;
 				send_req_4_output();
 			} else {
-				tx_hash_final(&tc, hash, false);
+				sha256_Final(hash, &tc);
 				if (memcmp(hash, hash_check, 32) != 0) {
 					fsm_sendFailure(FailureType_Failure_Other, "Transaction has changed during signing");
 					signing_abort();
