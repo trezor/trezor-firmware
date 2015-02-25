@@ -396,6 +396,9 @@ void signing_txack(TransactionType *tx)
 
 			spending += tx->outputs[0].amount;
 			co = compile_output(coin, root, tx->outputs, &bin_output, !is_change);
+			if (!is_change) {
+				layoutProgress("Signing transaction", progress);
+			}
 			if (co < 0) {
 				fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
 				signing_abort();
@@ -426,6 +429,7 @@ void signing_txack(TransactionType *tx)
 						layoutHome();
 						return;
 					}
+					layoutProgress("Signing transaction", progress);
 				}
 				// last confirmation
 				layoutConfirmTx(coin, to_spend - change_spend, fee);
@@ -434,9 +438,9 @@ void signing_txack(TransactionType *tx)
 					signing_abort();
 					return;
 				}
-
 				// Everything was checked, now phase 2 begins and the transaction is signed.
 				progress_meta_step = progress_step / (inputs_count + outputs_count);
+				layoutProgress("Signing transaction", progress);
 				idx1 = 0;
 				idx2 = 0;
 				send_req_4_input();

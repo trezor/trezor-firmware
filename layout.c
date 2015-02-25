@@ -117,7 +117,6 @@ void layoutProgress(const char *desc, int permil)
 		permil = OLED_WIDTH - 4;
 	}
 	oledBox(2, OLED_HEIGHT - 6, 1 + permil, OLED_HEIGHT - 3, 1);
-
 	// text
 	oledBox(0, OLED_HEIGHT - 16, OLED_WIDTH - 1, OLED_HEIGHT - 16 + 7, 0);
 	if (desc) {

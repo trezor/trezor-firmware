@@ -111,7 +111,7 @@ void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 	static char first_half[17 + 1];
 	strlcpy(first_half, out->address, sizeof(first_half));
 	const char *str_out = str_amount(out->amount, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialog(DIALOG_ICON_QUESTION,
 		"Cancel",
 		"Confirm",
 		NULL,
@@ -128,7 +128,7 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 {
 	const char *str_out = str_amount(amount_out, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
 	const char *str_fee = str_amount(amount_fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_fee, sizeof(buf_fee));
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialog(DIALOG_ICON_QUESTION,
 		"Cancel",
 		"Confirm",
 		NULL,
@@ -145,7 +145,7 @@ void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee, uint32_t kb)
 {
 	(void)kb;
 	const char *str_out = str_amount(fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialog(DIALOG_ICON_QUESTION,
 		"Cancel",
 		"Confirm",
 		NULL,
