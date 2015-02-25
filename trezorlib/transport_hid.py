@@ -122,7 +122,7 @@ class HidTransport(Transport):
                     # device is still alive
                     raise ConnectionError("Connection failed")
 
-                time.sleep(0.05)
+                time.sleep(0.001)
                 continue
 
             report_id = data[0]
