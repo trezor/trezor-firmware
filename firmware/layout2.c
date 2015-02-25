@@ -265,7 +265,7 @@ void layoutAddress(const char *address, const char *desc)
 void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 {
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
-		"Sign identity?",
+		"Login using this identity?",
 		identity->has_proto ? identity->proto : NULL,
 		identity->has_user ? identity->user : NULL,
 		identity->has_host ? identity->host : NULL,
