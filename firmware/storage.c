@@ -48,7 +48,6 @@ static bool   sessionRootNodeCached;
 static HDNode sessionRootNode;
 
 static bool sessionPinCached;
-static char sessionPin[17];
 
 static bool sessionPassphraseCached;
 static char sessionPassphrase[51];
@@ -122,7 +121,7 @@ void session_clear(void)
 {
 	sessionRootNodeCached = false;   memset(&sessionRootNode, 0, sizeof(sessionRootNode));
 	sessionPassphraseCached = false; memset(&sessionPassphrase, 0, sizeof(sessionPassphrase));
-	sessionPinCached = false;        memset(&sessionPin, 0, sizeof(sessionPin));
+	sessionPinCached = false;
 }
 
 static uint8_t meta_backup[FLASH_META_LEN];
@@ -306,14 +305,27 @@ const uint8_t *storage_getHomescreen(void)
 	return (storage.has_homescreen && storage.homescreen.size == 1024) ? storage.homescreen.bytes : 0;
 }
 
+/* Check whether pin matches storage.  The pin must be a null-terminated
+ * string with at most 9 characters.
+ */
 bool storage_isPinCorrect(const char *pin)
 {
-	return strcmp(storage.pin, pin) == 0;
+	/* The execution time of the following code only depends on the
+	 * (public) input.  This avoids timing attacks.
+	 */
+	char diff = 0;
+	uint32_t i = 0;
+	while (pin[i]) {
+		diff |= storage.pin[i] - pin[i];
+		i++;
+	}
+	diff |= storage.pin[i];
+	return diff == 0;
 }
 
 bool storage_hasPin(void)
 {
-	return storage.has_pin && strlen(storage.pin) > 0;
+	return storage.has_pin && storage.pin[0] != 0;
 }
 
 void storage_setPin(const char *pin)
@@ -340,15 +352,14 @@ bool session_isPassphraseCached(void)
 	return sessionPassphraseCached;
 }
 
-void session_cachePin(const char *pin)
+void session_cachePin(void)
 {
-	strlcpy(sessionPin, pin, sizeof(sessionPin));
 	sessionPinCached = true;
 }
 
 bool session_isPinCached(void)
 {
-	return sessionPinCached && strcmp(sessionPin, storage.pin) == 0;
+	return sessionPinCached;
 }
 
 void storage_resetPinFails(void)
