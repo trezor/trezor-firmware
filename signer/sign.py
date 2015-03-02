@@ -56,10 +56,11 @@ def compose_message(json, proto):
 
     return cfg.SerializeToString()
 
-def sign_message(data, key_pem):
-    # curve = ecdsa.curves.SECP256k1
-    # x = ecdsa.keys.SigningKey.generate(curve=curve)
-    key = ecdsa.keys.SigningKey.from_pem(key_pem)
+def sign_message(data, key):
+    if key.startswith('-----BEGIN'):
+        key = ecdsa.keys.SigningKey.from_pem(key)
+    else:
+        key = ecdsa.keys.SigningKey.from_secret_exponent(secexp = int(key, 16), curve=ecdsa.curves.SECP256k1, hashfunc=hashlib.sha256)
 
     verify = key.get_verifying_key()
     print "Verifying key:"
@@ -79,22 +80,22 @@ def pack_datafile(filename, signature, data):
     print "Signature and data stored to", filename
 
 if __name__ == '__main__':
-    key_pem = ''
-    print "Paste ECDSA private key (in PEM format) and press Enter:"
+    key = ''
+    print "Paste ECDSA private key (in PEM format or SECEXP format) and press Enter:"
     while True:
         inp = raw_input()
         if inp == '':
             break
 
-        key_pem += inp + "\n"
+        key += inp + "\n"
 
-    # key_pem = open('sample.key', 'r').read()
+    # key = open('sample.key', 'r').read()
 
     compile_config()
     json = parse_json()
     proto = get_compiled_proto()
 
     data = compose_message(json, proto)
-    signature = sign_message(data, key_pem)
+    signature = sign_message(data, key)
 
     pack_datafile('config_signed.bin', signature, data)
