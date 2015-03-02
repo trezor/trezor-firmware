@@ -6,7 +6,9 @@
                 "https://[\\w\\.-]+\\.mytrezor\\.com(/.*)?",
                 "https://trezor\\.github\\.io(/.*)?",
                 "https://greenaddress\\.it(/.*)?",
-                "https://[\\w\\.-]+\\.greenaddress\\.it(/.*)?"
+                "https://[\\w\\.-]+\\.greenaddress\\.it(/.*)?",
+                "https://coinprism\\.com(/.*)?",
+                "https://[\\w\\.-]+\\.coinprism\\.com(/.*)?"
 	],
 	"blacklist_urls": [
 	],
