@@ -84,7 +84,7 @@ def insight_tx(url, rawdata=False):
 
     for vout in data['vout']:
         o = t.bin_outputs.add()
-        o.amount = int(Decimal(vout['value']) * 100000000)
+        o.amount = int(Decimal(str(vout['value'])) * 100000000)
         asm = vout['scriptPubKey']['asm'].split(' ')
         asm = [ opcode_serialize(x) for x in asm ]
         o.script_pubkey = ''.join(asm)
