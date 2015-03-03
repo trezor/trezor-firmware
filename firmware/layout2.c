@@ -282,7 +282,7 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		strlcpy(row_hostport, identity->host, sizeof(row_hostport));
 		if (identity->has_port && identity->port[0]) {
 			strlcat(row_hostport, ":", sizeof(row_hostport));
-			strlcat(row_hostport, identity->user, sizeof(row_hostport));
+			strlcat(row_hostport, identity->port, sizeof(row_hostport));
 		}
 	} else {
 		row_hostport[0] = 0;
