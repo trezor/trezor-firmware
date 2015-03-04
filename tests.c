@@ -427,35 +427,31 @@ START_TEST(test_bip32_compare)
 }
 END_TEST
 
-START_TEST(test_bip32_cache)
+START_TEST(test_bip32_cache_1)
 {
 	HDNode node1, node2;
-	int r;
+	int i, r;
 
 	// test 1 .. 8
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
 
-	uint32_t i;
-	for (i = 1; i < 8; i++) {
-		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
-	}
-	r = hdnode_private_ckd(&node1, 8); ck_assert_int_eq(r, 1);
+	uint32_t ii[] = {0x80000001, 0x80000002, 0x80000003, 0x80000004, 0x80000005, 0x80000006, 0x80000007, 0x80000008};
 
-	uint32_t ii[] = {1, 2, 3, 4, 5, 6, 7, 8};
+	for (i = 0; i < 8; i++) {
+		r = hdnode_private_ckd(&node1, ii[i]); ck_assert_int_eq(r, 1);
+	}
 	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
 	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
 
-	// test 1 .. 7, 20
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
 
-	for (i = 1; i < 8; i++) {
-		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
-	}
-	r = hdnode_private_ckd(&node1, 20); ck_assert_int_eq(r, 1);
-
+	// test 1 .. 7, 20
 	ii[7] = 20;
+	for (i = 0; i < 8; i++) {
+		r = hdnode_private_ckd(&node1, ii[i]); ck_assert_int_eq(r, 1);
+	}
 	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
 	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
 
@@ -463,13 +459,43 @@ START_TEST(test_bip32_cache)
 	hdnode_from_seed(fromhex("000000002ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node1);
 	hdnode_from_seed(fromhex("000000002ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &node2);
 
-	for (i = 1; i < 8; i++) {
-		r = hdnode_private_ckd(&node1, i); ck_assert_int_eq(r, 1);
+	for (i = 0; i < 8; i++) {
+		r = hdnode_private_ckd(&node1, ii[i]); ck_assert_int_eq(r, 1);
 	}
-	r = hdnode_private_ckd(&node1, 20); ck_assert_int_eq(r, 1);
-
 	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
 	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
+}
+END_TEST
+
+START_TEST(test_bip32_cache_2)
+{
+	HDNode nodea[9], nodeb[9];
+	int i, j, r;
+
+	for (j = 0; j < 9; j++) {
+		hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &(nodea[j]));
+		hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, &(nodeb[j]));
+	}
+
+	uint32_t ii[] = {0x80000001, 0x80000002, 0x80000003, 0x80000004, 0x80000005, 0x80000006, 0x80000007, 0x80000008};
+	for (j = 0; j < 9; j++) {
+		// non cached
+		for (i = 1; i <= j; i++) {
+			r = hdnode_private_ckd(&(nodea[j]), ii[i - 1]); ck_assert_int_eq(r, 1);
+		}
+		// cached
+		r = hdnode_private_ckd_cached(&(nodeb[j]), ii, j); ck_assert_int_eq(r, 1);
+	}
+
+	ck_assert_mem_eq(&(nodea[0]), &(nodeb[0]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[1]), &(nodeb[1]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[2]), &(nodeb[2]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[3]), &(nodeb[3]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[4]), &(nodeb[4]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[5]), &(nodeb[5]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[6]), &(nodeb[6]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[7]), &(nodeb[7]), sizeof(HDNode));
+	ck_assert_mem_eq(&(nodea[8]), &(nodeb[8]), sizeof(HDNode));
 }
 END_TEST
 
@@ -1185,7 +1211,6 @@ Suite *test_suite(void)
 	Suite *s = suite_create("trezor-crypto");
 	TCase *tc;
 
-
 	tc = tcase_create("base58");
 	tcase_add_test(tc, test_base58);
 	suite_add_tcase(s, tc);
@@ -1194,7 +1219,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_vector_1);
 	tcase_add_test(tc, test_bip32_vector_2);
 	tcase_add_test(tc, test_bip32_compare);
-	tcase_add_test(tc, test_bip32_cache);
+	tcase_add_test(tc, test_bip32_cache_1);
+	tcase_add_test(tc, test_bip32_cache_2);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rfc6979");

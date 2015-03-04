@@ -230,6 +230,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 			if (hdnode_private_ckd(inout, i[k]) == 0) return 0;
 		}
 		// and save it
+		memset(&(private_ckd_cache[private_ckd_cache_index]), 0, sizeof(private_ckd_cache[private_ckd_cache_index]));
 		private_ckd_cache[private_ckd_cache_index].set = true;
 		private_ckd_cache[private_ckd_cache_index].depth = i_count - 1;
 		memcpy(private_ckd_cache[private_ckd_cache_index].i, i, (i_count - 1) * sizeof(uint32_t));
