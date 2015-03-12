@@ -85,7 +85,7 @@ flash2: $(NAME).hex
 		-c "shutdown"
 
 upload:
-	../../python-trezor/cmdtr.py firmware_update -f $(NAME).bin
+	../../python-trezor/trezorctl firmware_update -f $(NAME).bin
 
 sign: $(NAME).bin
 	../bootloader/firmware_sign.py -f $(NAME).bin
