@@ -50,7 +50,6 @@ include ../Makefile.include
 CFLAGS += -Wno-sequence-point
 CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
 CFLAGS += -DQR_MAX_VERSION=0
-CFLAGS += -DUSE_PUBKEY_VALIDATE=0
 CFLAGS += -DDEBUG_LINK=0
 CFLAGS += -DDEBUG_LOG=0
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'

@@ -15,7 +15,6 @@ OBJS += $(MCU_DIR)/trezor-crypto/sha2.o
 
 CFLAGS += -DUSE_PRECOMPUTED_IV=0
 CFLAGS += -DUSE_PRECOMPUTED_CP=0
-CFLAGS += -DUSE_PUBKEY_VALIDATE=0
 
 include $(MCU_DIR)/Makefile.include
 
