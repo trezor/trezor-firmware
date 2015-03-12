@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "bignum.h"
 #include "secp256k1.h"
 
@@ -283,10 +284,6 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 
 #if ! USE_INVERSE_FAST
 
-#if USE_PRECOMPUTED_IV
-#warning USE_PRECOMPUTED_IV will not be used
-#endif
-
 // in field G_prime, small but slow
 void bn_inverse(bignum256 *x, const bignum256 *prime)
 {
@@ -322,285 +319,273 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 
 #else
 
-// in field G_prime, big but fast
-// this algorithm is based on the Euklidean algorithm
-// the result is smaller than 2*prime
+// in field G_prime, big and complicated but fast
+// the input must not be 0 mod prime.
+// the result is smaller than prime
 void bn_inverse(bignum256 *x, const bignum256 *prime)
 {
-	int i, j, k, len1, len2, mask;
-	uint8_t buf[32];
-	uint32_t u[8], v[8], s[9], r[10], temp32;
-	uint64_t temp, temp2;
-	// reduce x modulo prime
+	int i, j, k, cmp;
+	struct combo {
+		uint32_t a[9];
+		int len1;
+	} us, vr, *odd, *even;
+	uint32_t pp[8];
+	uint32_t temp32;
+	uint64_t temp;
+
+	// The algorithm is based on Schroeppel et. al. "Almost Modular Inverse"
+	// algorithm.  We keep four values u,v,r,s in the combo registers
+	// us and vr.  us stores u in the first len1 limbs (little endian)
+	// and v in the last 9-len1 limbs (big endian).  vr stores v and s.
+	// This is because both u*s and v*r are guaranteed to fit in 8 limbs, so
+	// their components are guaranteed to fit in 9.  During the algorithm,
+	// the length of u and v shrinks while r and s grow.
+	// u,v,r,s correspond to F,G,B,C in Schroeppel's algorithm.
+
+	// reduce x modulo prime.  This is necessary as it has to fit in 8 limbs.
 	bn_fast_mod(x, prime);
 	bn_mod(x, prime);
-	// convert x and prime it to 8x32 bit limb form
-	bn_write_be(prime, buf);
+	// convert x and prime to 8x32 bit limb form
+	temp32 = prime->val[0];
 	for (i = 0; i < 8; i++) {
-		u[i] = read_be(buf + 28 - i * 4);
+		temp32 |= prime->val[i + 1] << (30-2*i);
+		us.a[i] = pp[i] = temp32;
+		temp32 = prime->val[i + 1] >> (2+2*i);
 	}
-	bn_write_be(x, buf);
+	temp32 = x->val[0];
 	for (i = 0; i < 8; i++) {
-		v[i] = read_be(buf + 28 - i * 4);
+		temp32 |= x->val[i + 1] << (30-2*i);
+		vr.a[i] = temp32;
+		temp32 = x->val[i + 1] >> (2+2*i);
 	}
-	len1 = 8;
-	s[0] = 1;
-	r[0] = 0;
-	len2 = 1;
+	us.len1 = 8;
+	vr.len1 = 8;
+	// set s = 1 and r = 0
+	us.a[8] = 1;
+	vr.a[8] = 0;
+	// set k = 0.
 	k = 0;
-	// u = prime, v = x  len1 = numlimbs(u,v)
-	// r = 0    , s = 1  len2 = numlimbs(r,s)
+
+	// only one of the numbers u,v can be even at any time.  We
+	// let even point to that number and odd to the other.
+	// Initially the prime u is guaranteed to be odd.
+	odd = &us;
+	even = &vr;
+
+	// u = prime, v = x  
+	// r = 0    , s = 1
 	// k = 0
 	for (;;) {
 		// invariants:
-		//   r,s,u,v >= 0
+		//   let u = limbs us.a[0..u.len1-1] in little endian, 
+		//   let s = limbs us.a[u.len..8] in big endian,
+		//   let v = limbs vr.a[0..u.len1-1] in little endian, 
+		//   let r = limbs vr.a[u.len..8] in big endian,
+		//   r,s >= 0 ; u,v >= 1
 		//   x*-r = u*2^k mod prime
 		//   x*s  = v*2^k mod prime
 		//   u*s + v*r = prime
 		//   floor(log2(u)) + floor(log2(v)) + k <= 510
-		//   max(u,v) <= 2^k
+		//   max(u,v) <= 2^k   (*) see comment at end of loop
 		//   gcd(u,v) = 1
-		//   len1 = numlimbs(u,v)
-		//   len2 = numlimbs(r,s)
+		//   {odd,even} = {&us, &vr}
+ 		//   odd->a[0] and odd->a[8] are odd
+		//   even->a[0] or even->a[8] is even
 		//
-		// first u,v are large and s,r small
-		// later u,v are small and s,r large
+		// first u/v are large and r/s small
+		// later u/v are small and r/s large
+		assert(odd->a[0] & 1);
+		assert(odd->a[8] & 1);
 
-		// if (is_zero(v)) break;
-		for (i = 0; i < len1; i++) {
-			if (v[i]) break;
+		// adjust length of even.
+		while (even->a[even->len1 - 1] == 0) {
+			even->len1--;
+			// if input was 0, return.
+			// This simple check prevents crashing with stack underflow
+			// or worse undesired behaviour for illegal input.
+			if (even->len1 < 0)
+				return;
 		}
-		if (i == len1) break;
 
-		// reduce u while it is even
-		for (;;) {
-			// count up to 30 zero bits of u.
-			for (i = 0; i < 30; i++) {
-				if (u[0] & (1 << i)) break;
+		// reduce even->a while it is even
+		while (even->a[0] == 0) {
+			// shift right first part of even by a limb
+			// and shift left second part of even by a limb.
+			for (i = 0; i < 8; i++) {
+				even->a[i] = even->a[i+1];
 			}
-			// if u was odd break
-			if (i == 0) break;
-
-			// shift u right by i bits.
-			mask = (1 << i) - 1;
-			for (j = 0; j + 1 < len1; j++) {
-				u[j] = (u[j] >> i) | ((u[j + 1] & mask) << (32 - i));
-			}
-			u[j] = (u[j] >> i);
-
-			// shift s left by i bits.
-			mask = (1 << (32 - i)) - 1;
-			s[len2] = s[len2 - 1] >> (32 - i);
-			for (j = len2 - 1; j > 0; j--) {
-				s[j] = (s[j - 1] >> (32 - i)) | ((s[j] & mask) << i);
-			}
-			s[0] = (s[0] & mask) << i;
-			// update len2 if necessary
-			if (s[len2]) {
-				r[len2] = 0;
-				len2++;
-			}
-			// add i bits to k.
-			k += i;
+			even->a[i] = 0;
+			even->len1--;
+			k += 32;
 		}
-		// reduce v while it is even
-		for (;;) {
-			// count up to 30 zero bits of v.
-			for (i = 0; i < 30; i++) {
-				if (v[0] & (1 << i)) break;
-			}
-			// if v was odd break
-			if (i == 0) break;
-
-			// shift v right by i bits.
-			mask = (1 << i) - 1;
-			for (j = 0; j + 1 < len1; j++) {
-				v[j] = (v[j] >> i) | ((v[j + 1] & mask) << (32 - i));
-			}
-			v[j] = (v[j] >> i);
-			mask = (1 << (32 - i)) - 1;
-			// shift r left by i bits.
-			r[len2] = r[len2 - 1] >> (32 - i);
-			for (j = len2 - 1; j > 0; j--) {
-				r[j] = (r[j - 1] >> (32 - i)) | ((r[j] & mask) << i);
-			}
-			r[0] = (r[0] & mask) << i;
-			// update len2 if necessary
-			if (r[len2]) {
-				s[len2] = 0;
-				len2++;
-			}
-			// add i bits to k.
-			k += i;
+		// count up to 32 zero bits of even->a.
+		j = 0;
+		while ((even->a[0] & (1 << j)) == 0) {
+			j++;
 		}
-		
-		// invariant is reestablished.
-		i = len1 - 1;
-		while (i > 0 && u[i] == v[i]) i--;
-		if (u[i] > v[i]) {
-			// u > v:
-			//  u = (u - v)/2;
-			temp = 0x100000000ull + u[0] - v[0];
-			u[0] = (temp >> 1) & 0x7FFFFFFF;
-			temp >>= 32;
-			for (i = 1; i < len1; i++) {
-				temp += 0xFFFFFFFFull + u[i] - v[i];
-				u[i - 1] += (temp & 1) << 31;
-				u[i] = (temp >> 1) & 0x7FFFFFFF;
-				temp >>= 32;
+		if (j > 0) {
+			// shift first part of even right by j bits.
+			for (i = 0; i + 1 < even->len1; i++) {
+				even->a[i] = (even->a[i] >> j) | (even->a[i + 1] << (32 - j));
 			}
-			temp = temp2 = 0;
-			// r += s;
-			// s += s;
-			for (i = 0; i < len2; i++) {
-				temp += s[i];
-				temp += r[i];
-				temp2 += s[i];
-				temp2 += s[i];
-				r[i] = temp;
-				s[i] = temp2;
-				temp >>= 32;
-				temp2 >>= 32;
-			}
-			// expand if necessary.
-			if (temp != 0 || temp2 != 0) {
-				r[len2] = temp;
-				s[len2] = temp2;
-				len2++;
-			}
-			// note that
-			//   u'2^(k+1) = (u - v) 2^k = x -(r + s) = x -r' mod prime
-			//   v'2^(k+1) = 2*v     2^k = x (s + s) = x s'   mod prime
-			//   u's' + v'r' = (u-v)/2(2s) + v(r+s) = us + vr
-		} else {
-			// v >= u:
-			// v = v - u;
-			temp = 0x100000000ull + v[0] - u[0];
-			v[0] = (temp >> 1) & 0x7FFFFFFF;
-			temp >>= 32;
-			for (i = 1; i < len1; i++) {
-				temp += 0xFFFFFFFFull + v[i] - u[i];
-				v[i - 1] += (temp & 1) << 31;
-				v[i] = (temp >> 1) & 0x7FFFFFFF;
-				temp >>= 32;
-			}
-			// s = s + r
-			// r = r + r
-			temp = temp2 = 0;
-			for (i = 0; i < len2; i++) {
-				temp += s[i];
-				temp += r[i];
-				temp2 += r[i];
-				temp2 += r[i];
-				s[i] = temp;
-				r[i] = temp2;
-				temp >>= 32;
-				temp2 >>= 32;
-			}
-			if (temp != 0 || temp2 != 0) {
-				s[len2] = temp;
-				r[len2] = temp2;
-				len2++;
-			}
-			// note that
-			//   u'2^(k+1) = 2*u     2^k = x -(r + r) = x -r' mod prime
-			//   v'2^(k+1) = (v - u) 2^k = x (s + r) = x s'   mod prime
-			//   u's' + v'r' = u(r+s) + (v-u)/2(2r) = us + vr
-		}
-		// adjust len1 if possible.
-		if (u[len1 - 1] == 0 && v[len1 - 1] == 0) len1--;
-		// increase k
-		k++;
-	}
-	// In the last iteration just before the comparison and subtraction
-	// we had u=1, v=1, s+r = prime, k <= 510, 2^k > max(s,r) >= prime/2
-	// hence 0 <= r < prime and 255 <= k <= 510.
-	//
-	// Afterwards r is doubled, k is incremented by 1.
-	// Hence 0 <= r < 2*prime and 256 <= k < 512.
-	//
-	// The invariants give us x*-r = 2^k mod prime,
-	// hence r = -2^k * x^-1 mod prime.
-	// We need to compute -r/2^k mod prime.
-
-	// convert r to bignum style
-	j = r[0] >> 30;
-	r[0] = r[0] & 0x3FFFFFFFu;
-	for (i = 1; i < len2; i++) {
-		uint32_t q = r[i] >> (30 - 2 * i);
-		r[i] = ((r[i] << (2 * i)) & 0x3FFFFFFFu) + j;
-		j=q;
-	}
-	r[i] = j;
-	i++;
-	for (; i < 9; i++) r[i] = 0;
-
-	// r = r mod prime, note that r<2*prime.
-	i = 8;
-	while (i > 0 && r[i] == prime->val[i]) i--;
-	if (r[i] >= prime->val[i]) {
-		temp32 = 1;
-		for (i = 0; i < 9; i++) {
-			temp32 += 0x3FFFFFFF + r[i] - prime->val[i];
-			r[i] = temp32 & 0x3FFFFFFF;
-			temp32 >>= 30;
-		}
-	}
-	// negate r:  r = prime - r
-	temp32 = 1;
-	for (i = 0; i < 9; i++) {
-		temp32 += 0x3FFFFFFF + prime->val[i] - r[i];
-		r[i] = temp32 & 0x3FFFFFFF;
-		temp32 >>= 30;
-	}
-	// now: r = 2^k * x^-1 mod prime
-	// compute  r/2^k,  256 <= k < 511
-	int done = 0;
-#if USE_PRECOMPUTED_IV
-	if (prime == &prime256k1) {
-		for (j = 0; j < 9; j++) {
-			x->val[j] = r[j];
-		}
-		// secp256k1_iv[k-256] = 2^-k mod prime
-		bn_multiply(secp256k1_iv + k - 256, x, prime);
-		// bn_fast_mod is unnecessary as bn_multiply already
-		//   guarantees x < 2*prime
-		bn_fast_mod(x, prime);
-		// We don't guarantee x < prime!
-		// the slow variant and the slow case below guarantee
-		// this.
-		done = 1;
-	}
-#endif
-	if (!done) {
-		// compute r = r/2^k mod prime
-		for (j = 0; j < k; j++) {
-			// invariant: r = 2^(k-j) * x^-1 mod prime
-			// in each iteration divide r by 2 modulo prime.
-			if (r[0] & 1) {
-				// r is odd; compute r = (prime + r)/2
-				temp32 = r[0] + prime->val[0];
-				r[0] = (temp32 >> 1) & 0x1FFFFFFF;
-				temp32 >>= 30;
-				for (i = 1; i < 9; i++) {
-					temp32 += r[i] + prime->val[i];
-					r[i - 1] += (temp32 & 1) << 29;
-					r[i] = (temp32 >> 1) & 0x1FFFFFFF;
-					temp32 >>= 30;
-				}
+			even->a[i] = (even->a[i] >> j);
+			if (even->a[i] == 0) {
+				even->len1--;
 			} else {
-				// r = r / 2
-				for (i = 0; i < 8; i++) {
-					r[i] = (r[i] >> 1) | ((r[i + 1] & 1) << 29);
-				}
-				r[8] = r[8] >> 1;
+				i++;
 			}
+
+			// shift second part of even left by j bits.
+			for (; i < 8; i++) {
+				even->a[i] = (even->a[i] << j) | (even->a[i + 1] >> (32 - j));
+			}
+			even->a[i] = (even->a[i] << j);
+			// add j bits to k.
+			k += j;
 		}
-		// r = x^-1 mod prime, since j = k
-		for (j = 0; j < 9; j++) {
-			x->val[j] = r[j];
+		// invariant is reestablished.
+		// now both a[0] are odd.
+		assert(odd->a[0] & 1);
+		assert(odd->a[8] & 1);
+		assert(even->a[0] & 1);
+		assert((even->a[8] & 1) == 0);
+
+		// cmp > 0 if us.a[0..len1-1] > vr.a[0..len1-1], 
+		// cmp = 0 if equal, < 0 if less.
+		cmp = us.len1 - vr.len1;
+		if (cmp == 0) {
+			i = us.len1 - 1;
+			while (i >= 0 && us.a[i] == vr.a[i]) i--;
+			// both are equal to 1 and we are done.
+			if (i == -1)
+				break;
+			cmp = us.a[i] > vr.a[i] ? 1 : -1;
 		}
+		if (cmp > 0) {
+			even = &us;
+			odd = &vr;
+		} else {
+			even = &vr;
+			odd = &us;
+		}
+
+		// now even > odd.
+
+		//  even->a[0..len1-1] = (even->a[0..len1-1] - odd->a[0..len1-1]);
+		temp = 1;
+		for (i = 0; i < odd->len1; i++) {
+			temp += 0xFFFFFFFFull + even->a[i] - odd->a[i];
+			even->a[i] = temp & 0xFFFFFFFF;
+			temp >>= 32;
+		}
+		for (; i < even->len1; i++) {
+			temp += 0xFFFFFFFFull + even->a[i];
+			even->a[i] = temp & 0xFFFFFFFF;
+			temp >>= 32;
+		}
+		//  odd->a[len1..8] = (odd->b[len1..8] + even->b[len1..8]);
+		temp = 0;
+		for (i = 8; i >= even->len1; i--) {
+			temp += (uint64_t) odd->a[i] + even->a[i];
+			odd->a[i] = temp & 0xFFFFFFFF;
+			temp >>= 32;
+		}
+		for (; i >= odd->len1; i--) {
+			temp += (uint64_t) odd->a[i];
+			odd->a[i] = temp & 0xFFFFFFFF;
+			temp >>= 32;
+		}
+		// note that
+		//  if u > v:
+		//   u'2^k = (u - v) 2^k = x(-r) - xs = x(-(r+s)) = x(-r') mod prime
+		//   u's' + v'r' = (u-v)s + v(r+s) = us + vr
+		//  if u < v:
+		//   v'2^k = (v - u) 2^k = xs - x(-r) = x(s+r) = xs' mod prime
+		//   u's' + v'r' = u(s+r) + (v-u)r = us + vr
+
+		// even->a[0] is difference between two odd numbers, hence even.
+		// odd->a[8] is sum of even and odd number, hence odd.
+		assert(odd->a[0] & 1);
+		assert(odd->a[8] & 1);
+		assert((even->a[0] & 1) == 0);
+
+		// The invariants are (almost) reestablished.
+		// The invariant max(u,v) <= 2^k can be invalidated at this point,
+		// because odd->a[len1..8] was changed.  We only have
+		//
+		//     odd->a[len1..8] <= 2^{k+1}
+		//
+		// Since even->a[0] is even, k will be incremented at the beginning
+		// of the next loop while odd->a[len1..8] remains unchanged.
+		// So after that, odd->a[len1..8] <= 2^k will hold again.
 	}
+	// In the last iteration we had u = v and gcd(u,v) = 1.
+	// Hence, u=1, v=1, s+r = prime, k <= 510, 2^k > max(s,r) >= prime/2
+	// This implies 0 <= s < prime and 255 <= k <= 510.
+	//
+	// The invariants also give us x*s = 2^k mod prime,
+	// hence s = -2^k * x^-1 mod prime.
+	// We need to compute -s/2^k mod prime.
+
+	// First we compute inverse = -prime^-1 mod 2^32, which we need later.
+	// We use the Explicit Quadratic Modular inverse algorithm.
+	//   http://arxiv.org/pdf/1209.6626.pdf
+	// a^-1  = (2-a) * PROD_i (1 + (a - 1)^(2^i)) mod 2^32
+	// the product will converge quickly, because (a-1)^(2^i) will be 
+	// zero mod 2^32 after at most five iterations.
+	// We want to compute -prime^-1 so we start with (pp[0]-2).
+	assert(pp[0] & 1);
+	uint32_t amone = pp[0]-1;
+	uint32_t inverse = pp[0] - 2;
+	while (amone) {
+		amone *= amone;
+		inverse *= (amone + 1);
+	}
+
+	while (k >= 32) {
+		// compute s / 2^32 modulo prime.
+		// Idea: compute factor, such that
+		//   s + factor*prime mod 2^32 == 0
+		// i.e. factor = s * -1/prime mod 2^32.
+		// Then compute s + factor*prime and shift right by 32 bits.
+		uint32_t factor = (inverse * us.a[8]) & 0xffffffff;
+		temp = us.a[8] + (uint64_t) pp[0] * factor;
+		//		printf("%lx %x %x %x\n", temp, us.b[0], inverse, factor);
+		assert((temp & 0xffffffff) == 0);
+		temp >>= 32;
+		for (i = 0; i < 7; i++) {
+			temp += us.a[8-(i+1)] + (uint64_t) pp[i+1] * factor;
+			us.a[8-i] = temp & 0xffffffff;
+			temp >>= 32;
+		}
+		us.a[8-i] = temp & 0xffffffff;
+		k -= 32;
+	}
+	if (k > 0) {
+		// compute s / 2^k  modulo prime.
+		// Same idea: compute factor, such that
+		//   s + factor*prime mod 2^k == 0
+		// i.e. factor = s * -1/prime mod 2^k.
+		// Then compute s + factor*prime and shift right by k bits.
+		uint32_t mask = (1 << k) - 1;
+		uint32_t factor = (inverse * us.a[8]) & mask;
+		temp = (us.a[8] + (uint64_t) pp[0] * factor) >> k;
+		assert(((us.a[8] + pp[0] * factor) & mask) == 0);
+		for (i = 0; i < 7; i++) {
+			temp += (us.a[8-(i+1)] + (uint64_t) pp[i+1] * factor) << (32 - k);
+			us.a[8-i] = temp & 0xffffffff;
+			temp >>= 32;
+		}
+		us.a[8-i] = temp & 0xffffffff;
+	}
+
+	// convert s to bignum style
+	temp32 = 0;
+	for (i = 0; i < 8; i++) {
+		x->val[i] = ((us.a[8-i] << (2 * i)) & 0x3FFFFFFFu) | temp32;
+		temp32 = us.a[8-i] >> (30 - 2 * i);
+	}
+	x->val[i] = temp32;
 }
 #endif
 
