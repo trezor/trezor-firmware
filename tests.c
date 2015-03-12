@@ -1060,7 +1060,6 @@ START_TEST(test_pubkey_validity)
 	res = ecdsa_read_pubkey(pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
-#if USE_PUBKEY_VALIDATE
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b826b8f40b92719086238e1bebf00000000"), 65);
 	res = ecdsa_read_pubkey(pub_key, &pub);
 	ck_assert_int_eq(res, 0);
@@ -1068,7 +1067,6 @@ START_TEST(test_pubkey_validity)
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b8211111111111111111111111111111111"), 65);
 	res = ecdsa_read_pubkey(pub_key, &pub);
 	ck_assert_int_eq(res, 0);
-#endif
 
 	memcpy(pub_key, fromhex("00"), 1);
 	res = ecdsa_read_pubkey(pub_key, &pub);

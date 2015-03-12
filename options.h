@@ -48,11 +48,6 @@
 #define USE_RFC6979 1
 #endif
 
-// check public key for validity
-#ifndef USE_PUBKEY_VALIDATE
-#define USE_PUBKEY_VALIDATE 1
-#endif
-
 // implement BIP32 caching
 #ifndef USE_BIP32_CACHE
 #define USE_BIP32_CACHE 1

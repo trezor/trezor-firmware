@@ -162,11 +162,9 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	scalar_multiply(&c, &b); // b = c * G
 	point_add(&a, &b);       // b = a + b
 
-#if USE_PUBKEY_VALIDATE
 	if (!ecdsa_validate_pubkey(&b)) {
 		return 0;
 	}
-#endif
 
 	inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
 	bn_write_be(&b.x, inout->public_key + 1);
