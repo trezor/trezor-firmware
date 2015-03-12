@@ -460,20 +460,12 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 	if (pub_key[0] == 0x04) {
 		bn_read_be(pub_key + 1, &(pub->x));
 		bn_read_be(pub_key + 33, &(pub->y));
-#if USE_PUBKEY_VALIDATE
 		return ecdsa_validate_pubkey(pub);
-#else
-		return 1;
-#endif
 	}
 	if (pub_key[0] == 0x02 || pub_key[0] == 0x03) { // compute missing y coords
 		bn_read_be(pub_key + 1, &(pub->x));
 		uncompress_coords(pub_key[0], &(pub->x), &(pub->y));
-#if USE_PUBKEY_VALIDATE
 		return ecdsa_validate_pubkey(pub);
-#else
-		return 1;
-#endif
 	}
 	// error
 	return 0;
@@ -483,12 +475,10 @@ int ecdsa_read_pubkey(const uint8_t *pub_key, curve_point *pub)
 //   - pub is not the point at infinity.
 //   - pub->x and pub->y are in range [0,p-1].
 //   - pub is on the curve.
-//   - n*pub is the point at infinity.
 
 int ecdsa_validate_pubkey(const curve_point *pub)
 {
 	bignum256 y_2, x_3_b;
-	curve_point temp;
 
 	if (point_is_infinity(pub)) {
 		return 0;
@@ -511,12 +501,6 @@ int ecdsa_validate_pubkey(const curve_point *pub)
 	bn_addmodi(&x_3_b, 7, &prime256k1);
 
 	if (!bn_is_equal(&x_3_b, &y_2)) {
-		return 0;
-	}
-
-	point_multiply(&order256k1, pub, &temp);
-
-	if (!point_is_infinity(&temp)) {
 		return 0;
 	}
 
