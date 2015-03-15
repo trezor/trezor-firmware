@@ -43,27 +43,37 @@ inline void write_be(uint8_t *data, uint32_t x)
 	data[3] = x;
 }
 
+// convert a raw bigendian 256 bit number to a normalized bignum
 void bn_read_be(const uint8_t *in_number, bignum256 *out_number)
 {
 	int i;
-	uint64_t temp = 0;
+	uint32_t temp = 0;
 	for (i = 0; i < 8; i++) {
-		temp += (((uint64_t)read_be(in_number + (7 - i) * 4)) << (2 * i));
+		// invariant: temp = (in_number % 2^(32i)) >> 30i
+		// get next limb = (in_number % 2^(32(i+1))) >> 32i
+		uint32_t limb = read_be(in_number + (7 - i) * 4);
+		// temp = (in_number % 2^(32(i+1))) << 30i
+		temp |= limb << (2*i);
+		// store 30 bits into val[i]
 		out_number->val[i]= temp & 0x3FFFFFFF;
-		temp >>= 30;
+		// prepare temp for next round
+		temp = limb >> (30 - 2*i);
 	}
 	out_number->val[8] = temp;
 }
 
+// convert a normalized bignum to a raw bigendian 256 bit number.
+// in_number must be normalized and < 2^256.
 void bn_write_be(const bignum256 *in_number, uint8_t *out_number)
 {
-	int i, shift = 30 + 16 - 32;
-	uint64_t temp = in_number->val[8];
+	int i;
+	uint32_t temp = in_number->val[8] << 16;
 	for (i = 0; i < 8; i++) {
-		temp <<= 30;
-		temp |= in_number->val[7 - i];
-		write_be(out_number + i * 4, temp >> shift);
-		shift -= 2;
+		// invariant: temp = (in_number >> 30*(8-i)) << (16 + 2i)
+		uint32_t limb = in_number->val[7 - i];
+		temp |= limb >> (14 - 2*i);
+		write_be(out_number + i * 4, temp);
+		temp = limb << (18 + 2*i);
 	}
 }
 
@@ -336,7 +346,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	// The algorithm is based on Schroeppel et. al. "Almost Modular Inverse"
 	// algorithm.  We keep four values u,v,r,s in the combo registers
 	// us and vr.  us stores u in the first len1 limbs (little endian)
-	// and v in the last 9-len1 limbs (big endian).  vr stores v and s.
+	// and s in the last 9-len1 limbs (big endian).  vr stores v and r.
 	// This is because both u*s and v*r are guaranteed to fit in 8 limbs, so
 	// their components are guaranteed to fit in 9.  During the algorithm,
 	// the length of u and v shrinks while r and s grow.
@@ -524,8 +534,8 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	// This implies 0 <= s < prime and 255 <= k <= 510.
 	//
 	// The invariants also give us x*s = 2^k mod prime,
-	// hence s = -2^k * x^-1 mod prime.
-	// We need to compute -s/2^k mod prime.
+	// hence s = 2^k * x^-1 mod prime.
+	// We need to compute s/2^k mod prime.
 
 	// First we compute inverse = -prime^-1 mod 2^32, which we need later.
 	// We use the Explicit Quadratic Modular inverse algorithm.
@@ -550,7 +560,6 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		// Then compute s + factor*prime and shift right by 32 bits.
 		uint32_t factor = (inverse * us.a[8]) & 0xffffffff;
 		temp = us.a[8] + (uint64_t) pp[0] * factor;
-		//		printf("%lx %x %x %x\n", temp, us.b[0], inverse, factor);
 		assert((temp & 0xffffffff) == 0);
 		temp >>= 32;
 		for (i = 0; i < 7; i++) {
@@ -650,9 +659,17 @@ void bn_divmod58(bignum256 *a, uint32_t *r)
 	rem = a->val[8] % 58;
 	a->val[8] /= 58;
 	for (i = 7; i >= 0; i--) {
+		// invariants:
+		//   rem = old(a) >> 30(i+1) % 58
+		//   a[i+1..8] = old(a[i+1..8])/58
+		//   a[0..i]   = old(a[0..i])
 		// 2^30 == 18512790*58 + 4
 		tmp = rem * 4 + a->val[i];
+		// set a[i] = (rem * 2^30 + a[i])/58
+		//          = rem * 18512790 + (rem * 4 + a[i])/58
 		a->val[i] = rem * 18512790 + (tmp / 58);
+		// set rem = (rem * 2^30 + a[i]) mod 58
+		//         = (rem * 4 + a[i]) mod 58
 		rem = tmp % 58;
 	}
 	*r = rem;
