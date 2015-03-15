@@ -626,14 +626,15 @@ void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime) {
 	bn_mod(a, prime);
 }
 
-// res = a - b
-// b < 2*prime; result not normalized
-void bn_subtractmod(const bignum256 *a, const bignum256 *b, bignum256 *res)
+// res = a - b mod prime.  More exactly res = a + (2*prime - b).
+// precondition: 0 <= b < 2*prime, 0 <= a < prime
+// res < 3*prime
+void bn_subtractmod(const bignum256 *a, const bignum256 *b, bignum256 *res, const bignum256 *prime)
 {
 	int i;
 	uint32_t temp = 0;
 	for (i = 0; i < 9; i++) {
-		temp += a->val[i] + 2u * prime256k1.val[i] - b->val[i];
+		temp += a->val[i] + 2u * prime->val[i] - b->val[i];
 		res->val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}
