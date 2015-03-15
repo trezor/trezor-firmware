@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "bignum.h"
 #include "rand.h"
@@ -192,42 +193,78 @@ int point_is_negative_of(const curve_point *p, const curve_point *q)
 	return !bn_is_equal(&(p->y), &(q->y));
 }
 
+#if USE_PRECOMPUTED_CP
+#define BITS_AT_A_TIME 3
+#else
+#define BITS_AT_A_TIME 2
+#endif
+
 // res = k * G
 void scalar_multiply(const bignum256 *k, curve_point *res)
 {
 	int i;
 	// result is zero
 	int is_zero = 1;
-	curve_point curr;
-	// initial res
-	memcpy(&curr, &G256k1, sizeof(curve_point));
-	for (i = 0; i < 256; i++) {
-		if (k->val[i / 30] & (1u << (i % 30))) {
-			if (is_zero) {
-#if USE_PRECOMPUTED_CP
-				if (i < 255 && (k->val[(i + 1) / 30] & (1u << ((i + 1) % 30)))) {
-					memcpy(res, secp256k1_cp2 + i, sizeof(curve_point));
-					i++;
-				} else {
-					memcpy(res, secp256k1_cp + i, sizeof(curve_point));
-				}
-#else
-				memcpy(res, &curr, sizeof(curve_point));
+#if !USE_PRECOMPUTED_CP
+	curve_point curr = G256k1;
 #endif
+	assert (bn_is_less(k, &order256k1));
+	bignum256 a = *k;
+	int sign = 1;
+	if ((a.val[8] & 0x8000) != 0) {
+		// negate k if it is large
+		bn_subtract(&order256k1, &a, &a);
+		sign = -sign;
+	}
+	// initial res
+	point_set_infinity(res);
+	for (i = 0; i < 256; i++) {
+		int lowbits = a.val[0] & ((1 << BITS_AT_A_TIME) - 1);
+		if ((lowbits & 1) != 0) {
+			int tsign = sign;
+			int factor = lowbits & 3;
+			
+			if ((lowbits & (1 << (BITS_AT_A_TIME - 1))) != 0) {
+				lowbits |= ~((1 << BITS_AT_A_TIME) - 1);
+				factor ^= ~1;
+				tsign = -sign;
+			}
+			
+			int j = 0;
+			uint32_t carry = -lowbits;
+			while (carry) {
+				carry += a.val[j];
+				a.val[j] = carry & 0x3fffffff;
+				carry >>= 30;
+				j++;
+			}
+
+			const curve_point *summand;
+#if USE_PRECOMPUTED_CP
+			summand = ((factor & 2) != 0 ? secp256k1_cp2 : secp256k1_cp) + i;
+#else
+			summand = &curr;
+#endif
+			// negate summand if necessary
+			if (is_zero) {
+				if (tsign < 0) {
+					res->x = summand->x;
+					bn_subtract(&prime256k1, &summand->y, &res->y);
+				} else {
+					*res = *summand;
+				}
 				is_zero = 0;
 			} else {
-#if USE_PRECOMPUTED_CP
-				if (i < 255 && (k->val[(i + 1) / 30] & (1u << ((i + 1) % 30)))) {
-					point_add(secp256k1_cp2 + i, res);
-					i++;
-				} else {
-					point_add(secp256k1_cp + i, res);
+				curve_point temp;
+				if (tsign < 0) {
+					temp.x = summand->x;
+					bn_subtract(&prime256k1, &summand->y, &temp.y);
+					summand = &temp;
 				}
-#else
-				point_add(&curr, res);
-#endif
+				point_add(summand, res);
 			}
 		}
+		bn_rshift(&a);
 #if ! USE_PRECOMPUTED_CP
 		point_double(&curr);
 #endif
