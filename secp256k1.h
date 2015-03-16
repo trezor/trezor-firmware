@@ -49,8 +49,7 @@ extern const bignum256 order256k1_half;
 extern const bignum256 three_over_two256k1;
 
 #if USE_PRECOMPUTED_CP
-extern const curve_point secp256k1_cp[256];
-extern const curve_point secp256k1_cp2[255];
+extern const curve_point secp256k1_cp[64][8];
 #endif
 
 #endif

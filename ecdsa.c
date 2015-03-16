@@ -194,82 +194,64 @@ int point_is_negative_of(const curve_point *p, const curve_point *q)
 }
 
 #if USE_PRECOMPUTED_CP
-#define BITS_AT_A_TIME 3
-#else
-#define BITS_AT_A_TIME 2
-#endif
 
 // res = k * G
 void scalar_multiply(const bignum256 *k, curve_point *res)
 {
-	int i;
+	int i, j;
 	// result is zero
-	int is_zero = 1;
-#if !USE_PRECOMPUTED_CP
-	curve_point curr = G256k1;
-#endif
 	assert (bn_is_less(k, &order256k1));
 	bignum256 a = *k;
-	int sign = 1;
-	if ((a.val[8] & 0x8000) != 0) {
-		// negate k if it is large
+	int sign = (a.val[0] & 1) ^ 1;
+	uint32_t lowbits;
+	// make number odd
+	if (sign) {
 		bn_subtract(&order256k1, &a, &a);
-		sign = -sign;
 	}
-	// initial res
-	point_set_infinity(res);
-	for (i = 0; i < 256; i++) {
-		int lowbits = a.val[0] & ((1 << BITS_AT_A_TIME) - 1);
-		if ((lowbits & 1) != 0) {
-			int tsign = sign;
-			int factor = lowbits & 3;
-			
-			if ((lowbits & (1 << (BITS_AT_A_TIME - 1))) != 0) {
-				lowbits |= ~((1 << BITS_AT_A_TIME) - 1);
-				factor ^= ~1;
-				tsign = -sign;
-			}
-			
-			int j = 0;
-			uint32_t carry = -lowbits;
-			while (carry) {
-				carry += a.val[j];
-				a.val[j] = carry & 0x3fffffff;
-				carry >>= 30;
-				j++;
-			}
+	a.val[8] |= 0x10000;
+	assert((a.val[0] & 1) != 0);
+	assert((a.val[8] & 0x10000) != 0);
 
-			const curve_point *summand;
-#if USE_PRECOMPUTED_CP
-			summand = ((factor & 2) != 0 ? secp256k1_cp2 : secp256k1_cp) + i;
-#else
-			summand = &curr;
-#endif
-			// negate summand if necessary
-			if (is_zero) {
-				if (tsign < 0) {
-					res->x = summand->x;
-					bn_subtract(&prime256k1, &summand->y, &res->y);
-				} else {
-					*res = *summand;
-				}
-				is_zero = 0;
-			} else {
-				curve_point temp;
-				if (tsign < 0) {
-					temp.x = summand->x;
-					bn_subtract(&prime256k1, &summand->y, &temp.y);
-					summand = &temp;
-				}
-				point_add(summand, res);
-			}
+	// now compute  res = a *G step by step.
+	// initial res
+	lowbits = a.val[0] & ((1 << 5) - 1);
+	lowbits ^= (lowbits >> 4) - 1;
+	lowbits &= 15;
+	*res = secp256k1_cp[0][lowbits >> 1];
+	for (i = 1; i < 64; i ++) {
+		// invariant res = abs((a % 2*16^i) - 16^i) * G
+
+		for (j = 0; j < 8; j++) {
+			a.val[j] = (a.val[j] >> 4) | ((a.val[j + 1] & 0xf) << 26);
 		}
-		bn_rshift(&a);
-#if ! USE_PRECOMPUTED_CP
-		point_double(&curr);
-#endif
+		a.val[j] >>= 4;
+
+		lowbits = a.val[0] & ((1 << 5) - 1);
+		lowbits ^= (lowbits >> 4) - 1;
+		lowbits &= 15;
+		if ((lowbits & 1) == 0) {
+			// negate last result to make signs of this round and the
+			// last round equal.
+			bn_subtract(&prime256k1, &res->y, &res->y);
+		}
+		
+		// add odd factor
+		point_add(&secp256k1_cp[i][lowbits >> 1], res);
+	}
+	if (sign) {
+		// negate 
+		bn_subtract(&prime256k1, &res->y, &res->y);
 	}
 }
+
+#else
+
+void scalar_multiply(const bignum256 *k, curve_point *res)
+{
+	point_multiply(k, &G256k1, res);
+}
+
+#endif
 
 // generate random K for signing
 int generate_k_random(bignum256 *k) {
