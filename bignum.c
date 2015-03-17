@@ -154,29 +154,6 @@ void bn_mod(bignum256 *x, const bignum256 *prime)
 	}
 }
 
-// a = a + b
-void bn_addi(bignum256 *a, uint32_t b)
-{
-	uint64_t t = a->val[0];
-	t += b;
-	a->val[0] = t & 0x3FFFFFFFu;
-	t >>= 30;
-	a->val[1] += t;
-}
-
-// a = a * b
-void bn_muli(bignum256 *a, uint32_t b)
-{
-	uint64_t t = 0;
-	int i;
-	for (i = 0; i < 8; i++) {
-		t = (uint64_t)(a->val[i]) * b + t;
-		a->val[i] = t & 0x3FFFFFFFu;
-		t >>= 30;
-	}
-	a->val[8] += t;
-}
-
 // Compute x := k * x  (mod prime)
 // both inputs must be smaller than 2 * prime.
 // result is reduced to 0 <= x < 2 * prime
@@ -657,7 +634,7 @@ void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime) {
 
 // res = a - b
 // b < 2*prime; result not normalized
-void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
+void bn_subtractmod(const bignum256 *a, const bignum256 *b, bignum256 *res)
 {
 	int i;
 	uint32_t temp = 0;
@@ -669,7 +646,7 @@ void bn_substract(const bignum256 *a, const bignum256 *b, bignum256 *res)
 }
 
 // res = a - b ; a > b
-void bn_substract_noprime(const bignum256 *a, const bignum256 *b, bignum256 *res)
+void bn_subtract(const bignum256 *a, const bignum256 *b, bignum256 *res)
 {
 	int i;
 	uint32_t tmp = 1;

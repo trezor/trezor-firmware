@@ -63,9 +63,9 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 		return;
 	}
 
-	bn_substract(&(cp2->x), &(cp1->x), &inv);
+	bn_subtractmod(&(cp2->x), &(cp1->x), &inv);
 	bn_inverse(&inv, &prime256k1);
-	bn_substract(&(cp2->y), &(cp1->y), &lambda);
+	bn_subtractmod(&(cp2->y), &(cp1->y), &lambda);
 	bn_multiply(&inv, &lambda, &prime256k1);
 	memcpy(&xr, &lambda, sizeof(bignum256));
 	bn_multiply(&xr, &xr, &prime256k1);
@@ -76,11 +76,11 @@ void point_add(const curve_point *cp1, curve_point *cp2)
 		temp >>= 30;
 	}
 	bn_fast_mod(&xr, &prime256k1);
-	bn_substract(&(cp1->x), &xr, &yr);
+	bn_subtractmod(&(cp1->x), &xr, &yr);
 	// no need to fast_mod here
 	// bn_fast_mod(&yr);
 	bn_multiply(&lambda, &yr, &prime256k1);
-	bn_substract(&yr, &(cp1->y), &yr);
+	bn_subtractmod(&yr, &(cp1->y), &yr);
 	bn_fast_mod(&yr, &prime256k1);
 	memcpy(&(cp2->x), &xr, sizeof(bignum256));
 	memcpy(&(cp2->y), &yr, sizeof(bignum256));
@@ -118,11 +118,11 @@ void point_double(curve_point *cp)
 		temp >>= 30;
 	}
 	bn_fast_mod(&xr, &prime256k1);
-	bn_substract(&(cp->x), &xr, &yr);
+	bn_subtractmod(&(cp->x), &xr, &yr);
 	// no need to fast_mod here
 	// bn_fast_mod(&yr);
 	bn_multiply(&lambda, &yr, &prime256k1);
-	bn_substract(&yr, &(cp->y), &yr);
+	bn_subtractmod(&yr, &(cp->y), &yr);
 	bn_fast_mod(&yr, &prime256k1);
 	memcpy(&(cp->x), &xr, sizeof(bignum256));
 	memcpy(&(cp->y), &yr, sizeof(bignum256));
@@ -363,7 +363,7 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 
 	// if S > order/2 => S = -S
 	if (bn_is_less(&order256k1_half, &k)) {
-		bn_substract_noprime(&order256k1, &k, &k);
+		bn_subtract(&order256k1, &k, &k);
 		if (pby) {
 			*pby = !*pby;
 		}
@@ -451,7 +451,7 @@ void uncompress_coords(uint8_t odd, const bignum256 *x, bignum256 *y)
 	bn_addmodi(y, 7, &prime256k1);         // y is x^3 + 7
 	bn_sqrt(y, &prime256k1);               // y = sqrt(y)
 	if ((odd & 0x01) != (y->val[0] & 1)) {
-		bn_substract_noprime(&prime256k1, y, y);   // y = -y
+		bn_subtract(&prime256k1, y, y);   // y = -y
 	}
 }
 
