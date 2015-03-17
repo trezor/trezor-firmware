@@ -643,7 +643,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		return;
 	}
 	uint32_t address_n[5];
-	address_n[0] = 0x80000000 | 46;
+	address_n[0] = 0x80000000 | 13;
 	address_n[1] = 0x80000000 | hash[ 0] | (hash[ 1] << 8) | (hash[ 2] << 16) | (hash[ 3] << 24);
 	address_n[2] = 0x80000000 | hash[ 4] | (hash[ 5] << 8) | (hash[ 6] << 16) | (hash[ 7] << 24);
 	address_n[3] = 0x80000000 | hash[ 8] | (hash[ 9] << 8) | (hash[10] << 16) | (hash[11] << 24);
