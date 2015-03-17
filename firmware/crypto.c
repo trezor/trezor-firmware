@@ -136,7 +136,7 @@ int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_
 	sha256_Raw(hash, 32, hash);
 	// e = -hash
 	bn_read_be(hash, &e);
-	bn_substract_noprime(&order256k1, &e, &e);
+	bn_subtract(&order256k1, &e, &e);
 	// r = r^-1
 	bn_inverse(&r, &order256k1);
 	point_multiply(&s, &cp, &cp);
