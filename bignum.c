@@ -244,7 +244,6 @@ void bn_fast_mod(bignum256 *x, const bignum256 *prime)
 	uint64_t temp;
 
 	coef = x->val[8] >> 16;
-	if (!coef) return;
 	// substract (coef * prime) from x
 	// note that we unrolled the first iteration
 	temp = 0x1000000000000000ull + x->val[0] - prime->val[0] * (uint64_t)coef;

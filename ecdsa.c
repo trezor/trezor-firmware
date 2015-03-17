@@ -210,6 +210,151 @@ static void conditional_negate(uint32_t cond, bignum256 *a, const bignum256 *pri
 	a->val[j] = ((tmp & 0x3fffffff) & cond) | (a->val[j] & ~cond);
 }
 
+typedef struct jacobian_curve_point {
+	bignum256 x, y, z;
+} jacobian_curve_point;
+
+static void curve_to_jacobian(const curve_point *p, jacobian_curve_point *jp) {
+	int i;
+	// randomize z coordinate
+	for (i = 0; i < 8; i++) {
+		jp->z.val[i] = random32() & 0x3FFFFFFF;
+	}
+	jp->z.val[8] = (random32() & 0x7fff) + 1;
+	
+	jp->x = jp->z;
+	bn_multiply(&jp->z, &jp->x, &prime256k1);
+	// x = z^2
+	jp->y = jp->x;
+	bn_multiply(&jp->z, &jp->y, &prime256k1);
+	// y = z^3
+
+	bn_multiply(&p->x, &jp->x, &prime256k1);
+	bn_multiply(&p->y, &jp->y, &prime256k1);
+	bn_mod(&jp->x, &prime256k1);
+	bn_mod(&jp->y, &prime256k1);
+}
+
+static void jacobian_to_curve(const jacobian_curve_point *jp, curve_point *p) {
+	p->y = jp->z;
+	bn_mod(&p->y, &prime256k1);
+	bn_inverse(&p->y, &prime256k1);
+	// p->y = z^-1
+	p->x = p->y;
+	bn_multiply(&p->x, &p->x, &prime256k1);
+	// p->x = z^-2
+	bn_multiply(&p->x, &p->y, &prime256k1);
+	// p->y = z^-3
+	bn_multiply(&jp->x, &p->x, &prime256k1);
+	// p->x = jp->x * z^-2
+	bn_multiply(&jp->y, &p->y, &prime256k1);
+	// p->y = jp->y * z^-3
+	bn_mod(&p->x, &prime256k1);
+	bn_mod(&p->y, &prime256k1);
+}
+
+static void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2) {
+	bignum256 r, h;
+	bignum256 rsq, hcb, hcby2, hsqx2;
+	int j;
+	uint64_t tmp1, tmp2;
+
+	/* usual algorithm:
+	 *
+	 * lambda  = (y1 - y2/z2^3) / (x1 - x2/z2^2)
+	 * x3/z3^2 = lambda^2 - x1 - x2/z2^2
+	 * y3/z3^3 = lambda * (x3/z3 - x2/z2) - y2/z2^3
+	 *
+	 * to get rid of fraction we set
+	 *  r = (y1 * z2^3 - y2)  (the numerator of lambda * z2^3)
+	 *  h = (x1 * z2^2 - x2)  (the denominator of lambda * z2^2)
+	 * Hence,
+	 *  lambda = r / (h*z2)
+	 *
+	 * With z3 = h*z2  (the denominator of lambda)
+	 * we get x3 = lambda^2*z3^2 - x1*z3^2 - x2/z2^2*z3^2
+	 *           = r^2 - x1*h^2*z2^2 - x2*h^2
+	 *           = r^2 - h^2*(x1*z2^2 + x2)
+	 *           = r^2 - h^2*(h + 2*x2)
+	 *           = r^2 - h^3 - 2*h^2*x2
+	 *    and y3 = (lambda * (x2/z2^2 - x3/z3^2) - y2/z2^3) * z3^3
+	 *           = r * (h^2*x2 - x3) - h^3*y2
+	 */
+	 
+
+	/* h = x1*z2^2 - x2
+	 * r = y1*z2^3 - y2
+	 * x3 = r^2 - h^3 - 2*h^2*x2
+	 * y3 = r*(h^2*x2 - x3) - h^3*y2
+	 * z3 = h*z2
+	 */
+
+	// h = x1 * z2^2 - x2;
+	// r = y1 * z2^3 - y2;
+	h = p2->z;
+	bn_multiply(&h, &h, &prime256k1); // h = z2^2
+	r = p2->z;
+	bn_multiply(&h, &r, &prime256k1); // r = z2^3
+
+	bn_multiply(&p1->x, &h, &prime256k1);
+	bn_subtractmod(&h, &p2->x, &h, &prime256k1);
+	// h = x1 * z2^2 - x2;
+
+	bn_multiply(&p1->y, &r, &prime256k1);
+	bn_subtractmod(&r, &p2->y, &r, &prime256k1);
+	// r = y1 * z2^3 - y2;
+
+	// hsqx2 = h^2
+	hsqx2 = h;
+	bn_multiply(&hsqx2, &hsqx2, &prime256k1);
+
+	// hcb = h^3
+	hcb = h;
+	bn_multiply(&hsqx2, &hcb, &prime256k1);
+
+	// hsqx2 = h^2 * x2
+	bn_multiply(&p2->x, &hsqx2, &prime256k1);
+
+	// hcby2 = h^3 * y2
+	hcby2 = hcb;
+	bn_multiply(&p2->y, &hcby2, &prime256k1);
+
+	// rsq = r^2
+	rsq = r;
+	bn_multiply(&rsq, &rsq, &prime256k1);
+
+	// z3 = h*z2
+	bn_multiply(&h, &p2->z, &prime256k1);
+
+	// x3 = r^2 - h^3 - 2h^2x2
+	// y3 = r*(h^2x2 - x3) - h^3y2
+	//   compute h^2x2 - x3 = h^3 + 3h^2x2 - r^2 first.
+	tmp1 = 0;
+	tmp2 = 0;
+	for (j = 0; j < 9; j++) {
+		tmp1 += (uint64_t) rsq.val[j] + 4*prime256k1.val[j] - hcb.val[j] - 2*hsqx2.val[j];
+		tmp2 += (uint64_t) hcb.val[j] + 3*hsqx2.val[j] + 2*prime256k1.val[j] - rsq.val[j];
+		assert(tmp1 < 5 * 0x40000000ull);
+		assert(tmp2 < 6 * 0x40000000ull);
+		p2->x.val[j] = tmp1 & 0x3fffffff;
+		p2->y.val[j] = tmp2 & 0x3fffffff;
+		tmp1 >>= 30;
+		tmp2 >>= 30;
+	}
+		
+	// y3 = r*(h^2x2 - x3) - y2*h^3
+	bn_multiply(&r, &p2->y, &prime256k1);
+	bn_subtractmod(&p2->y, &hcby2, &p2->y, &prime256k1);
+
+	// normalize the numbers
+	bn_fast_mod(&p2->x, &prime256k1);
+	bn_mod(&p2->x, &prime256k1);
+	bn_fast_mod(&p2->y, &prime256k1);
+	bn_mod(&p2->y, &prime256k1);
+	bn_mod(&p2->z, &prime256k1);
+}
+
+
 // res = k * G
 // k must be a normalized number with 0 <= k < order256k1
 void scalar_multiply(const bignum256 *k, curve_point *res)
@@ -220,6 +365,7 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 	bignum256 a;
 	uint32_t is_even = (k->val[0] & 1) - 1;
 	uint32_t lowbits;
+	jacobian_curve_point jres;
 
 	// is_even = 0xffffffff if k is even, 0 otherwise.
 
@@ -266,7 +412,7 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 	lowbits = a.val[0] & ((1 << 5) - 1);
 	lowbits ^= (lowbits >> 4) - 1;
 	lowbits &= 15;
-	*res = secp256k1_cp[0][lowbits >> 1];
+	curve_to_jacobian(&secp256k1_cp[0][lowbits >> 1], &jres);
 	for (i = 1; i < 64; i ++) {
 		// invariant res = sign(a[i-1]) sum_{j=0..i-1} (a[j] * 16^j * G)
 		// Note that sign(a[i-1]
@@ -284,12 +430,13 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 		lowbits &= 15;
 		// negate last result to make signs of this round and the
 		// last round equal.
-		conditional_negate((lowbits & 1) - 1, &res->y, &prime256k1);
+		conditional_negate((lowbits & 1) - 1, &jres.y, &prime256k1);
 		
 		// add odd factor
-		point_add(&secp256k1_cp[i][lowbits >> 1], res);
+		point_jacobian_add(&secp256k1_cp[i][lowbits >> 1], &jres);
 	}
-	conditional_negate(((a.val[0] >> 4) & 1) - 1, &res->y, &prime256k1);
+	conditional_negate(((a.val[0] >> 4) & 1) - 1, &jres.y, &prime256k1);
+	jacobian_to_curve(&jres, res);
 }
 
 #else
