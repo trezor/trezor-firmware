@@ -12,21 +12,21 @@ class TestMsgSignidentity(common.TrezorTest):
 
         identity = proto_types.IdentityType(proto='https', user='satoshi', host='bitcoin.org', port='', path='/login', index=0)
         sig = self.client.sign_identity(identity, binascii.unhexlify('531c4dd0a92caff62817eaec3065b65d'), '2015/02/20 16:50')
-        self.assertEqual(sig.address, '1G24md2ep5kjFGNT8Fe4RtZG2JE9GR1Xqe')
-        self.assertEqual(binascii.hexlify(sig.public_key), '0284efcc0a291c6ce86d016456a3c87f832f63c3266fd202a0785d3c10b02ef245')
-        self.assertEqual(binascii.hexlify(sig.signature), '1f66f1c8ef5ec104ea29b8270e4c5a622eb75fc51d40c81ce08176a0d3a1e197d9952b002b4bc278e7affabad3ff238e68c589f5b1a23990e019c20ac1d4269596')
+        self.assertEqual(sig.address, '17F17smBTX9VTZA9Mj8LM5QGYNZnmziCjL')
+        self.assertEqual(binascii.hexlify(sig.public_key), '023a472219ad3327b07c18273717bb3a40b39b743756bf287fbd5fa9d263237f45')
+        self.assertEqual(binascii.hexlify(sig.signature), '1fe5abeb9ed3926229a4c7d6936cf58c7357180c90a0e9565133b8578e118c5b2c7c4b6902afe81ce46f3b77e8f91a7cdae30e433ce2706166bf27ff111fc9734a')
 
         identity = proto_types.IdentityType(proto='ftp', user='satoshi', host='bitcoin.org', port='2323', path='/pub', index=3)
         sig = self.client.sign_identity(identity, binascii.unhexlify('531c4dd0a92caff62817eaec3065b65d'), '2015/02/20 16:50')
-        self.assertEqual(sig.address, '14p4LLCkw5HcqM55hA3ueZvZGYkePNeZaU')
-        self.assertEqual(binascii.hexlify(sig.public_key), '0333ea41759da347f4f4f487be0c396a0f88d36218598697fba9560fdb235e1442')
-        self.assertEqual(binascii.hexlify(sig.signature), '1fd6e658e3e806f3a28af1b665cf1a6ada8bb2e892e8bb2770cf1a32b81552bbbb68f5f12b7d18a94fac054d30984b7e08700091f89020a78184f039d28ace2da0')
+        self.assertEqual(sig.address, '1KAr6r5qF2kADL8bAaRQBjGKYEGxn9WrbS')
+        self.assertEqual(binascii.hexlify(sig.public_key), '0266cf12d2ba381c5fd797da0d64f59c07a6f1b034ad276cca6bf2729e92b20d9c')
+        self.assertEqual(binascii.hexlify(sig.signature), '1fda9910ed2c8cb5a79558c4f50d5030454cc4115931eac8e6307eb4f6ef87490b484beeff76369fa2f46e0677eb535bd78f35d0f987043ce14f25f9c610cb9c3a')
 
         identity = proto_types.IdentityType(proto='ssh', user='satoshi', host='bitcoin.org', port='', path='', index=47)
         sig = self.client.sign_identity(identity, binascii.unhexlify('531c4dd0a92caff62817eaec3065b65d'), '2015/02/20 16:50')
-        self.assertEqual(sig.address, '1P3qCVo8nw8kBGp7DrYros22mKeWUkcdXw')
-        self.assertEqual(binascii.hexlify(sig.public_key), '02c7a59992fa91b380da753b9f725a7803d86c4ec97123b3b5158d8fb395d552d7')
-        self.assertEqual(binascii.hexlify(sig.signature), '1fb2ff582d156c830da4dabd5ec6bf65c65198ebf871b8cafd461b7c4aca823f0bee0a46e7f7059774b0f2a3066a705612303ae485c5e8330cc46ad6b3c85886c9')
+        self.assertEqual(sig.address, '16MMzfyr5LPBNZ359NhjCthi2scrMufTAM')
+        self.assertEqual(binascii.hexlify(sig.public_key), '03cebfae5359d6c48b8dcf9da22b2113096548407ce21da8ab28a886f750f217f4')
+        self.assertEqual(binascii.hexlify(sig.signature), '20a645c1bfa9629d92c9ec5e21350264b806c44042597d77b635e89e3c8ea1a0230662df667b3d427a2c232d41b173b86a5492caf22d317820d7e5112186e0a933')
 
 if __name__ == '__main__':
     unittest.main()
