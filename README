@@ -1,4 +1,4 @@
-trezor-crypto
+trezor-common
 =============
 
 Common files shared among TREZOR repositories.
