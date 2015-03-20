@@ -103,7 +103,7 @@ int mnemonic_check(const char *mnemonic)
 	while (mnemonic[i]) {
 		j = 0;
 		while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
-			if (j >= sizeof(current_word)) {
+			if (j >= sizeof(current_word) - 1) {
 				return 0;
 			}
 			current_word[j] = mnemonic[i];
@@ -145,6 +145,7 @@ int mnemonic_check(const char *mnemonic)
 	return 0;
 }
 
+// passphrase must be at most 256 characters or code may crash
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total))
 {
 	uint8_t salt[8 + 256 + 4];
