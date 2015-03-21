@@ -131,31 +131,6 @@ void point_double(curve_point *cp)
 	bn_mod(&(cp->y), &prime256k1);
 }
 
-// res = k * p
-void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
-{
-	int i, j;
-	// result is zero
-	int is_zero = 1;
-	curve_point curr;
-	// initial res
-	memcpy(&curr, p, sizeof(curve_point));
-	for (i = 0; i < 9; i++) {
-		for (j = 0; j < 30; j++) {
-			if (i == 8 && (k->val[i] >> j) == 0) break;
-			if (k->val[i] & (1u << j)) {
-				if (is_zero) {
-					memcpy(res, &curr, sizeof(curve_point));
-					is_zero = 0;
-				} else {
-					point_add(&curr, res);
-				}
-			}
-			point_double(&curr);
-		}
-	}
-}
-
 // set point to internal representation of point at infinity
 void point_set_infinity(curve_point *p)
 {
@@ -192,8 +167,6 @@ int point_is_negative_of(const curve_point *p, const curve_point *q)
 	
 	return !bn_is_equal(&(p->y), &(q->y));
 }
-
-#if USE_PRECOMPUTED_CP
 
 // Negate a (modulo prime) if cond is 0xffffffff, keep it if cond is 0.
 // The timing of this function does not depend on cond.
@@ -257,13 +230,13 @@ static void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2) 
 	bignum256 r, h;
 	bignum256 rsq, hcb, hcby2, hsqx2;
 	int j;
-	uint64_t tmp1, tmp2;
+	uint64_t tmp1;
 
 	/* usual algorithm:
 	 *
 	 * lambda  = (y1 - y2/z2^3) / (x1 - x2/z2^2)
 	 * x3/z3^2 = lambda^2 - x1 - x2/z2^2
-	 * y3/z3^3 = lambda * (x3/z3 - x2/z2) - y2/z2^3
+	 * y3/z3^3 = lambda * (x2/z2^2 - x3/z3^2) - y2/z2^3
 	 *
 	 * to get rid of fraction we set
 	 *  r = (y1 * z2^3 - y2)  (the numerator of lambda * z2^3)
@@ -325,35 +298,208 @@ static void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2) 
 
 	// z3 = h*z2
 	bn_multiply(&h, &p2->z, &prime256k1);
+	bn_mod(&p2->z, &prime256k1);
 
 	// x3 = r^2 - h^3 - 2h^2x2
-	// y3 = r*(h^2x2 - x3) - h^3y2
-	//   compute h^2x2 - x3 = h^3 + 3h^2x2 - r^2 first.
 	tmp1 = 0;
-	tmp2 = 0;
 	for (j = 0; j < 9; j++) {
 		tmp1 += (uint64_t) rsq.val[j] + 4*prime256k1.val[j] - hcb.val[j] - 2*hsqx2.val[j];
-		tmp2 += (uint64_t) hcb.val[j] + 3*hsqx2.val[j] + 2*prime256k1.val[j] - rsq.val[j];
 		assert(tmp1 < 5 * 0x40000000ull);
-		assert(tmp2 < 6 * 0x40000000ull);
 		p2->x.val[j] = tmp1 & 0x3fffffff;
-		p2->y.val[j] = tmp2 & 0x3fffffff;
 		tmp1 >>= 30;
-		tmp2 >>= 30;
 	}
-		
-	// y3 = r*(h^2x2 - x3) - y2*h^3
-	bn_multiply(&r, &p2->y, &prime256k1);
-	bn_subtractmod(&p2->y, &hcby2, &p2->y, &prime256k1);
-
-	// normalize the numbers
 	bn_fast_mod(&p2->x, &prime256k1);
 	bn_mod(&p2->x, &prime256k1);
+
+	// y3 = r*(h^2x2 - x3) - y2*h^3
+	bn_subtractmod(&hsqx2, &p2->x, &p2->y, &prime256k1);
+	bn_multiply(&r, &p2->y, &prime256k1);
+	bn_subtractmod(&p2->y, &hcby2, &p2->y, &prime256k1);
 	bn_fast_mod(&p2->y, &prime256k1);
 	bn_mod(&p2->y, &prime256k1);
-	bn_mod(&p2->z, &prime256k1);
 }
 
+static void point_jacobian_double(jacobian_curve_point *p) {
+	bignum256 m, msq, ysq, xysq;
+	int j;
+	uint32_t tmp1, tmp2;
+	uint32_t modd;
+
+	/* usual algorithm:
+	 *
+	 * lambda  = (3(x/z^2)^2 / 2y/z^3) = 3x^2/2yz
+	 * x3/z3^2 = lambda^2 - 2x/z^2
+	 * y3/z3^3 = lambda * (x/z^2 - x3/z3^2) - y/z^3
+	 *
+	 * to get rid of fraction we set
+	 *  m = 3/2 x^2
+	 * Hence,
+	 *  lambda = m / yz
+	 *
+	 * With z3 = 2yz  (the denominator of lambda)
+	 * we get x3 = lambda^2*z3^2 - 2*x/z^2*z3^2
+	 *           = m^2 - 2*xy^2
+	 *    and y3 = (lambda * (x/z^2 - x3/z3^2) - y/z^3) * z3^3
+	 *           = m * (xy^2 - x3) - y^4
+	 */
+	 
+
+	/* m = 3/2*x*x
+	 * x3 = m^2 - 2*xy^2
+	 * y3 = m*(xy^2 - x3) - 8y^4
+	 * z3 = y*z
+	 */
+
+	m = p->x;
+	bn_multiply(&m, &m, &prime256k1);
+	modd = -(m.val[0] & 1);
+	// compute m = 3*m/2 mod prime
+	// if m is odd compute (3*m+prime)/2
+	tmp1 = (3*m.val[0] + (prime256k1.val[0] & modd)) >> 1;
+	for (j = 0; j < 8; j++) {
+		tmp2 = (3*m.val[j+1] + (prime256k1.val[j+1] & modd));
+		tmp1 += (tmp2 & 1) << 29;
+		m.val[j] = tmp1 & 0x3fffffff;
+		tmp1 >>= 30;
+		tmp1 += tmp2 >> 1;
+	}
+	m.val[8] = tmp1;
+
+	// msq = m^2
+	msq = m;
+	bn_multiply(&msq, &msq, &prime256k1);
+	// ysq = y^2
+	ysq = p->y;
+	bn_multiply(&ysq, &ysq, &prime256k1);
+	// xysq = xy^2
+	xysq = p->x;
+	bn_multiply(&ysq, &xysq, &prime256k1);
+	bn_multiply(&p->y, &p->z, &prime256k1);
+	bn_mod(&p->z, &prime256k1);
+
+	// x3 = m^2 - 2*xy^2
+	tmp1 = 0;
+	for (j = 0; j < 9; j++) {
+		tmp1 += msq.val[j] + 3*prime256k1.val[j] - 2*xysq.val[j];
+		p->x.val[j] = tmp1 & 0x3fffffff;
+		tmp1 >>= 30;
+	}
+	bn_fast_mod(&p->x, &prime256k1);
+	bn_mod(&p->x, &prime256k1);
+
+	// y = m*(xy^2 - x3) - y^4
+	bn_subtractmod(&xysq, &p->x, &p->y, &prime256k1);
+	bn_multiply(&m, &p->y, &prime256k1);
+	bn_multiply(&ysq, &ysq, &prime256k1);
+	bn_subtractmod(&p->y, &ysq, &p->y, &prime256k1);
+	bn_fast_mod(&p->y, &prime256k1);
+	bn_mod(&p->y, &prime256k1);
+}
+
+// res = k * p
+void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
+{
+	// this algorithm is loosely based on
+	//  Katsuyuki Okeya and Tsuyoshi Takagi, The Width-w NAF Method Provides
+	//  Small Memory and Fast Elliptic Scalar Multiplications Secure against
+	//  Side Channel Attacks.
+	assert (bn_is_less(k, &order256k1));
+
+	int i, j;
+	int pos, shift;
+	bignum256 a;
+	uint32_t is_even = (k->val[0] & 1) - 1;
+	uint32_t bits, sign, nsign;
+	jacobian_curve_point jres;
+	curve_point pmult[8];
+
+	// is_even = 0xffffffff if k is even, 0 otherwise.
+
+	// add 2^256.
+	// make number odd: subtract order256k1 if even
+	uint32_t tmp = 1;
+	uint32_t is_non_zero = 0;
+	for (j = 0; j < 8; j++) {
+		is_non_zero |= k->val[j];
+		tmp += 0x3fffffff + k->val[j] - (order256k1.val[j] & is_even);
+		a.val[j] = tmp & 0x3fffffff;
+		tmp >>= 30;
+	}
+	is_non_zero |= k->val[j];
+	a.val[j] = tmp + 0xffff + k->val[j] - (order256k1.val[j] & is_even);
+	assert((a.val[0] & 1) != 0);
+
+	// special case 0*p:  just return zero. We don't care about constant time.
+	if (!is_non_zero) {
+		point_set_infinity(res);
+		return;
+	}
+
+	// Now a = k + 2^256 (mod order256k1) and a is odd.
+	//
+	// The idea is to bring the new a into the form.
+	// sum_{i=0..64} a[i] 16^i,  where |a[i]| < 16 and a[i] is odd.
+	// a[0] is odd, since a is odd.  If a[i] would be even, we can
+	// add 1 to it and subtract 16 from a[i-1].  Afterwards,
+	// a[64] = 1, which is the 2^256 that we added before.
+	//
+	// Since k = a - 2^256 (mod order256k1), we can compute
+	//   k*p = sum_{i=0..63} a[i] 16^i * p
+	//
+	// We compute |a[i]| * p in advance for all possible
+	// values of |a[i]| * p.  pmult[i] = (2*i+1) * p
+	// We compute p, 3*p, ..., 15*p and store it in the table pmult.
+	// store p^2 temporarily in pmult[7]
+	pmult[7] = *p;
+	point_double(&pmult[7]);
+	// compute 3*p, etc by repeatedly adding p^2.
+	pmult[0] = *p;
+	for (i = 1; i < 8; i++) {
+		pmult[i] = pmult[7];
+		point_add(&pmult[i-1], &pmult[i]);
+	}
+
+	// now compute  res = sum_{i=0..63} a[i] * 16^i * p step by step,
+	// starting with i = 63.
+	// initialize jres = |a[63]| * p.
+	// Note that a[i] = a>>(4*i) & 0xf if (a&0x10) != 0
+	// and - (16 - (a>>(4*i) & 0xf)) otherwise.   We can compute this as
+	//   ((a ^ (((a >> 4) & 1) - 1)) & 0xf) >> 1
+	// since a is odd.
+	bits = a.val[8] >> 12;
+	sign = (bits >> 4) - 1;
+	bits ^= sign;
+	bits &= 15;
+	curve_to_jacobian(&pmult[bits>>1], &jres);
+	for (i = 62; i >= 0; i--) {
+		// sign = sign(a[i+1])  (0xffffffff for negative, 0 for positive)
+		// invariant jres = (-1)^sign sum_{j=i+1..63} (a[j] * 16^{j-i-1} * p)
+
+		point_jacobian_double(&jres);
+		point_jacobian_double(&jres);
+		point_jacobian_double(&jres);
+		point_jacobian_double(&jres);
+
+		// get lowest 5 bits of a >> (i*4).
+		pos = i*4/30; shift = i*4 % 30;
+		bits = (a.val[pos+1]<<(30-shift) | a.val[pos] >> shift) & 31;
+		nsign = (bits >> 4) - 1;
+		bits ^= nsign;
+		bits &= 15;
+
+		// negate last result to make signs of this round and the
+		// last round equal.
+		conditional_negate(sign ^ nsign, &jres.z, &prime256k1);
+		
+		// add odd factor
+		point_jacobian_add(&pmult[bits >> 1], &jres);
+		sign = nsign;
+	}
+	conditional_negate(sign, &jres.z, &prime256k1);
+	jacobian_to_curve(&jres, res);
+}
+
+#if USE_PRECOMPUTED_CP
 
 // res = k * G
 // k must be a normalized number with 0 <= k < order256k1
@@ -415,7 +561,6 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 	curve_to_jacobian(&secp256k1_cp[0][lowbits >> 1], &jres);
 	for (i = 1; i < 64; i ++) {
 		// invariant res = sign(a[i-1]) sum_{j=0..i-1} (a[j] * 16^j * G)
-		// Note that sign(a[i-1]
 
 		// shift a by 4 places.
 		for (j = 0; j < 8; j++) {
@@ -745,7 +890,6 @@ int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 // returns 0 if verification succeeded
 int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest)
 {
-	int i, j;
 	curve_point pub, res;
 	bignum256 r, s, z;
 
@@ -776,16 +920,8 @@ int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 	}
 
 	// both pub and res can be infinity, can have y = 0 OR can be equal -> false negative
-	for (i = 0; i < 9; i++) {
-		for (j = 0; j < 30; j++) {
-			if (i == 8 && (s.val[i] >> j) == 0) break;
-			if (s.val[i] & (1u << j)) {
-				point_add(&pub, &res);
-			}
-			point_double(&pub);
-		}
-	}
-
+	point_multiply(&s, &pub, &pub);
+	point_add(&pub, &res);
 	bn_mod(&(res.x), &order256k1);
 
 	// signature does not match
