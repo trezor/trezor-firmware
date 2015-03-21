@@ -10,7 +10,7 @@ RUN echo "deb http://ppa.launchpad.net/terry.guo/gcc-arm-embedded/ubuntu trusty 
 
 # install build tools and dependencies
 
-ENV GCC_ARM_VERSION 4.9.3.2014q4-0trusty12
+ENV GCC_ARM_VERSION 4.9.3.2015q1-0trusty13
 RUN apt-get install -y build-essential git gcc-arm-none-eabi=$GCC_ARM_VERSION python
 
 # clone the source code
@@ -19,5 +19,5 @@ RUN git clone https://github.com/libopencm3/libopencm3
 
 # build libopencm3
 
-ENV LIBOPENCM3_GITREV 8a15cec6bf99f59065879a14895fb8af8a8a53e7
+ENV LIBOPENCM3_GITREV fd141a81313876e3dc9253d682f7314fa2a59718
 RUN cd libopencm3 && git checkout $LIBOPENCM3_GITREV && make
