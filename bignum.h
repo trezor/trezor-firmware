@@ -57,6 +57,8 @@ void bn_lshift(bignum256 *a);
 
 void bn_rshift(bignum256 *a);
 
+void bn_mult_3_2(bignum256 *x, const bignum256 *prime);
+
 void bn_mod(bignum256 *x, const bignum256 *prime);
 
 void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);

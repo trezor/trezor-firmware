@@ -139,6 +139,26 @@ void bn_rshift(bignum256 *a)
 	a->val[8] >>= 1;
 }
 
+// multiply x by 3/2 modulo prime.
+// assumes x < 2*prime,
+// guarantees x < 4*prime on exit.
+void bn_mult_3_2(bignum256 * x, const bignum256 *prime)
+{
+	int j;
+	uint32_t xodd = -(x->val[0] & 1);
+	// compute x = 3*x/2 mod prime
+	// if x is odd compute (3*x+prime)/2
+	uint32_t tmp1 = (3*x->val[0] + (prime->val[0] & xodd)) >> 1;
+	for (j = 0; j < 8; j++) {
+		uint32_t tmp2 = (3*x->val[j+1] + (prime->val[j+1] & xodd));
+		tmp1 += (tmp2 & 1) << 29;
+		x->val[j] = tmp1 & 0x3fffffff;
+		tmp1 >>= 30;
+		tmp1 += tmp2 >> 1;
+	}
+	x->val[8] = tmp1;
+}
+
 // assumes x < 2*prime, result < prime
 void bn_mod(bignum256 *x, const bignum256 *prime)
 {
