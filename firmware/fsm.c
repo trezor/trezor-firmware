@@ -268,6 +268,11 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 {
 	RESP_INIT(PublicKey);
 
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
 	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
 	if (!node) return;
 
@@ -499,6 +504,11 @@ void fsm_msgApplySettings(ApplySettings *msg)
 void fsm_msgGetAddress(GetAddress *msg)
 {
 	RESP_INIT(Address);
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
