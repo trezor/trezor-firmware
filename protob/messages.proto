@@ -63,6 +63,7 @@ enum MessageType {
 	MessageType_DecryptedMessage = 52 [(wire_out) = true];
 	MessageType_SignIdentity = 53 [(wire_in) = true];
 	MessageType_SignedIdentity = 54 [(wire_out) = true];
+	MessageType_GetFeatures = 55 [(wire_in) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -82,8 +83,16 @@ message Initialize {
 }
 
 /**
+ * Request: Ask for device details (no device reset)
+ * @next Features
+ */
+message GetFeatures {
+}
+
+/**
  * Response: Reports various information about the device
  * @prev Initialize
+ * @prev GetFeatures
  */
 message Features {
 	optional string vendor = 1;			// name of the manufacturer, e.g. "bitcointrezor.com"
@@ -101,6 +110,8 @@ message Features {
 	optional bytes revision = 13;			// SCM revision of firmware
 	optional bytes bootloader_hash = 14;		// hash of the bootloader
 	optional bool imported = 15;			// was storage imported from an external source?
+	optional bool pin_cached = 16;			// is PIN already cached in session?
+	optional bool passphrase_cached = 17;		// is passphrase already cached in session?
 }
 
 /**
