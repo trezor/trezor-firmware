@@ -277,7 +277,7 @@ int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t
 	buf[sizeof(v)] = 0x01;
 	memcpy(buf + sizeof(v) + 1, bx, 64);
 	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
-	hmac_sha256(k, sizeof(k), v, sizeof(k), v);
+	hmac_sha256(k, sizeof(k), v, sizeof(v), v);
 
 	for (i = 0; i < 10000; i++) {
 		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
