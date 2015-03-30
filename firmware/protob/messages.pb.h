@@ -60,6 +60,7 @@ typedef enum _MessageType {
     MessageType_MessageType_DecryptedMessage = 52,
     MessageType_MessageType_SignIdentity = 53,
     MessageType_MessageType_SignedIdentity = 54,
+    MessageType_MessageType_GetFeatures = 55,
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
@@ -95,6 +96,10 @@ typedef struct _EntropyRequest {
 typedef struct _FirmwareErase {
     uint8_t dummy_field;
 } FirmwareErase;
+
+typedef struct _GetFeatures {
+    uint8_t dummy_field;
+} GetFeatures;
 
 typedef struct _Initialize {
     uint8_t dummy_field;
@@ -379,6 +384,10 @@ typedef struct _Features {
     Features_bootloader_hash_t bootloader_hash;
     bool has_imported;
     bool imported;
+    bool has_pin_cached;
+    bool pin_cached;
+    bool has_passphrase_cached;
+    bool passphrase_cached;
 } Features;
 
 typedef struct {
@@ -624,7 +633,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0}
+#define GetFeatures_init_default                 {0}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0}
 #define ClearSession_init_default                {0}
 #define ApplySettings_init_default               {false, "", false, "", false, 0, false, {0, {0}}}
 #define ChangePin_init_default                   {false, 0}
@@ -677,7 +687,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define DebugLinkStop_init_default               {0}
 #define DebugLinkLog_init_default                {false, 0, false, "", false, ""}
 #define Initialize_init_zero                     {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0}
+#define GetFeatures_init_zero                    {0}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0}
 #define ClearSession_init_zero                   {0}
 #define ApplySettings_init_zero                  {false, "", false, "", false, 0, false, {0, {0}}}
 #define ChangePin_init_zero                      {false, 0}
@@ -796,6 +807,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Features_revision_tag                    13
 #define Features_bootloader_hash_tag             14
 #define Features_imported_tag                    15
+#define Features_pin_cached_tag                  16
+#define Features_passphrase_cached_tag           17
 #define FirmwareUpload_payload_tag               1
 #define GetAddress_address_n_tag                 1
 #define GetAddress_coin_name_tag                 2
@@ -862,7 +875,8 @@ extern const char SimpleSignTx_coin_name_default[17];
 
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
-extern const pb_field_t Features_fields[16];
+extern const pb_field_t GetFeatures_fields[1];
+extern const pb_field_t Features_fields[18];
 extern const pb_field_t ClearSession_fields[1];
 extern const pb_field_t ApplySettings_fields[5];
 extern const pb_field_t ChangePin_fields[2];
@@ -917,7 +931,8 @@ extern const pb_field_t DebugLinkLog_fields[4];
 
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
-#define Features_size                            (236 + 6*CoinType_size)
+#define GetFeatures_size                         0
+#define Features_size                            (242 + 6*CoinType_size)
 #define ClearSession_size                        0
 #define ApplySettings_size                       1083
 #define ChangePin_size                           2

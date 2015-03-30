@@ -40,6 +40,7 @@ struct MessagesMap_t {
 static const struct MessagesMap_t MessagesMap[] = {
 	// in messages
 	{'n', 'i', MessageType_MessageType_Initialize,			Initialize_fields,			(void (*)(void *))fsm_msgInitialize},
+	{'n', 'i', MessageType_MessageType_GetFeatures,			GetFeatures_fields,			(void (*)(void *))fsm_msgGetFeatures},
 	{'n', 'i', MessageType_MessageType_Ping,				Ping_fields,				(void (*)(void *))fsm_msgPing},
 	{'n', 'i', MessageType_MessageType_ChangePin,			ChangePin_fields,			(void (*)(void *))fsm_msgChangePin},
 	{'n', 'i', MessageType_MessageType_WipeDevice,			WipeDevice_fields,			(void (*)(void *))fsm_msgWipeDevice},

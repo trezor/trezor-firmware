@@ -114,6 +114,12 @@ void fsm_msgInitialize(Initialize *msg)
 	recovery_abort();
 	signing_abort();
 	session_clear();
+	fsm_msgGetFeatures(0);
+}
+
+void fsm_msgGetFeatures(GetFeatures *msg)
+{
+	(void)msg;
 	RESP_INIT(Features);
 	resp->has_vendor = true;         strlcpy(resp->vendor, "bitcointrezor.com", sizeof(resp->vendor));
 	resp->has_major_version = true;  resp->major_version = VERSION_MAJOR;
@@ -139,6 +145,8 @@ void fsm_msgInitialize(Initialize *msg)
 	memcpy(resp->coins, coins, COINS_COUNT * sizeof(CoinType));
 	resp->has_initialized = true; resp->initialized = storage_isInitialized();
 	resp->has_imported = true; resp->imported = storage.has_imported && storage.imported;
+	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
+	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
 	msg_write(MessageType_MessageType_Features, resp);
 }
 
