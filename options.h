@@ -23,11 +23,6 @@
 #ifndef __OPTIONS_H__
 #define __OPTIONS_H__
 
-// use precomputed Inverse Values of powers of two
-#ifndef USE_PRECOMPUTED_IV
-#define USE_PRECOMPUTED_IV 1
-#endif
-
 // use precomputed Curve Points (some scalar multiples of curve base point G)
 #ifndef USE_PRECOMPUTED_CP
 #define USE_PRECOMPUTED_CP 1

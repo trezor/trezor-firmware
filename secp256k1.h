@@ -48,13 +48,8 @@ extern const bignum256 order256k1_half;
 // 3/2 in G_p
 extern const bignum256 three_over_two256k1;
 
-#if USE_PRECOMPUTED_IV
-extern const bignum256 secp256k1_iv[256];
-#endif
-
 #if USE_PRECOMPUTED_CP
-extern const curve_point secp256k1_cp[256];
-extern const curve_point secp256k1_cp2[255];
+extern const curve_point secp256k1_cp[64][8];
 #endif
 
 #endif

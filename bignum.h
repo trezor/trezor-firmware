@@ -57,6 +57,8 @@ void bn_lshift(bignum256 *a);
 
 void bn_rshift(bignum256 *a);
 
+void bn_mult_3_2(bignum256 *x, const bignum256 *prime);
+
 void bn_mod(bignum256 *x, const bignum256 *prime);
 
 void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);
@@ -73,7 +75,7 @@ void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime);
 
 void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime);
 
-void bn_subtractmod(const bignum256 *a, const bignum256 *b, bignum256 *res);
+void bn_subtractmod(const bignum256 *a, const bignum256 *b, bignum256 *res, const bignum256 *prime);
 
 void bn_subtract(const bignum256 *a, const bignum256 *b, bignum256 *res);
 
