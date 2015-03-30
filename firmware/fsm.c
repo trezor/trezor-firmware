@@ -113,6 +113,7 @@ void fsm_msgInitialize(Initialize *msg)
 	(void)msg;
 	recovery_abort();
 	signing_abort();
+	session_clear();
 	RESP_INIT(Features);
 	resp->has_vendor = true;         strlcpy(resp->vendor, "bitcointrezor.com", sizeof(resp->vendor));
 	resp->has_major_version = true;  resp->major_version = VERSION_MAJOR;
