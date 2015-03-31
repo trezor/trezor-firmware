@@ -117,14 +117,16 @@ void storage_reset(void)
 	// reset storage struct
 	memset(&storage, 0, sizeof(storage));
 	storage.version = STORAGE_VERSION;
-	session_clear();
+	session_clear(true); // clear PIN as well
 }
 
-void session_clear(void)
+void session_clear(bool clear_pin)
 {
 	sessionRootNodeCached = false;   memset(&sessionRootNode, 0, sizeof(sessionRootNode));
 	sessionPassphraseCached = false; memset(&sessionPassphrase, 0, sizeof(sessionPassphrase));
-	sessionPinCached = false;
+	if (clear_pin) {
+		sessionPinCached = false;
+	}
 }
 
 static uint8_t meta_backup[FLASH_META_LEN];

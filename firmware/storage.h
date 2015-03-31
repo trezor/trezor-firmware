@@ -29,7 +29,7 @@ void storage_init(void);
 void storage_reset_uuid(void);
 void storage_reset(void);
 void storage_commit(void);
-void session_clear(void);
+void session_clear(bool clear_pin);
 
 void storage_loadDevice(LoadDevice *msg);
 
