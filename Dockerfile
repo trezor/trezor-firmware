@@ -19,5 +19,5 @@ RUN git clone https://github.com/libopencm3/libopencm3
 
 # build libopencm3
 
-ENV LIBOPENCM3_GITREV fd141a81313876e3dc9253d682f7314fa2a59718
+ENV LIBOPENCM3_GITREV 7dbb93c78411b37bec64b5ca5be55076b0ab1b15
 RUN cd libopencm3 && git checkout $LIBOPENCM3_GITREV && make
