@@ -265,7 +265,7 @@ void layoutAddress(const char *address, const char *desc)
 
 void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 {
-	char row_proto[8 + 8 + 1];
+	char row_proto[8 + 11 + 1];
 	char row_hostport[64 + 6 + 1];
 	char row_user[64 + 8 + 1];
 
@@ -273,9 +273,9 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		strlcpy(row_proto, identity->proto, sizeof(row_proto));
 		char *p = row_proto;
 		while (*p) { *p = toupper((int)*p); p++; }
-		strlcat(row_proto, " login:", sizeof(row_proto));
+		strlcat(row_proto, " login to:", sizeof(row_proto));
 	} else {
-		strlcpy(row_proto, "Login:", sizeof(row_proto));
+		strlcpy(row_proto, "Login to:", sizeof(row_proto));
 	}
 
 	if (identity->has_host && identity->host[0]) {
@@ -296,7 +296,7 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 	}
 
 	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
-		"Sign in using this identity?",
+		"Do you want to sign in?",
 		row_proto[0] ? row_proto : NULL,
 		row_hostport[0] ? row_hostport : NULL,
 		row_user[0] ? row_user : NULL,
