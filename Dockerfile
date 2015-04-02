@@ -2,6 +2,8 @@
 
 FROM ubuntu:14.04
 
+ENV GCC_ARM_VERSION 4.9.3.2015q1-0trusty13
+
 # add and update package repositories
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FE324A81C208C89497EFC6246D1D8367A3421AFB
@@ -10,8 +12,8 @@ RUN echo "deb http://ppa.launchpad.net/terry.guo/gcc-arm-embedded/ubuntu trusty 
 
 # install build tools and dependencies
 
-ENV GCC_ARM_VERSION 4.9.3.2015q1-0trusty13
-RUN apt-get install -y build-essential git gcc-arm-none-eabi=$GCC_ARM_VERSION python
+RUN apt-get install -y build-essential git python
+RUN apt-get install -y gcc-arm-none-eabi=$GCC_ARM_VERSION
 
 # clone the source code
 
