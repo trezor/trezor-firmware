@@ -510,7 +510,7 @@ typedef struct _ResetDevice {
 
 typedef struct {
     size_t size;
-    uint8_t bytes[64];
+    uint8_t bytes[256];
 } SignIdentity_challenge_hidden_t;
 
 typedef struct _SignIdentity {
@@ -519,7 +519,7 @@ typedef struct _SignIdentity {
     bool has_challenge_hidden;
     SignIdentity_challenge_hidden_t challenge_hidden;
     bool has_challenge_visual;
-    char challenge_visual[64];
+    char challenge_visual[256];
 } SignIdentity;
 
 typedef struct {
@@ -975,7 +975,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SimpleSignTx_size                        (19 + 0*TxInputType_size + 0*TxOutputType_size + 0*TransactionType_size)
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
-#define SignIdentity_size                        (138 + IdentityType_size)
+#define SignIdentity_size                        (524 + IdentityType_size)
 #define SignedIdentity_size                      140
 #define FirmwareErase_size                       0
 #define FirmwareUpload_size                      2
