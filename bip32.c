@@ -32,6 +32,8 @@
 #include "ripemd160.h"
 #include "base58.h"
 
+#define MEMSET_BZERO(p,l)	memset((p), 0, (l))
+
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out)
 {
 	if (public_key[0] != 0x02 && public_key[0] != 0x03) { // invalid pubkey
@@ -41,7 +43,7 @@ int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
 	memcpy(out->chain_code, chain_code, 32);
-	memset(out->private_key, 0, 32);
+	MEMSET_BZERO(out->private_key, 32);
 	memcpy(out->public_key, public_key, 33);
 	return 1;
 }
@@ -50,9 +52,20 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 {
 	bignum256 a;
 	bn_read_be(private_key, &a);
-	if (bn_is_zero(&a) || !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+
+	bool failed = false;
+	if (bn_is_zero(&a)) {
+		failed = true;
+	}
+	else if( !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+		MEMSET_BZERO(&a,sizeof(a));
+		failed = true;
+	}
+
+	if(failed) {
 		return 0;
 	}
+
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -73,12 +86,23 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
 	memcpy(out->private_key, I, 32);
 	bignum256 a;
 	bn_read_be(out->private_key, &a);
-	if (bn_is_zero(&a) || !bn_is_less(&a, &order256k1)) { // == 0 or >= order
-		return 0;
+
+	bool failed = false;
+	if (bn_is_zero(&a)) {
+		failed = true;
 	}
-	memcpy(out->chain_code, I + 32, 32);
-	hdnode_fill_public_key(out);
-	return 1;
+	else if( !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+		MEMSET_BZERO(&a,sizeof(a));
+		failed = true;
+	}
+
+	if(!failed) {
+		memcpy(out->chain_code, I + 32, 32);
+		hdnode_fill_public_key(out);
+	}
+
+	MEMSET_BZERO(I,sizeof(I));
+	return failed ? 0 : 1;
 }
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i)
