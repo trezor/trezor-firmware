@@ -226,10 +226,12 @@ class Commands(object):
             fp.write(binascii.unhexlify(fp_old.read()))
 
             fp_old.close()
-            fp.seek(0)
-
+        
+        fp.seek(0)
         if fp.read(4) != 'TRZR':
             raise Exception("Trezor firmware header expected")
+
+        print "Please confirm action on device..."
 
         fp.seek(0)
         return self.client.firmware_update(fp=fp)
