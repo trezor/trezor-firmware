@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "bignum.h"
 #include "secp256k1.h"
+#include "macro_utils.h"
 
 inline uint32_t read_be(const uint8_t *data)
 {
@@ -252,6 +253,8 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 	for (i = 0; i < 9; i++) {
 		x->val[i] = res[i];
 	}
+
+	MEMSET_BZERO(res,sizeof(res));
 }
 
 // input x can be any normalized number that fits (0 <= x < 2^270).
@@ -309,6 +312,10 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 	}
 	bn_mod(&res, prime);
 	memcpy(x, &res, sizeof(bignum256));
+
+	MEMSET_BZERO(&res, sizeof(res));
+	MEMSET_BZERO(&p, sizeof(p));
+
 }
 
 #if ! USE_INVERSE_FAST
@@ -614,6 +621,11 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		temp32 = us.a[8-i] >> (30 - 2 * i);
 	}
 	x->val[i] = temp32;
+
+	// Let's wipe all temp buffers.
+	MEMSET_BZERO(pp, sizeof(pp));
+	MEMSET_BZERO(&us, sizeof(us));
+	MEMSET_BZERO(&vr, sizeof(vr));
 }
 #endif
 
