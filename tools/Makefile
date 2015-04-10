@@ -23,7 +23,7 @@ CFLAGS   += $(OPTFLAGS) \
             -Werror \
             -I..
 
-all: xpubaddrgen
+all: xpubaddrgen mksecptable
 
 OBJS = ../bip32.o ../ecdsa.o ../sha2.o ../bignum.o ../base58.o ../secp256k1.o ../ripemd160.o ../hmac.o ../rand.o
 
@@ -33,5 +33,8 @@ OBJS = ../bip32.o ../ecdsa.o ../sha2.o ../bignum.o ../base58.o ../secp256k1.o ..
 xpubaddrgen: xpubaddrgen.o $(OBJS)
 	$(CC) xpubaddrgen.o $(OBJS) -o xpubaddrgen
 
+mksecptable: mksecptable.o $(OBJS)
+	$(CC) mksecptable.o $(OBJS) -o mksecptable
+
 clean:
-	rm -f *.o xpubaddrgen
+	rm -f *.o xpubaddrgen mksecptable
