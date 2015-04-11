@@ -1448,7 +1448,8 @@ int main(void)
 	srunner_run_all(sr, CK_VERBOSE);
 	number_failed = srunner_ntests_failed(sr);
 	srunner_free(sr);
-	if (number_failed == 0)
+	if (number_failed == 0) {
 		printf("PASSED ALL TESTS\n");
+	}
 	return number_failed;
 }
