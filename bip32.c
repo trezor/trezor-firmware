@@ -31,6 +31,7 @@
 #include "sha2.h"
 #include "ripemd160.h"
 #include "base58.h"
+#include "macro_utils.h"
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out)
 {
@@ -41,7 +42,7 @@ int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
 	memcpy(out->chain_code, chain_code, 32);
-	memset(out->private_key, 0, 32);
+	MEMSET_BZERO(out->private_key, 32);
 	memcpy(out->public_key, public_key, 33);
 	return 1;
 }
@@ -50,9 +51,20 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 {
 	bignum256 a;
 	bn_read_be(private_key, &a);
-	if (bn_is_zero(&a) || !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+
+	bool failed = false;
+	if (bn_is_zero(&a)) {
+		failed = true;
+	}
+	else if( !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+		MEMSET_BZERO(&a,sizeof(a));
+		failed = true;
+	}
+
+	if(failed) {
 		return 0;
 	}
+
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -73,12 +85,28 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
 	memcpy(out->private_key, I, 32);
 	bignum256 a;
 	bn_read_be(out->private_key, &a);
-	if (bn_is_zero(&a) || !bn_is_less(&a, &order256k1)) { // == 0 or >= order
-		return 0;
+
+	bool failed = false;
+	if (bn_is_zero(&a)) {
+		failed = true;
 	}
-	memcpy(out->chain_code, I + 32, 32);
-	hdnode_fill_public_key(out);
-	return 1;
+	else
+	{
+		if( !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+			failed = true;
+		}
+
+		// Making sure a is wiped.
+		MEMSET_BZERO(&a,sizeof(a));
+	}
+
+	if(!failed) {
+		memcpy(out->chain_code, I + 32, 32);
+		hdnode_fill_public_key(out);
+	}
+
+	MEMSET_BZERO(I,sizeof(I));
+	return failed ? 0 : 1;
 }
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i)
@@ -108,23 +136,36 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
 	bn_read_be(inout->private_key, &b);
 
+	bool failed = false;
+
 	if (!bn_is_less(&b, &order256k1)) { // >= order
-		return 0;
+		failed = true;
+	}
+	if(!failed) {
+
+		bn_addmod(&a, &b, &order256k1);
+
+		if (bn_is_zero(&a)) {
+			failed = true;
+		}
 	}
 
-	bn_addmod(&a, &b, &order256k1);
+	if(!failed)
+	{
+		inout->depth++;
+		inout->child_num = i;
+		bn_write_be(&a, inout->private_key);
 
-	if (bn_is_zero(&a)) {
-		return 0;
+		hdnode_fill_public_key(inout);
 	}
 
-	inout->depth++;
-	inout->child_num = i;
-	bn_write_be(&a, inout->private_key);
-
-	hdnode_fill_public_key(inout);
-
-	return 1;
+	// Making sure to wipe our memory!
+	MEMSET_BZERO(&a,sizeof(a));
+	MEMSET_BZERO(&b,sizeof(b));
+	MEMSET_BZERO(I,sizeof(I));
+	MEMSET_BZERO(fingerprint,sizeof(fingerprint));
+	MEMSET_BZERO(data,sizeof(data));
+	return failed ? 0 : 1;
 }
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i)
@@ -147,32 +188,51 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	inout->fingerprint = (fingerprint[0] << 24) + (fingerprint[1] << 16) + (fingerprint[2] << 8) + fingerprint[3];
 
 	memset(inout->private_key, 0, 32);
+
+	bool failed = false;
 	if (!ecdsa_read_pubkey(inout->public_key, &a)) {
-		return 0;
+		failed = true;
 	}
 
-	hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
-	memcpy(inout->chain_code, I + 32, 32);
-	bn_read_be(I, &c);
+	if(!failed)
+	{
+		hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
+		memcpy(inout->chain_code, I + 32, 32);
+		bn_read_be(I, &c);
 
-	if (!bn_is_less(&c, &order256k1)) { // >= order
-		return 0;
+		if (!bn_is_less(&c, &order256k1)) { // >= order
+			failed = true;
+		}
 	}
 
-	scalar_multiply(&c, &b); // b = c * G
-	point_add(&a, &b);       // b = a + b
+	if(!failed)
+	{
+		scalar_multiply(&c, &b); // b = c * G
+		point_add(&a, &b);       // b = a + b
 
-	if (!ecdsa_validate_pubkey(&b)) {
-		return 0;
+		if (!ecdsa_validate_pubkey(&b)) {
+			failed = true;
+		}
 	}
 
-	inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
-	bn_write_be(&b.x, inout->public_key + 1);
+	if(!failed)
+	{
+		inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
+		bn_write_be(&b.x, inout->public_key + 1);
 
-	inout->depth++;
-	inout->child_num = i;
+		inout->depth++;
+		inout->child_num = i;
+	}
 
-	return 1;
+	// Wipe all stack data.
+	MEMSET_BZERO(data,sizeof(data));
+	MEMSET_BZERO(I,sizeof(I));
+	MEMSET_BZERO(fingerprint,sizeof(fingerprint));
+	MEMSET_BZERO(&a,sizeof(a));
+	MEMSET_BZERO(&b,sizeof(b));
+	MEMSET_BZERO(&c,sizeof(c));
+
+	return failed ? 0 : 1;
 }
 
 #if USE_BIP32_CACHE
@@ -262,7 +322,9 @@ void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, cha
 		node_data[45] = 0;
 		memcpy(node_data + 46, node->private_key, 32);
 	}
-	base58_encode_check(node_data, 78, str, strsize);
+	base58_encode_check(node_data, sizeof(node_data), str, strsize);
+
+	MEMSET_BZERO(node_data, sizeof(node_data));
 }
 
 void hdnode_serialize_public(const HDNode *node, char *str, int strsize)

@@ -24,6 +24,7 @@
 #include <string.h>
 #include "pbkdf2.h"
 #include "hmac.h"
+#include "macro_utils.h"
 
 void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total))
 {
@@ -56,6 +57,9 @@ void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int sal
 			memcpy(key + HMACLEN * (i - 1), f, HMACLEN);
 		}
 	}
+
+	MEMSET_BZERO(f,sizeof(f));
+	MEMSET_BZERO(g, sizeof(g));
 }
 
 void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total))
@@ -89,4 +93,7 @@ void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int sal
 			memcpy(key + HMACLEN * (i - 1), f, HMACLEN);
 		}
 	}
+
+	MEMSET_BZERO(f,sizeof(f));
+	MEMSET_BZERO(g, sizeof(g));
 }
