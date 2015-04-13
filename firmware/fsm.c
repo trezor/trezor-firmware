@@ -448,6 +448,7 @@ void fsm_msgClearSession(ClearSession *msg)
 {
 	(void)msg;
 	session_clear(true); // clear PIN as well
+	layoutScreensaver();
 	fsm_sendSuccess("Session cleared");
 }
 

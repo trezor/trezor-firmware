@@ -49,14 +49,21 @@ void layoutProgressSwipe(const char *desc, int permil)
 	layoutProgress(desc, permil);
 }
 
+void layoutScreensaver(void)
+{
+	layoutLast = layoutScreensaver;
+	oledClear();
+	oledRefresh();
+}
+
 void layoutHome(void)
 {
-	if (layoutLast == layoutHome) {
+	if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
 		oledClear();
 	} else {
-		layoutLast = layoutHome;
 		oledSwipeLeft();
 	}
+	layoutLast = layoutHome;
 	const char *label = storage_getLabel();
 	const uint8_t *homescreen = storage_getHomescreen();
 	if (homescreen) {
