@@ -267,7 +267,7 @@ void signing_txack(TransactionType *tx)
 	}
 
 	static int update_ctr = 0;
-	if (update_ctr++ == 50) {
+	if (update_ctr++ == 20) {
 		layoutProgress("Signing transaction", progress);
 		update_ctr = 0;
 	}
