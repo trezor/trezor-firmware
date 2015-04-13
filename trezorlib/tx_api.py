@@ -2,16 +2,7 @@ import binascii
 import urllib2
 import json
 from decimal import Decimal
-try:
-    raise Exception() # remove this line to enable caching
-    from filecache import filecache, DAY
-except:
-    def filecache(x):
-        def _inner(y):
-            return y
-        return _inner
-    DAY = None
-
+from filecache import filecache, DAY
 import types_pb2 as proto_types
 
 def op_push_data(data):
