@@ -31,7 +31,7 @@
 #include "sha2.h"
 #include "ripemd160.h"
 #include "base58.h"
-#include "macro_utils.h"
+#include "macros.h"
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out)
 {
@@ -53,15 +53,16 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 	bn_read_be(private_key, &a);
 
 	bool failed = false;
-	if (bn_is_zero(&a)) {
+	if (bn_is_zero(&a)) { // == 0
 		failed = true;
-	}
-	else if( !bn_is_less(&a, &order256k1)) { // == 0 or >= order
-		MEMSET_BZERO(&a,sizeof(a));
-		failed = true;
+	} else {
+		if (!bn_is_less(&a, &order256k1)) { // >= order
+			failed = true;
+		}
+		MEMSET_BZERO(&a, sizeof(a));
 	}
 
-	if(failed) {
+	if (failed) {
 		return 0;
 	}
 
@@ -87,25 +88,21 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
 	bn_read_be(out->private_key, &a);
 
 	bool failed = false;
-	if (bn_is_zero(&a)) {
+	if (bn_is_zero(&a)) { // == 0
 		failed = true;
-	}
-	else
-	{
-		if( !bn_is_less(&a, &order256k1)) { // == 0 or >= order
+	} else {
+		if (!bn_is_less(&a, &order256k1)) { // >= order
 			failed = true;
 		}
-
-		// Making sure a is wiped.
-		MEMSET_BZERO(&a,sizeof(a));
+		MEMSET_BZERO(&a, sizeof(a));
 	}
 
-	if(!failed) {
+	if (!failed) {
 		memcpy(out->chain_code, I + 32, 32);
 		hdnode_fill_public_key(out);
 	}
 
-	MEMSET_BZERO(I,sizeof(I));
+	MEMSET_BZERO(I, sizeof(I));
 	return failed ? 0 : 1;
 }
 
@@ -141,30 +138,25 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	if (!bn_is_less(&b, &order256k1)) { // >= order
 		failed = true;
 	}
-	if(!failed) {
-
+	if (!failed) {
 		bn_addmod(&a, &b, &order256k1);
-
 		if (bn_is_zero(&a)) {
 			failed = true;
 		}
 	}
-
-	if(!failed)
-	{
+	if (!failed) {
 		inout->depth++;
 		inout->child_num = i;
 		bn_write_be(&a, inout->private_key);
-
 		hdnode_fill_public_key(inout);
 	}
 
-	// Making sure to wipe our memory!
-	MEMSET_BZERO(&a,sizeof(a));
-	MEMSET_BZERO(&b,sizeof(b));
-	MEMSET_BZERO(I,sizeof(I));
-	MEMSET_BZERO(fingerprint,sizeof(fingerprint));
-	MEMSET_BZERO(data,sizeof(data));
+	// making sure to wipe our memory
+	MEMSET_BZERO(&a, sizeof(a));
+	MEMSET_BZERO(&b, sizeof(b));
+	MEMSET_BZERO(I, sizeof(I));
+	MEMSET_BZERO(fingerprint, sizeof(fingerprint));
+	MEMSET_BZERO(data, sizeof(data));
 	return failed ? 0 : 1;
 }
 
@@ -194,43 +186,37 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 		failed = true;
 	}
 
-	if(!failed)
-	{
+	if (!failed) {
 		hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
 		memcpy(inout->chain_code, I + 32, 32);
 		bn_read_be(I, &c);
-
 		if (!bn_is_less(&c, &order256k1)) { // >= order
 			failed = true;
 		}
 	}
 
-	if(!failed)
-	{
+	if (!failed) {
 		scalar_multiply(&c, &b); // b = c * G
 		point_add(&a, &b);       // b = a + b
-
 		if (!ecdsa_validate_pubkey(&b)) {
 			failed = true;
 		}
 	}
 
-	if(!failed)
-	{
+	if (!failed) {
 		inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
 		bn_write_be(&b.x, inout->public_key + 1);
-
 		inout->depth++;
 		inout->child_num = i;
 	}
 
 	// Wipe all stack data.
-	MEMSET_BZERO(data,sizeof(data));
-	MEMSET_BZERO(I,sizeof(I));
-	MEMSET_BZERO(fingerprint,sizeof(fingerprint));
-	MEMSET_BZERO(&a,sizeof(a));
-	MEMSET_BZERO(&b,sizeof(b));
-	MEMSET_BZERO(&c,sizeof(c));
+	MEMSET_BZERO(data, sizeof(data));
+	MEMSET_BZERO(I, sizeof(I));
+	MEMSET_BZERO(fingerprint, sizeof(fingerprint));
+	MEMSET_BZERO(&a, sizeof(a));
+	MEMSET_BZERO(&b, sizeof(b));
+	MEMSET_BZERO(&c, sizeof(c));
 
 	return failed ? 0 : 1;
 }

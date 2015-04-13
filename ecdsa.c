@@ -33,7 +33,7 @@
 #include "hmac.h"
 #include "ecdsa.h"
 #include "base58.h"
-#include "macro_utils.h"
+#include "macros.h"
 
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2)
@@ -165,12 +165,12 @@ int point_is_negative_of(const curve_point *p, const curve_point *q)
 	if (!bn_is_equal(&(p->x), &(q->x))) {
 		return 0;
 	}
-	
+
 	// we shouldn't hit this for a valid point
 	if (bn_is_zero(&(p->y))) {
 		return 0;
 	}
-	
+
 	return !bn_is_equal(&(p->y), &(q->y));
 }
 
@@ -200,7 +200,7 @@ static void curve_to_jacobian(const curve_point *p, jacobian_curve_point *jp) {
 		jp->z.val[i] = random32() & 0x3FFFFFFF;
 	}
 	jp->z.val[8] = (random32() & 0x7fff) + 1;
-	
+
 	jp->x = jp->z;
 	bn_multiply(&jp->z, &jp->x, &prime256k1);
 	// x = z^2
@@ -259,7 +259,6 @@ static void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2) 
 	 *    and y3 = (lambda * (x2/z2^2 - x3/z3^2) - y2/z2^3) * z3^3
 	 *           = r * (h^2*x2 - x3) - h^3*y2
 	 */
-	 
 
 	/* h = x1*z2^2 - x2
 	 * r = y1*z2^3 - y2
@@ -347,7 +346,6 @@ static void point_jacobian_double(jacobian_curve_point *p) {
 	 *    and y3 = (lambda * (x/z^2 - x3/z3^2) - y/z^3) * z3^3
 	 *           = m * (xy^2 - x3) - y^4
 	 */
-	 
 
 	/* m = 3/2*x*x
 	 * x3 = m^2 - 2*xy^2
@@ -486,7 +484,7 @@ void point_multiply(const bignum256 *k, const curve_point *p, curve_point *res)
 		// negate last result to make signs of this round and the
 		// last round equal.
 		conditional_negate(sign ^ nsign, &jres.z, &prime256k1);
-		
+
 		// add odd factor
 		point_jacobian_add(&pmult[bits >> 1], &jres);
 		sign = nsign;
@@ -572,7 +570,7 @@ void scalar_multiply(const bignum256 *k, curve_point *res)
 		// negate last result to make signs of this round and the
 		// last round equal.
 		conditional_negate((lowbits & 1) - 1, &jres.y, &prime256k1);
-		
+
 		// add odd factor
 		point_jacobian_add(&secp256k1_cp[i][lowbits >> 1], &jres);
 	}
@@ -656,7 +654,6 @@ int ecdsa_sign(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, ui
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
 	int res = ecdsa_sign_digest(priv_key, hash, sig, pby);
-
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
 
@@ -670,9 +667,7 @@ int ecdsa_sign_double(const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_
 	sha256_Raw(msg, msg_len, hash);
 	sha256_Raw(hash, 32, hash);
 	int res = ecdsa_sign_digest(priv_key, hash, sig, pby);
-
 	MEMSET_BZERO(hash, sizeof(hash));
-
 	return res;
 }
 
@@ -701,7 +696,7 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 	}
 #endif
 
-	if(result == 0)	{
+	if (result == 0) {
 		// compute k*G
 		scalar_multiply(&k, &R);
 		if (pby) {
@@ -716,7 +711,7 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 		}
 	}
 
-	if(result == 0)	{
+	if (result == 0) {
 		bn_inverse(&k, &order256k1);
 		bn_read_be(priv_key, da);
 		bn_multiply(&R.x, da, &order256k1);
@@ -734,8 +729,7 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 		}
 	}
 
-	if(result == 0)
-	{
+	if (result == 0) {
 		// if S > order/2 => S = -S
 		if (bn_is_less(&order256k1_half, &k)) {
 			bn_subtract(&order256k1, &k, &k);
@@ -748,9 +742,9 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 		bn_write_be(&k, sig + 32);
 	}
 
-	MEMSET_BZERO(&k,sizeof(k));
-	MEMSET_BZERO(&z,sizeof(z));
-	MEMSET_BZERO(&R,sizeof(R));
+	MEMSET_BZERO(&k, sizeof(k));
+	MEMSET_BZERO(&z, sizeof(z));
+	MEMSET_BZERO(&R, sizeof(R));
 	return 0;
 }
 
@@ -764,8 +758,8 @@ void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key)
 	scalar_multiply(&k, &R);
 	pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
 	bn_write_be(&R.x, pub_key + 1);
-	MEMSET_BZERO(&R,sizeof(R));
-	MEMSET_BZERO(&k,sizeof(k));
+	MEMSET_BZERO(&R, sizeof(R));
+	MEMSET_BZERO(&k, sizeof(k));
 }
 
 void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key)
@@ -779,8 +773,8 @@ void ecdsa_get_public_key65(const uint8_t *priv_key, uint8_t *pub_key)
 	pub_key[0] = 0x04;
 	bn_write_be(&R.x, pub_key + 1);
 	bn_write_be(&R.y, pub_key + 33);
-	MEMSET_BZERO(&R,sizeof(R));
-	MEMSET_BZERO(&k,sizeof(k));
+	MEMSET_BZERO(&R, sizeof(R));
+	MEMSET_BZERO(&k, sizeof(k));
 }
 
 void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
@@ -794,7 +788,7 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 		sha256_Raw(pub_key, 33, h); // expecting compressed format
 	}
 	ripemd160(h, 32, pubkeyhash);
-	MEMSET_BZERO(h,sizeof(h));
+	MEMSET_BZERO(h, sizeof(h));
 }
 
 void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *addr_raw)
@@ -809,8 +803,8 @@ void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr, int 
 	ecdsa_get_address_raw(pub_key, version, raw);
 	base58_encode_check(raw, 21, addr, addrsize);
 
-	// Not as important to clear this one, but we might as well.
-	MEMSET_BZERO(raw,sizeof(raw));
+	// not as important to clear this one, but we might as well
+	MEMSET_BZERO(raw, sizeof(raw));
 }
 
 void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif, int wifsize)
@@ -821,8 +815,8 @@ void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif, int wifs
 	data[33] = 0x01;
 	base58_encode_check(data, 34, wif, wifsize);
 
-	// This private keys running around our stack can cause trouble!
-	MEMSET_BZERO(data,sizeof(data));
+	// private keys running around our stack can cause trouble
+	MEMSET_BZERO(data, sizeof(data));
 }
 
 int ecdsa_address_decode(const char *addr, uint8_t *out)
@@ -907,8 +901,7 @@ int ecdsa_verify(const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg,
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
 	int res = ecdsa_verify_digest(pub_key, sig, hash);
-
-	MEMSET_BZERO(hash,sizeof(hash));
+	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
 }
 
@@ -917,10 +910,8 @@ int ecdsa_verify_double(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
 	sha256_Raw(hash, 32, hash);
-
 	int res = ecdsa_verify_digest(pub_key, sig, hash);
-
-	MEMSET_BZERO(hash,sizeof(hash));
+	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
 }
 
@@ -958,24 +949,23 @@ int ecdsa_verify_digest(const uint8_t *pub_key, const uint8_t *sig, const uint8_
 		scalar_multiply(&z, &res);
 	}
 
-	if(result == 0) {
-
-	// both pub and res can be infinity, can have y = 0 OR can be equal -> false negative
-	point_multiply(&s, &pub, &pub);
-	point_add(&pub, &res);
-	bn_mod(&(res.x), &order256k1);
-
-	// signature does not match
+	if (result == 0) {
+		// both pub and res can be infinity, can have y = 0 OR can be equal -> false negative
+		point_multiply(&s, &pub, &pub);
+		point_add(&pub, &res);
+		bn_mod(&(res.x), &order256k1);
+		// signature does not match
 		if (!bn_is_equal(&res.x, &r)) {
 			result = 5;
 		}
 	}
 
-	MEMSET_BZERO(&pub,sizeof(pub));
-	MEMSET_BZERO(&res,sizeof(res));
-	MEMSET_BZERO(&r,sizeof(r));
-	MEMSET_BZERO(&s,sizeof(s));
-	MEMSET_BZERO(&z,sizeof(z));
+	MEMSET_BZERO(&pub, sizeof(pub));
+	MEMSET_BZERO(&res, sizeof(res));
+	MEMSET_BZERO(&r, sizeof(r));
+	MEMSET_BZERO(&s, sizeof(s));
+	MEMSET_BZERO(&z, sizeof(z));
+
 	// all OK
 	return result;
 }

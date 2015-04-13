@@ -26,7 +26,7 @@
 #include <sys/types.h>
 #include "base58.h"
 #include "sha2.h"
-#include "macro_utils.h"
+#include "macros.h"
 
 static const int8_t b58digits_map[] = {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -184,8 +184,6 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz)
 	return true;
 }
 
-#include <stdio.h>
-
 int base58_encode_check(const uint8_t *data, int datalen, char *str, int strsize)
 {
 	if (datalen > 128) {
@@ -197,10 +195,9 @@ int base58_encode_check(const uint8_t *data, int datalen, char *str, int strsize
 	sha256_Raw(data, datalen, hash);
 	sha256_Raw(hash, 32, hash);
 	size_t res = strsize;
-	bool fSuccess = b58enc(str, &res, buf, datalen + 4);
-
+	bool success = b58enc(str, &res, buf, datalen + 4);
 	MEMSET_BZERO(buf, sizeof(buf));
-	return fSuccess ? res : 0;
+	return success ? res : 0;
 }
 
 int base58_decode_check(const char *str, uint8_t *data, int datalen)

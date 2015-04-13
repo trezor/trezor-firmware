@@ -26,7 +26,7 @@
 #include <assert.h>
 #include "bignum.h"
 #include "secp256k1.h"
-#include "macro_utils.h"
+#include "macros.h"
 
 inline uint32_t read_be(const uint8_t *data)
 {
@@ -226,7 +226,7 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 		//   0 <= res < 2^(30k + 256) * (2^30 + 1)
 		// estimate (res / prime)
 		coef = (res[i] >> 16) + (res[i + 1] << 14);
-		
+
 		// coef = res / 2^(30k + 256)  rounded down
 		// 0 <= coef <= 2^30
 		// subtract (coef * 2^(30k) * prime) from res
@@ -239,7 +239,7 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 			res[i - 8 + j] = temp & 0x3FFFFFFF;
 		}
 		// we don't clear res[i+1] but we never read it again.
-		
+
 		// we rely on the fact that prime > 2^256 - 2^196
 		//   res = oldres - coef*2^(30k) * prime;
 		// and
@@ -253,8 +253,7 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 	for (i = 0; i < 9; i++) {
 		x->val[i] = res[i];
 	}
-
-	MEMSET_BZERO(res,sizeof(res));
+	MEMSET_BZERO(res, sizeof(res));
 }
 
 // input x can be any normalized number that fits (0 <= x < 2^270).
@@ -312,10 +311,8 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 	}
 	bn_mod(&res, prime);
 	memcpy(x, &res, sizeof(bignum256));
-
 	MEMSET_BZERO(&res, sizeof(res));
 	MEMSET_BZERO(&p, sizeof(p));
-
 }
 
 #if ! USE_INVERSE_FAST
@@ -408,14 +405,14 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	odd = &us;
 	even = &vr;
 
-	// u = prime, v = x  
+	// u = prime, v = x
 	// r = 0    , s = 1
 	// k = 0
 	for (;;) {
 		// invariants:
-		//   let u = limbs us.a[0..u.len1-1] in little endian, 
+		//   let u = limbs us.a[0..u.len1-1] in little endian,
 		//   let s = limbs us.a[u.len..8] in big endian,
-		//   let v = limbs vr.a[0..u.len1-1] in little endian, 
+		//   let v = limbs vr.a[0..u.len1-1] in little endian,
 		//   let r = limbs vr.a[u.len..8] in big endian,
 		//   r,s >= 0 ; u,v >= 1
 		//   x*-r = u*2^k mod prime
@@ -425,7 +422,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		//   max(u,v) <= 2^k   (*) see comment at end of loop
 		//   gcd(u,v) = 1
 		//   {odd,even} = {&us, &vr}
- 		//   odd->a[0] and odd->a[8] are odd
+		//   odd->a[0] and odd->a[8] are odd
 		//   even->a[0] or even->a[8] is even
 		//
 		// first u/v are large and r/s small
@@ -486,7 +483,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		assert(even->a[0] & 1);
 		assert((even->a[8] & 1) == 0);
 
-		// cmp > 0 if us.a[0..len1-1] > vr.a[0..len1-1], 
+		// cmp > 0 if us.a[0..len1-1] > vr.a[0..len1-1],
 		// cmp = 0 if equal, < 0 if less.
 		cmp = us.len1 - vr.len1;
 		if (cmp == 0) {
@@ -567,7 +564,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	// We use the Explicit Quadratic Modular inverse algorithm.
 	//   http://arxiv.org/pdf/1209.6626.pdf
 	// a^-1  = (2-a) * PROD_i (1 + (a - 1)^(2^i)) mod 2^32
-	// the product will converge quickly, because (a-1)^(2^i) will be 
+	// the product will converge quickly, because (a-1)^(2^i) will be
 	// zero mod 2^32 after at most five iterations.
 	// We want to compute -prime^-1 so we start with (pp[0]-2).
 	assert(pp[0] & 1);
@@ -622,7 +619,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	}
 	x->val[i] = temp32;
 
-	// Let's wipe all temp buffers.
+	// let's wipe all temp buffers
 	MEMSET_BZERO(pp, sizeof(pp));
 	MEMSET_BZERO(&us, sizeof(us));
 	MEMSET_BZERO(&vr, sizeof(vr));

@@ -25,7 +25,7 @@
 
 #include "hmac.h"
 #include "sha2.h"
-#include "macro_utils.h"
+#include "macros.h"
 
 void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, const uint32_t msglen, uint8_t *hmac)
 {
@@ -54,10 +54,9 @@ void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 	sha256_Update(&ctx, o_key_pad, SHA256_BLOCK_LENGTH);
 	sha256_Update(&ctx, buf, SHA256_DIGEST_LENGTH);
 	sha256_Final(hmac, &ctx);
-	MEMSET_BZERO(buf,sizeof(buf));
-	MEMSET_BZERO(o_key_pad,sizeof(o_key_pad));
-	MEMSET_BZERO(i_key_pad,sizeof(i_key_pad));
-
+	MEMSET_BZERO(buf, sizeof(buf));
+	MEMSET_BZERO(o_key_pad, sizeof(o_key_pad));
+	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
 }
 
 void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, const uint32_t msglen, uint8_t *hmac)
@@ -88,7 +87,7 @@ void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 	sha512_Update(&ctx, buf, SHA512_DIGEST_LENGTH);
 	sha512_Final(hmac, &ctx);
 
-	MEMSET_BZERO(buf,sizeof(buf));
-	MEMSET_BZERO(o_key_pad,sizeof(o_key_pad));
-	MEMSET_BZERO(i_key_pad,sizeof(i_key_pad));
+	MEMSET_BZERO(buf, sizeof(buf));
+	MEMSET_BZERO(o_key_pad, sizeof(o_key_pad));
+	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
 }

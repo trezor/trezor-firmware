@@ -1220,7 +1220,7 @@ START_TEST(test_secp256k1_cp) {
 			point_multiply(&a, &G256k1, &p);
 			ck_assert_mem_eq(&p, &secp256k1_cp[i][j], sizeof(curve_point));
 
-			// even/odd has different behaviour; 
+			// even/odd has different behaviour;
 			// increment by one and test again
 			p1 = p;
 			point_add(&G256k1, &p1);
