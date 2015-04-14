@@ -1,6 +1,6 @@
 # TREZOR: The Hardware Bitcoin Wallet
 # http://bitcointrezor.com/
-# Put this file to /lib/udev/rules.d/
+# Put this file into /usr/lib/udev/rules.d
 
 # Raspbian does not understand the new TAG+="uaccess", TAG+="udev-acl" syntax, use MODE+GROUP for now ... :-(
 
