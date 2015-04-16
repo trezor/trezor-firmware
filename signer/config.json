@@ -8,13 +8,15 @@
 		"https://greenaddress\\.it(/.*)?",
 		"https://[\\w\\.-]+\\.greenaddress\\.it(/.*)?",
 		"https://coinprism\\.com(/.*)?",
-		"https://[\\w\\.-]+\\.coinprism\\.com(/.*)?"
-	],
+		"https://[\\w\\.-]+\\.coinprism\\.com(/.*)?",
+		"https://bitex\\.la(/.*)?",
+		"https://[\\w\\.-]+\\.bitex\\.la(/.*)?"
+		],
 	"blacklist_urls": [
 	],
 	"known_devices": [
 		["0x534c", "0x0001", "Trezor"],
 		["0x10c4", "0xea80", "Trezor Shield"]
 	],
-	"valid_days": 90
+	"valid_days": 180
 }
