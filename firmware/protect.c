@@ -147,13 +147,25 @@ bool protectPin(bool use_cached)
 	}
 	uint32_t fails = storage_getPinFails();
 	if (fails) {
-		if (fails > 2) {
-			layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait ...", NULL, NULL, NULL);
-		}
 		uint32_t wait;
 		wait = (fails < 32) ? (1u << fails) : 0xFFFFFFFF;
 		while (--wait > 0) {
-			delay(10000000);
+			// convert wait to secstr string
+			char secstrbuf[20];
+			strlcpy(secstrbuf, "________0 seconds", sizeof(secstrbuf));
+			char *secstr = secstrbuf + 9;
+			uint32_t secs = wait;
+			while (secs > 0 && secstr >= secstrbuf) {
+				secstr--;
+				*secstr = (secs % 10) + '0';
+				secs /= 10;
+			}
+			if (wait == 1) {
+				secstrbuf[16] = 0;
+			}
+			layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
+			// wait one second
+			delay(24000000);
 		}
 	}
 	const char *pin;
