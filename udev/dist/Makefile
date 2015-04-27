@@ -8,7 +8,7 @@ all: .package
 	docker run -t $(VOL_MOUNT) $(IMAGETAG) /release/release.sh
 
 trezor.rules:
-	cp ../51-trezor-udev.rules trezor.rules
+	cp ../51-trezor.rules trezor.rules
 
 .docker-image:
 	$(info Preparing docker image ...)
