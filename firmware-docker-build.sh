@@ -3,7 +3,7 @@ IMAGETAG=trezor-mcu-build
 FIRMWARETAG=${1:-master}
 
 docker build -t $IMAGETAG .
-docker run -t -v $(pwd):/output $IMAGETAG /bin/sh -c "\
+docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	git clone https://github.com/trezor/trezor-mcu && \
 	cd trezor-mcu && \
 	git checkout $FIRMWARETAG && \
@@ -11,10 +11,9 @@ docker run -t -v $(pwd):/output $IMAGETAG /bin/sh -c "\
 	make && \
 	cd firmware && \
 	make && \
-	cp trezor.bin /output \
-	"
+        cp trezor.bin /output/trezor-$FIRMWARETAG.bin"
 
 echo "---------------------"
 echo "Firmware fingerprint:"
 
-sha256sum trezor.bin
+sha256sum output/trezor-$FIRMWARETAG.bin
