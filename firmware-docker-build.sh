@@ -11,7 +11,7 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	make && \
 	cd firmware && \
 	make && \
-        cp trezor.bin /output/trezor-$FIRMWARETAG.bin"
+	cp trezor.bin /output/trezor-$FIRMWARETAG.bin"
 
 echo "---------------------"
 echo "Firmware fingerprint:"

@@ -11,7 +11,7 @@ How to build Trezor firmware?
 3. ``cd trezor-mcu``
 4. ``./firmware-docker-build.sh TAG`` (where TAG is v1.3.2 for example, if left blank the script builds latest commit)
 
-This creates trezor.bin in current directory and prints its fingerprint at the last line of the build log.
+This creates file ``output/trezor-TAG.bin`` and prints its fingerprint at the last line of the build log.
 
 How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 -------------------------------------------------------------------------
