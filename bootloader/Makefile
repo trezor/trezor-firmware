@@ -6,7 +6,7 @@ OBJS += bootloader.o
 OBJS += signatures.o
 OBJS += usb.o
 
-OBJS += $(MCU_DIR)/trezor-crypto/bignum.small.o
+OBJS += $(MCU_DIR)/trezor-crypto/bignum.o
 OBJS += $(MCU_DIR)/trezor-crypto/ecdsa.small.o
 OBJS += $(MCU_DIR)/trezor-crypto/hmac.o
 OBJS += $(MCU_DIR)/trezor-crypto/ripemd160.o
