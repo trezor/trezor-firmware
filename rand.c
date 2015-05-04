@@ -45,6 +45,7 @@ uint32_t random32(void)
 	uint32_t r;
 	size_t len = sizeof(r);
 	size_t len_read = fread(&r, 1, len, f);
+	(void)len_read;
 	assert(len_read == len);
 	return r;
 }
@@ -59,6 +60,7 @@ uint32_t random_uniform(uint32_t n)
 void random_buffer(uint8_t *buf, size_t len)
 {
 	size_t len_read = fread(buf, 1, len, f);
+	(void)len_read;
 	assert(len_read == len);
 }
 
