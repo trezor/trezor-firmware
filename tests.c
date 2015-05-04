@@ -1442,7 +1442,6 @@ Suite *test_suite(void)
 int main(void)
 {
 	int number_failed;
-	init_rand(); // needed for scalar_multiply()
 	Suite *s = test_suite();
 	SRunner *sr = srunner_create(s);
 	srunner_run_all(sr, CK_VERBOSE);
