@@ -30,14 +30,22 @@ class TestDeviceLoad(common.TrezorTest):
         self.assertEqual(passphrase_protection, True)
 
     def test_load_device_3(self):
-        self.client.wipe_device()
         self.client.load_device_by_xprv(xprv='xprv9s21ZrQH143K2JF8RafpqtKiTbsbaxEeUaMnNHsm5o6wCW3z8ySyH4UxFVSfZ8n7ESu7fgir8imbZKLYVBxFPND1pniTZ81vKfd45EHKX73', pin='', passphrase_protection=False, label='test', language='english')
+
+        passphrase_protection = self.client.debug.read_passphrase_protection()
+        self.assertEqual(passphrase_protection, False)
+
         address = self.client.get_address('Bitcoin', [])
         self.assertEqual(address, '128RdrAkJDmqasgvfRf6MC5VcX4HKqH4mR')
 
-        self.client.wipe_device()
+    def test_load_device_4(self):
         self.client.load_device_by_xprv(xprv='xprv9s21ZrQH143K2JF8RafpqtKiTbsbaxEeUaMnNHsm5o6wCW3z8ySyH4UxFVSfZ8n7ESu7fgir8imbZKLYVBxFPND1pniTZ81vKfd45EHKX73', pin='', passphrase_protection=True, label='test', language='english')
+
         self.client.set_passphrase('passphrase')
+
+        passphrase_protection = self.client.debug.read_passphrase_protection()
+        self.assertEqual(passphrase_protection, True)
+
         address = self.client.get_address('Bitcoin', [])
         self.assertEqual(address, '1CHUbFa4wTTPYgkYaw2LHSd5D4qJjMU8ri')
 
