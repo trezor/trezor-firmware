@@ -117,10 +117,14 @@ class HidTransport(Transport):
         while len(self.buffer) < length:
             data = self.hid.read(64)
             if not len(data):
-                if time.time() - start > 10 and not self.is_connected():
-                    # Over 10 of no response, let's check if
+                if time.time() - start > 10:
+                    # Over 10 s of no response, let's check if
                     # device is still alive
-                    raise ConnectionError("Connection failed")
+                    if not self.is_connected():
+                        raise ConnectionError("Connection failed")
+                    else:
+                        # Restart timer
+                        start = time.time()
 
                 time.sleep(0.001)
                 continue
