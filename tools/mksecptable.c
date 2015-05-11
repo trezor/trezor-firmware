@@ -14,9 +14,6 @@ int main(int __attribute__((unused)) argc, char __attribute__((unused)) **argv) 
 	int i,j,k;
 	curve_point ng = G256k1;
 	curve_point pow2ig = G256k1;
-#ifndef NDEBUG
-	init_rand(); // needed for point_multiply()
-#endif
 	for (i = 0; i < 64; i++) {
 		// invariants:
 		//   pow2ig = 16^i * G
