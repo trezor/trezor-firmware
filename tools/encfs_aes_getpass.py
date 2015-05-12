@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 '''
 Use Trezor as a hardware key for opening EncFS filesystem!
