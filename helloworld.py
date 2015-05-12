@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
