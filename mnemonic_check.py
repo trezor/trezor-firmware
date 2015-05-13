@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 __doc__ = '''
     Use this script to cross-check that TREZOR generated valid
     mnemonic sentence for given internal (TREZOR-generated)
