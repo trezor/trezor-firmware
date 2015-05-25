@@ -332,3 +332,10 @@ void usbTiny(char set)
 {
 	tiny = set;
 }
+
+void usbDelay(int cycles)
+{
+	while (cycles--) {
+		usbd_poll(usbd_dev);
+	}
+}
