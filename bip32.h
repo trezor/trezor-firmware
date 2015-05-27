@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include "ecdsa.h"
 #include "options.h"
 
 typedef struct {

@@ -140,24 +140,38 @@ void bn_rshift(bignum256 *a)
 	a->val[8] >>= 1;
 }
 
-// multiply x by 3/2 modulo prime.
+// multiply x by 1/2 modulo prime.
 // assumes x < 2*prime,
 // guarantees x < 4*prime on exit.
-void bn_mult_3_2(bignum256 * x, const bignum256 *prime)
+void bn_mult_half(bignum256 * x, const bignum256 *prime)
 {
 	int j;
 	uint32_t xodd = -(x->val[0] & 1);
-	// compute x = 3*x/2 mod prime
-	// if x is odd compute (3*x+prime)/2
-	uint32_t tmp1 = (3*x->val[0] + (prime->val[0] & xodd)) >> 1;
+	// compute x = x/2 mod prime
+	// if x is odd compute (x+prime)/2
+	uint32_t tmp1 = (x->val[0] + (prime->val[0] & xodd)) >> 1;
 	for (j = 0; j < 8; j++) {
-		uint32_t tmp2 = (3*x->val[j+1] + (prime->val[j+1] & xodd));
+		uint32_t tmp2 = (x->val[j+1] + (prime->val[j+1] & xodd));
 		tmp1 += (tmp2 & 1) << 29;
 		x->val[j] = tmp1 & 0x3fffffff;
 		tmp1 >>= 30;
 		tmp1 += tmp2 >> 1;
 	}
 	x->val[8] = tmp1;
+}
+
+// multiply x by k modulo prime.
+// assumes x < prime,
+// guarantees x < prime on exit.
+void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime)
+{
+	int j;
+	for (j = 0; j < 9; j++) {
+		x->val[j] = k * x->val[j];
+	}
+	bn_normalize(x);
+	bn_fast_mod(x, prime);
+	bn_mod(x, prime);
 }
 
 // assumes x < 2*prime, result < prime
@@ -186,16 +200,10 @@ void bn_mod(bignum256 *x, const bignum256 *prime)
 	}
 }
 
-// Compute x := k * x  (mod prime)
-// both inputs must be smaller than 2 * prime.
-// result is reduced to 0 <= x < 2 * prime
-// This only works for primes between 2^256-2^196 and 2^256.
-// this particular implementation accepts inputs up to 2^263 or 128*prime.
-void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
+void bn_multiply_long(const bignum256 *k, const bignum256 *x, uint32_t res[18])
 {
 	int i, j;
 	uint64_t temp = 0;
-	uint32_t res[18], coef;
 
 	// compute lower half of long multiplication
 	for (i = 0; i < 9; i++)
@@ -216,43 +224,69 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 		temp >>= 30;
 	}
 	res[17] = temp;
+}
+
+void bn_multiply_reduce_step(uint32_t res[18], const bignum256 *prime, uint32_t i) {
+	// let k = i-8.
+	// invariants:
+	//   res[0..(i+1)] = k * x   (mod prime)
+	//   0 <= res < 2^(30k + 256) * (2^30 + 1)
+	// estimate (res / prime)
+	// coef = res / 2^(30k + 256)  rounded down
+	// 0 <= coef <= 2^30
+	// subtract (coef * 2^(30k) * prime) from res
+	// note that we unrolled the first iteration
+	uint32_t j;
+	uint32_t coef = (res[i] >> 16) + (res[i + 1] << 14);
+	uint64_t temp = 0x1000000000000000ull + res[i - 8] - prime->val[0] * (uint64_t)coef;
+	res[i - 8] = temp & 0x3FFFFFFF;
+	for (j = 1; j < 9; j++) {
+		temp >>= 30;
+		temp += 0xFFFFFFFC0000000ull + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
+		res[i - 8 + j] = temp & 0x3FFFFFFF;
+	}
+    temp >>= 30;
+    temp += 0xFFFFFFFC0000000ull + res[i - 8 + j];
+    res[i - 8 + j] = temp & 0x3FFFFFFF;
+	// we rely on the fact that prime > 2^256 - 2^196
+	//   res = oldres - coef*2^(30k) * prime;
+	// and
+	//   coef * 2^(30k + 256) <= oldres < (coef+1) * 2^(30k + 256)
+	// Hence, 0 <= res < 2^30k (2^256 + coef * (2^256 - prime))
+	// Since coef * (2^256 - prime) < 2^226, we get
+	//   0 <= res < 2^(30k + 226) (2^30 + 1)
+	// Thus the invariant holds again.
+}
+
+
+void bn_multiply_reduce(bignum256 *x, uint32_t res[18], const bignum256 *prime)
+{
+	int i;
 	// res = k * x is a normalized number (every limb < 2^30)
 	// 0 <= res < 2^526.
 	// compute modulo p division is only estimated so this may give result greater than prime but not bigger than 2 * prime
 	for (i = 16; i >= 8; i--) {
-		// let k = i-8.
-		// invariants:
-		//   res[0..(i+1)] = k * x   (mod prime)
-		//   0 <= res < 2^(30k + 256) * (2^30 + 1)
-		// estimate (res / prime)
-		coef = (res[i] >> 16) + (res[i + 1] << 14);
-
-		// coef = res / 2^(30k + 256)  rounded down
-		// 0 <= coef <= 2^30
-		// subtract (coef * 2^(30k) * prime) from res
-		// note that we unrolled the first iteration
-		temp = 0x1000000000000000ull + res[i - 8] - prime->val[0] * (uint64_t)coef;
-		res[i - 8] = temp & 0x3FFFFFFF;
-		for (j = 1; j < 9; j++) {
-			temp >>= 30;
-			temp += 0xFFFFFFFC0000000ull + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
-			res[i - 8 + j] = temp & 0x3FFFFFFF;
-		}
-		// we don't clear res[i+1] but we never read it again.
-
-		// we rely on the fact that prime > 2^256 - 2^196
-		//   res = oldres - coef*2^(30k) * prime;
-		// and
-		//   coef * 2^(30k + 256) <= oldres < (coef+1) * 2^(30k + 256)
-		// Hence, 0 <= res < 2^30k (2^256 + coef * (2^256 - prime))
-		// Since coef * (2^256 - prime) < 2^226, we get
-		//   0 <= res < 2^(30k + 226) (2^30 + 1)
-		// Thus the invariant holds again.
+        bn_multiply_reduce_step(res, prime, i);
+        bn_multiply_reduce_step(res, prime, i); // apply twice, as a hack for NIST256P1 prime.
+        assert(res[i + 1] == 0);
 	}
 	// store the result
 	for (i = 0; i < 9; i++) {
 		x->val[i] = res[i];
 	}
+}
+
+// Compute x := k * x  (mod prime)
+// both inputs must be smaller than 2 * prime.
+// result is reduced to 0 <= x < 2 * prime
+// This only works for primes between 2^256-2^196 and 2^256.
+// this particular implementation accepts inputs up to 2^263 or 128*prime.
+
+void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
+{
+	uint32_t res[18] = {0};
+	bn_multiply_long(k, x, res);
+	bn_multiply_reduce(x, res, prime); 
 	MEMSET_BZERO(res, sizeof(res));
 }
 
@@ -660,9 +694,9 @@ void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime) {
 void bn_subtractmod(const bignum256 *a, const bignum256 *b, bignum256 *res, const bignum256 *prime)
 {
 	int i;
-	uint32_t temp = 0;
+	uint32_t temp = 1;
 	for (i = 0; i < 9; i++) {
-		temp += a->val[i] + 2u * prime->val[i] - b->val[i];
+		temp += 0x3FFFFFFF + a->val[i] + 2u * prime->val[i] - b->val[i];
 		res->val[i] = temp & 0x3FFFFFFF;
 		temp >>= 30;
 	}

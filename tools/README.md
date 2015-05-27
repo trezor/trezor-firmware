@@ -45,9 +45,10 @@ It will print ```<jobid> error``` when there was an error processing job jobid.
 It will print ```error``` when it encountered a malformed line.
 
 
-mksecptable
+mktable
 -----------
 
-mksecptable computes the points of the form `(2*j+1)*16^i*G` and prints them in the format to be included in `secp256k1.c`.  These points are used by the fast ECC multiplication.
+mktable computes the points of the form `(2*j+1)*16^i*G` and prints them in the format to be included in `secp256k1.c` and `nist256p1.c`.
+These points are used by the fast ECC multiplication.
 
 It is only meant to be run if the `scalar_mult` algorithm changes.
