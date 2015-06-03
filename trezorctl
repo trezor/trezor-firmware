@@ -8,8 +8,6 @@ import urllib
 import tempfile
 
 from trezorlib.client import TrezorClient, TrezorClientDebug
-from trezorlib.tx_api import TXAPIBitcoin
-from trezorlib.protobuf_json import pb2json
 
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
