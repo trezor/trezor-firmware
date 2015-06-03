@@ -442,7 +442,6 @@ def main():
     else:
         client = TrezorClient(transport)
 
-    client.set_tx_api(TXAPIBitcoin())
     cmds = Commands(client)
     
     res = args.func(cmds, args)

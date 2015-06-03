@@ -538,7 +538,10 @@ class ProtocolMixin(object):
                 continue
 
             tx = msg.transactions.add()
-            tx.CopyFrom(self.tx_api.get_tx(binascii.hexlify(inp.prev_hash)))
+            if self.tx_api:
+                tx.CopyFrom(self.tx_api.get_tx(binascii.hexlify(inp.prev_hash)))
+            else:
+                raise Exception('TX_API not defined')
             known_hashes.append(inp.prev_hash)
 
         return msg
@@ -560,7 +563,10 @@ class ProtocolMixin(object):
             if inp.prev_hash in known_hashes:
                 continue
 
-            txes[inp.prev_hash] = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash))
+            if self.tx_api:
+                txes[inp.prev_hash] = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash))
+            else:
+                raise Exception('TX_API not defined')
             known_hashes.append(inp.prev_hash)
 
         return txes
