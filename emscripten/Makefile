@@ -7,11 +7,14 @@ EMFLAGS = \
 SRC = ../bignum.c ../ecdsa.c ../secp256k1.c ../hmac.c ../bip32.c \
 	../base58.c ../ripemd160.c ../sha2.c ../rand.c
 
-test: trezor-crypto.js
+test: node_modules trezor-crypto.js
 	node test.js
 
 trezor-crypto.js: $(SRC)
 	emcc $(EMFLAGS) -o $@ $^
+
+node_modules:
+	npm install
 
 clean:
 	rm -f trezor-crypto.js
