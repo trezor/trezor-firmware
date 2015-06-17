@@ -470,6 +470,7 @@ message CipherKeyValue {
 	optional bool encrypt = 4;		// are we encrypting (True) or decrypting (False)?
 	optional bool ask_on_encrypt = 5;	// should we ask on encrypt operation?
 	optional bool ask_on_decrypt = 6;	// should we ask on decrypt operation?
+	optional bytes iv = 7;			// initialization vector (will be computed if not set)
 }
 
 /**
