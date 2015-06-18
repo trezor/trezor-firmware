@@ -745,7 +745,7 @@ int ecdsa_sign_digest(const uint8_t *priv_key, const uint8_t *digest, uint8_t *s
 	MEMSET_BZERO(&k, sizeof(k));
 	MEMSET_BZERO(&z, sizeof(z));
 	MEMSET_BZERO(&R, sizeof(R));
-	return 0;
+	return result;
 }
 
 void ecdsa_get_public_key33(const uint8_t *priv_key, uint8_t *pub_key)
