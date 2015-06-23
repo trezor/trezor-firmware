@@ -24,6 +24,8 @@ from mnemonic import Mnemonic
 
 SCREENSHOT = False
 
+DEFAULT_CURVE = 'secp256k1'
+
 # monkeypatching: text formatting of protobuf messages
 tools.monkeypatch_google_protobuf_text_format()
 
@@ -385,9 +387,9 @@ class ProtocolMixin(object):
         return path
 
     @expect(proto.PublicKey)
-    def get_public_node(self, n):
+    def get_public_node(self, n, ecdsa_curve_name=DEFAULT_CURVE):
         n = self._convert_prime(n)
-        return self.call(proto.GetPublicKey(address_n=n))
+        return self.call(proto.GetPublicKey(address_n=n, ecdsa_curve_name=ecdsa_curve_name))
 
     @field('address')
     @expect(proto.Address)
@@ -459,8 +461,8 @@ class ProtocolMixin(object):
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message))
 
     @expect(proto.SignedIdentity)
-    def sign_identity(self, identity, challenge_hidden, challenge_visual):
-        return self.call(proto.SignIdentity(identity=identity, challenge_hidden=challenge_hidden, challenge_visual=challenge_visual))
+    def sign_identity(self, identity, challenge_hidden, challenge_visual, ecdsa_curve_name=DEFAULT_CURVE):
+        return self.call(proto.SignIdentity(identity=identity, challenge_hidden=challenge_hidden, challenge_visual=challenge_visual, ecdsa_curve_name=ecdsa_curve_name))
 
     def verify_message(self, address, signature, message):
         try:
