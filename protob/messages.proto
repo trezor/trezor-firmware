@@ -255,6 +255,7 @@ message Entropy {
  */
 message GetPublicKey {
 	repeated uint32 address_n = 1;		// BIP-32 path to derive the key from master node
+	optional string ecdsa_curve_name = 2;		// ECDSA curve name to use
 }
 
 /**
@@ -570,6 +571,7 @@ message SignIdentity {
 	optional IdentityType identity = 1;		// identity
 	optional bytes challenge_hidden = 2;		// non-visible challenge
 	optional string challenge_visual = 3;		// challenge shown on display (e.g. date+time)
+	optional string ecdsa_curve_name = 4;		// ECDSA curve name to use
 }
 
 /**
