@@ -96,9 +96,11 @@ int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t 
 	sha256_Final(hash, &ctx);
 	sha256_Raw(hash, 32, hash);
 	uint8_t pby;
-	ecdsa_sign_digest(privkey, hash, signature + 1, &pby);
-	signature[0] = 27 + pby + 4;
-	return 0;
+	int result = ecdsa_sign_digest(&secp256k1, privkey, hash, signature + 1, &pby);
+	if (result == 0) {
+		signature[0] = 27 + pby + 4;
+	}
+	return result;
 }
 
 int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
