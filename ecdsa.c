@@ -608,7 +608,7 @@ int generate_k_random(bignum256 *k) {
 // http://tools.ietf.org/html/rfc6979
 int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash)
 {
-	int i;
+	int i, error;
 	uint8_t v[32], k[32], bx[2*32], buf[32 + 1 + sizeof(bx)];
 	bignum256 z1;
 
@@ -632,11 +632,13 @@ int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t
 	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
 	hmac_sha256(k, sizeof(k), v, sizeof(v), v);
 
+	error = 1;
 	for (i = 0; i < 10000; i++) {
 		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
 		bn_read_be(v, secret);
 		if ( !bn_is_zero(secret) && bn_is_less(secret, &order256k1) ) {
-			return 0; // good number -> no error
+			error = 0; // good number -> no error
+			break;
 		}
 		memcpy(buf, v, sizeof(v));
 		buf[sizeof(v)] = 0x00;
@@ -644,7 +646,12 @@ int generate_k_rfc6979(bignum256 *secret, const uint8_t *priv_key, const uint8_t
 		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
 	}
 	// we generated 10000 numbers, none of them is good -> fail
-	return 1;
+
+	MEMSET_BZERO(v, sizeof(v));
+	MEMSET_BZERO(k, sizeof(k));
+	MEMSET_BZERO(bx, sizeof(bx));
+	MEMSET_BZERO(buf, sizeof(buf));
+	return error;
 }
 
 // msg is a data to be signed
