@@ -32,6 +32,9 @@
 #include "ripemd160.h"
 #include "base58.h"
 #include "macros.h"
+#include "secp256k1.h"
+
+static const ecdsa_curve *default_curve = &secp256k1;
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out)
 {
@@ -56,7 +59,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 	if (bn_is_zero(&a)) { // == 0
 		failed = true;
 	} else {
-		if (!bn_is_less(&a, &order256k1)) { // >= order
+		if (!bn_is_less(&a, &default_curve->order)) { // >= order
 			failed = true;
 		}
 		MEMSET_BZERO(&a, sizeof(a));
@@ -91,7 +94,7 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
 	if (bn_is_zero(&a)) { // == 0
 		failed = true;
 	} else {
-		if (!bn_is_less(&a, &order256k1)) { // >= order
+		if (!bn_is_less(&a, &default_curve->order)) { // >= order
 			failed = true;
 		}
 		MEMSET_BZERO(&a, sizeof(a));
@@ -135,11 +138,11 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
 	bool failed = false;
 
-	if (!bn_is_less(&b, &order256k1)) { // >= order
+	if (!bn_is_less(&b, &default_curve->order)) { // >= order
 		failed = true;
 	}
 	if (!failed) {
-		bn_addmod(&a, &b, &order256k1);
+		bn_addmod(&a, &b, &default_curve->order);
 		if (bn_is_zero(&a)) {
 			failed = true;
 		}
@@ -182,7 +185,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	memset(inout->private_key, 0, 32);
 
 	bool failed = false;
-	if (!ecdsa_read_pubkey(inout->public_key, &a)) {
+	if (!ecdsa_read_pubkey(default_curve, inout->public_key, &a)) {
 		failed = true;
 	}
 
@@ -190,15 +193,15 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 		hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
 		memcpy(inout->chain_code, I + 32, 32);
 		bn_read_be(I, &c);
-		if (!bn_is_less(&c, &order256k1)) { // >= order
+		if (!bn_is_less(&c, &default_curve->order)) { // >= order
 			failed = true;
 		}
 	}
 
 	if (!failed) {
-		scalar_multiply(&c, &b); // b = c * G
-		point_add(&a, &b);       // b = a + b
-		if (!ecdsa_validate_pubkey(&b)) {
+		scalar_multiply(default_curve, &c, &b); // b = c * G
+		point_add(default_curve, &a, &b);       // b = a + b
+		if (!ecdsa_validate_pubkey(default_curve, &b)) {
 			failed = true;
 		}
 	}
@@ -291,7 +294,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 
 void hdnode_fill_public_key(HDNode *node)
 {
-	ecdsa_get_public_key33(node->private_key, node->public_key);
+	ecdsa_get_public_key33(default_curve, node->private_key, node->public_key);
 }
 
 void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize)

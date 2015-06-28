@@ -29,6 +29,13 @@
 
 #include "ecdsa.h"
 #include "rand.h"
+#include "secp256k1.h"
+
+#define CURVE			(&secp256k1)
+#define prime256k1		(secp256k1.prime)
+#define G256k1			(secp256k1.G)
+#define order256k1		(secp256k1.order)
+#define secp256k1_cp	(secp256k1.cp)
 
 int main(int argc, char *argv[])
 {
@@ -81,21 +88,21 @@ int main(int argc, char *argv[])
 		}
 
 		// use our ECDSA signer to sign the message with the key
-		if (ecdsa_sign(priv_key, msg, msg_len, sig, 0) != 0) {
+		if (ecdsa_sign(CURVE, priv_key, msg, msg_len, sig, 0) != 0) {
 			printf("trezor-crypto signing failed\n");
 			break;
 		}
 
 		// generate public key from private key
-		ecdsa_get_public_key33(priv_key, pub_key33);
-		ecdsa_get_public_key65(priv_key, pub_key65);
+		ecdsa_get_public_key33(&secp256k1, priv_key, pub_key33);
+		ecdsa_get_public_key65(&secp256k1, priv_key, pub_key65);
 
 		// use our ECDSA verifier to verify the message signature
-		if (ecdsa_verify(pub_key65, sig, msg, msg_len) != 0) {
+		if (ecdsa_verify(CURVE, pub_key65, sig, msg, msg_len) != 0) {
 			printf("trezor-crypto verification failed (pub_key_len = 65)\n");
 			break;
 		}
-		if (ecdsa_verify(pub_key33, sig, msg, msg_len) != 0) {
+		if (ecdsa_verify(CURVE, pub_key33, sig, msg, msg_len) != 0) {
 			printf("trezor-crypto verification failed (pub_key_len = 33)\n");
 			break;
 		}
