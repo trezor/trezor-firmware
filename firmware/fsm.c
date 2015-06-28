@@ -44,6 +44,8 @@
 #include "base58.h"
 #include "bip39.h"
 #include "ripemd160.h"
+#include "secp256k1.h"
+#include "nist256p1.h"
 
 // message methods
 
@@ -285,6 +287,17 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
 	if (!node) return;
 
+	uint8_t public_key[33];  // copy public key to temporary buffer
+	memcpy(public_key, node->public_key, sizeof(public_key));
+
+	if (msg->has_ecdsa_curve_name) {
+		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
+		if (curve) {
+			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
+			ecdsa_get_public_key33(curve, node->private_key, public_key);
+		}
+	}
+
 	resp->node.depth = node->depth;
 	resp->node.fingerprint = node->fingerprint;
 	resp->node.child_num = node->child_num;
@@ -293,7 +306,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	resp->node.has_private_key = false;
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
-	memcpy(resp->node.public_key.bytes, node->public_key, 33);
+	memcpy(resp->node.public_key.bytes, public_key, 33);
 	resp->has_xpub = true;
 	hdnode_serialize_public(node, resp->xpub, sizeof(resp->xpub));
 	msg_write(MessageType_MessageType_PublicKey, resp);
@@ -662,6 +675,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		layoutHome();
 		return;
 	}
+
 	uint32_t address_n[5];
 	address_n[0] = 0x80000000 | 13;
 	address_n[1] = 0x80000000 | hash[ 0] | (hash[ 1] << 8) | (hash[ 2] << 16) | (hash[ 3] << 24);
@@ -672,20 +686,51 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	const HDNode *node = fsm_getDerivedNode(address_n, 5);
 	if (!node) return;
 
-	uint8_t message[256 + 256];
-	memcpy(message, msg->challenge_hidden.bytes, msg->challenge_hidden.size);
-	const int len = strlen(msg->challenge_visual);
-	memcpy(message + msg->challenge_hidden.size, msg->challenge_visual, len);
+	uint8_t public_key[33];  // copy public key to temporary buffer
+	memcpy(public_key, node->public_key, sizeof(public_key));
 
-	layoutProgressSwipe("Signing", 0);
-	if (cryptoMessageSign(message, msg->challenge_hidden.size + len, node->private_key, resp->signature.bytes) == 0) {
-		resp->has_address = true;
-		uint8_t addr_raw[21];
-		ecdsa_get_address_raw(node->public_key, 0x00, addr_raw); // hardcoded Bitcoin address type
-		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+	if (msg->has_ecdsa_curve_name) {
+		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
+		if (curve) {
+			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
+			ecdsa_get_public_key33(curve, node->private_key, public_key);
+		}
+	}
+
+	bool sign_ssh = false;
+	if (msg->identity.has_proto) {
+		sign_ssh = (strcmp(msg->identity.proto, "ssh") == 0);
+	}
+
+	uint8_t message_bytes[256 + 256];
+	memcpy(message_bytes, msg->challenge_hidden.bytes, msg->challenge_hidden.size);
+	int message_size = msg->challenge_hidden.size;
+
+	int result = 0;
+	if (sign_ssh) {
+		// SSH doesn't sign visual challenge.
+		layoutProgressSwipe("Signing SSH", 0);
+		result = sshMessageSign(message_bytes, message_size, node->private_key, resp->signature.bytes);
+	} else {
+		const int len = strlen(msg->challenge_visual);
+		memcpy(message_bytes + message_size, msg->challenge_visual, len);
+		message_size = message_size + len;
+		layoutProgressSwipe("Signing", 0);
+		result = cryptoMessageSign(message_bytes, message_size, node->private_key, resp->signature.bytes);
+	}
+
+	if (result == 0) {
+		if (sign_ssh) {
+			resp->has_address = false;
+		} else {
+			resp->has_address = true;
+			uint8_t addr_raw[21];
+			ecdsa_get_address_raw(node->public_key, 0x00, addr_raw); // hardcoded Bitcoin address type
+			base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+		}
 		resp->has_public_key = true;
 		resp->public_key.size = 33;
-		memcpy(resp->public_key.bytes, node->public_key, 33);
+		memcpy(resp->public_key.bytes, public_key, 33);
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_SignedIdentity, resp);
@@ -706,7 +751,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 		return;
 	}
 	curve_point pubkey;
-	if (msg->pubkey.size != 33 || ecdsa_read_pubkey(msg->pubkey.bytes, &pubkey) == 0) {
+	if (msg->pubkey.size != 33 || ecdsa_read_pubkey(&secp256k1, msg->pubkey.bytes, &pubkey) == 0) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid public key provided");
 		return;
 	}
@@ -729,7 +774,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 		node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
 		if (!node) return;
 		uint8_t public_key[33];
-		ecdsa_get_public_key33(node->private_key, public_key);
+		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
 		ecdsa_get_address_raw(public_key, coin->address_type, address_raw);
 	}
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, signing);
@@ -766,7 +811,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 		return;
 	}
 	curve_point nonce_pubkey;
-	if (msg->nonce.size != 33 || ecdsa_read_pubkey(msg->nonce.bytes, &nonce_pubkey) == 0) {
+	if (msg->nonce.size != 33 || ecdsa_read_pubkey(&secp256k1, msg->nonce.bytes, &nonce_pubkey) == 0) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid nonce provided");
 		return;
 	}

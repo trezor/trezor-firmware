@@ -1,9 +1,9 @@
 [submodule "trezor-crypto"]
 	path = trezor-crypto
-	url = https://github.com/trezor/trezor-crypto.git
+	url = https://github.com/romanz/trezor-crypto.git
 [submodule "trezor-common"]
 	path = trezor-common
-	url = https://github.com/trezor/trezor-common.git
+	url = https://github.com/romanz/trezor-common.git
 [submodule "trezor-qrenc"]
 	path = trezor-qrenc
 	url = https://github.com/trezor/trezor-qrenc.git

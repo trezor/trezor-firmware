@@ -417,6 +417,8 @@ typedef struct _GetEntropy {
 typedef struct _GetPublicKey {
     size_t address_n_count;
     uint32_t address_n[8];
+    bool has_ecdsa_curve_name;
+    char ecdsa_curve_name[32];
 } GetPublicKey;
 
 typedef struct _LoadDevice {
@@ -520,6 +522,8 @@ typedef struct _SignIdentity {
     SignIdentity_challenge_hidden_t challenge_hidden;
     bool has_challenge_visual;
     char challenge_visual[256];
+    bool has_ecdsa_curve_name;
+    char ecdsa_curve_name[32];
 } SignIdentity;
 
 typedef struct {
@@ -650,7 +654,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define PassphraseAck_init_default               {""}
 #define GetEntropy_init_default                  {0}
 #define Entropy_init_default                     {{0, {0}}}
-#define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}}
+#define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
 #define PublicKey_init_default                   {HDNodeType_init_default, false, ""}
 #define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default}
 #define Address_init_default                     {""}
@@ -677,7 +681,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SimpleSignTx_init_default                {0, {}, 0, {}, 0, {}, false, "Bitcoin"}
 #define TxRequest_init_default                   {false, (RequestType)0, false, TxRequestDetailsType_init_default, false, TxRequestSerializedType_init_default}
 #define TxAck_init_default                       {false, TransactionType_init_default}
-#define SignIdentity_init_default                {false, IdentityType_init_default, false, {0, {0}}, false, ""}
+#define SignIdentity_init_default                {false, IdentityType_init_default, false, {0, {0}}, false, "", false, ""}
 #define SignedIdentity_init_default              {false, "", false, {0, {0}}, false, {0, {0}}}
 #define FirmwareErase_init_default               {0}
 #define FirmwareUpload_init_default              {{0, {0}}}
@@ -704,7 +708,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define PassphraseAck_init_zero                  {""}
 #define GetEntropy_init_zero                     {0}
 #define Entropy_init_zero                        {{0, {0}}}
-#define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}}
+#define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
 #define PublicKey_init_zero                      {HDNodeType_init_zero, false, ""}
 #define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero}
 #define Address_init_zero                        {""}
@@ -731,7 +735,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SimpleSignTx_init_zero                   {0, {}, 0, {}, 0, {}, false, ""}
 #define TxRequest_init_zero                      {false, (RequestType)0, false, TxRequestDetailsType_init_zero, false, TxRequestSerializedType_init_zero}
 #define TxAck_init_zero                          {false, TransactionType_init_zero}
-#define SignIdentity_init_zero                   {false, IdentityType_init_zero, false, {0, {0}}, false, ""}
+#define SignIdentity_init_zero                   {false, IdentityType_init_zero, false, {0, {0}}, false, "", false, ""}
 #define SignedIdentity_init_zero                 {false, "", false, {0, {0}}, false, {0, {0}}}
 #define FirmwareErase_init_zero                  {0}
 #define FirmwareUpload_init_zero                 {{0, {0}}}
@@ -816,6 +820,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define GetAddress_multisig_tag                  4
 #define GetEntropy_size_tag                      1
 #define GetPublicKey_address_n_tag               1
+#define GetPublicKey_ecdsa_curve_name_tag        2
 #define LoadDevice_mnemonic_tag                  1
 #define LoadDevice_node_tag                      2
 #define LoadDevice_pin_tag                       3
@@ -849,6 +854,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define SignIdentity_identity_tag                1
 #define SignIdentity_challenge_hidden_tag        2
 #define SignIdentity_challenge_visual_tag        3
+#define SignIdentity_ecdsa_curve_name_tag        4
 #define SignMessage_address_n_tag                1
 #define SignMessage_message_tag                  2
 #define SignMessage_coin_name_tag                3
@@ -892,7 +898,7 @@ extern const pb_field_t PassphraseRequest_fields[1];
 extern const pb_field_t PassphraseAck_fields[2];
 extern const pb_field_t GetEntropy_fields[2];
 extern const pb_field_t Entropy_fields[2];
-extern const pb_field_t GetPublicKey_fields[2];
+extern const pb_field_t GetPublicKey_fields[3];
 extern const pb_field_t PublicKey_fields[3];
 extern const pb_field_t GetAddress_fields[5];
 extern const pb_field_t Address_fields[2];
@@ -919,7 +925,7 @@ extern const pb_field_t SignTx_fields[4];
 extern const pb_field_t SimpleSignTx_fields[5];
 extern const pb_field_t TxRequest_fields[4];
 extern const pb_field_t TxAck_fields[2];
-extern const pb_field_t SignIdentity_fields[4];
+extern const pb_field_t SignIdentity_fields[5];
 extern const pb_field_t SignedIdentity_fields[4];
 extern const pb_field_t FirmwareErase_fields[1];
 extern const pb_field_t FirmwareUpload_fields[2];
@@ -948,7 +954,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define PassphraseAck_size                       53
 #define GetEntropy_size                          6
 #define Entropy_size                             1027
-#define GetPublicKey_size                        48
+#define GetPublicKey_size                        82
 #define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          (75 + MultisigRedeemScriptType_size)
 #define Address_size                             38
@@ -975,7 +981,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SimpleSignTx_size                        (19 + 0*TxInputType_size + 0*TxOutputType_size + 0*TransactionType_size)
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
-#define SignIdentity_size                        (524 + IdentityType_size)
+#define SignIdentity_size                        (558 + IdentityType_size)
 #define SignedIdentity_size                      140
 #define FirmwareErase_size                       0
 #define FirmwareUpload_size                      2

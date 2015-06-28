@@ -123,8 +123,9 @@ const pb_field_t Entropy_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t GetPublicKey_fields[2] = {
+const pb_field_t GetPublicKey_fields[3] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, GetPublicKey, address_n, address_n, 0),
+    PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, GetPublicKey, ecdsa_curve_name, address_n, 0),
     PB_LAST_FIELD
 };
 
@@ -304,10 +305,11 @@ const pb_field_t TxAck_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t SignIdentity_fields[4] = {
+const pb_field_t SignIdentity_fields[5] = {
     PB_FIELD2(  1, MESSAGE , OPTIONAL, STATIC  , FIRST, SignIdentity, identity, identity, &IdentityType_fields),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, SignIdentity, challenge_hidden, identity, 0),
     PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, SignIdentity, challenge_visual, challenge_hidden, 0),
+    PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, SignIdentity, ecdsa_curve_name, challenge_visual, 0),
     PB_LAST_FIELD
 };
 
