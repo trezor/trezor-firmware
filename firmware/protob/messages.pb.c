@@ -251,13 +251,14 @@ const pb_field_t DecryptedMessage_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t CipherKeyValue_fields[7] = {
+const pb_field_t CipherKeyValue_fields[8] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, CipherKeyValue, address_n, address_n, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, CipherKeyValue, key, address_n, 0),
     PB_FIELD2(  3, BYTES   , OPTIONAL, STATIC  , OTHER, CipherKeyValue, value, key, 0),
     PB_FIELD2(  4, BOOL    , OPTIONAL, STATIC  , OTHER, CipherKeyValue, encrypt, value, 0),
     PB_FIELD2(  5, BOOL    , OPTIONAL, STATIC  , OTHER, CipherKeyValue, ask_on_encrypt, encrypt, 0),
     PB_FIELD2(  6, BOOL    , OPTIONAL, STATIC  , OTHER, CipherKeyValue, ask_on_decrypt, ask_on_encrypt, 0),
+    PB_FIELD2(  7, BYTES   , OPTIONAL, STATIC  , OTHER, CipherKeyValue, iv, ask_on_decrypt, 0),
     PB_LAST_FIELD
 };
 

@@ -154,6 +154,11 @@ typedef struct {
     uint8_t bytes[1024];
 } CipherKeyValue_value_t;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[16];
+} CipherKeyValue_iv_t;
+
 typedef struct _CipherKeyValue {
     size_t address_n_count;
     uint32_t address_n[8];
@@ -167,6 +172,8 @@ typedef struct _CipherKeyValue {
     bool ask_on_encrypt;
     bool has_ask_on_decrypt;
     bool ask_on_decrypt;
+    bool has_iv;
+    CipherKeyValue_iv_t iv;
 } CipherKeyValue;
 
 typedef struct {
@@ -673,7 +680,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define EncryptedMessage_init_default            {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define DecryptMessage_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define DecryptedMessage_init_default            {false, {0, {0}}, false, ""}
-#define CipherKeyValue_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0}
+#define CipherKeyValue_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
 #define CipheredKeyValue_init_default            {false, {0, {0}}}
 #define EstimateTxSize_init_default              {0, 0, false, "Bitcoin"}
 #define TxSize_init_default                      {false, 0}
@@ -727,7 +734,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define EncryptedMessage_init_zero               {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define DecryptMessage_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define DecryptedMessage_init_zero               {false, {0, {0}}, false, ""}
-#define CipherKeyValue_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0}
+#define CipherKeyValue_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
 #define CipheredKeyValue_init_zero               {false, {0, {0}}}
 #define EstimateTxSize_init_zero                 {0, 0, false, ""}
 #define TxSize_init_zero                         {false, 0}
@@ -760,6 +767,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define CipherKeyValue_encrypt_tag               4
 #define CipherKeyValue_ask_on_encrypt_tag        5
 #define CipherKeyValue_ask_on_decrypt_tag        6
+#define CipherKeyValue_iv_tag                    7
 #define CipheredKeyValue_value_tag               1
 #define DebugLinkDecision_yes_no_tag             1
 #define DebugLinkLog_level_tag                   1
@@ -917,7 +925,7 @@ extern const pb_field_t EncryptMessage_fields[6];
 extern const pb_field_t EncryptedMessage_fields[4];
 extern const pb_field_t DecryptMessage_fields[5];
 extern const pb_field_t DecryptedMessage_fields[3];
-extern const pb_field_t CipherKeyValue_fields[7];
+extern const pb_field_t CipherKeyValue_fields[8];
 extern const pb_field_t CipheredKeyValue_fields[2];
 extern const pb_field_t EstimateTxSize_fields[4];
 extern const pb_field_t TxSize_fields[2];
@@ -973,7 +981,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define EncryptedMessage_size                    1168
 #define DecryptMessage_size                      1216
 #define DecryptedMessage_size                    1065
-#define CipherKeyValue_size                      1340
+#define CipherKeyValue_size                      1358
 #define CipheredKeyValue_size                    1027
 #define EstimateTxSize_size                      31
 #define TxSize_size                              6

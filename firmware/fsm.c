@@ -445,11 +445,11 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 	if (encrypt) {
 		aes_encrypt_ctx ctx;
 		aes_encrypt_key256(data, &ctx);
-		aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size, data + 32, &ctx);
+		aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size, ((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
 	} else {
 		aes_decrypt_ctx ctx;
 		aes_decrypt_key256(data, &ctx);
-		aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size, data + 32, &ctx);
+		aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size, ((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
 	}
 	resp->has_value = true;
 	resp->value.size = msg->value.size;

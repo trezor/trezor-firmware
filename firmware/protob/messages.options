@@ -80,6 +80,7 @@ DecryptedMessage.message		max_size:1024
 CipherKeyValue.address_n		max_count:8
 CipherKeyValue.key			max_size:256
 CipherKeyValue.value			max_size:1024
+CipherKeyValue.iv			max_size:16
 
 CipheredKeyValue.value			max_size:1024
 
