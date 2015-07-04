@@ -700,14 +700,13 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
 
 	int result = 0;
+	layoutProgressSwipe("Signing", 0);
 	if (sign_ssh) { // SSH does not sign visual challenge
-		layoutProgressSwipe("Signing SSH", 0);
 		result = sshMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
 	} else {
 		uint8_t digest[64];
 		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
 		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
-		layoutProgressSwipe("Signing", 0);
 		result = cryptoMessageSign(digest, 64, node->private_key, resp->signature.bytes);
 	}
 
