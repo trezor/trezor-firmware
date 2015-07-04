@@ -697,26 +697,18 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		}
 	}
 
-	bool sign_ssh = false;
-	if (msg->identity.has_proto) {
-		sign_ssh = (strcmp(msg->identity.proto, "ssh") == 0);
-	}
-
-	uint8_t message_bytes[256 + 256];
-	memcpy(message_bytes, msg->challenge_hidden.bytes, msg->challenge_hidden.size);
-	int message_size = msg->challenge_hidden.size;
+	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
 
 	int result = 0;
-	if (sign_ssh) {
-		// SSH doesn't sign visual challenge.
+	if (sign_ssh) { // SSH does not sign visual challenge
 		layoutProgressSwipe("Signing SSH", 0);
-		result = sshMessageSign(message_bytes, message_size, node->private_key, resp->signature.bytes);
+		result = sshMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
 	} else {
-		const int len = strlen(msg->challenge_visual);
-		memcpy(message_bytes + message_size, msg->challenge_visual, len);
-		message_size = message_size + len;
+		uint8_t digest[64];
+		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
+		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
 		layoutProgressSwipe("Signing", 0);
-		result = cryptoMessageSign(message_bytes, message_size, node->private_key, resp->signature.bytes);
+		result = cryptoMessageSign(digest, 64, node->private_key, resp->signature.bytes);
 	}
 
 	if (result == 0) {
