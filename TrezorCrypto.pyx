@@ -34,7 +34,7 @@ cdef class HDNode:
 		c.hdnode_public_ckd(cython.address(x.node), i)
 		return x
 
-	def private_ckd(self, int i):
+	def private_ckd(self, unsigned int i):
 		x = HDNode(copyfrom=self)
 		c.hdnode_private_ckd(cython.address(x.node), i)
 		return x
