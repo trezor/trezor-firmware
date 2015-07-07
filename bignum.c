@@ -25,7 +25,6 @@
 #include <string.h>
 #include <assert.h>
 #include "bignum.h"
-#include "secp256k1.h"
 #include "macros.h"
 
 inline uint32_t read_be(const uint8_t *data)

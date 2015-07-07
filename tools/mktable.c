@@ -2,7 +2,6 @@
 #include <assert.h>
 #include "bignum.h"
 #include "ecdsa.h"
-#include "secp256k1.h"
 #include "rand.h"
 
 /*
