@@ -8,7 +8,7 @@ These include:
 - Big Number (256 bit) Arithmetics
 - BIP32 Hierarchical Deterministic Wallets
 - BIP39 Mnemonic code
-- ECDSA signing/verifying (only hardcoded secp256k1 curve,
+- ECDSA signing/verifying (supports secp256k1 and nist256p1 curves,
   uses RFC6979 for deterministic signatures)
 - ECDSA public key derivation + Base58 address representation
 - HMAC-SHA256 and HMAC-SHA512
