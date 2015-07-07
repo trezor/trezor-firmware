@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import ctypes as c
 import random
 import ecdsa
@@ -25,7 +26,7 @@ random_iters = int(os.environ.get('ITERS', 1))
 scons_file = '''
 srcs = 'ecdsa bignum secp256k1 nist256p1 sha2 rand hmac ripemd160 base58'
 srcs = [(s + '.c') for s in srcs.split()]
-flags = ('-Os -g -W -Wall -Wextra -Wimplicit-function-declaration '
+flags = ('-O3 -g -W -Wall -Wextra -Wimplicit-function-declaration '
          '-Wredundant-decls -Wstrict-prototypes -Wundef -Wshadow '
          '-Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar '
          '-Wformat-nonliteral -Winit-self -Wuninitialized -Wformat-security '

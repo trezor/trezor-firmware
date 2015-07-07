@@ -1,6 +1,6 @@
 CC        = gcc
 
-OPTFLAGS  = -Os -g
+OPTFLAGS  = -O3 -g
 
 CFLAGS   += $(OPTFLAGS) \
             -W \
