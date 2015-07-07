@@ -21,6 +21,7 @@
 
 #include "signatures.h"
 #include "ecdsa.h"
+#include "secp256k1.h"
 #include "bootloader.h"
 
 #define PUBKEYS 5
@@ -52,13 +53,13 @@ int signatures_ok(void)
 	if (sigindex1 == sigindex3) return 0; // duplicate use
 	if (sigindex2 == sigindex3) return 0; // duplicate use
 
-	if (ecdsa_verify(pubkey[sigindex1 - 1], (uint8_t *)FLASH_META_SIG1, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failure
+	if (ecdsa_verify(&secp256k1, pubkey[sigindex1 - 1], (uint8_t *)FLASH_META_SIG1, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failure
 		return 0;
 	}
-	if (ecdsa_verify(pubkey[sigindex2 - 1], (uint8_t *)FLASH_META_SIG2, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failure
+	if (ecdsa_verify(&secp256k1, pubkey[sigindex2 - 1], (uint8_t *)FLASH_META_SIG2, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failure
 		return 0;
 	}
-	if (ecdsa_verify(pubkey[sigindex3 - 1], (uint8_t *)FLASH_META_SIG3, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failture
+	if (ecdsa_verify(&secp256k1, pubkey[sigindex3 - 1], (uint8_t *)FLASH_META_SIG3, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failture
 		return 0;
 	}
 
