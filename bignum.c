@@ -25,7 +25,6 @@
 #include <string.h>
 #include <assert.h>
 #include "bignum.h"
-#include "secp256k1.h"
 #include "macros.h"
 
 inline uint32_t read_be(const uint8_t *data)
@@ -364,7 +363,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		//    res = old(x)^((prime-2) % 2^(i*30))
 		// get the i-th limb of prime - 2
 		limb = prime->val[i];
-		// this is not enough in general but fine for secp256k1 because prime->val[0] > 1
+		// this is not enough in general but fine for secp256k1 & nist256p1 because prime->val[0] > 1
 		if (i == 0) limb -= 2;
 		for (j = 0; j < 30; j++) {
 			// invariants:

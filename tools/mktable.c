@@ -2,13 +2,12 @@
 #include <assert.h>
 #include "bignum.h"
 #include "ecdsa.h"
-#include "secp256k1.h"
 #include "rand.h"
 
 /*
- * This program prints the contents of the secp256k1_cp array.
- * The entry secp256k1_cp[i][j] contains the number (2*j+1)*16^i*G,
- * where G is the generator of secp256k1.
+ * This program prints the contents of the ecdsa_curve.cp array.
+ * The entry cp[i][j] contains the number (2*j+1)*16^i*G,
+ * where G is the generator of the specified elliptic curve.
  */
 int main(int argc, char **argv) {
 	int i,j,k;
