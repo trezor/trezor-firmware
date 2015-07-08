@@ -46,6 +46,20 @@ also found in ``helloworld.py``
   if __name__ == '__main__':
       main()
 
+When you got asked for PIN, you have to enter scrambled pin shown in Trezor display using the numeric keyboard mapping.
+
+  7 8 9
+  4 5 6
+  1 2 3
+
+Example: your pin is 1234 and your Trezor is displaying
+
+  2 8 3
+  5 4 6
+  7 9 1
+
+You have to enter: 3795
+
 How to install (Windows)
 ------------------------
 * Install Python 2.7 (http://python.org)
