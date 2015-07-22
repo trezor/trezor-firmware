@@ -6,7 +6,7 @@ import itertools
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
-from trezorlib.tx_api import TXAPITestnet, TXAPIBitcoin
+from trezorlib.tx_api import TXAPITestnet
 
 class TestMsgSigntx(common.TrezorTest):
     def test_one_one_fee(self):
@@ -476,7 +476,6 @@ class TestMsgSigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPIBitcoin())
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify("54aa5680dea781f45ebb536e53dffc526d68c0eb5c00547e323b2c32382dfba3"))),

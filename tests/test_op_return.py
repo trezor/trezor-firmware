@@ -6,7 +6,7 @@ import itertools
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
-from trezorlib.tx_api import TXAPITestnet, TXAPIBitcoin
+from trezorlib.tx_api import TXAPITestnet
 
 class TestOpReturn(common.TrezorTest):
 
