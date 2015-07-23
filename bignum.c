@@ -172,9 +172,7 @@ void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime)
 	for (j = 0; j < 9; j++) {
 		x->val[j] = k * x->val[j];
 	}
-	bn_normalize(x);
 	bn_fast_mod(x, prime);
-	bn_mod(x, prime);
 }
 
 // assumes x < 2*prime, result < prime
@@ -233,31 +231,35 @@ void bn_multiply_reduce_step(uint32_t res[18], const bignum256 *prime, uint32_t 
 	// let k = i-8.
 	// invariants:
 	//   res[0..(i+1)] = k * x   (mod prime)
-	//   0 <= res < 2^(30k + 256) * (2^30 + 1)
+	//   0 <= res < 2^(30k + 256) * (2^31)
 	// estimate (res / prime)
 	// coef = res / 2^(30k + 256)  rounded down
-	// 0 <= coef <= 2^30
+	// 0 <= coef < 2^31
 	// subtract (coef * 2^(30k) * prime) from res
 	// note that we unrolled the first iteration
 	uint32_t j;
 	uint32_t coef = (res[i] >> 16) + (res[i + 1] << 14);
-	uint64_t temp = 0x1000000000000000ull + res[i - 8] - prime->val[0] * (uint64_t)coef;
+	uint64_t temp = 0x2000000000000000ull + res[i - 8] - prime->val[0] * (uint64_t)coef;
+	assert (coef < 0x80000000u);
 	res[i - 8] = temp & 0x3FFFFFFF;
 	for (j = 1; j < 9; j++) {
 		temp >>= 30;
-		temp += 0xFFFFFFFC0000000ull + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
+		// Note: coeff * prime->val <= (2^31-1) * (2^30-1)
+		// Hence, this addition will not underflow.
+		temp += 0x1FFFFFFF80000000ull + res[i - 8 + j] - prime->val[j] * (uint64_t)coef;
 		res[i - 8 + j] = temp & 0x3FFFFFFF;
+		// 0 <= temp < 2^61
 	}
-    temp >>= 30;
-    temp += 0xFFFFFFFC0000000ull + res[i - 8 + j];
-    res[i - 8 + j] = temp & 0x3FFFFFFF;
-	// we rely on the fact that prime > 2^256 - 2^196
+	temp >>= 30;
+	temp += 0x1FFFFFFF80000000ull + res[i - 8 + j];
+	res[i - 8 + j] = temp & 0x3FFFFFFF;
+	// we rely on the fact that prime > 2^256 - 2^224
 	//   res = oldres - coef*2^(30k) * prime;
 	// and
 	//   coef * 2^(30k + 256) <= oldres < (coef+1) * 2^(30k + 256)
 	// Hence, 0 <= res < 2^30k (2^256 + coef * (2^256 - prime))
-	// Since coef * (2^256 - prime) < 2^226, we get
-	//   0 <= res < 2^(30k + 226) (2^30 + 1)
+	// Since coef * (2^256 - prime) < 2^256, we get
+	//   0 <= res < 2^(30k + 226) (2^31)
 	// Thus the invariant holds again.
 }
 
@@ -269,9 +271,8 @@ void bn_multiply_reduce(bignum256 *x, uint32_t res[18], const bignum256 *prime)
 	// 0 <= res < 2^526.
 	// compute modulo p division is only estimated so this may give result greater than prime but not bigger than 2 * prime
 	for (i = 16; i >= 8; i--) {
-        bn_multiply_reduce_step(res, prime, i);
-        bn_multiply_reduce_step(res, prime, i); // apply twice, as a hack for NIST256P1 prime.
-        assert(res[i + 1] == 0);
+		bn_multiply_reduce_step(res, prime, i);
+		assert(res[i + 1] == 0);
 	}
 	// store the result
 	for (i = 0; i < 9; i++) {
@@ -294,7 +295,7 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 }
 
 // input x can be any normalized number that fits (0 <= x < 2^270).
-// prime must be between (2^256 - 2^196) and 2^256
+// prime must be between (2^256 - 2^224) and 2^256
 // result is smaller than 2*prime
 void bn_fast_mod(bignum256 *x, const bignum256 *prime)
 {
@@ -305,11 +306,11 @@ void bn_fast_mod(bignum256 *x, const bignum256 *prime)
 	coef = x->val[8] >> 16;
 	// substract (coef * prime) from x
 	// note that we unrolled the first iteration
-	temp = 0x1000000000000000ull + x->val[0] - prime->val[0] * (uint64_t)coef;
+	temp = 0x2000000000000000ull + x->val[0] - prime->val[0] * (uint64_t)coef;
 	x->val[0] = temp & 0x3FFFFFFF;
 	for (j = 1; j < 9; j++) {
 		temp >>= 30;
-		temp += 0xFFFFFFFC0000000ull + x->val[j] - prime->val[j] * (uint64_t)coef;
+		temp += 0x1FFFFFFF80000000ull + x->val[j] - prime->val[j] * (uint64_t)coef;
 		x->val[j] = temp & 0x3FFFFFFF;
 	}
 }
@@ -679,16 +680,12 @@ void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
 	for (i = 0; i < 9; i++) {
 		a->val[i] += b->val[i];
 	}
-	bn_normalize(a);
 	bn_fast_mod(a, prime);
-	bn_mod(a, prime);
 }
 
-void bn_addmodi(bignum256 *a, uint32_t b, const bignum256 *prime) {
+void bn_addi(bignum256 *a, uint32_t b) {
 	a->val[0] += b;
 	bn_normalize(a);
-	bn_fast_mod(a, prime);
-	bn_mod(a, prime);
 }
 
 // res = a - b mod prime.  More exactly res = a + (2*prime - b).

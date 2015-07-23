@@ -40,10 +40,10 @@
 #include "secp256k1.h"
 
 #define CURVE			(&secp256k1)
-#define prime256k1		(secp256k1.prime)
-#define G256k1			(secp256k1.G)
-#define order256k1		(secp256k1.order)
-#define secp256k1_cp	(secp256k1.cp)
+#define prime256k1		(CURVE->prime)
+#define G256k1			(CURVE->G)
+#define order256k1		(CURVE->order)
+#define secp256k1_cp	(CURVE->cp)
 
 uint8_t *fromhex(const char *str)
 {
@@ -1231,7 +1231,7 @@ START_TEST(test_secp256k1_cp) {
 			// increment by one and test again
 			p1 = p;
 			point_add(CURVE, &G256k1, &p1);
-			bn_addmodi(&a, 1, &order256k1);
+			bn_addi(&a, 1);
 			scalar_multiply(CURVE, &a, &p);
 			ck_assert_mem_eq(&p, &p1, sizeof(curve_point));
 			bn_zero(&p.y); // test that point_multiply CURVE, is not a noop
@@ -1254,7 +1254,7 @@ START_TEST(test_mult_border_cases) {
 	point_multiply(CURVE, &a, &G256k1, &p);
 	ck_assert(point_is_infinity(&p));
 
-	bn_addmodi(&a, 1, &order256k1);  // a == 1
+	bn_addi(&a, 1);  // a == 1
 	scalar_multiply(CURVE, &a, &p);
 	ck_assert_mem_eq(&p, &G256k1, sizeof(curve_point));
 	point_multiply(CURVE, &a, &G256k1, &p);
@@ -1269,7 +1269,7 @@ START_TEST(test_mult_border_cases) {
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
 
 	bn_subtract(&order256k1, &a, &a);
-	bn_addmodi(&a, 1, &order256k1);  // a == 2
+	bn_addi(&a, 1);  // a == 2
 	expected = G256k1;
 	point_add(CURVE, &expected, &expected);
 	scalar_multiply(CURVE, &a, &p);
