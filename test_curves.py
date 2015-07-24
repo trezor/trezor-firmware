@@ -199,7 +199,7 @@ def test_multiply2(curve, r):
     prime = int2bn(curve.p)
     lib.bn_multiply_reduce(x, res, prime)
 
-    x = bn2int(x)
+    x = bn2int(x) % curve.p
     x_ = s % curve.p
 
     assert x == x_
@@ -263,17 +263,17 @@ def test_point_double(curve, r):
 
 
 def test_point_to_jacobian(curve, r):
-	p = r.randpoint(curve)
-	jp = JACOBIAN()
-	lib.curve_to_jacobian(to_POINT(p), jp, int2bn(curve.p))
-	jx, jy, jz = from_JACOBIAN(jp)
-	assert jx == (p.x() * jz ** 2) % curve.p
-	assert jy == (p.y() * jz ** 3) % curve.p
+    p = r.randpoint(curve)
+    jp = JACOBIAN()
+    lib.curve_to_jacobian(to_POINT(p), jp, int2bn(curve.p))
+    jx, jy, jz = from_JACOBIAN(jp)
+    assert jx % curve.p == (p.x() * jz ** 2) % curve.p
+    assert jy % curve.p == (p.y() * jz ** 3) % curve.p
 
-	q = POINT()
-	lib.jacobian_to_curve(jp, q, int2bn(curve.p))
-	q = from_POINT(q)
-	assert q == (p.x(), p.y())
+    q = POINT()
+    lib.jacobian_to_curve(jp, q, int2bn(curve.p))
+    q = from_POINT(q)
+    assert q == (p.x(), p.y())
 
 
 def test_cond_negate(curve, r):
@@ -282,7 +282,7 @@ def test_cond_negate(curve, r):
     lib.conditional_negate(0, a, int2bn(curve.p))
     assert bn2int(a) == x
     lib.conditional_negate(-1, a, int2bn(curve.p))
-    assert bn2int(a) == curve.p - x
+    assert bn2int(a) == 2*curve.p - x
 
 
 def test_jacobian_add(curve, r):
