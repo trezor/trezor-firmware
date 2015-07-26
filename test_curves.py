@@ -97,7 +97,7 @@ def test_inverse(curve, r):
     assert y == y_
 
 
-def test_inverse(curve, r):
+def test_mult_half(curve, r):
     x = r.randrange(0, 2*curve.p)
     y = int2bn(x)
     lib.bn_mult_half(y, int2bn(curve.p))
