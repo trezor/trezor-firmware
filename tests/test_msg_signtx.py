@@ -104,7 +104,7 @@ class TestMsgSigntx(common.TrezorTest):
                              )
 
         out1 = proto_types.TxOutputType(address='mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV',
-                              amount=1000000000 - 500000000 - 20000000,
+                              amount=1000000000 - 500000000 - 100000000,
                               script_type=proto_types.PAYTOADDRESS,
                               )
 
@@ -136,7 +136,7 @@ class TestMsgSigntx(common.TrezorTest):
             ])
             (signatures, serialized_tx) = self.client.sign_tx('Testnet', [inp1, ], [out1, out2])
 
-        self.assertEqual(binascii.hexlify(serialized_tx), '0100000001549d2977998f899a63c0a9da30dedb2841e33fef561097b05822eccbc7f3906f010000006b483045022100d74e9fa5c7ff5966d52bce8d1d772c1e3ef1376395fb85a0bbf910e723bd606d02204cb8df6debd7c4c076632011bb1e180495bcf3630d2471c354bed56c2e45a2180121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0200389c1c000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac0065cd1d000000001976a9142db345c36563122e2fd0f5485fb7ea9bbf7cb5a288ac00000000')
+        self.assertEqual(binascii.hexlify(serialized_tx), '0100000001549d2977998f899a63c0a9da30dedb2841e33fef561097b05822eccbc7f3906f010000006a47304402205ea68e9d52d4be14420ccecf7f2e11489d49b86bedb79ee99b5e9b7188884150022056219cb3384a5df8048cca286a9533403dbda1571afd84b51379cdaee6a6dea80121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff020084d717000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac0065cd1d000000001976a9142db345c36563122e2fd0f5485fb7ea9bbf7cb5a288ac00000000')
 
     def test_one_two_fee(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -401,7 +401,7 @@ class TestMsgSigntx(common.TrezorTest):
                              )
 
         out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 50000,
+                              amount=390000 - 250000,
                               script_type=proto_types.PAYTOADDRESS,
                               )
 
@@ -423,7 +423,7 @@ class TestMsgSigntx(common.TrezorTest):
             ])
             (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
 
-        self.assertEqual(binascii.hexlify(serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006a4730440220361b8268718533055682f4532d30c553ce778f70b217457a9aa1956e457c5aac0220538ae285bb340484bb09a67635d29192a14e61d8a8385b8b090a92e3e97e1c010121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0120300500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
+        self.assertEqual(binascii.hexlify(serialized_tx), '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b483045022100a3b17b37de3bfecca47f0d49f7bb0d0f68d45df7defe45713d57e83731f5e3d902205404b14630cea6a88b23a5f7c3a1b88494757a8ca5e1c0b0b93cf3c38231c3bd0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff01e0220200000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
 
     def test_not_enough_funds(self):
         self.setup_mnemonic_nopin_nopassphrase()
