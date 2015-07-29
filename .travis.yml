@@ -1,0 +1,9 @@
+language: c
+
+
+install:
+  - sudo apt-get install check
+
+script:
+  - make tests
+  - ./tests
