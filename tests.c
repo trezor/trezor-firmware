@@ -152,7 +152,7 @@ START_TEST(test_base58)
 
 		memcpy(rawn, fromhex(*raw), len);
 		r = base58_encode_check(rawn, len, strn, sizeof(strn));
-		ck_assert_int_eq(r, strlen(*str) + 1);
+		ck_assert_int_eq((size_t)r, strlen(*str) + 1);
 		ck_assert_str_eq(strn, *str);
 
 		r = base58_decode_check(strn, rawn, len);
