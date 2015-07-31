@@ -6,8 +6,13 @@ addons:
     packages:
     - check
     - libssl-dev
+    - python-pip
+
+install:
+  - pip install --user pytest ecdsa
 
 script:
   - make
   - ./tests
   - ./test-openssl 1000
+  - ITERS=10 py.test
