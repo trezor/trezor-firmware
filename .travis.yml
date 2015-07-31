@@ -1,9 +1,18 @@
+sudo: false
 language: c
 
+addons:
+  apt:
+    packages:
+    - check
+    - libssl-dev
+    - python-pip
 
 install:
-  - sudo apt-get install check
+  - pip install --user pytest ecdsa
 
 script:
-  - make tests
+  - make
   - ./tests
+  - ./test-openssl 1000
+  - ITERS=10 py.test
