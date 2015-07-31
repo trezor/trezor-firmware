@@ -1,8 +1,10 @@
+sudo: false
 language: c
 
-
-install:
-  - sudo apt-get install check
+addons:
+  apt:
+    packages:
+    - check
 
 script:
   - make tests
