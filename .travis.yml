@@ -5,7 +5,9 @@ addons:
   apt:
     packages:
     - check
+    - libssl-dev
 
 script:
-  - make tests
+  - make
   - ./tests
+  - ./test-openssl 1000
