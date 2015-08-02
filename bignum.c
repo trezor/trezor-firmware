@@ -88,28 +88,32 @@ void bn_zero(bignum256 *a)
 int bn_is_zero(const bignum256 *a)
 {
 	int i;
+	uint32_t result = 0;
 	for (i = 0; i < 9; i++) {
-		if (a->val[i] != 0) return 0;
+		result |= a->val[i];
 	}
-	return 1;
+	return !result;
 }
 
 int bn_is_less(const bignum256 *a, const bignum256 *b)
 {
 	int i;
+	uint32_t res1 = 0;
+	uint32_t res2 = 0;
 	for (i = 8; i >= 0; i--) {
-		if (a->val[i] < b->val[i]) return 1;
-		if (a->val[i] > b->val[i]) return 0;
+		res1 = (res1 << 1) | (a->val[i] < b->val[i]);
+		res2 = (res2 << 1) | (a->val[i] > b->val[i]);
 	}
-	return 0;
+	return res1 > res2;
 }
 
 int bn_is_equal(const bignum256 *a, const bignum256 *b) {
 	int i;
+	uint32_t result = 0;
 	for (i = 0; i < 9; i++) {
-		if (a->val[i] != b->val[i]) return 0;
+		result |= (a->val[i] ^ b->val[i]);
 	}
-	return 1;
+	return !result;
 }
 
 int bn_bitlen(const bignum256 *a) {
