@@ -227,8 +227,7 @@ static const char *usb_strings[] = {
 	(const char *)storage_uuid_str,
 };
 
-static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
-			void (**complete)(usbd_device *, struct usb_setup_data *))
+static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len, usbd_control_complete_callback *complete)
 {
 	(void)complete;
 	(void)dev;

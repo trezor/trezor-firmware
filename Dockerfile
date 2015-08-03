@@ -2,7 +2,7 @@
 
 FROM ubuntu:14.04
 
-ENV GCC_ARM_VERSION 4.9.3.2015q1-0trusty13
+ENV GCC_ARM_VERSION 4.9.3.2015q2-1trusty1
 
 # add and update package repositories
 
@@ -21,5 +21,5 @@ RUN git clone https://github.com/libopencm3/libopencm3
 
 # build libopencm3
 
-ENV LIBOPENCM3_GITREV 7dbb93c78411b37bec64b5ca5be55076b0ab1b15
+ENV LIBOPENCM3_GITREV 7b29caed1a726b5cef4c269b6a6ef7a1f1dd105c
 RUN cd libopencm3 && git checkout $LIBOPENCM3_GITREV && make
