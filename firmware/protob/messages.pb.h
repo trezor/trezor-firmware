@@ -667,7 +667,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define Address_init_default                     {""}
 #define WipeDevice_init_default                  {0}
 #define LoadDevice_init_default                  {false, "", false, HDNodeType_init_default, false, "", false, 0, false, "english", false, "", false, 0}
-#define ResetDevice_init_default                 {false, 0, false, 128u, false, 0, false, 0, false, "english", false, ""}
+#define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, ""}
 #define EntropyRequest_init_default              {0}
 #define EntropyAck_init_default                  {false, {0, {0}}}
 #define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0}

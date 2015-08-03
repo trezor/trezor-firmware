@@ -5,7 +5,7 @@
 
 const char GetAddress_coin_name_default[17] = "Bitcoin";
 const char LoadDevice_language_default[17] = "english";
-const uint32_t ResetDevice_strength_default = 128u;
+const uint32_t ResetDevice_strength_default = 256u;
 const char ResetDevice_language_default[17] = "english";
 const char RecoveryDevice_language_default[17] = "english";
 const char SignMessage_coin_name_default[17] = "Bitcoin";
