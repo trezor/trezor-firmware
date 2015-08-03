@@ -734,6 +734,13 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 	}
 
 	if (result == 0) {
+		// if S > order/2 => S = -S
+		if (bn_is_less(&curve->order_half, &k)) {
+			bn_subtract(&curve->order, &k, &k);
+			if (pby) {
+				*pby = !*pby;
+			}
+		}
 		// we are done, R.x and k is the result signature
 		bn_write_be(&R.x, sig);
 		bn_write_be(&k, sig + 32);
