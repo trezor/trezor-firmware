@@ -8,7 +8,6 @@ import binascii
 import pytest
 import os
 
-
 def bytes2num(s):
     res = 0
     for i, b in enumerate(reversed(bytearray(s))):
@@ -341,7 +340,7 @@ def test_sign(curve, r):
                                                hashfunc=hashlib.sha256)
     vk = sk.get_verifying_key()
 
-    sig_ref = sk.sign_digest_deterministic(digest, hashfunc=hashlib.sha256)
+    sig_ref = sk.sign_digest_deterministic(digest, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_string_canonize)
     assert binascii.hexlify(sig) == binascii.hexlify(sig_ref)
 
     assert vk.verify_digest(sig, digest, sigdecode)
