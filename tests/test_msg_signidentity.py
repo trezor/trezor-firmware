@@ -24,9 +24,9 @@ class TestMsgSignidentity(common.TrezorTest):
 
         identity = proto_types.IdentityType(proto='ssh', user='satoshi', host='bitcoin.org', port='', path='', index=47)
         sig = self.client.sign_identity(identity, binascii.unhexlify('531c4dd0a92caff62817eaec3065b65d'), '2015/02/20 16:50')
-        self.assertEqual(sig.address, '16MMzfyr5LPBNZ359NhjCthi2scrMufTAM')
+        self.assertEqual(sig.address, '')
         self.assertEqual(binascii.hexlify(sig.public_key), '03cebfae5359d6c48b8dcf9da22b2113096548407ce21da8ab28a886f750f217f4')
-        self.assertEqual(binascii.hexlify(sig.signature), '1f888a4b2b719d06b951799527eb753ec79a850b85c81b36b66caa2f3779a5e73827a2db77b8a1d2e51bb57d681b16ee12dc4af781aba80dfb956ede94b985e393')
+        self.assertEqual(binascii.hexlify(sig.signature), '00591d42831787e344ac9b6c1b5c0ed41af6eb20e08414ed312d20c991126f944e74bbabf5e9a98c28501386bab7cbd9b632953df549ac21096fd7bc7899017698')
 
 if __name__ == '__main__':
     unittest.main()
