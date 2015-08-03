@@ -97,6 +97,48 @@ def test_inverse(curve, r):
     assert y == y_
 
 
+def test_is_less(curve, r):
+    x = r.randrange(0, curve.p)
+    y = r.randrange(0, curve.p)
+    x_ = int2bn(x)
+    y_ = int2bn(y)
+
+    res = lib.bn_is_less(x_, y_)
+    assert res == (x < y)
+
+    res = lib.bn_is_less(y_, x_)
+    assert res == (y < x)
+
+
+def test_is_equal(curve, r):
+    x = r.randrange(0, curve.p)
+    y = r.randrange(0, curve.p)
+    x_ = int2bn(x)
+    y_ = int2bn(y)
+
+    assert lib.bn_is_equal(x_, y_) == (x == y)
+    assert lib.bn_is_equal(x_, x_) == 1
+    assert lib.bn_is_equal(y_, y_) == 1
+
+
+def test_is_zero(curve, r):
+    x = r.randrange(0, curve.p);
+    assert lib.bn_is_zero(int2bn(x)) == (not x)
+
+
+def test_simple_comparisons():
+    assert lib.bn_is_zero(int2bn(0)) == 1
+    assert lib.bn_is_zero(int2bn(1)) == 0
+
+    assert lib.bn_is_less(int2bn(0), int2bn(0)) == 0
+    assert lib.bn_is_less(int2bn(1), int2bn(0)) == 0
+    assert lib.bn_is_less(int2bn(0), int2bn(1)) == 1
+
+    assert lib.bn_is_equal(int2bn(0), int2bn(0)) == 1
+    assert lib.bn_is_equal(int2bn(1), int2bn(0)) == 0
+    assert lib.bn_is_equal(int2bn(0), int2bn(1)) == 0
+
+
 def test_mult_half(curve, r):
     x = r.randrange(0, 2*curve.p)
     y = int2bn(x)
