@@ -14,4 +14,6 @@ install:
 script:
   - cd libopencm3; make; cd ..
   - TOOLCHAIN_DIR=libopencm3 make
-  - cd firmware; TOOLCHAIN_DIR=libopencm3 make; cd ..
+  - cd firmware; TOOLCHAIN_DIR=../libopencm3 make; cd ..
+  - cd bootloader; TOOLCHAIN_DIR=../libopencm3 make; cd ..
+  - cd demo; TOOLCHAIN_DIR=../libopencm3 make; cd ..

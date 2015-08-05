@@ -25,9 +25,9 @@
 #include "layout.h"
 #include "oled.h"
 #include "setup.h"
-//#include "util.h"
 #include "hmac.h"
 #include "pbkdf2.h"
+#include "rng.h"
 
 const int states = 2;
 int state = 0;
@@ -192,8 +192,7 @@ static const char *usb_strings[] = {
 	"01234567",
 };
 
-static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
-			void (**complete)(usbd_device *, struct usb_setup_data *))
+static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len, usbd_control_complete_callback *complete)
 {
 	(void)complete;
 	(void)dev;
@@ -239,8 +238,17 @@ void usbInit(void)
 	usbd_register_set_config_callback(usbd_dev, hid_set_config);
 }
 
+uint32_t __stack_chk_guard;
+
+void __attribute__((noreturn)) __stack_chk_fail(void)
+{
+	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
+	for (;;) {} // loop forever
+}
+
 int main(void)
 {
+	__stack_chk_guard = random32();
 #ifndef APPVER
 	setup();
 	oledInit();
@@ -264,7 +272,7 @@ int main(void)
 			usbd_poll(usbd_dev);
 			switch (state) {
 				case 1:
-					layoutProgress("WORKING", frame % 41 * 25, frame % 4);
+					layoutProgress("WORKING", frame % 41 * 25);
 					pbkdf2_hmac_sha512(pass, passlen, salt, saltlen, 100, seed, 64, NULL);
 					usbd_ep_write_packet(usbd_dev, 0x81, seed, 64);
 					break;
