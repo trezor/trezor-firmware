@@ -298,6 +298,19 @@ def test_jacobian_add(curve, r):
     p_ = p1 + p2
     assert (p_.x(), p_.y()) == q
 
+def test_jacobian_add_double(curve, r):
+    p1 = r.randpoint(curve)
+    p2 = p1
+    prime = int2bn(curve.p)
+    q = POINT()
+    jp2 = JACOBIAN()
+    lib.curve_to_jacobian(to_POINT(p2), jp2, prime)
+    lib.point_jacobian_add(to_POINT(p1), jp2, curve.ptr)
+    lib.jacobian_to_curve(jp2, q, prime)
+    q = from_POINT(q)
+    p_ = p1 + p2
+    assert (p_.x(), p_.y()) == q
+
 def test_jacobian_double(curve, r):
     p = r.randpoint(curve)
     p2 = p.double()
@@ -330,3 +343,7 @@ def test_sign(curve, r):
     assert binascii.hexlify(sig) == binascii.hexlify(sig_ref)
 
     assert vk.verify_digest(sig, digest, sigdecode)
+
+def test_validate_pubkey(curve, r):
+    p = r.randpoint(curve)
+    assert lib.ecdsa_validate_pubkey(curve.ptr, to_POINT(p))
