@@ -43,6 +43,10 @@ const ecdsa_curve secp256k1 = {
 
 	/* a */ {
 		/*.val =*/{0}
+	},
+
+	/* b */ {
+		/*.val =*/{7}
 	}
 #if USE_PRECOMPUTED_CP
 	,
