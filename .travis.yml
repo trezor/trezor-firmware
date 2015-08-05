@@ -1,19 +1,14 @@
-sudo: false
 language: c
 
-addons:
-  apt:
-    packages:
-    - build-essential
-    - git
-    - gcc-arm-none-eabi
-
 install:
+  - sudo add-apt-repository ppa:terry.guo/gcc-arm-embedded -y
+  - sudo apt-get update
+  - sudo apt-get install -y build-essential git gcc-arm-none-eabi
   - git clone https://github.com/libopencm3/libopencm3
 
 script:
-  - cd libopencm3; make; cd ..
+  - make -C libopencm3
   - TOOLCHAIN_DIR=libopencm3 make
-  - cd firmware; TOOLCHAIN_DIR=../libopencm3 make; cd ..
-  - cd bootloader; TOOLCHAIN_DIR=../libopencm3 make; cd ..
-  - cd demo; TOOLCHAIN_DIR=../libopencm3 make; cd ..
+  - TOOLCHAIN_DIR=../libopencm3 make -C firmware
+  - TOOLCHAIN_DIR=../libopencm3 make -C bootloader
+  - TOOLCHAIN_DIR=../libopencm3 make -C demo

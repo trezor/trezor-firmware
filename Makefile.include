@@ -1,5 +1,5 @@
 TOP_DIR       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-TOOLCHAIN_DIR := $(TOP_DIR)/../libopencm3
+TOOLCHAIN_DIR ?= $(TOP_DIR)/../libopencm3
 
 PREFIX ?= arm-none-eabi-
 CC      = $(PREFIX)gcc
