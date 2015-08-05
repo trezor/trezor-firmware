@@ -116,6 +116,19 @@ int bn_is_equal(const bignum256 *a, const bignum256 *b) {
 	return !result;
 }
 
+void bn_cmov(bignum256 *res, int cond, const bignum256 *truecase, const bignum256 *falsecase)
+{
+	int i;
+	uint32_t tmask = (uint32_t) -cond;
+	uint32_t fmask = ~tmask;
+
+	assert (cond == 1 || cond == 0);
+	for (i = 0; i < 9; i++) {
+		res->val[i] = (truecase->val[i] & tmask) |
+			(falsecase->val[i] & fmask);
+	}
+}
+
 int bn_bitlen(const bignum256 *a) {
 	int i = 8, j;
 	while (i >= 0 && a->val[i] == 0) i--;
@@ -686,6 +699,15 @@ void bn_addmod(bignum256 *a, const bignum256 *b, const bignum256 *prime)
 void bn_addi(bignum256 *a, uint32_t b) {
 	a->val[0] += b;
 	bn_normalize(a);
+}
+
+void bn_subi(bignum256 *a, uint32_t b, const bignum256 *prime) {
+	int i;
+	for (i = 0; i < 9; i++) {
+		a->val[i] += prime->val[i];
+	}
+	a->val[0] -= b;
+	bn_fast_mod(a, prime);
 }
 
 // res = a - b mod prime.  More exactly res = a + (2*prime - b).

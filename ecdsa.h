@@ -39,7 +39,7 @@ typedef struct {
 	curve_point G;         // initial curve point
 	bignum256 order;       // order of G
 	bignum256 order_half;  // order of G divided by 2
-	bignum256 a;           // coefficient 'a' of the elliptic curve
+	int       a;           // coefficient 'a' of the elliptic curve
 	bignum256 b;           // coefficient 'b' of the elliptic curve
 
 #if USE_PRECOMPUTED_CP
@@ -68,6 +68,7 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash);
 void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *addr_raw);
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr, int addrsize);
 void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif, int wifsize);
+
 int ecdsa_address_decode(const char *addr, uint8_t *out);
 int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, curve_point *pub);
 int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub);
