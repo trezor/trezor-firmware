@@ -41,9 +41,7 @@ const ecdsa_curve secp256k1 = {
 		/*.val =*/{0x281b20a0, 0x3fa4bd19, 0x3a4501dd, 0x15db9cd5, 0x3fffff5d, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x7fff}
 	},
 
-	/* a */ {
-		/*.val =*/{0}
-	},
+	/* a */	0,
 
 	/* b */ {
 		/*.val =*/{7}
