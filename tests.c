@@ -38,12 +38,7 @@
 #include "sha2.h"
 #include "options.h"
 #include "secp256k1.h"
-
-#define CURVE			(&secp256k1)
-#define prime256k1		(CURVE->prime)
-#define G256k1			(CURVE->G)
-#define order256k1		(CURVE->order)
-#define secp256k1_cp	(CURVE->cp)
+#include "nist256p1.h"
 
 uint8_t *fromhex(const char *str)
 {
@@ -509,7 +504,7 @@ END_TEST
 
 #define test_deterministic(KEY, MSG, K) do { \
 	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
-	res = generate_k_rfc6979(CURVE, &k, fromhex(KEY), buf); \
+	res = generate_k_rfc6979(curve, &k, fromhex(KEY), buf); \
 	ck_assert_int_eq(res, 0); \
 	bn_write_be(&k, buf); \
 	ck_assert_mem_eq(buf, fromhex(K), 32); \
@@ -520,6 +515,7 @@ START_TEST(test_rfc6979)
 	int res;
 	bignum256 k;
 	uint8_t buf[32];
+	const ecdsa_curve *curve = &secp256k1;
 
 	test_deterministic("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50", "sample", "2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3");
 	test_deterministic("0000000000000000000000000000000000000000000000000000000000000001", "Satoshi Nakamoto", "8f8a276c19f4149656b280621e358cce24f5f52542772691ee69063b74f15d15");
@@ -535,6 +531,7 @@ START_TEST(test_sign_speed)
 	uint8_t sig[64], priv_key[32], msg[256];
 	size_t i;
 	int res;
+	const ecdsa_curve *curve = &secp256k1;
 
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
@@ -544,13 +541,13 @@ START_TEST(test_sign_speed)
 
 	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(CURVE, priv_key, msg, sizeof(msg), sig, 0);
+		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, 0);
 		ck_assert_int_eq(res, 0);
 	}
 
 	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(CURVE, priv_key, msg, sizeof(msg), sig, 0);
+		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, 0);
 		ck_assert_int_eq(res, 0);
 	}
 
@@ -563,6 +560,7 @@ START_TEST(test_verify_speed)
 	uint8_t sig[64], pub_key33[33], pub_key65[65], msg[256];
 	size_t i;
 	int res;
+	const ecdsa_curve *curve = &secp256k1;
 
 	for (i = 0; i < sizeof(msg); i++) {
 		msg[i] = i * 1103515245;
@@ -575,9 +573,9 @@ START_TEST(test_verify_speed)
 	memcpy(pub_key65, fromhex("044054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a09746c7083ed2097011b1223a17a644e81f59aa3de22dac119fd980b36a8ff29a244"), 65);
 
 	for (i = 0 ; i < 25; i++) {
-		res = ecdsa_verify(CURVE, pub_key65, sig, msg, sizeof(msg));
+		res = ecdsa_verify(curve, pub_key65, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
-		res = ecdsa_verify(CURVE, pub_key33, sig, msg, sizeof(msg));
+		res = ecdsa_verify(curve, pub_key33, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
 	}
 
@@ -586,9 +584,9 @@ START_TEST(test_verify_speed)
 	memcpy(pub_key65, fromhex("04ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d457196235193a15778062ddaa44aef7e6901b781763e52147f2504e268b2d572bf197"), 65);
 
 	for (i = 0 ; i < 25; i++) {
-		res = ecdsa_verify(CURVE, pub_key65, sig, msg, sizeof(msg));
+		res = ecdsa_verify(curve, pub_key65, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
-		res = ecdsa_verify(CURVE, pub_key33, sig, msg, sizeof(msg));
+		res = ecdsa_verify(curve, pub_key33, sig, msg, sizeof(msg));
 		ck_assert_int_eq(res, 0);
 	}
 
@@ -1039,45 +1037,46 @@ START_TEST(test_pubkey_validity)
 	uint8_t pub_key[65];
 	curve_point pub;
 	int res;
+	const ecdsa_curve *curve = &secp256k1;
 
 	memcpy(pub_key, fromhex("0226659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37"), 33);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("025b1654a0e78d28810094f6c5a96b8efb8a65668b578f170ac2b1f83bc63ba856"), 33);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("03433f246a12e6486a51ff08802228c61cf895175a9b49ed4766ea9a9294a3c7fe"), 33);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("03aeb03abeee0f0f8b4f7a5d65ce31f9570cef9f72c2dd8a19b4085a30ab033d48"), 33);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("0496e8f2093f018aff6c2e2da5201ee528e2c8accbf9cac51563d33a7bb74a016054201c025e2a5d96b1629b95194e806c63eb96facaedc733b1a4b70ab3b33e3a"), 65);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("0498010f8a687439ff497d3074beb4519754e72c4b6220fb669224749591dde416f3961f8ece18f8689bb32235e436874d2174048b86118a00afbd5a4f33a24f0f"), 65);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b826b8f40b92719086238e1bebf19b77a4d"), 65);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b826b8f40b92719086238e1bebf00000000"), 65);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 0);
 
 	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b8211111111111111111111111111111111"), 65);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 0);
 
 	memcpy(pub_key, fromhex("00"), 1);
-	res = ecdsa_read_pubkey(CURVE, pub_key, &pub);
+	res = ecdsa_read_pubkey(curve, pub_key, &pub);
 	ck_assert_int_eq(res, 0);
 }
 END_TEST
@@ -1210,7 +1209,7 @@ START_TEST(test_ecdsa_der)
 }
 END_TEST
 
-START_TEST(test_secp256k1_cp) {
+static void test_codepoints_curve(const ecdsa_curve *curve) {
 	int i, j;
 	bignum256 a;
 	curve_point p, p1;
@@ -1221,108 +1220,130 @@ START_TEST(test_secp256k1_cp) {
 			bn_normalize(&a);
 			// note that this is not a trivial test.  We add 64 curve
 			// points in the table to get that particular curve point.
-			scalar_multiply(CURVE, &a, &p);
-			ck_assert_mem_eq(&p, &secp256k1_cp[i][j], sizeof(curve_point));
-			bn_zero(&p.y); // test that point_multiply CURVE, is not a noop
-			point_multiply(CURVE, &a, &G256k1, &p);
-			ck_assert_mem_eq(&p, &secp256k1_cp[i][j], sizeof(curve_point));
-
-			// even/odd has different behaviour;
-			// increment by one and test again
-			p1 = p;
-			point_add(CURVE, &G256k1, &p1);
-			bn_addi(&a, 1);
-			scalar_multiply(CURVE, &a, &p);
+			scalar_multiply(curve, &a, &p);
+			ck_assert_mem_eq(&p, &curve->cp[i][j], sizeof(curve_point));
+			bn_zero(&p.y); // test that point_multiply curve, is not a noop
+			point_multiply(curve, &a, &curve->G, &p);
+			ck_assert_mem_eq(&p, &curve->cp[i][j], sizeof(curve_point));
+			// mul 2 test. this should catch bugs
+			bn_lshift(&a);
+			bn_mod(&a, &curve->order);
+			p1 = curve->cp[i][j];
+			point_double(curve, &p1);
+			// note that this is not a trivial test.  We add 64 curve
+			// points in the table to get that particular curve point.
+			scalar_multiply(curve, &a, &p);
 			ck_assert_mem_eq(&p, &p1, sizeof(curve_point));
-			bn_zero(&p.y); // test that point_multiply CURVE, is not a noop
-			point_multiply(CURVE, &a, &G256k1, &p);
+			bn_zero(&p.y); // test that point_multiply curve, is not a noop
+			point_multiply(curve, &a, &curve->G, &p);
 			ck_assert_mem_eq(&p, &p1, sizeof(curve_point));
 		}
 	}
 }
+
+START_TEST(test_codepoints) {
+	test_codepoints_curve(&secp256k1);
+	test_codepoints_curve(&nist256p1);
+}
 END_TEST
 
-START_TEST(test_mult_border_cases) {
+static void test_mult_border_cases_curve(const ecdsa_curve *curve) {
 	bignum256 a;
 	curve_point p;
 	curve_point expected;
 	bn_zero(&a);  // a == 0
-	scalar_multiply(CURVE, &a, &p);
+	scalar_multiply(curve, &a, &p);
 	ck_assert(point_is_infinity(&p));
-	point_multiply(CURVE, &a, &p, &p);
+	point_multiply(curve, &a, &p, &p);
 	ck_assert(point_is_infinity(&p));
-	point_multiply(CURVE, &a, &G256k1, &p);
+	point_multiply(curve, &a, &curve->G, &p);
 	ck_assert(point_is_infinity(&p));
 
 	bn_addi(&a, 1);  // a == 1
-	scalar_multiply(CURVE, &a, &p);
-	ck_assert_mem_eq(&p, &G256k1, sizeof(curve_point));
-	point_multiply(CURVE, &a, &G256k1, &p);
-	ck_assert_mem_eq(&p, &G256k1, sizeof(curve_point));
+	scalar_multiply(curve, &a, &p);
+	ck_assert_mem_eq(&p, &curve->G, sizeof(curve_point));
+	point_multiply(curve, &a, &curve->G, &p);
+	ck_assert_mem_eq(&p, &curve->G, sizeof(curve_point));
 
-	bn_subtract(&order256k1, &a, &a);  // a == -1
-	expected = G256k1;
-	bn_subtract(&prime256k1, &expected.y, &expected.y);
-	scalar_multiply(CURVE, &a, &p);
+	bn_subtract(&curve->order, &a, &a);  // a == -1
+	expected = curve->G;
+	bn_subtract(&curve->prime, &expected.y, &expected.y);
+	scalar_multiply(curve, &a, &p);
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
-	point_multiply(CURVE, &a, &G256k1, &p);
+	point_multiply(curve, &a, &curve->G, &p);
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
 
-	bn_subtract(&order256k1, &a, &a);
+	bn_subtract(&curve->order, &a, &a);
 	bn_addi(&a, 1);  // a == 2
-	expected = G256k1;
-	point_add(CURVE, &expected, &expected);
-	scalar_multiply(CURVE, &a, &p);
+	expected = curve->G;
+	point_add(curve, &expected, &expected);
+	scalar_multiply(curve, &a, &p);
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
-	point_multiply(CURVE, &a, &G256k1, &p);
+	point_multiply(curve, &a, &curve->G, &p);
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
 
-	bn_subtract(&order256k1, &a, &a);  // a == -2
-	expected = G256k1;
-	point_add(CURVE, &expected, &expected);
-	bn_subtract(&prime256k1, &expected.y, &expected.y);
-	scalar_multiply(CURVE, &a, &p);
+	bn_subtract(&curve->order, &a, &a);  // a == -2
+	expected = curve->G;
+	point_add(curve, &expected, &expected);
+	bn_subtract(&curve->prime, &expected.y, &expected.y);
+	scalar_multiply(curve, &a, &p);
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
-	point_multiply(CURVE, &a, &G256k1, &p);
+	point_multiply(curve, &a, &curve->G, &p);
 	ck_assert_mem_eq(&p, &expected, sizeof(curve_point));
+}
+
+START_TEST(test_mult_border_cases) {
+	test_mult_border_cases_curve(&secp256k1);
+	test_mult_border_cases_curve(&nist256p1);
 }
 END_TEST
 
-START_TEST(test_scalar_mult) {
+static void test_scalar_mult_curve(const ecdsa_curve *curve) {
 	int i;
 	// get two "random" numbers
-	bignum256 a = G256k1.x;
-	bignum256 b = G256k1.y;
+	bignum256 a = curve->G.x;
+	bignum256 b = curve->G.y;
 	curve_point p1, p2, p3;
 	for (i = 0; i < 1000; i++) {
 		/* test distributivity: (a + b)G = aG + bG */
-		scalar_multiply(CURVE, &a, &p1);
-		scalar_multiply(CURVE, &b, &p2);
-		bn_addmod(&a, &b, &order256k1);
-		scalar_multiply(CURVE, &a, &p3);
-		point_add(CURVE, &p1, &p2);
+		bn_mod(&a, &curve->order);
+		bn_mod(&b, &curve->order);
+		scalar_multiply(curve, &a, &p1);
+		scalar_multiply(curve, &b, &p2);
+		bn_addmod(&a, &b, &curve->order);
+		bn_mod(&a, &curve->order);
+		scalar_multiply(curve, &a, &p3);
+		point_add(curve, &p1, &p2);
 		ck_assert_mem_eq(&p2, &p3, sizeof(curve_point));
 		// new "random" numbers
 		a = p3.x;
 		b = p3.y;
 	}
 }
+
+START_TEST(test_scalar_mult) {
+	test_scalar_mult_curve(&secp256k1);
+	test_scalar_mult_curve(&nist256p1);
+}
 END_TEST
 
-START_TEST(test_point_mult) {
+static void test_point_mult_curve(const ecdsa_curve *curve) {
 	int i;
 	// get two "random" numbers and a "random" point
-	bignum256 a = G256k1.x;
-	bignum256 b = G256k1.y;
-	curve_point p = G256k1;
+	bignum256 a = curve->G.x;
+	bignum256 b = curve->G.y;
+	curve_point p = curve->G;
 	curve_point p1, p2, p3;
 	for (i = 0; i < 200; i++) {
 		/* test distributivity: (a + b)P = aP + bP */
-		point_multiply(CURVE, &a, &p, &p1);
-		point_multiply(CURVE, &b, &p, &p2);
-		bn_addmod(&a, &b, &order256k1);
-		point_multiply(CURVE, &a, &p, &p3);
-		point_add(CURVE, &p1, &p2);
+		bn_mod(&a, &curve->order);
+		bn_mod(&b, &curve->order);
+		point_multiply(curve, &a, &p, &p1);
+		point_multiply(curve, &b, &p, &p2);
+		bn_addmod(&a, &b, &curve->order);
+		bn_mod(&a, &curve->order);
+		point_multiply(curve, &a, &p, &p3);
+		point_add(curve, &p1, &p2);
 		ck_assert_mem_eq(&p2, &p3, sizeof(curve_point));
 		// new "random" numbers and a "random" point
 		a = p1.x;
@@ -1330,28 +1351,36 @@ START_TEST(test_point_mult) {
 		p = p3;
 	}
 }
+
+START_TEST(test_point_mult) {
+	test_point_mult_curve(&secp256k1);
+	test_point_mult_curve(&nist256p1);
+}
 END_TEST
 
-START_TEST(test_scalar_point_mult) {
+static void test_scalar_point_mult_curve(const ecdsa_curve *curve) {
 	int i;
 	// get two "random" numbers
-	bignum256 a = G256k1.x;
-	bignum256 b = G256k1.y;
+	bignum256 a = curve->G.x;
+	bignum256 b = curve->G.y;
 	curve_point p1, p2;
 	for (i = 0; i < 200; i++) {
 		/* test commutativity and associativity:
 		 * a(bG) = (ab)G = b(aG)
 		 */
-		scalar_multiply(CURVE, &a, &p1);
-		point_multiply(CURVE, &b, &p1, &p1);
+		bn_mod(&a, &curve->order);
+		bn_mod(&b, &curve->order);
+		scalar_multiply(curve, &a, &p1);
+		point_multiply(curve, &b, &p1, &p1);
 
-		scalar_multiply(CURVE, &b, &p2);
-		point_multiply(CURVE, &a, &p2, &p2);
+		scalar_multiply(curve, &b, &p2);
+		point_multiply(curve, &a, &p2, &p2);
 
 		ck_assert_mem_eq(&p1, &p2, sizeof(curve_point));
 
-		bn_multiply(&a, &b, &order256k1);
-		scalar_multiply(CURVE, &b, &p2);
+		bn_multiply(&a, &b, &curve->order);
+		bn_mod(&b, &curve->order);
+		scalar_multiply(curve, &b, &p2);
 
 		ck_assert_mem_eq(&p1, &p2, sizeof(curve_point));
 
@@ -1359,6 +1388,11 @@ START_TEST(test_scalar_point_mult) {
 		a = p1.x;
 		b = p1.y;
 	}
+}
+
+START_TEST(test_scalar_point_mult) {
+	test_scalar_point_mult_curve(&secp256k1);
+	test_scalar_point_mult_curve(&nist256p1);
 }
 END_TEST
 
@@ -1423,8 +1457,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_pubkey_validity);
 	suite_add_tcase(s, tc);
 
-	tc = tcase_create("secp256k1_cp");
-	tcase_add_test(tc, test_secp256k1_cp);
+	tc = tcase_create("codepoints");
+	tcase_add_test(tc, test_codepoints);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("mult_border_cases");
