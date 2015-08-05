@@ -30,15 +30,17 @@ ifdef SMALL
 CFLAGS += -DUSE_PRECOMPUTED_IV=0 -DUSE_PRECOMPUTED_CP=0
 endif
 
-OBJS   = bignum.o ecdsa.o secp256k1.o nist256p1.o rand.o hmac.o bip32.o bip39.o pbkdf2.o base58.o
-OBJS  += ripemd160.o
-OBJS  += sha2.o
-OBJS  += aescrypt.o aeskey.o aestab.o aes_modes.o
+SRCS   = bignum.c ecdsa.c secp256k1.c nist256p1.c rand.c hmac.c bip32.c bip39.c pbkdf2.c base58.c
+SRCS  += ripemd160.c
+SRCS  += sha2.c
+SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
+
+OBJS   = $(SRCS:.c=.o)
 
 TESTLIBS = -lcheck -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
 
-all: tests test-openssl
+all: tests test-openssl libtrezor-crypto.so
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -49,5 +51,8 @@ tests: tests.o $(OBJS)
 test-openssl: test-openssl.o $(OBJS)
 	$(CC) test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
 
+libtrezor-crypto.so: $(SRCS)
+	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o libtrezor-crypto.so
+
 clean:
-	rm -f *.o tests test-openssl
+	rm -f *.o tests test-openssl libtrezor-crypto.so

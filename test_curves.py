@@ -3,10 +3,9 @@ import ctypes as c
 import random
 import ecdsa
 import hashlib
-import subprocess
 import binascii
-import pytest
 import os
+import pytest
 
 def bytes2num(s):
     res = 0
@@ -22,20 +21,7 @@ curves = {
 
 random_iters = int(os.environ.get('ITERS', 1))
 
-scons_file = '''
-srcs = 'ecdsa bignum secp256k1 nist256p1 sha2 rand hmac ripemd160 base58'
-srcs = [(s + '.c') for s in srcs.split()]
-flags = ('-O3 -g -W -Wall -Wextra -Wimplicit-function-declaration '
-         '-Wredundant-decls -Wstrict-prototypes -Wundef -Wshadow '
-         '-Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar '
-         '-Wformat-nonliteral -Winit-self -Wuninitialized -Wformat-security '
-         '-Werror -Wno-sequence-point ')
-SharedLibrary('ecdsa', srcs, CCFLAGS=flags)
-'''
-open('SConstruct', 'w').write(scons_file)
-
-subprocess.check_call('scons -s', shell=True)
-lib = c.cdll.LoadLibrary('./libecdsa.so')
+lib = c.cdll.LoadLibrary('./libtrezor-crypto.so')
 
 lib.get_curve_by_name.restype = c.c_void_p
 

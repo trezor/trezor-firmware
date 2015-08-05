@@ -8,8 +8,6 @@ build/
 dist/
 MANIFEST
 TrezorCrypto.c
-SConstruct
-.sconsign.dblite
 *.os
 *.so
 *.pyc
