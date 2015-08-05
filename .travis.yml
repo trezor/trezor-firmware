@@ -1,0 +1,17 @@
+sudo: false
+language: c
+
+addons:
+  apt:
+    packages:
+    - build-essential
+    - git
+    - gcc-arm-none-eabi
+
+install:
+  - git clone https://github.com/libopencm3/libopencm3
+
+script:
+  - cd libopencm3; make; cd ..
+  - TOOLCHAIN_DIR=libopencm3 make
+  - cd firmware; TOOLCHAIN_DIR=libopencm3 make; cd ..
