@@ -292,7 +292,7 @@ def test_jacobian_add(curve, r):
     q = POINT()
     jp2 = JACOBIAN()
     lib.curve_to_jacobian(to_POINT(p2), jp2, prime)
-    lib.point_jacobian_add(to_POINT(p1), jp2, prime)
+    lib.point_jacobian_add(to_POINT(p1), jp2, curve.ptr)
     lib.jacobian_to_curve(jp2, q, prime)
     q = from_POINT(q)
     p_ = p1 + p2
