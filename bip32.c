@@ -143,6 +143,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	}
 	if (!failed) {
 		bn_addmod(&a, &b, &default_curve->order);
+		bn_mod(&a, &default_curve->order);
 		if (bn_is_zero(&a)) {
 			failed = true;
 		}
