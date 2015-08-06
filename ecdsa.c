@@ -287,7 +287,7 @@ void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2, const e
 	bn_fast_mod(&h, prime);
 	// h = x1' - x2;
 
-	bn_addmod(&xz, &p2->x, prime);
+	bn_add(&xz, &p2->x);
 	// xz = x1' + x2
 
 	is_doubling = bn_is_zero(&h) | bn_is_equal(&h, prime);
@@ -296,7 +296,7 @@ void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2, const e
 	bn_subtractmod(&yz, &p2->y, &r, prime);
 	// r = y1' - y2;
 
-	bn_addmod(&yz, &p2->y, prime);
+	bn_add(&yz, &p2->y);
 	// yz = y1' + y2
 
 	r2 = p2->x;
@@ -347,6 +347,7 @@ void point_jacobian_double(jacobian_curve_point *p, const ecdsa_curve *curve) {
 	bignum256 az4, m, msq, ysq, xysq;
 	const bignum256 *prime = &curve->prime;
 
+	assert (-3 <= curve->a && curve->a <= 0);
 	/* usual algorithm:
 	 *
 	 * lambda  = (3((x/z^2)^2 + a) / 2y/z^3) = (3x^2 + az^4)/2yz
@@ -861,7 +862,7 @@ void uncompress_coords(const ecdsa_curve *curve, uint8_t odd, const bignum256 *x
 	bn_multiply(x, y, &curve->prime);        // y is x^2
 	bn_subi(y, -curve->a, &curve->prime);    // y is x^2 + a
 	bn_multiply(x, y, &curve->prime);        // y is x^3 + ax
-	bn_addmod(y, &curve->b, &curve->prime);  // y is x^3 + ax + b
+	bn_add(y, &curve->b);                    // y is x^3 + ax + b
 	bn_sqrt(y, &curve->prime);               // y = sqrt(y)
 	if ((odd & 0x01) != (y->val[0] & 1)) {
 		bn_subtract(&curve->prime, y, y);   // y = -y
@@ -891,7 +892,7 @@ int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, curve_po
 
 int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub)
 {
-	bignum256 y_2, x_3_b;
+	bignum256 y_2, x3_ax_b;
 
 	if (point_is_infinity(pub)) {
 		return 0;
@@ -902,19 +903,20 @@ int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub)
 	}
 
 	memcpy(&y_2, &(pub->y), sizeof(bignum256));
-	memcpy(&x_3_b, &(pub->x), sizeof(bignum256));
+	memcpy(&x3_ax_b, &(pub->x), sizeof(bignum256));
 
 	// y^2
 	bn_multiply(&(pub->y), &y_2, &curve->prime);
 	bn_mod(&y_2, &curve->prime);
 
 	// x^3 + ax + b
-	bn_multiply(&(pub->x), &x_3_b, &curve->prime);  // x^2
-	bn_subi(&x_3_b, -curve->a, &curve->prime);      // x^2 + a
-	bn_multiply(&(pub->x), &x_3_b, &curve->prime);  // x^3 + ax
-	bn_addmod(&x_3_b, &curve->b, &curve->prime);    // x^3 + ax + b
+	bn_multiply(&(pub->x), &x3_ax_b, &curve->prime);  // x^2
+	bn_subi(&x3_ax_b, -curve->a, &curve->prime);      // x^2 + a
+	bn_multiply(&(pub->x), &x3_ax_b, &curve->prime);  // x^3 + ax
+	bn_addmod(&x3_ax_b, &curve->b, &curve->prime);    // x^3 + ax + b
+	bn_mod(&x3_ax_b, &curve->prime);
 
-	if (!bn_is_equal(&x_3_b, &y_2)) {
+	if (!bn_is_equal(&x3_ax_b, &y_2)) {
 		return 0;
 	}
 
