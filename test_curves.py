@@ -129,7 +129,7 @@ def test_mult_half(curve, r):
     y = int2bn(x)
     lib.bn_mult_half(y, int2bn(curve.p))
     y = bn2int(y)
-    if y > curve.p:
+    if y >= curve.p:
         y -= curve.p
     half = ecdsa.numbertheory.inverse_mod(2, curve.p)
     assert y == (x * half) % curve.p
@@ -156,6 +156,17 @@ def test_subtract2(r):
     assert z == z_
 
 
+def test_add(curve, r):
+    x = r.randrange(0, 2 ** 256)
+    y = r.randrange(0, 2 ** 256)
+    z_ = x + y
+    z = int2bn(x)
+    lib.bn_add(z, int2bn(y))
+    z = bn2int(z)
+
+    assert z == z_
+
+
 def test_addmod(curve, r):
     x = r.randrange(0, 2 ** 256)
     y = r.randrange(0, 2 ** 256)
@@ -163,7 +174,8 @@ def test_addmod(curve, r):
     z = int2bn(x)
     lib.bn_addmod(z, int2bn(y), int2bn(curve.p))
     z = bn2int(z)
-
+    if z >= curve.p:
+        z = z - curve.p
     assert z == z_
 
 
