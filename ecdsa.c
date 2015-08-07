@@ -290,7 +290,11 @@ void point_jacobian_add(const curve_point *p1, jacobian_curve_point *p2, const e
 	bn_add(&xz, &p2->x);
 	// xz = x1' + x2
 
-	is_doubling = bn_is_zero(&h) | bn_is_equal(&h, prime);
+	// check for h == 0 % prime.  Note that h never normalizes to
+	// zero, since h = x1' + 2*prime - x2 > 0 and a positive
+	// multiple of prime is always normalized to prime by
+	// bn_fast_mod.
+	is_doubling = bn_is_equal(&h, prime);
 
 	bn_multiply(&p1->y, &yz, prime);        // yz = y1' = y1*z2^3;
 	bn_subtractmod(&yz, &p2->y, &r, prime);
