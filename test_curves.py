@@ -19,6 +19,24 @@ curves = {
     'secp256k1': ecdsa.curves.SECP256k1
 }
 
+class Point:
+    def __init__(self, name, x, y):
+        self.curve = name
+        self.x = x
+        self.y = y
+
+points = [
+    Point('secp256k1', 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798, 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8),
+    Point('secp256k1', 0x1, 0x4218f20ae6c646b363db68605822fb14264ca8d2587fdd6fbc750d587e76a7ee),
+    Point('secp256k1', 0x2, 0x66fbe727b2ba09e09f5a98d70a5efce8424c5fa425bbda1c511f860657b8535e),
+    Point('secp256k1', 0x1b,0x1adcea1cf831b0ad1653e769d1a229091d0cc68d4b0328691b9caacc76e37c90),
+    Point('nist256p1', 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296, 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5),
+    Point('nist256p1', 0x0, 0x66485c780e2f83d72433bd5d84a06bb6541c2af31dae871728bf856a174f93f4),
+    Point('nist256p1', 0x0, 0x99b7a386f1d07c29dbcc42a27b5f9449abe3d50de25178e8d7407a95e8b06c0b),
+    Point('nist256p1', 0xaf8bbdfe8cdd5577acbf345b543d28cf402f4e94d3865b97ea0787f2d3aa5d22,0x35802b8b376b995265918b078bc109c21a535176585c40f519aca52d6afc147c),
+    Point('nist256p1', 0x80000, 0x580610071f440f0dcc14a22e2d5d5afc1224c0cd11a3b4b51b8ecd2224ee1ce2)
+]
+
 random_iters = int(os.environ.get('ITERS', 1))
 
 lib = c.cdll.LoadLibrary('./libtrezor-crypto.so')
@@ -72,6 +90,15 @@ def curve(request):
     curve_obj.p = curve_obj.curve.p()  # shorthand
     return curve_obj
 
+@pytest.fixture(params=points)
+def point(request):
+    name = request.param.curve
+    curve_ptr = lib.get_curve_by_name(name)
+    assert curve_ptr, 'curve {} not found'.format(name)
+    curve_obj = curves[name]
+    curve_obj.ptr = c.c_void_p(curve_ptr)
+    curve_obj.p = ecdsa.ellipticcurve.Point(curve_obj.curve, request.param.x, request.param.y)
+    return curve_obj
 
 def test_inverse(curve, r):
     x = r.randrange(1, curve.p)
@@ -359,3 +386,7 @@ def test_sign(curve, r):
 def test_validate_pubkey(curve, r):
     p = r.randpoint(curve)
     assert lib.ecdsa_validate_pubkey(curve.ptr, to_POINT(p))
+
+
+def test_validate_pubkey_direct(point):
+    assert lib.ecdsa_validate_pubkey(point.ptr, to_POINT(point.p))
