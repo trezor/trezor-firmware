@@ -277,10 +277,14 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 	char row_user[64 + 8 + 1];
 
 	if (identity->has_proto && identity->proto[0]) {
-		strlcpy(row_proto, identity->proto, sizeof(row_proto));
-		char *p = row_proto;
-		while (*p) { *p = toupper((int)*p); p++; }
-		strlcat(row_proto, " login to:", sizeof(row_proto));
+		if (strcmp(identity->proto, "https") == 0) {
+			strlcpy(row_proto, "Web sign in to:", sizeof(row_proto));
+		} else {
+			strlcpy(row_proto, identity->proto, sizeof(row_proto));
+			char *p = row_proto;
+			while (*p) { *p = toupper((int)*p); p++; }
+			strlcat(row_proto, " login to:", sizeof(row_proto));
+		}
 	} else {
 		strlcpy(row_proto, "Login to:", sizeof(row_proto));
 	}
