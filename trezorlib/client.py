@@ -176,6 +176,10 @@ class TextUIMixin(object):
         else:
             desc = 'PIN'
 
+        log("Use the numeric keypad to describe number positions. The layout is:")
+        log("    7 8 9")
+        log("    4 5 6")
+        log("    1 2 3")
         log("Please enter %s: " % desc)
         pin = getpass.getpass('')
         return proto.PinMatrixAck(pin=pin)
