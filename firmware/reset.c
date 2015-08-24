@@ -149,6 +149,8 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	layoutHome();
 }
 
+#if DEBUG_LINK
+
 uint32_t reset_get_int_entropy(uint8_t *entropy) {
 	memcpy(entropy, int_entropy, 32);
 	return 32;
@@ -157,3 +159,5 @@ uint32_t reset_get_int_entropy(uint8_t *entropy) {
 const char *reset_get_word(void) {
 	return current_word;
 }
+
+#endif
