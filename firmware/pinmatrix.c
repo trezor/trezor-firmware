@@ -73,7 +73,11 @@ void pinmatrix_done(char *pin)
 	memset(pinmatrix_perm, 'X', sizeof(pinmatrix_perm));
 }
 
+#if DEBUG_LINK
+
 const char *pinmatrix_get(void)
 {
 	return pinmatrix_perm;
 }
+
+#endif
