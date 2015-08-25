@@ -118,6 +118,7 @@ void fsm_msgInitialize(Initialize *msg)
 	recovery_abort();
 	signing_abort();
 	session_clear(false); // do not clear PIN
+	layoutHome();
 	fsm_msgGetFeatures(0);
 }
 
