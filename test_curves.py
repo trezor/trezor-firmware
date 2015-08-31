@@ -261,6 +261,13 @@ def test_mod(curve, r):
     lib.bn_mod(y, int2bn(curve.p))
     assert bn2int(y) == x % curve.p
 
+def test_mod_specific(curve):
+    p = curve.p
+    for x in [0, 1, 2, p - 2, p - 1, p, p + 1, p + 2, 2*p - 2, 2*p - 1]:
+        y = int2bn(x)
+        lib.bn_mod(y, int2bn(curve.p))
+        assert bn2int(y) == x % p
+
 POINT = BIGNUM * 2
 to_POINT = lambda p: POINT(int2bn(p.x()), int2bn(p.y()))
 from_POINT = lambda p: (bn2int(p[0]), bn2int(p[1]))

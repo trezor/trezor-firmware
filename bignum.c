@@ -229,27 +229,10 @@ void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime)
 // assumes x partly reduced, guarantees x fully reduced.
 void bn_mod(bignum256 *x, const bignum256 *prime)
 {
-	int i = 8;
-	uint32_t temp;
-	// compare numbers
-	while (i >= 0 && prime->val[i] == x->val[i]) i--;
-	// if equal
-	if (i == -1) {
-		// set x to zero
-		bn_zero(x);
-	} else {
-		// if x is greater
-		if (x->val[i] > prime->val[i]) {
-			// substract p from x
-			temp = 0x40000000u;
-			for (i = 0; i < 9; i++) {
-				temp += x->val[i] - prime->val[i];
-				x->val[i] = temp & 0x3FFFFFFF;
-				temp >>= 30;
-				temp += 0x3FFFFFFFu;
-			}
-		}
-	}
+	const int flag = bn_is_less(x, prime); // x < prime
+	bignum256 temp;
+	bn_subtract(x, prime, &temp); // temp = x - prime
+	bn_cmov(x, flag, x, &temp);
 }
 
 // auxiliary function for multiplication.
