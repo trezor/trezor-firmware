@@ -6,7 +6,6 @@ cd $(dirname $0)
 
 VERSION="1"
 
-
 install -D -m 0644 ./trezor.rules    ./lib/udev/rules.d/52-trezor-extension.rules
 
 NAME=trezor-udev
@@ -22,7 +21,7 @@ for TYPE in "deb" "rpm"; do
 		-v $VERSION \
 		--license "LGPL-3.0" \
 		--vendor "SatoshiLabs" \
-        --description "Udev rules for using Bitcoin Trezor on Linux" \
+		--description "Udev rules for TREZOR" \
 		--maintainer "SatoshiLabs <stick@satoshilabs.com>" \
 		--url "http://bitcointrezor.com/" \
 		--category "Productivity/Security" \
