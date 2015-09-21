@@ -761,7 +761,7 @@ START_TEST(test_pbkdf2_hmac_sha256)
 	ck_assert_mem_eq(k, fromhex("c5e478d59288c841aa530db6845c4c8d962893a001ce4e11a4963873aa98134a"), 32);
 
 	strcpy((char *)s, "saltSALTsaltSALTsaltSALTsaltSALTsalt");
-	pbkdf2_hmac_sha256((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 64, 0);
+	pbkdf2_hmac_sha256((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 40, 0);
 	ck_assert_mem_eq(k, fromhex("348c89dbcbd32b2f32d814b8116e84cf2b17347ebc1800181c4e2a1fb8dd53e1c635518c7dac47e9"), 40);
 }
 END_TEST
