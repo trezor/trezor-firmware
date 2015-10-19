@@ -149,7 +149,7 @@ class Commands(object):
         if args.mnemonic:
             mnemonic = ' '.join(args.mnemonic)
             return self.client.load_device_by_mnemonic(mnemonic, args.pin,
-                        args.passphrase_protection, args.label, 'english')
+                        args.passphrase_protection, args.label, 'english', args.skip_checksum)
 
         else:
             return self.client.load_device_by_xprv(args.xprv, args.pin,
@@ -315,6 +315,7 @@ class Commands(object):
         (('-p', '--pin'), {'type': str, 'default': ''}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
+        (('-s', '--skip-checksum'), {'action': 'store_true', 'default': False}),
     )
 
     reset_device.arguments = (
