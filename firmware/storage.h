@@ -58,6 +58,8 @@ void storage_resetPinFails(void);
 void storage_increasePinFails(void);
 uint32_t storage_getPinFails(void);
 
+uint32_t storage_nextU2FCounter(void);
+
 bool storage_isInitialized(void);
 
 extern Storage storage;
