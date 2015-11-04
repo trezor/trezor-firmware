@@ -39,6 +39,7 @@
 #include "protect.h"
 #include "layout2.h"
 
+_Static_assert(sizeof(Storage) <= FLASH_STORAGE_LEN, "Storage struct is too large for TREZOR flash");
 Storage storage;
 
 uint8_t storage_uuid[12];
