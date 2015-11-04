@@ -5,7 +5,7 @@
 
 
 
-const pb_field_t Storage_fields[11] = {
+const pb_field_t Storage_fields[12] = {
     PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, Storage, version, version, 0),
     PB_FIELD2(  2, MESSAGE , OPTIONAL, STATIC  , OTHER, Storage, node, version, &HDNodeType_fields),
     PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, Storage, mnemonic, node, 0),
@@ -16,6 +16,7 @@ const pb_field_t Storage_fields[11] = {
     PB_FIELD2(  8, STRING  , OPTIONAL, STATIC  , OTHER, Storage, label, language, 0),
     PB_FIELD2(  9, BOOL    , OPTIONAL, STATIC  , OTHER, Storage, imported, label, 0),
     PB_FIELD2( 10, BYTES   , OPTIONAL, STATIC  , OTHER, Storage, homescreen, imported, 0),
+    PB_FIELD2( 11, UINT32  , OPTIONAL, STATIC  , OTHER, Storage, u2f_counter, homescreen, 0),
     PB_LAST_FIELD
 };
 

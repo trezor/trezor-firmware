@@ -37,13 +37,15 @@ typedef struct _Storage {
     bool imported;
     bool has_homescreen;
     Storage_homescreen_t homescreen;
+    bool has_u2f_counter;
+    uint32_t u2f_counter;
 } Storage;
 
 /* Default values for struct fields */
 
 /* Initializer values for message structs */
-#define Storage_init_default                     {0, false, HDNodeType_init_default, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}}
-#define Storage_init_zero                        {0, false, HDNodeType_init_zero, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}}
+#define Storage_init_default                     {0, false, HDNodeType_init_default, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0}
+#define Storage_init_zero                        {0, false, HDNodeType_init_zero, false, "", false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Storage_version_tag                      1
@@ -56,12 +58,13 @@ typedef struct _Storage {
 #define Storage_label_tag                        8
 #define Storage_imported_tag                     9
 #define Storage_homescreen_tag                   10
+#define Storage_u2f_counter_tag                  11
 
 /* Struct field encoding specification for nanopb */
-extern const pb_field_t Storage_fields[11];
+extern const pb_field_t Storage_fields[12];
 
 /* Maximum encoded size of messages (where known) */
-#define Storage_size                             (1359 + HDNodeType_size)
+#define Storage_size                             (1365 + HDNodeType_size)
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -401,3 +401,15 @@ bool storage_isInitialized(void)
 {
 	return storage.has_node || storage.has_mnemonic;
 }
+
+uint32_t storage_nextU2FCounter(void)
+{
+	if(!storage.has_u2f_counter) {
+		storage.has_u2f_counter = true;
+		storage.u2f_counter = 1;
+	} else {
+		storage.u2f_counter++;
+	}
+	storage_commit();
+	return storage.u2f_counter;
+}
