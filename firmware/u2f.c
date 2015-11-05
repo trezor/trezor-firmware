@@ -447,12 +447,20 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 {
 		uint8_t keybase[64];
 
-		// First half of keyhandle is random
-		random_buffer(key_handle, 32);
+		// Derivation path is m/'U2F/'r/'r/'r/'r/'r/'r/'r/'r
+		uint32_t i, key_path[9];
+		key_path[0] = U2F_KEY_PATH;
+		for (i = 1; i < 9; i++) {
+			// high bit for hardened keys
+			key_path[i]= 0x80000000 | random32();
+		}
+
+		// First half of keyhandle is key_path
+		memcpy(key_handle, &key_path[1], 32);
 
 		// prepare keypair from /random data
 		const HDNode *node =
-			getDerivedNode((uint32_t*)key_handle, 32/sizeof(uint32_t));
+			getDerivedNode(key_path, sizeof(key_path) / sizeof(uint32_t));
 
 		// For second half of keyhandle
 		// Signature of app_id and random data
@@ -473,12 +481,17 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 
 const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle[])
 {
+	uint32_t key_path[9];
+	key_path[0] = U2F_KEY_PATH;
+	memcpy(&key_path[1], key_handle, 32);
+
+	const HDNode *node =
+		getDerivedNode(key_path, sizeof(key_path) / sizeof(uint32_t));
+
 	uint8_t keybase[64];
 	memcpy(&keybase[0], app_id, 32);
 	memcpy(&keybase[32], key_handle, 32);
 
-	const HDNode *node =
-		getDerivedNode((uint32_t*)key_handle, 32/sizeof(uint32_t));
 
 	uint8_t sig[64];
 	ecdsa_sign(&nist256p1, node->private_key,

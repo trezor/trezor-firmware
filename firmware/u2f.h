@@ -25,6 +25,8 @@
 #include "u2f/u2f_hid.h"
 #include "trezor.h"
 
+#define U2F_KEY_PATH 0x80553246
+
 typedef struct {
 	uint8_t cla, ins, p1, p2;
 	uint8_t lc1, lc2, lc3;
