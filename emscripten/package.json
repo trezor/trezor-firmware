@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "bitcoinjs-lib": "^1.5.7"
+    "bitcoinjs-lib": "^2.1.1"
   }
 }

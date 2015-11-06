@@ -11,7 +11,7 @@ var nodeStruct = {
     child_num: node.index,
     fingerprint: node.parentFingerprint,
     chain_code: node.chainCode,
-    public_key: node.pubKey.toBuffer()
+    public_key: node.keyPair.getPublicKeyBuffer().toString('hex')
 };
 var nodeSerialized = crypto.serializeNode(nodeStruct);
 

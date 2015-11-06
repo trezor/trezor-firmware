@@ -28,7 +28,7 @@ var _address = _malloc(ADDRESS_SIZE);
  */
 
 /**
- * @param {HDNode} node HDNode struct, see the definition above
+ * @param {HDNode} node  HDNode struct, see the definition above
  * @return {Uint8Array}
  */
 function serializeNode(node) {
@@ -47,9 +47,9 @@ function serializeNode(node) {
 }
 
 /**
- * @param {Uint8Array} sn serialized node, see `serializeNode`
- * @param {Number} index BIP32 index of the address
- * @param {Number} version address version byte
+ * @param {Uint8Array} sn   serialized node, see `serializeNode`
+ * @param {Number} index    BIP32 index of the address
+ * @param {Number} version  address version byte
  * @return {String}
  */
 function deriveAddress(sn, index, version) {
@@ -60,17 +60,17 @@ function deriveAddress(sn, index, version) {
 }
 
 /**
- * @param {HDNode} node HDNode struct, see the definition above
- * @param {Number} from index of the first address
- * @param {Number} to index of the last address
- * @param {Number} version address version byte
+ * @param {HDNode} node        HDNode struct, see the definition above
+ * @param {Number} firstIndex  index of the first address
+ * @param {Number} lastIndex   index of the last address
+ * @param {Number} version     address version byte
  * @return {Array<String>}
  */
-function deriveAddressRange(node, from, to, version) {
+function deriveAddressRange(node, firstIndex, lastIndex, version) {
     var addresses = [];
     var sn = serializeNode(node);
     var i;
-    for (i = from; i <= to; i++) {
+    for (i = firstIndex; i <= lastIndex; i++) {
         addresses.push(deriveAddress(sn, i, version));
     }
     return addresses;
@@ -94,13 +94,17 @@ function processMessage(event) {
 
     switch (type) {
     case 'deriveAddressRange':
-        var response = deriveAddressRange(
+        var addresses = deriveAddressRange(
             data['node'],
-            data['from'],
-            data['to'],
+            data['firstIndex'],
+            data['lastIndex'],
             data['version']
         );
-        postMessage(response);
+        postMessage({
+            'addresses': addresses,
+            'firstIndex': data['firstIndex'],
+            'lastIndex': data['lastIndex']
+        });
         break;
 
     default:
