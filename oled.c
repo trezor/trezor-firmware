@@ -74,7 +74,7 @@
 #define OLED_BUFTGL(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] ^= (1 << (7 - (Y)%8))
 
 static uint8_t _oledbuffer[OLED_BUFSIZE];
-static char is_debug_mode = 0;
+static bool is_debug_mode = 0;
 
 /*
  * Send a block of data via the SPI bus.
@@ -193,7 +193,7 @@ const uint8_t *oledGetBuffer()
 	return _oledbuffer;
 }
 
-void oledSetDebug(char set)
+void oledSetDebug(bool set)
 {
 	is_debug_mode = set;
 	oledRefresh();
@@ -216,7 +216,7 @@ void oledClearPixel(int x, int y)
 	OLED_BUFCLR(x,y);
 }
 
-void oledDrawChar(int x, int y, char c)
+void oledDrawChar(int x, int y, char c, int zoom)
 {
 	int char_width;
 	const uint8_t *char_data;
@@ -226,31 +226,15 @@ void oledDrawChar(int x, int y, char c)
 	char_width = fontCharWidth(c);
 	char_data = fontCharData(c);
 
-	int xoffset, yoffset;
-	for (xoffset = 0; xoffset < char_width; xoffset++) {
-		for (yoffset = 0; yoffset < FONT_HEIGHT; yoffset++) {
-			if (char_data[xoffset] & (1 << (FONT_HEIGHT - 1 - yoffset))) {
-				oledDrawPixel(x + xoffset, y + yoffset);
-			}
-		}
-	}
-}
-
-void oledDrawZoomedChar(int x, int y, int z, char c)
-{
-	int char_width;
-	const uint8_t *char_data;
-
-	if ((x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
-
-	char_width = fontCharWidth(c);
-	char_data = fontCharData(c);
-
-	int xoffset, yoffset;
-	for (xoffset = 0; xoffset < char_width; xoffset++) {
-		for (yoffset = 0; yoffset < FONT_HEIGHT; yoffset++) {
-			if (char_data[xoffset] & (1 << (FONT_HEIGHT - 1 - yoffset))) {
-				oledBox(x + xoffset * z, y + yoffset * z, x + xoffset * z + z - 1, y + yoffset * z + z - 1, 1);
+	int xo, yo;
+	for (xo = 0; xo < char_width; xo++) {
+		for (yo = 0; yo < FONT_HEIGHT; yo++) {
+			if (char_data[xo] & (1 << (FONT_HEIGHT - 1 - yo))) {
+				if (zoom <= 1) {
+					oledDrawPixel(x + xo, y + yo);
+				} else {
+					oledBox(x + xo * zoom, y + yo * zoom, x + (xo + 1) * zoom - 1, y + (yo + 1) * zoom - 1, true);
+				}
 			}
 		}
 	}
@@ -292,13 +276,8 @@ void oledDrawString(int x, int y, const char* text)
 	for (; *text; text++) {
 		c = oledConvertChar(*text);
 		if (c) {
-			if (size > 1) {
-				oledDrawZoomedChar(x + l, y, size, c);
-				l += fontCharWidth(c) * size + 1;
-			} else {
-				oledDrawChar(x + l, y, c);
-				l += fontCharWidth(c) + 1;
-			}
+			oledDrawChar(x + l, y, c, size);
+			l += size * (fontCharWidth(c) + 1);
 		}
 	}
 }
@@ -345,12 +324,12 @@ void oledInvert(int x1, int y1, int x2, int y2)
 /*
  * Draw a filled rectangle.
  */
-void oledBox(int x1, int y1, int x2, int y2, char val)
+void oledBox(int x1, int y1, int x2, int y2, bool set)
 {
 	int x, y;
 	for (x = x1; x <= x2; x++) {
 		for (y = y1; y <= y2; y++) {
-			val ? oledDrawPixel(x, y) : oledClearPixel(x, y);
+			set ? oledDrawPixel(x, y) : oledClearPixel(x, y);
 		}
 	}
 }

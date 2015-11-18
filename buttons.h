@@ -21,6 +21,7 @@
 #define __BUTTONS_H__
 
 #include <libopencm3/stm32/gpio.h>
+#include <stdbool.h>
 
 struct buttonState {
 	volatile bool YesUp;
