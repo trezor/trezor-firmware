@@ -270,6 +270,17 @@ void layoutAddress(const char *address, const char *desc)
 	oledRefresh();
 }
 
+void layoutPublicKey(const uint8_t *pubkey)
+{
+	char hex[32*2+1], desc[16];
+	strlcpy(desc, "Public Key: 00", sizeof(desc));
+	data2hex(pubkey, 1, desc + 12);
+	data2hex(pubkey + 1, 32, hex);
+	const char **str = split_message((const uint8_t *)hex, 32*2, 16);
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, NULL, "Continue", NULL,
+		desc, str[0], str[1], str[2], str[3], NULL);
+}
+
 void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 {
 	char row_proto[8 + 11 + 1];

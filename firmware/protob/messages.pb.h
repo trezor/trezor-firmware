@@ -426,6 +426,8 @@ typedef struct _GetPublicKey {
     uint32_t address_n[8];
     bool has_ecdsa_curve_name;
     char ecdsa_curve_name[32];
+    bool has_show_display;
+    bool show_display;
 } GetPublicKey;
 
 typedef struct _LoadDevice {
@@ -661,7 +663,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define PassphraseAck_init_default               {""}
 #define GetEntropy_init_default                  {0}
 #define Entropy_init_default                     {{0, {0}}}
-#define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
+#define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
 #define PublicKey_init_default                   {HDNodeType_init_default, false, ""}
 #define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default}
 #define Address_init_default                     {""}
@@ -715,7 +717,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define PassphraseAck_init_zero                  {""}
 #define GetEntropy_init_zero                     {0}
 #define Entropy_init_zero                        {{0, {0}}}
-#define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
+#define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
 #define PublicKey_init_zero                      {HDNodeType_init_zero, false, ""}
 #define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero}
 #define Address_init_zero                        {""}
@@ -829,6 +831,7 @@ extern const char SimpleSignTx_coin_name_default[17];
 #define GetEntropy_size_tag                      1
 #define GetPublicKey_address_n_tag               1
 #define GetPublicKey_ecdsa_curve_name_tag        2
+#define GetPublicKey_show_display_tag            3
 #define LoadDevice_mnemonic_tag                  1
 #define LoadDevice_node_tag                      2
 #define LoadDevice_pin_tag                       3
@@ -906,7 +909,7 @@ extern const pb_field_t PassphraseRequest_fields[1];
 extern const pb_field_t PassphraseAck_fields[2];
 extern const pb_field_t GetEntropy_fields[2];
 extern const pb_field_t Entropy_fields[2];
-extern const pb_field_t GetPublicKey_fields[3];
+extern const pb_field_t GetPublicKey_fields[4];
 extern const pb_field_t PublicKey_fields[3];
 extern const pb_field_t GetAddress_fields[5];
 extern const pb_field_t Address_fields[2];
@@ -962,7 +965,7 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define PassphraseAck_size                       53
 #define GetEntropy_size                          6
 #define Entropy_size                             1027
-#define GetPublicKey_size                        82
+#define GetPublicKey_size                        84
 #define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          (75 + MultisigRedeemScriptType_size)
 #define Address_size                             38

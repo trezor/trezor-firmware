@@ -123,9 +123,10 @@ const pb_field_t Entropy_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t GetPublicKey_fields[3] = {
+const pb_field_t GetPublicKey_fields[4] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, GetPublicKey, address_n, address_n, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, GetPublicKey, ecdsa_curve_name, address_n, 0),
+    PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, GetPublicKey, show_display, ecdsa_curve_name, 0),
     PB_LAST_FIELD
 };
 
