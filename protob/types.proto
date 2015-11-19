@@ -86,6 +86,7 @@ enum ButtonRequestType {
 	ButtonRequest_SignTx = 8;
 	ButtonRequest_FirmwareCheck = 9;
 	ButtonRequest_Address = 10;
+	ButtonRequest_PublicKey = 11;
 }
 
 /**
