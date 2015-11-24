@@ -1,8 +1,8 @@
 import sys
 import math
 import operator
-from PyQt4.Qt import QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout
-from PyQt4.QtGui import QPushButton, QLineEdit, QSizePolicy, QRegExpValidator, QLabel
+from PyQt4.QtGui import (QPushButton, QLineEdit, QSizePolicy, QRegExpValidator, QLabel,
+                        QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout)
 from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt
 
 class PinButton(QPushButton):
