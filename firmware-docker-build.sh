@@ -8,13 +8,10 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	cd trezor-mcu && \
 	git checkout $FIRMWARETAG && \
 	git submodule update --init && \
-	cd libopencm3 &&
+	make -C libopencm3 && \
 	make && \
-	cd .. && \
-	make && \
-	cd firmware && \
-	make && \
-	cp trezor.bin /output/trezor-$FIRMWARETAG.bin"
+	make -C firmware && \
+	cp firmware/trezor.bin /output/trezor-$FIRMWARETAG.bin"
 
 echo "---------------------"
 echo "Firmware fingerprint:"
