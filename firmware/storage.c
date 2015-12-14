@@ -265,7 +265,7 @@ bool storage_getRootNode(HDNode *node)
 		if (hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode) == 0) {
 			return false;
 		}
-		if (storage.has_passphrase_protection && storage.passphrase_protection && strlen(sessionPassphrase)) {
+		if (storage.has_passphrase_protection && storage.passphrase_protection && sessionPassphraseCached && strlen(sessionPassphrase) > 0) {
 			// decrypt hd node
 			uint8_t secret[64];
 			uint8_t salt[12];
