@@ -7,3 +7,6 @@
 [submodule "trezor-qrenc"]
 	path = trezor-qrenc
 	url = https://github.com/trezor/trezor-qrenc.git
+[submodule "libopencm3"]
+	path = libopencm3
+	url = https://github.com/libopencm3/libopencm3.git
