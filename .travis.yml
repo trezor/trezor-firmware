@@ -6,7 +6,7 @@ install:
   - sudo apt-get install -y build-essential git gcc-arm-none-eabi
 
 script:
-  - make -C libopencm3
+  - make -C vendor/libopencm3
   - make
   - make -C firmware
   - make -C bootloader
