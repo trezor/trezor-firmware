@@ -19,25 +19,25 @@ OBJS += crypto.o
 
 OBJS += debug.o
 
-OBJS += ../trezor-crypto/bignum.o
-OBJS += ../trezor-crypto/ecdsa.o
-OBJS += ../trezor-crypto/secp256k1.o
-OBJS += ../trezor-crypto/nist256p1.o
-OBJS += ../trezor-crypto/hmac.o
-OBJS += ../trezor-crypto/bip32.o
-OBJS += ../trezor-crypto/bip39.o
-OBJS += ../trezor-crypto/pbkdf2.o
-OBJS += ../trezor-crypto/base58.o
+OBJS += ../vendor/trezor-crypto/bignum.o
+OBJS += ../vendor/trezor-crypto/ecdsa.o
+OBJS += ../vendor/trezor-crypto/secp256k1.o
+OBJS += ../vendor/trezor-crypto/nist256p1.o
+OBJS += ../vendor/trezor-crypto/hmac.o
+OBJS += ../vendor/trezor-crypto/bip32.o
+OBJS += ../vendor/trezor-crypto/bip39.o
+OBJS += ../vendor/trezor-crypto/pbkdf2.o
+OBJS += ../vendor/trezor-crypto/base58.o
 
-OBJS += ../trezor-crypto/ripemd160.o
-OBJS += ../trezor-crypto/sha2.o
+OBJS += ../vendor/trezor-crypto/ripemd160.o
+OBJS += ../vendor/trezor-crypto/sha2.o
 
-OBJS += ../trezor-crypto/aescrypt.o
-OBJS += ../trezor-crypto/aeskey.o
-OBJS += ../trezor-crypto/aestab.o
-OBJS += ../trezor-crypto/aes_modes.o
+OBJS += ../vendor/trezor-crypto/aescrypt.o
+OBJS += ../vendor/trezor-crypto/aeskey.o
+OBJS += ../vendor/trezor-crypto/aestab.o
+OBJS += ../vendor/trezor-crypto/aes_modes.o
 
-OBJS += ../trezor-qrenc/qr_encode.o
+OBJS += ../vendor/trezor-qrenc/qr_encode.o
 
 # OBJS += protob/pb_common.o
 OBJS += protob/pb_decode.o

@@ -8,7 +8,7 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	cd trezor-mcu && \
 	git checkout $FIRMWARETAG && \
 	git submodule update --init && \
-	make -C libopencm3 && \
+	make -C vendor/libopencm3 && \
 	make && \
 	make -C firmware && \
 	cp firmware/trezor.bin /output/trezor-$FIRMWARETAG.bin"
