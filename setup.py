@@ -20,6 +20,7 @@ setup(
         'trezorlib.transport',
         'trezorlib.transport_fake',
         'trezorlib.transport_hid',
+        'trezorlib.transport_bridge',
         'trezorlib.transport_pipe',
         'trezorlib.transport_serial',
         'trezorlib.transport_socket',

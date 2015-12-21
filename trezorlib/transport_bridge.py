@@ -15,32 +15,43 @@ def get_error(resp):
 
 class BridgeTransport(Transport):
     def __init__(self, device, *args, **kwargs):
+        self.configure()
 
+        self.path = device['path']
+
+        self.session = None
+        self.response = None
+        self.conn = requests.Session();
+
+        super(BridgeTransport, self).__init__(device, *args, **kwargs)
+
+    @staticmethod
+    def configure():
         r = requests.get(CONFIG_URL)
         if r.status_code != 200:
             raise Exception('Could not fetch config from %s' % CONFIG_URL)
 
         config = r.text
 
-        self.conn = requests.Session();
-
-        r = self.conn.post(TREZORD_HOST + '/configure', data=config)
+        r = requests.post(TREZORD_HOST + '/configure', data=config)
         if r.status_code != 200:
             raise Exception('trezord: Could not configure' + get_error(r))
 
-        r = self.conn.get(TREZORD_HOST + '/enumerate')
+    @classmethod
+    def enumerate(cls):
+        """
+        Return a list of available TREZOR devices.
+        """
+        devices = {}
+        cls.configure()
+        r = requests.get(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
             raise Exception('trezord: Could not enumerate devices' + get_error(r))
+
         enum = r.json()
 
-        if len(enum) < 1:
-            raise Exception('trezord: No devices found')
+        return enum;
 
-        self.path = enum[0]['path']
-        self.session = None
-        self.response = None
-
-        super(BridgeTransport, self).__init__(device, *args, **kwargs)
 
     def _open(self):
         r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.path)
