@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='trezor',
-    version='0.6.8',
+    version='0.6.9',
     author='Bitcoin TREZOR',
     author_email='info@bitcointrezor.com',
     description='Python library for communicating with TREZOR Bitcoin Hardware Wallet',
@@ -29,7 +29,7 @@ setup(
     ],
     scripts = ['trezorctl'],
     test_suite='tests',
-    install_requires=['ecdsa>=0.9', 'protobuf==2.5.0', 'mnemonic>=0.8', 'hidapi>=0.7.99'],
+    install_requires=['ecdsa>=0.9', 'protobuf==2.6.1', 'mnemonic>=0.8', 'hidapi>=0.7.99'],
     include_package_data=True,
     zip_safe=False,
     classifiers=[
