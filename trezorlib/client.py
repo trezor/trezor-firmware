@@ -505,25 +505,27 @@ class ProtocolMixin(object):
 
     @field('value')
     @expect(proto.CipheredKeyValue)
-    def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True):
+    def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=None):
         n = self._convert_prime(n)
         return self.call(proto.CipherKeyValue(address_n=n,
                                               key=key,
                                               value=value,
                                               encrypt=True,
                                               ask_on_encrypt=ask_on_encrypt,
-                                              ask_on_decrypt=ask_on_decrypt))
+                                              ask_on_decrypt=ask_on_decrypt,
+                                              iv=iv if iv is not None else ''))
 
     @field('value')
     @expect(proto.CipheredKeyValue)
-    def decrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True):
+    def decrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=None):
         n = self._convert_prime(n)
         return self.call(proto.CipherKeyValue(address_n=n,
                                               key=key,
                                               value=value,
                                               encrypt=False,
                                               ask_on_encrypt=ask_on_encrypt,
-                                              ask_on_decrypt=ask_on_decrypt))
+                                              ask_on_decrypt=ask_on_decrypt,
+                                              iv=iv if iv is not None else ''))
 
     @field('tx_size')
     @expect(proto.TxSize)
