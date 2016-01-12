@@ -78,7 +78,7 @@ class expect(object):
     # or raises an exception
     def __init__(self, *expected):
         self.expected = expected
-        
+
     def __call__(self, f):
         def wrapped_f(*args, **kwargs):
             ret = f(*args, **kwargs)
@@ -220,7 +220,7 @@ class DebugLinkMixin(object):
 
         # Always press Yes and provide correct pin
         self.setup_debuglink(True, True)
-        
+
         # Do not expect any specific response from device
         self.expected_responses = None
 
@@ -292,7 +292,7 @@ class DebugLinkMixin(object):
         resp = super(DebugLinkMixin, self).call_raw(msg)
         self._check_request(resp)
         return resp
-        
+
     def _check_request(self, msg):
         if self.expected_responses != None:
             try:
@@ -310,7 +310,7 @@ class DebugLinkMixin(object):
                 if not msg.HasField(field.name) or getattr(msg, field.name) != value:
                     raise CallException(types.Failure_Other,
                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
-            
+
     def callback_ButtonRequest(self, msg):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
 

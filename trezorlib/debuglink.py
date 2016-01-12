@@ -19,7 +19,7 @@ class DebugLink(object):
 
     def close(self):
         self.transport.close()
-        
+
     def _call(self, msg, nowait=False):
         print "DEBUGLINK SEND", pprint(msg)
         self.transport.write(msg)
@@ -53,7 +53,7 @@ class DebugLink(object):
 
         print "Encoded PIN:", pin_encoded
         return pin_encoded
-        
+
     def read_layout(self):
         obj = self._call(proto.DebugLinkGetState())
         return obj.layout

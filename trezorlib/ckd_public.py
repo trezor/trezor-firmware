@@ -17,7 +17,7 @@ def point_to_pubkey(point):
     x_str = number_to_string(point.x(), order)
     y_str = number_to_string(point.y(), order)
     vk = x_str + y_str
-    return chr((ord(vk[63]) & 1) + 2) + vk[0:32]  # To compressed key 
+    return chr((ord(vk[63]) & 1) + 2) + vk[0:32]  # To compressed key
 
 def sec_to_public_pair(pubkey):
     """Convert a public key in sec binary format to a public pair."""
@@ -115,7 +115,7 @@ def deserialize(xpub):
     node.fingerprint = struct.unpack('>I', data[5:9])[0]
     node.child_num = struct.unpack('>I', data[9:13])[0]
     node.chain_code = data[13:45]
-    
+
     key = data[45:-4]
     if key[0] == '\x00':
         node.private_key = key[1:]

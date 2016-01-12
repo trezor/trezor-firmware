@@ -10,7 +10,7 @@ def build_map():
 
         map_type_to_class[i] = msg_class
         map_class_to_type[msg_class] = i
-    
+
 def get_type(msg):
     return map_class_to_type[msg.__class__]
 

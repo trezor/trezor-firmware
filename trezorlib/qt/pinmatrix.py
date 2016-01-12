@@ -27,7 +27,7 @@ class PinMatrixWidget(QWidget):
     '''
     def __init__(self, show_strength=True, parent=None):
         super(PinMatrixWidget, self).__init__(parent)
-        
+
         self.password = QLineEdit()
         self.password.setValidator(QRegExpValidator(QRegExp('[1-9]+'), None))
         self.password.setEchoMode(QLineEdit.Password)

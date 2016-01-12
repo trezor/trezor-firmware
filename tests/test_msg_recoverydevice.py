@@ -51,7 +51,7 @@ class TestDeviceRecovery(common.TrezorTest):
 
         self.assertTrue(self.client.features.pin_protection)
         self.assertTrue(self.client.features.passphrase_protection)
-        
+
         # Do passphrase-protected action, PassphraseRequest should be raised
         resp = self.client.call_raw(proto.Ping(passphrase_protection=True))
         self.assertIsInstance(resp, proto.PassphraseRequest)
@@ -106,7 +106,7 @@ class TestDeviceRecovery(common.TrezorTest):
         # Do PIN-protected action, PinRequest should NOT be raised
         resp = self.client.call_raw(proto.Ping(pin_protection=True))
         self.assertIsInstance(resp, proto.Success)
-    
+
     def test_word_fail(self):
         ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
                                    passphrase_protection=False,
