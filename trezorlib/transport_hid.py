@@ -6,7 +6,7 @@ import platform
 from transport import Transport, ConnectionError, NotImplementedException
 
 DEVICE_IDS = [
-    (0x10c4, 0xea80),  # Shield
+#    (0x10c4, 0xea80),  # Shield
     (0x534c, 0x0001),  # Trezor
 ]
 
@@ -27,32 +27,6 @@ class HidTransport(Transport):
         super(HidTransport, self).__init__(device, *args, **kwargs)
 
     @classmethod
-    def _detect_debuglink(cls, path):
-        # Takes platform-specific path of USB and
-        # decide if the HID interface is normal transport
-        # or debuglink
-        
-        if platform.system() == 'Linux':
-            # Sample: 0003:0017:00
-            if path.endswith(':00'):
-                return False
-            return True
-        
-        elif platform.system() == 'Windows':
-            # Sample: \\\\?\\hid#vid_534c&pid_0001&mi_01#7&1d71791f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}
-            # Note: 'mi' parameter is optional and might be unset
-            if '&mi_01#' in path:  # ,,,<o.O>,,,~
-                return True
-            return False
-
-        elif platform.system() == 'Darwin':
-            # DebugLink doesn't work on Mac
-            return False
-
-        else:
-            raise Exception("USB interface detection not implemented for %s" % platform.system())
-
-    @classmethod
     def enumerate(cls):
         """
         Return a list of available TREZOR devices.
@@ -62,6 +36,7 @@ class HidTransport(Transport):
             vendor_id = d['vendor_id']
             product_id = d['product_id']
             serial_number = d['serial_number']
+            interface_number = d['interface_number']
             path = d['path']
 
             # HIDAPI on Mac cannot detect correct HID interfaces, so device with
@@ -71,8 +46,13 @@ class HidTransport(Transport):
 
             if (vendor_id, product_id) in DEVICE_IDS:
                 devices.setdefault(serial_number, [None, None])
-                devices[serial_number][int(bool(cls._detect_debuglink(path)))] = path
-                
+                if interface_number == 0: # normal link
+                    devices[serial_number][0] = path
+                elif interface_number == 1: # normal link
+                    devices[serial_number][1] = path
+                else:
+                    raise Exception("Unknown USB interface number: %d" % interface_number)
+
         # List of two-tuples (path_normal, path_debuglink)
         return devices.values()
 
@@ -90,8 +70,9 @@ class HidTransport(Transport):
         self.hid = hid.device()
         self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)
-        self.hid.send_feature_report([0x41, 0x01]) # enable UART
-        self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
+        # the following was needed just for Trezor Shield
+        # self.hid.send_feature_report([0x41, 0x01]) # enable UART
+        # self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
     
     def _close(self):
         self.hid.close()
