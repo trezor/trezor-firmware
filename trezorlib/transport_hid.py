@@ -48,7 +48,7 @@ class HidTransport(Transport):
                 devices.setdefault(serial_number, [None, None])
                 if interface_number == 0: # normal link
                     devices[serial_number][0] = path
-                elif interface_number == 1: # normal link
+                elif interface_number == 1: # debug link
                     devices[serial_number][1] = path
                 else:
                     raise Exception("Unknown USB interface number: %d" % interface_number)
