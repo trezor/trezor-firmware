@@ -880,6 +880,11 @@ START_TEST(test_mnemonic)
 		ck_assert_str_eq(m, *b);
 		mnemonic_to_seed(m, "TREZOR", seed, 0);
 		ck_assert_mem_eq(seed, fromhex(*c), strlen(*c) / 2);
+#if USE_BIP39_CACHE
+		// try second time to check whether caching results work
+		mnemonic_to_seed(m, "TREZOR", seed, 0);
+		ck_assert_mem_eq(seed, fromhex(*c), strlen(*c) / 2);
+#endif
 		a += 3; b += 3; c += 3;
 	}
 }
