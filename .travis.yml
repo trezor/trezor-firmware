@@ -8,6 +8,12 @@ cache:
   directories:
     - $HOME/.cache/pip
 
+addons:
+    apt:
+        packages:
+            - libudev-dev
+            - libusb-1.0-0-dev
+
 python:
     - "2.6"
     - "2.7"
@@ -15,6 +21,9 @@ python:
     - "3.3"
     - "3.4"
     - "3.5"
+
+before_install:
+   - pip install setuptools --upgrade
 
 install:
     # Optimisation: build requirements as wheels, which get cached by Travis
