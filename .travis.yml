@@ -16,3 +16,6 @@ script:
   - ./tests
   - ./test-openssl 1000
   - ITERS=10 py.test
+  - mkdir _build && cd _build
+  - cmake ..
+  - make
