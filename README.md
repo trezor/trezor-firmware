@@ -1,3 +1,3 @@
-#TREZOR OS
+![TREZOR OS](assets/logo.png)
 
-WIP
+* [Documentation](docs/)
