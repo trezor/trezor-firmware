@@ -3,14 +3,14 @@
 Auxiliary classes used to tighten the type checking.
 
 ``` python
-class bytes16(bytes): pass # bytes variable of exactly 16 bytes
-class bytes20(bytes): pass # bytes variable of exactly 20 bytes
-class bytes21(bytes): pass # bytes variable of exactly 21 bytes
-class bytes24(bytes): pass # bytes variable of exactly 24 bytes
-class bytes32(bytes): pass # bytes variable of exactly 32 bytes
-class bytes33(bytes): pass # bytes variable of exactly 33 bytes
-class bytes64(bytes): pass # bytes variable of exactly 64 bytes
-class bytes65(bytes): pass # bytes variable of exactly 65 bytes
+bytes16 = bytes # bytes variable of exactly 16 bytes
+bytes20 = bytes # bytes variable of exactly 20 bytes
+bytes21 = bytes # bytes variable of exactly 21 bytes
+bytes24 = bytes # bytes variable of exactly 24 bytes
+bytes32 = bytes # bytes variable of exactly 32 bytes
+bytes33 = bytes # bytes variable of exactly 33 bytes
+bytes64 = bytes # bytes variable of exactly 64 bytes
+bytes65 = bytes # bytes variable of exactly 65 bytes
 ```
 
 Syntax used below is a valid Python function declaration with type hints defined in [PEP 0484](https://www.python.org/dev/peps/pep-0484/).
@@ -20,39 +20,39 @@ Syntax used below is a valid Python function declaration with type hints defined
 ###trezor.crypto.aes
 
 ``` python
-class aes_ctx(object): pass # AES context
+AES_CTX = object # AES context
 
-def aes_encrypt_key128(key: bytes16, iv: bytes16 = None) -> aes_ctx: # context
+def aes_encrypt_key128(key: bytes16, iv: bytes16 = None) -> AES_CTX: # context
 
-def aes_encrypt_key192(key: bytes24, iv: bytes16 = None) -> aes_ctx: # context
+def aes_encrypt_key192(key: bytes24, iv: bytes16 = None) -> AES_CTX: # context
 
-def aes_encrypt_key256(key: bytes32, iv: bytes16 = None) -> aes_ctx: # context
+def aes_encrypt_key256(key: bytes32, iv: bytes16 = None) -> AES_CTX: # context
 
-def aes_decrypt_key128(key: bytes16, iv: bytes16 = None) -> aes_ctx: # context
+def aes_decrypt_key128(key: bytes16, iv: bytes16 = None) -> AES_CTX: # context
 
-def aes_decrypt_key192(key: bytes24, iv: bytes16 = None) -> aes_ctx: # context
+def aes_decrypt_key192(key: bytes24, iv: bytes16 = None) -> AES_CTX: # context
 
-def aes_decrypt_key256(key: bytes32, iv: bytes16 = None) -> aes_ctx: # context
+def aes_decrypt_key256(key: bytes32, iv: bytes16 = None) -> AES_CTX: # context
 
-def aes_ecb_encrypt(ctx: aes_ctx, data: bytes) -> bytes: # encrypted
+def aes_ecb_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
 
-def aes_cbc_encrypt(ctx: aes_ctx, data: bytes) -> bytes: # encrypted
+def aes_cbc_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
 
-def aes_cfb_encrypt(ctx: aes_ctx, data: bytes) -> bytes: # encrypted
+def aes_cfb_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
 
-def aes_ofb_encrypt(ctx: aes_ctx, data: bytes) -> bytes: # encrypted
+def aes_ofb_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
 
-def aes_ctr_encrypt(ctx: aes_ctx, data: bytes) -> bytes: # encrypted
+def aes_ctr_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
 
-def aes_ecb_decrypt(ctx: aes_ctx, data: bytes) -> bytes: # decrypted
+def aes_ecb_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
 
-def aes_cbc_decrypt(ctx: aes_ctx, data: bytes) -> bytes: # decrypted
+def aes_cbc_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
 
-def aes_cfb_decrypt(ctx: aes_ctx, data: bytes) -> bytes: # decrypted
+def aes_cfb_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
 
-def aes_ofb_decrypt(ctx: aes_ctx, data: bytes) -> bytes: # decrypted
+def aes_ofb_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
 
-def aes_ctr_decrypt(ctx: aes_ctx, data: bytes) -> bytes: # decrypted
+def aes_ctr_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
 ```
 
 ###trezor.crypto.base58
