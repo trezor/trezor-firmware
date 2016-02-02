@@ -13,7 +13,7 @@ class bytes64(bytes): pass # bytes variable of exactly 64 bytes
 class bytes65(bytes): pass # bytes variable of exactly 65 bytes
 ```
 
-Syntax used below is a valid Python function declaration with anotations defined in [PEP 3107](https://www.python.org/dev/peps/pep-3107/).
+Syntax used below is a valid Python function declaration with type hints defined in [PEP 0484](https://www.python.org/dev/peps/pep-0484/).
 
 ##trezor.crypto
 
