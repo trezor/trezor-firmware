@@ -128,7 +128,7 @@ int main(void)
 		oledDrawBitmap(40, 0, &bmp_logo64_empty);
 		oledRefresh();
 
-		if (!signatures_ok()) {
+		if (!signatures_ok(NULL)) {
 			show_unofficial_warning();
 		}
 

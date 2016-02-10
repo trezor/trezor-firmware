@@ -444,7 +444,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		layoutProgress("INSTALLING ... Please wait", 1000);
 		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
 		// check if to restore old storage area but only if signatures are ok
-		if ((flags & 0x01) && signatures_ok()) {
+		if ((flags & 0x01) && signatures_ok(NULL)) {
 			// copy new stuff
 			memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_DESC_LEN);
 			// replace "TRZR" in header with 0000 when hash not confirmed
