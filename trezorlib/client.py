@@ -105,6 +105,9 @@ class BaseClient(object):
         self.transport = transport
         super(BaseClient, self).__init__()  # *args, **kwargs)
 
+    def cancel(self):
+        self.transport.write(proto.Cancel())
+
     def call_raw(self, msg):
         try:
             self.transport.session_begin()

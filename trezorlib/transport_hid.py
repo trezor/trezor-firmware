@@ -6,8 +6,8 @@ import platform
 from transport import Transport, ConnectionError, NotImplementedException
 
 DEVICE_IDS = [
-#    (0x10c4, 0xea80),  # Shield
-    (0x534c, 0x0001),  # Trezor
+#    (0x10c4, 0xea80),  # TREZOR Shield
+    (0x534c, 0x0001),  # TREZOR
     (0x2b24, 0x0001),  # KeepKey
 ]
 
@@ -15,7 +15,7 @@ class FakeRead(object):
     # Let's pretend we have a file-like interface
     def __init__(self, func):
         self.func = func
-        
+
     def read(self, size):
         return self.func(size)
 
@@ -65,35 +65,35 @@ class HidTransport(Transport):
             if d['path'] == self.device:
                 return True
         return False
-        
+
     def _open(self):
         self.buffer = ''
         self.hid = hid.device()
         self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)
-        # the following was needed just for Trezor Shield
+        # the following was needed just for TREZOR Shield
         # self.hid.send_feature_report([0x41, 0x01]) # enable UART
         # self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
-    
+
     def _close(self):
         self.hid.close()
         self.buffer = ''
         self.hid = None
-    
+
     def ready_to_read(self):
         return False
-    
+
     def _write(self, msg, protobuf_msg):
         msg = bytearray(msg)
-        while len(msg):            
+        while len(msg):
             # Report ID, data padded to 63 bytes
             self.hid.write([63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
             msg = msg[63:]
-            
+
     def _read(self):
         (msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
         return (msg_type, self._raw_read(datalen))
-                    
+
     def _raw_read(self, length):
         start = time.time()
         while len(self.buffer) < length:
@@ -112,11 +112,11 @@ class HidTransport(Transport):
                 continue
 
             report_id = data[0]
-            
+
             if report_id > 63:
                 # Command report
                 raise Exception("Not implemented")
-                                     
+
             # Payload received, skip the report ID
             self.buffer += str(bytearray(data[1:]))
 

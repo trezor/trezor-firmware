@@ -10,7 +10,7 @@ import tempfile
 from trezorlib.client import TrezorClient, TrezorClientDebug
 
 def parse_args(commands):
-    parser = argparse.ArgumentParser(description='Commandline tool for Trezor devices.')
+    parser = argparse.ArgumentParser(description='Commandline tool for TREZOR devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
     parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket', 'bridge'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
@@ -46,7 +46,7 @@ def get_transport(transport_string, path, **kwargs):
             try:
                 path = list_usb()[0][0]
             except IndexError:
-                raise Exception("No Trezor found on USB")
+                raise Exception("No TREZOR found on USB")
 
         for d in HidTransport.enumerate():
             # Two-tuple of (normal_interface, debug_interface)
@@ -237,14 +237,14 @@ class Commands(object):
 
         fp.seek(0)
         if fp.read(4) != 'TRZR':
-            raise Exception("Trezor firmware header expected")
+            raise Exception("TREZOR firmware header expected")
 
         print "Please confirm action on device..."
 
         fp.seek(0)
         return self.client.firmware_update(fp=fp)
 
-    list.help = 'List connected Trezor USB devices'
+    list.help = 'List connected TREZOR USB devices'
     ping.help = 'Send ping message'
     get_address.help = 'Get bitcoin address in base58 encoding'
     get_entropy.help = 'Get example entropy'

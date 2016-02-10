@@ -12,26 +12,26 @@ class SocketTransportClient(Transport):
         else:
             device = (device[0], int(device[1]))
 
-        self.socket = None        
+        self.socket = None
         super(SocketTransportClient, self).__init__(device, *args, **kwargs)
-    
+
     def _open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.device)
         self.filelike = self.socket.makefile()
-        
+
     def _close(self):
         self.socket.close()
         self.socket = None
         self.filelike = None
-    
+
     def ready_to_read(self):
         rlist, _, _ = select([self.socket], [], [], 0)
-        return len(rlist) > 0        
-    
+        return len(rlist) > 0
+
     def _write(self, msg, protobuf_msg):
         self.socket.sendall(msg)
-        
+
     def _read(self):
         try:
             (msg_type, datalen) = self._read_headers(self.filelike)
@@ -53,27 +53,27 @@ class SocketTransport(Transport):
         self.filelike = None
 
         super(SocketTransport, self).__init__(device, *args, **kwargs)
-        
+
     def _open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         #self.socket.setblocking(0)
-        
+
         self.socket.bind(self.device)
         self.socket.listen(5)
-        
+
     def _disconnect_client(self):
         print "Disconnecting client"
         if self.client != None:
             self.client.close()
             self.client = None
             self.filelike = None
-    
+
     def _close(self):
         self._disconnect_client()
         self.socket.close()
         self.socket = None
-        
+
     def ready_to_read(self):
         if self.filelike:
             # Connected
@@ -88,18 +88,18 @@ class SocketTransport(Transport):
                 self.filelike = self.client.makefile()
                 return self.ready_to_read()
             return False
-        
+
     def _write(self, msg, protobuf_msg):
         if self.filelike:
             # None on disconnected client
-            
+
             try:
                 self.filelike.write(msg)
                 self.filelike.flush()
             except socket.error:
                 print "Socket error"
                 self._disconnect_client()
-                
+
     def _read(self):
         try:
             (msg_type, datalen) = self._read_headers(self.filelike)

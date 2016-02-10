@@ -50,7 +50,7 @@ class BridgeTransport(Transport):
 
         enum = r.json()
 
-        return enum;
+        return enum
 
 
     def _open(self):

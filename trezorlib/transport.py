@@ -12,31 +12,31 @@ class Transport(object):
         self.device = device
         self.session_depth = 0
         self._open()
-    
+
     def _open(self):
         raise NotImplementedException("Not implemented")
-    
+
     def _close(self):
         raise NotImplementedException("Not implemented")
-    
+
     def _write(self, msg, protobuf_msg):
         raise NotImplementedException("Not implemented")
-    
+
     def _read(self):
         raise NotImplementedException("Not implemented")
-    
+
     def _session_begin(self):
         pass
-    
+
     def _session_end(self):
         pass
-    
+
     def ready_to_read(self):
         """
         Returns True if there is data to be read from the transport.  Otherwise, False.
         """
         raise NotImplementedException("Not implemented")
-    
+
     def session_begin(self):
         """
         Apply a lock to the device in order to preform synchronous multistep "conversations" with the device.  For example, before entering the transaction signing workflow, one begins a session.  After the transaction is complete, the session may be ended.
@@ -44,7 +44,7 @@ class Transport(object):
         if self.session_depth == 0:
             self._session_begin()
         self.session_depth += 1
-    
+
     def session_end(self):
         """
         End a session.  Se session_begin for an in depth description of TREZOR sessions.
@@ -53,13 +53,13 @@ class Transport(object):
         self.session_depth = max(0, self.session_depth)
         if self.session_depth == 0:
             self._session_end()
-        
+
     def close(self):
         """
         Close the connection to the physical device or file descriptor represented by the Transport.
         """
         self._close()
-        
+
     def write(self, msg):
         """
         Write mesage to tansport.  msg should be a member of a valid `protobuf class <https://developers.google.com/protocol-buffers/docs/pythontutorial>`_ with a SerializeToString() method.
@@ -79,9 +79,9 @@ class Transport(object):
         data = self._read()
         if data == None:
             return None
-        
+
         return self._parse_message(data)
-        
+
     def read_blocking(self):
         """
         Same as read, except blocks untill data is available to be read.
@@ -90,7 +90,7 @@ class Transport(object):
             data = self._read()
             if data != None:
                 break
-        
+
         return self._parse_message(data)
 
     def _parse_message(self, data):
@@ -101,7 +101,7 @@ class Transport(object):
             inst = mapping.get_class(msg_type)()
             inst.ParseFromString(data)
             return inst
-    
+
     def _read_headers(self, read_f):
         # Try to read headers until some sane value are detected
         is_ok = False
@@ -129,5 +129,5 @@ class Transport(object):
                 break
             except:
                 raise Exception("Cannot parse header length")
-       
+
         return (msg_type, datalen)
