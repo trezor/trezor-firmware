@@ -365,7 +365,8 @@ class ProtocolMixin(object):
         # Convert minus signs to uint32 with flag
         return [ int(abs(x) | self.PRIME_DERIVATION_FLAG) if x < 0 else x for x in n ]
 
-    def expand_path(self, n):
+    @staticmethod
+    def expand_path(n):
         # Convert string of bip32 path to list of uint32 integers with prime flags
         # 0/-1/1' -> [0, 0x80000001, 0x80000001]
         if not n:
@@ -384,7 +385,7 @@ class ProtocolMixin(object):
             x = abs(int(x))
 
             if prime:
-                x |= self.PRIME_DERIVATION_FLAG
+                x |= ProtocolMixin.PRIME_DERIVATION_FLAG
 
             path.append(x)
 
