@@ -129,6 +129,14 @@ def sign(message: bytes, secret_key: bytes32, public_key: bytes33 = None) -> byt
 def verify(message: bytes, public_key: bytes33, signature: bytes65) -> bool: # valid
 ```
 
+###trezor.crypto.reedsolomon
+
+``` python
+def encode(data: bytes) -> bytes: # encoded
+
+def decode(data: bytes) -> bytes: # decoded
+```
+
 ###trezor.crypto.secp256k1
 
 ``` python
