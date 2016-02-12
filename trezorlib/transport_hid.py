@@ -8,7 +8,6 @@ from transport import Transport, ConnectionError, NotImplementedException
 DEVICE_IDS = [
 #    (0x10c4, 0xea80),  # TREZOR Shield
     (0x534c, 0x0001),  # TREZOR
-    (0x2b24, 0x0001),  # KeepKey
 ]
 
 class FakeRead(object):
