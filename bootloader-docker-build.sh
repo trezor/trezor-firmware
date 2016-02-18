@@ -10,12 +10,12 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	git submodule update --init && \
 	make -C vendor/libopencm3 && \
 	make && \
-	make -C firmware && \
-	cp firmware/trezor.bin /output/trezor-$FIRMWARETAG.bin"
+	make -C bootloader && \
+	cp bootloader/bootloader.bin /output/bootloader-$FIRMWARETAG.bin"
 
 echo "---------------------"
-echo "Firmware fingerprint:"
-FILENAME=output/trezor-$FIRMWARETAG.bin
+echo "Bootloader fingerprint:"
+FILENAME=output/bootloader-$FIRMWARETAG.bin
 sha256sum "$FILENAME"
 FILESIZE=$(stat -c%s "$FILENAME")
-echo "Firmware size: $FILESIZE bytes (out of 491520 maximum)"
+echo "Bootloader size: $FILESIZE bytes (out of 32768 maximum)"
