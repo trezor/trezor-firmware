@@ -9,6 +9,7 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	git checkout $FIRMWARETAG && \
 	git submodule update --init && \
 	make -C vendor/libopencm3 && \
+	export OPTFLAGS=-Os
 	make && \
 	make -C bootloader && \
 	cp bootloader/bootloader.bin /output/bootloader-$FIRMWARETAG.bin"
