@@ -10,7 +10,9 @@
 		"https://coinprism\\.com(/.*)?",
 		"https://[\\w\\.-]+\\.coinprism\\.com(/.*)?",
 		"https://bitex\\.la(/.*)?",
-		"https://[\\w\\.-]+\\.bitex\\.la(/.*)?"
+		"https://[\\w\\.-]+\\.bitex\\.la(/.*)?",
+		"https://quorumwallet\\.com(/.*)?",
+		"https://[\\w\\.-]+\\.quorumwallet\\.com(/.*)?"
 		],
 	"blacklist_urls": [
 	],
