@@ -64,6 +64,11 @@ enum MessageType {
 	MessageType_SignIdentity = 53 [(wire_in) = true];
 	MessageType_SignedIdentity = 54 [(wire_out) = true];
 	MessageType_GetFeatures = 55 [(wire_in) = true];
+	MessageType_EthereumGetAddress = 56 [(wire_in) = true];
+	MessageType_EthereumAddress = 57 [(wire_out) = true];
+	MessageType_EthereumSignTx = 58 [(wire_in) = true];
+	MessageType_EthereumTxRequest = 59 [(wire_out) = true];
+	MessageType_EthereumTxAck = 60 [(wire_in) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -282,11 +287,30 @@ message GetAddress {
 }
 
 /**
+ * Request: Ask device for Ethereum address corresponding to address_n path
+ * @next PassphraseRequest
+ * @next EthereumAddress
+ * @next Failure
+ */
+message EthereumGetAddress {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional bool show_display = 2;			// optionally show on display before sending the result
+}
+
+/**
  * Response: Contains address derived from device private seed
  * @prev GetAddress
  */
 message Address {
 	required string address = 1;		// Coin address in Base58 encoding
+}
+
+/**
+ * Response: Contains an Ethereum address derived from device private seed
+ * @prev EthereumGetAddress
+ */
+message EthereumAddress {
+	required bytes address = 1;		// Coin address as an Ethereum 160 bit hash
 }
 
 /**
@@ -563,6 +587,47 @@ message TxRequest {
  */
 message TxAck {
 	optional TransactionType tx = 1;
+}
+
+/**
+ * Request: Ask device to sign transaction
+ * All fields are optional from the protocol's point of view. Each field defaults to value `0` if missing.
+ * @next PassphraseRequest
+ * @next PinMatrixRequest
+ * @next EthereumTxRequest
+ * @next Failure
+ */
+message EthereumSignTx {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional bytes nonce = 2;			// 256 bit unsigned big endian
+	optional bytes gas_price = 3;			// 256 bit unsigned big endian (in wei)
+	optional bytes gas_limit = 4;			// 256 bit unsigned big endian
+	optional bytes to = 5;				// 160 bit address hash
+	optional bytes value = 6;			// 256 bit unsigned big endian (in wei)
+	optional uint32 data_length = 7;		// Length of transaction payload
+}
+
+/**
+ * Response: Device asks for more data from transaction payload, or returns the signature.
+ * If data_length is set, device awaits that many more bytes of payload.
+ * Otherwise, the signature_* fields contain the computed transaction signature.
+ * @prev EthereumSignTx
+ * @next EthereumTxAck
+ */
+message EthereumTxRequest {
+	optional uint32 data_length = 1;		// Number of bytes being requested
+	optional uint32 signature_v = 2;		// Computed signature (recovery parameter, limited to 27 or 28)
+	optional bytes signature_r = 3;			// Computed signature
+	optional bytes signature_s = 4;			// Computed signature
+}
+
+/**
+ * Request: Transaction payload data.
+ * @prev EthereumTxRequest
+ * @next EthereumTxRequest
+ */
+message EthereumTxAck {
+	optional bytes data_chunk = 1;			// Bytes from transaction payload
 }
 
 ///////////////////////
