@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+from PIL import Image
+import sys
+import struct
+import zlib
+
+if len(sys.argv) < 2:
+    print('Usage png2toi image.png')
+    sys.exit(1)
+
+ifn = sys.argv[1]
+
+if not ifn.endswith('.png'):
+    print('Must provide PNG file')
+    sys.exit(2)
+
+im = Image.open(ifn)
+w, h = im.size
+print('Opened  %s ... %d x %d @ %s' % (ifn, w, h, im.mode))
+
+if not im.mode == 'RGB':
+    print('PNG file must use RGB mode')
+    sys.exit(3)
+
+pix = im.load()
+
+ofn = '%s.toi' % ifn[:-4]
+with open(ofn, 'wb') as f:
+    f.write(bytes('TOIa', 'ascii'))
+    f.write(struct.pack('>HH', w, h))
+    data = bytes()
+    for j in range(h):
+        for i in range(w):
+            r, g, b = pix[i, j]
+            c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+            data += struct.pack('>H', c)
+    z = zlib.compressobj(level=9, wbits=10)
+    zdata = z.compress(data) + z.flush()
+    zdata = zdata[2:-4] # strip header and checksum
+    f.write(zdata)
+
+print('Written %s ... %d bytes' % (ofn, 4 + 4 + len(zdata)))

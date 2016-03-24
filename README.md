@@ -1,3 +1,3 @@
-![TREZOR OS](assets/logo.png)
+![TREZOR OS](docs/logo.png)
 
 * [Documentation](docs/)
