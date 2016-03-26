@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+import freetype
+
+MIN_GLYPH = 33
+MAX_GLYPH = 126
+
+def process_face(name, style, size):
+    face = freetype.Face('/usr/share/fonts/truetype/%s-%s.ttf' % (name, style))
+    face.set_pixel_sizes(0, size)
+    with open('%s-%s-%s.c' % (name, style, size), 'wt') as f:
+        f.write('#include <stdint.h>\n\n')
+        f.write('#define MIN_GLYPH %d\n' % MIN_GLYPH)
+        f.write('#define MAX_GLYPH %d\n\n' % MAX_GLYPH)
+        f.write('// first two bytes are width and height of the glyph\n')
+        f.write('// third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n')
+        f.write('// rest is packed 4-bit glyph data\n\n')
+        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
+            c = chr(i)
+            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
+            bitmap = face.glyph.bitmap
+            metrics = face.glyph.metrics
+            assert(metrics.width // 64 == bitmap.width)
+            assert(metrics.height // 64 == bitmap.rows)
+            assert(metrics.horiAdvance % 64 == 0)
+            assert(metrics.horiBearingX % 64 == 0)
+            assert(metrics.horiBearingY % 64 == 0)
+            print('Loaded glyph "%c" ... %d x %d @ %d grays' % (c, bitmap.width, bitmap.rows, bitmap.num_grays))
+            f.write('/* %c */ static const uint8_t glyph_%d[] = { %d, %d, %d, %d, %d, ' % (c, i, bitmap.width, bitmap.rows, metrics.horiAdvance // 64, metrics.horiBearingX // 64, metrics.horiBearingY // 64))
+            buf = list(bitmap.buffer)
+            if len(buf) % 2 > 0:
+                buf.append(0)
+            buf = [ ( (a & 0xF0) | (b >> 4) ) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)] ]
+            f.write(', '.join(['%d' % x for x in buf]))
+            f.write(' };\n')
+        f.write('\nconst uint8_t * const Font_%s_%s_%s[MAX_GLYPH + 1 - MIN_GLYPH] = {\n' % (name, style, size))
+        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
+            f.write('    glyph_%d,\n' % i)
+        f.write('};\n')
+
+process_face('Roboto', 'Regular', 18)
