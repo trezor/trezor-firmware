@@ -24,16 +24,17 @@ def process_face(name, style, size):
             assert(bitmap.width == bitmap.pitch)
             assert(len(bitmap.buffer) == bitmap.pitch * bitmap.rows)
             print('Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes)' % (c, bitmap.width, bitmap.rows, bitmap.num_grays, len(bitmap.buffer)))
-            f.write('/* %c */ static const uint8_t glyph_%d[] = { %d, %d, %d, %d, %d, ' % (c, i, bitmap.width, bitmap.rows, metrics.horiAdvance // 64, metrics.horiBearingX // 64, metrics.horiBearingY // 64))
+            f.write('/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d' % (c, name, style, size, i, bitmap.width, bitmap.rows, metrics.horiAdvance // 64, metrics.horiBearingX // 64, metrics.horiBearingY // 64))
             buf = list(bitmap.buffer)
-            if len(buf) % 2 > 0:
-                buf.append(0)
-            buf = [ ( (a & 0xF0) | (b >> 4) ) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)] ]
-            f.write(', '.join(['%d' % x for x in buf]))
+            if len(buf) > 0:
+                if len(buf) % 2 > 0:
+                    buf.append(0)
+                buf = [ ( (a & 0xF0) | (b >> 4) ) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)] ]
+                f.write(', ' + ', '.join(['%d' % x for x in buf]))
             f.write(' };\n')
-        f.write('\nconst uint8_t * const Font_%s_%s_%s[%d + 1 - %d] = {\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))
+        f.write('\nconst uint8_t * const Font_%s_%s_%d[%d + 1 - %d] = {\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            f.write('    glyph_%d,\n' % i)
+            f.write('    Font_%s_%s_%d_glyph_%d,\n' % (name, style, size, i))
         f.write('};\n')
 
 process_face('Roboto', 'Regular', 18)

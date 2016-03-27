@@ -29,7 +29,8 @@
 #define SINF_WRITE DATA
 
 #include "modTrezorUi-inflate.h"
-#include "modTrezorUi-font_roboto.h"
+#include "modTrezorUi-font_Roboto.h"
+#include "modTrezorUi-font_RobotoMono.h"
 
 // common functions
 
@@ -66,7 +67,7 @@ static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
-static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint16_t fgcolor, uint16_t bgcolor) {
+static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor) {
     int i, j, xx = x;
     const uint8_t *g;
     uint8_t c, cr, cg, cb;
@@ -81,15 +82,25 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint1
     // render glyphs
     for (i = 0; i < textlen; i++) {
         if (text[i] >= ' ' && text[i] <= '~') {
-            g = Font_Roboto_Regular_18[text[i] - ' '];
+            c = text[i];
         } else
         // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
         if (text[i] >= 0xC0) {
             // bytes 11xxxxxx are first byte of UTF-8 characters
-            g = Font_Roboto_Regular_18['_' - ' '];
+            c = '_';
         } else {
             // bytes 10xxxxxx are successive UTF-8 characters
             continue;
+        }
+        switch (font) {
+            case 0:
+                g = Font_Roboto_Regular_18[c - ' '];
+                break;
+            case 1:
+                g = Font_RobotoMono_Regular_18[c - ' '];
+                break;
+            default:
+                return; // unknown font -> abort
         }
         // g[0], g[1] = width, height
         // g[2]       = advance
@@ -177,18 +188,19 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
 
-// def Display.text(self, x: int, y: int, text: bytes, fgcolor: int, bgcolor: int) -> None:
+// def Display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
 STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
-    mp_int_t fgcolor = mp_obj_get_int(args[4]);
-    mp_int_t bgcolor = mp_obj_get_int(args[5]);
-    display_text(x, y, bufinfo.buf, bufinfo.len, fgcolor, bgcolor);
+    mp_int_t font = mp_obj_get_int(args[4]);
+    mp_int_t fgcolor = mp_obj_get_int(args[5]);
+    mp_int_t bgcolor = mp_obj_get_int(args[6]);
+    display_text(x, y, bufinfo.buf, bufinfo.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 6, 6, mod_TrezorUi_Display_text);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
 STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
