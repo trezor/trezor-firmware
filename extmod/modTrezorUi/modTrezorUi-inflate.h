@@ -36,10 +36,6 @@
 
 #include <stdint.h>
 
-#ifndef SINF_WRITE
-#error Must define SINF_WRITE(byte) macro
-#endif
-
 // maximum possible window size (in bits) used during compression/deflate
 #define SINF_WBITS     10
 
@@ -59,6 +55,7 @@ typedef struct {
    int cbufi;
    SINF_TREE ltree; /* dynamic length/symbol tree */
    SINF_TREE dtree; /* dynamic distance tree */
+   void (* write)(uint8_t byte);
 } SINF_DATA;
 
 /* --------------------------------------------------- *
@@ -106,7 +103,7 @@ static void sinf_write(SINF_DATA *d, uint8_t byte)
 {
     d->cbuf[d->cbufi] = byte;
     d->cbufi = (d->cbufi + 1) % (1 << SINF_WBITS);
-    SINF_WRITE(byte);
+    d->write(byte);
 }
 
 /* build the fixed huffman trees */
@@ -394,7 +391,7 @@ static int sinf_inflate_dynamic_block(SINF_DATA *d)
  * ---------------------- */
 
 /* inflate stream from source */
-static int sinf_inflate(uint8_t *data)
+static int sinf_inflate(uint8_t *data, void (*write_callback)(uint8_t byte))
 {
    SINF_DATA d;
    int bfinal;
@@ -403,6 +400,7 @@ static int sinf_inflate(uint8_t *data)
    d.bitcount = 0;
    d.cbufi = 0;
    d.source = data;
+   d.write = write_callback;
 
    do {
 

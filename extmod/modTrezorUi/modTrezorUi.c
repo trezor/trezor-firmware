@@ -60,7 +60,7 @@ static void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data,
 
 static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen) {
     display_set_window(x, y, w, h);
-    sinf_inflate(data);
+    sinf_inflate(data, DATAfunc);
     display_update();
 }
 

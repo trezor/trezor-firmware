@@ -14,7 +14,9 @@ static SDL_Texture  *TEXTURE  = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
 
-static void DATA(uint8_t x) {
+#define DATA(X) DATAfunc((X))
+
+static void DATAfunc(uint8_t x) {
     if (!SDL_inited) return;
     if (POSX <= EX && POSY <= EY) {
         ((uint8_t *)SCREEN->pixels)[POSX * 2 + POSY * SCREEN->pitch + (DATAODD ^ 1)] = x;
