@@ -64,21 +64,43 @@ static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data
     display_update();
 }
 
+static uint16_t COLORTABLE[16];
+
+static void set_color_table(uint16_t fgcolor, uint16_t bgcolor)
+{
+    int i;
+    uint8_t cr, cg, cb;
+    for (i = 0; i < 16; i++) {
+        cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
+        cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
+        cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
+        COLORTABLE[i] = (cr << 11) | (cg << 5) | cb;
+    }
+}
+
+static void DATAiconmap(uint8_t byte)
+{
+    DATA(COLORTABLE[byte >> 4] >> 8);
+    DATA(COLORTABLE[byte >> 4] & 0xFF);
+    DATA(COLORTABLE[byte & 0x0F] >> 8);
+    DATA(COLORTABLE[byte & 0x0F] & 0xFF);
+}
+
+static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor) {
+    display_set_window(x, y, w, h);
+    set_color_table(fgcolor, bgcolor);
+    sinf_inflate(data, DATAiconmap);
+    display_update();
+}
+
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
 static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor) {
     int i, j, xx = x;
     const uint8_t *g;
-    uint8_t c, cr, cg, cb;
-    uint16_t ct[16];
-    // precompute color table
-    for (i = 0; i < 16; i++) {
-        cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
-        cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
-        cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
-        ct[i] = (cr << 11) | (cg << 5) | cb;
-    }
+    uint8_t c;
+    set_color_table(fgcolor, bgcolor);
     // render glyphs
     for (i = 0; i < textlen; i++) {
         if (text[i] >= ' ' && text[i] <= '~') {
@@ -113,8 +135,8 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
                 } else {
                     c = g[5 + j/2] & 0x0F;
                 }
-                DATA(ct[c] >> 8);
-                DATA(ct[c] & 0xFF);
+                DATA(COLORTABLE[c] >> 8);
+                DATA(COLORTABLE[c] & 0xFF);
             }
             display_update();
         }
@@ -188,6 +210,28 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
 
+// def Display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
+STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_buffer_info_t bufinfo;
+    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    uint8_t *data = bufinfo.buf;
+    if (bufinfo.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
+    }
+    mp_int_t w = (data[4] << 8) | data[5];
+    mp_int_t h = (data[6] << 8) | data[7];
+    if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
+    }
+    mp_int_t fgcolor = mp_obj_get_int(args[4]);
+    mp_int_t bgcolor = mp_obj_get_int(args[5]);
+    display_icon(x, y, w, h, data + 8, bufinfo.len - 8, fgcolor, bgcolor);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
+
 // def Display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
 STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
@@ -206,6 +250,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
     { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&mod_TrezorUi_Display_blit_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
+    { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorUi_Display_locals_dict, mod_TrezorUi_Display_locals_dict_table);
