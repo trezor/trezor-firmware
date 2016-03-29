@@ -38,7 +38,7 @@ static void display_init(void)
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
     }
-    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, RESX, RESY, SDL_WINDOW_SHOWN);
+    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, RESX + 16, RESY + 16, SDL_WINDOW_SHOWN);
     if (!win) {
         printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
         SDL_Quit();
@@ -68,7 +68,8 @@ static void display_update(void)
     if (!SDL_inited) return;
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
-    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, NULL, ROTATION, NULL, 0);
+    const SDL_Rect r = {8, 8, RESX, RESY};
+    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ROTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
 }
 
