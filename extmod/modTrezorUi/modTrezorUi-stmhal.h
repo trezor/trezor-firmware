@@ -95,21 +95,31 @@ static void display_unsleep(void) {
     CMD(0x29); // display
 }
 
+static uint8_t WINDOW_OFFSET_X = 0, WINDOW_OFFSET_Y = 0;
+
 static void display_orientation(uint16_t degrees)
 {
     // memory access control
     switch (degrees) {
         case 0:
-            CMD(0x36); DATA(0x08);
+            CMD(0x36); DATA(0x08 | (1<<6) | (1<<7));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 80;
             break;
         case 90:
-            CMD(0x36); DATA(0x08);
+            CMD(0x36); DATA(0x08 | (1<<5) | (1<<6));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 0;
             break;
         case 180:
             CMD(0x36); DATA(0x08);
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 0;
             break;
         case 270:
-            CMD(0x36); DATA(0x08);
+            CMD(0x36); DATA(0x08 | (1<<5) | (1<<7));
+            WINDOW_OFFSET_X = 80;
+            WINDOW_OFFSET_Y = 0;
             break;
     }
 }
@@ -142,11 +152,21 @@ static void display_init(void) {
     display_unsleep();
 }
 
-static void display_set_window(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-    CMD(0x2A); DATA(0); DATA(x); DATA(0); DATA(x + w - 1); // column addr set
-    CMD(0x2B); DATA(0); DATA(y); DATA(0); DATA(y + h - 1); // row addr set
+static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    x += WINDOW_OFFSET_X;
+    y += WINDOW_OFFSET_Y;
+    uint16_t x1 = x + w - 1;
+    uint16_t y1 = y + h - 1;
+    CMD(0x2A); DATA(x >> 8); DATA(x & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
+    CMD(0x2B); DATA(y >> 8); DATA(y & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
     CMD(0x2C);
 }
 
 static void display_update(void) {
+}
+
+static void display_rawcmd(uint8_t reg, uint8_t *data, int datalen)
+{
+    CMD(reg);
+    DATAS(data, datalen);
 }

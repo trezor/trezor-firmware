@@ -26,8 +26,6 @@
 #error Unsupported port. Only STMHAL and UNIX ports are supported.
 #endif
 
-#define SINF_WRITE DATA
-
 #include "modTrezorUi-inflate.h"
 #include "modTrezorUi-font_Roboto.h"
 #include "modTrezorUi-font_RobotoMono.h"
@@ -257,6 +255,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_TrezorUi_Display_orientation);
 
+// def Display.rawcmd(self, reg: int, data: bytes) -> None:
+STATIC mp_obj_t mod_TrezorUi_Display_rawcmd(mp_obj_t self, mp_obj_t reg, mp_obj_t data) {
+    mp_int_t r = mp_obj_get_int(reg);
+    mp_buffer_info_t bufinfo;
+    mp_get_buffer_raise(data, &bufinfo, MP_BUFFER_READ);
+    display_rawcmd(r, bufinfo.buf, bufinfo.len);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_rawcmd_obj, mod_TrezorUi_Display_rawcmd);
+
 STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
     { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&mod_TrezorUi_Display_blit_obj) },
@@ -264,6 +272,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
+    { MP_ROM_QSTR(MP_QSTR_rawcmd), MP_ROM_PTR(&mod_TrezorUi_Display_rawcmd_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorUi_Display_locals_dict, mod_TrezorUi_Display_locals_dict_table);
 

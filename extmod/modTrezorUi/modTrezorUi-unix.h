@@ -55,7 +55,7 @@ static void display_init(void)
     SDL_inited = 1;
 }
 
-static void display_set_window(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (!SDL_inited) return;
     SX = x; SY = y;
     EX = x + w - 1; EY = y + h - 1;
@@ -76,4 +76,8 @@ static void display_orientation(int degrees)
 {
     ROTATION = degrees;
     display_update();
+}
+
+static void display_rawcmd(uint8_t reg, uint8_t *data, int datalen)
+{
 }
