@@ -11,11 +11,14 @@ static int SDL_inited = 0;
 static SDL_Renderer *RENDERER = 0;
 static SDL_Surface  *SCREEN   = 0;
 static SDL_Texture  *TEXTURE  = 0;
+static SDL_Thread   *THREAD   = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
 static int ROTATION = 0;
 
 #define DATA(X) DATAfunc((X))
+
+#define DISPLAY_BORDER 8
 
 static void DATAfunc(uint8_t x) {
     if (!SDL_inited) return;
@@ -32,13 +35,33 @@ static void DATAfunc(uint8_t x) {
     }
 }
 
+static int HandleEvents(void *ptr)
+{
+    SDL_Event event;
+    int x, y;
+    bool down;
+    while (SDL_WaitEvent(&event) >= 0) {
+        switch (event.type) {
+            case SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEBUTTONDOWN:
+                x = event.button.x - DISPLAY_BORDER;
+                y = event.button.y - DISPLAY_BORDER;
+                if (x < 0 || y < 0 || x >= RESX || y >= RESY) continue;
+                down = (event.type == SDL_MOUSEBUTTONDOWN);
+                printf("CLICK %s: %d %d\n", down ? "DOWN" : "UP", x, y);
+                break;
+        }
+    }
+    return 0;
+}
+
 static void display_init(void)
 {
     if (SDL_inited) return;
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
     }
-    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, RESX + 16, RESY + 16, SDL_WINDOW_SHOWN);
+    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, RESX + 2 * DISPLAY_BORDER, RESY + 2 * DISPLAY_BORDER, SDL_WINDOW_SHOWN);
     if (!win) {
         printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
         SDL_Quit();
@@ -52,6 +75,7 @@ static void display_init(void)
     SDL_RenderClear(RENDERER);
     SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
+    THREAD = SDL_CreateThread(HandleEvents, "EventThread", NULL);
     SDL_inited = 1;
 }
 
@@ -68,7 +92,7 @@ static void display_update(void)
     if (!SDL_inited) return;
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
-    const SDL_Rect r = {8, 8, RESX, RESY};
+    const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, RESX, RESY};
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ROTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
 }
