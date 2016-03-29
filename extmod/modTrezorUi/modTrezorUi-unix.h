@@ -13,6 +13,7 @@ static SDL_Surface  *SCREEN   = 0;
 static SDL_Texture  *TEXTURE  = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
+static int ROTATION = 0;
 
 #define DATA(X) DATAfunc((X))
 
@@ -65,7 +66,14 @@ static void display_set_window(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 static void display_update(void)
 {
     if (!SDL_inited) return;
+    SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
-    SDL_RenderCopy(RENDERER, TEXTURE, NULL, NULL);
+    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, NULL, ROTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
+}
+
+static void display_orientation(int degrees)
+{
+    ROTATION = degrees;
+    display_update();
 }

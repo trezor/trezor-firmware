@@ -95,6 +95,25 @@ static void display_unsleep(void) {
     CMD(0x29); // display
 }
 
+static void display_orientation(uint16_t degrees)
+{
+    // memory access control
+    switch (degrees) {
+        case 0:
+            CMD(0x36); DATA(0x08);
+            break;
+        case 90:
+            CMD(0x36); DATA(0x08);
+            break;
+        case 180:
+            CMD(0x36); DATA(0x08);
+            break;
+        case 270:
+            CMD(0x36); DATA(0x08);
+            break;
+    }
+}
+
 static void display_init(void) {
     sram_init();
     CMD(0x01); // software reset
@@ -110,7 +129,7 @@ static void display_init(void) {
     CMD(0xC1); DATA(0x12);                // power control   SAP[2:0] BT[3:0]
     CMD(0xC5); DATAS("\x60\x44", 2);      // vcm control 1
     CMD(0xC7); DATA(0x8A);                // vcm control 2
-    CMD(0x36); DATA(0x08);                // memory access control (RGB)
+    display_orientation(0);
     CMD(0x3A); DATA(0x55);                // memory access control (16-bit 565)
     CMD(0xB1); DATAS("\x00\x18", 2);      // framerate
     CMD(0xB6); DATAS("\x0A\xA2", 2);      // display function control
