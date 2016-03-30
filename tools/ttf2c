@@ -37,4 +37,4 @@ def process_face(name, style, size):
             f.write('    Font_%s_%s_%d_glyph_%d,\n' % (name, style, size, i))
         f.write('};\n')
 
-process_face('Roboto', 'Regular', 18)
+process_face('Roboto', 'Regular', 20)

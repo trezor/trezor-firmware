@@ -27,8 +27,9 @@
 #endif
 
 #include "modTrezorUi-inflate.h"
-#include "modTrezorUi-font_Roboto.h"
-#include "modTrezorUi-font_RobotoMono.h"
+#include "modTrezorUi-font_RobotoMono_Regular.h"
+#include "modTrezorUi-font_Roboto_Regular.h"
+#include "modTrezorUi-font_Roboto_Bold.h"
 
 // common functions
 
@@ -114,10 +115,13 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
         }
         switch (font) {
             case 0:
-                g = Font_Roboto_Regular_18[c - ' '];
+                g = Font_RobotoMono_Regular_20[c - ' '];
                 break;
             case 1:
-                g = Font_RobotoMono_Regular_18[c - ' '];
+                g = Font_Roboto_Regular_20[c - ' '];
+                break;
+            case 2:
+                g = Font_Roboto_Bold_20[c - ' '];
                 break;
             default:
                 return; // unknown font -> abort
@@ -126,7 +130,7 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
         // g[2]       = advance
         // g[3], g[4] = bearingX, bearingY
         if (g[0] && g[1]) {
-            display_set_window(xx + g[3], y - g[4], g[0], g[1]);
+            display_set_window(xx + (int8_t)(g[3]), y - (int8_t)(g[4]), g[0], g[1]);
             for (j = 0; j < g[0] * g[1]; j++) {
                 if (j % 2 == 0) {
                     c = g[5 + j/2] >> 4;

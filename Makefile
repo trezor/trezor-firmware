@@ -1,10 +1,14 @@
 STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-TREZORV2
 
 help: ## show this help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36mmake %-10s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36mmake %-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## build stmhal and unix micropython ports
+build: build_stmhal build_unix ## build both stmhal and unix micropython ports
+
+build_stmhal: ## build stmhal port
 	make -C vendor/micropython/stmhal
+
+build_unix: ## build unix port
 	make -C vendor/micropython/unix
 
 flash: ## flash firmware using st-flash
