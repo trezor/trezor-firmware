@@ -7,7 +7,6 @@
 
 #include <SDL2/SDL.h>
 
-static int SDL_inited = 0;
 static SDL_Renderer *RENDERER = 0;
 static SDL_Surface  *SCREEN   = 0;
 static SDL_Texture  *TEXTURE  = 0;
@@ -21,7 +20,6 @@ static int ROTATION = 0;
 #define DISPLAY_BORDER 8
 
 static void DATAfunc(uint8_t x) {
-    if (!SDL_inited) return;
     if (POSX <= EX && POSY <= EY) {
         ((uint8_t *)SCREEN->pixels)[POSX * 2 + POSY * SCREEN->pitch + (DATAODD ^ 1)] = x;
     }
@@ -57,7 +55,6 @@ static int HandleEvents(void *ptr)
 
 static void display_init(void)
 {
-    if (SDL_inited) return;
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
     }
@@ -76,11 +73,9 @@ static void display_init(void)
     SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
     THREAD = SDL_CreateThread(HandleEvents, "EventThread", NULL);
-    SDL_inited = 1;
 }
 
 static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    if (!SDL_inited) return;
     SX = x; SY = y;
     EX = x + w - 1; EY = y + h - 1;
     POSX = SX; POSY = SY;
@@ -89,7 +84,6 @@ static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 
 static void display_update(void)
 {
-    if (!SDL_inited) return;
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, RESX, RESY};
