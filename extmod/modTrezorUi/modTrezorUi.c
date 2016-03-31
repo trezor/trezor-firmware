@@ -269,6 +269,8 @@ STATIC mp_obj_t mod_TrezorUi_Display_rawcmd(mp_obj_t self, mp_obj_t reg, mp_obj_
 }
 MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_rawcmd_obj, mod_TrezorUi_Display_rawcmd);
 
+// Display stuff
+
 STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
     { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&mod_TrezorUi_Display_blit_obj) },
@@ -287,9 +289,61 @@ STATIC const mp_obj_type_t mod_TrezorUi_Display_type = {
     .locals_dict = (void*)&mod_TrezorUi_Display_locals_dict,
 };
 
+// class Touch(object):
+typedef struct _mp_obj_Touch_t {
+    mp_obj_base_t base;
+} mp_obj_Touch_t;
+
+// def Touch.__init__(self):
+STATIC mp_obj_t mod_TrezorUi_Touch_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+    mp_obj_Touch_t *o = m_new_obj(mp_obj_Touch_t);
+    o->base.type = type;
+    return MP_OBJ_FROM_PTR(o);
+}
+
+// def Touch.callback_start(self, callback) -> None:
+STATIC mp_obj_t mod_TrezorUi_Touch_callback_start(mp_obj_t self, mp_obj_t callback) {
+    // TODO
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_start_obj, mod_TrezorUi_Touch_callback_start);
+
+// def Touch.callback_move(self, callback) -> None:
+STATIC mp_obj_t mod_TrezorUi_Touch_callback_move(mp_obj_t self, mp_obj_t callback) {
+    // TODO
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_move_obj, mod_TrezorUi_Touch_callback_move);
+
+// def Touch.callback_end(self, callback) -> None:
+STATIC mp_obj_t mod_TrezorUi_Touch_callback_end(mp_obj_t self, mp_obj_t callback) {
+    // TODO
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_end_obj, mod_TrezorUi_Touch_callback_end);
+
+// Touch stuff
+
+STATIC const mp_rom_map_elem_t mod_TrezorUi_Touch_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_callback_start), MP_ROM_PTR(&mod_TrezorUi_Touch_callback_start_obj) },
+    { MP_ROM_QSTR(MP_QSTR_callback_move), MP_ROM_PTR(&mod_TrezorUi_Touch_callback_move_obj) },
+    { MP_ROM_QSTR(MP_QSTR_callback_end), MP_ROM_PTR(&mod_TrezorUi_Touch_callback_end_obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(mod_TrezorUi_Touch_locals_dict, mod_TrezorUi_Touch_locals_dict_table);
+
+STATIC const mp_obj_type_t mod_TrezorUi_Touch_type = {
+    { &mp_type_type },
+    .name = MP_QSTR_Touch,
+    .make_new = mod_TrezorUi_Touch_make_new,
+    .locals_dict = (void*)&mod_TrezorUi_Touch_locals_dict,
+};
+
+// module stuff
+
 STATIC const mp_rom_map_elem_t mp_module_TrezorUi_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorUi) },
     { MP_ROM_QSTR(MP_QSTR_Display), MP_ROM_PTR(&mod_TrezorUi_Display_type) },
+    { MP_ROM_QSTR(MP_QSTR_Touch), MP_ROM_PTR(&mod_TrezorUi_Touch_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_TrezorUi_globals, mp_module_TrezorUi_globals_table);
