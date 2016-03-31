@@ -1,3 +1,3 @@
 #!/bin/bash
 cd `dirname $0`/src
-../vendor/micropython/unix/micropython -m main
+../vendor/micropython/unix/micropython main.py

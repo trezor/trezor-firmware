@@ -1,4 +1,4 @@
-from TrezorUi import Display
+from trezor import ui
 
 def rgb2color(r, g, b):
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
@@ -29,16 +29,11 @@ MONO   = 0
 NORMAL = 1
 BOLD   = 2
 
-d = Display()
-
-class Layout(object):
-
-    @staticmethod
-    def show_send(address, amount, currency='BTC'):
-        d.bar(0, 0, 240, 40, GREEN)
-        d.bar(0, 40, 240, 200, WHITE)
-        d.text(10, 28, 'Sending', BOLD, WHITE, GREEN)
-        d.text(10, 80, '%f %s' % (amount, currency), BOLD, BLACK, WHITE)
-        d.text(10, 110, 'to this address:', NORMAL, BLACK, WHITE)
-        d.text(10, 140, address[:18], MONO, BLACK, WHITE)
-        d.text(10, 160, address[18:], MONO, BLACK, WHITE)
+def show_send(address, amount, currency='BTC'):
+   ui.display.bar(0, 0, 240, 40, GREEN)
+   ui.display.bar(0, 40, 240, 200, WHITE)
+   ui.display.text(10, 28, 'Sending', BOLD, WHITE, GREEN)
+   ui.display.text(10, 80, '%f %s' % (amount, currency), BOLD, BLACK, WHITE)
+   ui.display.text(10, 110, 'to this address:', NORMAL, BLACK, WHITE)
+   ui.display.text(10, 140, address[:18], MONO, BLACK, WHITE)
+   ui.display.text(10, 160, address[18:], MONO, BLACK, WHITE)
