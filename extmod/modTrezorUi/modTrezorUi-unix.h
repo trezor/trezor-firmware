@@ -37,16 +37,27 @@ static int HandleEvents(void *ptr)
 {
     SDL_Event event;
     int x, y;
-    bool down;
     while (SDL_WaitEvent(&event) >= 0) {
         switch (event.type) {
-            case SDL_MOUSEBUTTONUP:
             case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEMOTION:
+            case SDL_MOUSEBUTTONUP:
                 x = event.button.x - DISPLAY_BORDER;
                 y = event.button.y - DISPLAY_BORDER;
                 if (x < 0 || y < 0 || x >= RESX || y >= RESY) continue;
-                down = (event.type == SDL_MOUSEBUTTONDOWN);
-                printf("CLICK %s: %d %d\n", down ? "DOWN" : "UP", x, y);
+                switch (event.type) {
+                    case SDL_MOUSEBUTTONDOWN:
+                        printf("TOUCH START: %d %d\n", x, y);
+                        break;
+                    case SDL_MOUSEMOTION:
+                        if (event.motion.state) {
+                            printf("TOUCH MOVE: %d %d\n", x, y);
+                        }
+                        break;
+                    case SDL_MOUSEBUTTONUP:
+                        printf("TOUCH END: %d %d\n", x, y);
+                        break;
+                }
                 break;
         }
     }
