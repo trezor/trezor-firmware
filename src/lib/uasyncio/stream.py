@@ -1,74 +1,10 @@
+import usocket
 import errno
-import uselect as select
-import usocket as _socket
-from uasyncio.core import *
+from .core import IOReadDone, IOWriteDone, IORead, IOWrite
 
-
-class EpollEventLoop(EventLoop):
-
-    def __init__(self):
-        EventLoop.__init__(self)
-        self.poller = select.poll()
-        self.objmap = {}
-
-    def add_reader(self, fd, cb, *args):
-        if __debug__:
-            log.debug("add_reader%s", (fd, cb, args))
-        if args:
-            self.poller.register(fd, select.POLLIN)
-            self.objmap[fd] = (cb, args)
-        else:
-            self.poller.register(fd, select.POLLIN)
-            self.objmap[fd] = cb
-
-    def remove_reader(self, fd):
-        if __debug__:
-            log.debug("remove_reader(%s)", fd)
-        self.poller.unregister(fd)
-        del self.objmap[fd]
-
-    def add_writer(self, fd, cb, *args):
-        if __debug__:
-            log.debug("add_writer%s", (fd, cb, args))
-        if args:
-            self.poller.register(fd, select.POLLOUT)
-            self.objmap[fd] = (cb, args)
-        else:
-            self.poller.register(fd, select.POLLOUT)
-            self.objmap[fd] = cb
-
-    def remove_writer(self, fd):
-        if __debug__:
-            log.debug("remove_writer(%s)", fd)
-        try:
-            self.poller.unregister(fd)
-            self.objmap.pop(fd, None)
-        except OSError as e:
-            # StreamWriter.awrite() first tries to write to an fd,
-            # and if that succeeds, yield IOWrite may never be called
-            # for that fd, and it will never be added to poller. So,
-            # ignore such error.
-            if e.args[0] != errno.ENOENT:
-                raise
-
-    def wait(self, delay):
-        if __debug__:
-            log.debug("epoll.wait(%d)", delay)
-        # We need one-shot behavior (second arg of 1 to .poll())
-        if delay == -1:
-            res = self.poller.poll(-1, 1)
-        else:
-            res = self.poller.poll(int(delay * 1000), 1)
-        #log.debug("epoll result: %s", res)
-        for fd, ev in res:
-            cb = self.objmap[fd]
-            if __debug__:
-                log.debug("Calling IO callback: %r", cb)
-            if isinstance(cb, tuple):
-                cb[0](*cb[1])
-            else:
-                self.call_soon(cb)
-
+if __debug__:
+    import logging
+    log = logging.getLogger("asyncio")
 
 class StreamReader:
 
@@ -141,7 +77,7 @@ class StreamWriter:
             buf = buf[res:]
             sz -= res
             yield IOWrite(self.s)
-            #assert s2.fileno() == self.s.fileno()
+            # assert s2.fileno() == self.s.fileno()
             if __debug__:
                 log.debug("StreamWriter.awrite(): can write more")
 
@@ -159,9 +95,9 @@ class StreamWriter:
 def open_connection(host, port):
     if __debug__:
         log.debug("open_connection(%s, %s)", host, port)
-    s = _socket.socket()
+    s = usocket.socket()
     s.setblocking(False)
-    ai = _socket.getaddrinfo(host, port)
+    ai = usocket.getaddrinfo(host, port)
     addr = ai[0][4]
     try:
         s.connect(addr)
@@ -179,13 +115,14 @@ def open_connection(host, port):
 
 
 def start_server(client_coro, host, port, backlog=10):
-    log.debug("start_server(%s, %s)", host, port)
-    s = _socket.socket()
+    if __debug__:
+        log.debug("start_server(%s, %s)", host, port)
+    s = usocket.socket()
     s.setblocking(False)
 
-    ai = _socket.getaddrinfo(host, port)
+    ai = usocket.getaddrinfo(host, port)
     addr = ai[0][4]
-    s.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+    s.setsockopt(usocket.SOL_SOCKET, usocket.SO_REUSEADDR, 1)
     s.bind(addr)
     s.listen(backlog)
     while True:
@@ -200,7 +137,3 @@ def start_server(client_coro, host, port, backlog=10):
             log.debug("start_server: After accept: %s", s2)
         extra = {"peername": client_addr}
         yield client_coro(StreamReader(s2), StreamWriter(s2, extra))
-
-
-import uasyncio.core
-uasyncio.core._event_loop_class = EpollEventLoop
