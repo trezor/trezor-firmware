@@ -2,20 +2,15 @@
 import sys
 sys.path.append('lib')
 
-import gc
-import utime
 import logging
-# import uasyncio
 import math
+import gc
+
 from uasyncio import core
-
-from TrezorUi import Display
-
 from trezor import ui
 
-from . import utils
+from .import utils
 
-d = Display()
 logging.basicConfig(level=logging.INFO)
 loop = core.get_event_loop()
 
@@ -33,7 +28,7 @@ def animate():
         col %= 0xff
         col += 0x0f
 
-        d.icon(190, 170, f.read(), utils.rgb2color(col, 0, 0), 0xffff)
+        ui.display.icon(190, 170, f.read(), utils.rgb2color(col, 0, 0), 0xffff)
         f.seek(0)
 
         yield from core.sleep(0.5)
