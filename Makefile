@@ -3,7 +3,10 @@ STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-TREZORV2
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36mmake %-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: build_stmhal build_unix ## build both stmhal and unix micropython ports
+submodule_update: ## update git submodules
+	git submodule update
+
+build: submodule_update build_stmhal build_unix ## build both stmhal and unix micropython ports
 
 build_stmhal: ## build stmhal port
 	make -C vendor/micropython/stmhal
