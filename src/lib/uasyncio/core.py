@@ -12,6 +12,7 @@ class EventLoop:
     def __init__(self):
         self.q = []
         self.cnt = 0
+        self.last_sleep = 0  # For performance stats
         #self.button_cb = None
 
     '''
@@ -25,14 +26,13 @@ class EventLoop:
         self.call_at(0, callback, *args)
 
     def call_later(self, delay, callback, *args):
-        self.call_at(utime.time() + delay, callback, *args)
+        self.call_at(utime.ticks_us() + delay * 1000000, callback, *args)
 
     def call_at(self, time, callback, *args):
         # Including self.cnt is a workaround per heapq docs
         if __debug__:
             log.debug("Scheduling %s", (time, self.cnt, callback, args))
         uheapq.heappush(self.q, (time, self.cnt, callback, args))
-#        print(self.q)
         self.cnt += 1
 
     def wait(self, delay):
@@ -40,7 +40,8 @@ class EventLoop:
         # with IO scheduling
         if __debug__:
             log.debug("Sleeping for: %s", delay)
-        utime.sleep(delay)
+        self.last_sleep = delay / 1000000.
+        utime.sleep(delay / 1000000.)
 
     def run_forever(self):
         while True:
@@ -49,7 +50,7 @@ class EventLoop:
                 if __debug__:
                     log.debug("Next coroutine to run: %s", (t, cnt, cb, args))
 #                __main__.mem_info()
-                tnow = utime.time()
+                tnow = utime.ticks_us()
                 delay = t - tnow
                 if delay > 0:
                     self.wait(delay)
@@ -58,7 +59,9 @@ class EventLoop:
                 # Assuming IO completion scheduled some tasks
                 continue
             if callable(cb):
-                cb(*args)
+                ret = cb(*args)
+                if __debug__ and isinstance(ret, type_gen):
+                    log.warning("Callback produced generator, which will never run.")
             else:
                 delay = 0
                 try:
@@ -167,11 +170,3 @@ def get_event_loop():
     if _event_loop is None:
         _event_loop = _event_loop_class()
     return _event_loop
-
-def sleep(secs):
-    yield Sleep(secs)
-
-'''
-def coroutine(f):
-    return f
-'''

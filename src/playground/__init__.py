@@ -2,7 +2,7 @@
 import sys
 sys.path.append('lib')
 
-import logging
+import utime
 import math
 import gc
 
@@ -11,27 +11,33 @@ from trezor import ui
 
 from .import utils
 
-logging.basicConfig(level=logging.INFO)
+if __debug__:
+    import logging
+    logging.basicConfig(level=logging.INFO)
+
 loop = core.get_event_loop()
 
-def meminfo():
+def perf_info():
     mem_free = gc.mem_free()
-    collected = gc.collect()
-    print("free_mem: %s/%s, collect: %s" % (mem_free, gc.mem_free(), collected))
-    loop.call_later(1, meminfo)
+    # gc.collect()
+    print("free_mem: %s/%s, last_sleep: %.06f" % \
+          (mem_free, gc.mem_free(), loop.last_sleep))
+    loop.call_later(1, perf_info)
 
 def animate():
     col = 0
-    f = open('../assets/lock.toi', 'r')
+    # hawcons gesture
+    f = open('playground/tap_64.toi', 'r')
 
     while True:
         col %= 0xff
         col += 0x0f
 
-        ui.display.icon(190, 170, f.read(), utils.rgb2color(col, 0, 0), 0xffff)
+        ui.display.icon(170, 170, f.read(), 0xffff, utils.rgb2color(col, 0, 0))
+        # ui.display.icon(100, 100, f.read(), 0xffff, utils.rgb2color(col, 0, 0))
         f.seek(0)
 
-        yield from core.sleep(0.5)
+        yield core.Sleep(0.5)
 
 sec = 0
 event = None
@@ -65,6 +71,9 @@ def tap_to_confirm():
     MAX_COLOR = 0xB0
 
     _background = utils.rgb2color(255, 255, 255)
+
+    f = open('playground/tap_64.toi', 'r')
+
     x = math.pi
     while True:
         x += STEP_X
@@ -72,21 +81,28 @@ def tap_to_confirm():
             x -= 2 * math.pi
         y = 1 + math.sin(x)
         
+        # ui.display.bar(0, 170, 240, 70, _background)
+
         # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
         col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
         foreground = utils.rgb2color(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
 
-        ui.display.text(10, 220, 'TAP TO CONFIRM', 2, foreground, _background)
+        ui.display.text(68, 212, 'TAP TO CONFIRM', 2, foreground, _background)
 
-        yield from core.sleep(DELAY)
+        f.seek(0)
+        ui.display.icon(3, 170, f.read(), _background, foreground)
+        # ui.display.icon(165, 50, f.read(), _background, foreground)
+
+
+        yield core.Sleep(DELAY)
 
 def run():
     # sekunda(3)
     # loop.call_soon(wait_for())
 
-    loop.call_soon(meminfo)
+    loop.call_soon(perf_info)
     loop.call_soon(tap_to_confirm())
-    loop.call_soon(animate())
+    # loop.call_soon(animate())
 
     loop.run_forever()
     loop.close()
