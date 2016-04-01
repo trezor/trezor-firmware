@@ -9,12 +9,7 @@ import gc
 from uasyncio import core
 from trezor import ui
 
-from .import utils
-
-if __debug__:
-    import logging
-    logging.basicConfig(level=logging.INFO)
-
+logging.basicConfig(level=logging.INFO)
 loop = core.get_event_loop()
 
 def perf_info():
@@ -33,8 +28,7 @@ def animate():
         col %= 0xff
         col += 0x0f
 
-        ui.display.icon(170, 170, f.read(), 0xffff, utils.rgb2color(col, 0, 0))
-        # ui.display.icon(100, 100, f.read(), 0xffff, utils.rgb2color(col, 0, 0))
+        ui.display.icon(190, 170, f.read(), ui.rgbcolor(col, 0, 0), 0xffff)
         f.seek(0)
 
         yield core.Sleep(0.5)
@@ -70,10 +64,7 @@ def tap_to_confirm():
     MIN_COLOR = 0x00
     MAX_COLOR = 0xB0
 
-    _background = utils.rgb2color(255, 255, 255)
-
-    f = open('playground/tap_64.toi', 'r')
-
+    _background = ui.rgbcolor(255, 255, 255)
     x = math.pi
     while True:
         x += STEP_X
@@ -85,7 +76,7 @@ def tap_to_confirm():
 
         # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
         col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
-        foreground = utils.rgb2color(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
+        foreground = ui.rgbcolor(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
 
         ui.display.text(68, 212, 'TAP TO CONFIRM', 2, foreground, _background)
 
