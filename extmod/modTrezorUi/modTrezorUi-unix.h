@@ -47,15 +47,15 @@ static int HandleEvents(void *ptr)
                 if (x < 0 || y < 0 || x >= RESX || y >= RESY) continue;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
-                        printf("TOUCH START: %d %d\n", x, y);
+                        // touch_start(x, y);
                         break;
                     case SDL_MOUSEMOTION:
                         if (event.motion.state) {
-                            printf("TOUCH MOVE: %d %d\n", x, y);
+                            // touch_move(x, y);
                         }
                         break;
                     case SDL_MOUSEBUTTONUP:
-                        printf("TOUCH END: %d %d\n", x, y);
+                        // touch_end(x, y);
                         break;
                 }
                 break;

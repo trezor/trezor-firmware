@@ -18,6 +18,31 @@
 #define RESX 240
 #define RESY 240
 
+
+mp_obj_t touch_start_callback = mp_const_none;
+mp_obj_t touch_move_callback = mp_const_none;
+mp_obj_t touch_end_callback = mp_const_none;
+
+/*
+static void touch_start(mp_int_t x, mp_int_t y) {
+    if (touch_start_callback != mp_const_none) {
+        mp_call_function_2(touch_start_callback, MP_OBJ_NEW_SMALL_INT(x), MP_OBJ_NEW_SMALL_INT(y));
+    }
+}
+
+static void touch_move(mp_int_t x, mp_int_t y) {
+    if (touch_move_callback != mp_const_none) {
+        mp_call_function_2(touch_move_callback, MP_OBJ_NEW_SMALL_INT(x), MP_OBJ_NEW_SMALL_INT(y));
+    }
+}
+
+static void touch_end(mp_int_t x, mp_int_t y) {
+    if (touch_end_callback != mp_const_none) {
+        mp_call_function_2(touch_end_callback, MP_OBJ_NEW_SMALL_INT(x), MP_OBJ_NEW_SMALL_INT(y));
+    }
+}
+*/
+
 #if defined STM32_HAL_H
 #include "modTrezorUi-stmhal.h"
 #elif defined UNIX
@@ -100,6 +125,7 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
     const uint8_t *g;
     uint8_t c;
     set_color_table(fgcolor, bgcolor);
+
     // render glyphs
     for (i = 0; i < textlen; i++) {
         if (text[i] >= ' ' && text[i] <= '~') {
@@ -303,21 +329,21 @@ STATIC mp_obj_t mod_TrezorUi_Touch_make_new(const mp_obj_type_t *type, size_t n_
 
 // def Touch.callback_start(self, callback) -> None:
 STATIC mp_obj_t mod_TrezorUi_Touch_callback_start(mp_obj_t self, mp_obj_t callback) {
-    // TODO
+    touch_start_callback = callback;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_start_obj, mod_TrezorUi_Touch_callback_start);
 
 // def Touch.callback_move(self, callback) -> None:
 STATIC mp_obj_t mod_TrezorUi_Touch_callback_move(mp_obj_t self, mp_obj_t callback) {
-    // TODO
+    touch_move_callback = callback;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_move_obj, mod_TrezorUi_Touch_callback_move);
 
 // def Touch.callback_end(self, callback) -> None:
 STATIC mp_obj_t mod_TrezorUi_Touch_callback_end(mp_obj_t self, mp_obj_t callback) {
-    // TODO
+    touch_end_callback = callback;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_end_obj, mod_TrezorUi_Touch_callback_end);
