@@ -170,3 +170,7 @@ static void display_rawcmd(uint8_t reg, uint8_t *data, int datalen)
     CMD(reg);
     DATAS(data, datalen);
 }
+
+static void display_backlight(uint8_t val)
+{
+}

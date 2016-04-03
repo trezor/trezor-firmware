@@ -111,3 +111,7 @@ static void display_orientation(int degrees)
 static void display_rawcmd(uint8_t reg, uint8_t *data, int datalen)
 {
 }
+
+static void display_backlight(uint8_t val)
+{
+}

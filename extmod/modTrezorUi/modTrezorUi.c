@@ -187,7 +187,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t 
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Display.bar(self, x: int, y: int, w: int, h: int, color: int) -> None:
+// def Display.bar(self, x: int, y: int, w: int, h: int, color: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -202,7 +202,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 6, mod_TrezorUi_Display_bar);
 
-// def Display.blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None:
+// def Display.blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -218,7 +218,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, mod_TrezorUi_Display_blit);
 
-// def Display.image(self, x: int, y: int, image: bytes) -> None:
+// def Display.image(self, x: int, y: int, image: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -238,7 +238,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
 
-// def Display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
+// def Display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -260,7 +260,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
 
-// def Display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
+// def Display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -274,7 +274,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
-// def Display.text(self, degrees: int) -> None:
+// def Display.orientation(self, degrees: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {
     mp_int_t deg = mp_obj_get_int(degrees);
     if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
@@ -285,7 +285,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_TrezorUi_Display_orientation);
 
-// def Display.rawcmd(self, reg: int, data: bytes) -> None:
+// def Display.rawcmd(self, reg: int, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_rawcmd(mp_obj_t self, mp_obj_t reg, mp_obj_t data) {
     mp_int_t r = mp_obj_get_int(reg);
     mp_buffer_info_t bufinfo;
@@ -294,6 +294,13 @@ STATIC mp_obj_t mod_TrezorUi_Display_rawcmd(mp_obj_t self, mp_obj_t reg, mp_obj_
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_rawcmd_obj, mod_TrezorUi_Display_rawcmd);
+
+// def Display.backlight(self, val: int) -> None
+STATIC mp_obj_t mod_TrezorUi_Display_backlight(mp_obj_t self, mp_obj_t reg) {
+    display_backlight(mp_obj_get_int(reg));
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_backlight_obj, mod_TrezorUi_Display_backlight);
 
 // Display stuff
 
@@ -305,6 +312,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
     { MP_ROM_QSTR(MP_QSTR_rawcmd), MP_ROM_PTR(&mod_TrezorUi_Display_rawcmd_obj) },
+    { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUi_Display_backlight_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorUi_Display_locals_dict, mod_TrezorUi_Display_locals_dict_table);
 
@@ -327,21 +335,21 @@ STATIC mp_obj_t mod_TrezorUi_Touch_make_new(const mp_obj_type_t *type, size_t n_
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Touch.callback_start(self, callback) -> None:
+// def Touch.callback_start(self, callback) -> None
 STATIC mp_obj_t mod_TrezorUi_Touch_callback_start(mp_obj_t self, mp_obj_t callback) {
     touch_start_callback = callback;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_start_obj, mod_TrezorUi_Touch_callback_start);
 
-// def Touch.callback_move(self, callback) -> None:
+// def Touch.callback_move(self, callback) -> None
 STATIC mp_obj_t mod_TrezorUi_Touch_callback_move(mp_obj_t self, mp_obj_t callback) {
     touch_move_callback = callback;
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_callback_move_obj, mod_TrezorUi_Touch_callback_move);
 
-// def Touch.callback_end(self, callback) -> None:
+// def Touch.callback_end(self, callback) -> None
 STATIC mp_obj_t mod_TrezorUi_Touch_callback_end(mp_obj_t self, mp_obj_t callback) {
     touch_end_callback = callback;
     return mp_const_none;
@@ -379,6 +387,5 @@ const mp_obj_module_t mp_module_TrezorUi = {
     .name = MP_QSTR_TrezorUi,
     .globals = (mp_obj_dict_t*)&mp_module_TrezorUi_globals,
 };
-
 
 #endif // MICROPY_PY_TREZORUI
