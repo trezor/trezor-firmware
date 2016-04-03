@@ -30,6 +30,8 @@ trezor.ui.display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor:
 
 trezor.ui.display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 
+trezor.ui.display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
+
 trezor.ui.display.orientation(self, degrees: int) -> None
 
 trezor.ui.display.rawcmd(self, reg: int, data: bytes) -> None

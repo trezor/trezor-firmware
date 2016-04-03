@@ -18,6 +18,22 @@
 #define RESX 240
 #define RESY 240
 
+#if defined STM32_HAL_H
+#include "modTrezorUi-stmhal.h"
+#elif defined UNIX
+#include "modTrezorUi-unix.h"
+#else
+#error Unsupported port. Only STMHAL and UNIX ports are supported.
+#endif
+
+#include "modTrezorUi-inflate.h"
+#include "modTrezorUi-font_RobotoMono_Regular.h"
+#include "modTrezorUi-font_Roboto_Regular.h"
+#include "modTrezorUi-font_Roboto_Bold.h"
+
+#include "trezor-qrenc/qr_encode.h"
+
+// touch callbacks
 
 mp_obj_t touch_start_callback = mp_const_none;
 mp_obj_t touch_move_callback = mp_const_none;
@@ -43,19 +59,6 @@ static void touch_end(mp_int_t x, mp_int_t y) {
 }
 */
 
-#if defined STM32_HAL_H
-#include "modTrezorUi-stmhal.h"
-#elif defined UNIX
-#include "modTrezorUi-unix.h"
-#else
-#error Unsupported port. Only STMHAL and UNIX ports are supported.
-#endif
-
-#include "modTrezorUi-inflate.h"
-#include "modTrezorUi-font_RobotoMono_Regular.h"
-#include "modTrezorUi-font_Roboto_Regular.h"
-#include "modTrezorUi-font_Roboto_Bold.h"
-
 // common functions
 
 static void DATAS(void *bytes, int len) {
@@ -68,8 +71,7 @@ static void DATAS(void *bytes, int len) {
 
 static void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c) {
     display_set_window(x, y, w, h);
-    int i;
-    for (i = 0; i < w * h; i++) {
+    for (int i = 0; i < w * h; i++) {
         DATA(c >> 8);
         DATA(c & 0xFF);
     }
@@ -92,9 +94,8 @@ static uint16_t COLORTABLE[16];
 
 static void set_color_table(uint16_t fgcolor, uint16_t bgcolor)
 {
-    int i;
     uint8_t cr, cg, cb;
-    for (i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {
         cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
         cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
         cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
@@ -121,13 +122,13 @@ static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data,
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
 static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor) {
-    int i, j, xx = x;
+    int xx = x;
     const uint8_t *g;
     uint8_t c;
     set_color_table(fgcolor, bgcolor);
 
     // render glyphs
-    for (i = 0; i < textlen; i++) {
+    for (int i = 0; i < textlen; i++) {
         if (text[i] >= ' ' && text[i] <= '~') {
             c = text[i];
         } else
@@ -157,7 +158,7 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
         // g[3], g[4] = bearingX, bearingY
         if (g[0] && g[1]) {
             display_set_window(xx + (int8_t)(g[3]), y - (int8_t)(g[4]), g[0], g[1]);
-            for (j = 0; j < g[0] * g[1]; j++) {
+            for (int j = 0; j < g[0] * g[1]; j++) {
                 if (j % 2 == 0) {
                     c = g[5 + j/2] >> 4;
                 } else {
@@ -170,6 +171,23 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
         }
         xx += g[2];
     }
+}
+
+static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int scale) {
+    uint8_t bitdata[QR_MAX_BITDATA];
+    int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
+    display_set_window(x, y, side * scale, side * scale);
+    for (int i = 0; i < side * scale; i++) {
+        for (int j = 0; j < side; j++) {
+            int a = j * side + (i / scale);
+            if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+                for (a = 0; a < scale * 2; a++) { DATA(0x00); }
+            } else {
+                for (a = 0; a < scale * 2; a++) { DATA(0xFF); }
+            }
+        }
+    }
+    display_update();
 }
 
 // uPy wrappers
@@ -274,6 +292,21 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
+// def Display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
+STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_int_t scale = mp_obj_get_int(args[4]);
+    if (scale < 1 || scale > 10) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Scale has to be between 1 and 10"));
+    }
+    mp_buffer_info_t bufinfo;
+    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    display_qrcode(x, y, bufinfo.buf, bufinfo.len, scale);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
+
 // def Display.orientation(self, degrees: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {
     mp_int_t deg = mp_obj_get_int(degrees);
@@ -310,6 +343,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
+    { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_TrezorUi_Display_qrcode_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
     { MP_ROM_QSTR(MP_QSTR_rawcmd), MP_ROM_PTR(&mod_TrezorUi_Display_rawcmd_obj) },
     { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUi_Display_backlight_obj) },

@@ -1,3 +1,6 @@
 [submodule "vendor/micropython"]
 	path = vendor/micropython
 	url = git@github.com:satoshilabs/micropython.git
+[submodule "vendor/trezor-qrenc"]
+	path = vendor/trezor-qrenc
+	url = https://github.com/trezor/trezor-qrenc.git

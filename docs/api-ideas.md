@@ -129,17 +129,3 @@ def sign(message: bytes, secret_key: bytes32, public_key: bytes33 = None) -> byt
 
 def verify(message: bytes, public_key: bytes33, signature: bytes65) -> bool: # valid
 ```
-
-##trezor.utils
-
-###trezor.utils.qrenc
-
-``` python
-class QrLevel(Enum):
-    L = 0
-    M = 1
-    Q = 2
-    H = 3
-
-def encode(source: bytes, level: QrLevel = QrLevel.H) -> list: # data
-```
