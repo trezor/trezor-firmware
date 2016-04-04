@@ -34,7 +34,7 @@ trezor.ui.display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
 
 trezor.ui.display.orientation(self, degrees: int) -> None
 
-trezor.ui.display.rawcmd(self, reg: int, data: bytes) -> None
+trezor.ui.display.raw(self, reg: int, data: bytes) -> None
 
 trezor.ui.display.backlight(self, val: int) -> None
 ```

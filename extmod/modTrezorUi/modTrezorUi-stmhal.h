@@ -165,12 +165,6 @@ static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 static void display_update(void) {
 }
 
-static void display_rawcmd(uint8_t reg, uint8_t *data, int datalen)
-{
-    CMD(reg);
-    DATAS(data, datalen);
-}
-
 static void display_backlight(uint8_t val)
 {
 }

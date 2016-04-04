@@ -190,6 +190,14 @@ static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int sc
     display_update();
 }
 
+static void display_raw(uint8_t reg, uint8_t *data, int datalen)
+{
+    if (reg) {
+        CMD(reg);
+    }
+    DATAS(data, datalen);
+}
+
 // uPy wrappers
 
 // class Display(object):
@@ -318,15 +326,15 @@ STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees
 }
 MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_TrezorUi_Display_orientation);
 
-// def Display.rawcmd(self, reg: int, data: bytes) -> None
-STATIC mp_obj_t mod_TrezorUi_Display_rawcmd(mp_obj_t self, mp_obj_t reg, mp_obj_t data) {
+// def Display.raw(self, reg: int, data: bytes) -> None
+STATIC mp_obj_t mod_TrezorUi_Display_raw(mp_obj_t self, mp_obj_t reg, mp_obj_t data) {
     mp_int_t r = mp_obj_get_int(reg);
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(data, &bufinfo, MP_BUFFER_READ);
-    display_rawcmd(r, bufinfo.buf, bufinfo.len);
+    display_raw(r, bufinfo.buf, bufinfo.len);
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_rawcmd_obj, mod_TrezorUi_Display_rawcmd);
+MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_raw_obj, mod_TrezorUi_Display_raw);
 
 // def Display.backlight(self, val: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_backlight(mp_obj_t self, mp_obj_t reg) {
@@ -345,7 +353,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_TrezorUi_Display_qrcode_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
-    { MP_ROM_QSTR(MP_QSTR_rawcmd), MP_ROM_PTR(&mod_TrezorUi_Display_rawcmd_obj) },
+    { MP_ROM_QSTR(MP_QSTR_raw), MP_ROM_PTR(&mod_TrezorUi_Display_raw_obj) },
     { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUi_Display_backlight_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorUi_Display_locals_dict, mod_TrezorUi_Display_locals_dict_table);

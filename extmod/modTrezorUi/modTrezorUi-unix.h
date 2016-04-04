@@ -15,6 +15,7 @@ static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
 static int ROTATION = 0;
 
+#define CMD(X) (void)(X);
 #define DATA(X) DATAfunc((X))
 
 #define DISPLAY_BORDER 8
@@ -106,10 +107,6 @@ static void display_orientation(int degrees)
 {
     ROTATION = degrees;
     display_update();
-}
-
-static void display_rawcmd(uint8_t reg, uint8_t *data, int datalen)
-{
 }
 
 static void display_backlight(uint8_t val)
