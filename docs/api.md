@@ -16,6 +16,16 @@ bytes65 = bytes # bytes variable of exactly 65 bytes
 Syntax used below is a valid Python function declaration with type hints defined in [PEP 0484](https://www.python.org/dev/peps/pep-0484/).
 
 
+##trezor.crypto
+
+###trezor.crypto.base58
+
+``` python
+def trezor.crypto.base58.encode(data: bytes) -> str
+
+def trezor.crypto.base58.decode(string: str) -> bytes
+```
+
 ##trezor.msg
 
 ``` python
