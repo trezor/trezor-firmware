@@ -28,3 +28,4 @@ gdb: ## start remote gdb session which connects to the openocd
 load: ## load contents of src into mass storage of trezor
 	rm -rf /run/media/${USER}/PYBFLASH/*
 	cp -a src/* /run/media/${USER}/PYBFLASH/
+	sync
