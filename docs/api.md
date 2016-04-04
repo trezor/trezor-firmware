@@ -15,6 +15,23 @@ bytes65 = bytes # bytes variable of exactly 65 bytes
 
 Syntax used below is a valid Python function declaration with type hints defined in [PEP 0484](https://www.python.org/dev/peps/pep-0484/).
 
+
+##trezor.msg
+
+``` python
+def trezor.msg.receive(callback) -> None
+
+def trezor.msg.send(message) -> None
+```
+
+##trezor.protobuf
+
+``` python
+def trezor.protobuf.encode(message) -> bytes
+
+def trezor.protobuf.decode(data: bytes) -> object
+```
+
 ##trezor.ui
 
 ###trezor.ui.display
