@@ -3,7 +3,7 @@ import sys
 if sys.platform == 'linux':
     import transport_pipe as pipe
 
-    def write(msg):
+    def send(msg):
         return pipe.write(msg)
         
     def read():
@@ -15,4 +15,14 @@ if sys.platform == 'linux':
     pipe.init('../pipe')
 
 else:
-    NotImplemented("HID transport")
+    from TrezorMsg import Msg
+
+    def send(msg):
+        return Msg.send(msg)
+
+    def read():
+        raise NotImplemented
+        return Msg.receive()
+
+    def set_notify(_on_read):
+        raise NotImplemented

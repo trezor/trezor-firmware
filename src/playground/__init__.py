@@ -13,8 +13,8 @@ import gc
 from uasyncio import core
 # import transport_pipe as pipe
 
-from trezor import ui, io
-from trezor import msg2 as msg
+from trezor import ui
+from trezor import msg
 
 logging.basicConfig(level=logging.INFO)
 loop = core.get_event_loop()
