@@ -42,9 +42,9 @@ trezor.ui.display.backlight(self, val: int) -> None
 ###trezor.ui.touch
 
 ``` python
-trezor.ui.touch.callback_start(self, callback) -> None
+trezor.ui.touch.start(self, callback) -> None
 
-trezor.ui.touch.callback_move(self, callback) -> None
+trezor.ui.touch.move(self, callback) -> None
 
-trezor.ui.touch.callback_end(self, callback) -> None
+trezor.ui.touch.end(self, callback) -> None
 ```
