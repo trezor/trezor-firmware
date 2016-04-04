@@ -2,19 +2,26 @@
 import sys
 sys.path.append('lib')
 
+if sys.platform == 'linux':
+    # Packages used only on linux platform (named pipes, ...)
+    sys.path.append('lib_linux')
+
 import utime
 import math
 import gc
 
 from uasyncio import core
-from trezor import ui
+# import transport_pipe as pipe
+
+from trezor import ui, io
+from trezor import msg2 as msg
 
 logging.basicConfig(level=logging.INFO)
 loop = core.get_event_loop()
 
 def perf_info():
     mem_free = gc.mem_free()
-    # gc.collect()
+    gc.collect()
     print("free_mem: %s/%s, last_sleep: %.06f" % \
           (mem_free, gc.mem_free(), loop.last_sleep))
     loop.call_later(1, perf_info)
@@ -87,9 +94,13 @@ def tap_to_confirm():
 
         yield core.Sleep(DELAY)
 
+def on_read():
+    print("READY TO READ")
+    print(msg.read())
+
 def run():
-    # sekunda(3)
-    # loop.call_soon(wait_for())
+    # pipe.init('../pipe', on_read)
+    msg.set_notify(on_read)
 
     loop.call_soon(perf_info)
     loop.call_soon(tap_to_confirm())

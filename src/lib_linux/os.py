@@ -41,6 +41,9 @@ if libc:
     opendir_ = libc.func("P", "opendir", "s")
     readdir_ = libc.func("P", "readdir", "P")
     open_ = libc.func("i", "open", "sii")
+    fdopen_ = libc.func("i", "fdopen", "sii")
+    fsync_ = libc.func("i", "fsync", "i")
+    #lseek = libc.func("i", "lseek", "iii")
     read_ = libc.func("i", "read", "ipi")
     write_ = libc.func("i", "write", "iPi")
     close_ = libc.func("i", "close", "i")
@@ -48,6 +51,7 @@ if libc:
     access_ = libc.func("i", "access", "si")
     fork_ = libc.func("i", "fork", "")
     pipe_ = libc.func("i", "pipe", "p")
+    mkfifo_ = libc.func("i", "mkfifo", "si")
     _exit_ = libc.func("v", "_exit", "i")
     getpid_ = libc.func("i", "getpid", "")
     waitpid_ = libc.func("i", "waitpid", "ipi")
@@ -55,9 +59,6 @@ if libc:
     execvp_ = libc.func("i", "execvp", "PP")
     kill_ = libc.func("i", "kill", "ii")
     getenv_ = libc.func("s", "getenv", "P")
-
-
-
 
 def check_error(ret):
     # Return True is error was EINTR (which usually means that OS call
@@ -163,6 +164,11 @@ def open(n, flags, mode=0o777):
     check_error(r)
     return r
 
+def fdopen(n, flags, mode=0o777):
+    r = fdopen_(n, flags, mode)
+    check_error(r)
+    return r
+
 def read(fd, n):
     buf = bytearray(n)
     r = read_(fd, buf, n)
@@ -171,6 +177,11 @@ def read(fd, n):
 
 def write(fd, buf):
     r = write_(fd, buf, len(buf))
+    check_error(r)
+    return r
+
+def fsync(fd):
+    r = fsync_(fd)
     check_error(r)
     return r
 
@@ -201,6 +212,11 @@ def pipe():
     r = pipe_(a)
     check_error(r)
     return a[0], a[1]
+
+def mkfifo(n, mode=0o777):
+    r = mkfifo_(n, mode)
+    check_error(r)
+    return r
 
 def _exit(n):
     _exit_(n)

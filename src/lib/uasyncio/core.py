@@ -13,14 +13,6 @@ class EventLoop:
         self.q = []
         self.cnt = 0
         self.last_sleep = 0  # For performance stats
-        #self.button_cb = None
-
-    '''
-    def create_task(self, coro):
-        # CPython 3.4.2
-        self.call_at(0, coro)
-        # CPython asyncio incompatibility: we don't return Task object
-    '''
 
     def call_soon(self, callback, *args):
         self.call_at(0, callback, *args)
@@ -78,27 +70,21 @@ class EventLoop:
                             delay = arg
                         elif isinstance(ret, StopLoop):
                             return arg
-                        '''
-                        elif isinstance(ret, IORead):
-                            self.add_reader(ret.obj.fileno(), lambda self, c, f: self.call_soon(c, f), self, cb, ret.obj)
-                            self.add_reader(ret.obj.fileno(), lambda c, f: self.call_soon(c, f), cb, ret.obj)
-                            self.add_reader(arg.fileno(), lambda cb: self.call_soon(cb), cb)
-                            self.add_reader(arg.fileno(), cb)
-                            continue
-                        elif isinstance(ret, IOWrite):
-                            self.add_writer(arg.fileno(), lambda cb: self.call_soon(cb), cb)
-                            self.add_writer(arg.fileno(), cb)
-                            continue
-                        elif isinstance(ret, IOReadDone):
-                            self.remove_reader(arg.fileno())
-                        elif isinstance(ret, IOWriteDone):
-                            self.remove_writer(arg.fileno())
-                        '''
+                        # elif isinstance(ret, IORead):
+                        #    self.add_reader(arg.fileno(), lambda self, c, f: self.call_soon(c, f), self, cb, arg)
+                        #    self.add_reader(arg.fileno(), lambda c, f: self.call_soon(c, f), cb, arg)
+                        #    self.add_reader(arg.fileno(), lambda cb: self.call_soon(cb), cb)
+                        #    self.add_reader(arg.fileno(), cb)
+                        #    continue
+                        # elif isinstance(ret, IOWrite):
+                        #    self.add_writer(arg.fileno(), lambda cb: self.call_soon(cb), cb)
+                        #    self.add_writer(arg.fileno(), cb)
+                        #    continue
+                        # elif isinstance(ret, IOReadDone):
+                        #    self.remove_reader(arg.fileno())
+                        # elif isinstance(ret, IOWriteDone):
+                        #    self.remove_writer(arg.fileno())
 
-                    #elif isinstance(ret, IOButton):
-                    #    print("TADY")
-                    #    self.button_cb = cb
-                    #    continue
                     elif isinstance(ret, type_gen):
                         self.call_soon(ret)
                     elif ret is None:
