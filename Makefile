@@ -14,6 +14,9 @@ build_stmhal: ## build stmhal port
 build_unix: ## build unix port
 	make -C vendor/micropython/unix
 
+run_unix: ## run unix port
+	./vendor/micropython/unix/micropython
+
 flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware0.bin 0x8000000
 	sleep 0.1
