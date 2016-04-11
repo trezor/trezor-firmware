@@ -3,7 +3,7 @@ from TrezorUi import Display, Touch
 display = Display()
 touch = Touch()
 
-def rgbcolor(r, g, b):
+def rgbcolor(r: int, g: int, b: int) -> int:
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
 
 RED         = rgbcolor(0xF4, 0x43, 0x36)
