@@ -28,7 +28,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_hash(mp_obj_t self, mp_obj_t data) {
     sha256_Raw(databuf.buf, databuf.len, (uint8_t *)vstr.buf);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_hash_obj, mod_TrezorCrypto_Sha256_hash);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_hash_obj, mod_TrezorCrypto_Sha256_hash);
 
 // Sha256 stuff
 

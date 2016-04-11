@@ -29,7 +29,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Base58_encode(mp_obj_t self, mp_obj_t data) {
     vstr.len--; // b58enc returns length including the trailing zero
     return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Base58_encode_obj, mod_TrezorCrypto_Base58_encode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Base58_encode_obj, mod_TrezorCrypto_Base58_encode);
 
 // def Base58.decode(self, string: str) -> bytes
 STATIC mp_obj_t mod_TrezorCrypto_Base58_decode(mp_obj_t self, mp_obj_t string) {
@@ -40,7 +40,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Base58_decode(mp_obj_t self, mp_obj_t string) {
     b58tobin(vstr.buf, &vstr.len, stringbuf.buf);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Base58_decode_obj, mod_TrezorCrypto_Base58_decode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Base58_decode_obj, mod_TrezorCrypto_Base58_decode);
 
 // Base58 stuff
 

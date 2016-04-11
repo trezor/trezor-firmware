@@ -32,14 +32,14 @@ STATIC mp_obj_t mod_TrezorProtobuf_Protobuf_encode(mp_obj_t self, mp_obj_t callb
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorProtobuf_Protobuf_encode_obj, mod_TrezorProtobuf_Protobuf_encode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorProtobuf_Protobuf_encode_obj, mod_TrezorProtobuf_Protobuf_encode);
 
 // def Protobuf.decode(self, data: bytes) -> object
 STATIC mp_obj_t mod_TrezorProtobuf_Protobuf_decode(mp_obj_t self, mp_obj_t data) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorProtobuf_Protobuf_decode_obj, mod_TrezorProtobuf_Protobuf_decode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorProtobuf_Protobuf_decode_obj, mod_TrezorProtobuf_Protobuf_decode);
 
 // Protobuf stuff
 

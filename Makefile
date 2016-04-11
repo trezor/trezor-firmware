@@ -17,6 +17,14 @@ build_unix: ## build unix port
 run_unix: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
 
+clean: clean_stmhal clean_unix ## clean all builds
+
+clean_stmhal: ## clean stmhal build
+	make -C vendor/micropython/stmhal clean
+
+clean_unix: ## clean unix build
+	make -C vendor/micropython/unix clean
+
 flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware0.bin 0x8000000
 	sleep 0.1

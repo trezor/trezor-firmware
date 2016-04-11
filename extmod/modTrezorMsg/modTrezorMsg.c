@@ -44,14 +44,14 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_receive(mp_obj_t self, mp_obj_t callback) {
     msg_receive_callback = callback;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_receive_obj, mod_TrezorMsg_Msg_receive);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_receive_obj, mod_TrezorMsg_Msg_receive);
 
 // def Msg.send(self, message) -> None
 STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t message) {
     // TODO
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
 
 // Msg stuff
 

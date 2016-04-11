@@ -25,7 +25,6 @@ STATIC const mp_rom_map_elem_t mp_module_TrezorCrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_Base58), MP_ROM_PTR(&mod_TrezorCrypto_Base58_type) },
     { MP_ROM_QSTR(MP_QSTR_Sha256), MP_ROM_PTR(&mod_TrezorCrypto_Sha256_type) },
 };
-
 STATIC MP_DEFINE_CONST_DICT(mp_module_TrezorCrypto_globals, mp_module_TrezorCrypto_globals_table);
 
 const mp_obj_module_t mp_module_TrezorCrypto = {

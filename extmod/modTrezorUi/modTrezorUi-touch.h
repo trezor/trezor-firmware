@@ -48,21 +48,21 @@ STATIC mp_obj_t mod_TrezorUi_Touch_start(mp_obj_t self, mp_obj_t callback) {
     touch_start_callback = callback;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_start_obj, mod_TrezorUi_Touch_start);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_start_obj, mod_TrezorUi_Touch_start);
 
 // def Touch.move(self, callback) -> None
 STATIC mp_obj_t mod_TrezorUi_Touch_move(mp_obj_t self, mp_obj_t callback) {
     touch_move_callback = callback;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_move_obj, mod_TrezorUi_Touch_move);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_move_obj, mod_TrezorUi_Touch_move);
 
 // def Touch.end(self, callback) -> None
 STATIC mp_obj_t mod_TrezorUi_Touch_end(mp_obj_t self, mp_obj_t callback) {
     touch_end_callback = callback;
     return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_end_obj, mod_TrezorUi_Touch_end);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Touch_end_obj, mod_TrezorUi_Touch_end);
 
 // Touch stuff
 
