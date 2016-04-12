@@ -24,8 +24,11 @@ STATIC mp_obj_t mod_TrezorCrypto_Base58_encode(mp_obj_t self, mp_obj_t data) {
     mp_buffer_info_t databuf;
     mp_get_buffer_raise(data, &databuf, MP_BUFFER_READ);
     vstr_t vstr;
-    vstr_init(&vstr, databuf.len * 8000 / 5857 + 1); // 256 = 2^8 ; 58 > 2^5.857
-    b58enc(vstr.buf, &vstr.len, databuf.buf, databuf.len);
+    vstr_init_len(&vstr, databuf.len * 8000 / 5857 + 1); // 256 = 2^8 ; 58 > 2^5.857
+    bool r = b58enc(vstr.buf, &vstr.len, databuf.buf, databuf.len);
+    if (!r) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid input"));
+    }
     vstr.len--; // b58enc returns length including the trailing zero
     return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
@@ -36,8 +39,11 @@ STATIC mp_obj_t mod_TrezorCrypto_Base58_decode(mp_obj_t self, mp_obj_t string) {
     mp_buffer_info_t stringbuf;
     mp_get_buffer_raise(string, &stringbuf, MP_BUFFER_READ);
     vstr_t vstr;
-    vstr_init(&vstr, stringbuf.len * 5858 / 8000 + 1); // 256 = 2^8 ; 58 < 2^5.858
-    b58tobin(vstr.buf, &vstr.len, stringbuf.buf);
+    vstr_init_len(&vstr, stringbuf.len * 5858 / 8000 + 1); // 256 = 2^8 ; 58 < 2^5.858
+    bool r = b58tobin(vstr.buf, &vstr.len, stringbuf.buf);
+    if (!r) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid input"));
+    }
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Base58_decode_obj, mod_TrezorCrypto_Base58_decode);

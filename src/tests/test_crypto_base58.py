@@ -64,11 +64,11 @@ class TestCryptoBase58(unittest.TestCase):
 
     def test_decode_check(self):
         for a, b in self.vectors:
-            self.assertEqual(trezor.crypto.base58.decode_check(b), trezor.utils.unhexlify('a'))
+            self.assertEqual(trezor.crypto.base58.decode_check(b), trezor.utils.unhexlify(a))
 
     def test_encode_check(self):
         for a, b in self.vectors:
-            self.assertEqual(trezor.crypto.base58.encode_check(trezor.utils.unhexlify('a')), b)
+            self.assertEqual(trezor.crypto.base58.encode_check(trezor.utils.unhexlify(a)), b)
 
 if __name__ == '__main__':
     unittest.main()
