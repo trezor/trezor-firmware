@@ -156,7 +156,7 @@ typedef struct _mp_obj_Display_t {
     mp_obj_base_t base;
 } mp_obj_Display_t;
 
-// def Display.__init__(self):
+// def Display.__init__(self)
 STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     display_init();
     mp_obj_Display_t *o = m_new_obj(mp_obj_Display_t);
