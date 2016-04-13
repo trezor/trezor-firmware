@@ -5,8 +5,9 @@
  * see LICENSE.md file for details
  */
 
-#include "trezor-crypto/sha2.h"
 #include "py/objstr.h"
+
+#include "trezor-crypto/sha2.h"
 
 // class Sha256(object):
 typedef struct _mp_obj_Sha256_t {

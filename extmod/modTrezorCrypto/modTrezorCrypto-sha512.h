@@ -5,8 +5,9 @@
  * see LICENSE.md file for details
  */
 
-#include "trezor-crypto/sha2.h"
 #include "py/objstr.h"
+
+#include "trezor-crypto/sha2.h"
 
 // class Sha512(object):
 typedef struct _mp_obj_Sha512_t {
