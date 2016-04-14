@@ -44,5 +44,13 @@ class TestCryptoSha256(unittest.TestCase):
         self.assertEqual(x.digest(), trezor.utils.unhexlify('50e72a0e26442fe2552dc3938ac58658228c0cbfb1d2ca872ae435266fcd055e'))
         '''
 
+    def test_digest_multi(self):
+        x = trezor.crypto.hash.sha256()
+        d0 = x.digest()
+        d1 = x.digest()
+        d2 = x.digest()
+        self.assertEqual(d0, d1)
+        self.assertEqual(d0, d2)
+
 if __name__ == '__main__':
     unittest.main()

@@ -44,5 +44,13 @@ class TestCryptoSha512(unittest.TestCase):
         self.assertEqual(x.digest(), trezor.utils.unhexlify('b47c933421ea2db149ad6e10fce6c7f93d0752380180ffd7f4629a712134831d77be6091b819ed352c2967a2e2d4fa5050723c9630691f1a05a7281dbe6c1086'))
         '''
 
+    def test_digest_multi(self):
+        x = trezor.crypto.hash.sha512()
+        d0 = x.digest()
+        d1 = x.digest()
+        d2 = x.digest()
+        self.assertEqual(d0, d1)
+        self.assertEqual(d0, d2)
+
 if __name__ == '__main__':
     unittest.main()

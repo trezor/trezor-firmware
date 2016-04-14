@@ -53,5 +53,13 @@ class TestCryptoRipemd160(unittest.TestCase):
             x.update(b'1234567890')
         self.assertEqual(x.digest(), trezor.utils.unhexlify('9b752e45573d4b39f4dbd3323cab82bf63326bfb'))
 
+    def test_digest_multi(self):
+        x = trezor.crypto.hash.ripemd160()
+        d0 = x.digest()
+        d1 = x.digest()
+        d2 = x.digest()
+        self.assertEqual(d0, d1)
+        self.assertEqual(d0, d2)
+
 if __name__ == '__main__':
     unittest.main()

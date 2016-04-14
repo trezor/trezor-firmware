@@ -48,7 +48,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_digest(mp_obj_t self) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, 64); // 512 bit = 64 bytes
-    sha512_Final((uint8_t *)vstr.buf, &(o->ctx));
+    SHA512_CTX ctx;
+    memcpy(&ctx, &(o->ctx), sizeof(SHA512_CTX));
+    sha512_Final((uint8_t *)vstr.buf, &ctx);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512_digest_obj, mod_TrezorCrypto_Sha512_digest);
@@ -58,6 +60,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512_digest_obj, mod_TrezorC
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Sha512_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Sha512_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Sha512_digest_obj) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(128) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(64) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Sha512_locals_dict, mod_TrezorCrypto_Sha512_locals_dict_table);
 
