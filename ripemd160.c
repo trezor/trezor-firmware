@@ -54,7 +54,7 @@
 /*
  * RIPEMD-160 context setup
  */
-void ripemd160_init(RIPEMD160_CTX *ctx)
+void ripemd160_Init(RIPEMD160_CTX *ctx)
 {
     memset(ctx, 0, sizeof(RIPEMD160_CTX));
     ctx->total[0] = 0;
@@ -251,7 +251,7 @@ void ripemd160_process( RIPEMD160_CTX *ctx, const uint8_t data[64] )
 /*
  * RIPEMD-160 process buffer
  */
-void ripemd160_update( RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen )
+void ripemd160_Update( RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen )
 {
     uint32_t fill;
     uint32_t left;
@@ -301,7 +301,7 @@ static const uint8_t ripemd160_padding[64] =
 /*
  * RIPEMD-160 final digest
  */
-void ripemd160_finish( RIPEMD160_CTX *ctx, uint8_t output[20] )
+void ripemd160_Final( uint8_t output[20], RIPEMD160_CTX *ctx )
 {
     uint32_t last, padn;
     uint32_t high, low;
@@ -317,8 +317,8 @@ void ripemd160_finish( RIPEMD160_CTX *ctx, uint8_t output[20] )
     last = ctx->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    ripemd160_update( ctx, ripemd160_padding, padn );
-    ripemd160_update( ctx, msglen, 8 );
+    ripemd160_Update( ctx, ripemd160_padding, padn );
+    ripemd160_Update( ctx, msglen, 8 );
 
     PUT_UINT32_LE( ctx->state[0], output,  0 );
     PUT_UINT32_LE( ctx->state[1], output,  4 );
@@ -333,7 +333,7 @@ void ripemd160_finish( RIPEMD160_CTX *ctx, uint8_t output[20] )
 void ripemd160(const uint8_t *msg, uint32_t msg_len, uint8_t hash[20])
 {
     RIPEMD160_CTX ctx;
-    ripemd160_init( &ctx );
-    ripemd160_update( &ctx, msg, msg_len );
-    ripemd160_finish( &ctx, hash );
+    ripemd160_Init( &ctx );
+    ripemd160_Update( &ctx, msg, msg_len );
+    ripemd160_Final( hash, &ctx );
 }
