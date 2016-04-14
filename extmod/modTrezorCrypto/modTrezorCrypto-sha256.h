@@ -9,6 +9,9 @@
 
 #include "trezor-crypto/sha2.h"
 
+#define HASH_SHA256_BLOCK_SIZE   64
+#define HASH_SHA256_DIGEST_SIZE  32
+
 // class Sha256(object):
 typedef struct _mp_obj_Sha256_t {
     mp_obj_base_t base;
@@ -47,7 +50,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_update_obj, mod_TrezorC
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_digest(mp_obj_t self) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
-    vstr_init_len(&vstr, 32); // 256 bit = 32 bytes
+    vstr_init_len(&vstr, HASH_SHA256_DIGEST_SIZE);
     SHA256_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(SHA256_CTX));
     sha256_Final((uint8_t *)vstr.buf, &ctx);
@@ -60,8 +63,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256_digest_obj, mod_TrezorC
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Sha256_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Sha256_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Sha256_digest_obj) },
-    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(64) },
-    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(32) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(HASH_SHA256_BLOCK_SIZE) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(HASH_SHA256_DIGEST_SIZE) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Sha256_locals_dict, mod_TrezorCrypto_Sha256_locals_dict_table);
 
