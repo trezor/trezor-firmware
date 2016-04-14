@@ -1,24 +1,24 @@
 class Hmac:
-    def __init__(self, key, msg, digest_cons):
-        self._digest_cons = digest_cons
-        self._inner = digest_cons()
-        self.digest_size = self._inner.digest_size
-        self.block_size = self._inner.block_size
+    def __init__(self, key, msg, digestmod):
+        self.__digestmod = digestmod
+        self.__inner = digestmod()
+        self.digest_size = self.__inner.digest_size
+        self.block_size = self.__inner.block_size
         if len(key) > self.block_size:
-            key = digest_cons(key).digest()
-        self._key = key + bytes(self.block_size - len(key))
-        self._inner.update(bytes((x ^ 0x36) for x in self._key))
+            key = digestmod(key).digest()
+        self.__key = key + bytes(self.block_size - len(key))
+        self.__inner.update(bytes((x ^ 0x36) for x in self.__key))
         if msg is not None:
             self.update(msg)
 
     def update(self, msg):
-        self._inner.update(msg)
+        self.__inner.update(msg)
 
     def digest(self):
-        outer = self._digest_cons()
-        outer.update(bytes((x ^ 0x5C) for x in self._key))
-        outer.update(self._inner.digest())
+        outer = self.__digestmod()
+        outer.update(bytes((x ^ 0x5C) for x in self.__key))
+        outer.update(self.__inner.digest())
         return outer.digest()
 
-def new(key, msg, digest_cons):
-    return Hmac(key, msg, digest_cons)
+def new(key, msg, digestmod):
+    return Hmac(key, msg, digestmod)
