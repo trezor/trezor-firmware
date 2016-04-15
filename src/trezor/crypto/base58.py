@@ -1,5 +1,5 @@
 from TrezorCrypto import Base58
-from .hash import sha256
+from .hashlib import sha256
 
 _base58 = Base58()
 

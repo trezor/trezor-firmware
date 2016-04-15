@@ -38,6 +38,7 @@ typedef struct _mp_obj_Touch_t {
 
 // def Touch.__init__(self)
 STATIC mp_obj_t mod_TrezorUi_Touch_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+    mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Touch_t *o = m_new_obj(mp_obj_Touch_t);
     o->base.type = type;
     return MP_OBJ_FROM_PTR(o);

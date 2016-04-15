@@ -1,3 +1,26 @@
+from TrezorCrypto import Ripemd160 as ripemd160
+from TrezorCrypto import Sha256 as sha256
+from TrezorCrypto import Sha512 as sha512
+
+from . import hmac
+
+def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
+    if name == 'sha256':
+        digestmod = sha256
+    elif name == 'sha512':
+        digestmod = sha512
+    elif name == 'ripemd160':
+        digestmod = ripemd160
+    else:
+        raise ValueError('unknown digest', name)
+    if dklen is None:
+        dklen = digestmod.digest_size
+
+    p = Pbkdf2(password, salt, rounds, digestmod, hmac)
+    k = p.read(dklen)
+    p.close()
+    return k
+
 #
 # Copyright (C) 2007-2011 Dwayne C. Litzenberger <dlitz@dlitz.net>
 # Copyright (C) 2016 Pavol Rusnak <stick@gk2.sk>
@@ -70,6 +93,3 @@ class Pbkdf2(object):
             del self.__blockNum
             del self.__buf
             self.closed = True
-
-def new(passphrase, salt, iterations, digestmodule, macmodule):
-    return Pbkdf2(passphrase, salt, iterations, digestmodule, macmodule)

@@ -18,21 +18,18 @@ typedef struct _mp_obj_Ripemd160_t {
     mbedtls_ripemd160_context ctx;
 } mp_obj_Ripemd160_t;
 
+STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data);
+
 // def Ripemd160.__init__(self, data: bytes = None)
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+    mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Ripemd160_t *o = m_new_obj(mp_obj_Ripemd160_t);
     o->base.type = type;
     mbedtls_ripemd160_init(&(o->ctx));
     mbedtls_ripemd160_starts(&(o->ctx));
     // constructor called with bytes/str as first parameter
     if (n_args == 1) {
-        if (!MP_OBJ_IS_STR_OR_BYTES(args[0])) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "Invalid argument"));
-        }
-        GET_STR_DATA_LEN(args[0], data, datalen);
-        mbedtls_ripemd160_update(&(o->ctx), data, datalen);
-    } else if (n_args != 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "Invalid arguments"));
+        mod_TrezorCrypto_Ripemd160_update(MP_OBJ_FROM_PTR(o), args[0]);
     }
     return MP_OBJ_FROM_PTR(o);
 }
@@ -60,11 +57,20 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_digest(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Ripemd160_digest_obj, mod_TrezorCrypto_Ripemd160_digest);
 
+// def Ripemd160.__del__(self) -> None
+STATIC mp_obj_t mod_TrezorCrypto_Ripemd160___del__(mp_obj_t self) {
+    mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
+    mbedtls_ripemd160_free(&(o->ctx));
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Ripemd160___del___obj, mod_TrezorCrypto_Ripemd160___del__);
+
 // Ripemd160 stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Ripemd160_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160_digest_obj) },
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(HASH_RIPEMD160_BLOCK_SIZE) },
     { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(HASH_RIPEMD160_DIGEST_SIZE) },
 };
