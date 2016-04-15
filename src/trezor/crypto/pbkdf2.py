@@ -24,7 +24,7 @@
 
 from ustruct import pack
 
-class PBKDF2(object):
+class Pbkdf2(object):
 
     def __init__(self, passphrase, salt, iterations, digestmodule, macmodule):
         self.__macmodule = macmodule
@@ -70,3 +70,6 @@ class PBKDF2(object):
             del self.__blockNum
             del self.__buf
             self.closed = True
+
+def new(passphrase, salt, iterations, digestmodule, macmodule):
+    return Pbkdf2(passphrase, salt, iterations, digestmodule, macmodule)
