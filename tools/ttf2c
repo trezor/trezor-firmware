@@ -7,7 +7,7 @@ MAX_GLYPH = ord('~')
 def process_face(name, style, size):
     face = freetype.Face('/usr/share/fonts/truetype/%s-%s.ttf' % (name, style))
     face.set_pixel_sizes(0, size)
-    with open('%s-%s-%s.c' % (name, style, size), 'wt') as f:
+    with open('%s-%s-%s.c' % (name.lower(), style.lower(), size), 'wt') as f:
         f.write('// first two bytes are width and height of the glyph\n')
         f.write('// third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n')
         f.write('// rest is packed 4-bit glyph data\n\n')

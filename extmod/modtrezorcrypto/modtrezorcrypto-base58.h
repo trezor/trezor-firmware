@@ -5,7 +5,7 @@
  * see LICENSE.md file for details
  */
 
-#include "trezor-crypto/base58.h"
+#include "base58.h"
 
 // class Base58(object):
 typedef struct _mp_obj_Base58_t {

@@ -19,16 +19,16 @@
 #define RESY 240
 
 #if defined STM32_HAL_H
-#include "modTrezorUi-stmhal.h"
+#include "modtrezorui-stmhal.h"
 #elif defined UNIX
-#include "modTrezorUi-unix.h"
+#include "modtrezorui-unix.h"
 #else
 #error Unsupported port. Only STMHAL and UNIX ports are supported.
 #endif
 
-#include "modTrezorUi-display.h"
+#include "modtrezorui-display.h"
 
-#include "modTrezorUi-touch.h"
+#include "modtrezorui-touch.h"
 
 // module stuff
 

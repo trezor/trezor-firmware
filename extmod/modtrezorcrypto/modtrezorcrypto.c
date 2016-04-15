@@ -15,10 +15,10 @@
 
 #if MICROPY_PY_TREZORCRYPTO
 
-#include "modTrezorCrypto-base58.h"
-#include "modTrezorCrypto-ripemd160.h"
-#include "modTrezorCrypto-sha256.h"
-#include "modTrezorCrypto-sha512.h"
+#include "modtrezorcrypto-base58.h"
+#include "modtrezorcrypto-ripemd160.h"
+#include "modtrezorcrypto-sha256.h"
+#include "modtrezorcrypto-sha512.h"
 
 // module stuff
 

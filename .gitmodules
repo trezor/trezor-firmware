@@ -4,9 +4,6 @@
 [submodule "vendor/trezor-qrenc"]
 	path = vendor/trezor-qrenc
 	url = https://github.com/trezor/trezor-qrenc.git
-[submodule "vendor/trezor-crypto"]
-	path = vendor/trezor-crypto
-	url = https://github.com/trezor/trezor-crypto.git
 [submodule "vendor/mbedtls"]
 	path = vendor/mbedtls
 	url = https://github.com/trezor/mbedtls.git

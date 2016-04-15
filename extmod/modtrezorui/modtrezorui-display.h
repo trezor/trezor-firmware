@@ -5,10 +5,10 @@
  * see LICENSE.md file for details
  */
 
-#include "modTrezorUi-inflate.h"
-#include "modTrezorUi-font_RobotoMono_Regular.h"
-#include "modTrezorUi-font_Roboto_Regular.h"
-#include "modTrezorUi-font_Roboto_Bold.h"
+#include "modtrezorui-inflate.h"
+#include "modtrezorui-font_robotomono_regular.h"
+#include "modtrezorui-font_roboto_regular.h"
+#include "modtrezorui-font_roboto_bold.h"
 
 #include "trezor-qrenc/qr_encode.h"
 
