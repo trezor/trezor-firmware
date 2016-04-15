@@ -731,11 +731,14 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	memcpy(public_key, node->public_key, sizeof(public_key));
 
 	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
+	bool sign_gpg = msg->identity.has_proto && (strcmp(msg->identity.proto, "gpg") == 0);
 
 	int result = 0;
 	layoutProgressSwipe("Signing", 0);
 	if (sign_ssh) { // SSH does not sign visual challenge
 		result = sshMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
+	} else if (sign_gpg) { // GPG should sign a message digest
+		result = gpgMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
 	} else {
 		uint8_t digest[64];
 		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
@@ -744,7 +747,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	}
 
 	if (result == 0) {
-		if (sign_ssh) {
+		if (curve != SECP256K1_NAME) {
 			resp->has_address = false;
 		} else {
 			resp->has_address = true;
