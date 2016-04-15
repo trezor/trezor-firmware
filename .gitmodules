@@ -7,3 +7,6 @@
 [submodule "vendor/trezor-crypto"]
 	path = vendor/trezor-crypto
 	url = https://github.com/trezor/trezor-crypto.git
+[submodule "vendor/mbedtls"]
+	path = vendor/mbedtls
+	url = https://github.com/trezor/mbedtls.git

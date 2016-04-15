@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/sha2.h"
+#include "mbedtls/sha256.h"
 
 #define HASH_SHA256_BLOCK_SIZE   64
 #define HASH_SHA256_DIGEST_SIZE  32
@@ -15,21 +15,22 @@
 // class Sha256(object):
 typedef struct _mp_obj_Sha256_t {
     mp_obj_base_t base;
-    SHA256_CTX ctx;
+    mbedtls_sha256_context ctx;
 } mp_obj_Sha256_t;
 
 // def Sha256.__init__(self, data: bytes = None)
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_obj_Sha256_t *o = m_new_obj(mp_obj_Sha256_t);
     o->base.type = type;
-    sha256_Init(&(o->ctx));
+    mbedtls_sha256_init(&(o->ctx));
+    mbedtls_sha256_starts(&(o->ctx), 0);
     // constructor called with bytes/str as first parameter
     if (n_args == 1) {
         if (!MP_OBJ_IS_STR_OR_BYTES(args[0])) {
             nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "Invalid argument"));
         }
         GET_STR_DATA_LEN(args[0], data, datalen);
-        sha256_Update(&(o->ctx), data, datalen);
+        mbedtls_sha256_update(&(o->ctx), data, datalen);
     } else if (n_args != 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "Invalid arguments"));
     }
@@ -41,7 +42,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t databuf;
     mp_get_buffer_raise(data, &databuf, MP_BUFFER_READ);
-    sha256_Update(&(o->ctx), databuf.buf, databuf.len);
+    mbedtls_sha256_update(&(o->ctx), databuf.buf, databuf.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_update_obj, mod_TrezorCrypto_Sha256_update);
@@ -51,9 +52,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_digest(mp_obj_t self) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, HASH_SHA256_DIGEST_SIZE);
-    SHA256_CTX ctx;
-    memcpy(&ctx, &(o->ctx), sizeof(SHA256_CTX));
-    sha256_Final((uint8_t *)vstr.buf, &ctx);
+    mbedtls_sha256_context ctx;
+    mbedtls_sha256_clone(&ctx, &(o->ctx));
+    mbedtls_sha256_finish(&ctx, (uint8_t *)vstr.buf);
+    mbedtls_sha256_free(&ctx);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256_digest_obj, mod_TrezorCrypto_Sha256_digest);
