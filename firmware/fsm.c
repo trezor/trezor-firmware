@@ -404,7 +404,7 @@ void fsm_msgSignTx(SignTx *msg)
 	const HDNode *node = fsm_getDerivedNode(0, 0);
 	if (!node) return;
 
-	signing_init(msg->inputs_count, msg->outputs_count, coin, node);
+	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
 }
 
 void fsm_msgCancel(Cancel *msg)

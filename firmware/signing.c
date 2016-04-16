@@ -51,8 +51,8 @@ static TxStruct to, tp, ti;
 static SHA256_CTX tc;
 static uint8_t hash[32], hash_check[32], privkey[32], pubkey[33], sig[64];
 static uint64_t to_spend, spending, change_spend;
-const uint32_t version = 1;
-const uint32_t lock_time = 0;
+static uint32_t version = 1;
+static uint32_t lock_time = 0;
 static uint32_t progress, progress_step, progress_meta_step;
 static bool multisig_fp_set, multisig_fp_mismatch;
 static uint8_t multisig_fp[32];
@@ -224,12 +224,14 @@ void send_req_finished(void)
 	msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
-void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinType *_coin, const HDNode *_root)
+void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinType *_coin, const HDNode *_root, uint32_t _version, uint32_t _lock_time)
 {
 	inputs_count = _inputs_count;
 	outputs_count = _outputs_count;
 	coin = _coin;
 	root = _root;
+	version = _version;
+	lock_time = _lock_time;
 
 	idx1 = 0;
 	to_spend = 0;
