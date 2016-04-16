@@ -519,6 +519,8 @@ message SignTx {
 	required uint32 outputs_count = 1;			// number of transaction outputs
 	required uint32 inputs_count = 2;			// number of transaction inputs
 	optional string coin_name = 3 [default='Bitcoin'];	// coin to use
+	optional uint32 version = 4 [default=1];		// transaction version
+	optional uint32 lock_time = 5 [default=0];		// transaction lock_time
 }
 
 /**
@@ -535,6 +537,8 @@ message SimpleSignTx {
 	repeated TxOutputType outputs = 2;			// transaction outputs
 	repeated TransactionType transactions = 3;		// transactions whose outputs are used to build current inputs
 	optional string coin_name = 4 [default='Bitcoin'];	// coin to use
+	optional uint32 version = 4 [default=1];		// transaction version
+	optional uint32 lock_time = 5 [default=0];		// transaction lock_time
 }
 
 /**
