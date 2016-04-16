@@ -15,7 +15,6 @@
 
 #if MICROPY_PY_TREZORCRYPTO
 
-#include "modtrezorcrypto-base58.h"
 #include "modtrezorcrypto-pbkdf2_hmac.h"
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-sha256.h"
@@ -25,7 +24,6 @@
 
 STATIC const mp_rom_map_elem_t mp_module_TrezorCrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorCrypto) },
-    { MP_ROM_QSTR(MP_QSTR_Base58), MP_ROM_PTR(&mod_TrezorCrypto_Base58_type) },
     { MP_ROM_QSTR(MP_QSTR_Ripemd160), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160_type) },
     { MP_ROM_QSTR(MP_QSTR_Sha256), MP_ROM_PTR(&mod_TrezorCrypto_Sha256_type) },
     { MP_ROM_QSTR(MP_QSTR_Sha512), MP_ROM_PTR(&mod_TrezorCrypto_Sha512_type) },

@@ -1,22 +1,70 @@
-from TrezorCrypto import Base58
+#
+# Copyright (c) 2015 David Keijser <keijser@gmail.com>
+# Copyright (c) 2016 Pavol Rusnak <stick@gk2.sk>
+#
+# Licensed under MIT License
+#
+# Implementations of Base58 and Base58Check encodings that are compatible
+# with the bitcoin network.
+#
+# This module is based upon base58 snippets found scattered over many bitcoin
+# tools written in python. From what I gather the original source is from a
+# forum post by Gavin Andresen, so direct your praise to him.
+# This module adds shiny packaging and support for python3.
+#
+
 from .hashlib import sha256
 
-_base58 = Base58()
+# 58 character alphabet used
+alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-def encode(data):
-    return _base58.encode(data)
+def encode(v):
+    origlen = len(v)
+    v = v.lstrip(b'\0')
+    newlen = len(v)
 
-def decode(string):
-    return _base58.decode(string)
+    p, acc = 1, 0
+    for c in reversed(v):
+        acc += p * c
+        p = p << 8
 
-def encode_check(data, hashlen=4):
-    h = sha256(sha256(data).digest()).digest()
-    return encode(data + h[:hashlen])
+    result = ''
+    while acc > 0:
+        acc, mod = divmod(acc, 58)
+        result += alphabet[mod]
 
-def decode_check(string, hashlen=4):
-    data = decode(string)
-    d, h1 = data[:-hashlen], data[-hashlen:]
-    h2 = sha256(sha256(d).digest).digest()[:4]
-    if h1 != h2:
-        raise RuntimeError('Checksum error')
-    return d
+    return ''.join([c for c in reversed(result + alphabet[0] * (origlen - newlen))])
+
+
+def decode(v):
+    origlen = len(v)
+    v = v.lstrip(alphabet[0])
+    newlen = len(v)
+
+    p, acc = 1, 0
+    for c in reversed(v):
+        acc += p * alphabet.index(c)
+        p *= 58
+
+    result = []
+    while acc > 0:
+        acc, mod = divmod(acc, 256)
+        result.append(mod)
+
+    return bytes([b for b in reversed(result +[0] * (origlen - newlen))])
+
+
+def encode_check(v):
+    digest = sha256(sha256(v).digest()).digest()
+    return encode(v + digest[:4])
+
+
+def decode_check(v):
+    result = decode(v)
+    result, check = result[:-4], result[-4:]
+    digest = sha256(sha256(result).digest()).digest()
+
+    if check != digest[:4]:
+        raise ValueError("Invalid checksum")
+
+    return result
