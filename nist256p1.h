@@ -28,6 +28,7 @@
 
 #include "ecdsa.h"
 
+extern const char NIST256P1_NAME[];
 extern const ecdsa_curve nist256p1;
 
 #endif

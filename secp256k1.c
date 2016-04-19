@@ -23,6 +23,8 @@
 
 #include "secp256k1.h"
 
+const char SECP256K1_NAME[] = "secp256k1";
+
 const ecdsa_curve secp256k1 = {
 	/* .prime */ {
 		/*.val =*/ {0x3ffffc2f, 0x3ffffffb, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0xffff}

@@ -23,6 +23,7 @@
 
 #include "nist256p1.h"
 
+const char NIST256P1_NAME[] = "nist256p1";
 const ecdsa_curve nist256p1 = {
 	/* .prime */ {
 		/*.val =*/ {0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3f, 0x0, 0x0, 0x1000, 0x3fffc000, 0xffff}

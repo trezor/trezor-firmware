@@ -34,9 +34,7 @@
 #include "macros.h"
 #include "secp256k1.h"
 
-static const ecdsa_curve *default_curve = &secp256k1;
-
-int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out)
+int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char* curve, HDNode *out)
 {
 	if (public_key[0] != 0x02 && public_key[0] != 0x03) { // invalid pubkey
 		return 0;
@@ -47,19 +45,21 @@ int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 	memcpy(out->chain_code, chain_code, 32);
 	MEMSET_BZERO(out->private_key, 32);
 	memcpy(out->public_key, public_key, 33);
+	out->curve = get_curve_by_name(curve);
 	return 1;
 }
 
-int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, HDNode *out)
+int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, const char* curve, HDNode *out)
 {
 	bignum256 a;
 	bn_read_be(private_key, &a);
+	out->curve = get_curve_by_name(curve);
 
 	bool failed = false;
 	if (bn_is_zero(&a)) { // == 0
 		failed = true;
 	} else {
-		if (!bn_is_less(&a, &default_curve->order)) { // >= order
+		if (!bn_is_less(&a, &out->curve->order)) { // >= order
 			failed = true;
 		}
 		MEMSET_BZERO(&a, sizeof(a));
@@ -78,13 +78,14 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 	return 1;
 }
 
-int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
+int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNode *out)
 {
 	uint8_t I[32 + 32];
 	memset(out, 0, sizeof(HDNode));
 	out->depth = 0;
 	out->fingerprint = 0x00000000;
 	out->child_num = 0;
+	out->curve = get_curve_by_name(curve);
 	hmac_sha512((uint8_t *)"Bitcoin seed", 12, seed, seed_len, I);
 	memcpy(out->private_key, I, 32);
 	bignum256 a;
@@ -94,7 +95,7 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
 	if (bn_is_zero(&a)) { // == 0
 		failed = true;
 	} else {
-		if (!bn_is_less(&a, &default_curve->order)) { // >= order
+		if (!bn_is_less(&a, &out->curve->order)) { // >= order
 			failed = true;
 		}
 		MEMSET_BZERO(&a, sizeof(a));
@@ -138,12 +139,12 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
 	bool failed = false;
 
-	if (!bn_is_less(&b, &default_curve->order)) { // >= order
+	if (!bn_is_less(&b, &inout->curve->order)) { // >= order
 		failed = true;
 	}
 	if (!failed) {
-		bn_addmod(&a, &b, &default_curve->order);
-		bn_mod(&a, &default_curve->order);
+		bn_addmod(&a, &b, &inout->curve->order);
+		bn_mod(&a, &inout->curve->order);
 		if (bn_is_zero(&a)) {
 			failed = true;
 		}
@@ -186,7 +187,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	memset(inout->private_key, 0, 32);
 
 	bool failed = false;
-	if (!ecdsa_read_pubkey(default_curve, inout->public_key, &a)) {
+	if (!ecdsa_read_pubkey(inout->curve, inout->public_key, &a)) {
 		failed = true;
 	}
 
@@ -194,15 +195,15 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 		hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
 		memcpy(inout->chain_code, I + 32, 32);
 		bn_read_be(I, &c);
-		if (!bn_is_less(&c, &default_curve->order)) { // >= order
+		if (!bn_is_less(&c, &inout->curve->order)) { // >= order
 			failed = true;
 		}
 	}
 
 	if (!failed) {
-		scalar_multiply(default_curve, &c, &b); // b = c * G
-		point_add(default_curve, &a, &b);       // b = a + b
-		if (!ecdsa_validate_pubkey(default_curve, &b)) {
+		scalar_multiply(inout->curve, &c, &b); // b = c * G
+		point_add(inout->curve, &a, &b);       // b = a + b
+		if (!ecdsa_validate_pubkey(inout->curve, &b)) {
 			failed = true;
 		}
 	}
@@ -263,7 +264,8 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 		for (j = 0; j < BIP32_CACHE_SIZE; j++) {
 			if (private_ckd_cache[j].set &&
 			    private_ckd_cache[j].depth == i_count - 1 &&
-			    memcmp(private_ckd_cache[j].i, i, (i_count - 1) * sizeof(uint32_t)) == 0) {
+			    memcmp(private_ckd_cache[j].i, i, (i_count - 1) * sizeof(uint32_t)) == 0 &&
+				private_ckd_cache[j].node.curve == inout->curve) {
 				memcpy(inout, &(private_ckd_cache[j].node), sizeof(HDNode));
 				found = true;
 				break;
@@ -295,7 +297,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 
 void hdnode_fill_public_key(HDNode *node)
 {
-	ecdsa_get_public_key33(default_curve, node->private_key, node->public_key);
+	ecdsa_get_public_key33(node->curve, node->private_key, node->public_key);
 }
 
 void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize)

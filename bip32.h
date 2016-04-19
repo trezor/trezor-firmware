@@ -36,13 +36,14 @@ typedef struct {
 	uint8_t chain_code[32];
 	uint8_t private_key[32];
 	uint8_t public_key[33];
+	const ecdsa_curve *curve;
 } HDNode;
 
-int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, HDNode *out);
+int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char *curve, HDNode *out);
 
-int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, HDNode *out);
+int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, const char *curve, HDNode *out);
 
-int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out);
+int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve, HDNode *out);
 
 #define hdnode_private_ckd_prime(X, I) hdnode_private_ckd((X), ((I) | 0x80000000))
 
