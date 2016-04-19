@@ -93,10 +93,10 @@ const CoinType *fsm_getCoin(const char *name)
 	return coin;
 }
 
-const HDNode *fsm_getDerivedNode(uint32_t *address_n, size_t address_n_count)
+const HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
-	if (!storage_getRootNode(&node)) {
+	if (!storage_getRootNode(&node, curve)) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled");
 		layoutHome();
 		return 0;
@@ -292,19 +292,15 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 		return;
 	}
 
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const char *curve = SECP256K1_NAME;
+	if (msg->has_ecdsa_curve_name) {
+		curve = msg->ecdsa_curve_name;
+	}
+	const HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	uint8_t public_key[33];  // copy public key to temporary buffer
 	memcpy(public_key, node->public_key, sizeof(public_key));
-
-	if (msg->has_ecdsa_curve_name) {
-		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
-		if (curve) {
-			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
-			ecdsa_get_public_key33(curve, node->private_key, public_key);
-		}
-	}
 
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(public_key);
@@ -401,7 +397,7 @@ void fsm_msgSignTx(SignTx *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(0, 0);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, 0, 0);
 	if (!node) return;
 
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
@@ -445,7 +441,7 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 		layoutHome();
 		return;
 	}
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	bool encrypt = msg->has_encrypt && msg->encrypt;
@@ -566,7 +562,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	if (msg->has_multisig) {
@@ -646,7 +642,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe("Signing", 0);
@@ -724,19 +720,15 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	address_n[3] = 0x80000000 | hash[ 8] | (hash[ 9] << 8) | (hash[10] << 16) | (hash[11] << 24);
 	address_n[4] = 0x80000000 | hash[12] | (hash[13] << 8) | (hash[14] << 16) | (hash[15] << 24);
 
-	const HDNode *node = fsm_getDerivedNode(address_n, 5);
+	const char *curve = SECP256K1_NAME;
+	if (msg->has_ecdsa_curve_name) {
+		curve = msg->ecdsa_curve_name;
+	}
+	const HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
 	if (!node) return;
 
 	uint8_t public_key[33];  // copy public key to temporary buffer
 	memcpy(public_key, node->public_key, sizeof(public_key));
-
-	if (msg->has_ecdsa_curve_name) {
-		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
-		if (curve) {
-			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
-			ecdsa_get_public_key33(curve, node->private_key, public_key);
-		}
-	}
 
 	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
 
@@ -807,7 +799,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 			layoutHome();
 			return;
 		}
-		node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+		node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 		if (!node) return;
 		uint8_t public_key[33];
 		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
@@ -859,7 +851,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 		layoutHome();
 		return;
 	}
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe("Decrypting", 0);
