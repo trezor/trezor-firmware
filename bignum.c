@@ -371,7 +371,7 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 	bn_zero(&res); res.val[0] = 1;
 	// compute p = (prime+1)/4
 	memcpy(&p, prime, sizeof(bignum256));
-	p.val[0] += 1;
+	bn_addi(&p, 1);
 	bn_rshift(&p);
 	bn_rshift(&p);
 	for (i = 0; i < 9; i++) {
