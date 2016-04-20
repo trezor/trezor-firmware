@@ -36,16 +36,20 @@
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char* curve, HDNode *out)
 {
+	const ecdsa_curve *curve_info = get_curve_by_name(curve);
+	if (curve_info == 0) {
+		return 0;
+	}
 	if (public_key[0] != 0x02 && public_key[0] != 0x03) { // invalid pubkey
 		return 0;
 	}
+	out->curve = curve_info;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
 	memcpy(out->chain_code, chain_code, 32);
 	MEMSET_BZERO(out->private_key, 32);
 	memcpy(out->public_key, public_key, 33);
-	out->curve = get_curve_by_name(curve);
 	return 1;
 }
 
@@ -53,10 +57,12 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 {
 	bignum256 a;
 	bn_read_be(private_key, &a);
-	out->curve = get_curve_by_name(curve);
 
 	bool failed = false;
-	if (bn_is_zero(&a)) { // == 0
+	const ecdsa_curve *curve_info = get_curve_by_name(curve);
+	if (curve_info == 0) {
+		failed = true;
+	} else if (bn_is_zero(&a)) { // == 0
 		failed = true;
 	} else {
 		if (!bn_is_less(&a, &out->curve->order)) { // >= order
@@ -69,6 +75,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 		return 0;
 	}
 
+	out->curve = curve_info;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -86,6 +93,9 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 	out->fingerprint = 0x00000000;
 	out->child_num = 0;
 	out->curve = get_curve_by_name(curve);
+	if (out->curve == 0) {
+		return 0;
+	}
 	hmac_sha512((const uint8_t*) out->curve->bip32_name,
 				strlen(out->curve->bip32_name), seed, seed_len, I);
 	memcpy(out->private_key, I, 32);
