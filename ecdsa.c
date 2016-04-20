@@ -862,7 +862,7 @@ int ecdsa_address_decode(const char *addr, uint8_t *out)
 
 void uncompress_coords(const ecdsa_curve *curve, uint8_t odd, const bignum256 *x, bignum256 *y)
 {
-	// y^2 = x^3 + 0*x + 7
+	// y^2 = x^3 + a*x + b
 	memcpy(y, x, sizeof(bignum256));         // y is x
 	bn_multiply(x, y, &curve->prime);        // y is x^2
 	bn_subi(y, -curve->a, &curve->prime);    // y is x^2 + a
@@ -1050,10 +1050,10 @@ const ecdsa_curve *get_curve_by_name(const char *curve_name) {
 	if (curve_name == 0) {
 		return 0;
 	}
-	if (strcmp(curve_name, "secp256k1") == 0) {
+	if (strcmp(curve_name, SECP256K1_NAME) == 0) {
 		return &secp256k1;
 	}
-	if (strcmp(curve_name, "nist256p1") == 0) {
+	if (strcmp(curve_name, NIST256P1_NAME) == 0) {
 		return &nist256p1;
 	}
 	return 0;

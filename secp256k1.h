@@ -28,6 +28,7 @@
 
 #include "ecdsa.h"
 
+extern const char SECP256K1_NAME[];
 extern const ecdsa_curve secp256k1;
 
 #endif
