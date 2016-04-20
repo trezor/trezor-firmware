@@ -33,7 +33,9 @@ void session_clear(bool clear_pin);
 
 void storage_loadDevice(LoadDevice *msg);
 
-bool storage_getRootNode(HDNode *node);
+const uint8_t *storage_getSeed(void);
+
+bool storage_getRootNode(HDNode *node, const char *curve);
 
 const char *storage_getLabel(void);
 void storage_setLabel(const char *label);
