@@ -90,6 +90,16 @@ int sshMessageSign(const uint8_t *message, size_t message_len, const uint8_t *pr
 	return ecdsa_sign(&nist256p1, privkey, message, message_len, signature + 1, NULL);
 }
 
+int gpgMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature)
+{
+	// GPG should sign a SHA256 digest of the original message.
+	if (message_len != 32) {
+		return 1;
+	}
+	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
+	return ecdsa_sign_digest(&nist256p1, privkey, message, signature + 1, NULL);
+}
+
 int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature)
 {
 	SHA256_CTX ctx;
