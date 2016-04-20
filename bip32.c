@@ -86,7 +86,8 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 	out->fingerprint = 0x00000000;
 	out->child_num = 0;
 	out->curve = get_curve_by_name(curve);
-	hmac_sha512((uint8_t *)"Bitcoin seed", 12, seed, seed_len, I);
+	hmac_sha512((const uint8_t*) out->curve->bip32_name,
+				strlen(out->curve->bip32_name), seed, seed_len, I);
 	memcpy(out->private_key, I, 32);
 	bignum256 a;
 	bn_read_be(out->private_key, &a);
@@ -337,6 +338,7 @@ int hdnode_deserialize(const char *str, HDNode *node)
 	if (!base58_decode_check(str, node_data, sizeof(node_data))) {
 		return -1;
 	}
+	node->curve = get_curve_by_name(SECP256K1_NAME);
 	uint32_t version = read_be(node_data);
 	if (version == 0x0488B21E) { // public node
 		memcpy(node->public_key, node_data + 45, 33);

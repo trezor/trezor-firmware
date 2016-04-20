@@ -1050,10 +1050,10 @@ const ecdsa_curve *get_curve_by_name(const char *curve_name) {
 	if (curve_name == 0) {
 		return 0;
 	}
-	if (strcmp(curve_name, "secp256k1") == 0) {
+	if (strcmp(curve_name, SECP256K1_NAME) == 0) {
 		return &secp256k1;
 	}
-	if (strcmp(curve_name, "nist256p1") == 0) {
+	if (strcmp(curve_name, NIST256P1_NAME) == 0) {
 		return &nist256p1;
 	}
 	return 0;

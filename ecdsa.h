@@ -41,6 +41,7 @@ typedef struct {
 	bignum256 order_half;  // order of G divided by 2
 	int       a;           // coefficient 'a' of the elliptic curve
 	bignum256 b;           // coefficient 'b' of the elliptic curve
+	const char *bip32_name;// string used for generating BIP32 xprv from seed
 
 #if USE_PRECOMPUTED_CP
 	const curve_point cp[64][8];
