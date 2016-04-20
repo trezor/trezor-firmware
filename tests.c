@@ -648,6 +648,33 @@ START_TEST(test_bip32_nist_compare)
 }
 END_TEST
 
+START_TEST(test_bip32_nist_invalid)
+{
+	HDNode node, node2;
+	int r;
+
+	// init m
+	hdnode_from_seed(fromhex("000102030405060708090a0b0c0d0e0f"), 16, NIST256P1_NAME, &node);
+
+	// [Chain m/28578']
+	r = hdnode_private_ckd_prime(&node, 28578);
+	ck_assert_int_eq(r, 1);
+	ck_assert_int_eq(node.fingerprint, 0xbe6105b5);
+	ck_assert_mem_eq(node.chain_code,  fromhex("e94c8ebe30c2250a14713212f6449b20f3329105ea15b652ca5bdfc68f6c65c2"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("06f0db126f023755d0b8d86d4591718a5210dd8d024e3e14b6159d63f53aa669"), 32);
+	ck_assert_mem_eq(node.public_key,  fromhex("02519b5554a4872e8c9c1c847115363051ec43e93400e030ba3c36b52a3e70a5b7"), 33);
+
+	memcpy(&node2, &node, sizeof(HDNode));
+	r = hdnode_private_ckd(&node2, 33941);
+	ck_assert_int_eq(r, 0);
+
+	memcpy(&node2, &node, sizeof(HDNode));
+	memset(&node2.private_key, 0, 32);
+	r = hdnode_public_ckd(&node2, 33941);
+	ck_assert_int_eq(r, 0);
+}
+END_TEST
+
 #define test_deterministic(KEY, MSG, K) do {	  \
 	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
 	res = generate_k_rfc6979(curve, &k, fromhex(KEY), buf); \
@@ -1569,6 +1596,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_nist_vector_1);
 	tcase_add_test(tc, test_bip32_nist_vector_2);
 	tcase_add_test(tc, test_bip32_nist_compare);
+	tcase_add_test(tc, test_bip32_nist_invalid);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rfc6979");
