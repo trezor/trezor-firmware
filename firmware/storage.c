@@ -31,6 +31,7 @@
 #include "pbkdf2.h"
 #include "bip32.h"
 #include "bip39.h"
+#include "secp256k1.h"
 #include "util.h"
 #include "memory.h"
 #include "rng.h"
@@ -274,7 +275,7 @@ const uint8_t *storage_getSeed(void)
 bool storage_getRootNode(HDNode *node, const char *curve)
 {
 	// if storage has node, decrypt and use it
-	if (storage.has_node && strcmp(curve, "secp256k1") == 0) {
+	if (storage.has_node && strcmp(curve, SECP256K1_NAME) == 0) {
 		if (!protectPassphrase()) {
 			return false;
 		}
