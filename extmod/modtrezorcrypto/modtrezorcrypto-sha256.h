@@ -61,7 +61,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256_digest_obj, mod_TrezorC
 STATIC mp_obj_t mod_TrezorCrypto_Sha256___del__(mp_obj_t self) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     mbedtls_sha256_free(&(o->ctx));
-    printf("yay!\n");
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256___del___obj, mod_TrezorCrypto_Sha256___del__);
