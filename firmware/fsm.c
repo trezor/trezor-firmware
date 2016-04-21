@@ -97,7 +97,7 @@ const HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t 
 {
 	static HDNode node;
 	if (!storage_getRootNode(&node, curve)) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled");
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled or unsupported curve");
 		layoutHome();
 		return 0;
 	}
@@ -299,11 +299,8 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	const HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
-	uint8_t public_key[33];  // copy public key to temporary buffer
-	memcpy(public_key, node->public_key, sizeof(public_key));
-
 	if (msg->has_show_display && msg->show_display) {
-		layoutPublicKey(public_key);
+		layoutPublicKey(node->public_key);
 		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show public key cancelled");
 			layoutHome();
@@ -319,7 +316,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	resp->node.has_private_key = false;
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
-	memcpy(resp->node.public_key.bytes, public_key, 33);
+	memcpy(resp->node.public_key.bytes, node->public_key, 33);
 	resp->has_xpub = true;
 	hdnode_serialize_public(node, resp->xpub, sizeof(resp->xpub));
 	msg_write(MessageType_MessageType_PublicKey, resp);
@@ -727,9 +724,6 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	const HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
 	if (!node) return;
 
-	uint8_t public_key[33];  // copy public key to temporary buffer
-	memcpy(public_key, node->public_key, sizeof(public_key));
-
 	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
 	bool sign_gpg = msg->identity.has_proto && (strcmp(msg->identity.proto, "gpg") == 0);
 
@@ -747,7 +741,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	}
 
 	if (result == 0) {
-		if (curve != SECP256K1_NAME) {
+		if (strcmp(curve, SECP256K1_NAME) != 0) {
 			resp->has_address = false;
 		} else {
 			resp->has_address = true;
@@ -757,7 +751,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		}
 		resp->has_public_key = true;
 		resp->public_key.size = 33;
-		memcpy(resp->public_key.bytes, public_key, 33);
+		memcpy(resp->public_key.bytes, node->public_key, 33);
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_SignedIdentity, resp);
