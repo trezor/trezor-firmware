@@ -1,6 +1,5 @@
 /**
- * Copyright (c) 2013-2014 Tomas Dzetkulic
- * Copyright (c) 2013-2014 Pavol Rusnak
+ * Copyright (c) 2016 Jochen Hoenicke
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -21,15 +20,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __NIST256P1_H__
-#define __NIST256P1_H__
-
-#include <stdint.h>
-
-#include "ecdsa.h"
-#include "bip32.h"
-
-extern const ecdsa_curve nist256p1;
-extern const curve_info nist256p1_info;
-
-#endif
+const char SECP256K1_NAME[] = "secp256k1";
+const char NIST256P1_NAME[] = "nist256p1";
+const char ED25519_NAME[] = "ed25519";

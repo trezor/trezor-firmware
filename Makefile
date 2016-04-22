@@ -24,18 +24,22 @@ CFLAGS   += $(OPTFLAGS) \
 
 # disable sequence point warning because of AES code
 CFLAGS += -Wno-sequence-point
+CFLAGS += -DED25519_CUSTOMRANDOM=1
+CFLAGS += -DED25519_CUSTOMHASH=1
+CFLAGS += -Ied25519-donna -I.
 
 # disable certain optimizations and features when small footprint is required
 ifdef SMALL
 CFLAGS += -DUSE_PRECOMPUTED_IV=0 -DUSE_PRECOMPUTED_CP=0
 endif
 
-SRCS   = bignum.c ecdsa.c secp256k1.c nist256p1.c rand.c hmac.c bip32.c bip39.c pbkdf2.c base58.c
+SRCS   = bignum.c ecdsa.c curves.c secp256k1.c nist256p1.c rand.c hmac.c bip32.c bip39.c pbkdf2.c base58.c
 SRCS  += ripemd160.c
 SRCS  += sha2.c
 SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
 
 OBJS   = $(SRCS:.c=.o)
+OBJS  += ed25519-donna/ed25519.o
 
 TESTLIBS = -lcheck -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
@@ -55,4 +59,4 @@ libtrezor-crypto.so: $(SRCS)
 	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o libtrezor-crypto.so
 
 clean:
-	rm -f *.o tests test-openssl libtrezor-crypto.so
+	rm -f *.o ed25519-donna/*.o tests test-openssl libtrezor-crypto.so

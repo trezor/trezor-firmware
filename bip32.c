@@ -33,8 +33,16 @@
 #include "ripemd160.h"
 #include "base58.h"
 #include "macros.h"
+#include "curves.h"
 #include "secp256k1.h"
 #include "nist256p1.h"
+#include "ed25519.h"
+
+const curve_info ed25519_info = {
+	/* bip32_name */
+	"ed25519 seed",
+	0
+};
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char* curve, HDNode *out)
 {
@@ -108,7 +116,6 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 			bn_read_be(I, &a);
 			if (!bn_is_zero(&a) // != 0
 				&& bn_is_less(&a, &out->curve->params->order)) { // < order
-
 				break;
 			}
 			hmac_sha512((const uint8_t*) out->curve->bip32_name,
@@ -328,8 +335,36 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 
 void hdnode_fill_public_key(HDNode *node)
 {
-	ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
+	if (node->curve == &ed25519_info) {
+		node->public_key[0] = 0;
+		ed25519_publickey(node->private_key, node->public_key + 1);
+	} else {
+		ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
+	}
 }
+
+// msg is a data to be signed
+// msg_len is the message length
+int hdnode_sign(const HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby)
+{
+	if (node->curve == &ed25519_info) {
+		ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
+		return 0;
+	} else {
+		return ecdsa_sign(node->curve->params, node->private_key, msg, msg_len, sig, pby);
+	}
+}
+
+int hdnode_sign_digest(const HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby)
+{
+	if (node->curve == &ed25519_info) {
+		ed25519_sign(digest, 32, node->private_key, node->public_key + 1, sig);
+		return 0;
+	} else {
+		return ecdsa_sign_digest(node->curve->params, node->private_key, digest, sig, pby);
+	}
+}
+
 
 void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize)
 {
@@ -397,6 +432,9 @@ const curve_info *get_curve_by_name(const char *curve_name) {
 	}
 	if (strcmp(curve_name, NIST256P1_NAME) == 0) {
 		return &nist256p1_info;
+	}
+	if (strcmp(curve_name, ED25519_NAME) == 0) {
+		return &ed25519_info;
 	}
 	return 0;
 }

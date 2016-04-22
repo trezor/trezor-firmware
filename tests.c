@@ -38,6 +38,7 @@
 #include "rand.h"
 #include "sha2.h"
 #include "options.h"
+#include "curves.h"
 #include "secp256k1.h"
 #include "nist256p1.h"
 
@@ -500,6 +501,30 @@ START_TEST(test_bip32_cache_2)
 	ck_assert_mem_eq(&(nodea[6]), &(nodeb[6]), sizeof(HDNode));
 	ck_assert_mem_eq(&(nodea[7]), &(nodeb[7]), sizeof(HDNode));
 	ck_assert_mem_eq(&(nodea[8]), &(nodeb[8]), sizeof(HDNode));
+}
+END_TEST
+
+START_TEST(test_bip32_nist_seed)
+{
+	HDNode node;
+
+	// init m
+	hdnode_from_seed(fromhex("a7305bc8df8d0951f0cb224c0e95d7707cbdf2c6ce7e8d481fec69c7ff5e9446"), 32, NIST256P1_NAME, &node);
+
+	// [Chain m]
+	ck_assert_int_eq(node.fingerprint, 0x00000000);	
+	ck_assert_mem_eq(node.private_key, fromhex("3b8c18469a4634517d6d0b65448f8e6c62091b45540a1743c5846be55d47d88f"), 32);
+	ck_assert_mem_eq(node.chain_code,  fromhex("7762f9729fed06121fd13f326884c82f59aa95c57ac492ce8c9654e60efd130c"), 32);
+	ck_assert_mem_eq(node.public_key,  fromhex("0383619fadcde31063d8c5cb00dbfe1713f3e6fa169d8541a798752a1c1ca0cb20"), 33);
+
+	// init m
+	hdnode_from_seed(fromhex("aa305bc8df8d0951f0cb29ad4568d7707cbdf2c6ce7e8d481fec69c7ff5e9446"), 32, NIST256P1_NAME, &node);
+
+	// [Chain m]
+	ck_assert_int_eq(node.fingerprint, 0x00000000);
+	ck_assert_mem_eq(node.chain_code,  fromhex("a81d21f36f987fa0be3b065301bfb6aa9deefbf3dfef6744c37b9a4abc3c68f1"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("0e49dc46ce1d8c29d9b80a05e40f5d0cd68cbf02ae98572186f5343be18084bf"), 32);
+	ck_assert_mem_eq(node.public_key,  fromhex("03aaa4c89acd9a98935330773d3dae55122f3591bac4a40942681768de8df6ba63"), 33);
 }
 END_TEST
 
@@ -1600,6 +1625,7 @@ Suite *test_suite(void)
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("bip32-nist");
+	tcase_add_test(tc, test_bip32_nist_seed);
 	tcase_add_test(tc, test_bip32_nist_vector_1);
 	tcase_add_test(tc, test_bip32_nist_vector_2);
 	tcase_add_test(tc, test_bip32_nist_compare);

@@ -64,6 +64,9 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count);
 
 void hdnode_fill_public_key(HDNode *node);
 
+int hdnode_sign(const HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
+int hdnode_sign_digest(const HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby);
+
 void hdnode_serialize_public(const HDNode *node, char *str, int strsize);
 
 void hdnode_serialize_private(const HDNode *node, char *str, int strsize);
