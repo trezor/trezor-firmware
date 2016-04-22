@@ -31,7 +31,7 @@
 #include "pbkdf2.h"
 #include "bip32.h"
 #include "bip39.h"
-#include "secp256k1.h"
+#include "curves.h"
 #include "util.h"
 #include "memory.h"
 #include "rng.h"

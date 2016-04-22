@@ -44,8 +44,8 @@
 #include "base58.h"
 #include "bip39.h"
 #include "ripemd160.h"
+#include "curves.h"
 #include "secp256k1.h"
-#include "nist256p1.h"
 
 // message methods
 
@@ -643,7 +643,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 	if (!node) return;
 
 	layoutProgressSwipe("Signing", 0);
-	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
+	if (cryptoMessageSign(node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
 		resp->has_address = true;
 		uint8_t addr_raw[21];
 		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
@@ -730,14 +730,14 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	int result = 0;
 	layoutProgressSwipe("Signing", 0);
 	if (sign_ssh) { // SSH does not sign visual challenge
-		result = sshMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
+		result = sshMessageSign(node, msg->challenge_hidden.bytes, msg->challenge_hidden.size, resp->signature.bytes);
 	} else if (sign_gpg) { // GPG should sign a message digest
-		result = gpgMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
+		result = gpgMessageSign(node, msg->challenge_hidden.bytes, msg->challenge_hidden.size, resp->signature.bytes);
 	} else {
 		uint8_t digest[64];
 		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
 		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
-		result = cryptoMessageSign(digest, 64, node->private_key, resp->signature.bytes);
+		result = cryptoMessageSign(node, digest, 64, resp->signature.bytes);
 	}
 
 	if (result == 0) {

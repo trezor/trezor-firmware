@@ -25,8 +25,8 @@
 #include "hmac.h"
 #include "bip32.h"
 #include "layout.h"
+#include "curves.h"
 #include "secp256k1.h"
-#include "nist256p1.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -84,23 +84,23 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out)
 	return 1 + 8;
 }
 
-int sshMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature)
+int sshMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
-	return ecdsa_sign(&nist256p1, privkey, message, message_len, signature + 1, NULL);
+	return hdnode_sign(node, message, message_len, signature + 1, NULL);
 }
 
-int gpgMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature)
+int gpgMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	// GPG should sign a SHA256 digest of the original message.
 	if (message_len != 32) {
 		return 1;
 	}
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
-	return ecdsa_sign_digest(&nist256p1, privkey, message, signature + 1, NULL);
+	return hdnode_sign_digest(node, message, signature + 1, NULL);
 }
 
-int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature)
+int cryptoMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -113,7 +113,7 @@ int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t 
 	sha256_Final(hash, &ctx);
 	sha256_Raw(hash, 32, hash);
 	uint8_t pby;
-	int result = ecdsa_sign_digest(&secp256k1, privkey, hash, signature + 1, &pby);
+	int result = hdnode_sign_digest(node, hash, signature + 1, &pby);
 	if (result == 0) {
 		signature[0] = 27 + pby + 4;
 	}
@@ -183,11 +183,13 @@ int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_
 int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, const uint8_t *address_raw)
 {
 	if (privkey && address_raw) { // signing == true
+		HDNode node;
 		payload[0] = display_only ? 0x81 : 0x01;
 		uint32_t l = ser_length(msg_size, payload + 1);
 		memcpy(payload + 1 + l, msg, msg_size);
 		memcpy(payload + 1 + l + msg_size, address_raw, 21);
-		if (cryptoMessageSign(msg, msg_size, privkey, payload + 1 + l + msg_size + 21) != 0) {
+		hdnode_from_xprv(0, 0, 0, privkey, privkey, SECP256K1_NAME, &node);
+		if (cryptoMessageSign(&node, msg, msg_size, payload + 1 + l + msg_size + 21) != 0) {
 			return 1;
 		}
 		*payload_len = 1 + l + msg_size + 21 + 65;
