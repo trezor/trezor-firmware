@@ -46,10 +46,7 @@ const ecdsa_curve nist256p1 = {
 
 	/* b */ {
 		/*.val =*/{0x27d2604b, 0x2f38f0f8, 0x53b0f63, 0x741ac33, 0x1886bc65, 0x2ef555da, 0x293e7b3e, 0xd762a8e, 0x5ac6}
-	},
-
-	/* bip32_name */
-	"Nist256p1 seed"
+	}
 
 #if USE_PRECOMPUTED_CP
 	,
@@ -57,4 +54,10 @@ const ecdsa_curve nist256p1 = {
 #include "nist256p1.table"
 	}
 #endif
+};
+
+const curve_info nist256p1_info = {
+	/* bip32_name */
+	"Nist256p1 seed",
+	&nist256p1
 };

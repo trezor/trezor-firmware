@@ -47,10 +47,7 @@ const ecdsa_curve secp256k1 = {
 
 	/* b */ {
 		/*.val =*/{7}
-	},
-
-	/* bip32_name */
-	"Bitcoin seed"
+	}
 
 #if USE_PRECOMPUTED_CP
 	,
@@ -58,4 +55,10 @@ const ecdsa_curve secp256k1 = {
 #include "secp256k1.table"
 	}
 #endif
+};
+
+const curve_info secp256k1_info = {
+	/* bip32_name */
+	"Bitcoin seed",
+	&secp256k1
 };

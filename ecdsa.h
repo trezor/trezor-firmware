@@ -41,7 +41,6 @@ typedef struct {
 	bignum256 order_half;  // order of G divided by 2
 	int       a;           // coefficient 'a' of the elliptic curve
 	bignum256 b;           // coefficient 'b' of the elliptic curve
-	const char *bip32_name;// string used for generating BIP32 xprv from seed
 
 #if USE_PRECOMPUTED_CP
 	const curve_point cp[64][8];
@@ -77,7 +76,6 @@ int ecdsa_verify(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t
 int ecdsa_verify_double(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
 int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest);
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
-const ecdsa_curve *get_curve_by_name(const char *curve_name);
 
 // Private
 int generate_k_rfc6979(const ecdsa_curve *curve, bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash);

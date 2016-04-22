@@ -30,13 +30,18 @@
 #include "options.h"
 
 typedef struct {
+	const char *bip32_name;    // string for generating BIP32 xprv from seed
+	const ecdsa_curve *params; // ecdsa curve parameters, null for ed25519
+} curve_info;
+
+typedef struct {
 	uint32_t depth;
 	uint32_t fingerprint;
 	uint32_t child_num;
 	uint8_t chain_code[32];
 	uint8_t private_key[32];
 	uint8_t public_key[33];
-	const ecdsa_curve *curve;
+	const curve_info *curve;
 } HDNode;
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char *curve, HDNode *out);
@@ -67,5 +72,7 @@ int hdnode_deserialize(const char *str, HDNode *node);
 
 // Private
 void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize);
+
+const curve_info *get_curve_by_name(const char *curve_name);
 
 #endif

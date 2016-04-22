@@ -648,7 +648,7 @@ START_TEST(test_bip32_nist_compare)
 }
 END_TEST
 
-START_TEST(test_bip32_nist_invalid)
+START_TEST(test_bip32_nist_repeat)
 {
 	HDNode node, node2;
 	int r;
@@ -666,12 +666,19 @@ START_TEST(test_bip32_nist_invalid)
 
 	memcpy(&node2, &node, sizeof(HDNode));
 	r = hdnode_private_ckd(&node2, 33941);
-	ck_assert_int_eq(r, 0);
+	ck_assert_int_eq(r, 1);
+	ck_assert_int_eq(node2.fingerprint, 0x3e2b7bc6);
+	ck_assert_mem_eq(node2.chain_code,  fromhex("9e87fe95031f14736774cd82f25fd885065cb7c358c1edf813c72af535e83071"), 32);
+	ck_assert_mem_eq(node2.private_key, fromhex("092154eed4af83e078ff9b84322015aefe5769e31270f62c3f66c33888335f3a"), 32);
+	ck_assert_mem_eq(node2.public_key,  fromhex("0235bfee614c0d5b2cae260000bb1d0d84b270099ad790022c1ae0b2e782efe120"), 33);
 
 	memcpy(&node2, &node, sizeof(HDNode));
 	memset(&node2.private_key, 0, 32);
 	r = hdnode_public_ckd(&node2, 33941);
-	ck_assert_int_eq(r, 0);
+	ck_assert_int_eq(r, 1);
+	ck_assert_int_eq(node2.fingerprint, 0x3e2b7bc6);
+	ck_assert_mem_eq(node2.chain_code,  fromhex("9e87fe95031f14736774cd82f25fd885065cb7c358c1edf813c72af535e83071"), 32);
+	ck_assert_mem_eq(node2.public_key,  fromhex("0235bfee614c0d5b2cae260000bb1d0d84b270099ad790022c1ae0b2e782efe120"), 33);
 }
 END_TEST
 
@@ -1596,7 +1603,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_nist_vector_1);
 	tcase_add_test(tc, test_bip32_nist_vector_2);
 	tcase_add_test(tc, test_bip32_nist_compare);
-	tcase_add_test(tc, test_bip32_nist_invalid);
+	tcase_add_test(tc, test_bip32_nist_repeat);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("rfc6979");

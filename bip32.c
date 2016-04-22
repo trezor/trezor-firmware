@@ -1,6 +1,7 @@
 /**
- * Copyright (c) 2013-2014 Tomas Dzetkulic
- * Copyright (c) 2013-2014 Pavol Rusnak
+ * Copyright (c) 2013-2016 Tomas Dzetkulic
+ * Copyright (c) 2013-2016 Pavol Rusnak
+ * Copyright (c) 2015-2016 Jochen Hoenicke
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -33,17 +34,18 @@
 #include "base58.h"
 #include "macros.h"
 #include "secp256k1.h"
+#include "nist256p1.h"
 
 int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char* curve, HDNode *out)
 {
-	const ecdsa_curve *curve_info = get_curve_by_name(curve);
-	if (curve_info == 0) {
+	const curve_info *info = get_curve_by_name(curve);
+	if (info == 0) {
 		return 0;
 	}
 	if (public_key[0] != 0x02 && public_key[0] != 0x03) { // invalid pubkey
 		return 0;
 	}
-	out->curve = curve_info;
+	out->curve = info;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -55,18 +57,19 @@ int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 
 int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, const char* curve, HDNode *out)
 {
-	bignum256 a;
-	bn_read_be(private_key, &a);
-
 	bool failed = false;
-	const ecdsa_curve *curve_info = get_curve_by_name(curve);
-	if (curve_info == 0) {
-		failed = true;
-	} else if (bn_is_zero(&a)) { // == 0
+	const curve_info *info = get_curve_by_name(curve);
+	if (info == 0) {
 		failed = true;
 	} else {
-		if (!bn_is_less(&a, &out->curve->order)) { // >= order
+		bignum256 a;
+		bn_read_be(private_key, &a);
+		if (bn_is_zero(&a)) { // == 0
 			failed = true;
+		} else {
+			if (!bn_is_less(&a, &info->params->order)) { // >= order
+				failed = true;
+			}
 		}
 		MEMSET_BZERO(&a, sizeof(a));
 	}
@@ -75,7 +78,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, c
 		return 0;
 	}
 
-	out->curve = curve_info;
+	out->curve = info;
 	out->depth = depth;
 	out->fingerprint = fingerprint;
 	out->child_num = child_num;
@@ -98,27 +101,27 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 	}
 	hmac_sha512((const uint8_t*) out->curve->bip32_name,
 				strlen(out->curve->bip32_name), seed, seed_len, I);
-	memcpy(out->private_key, I, 32);
-	bignum256 a;
-	bn_read_be(out->private_key, &a);
 
-	bool failed = false;
-	if (bn_is_zero(&a)) { // == 0
-		failed = true;
-	} else {
-		if (!bn_is_less(&a, &out->curve->order)) { // >= order
-			failed = true;
+	if (out->curve->params) {
+		bignum256 a;
+		while (true) {
+			bn_read_be(I, &a);
+			if (!bn_is_zero(&a) // != 0
+				&& bn_is_less(&a, &out->curve->params->order)) { // < order
+
+				break;
+			}
+			hmac_sha512((const uint8_t*) out->curve->bip32_name,
+						strlen(out->curve->bip32_name), I, sizeof(I), I);
 		}
 		MEMSET_BZERO(&a, sizeof(a));
 	}
-
-	if (!failed) {
-		memcpy(out->chain_code, I + 32, 32);
-		hdnode_fill_public_key(out);
-	}
+	memcpy(out->private_key, I, 32);
+	memcpy(out->chain_code, I + 32, 32);
+	hdnode_fill_public_key(out);
 
 	MEMSET_BZERO(I, sizeof(I));
-	return failed ? 0 : 1;
+	return 1;
 }
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i)
@@ -132,6 +135,9 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 		data[0] = 0;
 		memcpy(data + 1, inout->private_key, 32);
 	} else { // public derivation
+		if (!inout->curve->params) {
+			return 0;
+		}
 		memcpy(data, inout->public_key, 33);
 	}
 	write_be(data + 33, i);
@@ -143,29 +149,37 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	bn_read_be(inout->private_key, &a);
 
 	hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
-	memcpy(inout->chain_code, I + 32, 32);
-	memcpy(inout->private_key, I, 32);
+	if (inout->curve->params) {
+		while (true) {
+			bool failed = false;
+			bn_read_be(I, &b);
+			if (!bn_is_less(&b, &inout->curve->params->order)) { // >= order
+				failed = true;
+			} else {
+				bn_addmod(&b, &a, &inout->curve->params->order);
+				bn_mod(&b, &inout->curve->params->order);
+				if (bn_is_zero(&b)) {
+					failed = true;
+				}
+			}
+			
+			if (!failed) {
+				bn_write_be(&b, inout->private_key);
+				break;
+			}
 
-	bn_read_be(inout->private_key, &b);
-
-	bool failed = false;
-
-	if (!bn_is_less(&b, &inout->curve->order)) { // >= order
-		failed = true;
-	}
-	if (!failed) {
-		bn_addmod(&a, &b, &inout->curve->order);
-		bn_mod(&a, &inout->curve->order);
-		if (bn_is_zero(&a)) {
-			failed = true;
+			data[0] = 1;
+			memcpy(data + 1, I + 32, 32);
+			hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
 		}
+	} else {
+		memcpy(inout->private_key, I, 32);
 	}
-	if (!failed) {
-		inout->depth++;
-		inout->child_num = i;
-		bn_write_be(&a, inout->private_key);
-		hdnode_fill_public_key(inout);
-	}
+		
+	memcpy(inout->chain_code, I + 32, 32);
+	inout->depth++;
+	inout->child_num = i;
+	hdnode_fill_public_key(inout);
 
 	// making sure to wipe our memory
 	MEMSET_BZERO(&a, sizeof(a));
@@ -173,7 +187,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	MEMSET_BZERO(I, sizeof(I));
 	MEMSET_BZERO(fingerprint, sizeof(fingerprint));
 	MEMSET_BZERO(data, sizeof(data));
-	return failed ? 0 : 1;
+	return 1;
 }
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i)
@@ -187,6 +201,9 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	if (i & 0x80000000) { // private derivation
 		return 0;
 	} else { // public derivation
+		if (!inout->curve->params) {
+			return 0;
+		}
 		memcpy(data, inout->public_key, 33);
 	}
 	write_be(data + 33, i);
@@ -197,34 +214,37 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 
 	memset(inout->private_key, 0, 32);
 
-	bool failed = false;
-	if (!ecdsa_read_pubkey(inout->curve, inout->public_key, &a)) {
-		failed = true;
+	if (!ecdsa_read_pubkey(inout->curve->params, inout->public_key, &a)) {
+		return 0;
 	}
 
-	if (!failed) {
+	while (true) {
+		bool failed = false;
 		hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
-		memcpy(inout->chain_code, I + 32, 32);
 		bn_read_be(I, &c);
-		if (!bn_is_less(&c, &inout->curve->order)) { // >= order
+		if (!bn_is_less(&c, &inout->curve->params->order)) { // >= order
 			failed = true;
+		} else {
+			scalar_multiply(inout->curve->params, &c, &b); // b = c * G
+			point_add(inout->curve->params, &a, &b);       // b = a + b
+			if (point_is_infinity(&b)) {
+				failed = true;
+			}
 		}
+		
+		if (!failed) {
+			inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
+			bn_write_be(&b.x, inout->public_key + 1);
+			break;
+		}
+
+		data[0] = 1;
+		memcpy(data + 1, I + 32, 32);
 	}
 
-	if (!failed) {
-		scalar_multiply(inout->curve, &c, &b); // b = c * G
-		point_add(inout->curve, &a, &b);       // b = a + b
-		if (!ecdsa_validate_pubkey(inout->curve, &b)) {
-			failed = true;
-		}
-	}
-
-	if (!failed) {
-		inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
-		bn_write_be(&b.x, inout->public_key + 1);
-		inout->depth++;
-		inout->child_num = i;
-	}
+	inout->depth++;
+	inout->child_num = i;
+	memcpy(inout->chain_code, I + 32, 32);
 
 	// Wipe all stack data.
 	MEMSET_BZERO(data, sizeof(data));
@@ -234,7 +254,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	MEMSET_BZERO(&b, sizeof(b));
 	MEMSET_BZERO(&c, sizeof(c));
 
-	return failed ? 0 : 1;
+	return 1;
 }
 
 #if USE_BIP32_CACHE
@@ -308,7 +328,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 
 void hdnode_fill_public_key(HDNode *node)
 {
-	ecdsa_get_public_key33(node->curve, node->private_key, node->public_key);
+	ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
 }
 
 void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize)
@@ -365,5 +385,18 @@ int hdnode_deserialize(const char *str, HDNode *node)
 	node->fingerprint = read_be(node_data + 5);
 	node->child_num = read_be(node_data + 9);
 	memcpy(node->chain_code, node_data + 13, 32);
+	return 0;
+}
+
+const curve_info *get_curve_by_name(const char *curve_name) {
+	if (curve_name == 0) {
+		return 0;
+	}
+	if (strcmp(curve_name, SECP256K1_NAME) == 0) {
+		return &secp256k1_info;
+	}
+	if (strcmp(curve_name, NIST256P1_NAME) == 0) {
+		return &nist256p1_info;
+	}
 	return 0;
 }

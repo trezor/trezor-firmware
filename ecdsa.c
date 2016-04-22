@@ -36,9 +36,6 @@
 #include "base58.h"
 #include "macros.h"
 
-#include "secp256k1.h"
-#include "nist256p1.h"
-
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2)
 {
@@ -1043,18 +1040,4 @@ int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der)
 
 	*len = *len1 + *len2 + 4;
 	return *len + 2;
-}
-
-
-const ecdsa_curve *get_curve_by_name(const char *curve_name) {
-	if (curve_name == 0) {
-		return 0;
-	}
-	if (strcmp(curve_name, SECP256K1_NAME) == 0) {
-		return &secp256k1;
-	}
-	if (strcmp(curve_name, NIST256P1_NAME) == 0) {
-		return &nist256p1;
-	}
-	return 0;
 }
