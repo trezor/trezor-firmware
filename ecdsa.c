@@ -735,7 +735,12 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 			*pby = R.y.val[0] & 1;
 		}
 		// r = (rx mod n)
-		bn_mod(&R.x, &curve->order);
+		if (!bn_is_less(&R.x, &curve->order)) {
+			bn_subtract(&R.x, &curve->order, &R.x);
+			if (pby) {
+				*pby |= 2;
+			}
+		}
 		// if r is zero, we fail
 		if (bn_is_zero(&R.x))
 		{
@@ -766,7 +771,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 		if (bn_is_less(&curve->order_half, &k)) {
 			bn_subtract(&curve->order, &k, &k);
 			if (pby) {
-				*pby = !*pby;
+				*pby ^= 1;
 			}
 		}
 		// we are done, R.x and k is the result signature
@@ -948,6 +953,55 @@ int ecdsa_verify_double(const ecdsa_curve *curve, const uint8_t *pub_key, const 
 	int res = ecdsa_verify_digest(curve, pub_key, sig, hash);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
+}
+
+// Compute public key from signature and recovery id.
+// returns 0 if verification succeeded
+int ecdsa_verify_digest_recover(const ecdsa_curve *curve, uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest, int recid)
+{
+	bignum256 r, s, e;
+	curve_point cp, cp2;
+
+	// read r and s
+	bn_read_be(sig, &r);
+	bn_read_be(sig + 32, &s);
+	if (!bn_is_less(&r, &curve->order) || bn_is_zero(&r)) {
+		return 1;
+	}
+	if (!bn_is_less(&s, &curve->order) || bn_is_zero(&s)) {
+		return 1;
+	}
+	// cp = R = k * G (k is secret nonce when signing)
+	memcpy(&cp.x, &r, sizeof(bignum256));
+	if (recid & 2) {
+		bn_add(&cp.x, &curve->order);
+		if (!bn_is_less(&cp.x, &curve->prime)) {
+			return 1;
+		}
+	}
+	// compute y from x
+	uncompress_coords(curve, recid & 1, &cp.x, &cp.y);
+	if (!ecdsa_validate_pubkey(curve, &cp)) {
+		return 1;
+	}
+	// e = -digest
+	bn_read_be(digest, &e);
+	bn_mod(&e, &curve->order);
+	bn_subtract(&curve->order, &e, &e);
+	// r := r^-1
+	bn_inverse(&r, &curve->order);
+	// cp := s * R = s * k *G
+	point_multiply(curve, &s, &cp, &cp);
+	// cp2 := -digest * G
+	scalar_multiply(curve, &e, &cp2);
+	// cp := (s * k - digest) * G = (r*priv) * G = r * Pub
+	point_add(curve, &cp2, &cp);
+	// cp := r^{-1} * r * Pub = Pub
+	point_multiply(curve, &r, &cp, &cp);
+	pub_key[0] = 0x04;
+	bn_write_be(&cp.x, pub_key + 1);
+	bn_write_be(&cp.y, pub_key + 33);
+	return 0;
 }
 
 // returns 0 if verification succeeded
