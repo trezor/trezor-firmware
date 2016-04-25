@@ -201,7 +201,7 @@ void layoutVerifyAddress(const char *address)
 	const char **str = split_message((const uint8_t *)address, strlen(address), 17);
 	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
 		"Confirm address?",
-		"Address from signature:",
+		"Message signed by:",
 		NULL, str[0], str[1], str[2], NULL);
 }
 
