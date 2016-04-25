@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include <bip39.h>
-#include <bip32.h>
-#include <ecdsa.h>
+#include "bip39.h"
+#include "bip32.h"
+#include "ecdsa.h"
+#include "curves.h"
 
 char passphrase[256];
 uint8_t seed[512 / 8];
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
 		count++;
 		passphrase[len - 1] = 0;
 		mnemonic_to_seed(mnemonic, passphrase, seed, NULL);
-		hdnode_from_seed(seed, 512 / 8, &node);
+		hdnode_from_seed(seed, 512 / 8, SECP256K1_NAME, &node);
 		hdnode_private_ckd_prime(&node, 44);
 		hdnode_private_ckd_prime(&node, 0);
 		hdnode_private_ckd_prime(&node, 0);

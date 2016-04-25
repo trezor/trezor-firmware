@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <bip32.h>
-#include <ecdsa.h>
+#include "bip32.h"
+#include "ecdsa.h"
 
 void process_job(uint32_t jobid, const char *xpub, uint32_t change, uint32_t from, uint32_t to)
 {

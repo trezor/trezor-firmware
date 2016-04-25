@@ -25,7 +25,7 @@ CFLAGS   += $(OPTFLAGS) \
 
 all: xpubaddrgen mktable bip39bruteforce
 
-OBJS = ../bip32.o ../bip39.o ../ecdsa.o ../sha2.o ../bignum.o ../base58.o ../secp256k1.o ../nist256p1.o ../ripemd160.o ../hmac.o ../rand.o ../pbkdf2.o
+OBJS = ../bip32.o ../bip39.o ../ecdsa.o ../sha2.o ../bignum.o ../base58.o ../secp256k1.o ../nist256p1.o ../ripemd160.o ../hmac.o ../rand.o ../pbkdf2.o ../curves.o ../ed25519-donna/ed25519.o
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<

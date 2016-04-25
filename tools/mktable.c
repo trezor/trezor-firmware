@@ -3,6 +3,7 @@
 #include "bignum.h"
 #include "ecdsa.h"
 #include "rand.h"
+#include "bip32.h"
 
 /*
  * This program prints the contents of the ecdsa_curve.cp array.
@@ -16,7 +17,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	const char *name = argv[1];
-	const ecdsa_curve *curve = get_curve_by_name(name);
+	const curve_info *curve = get_curve_by_name(name);
 	if (curve == 0) {
 		printf("Unknown curve '%s'\n", name);
 		return 1;

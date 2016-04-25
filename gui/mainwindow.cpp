@@ -5,6 +5,7 @@ extern "C" {
 #include "../bip32.h"
 #include "../bip39.h"
 #include "../ecdsa.h"
+#include "../curves.h"
 }
 
 bool root_set = false;
@@ -35,7 +36,7 @@ void MainWindow::on_buttonLoad_clicked()
     }
     uint8_t seed[64];
     mnemonic_to_seed(ui->editMnemonic->text().toLocal8Bit().data(), ui->editPassphrase->text().toLocal8Bit().data(), seed, 0);
-    hdnode_from_seed(seed, 64, &root);
+    hdnode_from_seed(seed, 64, SECP256K1_NAME, &root);
     root_set = true;
     ui->spinAccount->setValue(1);
     on_spinAccount_valueChanged(1);
