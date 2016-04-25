@@ -75,6 +75,7 @@ int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub);
 int ecdsa_verify(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
 int ecdsa_verify_double(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
 int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest);
+int ecdsa_verify_digest_recover(const ecdsa_curve *curve, uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest, int recid);
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 
 // Private
