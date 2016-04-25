@@ -986,8 +986,9 @@ int ecdsa_verify_digest_recover(const ecdsa_curve *curve, uint8_t *pub_key, cons
 	}
 	// e = -digest
 	bn_read_be(digest, &e);
+	bn_subtractmod(&curve->order, &e, &e, &curve->order);
+	bn_fast_mod(&e, &curve->order);
 	bn_mod(&e, &curve->order);
-	bn_subtract(&curve->order, &e, &e);
 	// r := r^-1
 	bn_inverse(&r, &curve->order);
 	// cp := s * R = s * k *G
