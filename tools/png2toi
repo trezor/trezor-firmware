@@ -54,11 +54,11 @@ def process_image(ifn):
             f.write(bytes('TOIg', 'ascii'))
         f.write(struct.pack('>HH', w, h))
         if im.mode == 'RGB':
-            data = process_rgb(w, h, pix)
+            pixeldata = process_rgb(w, h, pix)
         else:
-            data = process_grayscale(w, h, pix)
+            pixeldata = process_grayscale(w, h, pix)
         z = zlib.compressobj(level=9, wbits=10)
-        zdata = z.compress(data) + z.flush()
+        zdata = z.compress(pixeldata) + z.flush()
         zdata = zdata[2:-4] # strip header and checksum
         f.write(struct.pack('>I', len(zdata)))
         f.write(zdata)
