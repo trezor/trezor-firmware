@@ -41,10 +41,12 @@ random_iters = int(os.environ.get('ITERS', 1))
 
 lib = c.cdll.LoadLibrary('./libtrezor-crypto.so')
 
-lib.get_curve_by_name.restype = c.c_void_p
+class curve_info(c.Structure):
+    _fields_ = [("bip32_name", c.c_char_p),
+                ("params", c.c_void_p)]
+lib.get_curve_by_name.restype = c.POINTER(curve_info)
 
 BIGNUM = c.c_uint32 * 9
-
 
 class Random(random.Random):
     def randbytes(self, n):
@@ -83,7 +85,7 @@ def r(request):
 @pytest.fixture(params=list(sorted(curves)))
 def curve(request):
     name = request.param
-    curve_ptr = lib.get_curve_by_name(name)
+    curve_ptr = lib.get_curve_by_name(name).contents.params
     assert curve_ptr, 'curve {} not found'.format(name)
     curve_obj = curves[name]
     curve_obj.ptr = c.c_void_p(curve_ptr)
@@ -93,7 +95,7 @@ def curve(request):
 @pytest.fixture(params=points)
 def point(request):
     name = request.param.curve
-    curve_ptr = lib.get_curve_by_name(name)
+    curve_ptr = lib.get_curve_by_name(name).contents.params
     assert curve_ptr, 'curve {} not found'.format(name)
     curve_obj = curves[name]
     curve_obj.ptr = c.c_void_p(curve_ptr)

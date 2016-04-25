@@ -5,7 +5,7 @@ cdef extern from "bip32.h":
 	ctypedef struct HDNode:
 		uint8_t public_key[33]
 
-	int hdnode_from_seed(const uint8_t *seed, int seed_len, HDNode *out)
+	int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve, HDNode *out)
 
 	int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
