@@ -1,14 +1,16 @@
 #TREZOR Optimized Image Format
 
+All multibyte integer values are big endian!
+
 ##Header
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
 | 0x0000 | 3      | magic | `TOI` |
 | 0x0003 | 1      | fmt | data format: `f` or `g` (see below) |
-| 0x0004 | 2      | width | width of the image (big endian) |
-| 0x0006 | 2      | height | height of the image (big endian) |
-| 0x0008 | 4      | datasize | length of the compressed data (big endian) |
+| 0x0004 | 2      | width | width of the image |
+| 0x0006 | 2      | height | height of the image |
+| 0x0008 | 4      | datasize | length of the compressed data |
 | 0x000A | ?      | data | compressed data (see below) |
 
 ##Format
@@ -20,7 +22,7 @@ TOI currently supports 2 variants:
 
 ###Full-color
 
-For each pixel a big endian 16-bit value is used. First 5 bits are used for red component, next 6 bits are green, final 5 bits are blue, so it looks like this:
+For each pixel a 16-bit value is used. First 5 bits are used for red component, next 6 bits are green, final 5 bits are blue, so it looks like this:
 
 | 15 | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 |----|----|----|----|----|----|---|---|---|---|---|---|---|---|---|---|

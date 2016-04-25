@@ -1,6 +1,8 @@
 #TREZOR OS Bootloader
 
-##Firmware file format
+All multibyte integer values are big endian!
+
+##Firmware File Format
 
 TREZOR OS firmware file consists of 3 parts:
 
@@ -13,7 +15,7 @@ TREZOR OS firmware file consists of 3 parts:
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
 | 0x0000 | 4      | magic | firmware magic `TRZV` |
-| 0x0004 | 4      | hlen | length of the vendor header (big endian) |
+| 0x0004 | 4      | hlen | length of the vendor header |
 | 0x0008 | 1      | vsig_m | number of signatures needed to run the firmware from this vendor |
 | 0x0009 | 1      | vsig_n | number of pubkeys vendor wants to use for signing |
 | 0x000A | 1      | vstr_len | vendor string length |
