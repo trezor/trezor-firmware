@@ -203,15 +203,19 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
     uint8_t *data = bufinfo.buf;
-    if (bufinfo.len < 8 || memcmp(data, "TOIa", 4) != 0) {
+    if (bufinfo.len < 8 || memcmp(data, "TOIf", 4) != 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
     }
     mp_int_t w = (data[4] << 8) | data[5];
     mp_int_t h = (data[6] << 8) | data[7];
+    mp_int_t datalen = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
-    display_image(x, y, w, h, data + 8, bufinfo.len - 8);
+    if (datalen != bufinfo.len - 12) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
+    }
+    display_image(x, y, w, h, data + 12, bufinfo.len - 12);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
@@ -228,12 +232,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     }
     mp_int_t w = (data[4] << 8) | data[5];
     mp_int_t h = (data[6] << 8) | data[7];
+    mp_int_t datalen = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
+    if (datalen != bufinfo.len - 12) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
+    }
     mp_int_t fgcolor = mp_obj_get_int(args[4]);
     mp_int_t bgcolor = mp_obj_get_int(args[5]);
-    display_icon(x, y, w, h, data + 8, bufinfo.len - 8, fgcolor, bgcolor);
+    display_icon(x, y, w, h, data + 12, bufinfo.len - 12, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);

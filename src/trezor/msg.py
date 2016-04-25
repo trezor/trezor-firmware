@@ -21,8 +21,8 @@ else:
         return Msg.send(msg)
 
     def read():
-        raise NotImplemented
+        raise NotImplementedError
         return Msg.receive()
 
     def set_notify(_on_read):
-        raise NotImplemented
+        raise NotImplementedError

@@ -29,7 +29,7 @@ def perf_info():
 def animate():
     col = 0
     # hawcons gesture
-    f = open('playground/tap_64.toi', 'r')
+    f = open('playground/tap_64.toig', 'r')
 
     while True:
         col %= 0xff
@@ -71,6 +71,8 @@ def tap_to_confirm():
     MIN_COLOR = 0x00
     MAX_COLOR = 0xB0
 
+    f = open('playground/tap_64.toig', 'r')
+
     _background = ui.rgbcolor(255, 255, 255)
     x = math.pi
     while True:
@@ -100,7 +102,7 @@ def on_read():
 
 def run():
     # pipe.init('../pipe', on_read)
-    msg.set_notify(on_read)
+    # msg.set_notify(on_read)
 
     loop.call_soon(perf_info)
     loop.call_soon(tap_to_confirm())

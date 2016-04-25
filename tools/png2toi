@@ -4,61 +4,79 @@ import sys
 import struct
 import zlib
 
-if len(sys.argv) < 2:
-    print('Usage png2toi image.png [mode]')
-    sys.exit(1)
 
-ifn = sys.argv[1]
-
-gray = False
-if len(sys.argv) >= 3 and sys.argv[2] == 'g':
-    gray = True
-
-if not ifn.endswith('.png'):
-    print('Must provide PNG file')
-    sys.exit(2)
-
-im = Image.open(ifn)
-w, h = im.size
-print('Opened  %s ... %d x %d @ %s' % (ifn, w, h, im.mode))
-
-if not gray:
-    if not im.mode == 'RGB':
-        print('PNG file must use RGB mode')
-        sys.exit(3)
-else:
-    if not im.mode == 'L':
-        print('PNG file must use grayscale mode')
-        sys.exit(3)
-    if w % 2 > 0:
-        print('PNG file must have width divisible by 2')
-        sys.exit(4)
-
-pix = im.load()
-
-ofn = '%s.toi' % ifn[:-4]
-with open(ofn, 'wb') as f:
-    if not gray:
-        f.write(bytes('TOIa', 'ascii'))
-    else:
-        f.write(bytes('TOIg', 'ascii'))
-    f.write(struct.pack('>HH', w, h))
+def process_rgb(w, h, pix):
     data = bytes()
-    if not gray:
-        for j in range(h):
-            for i in range(w):
-                r, g, b = pix[i, j]
-                c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
-                data += struct.pack('>H', c)
-    else:
-        for j in range(h):
+    for j in range(h):
+        for i in range(w):
+            r, g, b = pix[i, j]
+            c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+            data += struct.pack('>H', c)
+    return data
+
+
+def process_grayscale(w, h, pix):
+    data = bytes()
+    for j in range(h):
             for i in range(w // 2):
                 l1, l2 = pix[i * 2, j], pix[i * 2 + 1, j]
                 c = (l1 & 0xF0) | (l2 >> 4)
                 data += struct.pack('>B', c)
-    z = zlib.compressobj(level=9, wbits=10)
-    zdata = z.compress(data) + z.flush()
-    zdata = zdata[2:-4] # strip header and checksum
-    f.write(zdata)
+    return data
 
-print('Written %s ... %d bytes' % (ofn, 4 + 4 + len(zdata)))
+
+def process_image(ifn):
+    im = Image.open(ifn)
+    w, h = im.size
+    print('Opened %s ... %d x %d @ %s' % (ifn, w, h, im.mode))
+
+    if im.mode == 'RGB':
+        print('Detected RGB mode')
+    elif im.mode == 'L':
+        if w % 2 > 0:
+            print('PNG file must have width divisible by 2')
+            return 3
+        print('Detected GRAYSCALE mode')
+    else:
+        print('Unknown mode:', im.mode)
+        return 4
+
+    pix = im.load()
+
+    if im.mode == 'RGB':
+        ofn = '%s.toif' % ifn[:-4]
+    else:
+        ofn = '%s.toig' % ifn[:-4]
+    with open(ofn, 'wb') as f:
+        if im.mode == 'RGB':
+            f.write(bytes('TOIf', 'ascii'))
+        else:
+            f.write(bytes('TOIg', 'ascii'))
+        f.write(struct.pack('>HH', w, h))
+        if im.mode == 'RGB':
+            data = process_rgb(w, h, pix)
+        else:
+            data = process_grayscale(w, h, pix)
+        z = zlib.compressobj(level=9, wbits=10)
+        zdata = z.compress(data) + z.flush()
+        zdata = zdata[2:-4] # strip header and checksum
+        f.write(struct.pack('>I', len(zdata)))
+        f.write(zdata)
+
+    print('Written %s ... %d bytes' % (ofn, 4 + 4 + len(zdata)))
+
+
+def main():
+    if len(sys.argv) < 2:
+        print('Usage png2toi image.png')
+        return 1
+
+    ifn = sys.argv[1]
+    if not ifn.endswith('.png'):
+        print('Must provide PNG file')
+        return 2
+
+    process_image(ifn)
+
+
+main()
