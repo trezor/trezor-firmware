@@ -37,9 +37,9 @@ SRCS   = bignum.c ecdsa.c curves.c secp256k1.c nist256p1.c rand.c hmac.c bip32.c
 SRCS  += ripemd160.c
 SRCS  += sha2.c
 SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
+SRCS  += ed25519-donna/ed25519.c
 
 OBJS   = $(SRCS:.c=.o)
-OBJS  += ed25519-donna/ed25519.o
 
 TESTLIBS = -lcheck -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
