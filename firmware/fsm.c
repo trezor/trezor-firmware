@@ -674,7 +674,7 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	}
 	if (msg->signature.size == 65 && cryptoMessageVerify(msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
 		layoutVerifyAddress(msg->address);
-		if (!protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
 			layoutHome();
 			return;
