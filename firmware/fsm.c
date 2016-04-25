@@ -673,8 +673,18 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid address");
 	}
 	if (msg->signature.size == 65 && cryptoMessageVerify(msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
+		layoutVerifyAddress(msg->address);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
+			layoutHome();
+			return;
+		}
 		layoutVerifyMessage(msg->message.bytes, msg->message.size);
-		protectButton(ButtonRequestType_ButtonRequest_Other, true);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
+			layoutHome();
+			return;
+		}
 		fsm_sendSuccess("Message verified");
 	} else {
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid signature");

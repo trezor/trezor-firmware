@@ -196,10 +196,18 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
+void layoutVerifyAddress(const char *address)
+{
+	const char **str = split_message((const uint8_t *)address, strlen(address), 17);
+	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
+		"Address from signature:",
+		NULL, str[0], str[1], str[2], NULL, NULL);
+}
+
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 {
 	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
+	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
 		"Verified message",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
