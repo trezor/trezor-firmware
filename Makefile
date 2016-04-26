@@ -38,6 +38,7 @@ endif
 SRCS   = bignum.c ecdsa.c curves.c secp256k1.c nist256p1.c rand.c hmac.c bip32.c bip39.c pbkdf2.c base58.c
 SRCS  += ripemd160.c
 SRCS  += sha2.c
+SRCS  += sha3.c
 SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
 SRCS  += ed25519-donna/ed25519.c
 
