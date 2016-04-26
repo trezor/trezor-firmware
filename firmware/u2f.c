@@ -28,6 +28,7 @@
 #include "usb.h"
 #include "buttons.h"
 #include "trezor.h"
+#include "curves.h"
 #include "nist256p1.h"
 #include "rng.h"
 
@@ -427,7 +428,7 @@ void u2f_version(const APDU *a)
 const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
-	if (!storage_getRootNode(&node)) {
+	if (!storage_getRootNode(&node, NIST256P1_NAME)) {
 		layoutHome();
 		debugLog(0, "", "ERR: Device not init");
 		return 0;
@@ -467,9 +468,7 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 		memcpy(&keybase[0], app_id, 32);
 		memcpy(&keybase[32], key_handle, 32);
 		uint8_t sig[64];
-		ecdsa_sign(&nist256p1, node->private_key,
-			(uint8_t *)&keybase, sizeof(keybase), sig,
-			NULL);
+		hdnode_sign(node, (uint8_t *)&keybase, sizeof(keybase), sig, NULL);
 
 		// Copy 32 bytes of signature into keyhandle
 		memcpy(&key_handle[32], sig, 32);
@@ -494,9 +493,7 @@ const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle
 
 
 	uint8_t sig[64];
-	ecdsa_sign(&nist256p1, node->private_key,
-			(uint8_t *)&keybase, sizeof(keybase), sig,
-			NULL);
+	hdnode_sign(node, (uint8_t *)&keybase, sizeof(keybase), sig, NULL);
 
 	if (memcmp(&key_handle[32], sig, 32) !=0)
 		return NULL;
@@ -572,7 +569,7 @@ void u2f_register(const APDU *a)
 			return;
 		}
 
-		ecdsa_get_public_key65(&nist256p1, node->private_key,
+		ecdsa_get_public_key65(node->curve->params, node->private_key,
 				       (uint8_t *)&resp->pubKey);
 
 		memcpy(resp->keyHandleCertSig + resp->keyHandleLen,
