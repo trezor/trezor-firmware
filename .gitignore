@@ -2,6 +2,7 @@
 *.exe
 *~
 test-openssl
+test_speed
 tests
 build-*/
 build/

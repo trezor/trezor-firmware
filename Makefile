@@ -26,6 +26,8 @@ CFLAGS   += $(OPTFLAGS) \
 CFLAGS += -Wno-sequence-point
 CFLAGS += -DED25519_CUSTOMRANDOM=1
 CFLAGS += -DED25519_CUSTOMHASH=1
+CFLAGS += -DED25519_NO_INLINE_ASM
+CFLAGS += -DED25519_FORCE_32BIT=1
 CFLAGS += -Ied25519-donna -I.
 
 # disable certain optimizations and features when small footprint is required
@@ -44,13 +46,16 @@ OBJS   = $(SRCS:.c=.o)
 TESTLIBS = -lcheck -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
 
-all: tests test-openssl libtrezor-crypto.so
+all: tests test-openssl libtrezor-crypto.so test_speed
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 tests: tests.o $(OBJS)
 	$(CC) tests.o $(OBJS) $(TESTLIBS) -o tests
+
+test_speed: test_speed.o $(OBJS)
+	$(CC) test_speed.o $(OBJS) $(TESTLIBS) -o test_speed
 
 test-openssl: test-openssl.o $(OBJS)
 	$(CC) test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
@@ -59,4 +64,4 @@ libtrezor-crypto.so: $(SRCS)
 	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o libtrezor-crypto.so
 
 clean:
-	rm -f *.o ed25519-donna/*.o tests test-openssl libtrezor-crypto.so
+	rm -f *.o ed25519-donna/*.o tests test_speed test-openssl libtrezor-crypto.so
