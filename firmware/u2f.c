@@ -41,7 +41,7 @@
 
 // About 1/2 Second according to values used in protect.c
 #define U2F_TIMEOUT 840000/2
-#define U2F_OUT_PKT_BUFFER_LEN 128
+#define U2F_OUT_PKT_BUFFER_LEN 16
 
 // Initialise without a cid
 static uint32_t cid = CID_BROADCAST;
@@ -171,7 +171,7 @@ void u2fhid_read(const U2FHID_FRAME *f)
 	static uint8_t seq, cmd;
 	static uint32_t len;
 	static uint8_t *buf_ptr;
-	static uint8_t buf[7609];
+	static uint8_t buf[57+7*59];
 
 	if ((f->cid != CID_BROADCAST) && (f->cid != cid)) {
 		return; // Not for us
@@ -291,7 +291,7 @@ void u2fhid_init(const U2FHID_INIT_REQ *init_req)
 	f.cid = CID_BROADCAST;
 	f.init.cmd = U2FHID_INIT;
 	f.init.bcnth = 0;
-	f.init.bcntl = sizeof(U2FHID_INIT_RESP);
+	f.init.bcntl = U2FHID_INIT_RESP_SIZE;
 
 	memcpy(resp->nonce, init_req->nonce, sizeof(init_req->nonce));
 	resp->cid = next_cid();

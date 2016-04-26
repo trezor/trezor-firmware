@@ -120,6 +120,8 @@ extern "C"
     uint8_t capFlags;		// Capabilities flags  
   } U2FHID_INIT_RESP;
 
+#define U2FHID_INIT_RESP_SIZE 17
+
 // Low-level error codes. Return as negatives.
 
 #define ERR_NONE                0x00	// No error
