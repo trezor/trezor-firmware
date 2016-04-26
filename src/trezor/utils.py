@@ -1,5 +1,12 @@
-def hexlify(data: bytes) -> str:
-    return ''.join(['%02x' % b for b in data])
+import sys
+import gc
 
-def unhexlify(data: str) -> bytes:
-    return bytes([int(data[i:i+2], 16) for i in range(0, len(data), 2)])
+def unimport(func):
+    def inner(*args, **kwargs):
+        mods = set(sys.modules)
+        ret = func(*args, **kwargs)
+        for to_remove in set(sys.modules) - mods:
+            print(to_remove)
+            del sys.modules[to_remove]
+        return ret
+    return inner

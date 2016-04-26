@@ -15,15 +15,16 @@ from uasyncio import core
 
 from trezor import ui
 from trezor import msg
+from trezor.utils import unimport
 
 logging.basicConfig(level=logging.INFO)
 loop = core.get_event_loop()
 
 def perf_info():
-    mem_free = gc.mem_free()
+    mem_alloc = gc.mem_alloc()
     gc.collect()
-    print("free_mem: %s/%s, last_sleep: %.06f" % \
-          (mem_free, gc.mem_free(), loop.last_sleep))
+    print("mem_alloc: %s/%s, last_sleep: %.06f" % \
+          (mem_alloc, gc.mem_alloc(), loop.last_sleep))
     loop.call_later(1, perf_info)
 
 def animate():
@@ -100,10 +101,31 @@ def on_read():
     print("READY TO READ")
     print(msg.read())
 
+@unimport
+def zprava():
+    from _io import BytesIO
+
+    from trezor.messages.GetAddress import GetAddress
+
+    m = GetAddress()
+    m.address_n = [1, 2, 3]
+    m.show_display = True
+
+    print(m.__dict__)
+    f = BytesIO()
+    m.dump(f)
+    data = f.getvalue()
+    f.close()
+    print(data)
+    # m2 = GetAddress.load(BytesIO(data))
+    # print(m2.__dict__)
+
 def run():
     # pipe.init('../pipe', on_read)
     # msg.set_notify(on_read)
 
+    zprava()
+    
     loop.call_soon(perf_info)
     loop.call_soon(tap_to_confirm())
     # loop.call_soon(animate())

@@ -76,7 +76,6 @@ FLAG_REQUIRED = 1
 FLAG_REQUIRED_MASK = 1
 FLAG_SINGLE = 0
 FLAG_REPEATED = 2
-FLAG_PACKED_REPEATED = 6
 FLAG_REPEATED_MASK = 6
 FLAG_PRIMITIVE = 0
 FLAG_EMBEDDED = 8
@@ -110,12 +109,15 @@ class MessageType:
         # Creates a new message type.
         self.__tags_to_types = dict() # Maps a tag to a type instance.
         self.__tags_to_names = dict() # Maps a tag to a given field name.
+        self.__defaults = dict()  # Maps a tag to its default value.
         self.__flags = dict()  # Maps a tag to FLAG_
 
-    def add_field(self, tag, name, field_type, flags=FLAG_SIMPLE):
+    def add_field(self, tag, name, field_type, flags=FLAG_SIMPLE, default=None):
         # Adds a field to the message type.
         if tag in self.__tags_to_names or tag in self.__tags_to_types:
             raise ValueError('The tag %s is already used.' % tag)
+        if default != None:
+            self.__defaults[tag] = default
         self.__tags_to_names[tag] = name
         self.__tags_to_types[tag] = field_type
         self.__flags[tag] = flags
@@ -137,19 +139,12 @@ class MessageType:
                 if self.__has_flag(tag, FLAG_SINGLE, FLAG_REPEATED_MASK):
                     # Single value.
                     UVarintType.dump(fp, _pack_key(tag, field_type.WIRE_TYPE))
-                    field_type.dump(fp, value.__dict__[self.__tags_to_names[tag]])
-                elif self.__has_flag(tag, FLAG_PACKED_REPEATED, FLAG_REPEATED_MASK):
-                    # Repeated packed value.
-                    UVarintType.dump(fp, _pack_key(tag, BytesType.WIRE_TYPE))
-                    internal_fp = BytesIO()
-                    for single_value in value[self.__tags_to_names[tag]]:
-                        field_type.dump(internal_fp, single_value)
-                    BytesType.dump(fp, internal_fp.getvalue())
+                    field_type.dump(fp, getattr(value, self.__tags_to_names[tag]))
                 elif self.__has_flag(tag, FLAG_REPEATED, FLAG_REPEATED_MASK):
                     # Repeated value.
                     key = _pack_key(tag, field_type.WIRE_TYPE)
                     # Put it together sequently.
-                    for single_value in value[self.__tags_to_names[tag]]:
+                    for single_value in getattr(value, self.__tags_to_names[tag]):
                         UVarintType.dump(fp, key)
                         field_type.dump(fp, single_value)
             elif self.__has_flag(tag, FLAG_REQUIRED, FLAG_REQUIRED_MASK):
@@ -163,30 +158,18 @@ class MessageType:
 
                 if tag in self.__tags_to_types:
                     field_type = self.__tags_to_types[tag]
-                    if not self.__has_flag(tag, FLAG_PACKED_REPEATED, FLAG_REPEATED_MASK):
-                        if wire_type != field_type.WIRE_TYPE:
-                            raise TypeError(
-                                'Value of tag %s has incorrect wiretype %s, %s expected.' % \
-                                (tag, wire_type, field_type.WIRE_TYPE))
-                    elif wire_type != BytesType.WIRE_TYPE:
-                        raise TypeError('Tag %s has wiretype %s while the field is packed repeated.' % (tag, wire_type))
+                    if wire_type != field_type.WIRE_TYPE:
+                        raise TypeError(
+                            'Value of tag %s has incorrect wiretype %s, %s expected.' % \
+                            (tag, wire_type, field_type.WIRE_TYPE))
                     if self.__has_flag(tag, FLAG_SINGLE, FLAG_REPEATED_MASK):
                         # Single value.
                         setattr(message, self.__tags_to_names[tag], field_type.load(fp))
-                    elif self.__has_flag(tag, FLAG_PACKED_REPEATED, FLAG_REPEATED_MASK):
-                        # Repeated packed value.
-                        repeated_value = message[self.__tags_to_names[tag]] = list()
-                        internal_fp = EofWrapper(fp, UVarintType.load(fp))  # Limit with value length.
-                        while True:
-                            try:
-                                repeated_value.append(field_type.load(internal_fp))
-                            except EOFError:
-                                break
                     elif self.__has_flag(tag, FLAG_REPEATED, FLAG_REPEATED_MASK):
                         # Repeated value.
-                        if not self.__tags_to_names[tag] in message:
-                            repeated_value = message[self.__tags_to_names[tag]] = list()
-                        repeated_value.append(field_type.load(fp))
+                        if not self.__tags_to_names[tag] in message.__dict__:
+                            setattr(message, self.__tags_to_names[tag], list())
+                        getattr(message, self.__tags_to_names[tag]).append(field_type.load(fp))
                 else:
                     # Skip this field.
 
@@ -194,11 +177,15 @@ class MessageType:
                     {0: UVarintType, 2: BytesType}[wire_type].load(fp)
 
             except EOFError:
-                # Check if all required fields are present.
                 for tag, name in iter(self.__tags_to_names.items()):
-                    if self.__has_flag(tag, FLAG_REQUIRED, FLAG_REQUIRED_MASK) and not name in message:
+                    # Fill in default value if value not set
+                    if name not in message.__dict__ and tag in self.__defaults:
+                        setattr(message, name, self.__defaults[tag])
+
+                    # Check if all required fields are present.
+                    if self.__has_flag(tag, FLAG_REQUIRED, FLAG_REQUIRED_MASK) and not name in message.__dict__:
                         if self.__has_flag(tag, FLAG_REPEATED, FLAG_REPEATED_MASK):
-                            message[name] = list() # Empty list (no values was in input stream). But required field.
+                            setattr(message, name, list())  # Empty list (no values was in input stream). But required field.
                         else:
                             raise ValueError('The field %s (\'%s\') is required but missing.' % (tag, name))
                 return message
