@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 sys.path.append('../lib')
 import unittest
-import trezor.utils
+from ubinascii import unhexlify
 
 from trezor.crypto import base58
 
@@ -64,11 +64,11 @@ class TestCryptoBase58(unittest.TestCase):
 
     def test_decode_check(self):
         for a, b in self.vectors:
-            self.assertEqual(base58.decode_check(b), trezor.utils.unhexlify(a))
+            self.assertEqual(base58.decode_check(b), unhexlify(a))
 
     def test_encode_check(self):
         for a, b in self.vectors:
-            self.assertEqual(base58.encode_check(trezor.utils.unhexlify(a)), b)
+            self.assertEqual(base58.encode_check(unhexlify(a)), b)
 
 if __name__ == '__main__':
     unittest.main()
