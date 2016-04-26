@@ -24,70 +24,90 @@
 #include <string.h>
 
 #include "hmac.h"
-#include "sha2.h"
 #include "macros.h"
+
+void hmac_sha256_Init(HMAC_SHA256_CTX *hctx, const uint8_t *key, const uint32_t keylen)
+{
+	uint8_t i_key_pad[SHA256_BLOCK_LENGTH];
+	memset(i_key_pad, 0, SHA256_BLOCK_LENGTH);
+	if (keylen > SHA256_BLOCK_LENGTH) {
+		sha256_Raw(key, keylen, i_key_pad);
+	} else {
+		memcpy(i_key_pad, key, keylen);
+	}
+	for (int i = 0; i < SHA256_BLOCK_LENGTH; i++) {
+		hctx->o_key_pad[i] = i_key_pad[i] ^ 0x5c;
+		i_key_pad[i] ^= 0x36;
+	}
+	sha256_Init(&(hctx->ctx));
+	sha256_Update(&(hctx->ctx), i_key_pad, SHA256_BLOCK_LENGTH);
+	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
+}
+
+void hmac_sha256_Update(HMAC_SHA256_CTX *hctx, const uint8_t *msg, const uint32_t msglen)
+{
+	sha256_Update(&(hctx->ctx), msg, msglen);
+}
+
+void hmac_sha256_Final(HMAC_SHA256_CTX *hctx, uint8_t *hmac)
+{
+	uint8_t hash[SHA256_DIGEST_LENGTH];
+	sha256_Final(&(hctx->ctx), hash);
+	sha256_Init(&(hctx->ctx));
+	sha256_Update(&(hctx->ctx), hctx->o_key_pad, SHA256_BLOCK_LENGTH);
+	sha256_Update(&(hctx->ctx), hash, SHA256_DIGEST_LENGTH);
+	sha256_Final(&(hctx->ctx), hmac);
+	MEMSET_BZERO(hash, sizeof(hash));
+	MEMSET_BZERO(hctx, sizeof(hctx));
+}
 
 void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, const uint32_t msglen, uint8_t *hmac)
 {
-	int i;
-	uint8_t buf[SHA256_BLOCK_LENGTH], o_key_pad[SHA256_BLOCK_LENGTH], i_key_pad[SHA256_BLOCK_LENGTH];
-	SHA256_CTX ctx;
+	HMAC_SHA256_CTX hctx;
+	hmac_sha256_Init(&hctx, key, keylen);
+	hmac_sha256_Update(&hctx, msg, msglen);
+	hmac_sha256_Final(&hctx, hmac);
+}
 
-	memset(buf, 0, SHA256_BLOCK_LENGTH);
-	if (keylen > SHA256_BLOCK_LENGTH) {
-		sha256_Raw(key, keylen, buf);
+void hmac_sha512_Init(HMAC_SHA512_CTX *hctx, const uint8_t *key, const uint32_t keylen)
+{
+	uint8_t i_key_pad[SHA512_BLOCK_LENGTH];
+	memset(i_key_pad, 0, SHA512_BLOCK_LENGTH);
+	if (keylen > SHA512_BLOCK_LENGTH) {
+		sha512_Raw(key, keylen, i_key_pad);
 	} else {
-		memcpy(buf, key, keylen);
+		memcpy(i_key_pad, key, keylen);
 	}
-
-	for (i = 0; i < SHA256_BLOCK_LENGTH; i++) {
-		o_key_pad[i] = buf[i] ^ 0x5c;
-		i_key_pad[i] = buf[i] ^ 0x36;
+	for (int i = 0; i < SHA512_BLOCK_LENGTH; i++) {
+		hctx->o_key_pad[i] = i_key_pad[i] ^ 0x5c;
+		i_key_pad[i] ^= 0x36;
 	}
-
-	sha256_Init(&ctx);
-	sha256_Update(&ctx, i_key_pad, SHA256_BLOCK_LENGTH);
-	sha256_Update(&ctx, msg, msglen);
-	sha256_Final(&ctx, buf);
-
-	sha256_Init(&ctx);
-	sha256_Update(&ctx, o_key_pad, SHA256_BLOCK_LENGTH);
-	sha256_Update(&ctx, buf, SHA256_DIGEST_LENGTH);
-	sha256_Final(&ctx, hmac);
-	MEMSET_BZERO(buf, sizeof(buf));
-	MEMSET_BZERO(o_key_pad, sizeof(o_key_pad));
+	sha512_Init(&(hctx->ctx));
+	sha512_Update(&(hctx->ctx), i_key_pad, SHA512_BLOCK_LENGTH);
 	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
+}
+
+void hmac_sha512_Update(HMAC_SHA512_CTX *hctx, const uint8_t *msg, const uint32_t msglen)
+{
+	sha512_Update(&(hctx->ctx), msg, msglen);
+}
+
+void hmac_sha512_Final(HMAC_SHA512_CTX *hctx, uint8_t *hmac)
+{
+	uint8_t hash[SHA512_DIGEST_LENGTH];
+	sha512_Final(&(hctx->ctx), hash);
+	sha512_Init(&(hctx->ctx));
+	sha512_Update(&(hctx->ctx), hctx->o_key_pad, SHA512_BLOCK_LENGTH);
+	sha512_Update(&(hctx->ctx), hash, SHA512_DIGEST_LENGTH);
+	sha512_Final(&(hctx->ctx), hmac);
+	MEMSET_BZERO(hash, sizeof(hash));
+	MEMSET_BZERO(hctx, sizeof(hctx));
 }
 
 void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, const uint32_t msglen, uint8_t *hmac)
 {
-	int i;
-	uint8_t buf[SHA512_BLOCK_LENGTH], o_key_pad[SHA512_BLOCK_LENGTH], i_key_pad[SHA512_BLOCK_LENGTH];
-	SHA512_CTX ctx;
-
-	memset(buf, 0, SHA512_BLOCK_LENGTH);
-	if (keylen > SHA512_BLOCK_LENGTH) {
-		sha512_Raw(key, keylen, buf);
-	} else {
-		memcpy(buf, key, keylen);
-	}
-
-	for (i = 0; i < SHA512_BLOCK_LENGTH; i++) {
-		o_key_pad[i] = buf[i] ^ 0x5c;
-		i_key_pad[i] = buf[i] ^ 0x36;
-	}
-
-	sha512_Init(&ctx);
-	sha512_Update(&ctx, i_key_pad, SHA512_BLOCK_LENGTH);
-	sha512_Update(&ctx, msg, msglen);
-	sha512_Final(&ctx, buf);
-
-	sha512_Init(&ctx);
-	sha512_Update(&ctx, o_key_pad, SHA512_BLOCK_LENGTH);
-	sha512_Update(&ctx, buf, SHA512_DIGEST_LENGTH);
-	sha512_Final(&ctx, hmac);
-
-	MEMSET_BZERO(buf, sizeof(buf));
-	MEMSET_BZERO(o_key_pad, sizeof(o_key_pad));
-	MEMSET_BZERO(i_key_pad, sizeof(i_key_pad));
+	HMAC_SHA512_CTX hctx;
+	hmac_sha512_Init(&hctx, key, keylen);
+	hmac_sha512_Update(&hctx, msg, msglen);
+	hmac_sha512_Final(&hctx, hmac);
 }
