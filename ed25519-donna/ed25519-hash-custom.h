@@ -14,5 +14,5 @@
 #define ed25519_hash_context SHA512_CTX
 #define ed25519_hash_init(ctx) sha512_Init(ctx)
 #define ed25519_hash_update(ctx, in, inlen) sha512_Update((ctx), (in), (inlen))
-#define ed25519_hash_final(ctx, hash) sha512_Final((hash), (ctx))
+#define ed25519_hash_final(ctx, hash) sha512_Final((ctx), (hash))
 #define ed25519_hash(hash, in, inlen) sha512_Raw((in), (inlen), (hash))

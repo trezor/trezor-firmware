@@ -301,7 +301,7 @@ static const uint8_t ripemd160_padding[64] =
 /*
  * RIPEMD-160 final digest
  */
-void ripemd160_Final( uint8_t output[20], RIPEMD160_CTX *ctx )
+void ripemd160_Final( RIPEMD160_CTX *ctx, uint8_t output[20] )
 {
     uint32_t last, padn;
     uint32_t high, low;
@@ -335,5 +335,5 @@ void ripemd160(const uint8_t *msg, uint32_t msg_len, uint8_t hash[20])
     RIPEMD160_CTX ctx;
     ripemd160_Init( &ctx );
     ripemd160_Update( &ctx, msg, msg_len );
-    ripemd160_Final( hash, &ctx );
+    ripemd160_Final( &ctx, hash );
 }
