@@ -110,7 +110,7 @@ int cryptoMessageSign(const HDNode *node, const uint8_t *message, size_t message
 	sha256_Update(&ctx, varint, l);
 	sha256_Update(&ctx, message, message_len);
 	uint8_t hash[32];
-	sha256_Final(hash, &ctx);
+	sha256_Final(&ctx, hash);
 	sha256_Raw(hash, 32, hash);
 	uint8_t pby;
 	int result = hdnode_sign_digest(node, hash, signature + 1, &pby);
@@ -151,7 +151,7 @@ int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_
 	uint32_t l = ser_length(message_len, varint);
 	sha256_Update(&ctx, varint, l);
 	sha256_Update(&ctx, message, message_len);
-	sha256_Final(hash, &ctx);
+	sha256_Final(&ctx, hash);
 	sha256_Raw(hash, 32, hash);
 	// e = -hash
 	bn_read_be(hash, &e);
@@ -357,7 +357,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t 
 		sha256_Update(&ctx, ptr[i]->node.public_key.bytes, 33);
 	}
 	sha256_Update(&ctx, (const uint8_t *)&n, sizeof(uint32_t));
-	sha256_Final(hash, &ctx);
+	sha256_Final(&ctx, hash);
 	layoutProgressUpdate(true);
 	return 1;
 }
@@ -385,6 +385,6 @@ int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash)
 	if (identity->has_path && identity->path[0]) {
 		sha256_Update(&ctx, (const uint8_t *)(identity->path), strlen(identity->path));
 	}
-	sha256_Final(hash, &ctx);
+	sha256_Final(&ctx, hash);
 	return 1;
 }

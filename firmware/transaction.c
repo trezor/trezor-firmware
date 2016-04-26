@@ -223,7 +223,7 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	d[1] = 0xAE;
 	sha256_Update(&ctx, d, 2);
 
-	sha256_Final(hash, &ctx);
+	sha256_Final(&ctx, hash);
 
 	return 1;
 }
@@ -425,7 +425,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 {
-	sha256_Final(hash, &(t->ctx));
+	sha256_Final(&(t->ctx), hash);
 	sha256_Raw(hash, 32, hash);
 	if (!reverse) return;
 	uint8_t i, k;

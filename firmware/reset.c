@@ -89,7 +89,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Init(&ctx);
 	sha256_Update(&ctx, int_entropy, 32);
 	sha256_Update(&ctx, ext_entropy, len);
-	sha256_Final(int_entropy, &ctx);
+	sha256_Final(&ctx, int_entropy);
 	strlcpy(storage.mnemonic, mnemonic_from_data(int_entropy, strength / 8), sizeof(storage.mnemonic));
 	memset(int_entropy, 0, 32);
 	awaiting_entropy = false;

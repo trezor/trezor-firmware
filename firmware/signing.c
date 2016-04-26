@@ -416,7 +416,7 @@ void signing_txack(TransactionType *tx)
 				idx1++;
 				send_req_3_output();
 			} else {
-				sha256_Final(hash_check, &tc);
+				sha256_Final(&tc, hash_check);
 				// check fees
 				if (spending > to_spend) {
 					fsm_sendFailure(FailureType_Failure_NotEnoughFunds, "Not enough funds");
@@ -527,7 +527,7 @@ void signing_txack(TransactionType *tx)
 				idx2++;
 				send_req_4_output();
 			} else {
-				sha256_Final(hash, &tc);
+				sha256_Final(&tc, hash);
 				if (memcmp(hash, hash_check, 32) != 0) {
 					fsm_sendFailure(FailureType_Failure_Other, "Transaction has changed during signing");
 					signing_abort();

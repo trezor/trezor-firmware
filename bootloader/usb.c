@@ -426,7 +426,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		uint8_t hash[32];
-		sha256_Final(hash, &ctx);
+		sha256_Final(&ctx, hash);
 		layoutFirmwareHash(hash);
 		do {
 			delay(100000);
