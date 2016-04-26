@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "mbedtls/sha256.h"
+#include "trezor-crypto/sha2.h"
 
 #define HASH_SHA256_BLOCK_SIZE   64
 #define HASH_SHA256_DIGEST_SIZE  32
@@ -15,7 +15,7 @@
 // class Sha256(object):
 typedef struct _mp_obj_Sha256_t {
     mp_obj_base_t base;
-    mbedtls_sha256_context ctx;
+    SHA256_CTX ctx;
 } mp_obj_Sha256_t;
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data);
@@ -25,8 +25,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_make_new(const mp_obj_type_t *type, size
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha256_t *o = m_new_obj(mp_obj_Sha256_t);
     o->base.type = type;
-    mbedtls_sha256_init(&(o->ctx));
-    mbedtls_sha256_starts(&(o->ctx), 0);
+    sha256_Init(&(o->ctx));
     // constructor called with bytes/str as first parameter
     if (n_args == 1) {
         mod_TrezorCrypto_Sha256_update(MP_OBJ_FROM_PTR(o), args[0]);
@@ -39,7 +38,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t databuf;
     mp_get_buffer_raise(data, &databuf, MP_BUFFER_READ);
-    mbedtls_sha256_update(&(o->ctx), databuf.buf, databuf.len);
+    sha256_Update(&(o->ctx), databuf.buf, databuf.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_update_obj, mod_TrezorCrypto_Sha256_update);
@@ -49,10 +48,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_digest(mp_obj_t self) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, HASH_SHA256_DIGEST_SIZE);
-    mbedtls_sha256_context ctx;
-    mbedtls_sha256_clone(&ctx, &(o->ctx));
-    mbedtls_sha256_finish(&ctx, (uint8_t *)vstr.buf);
-    mbedtls_sha256_free(&ctx);
+    SHA256_CTX ctx;
+    memcpy(&ctx, &(o->ctx), sizeof(SHA256_CTX));
+    sha256_Final(&ctx, (uint8_t *)vstr.buf);
+    memset(&ctx, 0, sizeof(SHA256_CTX));
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256_digest_obj, mod_TrezorCrypto_Sha256_digest);
@@ -60,7 +59,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256_digest_obj, mod_TrezorC
 // def Sha256.__del__(self) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha256___del__(mp_obj_t self) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
-    mbedtls_sha256_free(&(o->ctx));
+    memset(&(o->ctx), 0, sizeof(SHA256_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha256___del___obj, mod_TrezorCrypto_Sha256___del__);

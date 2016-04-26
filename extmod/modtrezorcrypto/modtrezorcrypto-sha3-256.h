@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "sha3.h"
+#include "trezor-crypto/sha3.h"
 
 #define HASH_SHA3_256_BLOCK_SIZE   64
 #define HASH_SHA3_256_DIGEST_SIZE  32
@@ -15,7 +15,7 @@
 // class Sha3_256(object):
 typedef struct _mp_obj_Sha3_256_t {
     mp_obj_base_t base;
-    sha3_ctx ctx;
+    SHA3_CTX ctx;
 } mp_obj_Sha3_256_t;
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data);
@@ -25,7 +25,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_make_new(const mp_obj_type_t *type, si
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha3_256_t *o = m_new_obj(mp_obj_Sha3_256_t);
     o->base.type = type;
-    rhash_sha3_256_init(&(o->ctx));
+    sha3_256_Init(&(o->ctx));
     // constructor called with bytes/str as first parameter
     if (n_args == 1) {
         mod_TrezorCrypto_Sha3_256_update(MP_OBJ_FROM_PTR(o), args[0]);
@@ -38,7 +38,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t databuf;
     mp_get_buffer_raise(data, &databuf, MP_BUFFER_READ);
-    rhash_sha3_update(&(o->ctx), databuf.buf, databuf.len);
+    sha3_Update(&(o->ctx), databuf.buf, databuf.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_256_update_obj, mod_TrezorCrypto_Sha3_256_update);
@@ -48,10 +48,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_digest(mp_obj_t self) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, HASH_SHA3_256_DIGEST_SIZE);
-    sha3_ctx ctx;
-    memcpy(&ctx, &(o->ctx), sizeof(sha3_ctx));
-    rhash_sha3_final(&ctx, (uint8_t *)vstr.buf);
-    memset(&ctx, 0, sizeof(sha3_ctx));
+    SHA3_CTX ctx;
+    memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
+    sha3_Final(&ctx, (uint8_t *)vstr.buf);
+    memset(&ctx, 0, sizeof(SHA3_CTX));
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha3_256_digest_obj, mod_TrezorCrypto_Sha3_256_digest);
@@ -59,7 +59,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha3_256_digest_obj, mod_Trezo
 // def Sha3_256.__del__(self) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256___del__(mp_obj_t self) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
-    memset(&(o->ctx), 0, sizeof(sha3_ctx));
+    memset(&(o->ctx), 0, sizeof(SHA3_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha3_256___del___obj, mod_TrezorCrypto_Sha3_256___del__);

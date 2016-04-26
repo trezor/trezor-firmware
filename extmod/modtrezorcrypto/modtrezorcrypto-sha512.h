@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "mbedtls/sha512.h"
+#include "trezor-crypto/sha2.h"
 
 #define HASH_SHA512_BLOCK_SIZE   128
 #define HASH_SHA512_DIGEST_SIZE  64
@@ -15,7 +15,7 @@
 // class Sha512(object):
 typedef struct _mp_obj_Sha512_t {
     mp_obj_base_t base;
-    mbedtls_sha512_context ctx;
+    SHA512_CTX ctx;
 } mp_obj_Sha512_t;
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha512_update(mp_obj_t self, mp_obj_t data);
@@ -25,8 +25,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_make_new(const mp_obj_type_t *type, size
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha512_t *o = m_new_obj(mp_obj_Sha512_t);
     o->base.type = type;
-    mbedtls_sha512_init(&(o->ctx));
-    mbedtls_sha512_starts(&(o->ctx), 0);
+    sha512_Init(&(o->ctx));
     if (n_args == 1) {
         mod_TrezorCrypto_Sha512_update(MP_OBJ_FROM_PTR(o), args[0]);
     }
@@ -38,7 +37,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t databuf;
     mp_get_buffer_raise(data, &databuf, MP_BUFFER_READ);
-    mbedtls_sha512_update(&(o->ctx), databuf.buf, databuf.len);
+    sha512_Update(&(o->ctx), databuf.buf, databuf.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha512_update_obj, mod_TrezorCrypto_Sha512_update);
@@ -48,10 +47,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_digest(mp_obj_t self) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, HASH_SHA512_DIGEST_SIZE);
-    mbedtls_sha512_context ctx;
-    mbedtls_sha512_clone(&ctx, &(o->ctx));
-    mbedtls_sha512_finish(&ctx, (uint8_t *)vstr.buf);
-    mbedtls_sha512_free(&ctx);
+    SHA512_CTX ctx;
+    memcpy(&ctx, &(o->ctx), sizeof(SHA512_CTX));
+    sha512_Final(&ctx, (uint8_t *)vstr.buf);
+    memset(&ctx, 0, sizeof(SHA512_CTX));
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512_digest_obj, mod_TrezorCrypto_Sha512_digest);
@@ -59,7 +58,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512_digest_obj, mod_TrezorC
 // def Sha512.__del__(self) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha512___del__(mp_obj_t self) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
-    mbedtls_sha512_free(&(o->ctx));
+    memset(&(o->ctx), 0, sizeof(SHA512_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512___del___obj, mod_TrezorCrypto_Sha512___del__);
