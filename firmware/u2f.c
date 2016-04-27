@@ -32,10 +32,12 @@
 #include "nist256p1.h"
 #include "rng.h"
 #include "hmac.h"
+#include "util.h"
 
 #include "u2f/u2f.h"
 #include "u2f/u2f_hid.h"
 #include "u2f/u2f_keys.h"
+#include "u2f_knownapps.h"
 #include "u2f.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
@@ -96,31 +98,12 @@ uint8_t buttonState(void)
 	return 0;
 }
 
-void int2hex(uint8_t *dst, const uint32_t i)
-{
-	dst[0] = '0' + ((i >> 28) & 0x0F);
-	dst[1] = '0' + ((i >> 24) & 0x0F);
-	dst[2] = '0' + ((i >> 20) & 0x0F);
-	dst[3] = '0' + ((i >> 16) & 0x0F);
-	dst[4] = '0' + ((i >> 12) & 0x0F);
-	dst[5] = '0' + ((i >> 8) & 0x0F);
-	dst[6] = '0' + ((i >> 4) & 0x0F);
-	dst[7] = '0' + (i & 0x0F);
-	dst[8] = '\0';
-
-	int t = 0;
-	for (; t < 8; t++) {
-		if (dst[t] > '9')
-			dst[t] += 7; // 'A'-'9'+1
-	}
-}
-
 char *debugInt(const uint32_t i)
 {
 	static uint8_t n = 0;
-	static uint8_t id[8][9];
-	int2hex(id[n], i);
-	debugLog(0, "", (const char *)id[n]);
+	static char id[8][9];
+	uint32hex(i, id[n]);
+	debugLog(0, "", id[n]);
 	char *ret = (char *)id[n];
 	n = (n + 1) % 8;
 	return ret;
@@ -426,6 +409,21 @@ void u2f_version(const APDU *a)
 	send_u2f_msg(version_response, sizeof(version_response));
 }
 
+static const char *getReadableAppId(const uint8_t appid[32]) {
+	unsigned int i;
+	static char buf[6+2+6+1];
+
+	for (i = 0; i < sizeof(u2f_well_known)/sizeof(U2FWellKnown); i++) {
+		if (memcmp(appid, u2f_well_known[i].appid, 32) == 0)
+			return u2f_well_known[i].appname;
+	}
+
+	data2hex(appid, 3, &buf[0]);
+	buf[6] = buf[7] = '.';
+	data2hex(appid+(sizeof(appid)-3), 3, &buf[8]);
+	return buf;
+}
+
 const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
@@ -529,7 +527,8 @@ void u2f_register(const APDU *a)
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
 		layoutDialog(DIALOG_ICON_QUESTION, "Cancel", "Register",
-				NULL, "Register U2F", "security key", "", "", "", NULL);
+					 NULL, "Register U2F", "security key",
+					 "", getReadableAppId(req->appId), "", NULL);
 		dialog_timeout = U2F_TIMEOUT;
 		last_req_state = REG;
 		return;
@@ -661,7 +660,8 @@ void u2f_authenticate(const APDU *a)
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
 		layoutDialog(DIALOG_ICON_QUESTION, "Cancel", "Authenticate", NULL,
-				"Authenticate U2F", "security key", "", "", "", NULL);
+					 "Authenticate U2F", "security key",
+					 "", getReadableAppId(req->appId), "", NULL);
 		dialog_timeout = U2F_TIMEOUT;
 		last_req_state = AUTH;
 		return;

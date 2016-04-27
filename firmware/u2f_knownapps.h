@@ -1,0 +1,57 @@
+/*
+ * This file is part of the TREZOR project.
+ *
+ * Copyright (C) 2016 Jochen Hoenicke <hoenicke@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef __U2F_KNOWNAPPS_H_INCLUDED__
+#define __U2F_KNOWNAPPS_H_INCLUDED__
+
+#include <stdint.h>
+
+typedef struct {
+	uint8_t appid[32];
+	const char *appname;
+} U2FWellKnown;
+
+static const U2FWellKnown u2f_well_known[3] = {
+    { 
+        // didn't feel like tracing that one yet
+        { 0xa5,0x46,0x72,0xb2,0x22,0xc4,0xcf,0x95,
+		  0xe1,0x51,0xed,0x8d,0x4d,0x3c,0x76,0x7a,
+		  0x6c,0xc3,0x49,0x43,0x59,0x43,0x79,0x4e,
+		  0x88,0x4f,0x3d,0x02,0x3a,0x82,0x29,0xfd },
+        "Google"
+    },
+    { 
+        // https://github.com/u2f/trusted_facets
+        { 0x70,0x61,0x7d,0xfe,0xd0,0x65,0x86,0x3a,
+		  0xf4,0x7c,0x15,0x55,0x6c,0x91,0x79,0x88,
+		  0x80,0x82,0x8c,0xc4,0x07,0xfd,0xf7,0x0a,
+		  0xe8,0x50,0x11,0x56,0x94,0x65,0xa0,0x75 },
+        "Github"
+    },
+    { 
+        // https://www.dropbox.com/u2f-app-id.json
+        { 0xc5,0x0f,0x8a,0x7b,0x70,0x8e,0x92,0xf8,
+		  0x2e,0x7a,0x50,0xe2,0xbd,0xc5,0x5d,0x8f,
+		  0xd9,0x1a,0x22,0xfe,0x6b,0x29,0xc0,0xcd,
+		  0xf7,0x80,0x55,0x30,0x84,0x2a,0xf5,0x81 },
+        "Dropbox"
+    }
+};
+
+#endif // U2F_KNOWNAPPS_INCLUDED
