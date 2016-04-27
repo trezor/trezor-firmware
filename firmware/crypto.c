@@ -122,28 +122,9 @@ int cryptoMessageSign(const HDNode *node, const uint8_t *message, size_t message
 
 int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
 {
-	bignum256 r, s, e;
-	curve_point cp, cp2;
 	SHA256_CTX ctx;
 	uint8_t pubkey[65], addr_raw[21], hash[32];
 
-	uint8_t nV = signature[0];
-	if (nV < 27 || nV >= 35) {
-		return 1;
-	}
-	bool compressed;
-	compressed = (nV >= 31);
-	if (compressed) {
-		nV -= 4;
-	}
-	uint8_t recid = nV - 27;
-	// read r and s
-	bn_read_be(signature + 1, &r);
-	bn_read_be(signature + 33, &s);
-	// x = r
-	memcpy(&cp.x, &r, sizeof(bignum256));
-	// compute y from x
-	uncompress_coords(&secp256k1, recid % 2, &cp.x, &cp.y);
 	// calculate hash
 	sha256_Init(&ctx);
 	sha256_Update(&ctx, (const uint8_t *)"\x18" "Bitcoin Signed Message:" "\n", 25);
@@ -153,29 +134,26 @@ int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_
 	sha256_Update(&ctx, message, message_len);
 	sha256_Final(&ctx, hash);
 	sha256_Raw(hash, 32, hash);
-	// e = -hash
-	bn_read_be(hash, &e);
-	bn_subtract(&secp256k1.order, &e, &e);
-	// r = r^-1
-	bn_inverse(&r, &secp256k1.order);
-	point_multiply(&secp256k1, &s, &cp, &cp);
-	scalar_multiply(&secp256k1, &e, &cp2);
-	point_add(&secp256k1, &cp2, &cp);
-	point_multiply(&secp256k1, &r, &cp, &cp);
-	pubkey[0] = 0x04;
-	bn_write_be(&cp.x, pubkey + 1);
-	bn_write_be(&cp.y, pubkey + 33);
-	// check if the address is correct
-	if (compressed) {
-		pubkey[0] = 0x02 | (cp.y.val[0] & 0x01);
+
+	uint8_t recid = signature[0] - 27;
+	if (recid >= 8) {
+		return 1;
 	}
+	bool compressed = (recid >= 4);
+	recid &= 3;
+
+	// check if signature verifies the digest and recover the public key
+	if (ecdsa_verify_digest_recover(&secp256k1, pubkey, signature + 1, hash, recid) != 0) {
+		return 3;
+	}
+	// convert public key to compressed pubkey if necessary
+	if (compressed) {
+		pubkey[0] = 0x02 | (pubkey[64] & 1);
+	}
+	// check if the address is correct
 	ecdsa_get_address_raw(pubkey, address_raw[0], addr_raw);
 	if (memcmp(addr_raw, address_raw, 21) != 0) {
 		return 2;
-	}
-	// check if signature verifies the digest
-	if (ecdsa_verify_digest(&secp256k1, pubkey, signature + 1, hash) != 0) {
-		return 3;
 	}
 	return 0;
 }
