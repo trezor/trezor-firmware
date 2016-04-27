@@ -28,6 +28,6 @@ BLUE_GRAY   = rgbcolor(0x60, 0x7D, 0x8B)
 BLACK       = rgbcolor(0x00, 0x00, 0x00)
 WHITE       = rgbcolor(0xFF, 0xFF, 0xFF)
 
-MONO   = 0
-NORMAL = 1
-BOLD   = 2
+MONO   = const(0)
+NORMAL = const(1)
+BOLD   = const(2)

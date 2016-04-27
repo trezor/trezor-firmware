@@ -41,5 +41,8 @@ gdb: ## start remote gdb session which connects to the openocd
 
 load: ## load contents of src into mass storage of trezor
 	rm -rf /run/media/${USER}/PYBFLASH/*
-	cp -a src/* /run/media/${USER}/PYBFLASH/
+	cp -a src/lib /run/media/${USER}/PYBFLASH/
+	cp -a src/playground /run/media/${USER}/PYBFLASH/
+	cp -a src/trezor /run/media/${USER}/PYBFLASH/
+	cp -a src/*.py /run/media/${USER}/PYBFLASH/
 	sync
