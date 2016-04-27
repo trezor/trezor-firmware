@@ -168,25 +168,33 @@ void u2fhid_read(const U2FHID_FRAME *f)
 		cmd = f->type;
 		memcpy(buf_ptr, f->init.data, sizeof(f->init.data));
 		buf_ptr += sizeof(f->init.data);
+
+		// Broadcast is reserved for init
+		if (cid == CID_BROADCAST && cmd != U2FHID_INIT)
+			return;
+
+		// Check length isnt bigger than spec max
+		if (len > sizeof(buf)) {
+			len = 0;
+			return send_u2fhid_error(ERR_INVALID_LEN);
+		}
 	}
 	else {
+		// Broadcast is reserved for init
+		if (cid == CID_BROADCAST)
+			return;
+		// check out of bounds
+		if ((buf_ptr - buf) >= (signed) len
+			|| (buf_ptr + sizeof(f->cont.data) - buf) > (signed) sizeof(buf))
+			return;
 		if (f->cont.seq == seq) {
 			seq++;
 			memcpy(buf_ptr, f->cont.data, sizeof(f->cont.data));
 			buf_ptr += sizeof(f->cont.data);
-		}
-		else {
+		} else {
 			return send_u2fhid_error(ERR_INVALID_SEQ);
 		}
 	}
-
-	// Broadcast is reserved for init
-	if (cid == CID_BROADCAST && cmd != U2FHID_INIT)
-		return;
-
-	// Check length isnt bigger than spec max
-	if (len > sizeof(buf))
-		return send_u2fhid_error(ERR_INVALID_LEN);
 
 	// Do we need to wait for more data
 	if ((buf_ptr - buf) < (signed)len) {
@@ -202,17 +210,11 @@ void u2fhid_read(const U2FHID_FRAME *f)
 		case U2FHID_MSG:
 			u2fhid_msg((APDU *)buf, len);
 			break;
-		case U2FHID_LOCK:
-			u2fhid_lock(buf, len);
-			break;
 		case U2FHID_INIT:
 			u2fhid_init((const U2FHID_INIT_REQ *)buf);
 			break;
 		case U2FHID_WINK:
 			u2fhid_wink(buf, len);
-			break;
-		// case U2FHID_SYNC:
-		//	u2fhid_sync(buf, len);
 			break;
 		default:
 			send_u2fhid_error(ERR_INVALID_CMD);
@@ -243,26 +245,6 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 	f.init.cmd = U2FHID_WINK;
 	f.init.bcntl = 0;
 	queue_u2f_pkt(&f);
-}
-
-void u2fhid_sync(const uint8_t *buf, uint32_t len)
-{
-	debugLog(0, "", "u2fhid_sync");
-	(void)buf;
-
-	if (len > 0)
-		return send_u2fhid_error(ERR_INVALID_LEN);
-
-	// Abort things.
-	dialog_timeout = 0;
-}
-
-void u2fhid_lock(const uint8_t *buf, uint32_t len)
-{
-	debugLog(0, "", "u2fhid_lock");
-	(void)buf;
-	(void)len;
-	send_u2fhid_error(ERR_INVALID_CMD);
 }
 
 void u2fhid_init(const U2FHID_INIT_REQ *init_req)
