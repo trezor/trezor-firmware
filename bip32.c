@@ -400,7 +400,7 @@ int hdnode_deserialize(const char *str, HDNode *node)
 {
 	uint8_t node_data[78];
 	memset(node, 0, sizeof(HDNode));
-	if (!base58_decode_check(str, node_data, sizeof(node_data))) {
+	if (base58_decode_check(str, node_data, sizeof(node_data)) != sizeof(node_data)) {
 		return -1;
 	}
 	node->curve = get_curve_by_name(SECP256K1_NAME);
