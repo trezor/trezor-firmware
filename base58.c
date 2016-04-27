@@ -42,7 +42,7 @@ static const int8_t b58digits_map[] = {
 bool b58tobin(void *bin, size_t *binszp, const char *b58)
 {
 	size_t binsz = *binszp;
-	const unsigned char *b58u = (void*)b58;
+	const unsigned char *b58u = (const unsigned char*)b58;
 	unsigned char *binu = bin;
 	size_t outisz = (binsz + 3) / 4;
 	uint32_t outi[outisz];
@@ -59,7 +59,7 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58)
 	memset(outi, 0, outisz * sizeof(*outi));
 
 	// Leading zeros, just count
-	for (i = 0; i < b58sz && !b58digits_map[b58u[i]]; ++i)
+	for (i = 0; i < b58sz && b58u[i] == '1'; ++i)
 		++zerocount;
 
 	for ( ; i < b58sz; ++i)
@@ -210,12 +210,10 @@ int base58_decode_check(const char *str, uint8_t *data, int datalen)
 	if (b58tobin(d, &res, str) != true) {
 		return 0;
 	}
-	if (res != (size_t)datalen + 4) {
+	uint8_t *nd = d + datalen + 4 - res;
+	if (b58check(nd, res, str) < 0) {
 		return 0;
 	}
-	if (b58check(d, res, str) < 0) {
-		return 0;
-	}
-	memcpy(data, d, datalen);
-	return datalen;
+	memcpy(data, nd, res - 4);
+	return res - 4;
 }
