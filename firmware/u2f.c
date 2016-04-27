@@ -31,6 +31,7 @@
 #include "curves.h"
 #include "nist256p1.h"
 #include "rng.h"
+#include "hmac.h"
 
 #include "u2f/u2f.h"
 #include "u2f/u2f_hid.h"
@@ -467,11 +468,8 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 		// Signature of app_id and random data
 		memcpy(&keybase[0], app_id, 32);
 		memcpy(&keybase[32], key_handle, 32);
-		uint8_t sig[64];
-		hdnode_sign(node, (uint8_t *)&keybase, sizeof(keybase), sig, NULL);
-
-		// Copy 32 bytes of signature into keyhandle
-		memcpy(&key_handle[32], sig, 32);
+		hmac_sha256(node->private_key, sizeof(node->private_key),
+					keybase, sizeof(keybase), &key_handle[32]);
 
 		// Done!
 		return node;
@@ -492,10 +490,11 @@ const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle
 	memcpy(&keybase[32], key_handle, 32);
 
 
-	uint8_t sig[64];
-	hdnode_sign(node, (uint8_t *)&keybase, sizeof(keybase), sig, NULL);
+	uint8_t hmac[32];
+	hmac_sha256(node->private_key, sizeof(node->private_key),
+				keybase, sizeof(keybase), hmac);
 
-	if (memcmp(&key_handle[32], sig, 32) !=0)
+	if (memcmp(&key_handle[32], hmac, 32) != 0)
 		return NULL;
 
 	// Done!
