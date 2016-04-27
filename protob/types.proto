@@ -131,6 +131,8 @@ message CoinType {
 	optional uint32 address_type = 3 [default=0];
 	optional uint64 maxfee_kb = 4;
 	optional uint32 address_type_p2sh = 5 [default=5];
+	optional uint32 address_type_p2wpkh = 6 [default=6];
+	optional uint32 address_type_p2wsh = 7 [default=10];
 }
 
 /**
