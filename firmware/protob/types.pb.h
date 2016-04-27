@@ -229,7 +229,7 @@ typedef struct {
 
 typedef struct _TxOutputType {
     bool has_address;
-    char address[41];
+    char address[54];
     size_t address_n_count;
     uint32_t address_n[8];
     uint64_t amount;
