@@ -7,6 +7,8 @@ include_directories(ed25519-donna)
 set_source_files_properties(aeskey.c PROPERTIES
                             COMPILE_FLAGS -Wno-sequence-point)
 
+set(CMAKE_C_FLAGS "-std=c99")
+
 if(MSVC)
   set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CXX)
 endif(MSVC)

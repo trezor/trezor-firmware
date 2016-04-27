@@ -3,6 +3,7 @@ CC        = gcc
 OPTFLAGS  = -O3 -g
 
 CFLAGS   += $(OPTFLAGS) \
+            -std=c99 \
             -W \
             -Wall \
             -Wextra \
