@@ -1,6 +1,6 @@
 #TREZOR Optimized Image Format
 
-All multibyte integer values are big endian!
+All multibyte integer values are little endian!
 
 ##Header
 

@@ -206,9 +206,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     if (bufinfo.len < 8 || memcmp(data, "TOIf", 4) != 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
     }
-    mp_int_t w = (data[4] << 8) | data[5];
-    mp_int_t h = (data[6] << 8) | data[7];
-    mp_int_t datalen = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];
+    mp_int_t w = *(uint16_t *)(data + 4);
+    mp_int_t h = *(uint16_t *)(data + 6);
+    mp_int_t datalen = *(uint32_t *)(data + 8);
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
@@ -230,9 +230,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     if (bufinfo.len < 8 || memcmp(data, "TOIg", 4) != 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
     }
-    mp_int_t w = (data[4] << 8) | data[5];
-    mp_int_t h = (data[6] << 8) | data[7];
-    mp_int_t datalen = (data[8] << 24) | (data[9] << 16) | (data[10] << 8) | data[11];
+    mp_int_t w = *(uint16_t *)(data + 4);
+    mp_int_t h = *(uint16_t *)(data + 6);
+    mp_int_t datalen = *(uint32_t *)(data + 8);
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }

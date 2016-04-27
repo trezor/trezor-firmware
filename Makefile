@@ -34,7 +34,7 @@ flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware1.bin 0x8020000
 
 openocd: ## start openocd which connects to the device
-	openocd -f interface/stlink-v2.cfg -f target/stm32f4x_stlink.cfg
+	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
 
 gdb: ## start remote gdb session which connects to the openocd
 	gdb $(STMHAL_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'

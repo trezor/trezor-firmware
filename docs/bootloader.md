@@ -1,6 +1,6 @@
 #TREZOR OS Bootloader
 
-All multibyte integer values are big endian!
+All multibyte integer values are little endian!
 
 ##Firmware File Format
 

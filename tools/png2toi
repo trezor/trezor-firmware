@@ -45,25 +45,36 @@ def process_image(ifn):
 
     if im.mode == 'RGB':
         ofn = '%s.toif' % ifn[:-4]
+        pixeldata = process_rgb(w, h, pix)
     else:
         ofn = '%s.toig' % ifn[:-4]
+        pixeldata = process_grayscale(w, h, pix)
+    z = zlib.compressobj(level=9, wbits=10)
+    zdata = z.compress(pixeldata) + z.flush()
+    zdata = zdata[2:-4] # strip header and checksum
+
     with open(ofn, 'wb') as f:
         if im.mode == 'RGB':
             f.write(bytes('TOIf', 'ascii'))
         else:
             f.write(bytes('TOIg', 'ascii'))
-        f.write(struct.pack('>HH', w, h))
-        if im.mode == 'RGB':
-            pixeldata = process_rgb(w, h, pix)
-        else:
-            pixeldata = process_grayscale(w, h, pix)
-        z = zlib.compressobj(level=9, wbits=10)
-        zdata = z.compress(pixeldata) + z.flush()
-        zdata = zdata[2:-4] # strip header and checksum
-        f.write(struct.pack('>I', len(zdata)))
+        f.write(struct.pack('<HH', w, h))
+        f.write(struct.pack('<I', len(zdata)))
         f.write(zdata)
-
-    print('Written %s ... %d bytes' % (ofn, 4 + 4 + len(zdata)))
+        print('Written %s ... %d bytes' % (ofn, 4 + 4 + len(zdata)))
+    with open(ofn + '.h', 'wt') as f:
+        f.write('static const uint8_t toi_%s[] = {\n' % ifn[:-4])
+        if im.mode == 'RGB':
+            f.write("    'T', 'O', 'I', 'f',\n")
+        else:
+            f.write("    'T', 'O', 'I', 'g',\n")
+        f.write('    (uint16_t)%d, (uint16_t)%d,\n' % (w, h))
+        f.write('    (uint32_t)%d,\n' % len(zdata))
+        f.write('   ')
+        for b in zdata:
+            f.write(' 0x%02x,' % b)
+        f.write('\n};\n')
+        print('Written %s ...' % (ofn + '.h'))
 
 
 def main():
