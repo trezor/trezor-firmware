@@ -1,5 +1,11 @@
 import sys
 import gc
+from TrezorUtils import Utils
+
+_utils = Utils()
+
+def memaccess(address, length):
+    return _utils.memaccess(address, length)
 
 def unimport(func):
     def inner(*args, **kwargs):
