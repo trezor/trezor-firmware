@@ -56,9 +56,9 @@ bool storage_hasPin(void);
 void storage_setPin(const char *pin);
 void session_cachePin(void);
 bool session_isPinCached(void);
-void storage_resetPinFails(void);
-void storage_increasePinFails(void);
-uint32_t storage_getPinFails(void);
+void storage_resetPinFails(uint32_t *pinfailptr);
+bool storage_increasePinFails(uint32_t *pinfailptr);
+uint32_t *storage_getPinFailsPtr(void);
 
 bool storage_isInitialized(void);
 

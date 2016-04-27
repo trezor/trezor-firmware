@@ -40,13 +40,38 @@
 #include "protect.h"
 #include "layout2.h"
 
-_Static_assert(sizeof(Storage) <= FLASH_STORAGE_LEN, "Storage struct is too large for TREZOR flash");
 Storage storage;
 
 uint8_t storage_uuid[12];
 char    storage_uuid_str[25];
 
+/*
+ storage layout:
+
+ offset | type/length |  description
+--------+-------------+-------------------------------
+ 0x0000 |   4 bytes   |  magic = 'stor'
+ 0x0004 |  12 bytes   |  uuid
+ 0x0010 |  ?          |  Storage structure
+ 0x4000 |   4 kbytes  |  area for pin failures
+ 0x5000 |  12 kbytes  |  reserved
+
+The area for pin failures looks like this:
+0 ... 0 pinfail 0xffffffff .. 0xffffffff
+The pinfail is a binary number of the form 1...10...0,
+the number of zeros is the number of pin failures.
+This layout is used because we can only clear bits without 
+erasing the flash.
+
+ */
+
+#define FLASH_STORAGE_PINAREA     (FLASH_META_START + 0x4000)
+#define FLASH_STORAGE_PINAREA_LEN (0x1000)
+#define FLASH_STORAGE_REALLEN (4 + sizeof(storage_uuid) + sizeof(Storage))
+_Static_assert(FLASH_STORAGE_START + FLASH_STORAGE_REALLEN <= FLASH_STORAGE_PINAREA, "Storage struct is too large for TREZOR flash");
+
 static bool sessionSeedCached;
+
 static uint8_t sessionSeed[64];
 
 static bool sessionPinCached;
@@ -54,36 +79,41 @@ static bool sessionPinCached;
 static bool sessionPassphraseCached;
 static char sessionPassphrase[51];
 
-/*
- storage layout:
+#define STORAGE_VERSION 6
 
- offset | type/length |  description
---------+-------------+-------------------------------
- 0x0000 |  4 bytes    |  magic = 'stor'
- 0x0004 |  12 bytes   |  uuid
- 0x0010 |  ?          |  Storage structure
- */
-
-#define STORAGE_VERSION 5
+void storage_check_flash_errors(void)
+{
+	// flash operation failed
+	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
+		layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
+		for (;;) { }
+	}
+}
 
 void storage_from_flash(uint32_t version)
 {
-	switch (version) {
-		case 1: // copy (since 1.0.0)
-			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
-			break;
-		case 2: // copy (since 1.2.1)
-			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
-			break;
-		case 3: // copy (since 1.3.1)
-			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
-			break;
-		case 4: // copy (since 1.3.2)
-			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
-			break;
-		case 5: // copy (since 1.3.3)
-			memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
-			break;
+	// version 1: since 1.0.0
+	// version 2: since 1.2.1
+	// version 3: since 1.3.1
+	// version 4: since 1.3.2
+	// version 5: since 1.3.3
+	// version 6: since 1.3.6
+	memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
+	if (version <= 5) {
+		// convert PIN failure counter from version 5 format
+		uint32_t pinctr = storage.has_pin_failed_attempts
+			? storage.pin_failed_attempts : 0;
+		if (pinctr > 31)
+			pinctr = 31;
+		flash_clear_status_flags();
+		flash_unlock();
+		// erase extra storage sector
+		flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
+		flash_program_word(FLASH_STORAGE_PINAREA, 0xffffffff << pinctr);
+		flash_lock();
+		storage_check_flash_errors();
+		storage.has_pin_failed_attempts = false;
+		storage.pin_failed_attempts = 0;
 	}
 	storage.version = STORAGE_VERSION;
 }
@@ -136,35 +166,29 @@ void session_clear(bool clear_pin)
 	}
 }
 
-static uint8_t meta_backup[FLASH_META_LEN];
-
 void storage_commit(void)
 {
 	int i;
-	uint32_t *w;
+	uint32_t meta_backup[(FLASH_STORAGE_PINAREA - FLASH_META_START) / 4];
+
 	// backup meta
-	memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
+	memcpy((uint8_t*)meta_backup, (uint8_t*)FLASH_META_START, FLASH_META_DESC_LEN);
+	// modify storage
+	memcpy((uint8_t*)meta_backup + FLASH_META_DESC_LEN, "stor", 4);
+	memcpy((uint8_t*)meta_backup + FLASH_META_DESC_LEN + 4, storage_uuid, sizeof(storage_uuid));
+	memcpy((uint8_t*)meta_backup + FLASH_META_DESC_LEN + 4 + sizeof(storage_uuid), &storage, sizeof(Storage));
+	memset((uint8_t*)meta_backup + FLASH_META_DESC_LEN + FLASH_STORAGE_REALLEN, 0, sizeof(meta_backup) - FLASH_META_DESC_LEN - FLASH_STORAGE_REALLEN);
+
 	flash_clear_status_flags();
 	flash_unlock();
 	// erase storage
-	for (i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
-		flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
-	}
-	// modify storage
-	memcpy(meta_backup + FLASH_META_DESC_LEN, "stor", 4);
-	memcpy(meta_backup + FLASH_META_DESC_LEN + 4, storage_uuid, sizeof(storage_uuid));
-	memcpy(meta_backup + FLASH_META_DESC_LEN + 4 + sizeof(storage_uuid), &storage, sizeof(Storage));
+	flash_erase_sector(FLASH_META_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
 	// copy it back
-	for (i = 0; i < FLASH_META_LEN / 4; i++) {
-		w = (uint32_t *)(meta_backup + i * 4);
-		flash_program_word(FLASH_META_START + i * 4, *w);
+	for (i = 0; i < (signed) (sizeof(meta_backup) / 4); i++) {
+		flash_program_word(FLASH_META_START + i * 4, meta_backup[i]);
 	}
 	flash_lock();
-	// flash operation failed
-	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
-		layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
-		for (;;) { }
-	}
+	storage_check_flash_errors();
 }
 
 void storage_loadDevice(LoadDevice *msg)
@@ -344,7 +368,7 @@ bool storage_hasPin(void)
 
 void storage_setPin(const char *pin)
 {
-	if (pin && strlen(pin) > 0) {
+	if (pin && pin[0]) {
 		storage.has_pin = true;
 		strlcpy(storage.pin, pin, sizeof(storage.pin));
 	} else {
@@ -376,28 +400,44 @@ bool session_isPinCached(void)
 	return sessionPinCached;
 }
 
-void storage_resetPinFails(void)
+void storage_resetPinFails(uint32_t *pinfailsptr)
 {
-	storage.has_pin_failed_attempts = true;
-	storage.pin_failed_attempts = 0;
-	storage_commit();
-}
-
-void storage_increasePinFails(void)
-{
-	if (!storage.has_pin_failed_attempts) {
-		storage.has_pin_failed_attempts = true;
-		storage.pin_failed_attempts = 1;
+	flash_clear_status_flags();
+	flash_unlock();
+	if ((uint32_t) (pinfailsptr + 1) - FLASH_STORAGE_PINAREA
+		>= FLASH_STORAGE_PINAREA_LEN) {
+		// erase extra storage sector
+		flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
 	} else {
-		storage.pin_failed_attempts++;
+		flash_program_word((uint32_t) pinfailsptr, 0);
 	}
-	storage_commit();
+	flash_lock();
+	storage_check_flash_errors();
 }
 
-uint32_t storage_getPinFails(void)
+bool storage_increasePinFails(uint32_t *pinfailsptr)
 {
-	storage_from_flash(STORAGE_VERSION); // reload from flash
-	return storage.has_pin_failed_attempts ? storage.pin_failed_attempts : 0;
+	uint32_t newctr = *pinfailsptr << 1;
+	// counter already at maximum, we do not increase it any more
+	// return success so that a good pin is accepted
+	if (!newctr)
+		return true;
+
+	flash_clear_status_flags();
+	flash_unlock();
+	flash_program_word((uint32_t) pinfailsptr, newctr);
+	flash_lock();
+	storage_check_flash_errors();
+
+	return *pinfailsptr == newctr;
+}
+
+uint32_t *storage_getPinFailsPtr(void)
+{
+	uint32_t *pinfailsptr = (uint32_t *) FLASH_STORAGE_PINAREA;
+	while (*pinfailsptr == 0)
+		pinfailsptr++;
+	return pinfailsptr;
 }
 
 bool storage_isInitialized(void)
