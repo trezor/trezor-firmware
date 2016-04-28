@@ -5,7 +5,7 @@ import os
 import ustruct
 import uselect
 
-from uasyncio import loop
+from trezor import loop
 
 read_fd = None
 write_fd = None

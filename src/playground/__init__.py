@@ -10,12 +10,12 @@ import utime
 import math
 import gc
 
-from uasyncio import loop
 # import transport_pipe as pipe
 
 from trezor import ui
 from trezor import msg
-from trezor.utils import unimport
+from trezor import loop
+from trezor.utils import unimport_gen, unimport_func
 from trezor import layout
 
 if __debug__:
@@ -29,6 +29,7 @@ def perf_info():
           (mem_alloc, gc.mem_alloc(), loop.last_sleep))
     loop.call_later(1000000, perf_info)
 
+'''
 def animate():
     col = 0
     # hawcons gesture
@@ -66,16 +67,11 @@ def wait_for():
     print(ktery)
     
     print("Po cekani na event")
+'''
 
 def tap_to_confirm(address, amount, currency):
 
     loop.call_later(5 * 1000000, layout.change(homescreen()))
-
-    STEP_X = 0.07
-    DELAY = int(0.01 * 1000000)
-    BASE_COLOR = (0x00, 0x00, 0x00)
-    MIN_COLOR = 0x00
-    MAX_COLOR = 0xB0
 
     ui.display.bar(0, 0, 240, 40, ui.GREEN)
     ui.display.bar(0, 40, 240, 200, ui.WHITE)
@@ -87,38 +83,23 @@ def tap_to_confirm(address, amount, currency):
     ui.display.text(10, 160, address[18:], ui.MONO, ui.BLACK, ui.WHITE)
 
     f = open('playground/tap_64.toig', 'r')
-
     _background = ui.rgbcolor(255, 255, 255)
-    x = math.pi
-    while True:
-        x += STEP_X
-        if x > 2 * math.pi:
-            x -= 2 * math.pi
-        y = 1 + math.sin(x)
-        
-        # ui.display.bar(0, 170, 240, 70, _background)
 
-        # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
-        col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
-        foreground = ui.rgbcolor(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
-
+    def func(foreground):
         ui.display.text(68, 212, 'TAP TO CONFIRM', 2, foreground, _background)
 
         f.seek(0)
         ui.display.icon(3, 170, f.read(), _background, foreground)
-        # ui.display.icon(165, 50, f.read(), _background, foreground)
 
-        try:
-            yield loop.Sleep(DELAY)
-        except StopIteration:
-            print("Somebody asked me to stop layout tap_to_confirm")
-            return
+    yield from animate_pulse(func, DELAY=10000)
 
+'''
 def on_read():
     print("READY TO READ")
     print(msg.read())
+'''
 
-@unimport
+@unimport_func
 def zprava():
     from _io import BytesIO
 
@@ -137,27 +118,53 @@ def zprava():
     # m2 = GetAddress.load(BytesIO(data))
     # print(m2.__dict__)
 
+@unimport_gen
+def animate_pulse(func, STEP_X=0.05, DELAY=30000, BASE_COLOR=(0x00, 0x00, 0x00), MIN_COLOR=0x00, MAX_COLOR=0x80):
+    x = math.pi / 3
+
+    from const_delay import ConstDelay
+    delay = ConstDelay(DELAY)
+
+    while True:
+        # print(x)
+        x += STEP_X
+        if x > 2 * math.pi:
+            x -= 2 * math.pi
+        y = 1 + math.sin(x)
+
+        # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
+        col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
+        foreground = ui.rgbcolor(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
+
+        func(foreground)
+
+        yield delay.wait()
+
 def homescreen():
     print("Homescreen layout!")
+
+    loop.call_later(5 * 1000000, layout.change(tap_to_confirm('1BitkeyP2nDd5oa64x7AjvBbbwST54W5Zmx2', 110.126967, 'BTC')))
 
     ui.display.bar(0, 0, 240, 240, ui.WHITE)
 
     f = open('playground/trezor.toig', 'r')
-    f.seek(0)
-    ui.display.icon(0, 0, f.read(), ui.BLACK, ui.WHITE)
-    while True:
-        yield loop.Sleep(1000000)
+
+    def func(foreground):
+        f.seek(0)
+        ui.display.icon(0, 0, f.read(), foreground, ui.BLACK)
+
+    yield from animate_pulse(func, STEP_X=0.035, BASE_COLOR=(0xff, 0xff, 0xff), MIN_COLOR=0xaa, MAX_COLOR=0xff)
 
 def run():
     # pipe.init('../pipe', on_read)
     # msg.set_notify(on_read)
 
-    # zprava()
+    zprava()
     
     loop.call_soon(perf_info)
     loop.call_soon(layout.set_main(homescreen()))
 
-    loop.call_later(3 * 1000000, layout.change(tap_to_confirm('1BitkeyP2nDd5oa64x7AjvBbbwST54W5Zmx2', 110.126967, 'BTC')))
+    # loop.call_later(10 * 1000000, layout.change(tap_to_confirm('1BitkeyP2nDd5oa64x7AjvBbbwST54W5Zmx2', 110.126967, 'BTC')))
     # loop.call_soon(animate())
 
     loop.run_forever()
