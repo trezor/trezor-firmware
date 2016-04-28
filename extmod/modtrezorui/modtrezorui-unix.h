@@ -34,33 +34,29 @@ static void DATAfunc(uint8_t x) {
     }
 }
 
-void touch_start(mp_int_t x, mp_int_t y);
-void touch_move(mp_int_t x, mp_int_t y);
-void touch_end(mp_int_t x, mp_int_t y);
-
-void upy_idle_func(void)
+uint32_t trezorui_poll_sdl_event(uint32_t timeout_us)
 {
     SDL_Event event;
     int x, y;
-    while (SDL_PollEvent(&event) > 0) {
+    if (SDL_WaitEventTimeout(&event, timeout_us / 1000) > 0) {
         switch (event.type) {
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:
             case SDL_MOUSEBUTTONUP:
                 x = event.button.x - DISPLAY_BORDER;
                 y = event.button.y - DISPLAY_BORDER;
-                if (x < 0 || y < 0 || x >= RESX || y >= RESY) continue;
+                if (x < 0 || y < 0 || x >= RESX || y >= RESY) break;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
-                        touch_start(x, y);
+                        return (0x00 << 24) | (0x01 << 16) | (x << 8) | y; // touch_start
                         break;
                     case SDL_MOUSEMOTION:
                         if (event.motion.state) {
-                            touch_move(x, y);
+                            return (0x00 << 24) | (0x02 << 16) | (x << 8) | y; // touch_move
                         }
                         break;
                     case SDL_MOUSEBUTTONUP:
-                        touch_end(x, y);
+                        return (0x00 << 24) | (0x03 << 16) | (x << 8) | y; // touch_end
                         break;
                 }
                 break;
@@ -69,7 +65,7 @@ void upy_idle_func(void)
                 break;
         }
     }
-    return;
+    return 0;
 }
 
 static void display_init(void)

@@ -8,6 +8,9 @@ type_gen = type((lambda: (yield))())
 def memaccess(address, length):
     return _utils.memaccess(address, length)
 
+def select(timeout_us):
+    return _utils.select(timeout_us)
+
 def unimport_func(func):
     def inner(*args, **kwargs):
         mods = set(sys.modules)

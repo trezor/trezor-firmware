@@ -28,14 +28,11 @@
 
 #include "modtrezorui-display.h"
 
-#include "modtrezorui-touch.h"
-
 // module stuff
 
 STATIC const mp_rom_map_elem_t mp_module_TrezorUi_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorUi) },
     { MP_ROM_QSTR(MP_QSTR_Display), MP_ROM_PTR(&mod_TrezorUi_Display_type) },
-    { MP_ROM_QSTR(MP_QSTR_Touch), MP_ROM_PTR(&mod_TrezorUi_Touch_type) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_TrezorUi_globals, mp_module_TrezorUi_globals_table);

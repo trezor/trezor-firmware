@@ -42,10 +42,29 @@ STATIC mp_obj_t mod_TrezorUtils_Utils_memaccess(mp_obj_t self, mp_obj_t address,
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUtils_Utils_memaccess_obj, mod_TrezorUtils_Utils_memaccess);
 
+// from modtrezorui
+uint32_t trezorui_poll_sdl_event(uint32_t timeout_us);
+
+// def Utils.select(self, timeout_us: int) -> None/tuple
+STATIC mp_obj_t mod_TrezorUtils_Utils_select(mp_obj_t self, mp_obj_t timeout_us) {
+    uint32_t to = mp_obj_get_int(timeout_us);
+    uint32_t e = trezorui_poll_sdl_event(to);
+    if (e) {
+        mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+        tuple->items[0] = MP_OBJ_NEW_SMALL_INT((e & 0xFF0000) >> 16);
+        tuple->items[1] = MP_OBJ_NEW_SMALL_INT((e & 0xFF00) >> 8);
+        tuple->items[2] = MP_OBJ_NEW_SMALL_INT((e & 0xFF));
+        return MP_OBJ_FROM_PTR(tuple);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUtils_Utils_select_obj, mod_TrezorUtils_Utils_select);
+
 // Utils stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorUtils_Utils_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_memaccess), MP_ROM_PTR(&mod_TrezorUtils_Utils_memaccess_obj) },
+    { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorUtils_Utils_select_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorUtils_Utils_locals_dict, mod_TrezorUtils_Utils_locals_dict_table);
 
