@@ -18,7 +18,7 @@ def layout_tap_to_confirm(address, amount, currency):
     ui.display.text(10, 160, address[18:], ui.MONO, ui.BLACK, ui.WHITE)
 
     f = open('apps/playground/tap_64.toig', 'r')
-    _background = ui.rgbcolor(255, 255, 255)
+    _background = ui.WHITE
 
     def func(foreground):
         ui.display.text(68, 212, 'TAP TO CONFIRM', 2, foreground, _background)
@@ -26,7 +26,7 @@ def layout_tap_to_confirm(address, amount, currency):
         f.seek(0)
         ui.display.icon(3, 170, f.read(), _background, foreground)
 
-    yield from ui.animate_pulse(func)  # , DELAY=10000)
+    yield from ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 
 @unimport_func
 def zprava():
