@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # Implements the Google's protobuf encoding.
 # eigenein (c) 2011
 # http://eigenein.me/protobuf/
@@ -77,9 +74,6 @@ FLAG_REQUIRED_MASK = 1
 FLAG_SINGLE = 0
 FLAG_REPEATED = 2
 FLAG_REPEATED_MASK = 6
-FLAG_PRIMITIVE = 0
-FLAG_EMBEDDED = 8
-FLAG_EMBEDDED_MASK = 8
 
 class EofWrapper:
     # Wraps a stream to raise EOFError instead of just returning of ''.
@@ -151,7 +145,8 @@ class MessageType:
                 raise ValueError('The field with the tag %s is required but a value is missing.' % tag)
         
     def load(self, fp):
-        fp, message = EofWrapper(fp), self.__call__() # Wrap fp and create a new instance.
+        fp = EofWrapper(fp)
+        message = self.__call__()
         while True:
             try:
                 tag, wire_type = _unpack_key(UVarintType.load(fp))
