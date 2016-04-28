@@ -48,7 +48,7 @@ OBJS   = $(SRCS:.c=.o)
 TESTLIBS = -lcheck -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
 
-all: tests test-openssl libtrezor-crypto.so test_speed
+all: tests test-openssl libtrezor-crypto.so test_speed tools
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -65,5 +65,17 @@ test-openssl: test-openssl.o $(OBJS)
 libtrezor-crypto.so: $(SRCS)
 	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o libtrezor-crypto.so
 
+tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
+
+tools/xpubaddrgen: tools/xpubaddrgen.o $(OBJS)
+	$(CC) tools/xpubaddrgen.o $(OBJS) -o tools/xpubaddrgen
+
+tools/mktable: tools/mktable.o $(OBJS)
+	$(CC) tools/mktable.o $(OBJS) -o tools/mktable
+
+tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
+	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
+
 clean:
 	rm -f *.o ed25519-donna/*.o tests test_speed test-openssl libtrezor-crypto.so
+	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
