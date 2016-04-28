@@ -38,14 +38,20 @@ NORMAL = const(1)
 BOLD   = const(2)
 
 
-def animate_pulse(func, SPEED=200000, DELAY=30000, BASE_COLOR=(0x00, 0x00, 0x00), MIN_COLOR=0x00, MAX_COLOR=0x80):
+def lerpi(a: int, b: int, t: float) -> int:
+    return int(a + t * (b - a))
+
+
+def blend(ca: int, cb: int, t: float) -> int:
+    return rgbcolor(lerpi((ca >> 8) & 0xF8, (cb >> 8) & 0xF8, t),
+                    lerpi((ca >> 3) & 0xFC, (cb >> 3) & 0xFC, t),
+                    lerpi((ca << 3) & 0xF8, (cb << 3) & 0xF8, t))
+
+
+def animate_pulse(func, ca, cb, speed=200000, delay=30000):
     while True:
-        y = 1 + math.sin(utime.ticks_us() / SPEED)
-
-        # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
-        col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
-        foreground = rgbcolor(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
-
-        func(foreground)
-        yield loop.Sleep(DELAY)
-
+        # normalize sin from interval -1:1 to 0:1
+        y = 0.5 + 0.5 * math.sin(utime.ticks_us() / speed)
+        c = blend(ca, cb, y)
+        func(c)
+        yield loop.Sleep(delay)
