@@ -10,7 +10,7 @@ import utime
 import math
 import gc
 
-from uasyncio import core
+from uasyncio import loop
 # import transport_pipe as pipe
 
 from trezor import ui
@@ -18,8 +18,9 @@ from trezor import msg
 from trezor.utils import unimport
 from trezor import layout
 
-logging.basicConfig(level=logging.INFO)
-loop = core.get_event_loop()
+if __debug__:
+    import logging
+    logging.basicConfig(level=logging.INFO)
 
 def perf_info():
     mem_alloc = gc.mem_alloc()
@@ -40,7 +41,7 @@ def animate():
         ui.display.icon(190, 170, f.read(), ui.rgbcolor(col, 0, 0), 0xffff)
         f.seek(0)
 
-        yield core.Sleep(int(0.5 * 1000000))
+        yield loop.Sleep(int(0.5 * 1000000))
 
 sec = 0
 event = None
@@ -61,17 +62,29 @@ def sekunda(x):
 def wait_for():
     print("Jsem tady")
 
-    ktery = yield core.IOButton()
+    ktery = yield loop.IOButton()
     print(ktery)
     
     print("Po cekani na event")
 
-def tap_to_confirm():
+def tap_to_confirm(address, amount, currency):
+
+    loop.call_later(5 * 1000000, layout.change(homescreen()))
+
     STEP_X = 0.07
     DELAY = int(0.01 * 1000000)
     BASE_COLOR = (0x00, 0x00, 0x00)
     MIN_COLOR = 0x00
     MAX_COLOR = 0xB0
+
+    ui.display.bar(0, 0, 240, 40, ui.GREEN)
+    ui.display.bar(0, 40, 240, 200, ui.WHITE)
+
+    ui.display.text(10, 28, 'Sending', ui.BOLD, ui.WHITE, ui.GREEN)
+    ui.display.text(10, 80, '%f %s' % (amount, currency), ui.BOLD, ui.BLACK, ui.WHITE)
+    ui.display.text(10, 110, 'to this address:', ui.NORMAL, ui.BLACK, ui.WHITE)
+    ui.display.text(10, 140, address[:18], ui.MONO, ui.BLACK, ui.WHITE)
+    ui.display.text(10, 160, address[18:], ui.MONO, ui.BLACK, ui.WHITE)
 
     f = open('playground/tap_64.toig', 'r')
 
@@ -96,7 +109,7 @@ def tap_to_confirm():
         # ui.display.icon(165, 50, f.read(), _background, foreground)
 
         try:
-            yield core.Sleep(DELAY)
+            yield loop.Sleep(DELAY)
         except StopIteration:
             print("Somebody asked me to stop layout tap_to_confirm")
             return
@@ -124,21 +137,27 @@ def zprava():
     # m2 = GetAddress.load(BytesIO(data))
     # print(m2.__dict__)
 
-def novy_layout():
-    print("Novy layout!")
-    yield core.Sleep(2 * 1000000)
-    return tap_to_confirm
+def homescreen():
+    print("Homescreen layout!")
+
+    ui.display.bar(0, 0, 240, 240, ui.WHITE)
+
+    f = open('playground/trezor.toig', 'r')
+    f.seek(0)
+    ui.display.icon(0, 0, f.read(), ui.BLACK, ui.WHITE)
+    while True:
+        yield loop.Sleep(1000000)
 
 def run():
     # pipe.init('../pipe', on_read)
     # msg.set_notify(on_read)
 
-    zprava()
+    # zprava()
     
     loop.call_soon(perf_info)
-    loop.call_soon(layout.set_main_layout(tap_to_confirm))
+    loop.call_soon(layout.set_main(homescreen()))
 
-    loop.call_later(2 * 1000000, layout.change_layout(novy_layout))
+    loop.call_later(3 * 1000000, layout.change(tap_to_confirm('1BitkeyP2nDd5oa64x7AjvBbbwST54W5Zmx2', 110.126967, 'BTC')))
     # loop.call_soon(animate())
 
     loop.run_forever()
