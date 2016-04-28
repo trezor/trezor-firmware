@@ -6,11 +6,11 @@
  */
 
 #include <SDL2/SDL.h>
+#include <stdlib.h>
 
 static SDL_Renderer *RENDERER = 0;
 static SDL_Surface  *SCREEN   = 0;
 static SDL_Texture  *TEXTURE  = 0;
-static SDL_Thread   *THREAD   = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
 static int ROTATION = 0;
@@ -34,11 +34,15 @@ static void DATAfunc(uint8_t x) {
     }
 }
 
-static int HandleEvents(void *ptr)
+void touch_start(mp_int_t x, mp_int_t y);
+void touch_move(mp_int_t x, mp_int_t y);
+void touch_end(mp_int_t x, mp_int_t y);
+
+void upy_idle_func(void)
 {
     SDL_Event event;
     int x, y;
-    while (SDL_WaitEvent(&event) >= 0) {
+    while (SDL_PollEvent(&event) > 0) {
         switch (event.type) {
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:
@@ -48,21 +52,24 @@ static int HandleEvents(void *ptr)
                 if (x < 0 || y < 0 || x >= RESX || y >= RESY) continue;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
-                        // touch_start(x, y);
+                        touch_start(x, y);
                         break;
                     case SDL_MOUSEMOTION:
                         if (event.motion.state) {
-                            // touch_move(x, y);
+                            touch_move(x, y);
                         }
                         break;
                     case SDL_MOUSEBUTTONUP:
-                        // touch_end(x, y);
+                        touch_end(x, y);
                         break;
                 }
                 break;
+            case SDL_QUIT:
+                exit(3);
+                break;
         }
     }
-    return 0;
+    return;
 }
 
 static void display_init(void)
@@ -84,7 +91,6 @@ static void display_init(void)
     SDL_RenderClear(RENDERER);
     SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
-    THREAD = SDL_CreateThread(HandleEvents, "EventThread", NULL);
 }
 
 static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {

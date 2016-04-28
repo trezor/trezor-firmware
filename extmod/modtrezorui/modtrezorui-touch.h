@@ -11,25 +11,23 @@ mp_obj_t touch_start_callback = mp_const_none;
 mp_obj_t touch_move_callback = mp_const_none;
 mp_obj_t touch_end_callback = mp_const_none;
 
-/*
-static void touch_start(mp_int_t x, mp_int_t y) {
+void touch_start(mp_int_t x, mp_int_t y) {
     if (touch_start_callback != mp_const_none) {
         mp_call_function_2(touch_start_callback, MP_OBJ_NEW_SMALL_INT(x), MP_OBJ_NEW_SMALL_INT(y));
     }
 }
 
-static void touch_move(mp_int_t x, mp_int_t y) {
+void touch_move(mp_int_t x, mp_int_t y) {
     if (touch_move_callback != mp_const_none) {
         mp_call_function_2(touch_move_callback, MP_OBJ_NEW_SMALL_INT(x), MP_OBJ_NEW_SMALL_INT(y));
     }
 }
 
-static void touch_end(mp_int_t x, mp_int_t y) {
+void touch_end(mp_int_t x, mp_int_t y) {
     if (touch_end_callback != mp_const_none) {
         mp_call_function_2(touch_end_callback, MP_OBJ_NEW_SMALL_INT(x), MP_OBJ_NEW_SMALL_INT(y));
     }
 }
-*/
 
 // class Touch(object):
 typedef struct _mp_obj_Touch_t {
