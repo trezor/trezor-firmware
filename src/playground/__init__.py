@@ -16,6 +16,7 @@ from uasyncio import core
 from trezor import ui
 from trezor import msg
 from trezor.utils import unimport
+from trezor import layout
 
 logging.basicConfig(level=logging.INFO)
 loop = core.get_event_loop()
@@ -23,9 +24,9 @@ loop = core.get_event_loop()
 def perf_info():
     mem_alloc = gc.mem_alloc()
     gc.collect()
-    print("mem_alloc: %s/%s, last_sleep: %.06f" % \
+    print("mem_alloc: %s/%s, last_sleep: %d" % \
           (mem_alloc, gc.mem_alloc(), loop.last_sleep))
-    loop.call_later(1, perf_info)
+    loop.call_later(1000000, perf_info)
 
 def animate():
     col = 0
@@ -39,7 +40,7 @@ def animate():
         ui.display.icon(190, 170, f.read(), ui.rgbcolor(col, 0, 0), 0xffff)
         f.seek(0)
 
-        yield core.Sleep(0.5)
+        yield core.Sleep(int(0.5 * 1000000))
 
 sec = 0
 event = None
@@ -67,7 +68,7 @@ def wait_for():
 
 def tap_to_confirm():
     STEP_X = 0.07
-    DELAY = 0.01
+    DELAY = int(0.01 * 1000000)
     BASE_COLOR = (0x00, 0x00, 0x00)
     MIN_COLOR = 0x00
     MAX_COLOR = 0xB0
@@ -94,8 +95,11 @@ def tap_to_confirm():
         ui.display.icon(3, 170, f.read(), _background, foreground)
         # ui.display.icon(165, 50, f.read(), _background, foreground)
 
-
-        yield core.Sleep(DELAY)
+        try:
+            yield core.Sleep(DELAY)
+        except StopIteration:
+            print("Somebody asked me to stop layout tap_to_confirm")
+            return
 
 def on_read():
     print("READY TO READ")
@@ -120,6 +124,11 @@ def zprava():
     # m2 = GetAddress.load(BytesIO(data))
     # print(m2.__dict__)
 
+def novy_layout():
+    print("Novy layout!")
+    yield core.Sleep(2 * 1000000)
+    return tap_to_confirm
+
 def run():
     # pipe.init('../pipe', on_read)
     # msg.set_notify(on_read)
@@ -127,7 +136,9 @@ def run():
     zprava()
     
     loop.call_soon(perf_info)
-    loop.call_soon(tap_to_confirm())
+    loop.call_soon(layout.set_main_layout(tap_to_confirm))
+
+    loop.call_later(2 * 1000000, layout.change_layout(novy_layout))
     # loop.call_soon(animate())
 
     loop.run_forever()

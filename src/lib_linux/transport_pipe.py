@@ -44,7 +44,7 @@ def close():
 
 def watch_read():
     global on_read
-    sleep = core.Sleep(0.01)
+    sleep = core.Sleep(10000)  # 0.01s
     while True:
         if ready_to_read() and on_read:
             on_read()
