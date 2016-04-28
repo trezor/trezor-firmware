@@ -1,4 +1,5 @@
 import sys
+import utime
 
 _new_layout = None
 _current_layout = None
@@ -15,17 +16,18 @@ def set_main(main_layout):
     global _new_layout
     global _current_layout
 
-    _current_layout = main_layout
+    _current_layout = main_layout()
     while True:
         try:
             _current_layout = yield from _current_layout
         except Exception as e:
             sys.print_exception(e)
-            sys.exit()
+            utime.sleep(1)  # Don't produce wall of exceptions
             # if _current_layout == main_layout:
             #    # Main layout thrown exception, what to do?
-            # _current_layout = main_layout
-            # continue
+            #    sys.exit()
+            _current_layout = main_layout()
+            continue
 
         if _new_layout != None:
             print("Switching to new layout %s" % _new_layout)
