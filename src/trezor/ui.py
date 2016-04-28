@@ -1,4 +1,9 @@
+import math
+import utime
+
 from TrezorUi import Display, Touch
+
+from . import loop
 
 display = Display()
 touch = Touch()
@@ -31,3 +36,16 @@ WHITE       = rgbcolor(0xFF, 0xFF, 0xFF)
 MONO   = const(0)
 NORMAL = const(1)
 BOLD   = const(2)
+
+
+def animate_pulse(func, SPEED=200000, DELAY=30000, BASE_COLOR=(0x00, 0x00, 0x00), MIN_COLOR=0x00, MAX_COLOR=0x80):
+    while True:
+        y = 1 + math.sin(utime.ticks_us() / SPEED)
+
+        # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
+        col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
+        foreground = rgbcolor(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
+
+        func(foreground)
+        yield loop.Sleep(DELAY)
+
