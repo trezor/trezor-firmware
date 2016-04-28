@@ -5,7 +5,7 @@ import os
 import ustruct
 import uselect
 
-from uasyncio import core
+from uasyncio import loop
 
 read_fd = None
 write_fd = None
@@ -29,7 +29,6 @@ def init(filename):
     poll.register(read_fd, uselect.POLLIN)
 
     # Setup polling
-    loop = core.get_event_loop()
     loop.call_soon(watch_read())
 
 def set_notify(_on_read):
@@ -44,7 +43,7 @@ def close():
 
 def watch_read():
     global on_read
-    sleep = core.Sleep(10000)  # 0.01s
+    sleep = loop.Sleep(10000)  # 0.01s
     while True:
         if ready_to_read() and on_read:
             on_read()
