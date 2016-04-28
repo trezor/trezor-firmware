@@ -21,8 +21,11 @@ def set_main(main_layout):
             _current_layout = yield from _current_layout
         except Exception as e:
             sys.print_exception(e)
-            _current_layout = main_layout
-            continue
+            sys.exit()
+            # if _current_layout == main_layout:
+            #    # Main layout thrown exception, what to do?
+            # _current_layout = main_layout
+            # continue
 
         if _new_layout != None:
             print("Switching to new layout %s" % _new_layout)

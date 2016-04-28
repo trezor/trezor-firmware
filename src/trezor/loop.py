@@ -5,7 +5,7 @@ from .utils import type_gen
 
 if __debug__:
     import logging
-    log = logging.getLogger("asyncio")
+    log = logging.getLogger("trezor.loop")
 
 q = []
 cnt = 0

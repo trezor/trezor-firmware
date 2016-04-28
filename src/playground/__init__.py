@@ -12,11 +12,11 @@ import gc
 
 # import transport_pipe as pipe
 
-from trezor import ui
-from trezor import msg
+# from trezor import msg
 from trezor import loop
 from trezor.utils import unimport_gen, unimport_func
 from trezor import layout
+from trezor import ui
 
 if __debug__:
     import logging
@@ -91,7 +91,7 @@ def tap_to_confirm(address, amount, currency):
         f.seek(0)
         ui.display.icon(3, 170, f.read(), _background, foreground)
 
-    yield from animate_pulse(func, DELAY=10000)
+    yield from ui.animate_pulse(func)  # , DELAY=10000)
 
 '''
 def on_read():
@@ -118,28 +118,6 @@ def zprava():
     # m2 = GetAddress.load(BytesIO(data))
     # print(m2.__dict__)
 
-@unimport_gen
-def animate_pulse(func, STEP_X=0.05, DELAY=30000, BASE_COLOR=(0x00, 0x00, 0x00), MIN_COLOR=0x00, MAX_COLOR=0x80):
-    x = math.pi / 3
-
-    from const_delay import ConstDelay
-    delay = ConstDelay(DELAY)
-
-    while True:
-        # print(x)
-        x += STEP_X
-        if x > 2 * math.pi:
-            x -= 2 * math.pi
-        y = 1 + math.sin(x)
-
-        # Normalize color from interval 0:2 to MIN_COLOR:MAX_COLOR
-        col = int((MAX_COLOR - MIN_COLOR) / 2 * y) + MIN_COLOR
-        foreground = ui.rgbcolor(BASE_COLOR[0] + col, BASE_COLOR[1] + col, BASE_COLOR[2] + col)
-
-        func(foreground)
-
-        yield delay.wait()
-
 def homescreen():
     print("Homescreen layout!")
 
@@ -153,9 +131,13 @@ def homescreen():
         f.seek(0)
         ui.display.icon(0, 0, f.read(), foreground, ui.BLACK)
 
-    yield from animate_pulse(func, STEP_X=0.035, BASE_COLOR=(0xff, 0xff, 0xff), MIN_COLOR=0xaa, MAX_COLOR=0xff)
+    yield from ui.animate_pulse(func, SPEED=400000, BASE_COLOR=(0xff, 0xff, 0xff), MIN_COLOR=0xaa, MAX_COLOR=0xff)
 
 def run():
+    ui.touch.start(lambda x, y: print('touch start %d %d\n' % (x, y)))
+    ui.touch.move(lambda x, y: print('touch move %d %d\n' % (x, y)))
+    ui.touch.end(lambda x, y: print('touch end %d %d\n' % (x, y)))
+
     # pipe.init('../pipe', on_read)
     # msg.set_notify(on_read)
 
