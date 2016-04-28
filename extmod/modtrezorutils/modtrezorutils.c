@@ -71,4 +71,4 @@ const mp_obj_module_t mp_module_TrezorUtils = {
     .globals = (mp_obj_dict_t*)&mp_module_TrezorUtils_globals,
 };
 
-#endif // MICROPY_PY_TREZORPROTOBUF
+#endif // MICROPY_PY_TREZORUTILS
