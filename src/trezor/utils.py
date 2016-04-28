@@ -1,18 +1,31 @@
 import sys
-import gc
 from TrezorUtils import Utils
 
 _utils = Utils()
 
+type_gen = type((lambda: (yield))())
+
 def memaccess(address, length):
     return _utils.memaccess(address, length)
 
-def unimport(func):
+def unimport_func(func):
     def inner(*args, **kwargs):
         mods = set(sys.modules)
-        ret = func(*args, **kwargs)
-        for to_remove in set(sys.modules) - mods:
-            print(to_remove)
-            del sys.modules[to_remove]
+        try:
+            ret = func(*args, **kwargs)
+        finally:
+            for to_remove in set(sys.modules) - mods:
+                del sys.modules[to_remove]
+        return ret
+    return inner
+
+def unimport_gen(gen):
+    def inner(*args, **kwargs):
+        mods = set(sys.modules)
+        try:
+            ret = yield from gen(*args, **kwargs)
+        finally:
+            for to_remove in set(sys.modules) - mods:
+                del sys.modules[to_remove]
         return ret
     return inner
