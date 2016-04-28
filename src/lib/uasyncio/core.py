@@ -18,13 +18,13 @@ class EventLoop:
         self.call_at(0, callback, *args)
 
     def call_later(self, delay, callback, *args):
-        self.call_at(utime.ticks_us() + delay * 1000000, callback, *args)
+        self.call_at(utime.ticks_us() + delay, callback, *args)
 
     def call_at(self, time, callback, *args):
         # Including self.cnt is a workaround per heapq docs
         if __debug__:
-            log.debug("Scheduling %s", (time, self.cnt, callback, args))
-        uheapq.heappush(self.q, (time, self.cnt, callback, args))
+            log.debug("Scheduling %s", (int(time), self.cnt, callback, args))
+        uheapq.heappush(self.q, (int(time), self.cnt, callback, args))
         self.cnt += 1
 
     def wait(self, delay):
@@ -32,8 +32,8 @@ class EventLoop:
         # with IO scheduling
         if __debug__:
             log.debug("Sleeping for: %s", delay)
-        self.last_sleep = delay / 1000000.
-        utime.sleep(delay / 1000000.)
+        self.last_sleep = delay
+        utime.sleep_us(delay)
 
     def run_forever(self):
         while True:
