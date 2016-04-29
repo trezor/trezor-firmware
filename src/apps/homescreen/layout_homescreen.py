@@ -19,4 +19,16 @@ def layout_homescreen():
         f.seek(0)
         ui.display.icon(0, 0, f.read(), foreground, ui.BLACK)
 
-    yield from ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
+    animation = ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
+
+    timeout = loop.sleep(3 * 1000000)
+
+    yield from loop.wait([timeout, animation])
+
+    try:
+        print(animation.throw(StopIteration()))
+    except:
+        pass
+
+    from apps import playground
+    return playground.layout_tap_to_confirm('1BitkeyP2nDd5oa64x7AjvBbbwST54W5Zmx2', 110.126967, 'BTC')

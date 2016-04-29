@@ -19,8 +19,8 @@ def perf_info_debug():
 
         mem_alloc = gc.mem_alloc()
         gc.collect()
-        print("mem_alloc: %s/%s, delay_avg: %d, delay_last: %d, queue: %s" % \
-              (mem_alloc, gc.mem_alloc(), delay_avg, delay_last, ', '.join(queue)))
+        log.info(__name__, "mem_alloc: %s/%s, delay_avg: %d, delay_last: %d, queue: %s",
+              mem_alloc, gc.mem_alloc(), delay_avg, delay_last, ', '.join(queue))
 
         yield loop.sleep(1000000)
 
@@ -28,7 +28,7 @@ def perf_info_debug():
 def perf_info():
     while True:
         gc.collect()
-        print("mem_alloc: %d" % gc.mem_alloc())
+        log.info(__name__, "mem_alloc: %d", gc.mem_alloc())
         yield loop.sleep(1000000)
 
 

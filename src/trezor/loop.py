@@ -1,4 +1,5 @@
 import utime
+import sys
 
 from uheapq import heappop, heappush
 from .utils import type_gen
@@ -10,6 +11,8 @@ EVT_TSTART = const(-1)
 EVT_TMOVE = const(-2)
 EVT_TEND = const(-3)
 EVT_MSG = const(-4)
+
+DO_NOTHING = const(-5)
 
 evt_handlers = { EVT_TSTART: None,
                  EVT_TMOVE: None,
@@ -43,13 +46,39 @@ def __wait_for_event(timeout_us):
     return event
 
 
-def __call_at(time, gen, *args):
+def __call_at(time, gen):
     if __debug__:
-        log.debug(__name__, 'Scheduling %s %s %s', time, gen, args)
+        log.debug(__name__, 'Scheduling %s %s', time, gen)
 
     if not time:
         time = utime.ticks_us()
-    heappush(time_queue, (time, gen, args))
+    heappush(time_queue, (time, gen))
+
+def __wait_gen(gen, cb):
+    if isinstance(gen, int):
+        ret = yield gen
+
+    else:
+        ret = yield from gen
+
+    cb.throw(StopIteration())
+
+
+def __wait_cb():
+    while True:
+        try:
+            yield sleep(1000000)
+        except StopIteration:
+            break
+
+def wait(gens):
+    cb = __wait_cb()
+    cb.send(None)
+
+    for g in gens:
+        __call_at(None, __wait_gen(g, cb))
+
+    return cb
 
 
 def sleep(us):
@@ -65,7 +94,7 @@ def run_forever(start_gens):
     while True:
 
         if time_queue:
-            t, _, _ = time_queue[0]
+            t, _ = time_queue[0]
             delay = t - utime.ticks_us()
         else:
             delay = delay_max
@@ -77,29 +106,33 @@ def run_forever(start_gens):
             raise NotImplementedError()
         else:
             # run something from the time queue
-            _, gen, args = heappop(time_queue)
+            _, gen = heappop(time_queue)
 
         try:
-            if not args:
-                args = (None,)
-            ret = gen.send(*args)
+            ret = gen.send(None)
         except StopIteration as e:
             # gen ended, forget it and go on
             continue
+        except Exception as e:
+            # FIXME
+            log.error(__name__, str(e))
+            sys.print_exception(e)
+            # log.exception(__name__, e)
+            continue
 
-        if isinstance(ret, type_gen):
-            # generator, run it and call us asap
-            __call_at(None, ret)
-            __call_at(None, gen, *args)
-
-        elif isinstance(ret, int):
+        if isinstance(ret, int):
             if ret >= 0:
                 # sleep until ret, call us later
-                __call_at(ret, gen, *args)
+                __call_at(ret, gen)
+            elif ret == DO_NOTHING:
+                print("Removing gen from time queue")
             else:
                 # wait for event
                 raise NotImplementedError()
 
         elif ret is None:
             # just call us asap
-            __call_at(None, gen, *args)
+            __call_at(None, gen)
+        else:
+
+            raise Exception("Unhandled result %s" % gen)
