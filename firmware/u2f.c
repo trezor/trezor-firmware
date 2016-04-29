@@ -98,6 +98,7 @@ uint8_t buttonState(void)
 	return 0;
 }
 
+#if DEBUG_LOG
 char *debugInt(const uint32_t i)
 {
 	static uint8_t n = 0;
@@ -108,6 +109,9 @@ char *debugInt(const uint32_t i)
 	n = (n + 1) % 8;
 	return ret;
 }
+#else
+#define debugInt(I) do{}while(0)
+#endif
 
 static uint32_t dialog_timeout = 0;
 
