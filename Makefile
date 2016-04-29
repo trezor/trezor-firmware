@@ -6,12 +6,15 @@ help: ## show this help
 update: ## update git submodules
 	git submodule update
 
-build: update build_stmhal build_unix ## build both stmhal and unix micropython ports
+build: build_stmhal build_unix ## build both stmhal and unix micropython ports
 
-build_stmhal: ## build stmhal port
+build_stmhal: update ## build stmhal port
 	make -C vendor/micropython/stmhal
 
-build_unix: ## build unix port
+build_unix: update ## build unix port (32-bit)
+	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
+
+build_unix64: update ## build unix port (64-bit)
 	make -C vendor/micropython/unix
 
 run_unix: ## run unix port
@@ -41,8 +44,8 @@ gdb: ## start remote gdb session which connects to the openocd
 
 load: ## load contents of src into mass storage of trezor
 	rm -rf /run/media/${USER}/PYBFLASH/*
+	cp -a src/apps /run/media/${USER}/PYBFLASH/
 	cp -a src/lib /run/media/${USER}/PYBFLASH/
-	cp -a src/playground /run/media/${USER}/PYBFLASH/
 	cp -a src/trezor /run/media/${USER}/PYBFLASH/
 	cp -a src/*.py /run/media/${USER}/PYBFLASH/
 	sync

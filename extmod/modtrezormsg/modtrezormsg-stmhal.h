@@ -1,3 +1,5 @@
+#include <usrsw.h>
+
 void msg_init(void)
 {
 }
@@ -14,5 +16,18 @@ int msg_send(uint8_t *buf, size_t len)
 
 uint32_t msg_poll_ui_event(void)
 {
-    return 0;
+    static int lp = 0;
+    uint32_t r = 0;
+    int p = switch_get();
+    if (lp == 0 && p == 1) {
+        r = 0x00010000; // touch start
+    } else
+    if (lp == 1 && p == 1) {
+        r = 0x00020000; // touch move
+    }
+    if (lp == 1 && p == 0) {
+        r = 0x00030000; // touch end
+    }
+    lp = p;
+    return r;
 }
