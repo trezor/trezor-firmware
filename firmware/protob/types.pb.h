@@ -387,10 +387,10 @@ extern const pb_field_t IdentityType_fields[7];
 #define CoinType_size                            99
 #define MultisigRedeemScriptType_size            3741
 #define TxInputType_size                         5508
-#define TxOutputType_size                        3934
+#define TxOutputType_size                        3947
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     11042
-#define TxRequestDetailsType_size                52
+#define TransactionType_size                     10022
+#define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             2132
 #define IdentityType_size                        416
 

@@ -32,6 +32,8 @@
 #include "messages.pb.h"
 #include "types.pb.h"
 
+static const uint8_t segwit_header[2] = {0,1};
+
 uint32_t op_push(uint32_t i, uint8_t *out) {
 	if (i < 0x4C) {
 		out[0] = i & 0xFF;
@@ -296,6 +298,13 @@ uint32_t tx_prevout_hash(SHA256_CTX *ctx, const TxInputType *input)
 	return 36;
 }
 
+uint32_t tx_script_hash(SHA256_CTX *ctx, uint32_t size, const uint8_t *data)
+{
+	int r = ser_length_hash(ctx, size);
+	sha256_Update(ctx, data, size);
+	return r + size;
+}
+
 uint32_t tx_sequence_hash(SHA256_CTX *ctx, const TxInputType *input)
 {
 	sha256_Update(ctx, (const uint8_t *)&input->sequence, 4);
@@ -306,21 +315,37 @@ uint32_t tx_output_hash(SHA256_CTX *ctx, const TxOutputBinType *output)
 {
 	uint32_t r = 0;
 	sha256_Update(ctx, (const uint8_t *)&output->amount, 8); r += 8;
-	r += ser_length_hash(ctx, output->script_pubkey.size);
-	sha256_Update(ctx, output->script_pubkey.bytes, output->script_pubkey.size); r+= output->script_pubkey.size;
+	r += tx_script_hash(ctx, output->script_pubkey.size, output->script_pubkey.bytes);
 	return r;
+}
+
+uint32_t tx_serialize_script(uint32_t size, const uint8_t *data, uint8_t *out)
+{
+	int r = ser_length(size, out);
+	memcpy(out + r, data, size);
+	return r + size;
 }
 
 uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out)
 {
+	int r = 4;
 	memcpy(out, &(tx->version), 4);
-	return 4 + ser_length(tx->inputs_len, out + 4);
+	if (tx->is_segwit) {
+		memcpy(out + r, segwit_header, 2);
+		r += 2;
+	}
+	return r + ser_length(tx->inputs_len, out + r);
 }
 
 uint32_t tx_serialize_header_hash(TxStruct *tx)
 {
+	int r = 4;
 	sha256_Update(&(tx->ctx), (const uint8_t *)&(tx->version), 4);
-	return 4 + ser_length_hash(&(tx->ctx), tx->inputs_len);
+	if (tx->is_segwit) {
+		sha256_Update(&(tx->ctx), segwit_header, 2);
+		r += 2;
+	}
+	return r + ser_length_hash(&(tx->ctx), tx->inputs_len);
 }
 
 uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out)
@@ -339,8 +364,7 @@ uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out
 	}
 	r += 32;
 	memcpy(out + r, &input->prev_index, 4); r += 4;
-	r += ser_length(input->script_sig.size, out + r);
-	memcpy(out + r, input->script_sig.bytes, input->script_sig.size); r += input->script_sig.size;
+	r += tx_serialize_script(input->script_sig.size, input->script_sig.bytes, out + r);
 	memcpy(out + r, &input->sequence, 4); r += 4;
 
 	tx->have_inputs++;
@@ -360,8 +384,7 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input)
 		r += tx_serialize_header_hash(tx);
 	}
 	r += tx_prevout_hash(&(tx->ctx), input);
-	r += ser_length_hash(&(tx->ctx), input->script_sig.size);
-	sha256_Update(&(tx->ctx), input->script_sig.bytes, input->script_sig.size); r += input->script_sig.size;
+	r += tx_script_hash(&(tx->ctx), input->script_sig.size, input->script_sig.bytes);
 	r += tx_sequence_hash(&(tx->ctx), input);
 
 	tx->have_inputs++;
@@ -419,8 +442,7 @@ uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_
 		r += tx_serialize_middle(tx, out + r);
 	}
 	memcpy(out + r, &output->amount, 8); r += 8;
-	r += ser_length(output->script_pubkey.size, out + r);
-	memcpy(out + r, output->script_pubkey.bytes, output->script_pubkey.size); r+= output->script_pubkey.size;
+	r += tx_serialize_script(output->script_pubkey.size, output->script_pubkey.bytes, out + r);
 	tx->have_outputs++;
 	if (tx->have_outputs == tx->outputs_len) {
 		r += tx_serialize_footer(tx, out + r);
