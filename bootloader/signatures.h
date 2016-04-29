@@ -20,6 +20,6 @@
 #ifndef __SIGNATURES_H__
 #define __SIGNATURES_H__
 
-int signatures_ok(void);
+int signatures_ok(uint8_t *store_hash);
 
 #endif

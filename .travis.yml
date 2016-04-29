@@ -4,11 +4,10 @@ install:
   - sudo add-apt-repository ppa:terry.guo/gcc-arm-embedded -y
   - sudo apt-get update
   - sudo apt-get install -y build-essential git gcc-arm-none-eabi
-  - git clone https://github.com/libopencm3/libopencm3
 
 script:
-  - make -C libopencm3
-  - TOOLCHAIN_DIR=libopencm3 make
-  - TOOLCHAIN_DIR=../libopencm3 make -C firmware
-  - TOOLCHAIN_DIR=../libopencm3 make -C bootloader
-  - TOOLCHAIN_DIR=../libopencm3 make -C demo
+  - make -C vendor/libopencm3
+  - make
+  - make -C firmware
+  - make -C bootloader
+  - make -C demo

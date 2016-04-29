@@ -139,7 +139,7 @@ static uint8_t msg_debug_out[MSG_DEBUG_OUT_SIZE];
 
 #endif
 
-inline void msg_out_append(uint8_t c)
+static inline void msg_out_append(uint8_t c)
 {
 	if (msg_out_cur == 0) {
 		msg_out[msg_out_end * 64] = '?';
@@ -155,7 +155,7 @@ inline void msg_out_append(uint8_t c)
 
 #if DEBUG_LINK
 
-inline void msg_debug_out_append(uint8_t c)
+static inline void msg_debug_out_append(uint8_t c)
 {
 	if (msg_debug_out_cur == 0) {
 		msg_debug_out[msg_debug_out_end * 64] = '?';
@@ -171,7 +171,7 @@ inline void msg_debug_out_append(uint8_t c)
 
 #endif
 
-inline void msg_out_pad(void)
+static inline void msg_out_pad(void)
 {
 	if (msg_out_cur == 0) return;
 	while (msg_out_cur < 64) {

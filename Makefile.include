@@ -1,5 +1,5 @@
 TOP_DIR       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-TOOLCHAIN_DIR ?= $(TOP_DIR)/../libopencm3
+TOOLCHAIN_DIR ?= $(TOP_DIR)vendor/libopencm3
 
 PREFIX ?= arm-none-eabi-
 CC      = $(PREFIX)gcc
@@ -9,9 +9,12 @@ OBJDUMP = $(PREFIX)objdump
 FLASH   = st-flash
 OPENOCD = openocd
 
-OPTFLAGS  = -O3 -g -DNDEBUG
+OPTFLAGS ?= -O3
+DBGFLAGS ?= -g -DNDEBUG
 
 CFLAGS   += $(OPTFLAGS) \
+            $(DBGFLAGS) \
+            -std=c99 \
             -W \
             -Wall \
             -Wextra \
@@ -42,9 +45,10 @@ CFLAGS   += $(OPTFLAGS) \
             -DSTM32F2 \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
-            -I$(TOP_DIR)/gen \
-            -I$(TOP_DIR)/trezor-crypto \
-            -I$(TOP_DIR)/trezor-qrenc
+            -I$(TOP_DIR)gen \
+            -I$(TOP_DIR)vendor/trezor-crypto \
+            -I$(TOP_DIR)vendor/trezor-crypto/ed25519-donna \
+            -I$(TOP_DIR)vendor/trezor-qrenc
 
 ifdef APPVER
 CFLAGS   += -DAPPVER=$(APPVER)

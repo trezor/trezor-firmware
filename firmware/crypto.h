@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ecdsa.h>
+#include <bip32.h>
 #include <sha2.h>
 #include <pb.h>
 #include "types.pb.h"
@@ -32,9 +33,11 @@ uint32_t ser_length(uint32_t len, uint8_t *out);
 
 uint32_t ser_length_hash(SHA256_CTX *ctx, uint32_t len);
 
-int sshMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature);
+int sshMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
-int cryptoMessageSign(const uint8_t *message, size_t message_len, const uint8_t *privkey, uint8_t *signature);
+int gpgMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
+
+int cryptoMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
 int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature);
 

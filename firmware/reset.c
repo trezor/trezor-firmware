@@ -77,7 +77,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	awaiting_entropy = true;
 }
 
-static char current_word[10];
+static char current_word[10], current_word_display[11];
 
 void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 {
@@ -89,7 +89,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Init(&ctx);
 	sha256_Update(&ctx, int_entropy, 32);
 	sha256_Update(&ctx, ext_entropy, len);
-	sha256_Final(int_entropy, &ctx);
+	sha256_Final(&ctx, int_entropy);
 	strlcpy(storage.mnemonic, mnemonic_from_data(int_entropy, strength / 8), sizeof(storage.mnemonic));
 	memset(int_entropy, 0, 32);
 	awaiting_entropy = false;
@@ -122,17 +122,22 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 			if (word_pos == 3 || word_pos == 23) {
 				desc[2] = 'r'; desc[3] = 'd';
 			}
+			current_word_display[0] = 0x01;
+			for (j = 0; current_word[j]; j++) {
+				current_word_display[j + 1] = current_word[j] + 'A' - 'a';
+			}
+			current_word_display[j + 1] = 0;
 			if (word_pos == (int)strength/32*3) { // last word
 				if (pass == 1) {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Finish", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Finish", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Again", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Again", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				}
 			} else {
 				if (pass == 1) {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, current_word, NULL);
+					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				}
 			}
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {

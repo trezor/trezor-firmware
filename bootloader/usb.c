@@ -425,15 +425,9 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		if (msg_id != 0x001B) {	// ButtonAck message (id 27)
 			return;
 		}
-		char digest[64];
-		sha256_End(&ctx, digest);
-		char str[4][17];
-		strlcpy(str[0], digest, 17);
-		strlcpy(str[1], digest + 16, 17);
-		strlcpy(str[2], digest + 32, 17);
-		strlcpy(str[3], digest + 48, 17);
-		layoutDialog(DIALOG_ICON_QUESTION, "Abort", "Continue", "Compare fingerprints", str[0], str[1], str[2], str[3], NULL, NULL);
-
+		uint8_t hash[32];
+		sha256_Final(&ctx, hash);
+		layoutFirmwareHash(hash);
 		do {
 			delay(100000);
 			buttonUpdate();
@@ -444,7 +438,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		layoutProgress("INSTALLING ... Please wait", 1000);
 		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
 		// check if to restore old storage area but only if signatures are ok
-		if ((flags & 0x01) && signatures_ok()) {
+		if ((flags & 0x01) && signatures_ok(NULL)) {
 			// copy new stuff
 			memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_DESC_LEN);
 			// replace "TRZR" in header with 0000 when hash not confirmed

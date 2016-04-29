@@ -31,6 +31,7 @@
 #include "pbkdf2.h"
 #include "bip32.h"
 #include "bip39.h"
+#include "curves.h"
 #include "util.h"
 #include "memory.h"
 #include "rng.h"
@@ -45,8 +46,8 @@ Storage storage;
 uint8_t storage_uuid[12];
 char    storage_uuid_str[25];
 
-static bool   sessionRootNodeCached;
-static HDNode sessionRootNode;
+static bool sessionSeedCached;
+static uint8_t sessionSeed[64];
 
 static bool sessionPinCached;
 
@@ -126,8 +127,10 @@ void storage_reset(void)
 
 void session_clear(bool clear_pin)
 {
-	sessionRootNodeCached = false;   memset(&sessionRootNode, 0, sizeof(sessionRootNode));
-	sessionPassphraseCached = false; memset(&sessionPassphrase, 0, sizeof(sessionPassphrase));
+	sessionSeedCached = false;
+	memset(&sessionSeed, 0, sizeof(sessionSeed));
+	sessionPassphraseCached = false;
+	memset(&sessionPassphrase, 0, sizeof(sessionPassphrase));
 	if (clear_pin) {
 		sessionPinCached = false;
 	}
@@ -186,14 +189,14 @@ void storage_loadDevice(LoadDevice *msg)
 		storage.has_node = true;
 		storage.has_mnemonic = false;
 		memcpy(&storage.node, &(msg->node), sizeof(HDNodeType));
-		sessionRootNodeCached = false;
-		memset(&sessionRootNode, 0, sizeof(sessionRootNode));
+		sessionSeedCached = false;
+		memset(&sessionSeed, 0, sizeof(sessionSeed));
 	} else if (msg->has_mnemonic) {
 		storage.has_mnemonic = true;
 		storage.has_node = false;
 		strlcpy(storage.mnemonic, msg->mnemonic, sizeof(storage.mnemonic));
-		sessionRootNodeCached = false;
-		memset(&sessionRootNode, 0, sizeof(sessionRootNode));
+		sessionSeedCached = false;
+		memset(&sessionSeed, 0, sizeof(sessionSeed));
 	}
 
 	if (msg->has_language) {
@@ -224,7 +227,7 @@ void storage_setLanguage(const char *lang)
 
 void storage_setPassphraseProtection(bool passphrase_protection)
 {
-	sessionRootNodeCached = false;
+	sessionSeedCached = false;
 	sessionPassphraseCached = false;
 
 	storage.has_passphrase_protection = true;
@@ -249,56 +252,56 @@ void get_root_node_callback(uint32_t iter, uint32_t total)
 	layoutProgress("Waking up", 1000 * iter / total);
 }
 
-bool storage_getRootNode(HDNode *node)
+const uint8_t *storage_getSeed(void)
 {
 	// root node is properly cached
-	if (sessionRootNodeCached) {
-		memcpy(node, &sessionRootNode, sizeof(HDNode));
-		return true;
-	}
-
-	// if storage has node, decrypt and use it
-	if (storage.has_node) {
-		if (!protectPassphrase()) {
-			return false;
-		}
-		if (hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, &sessionRootNode) == 0) {
-			return false;
-		}
-		if (storage.has_passphrase_protection && storage.passphrase_protection && strlen(sessionPassphrase)) {
-			// decrypt hd node
-			uint8_t secret[64];
-			uint8_t salt[12];
-			memcpy(salt, "TREZORHD", 8);
-			layoutProgressSwipe("Waking up", 0);
-			pbkdf2_hmac_sha512((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), salt, 8, BIP39_PBKDF2_ROUNDS, secret, 64, get_root_node_callback);
-			aes_decrypt_ctx ctx;
-			aes_decrypt_key256(secret, &ctx);
-			aes_cbc_decrypt(sessionRootNode.chain_code, sessionRootNode.chain_code, 32, secret + 32, &ctx);
-			aes_cbc_decrypt(sessionRootNode.private_key, sessionRootNode.private_key, 32, secret + 32, &ctx);
-		}
-		memcpy(node, &sessionRootNode, sizeof(HDNode));
-		sessionRootNodeCached = true;
-		return true;
+	if (sessionSeedCached) {
+		return sessionSeed;
 	}
 
 	// if storage has mnemonic, convert it to node and use it
 	if (storage.has_mnemonic) {
 		if (!protectPassphrase()) {
+			return NULL;
+		}
+		mnemonic_to_seed(storage.mnemonic, sessionPassphrase, sessionSeed, get_root_node_callback); // BIP-0039
+		sessionSeedCached = true;
+		return sessionSeed;
+	}
+
+	return NULL;
+}
+
+bool storage_getRootNode(HDNode *node, const char *curve)
+{
+	// if storage has node, decrypt and use it
+	if (storage.has_node && strcmp(curve, SECP256K1_NAME) == 0) {
+		if (!protectPassphrase()) {
 			return false;
 		}
-		uint8_t seed[64];
-		layoutProgressSwipe("Waking up", 0);
-		mnemonic_to_seed(storage.mnemonic, sessionPassphrase, seed, get_root_node_callback); // BIP-0039
-		if (hdnode_from_seed(seed, sizeof(seed), &sessionRootNode) == 0) {
+		if (hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, curve, node) == 0) {
 			return false;
 		}
-		memcpy(node, &sessionRootNode, sizeof(HDNode));
-		sessionRootNodeCached = true;
+		if (storage.has_passphrase_protection && storage.passphrase_protection && sessionPassphraseCached && strlen(sessionPassphrase) > 0) {
+			// decrypt hd node
+			uint8_t secret[64];
+			uint8_t salt[12];
+			memcpy(salt, "TREZORHD", 8);
+			pbkdf2_hmac_sha512((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), salt, 8, BIP39_PBKDF2_ROUNDS, secret, 64, get_root_node_callback);
+			aes_decrypt_ctx ctx;
+			aes_decrypt_key256(secret, &ctx);
+			aes_cbc_decrypt(node->chain_code, node->chain_code, 32, secret + 32, &ctx);
+			aes_cbc_decrypt(node->private_key, node->private_key, 32, secret + 32, &ctx);
+		}
 		return true;
 	}
 
-	return false;
+	const uint8_t *seed = storage_getSeed();
+	if (seed == NULL) {
+		return false;
+	}
+	
+	return hdnode_from_seed(seed, 64, curve, node);
 }
 
 const char *storage_getLabel(void)

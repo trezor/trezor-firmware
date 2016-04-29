@@ -44,8 +44,8 @@
 #include "base58.h"
 #include "bip39.h"
 #include "ripemd160.h"
+#include "curves.h"
 #include "secp256k1.h"
-#include "nist256p1.h"
 
 // message methods
 
@@ -93,11 +93,11 @@ const CoinType *fsm_getCoin(const char *name)
 	return coin;
 }
 
-const HDNode *fsm_getDerivedNode(uint32_t *address_n, size_t address_n_count)
+const HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
-	if (!storage_getRootNode(&node)) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled");
+	if (!storage_getRootNode(&node, curve)) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled or unsupported curve");
 		layoutHome();
 		return 0;
 	}
@@ -282,22 +282,29 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 {
 	RESP_INIT(PublicKey);
 
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
 	if (!protectPin(true)) {
 		layoutHome();
 		return;
 	}
 
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const char *curve = SECP256K1_NAME;
+	if (msg->has_ecdsa_curve_name) {
+		curve = msg->ecdsa_curve_name;
+	}
+	const HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
-	uint8_t public_key[33];  // copy public key to temporary buffer
-	memcpy(public_key, node->public_key, sizeof(public_key));
-
-	if (msg->has_ecdsa_curve_name) {
-		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
-		if (curve) {
-			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
-			ecdsa_get_public_key33(curve, node->private_key, public_key);
+	if (msg->has_show_display && msg->show_display) {
+		layoutPublicKey(node->public_key);
+		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show public key cancelled");
+			layoutHome();
+			return;
 		}
 	}
 
@@ -309,7 +316,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	resp->node.has_private_key = false;
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
-	memcpy(resp->node.public_key.bytes, public_key, 33);
+	memcpy(resp->node.public_key.bytes, node->public_key, 33);
 	resp->has_xpub = true;
 	hdnode_serialize_public(node, resp->xpub, sizeof(resp->xpub));
 	msg_write(MessageType_MessageType_PublicKey, resp);
@@ -363,6 +370,11 @@ void fsm_msgResetDevice(ResetDevice *msg)
 
 void fsm_msgSignTx(SignTx *msg)
 {
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
 	if (msg->inputs_count < 1) {
 		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one input");
 		layoutHome();
@@ -382,10 +394,10 @@ void fsm_msgSignTx(SignTx *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(0, 0);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, 0, 0);
 	if (!node) return;
 
-	signing_init(msg->inputs_count, msg->outputs_count, coin, node);
+	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
 }
 
 void fsm_msgCancel(Cancel *msg)
@@ -406,6 +418,10 @@ void fsm_msgTxAck(TxAck *msg)
 
 void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 {
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
 	if (!msg->has_key) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No key provided");
 		return;
@@ -422,7 +438,7 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 		layoutHome();
 		return;
 	}
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	bool encrypt = msg->has_encrypt && msg->encrypt;
@@ -531,6 +547,11 @@ void fsm_msgGetAddress(GetAddress *msg)
 {
 	RESP_INIT(Address);
 
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
 	if (!protectPin(true)) {
 		layoutHome();
 		return;
@@ -538,7 +559,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	if (msg->has_multisig) {
@@ -599,6 +620,11 @@ void fsm_msgSignMessage(SignMessage *msg)
 {
 	RESP_INIT(MessageSignature);
 
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
 	layoutSignMessage(msg->message.bytes, msg->message.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign message cancelled");
@@ -613,11 +639,11 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe("Signing", 0);
-	if (cryptoMessageSign(msg->message.bytes, msg->message.size, node->private_key, resp->signature.bytes) == 0) {
+	if (cryptoMessageSign(node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
 		resp->has_address = true;
 		uint8_t addr_raw[21];
 		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
@@ -647,8 +673,18 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid address");
 	}
 	if (msg->signature.size == 65 && cryptoMessageVerify(msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
+		layoutVerifyAddress(msg->address);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
+			layoutHome();
+			return;
+		}
 		layoutVerifyMessage(msg->message.bytes, msg->message.size);
-		protectButton(ButtonRequestType_ButtonRequest_Other, true);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
+			layoutHome();
+			return;
+		}
 		fsm_sendSuccess("Message verified");
 	} else {
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid signature");
@@ -659,6 +695,11 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 void fsm_msgSignIdentity(SignIdentity *msg)
 {
 	RESP_INIT(SignedIdentity);
+
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
 
 	layoutSignIdentity(&(msg->identity), msg->has_challenge_visual ? msg->challenge_visual : 0);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -686,35 +727,31 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	address_n[3] = 0x80000000 | hash[ 8] | (hash[ 9] << 8) | (hash[10] << 16) | (hash[11] << 24);
 	address_n[4] = 0x80000000 | hash[12] | (hash[13] << 8) | (hash[14] << 16) | (hash[15] << 24);
 
-	const HDNode *node = fsm_getDerivedNode(address_n, 5);
+	const char *curve = SECP256K1_NAME;
+	if (msg->has_ecdsa_curve_name) {
+		curve = msg->ecdsa_curve_name;
+	}
+	const HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
 	if (!node) return;
 
-	uint8_t public_key[33];  // copy public key to temporary buffer
-	memcpy(public_key, node->public_key, sizeof(public_key));
-
-	if (msg->has_ecdsa_curve_name) {
-		const ecdsa_curve *curve = get_curve_by_name(msg->ecdsa_curve_name);
-		if (curve) {
-			// correct public key (since fsm_getDerivedNode uses secp256k1 curve)
-			ecdsa_get_public_key33(curve, node->private_key, public_key);
-		}
-	}
-
 	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
+	bool sign_gpg = msg->identity.has_proto && (strcmp(msg->identity.proto, "gpg") == 0);
 
 	int result = 0;
 	layoutProgressSwipe("Signing", 0);
 	if (sign_ssh) { // SSH does not sign visual challenge
-		result = sshMessageSign(msg->challenge_hidden.bytes, msg->challenge_hidden.size, node->private_key, resp->signature.bytes);
+		result = sshMessageSign(node, msg->challenge_hidden.bytes, msg->challenge_hidden.size, resp->signature.bytes);
+	} else if (sign_gpg) { // GPG should sign a message digest
+		result = gpgMessageSign(node, msg->challenge_hidden.bytes, msg->challenge_hidden.size, resp->signature.bytes);
 	} else {
 		uint8_t digest[64];
 		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
 		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
-		result = cryptoMessageSign(digest, 64, node->private_key, resp->signature.bytes);
+		result = cryptoMessageSign(node, digest, 64, resp->signature.bytes);
 	}
 
 	if (result == 0) {
-		if (sign_ssh) {
+		if (strcmp(curve, SECP256K1_NAME) != 0) {
 			resp->has_address = false;
 		} else {
 			resp->has_address = true;
@@ -724,7 +761,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		}
 		resp->has_public_key = true;
 		resp->public_key.size = 33;
-		memcpy(resp->public_key.bytes, public_key, 33);
+		memcpy(resp->public_key.bytes, node->public_key, 33);
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_SignedIdentity, resp);
@@ -736,6 +773,10 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 
 void fsm_msgEncryptMessage(EncryptMessage *msg)
 {
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
 	if (!msg->has_pubkey) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No public key provided");
 		return;
@@ -765,7 +806,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 			layoutHome();
 			return;
 		}
-		node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+		node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 		if (!node) return;
 		uint8_t public_key[33];
 		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
@@ -792,6 +833,10 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 
 void fsm_msgDecryptMessage(DecryptMessage *msg)
 {
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
 	if (!msg->has_nonce) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No nonce provided");
 		return;
@@ -813,7 +858,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 		layoutHome();
 		return;
 	}
-	const HDNode *node = fsm_getDerivedNode(msg->address_n, msg->address_n_count);
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe("Decrypting", 0);

@@ -18,10 +18,12 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 
 #include "signatures.h"
 #include "ecdsa.h"
 #include "secp256k1.h"
+#include "sha2.h"
 #include "bootloader.h"
 
 #define PUBKEYS 5
@@ -36,7 +38,7 @@ static const uint8_t *pubkey[PUBKEYS] = {
 
 #define SIGNATURES 3
 
-int signatures_ok(void)
+int signatures_ok(uint8_t *store_hash)
 {
 	uint32_t codelen = *((uint32_t *)FLASH_META_CODELEN);
 	uint8_t sigindex1, sigindex2, sigindex3;
@@ -53,13 +55,19 @@ int signatures_ok(void)
 	if (sigindex1 == sigindex3) return 0; // duplicate use
 	if (sigindex2 == sigindex3) return 0; // duplicate use
 
-	if (ecdsa_verify(&secp256k1, pubkey[sigindex1 - 1], (uint8_t *)FLASH_META_SIG1, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failure
+	uint8_t hash[32];
+	sha256_Raw((uint8_t *)FLASH_APP_START, codelen, hash);
+	if (store_hash) {
+		memcpy(store_hash, hash, 32);
+	}
+
+	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex1 - 1], (uint8_t *)FLASH_META_SIG1, hash) != 0) { // failure
 		return 0;
 	}
-	if (ecdsa_verify(&secp256k1, pubkey[sigindex2 - 1], (uint8_t *)FLASH_META_SIG2, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failure
+	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex2 - 1], (uint8_t *)FLASH_META_SIG2, hash) != 0) { // failure
 		return 0;
 	}
-	if (ecdsa_verify(&secp256k1, pubkey[sigindex3 - 1], (uint8_t *)FLASH_META_SIG3, (uint8_t *)FLASH_APP_START, codelen) != 0) { // failture
+	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1], (uint8_t *)FLASH_META_SIG3, hash) != 0) { // failture
 		return 0;
 	}
 

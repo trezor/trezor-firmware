@@ -21,6 +21,7 @@
 #define __OLED_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "bitmaps.h"
 #include "fonts.h"
@@ -33,19 +34,19 @@ void oledInit(void);
 void oledClear(void);
 void oledRefresh(void);
 
-void oledSetDebug(char set);
+void oledSetDebug(bool set);
 void oledSetBuffer(uint8_t *buf);
 const uint8_t *oledGetBuffer(void);
 void oledDrawPixel(int x, int y);
 void oledClearPixel(int x, int y);
-void oledDrawChar(int x, int y, char c);
+void oledDrawChar(int x, int y, char c, int zoom);
 int oledStringWidth(const char *text);
 void oledDrawString(int x, int y, const char* text);
 void oledDrawStringCenter(int y, const char* text);
 void oledDrawStringRight(int x, int y, const char* text);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);
-void oledBox(int x1, int y1, int x2, int y2, char val);
+void oledBox(int x1, int y1, int x2, int y2, bool set);
 void oledHLine(int y);
 void oledFrame(int x1, int y1, int x2, int y2);
 void oledSwipeLeft(void);

@@ -196,10 +196,19 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
+void layoutVerifyAddress(const char *address)
+{
+	const char **str = split_message((const uint8_t *)address, strlen(address), 17);
+	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
+		"Confirm address?",
+		"Message signed by:",
+		NULL, str[0], str[1], str[2], NULL);
+}
+
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 {
 	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
+	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
 		"Verified message",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
@@ -268,6 +277,17 @@ void layoutAddress(const char *address, const char *desc)
 	oledInvert(OLED_WIDTH - oledStringWidth(btnYes) - fontCharWidth('\x06') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
 
 	oledRefresh();
+}
+
+void layoutPublicKey(const uint8_t *pubkey)
+{
+	char hex[32*2+1], desc[16];
+	strlcpy(desc, "Public Key: 00", sizeof(desc));
+	data2hex(pubkey, 1, desc + 12);
+	data2hex(pubkey + 1, 32, hex);
+	const char **str = split_message((const uint8_t *)hex, 32*2, 16);
+	layoutDialogSwipe(DIALOG_ICON_QUESTION, NULL, "Continue", NULL,
+		desc, str[0], str[1], str[2], str[3], NULL);
 }
 
 void layoutSignIdentity(const IdentityType *identity, const char *challenge)

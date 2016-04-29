@@ -53,7 +53,8 @@ typedef enum _ButtonRequestType {
     ButtonRequestType_ButtonRequest_ProtectCall = 7,
     ButtonRequestType_ButtonRequest_SignTx = 8,
     ButtonRequestType_ButtonRequest_FirmwareCheck = 9,
-    ButtonRequestType_ButtonRequest_Address = 10
+    ButtonRequestType_ButtonRequest_Address = 10,
+    ButtonRequestType_ButtonRequest_PublicKey = 11
 } ButtonRequestType;
 
 typedef enum _PinMatrixRequestType {

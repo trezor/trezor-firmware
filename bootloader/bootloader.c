@@ -38,7 +38,23 @@
 #error Bootloader cannot be used in app mode
 #endif
 
-void show_unofficial_warning(void)
+void layoutFirmwareHash(uint8_t *hash)
+{
+	char str[4][17];
+	int i;
+	for (i = 0; i < 4; i++) {
+		data2hex(hash + i * 8, 8, str[i]);
+	}
+	layoutDialog(DIALOG_ICON_QUESTION, "Abort", "Continue", "Compare fingerprints", str[0], str[1], str[2], str[3], NULL, NULL);
+}
+
+void show_halt(void)
+{
+	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
+	system_halt();
+}
+
+void show_unofficial_warning(uint8_t *hash)
 {
 	layoutDialog(DIALOG_ICON_WARNING, "Abort", "I'll take the risk", NULL, "WARNING!", NULL, "Unofficial firmware", "detected.", NULL, NULL);
 
@@ -47,19 +63,29 @@ void show_unofficial_warning(void)
 		buttonUpdate();
 	} while (!button.YesUp && !button.NoUp);
 
-	if (button.YesUp) {
-		return; // yes button was pressed -> return
+	if (button.NoUp) {
+		show_halt(); // no button was pressed -> halt
 	}
 
-	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
-	system_halt();
+	layoutFirmwareHash(hash);
+
+	do {
+		delay(100000);
+		buttonUpdate();
+	} while (!button.YesUp && !button.NoUp);
+
+	if (button.NoUp) {
+		show_halt(); // no button was pressed -> halt
+	}
+
+	// everything is OK, user pressed 2x Continue -> continue program
 }
 
 void load_app(void)
 {
 	// jump to app
 	SCB_VTOR = FLASH_APP_START; // & 0xFFFF;
-	asm volatile("msr msp, %0"::"g" (*(volatile uint32_t *)FLASH_APP_START));
+	__asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)FLASH_APP_START));
 	(*(void (**)())(FLASH_APP_START + 4))();
 }
 
@@ -128,8 +154,9 @@ int main(void)
 		oledDrawBitmap(40, 0, &bmp_logo64_empty);
 		oledRefresh();
 
-		if (!signatures_ok()) {
-			show_unofficial_warning();
+		uint8_t hash[32];
+		if (!signatures_ok(hash)) {
+			show_unofficial_warning(hash);
 		}
 
 		load_app();

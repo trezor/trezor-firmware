@@ -55,13 +55,30 @@
 #define OLED_RST_PORT			GPIOB
 #define OLED_RST_PIN			GPIO1	// PB1 | Reset display
 
+/* TREZOR has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
+ * The contents of this display are buffered in _oledbuffer.  This is
+ * an array of OLED_WIDTH * OLED_HEIGHT/8 bytes.  At byte y*OLED_WIDTH + x
+ * it stores the column of pixels from (x,8y) to (x,8y+7); the LSB stores
+ * the top most pixel.  The pixel (0,0) is the top left corner of the
+ * display.
+ */
+
+/* Macros to manipulate a single pixel in _oledbuffer:
+ * OLED_BUFSET(X,Y) sets pixel X,Y (white)
+ * OLED_BUFCLR(X,Y) clears pixel X,Y (black)
+ * OLED_BUFTGL(X,Y) toggles pixel X,Y (inverts it)
+ */
+
 #define OLED_BUFSET(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] |= (1 << (7 - (Y)%8))
 #define OLED_BUFCLR(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] &= ~(1 << (7 - (Y)%8))
 #define OLED_BUFTGL(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] ^= (1 << (7 - (Y)%8))
 
 static uint8_t _oledbuffer[OLED_BUFSIZE];
-static char is_debug_mode = 0;
+static bool is_debug_mode = 0;
 
+/*
+ * Send a block of data via the SPI bus.
+ */
 inline void SPISend(uint32_t base, uint8_t *data, int len)
 {
 	int i;
@@ -72,6 +89,9 @@ inline void SPISend(uint32_t base, uint8_t *data, int len)
 	delay(800);
 }
 
+/*
+ * Initialize the display.
+ */
 void oledInit()
 {
 	static uint8_t s[25] = {
@@ -121,11 +141,20 @@ void oledInit()
 	oledRefresh();
 }
 
+/*
+ * Clears the display buffer (sets all pixels to black)
+ */
 void oledClear()
 {
 	memset(_oledbuffer, 0, sizeof(_oledbuffer));
 }
 
+/*
+ * Refresh the display. This copies the buffer to the display to show the
+ * contents.  This must be called after every operation to the buffer to
+ * make the change visible.  All other operations only change the buffer
+ * not the content of the display.
+ */
 void oledRefresh()
 {
 	static uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
@@ -164,7 +193,7 @@ const uint8_t *oledGetBuffer()
 	return _oledbuffer;
 }
 
-void oledSetDebug(char set)
+void oledSetDebug(bool set)
 {
 	is_debug_mode = set;
 	oledRefresh();
@@ -187,7 +216,7 @@ void oledClearPixel(int x, int y)
 	OLED_BUFCLR(x,y);
 }
 
-void oledDrawChar(int x, int y, char c)
+void oledDrawChar(int x, int y, char c, int zoom)
 {
 	int char_width;
 	const uint8_t *char_data;
@@ -197,11 +226,15 @@ void oledDrawChar(int x, int y, char c)
 	char_width = fontCharWidth(c);
 	char_data = fontCharData(c);
 
-	int xoffset, yoffset;
-	for (xoffset = 0; xoffset < char_width; xoffset++) {
-		for (yoffset = 0; yoffset < FONT_HEIGHT; yoffset++) {
-			if (char_data[xoffset] & (1 << (FONT_HEIGHT - 1 - yoffset))) {
-				oledDrawPixel(x + xoffset, y + yoffset);
+	int xo, yo;
+	for (xo = 0; xo < char_width; xo++) {
+		for (yo = 0; yo < FONT_HEIGHT; yo++) {
+			if (char_data[xo] & (1 << (FONT_HEIGHT - 1 - yo))) {
+				if (zoom <= 1) {
+					oledDrawPixel(x + xo, y + yo);
+				} else {
+					oledBox(x + xo * zoom, y + yo * zoom, x + (xo + 1) * zoom - 1, y + (yo + 1) * zoom - 1, true);
+				}
 			}
 		}
 	}
@@ -233,13 +266,18 @@ int oledStringWidth(const char *text) {
 void oledDrawString(int x, int y, const char* text)
 {
 	if (!text) return;
+	int size = 1;
+	if (*text == 0x01) { // double size
+		text++;
+		size = 2;
+	}
 	int l = 0;
 	char c;
 	for (; *text; text++) {
 		c = oledConvertChar(*text);
 		if (c) {
-			oledDrawChar(x + l, y, c);
-			l += fontCharWidth(c) + 1;
+			oledDrawChar(x + l, y, c, size);
+			l += size * (fontCharWidth(c) + 1);
 		}
 	}
 }
@@ -283,12 +321,15 @@ void oledInvert(int x1, int y1, int x2, int y2)
 	}
 }
 
-void oledBox(int x1, int y1, int x2, int y2, char val)
+/*
+ * Draw a filled rectangle.
+ */
+void oledBox(int x1, int y1, int x2, int y2, bool set)
 {
 	int x, y;
 	for (x = x1; x <= x2; x++) {
 		for (y = y1; y <= y2; y++) {
-			val ? oledDrawPixel(x, y) : oledClearPixel(x, y);
+			set ? oledDrawPixel(x, y) : oledClearPixel(x, y);
 		}
 	}
 }
@@ -300,6 +341,9 @@ void oledHLine(int y) {
 	}
 }
 
+/*
+ * Draw a rectangle frame.
+ */
 void oledFrame(int x1, int y1, int x2, int y2)
 {
 	int x, y;
@@ -313,6 +357,10 @@ void oledFrame(int x1, int y1, int x2, int y2)
 	}
 }
 
+/*
+ * Animates the display, swiping the current contents out to the left.
+ * This clears the display.
+ */
 void oledSwipeLeft(void)
 {
 	int i, j, k;
@@ -333,6 +381,10 @@ void oledSwipeLeft(void)
 	}
 }
 
+/*
+ * Animates the display, swiping the current contents out to the right.
+ * This clears the display.
+ */
 void oledSwipeRight(void)
 {
 	int i, j, k;

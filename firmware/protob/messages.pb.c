@@ -12,7 +12,11 @@ const char SignMessage_coin_name_default[17] = "Bitcoin";
 const char EncryptMessage_coin_name_default[17] = "Bitcoin";
 const char EstimateTxSize_coin_name_default[17] = "Bitcoin";
 const char SignTx_coin_name_default[17] = "Bitcoin";
+const uint32_t SignTx_version_default = 1u;
+const uint32_t SignTx_lock_time_default = 0u;
 const char SimpleSignTx_coin_name_default[17] = "Bitcoin";
+const uint32_t SimpleSignTx_version_default = 1u;
+const uint32_t SimpleSignTx_lock_time_default = 0u;
 
 
 const pb_field_t Initialize_fields[1] = {
@@ -123,9 +127,10 @@ const pb_field_t Entropy_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t GetPublicKey_fields[3] = {
+const pb_field_t GetPublicKey_fields[4] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, GetPublicKey, address_n, address_n, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, GetPublicKey, ecdsa_curve_name, address_n, 0),
+    PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, GetPublicKey, show_display, ecdsa_curve_name, 0),
     PB_LAST_FIELD
 };
 
@@ -279,18 +284,22 @@ const pb_field_t TxSize_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t SignTx_fields[4] = {
+const pb_field_t SignTx_fields[6] = {
     PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, SignTx, outputs_count, outputs_count, 0),
     PB_FIELD2(  2, UINT32  , REQUIRED, STATIC  , OTHER, SignTx, inputs_count, outputs_count, 0),
     PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, SignTx, coin_name, inputs_count, &SignTx_coin_name_default),
+    PB_FIELD2(  4, UINT32  , OPTIONAL, STATIC  , OTHER, SignTx, version, coin_name, &SignTx_version_default),
+    PB_FIELD2(  5, UINT32  , OPTIONAL, STATIC  , OTHER, SignTx, lock_time, version, &SignTx_lock_time_default),
     PB_LAST_FIELD
 };
 
-const pb_field_t SimpleSignTx_fields[5] = {
+const pb_field_t SimpleSignTx_fields[7] = {
     PB_FIELD2(  1, MESSAGE , REPEATED, STATIC  , FIRST, SimpleSignTx, inputs, inputs, &TxInputType_fields),
     PB_FIELD2(  2, MESSAGE , REPEATED, STATIC  , OTHER, SimpleSignTx, outputs, inputs, &TxOutputType_fields),
     PB_FIELD2(  3, MESSAGE , REPEATED, STATIC  , OTHER, SimpleSignTx, transactions, outputs, &TransactionType_fields),
     PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, SimpleSignTx, coin_name, transactions, &SimpleSignTx_coin_name_default),
+    PB_FIELD2(  5, UINT32  , OPTIONAL, STATIC  , OTHER, SimpleSignTx, version, coin_name, &SimpleSignTx_version_default),
+    PB_FIELD2(  6, UINT32  , OPTIONAL, STATIC  , OTHER, SimpleSignTx, lock_time, version, &SimpleSignTx_lock_time_default),
     PB_LAST_FIELD
 };
 
