@@ -28,16 +28,16 @@ def _log(name, mlevel, msg, *args):
         print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args), file=sys.stderr)
 
 def debug(name, msg, *args):
-    _log(DEBUG, msg, *args)
+    _log(name, DEBUG, msg, *args)
 
 def info(name, msg, *args):
-    _log(INFO, msg, *args)
+    _log(name, INFO, msg, *args)
 
 def warning(name, msg, *args):
-    _log(WARNING, msg, *args)
+    _log(name, WARNING, msg, *args)
 
 def error(name, msg, *args):
-    _log(ERROR, msg, *args)
+    _log(name, ERROR, msg, *args)
 
 def critical(name, msg, *args):
-    _log(CRITICAL, msg, *args)
+    _log(name, CRITICAL, msg, *args)

@@ -46,7 +46,7 @@ def __wait_for_event(timeout_us):
 
 def __call_at(time, gen, *args):
     if __debug__:
-        log.debug("Scheduling %s", (time, gen, args))
+        log.debug(__name__, 'Scheduling %s %s %s', time, gen, args)
 
     if not time:
         time = utime.ticks_us()
