@@ -5,9 +5,7 @@ from .utils import type_gen
 from . import msg
 from . import ui
 
-if __debug__:
-    import logging
-    log = logging.getLogger("trezor.loop")
+import log
 
 q = []
 cnt = 0

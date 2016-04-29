@@ -6,10 +6,6 @@ import gc
 from trezor import loop
 from trezor import layout
 
-if __debug__:
-    import logging
-    logging.basicConfig(level=logging.INFO)
-
 def perf_info_debug():
     while True:
         queue = [str(x[2]).split("'")[1] for x in loop.q]
