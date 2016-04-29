@@ -53,4 +53,4 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
         y = 0.5 + 0.5 * math.sin(utime.ticks_us() / speed)
         c = blend(ca, cb, y)
         func(c)
-        yield loop.Sleep(delay)
+        yield loop.sleep(delay)
