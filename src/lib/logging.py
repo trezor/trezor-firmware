@@ -1,11 +1,13 @@
 import sys
 
-CRITICAL = 50
-ERROR    = 40
-WARNING  = 30
-INFO     = 20
-DEBUG    = 10
-NOTSET   = 0
+# raise Exception("Disabled")
+
+CRITICAL = const(50)
+ERROR = const(40)
+WARNING = const(30)
+INFO = const(20)
+DEBUG = const(10)
+NOTSET = const(0)
 
 _level_dict = {
     CRITICAL: "CRIT",
