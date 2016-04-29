@@ -184,7 +184,7 @@ static inline void msg_out_pad(void)
 
 #if DEBUG_LINK
 
-inline void msg_debug_out_pad(void)
+static inline void msg_debug_out_pad(void)
 {
 	if (msg_debug_out_cur == 0) return;
 	while (msg_debug_out_cur < 64) {

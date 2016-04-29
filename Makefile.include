@@ -14,7 +14,7 @@ DBGFLAGS ?= -g -DNDEBUG
 
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
-            -std=c99 \
+            -std=gnu99 \
             -W \
             -Wall \
             -Wextra \
