@@ -20,19 +20,11 @@ def perf_info():
 
         yield loop.Sleep(1000000)
 
-_main_layout = None
-
 def run(main_layout):
-    # ui.touch.start(lambda x, y: print('touch start %d %d\n' % (x, y)))
-    # ui.touch.move(lambda x, y: print('touch move %d %d\n' % (x, y)))
-    # ui.touch.end(lambda x, y: print('touch end %d %d\n' % (x, y)))
-
     if __debug__:
         loop.call_soon(perf_info())
 
-    global _main_layout
-    _main_layout = main_layout
-    loop.call_soon(layout.set_main(_main_layout))
+    loop.call_soon(layout.set_main(main_layout))
 
     loop.run_forever()
     loop.close()

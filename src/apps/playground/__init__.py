@@ -1,12 +1,8 @@
 from trezor import loop
-from trezor import layout
 from trezor import ui
 from trezor.utils import unimport_func
 
 def layout_tap_to_confirm(address, amount, currency):
-
-    from trezor.main import _main_layout
-    loop.call_later(5 * 1000000, layout.change(_main_layout()))
 
     ui.display.bar(0, 0, 240, 40, ui.GREEN)
     ui.display.bar(0, 40, 240, 200, ui.WHITE)
