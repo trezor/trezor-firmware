@@ -1,6 +1,7 @@
 from trezor import ui
 from trezor import loop
 from trezor import layout
+from trezor import utils
 
 def layout_homescreen():
     print("Homescreen layout!")
@@ -16,4 +17,4 @@ def layout_homescreen():
         f.seek(0)
         ui.display.icon(0, 0, f.read(), foreground, ui.BLACK)
 
-    yield from ui.animate_pulse(func, SPEED=400000, BASE_COLOR=(0xff, 0xff, 0xff), MIN_COLOR=0xaa, MAX_COLOR=0xff)
+    yield from ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
