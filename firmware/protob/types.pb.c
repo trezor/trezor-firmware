@@ -5,6 +5,8 @@
 
 const uint32_t CoinType_address_type_default = 0u;
 const uint32_t CoinType_address_type_p2sh_default = 5u;
+const uint32_t CoinType_address_type_p2wpkh_default = 6u;
+const uint32_t CoinType_address_type_p2wsh_default = 10u;
 const uint32_t TxInputType_sequence_default = 4294967295u;
 const InputScriptType TxInputType_script_type_default = InputScriptType_SPENDADDRESS;
 const uint32_t IdentityType_index_default = 0u;
@@ -26,12 +28,14 @@ const pb_field_t HDNodePathType_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t CoinType_fields[6] = {
+const pb_field_t CoinType_fields[8] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, CoinType, coin_name, coin_name, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, CoinType, coin_shortcut, coin_name, 0),
     PB_FIELD2(  3, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type, coin_shortcut, &CoinType_address_type_default),
     PB_FIELD2(  4, UINT64  , OPTIONAL, STATIC  , OTHER, CoinType, maxfee_kb, address_type, 0),
     PB_FIELD2(  5, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2sh, maxfee_kb, &CoinType_address_type_p2sh_default),
+    PB_FIELD2(  6, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2wpkh, address_type_p2sh, &CoinType_address_type_p2wpkh_default),
+    PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2wsh, address_type_p2wpkh, &CoinType_address_type_p2wsh_default),
     PB_LAST_FIELD
 };
 
