@@ -4,8 +4,7 @@ from uheapq import heappop, heappush
 from .utils import type_gen
 from . import msg
 from . import ui
-
-import log
+from . import log
 
 EVT_TSTART = const(-1)
 EVT_TMOVE = const(-2)

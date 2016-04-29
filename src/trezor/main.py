@@ -2,12 +2,12 @@ import sys
 sys.path.append('lib')
 
 import gc
-import log
-
-log.level = log.INFO
 
 from trezor import loop
 from trezor import layout
+from trezor import log
+
+log.level = log.INFO
 
 
 def perf_info_debug():
