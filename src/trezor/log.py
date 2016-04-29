@@ -1,3 +1,4 @@
+import _io
 import sys
 import utime
 
@@ -38,6 +39,11 @@ def warning(name, msg, *args):
 
 def error(name, msg, *args):
     _log(name, ERROR, msg, *args)
+
+def exception(name, exc):
+    out = _io.StringIO()
+    sys.print_exception(exc, out)
+    _log(name, ERROR, out.getvalue())
 
 def critical(name, msg, *args):
     _log(name, CRITICAL, msg, *args)

@@ -1,5 +1,4 @@
 import utime
-import sys
 
 from uheapq import heappop, heappush
 from .utils import type_gen
@@ -11,8 +10,6 @@ EVT_TSTART = const(-1)
 EVT_TMOVE = const(-2)
 EVT_TEND = const(-3)
 EVT_MSG = const(-4)
-
-DO_NOTHING = const(-5)
 
 evt_handlers = { EVT_TSTART: None,
                  EVT_TMOVE: None,
@@ -114,18 +111,13 @@ def run_forever(start_gens):
             # gen ended, forget it and go on
             continue
         except Exception as e:
-            # FIXME
-            log.error(__name__, str(e))
-            sys.print_exception(e)
-            # log.exception(__name__, e)
+            log.exception(__name__, e)
             continue
 
         if isinstance(ret, int):
             if ret >= 0:
                 # sleep until ret, call us later
                 __call_at(ret, gen)
-            elif ret == DO_NOTHING:
-                print("Removing gen from time queue")
             else:
                 # wait for event
                 raise NotImplementedError()

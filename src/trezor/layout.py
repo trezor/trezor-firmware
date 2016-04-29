@@ -2,7 +2,7 @@ import sys
 import utime
 from . import utils
 
-import log
+from . import log
 
 _new_layout = None
 _current_layout = None
