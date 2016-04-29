@@ -2,6 +2,7 @@ import utime
 import uheapq
 
 from .utils import type_gen
+from . import msg
 
 if __debug__:
     import logging
@@ -34,7 +35,10 @@ def wait(delay):
         log.debug("Sleeping for: %s", delay)
 
     last_sleep = delay
-    utime.sleep_us(delay)
+    m = msg.select(delay)
+    if m:
+        print('msg:', m)
+    return m
 
 def run_forever():
     global q, cnt
@@ -47,11 +51,12 @@ def run_forever():
             tnow = utime.ticks_us()
             delay = t - tnow
             if delay > 0:
-                wait(delay)
+                m = wait(delay)
         else:
-            wait(-1)
+            m = wait(0)
             # Assuming IO completion scheduled some tasks
             continue
+
         if callable(cb):
             ret = cb(*args)
             if __debug__ and isinstance(ret, type_gen):
