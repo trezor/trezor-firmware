@@ -174,8 +174,9 @@ void u2fhid_read(const U2FHID_FRAME *f)
 		buf_ptr += sizeof(f->init.data);
 
 		// Broadcast is reserved for init
-		if (cid == CID_BROADCAST && cmd != U2FHID_INIT)
+		if (f->cid == CID_BROADCAST && cmd != U2FHID_INIT)
 			return;
+		cid = f->cid;
 
 		// Check length isnt bigger than spec max
 		if (len > sizeof(buf)) {
@@ -184,9 +185,6 @@ void u2fhid_read(const U2FHID_FRAME *f)
 		}
 	}
 	else {
-		// Broadcast is reserved for init
-		if (cid == CID_BROADCAST)
-			return;
 		// check out of bounds
 		if ((buf_ptr - buf) >= (signed) len
 			|| (buf_ptr + sizeof(f->cont.data) - buf) > (signed) sizeof(buf))
@@ -258,13 +256,13 @@ void u2fhid_init(const U2FHID_INIT_REQ *init_req)
 	U2FHID_INIT_RESP *resp = (U2FHID_INIT_RESP *)f.init.data;
 
 	bzero(&f, sizeof(f));
-	f.cid = CID_BROADCAST;
+	f.cid = cid;
 	f.init.cmd = U2FHID_INIT;
 	f.init.bcnth = 0;
 	f.init.bcntl = U2FHID_INIT_RESP_SIZE;
 
 	memcpy(resp->nonce, init_req->nonce, sizeof(init_req->nonce));
-	resp->cid = next_cid();
+	resp->cid = cid == CID_BROADCAST ? next_cid() : cid;
 	resp->versionInterface = U2FHID_IF_VERSION;
 	resp->versionMajor = VERSION_MAJOR;
 	resp->versionMinor = VERSION_MINOR;
