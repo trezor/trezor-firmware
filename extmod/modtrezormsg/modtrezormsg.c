@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
     if (to < 0) {
         to = 0;
     }
-    while (to >= 0) {
+    for(;;) {
         uint32_t e = msg_poll_ui_event();
         if (e) {
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
@@ -70,6 +70,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             vstr_init_len(&vstr, 64);
             memcpy(vstr.buf, m, 64);
             return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+        }
+        if (to <= 0) {
+            break;
         }
         mp_hal_delay_us_fast(TICK_RESOLUTION);
         to -= TICK_RESOLUTION;

@@ -38,6 +38,7 @@ uint32_t trezorui_poll_sdl_event(void)
 {
     SDL_Event event;
     int x, y;
+    SDL_PumpEvents();
     if (SDL_PollEvent(&event) > 0) {
         switch (event.type) {
             case SDL_MOUSEBUTTONDOWN:
@@ -51,6 +52,8 @@ uint32_t trezorui_poll_sdl_event(void)
                         return (0x00 << 24) | (0x01 << 16) | (x << 8) | y; // touch_start
                         break;
                     case SDL_MOUSEMOTION:
+                        // remove other SDL_MOUSEMOTION events from queue
+                        SDL_FlushEvent(SDL_MOUSEMOTION);
                         if (event.motion.state) {
                             return (0x00 << 24) | (0x02 << 16) | (x << 8) | y; // touch_move
                         }
@@ -58,6 +61,11 @@ uint32_t trezorui_poll_sdl_event(void)
                     case SDL_MOUSEBUTTONUP:
                         return (0x00 << 24) | (0x03 << 16) | (x << 8) | y; // touch_end
                         break;
+                }
+                break;
+            case SDL_KEYUP:
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    exit(3);
                 }
                 break;
             case SDL_QUIT:
