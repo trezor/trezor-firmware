@@ -3,6 +3,7 @@ import uheapq
 
 from .utils import type_gen
 from . import msg
+from . import ui
 
 if __debug__:
     import logging
@@ -46,8 +47,10 @@ def wait(delay):
 
     m = msg.select(delay)
     if m:
-        print('msg:', m)
-        utime.sleep_us(10000)
+        # print('msg:', m)
+        # utime.sleep_us(10000)
+        if m[0] == 2:
+            ui.display.bar(m[1], m[2], 2, 2, ui.BLACK)
     return m
 
 def run_forever():
