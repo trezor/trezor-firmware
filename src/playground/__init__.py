@@ -1,11 +1,6 @@
 # import time
 import sys
 sys.path.append('lib')
-
-if sys.platform == 'linux':
-    # Packages used only on linux platform (named pipes, ...)
-    sys.path.append('lib_linux')
-
 import utime
 import math
 import gc

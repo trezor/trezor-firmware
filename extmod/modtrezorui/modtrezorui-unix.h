@@ -34,11 +34,11 @@ static void DATAfunc(uint8_t x) {
     }
 }
 
-uint32_t trezorui_poll_sdl_event(uint32_t timeout_us)
+uint32_t trezorui_poll_sdl_event(void)
 {
     SDL_Event event;
     int x, y;
-    if (SDL_WaitEventTimeout(&event, timeout_us / 1000) > 0) {
+    if (SDL_PollEvent(&event) > 0) {
         switch (event.type) {
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:

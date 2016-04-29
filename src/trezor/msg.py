@@ -1,28 +1,9 @@
-import sys
+from TrezorMsg import Msg
 
-if sys.platform == 'linux':
-    import transport_pipe as pipe
+_msg = Msg()
 
-    def send(msg):
-        return pipe.write(msg)
-        
-    def read():
-        return pipe.read()
+def select(timeout_ms):
+    return _msg.select(timeout_ms)
 
-    def set_notify(_on_read):
-        return pipe.set_notify(_on_read)
-
-    pipe.init('../pipe')
-
-else:
-    from TrezorMsg import Msg
-
-    def send(msg):
-        return Msg.send(msg)
-
-    def read():
-        raise NotImplementedError
-        return Msg.receive()
-
-    def set_notify(_on_read):
-        raise NotImplementedError
+def send(msg):
+    return _msg.send(msg)

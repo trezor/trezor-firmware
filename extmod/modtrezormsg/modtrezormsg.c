@@ -12,20 +12,17 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "py/binary.h"
+#include "py/mphal.h"
 
 #if MICROPY_PY_TREZORMSG
 
-// io callbacks
-
-mp_obj_t msg_receive_callback = mp_const_none;
-
-/*
-static void msg_receive(mp_obj_t message) {
-    if (touch_start_callback != mp_const_none) {
-        mp_call_function_1(msg_receive_callback, message);
-    }
-}
-*/
+#if defined STM32_HAL_H
+#include "modtrezormsg-stmhal.h"
+#elif defined UNIX
+#include "modtrezormsg-unix.h"
+#else
+#error Unsupported port. Only STMHAL and UNIX ports are supported.
+#endif
 
 // class Msg(object):
 typedef struct _mp_obj_Msg_t {
@@ -35,29 +32,50 @@ typedef struct _mp_obj_Msg_t {
 // def Msg.__init__(self)
 STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
+    msg_init();
     mp_obj_Msg_t *o = m_new_obj(mp_obj_Msg_t);
     o->base.type = type;
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Msg.receive(self, callback) -> None
-STATIC mp_obj_t mod_TrezorMsg_Msg_receive(mp_obj_t self, mp_obj_t callback) {
-    msg_receive_callback = callback;
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_receive_obj, mod_TrezorMsg_Msg_receive);
-
-// def Msg.send(self, message) -> None
+// def Msg.send(self, message) -> int
 STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t message) {
-    // TODO
-    return mp_const_none;
+    mp_buffer_info_t buf;
+    mp_get_buffer_raise(message, &buf, MP_BUFFER_READ);
+    int r = msg_send(buf.buf, buf.len);
+    return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
+
+// def Msg.select(self, timeout_ms: int) -> None/tuple/bytes
+STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_ms) {
+    int to = mp_obj_get_int(timeout_ms);
+    while (--to >= 0) {
+        uint32_t e = msg_poll_ui_event();
+        if (e) {
+            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT((e & 0xFF0000) >> 16);
+            tuple->items[1] = MP_OBJ_NEW_SMALL_INT((e & 0xFF00) >> 8);
+            tuple->items[2] = MP_OBJ_NEW_SMALL_INT((e & 0xFF));
+            return MP_OBJ_FROM_PTR(tuple);
+        }
+        const uint8_t *m = msg_recv();
+        if (m) {
+            vstr_t vstr;
+            vstr_init_len(&vstr, 64);
+            memcpy(vstr.buf, m, 64);
+            return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+        }
+        mp_hal_delay_ms(1);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_select_obj, mod_TrezorMsg_Msg_select);
 
 // Msg stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorMsg_Msg_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_receive), MP_ROM_PTR(&mod_TrezorMsg_Msg_receive_obj) },
+    { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorMsg_Msg_select_obj) },
     { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_TrezorMsg_Msg_send_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_Msg_locals_dict, mod_TrezorMsg_Msg_locals_dict_table);

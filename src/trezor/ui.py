@@ -1,12 +1,11 @@
 import math
 import utime
 
-from TrezorUi import Display, Touch
+from TrezorUi import Display
 
 from . import loop
 
 display = Display()
-touch = Touch()
 
 def rgbcolor(r: int, g: int, b: int) -> int:
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
