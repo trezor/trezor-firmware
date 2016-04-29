@@ -10,7 +10,14 @@ if __debug__:
 
 q = []
 cnt = 0
-last_sleep = 0  # For performance stats
+
+# For performance stats
+if __debug__:
+    # For performance stats
+    import array
+    log_delay_pos = 0
+    log_delay_rb_len = const(10)
+    log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
 def call_soon(callback, *args):
     call_at(0, callback, *args)
@@ -29,15 +36,18 @@ def call_at(time, callback, *args):
     cnt += 1
 
 def wait(delay):
-    global last_sleep
-
     if __debug__:
-        log.debug("Sleeping for: %s", delay)
+        # Adding delay to ring buffer for performance stats
+        global log_delay_pos
+        global log_delay_rb
+        global log_delay_rb_len
+        log_delay_rb[log_delay_pos] = delay
+        log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
-    last_sleep = delay
     m = msg.select(delay)
     if m:
         print('msg:', m)
+        utime.sleep_us(10000)
     return m
 
 def run_forever():
