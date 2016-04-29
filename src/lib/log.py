@@ -19,27 +19,25 @@ _leveldict = {
 level = NOTSET
 color = True
 
-def _log(mlevel, msg, *args):
-    global level
-    if mlevel >= level:
-        name = 'name'
+def _log(name, mlevel, msg, *args):
+    if __debug__ and mlevel >= level:
         if color:
             fmt = '%d \x1b[35m%s\x1b[0m %s \x1b[' + _leveldict[mlevel][1] + 'm' + msg + '\x1b[0m'
         else:
             fmt = '%d %s %s ' + msg
         print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args), file=sys.stderr)
 
-def debug(msg, *args):
+def debug(name, msg, *args):
     _log(DEBUG, msg, *args)
 
-def info(msg, *args):
+def info(name, msg, *args):
     _log(INFO, msg, *args)
 
-def warning(msg, *args):
+def warning(name, msg, *args):
     _log(WARNING, msg, *args)
 
-def error(msg, *args):
+def error(name, msg, *args):
     _log(ERROR, msg, *args)
 
-def critical(msg, *args):
+def critical(name, msg, *args):
     _log(CRITICAL, msg, *args)

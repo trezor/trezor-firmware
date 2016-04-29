@@ -17,8 +17,11 @@ build_unix: update ## build unix port (32-bit)
 build_unix64: update ## build unix port (64-bit)
 	make -C vendor/micropython/unix
 
-run_unix: ## run unix port
+run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
+
+emu: ## run emulator
+	./emu.sh
 
 clean: clean_stmhal clean_unix ## clean all builds
 
