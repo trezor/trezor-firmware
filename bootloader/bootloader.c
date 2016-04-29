@@ -85,7 +85,7 @@ void load_app(void)
 {
 	// jump to app
 	SCB_VTOR = FLASH_APP_START; // & 0xFFFF;
-	asm volatile("msr msp, %0"::"g" (*(volatile uint32_t *)FLASH_APP_START));
+	__asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)FLASH_APP_START));
 	(*(void (**)())(FLASH_APP_START + 4))();
 }
 
