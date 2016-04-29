@@ -286,6 +286,31 @@ uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uin
 
 // tx methods
 
+uint32_t tx_prevout_hash(SHA256_CTX *ctx, const TxInputType *input)
+{
+	int i;
+	for (i = 0; i < 32; i++) {
+		sha256_Update(ctx, &(input->prev_hash.bytes[31 - i]), 1);
+	}
+	sha256_Update(ctx, (const uint8_t *)&input->prev_index, 4);
+	return 36;
+}
+
+uint32_t tx_sequence_hash(SHA256_CTX *ctx, const TxInputType *input)
+{
+	sha256_Update(ctx, (const uint8_t *)&input->sequence, 4);
+	return 4;
+}
+
+uint32_t tx_output_hash(SHA256_CTX *ctx, const TxOutputBinType *output)
+{
+	uint32_t r = 0;
+	sha256_Update(ctx, (const uint8_t *)&output->amount, 8); r += 8;
+	r += ser_length_hash(ctx, output->script_pubkey.size);
+	sha256_Update(ctx, output->script_pubkey.bytes, output->script_pubkey.size); r+= output->script_pubkey.size;
+	return r;
+}
+
 uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out)
 {
 	memcpy(out, &(tx->version), 4);
@@ -326,7 +351,6 @@ uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out
 
 uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input)
 {
-	int i;
 	if (tx->have_inputs >= tx->inputs_len) {
 		// already got all inputs
 		return 0;
@@ -335,14 +359,10 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input)
 	if (tx->have_inputs == 0) {
 		r += tx_serialize_header_hash(tx);
 	}
-	for (i = 0; i < 32; i++) {
-		sha256_Update(&(tx->ctx), &(input->prev_hash.bytes[31 - i]), 1);
-	}
-	r += 32;
-	sha256_Update(&(tx->ctx), (const uint8_t *)&input->prev_index, 4); r += 4;
+	r += tx_prevout_hash(&(tx->ctx), input);
 	r += ser_length_hash(&(tx->ctx), input->script_sig.size);
 	sha256_Update(&(tx->ctx), input->script_sig.bytes, input->script_sig.size); r += input->script_sig.size;
-	sha256_Update(&(tx->ctx), (const uint8_t *)&input->sequence, 4); r += 4;
+	r += tx_sequence_hash(&(tx->ctx), input);
 
 	tx->have_inputs++;
 	tx->size += r;
@@ -423,9 +443,7 @@ uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output)
 	if (tx->have_outputs == 0) {
 		r += tx_serialize_middle_hash(tx);
 	}
-	sha256_Update(&(tx->ctx), (const uint8_t *)&output->amount, 8); r += 8;
-	r += ser_length_hash(&(tx->ctx), output->script_pubkey.size);
-	sha256_Update(&(tx->ctx), output->script_pubkey.bytes, output->script_pubkey.size); r+= output->script_pubkey.size;
+	r += tx_output_hash(&(tx->ctx), output);
 	tx->have_outputs++;
 	if (tx->have_outputs == tx->outputs_len) {
 		r += tx_serialize_footer_hash(tx);
