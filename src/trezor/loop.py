@@ -11,10 +11,14 @@ EVT_TMOVE = const(-2)
 EVT_TEND = const(-3)
 EVT_MSG = const(-4)
 
-evt_handlers = { EVT_TSTART: None,
-                 EVT_TMOVE: None,
-                 EVT_TEND: None,
-                 EVT_MSG: None, }
+DO_NOTHING = const(-5)
+
+evt_handlers = {
+    EVT_TSTART: None,
+    EVT_TMOVE: None,
+    EVT_TEND: None,
+    EVT_MSG: None,
+}
 time_queue = []
 
 if __debug__:
@@ -32,30 +36,47 @@ def __call_at(time, gen):
         time = utime.ticks_us()
     heappush(time_queue, (time, gen))
 
-def __wait_gen(gen, cb):
-    if isinstance(gen, int):
-        ret = yield gen
 
-    else:
+def __wait_for_gen(gen, cb):
+    if isinstance(gen, type_gen):
         ret = yield from gen
+    else:
+        ret = yield gen
+    try:
+        cb.throw(StopIteration)
+    except Exception as e:
+        log.info(__name__, '__wait_gen throw raised %s', e)
 
-    cb.throw(StopIteration())
+    log.info(__name__, '__wait_gen returning %s', ret)
 
 
-def __wait_cb():
-    while True:
+class __Wait():
+    pass
+
+
+def __wait_callback(call_after):
+    # TODO: rewrite as instance of __Wait instead of generator
+    delegate = yield
+    received = 0
+    while received < call_after:
         try:
-            yield sleep(1000000)
+            yield
         except StopIteration:
-            break
+            received += 1
+    __call_at(None, delegate)
 
-def wait(gens):
-    cb = __wait_cb()
-    cb.send(None)
 
+def wait_for_first(gens):
+    cb = __wait_callback(1)
     for g in gens:
-        __call_at(None, __wait_gen(g, cb))
+        __call_at(None, __wait_for_gen(g, cb))
+    return cb
 
+
+def wait_for_all(gens):
+    cb = __wait_callback(len(gens))
+    for g in gens:
+        __call_at(None, __wait_for_gen(g, cb))
     return cb
 
 
@@ -99,9 +120,12 @@ def run_forever(start_gens):
 
         try:
             ret = gen.send(None)
+
         except StopIteration as e:
+            log.info(__name__, '%s ended', gen)
             # gen ended, forget it and go on
             continue
+
         except Exception as e:
             log.exception(__name__, e)
             continue
@@ -114,9 +138,14 @@ def run_forever(start_gens):
                 # wait for event
                 raise NotImplementedError()
 
+        elif isinstance(ret, type_gen):
+            log.info(__name__, 'Scheduling %s -> %s', gen, ret)
+            ret.send(None)
+            ret.send(gen)
+
         elif ret is None:
             # just call us asap
             __call_at(None, gen)
-        else:
 
-            raise Exception("Unhandled result %s" % gen)
+        else:
+            raise Exception("Unhandled result %s by %s" % (ret, gen))

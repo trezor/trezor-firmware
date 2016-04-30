@@ -1,8 +1,8 @@
 import sys
 import utime
-from . import utils
 
 from . import log
+from . import utils
 
 _new_layout = None
 _current_layout = None
