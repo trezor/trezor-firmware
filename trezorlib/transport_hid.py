@@ -2,8 +2,7 @@
 
 import hid
 import time
-import platform
-from transport import Transport, ConnectionError, NotImplementedException
+from transport import Transport, ConnectionError
 
 DEVICE_IDS = [
 #    (0x10c4, 0xea80),  # TREZOR Shield
