@@ -25,8 +25,32 @@
 #define __PBKDF2_H__
 
 #include <stdint.h>
+#include "sha2.h"
 
-void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total));
-void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total));
+typedef struct _PBKDF2_HMAC_SHA256_CTX {
+	uint8_t f[SHA256_DIGEST_LENGTH];
+	uint8_t g[SHA256_DIGEST_LENGTH];
+	const uint8_t *pass;
+	int passlen;
+	char first;
+} PBKDF2_HMAC_SHA256_CTX;
+
+typedef struct _PBKDF2_HMAC_SHA512_CTX {
+	uint8_t f[SHA512_DIGEST_LENGTH];
+	uint8_t g[SHA512_DIGEST_LENGTH];
+	const uint8_t *pass;
+	int passlen;
+	char first;
+} PBKDF2_HMAC_SHA512_CTX;
+
+void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass, int passlen, uint8_t *salt, int saltlen);
+void pbkdf2_hmac_sha256_Update(PBKDF2_HMAC_SHA256_CTX *pctx, uint32_t iterations);
+void pbkdf2_hmac_sha256_Final(PBKDF2_HMAC_SHA256_CTX *pctx, uint8_t *key);
+void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key);
+
+void pbkdf2_hmac_sha512_Init(PBKDF2_HMAC_SHA512_CTX *pctx, const uint8_t *pass, int passlen, uint8_t *salt, int saltlen);
+void pbkdf2_hmac_sha512_Update(PBKDF2_HMAC_SHA512_CTX *pctx, uint32_t iterations);
+void pbkdf2_hmac_sha512_Final(PBKDF2_HMAC_SHA512_CTX *pctx, uint8_t *key);
+void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key);
 
 #endif

@@ -168,8 +168,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	int mnemoniclen = strlen(mnemonic);
 	// check cache
 	if (mnemoniclen < 256 && passphraselen < 64) {
-		int i;
-		for (i = 0; i < BIP39_CACHE_SIZE; i++) {
+		for (int i = 0; i < BIP39_CACHE_SIZE; i++) {
 			if (!bip39_cache[i].set) continue;
 			if (strcmp(bip39_cache[i].mnemonic, mnemonic) != 0) continue;
 			if (strcmp(bip39_cache[i].passphrase, passphrase) != 0) continue;
@@ -179,10 +178,21 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 		}
 	}
 #endif
-	uint8_t salt[8 + 256 + 4];
+	uint8_t salt[8 + 256];
 	memcpy(salt, "mnemonic", 8);
 	memcpy(salt + 8, passphrase, passphraselen);
-	pbkdf2_hmac_sha512((const uint8_t *)mnemonic, strlen(mnemonic), salt, passphraselen + 8, BIP39_PBKDF2_ROUNDS, seed, 512 / 8, progress_callback);
+	PBKDF2_HMAC_SHA512_CTX pctx;
+	pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)mnemonic, strlen(mnemonic), salt, passphraselen + 8);
+	if (progress_callback) {
+		progress_callback(0, BIP39_PBKDF2_ROUNDS);
+	}
+	for (int i = 0; i < 8; i++) {
+		pbkdf2_hmac_sha512_Update(&pctx, BIP39_PBKDF2_ROUNDS / 8);
+		if (progress_callback) {
+			progress_callback((i + 1) * BIP39_PBKDF2_ROUNDS / 8, BIP39_PBKDF2_ROUNDS);
+		}
+	}
+	pbkdf2_hmac_sha512_Final(&pctx, seed);
 #if USE_BIP39_CACHE
 	// store to cache
 	if (mnemoniclen < 256 && passphraselen < 64) {

@@ -26,78 +26,78 @@
 #include "hmac.h"
 #include "macros.h"
 
-void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total))
+void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass, int passlen, uint8_t *salt, int saltlen)
 {
-	const uint32_t HMACLEN = 256/8;
-	uint8_t f[HMACLEN], g[HMACLEN];
-	uint32_t blocks = keylen / HMACLEN;
-	if (keylen & (HMACLEN - 1)) {
-		blocks++;
-	}
-	for (uint32_t i = 1; i <= blocks; i++) {
-		HMAC_SHA256_CTX hctx;
-		hmac_sha256_Init(&hctx, pass, passlen);
-		hmac_sha256_Update(&hctx, salt, saltlen);
-		uint32_t ii = ((i & 0xFF000000) >> 24) | ((i & 0x00FF0000) >> 8) | ((i & 0x0000FF00) << 8) | ((i & 0x000000FF) << 24);
-		hmac_sha256_Update(&hctx, (const uint8_t *)&ii, sizeof(uint32_t));
-		hmac_sha256_Final(&hctx, g);
-		memcpy(f, g, HMACLEN);
-		if (progress_callback) {
-			progress_callback(0, iterations);
-		}
-		for (uint32_t j = 1; j < iterations; j++) {
-			hmac_sha256(pass, passlen, g, HMACLEN, g);
-			for (uint32_t k = 0; k < HMACLEN; k++) {
-				f[k] ^= g[k];
-			}
-			if (progress_callback && (j % 256 == 255)) {
-				progress_callback(j + 1, iterations);
-			}
-		}
-		if (i == blocks && (keylen & (HMACLEN - 1))) {
-			memcpy(key + HMACLEN * (i - 1), f, keylen & (HMACLEN - 1));
-		} else {
-			memcpy(key + HMACLEN * (i - 1), f, HMACLEN);
-		}
-	}
-	MEMSET_BZERO(f, sizeof(f));
-	MEMSET_BZERO(g, sizeof(g));
+	HMAC_SHA256_CTX hctx;
+	hmac_sha256_Init(&hctx, pass, passlen);
+	hmac_sha256_Update(&hctx, salt, saltlen);
+	hmac_sha256_Update(&hctx, (const uint8_t *)"\x00\x00\x00\x01", 4);
+	hmac_sha256_Final(&hctx, pctx->g);
+	memcpy(pctx->f, pctx->g, SHA256_DIGEST_LENGTH);
+	pctx->pass = pass;
+	pctx->passlen = passlen;
+	pctx->first = 1;
 }
 
-void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen, void (*progress_callback)(uint32_t current, uint32_t total))
+void pbkdf2_hmac_sha256_Update(PBKDF2_HMAC_SHA256_CTX *pctx, uint32_t iterations)
 {
-	const uint32_t HMACLEN = 512/8;
-	uint8_t f[HMACLEN], g[HMACLEN];
-	uint32_t blocks = keylen / HMACLEN;
-	if (keylen & (HMACLEN - 1)) {
-		blocks++;
-	}
-	for (uint32_t i = 1; i <= blocks; i++) {
-		HMAC_SHA512_CTX hctx;
-		hmac_sha512_Init(&hctx, pass, passlen);
-		hmac_sha512_Update(&hctx, salt, saltlen);
-		uint32_t ii = ((i & 0xFF000000) >> 24) | ((i & 0x00FF0000) >> 8) | ((i & 0x0000FF00) << 8) | ((i & 0x000000FF) << 24);
-		hmac_sha512_Update(&hctx, (const uint8_t *)&ii, sizeof(uint32_t));
-		hmac_sha512_Final(&hctx, g);
-		memcpy(f, g, HMACLEN);
-		if (progress_callback) {
-			progress_callback(0, iterations);
-		}
-		for (uint32_t j = 1; j < iterations; j++) {
-			hmac_sha512(pass, passlen, g, HMACLEN, g);
-			for (uint32_t k = 0; k < HMACLEN; k++) {
-				f[k] ^= g[k];
-			}
-			if (progress_callback && (j % 256 == 255)) {
-				progress_callback(j + 1, iterations);
-			}
-		}
-		if (i == blocks && (keylen & (HMACLEN - 1))) {
-			memcpy(key + HMACLEN * (i - 1), f, keylen & (HMACLEN - 1));
-		} else {
-			memcpy(key + HMACLEN * (i - 1), f, HMACLEN);
+	for (uint32_t i = pctx->first; i < iterations; i++) {
+		hmac_sha256(pctx->pass, pctx->passlen, pctx->g, SHA256_DIGEST_LENGTH, pctx->g);
+		for (uint32_t j = 0; j < SHA256_DIGEST_LENGTH; j++) {
+			pctx->f[j] ^= pctx->g[j];
 		}
 	}
-	MEMSET_BZERO(f, sizeof(f));
-	MEMSET_BZERO(g, sizeof(g));
+	pctx->first = 0;
+}
+
+void pbkdf2_hmac_sha256_Final(PBKDF2_HMAC_SHA256_CTX *pctx, uint8_t *key)
+{
+	memcpy(key, pctx->f, SHA256_DIGEST_LENGTH);
+	MEMSET_BZERO(pctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
+}
+
+void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+{
+	PBKDF2_HMAC_SHA256_CTX pctx;
+	pbkdf2_hmac_sha256_Init(&pctx, pass, passlen, salt, saltlen);
+	pbkdf2_hmac_sha256_Update(&pctx, iterations);
+	pbkdf2_hmac_sha256_Final(&pctx, key);
+}
+
+void pbkdf2_hmac_sha512_Init(PBKDF2_HMAC_SHA512_CTX *pctx, const uint8_t *pass, int passlen, uint8_t *salt, int saltlen)
+{
+	HMAC_SHA512_CTX hctx;
+	hmac_sha512_Init(&hctx, pass, passlen);
+	hmac_sha512_Update(&hctx, salt, saltlen);
+	hmac_sha512_Update(&hctx, (const uint8_t *)"\x00\x00\x00\x01", 4);
+	hmac_sha512_Final(&hctx, pctx->g);
+	memcpy(pctx->f, pctx->g, SHA512_DIGEST_LENGTH);
+	pctx->pass = pass;
+	pctx->passlen = passlen;
+	pctx->first = 1;
+}
+
+void pbkdf2_hmac_sha512_Update(PBKDF2_HMAC_SHA512_CTX *pctx, uint32_t iterations)
+{
+	for (uint32_t i = pctx->first; i < iterations; i++) {
+		hmac_sha512(pctx->pass, pctx->passlen, pctx->g, SHA512_DIGEST_LENGTH, pctx->g);
+		for (uint32_t j = 0; j < SHA512_DIGEST_LENGTH; j++) {
+			pctx->f[j] ^= pctx->g[j];
+		}
+	}
+	pctx->first = 0;
+}
+
+void pbkdf2_hmac_sha512_Final(PBKDF2_HMAC_SHA512_CTX *pctx, uint8_t *key)
+{
+	memcpy(key, pctx->f, SHA512_DIGEST_LENGTH);
+	MEMSET_BZERO(pctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
+}
+
+void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+{
+	PBKDF2_HMAC_SHA512_CTX pctx;
+	pbkdf2_hmac_sha512_Init(&pctx, pass, passlen, salt, saltlen);
+	pbkdf2_hmac_sha512_Update(&pctx, iterations);
+	pbkdf2_hmac_sha512_Final(&pctx, key);
 }
