@@ -45,10 +45,12 @@ enum FailureType {
  * @used_in TxOutputType
  */
 enum OutputScriptType {
-	PAYTOADDRESS = 0;
-	PAYTOSCRIPTHASH = 1;
-	PAYTOMULTISIG = 2;
-	PAYTOOPRETURN = 3;
+	PAYTOADDRESS = 0;	// used for all addresses (bitcoin, p2sh, witness)
+	PAYTOSCRIPTHASH = 1;	// p2sh address (deprecated; use PAYTOADDRESS)
+	PAYTOMULTISIG = 2;	// only for change output
+	PAYTOOPRETURN = 3;	// op_return
+	PAYTOWITNESS = 4;	// only for change output
+	PAYTOP2SHWITNESS = 5;	// only for change output
 }
 
 /**
@@ -56,8 +58,11 @@ enum OutputScriptType {
  * @used_in TxInputType
  */
 enum InputScriptType {
-	SPENDADDRESS = 0;
-	SPENDMULTISIG = 1;
+	SPENDADDRESS = 0;		// standard p2pkh address
+	SPENDMULTISIG = 1;		// p2sh multisig address
+	EXTERNAL = 2;			// reserved for external inputs (coinjoin)
+	SPENDWITNESS = 3;		// native segwit
+	SPENDP2SHWITNESS = 4;		// segwit over p2sh (backward compatible)
 }
 
 /**
@@ -141,7 +146,7 @@ message CoinType {
  * @used_in TxInputType
  */
 message MultisigRedeemScriptType {
-	repeated HDNodePathType pubkeys = 1;						// pubkeys from multisig address (sorted lexicographically)
+	repeated HDNodePathType pubkeys = 1;					// pubkeys from multisig address (sorted lexicographically)
 	repeated bytes signatures = 2;						// existing signatures for partially signed input
 	optional uint32 m = 3;							// "m" from n, how many valid signatures is necessary for spending
 }
@@ -159,6 +164,7 @@ message TxInputType {
 	optional uint32 sequence = 5 [default=0xffffffff];			// sequence
 	optional InputScriptType script_type = 6 [default=SPENDADDRESS];	// defines template of input script
 	optional MultisigRedeemScriptType multisig = 7;				// Filled if input is going to spend multisig tx
+	optional uint64 amount = 8;	  	     				// amount of previous transaction output (for segwit only)
 }
 
 /**
