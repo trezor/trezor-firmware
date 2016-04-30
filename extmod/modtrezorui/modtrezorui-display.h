@@ -48,31 +48,31 @@ static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data
     display_update();
 }
 
-static uint16_t COLORTABLE[16];
-
-static void set_color_table(uint16_t fgcolor, uint16_t bgcolor)
+static void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
 {
     uint8_t cr, cg, cb;
     for (int i = 0; i < 16; i++) {
         cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
         cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
         cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
-        COLORTABLE[i] = (cr << 11) | (cg << 5) | cb;
+        colortable[i] = (cr << 11) | (cg << 5) | cb;
     }
 }
 
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 {
-    DATA(COLORTABLE[byte >> 4] >> 8);
-    DATA(COLORTABLE[byte >> 4] & 0xFF);
-    DATA(COLORTABLE[byte & 0x0F] >> 8);
-    DATA(COLORTABLE[byte & 0x0F] & 0xFF);
+    uint16_t *colortable = (uint16_t *)userdata;
+    DATA(colortable[byte >> 4] >> 8);
+    DATA(colortable[byte >> 4] & 0xFF);
+    DATA(colortable[byte & 0x0F] >> 8);
+    DATA(colortable[byte & 0x0F] & 0xFF);
 }
 
 static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor) {
     display_set_window(x, y, w, h);
-    set_color_table(fgcolor, bgcolor);
-    sinf_inflate(data, inflate_callback_icon, NULL);
+    uint16_t colortable[16];
+    set_color_table(colortable, fgcolor, bgcolor);
+    sinf_inflate(data, inflate_callback_icon, colortable);
     display_update();
 }
 
@@ -83,7 +83,8 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
     int xx = x;
     const uint8_t *g;
     uint8_t c;
-    set_color_table(fgcolor, bgcolor);
+    uint16_t colortable[16];
+    set_color_table(colortable, fgcolor, bgcolor);
 
     // render glyphs
     for (int i = 0; i < textlen; i++) {
@@ -122,8 +123,8 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
                 } else {
                     c = g[5 + j/2] & 0x0F;
                 }
-                DATA(COLORTABLE[c] >> 8);
-                DATA(COLORTABLE[c] & 0xFF);
+                DATA(colortable[c] >> 8);
+                DATA(colortable[c] & 0xFF);
             }
             display_update();
         }
@@ -150,9 +151,13 @@ static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int sc
 
 #include "modtrezorui-loader.h"
 
-static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint16_t iconbgcolor)
+static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint16_t iconfgcolor)
 {
-    set_color_table(fgcolor, bgcolor);
+    uint16_t colortable[16], iconcolortable[16];
+    set_color_table(colortable, fgcolor, bgcolor);
+    if (icon) {
+        set_color_table(iconcolortable, iconfgcolor, bgcolor);
+    }
     display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
     for (int y = 0; y < img_loader_size * 2; y++) {
         for (int x = 0; x < img_loader_size * 2; x++) {
@@ -182,8 +187,8 @@ static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor
                 } else {
                     c = (icon[i / 2] & 0xF0) >> 4;
                 }
-                DATA(c << 4 | c >> 1);
-                DATA(c << 7 | c << 1);
+                DATA(iconcolortable[c] >> 8);
+                DATA(iconcolortable[c] & 0xFF);
             } else {
                 uint8_t c;
                 if (progress > a) {
@@ -191,8 +196,8 @@ static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor
                 } else {
                     c = img_loader[my][mx] & 0x000F;
                 }
-                DATA(COLORTABLE[c] >> 8);
-                DATA(COLORTABLE[c] & 0xFF);
+                DATA(colortable[c] >> 8);
+                DATA(colortable[c] & 0xFF);
             }
         }
     }
@@ -338,7 +343,7 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
-// def Display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconcolor: int=None) -> None
+// def Display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
     mp_int_t progress = mp_obj_get_int(args[1]);
     mp_int_t fgcolor = mp_obj_get_int(args[2]);
@@ -361,13 +366,13 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         }
         uint8_t icondata[96 * 96 /2];
         sinf_inflate(data + 12, inflate_callback_loader, icondata);
-        uint16_t iconcolor;
+        uint16_t iconfgcolor;
         if (n_args > 5) { // icon color provided
-            iconcolor = mp_obj_get_int(args[5]);
+            iconfgcolor = mp_obj_get_int(args[5]);
         } else {
-            iconcolor = ~bgcolor; // invert
+            iconfgcolor = ~bgcolor; // invert
         }
-        display_loader(progress, fgcolor, bgcolor, icondata, iconcolor);
+        display_loader(progress, fgcolor, bgcolor, icondata, iconfgcolor);
     } else {
         display_loader(progress, fgcolor, bgcolor, NULL, 0);
     }
