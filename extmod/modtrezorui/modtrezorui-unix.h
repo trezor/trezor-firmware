@@ -8,6 +8,8 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 
+#define DISPLAY_BORDER 8
+
 static SDL_Renderer *RENDERER = 0;
 static SDL_Surface  *SCREEN   = 0;
 static SDL_Texture  *TEXTURE  = 0;
@@ -16,11 +18,8 @@ static int POSX, POSY, SX, SY, EX, EY = 0;
 static int ROTATION = 0;
 
 #define CMD(X) (void)(X);
-#define DATA(X) DATAfunc((X))
 
-#define DISPLAY_BORDER 8
-
-static void DATAfunc(uint8_t x) {
+static void DATA(uint8_t x) {
     if (POSX <= EX && POSY <= EY) {
         ((uint8_t *)SCREEN->pixels)[POSX * 2 + POSY * SCREEN->pitch + (DATAODD ^ 1)] = x;
     }

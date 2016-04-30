@@ -37,9 +37,14 @@ static void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data,
     display_update();
 }
 
+static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
+{
+    DATA(byte);
+}
+
 static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen) {
     display_set_window(x, y, w, h);
-    sinf_inflate(data, DATAfunc);
+    sinf_inflate(data, inflate_callback_image, NULL);
     display_update();
 }
 
@@ -56,7 +61,7 @@ static void set_color_table(uint16_t fgcolor, uint16_t bgcolor)
     }
 }
 
-static void DATAiconmap(uint8_t byte)
+static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 {
     DATA(COLORTABLE[byte >> 4] >> 8);
     DATA(COLORTABLE[byte >> 4] & 0xFF);
@@ -67,7 +72,7 @@ static void DATAiconmap(uint8_t byte)
 static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor) {
     display_set_window(x, y, w, h);
     set_color_table(fgcolor, bgcolor);
-    sinf_inflate(data, DATAiconmap);
+    sinf_inflate(data, inflate_callback_icon, NULL);
     display_update();
 }
 
@@ -145,7 +150,7 @@ static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int sc
 
 #include "modtrezorui-loader.h"
 
-static void display_loader(uint16_t position, uint16_t fgcolor, uint16_t bgcolor)
+static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon)
 {
     set_color_table(fgcolor, bgcolor);
     display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
@@ -168,14 +173,27 @@ static void display_loader(uint16_t position, uint16_t fgcolor, uint16_t bgcolor
             } else {
                 a = 999 - (img_loader[my][mx] >> 8);
             }
-            uint8_t c;
-            if (position > a) {
-                c = (img_loader[my][mx] & 0x00F0) >> 4;
+            // inside of circle - draw glyph
+            if (mx + my > (48 * 2) && mx >= img_loader_size - 48 && my >= img_loader_size - 48) {
+                int i = (x - (img_loader_size - 48)) + (y - (img_loader_size - 48)) * 96;
+                uint8_t c;
+                if (i % 2) {
+                    c = icon[i / 2] & 0x0F;
+                } else {
+                    c = (icon[i / 2] & 0xF0) >> 4;
+                }
+                DATA(c << 4 | c >> 1);
+                DATA(c << 7 | c << 1);
             } else {
-                c = img_loader[my][mx] & 0x000F;
+                uint8_t c;
+                if (progress > a) {
+                    c = (img_loader[my][mx] & 0x00F0) >> 4;
+                } else {
+                    c = img_loader[my][mx] & 0x000F;
+                }
+                DATA(COLORTABLE[c] >> 8);
+                DATA(COLORTABLE[c] & 0xFF);
             }
-            DATA(COLORTABLE[c] >> 8);
-            DATA(COLORTABLE[c] & 0xFF);
         }
     }
     display_update();
@@ -313,15 +331,43 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
 
-// def Display.loader(self, position: int, fgcolor: int, bgcolor: int) -> None
+
+static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
+{
+    uint8_t *out = (uint8_t *)userdata;
+    out[pos] = byte;
+}
+
+// def Display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
-    mp_int_t position = mp_obj_get_int(args[1]);
+    mp_int_t progress = mp_obj_get_int(args[1]);
     mp_int_t fgcolor = mp_obj_get_int(args[2]);
     mp_int_t bgcolor = mp_obj_get_int(args[3]);
-    display_loader(position, fgcolor, bgcolor);
+    if (n_args > 4) { // icon provided
+        mp_buffer_info_t bufinfo;
+        mp_get_buffer_raise(args[4], &bufinfo, MP_BUFFER_READ);
+        uint8_t *data = bufinfo.buf;
+        if (bufinfo.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
+        }
+        mp_int_t w = *(uint16_t *)(data + 4);
+        mp_int_t h = *(uint16_t *)(data + 6);
+        mp_int_t datalen = *(uint32_t *)(data + 8);
+        if (w != 96 || h != 96) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid icon size"));
+        }
+        if (datalen != bufinfo.len - 12) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
+        }
+        uint8_t icondata[96 * 96 /2];
+        sinf_inflate(data + 12, inflate_callback_loader, icondata);
+        display_loader(progress, fgcolor, bgcolor, icondata);
+    } else {
+        display_loader(progress, fgcolor, bgcolor, NULL);
+    }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 4, mod_TrezorUi_Display_loader);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 5, mod_TrezorUi_Display_loader);
 
 // def Display.orientation(self, degrees: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {

@@ -10,10 +10,6 @@
 #define CMD(X)  (*((__IO uint8_t *)((uint32_t)(0x60000000))) = (X))
 #define DATA(X) (*((__IO uint8_t *)((uint32_t)(0x60000000 | 0x10000))) = (X))
 
-static void DATAfunc(uint8_t x) {
-    DATA(x);
-}
-
 static void DATAS(void *bytes, int len);
 
 void sram_init(void) {

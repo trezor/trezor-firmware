@@ -55,7 +55,9 @@ typedef struct {
    int cbufi;
    SINF_TREE ltree; /* dynamic length/symbol tree */
    SINF_TREE dtree; /* dynamic distance tree */
-   void (* write)(uint8_t byte);
+   void (* write)(uint8_t byte, uint32_t pos, void *userdata);
+   void *userdata;
+   uint32_t written;
 } SINF_DATA;
 
 /* --------------------------------------------------- *
@@ -103,7 +105,8 @@ static void sinf_write(SINF_DATA *d, uint8_t byte)
 {
     d->cbuf[d->cbufi] = byte;
     d->cbufi = (d->cbufi + 1) % (1 << SINF_WBITS);
-    d->write(byte);
+    d->write(byte, d->written, d->userdata);
+    d->written++;
 }
 
 /* build the fixed huffman trees */
@@ -391,7 +394,7 @@ static int sinf_inflate_dynamic_block(SINF_DATA *d)
  * ---------------------- */
 
 /* inflate stream from source */
-static int sinf_inflate(uint8_t *data, void (*write_callback)(uint8_t byte))
+static int sinf_inflate(uint8_t *data, void (*write_callback)(uint8_t byte, uint32_t pos, void *userdata), void *userdata)
 {
    SINF_DATA d;
    int bfinal;
@@ -401,6 +404,8 @@ static int sinf_inflate(uint8_t *data, void (*write_callback)(uint8_t byte))
    d.cbufi = 0;
    d.source = data;
    d.write = write_callback;
+   d.userdata = userdata;
+   d.written = 0;
 
    do {
 
