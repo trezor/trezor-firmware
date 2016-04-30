@@ -150,7 +150,7 @@ static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int sc
 
 #include "modtrezorui-loader.h"
 
-static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon)
+static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint16_t iconbgcolor)
 {
     set_color_table(fgcolor, bgcolor);
     display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
@@ -174,7 +174,7 @@ static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor
                 a = 999 - (img_loader[my][mx] >> 8);
             }
             // inside of circle - draw glyph
-            if (mx + my > (48 * 2) && mx >= img_loader_size - 48 && my >= img_loader_size - 48) {
+            if (icon && mx + my > (48 * 2) && mx >= img_loader_size - 48 && my >= img_loader_size - 48) {
                 int i = (x - (img_loader_size - 48)) + (y - (img_loader_size - 48)) * 96;
                 uint8_t c;
                 if (i % 2) {
@@ -338,7 +338,7 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
-// def Display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None) -> None
+// def Display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconcolor: int=None) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
     mp_int_t progress = mp_obj_get_int(args[1]);
     mp_int_t fgcolor = mp_obj_get_int(args[2]);
@@ -361,13 +361,19 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         }
         uint8_t icondata[96 * 96 /2];
         sinf_inflate(data + 12, inflate_callback_loader, icondata);
-        display_loader(progress, fgcolor, bgcolor, icondata);
+        uint16_t iconcolor;
+        if (n_args > 5) { // icon color provided
+            iconcolor = mp_obj_get_int(args[5]);
+        } else {
+            iconcolor = ~bgcolor; // invert
+        }
+        display_loader(progress, fgcolor, bgcolor, icondata, iconcolor);
     } else {
-        display_loader(progress, fgcolor, bgcolor, NULL);
+        display_loader(progress, fgcolor, bgcolor, NULL, 0);
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 5, mod_TrezorUi_Display_loader);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 6, mod_TrezorUi_Display_loader);
 
 // def Display.orientation(self, degrees: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {
