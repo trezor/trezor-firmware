@@ -24,25 +24,6 @@ if __debug__:
     log_delay_rb_len = const(10)
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
-
-def __wait_for_event(timeout_us):
-    if __debug__:
-        # Adding delay to ring buffer for performance stats
-        global log_delay_pos
-        global log_delay_rb
-        global log_delay_rb_len
-        log_delay_rb[log_delay_pos] = timeout_us
-        log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
-
-    event = msg.select(timeout_us)
-    if event:
-        # print('msg:', m)
-        # utime.sleep_us(10000)
-        if event[0] == 2:
-            ui.display.bar(event[1], event[2], 2, 2, ui.BLACK)
-    return event
-
-
 def __call_at(time, gen):
     if __debug__:
         log.debug(__name__, 'Scheduling %s %s', time, gen)
@@ -83,6 +64,11 @@ def sleep(us):
 
 
 def run_forever(start_gens):
+    if __debug__:
+        global log_delay_pos
+        global log_delay_rb
+        global log_delay_rb_len
+
     delay_max = const(1000000)
 
     for gen in start_gens:
@@ -96,11 +82,17 @@ def run_forever(start_gens):
         else:
             delay = delay_max
 
-        event = __wait_for_event(delay)
+        if __debug__:
+            # Adding current delay to ring buffer for performance stats
+            log_delay_rb[log_delay_pos] = delay
+            log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
+
+        event = msg.select(delay)
 
         if event:
             # run interrupt handler
-            raise NotImplementedError()
+            log.info(__name__, "Received data: %s", event)
+            continue
         else:
             # run something from the time queue
             _, gen = heappop(time_queue)
