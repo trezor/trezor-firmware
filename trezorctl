@@ -12,7 +12,7 @@ from trezorlib.client import TrezorClient, TrezorClientDebug
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for TREZOR devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
-    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'serial', 'pipe', 'socket', 'bridge'], default='usb', help="Transport used for talking with the device")
+    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'udp', 'serial', 'pipe', 'socket', 'bridge'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
 #    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
 #    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
@@ -54,6 +54,10 @@ def get_transport(transport_string, path, **kwargs):
                 return HidTransport(d, **kwargs)
 
         raise Exception("Device not found")
+
+    if transport_string == 'udp':
+        from trezorlib.transport_udp import UdpTransport
+        return UdpTransport(path, **kwargs)
 
     if transport_string == 'serial':
         from trezorlib.transport_serial import SerialTransport
