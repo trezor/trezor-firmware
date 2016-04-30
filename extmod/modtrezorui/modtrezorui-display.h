@@ -143,6 +143,44 @@ static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int sc
     display_update();
 }
 
+#include "modtrezorui-loader.h"
+
+static void display_loader(uint16_t position, uint16_t fgcolor, uint16_t bgcolor)
+{
+    set_color_table(fgcolor, bgcolor);
+    display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
+    for (int y = 0; y < img_loader_size * 2; y++) {
+        for (int x = 0; x < img_loader_size * 2; x++) {
+            int mx = x, my = y;
+            uint16_t a;
+            if ((mx >= img_loader_size) && (my >= img_loader_size)) {
+                mx = img_loader_size * 2 - 1 - x;
+                my = img_loader_size * 2 - 1 - y;
+                a = 499 - (img_loader[my][mx] >> 8);
+            } else
+            if (mx >= img_loader_size) {
+                mx = img_loader_size * 2 - 1 - x;
+                a = img_loader[my][mx] >> 8;
+            } else
+            if (my >= img_loader_size) {
+                my = img_loader_size * 2 - 1 - y;
+                a = 500 + (img_loader[my][mx] >> 8);
+            } else {
+                a = 999 - (img_loader[my][mx] >> 8);
+            }
+            uint8_t c;
+            if (position > a) {
+                c = (img_loader[my][mx] & 0x00F0) >> 4;
+            } else {
+                c = img_loader[my][mx] & 0x000F;
+            }
+            DATA(COLORTABLE[c] >> 8);
+            DATA(COLORTABLE[c] & 0xFF);
+        }
+    }
+    display_update();
+}
+
 static void display_raw(uint8_t reg, uint8_t *data, int datalen)
 {
     if (reg) {
@@ -275,6 +313,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
 
+// def Display.loader(self, position: int, fgcolor: int, bgcolor: int) -> None
+STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
+    mp_int_t position = mp_obj_get_int(args[1]);
+    mp_int_t fgcolor = mp_obj_get_int(args[2]);
+    mp_int_t bgcolor = mp_obj_get_int(args[3]);
+    display_loader(position, fgcolor, bgcolor);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 4, mod_TrezorUi_Display_loader);
+
 // def Display.orientation(self, degrees: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {
     mp_int_t deg = mp_obj_get_int(degrees);
@@ -312,6 +360,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_TrezorUi_Display_qrcode_obj) },
+    { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_TrezorUi_Display_loader_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
     { MP_ROM_QSTR(MP_QSTR_raw), MP_ROM_PTR(&mod_TrezorUi_Display_raw_obj) },
     { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUi_Display_backlight_obj) },
