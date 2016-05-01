@@ -444,7 +444,8 @@ uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_
 	memcpy(out + r, &output->amount, 8); r += 8;
 	r += tx_serialize_script(output->script_pubkey.size, output->script_pubkey.bytes, out + r);
 	tx->have_outputs++;
-	if (tx->have_outputs == tx->outputs_len) {
+	if (tx->have_outputs == tx->outputs_len
+		&& !tx->is_segwit) {
 		r += tx_serialize_footer(tx, out + r);
 	}
 	tx->size += r;
@@ -467,7 +468,8 @@ uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output)
 	}
 	r += tx_output_hash(&(tx->ctx), output);
 	tx->have_outputs++;
-	if (tx->have_outputs == tx->outputs_len) {
+	if (tx->have_outputs == tx->outputs_len
+		&& !tx->is_segwit) {
 		r += tx_serialize_footer_hash(tx);
 	}
 	tx->size += r;
@@ -506,6 +508,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->extra_data_len = extra_data_len;
 	tx->extra_data_received = 0;
 	tx->size = 0;
+	tx->is_segwit = false;
 	sha256_Init(&(tx->ctx));
 }
 

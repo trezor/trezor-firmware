@@ -783,6 +783,10 @@ void signing_txack(TransactionType *tx)
 			if (tx->inputs[0].script_type != InputScriptType_SPENDWADDRESS
 				&& tx->inputs[0].script_type != InputScriptType_SPENDWMULTISIG) {
 				// empty witness
+				resp.has_serialized = true;
+				resp.serialized.has_signature_index = false;
+				resp.serialized.has_signature = false;
+				resp.serialized.has_serialized_tx = true;
 				resp.serialized.serialized_tx.bytes[0] = 0;
 				resp.serialized.serialized_tx.size = 1;
 			} else {
@@ -805,10 +809,12 @@ void signing_txack(TransactionType *tx)
 				tx_prevout_hash(&hashers[0], &tx->inputs[0]);
 				tx_script_hash(&hashers[0], tx->inputs[0].script_sig.size, tx->inputs[0].script_sig.bytes);			
 				sha256_Update(&hashers[0], (const uint8_t*) &tx->inputs[0].amount, 8);
+				tx_sequence_hash(&hashers[0], &tx->inputs[0]);
 				sha256_Update(&hashers[0], hash_outputs, 32);
 				sha256_Update(&hashers[0], (const uint8_t*) &lock_time, 4);
 				sha256_Update(&hashers[0], (const uint8_t*) &sighash, 4);
 				sha256_Final(&hashers[0], hash);
+				sha256_Raw(hash, 32, hash);
 
 				resp.has_serialized = true;
 				resp.serialized.has_signature_index = true;
@@ -825,7 +831,7 @@ void signing_txack(TransactionType *tx)
 						return;
 					}
 					// fill in the signature
-					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey);
+					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), node.public_key);
 					if (pubkey_idx < 0) {
 						fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
 						signing_abort();
@@ -838,7 +844,8 @@ void signing_txack(TransactionType *tx)
 					r += ser_length(input.multisig.signatures_count + 2, resp.serialized.serialized_tx.bytes + r);
 					resp.serialized.serialized_tx.bytes[r] = 0; r++;
 					for (i = 0; i < input.multisig.signatures_count; i++) {
-						r += tx_serialize_script(input.multisig.signatures[i].size, input.multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
+						input.multisig.signatures[i].bytes[input.multisig.signatures[i].size] = 1;
+						r += tx_serialize_script(input.multisig.signatures[i].size + 1, input.multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
 					}
 					script_len = compile_script_multisig(&input.multisig, 0);
 					r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
@@ -848,10 +855,16 @@ void signing_txack(TransactionType *tx)
 				} else { // SPENDWADDRESS
 					uint32_t r = 0;
 					r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
-					r += tx_serialize_script(resp.serialized.signature.size, resp.serialized.signature.bytes, resp.serialized.serialized_tx.bytes + r);
+					resp.serialized.signature.bytes[resp.serialized.signature.size] = 1;
+					r += tx_serialize_script(resp.serialized.signature.size + 1, resp.serialized.signature.bytes, resp.serialized.serialized_tx.bytes + r);
 					r += tx_serialize_script(33, node.public_key, resp.serialized.serialized_tx.bytes + r);
 					resp.serialized.serialized_tx.size = r;
 				}
+			}
+			if (idx1 == inputs_count - 1) {
+				uint32_t r = resp.serialized.serialized_tx.size;
+				r += tx_serialize_footer(&to, resp.serialized.serialized_tx.bytes + r);
+				resp.serialized.serialized_tx.size = r;
 			}
 			// since this took a longer time, update progress
 			layoutProgress("Signing transaction", progress);

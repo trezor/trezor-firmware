@@ -58,6 +58,7 @@ uint32_t tx_sequence_hash(SHA256_CTX *ctx, const TxInputType *input);
 uint32_t tx_output_hash(SHA256_CTX *ctx, const TxOutputBinType *output);
 uint32_t tx_serialize_script(uint32_t size, const uint8_t *data, uint8_t *out);
 
+uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out);
 uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out);
 uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_t *out);
 
