@@ -107,7 +107,8 @@ class Commands(object):
 
     def get_public_node(self, args):
         address_n = self.client.expand_path(args.n)
-        return self.client.get_public_node(address_n)
+        curve = args.curve
+        return self.client.get_public_node(address_n, ecdsa_curve_name=curve)
     
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
@@ -353,6 +354,7 @@ class Commands(object):
 
     get_public_node.arguments = (
         (('-n', '-address'), {'type': str}),
+        (('-e', '--curve'), {'type': str, 'default': 'secp256k1'}),
     )
 
     firmware_update.arguments = (
