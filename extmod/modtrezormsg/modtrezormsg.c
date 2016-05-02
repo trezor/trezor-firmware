@@ -40,9 +40,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 
 // def Msg.send(self, message) -> int
 STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t message) {
-    mp_buffer_info_t buf;
-    mp_get_buffer_raise(message, &buf, MP_BUFFER_READ);
-    int r = msg_send(buf.buf, buf.len);
+    mp_buffer_info_t msg;
+    mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+    int r = msg_send(msg.buf, msg.len);
     return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
@@ -51,9 +51,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 
 // def Msg.select(self, timeout_us: int) -> None/tuple/bytes
 STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
-    int to = mp_obj_get_int(timeout_us);
-    if (to < 0) {
-        to = 0;
+    int timeout = mp_obj_get_int(timeout_us);
+    if (timeout < 0) {
+        timeout = 0;
     }
     for(;;) {
         uint32_t e = msg_poll_ui_event();
@@ -74,11 +74,11 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
             return MP_OBJ_FROM_PTR(tuple);
          }
-        if (to <= 0) {
+        if (timeout <= 0) {
             break;
         }
         mp_hal_delay_us_fast(TICK_RESOLUTION);
-        to -= TICK_RESOLUTION;
+        timeout -= TICK_RESOLUTION;
     }
     return mp_const_none;
 }

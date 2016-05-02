@@ -14,7 +14,7 @@
 
 // common display functions
 
-static void DATAS(void *bytes, int len) {
+static void DATAS(const void *bytes, int len) {
     const uint8_t *c = (const uint8_t *)bytes;
     while (len-- > 0) {
         DATA(*c);
@@ -31,7 +31,7 @@ static void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c) 
     display_update();
 }
 
-static void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen) {
+static void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen) {
     display_set_window(x, y, w, h);
     DATAS(data, datalen);
     display_update();
@@ -42,7 +42,7 @@ static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
     DATA(byte);
 }
 
-static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen) {
+static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen) {
     display_set_window(x, y, w, h);
     sinf_inflate(data, inflate_callback_image, NULL);
     display_update();
@@ -68,7 +68,7 @@ static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
     DATA(colortable[byte & 0x0F] & 0xFF);
 }
 
-static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor) {
+static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor) {
     display_set_window(x, y, w, h);
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
@@ -102,7 +102,7 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c) {
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
-static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor) {
+static void display_text(uint8_t x, uint8_t y, const uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor) {
     uint32_t px = x;
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
@@ -133,7 +133,7 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
 }
 
 // compute the width of the text (in pixels)
-static uint32_t display_text_width(uint8_t *text, int textlen, uint8_t font) {
+static uint32_t display_text_width(const uint8_t *text, int textlen, uint8_t font) {
     uint32_t w = 0;
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, text[i]);
@@ -143,7 +143,7 @@ static uint32_t display_text_width(uint8_t *text, int textlen, uint8_t font) {
     return w;
 }
 
-static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int scale) {
+static void display_qrcode(uint8_t x, uint8_t y, const char *data, int datalen, int scale) {
     uint8_t bitdata[QR_MAX_BITDATA];
     int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
     display_set_window(x, y, side * scale, side * scale);
@@ -215,7 +215,7 @@ static void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor
     display_update();
 }
 
-static void display_raw(uint8_t reg, uint8_t *data, int datalen)
+static void display_raw(uint8_t reg, const uint8_t *data, int datalen)
 {
     if (reg) {
         CMD(reg);
@@ -258,12 +258,12 @@ STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_int_t w = mp_obj_get_int(args[3]);
     mp_int_t h = mp_obj_get_int(args[4]);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[5], &bufinfo, MP_BUFFER_READ);
-    if (bufinfo.len != 2 * w * h) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Wrong data size (got %d bytes, expected %d bytes)", bufinfo.len, 2 * w * h));
+    mp_buffer_info_t data;
+    mp_get_buffer_raise(args[5], &data, MP_BUFFER_READ);
+    if (data.len != 2 * w * h) {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Wrong data size (got %d bytes, expected %d bytes)", data.len, 2 * w * h));
     }
-    display_blit(x, y, w, h, bufinfo.buf, bufinfo.len);
+    display_blit(x, y, w, h, data.buf, data.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, mod_TrezorUi_Display_blit);
@@ -272,10 +272,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, 
 STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
-    uint8_t *data = bufinfo.buf;
-    if (bufinfo.len < 8 || memcmp(data, "TOIf", 4) != 0) {
+    mp_buffer_info_t image;
+    mp_get_buffer_raise(args[3], &image, MP_BUFFER_READ);
+    const uint8_t *data = image.buf;
+    if (image.len < 8 || memcmp(data, "TOIf", 4) != 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
     }
     mp_int_t w = *(uint16_t *)(data + 4);
@@ -284,10 +284,10 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
-    if (datalen != bufinfo.len - 12) {
+    if (datalen != image.len - 12) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
     }
-    display_image(x, y, w, h, data + 12, bufinfo.len - 12);
+    display_image(x, y, w, h, data + 12, image.len - 12);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
@@ -296,10 +296,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4,
 STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
-    uint8_t *data = bufinfo.buf;
-    if (bufinfo.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+    mp_buffer_info_t icon;
+    mp_get_buffer_raise(args[3], &icon, MP_BUFFER_READ);
+    const uint8_t *data = icon.buf;
+    if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
     }
     mp_int_t w = *(uint16_t *)(data + 4);
@@ -308,12 +308,12 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
-    if (datalen != bufinfo.len - 12) {
+    if (datalen != icon.len - 12) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
     }
     mp_int_t fgcolor = mp_obj_get_int(args[4]);
     mp_int_t bgcolor = mp_obj_get_int(args[5]);
-    display_icon(x, y, w, h, data + 12, bufinfo.len - 12, fgcolor, bgcolor);
+    display_icon(x, y, w, h, data + 12, icon.len - 12, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
@@ -322,12 +322,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, 
 STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    mp_buffer_info_t text;
+    mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    display_text(x, y, bufinfo.buf, bufinfo.len, font, fgcolor, bgcolor);
+    display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
@@ -336,13 +336,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, 
 STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    mp_buffer_info_t text;
+    mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    uint32_t w = display_text_width(bufinfo.buf, bufinfo.len, font);
-    display_text(x - w / 2, y, bufinfo.buf, bufinfo.len, font, fgcolor, bgcolor);
+    uint32_t w = display_text_width(text.buf, text.len, font);
+    display_text(x - w / 2, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
@@ -351,23 +351,23 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj,
 STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    mp_buffer_info_t text;
+    mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    uint32_t w = display_text_width(bufinfo.buf, bufinfo.len, font);
-    display_text(x - w, y, bufinfo.buf, bufinfo.len, font, fgcolor, bgcolor);
+    uint32_t w = display_text_width(text.buf, text.len, font);
+    display_text(x - w, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);
 
 // def Display.text_width(self, text: bytes, font: int) -> int
 STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(text, &bufinfo, MP_BUFFER_READ);
+    mp_buffer_info_t txt;
+    mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
     mp_int_t f = mp_obj_get_int(font);
-    uint32_t w = display_text_width(bufinfo.buf, bufinfo.len, f);
+    uint32_t w = display_text_width(txt.buf, txt.len, f);
     return MP_OBJ_NEW_SMALL_INT(w);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_text_width_obj, mod_TrezorUi_Display_text_width);
@@ -380,9 +380,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
     if (scale < 1 || scale > 10) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Scale has to be between 1 and 10"));
     }
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
-    display_qrcode(x, y, bufinfo.buf, bufinfo.len, scale);
+    mp_buffer_info_t data;
+    mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
+    display_qrcode(x, y, data.buf, data.len, scale);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
@@ -400,10 +400,10 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
     mp_int_t fgcolor = mp_obj_get_int(args[2]);
     mp_int_t bgcolor = mp_obj_get_int(args[3]);
     if (n_args > 4) { // icon provided
-        mp_buffer_info_t bufinfo;
-        mp_get_buffer_raise(args[4], &bufinfo, MP_BUFFER_READ);
-        uint8_t *data = bufinfo.buf;
-        if (bufinfo.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+        mp_buffer_info_t icon;
+        mp_get_buffer_raise(args[4], &icon, MP_BUFFER_READ);
+        const uint8_t *data = icon.buf;
+        if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
             nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
         }
         mp_int_t w = *(uint16_t *)(data + 4);
@@ -412,7 +412,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         if (w != 96 || h != 96) {
             nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid icon size"));
         }
-        if (datalen != bufinfo.len - 12) {
+        if (datalen != icon.len - 12) {
             nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
         }
         uint8_t icondata[96 * 96 /2];
@@ -445,9 +445,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_Trezo
 // def Display.raw(self, reg: int, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_raw(mp_obj_t self, mp_obj_t reg, mp_obj_t data) {
     mp_int_t r = mp_obj_get_int(reg);
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(data, &bufinfo, MP_BUFFER_READ);
-    display_raw(r, bufinfo.buf, bufinfo.len);
+    mp_buffer_info_t raw;
+    mp_get_buffer_raise(data, &raw, MP_BUFFER_READ);
+    display_raw(r, raw.buf, raw.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_raw_obj, mod_TrezorUi_Display_raw);

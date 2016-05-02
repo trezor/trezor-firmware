@@ -25,19 +25,19 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_make_new(const mp_obj_type_t *type, s
 
 // def Nist256p1.publickey(self, secret_key: bytes, compressed: bool=True) -> bytes
 STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_publickey(size_t n_args, const mp_obj_t *args) {
-    mp_buffer_info_t skbuf;
-    mp_get_buffer_raise(args[1], &skbuf, MP_BUFFER_READ);
-    if (skbuf.len != 32) {
+    mp_buffer_info_t sk;
+    mp_get_buffer_raise(args[1], &sk, MP_BUFFER_READ);
+    if (sk.len != 32) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of secret key"));
     }
     bool compressed = n_args < 3 || args[2] == mp_const_true;
     vstr_t vstr;
     if (compressed) {
         vstr_init_len(&vstr, 33);
-        ecdsa_get_public_key33(&nist256p1, (const uint8_t *)skbuf.buf, (uint8_t *)vstr.buf);
+        ecdsa_get_public_key33(&nist256p1, (const uint8_t *)sk.buf, (uint8_t *)vstr.buf);
     } else {
         vstr_init_len(&vstr, 65);
-        ecdsa_get_public_key65(&nist256p1, (const uint8_t *)skbuf.buf, (uint8_t *)vstr.buf);
+        ecdsa_get_public_key65(&nist256p1, (const uint8_t *)sk.buf, (uint8_t *)vstr.buf);
     }
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -45,16 +45,16 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Nist256p1_publickey_
 
 // def Nist256p1.sign(self, secret_key: bytes, message: bytes) -> bytes
 STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_key, mp_obj_t message) {
-    mp_buffer_info_t skbuf, messagebuf;
-    mp_get_buffer_raise(secret_key, &skbuf, MP_BUFFER_READ);
-    mp_get_buffer_raise(message, &messagebuf, MP_BUFFER_READ);
-    if (skbuf.len != 32) {
+    mp_buffer_info_t sk, msg;
+    mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
+    mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+    if (sk.len != 32) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of secret key"));
     }
     vstr_t vstr;
     vstr_init_len(&vstr, 65);
     uint8_t pby;
-    if (0 != ecdsa_sign(&nist256p1, (const uint8_t *)skbuf.buf, (const uint8_t *)messagebuf.buf, messagebuf.len, (uint8_t *)vstr.buf, &pby)) {
+    if (0 != ecdsa_sign(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)msg.buf, msg.len, (uint8_t *)vstr.buf, &pby)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Signing failed"));
     }
     (void)pby;
@@ -64,17 +64,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Nist256p1_sign_obj, mod_Trezor
 
 // def Nist256p1.verify(self, public_key: bytes, signature: bytes, message: bytes) -> bool
 STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_verify(size_t n_args, const mp_obj_t *args) {
-    mp_buffer_info_t pkbuf, sigbuf, messagebuf;
-    mp_get_buffer_raise(args[1], &pkbuf, MP_BUFFER_READ);
-    mp_get_buffer_raise(args[2], &sigbuf, MP_BUFFER_READ);
-    mp_get_buffer_raise(args[3], &messagebuf, MP_BUFFER_READ);
-    if (pkbuf.len != 33 && pkbuf.len != 65) {
+    mp_buffer_info_t pk, sig, msg;
+    mp_get_buffer_raise(args[1], &pk, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[2], &sig, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[3], &msg, MP_BUFFER_READ);
+    if (pk.len != 33 && pk.len != 65) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of public key"));
     }
-    if (sigbuf.len != 65) {
+    if (sig.len != 65) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of signature"));
     }
-    return mp_obj_new_bool(0 == ecdsa_verify(&nist256p1, (const uint8_t *)pkbuf.buf, (const uint8_t *)sigbuf.buf, (const uint8_t *)messagebuf.buf, messagebuf.len));
+    return mp_obj_new_bool(0 == ecdsa_verify(&nist256p1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf, (const uint8_t *)msg.buf, msg.len));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Nist256p1_verify_obj, 4, 4, mod_TrezorCrypto_Nist256p1_verify);
 

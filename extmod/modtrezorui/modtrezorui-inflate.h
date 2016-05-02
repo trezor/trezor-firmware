@@ -394,7 +394,7 @@ static int sinf_inflate_dynamic_block(SINF_DATA *d)
  * ---------------------- */
 
 /* inflate stream from source */
-static int sinf_inflate(uint8_t *data, void (*write_callback)(uint8_t byte, uint32_t pos, void *userdata), void *userdata)
+static int sinf_inflate(const uint8_t *data, void (*write_callback)(uint8_t byte, uint32_t pos, void *userdata), void *userdata)
 {
    SINF_DATA d;
    int bfinal;
