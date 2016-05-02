@@ -3,15 +3,12 @@ import utime
 from uheapq import heappop, heappush
 from .utils import type_gen
 from . import msg
-from . import ui
 from . import log
 
 EVT_TSTART = const(-1)
 EVT_TMOVE = const(-2)
 EVT_TEND = const(-3)
 EVT_MSG = const(-4)
-
-DO_NOTHING = const(-5)
 
 evt_handlers = {
     EVT_TSTART: None,
@@ -28,6 +25,7 @@ if __debug__:
     log_delay_rb_len = const(10)
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
+
 def __call_at(time, gen):
     if __debug__:
         log.debug(__name__, 'Scheduling %s %s', time, gen)
@@ -35,6 +33,7 @@ def __call_at(time, gen):
     if not time:
         time = utime.ticks_us()
     heappush(time_queue, (time, gen))
+
 
 class Wait():
     def __init__(self, gens, wait_for=1, exit_others=True):
@@ -69,6 +68,7 @@ class Wait():
                     except:
                         pass
 
+
 def sleep(us):
     return utime.ticks_us() + us
 
@@ -100,19 +100,23 @@ def run_forever(start_gens):
         event = msg.select(delay)
 
         if event:
-            # run interrupt handler
+            # Run interrupt handler
             log.info(__name__, "Received data: %s", event)
             continue
         else:
-            # run something from the time queue
-            _, gen = heappop(time_queue)
+            if time_queue:
+                # Run something from the time queue
+                _, gen = heappop(time_queue)
+            else:
+                # Sleep again
+                delay = delay_max
+                continue
 
         try:
             ret = gen.send(None)
 
         except StopIteration as e:
-            log.info(__name__, '%s ended', gen)
-            # gen ended, forget it and go on
+            log.debug(__name__, '%s finished', gen)
             continue
 
         except Exception as e:
@@ -121,18 +125,18 @@ def run_forever(start_gens):
 
         if isinstance(ret, int):
             if ret >= 0:
-                # sleep until ret, call us later
+                # Sleep until ret, call us later
                 __call_at(ret, gen)
             else:
-                # wait for event
+                # Wait for event
                 raise NotImplementedError()
 
         elif isinstance(ret, Wait):
-            log.info(__name__, 'Scheduling %s -> %s', gen, ret)
+            # Register the origin generator as a waiting callback
             ret.callback = gen
 
         elif ret is None:
-            # just call us asap
+            # Just call us asap
             __call_at(None, gen)
 
         else:
