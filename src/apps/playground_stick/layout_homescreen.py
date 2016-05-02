@@ -8,7 +8,7 @@ def layout_homescreen():
 
     ui.display.bar(0, 0, 240, 48 * 4, ui.BLACK)
     ui.display.bar(0, 48 * 4, 240, 48, c)
-    ui.text_center(120, 240 - 18, 'Hold to confirm', 2, ui.WHITE, c)
+    ui.display.text_center(120, 240 - 18, 'Hold to confirm', ui.BOLD, ui.WHITE, c)
     p = 0
 
     def func(foreground):

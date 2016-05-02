@@ -332,6 +332,36 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
+// def Display.text_center(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_buffer_info_t bufinfo;
+    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    mp_int_t font = mp_obj_get_int(args[4]);
+    mp_int_t fgcolor = mp_obj_get_int(args[5]);
+    mp_int_t bgcolor = mp_obj_get_int(args[6]);
+    uint32_t w = display_text_width(bufinfo.buf, bufinfo.len, font);
+    display_text(x - w / 2, y, bufinfo.buf, bufinfo.len, font, fgcolor, bgcolor);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
+
+// def Display.text_right(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_buffer_info_t bufinfo;
+    mp_get_buffer_raise(args[3], &bufinfo, MP_BUFFER_READ);
+    mp_int_t font = mp_obj_get_int(args[4]);
+    mp_int_t fgcolor = mp_obj_get_int(args[5]);
+    mp_int_t bgcolor = mp_obj_get_int(args[6]);
+    uint32_t w = display_text_width(bufinfo.buf, bufinfo.len, font);
+    display_text(x - w, y, bufinfo.buf, bufinfo.len, font, fgcolor, bgcolor);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);
+
 // def Display.text_width(self, text: bytes, font: int) -> int
 STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
     mp_buffer_info_t bufinfo;
@@ -437,6 +467,8 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text_center), MP_ROM_PTR(&mod_TrezorUi_Display_text_center_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text_right), MP_ROM_PTR(&mod_TrezorUi_Display_text_right_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_width), MP_ROM_PTR(&mod_TrezorUi_Display_text_width_obj) },
     { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_TrezorUi_Display_qrcode_obj) },
     { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_TrezorUi_Display_loader_obj) },

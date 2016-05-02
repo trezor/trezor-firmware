@@ -36,17 +36,6 @@ MONO   = const(0)
 NORMAL = const(1)
 BOLD   = const(2)
 
-def text(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
-    display.text(x, y, text, font, fgcolor, bgcolor)
-
-def text_right(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
-    w = display.text_width(text, font)
-    display.text(x - w, y, text, font, fgcolor, bgcolor)
-
-def text_center(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
-    w = display.text_width(text, font)
-    display.text(x - w // 2, y, text, font, fgcolor, bgcolor)
-
 def lerpi(a: int, b: int, t: float) -> int:
     return int(a + t * (b - a))
 

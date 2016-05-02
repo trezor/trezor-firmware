@@ -17,7 +17,7 @@ def layout_tap_to_confirm(address, amount, currency):
     _background = ui.WHITE
 
     def func(foreground):
-        ui.display.text(68, 212, 'TAP TO CONFIRM', 2, foreground, _background)
+        ui.display.text(68, 212, 'TAP TO CONFIRM', ui.BOLD, foreground, _background)
 
         f.seek(0)
         ui.display.icon(3, 170, f.read(), _background, foreground)
