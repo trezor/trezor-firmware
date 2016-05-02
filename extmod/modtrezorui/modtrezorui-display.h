@@ -76,48 +76,48 @@ static void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, void *data,
     display_update();
 }
 
+static const uint8_t *get_glyph(uint8_t font, uint8_t c) {
+    if (c >= ' ' && c <= '~') {
+    // do nothing - valid ASCII
+    } else
+    // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
+    if (c >= 0xC0) {
+        // bytes 11xxxxxx are first byte of UTF-8 characters
+        c = '_';
+    } else {
+        // bytes 10xxxxxx are successive UTF-8 characters
+        return 0;
+    }
+    switch (font) {
+        case 0:
+            return Font_RobotoMono_Regular_20[c - ' '];
+        case 1:
+            return Font_Roboto_Regular_20[c - ' '];
+        case 2:
+            return Font_Roboto_Bold_20[c - ' '];
+    }
+    return 0;
+}
+
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
 static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor) {
-    int xx = x;
-    const uint8_t *g;
-    uint8_t c;
+    uint32_t px = x;
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
 
     // render glyphs
     for (int i = 0; i < textlen; i++) {
-        if (text[i] >= ' ' && text[i] <= '~') {
-            c = text[i];
-        } else
-        // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
-        if (text[i] >= 0xC0) {
-            // bytes 11xxxxxx are first byte of UTF-8 characters
-            c = '_';
-        } else {
-            // bytes 10xxxxxx are successive UTF-8 characters
-            continue;
-        }
-        switch (font) {
-            case 0:
-                g = Font_RobotoMono_Regular_20[c - ' '];
-                break;
-            case 1:
-                g = Font_Roboto_Regular_20[c - ' '];
-                break;
-            case 2:
-                g = Font_Roboto_Bold_20[c - ' '];
-                break;
-            default:
-                return; // unknown font -> abort
-        }
+        const uint8_t *g = get_glyph(font, text[i]);
+        if (!g) continue;
         // g[0], g[1] = width, height
         // g[2]       = advance
         // g[3], g[4] = bearingX, bearingY
         if (g[0] && g[1]) {
-            display_set_window(xx + (int8_t)(g[3]), y - (int8_t)(g[4]), g[0], g[1]);
+            display_set_window(px + (int8_t)(g[3]), y - (int8_t)(g[4]), g[0], g[1]);
             for (int j = 0; j < g[0] * g[1]; j++) {
+                uint8_t c;
                 if (j % 2 == 0) {
                     c = g[5 + j/2] >> 4;
                 } else {
@@ -128,8 +128,19 @@ static void display_text(uint8_t x, uint8_t y, uint8_t *text, int textlen, uint8
             }
             display_update();
         }
-        xx += g[2];
+        px += g[2];
     }
+}
+
+// compute the width of the text (in pixels)
+static uint32_t display_text_width(uint8_t *text, int textlen, uint8_t font) {
+    uint32_t w = 0;
+    for (int i = 0; i < textlen; i++) {
+        const uint8_t *g = get_glyph(font, text[i]);
+        if (!g) continue;
+        w += g[2];
+    }
+    return w;
 }
 
 static void display_qrcode(uint8_t x, uint8_t y, char *data, int datalen, int scale) {
@@ -321,6 +332,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
+// def Display.text_width(self, text: bytes, font: int) -> int
+STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
+    mp_buffer_info_t bufinfo;
+    mp_get_buffer_raise(text, &bufinfo, MP_BUFFER_READ);
+    mp_int_t f = mp_obj_get_int(font);
+    uint32_t w = display_text_width(bufinfo.buf, bufinfo.len, f);
+    return MP_OBJ_NEW_SMALL_INT(w);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_text_width_obj, mod_TrezorUi_Display_text_width);
+
 // def Display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
@@ -416,6 +437,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text_width), MP_ROM_PTR(&mod_TrezorUi_Display_text_width_obj) },
     { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_TrezorUi_Display_qrcode_obj) },
     { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_TrezorUi_Display_loader_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },

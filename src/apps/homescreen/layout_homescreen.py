@@ -7,7 +7,7 @@ def layout_homescreen():
 
     # ui.display.bar(0, 0, 240, 240, ui.WHITE)
 
-    f = open('apps/homescreen/trezor.toig', 'r')
+    f = open('apps/homescreen/trezor.toig', 'rb')
 
     def func(foreground):
         f.seek(0)

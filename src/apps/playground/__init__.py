@@ -13,7 +13,7 @@ def layout_tap_to_confirm(address, amount, currency):
     ui.display.text(10, 140, address[:18], ui.MONO, ui.BLACK, ui.WHITE)
     ui.display.text(10, 160, address[18:], ui.MONO, ui.BLACK, ui.WHITE)
 
-    f = open('apps/playground/tap_64.toig', 'r')
+    f = open('apps/playground/tap_64.toig', 'rb')
     _background = ui.WHITE
 
     def func(foreground):
