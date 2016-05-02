@@ -8,7 +8,7 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 
-#define DISPLAY_BORDER 8
+#define DISPLAY_BORDER 16
 
 static SDL_Renderer *RENDERER = 0;
 static SDL_Surface  *SCREEN   = 0;
@@ -91,7 +91,7 @@ static void display_init(void)
         SDL_DestroyWindow(win);
         SDL_Quit();
     }
-    SDL_SetRenderDrawColor(RENDERER, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(RENDERER, 48, 48, 48, 255);
     SDL_RenderClear(RENDERER);
     SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
