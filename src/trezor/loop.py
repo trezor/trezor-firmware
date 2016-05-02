@@ -58,7 +58,7 @@ class Wait():
     def finish(self, gen, result):
         self.received += 1
 
-        if self.received >= self.wait_for:
+        if self.received == self.wait_for:
             __call_at(None, self.callback)
             self.callback = None
 
