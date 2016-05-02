@@ -7,7 +7,7 @@ c = ui.rgbcolor(0x20, 0x98, 0xD1)
 def layout_homescreen():
 
     ui.display.bar(0, 0, 240, 48 * 4, ui.BLACK)
-    ui.display.bar(0, 48 * 4, 240, 48, c)
+    ui.display.bar(0, 48 * 4, 240, 48, c, ui.BLACK)
     ui.display.text_center(120, 240 - 18, 'Hold to confirm', ui.BOLD, ui.WHITE, c)
     p = 0
 

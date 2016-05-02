@@ -22,11 +22,78 @@ static void DATAS(const void *bytes, int len) {
     }
 }
 
+static void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
+{
+    uint8_t cr, cg, cb;
+    for (int i = 0; i < 16; i++) {
+        cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
+        cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
+        cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
+        colortable[i] = (cr << 11) | (cg << 5) | cb;
+    }
+}
+
 static void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c) {
     display_set_window(x, y, w, h);
     for (int i = 0; i < w * h; i++) {
         DATA(c >> 8);
         DATA(c & 0xFF);
+    }
+    display_update();
+}
+
+#define CORNER_RADIUS 16
+
+static const uint8_t cornertable[CORNER_RADIUS*CORNER_RADIUS] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 9, 12, 14, 15,
+    0, 0, 0, 0, 0, 0, 0, 0, 3, 9, 15, 15, 15, 15, 15, 15,
+    0, 0, 0, 0, 0, 0, 0, 8, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 0, 0, 0, 0, 3, 12, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 0, 0, 0, 3, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 0, 0, 3, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 0, 0, 12, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 0, 8, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 3, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    0, 9, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    1, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    5, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    9, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    12, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+};
+
+
+static void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, uint16_t b) {
+    uint16_t colortable[16];
+    set_color_table(colortable, c, b);
+    display_set_window(x, y, w, h);
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            if (x < CORNER_RADIUS && y < CORNER_RADIUS) {
+                uint8_t c = cornertable[x + y * CORNER_RADIUS];
+                DATA(colortable[c] >> 8);
+                DATA(colortable[c] & 0xFF);
+            } else
+            if (x < CORNER_RADIUS && y >= h - CORNER_RADIUS) {
+                uint8_t c = cornertable[x + (h - 1 - y) * CORNER_RADIUS];
+                DATA(colortable[c] >> 8);
+                DATA(colortable[c] & 0xFF);
+            } else
+            if (x >= w - CORNER_RADIUS && y < CORNER_RADIUS) {
+                uint8_t c = cornertable[(w - 1 - x) + y * CORNER_RADIUS];
+                DATA(colortable[c] >> 8);
+                DATA(colortable[c] & 0xFF);
+            } else
+            if (x >= w - CORNER_RADIUS && y >= h - CORNER_RADIUS) {
+                uint8_t c = cornertable[(w - 1 - x) + (h - 1 - y) * CORNER_RADIUS];
+                DATA(colortable[c] >> 8);
+                DATA(colortable[c] & 0xFF);
+            } else {
+                DATA(c >> 8);
+                DATA(c & 0xFF);
+            }
+        }
     }
     display_update();
 }
@@ -46,17 +113,6 @@ static void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void
     display_set_window(x, y, w, h);
     sinf_inflate(data, inflate_callback_image, NULL);
     display_update();
-}
-
-static void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
-{
-    uint8_t cr, cg, cb;
-    for (int i = 0; i < 16; i++) {
-        cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
-        cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
-        cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
-        colortable[i] = (cr << 11) | (cg << 5) | cb;
-    }
 }
 
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
@@ -237,7 +293,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t 
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Display.bar(self, x: int, y: int, w: int, h: int, color: int) -> None
+// def Display.bar(self, x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -247,10 +303,15 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
-    display_bar(x, y, w, h, c);
+    if (n_args > 6) {
+        uint16_t b = mp_obj_get_int(args[6]);
+        display_bar_radius(x, y, w, h, c, b);
+    } else {
+        display_bar(x, y, w, h, c);
+    }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 6, mod_TrezorUi_Display_bar);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 7, mod_TrezorUi_Display_bar);
 
 // def Display.blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
