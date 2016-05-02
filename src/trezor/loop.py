@@ -36,49 +36,38 @@ def __call_at(time, gen):
         time = utime.ticks_us()
     heappush(time_queue, (time, gen))
 
+class Wait():
+    def __init__(self, gens, wait_for=1, exit_others=True):
+        self.wait_for = wait_for
+        self.exit_others = exit_others
+        self.received = 0
+        self.callback = None
+        self.gens = gens
 
-def __wait_for_gen(gen, cb):
-    if isinstance(gen, type_gen):
-        ret = yield from gen
-    else:
-        ret = yield gen
-    try:
-        cb.throw(StopIteration)
-    except Exception as e:
-        log.info(__name__, '__wait_gen throw raised %s', e)
+        for g in gens:
+            __call_at(None, self._wait(g))
 
-    log.info(__name__, '__wait_gen returning %s', ret)
+    def _wait(self, gen):
+        if isinstance(gen, type_gen):
+            ret = yield from gen
+        else:
+            ret = yield gen
 
+        self.finish(gen, ret)
 
-class __Wait():
-    pass
+    def finish(self, gen, result):
+        self.received += 1
 
+        if self.received >= self.wait_for:
+            __call_at(None, self.callback)
+            self.callback = None
 
-def __wait_callback(call_after):
-    # TODO: rewrite as instance of __Wait instead of generator
-    delegate = yield
-    received = 0
-    while received < call_after:
-        try:
-            yield
-        except StopIteration:
-            received += 1
-    __call_at(None, delegate)
-
-
-def wait_for_first(gens):
-    cb = __wait_callback(1)
-    for g in gens:
-        __call_at(None, __wait_for_gen(g, cb))
-    return cb
-
-
-def wait_for_all(gens):
-    cb = __wait_callback(len(gens))
-    for g in gens:
-        __call_at(None, __wait_for_gen(g, cb))
-    return cb
-
+            if self.exit_others:
+                for g in self.gens:
+                    try:
+                        g.throw(StopIteration())
+                    except:
+                        pass
 
 def sleep(us):
     return utime.ticks_us() + us
@@ -138,10 +127,9 @@ def run_forever(start_gens):
                 # wait for event
                 raise NotImplementedError()
 
-        elif isinstance(ret, type_gen):
+        elif isinstance(ret, Wait):
             log.info(__name__, 'Scheduling %s -> %s', gen, ret)
-            ret.send(None)
-            ret.send(gen)
+            ret.callback = gen
 
         elif ret is None:
             # just call us asap
