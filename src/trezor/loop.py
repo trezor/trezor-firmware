@@ -10,7 +10,7 @@ EVT_TMOVE = const(-2)
 EVT_TEND = const(-3)
 EVT_MSG = const(-4)
 
-evt_handlers = {
+event_handlers = {
     EVT_TSTART: None,
     EVT_TMOVE: None,
     EVT_TEND: None,
@@ -101,19 +101,27 @@ def run_forever(start_gens):
 
         if event:
             # Run interrupt handler
-            log.info(__name__, "Received data: %s", event)
-            continue
+            event_id, *args = event
+            event_id = -event_id
+            gen = event_handlers.get(event_id, None)
+            event_handlers[event_id] = None
+            if not gen:
+                log.info(__name__, 'No handler for event: %s', event)
+                continue
+            if not args:
+                args = None
         else:
             if time_queue:
                 # Run something from the time queue
                 _, gen = heappop(time_queue)
+                args = None
             else:
                 # Sleep again
                 delay = delay_max
                 continue
 
         try:
-            ret = gen.send(None)
+            ret = gen.send(args)
 
         except StopIteration as e:
             log.debug(__name__, '%s finished', gen)
@@ -123,13 +131,16 @@ def run_forever(start_gens):
             log.exception(__name__, e)
             continue
 
-        if isinstance(ret, int):
-            if ret >= 0:
-                # Sleep until ret, call us later
-                __call_at(ret, gen)
-            else:
-                # Wait for event
-                raise NotImplementedError()
+        if isinstance(ret, int) and ret >= 0:
+            # Sleep until ret, call us later
+            __call_at(ret, gen)
+
+        elif isinstance(ret, int) and ret in event_handlers:
+            # Wait for event
+            if event_handlers[ret]:
+                raise Exception('Already waiting for %s: %s' %
+                                (ret, event_handlers[ret]))
+            event_handlers[ret] = gen
 
         elif isinstance(ret, Wait):
             # Register the origin generator as a waiting callback
@@ -140,4 +151,4 @@ def run_forever(start_gens):
             __call_at(None, gen)
 
         else:
-            raise Exception("Unhandled result %s by %s" % (ret, gen))
+            raise Exception('Unhandled result %s by %s' % (ret, gen))

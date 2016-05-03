@@ -2,6 +2,7 @@ from trezor import loop
 from trezor import ui
 from trezor.utils import unimport_func
 
+
 def layout_tap_to_confirm(address, amount, currency):
 
     ui.display.bar(0, 0, 240, 40, ui.GREEN)
@@ -14,15 +15,20 @@ def layout_tap_to_confirm(address, amount, currency):
     ui.display.text(10, 160, address[18:], ui.MONO, ui.BLACK, ui.WHITE)
 
     f = open('apps/playground/tap_64.toig', 'rb')
-    _background = ui.WHITE
+    bg = ui.WHITE
 
-    def func(foreground):
-        ui.display.text(68, 212, 'TAP TO CONFIRM', ui.BOLD, foreground, _background)
-
+    def func(fg):
+        ui.display.text(68, 212, 'TAP TO CONFIRM', ui.BOLD, fg, bg)
         f.seek(0)
-        ui.display.icon(3, 170, f.read(), _background, foreground)
+        ui.display.icon(3, 170, f.read(), bg, fg)
 
-    yield from ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
+    animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
+
+    yield loop.Wait([
+        animation,
+        loop.EVT_TSTART,
+    ])
+
 
 @unimport_func
 def zprava():
@@ -43,9 +49,11 @@ def zprava():
     # m2 = GetAddress.load(BytesIO(data))
     # print(m2.__dict__)
 
+
 def dispatch():
     # Callback for HID messages
     print("Dispatch playground")
+
 
 def boot():
     # Initilize app on boot time.
