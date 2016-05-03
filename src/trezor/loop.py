@@ -26,12 +26,13 @@ if __debug__:
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
 
-def __call_at(time, gen):
+def __schedule(gen, time=None):
     if __debug__:
         log.debug(__name__, 'Scheduling %s %s', time, gen)
 
     if not time:
         time = utime.ticks_us()
+
     heappush(time_queue, (time, gen))
 
 
@@ -44,7 +45,7 @@ class Wait():
         self.gens = gens
 
         for g in gens:
-            __call_at(None, self._wait(g))
+            __schedule(self._wait(g))
 
     def _wait(self, gen):
         if isinstance(gen, type_gen):
@@ -58,7 +59,7 @@ class Wait():
         self.received += 1
 
         if self.received == self.wait_for:
-            __call_at(None, self.callback)
+            __schedule(self.callback)
             self.callback = None
 
             if self.exit_others:
@@ -82,7 +83,7 @@ def run_forever(start_gens):
     delay_max = const(1000000)
 
     for gen in start_gens:
-        __call_at(None, gen)
+        __schedule(gen)
 
     while True:
 
@@ -133,7 +134,7 @@ def run_forever(start_gens):
 
         if isinstance(ret, int) and ret >= 0:
             # Sleep until ret, call us later
-            __call_at(ret, gen)
+            __schedule(gen, ret)
 
         elif isinstance(ret, int) and ret in event_handlers:
             # Wait for event
@@ -148,7 +149,7 @@ def run_forever(start_gens):
 
         elif ret is None:
             # Just call us asap
-            __call_at(None, gen)
+            __schedule(gen)
 
         else:
             raise Exception('Unhandled result %s by %s' % (ret, gen))
