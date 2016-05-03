@@ -59,7 +59,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
         uint32_t e = msg_poll_ui_event();
         if (e) {
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(-((e & 0xFF0000) >> 16));
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT((e & 0xFF0000) >> 16);
             tuple->items[1] = MP_OBJ_NEW_SMALL_INT((e & 0xFF00) >> 8);
             tuple->items[2] = MP_OBJ_NEW_SMALL_INT((e & 0xFF));
             return MP_OBJ_FROM_PTR(tuple);
@@ -70,7 +70,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             vstr_init_len(&vstr, 64);
             memcpy(vstr.buf, m, 64);
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(-4);
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(4);
             tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
             return MP_OBJ_FROM_PTR(tuple);
          }
