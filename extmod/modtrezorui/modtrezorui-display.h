@@ -279,12 +279,10 @@ static void display_raw(uint8_t reg, const uint8_t *data, int datalen)
     DATAS(data, datalen);
 }
 
-// class Display(object):
 typedef struct _mp_obj_Display_t {
     mp_obj_base_t base;
 } mp_obj_Display_t;
 
-// def Display.__init__(self)
 STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     display_init();
@@ -293,7 +291,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t 
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Display.bar(self, x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None) -> None
+/// def trezor.ui.display.bar(self, x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -313,7 +311,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 7, mod_TrezorUi_Display_bar);
 
-// def Display.blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None
+/// def trezor.ui.display.blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -329,7 +327,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, mod_TrezorUi_Display_blit);
 
-// def Display.image(self, x: int, y: int, image: bytes) -> None
+/// def trezor.ui.display.image(self, x: int, y: int, image: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -353,7 +351,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
 
-// def Display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -379,7 +377,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
 
-// def Display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -393,7 +391,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
-// def Display.text_center(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.text_center(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -408,7 +406,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
 
-// def Display.text_right(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.text_right(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -423,7 +421,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *a
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);
 
-// def Display.text_width(self, text: bytes, font: int) -> int
+/// def trezor.ui.display.text_width(self, text: bytes, font: int) -> int
 STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
     mp_buffer_info_t txt;
     mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
@@ -433,7 +431,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_text_width_obj, mod_TrezorUi_Display_text_width);
 
-// def Display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
+/// def trezor.ui.display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
@@ -455,7 +453,7 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
-// def Display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None
+/// def trezor.ui.display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
     mp_int_t progress = mp_obj_get_int(args[1]);
     mp_int_t fgcolor = mp_obj_get_int(args[2]);
@@ -492,7 +490,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 6, mod_TrezorUi_Display_loader);
 
-// def Display.orientation(self, degrees: int) -> None
+/// def trezor.ui.display.orientation(self, degrees: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {
     mp_int_t deg = mp_obj_get_int(degrees);
     if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
@@ -503,7 +501,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_TrezorUi_Display_orientation);
 
-// def Display.raw(self, reg: int, data: bytes) -> None
+/// def trezor.ui.display.raw(self, reg: int, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_raw(mp_obj_t self, mp_obj_t reg, mp_obj_t data) {
     mp_int_t r = mp_obj_get_int(reg);
     mp_buffer_info_t raw;
@@ -513,14 +511,12 @@ STATIC mp_obj_t mod_TrezorUi_Display_raw(mp_obj_t self, mp_obj_t reg, mp_obj_t d
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_raw_obj, mod_TrezorUi_Display_raw);
 
-// def Display.backlight(self, val: int) -> None
+/// def trezor.ui.display.backlight(self, val: int) -> None
 STATIC mp_obj_t mod_TrezorUi_Display_backlight(mp_obj_t self, mp_obj_t reg) {
     display_backlight(mp_obj_get_int(reg));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_backlight_obj, mod_TrezorUi_Display_backlight);
-
-// Display stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },

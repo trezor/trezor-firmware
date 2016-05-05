@@ -12,7 +12,6 @@
 #define HASH_RIPEMD160_BLOCK_SIZE   64
 #define HASH_RIPEMD160_DIGEST_SIZE  20
 
-// class Ripemd160(object):
 typedef struct _mp_obj_Ripemd160_t {
     mp_obj_base_t base;
     RIPEMD160_CTX ctx;
@@ -20,7 +19,7 @@ typedef struct _mp_obj_Ripemd160_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data);
 
-// def Ripemd160.__init__(self, data: bytes = None)
+/// def trezor.crypto.hashlib.ripemd160(self, data: bytes=None) -> Ripemd160
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Ripemd160_t *o = m_new_obj(mp_obj_Ripemd160_t);
@@ -33,7 +32,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_make_new(const mp_obj_type_t *type, s
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Ripemd160.update(self, data: bytes) -> None
+/// def Ripemd160.update(self, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t msg;
@@ -43,7 +42,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data) 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ripemd160_update_obj, mod_TrezorCrypto_Ripemd160_update);
 
-// def Ripemd160.digest(self) -> bytes
+/// def Ripemd160.digest(self) -> bytes
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_digest(mp_obj_t self) {
     mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
@@ -56,15 +55,12 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_digest(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Ripemd160_digest_obj, mod_TrezorCrypto_Ripemd160_digest);
 
-// def Ripemd160.__del__(self) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160___del__(mp_obj_t self) {
     mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
     memset(&(o->ctx), 0, sizeof(RIPEMD160_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Ripemd160___del___obj, mod_TrezorCrypto_Ripemd160___del__);
-
-// Ripemd160 stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Ripemd160_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160_update_obj) },

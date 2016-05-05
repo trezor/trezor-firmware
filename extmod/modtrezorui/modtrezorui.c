@@ -28,8 +28,6 @@
 
 #include "modtrezorui-display.h"
 
-// module stuff
-
 STATIC const mp_rom_map_elem_t mp_module_TrezorUi_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorUi) },
     { MP_ROM_QSTR(MP_QSTR_Display), MP_ROM_PTR(&mod_TrezorUi_Display_type) },

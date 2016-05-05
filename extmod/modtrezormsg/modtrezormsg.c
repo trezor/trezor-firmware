@@ -24,12 +24,10 @@
 #error Unsupported port. Only STMHAL and UNIX ports are supported.
 #endif
 
-// class Msg(object):
 typedef struct _mp_obj_Msg_t {
     mp_obj_base_t base;
 } mp_obj_Msg_t;
 
-// def Msg.__init__(self)
 STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     msg_init();
@@ -38,7 +36,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Msg.send(self, message) -> int
+/// def trezor.msg.send(self, message) -> int
 STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t message) {
     mp_buffer_info_t msg;
     mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
@@ -49,7 +47,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 
 #define TICK_RESOLUTION 1000
 
-// def Msg.select(self, timeout_us: int) -> None/tuple/bytes
+/// def trezor.msg.select(self, timeout_us: int) -> tuple
 STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
     int timeout = mp_obj_get_int(timeout_us);
     if (timeout < 0) {
@@ -84,8 +82,6 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_select_obj, mod_TrezorMsg_Msg_select);
 
-// Msg stuff
-
 STATIC const mp_rom_map_elem_t mod_TrezorMsg_Msg_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorMsg_Msg_select_obj) },
     { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_TrezorMsg_Msg_send_obj) },
@@ -98,8 +94,6 @@ STATIC const mp_obj_type_t mod_TrezorMsg_Msg_type = {
     .make_new = mod_TrezorMsg_Msg_make_new,
     .locals_dict = (void*)&mod_TrezorMsg_Msg_locals_dict,
 };
-
-// module stuff
 
 STATIC const mp_rom_map_elem_t mp_module_TrezorMsg_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorMsg) },

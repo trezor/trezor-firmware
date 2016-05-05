@@ -25,8 +25,6 @@
 #include "modtrezorcrypto-sha3-256.h"
 #include "modtrezorcrypto-sha3-512.h"
 
-// module stuff
-
 STATIC const mp_rom_map_elem_t mp_module_TrezorCrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorCrypto) },
     { MP_ROM_QSTR(MP_QSTR_Ed25519), MP_ROM_PTR(&mod_TrezorCrypto_Ed25519_type) },

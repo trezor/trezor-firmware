@@ -12,7 +12,6 @@
 #define HASH_SHA512_BLOCK_SIZE   128
 #define HASH_SHA512_DIGEST_SIZE  64
 
-// class Sha512(object):
 typedef struct _mp_obj_Sha512_t {
     mp_obj_base_t base;
     SHA512_CTX ctx;
@@ -20,7 +19,7 @@ typedef struct _mp_obj_Sha512_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha512_update(mp_obj_t self, mp_obj_t data);
 
-// def Sha512.__init__(self, data: bytes = None)
+/// def trezor.crypto.hashlib.sha512(self, data: bytes=None) -> Sha512
 STATIC mp_obj_t mod_TrezorCrypto_Sha512_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha512_t *o = m_new_obj(mp_obj_Sha512_t);
@@ -32,7 +31,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_make_new(const mp_obj_type_t *type, size
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Sha512.hash(self, data: bytes) -> None
+/// def Sha512.hash(self, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha512_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t msg;
@@ -42,7 +41,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha512_update_obj, mod_TrezorCrypto_Sha512_update);
 
-// def Sha512.digest(self) -> bytes
+/// def Sha512.digest(self) -> bytes
 STATIC mp_obj_t mod_TrezorCrypto_Sha512_digest(mp_obj_t self) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
@@ -55,15 +54,12 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha512_digest(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512_digest_obj, mod_TrezorCrypto_Sha512_digest);
 
-// def Sha512.__del__(self) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha512___del__(mp_obj_t self) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
     memset(&(o->ctx), 0, sizeof(SHA512_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha512___del___obj, mod_TrezorCrypto_Sha512___del__);
-
-// Sha512 stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Sha512_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Sha512_update_obj) },

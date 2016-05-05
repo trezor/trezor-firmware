@@ -16,12 +16,10 @@
 
 #if MICROPY_PY_TREZORUTILS
 
-// class Utils(object):
 typedef struct _mp_obj_Utils_t {
     mp_obj_base_t base;
 } mp_obj_Utils_t;
 
-// def Utils.__init__(self)
 STATIC mp_obj_t mod_TrezorUtils_Utils_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Utils_t *o = m_new_obj(mp_obj_Utils_t);
@@ -29,7 +27,7 @@ STATIC mp_obj_t mod_TrezorUtils_Utils_make_new(const mp_obj_type_t *type, size_t
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Utils.memaccess(self, address: int, length: int) -> bytes
+/// def trezor.utils.memaccess(self, address: int, length: int) -> bytes
 STATIC mp_obj_t mod_TrezorUtils_Utils_memaccess(mp_obj_t self, mp_obj_t address, mp_obj_t length) {
     uint32_t addr = mp_obj_get_int(address);
     uint32_t len = mp_obj_get_int(length);
@@ -42,8 +40,6 @@ STATIC mp_obj_t mod_TrezorUtils_Utils_memaccess(mp_obj_t self, mp_obj_t address,
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUtils_Utils_memaccess_obj, mod_TrezorUtils_Utils_memaccess);
 
-// Utils stuff
-
 STATIC const mp_rom_map_elem_t mod_TrezorUtils_Utils_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_memaccess), MP_ROM_PTR(&mod_TrezorUtils_Utils_memaccess_obj) },
 };
@@ -55,8 +51,6 @@ STATIC const mp_obj_type_t mod_TrezorUtils_Utils_type = {
     .make_new = mod_TrezorUtils_Utils_make_new,
     .locals_dict = (void*)&mod_TrezorUtils_Utils_locals_dict,
 };
-
-// module stuff
 
 STATIC const mp_rom_map_elem_t mp_module_TrezorUtils_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorUtils) },

@@ -1,0 +1,55 @@
+###trezor.crypto.aes
+
+AES_CTX = object # AES context
+
+def aes_encrypt_key128(key: bytes16, iv: bytes16 = None) -> AES_CTX: # context
+
+def aes_encrypt_key192(key: bytes24, iv: bytes16 = None) -> AES_CTX: # context
+
+def aes_encrypt_key256(key: bytes32, iv: bytes16 = None) -> AES_CTX: # context
+
+def aes_decrypt_key128(key: bytes16, iv: bytes16 = None) -> AES_CTX: # context
+
+def aes_decrypt_key192(key: bytes24, iv: bytes16 = None) -> AES_CTX: # context
+
+def aes_decrypt_key256(key: bytes32, iv: bytes16 = None) -> AES_CTX: # context
+
+def aes_ecb_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
+
+def aes_cbc_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
+
+def aes_cfb_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
+
+def aes_ofb_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
+
+def aes_ctr_encrypt(ctx: AES_CTX, data: bytes) -> bytes: # encrypted
+
+def aes_ecb_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
+
+def aes_cbc_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
+
+def aes_cfb_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
+
+def aes_ofb_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
+
+def aes_ctr_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
+
+###trezor.crypto.hd
+
+TODO
+
+###trezor.crypto.mnemonic
+
+def bip39_generate(strength: int) -> bytes: # sentence
+
+def bip39_fromdata(data: bytes) -> bytes: # sentence
+
+def bip39_check(mnemonic: bytes) -> bool: # valid
+
+def bip39_seed(mnemonic: bytes, passphrase: bytes) -> bytes64: # seed
+
+###trezor.crypto.reedsolomon
+
+def encode(data: bytes) -> bytes: # encoded
+
+def decode(data: bytes) -> bytes: # decoded

@@ -11,14 +11,14 @@ class Hmac:
         if msg is not None:
             self.update(msg)
 
-    def update(self, msg):
+    def update(self, msg: bytes) -> None:
         self.__inner.update(msg)
 
-    def digest(self):
+    def digest(self) -> bytes:
         outer = self.__digestmod()
         outer.update(bytes((x ^ 0x5C) for x in self.__key))
         outer.update(self.__inner.digest())
         return outer.digest()
 
-def new(key, msg, digestmod):
+def new(key, msg, digestmod) -> Hmac:
     return Hmac(key, msg, digestmod)

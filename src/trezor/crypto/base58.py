@@ -16,34 +16,34 @@
 from .hashlib import sha256
 
 # 58 character alphabet used
-alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+_alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-def encode(v):
-    origlen = len(v)
-    v = v.lstrip(b'\0')
-    newlen = len(v)
+def encode(data: bytes) -> str:
+    origlen = len(data)
+    data = data.lstrip(b'\0')
+    newlen = len(data)
 
     p, acc = 1, 0
-    for c in reversed(v):
+    for c in reversed(data):
         acc += p * c
         p = p << 8
 
     result = ''
     while acc > 0:
         acc, mod = divmod(acc, 58)
-        result += alphabet[mod]
+        result += _alphabet[mod]
 
-    return ''.join([c for c in reversed(result + alphabet[0] * (origlen - newlen))])
+    return ''.join([c for c in reversed(result + _alphabet[0] * (origlen - newlen))])
 
 
-def decode(v):
-    origlen = len(v)
-    v = v.lstrip(alphabet[0])
-    newlen = len(v)
+def decode(string: str) -> bytes:
+    origlen = len(string)
+    string = string.lstrip(_alphabet[0])
+    newlen = len(string)
 
     p, acc = 1, 0
-    for c in reversed(v):
-        acc += p * alphabet.index(c)
+    for c in reversed(string):
+        acc += p * _alphabet.index(c)
         p *= 58
 
     result = []
@@ -54,13 +54,13 @@ def decode(v):
     return bytes([b for b in reversed(result +[0] * (origlen - newlen))])
 
 
-def encode_check(v):
-    digest = sha256(sha256(v).digest()).digest()
-    return encode(v + digest[:4])
+def encode_check(data: bytes) -> str:
+    digest = sha256(sha256(data).digest()).digest()
+    return encode(data + digest[:4])
 
 
-def decode_check(v):
-    result = decode(v)
+def decode_check(string: str) -> bytes:
+    result = decode(string)
     result, check = result[:-4], result[-4:]
     digest = sha256(sha256(result).digest()).digest()
 

@@ -12,7 +12,6 @@
 #define HASH_SHA3_256_BLOCK_SIZE   64
 #define HASH_SHA3_256_DIGEST_SIZE  32
 
-// class Sha3_256(object):
 typedef struct _mp_obj_Sha3_256_t {
     mp_obj_base_t base;
     SHA3_CTX ctx;
@@ -20,7 +19,7 @@ typedef struct _mp_obj_Sha3_256_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data);
 
-// def Sha3_256.__init__(self, data: bytes = None)
+/// def trezor.crypto.hashlib.sha3_256(self, data: bytes=None) -> Sha3_256
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha3_256_t *o = m_new_obj(mp_obj_Sha3_256_t);
@@ -33,7 +32,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_make_new(const mp_obj_type_t *type, si
     return MP_OBJ_FROM_PTR(o);
 }
 
-// def Sha3_256.update(self, data: bytes) -> None
+/// def Sha3_256.update(self, data: bytes) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t msg;
@@ -43,7 +42,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_256_update_obj, mod_TrezorCrypto_Sha3_256_update);
 
-// def Sha3_256.digest(self) -> bytes
+/// def Sha3_256.digest(self) -> bytes
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_digest(mp_obj_t self) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
@@ -56,15 +55,12 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_digest(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha3_256_digest_obj, mod_TrezorCrypto_Sha3_256_digest);
 
-// def Sha3_256.__del__(self) -> None
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256___del__(mp_obj_t self) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     memset(&(o->ctx), 0, sizeof(SHA3_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha3_256___del___obj, mod_TrezorCrypto_Sha3_256___del__);
-
-// Sha3_256 stuff
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Sha3_256_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Sha3_256_update_obj) },
