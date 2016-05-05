@@ -65,7 +65,7 @@ class HidTransport(Transport):
         return False
 
     def _open(self):
-        self.buffer = ''
+        self.buffer = bytearray()
         self.hid = hid.device()
         self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)
@@ -75,7 +75,7 @@ class HidTransport(Transport):
 
     def _close(self):
         self.hid.close()
-        self.buffer = ''
+        self.buffer = bytearray()
         self.hid = None
 
     def ready_to_read(self):
@@ -116,8 +116,8 @@ class HidTransport(Transport):
                 raise Exception("Not implemented")
 
             # Payload received, skip the report ID
-            self.buffer += str(bytearray(data[1:]))
+            self.buffer.extend(bytearray(data[1:]))
 
         ret = self.buffer[:length]
         self.buffer = self.buffer[length:]
-        return ret
+        return bytes(ret)
