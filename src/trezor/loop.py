@@ -26,14 +26,14 @@ if __debug__:
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
 
-def __schedule(gen, time=None):
+def __schedule(gen, args=(), time=None):
     if __debug__:
         log.debug(__name__, 'Scheduling %s %s', time, gen)
 
     if not time:
         time = utime.ticks_us()
 
-    heappush(time_queue, (time, gen))
+    heappush(time_queue, (time, gen, args))
 
 
 class Wait():
@@ -59,7 +59,7 @@ class Wait():
         self.received += 1
 
         if self.received == self.wait_for:
-            __schedule(self.callback)
+            __schedule(self.callback, (gen, result))
             self.callback = None
 
             if self.exit_others:
@@ -88,7 +88,7 @@ def run_forever(start_gens):
     while True:
 
         if time_queue:
-            t, _ = time_queue[0]
+            t, _, _ = time_queue[0]
             delay = t - utime.ticks_us()
         else:
             delay = delay_max
@@ -109,18 +109,17 @@ def run_forever(start_gens):
             if not gen:
                 log.info(__name__, 'No handler for event: %s', event)
                 continue
-            if not args:
-                args = None
         else:
             if time_queue:
                 # Run something from the time queue
-                _, gen = heappop(time_queue)
-                args = None
+                _, gen, args = heappop(time_queue)
             else:
                 # Sleep again
                 delay = delay_max
                 continue
 
+        if not args:
+            args = None
         try:
             ret = gen.send(args)
 
@@ -134,13 +133,12 @@ def run_forever(start_gens):
 
         if isinstance(ret, int) and ret >= 0:
             # Sleep until ret, call us later
-            __schedule(gen, ret)
+            __schedule(gen, (), ret)
 
         elif isinstance(ret, int) and ret in event_handlers:
             # Wait for event
             if event_handlers[ret]:
-                raise Exception('Already waiting for %s: %s' %
-                                (ret, event_handlers[ret]))
+                event_handlers[ret].close()
             event_handlers[ret] = gen
 
         elif isinstance(ret, Wait):
