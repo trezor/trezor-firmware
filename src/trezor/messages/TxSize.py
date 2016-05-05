@@ -3,3 +3,4 @@ from protobuf import protobuf as p
 t = p.MessageType()
 t.add_field(1, 'tx_size', p.UVarintType)
 TxSize = t
+TYPE = const(44)

@@ -7,3 +7,4 @@ t.add_field(3, 'display_only', p.BoolType)
 t.add_field(4, 'address_n', p.UVarintType, flags=p.FLAG_REPEATED)
 t.add_field(5, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 EncryptMessage = t
+TYPE = const(49)

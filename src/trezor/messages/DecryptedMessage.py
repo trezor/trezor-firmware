@@ -4,3 +4,4 @@ t = p.MessageType()
 t.add_field(1, 'message', p.BytesType)
 t.add_field(2, 'address', p.UnicodeType)
 DecryptedMessage = t
+TYPE = const(52)

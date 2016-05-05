@@ -2,3 +2,4 @@
 from protobuf import protobuf as p
 t = p.MessageType()
 GetFeatures = t
+TYPE = const(55)

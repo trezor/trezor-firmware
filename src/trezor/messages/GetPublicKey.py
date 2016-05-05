@@ -5,3 +5,4 @@ t.add_field(1, 'address_n', p.UVarintType, flags=p.FLAG_REPEATED)
 t.add_field(2, 'ecdsa_curve_name', p.UnicodeType)
 t.add_field(3, 'show_display', p.BoolType)
 GetPublicKey = t
+TYPE = const(11)

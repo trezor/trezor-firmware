@@ -2,3 +2,4 @@
 from protobuf import protobuf as p
 t = p.MessageType()
 WipeDevice = t
+TYPE = const(5)

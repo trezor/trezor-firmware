@@ -3,3 +3,4 @@ from protobuf import protobuf as p
 t = p.MessageType()
 t.add_field(1, 'word', p.UnicodeType, flags=p.FLAG_REQUIRED)
 WordAck = t
+TYPE = const(47)

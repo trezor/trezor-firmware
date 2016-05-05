@@ -2,3 +2,4 @@
 from protobuf import protobuf as p
 t = p.MessageType()
 ButtonAck = t
+TYPE = const(27)

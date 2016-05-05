@@ -7,3 +7,4 @@ t.add_field(3, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 t.add_field(4, 'version', p.UVarintType, default=1)
 t.add_field(5, 'lock_time', p.UVarintType, default=0)
 SignTx = t
+TYPE = const(15)

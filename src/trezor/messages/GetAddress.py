@@ -7,3 +7,4 @@ t.add_field(2, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 t.add_field(3, 'show_display', p.BoolType)
 t.add_field(4, 'multisig', p.EmbeddedMessage(MultisigRedeemScriptType))
 GetAddress = t
+TYPE = const(29)

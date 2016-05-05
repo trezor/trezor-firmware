@@ -7,3 +7,4 @@ t.add_field(2, 'challenge_hidden', p.BytesType)
 t.add_field(3, 'challenge_visual', p.UnicodeType)
 t.add_field(4, 'ecdsa_curve_name', p.UnicodeType)
 SignIdentity = t
+TYPE = const(53)

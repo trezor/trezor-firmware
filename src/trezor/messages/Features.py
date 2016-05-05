@@ -20,3 +20,4 @@ t.add_field(15, 'imported', p.BoolType)
 t.add_field(16, 'pin_cached', p.BoolType)
 t.add_field(17, 'passphrase_cached', p.BoolType)
 Features = t
+TYPE = const(17)

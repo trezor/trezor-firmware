@@ -4,3 +4,4 @@ from .TransactionType import TransactionType
 t = p.MessageType()
 t.add_field(1, 'tx', p.EmbeddedMessage(TransactionType))
 TxAck = t
+TYPE = const(22)

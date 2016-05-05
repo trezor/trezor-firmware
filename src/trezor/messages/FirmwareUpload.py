@@ -3,3 +3,4 @@ from protobuf import protobuf as p
 t = p.MessageType()
 t.add_field(1, 'payload', p.BytesType, flags=p.FLAG_REQUIRED)
 FirmwareUpload = t
+TYPE = const(7)

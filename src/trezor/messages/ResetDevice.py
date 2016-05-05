@@ -8,3 +8,4 @@ t.add_field(4, 'pin_protection', p.BoolType)
 t.add_field(5, 'language', p.UnicodeType, default=u'english')
 t.add_field(6, 'label', p.UnicodeType)
 ResetDevice = t
+TYPE = const(14)

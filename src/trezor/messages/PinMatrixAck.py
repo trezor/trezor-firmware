@@ -3,3 +3,4 @@ from protobuf import protobuf as p
 t = p.MessageType()
 t.add_field(1, 'pin', p.UnicodeType, flags=p.FLAG_REQUIRED)
 PinMatrixAck = t
+TYPE = const(19)

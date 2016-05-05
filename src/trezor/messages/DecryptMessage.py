@@ -6,3 +6,4 @@ t.add_field(2, 'nonce', p.BytesType)
 t.add_field(3, 'message', p.BytesType)
 t.add_field(4, 'hmac', p.BytesType)
 DecryptMessage = t
+TYPE = const(51)

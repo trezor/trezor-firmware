@@ -7,3 +7,4 @@ t.add_field(1, 'request_type', p.UVarintType)
 t.add_field(2, 'details', p.EmbeddedMessage(TxRequestDetailsType))
 t.add_field(3, 'serialized', p.EmbeddedMessage(TxRequestSerializedType))
 TxRequest = t
+TYPE = const(21)

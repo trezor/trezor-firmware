@@ -11,3 +11,4 @@ t.add_field(4, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 t.add_field(5, 'version', p.UVarintType, default=1)
 t.add_field(6, 'lock_time', p.UVarintType, default=0)
 SimpleSignTx = t
+TYPE = const(16)

@@ -6,3 +6,4 @@ t.add_field(2, 'button_protection', p.BoolType)
 t.add_field(3, 'pin_protection', p.BoolType)
 t.add_field(4, 'passphrase_protection', p.BoolType)
 Ping = t
+TYPE = const(1)

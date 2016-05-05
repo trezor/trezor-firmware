@@ -4,3 +4,4 @@ t = p.MessageType()
 t.add_field(1, 'code', p.UVarintType)
 t.add_field(2, 'data', p.UnicodeType)
 ButtonRequest = t
+TYPE = const(26)

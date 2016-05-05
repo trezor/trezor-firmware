@@ -2,3 +2,4 @@
 from protobuf import protobuf as p
 t = p.MessageType()
 WordRequest = t
+TYPE = const(46)

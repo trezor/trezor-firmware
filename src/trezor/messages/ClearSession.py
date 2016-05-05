@@ -2,3 +2,4 @@
 from protobuf import protobuf as p
 t = p.MessageType()
 ClearSession = t
+TYPE = const(24)

@@ -5,3 +5,4 @@ t = p.MessageType()
 t.add_field(1, 'node', p.EmbeddedMessage(HDNodeType), flags=p.FLAG_REQUIRED)
 t.add_field(2, 'xpub', p.UnicodeType)
 PublicKey = t
+TYPE = const(12)

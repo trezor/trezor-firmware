@@ -5,3 +5,4 @@ t.add_field(1, 'address_n', p.UVarintType, flags=p.FLAG_REPEATED)
 t.add_field(2, 'message', p.BytesType, flags=p.FLAG_REQUIRED)
 t.add_field(3, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 SignMessage = t
+TYPE = const(38)

@@ -4,3 +4,4 @@ t = p.MessageType()
 t.add_field(1, 'address', p.UnicodeType)
 t.add_field(2, 'signature', p.BytesType)
 MessageSignature = t
+TYPE = const(40)

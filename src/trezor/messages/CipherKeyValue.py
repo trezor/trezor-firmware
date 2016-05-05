@@ -9,3 +9,4 @@ t.add_field(5, 'ask_on_encrypt', p.BoolType)
 t.add_field(6, 'ask_on_decrypt', p.BoolType)
 t.add_field(7, 'iv', p.BytesType)
 CipherKeyValue = t
+TYPE = const(23)

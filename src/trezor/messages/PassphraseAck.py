@@ -3,3 +3,4 @@ from protobuf import protobuf as p
 t = p.MessageType()
 t.add_field(1, 'passphrase', p.UnicodeType, flags=p.FLAG_REQUIRED)
 PassphraseAck = t
+TYPE = const(42)

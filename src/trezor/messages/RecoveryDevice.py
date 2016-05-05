@@ -8,3 +8,4 @@ t.add_field(4, 'language', p.UnicodeType, default=u'english')
 t.add_field(5, 'label', p.UnicodeType)
 t.add_field(6, 'enforce_wordlist', p.BoolType)
 RecoveryDevice = t
+TYPE = const(45)

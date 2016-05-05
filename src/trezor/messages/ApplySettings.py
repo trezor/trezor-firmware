@@ -6,3 +6,4 @@ t.add_field(2, 'label', p.UnicodeType)
 t.add_field(3, 'use_passphrase', p.BoolType)
 t.add_field(4, 'homescreen', p.BytesType)
 ApplySettings = t
+TYPE = const(25)

@@ -13,3 +13,4 @@ t.add_field(8, 'reset_entropy', p.BytesType)
 t.add_field(9, 'recovery_fake_word', p.UnicodeType)
 t.add_field(10, 'recovery_word_pos', p.UVarintType)
 DebugLinkState = t
+TYPE = const(102)

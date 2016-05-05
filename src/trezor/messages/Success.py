@@ -3,3 +3,4 @@ from protobuf import protobuf as p
 t = p.MessageType()
 t.add_field(1, 'message', p.UnicodeType)
 Success = t
+TYPE = const(2)

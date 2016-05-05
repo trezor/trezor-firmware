@@ -10,3 +10,4 @@ t.add_field(5, 'language', p.UnicodeType, default=u'english')
 t.add_field(6, 'label', p.UnicodeType)
 t.add_field(7, 'skip_checksum', p.BoolType)
 LoadDevice = t
+TYPE = const(13)

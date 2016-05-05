@@ -5,3 +5,4 @@ t.add_field(1, 'nonce', p.BytesType)
 t.add_field(2, 'message', p.BytesType)
 t.add_field(3, 'hmac', p.BytesType)
 EncryptedMessage = t
+TYPE = const(50)
