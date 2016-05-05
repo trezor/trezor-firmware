@@ -26,10 +26,10 @@ class PipeTransport(Transport):
                 raise Exception("Not connected")
 
         self.write_fd = os.open(self.filename_write, os.O_RDWR)#|os.O_NONBLOCK)
-        self.write_f = os.fdopen(self.write_fd, 'w+')
+        self.write_f = os.fdopen(self.write_fd, 'w+b', 0)
 
         self.read_fd = os.open(self.filename_read, os.O_RDWR)#|os.O_NONBLOCK)
-        self.read_f = os.fdopen(self.read_fd, 'rb')
+        self.read_f = os.fdopen(self.read_fd, 'rb', 0)
 
     def _close(self):
         self.read_f.close()

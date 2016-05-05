@@ -1,9 +1,15 @@
 import binascii
-import urllib2
 import json
 from decimal import Decimal
 # from filecache import filecache, DAY
 from . import types_pb2 as proto_types
+
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 
 def insight_tx(url, rawdata=False):
     if not rawdata:

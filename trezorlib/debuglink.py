@@ -8,7 +8,7 @@ def button_press(yes_no):
     print("User pressed", '"y"' if yes_no else '"n"')
 
 def pprint(msg):
-    return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
+    return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), '#FIXME') # msg))
 
 class DebugLink(object):
     def __init__(self, transport, pin_func=pin_info, button_func=button_press):

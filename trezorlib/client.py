@@ -7,14 +7,17 @@ import unicodedata
 import json
 import getpass
 
-import tools
-import mapping
-import messages_pb2 as proto
-import types_pb2 as types
-import protobuf_json
-from debuglink import DebugLink
 from mnemonic import Mnemonic
 
+from . import tools
+from . import mapping
+from . import messages_pb2 as proto
+from . import types_pb2 as types
+from .debuglink import DebugLink
+
+if sys.version_info[0] == 3:
+    from io import BytesIO
+    unicode = lambda s, enc: BytesIO(bytes(s, enc))
 
 # try:
 #     from PIL import Image
@@ -44,7 +47,7 @@ def pprint(msg):
     if isinstance(msg, proto.FirmwareUpload):
         return "<%s> (%d bytes):\n" % (msg_class, msg_size)
     else:
-        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
+        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, '#FIXME') # msg)
 
 def log(msg):
     sys.stderr.write("%s\n" % msg)

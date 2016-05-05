@@ -66,7 +66,7 @@ class Transport(object):
         """
         ser = msg.SerializeToString()
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
-        self._write("##%s%s" % (header, ser), msg)
+        self._write(b"##" + header + ser, msg)
 
     def read(self):
         """
@@ -110,14 +110,14 @@ class Transport(object):
             # Align cursor to the beginning of the header ("##")
             c = read_f.read(1)
             i = 0
-            while c != '#':
+            while c != b"#":
                 i += 1
                 if i >= 64:
                     # timeout
                     raise Exception("Timed out while waiting for the magic character")
                 c = read_f.read(1)
 
-            if read_f.read(1) != "#":
+            if read_f.read(1) != b"#":
                 # Second character must be # to be valid header
                 raise Exception("Second magic character is broken")
 
