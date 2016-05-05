@@ -2,7 +2,7 @@
 
 # Local serial port loopback: socat PTY,link=COM8 PTY,link=COM9
 
-from transport import Transport, NotImplementedException
+from .transport import Transport, NotImplementedException
 
 class FakeTransport(Transport):
     def __init__(self, device, *args, **kwargs):

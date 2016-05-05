@@ -100,7 +100,7 @@ class TestProtectCall(common.TrezorTest):
             got = time.time() - start
 
             msg = "Pin delay expected to be at least %s seconds, got %s" % (expected, got)
-            print msg
+            print(msg)
             self.assertLessEqual(expected, got, msg)
 
         for attempt in range(1, 6):

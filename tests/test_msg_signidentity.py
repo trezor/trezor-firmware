@@ -17,10 +17,10 @@ def check_path(identity):
     if identity.port: uri += ':' + identity.port
     if identity.path: uri += identity.path
     m.update(uri)
-    print 'hash:', m.hexdigest()
+    print('hash:', m.hexdigest())
     (a, b, c, d, _, _, _, _) = struct.unpack('<8I', m.digest())
     address_n = [0x80000000 | 13, 0x80000000 | a, 0x80000000 | b, 0x80000000 | c, 0x80000000 | d]
-    print 'path:', 'm/' + '/'.join([str(x) for x in address_n])
+    print('path:', 'm/' + '/'.join([str(x) for x in address_n]))
 
 class TestMsgSignidentity(common.TrezorTest):
 

@@ -15,7 +15,7 @@ class TestBip32Speed(common.TrezorTest):
             self.client.get_address('Bitcoin', range(depth))
             delay = time.time() - start
             expected = (depth + 1) * 0.26
-            print "DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay
+            print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
             self.assertLessEqual(delay, expected)
 
     def test_private_ckd(self):
@@ -28,7 +28,7 @@ class TestBip32Speed(common.TrezorTest):
             self.client.get_address('Bitcoin', range(-depth, 0))
             delay = time.time() - start
             expected = (depth + 1) * 0.26
-            print "DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay
+            print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
             self.assertLessEqual(delay, expected)
 
     def test_cache(self):
@@ -44,8 +44,8 @@ class TestBip32Speed(common.TrezorTest):
             self.client.get_address('Bitcoin', [1, 2, 3, 4, 5, 6, 7, x])
         cache_time = time.time() - start
 
-        print "NOCACHE TIME", nocache_time
-        print "CACHED TIME", cache_time
+        print("NOCACHE TIME", nocache_time)
+        print("CACHED TIME", cache_time)
 
         # Cached time expected to be at least 2x faster
         self.assertLessEqual(cache_time, nocache_time / 2.)

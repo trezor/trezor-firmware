@@ -4,15 +4,15 @@ import time
 import binascii
 import hashlib
 import unicodedata
-import mapping
 import json
 import getpass
 
 import tools
+import mapping
 import messages_pb2 as proto
 import types_pb2 as types
 import protobuf_json
-from trezorlib.debuglink import DebugLink
+from debuglink import DebugLink
 from mnemonic import Mnemonic
 
 

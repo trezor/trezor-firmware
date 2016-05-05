@@ -44,7 +44,7 @@ __author__='Paul Dovbush <dpp@dpp.su>'
 import json
 from google.protobuf.descriptor import FieldDescriptor as FD
 import binascii
-import types_pb2 as types
+from . import types_pb2 as types
 
 class ParseError(Exception): pass
 

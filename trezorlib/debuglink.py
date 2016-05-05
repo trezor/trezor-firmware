@@ -1,11 +1,11 @@
-import messages_pb2 as proto
-from transport import NotImplementedException
+from . import messages_pb2 as proto
+from .transport import NotImplementedException
 
 def pin_info(pin):
-    print "Device asks for PIN %s" % pin
+    print("Device asks for PIN %s" % pin)
 
 def button_press(yes_no):
-    print "User pressed", '"y"' if yes_no else '"n"'
+    print("User pressed", '"y"' if yes_no else '"n"')
 
 def pprint(msg):
     return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
@@ -21,18 +21,18 @@ class DebugLink(object):
         self.transport.close()
 
     def _call(self, msg, nowait=False):
-        print "DEBUGLINK SEND", pprint(msg)
+        print("DEBUGLINK SEND", pprint(msg))
         self.transport.write(msg)
         if nowait:
             return
         ret = self.transport.read_blocking()
-        print "DEBUGLINK RECV", pprint(ret)
+        print("DEBUGLINK RECV", pprint(ret))
         return ret
 
     def read_pin(self):
         obj = self._call(proto.DebugLinkGetState())
-        print "Read PIN:", obj.pin
-        print "Read matrix:", obj.matrix
+        print("Read PIN:", obj.pin)
+        print("Read matrix:", obj.matrix)
 
         return (obj.pin, obj.matrix)
 
@@ -51,7 +51,7 @@ class DebugLink(object):
         # on keypad, not a real PIN.
         pin_encoded = ''.join([ str(matrix.index(p) + 1) for p in pin])
 
-        print "Encoded PIN:", pin_encoded
+        print("Encoded PIN:", pin_encoded)
         return pin_encoded
 
     def read_layout(self):
@@ -83,7 +83,7 @@ class DebugLink(object):
         return obj.passphrase_protection
 
     def press_button(self, yes_no):
-        print "Pressing", yes_no
+        print("Pressing", yes_no)
         self.button_func(yes_no)
         self._call(proto.DebugLinkDecision(yes_no=yes_no), nowait=True)
 

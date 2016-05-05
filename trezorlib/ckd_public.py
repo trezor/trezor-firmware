@@ -7,8 +7,8 @@ from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
 from ecdsa.ellipticcurve import Point, INFINITY
 
-import tools
-import types_pb2 as proto_types
+from . import tools
+from . import types_pb2 as proto_types
 
 PRIME_DERIVATION_FLAG = 0x80000000
 

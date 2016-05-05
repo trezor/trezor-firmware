@@ -2,7 +2,7 @@
 
 import socket
 from select import select
-from transport import Transport
+from .transport import Transport
 
 class SocketTransportClient(Transport):
     def __init__(self, device, *args, **kwargs):
@@ -37,7 +37,7 @@ class SocketTransportClient(Transport):
             (msg_type, datalen) = self._read_headers(self.filelike)
             return (msg_type, self.filelike.read(datalen))
         except socket.error:
-            print "Failed to read from device"
+            print("Failed to read from device")
             return None
 
 class SocketTransport(Transport):
@@ -63,7 +63,7 @@ class SocketTransport(Transport):
         self.socket.listen(5)
 
     def _disconnect_client(self):
-        print "Disconnecting client"
+        print("Disconnecting client")
         if self.client != None:
             self.client.close()
             self.client = None
@@ -84,7 +84,7 @@ class SocketTransport(Transport):
             rlist, _, _ = select([self.socket], [], [], 0)
             if len(rlist) > 0:
                 (self.client, ipaddr) = self.socket.accept()
-                print "Connected", ipaddr[0]
+                print("Connected", ipaddr[0])
                 self.filelike = self.client.makefile()
                 return self.ready_to_read()
             return False
@@ -97,7 +97,7 @@ class SocketTransport(Transport):
                 self.filelike.write(msg)
                 self.filelike.flush()
             except socket.error:
-                print "Socket error"
+                print("Socket error")
                 self._disconnect_client()
 
     def _read(self):
@@ -105,6 +105,6 @@ class SocketTransport(Transport):
             (msg_type, datalen) = self._read_headers(self.filelike)
             return (msg_type, self.filelike.read(datalen))
         except Exception:
-            print "Failed to read from device"
+            print("Failed to read from device")
             self._disconnect_client()
             return None

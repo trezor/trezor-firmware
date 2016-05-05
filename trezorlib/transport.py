@@ -1,5 +1,5 @@
 import struct
-import mapping
+from . import mapping
 
 class NotImplementedException(Exception):
     pass
@@ -115,7 +115,6 @@ class Transport(object):
                 if i >= 64:
                     # timeout
                     raise Exception("Timed out while waiting for the magic character")
-                #print "Aligning to magic characters"
                 c = read_f.read(1)
 
             if read_f.read(1) != "#":

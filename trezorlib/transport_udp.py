@@ -3,7 +3,7 @@
 import socket
 from select import select
 import time
-from transport import Transport, ConnectionError
+from .transport import Transport, ConnectionError
 
 class FakeRead(object):
     # Let's pretend we have a file-like interface

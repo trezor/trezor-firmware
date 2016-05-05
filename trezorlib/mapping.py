@@ -1,4 +1,4 @@
-import messages_pb2 as proto
+from . import messages_pb2 as proto
 
 map_type_to_class = {}
 map_class_to_type = {}

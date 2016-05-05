@@ -1,11 +1,11 @@
 '''BridgeTransport implements transport TREZOR Bridge (aka trezord).'''
 
 import requests
-import protobuf_json
 import json
-import mapping
-from transport import Transport
-import messages_pb2 as proto
+from . import protobuf_json
+from . import mapping
+from . import messages_pb2 as proto
+from .transport import Transport
 
 TREZORD_HOST = 'https://localback.net:21324'
 CONFIG_URL = 'https://mytrezor.com/data/plugin/config_signed.bin'

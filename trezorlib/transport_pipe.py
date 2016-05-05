@@ -3,7 +3,7 @@ Use this transport for talking with trezor simulator.'''
 
 import os
 from select import select
-from transport import Transport
+from .transport import Transport
 
 class PipeTransport(Transport):
     def __init__(self, device, is_device, *args, **kwargs):
@@ -16,8 +16,8 @@ class PipeTransport(Transport):
             self.filename_read = self.device+'.to'
             self.filename_write = self.device+'.from'
 
-            os.mkfifo(self.filename_read, 0600)
-            os.mkfifo(self.filename_write, 0600)
+            os.mkfifo(self.filename_read, 0o600)
+            os.mkfifo(self.filename_write, 0o600)
         else:
             self.filename_read = self.device+'.from'
             self.filename_write = self.device+'.to'
@@ -47,7 +47,7 @@ class PipeTransport(Transport):
             self.write_f.write(msg)
             self.write_f.flush()
         except OSError:
-            print "Error while writing to socket"
+            print("Error while writing to socket")
             raise
 
     def _read(self):
@@ -55,5 +55,5 @@ class PipeTransport(Transport):
             (msg_type, datalen) = self._read_headers(self.read_f)
             return (msg_type, self.read_f.read(datalen))
         except IOError:
-            print "Failed to read from device"
+            print("Failed to read from device")
             raise

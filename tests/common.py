@@ -24,8 +24,8 @@ class TrezorTest(unittest.TestCase):
 
         self.client.wipe_device()
 
-        print "Setup finished"
-        print "--------------"
+        print("Setup finished")
+        print("--------------")
 
     def setup_mnemonic_nopin_nopassphrase(self):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin='', passphrase_protection=False, label='test', language='english')

@@ -3,7 +3,7 @@ import urllib2
 import json
 from decimal import Decimal
 # from filecache import filecache, DAY
-import types_pb2 as proto_types
+from . import types_pb2 as proto_types
 
 def insight_tx(url, rawdata=False):
     if not rawdata:
