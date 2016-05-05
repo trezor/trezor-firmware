@@ -8,7 +8,7 @@
 #include "py/objstr.h"
 
 #include "trezor-crypto/ecdsa.h"
-#include "trezor.crypto.curve.nist256p1.h"
+#include "trezor-crypto/nist256p1.h"
 
 typedef struct _mp_obj_Nist256p1_t {
     mp_obj_base_t base;

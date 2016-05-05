@@ -2,8 +2,9 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <stdlib.h>
 
-#define TREZOR_PORT 21324
+#define TREZOR_UDP_PORT 21324
 
 static int s;
 static struct sockaddr_in si_me, si_other;
@@ -17,8 +18,18 @@ void msg_init(void)
     fcntl(s, F_SETFL, O_NONBLOCK);
 
     si_me.sin_family = AF_INET;
-    si_me.sin_port = htons(TREZOR_PORT);
-    si_me.sin_addr.s_addr = htonl(INADDR_ANY);
+    const char *ip = getenv("TREZOR_UDP_IP");
+    if (ip) {
+        si_me.sin_addr.s_addr = inet_addr(ip);
+    } else {
+        si_me.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    }
+    const char *port = getenv("TREZOR_UDP_PORT");
+    if (port) {
+        si_me.sin_port = htons(atoi(port));
+    } else {
+        si_me.sin_port = htons(TREZOR_UDP_PORT);
+    }
 
     int b;
     b = bind(s, (struct sockaddr*)&si_me, sizeof(si_me));

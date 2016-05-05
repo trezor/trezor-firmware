@@ -8,7 +8,7 @@
 #include "py/objstr.h"
 
 #include "trezor-crypto/ecdsa.h"
-#include "trezor.crypto.curve.secp256k1.h"
+#include "trezor-crypto/secp256k1.h"
 
 typedef struct _mp_obj_Secp256k1_t {
     mp_obj_base_t base;
