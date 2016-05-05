@@ -99,13 +99,27 @@ def process_enum(t, cls):
 
     return out
 
+def find_msg_type(msg_types, t):
+    for k, v in msg_types:
+        msg_name = k.replace('MessageType_', '')
+        if msg_name == t:
+            return v
+
 def process_module(mod, genpath):
 
     print("Processing module %s" % mod.__name__)
     types = dict([(name, cls) for name, cls in mod.__dict__.items() if isinstance(cls, type)])
 
+    msg_types = __import__('pb2', globals(), locals(), ['messages_pb2', ]).messages_pb2.MessageType.items()
+
     for t, cls in types.iteritems():
         out = process_type(t, cls)
+
+        # Find message type for given class
+        msg_id = find_msg_type(msg_types, t)
+        if msg_id is not None:
+            out.append('TYPE = const(%d)' % msg_id)
+
         write_to_file(genpath, t, out)
 
     enums = dict([(name, cls) for name, cls in mod.__dict__.items() if isinstance(cls, EnumTypeWrapper)])
