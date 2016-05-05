@@ -21,6 +21,8 @@ def trezor.crypto.base58.decode_check(string: str) -> bytes
 
 ###trezor.crypto.curve
 
+####trezor.crypto.curve.ed25519
+
 ``` python
 def trezor.crypto.curve.ed25519.publickey(self, secret_key: bytes) -> bytes
 ```
@@ -31,6 +33,8 @@ def trezor.crypto.curve.ed25519.sign(self, secret_key: bytes, message: bytes) ->
 def trezor.crypto.curve.ed25519.verify(self, public_key: bytes, signature: bytes, message: bytes) -> bool
 ```
 
+####trezor.crypto.curve.nist256p1
+
 ``` python
 def trezor.crypto.curve.nist256p1.publickey(self, secret_key: bytes, compressed: bool=True) -> bytes
 ```
@@ -40,6 +44,8 @@ def trezor.crypto.curve.nist256p1.sign(self, secret_key: bytes, message: bytes) 
 ``` python
 def trezor.crypto.curve.nist256p1.verify(self, public_key: bytes, signature: bytes, message: bytes) -> bool
 ```
+
+####trezor.crypto.curve.secp256k1
 
 ``` python
 def trezor.crypto.curve.secp256k1.publickey(self, secret_key: bytes, compressed: bool=True) -> bytes
@@ -53,6 +59,8 @@ def trezor.crypto.curve.secp256k1.verify(self, public_key: bytes, signature: byt
 
 ###trezor.crypto.hashlib
 
+####trezor.crypto.hashlib.ripemd160
+
 ``` python
 def trezor.crypto.hashlib.ripemd160(self, data: bytes=None) -> Ripemd160
 ```
@@ -62,6 +70,8 @@ def Ripemd160.update(self, data: bytes) -> None
 ``` python
 def Ripemd160.digest(self) -> bytes
 ```
+
+####trezor.crypto.hashlib.sha256
 
 ``` python
 def trezor.crypto.hashlib.sha256(self, data: bytes=None) -> Sha256
@@ -73,6 +83,8 @@ def Sha256.update(self, data: bytes) -> None
 def Sha256.digest(self) -> bytes
 ```
 
+####trezor.crypto.hashlib.sha512
+
 ``` python
 def trezor.crypto.hashlib.sha512(self, data: bytes=None) -> Sha512
 ```
@@ -83,6 +95,8 @@ def Sha512.hash(self, data: bytes) -> None
 def Sha512.digest(self) -> bytes
 ```
 
+####trezor.crypto.hashlib.sha3_256
+
 ``` python
 def trezor.crypto.hashlib.sha3_256(self, data: bytes=None) -> Sha3_256
 ```
@@ -92,6 +106,8 @@ def Sha3_256.update(self, data: bytes) -> None
 ``` python
 def Sha3_256.digest(self) -> bytes
 ```
+
+####trezor.crypto.hashlib.sha3_512
 
 ``` python
 def trezor.crypto.hashlib.sha3_512(self, data: bytes=None) -> Sha3_512
