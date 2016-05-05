@@ -59,3 +59,7 @@ Syntax used below is a valid Python function declaration with type hints defined
 ###trezor.ui.display
 
 @extmod/modtrezorui/modtrezorui-display.h
+
+###trezor.utils
+
+@extmod/modtrezorutils/modtrezorutils.c

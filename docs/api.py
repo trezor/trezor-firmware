@@ -8,10 +8,14 @@ def process_file(fn):
     if ext in ['.h', '.c']:
         for l in src:
             l = l.rstrip()
-            if l.startswith('/// '):
+            if l.startswith('/// def '):
                 r.append('``` python')
                 r.append(l[4:])
                 r.append('```')
+            elif l.startswith('/// '):
+                r.append(l[4:])
+            elif l == '///':
+                r.append('')
     elif ext == '.py':
         mod = mod[4:].replace('/', '.')
         for l in src:
