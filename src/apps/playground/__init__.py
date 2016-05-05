@@ -6,9 +6,9 @@ from trezor.utils import unimport_func
 def multiplex_touch_events(gens):
     while True:
         e, (x, y) = yield loop.Wait([
-            loop.EVT_TSTART,
-            loop.EVT_TMOVE,
-            loop.EVT_TEND,
+            loop.TOUCH_START,
+            loop.TOUCH_MOVE,
+            loop.TOUCH_END,
         ])
         for gen in gens:
             gen.send((e, (x, y)))
@@ -23,7 +23,7 @@ def in_area(pos, area):
 def click_in(area, enter, leave):
     while True:
         e, pos = yield
-        if e is not loop.EVT_TSTART or not in_area(pos, area):
+        if e is not loop.TOUCH_START or not in_area(pos, area):
             continue
 
         inside = True
@@ -31,7 +31,7 @@ def click_in(area, enter, leave):
 
         while True:
             e, pos = yield
-            if e is loop.EVT_TMOVE:
+            if e is loop.TOUCH_MOVE:
                 if in_area(pos, area):
                     if not inside:
                         enter()
@@ -40,7 +40,7 @@ def click_in(area, enter, leave):
                     if inside:
                         leave()
                         inside = False
-            elif e is loop.EVT_TEND:
+            elif e is loop.TOUCH_END:
                 if in_area(pos, area):
                     return
                 else:

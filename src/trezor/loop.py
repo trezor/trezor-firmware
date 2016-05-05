@@ -5,16 +5,16 @@ from .utils import type_gen
 from . import msg
 from . import log
 
-EVT_TSTART = const(-1)
-EVT_TMOVE = const(-2)
-EVT_TEND = const(-3)
-EVT_MSG = const(-4)
+TOUCH_START = const(-1)
+TOUCH_MOVE = const(-2)
+TOUCH_END = const(-3)
+MESSAGE = const(-4)
 
 event_handlers = {
-    EVT_TSTART: None,
-    EVT_TMOVE: None,
-    EVT_TEND: None,
-    EVT_MSG: None,
+    TOUCH_START: None,
+    TOUCH_MOVE: None,
+    TOUCH_END: None,
+    MESSAGE: None,
 }
 time_queue = []
 
