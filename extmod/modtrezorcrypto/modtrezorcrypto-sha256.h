@@ -19,7 +19,7 @@ typedef struct _mp_obj_Sha256_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.sha256(self, data: bytes=None) -> Sha256
+/// def trezor.crypto.hashlib.sha256(data: bytes=None) -> Sha256
 ///
 /// Creates a hash context object.
 ///

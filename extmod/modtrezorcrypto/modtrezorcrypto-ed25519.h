@@ -20,7 +20,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_make_new(const mp_obj_type_t *type, siz
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.curve.ed25519.publickey(self, secret_key: bytes) -> bytes
+/// def trezor.crypto.curve.ed25519.publickey(secret_key: bytes) -> bytes
 ///
 /// Computes public key from secret key.
 ///
@@ -37,7 +37,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_publickey(mp_obj_t self, mp_obj_t secre
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ed25519_publickey_obj, mod_TrezorCrypto_Ed25519_publickey);
 
-/// def trezor.crypto.curve.ed25519.sign(self, secret_key: bytes, message: bytes) -> bytes
+/// def trezor.crypto.curve.ed25519.sign(secret_key: bytes, message: bytes) -> bytes
 ///
 /// Uses secret key to produce the signature of message.
 ///
@@ -57,7 +57,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_sign(mp_obj_t self, mp_obj_t secret_key
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Ed25519_sign_obj, mod_TrezorCrypto_Ed25519_sign);
 
-/// def trezor.crypto.curve.ed25519.verify(self, public_key: bytes, signature: bytes, message: bytes) -> bool
+/// def trezor.crypto.curve.ed25519.verify(public_key: bytes, signature: bytes, message: bytes) -> bool
 ///
 /// Uses public key to verify the signature of the message
 /// Returns True on success.

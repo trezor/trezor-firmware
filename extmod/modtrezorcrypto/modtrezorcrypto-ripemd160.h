@@ -19,7 +19,7 @@ typedef struct _mp_obj_Ripemd160_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.ripemd160(self, data: bytes=None) -> Ripemd160
+/// def trezor.crypto.hashlib.ripemd160(data: bytes=None) -> Ripemd160
 ///
 /// Creates a hash context object.
 ///

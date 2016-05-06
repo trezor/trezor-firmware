@@ -19,7 +19,7 @@ typedef struct _mp_obj_Sha3_256_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.sha3_256(self, data: bytes=None) -> Sha3_256
+/// def trezor.crypto.hashlib.sha3_256(data: bytes=None) -> Sha3_256
 ///
 /// Creates a hash context object.
 ///

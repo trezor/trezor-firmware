@@ -291,7 +291,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t 
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.ui.display.bar(self, x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None) -> None
+/// def trezor.ui.display.bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None) -> None
 ///
 /// Renders a bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
 /// When a bgcolor is set, the bar is drawn with rounded corners and bgcolor is used for background.
@@ -315,7 +315,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 7, mod_TrezorUi_Display_bar);
 
-/// def trezor.ui.display.blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None
+/// def trezor.ui.display.blit(x: int, y: int, w: int, h: int, data: bytes) -> None
 ///
 /// Renders rectangle at position (x,y = upper left corner) with width w and height h with data.
 /// The data needs to have the correct format.
@@ -335,7 +335,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, mod_TrezorUi_Display_blit);
 
-/// def trezor.ui.display.image(self, x: int, y: int, image: bytes) -> None
+/// def trezor.ui.display.image(x: int, y: int, image: bytes) -> None
 ///
 /// Renders an image at position (x,y).
 /// The image needs to be in TREZOR Optimized Image Format (TOIF) - full-color mode.
@@ -363,7 +363,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
 
-/// def trezor.ui.display.icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.icon(x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None
 ///
 /// Renders an icon at position (x,y), fgcolor is used as foreground color, bgcolor as background.
 /// The image needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
@@ -393,7 +393,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
 
-/// def trezor.ui.display.text(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.text(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 ///
 /// Renders left-aligned text at position (x,y) where x is left position and y is baseline.
 /// Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -411,7 +411,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
-/// def trezor.ui.display.text_center(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.text_center(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 ///
 /// Renders text centered at position (x,y) where x is text center and y is baseline.
 /// Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -430,7 +430,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
 
-/// def trezor.ui.display.text_right(self, x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
+/// def trezor.ui.display.text_right(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None
 ///
 /// Renders right-aligned text at position (x,y) where x is right position and y is baseline.
 /// Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -449,7 +449,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *a
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);
 
-/// def trezor.ui.display.text_width(self, text: bytes, font: int) -> int
+/// def trezor.ui.display.text_width(text: bytes, font: int) -> int
 ///
 /// Returns a width of text in pixels. Font font is used for rendering.
 ///
@@ -462,7 +462,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_text_width_obj, mod_TrezorUi_Display_text_width);
 
-/// def trezor.ui.display.qrcode(self, x: int, y: int, data: bytes, scale: int) -> None
+/// def trezor.ui.display.qrcode(x: int, y: int, data: bytes, scale: int) -> None
 ///
 /// Renders data encoded as a QR code at position (x,y).
 /// Scale determines a zoom factor.
@@ -488,7 +488,7 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
-/// def trezor.ui.display.loader(self, progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None
+/// def trezor.ui.display.loader(progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None
 ///
 /// Renders a rotating loader graphic.
 /// Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
@@ -531,7 +531,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 6, mod_TrezorUi_Display_loader);
 
-/// def trezor.ui.display.orientation(self, degrees: int) -> None
+/// def trezor.ui.display.orientation(degrees: int) -> None
 ///
 /// Sets display orientation to 0, 90, 180 or 270 degrees.
 /// Everything needs to be redrawn again when this function is used.
@@ -546,7 +546,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_TrezorUi_Display_orientation);
 
-/// def trezor.ui.display.backlight(self, val: int) -> None
+/// def trezor.ui.display.backlight(val: int) -> None
 ///
 /// Sets backlight intensity to the value specified in val.
 ///
@@ -556,7 +556,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_backlight(mp_obj_t self, mp_obj_t reg) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_backlight_obj, mod_TrezorUi_Display_backlight);
 
-/// def trezor.ui.display.raw(self, reg: int, data: bytes) -> None
+/// def trezor.ui.display.raw(reg: int, data: bytes) -> None
 ///
 /// Performs a raw command on the display. Read the datasheet to learn more.
 ///

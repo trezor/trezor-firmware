@@ -36,7 +36,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.msg.send(self, message) -> int
+/// def trezor.msg.send(message) -> int
 ///
 /// Sends message using USB HID (device) or UDP (emulator).
 ///
@@ -50,7 +50,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 
 #define TICK_RESOLUTION 1000
 
-/// def trezor.msg.select(self, timeout_us: int) -> tuple
+/// def trezor.msg.select(timeout_us: int) -> tuple
 ///
 /// Polls the event queue and returns the event object.
 /// Function returns None if timeout specified in microseconds is reached.

@@ -20,7 +20,7 @@ typedef struct _mp_obj_Pbkdf2_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.pbkdf2(self, prf: str, password: bytes, salt: bytes, iterations: int=None) -> Pbkdf2
+/// def trezor.crypto.pbkdf2(prf: str, password: bytes, salt: bytes, iterations: int=None) -> Pbkdf2
 STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 3, 4, false);
     mp_obj_Pbkdf2_t *o = m_new_obj(mp_obj_Pbkdf2_t);
