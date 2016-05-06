@@ -1,3 +1,9 @@
+def new(key, msg, digestmod) -> Hmac:
+###
+### Creates a HMAC context object.
+###
+    return Hmac(key, msg, digestmod)
+
 class Hmac:
     def __init__(self, key, msg, digestmod):
         self.__digestmod = digestmod
@@ -12,13 +18,18 @@ class Hmac:
             self.update(msg)
 
     def update(self, msg: bytes) -> None:
+    ###
+    ### Update the context with data.
+    ###
         self.__inner.update(msg)
 
     def digest(self) -> bytes:
+    ###
+    ### Returns the digest of processed data.
+    ###
         outer = self.__digestmod()
         outer.update(bytes((x ^ 0x5C) for x in self.__key))
         outer.update(self.__inner.digest())
         return outer.digest()
 
-def new(key, msg, digestmod) -> Hmac:
-    return Hmac(key, msg, digestmod)
+

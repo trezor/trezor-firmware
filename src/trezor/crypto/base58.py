@@ -19,6 +19,9 @@ from .hashlib import sha256
 _alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 def encode(data: bytes) -> str:
+###
+### Convert bytes to base58 encoded string.
+###
     origlen = len(data)
     data = data.lstrip(b'\0')
     newlen = len(data)
@@ -37,6 +40,9 @@ def encode(data: bytes) -> str:
 
 
 def decode(string: str) -> bytes:
+###
+### Convert base58 encoded string to bytes.
+###
     origlen = len(string)
     string = string.lstrip(_alphabet[0])
     newlen = len(string)
@@ -55,11 +61,16 @@ def decode(string: str) -> bytes:
 
 
 def encode_check(data: bytes) -> str:
+###
+### Convert bytes to base58 encoded string, append checksum.
+###
     digest = sha256(sha256(data).digest()).digest()
     return encode(data + digest[:4])
 
-
 def decode_check(string: str) -> bytes:
+###
+### Convert base58 encoded string to bytes and verify checksum.
+###
     result = decode(string)
     result, check = result[:-4], result[-4:]
     digest = sha256(sha256(result).digest()).digest()

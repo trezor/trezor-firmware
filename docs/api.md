@@ -9,15 +9,27 @@ Syntax used below is a valid Python function declaration with type hints defined
 ``` python
 def trezor.crypto.base58.encode(data: bytes) -> str
 ```
+
+Convert bytes to base58 encoded string.
+
 ``` python
 def trezor.crypto.base58.decode(string: str) -> bytes
 ```
+
+Convert base58 encoded string to bytes.
+
 ``` python
 def trezor.crypto.base58.encode_check(data: bytes) -> str
 ```
+
+Convert bytes to base58 encoded string, append checksum.
+
 ``` python
 def trezor.crypto.base58.decode_check(string: str) -> bytes
 ```
+
+Convert base58 encoded string to bytes and verify checksum.
+
 
 ###trezor.crypto.curve
 
@@ -199,6 +211,21 @@ Returns the digest of hashed data.
 ``` python
 def trezor.crypto.hmac.new(key, msg, digestmod) -> Hmac
 ```
+
+Creates a HMAC context object.
+
+``` python
+def Hmac.update(self, msg: bytes) -> None
+```
+
+Update the context with data.
+
+``` python
+def Hmac.digest(self) -> bytes
+```
+
+Returns the digest of processed data.
+
 
 ##trezor.msg
 
