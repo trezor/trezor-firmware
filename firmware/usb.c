@@ -230,14 +230,14 @@ static const struct usb_interface_descriptor hid_iface_debug[] = {{
 static const struct usb_interface ifaces[] = {{
 	.num_altsetting = 1,
 	.altsetting = hid_iface,
-}, {
-    .num_altsetting = 1,
-    .altsetting = hid_iface_u2f,
 #if DEBUG_LINK
 }, {
 	.num_altsetting = 1,
 	.altsetting = hid_iface_debug,
 #endif
+}, {
+    .num_altsetting = 1,
+    .altsetting = hid_iface_u2f,
 }};
 
 static const struct usb_config_descriptor config = {
@@ -308,7 +308,7 @@ static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
 
 	debugLog(0, "", "hid_u2f_rx_callback");
     if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
-	u2fhid_read((const U2FHID_FRAME *)buf);
+	u2fhid_read(tiny, (const U2FHID_FRAME *)buf);
 }
 
 #if DEBUG_LINK

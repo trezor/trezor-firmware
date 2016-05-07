@@ -47,7 +47,7 @@
 #define U2F_OUT_PKT_BUFFER_LEN 16
 
 // Initialise without a cid
-static uint32_t cid = CID_BROADCAST;
+static uint32_t cid = 0;
 
 // Circular Output buffer
 static uint32_t u2f_out_start = 0;
@@ -154,73 +154,130 @@ uint32_t next_cid(void)
 	return cid;
 }
 
-void u2fhid_read(const U2FHID_FRAME *f)
+typedef struct {
+	uint8_t buf[57+127*59];
+	uint8_t *buf_ptr;
+	uint32_t len;
+	uint8_t seq;
+	uint8_t cmd;
+} U2F_ReadBuffer;
+
+U2F_ReadBuffer *reader;
+
+void u2fhid_read(char tiny, const U2FHID_FRAME *f)
 {
-	static uint8_t seq, cmd;
-	static uint32_t len;
-	static uint8_t *buf_ptr;
-	static uint8_t buf[57+7*59];
-
-	if ((f->cid != CID_BROADCAST) && (f->cid != cid)) {
-		return; // Not for us
-	}
-
-	if (f->type & TYPE_INIT) {
-		seq = 0;
-		buf_ptr = buf;
-		len = MSG_LEN(*f);
-		cmd = f->type;
-		memcpy(buf_ptr, f->init.data, sizeof(f->init.data));
-		buf_ptr += sizeof(f->init.data);
-
-		// Broadcast is reserved for init
-		if (f->cid == CID_BROADCAST && cmd != U2FHID_INIT)
+	if (tiny) {
+		// read continue packet
+		if (reader == 0 || cid != f->cid) {
+			send_u2fhid_error(f->cid, ERR_CHANNEL_BUSY);
 			return;
-		cid = f->cid;
-
-		// Check length isnt bigger than spec max
-		if (len > sizeof(buf)) {
-			len = 0;
-			return send_u2fhid_error(ERR_INVALID_LEN);
 		}
-	}
-	else {
+
+		if ((f->type & TYPE_INIT) || reader->seq != f->cont.seq) {
+			u2fhid_init_cmd(f);
+			return;
+		}
+
 		// check out of bounds
-		if ((buf_ptr - buf) >= (signed) len
-			|| (buf_ptr + sizeof(f->cont.data) - buf) > (signed) sizeof(buf))
+		if ((reader->buf_ptr - reader->buf) >= (signed) reader->len
+			|| (reader->buf_ptr + sizeof(f->cont.data) - reader->buf) > (signed) sizeof(reader->buf))
 			return;
-		if (f->cont.seq == seq) {
-			seq++;
-			memcpy(buf_ptr, f->cont.data, sizeof(f->cont.data));
-			buf_ptr += sizeof(f->cont.data);
-		} else {
-			return send_u2fhid_error(ERR_INVALID_SEQ);
-		}
-	}
-
-	// Do we need to wait for more data
-	if ((buf_ptr - buf) < (signed)len) {
-		// debugLog(0, "", "u2fhid_read wait");
+		reader->seq++;
+		memcpy(reader->buf_ptr, f->cont.data, sizeof(f->cont.data));
+		reader->buf_ptr += sizeof(f->cont.data);
 		return;
 	}
 
-	// We have all the data
-	switch (cmd) {
+	u2fhid_read_start(f);
+}
+
+void u2fhid_init_cmd(const U2FHID_FRAME *f) {
+	reader->seq = 0;
+	reader->buf_ptr = reader->buf;
+	reader->len = MSG_LEN(*f);
+	reader->cmd = f->type;
+	memcpy(reader->buf_ptr, f->init.data, sizeof(f->init.data));
+	reader->buf_ptr += sizeof(f->init.data);
+	cid = f->cid;
+	// Check length isnt bigger than spec max
+	if (reader->len > sizeof(reader->buf)) {
+		reader->len = 0;
+		return send_u2fhid_error(cid, ERR_INVALID_LEN);
+	}
+}
+
+void u2fhid_read_start(const U2FHID_FRAME *f) {
+	U2F_ReadBuffer readbuffer;
+	if (!(f->type & TYPE_INIT)) {
+		return;
+	}
+
+	reader = &readbuffer;
+	u2fhid_init_cmd(f);
+
+	// Broadcast is reserved for init
+	if (f->cid == CID_BROADCAST && reader->cmd != U2FHID_INIT)
+		return;
+
+	usbTiny(1);
+	for(;;) {
+		// Do we need to wait for more data
+		while ((reader->buf_ptr - reader->buf) < (signed)reader->len) {
+			uint8_t lastseq = reader->seq;
+			uint8_t lastcmd = reader->cmd;
+			int counter = U2F_TIMEOUT;
+			while (reader->seq == lastseq && reader->cmd == lastcmd) {
+				if (counter-- == 0) {
+					// timeout
+					cid = 0;
+					send_u2fhid_error(f->cid, ERR_MSG_TIMEOUT);
+					usbTiny(0);
+					return;
+				}
+				usbPoll();
+			}
+		}
+		
+		// We have all the data
+		switch (reader->cmd) {
 		case U2FHID_PING:
-			u2fhid_ping(buf, len);
+			u2fhid_ping(reader->buf, reader->len);
 			break;
 		case U2FHID_MSG:
-			u2fhid_msg((APDU *)buf, len);
+			u2fhid_msg((APDU *)reader->buf, reader->len);
 			break;
 		case U2FHID_INIT:
-			u2fhid_init((const U2FHID_INIT_REQ *)buf);
+			u2fhid_init((const U2FHID_INIT_REQ *)reader->buf);
 			break;
 		case U2FHID_WINK:
-			u2fhid_wink(buf, len);
+			u2fhid_wink(reader->buf, reader->len);
 			break;
 		default:
-			send_u2fhid_error(ERR_INVALID_CMD);
+			send_u2fhid_error(cid, ERR_INVALID_CMD);
 			break;
+		}
+
+		// wait for next commmand/ button press
+		reader->cmd = 0;
+		uint8_t bs = 0;
+		while (dialog_timeout-- && bs == 0 && reader->cmd == 0) {
+			usbPoll(); // may trigger new request
+			bs = buttonState();
+		}
+
+		if (reader->cmd == 0) {
+			if (dialog_timeout == 0) {
+				last_req_state += BTN_NO; // Timeout is like button no
+			}
+			else {
+				last_req_state += bs;
+				dialog_timeout = 0;
+			}
+			cid = 0;
+			usbTiny(0);
+			layoutHome();
+			return;
+		}
 	}
 }
 
@@ -236,7 +293,7 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 	(void)buf;
 
 	if (len > 0)
-		return send_u2fhid_error(ERR_INVALID_LEN);
+		return send_u2fhid_error(cid, ERR_INVALID_LEN);
 
 	if (dialog_timeout > 0)
 		dialog_timeout = U2F_TIMEOUT;
@@ -308,7 +365,7 @@ void u2fhid_msg(const APDU *a, uint32_t len)
 	// Very crude locking, incase another message comes in while we wait.  This
 	// actually can probably be removed as no code inside calls usbPoll anymore
 	if (lock)
-		return send_u2fhid_error(ERR_CHANNEL_BUSY);
+		return send_u2fhid_error(cid, ERR_CHANNEL_BUSY);
 
 	lock = true;
 
@@ -329,7 +386,7 @@ void u2fhid_msg(const APDU *a, uint32_t len)
 
 	lock = false;
 
-	LayoutHomeAfterTimeout();
+	//LayoutHomeAfterTimeout();
 }
 
 void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
@@ -371,12 +428,12 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
 	}
 }
 
-void send_u2fhid_error(uint8_t err)
+void send_u2fhid_error(uint32_t fcid, uint8_t err)
 {
 	U2FHID_FRAME f;
 
 	bzero(&f, sizeof(f));
-	f.cid = cid;
+	f.cid = fcid;
 	f.init.cmd = U2FHID_ERROR;
 	f.init.bcntl = 1;
 	f.init.data[0] = err;
