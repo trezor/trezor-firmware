@@ -3,54 +3,10 @@ from trezor import ui
 from trezor.utils import unimport_func
 
 
-def multiplex_touch_events(gens):
-    while True:
-        event = yield loop.Wait([
-            loop.TOUCH_START,
-            loop.TOUCH_MOVE,
-            loop.TOUCH_END,
-        ])
-        for gen in gens:
-            gen.send(event)
-
-
 def in_area(pos, area):
     x, y = pos
     ax, ay, aw, ah = area
     return ax <= x <= ax + aw and ay <= y <= ay + ah
-
-
-def click_in(area, click=None, enter=None, leave=None):
-    while True:
-        e, pos = yield
-        if e is not loop.TOUCH_START or not in_area(pos, area):
-            continue
-
-        inside = True
-        if enter:
-            enter()
-
-        while True:
-            e, pos = yield
-            if e is loop.TOUCH_MOVE:
-                if in_area(pos, area):
-                    if not inside:
-                        if enter:
-                            enter()
-                        inside = True
-                else:
-                    if inside:
-                        if leave:
-                            leave()
-                        inside = False
-            elif e is loop.TOUCH_END:
-                if in_area(pos, area):
-                    if click:
-                        click()
-                    else:
-                        return
-                else:
-                    break
 
 
 default_button = {
@@ -85,90 +41,102 @@ confirm_button_active = {
 }
 
 
-def render_button(area, text, style):
-    ax, ay, aw, ah = area
-    tx = ax + aw // 2
-    ty = ay + ah - 5
-    ui.display.bar(ax, ay, aw, ah, style['bg-color'])
-    ui.display.text_center(tx, ty, text,
-                           style['text-style'],
-                           style['fg-color'],
-                           style['bg-color'])
+BTN_CLICKED = const(1)
+
+BTN_STARTED = const(1)
+BTN_ACTIVE = const(2)
+BTN_DIRTY = const(4)
 
 
-def button_widget(area, text,
-                  click=None,
-                  style=default_button,
-                  active_style=default_button_active):
+class Button():
 
-    def enter():
-        render_button(area, text, active_style)
+    def __init__(self, area, text,
+                 style=default_button,
+                 active_style=default_button_active):
+        self.area = area
+        self.text = text
+        self.style = style
+        self.active_style = active_style
+        self.state = BTN_DIRTY
 
-    def leave():
-        render_button(area, text, style)
+    def render(self):
+        if not self.state & BTN_DIRTY:
+            return
+        state = self.state & ~BTN_DIRTY
+        style = self.active_style if state & BTN_ACTIVE else self.style
+        ax, ay, aw, ah = self.area
+        tx = ax + aw // 2
+        ty = ay + ah - 5
+        ui.display.bar(ax, ay, aw, ah, style['bg-color'])
+        ui.display.text_center(tx, ty, self.text,
+                               style['text-style'],
+                               style['fg-color'],
+                               style['bg-color'])
+        self.state = state
 
-    def _click():
-        leave()
-        click()
+    def progress(self, event, pos):
+        if event is loop.TOUCH_START:
+            if in_area(pos, self.area):
+                self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
+        elif event is loop.TOUCH_MOVE and self.state & BTN_STARTED:
+            if in_area(pos, self.area):
+                if not self.state & BTN_ACTIVE:
+                    self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
+            else:
+                if self.state & BTN_ACTIVE:
+                    self.state = BTN_STARTED | BTN_DIRTY
+        elif event is loop.TOUCH_END and self.state & BTN_STARTED:
+            self.state = BTN_DIRTY
+            if in_area(pos, self.area):
+                return BTN_CLICKED
 
-    render_button(area, text, style)
-    return click_in(area, _click, enter, leave)
 
-
-def pin_widget():
-
-    pin = ''
+def digit_area(d):
     width = const(80)
     height = const(60)
-    margin = const(5)
+    margin = const(1)
+    x = ((d - 1) % 3) * width
+    y = ((d - 1) // 3) * height
+    return (
+        x + margin,
+        y + margin,
+        width - margin,
+        height - margin)
 
-    def digit_area(d):
-        x = ((d - 1) % 3) * width
-        y = ((d - 1) // 3) * height
-        return (
-            x + margin,
-            y + margin,
-            width - margin,
-            height - margin
-        )
 
-    def append_digit(d):
-        pin += str(d)
-        print('PIN so far: ', pin)
+PIN_CONFIRMED = const(1)
+PIN_CANCELLED = const(2)
 
-    def digit_widget(digit):
-        nonlocal pin
-        area = digit_area(digit)
-        button = button_widget(
-            area,
-            str(digit),
-            lambda: append_digit(digit))
-        return button
 
-    digits = (1, 2, 3, 4, 5, 6, 7, 8, 9)
-    buttons = [digit_widget(d) for d in digits]
+class PinDialog():
 
-    def cancel():
-        raise StopIteration(None)
+    def __init__(self):
+        self.confirm_button = Button(
+            (0, 240-60, 120, 60), 'Confirm',
+            style=confirm_button,
+            active_style=confirm_button_active)
+        self.cancel_button = Button(
+            (120, 240-60, 120, 60), 'Cancel',
+            style=cancel_button,
+            active_style=cancel_button_active)
+        self.pin_buttons = [
+            Button(digit_area(d), str(d)) for d in range(1, 10)]
+        self.pin = ''
 
-    def confirm():
-        raise StopIteration(pin)
+    def render(self):
+        for b in self.pin_buttons:
+            b.render()
+        self.confirm_button.render()
+        self.cancel_button.render()
 
-    cancel_widget = button_widget((0, 240 - 60, 120, 60), 'Cancel',
-                                  click=cancel,
-                                  style=cancel_button,
-                                  active_style=cancel_button_active)
-    confirm_widget = button_widget((120, 240 - 60, 120, 60), 'Confirm',
-                                   click=confirm,
-                                   style=confirm_button,
-                                   active_style=confirm_button_active)
-
-    buttons.append(cancel_widget)
-    buttons.append(confirm_widget)
-    for but in buttons:
-        next(but)
-
-    return buttons
+    def progress(self, event, pos):
+        for b in self.pin_buttons:
+            if b.progress(event, pos) is BTN_CLICKED:
+                self.pin += b.text
+        if self.confirm_button.progress(event, pos) is BTN_CLICKED:
+            return PIN_CONFIRMED
+        if self.cancel_button.progress(event, pos) is BTN_CLICKED:
+            return PIN_CANCELLED
 
 
 def layout_tap_to_confirm(address, amount, currency):
@@ -193,17 +161,25 @@ def layout_tap_to_confirm(address, amount, currency):
 
     # animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 
-    # button = button_widget((20, 20, 210, 60), 'HELLO WORLD!')
-    # next(button)
+    pin = PinDialog()
 
-    pin = pin_widget()
+    while True:
+        pin.render()
 
-    result = yield loop.Wait((
-        # animation,
-        multiplex_touch_events(pin),
-    ))
-
-    print(result)
+        # TODO: if we simply wait for any of scalar events, we can use
+        # something much more lightweight than loop.Wait
+        event, pos = yield loop.Wait([
+            loop.TOUCH_START,
+            loop.TOUCH_MOVE,
+            loop.TOUCH_END,
+        ])
+        result = pin.progress(event, pos)
+        if result is PIN_CONFIRMED:
+            print('PIN confirmed:', pin.pin)
+            return
+        elif result is PIN_CANCELLED:
+            print('PIN CANCELLED, go home')
+            return
 
 
 @unimport_func
