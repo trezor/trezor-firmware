@@ -2,7 +2,7 @@
 # eigenein (c) 2011
 # http://eigenein.me/protobuf/
 
-from _io import BytesIO
+from uio import BytesIO
 import ustruct
 
 # Types. -----------------------------------------------------------------------
