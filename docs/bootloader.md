@@ -12,6 +12,8 @@ TREZOR Core firmware file consists of 3 parts:
 
 ###Vendor Header
 
+Total length of vendor header is 82 + 32 * (number of pubkeys) + (length of vendor string) + (length of vendor image) bytes rounded up to the closest multiply of 256 bytes.
+
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
 | 0x0000 | 4      | magic | firmware magic `TRZV` |
@@ -19,16 +21,19 @@ TREZOR Core firmware file consists of 3 parts:
 | 0x0008 | 4      | expiry | valid until timestamp |
 | 0x000C | 1      | vsig_m | number of signatures needed to run the firmware from this vendor |
 | 0x000D | 1      | vsig_n | number of pubkeys vendor wants to use for signing |
-| 0x000E | 1      | vstr_len | vendor string length |
-| 0x000F | ?      | vstr | vendor string |
-| ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
-| ?      | 32     | vpub1 | vendor pubkey 1 |
+| 0x000E | 2      | reserved | not used yet |
+| 0x0010 | 32     | vpub1 | vendor pubkey 1 |
 | ...    | ...    | ... | ... |
 | ?      | 32     | vpubn | vendor pubkey n |
-| ?      | 1      | slsigidx | SatoshiLabs signature indexes |
+| ?      | 1      | vstr_len | vendor string length |
+| ?      | ?      | vstr | vendor string |
+| ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
+| ?      | 1      | slsigidx | SatoshiLabs signature indexes (bitmap) |
 | ?      | 64     | slsig | SatoshiLabs signature |
 
 ###Firmware Header
+
+Total length of firmware header is 256 bytes.
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
@@ -40,5 +45,6 @@ TREZOR Core firmware file consists of 3 parts:
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 1      | vidx   | vendor signature indexes |
-| 0x0015 | 64     | vsign  | vendor signature |
+| 0x0014 | 1      | vndsigidx | vendor signature indexes (bitmap) |
+| 0x0015 | 64     | vndsig | vendor signature |
+| 0x0079 | 135    | reserved | not used yet |
