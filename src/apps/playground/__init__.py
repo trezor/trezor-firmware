@@ -9,32 +9,32 @@ def in_area(pos, area):
     return ax <= x <= ax + aw and ay <= y <= ay + ah
 
 
-default_button = {
+DEFAULT_BUTTON = {
     'bg-color': ui.WHITE,
     'fg-color': ui.BLACK,
     'text-style': ui.NORMAL,
 }
-default_button_active = {
+DEFAULT_BUTTON_ACTIVE = {
     'bg-color': ui.GREY,
     'fg-color': ui.BLACK,
     'text-style': ui.BOLD,
 }
-cancel_button = {
+CANCEL_BUTTON = {
     'bg-color': ui.blend(ui.BLACK, ui.RED, 0.3),
     'fg-color': ui.RED,
     'text-style': ui.NORMAL,
 }
-cancel_button_active = {
+CANCEL_BUTTON_ACTIVE = {
     'bg-color': ui.RED,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
 }
-confirm_button = {
+CONFIRM_BUTTON = {
     'bg-color': ui.blend(ui.BLACK, ui.GREEN, 0.3),
     'fg-color': ui.GREEN,
     'text-style': ui.NORMAL,
 }
-confirm_button_active = {
+CONFIRM_BUTTON_ACTIVE = {
     'bg-color': ui.GREEN,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
@@ -50,20 +50,18 @@ BTN_DIRTY = const(4)
 
 class Button():
 
-    def __init__(self, area, text,
-                 style=default_button,
-                 active_style=default_button_active):
+    def __init__(self, area, text, normal_style=None, active_style=None):
         self.area = area
         self.text = text
-        self.style = style
-        self.active_style = active_style
+        self.normal_style = normal_style or DEFAULT_BUTTON
+        self.active_style = active_style or DEFAULT_BUTTON_ACTIVE
         self.state = BTN_DIRTY
 
     def render(self):
         if not self.state & BTN_DIRTY:
             return
         state = self.state & ~BTN_DIRTY
-        style = self.active_style if state & BTN_ACTIVE else self.style
+        style = self.active_style if state & BTN_ACTIVE else self.normal_style
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
         ty = ay + ah - 5
@@ -97,11 +95,10 @@ def digit_area(d):
     margin = const(1)
     x = ((d - 1) % 3) * width
     y = ((d - 1) // 3) * height
-    return (
-        x + margin,
-        y + margin,
-        width - margin,
-        height - margin)
+    return (x + margin,
+            y + margin,
+            width - margin,
+            height - margin)
 
 
 PIN_CONFIRMED = const(1)
@@ -110,29 +107,27 @@ PIN_CANCELLED = const(2)
 
 class PinDialog():
 
-    def __init__(self):
-        self.confirm_button = Button(
-            (0, 240-60, 120, 60), 'Confirm',
-            style=confirm_button,
-            active_style=confirm_button_active)
-        self.cancel_button = Button(
-            (120, 240-60, 120, 60), 'Cancel',
-            style=cancel_button,
-            active_style=cancel_button_active)
-        self.pin_buttons = [
-            Button(digit_area(d), str(d)) for d in range(1, 10)]
-        self.pin = ''
+    def __init__(self, pin=''):
+        self.pin = pin
+        self.confirm_button = Button((0, 240 - 60, 120, 60), 'Confirm',
+                                     normal_style=CONFIRM_BUTTON,
+                                     active_style=CONFIRM_BUTTON_ACTIVE)
+        self.cancel_button = Button((120, 240 - 60, 120, 60), 'Cancel',
+                                    normal_style=CANCEL_BUTTON,
+                                    active_style=CANCEL_BUTTON_ACTIVE)
+        self.pin_buttons = [Button(digit_area(dig), str(dig))
+                            for dig in range(1, 10)]
 
     def render(self):
-        for b in self.pin_buttons:
-            b.render()
+        for btn in self.pin_buttons:
+            btn.render()
         self.confirm_button.render()
         self.cancel_button.render()
 
     def progress(self, event, pos):
-        for b in self.pin_buttons:
-            if b.progress(event, pos) is BTN_CLICKED:
-                self.pin += b.text
+        for btn in self.pin_buttons:
+            if btn.progress(event, pos) is BTN_CLICKED:
+                self.pin += btn.text
         if self.confirm_button.progress(event, pos) is BTN_CLICKED:
             return PIN_CONFIRMED
         if self.cancel_button.progress(event, pos) is BTN_CLICKED:
@@ -166,8 +161,7 @@ def layout_tap_to_confirm(address, amount, currency):
     while True:
         pin.render()
 
-        # TODO: if we simply wait for any of scalar events, we can use
-        # something much more lightweight than loop.Wait
+        # TODO: use something much more lightweight than loop.Wait
         event, pos = yield loop.Wait([
             loop.TOUCH_START,
             loop.TOUCH_MOVE,
