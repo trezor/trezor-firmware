@@ -25,9 +25,8 @@ TREZOR OS firmware file consists of 3 parts:
 | ?      | 32     | vpub1 | vendor pubkey 1 |
 | ...    | ...    | ... | ... |
 | ?      | 32     | vpubn | vendor pubkey n |
-| ?      | 64     | slsig1 | SatoshiLabs signature 1 |
-| ?      | 64     | slsig2 | SatoshiLabs signature 2 |
-| ?      | 64     | slsig3 | SatoshiLabs signature 3 |
+| ?      | 1      | slsigidx | SatoshiLabs signature indexes |
+| ?      | 64     | slsig | SatoshiLabs signature |
 
 ###Firmware Header
 
@@ -41,10 +40,5 @@ TREZOR OS firmware file consists of 3 parts:
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 1      | vidx1 | vendor signature index 1 |
-| 0x0015 | 32     | vsig1 | vendor signature 1 |
-| 0x0047 | 1      | vidx2 | vendor signature index 2 |
-| 0x0048 | 32     | vsig2 | vendor signature 2 |
-| ...    | ...    | ...   | ... |
-| ?      | 1      | vidxn | vendor signature index n |
-| ?      | 32     | vsign | vendor signature n |
+| 0x0014 | 1      | vidx   | vendor signature indexes |
+| 0x0015 | 64     | vsign  | vendor signature |
