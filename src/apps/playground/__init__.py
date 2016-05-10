@@ -208,7 +208,7 @@ def layout_tap_to_confirm(address, amount, currency):
 
 @unimport_func
 def zprava():
-    from _io import BytesIO
+    from uio import BytesIO
 
     from trezor.messages.GetAddress import GetAddress
 
