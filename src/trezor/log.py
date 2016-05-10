@@ -1,4 +1,4 @@
-import _io
+import uio
 import sys
 import utime
 
@@ -41,7 +41,7 @@ def error(name, msg, *args):
     _log(name, ERROR, msg, *args)
 
 def exception(name, exc):
-    out = _io.StringIO()
+    out = uio.StringIO()
     sys.print_exception(exc, out)
     _log(name, ERROR, out.getvalue())
 
