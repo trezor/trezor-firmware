@@ -1,4 +1,4 @@
-![TREZOR OS](docs/logo.png)
+![TREZOR Core](docs/logo.png)
 
 * [Documentation](docs/)
 

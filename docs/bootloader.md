@@ -1,10 +1,10 @@
-#TREZOR OS Bootloader
+#TREZOR Core Bootloader
 
 All multibyte integer values are little endian!
 
 ##Firmware File Format
 
-TREZOR OS firmware file consists of 3 parts:
+TREZOR Core firmware file consists of 3 parts:
 
 1. vendor header
 2. firmware header

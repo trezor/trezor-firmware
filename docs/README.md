@@ -1,5 +1,5 @@
-#TREZOR OS documentation
+#TREZOR Core documentation
 
-* [TREZOR OS API](api.md)
-* [TREZOR OS Bootloader](bootloader.md)
-* [TREZOR OS Image Format](toif.md)
+* [TREZOR Core API](api.md)
+* [TREZOR Core Bootloader](bootloader.md)
+* [TREZOR Core Image Format](toif.md)
