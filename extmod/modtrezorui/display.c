@@ -13,6 +13,7 @@
 #include "trezor-qrenc/qr_encode.h"
 
 #include "display.h"
+#include <string.h>
 
 #if defined STM32_HAL_H
 #include "display-stmhal.h"
@@ -238,6 +239,12 @@ void display_qrcode(uint8_t x, uint8_t y, const char *data, int datalen, int sca
 
 #include "loader.h"
 
+static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
+{
+    uint8_t *out = (uint8_t *)userdata;
+    out[pos] = byte;
+}
+
 void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint16_t iconfgcolor)
 {
     uint16_t colortable[16], iconcolortable[16];
@@ -246,6 +253,13 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
         set_color_table(iconcolortable, iconfgcolor, bgcolor);
     }
     display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
+    if (icon && memcmp(icon, "TOIg\x60\x00\x60\x00", 8) == 0) {
+        uint8_t icondata[96 * 96 / 2];
+        sinf_inflate(icon + 12, inflate_callback_loader, icondata);
+        icon = icondata;
+    } else {
+        icon = NULL;
+    }
     for (int y = 0; y < img_loader_size * 2; y++) {
         for (int x = 0; x < img_loader_size * 2; x++) {
             int mx = x, my = y;

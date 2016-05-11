@@ -211,13 +211,6 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
 
-
-static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
-{
-    uint8_t *out = (uint8_t *)userdata;
-    out[pos] = byte;
-}
-
 /// def trezor.ui.display.loader(progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None
 ///
 /// Renders a rotating loader graphic.
@@ -245,15 +238,13 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         if (datalen != icon.len - 12) {
             nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
         }
-        uint8_t icondata[96 * 96 /2];
-        sinf_inflate(data + 12, inflate_callback_loader, icondata);
         uint16_t iconfgcolor;
         if (n_args > 5) { // icon color provided
             iconfgcolor = mp_obj_get_int(args[5]);
         } else {
             iconfgcolor = ~bgcolor; // invert
         }
-        display_loader(progress, fgcolor, bgcolor, icondata, iconfgcolor);
+        display_loader(progress, fgcolor, bgcolor, data, iconfgcolor);
     } else {
         display_loader(progress, fgcolor, bgcolor, NULL, 0);
     }
