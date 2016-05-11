@@ -13,3 +13,8 @@ libtrezor.a: $(OBJS)
 	ar rcs libtrezor.a $(OBJS)
 
 include Makefile.include
+
+.PHONY: vendor
+
+vendor:
+	git submodule update --init
