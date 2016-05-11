@@ -4,6 +4,9 @@ python-trezor
 .. image:: https://travis-ci.org/trezor/python-trezor.svg?branch=master
     :target: https://travis-ci.org/trezor/python-trezor
 
+.. image:: https://badges.gitter.im/trezor/community.svg
+    :target: https://gitter.im/trezor/community
+
 Client side implementation for TREZOR-compatible Bitcoin hardware wallets.
 
 See http://bitcointrezor.com for more information.
