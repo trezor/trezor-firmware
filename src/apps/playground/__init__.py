@@ -64,7 +64,7 @@ class Button():
         style = self.active_style if state & BTN_ACTIVE else self.normal_style
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
-        ty = ay + ah - 5
+        ty = ay + ah // 2 + 8  # offset to make the text vertically centered
         ui.display.bar(ax, ay, aw, ah, style['bg-color'])
         ui.display.text_center(tx, ty, self.text,
                                style['text-style'],
@@ -72,7 +72,7 @@ class Button():
                                style['bg-color'])
         self.state = state
 
-    def progress(self, event, pos):
+    def send(self, event, pos):
         if event is loop.TOUCH_START:
             if in_area(pos, self.area):
                 self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
@@ -124,14 +124,24 @@ class PinDialog():
         self.confirm_button.render()
         self.cancel_button.render()
 
-    def progress(self, event, pos):
+    def send(self, event, pos):
         for btn in self.pin_buttons:
-            if btn.progress(event, pos) is BTN_CLICKED:
+            if btn.send(event, pos) is BTN_CLICKED:
                 self.pin += btn.text
-        if self.confirm_button.progress(event, pos) is BTN_CLICKED:
+        if self.confirm_button.send(event, pos) is BTN_CLICKED:
             return PIN_CONFIRMED
-        if self.cancel_button.progress(event, pos) is BTN_CLICKED:
+        if self.cancel_button.send(event, pos) is BTN_CLICKED:
             return PIN_CANCELLED
+
+    def wait_for_result(self):
+        while True:
+            self.render()
+            event, pos = yield loop.Wait([loop.TOUCH_START,
+                                          loop.TOUCH_MOVE,
+                                          loop.TOUCH_END])
+            result = self.send(event, pos)
+            if result is not None:
+                return result
 
 
 def layout_tap_to_confirm(address, amount, currency):
@@ -158,22 +168,11 @@ def layout_tap_to_confirm(address, amount, currency):
 
     pin = PinDialog()
 
-    while True:
-        pin.render()
-
-        # TODO: use something much more lightweight than loop.Wait
-        event, pos = yield loop.Wait([
-            loop.TOUCH_START,
-            loop.TOUCH_MOVE,
-            loop.TOUCH_END,
-        ])
-        result = pin.progress(event, pos)
-        if result is PIN_CONFIRMED:
-            print('PIN confirmed:', pin.pin)
-            return
-        elif result is PIN_CANCELLED:
-            print('PIN CANCELLED, go home')
-            return
+    pin_result = yield from pin.wait_for_result()
+    if pin_result is PIN_CONFIRMED:
+        print('PIN confirmed:', pin.pin)
+    elif pin_result is PIN_CANCELLED:
+        print('PIN CANCELLED, go home')
 
 
 @unimport_func
