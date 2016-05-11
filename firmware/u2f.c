@@ -33,6 +33,7 @@
 #include "rng.h"
 #include "hmac.h"
 #include "util.h"
+#include "macros.h"
 
 #include "u2f/u2f.h"
 #include "u2f/u2f_hid.h"
@@ -240,7 +241,7 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 		dialog_timeout = U2F_TIMEOUT;
 
 	U2FHID_FRAME f;
-	bzero(&f, sizeof(f));
+	MEMSET_BZERO(&f, sizeof(f));
 	f.cid = cid;
 	f.init.cmd = U2FHID_WINK;
 	f.init.bcntl = 0;
@@ -253,7 +254,7 @@ void u2fhid_init(const U2FHID_INIT_REQ *init_req)
 	U2FHID_FRAME f;
 	U2FHID_INIT_RESP *resp = (U2FHID_INIT_RESP *)f.init.data;
 
-	bzero(&f, sizeof(f));
+	MEMSET_BZERO(&f, sizeof(f));
 	f.cid = CID_BROADCAST;
 	f.init.cmd = U2FHID_INIT;
 	f.init.bcnth = 0;
@@ -340,7 +341,7 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
 
 	// debugLog(0, "", "send_u2fhid_msg");
 
-	bzero(&f, sizeof(f));
+	MEMSET_BZERO(&f, sizeof(f));
 	f.cid = cid;
 	f.init.cmd = cmd;
 	f.init.bcnth = len >> 8;
@@ -356,7 +357,7 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
 	// Cont packet(s)
 	for (; l > 0; l -= psz, p += psz) {
 		// debugLog(0, "", "send_u2fhid_msg con");
-		bzero(&f.cont.data, sizeof(f.cont.data));
+		MEMSET_BZERO(&f.cont.data, sizeof(f.cont.data));
 		f.cont.seq = seq++;
 		psz = MIN(sizeof(f.cont.data), l);
 		memcpy(f.cont.data, p, psz);
@@ -373,7 +374,7 @@ void send_u2fhid_error(uint8_t err)
 {
 	U2FHID_FRAME f;
 
-	bzero(&f, sizeof(f));
+	MEMSET_BZERO(&f, sizeof(f));
 	f.cid = cid;
 	f.init.cmd = U2FHID_ERROR;
 	f.init.bcntl = 1;
@@ -391,18 +392,18 @@ void u2f_version(const APDU *a)
 	send_u2f_msg(version_response, sizeof(version_response));
 }
 
-static const char *getReadableAppId(const uint8_t appid[32]) {
+static const char *getReadableAppId(const uint8_t appid[U2F_APPID_SIZE]) {
 	unsigned int i;
 	static char buf[6+2+6+1];
 
 	for (i = 0; i < sizeof(u2f_well_known)/sizeof(U2FWellKnown); i++) {
-		if (memcmp(appid, u2f_well_known[i].appid, 32) == 0)
+		if (memcmp(appid, u2f_well_known[i].appid, U2F_APPID_SIZE) == 0)
 			return u2f_well_known[i].appname;
 	}
 
 	data2hex(appid, 3, &buf[0]);
 	buf[6] = buf[7] = '.';
-	data2hex(appid+(sizeof(appid)-3), 3, &buf[8]);
+	data2hex(appid + (U2F_APPID_SIZE - 3), 3, &buf[8]);
 	return buf;
 }
 
@@ -534,7 +535,7 @@ void u2f_register(const APDU *a)
 	if (last_req_state == REG_PASS) {
 		uint8_t data[sizeof(U2F_REGISTER_RESP) + 2];
 		U2F_REGISTER_RESP *resp = (U2F_REGISTER_RESP *)&data;
-		bzero(data, sizeof(data));
+		MEMSET_BZERO(data, sizeof(data));
 
 
 		resp->registerId = U2F_REGISTER_ID;
