@@ -19,7 +19,7 @@ static int ROTATION = 0;
 
 #define CMD(X) (void)(X);
 
-static void DATA(uint8_t x) {
+void DATA(uint8_t x) {
     if (POSX <= EX && POSY <= EY) {
         ((uint8_t *)SCREEN->pixels)[POSX * 2 + POSY * SCREEN->pitch + (DATAODD ^ 1)] = x;
     }
@@ -75,7 +75,7 @@ uint32_t trezorui_poll_sdl_event(void)
     return 0;
 }
 
-static void display_init(void)
+void display_init(void)
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -97,14 +97,15 @@ static void display_init(void)
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
 }
 
-static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
     SX = x; SY = y;
     EX = x + w - 1; EY = y + h - 1;
     POSX = SX; POSY = SY;
     DATAODD = 0;
 }
 
-static void display_update(void)
+void display_update(void)
 {
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
@@ -113,12 +114,12 @@ static void display_update(void)
     SDL_RenderPresent(RENDERER);
 }
 
-static void display_orientation(int degrees)
+void display_orientation(int degrees)
 {
     ROTATION = degrees;
     display_update();
 }
 
-static void display_backlight(uint8_t val)
+void display_backlight(uint8_t val)
 {
 }

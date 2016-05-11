@@ -10,7 +10,7 @@
 #define CMD(X)  (*((__IO uint8_t *)((uint32_t)(0x60000000))) = (X))
 #define DATA(X) (*((__IO uint8_t *)((uint32_t)(0x60000000 | 0x10000))) = (X))
 
-static void DATAS(const void *bytes, int len);
+void DATAS(const void *bytes, int len);
 
 void display_sram_init(void) {
     __GPIOE_CLK_ENABLE();
@@ -93,7 +93,7 @@ static void display_unsleep(void) {
 
 static uint8_t WINDOW_OFFSET_X = 0, WINDOW_OFFSET_Y = 0;
 
-static void display_orientation(uint16_t degrees)
+void display_orientation(int degrees)
 {
     // memory access control
     switch (degrees) {
@@ -120,7 +120,7 @@ static void display_orientation(uint16_t degrees)
     }
 }
 
-static void display_init(void) {
+void display_init(void) {
     display_sram_init();
     CMD(0x01); // software reset
     HAL_Delay(20);
@@ -148,7 +148,7 @@ static void display_init(void) {
     display_unsleep();
 }
 
-static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     x += WINDOW_OFFSET_X;
     y += WINDOW_OFFSET_Y;
     uint16_t x1 = x + w - 1;
@@ -158,9 +158,9 @@ static void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     CMD(0x2C);
 }
 
-static void display_update(void) {
+void display_update(void) {
 }
 
-static void display_backlight(uint8_t val)
+void display_backlight(uint8_t val)
 {
 }

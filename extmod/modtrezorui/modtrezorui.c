@@ -15,17 +15,6 @@
 
 #if MICROPY_PY_TREZORUI
 
-#define RESX 240
-#define RESY 240
-
-#if defined STM32_HAL_H
-#include "modtrezorui-stmhal.h"
-#elif defined UNIX
-#include "modtrezorui-unix.h"
-#else
-#error Unsupported port. Only STMHAL and UNIX ports are supported.
-#endif
-
 #include "modtrezorui-display.h"
 
 STATIC const mp_rom_map_elem_t mp_module_TrezorUi_globals_table[] = {
