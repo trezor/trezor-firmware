@@ -17,6 +17,7 @@ event_handlers = {
     MESSAGE: None,
 }
 time_queue = []
+schedule_ctr = 0
 
 if __debug__:
     # For performance stats
@@ -27,16 +28,15 @@ if __debug__:
 
 
 def __schedule(gen, args=(), time=None):
-    if __debug__:
-        log.debug(__name__, 'Scheduling %s %s', time, gen)
-
+    global schedule_ctr
     if not time:
         time = utime.ticks_us()
-
-    heappush(time_queue, (time, gen, args))
+    heappush(time_queue, (time, schedule_ctr, gen, args))
+    schedule_ctr += 1
 
 
 class Wait():
+
     def __init__(self, gens, wait_for=1, exit_others=True):
         self.wait_for = wait_for
         self.exit_others = exit_others
@@ -64,10 +64,8 @@ class Wait():
 
             if self.exit_others:
                 for g in self.gens:
-                    try:
-                        g.throw(StopIteration())
-                    except:
-                        pass
+                    if isinstance(gen, type_gen):
+                        g.close()
 
 
 def sleep(us):
@@ -88,7 +86,7 @@ def run_forever(start_gens):
     while True:
 
         if time_queue:
-            t, _, _ = time_queue[0]
+            t, _, _, _ = time_queue[0]
             delay = t - utime.ticks_us()
         else:
             delay = delay_max
@@ -112,7 +110,7 @@ def run_forever(start_gens):
         else:
             if time_queue:
                 # Run something from the time queue
-                _, gen, args = heappop(time_queue)
+                _, _, gen, args = heappop(time_queue)
             else:
                 # Sleep again
                 delay = delay_max
