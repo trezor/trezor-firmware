@@ -12,7 +12,7 @@
 
 static void DATAS(const void *bytes, int len);
 
-void sram_init(void) {
+void display_sram_init(void) {
     __GPIOE_CLK_ENABLE();
     __FSMC_CLK_ENABLE();
 
@@ -121,7 +121,7 @@ static void display_orientation(uint16_t degrees)
 }
 
 static void display_init(void) {
-    sram_init();
+    display_sram_init();
     CMD(0x01); // software reset
     HAL_Delay(20);
     CMD(0x28); // display off
