@@ -10,34 +10,42 @@ def in_area(pos, area):
 
 
 DEFAULT_BUTTON = {
-    'bg-color': ui.WHITE,
-    'fg-color': ui.BLACK,
+    'bg-color': ui.BLACK,
+    'fg-color': ui.WHITE,
     'text-style': ui.NORMAL,
+    'border-color': ui.blend(ui.BLACK, ui.WHITE, 0.1),
 }
 DEFAULT_BUTTON_ACTIVE = {
     'bg-color': ui.GREY,
     'fg-color': ui.BLACK,
     'text-style': ui.BOLD,
+    'border-color': ui.GREY,
 }
+
 CANCEL_BUTTON = {
     'bg-color': ui.blend(ui.BLACK, ui.RED, 0.3),
     'fg-color': ui.RED,
     'text-style': ui.NORMAL,
+    'border-color': ui.blend(ui.BLACK, ui.RED, 0.6),
 }
 CANCEL_BUTTON_ACTIVE = {
     'bg-color': ui.RED,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
+    'border-color': ui.RED,
 }
+
 CONFIRM_BUTTON = {
     'bg-color': ui.blend(ui.BLACK, ui.GREEN, 0.3),
     'fg-color': ui.GREEN,
     'text-style': ui.NORMAL,
+    'border-color': ui.blend(ui.BLACK, ui.GREEN, 0.6),
 }
 CONFIRM_BUTTON_ACTIVE = {
     'bg-color': ui.GREEN,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
+    'border-color': ui.GREEN,
 }
 
 
@@ -64,8 +72,9 @@ class Button():
         style = self.active_style if state & BTN_ACTIVE else self.normal_style
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
-        ty = ay + ah // 2 + 8  # offset to make the text vertically centered
-        ui.display.bar(ax, ay, aw, ah, style['bg-color'])
+        ty = ay + ah // 2 + 8
+        ui.display.bar(ax, ay, aw, ah, style['border-color'])
+        ui.display.bar(ax+1, ay+1, aw-2, ah-2, style['bg-color'])
         ui.display.text_center(tx, ty, self.text,
                                style['text-style'],
                                style['fg-color'],
@@ -92,13 +101,9 @@ class Button():
 def digit_area(d):
     width = const(80)
     height = const(60)
-    margin = const(1)
     x = ((d - 1) % 3) * width
     y = ((d - 1) // 3) * height
-    return (x + margin,
-            y + margin,
-            width - margin,
-            height - margin)
+    return (x, y, width, height)
 
 
 PIN_CONFIRMED = const(1)
