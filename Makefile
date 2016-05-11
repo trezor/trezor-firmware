@@ -1,20 +1,22 @@
+.PHONY: vendor
+
 STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-TREZORV2
 
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36mmake %-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-update: ## update git submodules
-	git submodule update
+vendor: ## update git submodules
+	git submodule update --init
 
 build: build_stmhal build_unix ## build both stmhal and unix micropython ports
 
-build_stmhal: update ## build stmhal port
+build_stmhal: vendor ## build stmhal port
 	make -C vendor/micropython/stmhal
 
-build_unix: update ## build unix port (32-bit)
+build_unix: vendor ## build unix port (32-bit)
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
 
-build_unix64: update ## build unix port (64-bit)
+build_unix64: vendor ## build unix port (64-bit)
 	make -C vendor/micropython/unix
 
 run: ## run unix port
