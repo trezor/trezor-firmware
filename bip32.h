@@ -56,7 +56,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i);
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i);
 
-int hdnode_public_ckd_address_optimized(const HDNode *in, const curve_point *pub, uint32_t i, uint8_t version, char *addr, int addrsize);
+int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint8_t version, char *addr, int addrsize);
 
 #if USE_BIP32_CACHE
 

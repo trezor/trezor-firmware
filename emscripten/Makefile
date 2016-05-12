@@ -2,7 +2,8 @@ EMFLAGS = \
 	-Os --closure 1 \
 	--memory-init-file 0 \
 	--pre-js pre.js --post-js post.js \
-	-s EXPORTED_FUNCTIONS='["_hdnode_public_ckd", "_ecdsa_get_address"]'
+	-I ../ed25519-donna \
+	-s EXPORTED_FUNCTIONS='["_hdnode_public_ckd_address_optimized", "_ecdsa_read_pubkey"]'
 
 SRC = ../bignum.c ../ecdsa.c ../secp256k1.c ../hmac.c ../bip32.c \
 	../base58.c ../ripemd160.c ../sha2.c ../rand.c
@@ -22,3 +23,6 @@ node_modules:
 
 clean:
 	rm -f trezor-crypto.js test-browserify.js
+
+docker:
+	docker run --rm -i -v $(shell pwd)/..:/src -t apiaryio/emcc /bin/bash

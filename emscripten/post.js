@@ -11,13 +11,17 @@
 
 var HEAPU8 = Module['HEAPU8'];
 var _malloc = Module['_malloc'];
-var _hdnode_public_ckd = Module['_hdnode_public_ckd'];
-var _ecdsa_get_address = Module['_ecdsa_get_address'];
+var _hdnode_public_ckd_address_optimized = Module['_hdnode_public_ckd_address_optimized'];
+var _ecdsa_read_pubkey = Module['_ecdsa_read_pubkey'];
 var Pointer_stringify = Module['Pointer_stringify'];
 
-// HDNode struct global
-var HDNODE_SIZE = 4 + 4 + 4 + 32 + 32 + 33;
-var _hdnode = _malloc(HDNODE_SIZE);
+// HDNode structs global
+var PUBPOINT_SIZE = 2 * 9 * 4; // (2 * bignum256 (= 9 * uint32_t))
+var _pubpoint = _malloc(PUBPOINT_SIZE);
+var PUBKEY_SIZE = 33;
+var _pubkey = _malloc(PUBKEY_SIZE);
+var CHAINCODE_SIZE = 32;
+var _chaincode = _malloc(CHAINCODE_SIZE);
 
 // address string global
 var ADDRESS_SIZE = 40; // maximum size
@@ -29,33 +33,26 @@ var _address = _malloc(ADDRESS_SIZE);
 
 /**
  * @param {HDNode} node  HDNode struct, see the definition above
- * @return {Uint8Array}
  */
 function serializeNode(node) {
-    var b = new ArrayBuffer(HDNODE_SIZE);
+    var u8_pubkey = new Uint8Array(33);
+    u8_pubkey.set(node['public_key'], 0);
+    HEAPU8.set(u8_pubkey, _pubkey);
 
-    var u32 = new Uint32Array(b, 0, 12);
-    u32[0] = node['depth'];
-    u32[1] = node['fingerprint'];
-    u32[2] = node['child_num'];
+    var u8_chaincode = new Uint8Array(32);
+    u8_chaincode.set(node['chain_code'], 0);
+    HEAPU8.set(u8_chaincode, _chaincode);
 
-    var u8 = new Uint8Array(b, 0, HDNODE_SIZE);
-    u8.set(node['chain_code'], 12);
-    u8.set(node['public_key'], 12 + 32 + 32);
-
-    return u8;
+    _ecdsa_read_pubkey(0, _pubkey, _pubpoint);
 }
 
 /**
- * @param {Uint8Array} sn   serialized node, see `serializeNode`
  * @param {Number} index    BIP32 index of the address
  * @param {Number} version  address version byte
  * @return {String}
  */
-function deriveAddress(sn, index, version) {
-    HEAPU8.set(sn, _hdnode);
-    _hdnode_public_ckd(_hdnode, index);
-    _ecdsa_get_address(_hdnode + 12 + 32 + 32, version, _address, ADDRESS_SIZE);
+function deriveAddress(index, version) {
+    _hdnode_public_ckd_address_optimized(_pubpoint, _pubkey, _chaincode, index, version, _address, ADDRESS_SIZE);
     return Pointer_stringify(_address);
 }
 
@@ -68,10 +65,10 @@ function deriveAddress(sn, index, version) {
  */
 function deriveAddressRange(node, firstIndex, lastIndex, version) {
     var addresses = [];
-    var sn = serializeNode(node);
+    serializeNode(node);
     var i;
     for (i = firstIndex; i <= lastIndex; i++) {
-        addresses.push(deriveAddress(sn, i, version));
+        addresses.push(deriveAddress(i, version));
     }
     return addresses;
 }

@@ -100,10 +100,10 @@ void bench_ckd_normal(void) {
 void bench_ckd_optimized(void) {
 	char addr[40];
 	curve_point pub;
-	ecdsa_read_pubkey(root.curve->params, root.public_key, &pub);
+	ecdsa_read_pubkey(0, root.public_key, &pub);
 	clock_t t = clock();
 	for (int i = 0; i < 1000; i++) {
-		hdnode_public_ckd_address_optimized(&root, &pub, i, 0, addr, 40);
+		hdnode_public_ckd_address_optimized(&pub, root.public_key, root.chain_code, i, 0, addr, 40);
 		if (i == 0) {
 			printf("address = %s\n", addr);
 		}

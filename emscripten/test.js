@@ -13,7 +13,6 @@ var nodeStruct = {
     chain_code: node.chainCode,
     public_key: node.keyPair.getPublicKeyBuffer()
 };
-var nodeSerialized = crypto.serializeNode(nodeStruct);
 
 var suite;
 var worker;
@@ -60,8 +59,9 @@ function benchBitcoinJS(ops, fn) {
 
 function benchBrowserify(ops, fn) {
     var i;
+    crypto.serializeNode(nodeStruct);
     for (i = 0; i < ops; i++) {
-        crypto.deriveAddress(nodeSerialized, i, 0);
+        crypto.deriveAddress(i, 0);
     }
     fn();
 }

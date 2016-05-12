@@ -35,6 +35,7 @@
 #include "ecdsa.h"
 #include "base58.h"
 #include "macros.h"
+#include "secp256k1.h"
 
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2)
@@ -878,6 +879,9 @@ void uncompress_coords(const ecdsa_curve *curve, uint8_t odd, const bignum256 *x
 
 int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, curve_point *pub)
 {
+	if (!curve) {
+		curve = &secp256k1;
+	}
 	if (pub_key[0] == 0x04) {
 		bn_read_be(pub_key + 1, &(pub->x));
 		bn_read_be(pub_key + 33, &(pub->y));

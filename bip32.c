@@ -264,42 +264,42 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-int hdnode_public_ckd_address_optimized(const HDNode *in, const curve_point *pub, uint32_t i, uint8_t version, char *addr, int addrsize)
+int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint8_t version, char *addr, int addrsize)
 {
 	uint8_t data[1 + 32 + 4];
 	uint8_t I[32 + 32];
-	uint8_t public_key[33];
+	uint8_t child_pubkey[33];
 	curve_point b;
 	bignum256 c;
 
 	if (i & 0x80000000) { // private derivation
 		return 0;
 	}
-	memcpy(data, in->public_key, 33);
+	memcpy(data, public_key, 33);
 	write_be(data + 33, i);
 
 	while (true) {
 		bool failed = false;
-		hmac_sha512(in->chain_code, 32, data, sizeof(data), I);
+		hmac_sha512(chain_code, 32, data, sizeof(data), I);
 		bn_read_be(I, &c);
-		if (!bn_is_less(&c, &in->curve->params->order)) { // >= order
+		if (!bn_is_less(&c, &secp256k1.order)) { // >= order
 			failed = true;
 		} else {
-			scalar_multiply(in->curve->params, &c, &b); // b = c * G
-			point_add(in->curve->params, pub, &b);       // b = a + b
+			scalar_multiply(&secp256k1, &c, &b); // b = c * G
+			point_add(&secp256k1, pub, &b);       // b = a + b
 			if (point_is_infinity(&b)) {
 				failed = true;
 			}
 		}
 		if (!failed) {
-			public_key[0] = 0x02 | (b.y.val[0] & 0x01);
-			bn_write_be(&b.x, public_key + 1);
+			child_pubkey[0] = 0x02 | (b.y.val[0] & 0x01);
+			bn_write_be(&b.x, child_pubkey + 1);
 			break;
 		}
 		data[0] = 1;
 		memcpy(data + 1, I + 32, 32);
 	}
-	ecdsa_get_address(public_key, version, addr, addrsize);
+	ecdsa_get_address(child_pubkey, version, addr, addrsize);
 	return 1;
 }
 
