@@ -5,20 +5,6 @@ from .utils import type_gen
 from . import msg
 from . import log
 
-TOUCH_START = const(-1)
-TOUCH_MOVE = const(-2)
-TOUCH_END = const(-3)
-MESSAGE = const(-4)
-
-event_handlers = {
-    TOUCH_START: None,
-    TOUCH_MOVE: None,
-    TOUCH_END: None,
-    MESSAGE: None,
-}
-time_queue = []
-schedule_ctr = 0
-
 if __debug__:
     # For performance stats
     import array
@@ -26,13 +12,35 @@ if __debug__:
     log_delay_rb_len = const(10)
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
+TOUCH_START = const(1)
+TOUCH_MOVE = const(2)
+TOUCH_END = const(4)
+HID_READ = const(8)
 
-def __schedule(gen, args=(), time=None):
-    global schedule_ctr
+time_queue = []
+time_queue_ctr = 0
+blocked_events = 0
+blocked_gen = None
+
+
+def schedule(gen, data=None, time=None):
+    global time_queue_ctr
     if not time:
         time = utime.ticks_us()
-    heappush(time_queue, (time, schedule_ctr, gen, args))
-    schedule_ctr += 1
+    heappush(time_queue, (time, time_queue_ctr, gen, data))
+    time_queue_ctr += 1
+
+
+class Sleep():
+
+    def __init__(self, us):
+        self.time = utime.ticks_us() + us
+
+
+class Select():
+
+    def __init__(self, events):
+        self.events = events
 
 
 class Wait():
@@ -45,7 +53,7 @@ class Wait():
         self.gens = gens
 
         for g in gens:
-            __schedule(self._wait(g))
+            schedule(self._wait(g))
 
     def _wait(self, gen):
         if isinstance(gen, type_gen):
@@ -59,7 +67,7 @@ class Wait():
         self.received += 1
 
         if self.received == self.wait_for:
-            __schedule(self.callback, (gen, result))
+            schedule(self.callback, (gen, result))
             self.callback = None
 
             if self.exit_others:
@@ -68,84 +76,73 @@ class Wait():
                         g.close()
 
 
-def sleep(us):
-    return utime.ticks_us() + us
-
-
-def run_forever(start_gens):
+def run_forever():
     if __debug__:
-        global log_delay_pos
-        global log_delay_rb
-        global log_delay_rb_len
+        global log_delay_pos, log_delay_rb, log_delay_rb_len
+    global blocked_events, blocked_gen
 
-    delay_max = const(1000000)
-
-    for gen in start_gens:
-        __schedule(gen)
+    DELAY_MAX = const(1000000)
 
     while True:
 
+        # Peek at how long we can sleep while waiting for an event
         if time_queue:
             t, _, _, _ = time_queue[0]
             delay = t - utime.ticks_us()
         else:
-            delay = delay_max
+            delay = DELAY_MAX
 
         if __debug__:
             # Adding current delay to ring buffer for performance stats
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
-        event = msg.select(delay)
-
-        if event:
-            # Run interrupt handler
-            event_id, *args = event
-            event_id = -event_id
-            gen = event_handlers.get(event_id, None)
-            event_handlers[event_id] = None
-            if not gen:
+        message = msg.select(delay)
+        if message:
+            # Run interrupt handler right away, they have priority
+            event = message[0]
+            data = message
+            if blocked_events & event:
+                gen = blocked_gen
+                blocked_events = 0
+                blocked_gen = None
+            else:
                 log.info(__name__, 'No handler for event: %s', event)
                 continue
         else:
+            # Run something from the time queue
             if time_queue:
-                # Run something from the time queue
-                _, _, gen, args = heappop(time_queue)
+                _, _, gen, data = heappop(time_queue)
             else:
-                # Sleep again
-                delay = delay_max
                 continue
 
-        if not args:
-            args = None
         try:
-            ret = gen.send(args)
-
+            result = gen.send(data)
         except StopIteration as e:
             log.debug(__name__, '%s finished', gen)
             continue
-
         except Exception as e:
             log.exception(__name__, e)
             continue
 
-        if isinstance(ret, int) and ret >= 0:
-            # Sleep until ret, call us later
-            __schedule(gen, (), ret)
+        if isinstance(result, Sleep):
+            # Sleep until result.time, call us later
+            schedule(gen, None, result.time)
 
-        elif isinstance(ret, int) and ret in event_handlers:
-            # Wait for event
-            if event_handlers[ret]:
-                event_handlers[ret].close()
-            event_handlers[ret] = gen
+        elif isinstance(result, Select):
+            # Wait for one or more types of event
+            if blocked_gen:
+                blocked_gen.close()
+            blocked_gen = gen
+            blocked_events = result.events
 
-        elif isinstance(ret, Wait):
+        elif isinstance(result, Wait):
             # Register the origin generator as a waiting callback
-            ret.callback = gen
+            result.callback = gen
 
-        elif ret is None:
+        elif result is None:
             # Just call us asap
-            __schedule(gen)
+            schedule(gen)
 
         else:
-            raise Exception('Unhandled result %s by %s' % (ret, gen))
+            raise Exception('Unhandled result %s by %s' % (result, gen))

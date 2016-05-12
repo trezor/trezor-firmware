@@ -74,7 +74,7 @@ class Button():
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
         ui.display.bar(ax, ay, aw, ah, style['border-color'])
-        ui.display.bar(ax+1, ay+1, aw-2, ah-2, style['bg-color'])
+        ui.display.bar(ax + 1, ay + 1, aw - 2, ah - 2, style['bg-color'])
         ui.display.text_center(tx, ty, self.text,
                                style['text-style'],
                                style['fg-color'],
@@ -141,9 +141,7 @@ class PinDialog():
     def wait_for_result(self):
         while True:
             self.render()
-            event, pos = yield loop.Wait([loop.TOUCH_START,
-                                          loop.TOUCH_MOVE,
-                                          loop.TOUCH_END])
+            event, *pos = yield loop.Select(loop.TOUCH_START | loop.TOUCH_MOVE | loop.TOUCH_END)
             result = self.send(event, pos)
             if result is not None:
                 return result
@@ -171,11 +169,13 @@ def layout_tap_to_confirm(address, amount, currency):
 
     # animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 
-    pin = PinDialog()
+    pin_dialog = PinDialog()
 
-    pin_result = yield from pin.wait_for_result()
+    pin_result = yield from pin_dialog.wait_for_result()
+
     if pin_result is PIN_CONFIRMED:
-        print('PIN confirmed:', pin.pin)
+        print('PIN confirmed:', pin_dialog.pin)
+
     elif pin_result is PIN_CANCELLED:
         print('PIN CANCELLED, go home')
 
