@@ -63,8 +63,10 @@ static const struct MessagesMap_t MessagesMap[] = {
 	{'n', 'i', MessageType_MessageType_SignMessage,			SignMessage_fields,			(void (*)(void *))fsm_msgSignMessage},
 	{'n', 'i', MessageType_MessageType_SignIdentity,		SignIdentity_fields,		(void (*)(void *))fsm_msgSignIdentity},
 	{'n', 'i', MessageType_MessageType_VerifyMessage,		VerifyMessage_fields,		(void (*)(void *))fsm_msgVerifyMessage},
+/* ECIES disabled
 	{'n', 'i', MessageType_MessageType_EncryptMessage,		EncryptMessage_fields,		(void (*)(void *))fsm_msgEncryptMessage},
 	{'n', 'i', MessageType_MessageType_DecryptMessage,		DecryptMessage_fields,		(void (*)(void *))fsm_msgDecryptMessage},
+*/
 //	{'n', 'i', MessageType_MessageType_PassphraseAck,		PassphraseAck_fields,		(void (*)(void *))fsm_msgPassphraseAck},
 	{'n', 'i', MessageType_MessageType_EstimateTxSize,		EstimateTxSize_fields,		(void (*)(void *))fsm_msgEstimateTxSize},
 	{'n', 'i', MessageType_MessageType_RecoveryDevice,		RecoveryDevice_fields,		(void (*)(void *))fsm_msgRecoveryDevice},
@@ -83,8 +85,10 @@ static const struct MessagesMap_t MessagesMap[] = {
 	{'n', 'o', MessageType_MessageType_EntropyRequest,		EntropyRequest_fields,		0},
 	{'n', 'o', MessageType_MessageType_MessageSignature,	MessageSignature_fields,	0},
 	{'n', 'o', MessageType_MessageType_SignedIdentity,		SignedIdentity_fields,		0},
+/* ECIES disabled
 	{'n', 'o', MessageType_MessageType_EncryptedMessage,	EncryptedMessage_fields,	0},
 	{'n', 'o', MessageType_MessageType_DecryptedMessage,	DecryptedMessage_fields,	0},
+*/
 	{'n', 'o', MessageType_MessageType_PassphraseRequest,	PassphraseRequest_fields,	0},
 	{'n', 'o', MessageType_MessageType_TxSize,				TxSize_fields,				0},
 	{'n', 'o', MessageType_MessageType_WordRequest,			WordRequest_fields,			0},
