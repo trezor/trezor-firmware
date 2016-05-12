@@ -58,7 +58,7 @@ uint32_t trezorui_poll_sdl_event(void)
                         }
                         break;
                     case SDL_MOUSEBUTTONUP:
-                        return (0x00 << 24) | (0x03 << 16) | (x << 8) | y; // touch_end
+                        return (0x00 << 24) | (0x04 << 16) | (x << 8) | y; // touch_end
                         break;
                 }
                 break;
