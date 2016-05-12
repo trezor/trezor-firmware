@@ -5,10 +5,13 @@ import os
 
 from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
-def process_type(t, cls):
+def process_type(t, cls, msg_id):
     imports = ["from protobuf import protobuf as p",]
 
     out = ["t = p.MessageType()", ]
+
+    if msg_id is not None:
+        out.append("t.type = const(%d)" % msg_id)
 
     print("  * type %s" % t)
 
@@ -113,12 +116,10 @@ def process_module(mod, genpath):
     msg_types = __import__('pb2', globals(), locals(), ['messages_pb2', ]).messages_pb2.MessageType.items()
 
     for t, cls in types.iteritems():
-        out = process_type(t, cls)
-
         # Find message type for given class
         msg_id = find_msg_type(msg_types, t)
-        if msg_id is not None:
-            out.append('TYPE = const(%d)' % msg_id)
+
+        out = process_type(t, cls, msg_id)
 
         write_to_file(genpath, t, out)
 
