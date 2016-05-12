@@ -26,7 +26,7 @@
 #include "hmac.h"
 #include "macros.h"
 
-void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass, int passlen, uint8_t *salt, int saltlen)
+void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)
 {
 	HMAC_SHA256_CTX hctx;
 	hmac_sha256_Init(&hctx, pass, passlen);
@@ -56,7 +56,7 @@ void pbkdf2_hmac_sha256_Final(PBKDF2_HMAC_SHA256_CTX *pctx, uint8_t *key)
 	MEMSET_BZERO(pctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
 }
 
-void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
 {
 	PBKDF2_HMAC_SHA256_CTX pctx;
 	pbkdf2_hmac_sha256_Init(&pctx, pass, passlen, salt, saltlen);
@@ -64,7 +64,7 @@ void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, uint8_t *salt, int sal
 	pbkdf2_hmac_sha256_Final(&pctx, key);
 }
 
-void pbkdf2_hmac_sha512_Init(PBKDF2_HMAC_SHA512_CTX *pctx, const uint8_t *pass, int passlen, uint8_t *salt, int saltlen)
+void pbkdf2_hmac_sha512_Init(PBKDF2_HMAC_SHA512_CTX *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)
 {
 	HMAC_SHA512_CTX hctx;
 	hmac_sha512_Init(&hctx, pass, passlen);
@@ -94,7 +94,7 @@ void pbkdf2_hmac_sha512_Final(PBKDF2_HMAC_SHA512_CTX *pctx, uint8_t *key)
 	MEMSET_BZERO(pctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
 }
 
-void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
+void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
 {
 	PBKDF2_HMAC_SHA512_CTX pctx;
 	pbkdf2_hmac_sha512_Init(&pctx, pass, passlen, salt, saltlen);
