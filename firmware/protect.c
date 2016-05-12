@@ -142,31 +142,29 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 
 bool protectPin(bool use_cached)
 {
-	if (!storage.has_pin || strlen(storage.pin) == 0 || (use_cached && session_isPinCached())) {
+	if (!storage.has_pin || storage.pin[0] == 0 || (use_cached && session_isPinCached())) {
 		return true;
 	}
-	uint32_t fails = storage_getPinFails();
-	if (fails) {
-		uint32_t wait;
-		wait = (fails < 32) ? (1u << fails) : 0xFFFFFFFF;
-		while (--wait > 0) {
-			// convert wait to secstr string
-			char secstrbuf[20];
-			strlcpy(secstrbuf, "________0 seconds", sizeof(secstrbuf));
-			char *secstr = secstrbuf + 9;
-			uint32_t secs = wait;
-			while (secs > 0 && secstr >= secstrbuf) {
-				secstr--;
-				*secstr = (secs % 10) + '0';
-				secs /= 10;
-			}
-			if (wait == 1) {
-				secstrbuf[16] = 0;
-			}
-			layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
-			// wait one second
-			usbDelay(840000);
+	uint32_t *fails = storage_getPinFailsPtr();
+	uint32_t wait = ~*fails;
+	while (wait > 0) {
+		// convert wait to secstr string
+		char secstrbuf[20];
+		strlcpy(secstrbuf, "________0 seconds", sizeof(secstrbuf));
+		char *secstr = secstrbuf + 9;
+		uint32_t secs = wait;
+		while (secs > 0 && secstr >= secstrbuf) {
+			secstr--;
+			*secstr = (secs % 10) + '0';
+			secs /= 10;
 		}
+		if (wait == 1) {
+			secstrbuf[16] = 0;
+		}
+		layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
+		// wait one second
+		usbDelay(840000);
+		wait--;
 	}
 	const char *pin;
 	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, "Please enter current PIN:");
@@ -174,11 +172,9 @@ bool protectPin(bool use_cached)
 		fsm_sendFailure(FailureType_Failure_PinCancelled, "PIN Cancelled");
 		return false;
 	}
-	storage_increasePinFails();
-	bool increase_failed = (fails >= storage_getPinFails());
-	if (storage_isPinCorrect(pin) && !increase_failed) {
+	if (storage_increasePinFails(fails) && storage_isPinCorrect(pin)) {
 		session_cachePin();
-		storage_resetPinFails();
+		storage_resetPinFails(fails);
 		return true;
 	} else {
 		fsm_sendFailure(FailureType_Failure_PinInvalid, "Invalid PIN");
