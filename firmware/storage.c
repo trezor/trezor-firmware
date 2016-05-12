@@ -323,9 +323,14 @@ bool storage_getRootNode(HDNode *node, const char *curve)
 		if (storage.has_passphrase_protection && storage.passphrase_protection && sessionPassphraseCached && strlen(sessionPassphrase) > 0) {
 			// decrypt hd node
 			uint8_t secret[64];
-			uint8_t salt[12];
-			memcpy(salt, "TREZORHD", 8);
-			pbkdf2_hmac_sha512((const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), salt, 8, BIP39_PBKDF2_ROUNDS, secret, 64, get_root_node_callback);
+			PBKDF2_HMAC_SHA512_CTX pctx;
+			pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), (const uint8_t *)"TREZORHD", 8);
+			get_root_node_callback(0, BIP39_PBKDF2_ROUNDS);
+			for (int i = 0; i < 8; i++) {
+				pbkdf2_hmac_sha512_Update(&pctx, BIP39_PBKDF2_ROUNDS / 8);
+				get_root_node_callback((i + 1) * BIP39_PBKDF2_ROUNDS / 8, BIP39_PBKDF2_ROUNDS);
+			}
+			pbkdf2_hmac_sha512_Final(&pctx, secret);
 			aes_decrypt_ctx ctx;
 			aes_decrypt_key256(secret, &ctx);
 			aes_cbc_decrypt(node->chain_code, node->chain_code, 32, secret + 32, &ctx);
