@@ -49,6 +49,7 @@ typedef struct {
 
 typedef struct {
    const uint8_t *source;
+   uint32_t sourcelen;
    uint32_t tag;
    uint32_t bitcount;
    uint8_t cbuf[1 << SINF_WBITS];
@@ -58,32 +59,32 @@ typedef struct {
    void (* write)(uint8_t byte, uint32_t pos, void *userdata);
    void *userdata;
    uint32_t written;
-} SINF_DATA;
+} SINF_CTX;
 
 /* --------------------------------------------------- *
  * -- uninitialized global data (static structures) -- *
  * --------------------------------------------------- */
 
-const uint8_t SINF_LENGTH_BITS[30] = {
+static const uint8_t SINF_LENGTH_BITS[30] = {
    0, 0, 0, 0, 0, 0, 0, 0,
    1, 1, 1, 1, 2, 2, 2, 2,
    3, 3, 3, 3, 4, 4, 4, 4,
    5, 5, 5, 5
 };
-const uint16_t SINF_LENGTH_BASE[30] = {
+static const uint16_t SINF_LENGTH_BASE[30] = {
    3, 4, 5, 6, 7, 8, 9, 10,
    11, 13, 15, 17, 19, 23, 27, 31,
    35, 43, 51, 59, 67, 83, 99, 115,
    131, 163, 195, 227, 258
 };
 
-const uint8_t SINF_DIST_BITS[30] = {
+static const uint8_t SINF_DIST_BITS[30] = {
    0, 0, 0, 0, 1, 1, 2, 2,
    3, 3, 4, 4, 5, 5, 6, 6,
    7, 7, 8, 8, 9, 9, 10, 10,
    11, 11, 12, 12, 13, 13
 };
-const uint16_t SINF_DIST_BASE[30] = {
+static const uint16_t SINF_DIST_BASE[30] = {
    1, 2, 3, 4, 5, 7, 9, 13,
    17, 25, 33, 49, 65, 97, 129, 193,
    257, 385, 513, 769, 1025, 1537, 2049, 3073,
@@ -91,7 +92,7 @@ const uint16_t SINF_DIST_BASE[30] = {
 };
 
 /* special ordering of code length codes */
-const uint8_t SINF_CLCIDX[] = {
+static const uint8_t SINF_CLCIDX[] = {
    16, 17, 18, 0, 8, 7, 9, 6,
    10, 5, 11, 4, 12, 3, 13, 2,
    14, 1, 15
@@ -101,12 +102,12 @@ const uint8_t SINF_CLCIDX[] = {
  * -- utility functions -- *
  * ----------------------- */
 
-static void sinf_write(SINF_DATA *d, uint8_t byte)
+static void sinf_write(SINF_CTX *ctx, uint8_t byte)
 {
-    d->cbuf[d->cbufi] = byte;
-    d->cbufi = (d->cbufi + 1) % (1 << SINF_WBITS);
-    d->write(byte, d->written, d->userdata);
-    d->written++;
+    ctx->cbuf[ctx->cbufi] = byte;
+    ctx->cbufi = (ctx->cbufi + 1) % (1 << SINF_WBITS);
+    ctx->write(byte, ctx->written, ctx->userdata);
+    ctx->written++;
 }
 
 /* build the fixed huffman trees */
@@ -167,27 +168,27 @@ static void sinf_build_tree(SINF_TREE *t, const uint8_t *lengths, uint32_t num)
  * ---------------------- */
 
 /* get one bit from source stream */
-static int sinf_getbit(SINF_DATA *d)
+static int sinf_getbit(SINF_CTX *ctx)
 {
    uint32_t bit;
 
    /* check if tag is empty */
-   if (!d->bitcount--)
+   if (!ctx->bitcount--)
    {
       /* load next tag */
-      d->tag = *d->source++;
-      d->bitcount = 7;
+      ctx->tag = *ctx->source++;
+      ctx->bitcount = 7;
    }
 
    /* shift bit out of tag */
-   bit = d->tag & 0x01;
-   d->tag >>= 1;
+   bit = ctx->tag & 0x01;
+   ctx->tag >>= 1;
 
    return bit;
 }
 
 /* read a num bit value from a stream and add base */
-static uint32_t sinf_read_bits(SINF_DATA *d, int num, int base)
+static uint32_t sinf_read_bits(SINF_CTX *ctx, int num, int base)
 {
    uint32_t val = 0;
 
@@ -198,21 +199,21 @@ static uint32_t sinf_read_bits(SINF_DATA *d, int num, int base)
       uint32_t mask;
 
       for (mask = 1; mask < limit; mask *= 2)
-         if (sinf_getbit(d)) val += mask;
+         if (sinf_getbit(ctx)) val += mask;
    }
 
    return val + base;
 }
 
 /* given a data stream and a tree, decode a symbol */
-static int sinf_decode_symbol(SINF_DATA *d, SINF_TREE *t)
+static int sinf_decode_symbol(SINF_CTX *ctx, SINF_TREE *t)
 {
    int sum = 0, cur = 0, len = 0;
 
    /* get more bits while code value is above sum */
    do {
 
-      cur = 2*cur + sinf_getbit(d);
+      cur = 2*cur + sinf_getbit(ctx);
 
       ++len;
 
@@ -225,20 +226,20 @@ static int sinf_decode_symbol(SINF_DATA *d, SINF_TREE *t)
 }
 
 /* given a data stream, decode dynamic trees from it */
-static void sinf_decode_trees(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
+static void sinf_decode_trees(SINF_CTX *ctx, SINF_TREE *lt, SINF_TREE *dt)
 {
    uint8_t lengths[288+32];
    uint32_t hlit, hdist, hclen;
    uint32_t i, num, length;
 
    /* get 5 bits HLIT (257-286) */
-   hlit = sinf_read_bits(d, 5, 257);
+   hlit = sinf_read_bits(ctx, 5, 257);
 
    /* get 5 bits HDIST (1-32) */
-   hdist = sinf_read_bits(d, 5, 1);
+   hdist = sinf_read_bits(ctx, 5, 1);
 
    /* get 4 bits HCLEN (4-19) */
-   hclen = sinf_read_bits(d, 4, 4);
+   hclen = sinf_read_bits(ctx, 4, 4);
 
    for (i = 0; i < 19; ++i) lengths[i] = 0;
 
@@ -246,7 +247,7 @@ static void sinf_decode_trees(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
    for (i = 0; i < hclen; ++i)
    {
       /* get 3 bits code length (0-7) */
-      uint32_t clen = sinf_read_bits(d, 3, 0);
+      uint32_t clen = sinf_read_bits(ctx, 3, 0);
 
       lengths[SINF_CLCIDX[i]] = clen;
    }
@@ -257,7 +258,7 @@ static void sinf_decode_trees(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
    /* decode code lengths for the dynamic trees */
    for (num = 0; num < hlit + hdist; )
    {
-      int sym = sinf_decode_symbol(d, lt);
+      int sym = sinf_decode_symbol(ctx, lt);
 
       switch (sym)
       {
@@ -265,7 +266,7 @@ static void sinf_decode_trees(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
          /* copy previous code length 3-6 times (read 2 bits) */
          {
             uint8_t prev = lengths[num - 1];
-            for (length = sinf_read_bits(d, 2, 3); length; --length)
+            for (length = sinf_read_bits(ctx, 2, 3); length; --length)
             {
                lengths[num++] = prev;
             }
@@ -273,14 +274,14 @@ static void sinf_decode_trees(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
          break;
       case 17:
          /* repeat code length 0 for 3-10 times (read 3 bits) */
-         for (length = sinf_read_bits(d, 3, 3); length; --length)
+         for (length = sinf_read_bits(ctx, 3, 3); length; --length)
          {
             lengths[num++] = 0;
          }
          break;
       case 18:
          /* repeat code length 0 for 11-138 times (read 7 bits) */
-         for (length = sinf_read_bits(d, 7, 11); length; --length)
+         for (length = sinf_read_bits(ctx, 7, 11); length; --length)
          {
             lengths[num++] = 0;
          }
@@ -302,11 +303,11 @@ static void sinf_decode_trees(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
  * ----------------------------- */
 
 /* given a stream and two trees, inflate a block of data */
-static int sinf_inflate_block_data(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
+static int sinf_inflate_block_data(SINF_CTX *ctx, SINF_TREE *lt, SINF_TREE *dt)
 {
    while (1)
    {
-      int sym = sinf_decode_symbol(d, lt);
+      int sym = sinf_decode_symbol(ctx, lt);
 
       /* check for end of block */
       if (sym == 256)
@@ -316,7 +317,7 @@ static int sinf_inflate_block_data(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
 
       if (sym < 256)
       {
-         sinf_write(d, sym);
+         sinf_write(ctx, sym);
       } else {
 
          uint32_t length, offs, i;
@@ -325,68 +326,68 @@ static int sinf_inflate_block_data(SINF_DATA *d, SINF_TREE *lt, SINF_TREE *dt)
          sym -= 257;
 
          /* possibly get more bits from length code */
-         length = sinf_read_bits(d, SINF_LENGTH_BITS[sym], SINF_LENGTH_BASE[sym]);
+         length = sinf_read_bits(ctx, SINF_LENGTH_BITS[sym], SINF_LENGTH_BASE[sym]);
 
-         dist = sinf_decode_symbol(d, dt);
+         dist = sinf_decode_symbol(ctx, dt);
 
          /* possibly get more bits from distance code */
-         offs = sinf_read_bits(d, SINF_DIST_BITS[dist], SINF_DIST_BASE[dist]);
+         offs = sinf_read_bits(ctx, SINF_DIST_BITS[dist], SINF_DIST_BASE[dist]);
 
          /* copy match */
          for (i = 0; i < length; ++i)
          {
-            sinf_write(d, d->cbuf[(d->cbufi + (1 << SINF_WBITS) - offs) % (1 << SINF_WBITS)]);
+            sinf_write(ctx, ctx->cbuf[(ctx->cbufi + (1 << SINF_WBITS) - offs) % (1 << SINF_WBITS)]);
          }
       }
    }
 }
 
 /* inflate an uncompressed block of data */
-static int sinf_inflate_uncompressed_block(SINF_DATA *d)
+static int sinf_inflate_uncompressed_block(SINF_CTX *ctx)
 {
    uint32_t length, invlength;
    uint32_t i;
 
    /* get length */
-   length = d->source[1];
-   length = 256*length + d->source[0];
+   length = ctx->source[1];
+   length = 256*length + ctx->source[0];
 
    /* get one's complement of length */
-   invlength = d->source[3];
-   invlength = 256*invlength + d->source[2];
+   invlength = ctx->source[3];
+   invlength = 256*invlength + ctx->source[2];
 
    /* check length */
    if (length != (~invlength & 0x0000ffff)) return SINF_ERROR;
 
-   d->source += 4;
+   ctx->source += 4;
 
    /* copy block */
-   for (i = length; i; --i) sinf_write(d, *d->source++);
+   for (i = length; i; --i) sinf_write(ctx, *ctx->source++);
 
    /* make sure we start next block on a byte boundary */
-   d->bitcount = 0;
+   ctx->bitcount = 0;
 
    return SINF_OK;
 }
 
 /* inflate a block of data compressed with fixed huffman trees */
-static int sinf_inflate_fixed_block(SINF_DATA *d)
+static int sinf_inflate_fixed_block(SINF_CTX *ctx)
 {
    /* build fixed huffman trees */
-   sinf_build_fixed_trees(&d->ltree, &d->dtree);
+   sinf_build_fixed_trees(&ctx->ltree, &ctx->dtree);
 
    /* decode block using fixed trees */
-   return sinf_inflate_block_data(d, &d->ltree, &d->dtree);
+   return sinf_inflate_block_data(ctx, &ctx->ltree, &ctx->dtree);
 }
 
 /* inflate a block of data compressed with dynamic huffman trees */
-static int sinf_inflate_dynamic_block(SINF_DATA *d)
+static int sinf_inflate_dynamic_block(SINF_CTX *ctx)
 {
    /* decode trees from stream */
-   sinf_decode_trees(d, &d->ltree, &d->dtree);
+   sinf_decode_trees(ctx, &ctx->ltree, &ctx->dtree);
 
    /* decode block using decoded trees */
-   return sinf_inflate_block_data(d, &d->ltree, &d->dtree);
+   return sinf_inflate_block_data(ctx, &ctx->ltree, &ctx->dtree);
 }
 
 /* ---------------------- *
@@ -394,18 +395,19 @@ static int sinf_inflate_dynamic_block(SINF_DATA *d)
  * ---------------------- */
 
 /* inflate stream from source */
-int sinf_inflate(const uint8_t *data, void (*write_callback)(uint8_t byte, uint32_t pos, void *userdata), void *userdata)
+int sinf_inflate(const uint8_t *data, uint32_t datalen, void (*write_callback)(uint8_t byte, uint32_t pos, void *userdata), void *userdata)
 {
-   SINF_DATA d;
+   SINF_CTX ctx;
    int bfinal;
 
    /* initialise data */
-   d.bitcount = 0;
-   d.cbufi = 0;
-   d.source = data;
-   d.write = write_callback;
-   d.userdata = userdata;
-   d.written = 0;
+   ctx.bitcount = 0;
+   ctx.cbufi = 0;
+   ctx.source = data;
+   ctx.sourcelen = datalen;
+   ctx.write = write_callback;
+   ctx.userdata = userdata;
+   ctx.written = 0;
 
    do {
 
@@ -413,25 +415,25 @@ int sinf_inflate(const uint8_t *data, void (*write_callback)(uint8_t byte, uint3
       int res;
 
       /* read final block flag */
-      bfinal = sinf_getbit(&d);
+      bfinal = sinf_getbit(&ctx);
 
       /* read block type (2 bits) */
-      btype = sinf_read_bits(&d, 2, 0);
+      btype = sinf_read_bits(&ctx, 2, 0);
 
       /* decompress block */
       switch (btype)
       {
       case 0:
          /* decompress uncompressed block */
-         res = sinf_inflate_uncompressed_block(&d);
+         res = sinf_inflate_uncompressed_block(&ctx);
          break;
       case 1:
          /* decompress block with fixed huffman trees */
-         res = sinf_inflate_fixed_block(&d);
+         res = sinf_inflate_fixed_block(&ctx);
          break;
       case 2:
          /* decompress block with dynamic huffman trees */
-         res = sinf_inflate_dynamic_block(&d);
+         res = sinf_inflate_dynamic_block(&ctx);
          break;
       default:
          return SINF_ERROR;

@@ -244,9 +244,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         } else {
             iconfgcolor = ~bgcolor; // invert
         }
-        display_loader(progress, fgcolor, bgcolor, data, iconfgcolor);
+        display_loader(progress, fgcolor, bgcolor, icon.buf, icon.len, iconfgcolor);
     } else {
-        display_loader(progress, fgcolor, bgcolor, NULL, 0);
+        display_loader(progress, fgcolor, bgcolor, NULL, 0, 0);
     }
     return mp_const_none;
 }

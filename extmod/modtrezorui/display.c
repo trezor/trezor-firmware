@@ -127,7 +127,7 @@ static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
 void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen)
 {
     display_set_window(x, y, w, h);
-    sinf_inflate(data, inflate_callback_image, NULL);
+    sinf_inflate(data, datalen, inflate_callback_image, NULL);
     display_update();
 }
 
@@ -145,7 +145,7 @@ void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, 
     display_set_window(x, y, w, h);
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
-    sinf_inflate(data, inflate_callback_icon, colortable);
+    sinf_inflate(data, datalen, inflate_callback_icon, colortable);
     display_update();
 }
 
@@ -245,7 +245,7 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
-void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint16_t iconfgcolor)
+void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor)
 {
     uint16_t colortable[16], iconcolortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
@@ -253,9 +253,9 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
         set_color_table(iconcolortable, iconfgcolor, bgcolor);
     }
     display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
-    if (icon && memcmp(icon, "TOIg\x60\x00\x60\x00", 8) == 0) {
+    if (icon && memcmp(icon, "TOIg\x60\x00\x60\x00", 8) == 0 && iconlen == 12 + *(uint32_t *)(icon + 8)) {
         uint8_t icondata[96 * 96 / 2];
-        sinf_inflate(icon + 12, inflate_callback_loader, icondata);
+        sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
         icon = icondata;
     } else {
         icon = NULL;

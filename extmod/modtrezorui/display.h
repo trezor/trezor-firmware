@@ -26,7 +26,7 @@ void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, 
 void display_text(uint8_t x, uint8_t y, const uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
 uint32_t display_text_width(const uint8_t *text, int textlen, uint8_t font);
 void display_qrcode(uint8_t x, uint8_t y, const char *data, int datalen, int scale);
-void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint16_t iconfgcolor);
+void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor);
 void display_raw(uint8_t reg, const uint8_t *data, int datalen);
 
 #endif
