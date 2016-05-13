@@ -8,6 +8,10 @@ Syntax used below is a valid Python function declaration with type hints defined
 
 @src/trezor/crypto/base58.py
 
+###trezor.crypto.bip39
+
+@extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
+
 ###trezor.crypto.curve
 
 ####trezor.crypto.curve.ed25519

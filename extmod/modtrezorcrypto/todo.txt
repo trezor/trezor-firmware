@@ -37,19 +37,3 @@ def aes_ctr_decrypt(ctx: AES_CTX, data: bytes) -> bytes: # decrypted
 ###trezor.crypto.hd
 
 TODO
-
-###trezor.crypto.mnemonic
-
-def bip39_generate(strength: int) -> bytes: # sentence
-
-def bip39_fromdata(data: bytes) -> bytes: # sentence
-
-def bip39_check(mnemonic: bytes) -> bool: # valid
-
-def bip39_seed(mnemonic: bytes, passphrase: bytes) -> bytes64: # seed
-
-###trezor.crypto.reedsolomon
-
-def encode(data: bytes) -> bytes: # encoded
-
-def decode(data: bytes) -> bytes: # decoded

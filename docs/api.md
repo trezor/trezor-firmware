@@ -31,6 +31,27 @@ def trezor.crypto.base58.decode_check(string: str) -> bytes
 Convert base58 encoded string to bytes and verify checksum.
 
 
+###trezor.crypto.bip39
+
+``` python
+def trezor.crypto.bip39.generate(strength: int) -> tuple
+```
+
+Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits)
+
+``` python
+def trezor.crypto.bip39.from_data(data: bytes) -> tuple
+```
+
+Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes)
+
+``` python
+def trezor.crypto.bip39.check(mnemonic: str) -> bool
+```
+
+Check whether given mnemonic is valid
+
+
 ###trezor.crypto.curve
 
 ####trezor.crypto.curve.ed25519
