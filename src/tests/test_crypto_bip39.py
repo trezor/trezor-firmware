@@ -36,7 +36,8 @@ class TestCryptoBip39(unittest.TestCase):
             ('15da872c95a13dd738fbf50e427583ad61f18fd99f628c417a61cf8343c90419', 'beyond stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut', 'b15509eaa2d09d3efd3e006ef42151b30367dc6e3aa5e44caba3fe4d3e352e65101fbdb86a96776b91946ff06f8eac594dc6ee1d3e82a42dfe1b40fef6bcc3fd'),
         ]
         for d, m, s in v:
-            self.assertEqual(bip39.from_data(unhexlify(d)), tuple(m.split(' ')))
+            self.assertEqual(bip39.from_data(unhexlify(d)), m)
+            self.assertEqual(bip39.seed(m, 'TREZOR'), unhexlify(s))
 
     def test_check_ok(self):
         v = [

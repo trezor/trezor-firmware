@@ -20,7 +20,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_make_new(const mp_obj_type_t *type, size_
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.bip39.generate(strength: int) -> tuple
+/// def trezor.crypto.bip39.generate(strength: int) -> str
 ///
 /// Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits)
 ///
@@ -29,21 +29,15 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_generate(mp_obj_t self, mp_obj_t strength
     if (bits % 32 || bits < 128 || bits > 256) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid bit strength (only 128, 160, 192, 224 and 256 values are allowed)"));
     }
-    int words = bits / 32 * 3;
-    const char * const *wordlist = mnemonic_wordlist();
-    const uint16_t *mnemo = mnemonic_generate_indexes(bits);
-    mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(words, NULL));
-    for (int i = 0; i < words; i++) {
-        vstr_t vstr;
-        vstr_init_len(&vstr, strlen(wordlist[mnemo[i]]));
-        strcpy(vstr.buf, wordlist[mnemo[i]]);
-        tuple->items[i] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
-    }
-    return MP_OBJ_FROM_PTR(tuple);
+    const char *mnemo = mnemonic_generate(bits);
+    vstr_t vstr;
+    vstr_init_len(&vstr, strlen(mnemo));
+    strcpy(vstr.buf, mnemo);
+    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_generate_obj, mod_TrezorCrypto_Bip39_generate);
 
-/// def trezor.crypto.bip39.from_data(data: bytes) -> tuple
+/// def trezor.crypto.bip39.from_data(data: bytes) -> str
 ///
 /// Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes)
 ///
@@ -53,17 +47,11 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_from_data(mp_obj_t self, mp_obj_t data) {
     if (bin.len % 4 || bin.len < 16 || bin.len > 32) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)"));
     }
-    int words = bin.len / 4 * 3;
-    const char * const *wordlist = mnemonic_wordlist();
-    const uint16_t *mnemo = mnemonic_from_data_indexes(bin.buf, bin.len);
-    mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(words, NULL));
-    for (int i = 0; i < words; i++) {
-        vstr_t vstr;
-        vstr_init_len(&vstr, strlen(wordlist[mnemo[i]]));
-        strcpy(vstr.buf, wordlist[mnemo[i]]);
-        tuple->items[i] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
-    }
-    return MP_OBJ_FROM_PTR(tuple);
+    const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
+    vstr_t vstr;
+    vstr_init_len(&vstr, strlen(mnemo));
+    strcpy(vstr.buf, mnemo);
+    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_from_data_obj, mod_TrezorCrypto_Bip39_from_data);
 
@@ -78,11 +66,27 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_check(mp_obj_t self, mp_obj_t mnemonic) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_check_obj, mod_TrezorCrypto_Bip39_check);
 
+/// def trezor.crypto.bip39.seed(mnemonic: str, passphrase: str) -> bytes
+///
+/// Generate seed from mnemonic and passphrase
+///
+STATIC mp_obj_t mod_TrezorCrypto_Bip39_seed(mp_obj_t self, mp_obj_t mnemonic, mp_obj_t passphrase) {
+    mp_buffer_info_t mnemo;
+    mp_buffer_info_t phrase;
+    mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
+    mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
+    vstr_t vstr;
+    vstr_init_len(&vstr, 64);
+    mnemonic_to_seed(mnemo.buf, phrase.buf, (uint8_t *)vstr.buf, NULL); // no callback for now
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Bip39_seed_obj, mod_TrezorCrypto_Bip39_seed);
+
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Bip39_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_generate), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_generate_obj) },
     { MP_ROM_QSTR(MP_QSTR_from_data), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_from_data_obj) },
     { MP_ROM_QSTR(MP_QSTR_check), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_check_obj) },
-//    { MP_ROM_QSTR(MP_QSTR_seed), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_seed_obj) },
+    { MP_ROM_QSTR(MP_QSTR_seed), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_seed_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Bip39_locals_dict, mod_TrezorCrypto_Bip39_locals_dict_table);
 
