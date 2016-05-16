@@ -1887,7 +1887,7 @@ START_TEST(test_output_script) {
 	char address[60];
 	while (*scr && *adr) {
 		int r = script_output_to_address(fromhex(*scr), strlen(*scr)/2, address, 60);
-		ck_assert_int_eq(r, strlen(*adr) + 1);
+		ck_assert_int_eq(r, (int)(strlen(*adr) + 1));
 		ck_assert_str_eq(address, *adr);
 		scr += 2;
 		adr += 2;
