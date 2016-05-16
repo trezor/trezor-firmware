@@ -42,6 +42,7 @@
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
+#include "script.h"
 
 uint8_t *fromhex(const char *str)
 {
@@ -1872,6 +1873,28 @@ START_TEST(test_ed25519) {
 }
 END_TEST
 
+START_TEST(test_output_script) {
+	static const char *vectors[] = {
+		"76A914010966776006953D5567439E5E39F86A0D273BEE88AC", "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM",
+		"A914010966776006953D5567439E5E39F86A0D273BEE87", "31nVrspaydBz8aMpxH9WkS2DuhgqS1fCuG",
+		"0014010966776006953D5567439E5E39F86A0D273BEE", "p2xtZoXeX5X8BP8JfFhQK2nD3emtjch7UeFm",
+		"00200102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20", "7XhPD7te3C6CVKnJWUhrTJbFTwudhHqfrjpS59AS6sMzL4RYFiCNg",
+		0, 0,
+	};
+	const char **scr, **adr;
+	scr = vectors;
+	adr = vectors + 1;
+	char address[60];
+	while (*scr && *adr) {
+		int r = script_output_to_address(fromhex(*scr), strlen(*scr)/2, address, 60);
+		ck_assert_int_eq(r, strlen(*adr) + 1);
+		ck_assert_str_eq(address, *adr);
+		scr += 2;
+		adr += 2;
+	}
+}
+END_TEST
+
 
 // define test suite and cases
 Suite *test_suite(void)
@@ -1973,6 +1996,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("ed25519");
 	tcase_add_test(tc, test_ed25519);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("script");
+	tcase_add_test(tc, test_output_script);
 	suite_add_tcase(s, tc);
 
 	return s;
