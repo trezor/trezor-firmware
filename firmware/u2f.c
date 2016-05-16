@@ -568,9 +568,7 @@ void u2f_register(const APDU *a)
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
-		layoutDialog(DIALOG_ICON_QUESTION, "Cancel", "Register",
-					 NULL, "Register U2F", "security key",
-					 "", getReadableAppId(req->appId), "", NULL);
+		layoutU2FDialog("Register", getReadableAppId(req->appId));
 		dialog_timeout = U2F_TIMEOUT;
 		last_req_state = REG;
 		return;
@@ -701,9 +699,7 @@ void u2f_authenticate(const APDU *a)
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
-		layoutDialog(DIALOG_ICON_QUESTION, "Cancel", "Authenticate", NULL,
-					 "Authenticate U2F", "security key",
-					 "", getReadableAppId(req->appId), "", NULL);
+		layoutU2FDialog("Authenticate", getReadableAppId(req->appId));
 		dialog_timeout = U2F_TIMEOUT;
 		last_req_state = AUTH;
 		return;

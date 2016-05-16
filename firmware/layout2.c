@@ -335,3 +335,7 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		NULL,
 		NULL);
 }
+
+void layoutU2FDialog(const char *verb, const char *appid) {
+	layoutDialog(DIALOG_ICON_QUESTION, "Cancel", verb, NULL, verb, "U2F security key?", "", appid, "", NULL);
+}
