@@ -141,7 +141,9 @@ class PinDialog():
     def wait_for_result(self):
         while True:
             self.render()
-            event, *pos = yield loop.Select(loop.TOUCH_START | loop.TOUCH_MOVE | loop.TOUCH_END)
+            event, *pos = yield loop.Select(loop.TOUCH_START,
+                                            loop.TOUCH_MOVE,
+                                            loop.TOUCH_END)
             result = self.send(event, pos)
             if result is not None:
                 return result
@@ -170,7 +172,6 @@ def layout_tap_to_confirm(address, amount, currency):
     # animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 
     pin_dialog = PinDialog()
-
     pin_result = yield from pin_dialog.wait_for_result()
 
     if pin_result is PIN_CONFIRMED:

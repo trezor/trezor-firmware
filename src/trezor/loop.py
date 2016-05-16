@@ -1,6 +1,6 @@
 import utime
 
-from uheapq import heappop, heappush
+from uheapq import heappop, heappush, heapify
 from .utils import type_gen
 from . import msg
 from . import log
@@ -17,18 +17,38 @@ TOUCH_MOVE = const(2)
 TOUCH_END = const(4)
 HID_READ = const(8)
 
-time_queue = []
-time_queue_ctr = 0
-blocked_events = 0
-blocked_gen = None
+blocked_gens = {}  # event -> generator
+time_queue = []  # [(int, int, generator, any)]
+time_ticket = 0
 
 
 def schedule(gen, data=None, time=None):
-    global time_queue_ctr
+    global time_ticket
     if not time:
         time = utime.ticks_us()
-    heappush(time_queue, (time, time_queue_ctr, gen, data))
-    time_queue_ctr += 1
+    heappush(time_queue, (time, time_ticket, gen, data))
+    time_ticket += 1
+    return gen
+
+
+def unschedule(gen):
+    global time_queue
+    time_queue = [entry for entry in time_queue if entry[1] is not gen]
+    heapify(time_queue)
+
+
+def block(gen, event):
+    curr_gen = blocked_gens.get(event, None)
+    if curr_gen is not None:
+        log.warning(__name__, 'Closing %s blocked on %s', curr_gen, event)
+        curr_gen.close()
+    blocked_gens[event] = gen
+
+
+def unblock(gen):
+    for key in blocked_gens:
+        if blocked_gens[key] is gen:
+            blocked_gens[key] = None
 
 
 class Sleep():
@@ -39,40 +59,41 @@ class Sleep():
 
 class Select():
 
-    def __init__(self, events):
+    def __init__(self, *events):
         self.events = events
+
+    def handle(self, gen):
+        for event in self.events:
+            block(gen, event)
 
 
 class Wait():
 
     def __init__(self, gens, wait_for=1, exit_others=True):
+        self.gens = gens
         self.wait_for = wait_for
         self.exit_others = exit_others
         self.received = 0
+        self.scheduled = None
         self.callback = None
-        self.gens = gens
 
-        for g in gens:
-            schedule(self._wait(g))
+    def handle(self, gen):
+        self.scheduled = [schedule(self._wait(g)) for g in self.gens]
+        self.callback = gen
 
     def _wait(self, gen):
-        if isinstance(gen, type_gen):
-            ret = yield from gen
-        else:
-            ret = yield gen
+        result = yield from gen
+        self._finish(gen, result)
 
-        self.finish(gen, ret)
-
-    def finish(self, gen, result):
+    def _finish(self, gen, result):
         self.received += 1
-
         if self.received == self.wait_for:
             schedule(self.callback, (gen, result))
-            self.callback = None
-
             if self.exit_others:
-                for g in self.gens:
-                    if isinstance(gen, type_gen):
+                for g in self.scheduled:
+                    if g is not gen:
+                        unschedule(g)
+                        unblock(g)
                         g.close()
 
 
@@ -102,13 +123,12 @@ def run_forever():
             # Run interrupt handler right away, they have priority
             event = message[0]
             data = message
-            if blocked_events & event:
-                gen = blocked_gen
-                blocked_events = 0
-                blocked_gen = None
-            else:
+            gen = blocked_gens.pop(event, None)
+            if not gen:
                 log.info(__name__, 'No handler for event: %s', event)
                 continue
+            # Cancel other registrations of this handler
+            unblock(gen)
         else:
             # Run something from the time queue
             if time_queue:
@@ -127,18 +147,15 @@ def run_forever():
 
         if isinstance(result, Sleep):
             # Sleep until result.time, call us later
-            schedule(gen, None, result.time)
+            schedule(gen, result, result.time)
 
         elif isinstance(result, Select):
             # Wait for one or more types of event
-            if blocked_gen:
-                blocked_gen.close()
-            blocked_gen = gen
-            blocked_events = result.events
+            result.handle(gen)
 
         elif isinstance(result, Wait):
-            # Register the origin generator as a waiting callback
-            result.callback = gen
+            # Register us as a waiting callback
+            result.handle(gen)
 
         elif result is None:
             # Just call us asap
