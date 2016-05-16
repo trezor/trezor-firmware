@@ -771,6 +771,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	layoutHome();
 }
 
+/* ECIES disabled
 void fsm_msgEncryptMessage(EncryptMessage *msg)
 {
 	if (!storage_isInitialized()) {
@@ -888,6 +889,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 	msg_write(MessageType_MessageType_DecryptedMessage, resp);
 	layoutHome();
 }
+*/
 
 void fsm_msgEstimateTxSize(EstimateTxSize *msg)
 {

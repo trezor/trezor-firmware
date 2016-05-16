@@ -1,12 +1,10 @@
-TREZOR Firmware
-===============
+# TREZOR Firmware
 
-[![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu)
+[![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 http://bitcointrezor.com/
 
-How to build TREZOR firmware?
------------------------------
+## How to build TREZOR firmware?
 
 1. <a href="https://docs.docker.com/engine/installation/">Install Docker</a>
 2. `git clone https://github.com/trezor/trezor-mcu.git`
@@ -15,8 +13,7 @@ How to build TREZOR firmware?
 
 This creates file `output/trezor-TAG.bin` and prints its fingerprint at the last line of the build log.
 
-How to build TREZOR bootloader?
------------------------------
+## How to build TREZOR bootloader?
 
 1. <a href="https://docs.docker.com/engine/installation/">Install Docker</a>
 2. `git clone https://github.com/trezor/trezor-mcu.git`
@@ -25,8 +22,7 @@ How to build TREZOR bootloader?
 
 This creates file `output/bootloader.bin` and prints its fingerprint and size at the last line of the build log.
 
-How to get fingerprint of firmware signed and distributed by SatoshiLabs?
--------------------------------------------------------------------------
+## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
 1. Pick version of firmware binary listed on https://mytrezor.com/data/firmware/releases.json
 2. Download it: `wget -O trezor.signed.bin.hex https://mytrezor.com/data/firmware/trezor-1.1.0.bin.hex`

@@ -21,12 +21,12 @@
 #include "coins.h"
 
 const CoinType coins[COINS_COUNT] = {
-	{true, "Bitcoin",  true, "BTC",  true,   0, true,     100000, true,   5},
-	{true, "Testnet",  true, "TEST", true, 111, true,   10000000, true, 196},
-	{true, "Namecoin", true, "NMC",  true,  52, true,   10000000, true,   5},
-	{true, "Litecoin", true, "LTC",  true,  48, true,    1000000, true,   5},
-	{true, "Dogecoin", true, "DOGE", true,  30, true, 1000000000, true,  22},
-	{true, "Dash",     true, "DASH", true,  76, true,     100000, true,  16},
+	{true, "Bitcoin",  true, "BTC",  true,   0, true,     100000, true,   5, true, 6, true, 10},
+	{true, "Testnet",  true, "TEST", true, 111, true,   10000000, true, 196, true, 3, true, 40},
+	{true, "Namecoin", true, "NMC",  true,  52, true,   10000000, true,   5, false, 0, false, 0},
+	{true, "Litecoin", true, "LTC",  true,  48, true,    1000000, true,   5, false, 0, false, 0},
+	{true, "Dogecoin", true, "DOGE", true,  30, true, 1000000000, true,  22, false, 0, false, 0},
+	{true, "Dash",     true, "DASH", true,  76, true,     100000, true,  16, false, 0, false, 0},
 };
 
 const CoinType *coinByShortcut(const char *shortcut)

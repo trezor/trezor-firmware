@@ -158,6 +158,7 @@ int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_
 	return 0;
 }
 
+/* ECIES disabled
 int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, const uint8_t *address_raw)
 {
 	if (privkey && address_raw) { // signing == true
@@ -195,10 +196,10 @@ int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_siz
 	bn_write_be(&R.x, shared_secret + 1);
 	// generate keying bytes
 	uint8_t keying_bytes[80];
-	uint8_t salt[22 + 33 + 4];
+	uint8_t salt[22 + 33];
 	memcpy(salt, "Bitcoin Secure Message", 22);
 	memcpy(salt + 22, nonce, 33);
-	pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes, 80, NULL);
+	pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes, 80);
 	// encrypt payload
 	aes_encrypt_ctx ctx;
 	aes_encrypt_key256(keying_bytes, &ctx);
@@ -227,11 +228,11 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_le
 	bn_write_be(&R.x, shared_secret + 1);
 	// generate keying bytes
 	uint8_t keying_bytes[80];
-	uint8_t salt[22 + 33 + 4];
+	uint8_t salt[22 + 33];
 	memcpy(salt, "Bitcoin Secure Message", 22);
 	salt[22] = 0x02 | (nonce->y.val[0] & 0x01);
 	bn_write_be(&(nonce->x), salt + 23);
-	pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes, 80, NULL);
+	pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes, 80);
 	// compute hmac
 	uint8_t out[32];
 	hmac_sha256(keying_bytes + 32, 32, payload, payload_len, out);
@@ -267,6 +268,7 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_le
 	*msg_len = o;
 	return 0;
 }
+*/
 
 uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
 {
