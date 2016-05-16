@@ -54,20 +54,17 @@ static const struct usb_device_descriptor dev_descr = {
 
 static const uint8_t hid_report_descriptor[] = {
 	0x06, 0x00, 0xff,  // USAGE_PAGE (Reserved)
-	0x09, 0x01,        // USAGE 
+	0x09, 0x01,        // USAGE (1)
 	0xa1, 0x01,        // COLLECTION (Application)
-	0x09, 0x20,        // USAGE (Input Report Data)
 	0x15, 0x00,        // LOGICAL_MINIMUM (0)
-	0x26,0xff, 0x00,   // LOGICAL_MAXIMUM (255)
-	0x75,0x08,         // REPORT_SIZE (8)
-	0x95,0x40,         // REPORT_COUNT (64)
-	0x81,0x02,         // INPUT (Data,Var,Abs)
-	0x09,0x21,         // USAGE (Output Report Data)
-	0x15,0x00,         // LOGICAL_MINIMUM (0)
-	0x26,0xff, 0x00,   // LOGICAL_MAXIMUM (255)
-	0x75,0x08,         // REPORT_SIZE (8)
-	0x95,0x40,         // REPORT_COUNT (64)
-	0x91,0x02,         // OUTPUT (Data,Var,Abs)
+	0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
+	0x85, 0x3f,        // REPORT_ID (63)
+	0x75, 0x08,        // REPORT_SIZE (8)
+	0x95, 0x3f,        // REPORT_COUNT (63)
+	0x09, 0x01,        // USAGE (1)
+	0x81, 0x02,        // INPUT (Data,Var,Abs)
+	0x09, 0x01,        // USAGE (1)
+	0x91, 0x02,        // OUTPUT (Data,Var,Abs)
 	0xc0               // END_COLLECTION
 };
 
@@ -233,14 +230,14 @@ static const struct usb_interface_descriptor hid_iface_debug[] = {{
 static const struct usb_interface ifaces[] = {{
 	.num_altsetting = 1,
 	.altsetting = hid_iface,
-}, {
-    .num_altsetting = 1,
-    .altsetting = hid_iface_u2f,
 #if DEBUG_LINK
 }, {
 	.num_altsetting = 1,
 	.altsetting = hid_iface_debug,
 #endif
+}, {
+    .num_altsetting = 1,
+    .altsetting = hid_iface_u2f,
 }};
 
 static const struct usb_config_descriptor config = {
@@ -311,7 +308,7 @@ static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
 
 	debugLog(0, "", "hid_u2f_rx_callback");
     if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
-	u2fhid_read((const U2FHID_FRAME *)buf);
+	u2fhid_read(tiny, (const U2FHID_FRAME *)buf);
 }
 
 #if DEBUG_LINK

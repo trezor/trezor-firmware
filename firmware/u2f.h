@@ -35,7 +35,9 @@ typedef struct {
 
 #define APDU_LEN(A) (uint32_t)(((A).lc1 << 16) + ((A).lc2 << 8) + ((A).lc3))
 
-void u2fhid_read(const U2FHID_FRAME *buf);
+void u2fhid_read(char tiny, const U2FHID_FRAME *buf);
+void u2fhid_init_cmd(const U2FHID_FRAME *f);
+void u2fhid_read_start(const U2FHID_FRAME *f);
 bool u2fhid_write(uint8_t *buf);
 void u2fhid_init(const U2FHID_INIT_REQ *init_req);
 void u2fhid_ping(const uint8_t *buf, uint32_t len);
@@ -50,11 +52,11 @@ void u2f_register(const APDU *a);
 void u2f_version(const APDU *a);
 void u2f_authenticate(const APDU *a);
 
-void send_u2f_msg(const uint8_t *data, const uint32_t len);
-void send_u2f_error(const uint16_t err);
+void send_u2f_msg(const uint8_t *data, uint32_t len);
+void send_u2f_error(uint16_t err);
 
 void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data,
 		     const uint32_t len);
-void send_u2fhid_error(const uint8_t err);
+void send_u2fhid_error(uint32_t fcid, uint8_t err);
 
 #endif
