@@ -267,16 +267,16 @@ static void sha3_process_block(uint64_t hash[25], const uint64_t *block, size_t 
  */
 void sha3_Update(SHA3_CTX *ctx, const unsigned char *msg, size_t size)
 {
-	size_t index = (size_t)ctx->rest;
+	size_t idx = (size_t)ctx->rest;
 	size_t block_size = (size_t)ctx->block_size;
 
 	if (ctx->rest & SHA3_FINALIZED) return; /* too late for additional input */
 	ctx->rest = (unsigned)((ctx->rest + size) % block_size);
 
 	/* fill partial block */
-	if (index) {
-		size_t left = block_size - index;
-		memcpy((char*)ctx->message + index, msg, (size < left ? size : left));
+	if (idx) {
+		size_t left = block_size - idx;
+		memcpy((char*)ctx->message + idx, msg, (size < left ? size : left));
 		if (size < left) return;
 
 		/* process partial block */
