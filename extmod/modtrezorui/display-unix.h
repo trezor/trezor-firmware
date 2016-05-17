@@ -90,7 +90,7 @@ void display_init(void)
         SDL_DestroyWindow(win);
         SDL_Quit();
     }
-    SDL_SetRenderDrawColor(RENDERER, 48, 48, 48, 255);
+    SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     SDL_RenderClear(RENDERER);
     SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
@@ -131,5 +131,6 @@ int display_backlight(int val)
     if (val >= 0 && val <= 255) {
         BACKLIGHT = val;
     }
+    SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     return BACKLIGHT;
 }
