@@ -21,6 +21,7 @@
 #define __SHA3_H__
 
 #include <stdint.h>
+#include "options.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +58,7 @@ void sha3_512_Init(SHA3_CTX *ctx);
 void sha3_Update(SHA3_CTX *ctx, const unsigned char* msg, size_t size);
 void sha3_Final(SHA3_CTX *ctx, unsigned char* result);
 
-#ifdef USE_KECCAK
+#if USE_KECCAK
 #define keccak_224_Init sha3_224_Init
 #define keccak_256_Init sha3_256_Init
 #define keccak_384_Init sha3_384_Init

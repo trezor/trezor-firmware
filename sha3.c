@@ -331,7 +331,7 @@ void sha3_Final(SHA3_CTX *ctx, unsigned char* result)
 	if (result) me64_to_le_str(result, ctx->hash, digest_length);
 }
 
-#ifdef USE_KECCAK
+#if USE_KECCAK
 /**
 * Store calculated hash into the given array.
 *

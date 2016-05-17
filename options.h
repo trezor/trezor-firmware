@@ -56,4 +56,9 @@
 #define BIP39_CACHE_SIZE 4
 #endif
 
+// support Keccak hashing
+#ifndef USE_KECCAK
+#define USE_KECCAK 0
+#endif
+
 #endif
