@@ -82,7 +82,10 @@ class Wait():
         self.callback = gen
 
     def _wait(self, gen):
-        result = yield from gen
+        if isinstance(gen, type_gen):
+            result = yield from gen
+        else:
+            result = yield gen
         self._finish(gen, result)
 
     def _finish(self, gen, result):
@@ -91,7 +94,7 @@ class Wait():
             schedule(self.callback, (gen, result))
             if self.exit_others:
                 for g in self.scheduled:
-                    if g is not gen:
+                    if g is not gen and isinstance(g, type_gen):
                         unschedule(g)
                         unblock(g)
                         g.close()
