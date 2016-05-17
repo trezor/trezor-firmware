@@ -17,10 +17,8 @@
 
 #if defined STM32_HAL_H
 #include "display-stmhal.h"
-#elif defined UNIX
-#include "display-unix.h"
 #else
-#error Unsupported port. Only STMHAL and UNIX ports are supported.
+#include "display-unix.h"
 #endif
 
 // common display functions

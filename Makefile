@@ -3,21 +3,33 @@
 STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-TREZORV2
 
 help: ## show this help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36mmake %-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36mmake %-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 vendor: ## update git submodules
 	git submodule update --init
 
-build: build_stmhal build_unix ## build both stmhal and unix micropython ports
+build: build_stmhal build_unix ## build both stmhal and 32-bit unix micropython ports
 
 build_stmhal: vendor ## build stmhal port
 	make -C vendor/micropython/stmhal
 
-build_unix: vendor ## build unix port (32-bit)
+build_unix: vendor ## build 32-bit unix port
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
 
-build_unix64: vendor ## build unix port (64-bit)
+build_cross: vendor ## build 32-bit mpy-cross port
+	make -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
+
+build_frozen: vendor build_cross ## build 32-bit unix port with frozen modules (from vendor/micropython/unix/frozen)
+	make -C vendor/micropython/unix FROZEN_MPY_DIR=frozen MICROPY_FORCE_32BIT=1
+
+build_unix64: vendor ## build 64-bit unix port
 	make -C vendor/micropython/unix
+
+build_cross64: vendor ## build 64-bit mpy-cross port
+	make -C vendor/micropython/mpy-cross
+
+build_frozen64: vendor build_cross ## build 64-bit unix port with frozen modules (from vendor/micropython/unix/frozen)
+	make -C vendor/micropython/unix FROZEN_MPY_DIR=frozen
 
 run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
