@@ -252,30 +252,46 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 6, mod_TrezorUi_Display_loader);
 
-/// def trezor.ui.display.orientation(degrees: int) -> None
+/// def trezor.ui.display.orientation(degrees: int=None) -> int
 ///
 /// Sets display orientation to 0, 90, 180 or 270 degrees.
 /// Everything needs to be redrawn again when this function is used.
+/// Call without the degrees parameter to just perform the read of the value.
 ///
-STATIC mp_obj_t mod_TrezorUi_Display_orientation(mp_obj_t self, mp_obj_t degrees) {
-    mp_int_t deg = mp_obj_get_int(degrees);
-    if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Value must be 0, 90, 180 or 270"));
+STATIC mp_obj_t mod_TrezorUi_Display_orientation(size_t n_args, const mp_obj_t *args) {
+    mp_int_t deg;
+    if (n_args > 1) {
+        deg = mp_obj_get_int(args[1]);
+        if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Value must be 0, 90, 180 or 270"));
+        }
+        deg = display_orientation(deg);
+    } else {
+        deg = display_orientation(-1);
     }
-    display_orientation(deg);
-    return mp_const_none;
+    return MP_OBJ_NEW_SMALL_INT(deg);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_orientation_obj, mod_TrezorUi_Display_orientation);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_orientation_obj, 1, 2, mod_TrezorUi_Display_orientation);
 
-/// def trezor.ui.display.backlight(val: int) -> None
+/// def trezor.ui.display.backlight(val: int=None) -> int
 ///
 /// Sets backlight intensity to the value specified in val.
+/// Call without the val parameter to just perform the read of the value.
 ///
-STATIC mp_obj_t mod_TrezorUi_Display_backlight(mp_obj_t self, mp_obj_t reg) {
-    display_backlight(mp_obj_get_int(reg));
-    return mp_const_none;
+STATIC mp_obj_t mod_TrezorUi_Display_backlight(size_t n_args, const mp_obj_t *args) {
+    mp_int_t val;
+    if (n_args > 1) {
+        val = mp_obj_get_int(args[1]);
+        if (val < 0 || val > 255) {
+            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Value must be between 0 and 255"));
+        }
+        val = display_backlight(val);
+    } else {
+        val = display_backlight(-1);
+    }
+    return MP_OBJ_NEW_SMALL_INT(val);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_backlight_obj, mod_TrezorUi_Display_backlight);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_backlight_obj, 1, 2, mod_TrezorUi_Display_backlight);
 
 /// def trezor.ui.display.raw(reg: int, data: bytes) -> None
 ///

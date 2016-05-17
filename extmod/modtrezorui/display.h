@@ -14,8 +14,8 @@
 void display_init(void);
 void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void display_update(void);
-void display_orientation(int degrees);
-void display_backlight(uint8_t val);
+int display_orientation(int degrees);
+int display_backlight(int val);
 
 void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor);
 void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c);

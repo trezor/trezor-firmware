@@ -15,7 +15,6 @@ static SDL_Surface  *SCREEN   = 0;
 static SDL_Texture  *TEXTURE  = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
-static int ROTATION = 0;
 
 #define CMD(X) (void)(X);
 
@@ -112,16 +111,25 @@ void display_update(void)
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, RESX, RESY};
-    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ROTATION, NULL, 0);
+    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
 }
 
-void display_orientation(int degrees)
+int display_orientation(int degrees)
 {
-    ROTATION = degrees;
-    display_update();
+    if (degrees != ORIENTATION) {
+        if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
+            ORIENTATION = degrees;
+            display_update();
+        }
+    }
+    return ORIENTATION;
 }
 
-void display_backlight(uint8_t val)
+int display_backlight(int val)
 {
+    if (val >= 0 && val <= 255) {
+        BACKLIGHT = val;
+    }
+    return BACKLIGHT;
 }

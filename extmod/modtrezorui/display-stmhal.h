@@ -93,31 +93,38 @@ static void display_unsleep(void) {
 
 static uint8_t WINDOW_OFFSET_X = 0, WINDOW_OFFSET_Y = 0;
 
-void display_orientation(int degrees)
+int display_orientation(int degrees)
 {
-    // memory access control
-    switch (degrees) {
-        case 0:
-            CMD(0x36); DATA(0x08 | (1<<6) | (1<<7));
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 80;
-            break;
-        case 90:
-            CMD(0x36); DATA(0x08 | (1<<5) | (1<<6));
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 0;
-            break;
-        case 180:
-            CMD(0x36); DATA(0x08);
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 0;
-            break;
-        case 270:
-            CMD(0x36); DATA(0x08 | (1<<5) | (1<<7));
-            WINDOW_OFFSET_X = 80;
-            WINDOW_OFFSET_Y = 0;
-            break;
+    if (degrees != ORIENTATION) {
+        // memory access control
+        switch (degrees) {
+            case 0:
+                CMD(0x36); DATA(0x08 | (1<<6) | (1<<7));
+                WINDOW_OFFSET_X = 0;
+                WINDOW_OFFSET_Y = 80;
+                ORIENTATION = 0;
+                break;
+            case 90:
+                CMD(0x36); DATA(0x08 | (1<<5) | (1<<6));
+                WINDOW_OFFSET_X = 0;
+                WINDOW_OFFSET_Y = 0;
+                ORIENTATION = 90;
+                break;
+            case 180:
+                CMD(0x36); DATA(0x08);
+                WINDOW_OFFSET_X = 0;
+                WINDOW_OFFSET_Y = 0;
+                ORIENTATION = 180;
+                break;
+            case 270:
+                CMD(0x36); DATA(0x08 | (1<<5) | (1<<7));
+                WINDOW_OFFSET_X = 80;
+                WINDOW_OFFSET_Y = 0;
+                ORIENTATION = 270;
+                break;
+        }
     }
+    return ORIENTATION;
 }
 
 void display_init(void) {
@@ -161,6 +168,10 @@ void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 void display_update(void) {
 }
 
-void display_backlight(uint8_t val)
+int display_backlight(int val)
 {
+    if (val >= 0 && val <= 255) {
+        BACKLIGHT = val;
+    }
+    return BACKLIGHT;
 }
