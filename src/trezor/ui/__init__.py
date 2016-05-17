@@ -39,7 +39,7 @@ NORMAL = const(1)
 BOLD   = const(2)
 
 
-def in_area(pos, area):
+def in_area(pos: tuple, area: tuple) -> bool:
     x, y = pos
     ax, ay, aw, ah = area
     return ax <= x <= ax + aw and ay <= y <= ay + ah

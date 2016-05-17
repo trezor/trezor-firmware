@@ -276,6 +276,9 @@ Function returns None if timeout specified in microseconds is reached.
 def trezor.ui.rgbcolor(r: int, g: int, b: int) -> int
 ```
 ``` python
+def trezor.ui.in_area(pos: tuple, area: tuple) -> bool
+```
+``` python
 def trezor.ui.lerpi(a: int, b: int, t: float) -> int
 ```
 ``` python
@@ -359,17 +362,19 @@ When icon and iconfgcolor are provided, an icon is drawn in the middle using the
 Icon needs to be of exaclty 96x96 pixels size.
 
 ``` python
-def trezor.ui.display.orientation(degrees: int) -> None
+def trezor.ui.display.orientation(degrees: int=None) -> int
 ```
 
 Sets display orientation to 0, 90, 180 or 270 degrees.
 Everything needs to be redrawn again when this function is used.
+Call without the degrees parameter to just perform the read of the value.
 
 ``` python
-def trezor.ui.display.backlight(val: int) -> None
+def trezor.ui.display.backlight(val: int=None) -> int
 ```
 
 Sets backlight intensity to the value specified in val.
+Call without the val parameter to just perform the read of the value.
 
 ``` python
 def trezor.ui.display.raw(reg: int, data: bytes) -> None

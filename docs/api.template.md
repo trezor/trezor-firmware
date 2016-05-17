@@ -58,7 +58,7 @@ Syntax used below is a valid Python function declaration with type hints defined
 
 ##trezor.ui
 
-@src/trezor/ui.py
+@src/trezor/ui/__init__.py
 
 ###trezor.ui.display
 

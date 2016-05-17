@@ -20,6 +20,8 @@ def process_file(fn):
                 r.append('')
     elif ext == '.py':
         mod = mod[4:].replace('/', '.')
+        if mod.endswith('.__init__'):
+            mod = mod[:-9]
         for l in src:
             l = l.rstrip()
             if l.startswith('def '):
