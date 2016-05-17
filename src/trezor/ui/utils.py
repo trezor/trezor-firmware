@@ -1,14 +1,12 @@
 import math
 import utime
 
-from TrezorUi import Display
+from trezor import loop
 
-from . import loop
-
-display = Display()
 
 def rgbcolor(r: int, g: int, b: int) -> int:
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+
 
 RED         = rgbcolor(0xF4, 0x43, 0x36)
 PINK        = rgbcolor(0xE9, 0x1E, 0x63)
@@ -35,6 +33,13 @@ WHITE       = rgbcolor(0xFF, 0xFF, 0xFF)
 MONO   = const(0)
 NORMAL = const(1)
 BOLD   = const(2)
+
+
+def in_area(pos, area):
+    x, y = pos
+    ax, ay, aw, ah = area
+    return ax <= x <= ax + aw and ay <= y <= ay + ah
+
 
 def lerpi(a: int, b: int, t: float) -> int:
     return int(a + t * (b - a))
