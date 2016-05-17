@@ -401,6 +401,7 @@ message VerifyMessage {
 	optional string address = 1;				// address to verify
 	optional bytes signature = 2;				// signature to verify
 	optional bytes message = 3;				// message to verify
+	optional string coin_name = 4 [default='Bitcoin'];	// coin to use for verifying
 }
 
 /**
