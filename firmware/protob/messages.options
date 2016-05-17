@@ -56,6 +56,7 @@ SignMessage.coin_name			max_size:17
 VerifyMessage.address			max_size:36
 VerifyMessage.signature			max_size:65
 VerifyMessage.message			max_size:1024
+VerifyMessage.coin_name			max_size:17
 
 MessageSignature.address		max_size:36
 MessageSignature.signature		max_size:65

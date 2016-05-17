@@ -100,11 +100,11 @@ int gpgMessageSign(const HDNode *node, const uint8_t *message, size_t message_le
 	return hdnode_sign_digest(node, message, signature + 1, NULL);
 }
 
-int cryptoMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
+int cryptoMessageSign(const CoinType *coin, const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
-	sha256_Update(&ctx, (const uint8_t *)"\x18" "Bitcoin Signed Message:" "\n", 25);
+	sha256_Update(&ctx, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
 	uint8_t varint[5];
 	uint32_t l = ser_length(message_len, varint);
 	sha256_Update(&ctx, varint, l);
@@ -120,14 +120,14 @@ int cryptoMessageSign(const HDNode *node, const uint8_t *message, size_t message
 	return result;
 }
 
-int cryptoMessageVerify(const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
+int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	uint8_t pubkey[65], addr_raw[21], hash[32];
 
 	// calculate hash
 	sha256_Init(&ctx);
-	sha256_Update(&ctx, (const uint8_t *)"\x18" "Bitcoin Signed Message:" "\n", 25);
+	sha256_Update(&ctx, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
 	uint8_t varint[5];
 	uint32_t l = ser_length(message_len, varint);
 	sha256_Update(&ctx, varint, l);
