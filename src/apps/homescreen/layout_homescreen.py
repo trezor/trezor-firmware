@@ -15,7 +15,7 @@ def layout_homescreen():
 
     animation = ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
 
-    timeout = loop.sleep(5000 * 1000)
+    timeout = loop.Sleep(5000 * 1000)
 
     yield loop.Wait([animation, timeout])
     print('back to layout')
