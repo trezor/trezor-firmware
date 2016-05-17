@@ -56,7 +56,11 @@ static uint32_t u2f_out_end = 0;
 static uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 
 #define U2F_PUBKEY_LEN 65
-#define KEY_HANDLE_LEN 64
+#define KEY_PATH_LEN 32
+#define KEY_HANDLE_LEN (KEY_PATH_LEN + SHA256_DIGEST_LENGTH)
+
+// Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
+#define KEY_PATH_ENTRIES (1 + KEY_PATH_LEN / sizeof(uint32_t))
 
 // Auth/Register request state machine
 typedef enum {
@@ -487,29 +491,28 @@ const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 
 const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 {
-		uint8_t keybase[64];
+		uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
 
-		// Derivation path is m/'U2F/'r/'r/'r/'r/'r/'r/'r/'r
-		uint32_t i, key_path[9];
+		// Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
+		uint32_t i, key_path[KEY_PATH_ENTRIES];
 		key_path[0] = U2F_KEY_PATH;
-		for (i = 1; i < 9; i++) {
+		for (i = 1; i < KEY_PATH_ENTRIES; i++) {
 			// high bit for hardened keys
 			key_path[i]= 0x80000000 | random32();
 		}
 
 		// First half of keyhandle is key_path
-		memcpy(key_handle, &key_path[1], 32);
+		memcpy(key_handle, &key_path[1], KEY_PATH_LEN);
 
 		// prepare keypair from /random data
-		const HDNode *node =
-			getDerivedNode(key_path, sizeof(key_path) / sizeof(uint32_t));
+		const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
 
 		// For second half of keyhandle
 		// Signature of app_id and random data
-		memcpy(&keybase[0], app_id, 32);
-		memcpy(&keybase[32], key_handle, 32);
+		memcpy(&keybase[0], app_id, U2F_APPID_SIZE);
+		memcpy(&keybase[U2F_APPID_SIZE], key_handle, KEY_PATH_LEN);
 		hmac_sha256(node->private_key, sizeof(node->private_key),
-					keybase, sizeof(keybase), &key_handle[32]);
+					keybase, sizeof(keybase), &key_handle[KEY_PATH_LEN]);
 
 		// Done!
 		return node;
@@ -518,23 +521,22 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 
 const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle[])
 {
-	uint32_t key_path[9];
+	uint32_t key_path[KEY_PATH_ENTRIES];
 	key_path[0] = U2F_KEY_PATH;
-	memcpy(&key_path[1], key_handle, 32);
+	memcpy(&key_path[1], key_handle, KEY_PATH_LEN);
 
-	const HDNode *node =
-		getDerivedNode(key_path, sizeof(key_path) / sizeof(uint32_t));
+	const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
 
-	uint8_t keybase[64];
-	memcpy(&keybase[0], app_id, 32);
-	memcpy(&keybase[32], key_handle, 32);
+	uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
+	memcpy(&keybase[0], app_id, U2F_APPID_SIZE);
+	memcpy(&keybase[U2F_APPID_SIZE], key_handle, KEY_PATH_LEN);
 
 
-	uint8_t hmac[32];
+	uint8_t hmac[SHA256_DIGEST_LENGTH];
 	hmac_sha256(node->private_key, sizeof(node->private_key),
 				keybase, sizeof(keybase), hmac);
 
-	if (memcmp(&key_handle[32], hmac, 32) != 0)
+	if (memcmp(&key_handle[KEY_PATH_LEN], hmac, SHA256_DIGEST_LENGTH) != 0)
 		return NULL;
 
 	// Done!

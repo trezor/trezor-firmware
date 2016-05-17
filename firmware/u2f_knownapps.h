@@ -21,9 +21,10 @@
 #define __U2F_KNOWNAPPS_H_INCLUDED__
 
 #include <stdint.h>
+#include "u2f/u2f.h"
 
 typedef struct {
-	uint8_t appid[32];
+	uint8_t appid[U2F_APPID_SIZE];
 	const char *appname;
 } U2FWellKnown;
 
