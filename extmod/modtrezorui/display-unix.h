@@ -95,6 +95,8 @@ void display_init(void)
     SDL_RenderClear(RENDERER);
     SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
+    SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
+    SDL_SetTextureAlphaMod(TEXTURE, 0);
 }
 
 void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
