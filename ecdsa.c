@@ -820,23 +820,17 @@ void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, u
 
 int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, uint8_t *uncompressed)
 {
-	if (pub_key[0] == 2 || pub_key[0] == 3) {
-		bignum256 x, y;
+	curve_point pub;
 
-		bn_read_be(pub_key + 1, &x);
-		// uncompress_coords will check for pub_key[0] & 1
-		uncompress_coords(curve, pub_key[0], &x, &y);
-
-		uncompressed[0] = 4;
-		memcpy(uncompressed + 1, pub_key + 1, 32);
-		bn_write_be(&y, uncompressed + 33);
-		return 1;
-	} else if (pub_key[0] == 4) {
-		memcpy(uncompressed, pub_key, 65);
-		return 1;
+	if (!ecdsa_read_pubkey(curve, pub_key, &pub)) {
+		return 0;
 	}
 
-	return 0;
+	uncompressed[0] = 4;
+	bn_write_be(&pub.x, uncompressed + 1);
+	bn_write_be(&pub.y, uncompressed + 33);
+
+	return 1;
 }
 
 void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
