@@ -133,6 +133,7 @@ message CoinType {
 	optional uint32 address_type_p2sh = 5 [default=5];
 	optional uint32 address_type_p2wpkh = 6 [default=6];
 	optional uint32 address_type_p2wsh = 7 [default=10];
+	optional bytes signed_message_header = 8;
 }
 
 /**
