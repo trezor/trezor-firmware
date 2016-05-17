@@ -66,6 +66,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, uint8_t *pub_key);
 void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash);
+int ecdsa_get_ethereum_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash);
 void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *addr_raw);
 void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr, int addrsize);
 void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif, int wifsize);
