@@ -1,46 +1,45 @@
-from . import utils
-from . import display
-from .utils import in_area
+from . import display, in_area
+from trezor import ui
 from trezor import loop
 
 
 DEFAULT_BUTTON = {
-    'bg-color': utils.BLACK,
-    'fg-color': utils.WHITE,
-    'text-style': utils.NORMAL,
-    'border-color': utils.blend(utils.BLACK, utils.WHITE, 0.1),
+    'bg-color': ui.BLACK,
+    'fg-color': ui.WHITE,
+    'text-style': ui.NORMAL,
+    'border-color': ui.blend(ui.BLACK, ui.WHITE, 0.1),
 }
 DEFAULT_BUTTON_ACTIVE = {
-    'bg-color': utils.GREY,
-    'fg-color': utils.BLACK,
-    'text-style': utils.BOLD,
-    'border-color': utils.GREY,
+    'bg-color': ui.GREY,
+    'fg-color': ui.BLACK,
+    'text-style': ui.BOLD,
+    'border-color': ui.GREY,
 }
 
 CANCEL_BUTTON = {
-    'bg-color': utils.blend(utils.BLACK, utils.RED, 0.3),
-    'fg-color': utils.RED,
-    'text-style': utils.NORMAL,
-    'border-color': utils.blend(utils.BLACK, utils.RED, 0.6),
+    'bg-color': ui.blend(ui.BLACK, ui.RED, 0.3),
+    'fg-color': ui.RED,
+    'text-style': ui.NORMAL,
+    'border-color': ui.blend(ui.BLACK, ui.RED, 0.6),
 }
 CANCEL_BUTTON_ACTIVE = {
-    'bg-color': utils.RED,
-    'fg-color': utils.WHITE,
-    'text-style': utils.BOLD,
-    'border-color': utils.RED,
+    'bg-color': ui.RED,
+    'fg-color': ui.WHITE,
+    'text-style': ui.BOLD,
+    'border-color': ui.RED,
 }
 
 CONFIRM_BUTTON = {
-    'bg-color': utils.blend(utils.BLACK, utils.GREEN, 0.3),
-    'fg-color': utils.GREEN,
-    'text-style': utils.NORMAL,
-    'border-color': utils.blend(utils.BLACK, utils.GREEN, 0.6),
+    'bg-color': ui.blend(ui.BLACK, ui.GREEN, 0.3),
+    'fg-color': ui.GREEN,
+    'text-style': ui.NORMAL,
+    'border-color': ui.blend(ui.BLACK, ui.GREEN, 0.6),
 }
 CONFIRM_BUTTON_ACTIVE = {
-    'bg-color': utils.GREEN,
-    'fg-color': utils.WHITE,
-    'text-style': utils.BOLD,
-    'border-color': utils.GREEN,
+    'bg-color': ui.GREEN,
+    'fg-color': ui.WHITE,
+    'text-style': ui.BOLD,
+    'border-color': ui.GREEN,
 }
 
 BTN_CLICKED = const(1)

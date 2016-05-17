@@ -1,5 +1,4 @@
 from trezor import ui
-from trezor.ui import utils as ui_utils
 from trezor.ui.swipe import Swipe
 from trezor import loop
 
@@ -17,10 +16,10 @@ def layout_homescreen():
 
     def func(foreground):
         f.seek(0)
-        ui.display.icon(0, 0, f.read(), foreground, ui_utils.BLACK)
+        ui.display.icon(0, 0, f.read(), foreground, ui.BLACK)
 
     orientation = swipe_to_change_orientation()
-    animation = ui_utils.animate_pulse(func, ui_utils.WHITE, ui_utils.GREY, speed=400000)
+    animation = ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
     timeout = loop.Sleep(5000 * 1000)
 
     yield loop.Wait([

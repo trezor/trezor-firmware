@@ -1,6 +1,6 @@
 import utime
 
-from .utils import in_area
+from . import in_area
 from trezor import loop
 
 
