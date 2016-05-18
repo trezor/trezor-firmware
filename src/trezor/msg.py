@@ -39,19 +39,19 @@ def read_message():
     # TODO: validate msglen for sane values
 
     report = memoryview(report)
-    repdata = report[9:]
-    repdata = repdata[:msglen]
+    data = report[9:]
+    data = data[:msglen]
 
-    msgdata = bytearray(repdata)  # TODO: allocate msglen bytes
+    msgdata = bytearray(data)  # TODO: allocate msglen bytes
     remaining = msglen - len(msgdata)
 
     while remaining > 0:
         report = yield from read_report()
         report = memoryview(report)
-        repdata = report[1:]
-        repdata = repdata[:remaining]
-        msgdata.extend(repdata)
-        remaining -= len(repdata)
+        data = report[1:]
+        data = data[:remaining]
+        msgdata.extend(data)
+        remaining -= len(data)
 
     return (msgtype, msgdata)
 
@@ -65,15 +65,15 @@ def write_message(msgtype, msgdata):
 
     msgdata = memoryview(msgdata)
     report = memoryview(report)
-    repdata = report[9:]
+    data = report[9:]
 
     while msgdata:
-        n = min(len(repdata), len(msgdata))
-        repdata[:n] = msgdata[:n]
+        n = min(len(data), len(msgdata))
+        data[:n] = msgdata[:n]
         i = n
-        while i < len(repdata):
-            repdata[i] = 0
+        while i < len(data):
+            data[i] = 0
             i += 1
         write_report(report)
         msgdata = msgdata[n:]
-        repdata = report[1:]
+        data = report[1:]
