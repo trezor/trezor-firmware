@@ -42,7 +42,7 @@ const uint8_t *msg_recv(void)
 {
     static uint8_t buf[RECV_BUFLEN];
     struct sockaddr_in si;
-    socklen_t sl;
+    socklen_t sl = sizeof(si);
     memset(buf, 0, sizeof(buf));
     int len = recvfrom(s, buf, RECV_BUFLEN, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
     if (len < 0) {
