@@ -75,7 +75,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             vstr_init_len(&vstr, 64);
             memcpy(vstr.buf, m, 64);
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(4);
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(8);
             tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
             return MP_OBJ_FROM_PTR(tuple);
          }
