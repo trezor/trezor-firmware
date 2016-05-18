@@ -4,7 +4,13 @@ sys.path.append('../lib')
 import unittest
 
 from trezor import loop
-from trezor.msg import read_report, parse_header, read_message
+from trezor import msg
+from trezor.msg import read_report, read_message, write_message
+
+
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 
 class TestMsg(unittest.TestCase):
@@ -23,13 +29,6 @@ class TestMsg(unittest.TestCase):
         except StopIteration as e:
             result = e.value
         self.assertEqual(result, empty_report)
-
-    def test_parse_header(self):
-
-        report = b'\x3f##\xab\xcd\x12\x34\x56\x78'
-        msgtype, msglen = parse_header(report)
-        self.assertEqual(msgtype, int('0xabcd', 16))
-        self.assertEqual(msglen, int('0x12345678', 16))
 
     def test_read_message(self):
 
@@ -56,10 +55,6 @@ class TestMsg(unittest.TestCase):
         self.assertEqual(restype, int('0xabcd', 16))
         self.assertEqual(resmsg, content)
 
-        def chunks(l, n):
-            for i in range(0, len(l), n):
-                yield l[i:i + n]
-
         reader = read_message()
         reader.send(None)
 
@@ -73,6 +68,17 @@ class TestMsg(unittest.TestCase):
             restype, resmsg = e.value
         self.assertEqual(restype, int('0xabcd', 16))
         self.assertEqual(resmsg, content)
+
+    def test_write_message(self):
+
+        written_reports = []
+        msg.write_report = lambda report: written_reports.append(bytes(report))
+
+        content = bytes([x for x in range(0, 256)])
+        message = b'##\xab\xcd\x00\x00\x01\00' + content
+        reports = [b'\x3f' + ch + '\x00' * (63 - len(ch)) for ch in chunks(message, 63)]
+        write_message(int('0xabcd'), content)
+        self.assertEqual(written_reports, reports)
 
 
 if __name__ == '__main__':

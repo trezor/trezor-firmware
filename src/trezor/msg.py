@@ -15,38 +15,65 @@ def send(msg):
     return _msg.send(msg)
 
 
-REPORT_LEN = 64
-REPORT_NUM = 63
-HEADER_MAGIC = 35  # '#'
+REPORT_LEN = const(64)
+REPORT_NUM = const(63)
+HEADER_MAGIC = const(35)  # '#'
 
 
 def read_report():
     report = yield loop.Select(loop.HID_READ)
-    assert report[0] == REPORT_NUM, 'Malformed report number'
-    assert len(report) == REPORT_LEN, 'Incorrect report length'
-    return memoryview(report)
+    assert report[0] == REPORT_NUM
+    return report
 
 
-def parse_header(report):
-    assert report[1] == HEADER_MAGIC and report[2] == HEADER_MAGIC, 'Header not found'
-    return ustruct.unpack_from('>HL', report, 3)
+def write_report(report):
+    return send(report)  # FIXME
 
 
 def read_message():
     report = yield from read_report()
-    (msgtype, msglen) = parse_header(report)
+    assert report[1] == HEADER_MAGIC
+    assert report[2] == HEADER_MAGIC
+    (msgtype, msglen) = ustruct.unpack_from('>HL', report, 3)
 
-    repdata = report[1 + 8:]
+    # TODO: validate msglen for sane values
+
+    report = memoryview(report)
+    repdata = report[9:]
     repdata = repdata[:msglen]
-    msgbuf = bytearray(repdata)
 
-    remaining = msglen - len(msgbuf)
+    msgdata = bytearray(repdata)  # TODO: allocate msglen bytes
+    remaining = msglen - len(msgdata)
 
     while remaining > 0:
         report = yield from read_report()
+        report = memoryview(report)
         repdata = report[1:]
         repdata = repdata[:remaining]
-        msgbuf.extend(repdata)
+        msgdata.extend(repdata)
         remaining -= len(repdata)
 
-    return (msgtype, msgbuf)
+    return (msgtype, msgdata)
+
+
+def write_message(msgtype, msgdata):
+    report = bytearray(REPORT_LEN)
+    report[0] = REPORT_NUM
+    report[1] = HEADER_MAGIC
+    report[2] = HEADER_MAGIC
+    ustruct.pack_into('>HL', report, 3, msgtype, len(msgdata))
+
+    msgdata = memoryview(msgdata)
+    report = memoryview(report)
+    repdata = report[9:]
+
+    while msgdata:
+        n = min(len(repdata), len(msgdata))
+        repdata[:n] = msgdata[:n]
+        i = n
+        while i < len(repdata):
+            repdata[i] = 0
+            i += 1
+        write_report(report)
+        msgdata = msgdata[n:]
+        repdata = report[1:]
