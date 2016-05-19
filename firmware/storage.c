@@ -72,7 +72,7 @@ _Static_assert(FLASH_STORAGE_START + FLASH_STORAGE_REALLEN <= FLASH_STORAGE_PINA
 _Static_assert((sizeof(storage_uuid) & 3) == 0, "storage uuid unaligned");
 _Static_assert((sizeof(storage) & 3) == 0, "storage unaligned");
 
-static bool sessionSeedCached;
+static bool sessionSeedCached, sessionSeedUsesPassphrase;
 
 static uint8_t sessionSeed[64];
 
@@ -290,27 +290,29 @@ void get_root_node_callback(uint32_t iter, uint32_t total)
 	layoutProgress("Waking up", 1000 * iter / total);
 }
 
-const uint8_t *storage_getSeed(void)
+const uint8_t *storage_getSeed(bool usePassphrase)
 {
 	// root node is properly cached
-	if (sessionSeedCached) {
+	if (usePassphrase == sessionSeedUsesPassphrase
+		&& sessionSeedCached) {
 		return sessionSeed;
 	}
 
 	// if storage has mnemonic, convert it to node and use it
 	if (storage.has_mnemonic) {
-		if (!protectPassphrase()) {
+		if (usePassphrase && !protectPassphrase()) {
 			return NULL;
 		}
-		mnemonic_to_seed(storage.mnemonic, sessionPassphrase, sessionSeed, get_root_node_callback); // BIP-0039
+		mnemonic_to_seed(storage.mnemonic, usePassphrase ? sessionPassphrase : "", sessionSeed, get_root_node_callback); // BIP-0039
 		sessionSeedCached = true;
+		sessionSeedUsesPassphrase = usePassphrase;
 		return sessionSeed;
 	}
 
 	return NULL;
 }
 
-bool storage_getRootNode(HDNode *node, const char *curve)
+bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
 {
 	// if storage has node, decrypt and use it
 	if (storage.has_node && strcmp(curve, SECP256K1_NAME) == 0) {
@@ -339,7 +341,7 @@ bool storage_getRootNode(HDNode *node, const char *curve)
 		return true;
 	}
 
-	const uint8_t *seed = storage_getSeed();
+	const uint8_t *seed = storage_getSeed(usePassphrase);
 	if (seed == NULL) {
 		return false;
 	}

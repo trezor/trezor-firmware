@@ -96,7 +96,7 @@ const CoinType *fsm_getCoin(const char *name)
 const HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
-	if (!storage_getRootNode(&node, curve)) {
+	if (!storage_getRootNode(&node, curve, true)) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled or unsupported curve");
 		layoutHome();
 		return 0;
