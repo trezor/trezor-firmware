@@ -1,9 +1,11 @@
 from trezor import loop
 from trezor import ui
+from trezor import msg
 from trezor.ui.pin import PinDialog, PIN_CONFIRMED, PIN_CANCELLED
 from trezor.utils import unimport_func
 
 
+@unimport_func
 def layout_tap_to_confirm(address, amount, currency):
 
     # ui.display.bar(0, 0, 240, 40, ui.GREEN)
@@ -26,34 +28,63 @@ def layout_tap_to_confirm(address, amount, currency):
 
     # animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 
-    pin_dialog = PinDialog()
-    pin_result = yield from pin_dialog.wait_for_result()
+    # pin_dialog = PinDialog()
+    # pin_result = yield from pin_dialog.wait_for_result()
 
-    if pin_result is PIN_CONFIRMED:
-        print('PIN confirmed:', pin_dialog.pin)
+    # if pin_result is PIN_CONFIRMED:
+    #     print('PIN confirmed:', pin_dialog.pin)
 
-    elif pin_result is PIN_CANCELLED:
-        print('PIN CANCELLED, go home')
+    # elif pin_result is PIN_CANCELLED:
+    #     print('PIN CANCELLED, go home')
 
+    from trezor.messages.Initialize import Initialize
+    from trezor.messages.Features import Features
+    from trezor.messages.GetPublicKey import GetPublicKey
+    from trezor.messages.PinMatrixRequest import PinMatrixRequest
+    from trezor.messages.PinMatrixRequestType import Current
+    from trezor.messages.PinMatrixAck import PinMatrixAck
+    from trezor.messages.PublicKey import PublicKey
+    from trezor.messages.HDNodeType import HDNodeType
 
-@unimport_func
-def zprava():
-    from uio import BytesIO
+    m = yield from msg.read_msg(Initialize)
+    print('Initialize')
 
-    from trezor.messages.GetAddress import GetAddress
+    m = Features()
+    m.revision = 'deadbeef'
+    m.bootloader_hash = 'deadbeef'
+    m.device_id = 'DEADBEEF'
+    m.coins = []
+    m.imported = False
+    m.initialized = True
+    m.label = 'My TREZOR'
+    m.major_version = 2
+    m.minor_version = 0
+    m.patch_version = 0
+    m.pin_cached = False
+    m.pin_protection = True
+    m.passphrase_cached = False
+    m.passphrase_protection = False
+    m.vendor = 'bitcointrezor.com'
 
-    m = GetAddress()
-    m.address_n = [1, 2, 3]
-    m.show_display = True
+    m = yield from msg.call(m, GetPublicKey)
+    print('GetPublicKey', m.address_n)
 
-    print(m.__dict__)
-    f = BytesIO()
-    m.dump(f)
-    data = f.getvalue()
-    f.close()
-    print(data)
-    # m2 = GetAddress.load(BytesIO(data))
-    # print(m2.__dict__)
+    m = PinMatrixRequest()
+    m.type = Current
+
+    m = yield from msg.call(m, PinMatrixAck)
+    print('PinMatrixAck', m.pin)
+
+    m = PublicKey()
+    m.node = HDNodeType()
+    m.node.depth = 0
+    m.node.child_num = 0
+    m.node.fingerprint = 0
+    m.node.chain_code = 'deadbeef'
+    m.node.public_key = 'deadbeef'
+
+    m = yield from msg.call(m, Initialize)
+    print('Initialize')
 
 
 def dispatch():
@@ -65,5 +96,3 @@ def boot():
     # Initilize app on boot time.
     # This should hookup HID message types dispatcher() wants to receive.
     print("Boot playground")
-
-    zprava()
