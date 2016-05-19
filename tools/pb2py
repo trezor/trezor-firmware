@@ -11,7 +11,7 @@ def process_type(t, cls, msg_id):
     out = ["t = p.MessageType()", ]
 
     if msg_id is not None:
-        out.append("t.type = const(%d)" % msg_id)
+        out.append("t.wire_type = %d" % msg_id)
 
     print("  * type %s" % t)
 
