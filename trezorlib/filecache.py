@@ -62,6 +62,7 @@ import sys as _sys
 import time as _time
 import traceback as _traceback
 import types
+import atexit
 
 _retval = _collections.namedtuple('_retval', 'timesig data')
 _SRC_DIR = _os.path.dirname(_os.path.abspath(__file__))
@@ -171,6 +172,7 @@ def filecache(seconds_of_validity=None, fail_silently=False):
             else:
                 function._db = _shelve.open(cache_name)
                 OPEN_DBS[cache_name] = function._db
+                atexit.register(function._db.close)
 
             function_with_cache._db = function._db
 
@@ -179,6 +181,7 @@ def filecache(seconds_of_validity=None, fail_silently=False):
     if type(seconds_of_validity) == types.FunctionType:
         # support for when people use '@filecache.filecache' instead of '@filecache.filecache()'
         func = seconds_of_validity
+        seconds_of_validity = None
         return filecache_decorator(func)
 
     return filecache_decorator

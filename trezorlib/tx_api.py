@@ -2,7 +2,7 @@ import binascii
 import urllib2
 import json
 from decimal import Decimal
-from filecache import filecache, DAY
+# from filecache import filecache, DAY
 import types_pb2 as proto_types
 
 def insight_tx(url, rawdata=False):
@@ -42,14 +42,14 @@ def insight_tx(url, rawdata=False):
 
 class TXAPIBitcoin(object):
 
-    @filecache(DAY)
+    # @filecache(DAY)
     def get_tx(self, txhash):
         url = 'https://insight.bitpay.com/api/tx/%s' % txhash
         return insight_tx(url)
 
 class TXAPITestnet(object):
 
-    @filecache(DAY)
+    # @filecache(DAY)
     def get_tx(self, txhash):
         url = 'https://test-insight.bitpay.com/api/tx/%s' % txhash
         return insight_tx(url)
