@@ -71,7 +71,7 @@ class UdpTransport(Transport):
                 time.sleep(0.001)
                 continue
 
-            report_id = data[0]
+            report_id = ord(data[0])
 
             if report_id > 63:
                 # Command report
