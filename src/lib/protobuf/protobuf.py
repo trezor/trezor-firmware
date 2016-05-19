@@ -28,7 +28,7 @@ class UVarintType:
         return value
 
 # class UInt32Type(UVarintType): pass
-   
+
 class BoolType:
     # Represents a boolean type. Encodes True as UVarint 1, and False as UVarint 0.
     WIRE_TYPE = 0
@@ -80,7 +80,7 @@ class EofWrapper:
     def __init__(self, fp, limit=None):
         self.__fp = fp
         self.__limit = limit
-        
+
     def read(self, size=None):
         # Reads a string. Raises EOFError on end of stream.
         if self.__limit is not None:
@@ -92,9 +92,9 @@ class EofWrapper:
         return s
 
 # Packs a tag and a wire_type into single int according to the protobuf spec.
-_pack_key = lambda tag, wire_type: (tag << 3) | wire_type 
+_pack_key = lambda tag, wire_type: (tag << 3) | wire_type
 # Unpacks a key into a tag and a wire_type according to the protobuf spec.
-_unpack_key = lambda key: (key >> 3, key & 7)    
+_unpack_key = lambda key: (key >> 3, key & 7)
 
 class MessageType:
     # Represents a message type.
@@ -143,7 +143,7 @@ class MessageType:
                         field_type.dump(fp, single_value)
             elif self.__has_flag(tag, FLAG_REQUIRED, FLAG_REQUIRED_MASK):
                 raise ValueError('The field with the tag %s is required but a value is missing.' % tag)
-        
+
     def load(self, fp):
         fp = EofWrapper(fp)
         message = self.__call__()
@@ -185,6 +185,15 @@ class MessageType:
                             raise ValueError('The field %s (\'%s\') is required but missing.' % (tag, name))
                 return message
 
+    def dumps(self, value):
+        fp = BytesIO()
+        self.dump(fp, value)
+        return fp.getvalue()
+
+    def loads(self, buf):
+        fp = BytesIO(buf)
+        return self.load(fp)
+
 class Message:
     # Represents a message instance.
 
@@ -194,25 +203,29 @@ class Message:
 
     def dump(self, fp):
         # Dumps the message into a write-like object.
-        return self.message_type.dump(fp, self)   
+        return self.message_type.dump(fp, self)
+
+    def dumps(self):
+        # Dumps the message into bytes
+        return self.message_type.dumps(self)
 
 # Embedded message. ------------------------------------------------------------
 
 class EmbeddedMessage:
     # Represents an embedded message type.
-    
+
     WIRE_TYPE = 2
-    
+
     def __init__(self, message_type):
         # Initializes a new instance. The argument is an underlying message type.
         self.message_type = message_type
-    
+
     def __call__(self):
         # Creates a message of the underlying message type.
         return self.message_type()
-    
+
     def dump(self, fp, value):
         BytesType.dump(fp, self.message_type.dumps(value))
-        
+
     def load(self, fp):
         return self.message_type.load(EofWrapper(fp, UVarintType.load(fp)))  # Limit with embedded message length.
