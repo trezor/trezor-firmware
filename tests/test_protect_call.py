@@ -96,7 +96,10 @@ class TestProtectCall(common.TrezorTest):
         self.client.setup_debuglink(button=True, pin_correct=False)
 
         def test_backoff(attempts, start):
-            expected = 0.2 * (2 ** attempts)
+            if attempts <= 1:
+                expected = 0.2
+            else:
+                expected = (2 ** (attempts - 2))
             got = time.time() - start
 
             msg = "Pin delay expected to be at least %s seconds, got %s" % (expected, got)

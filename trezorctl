@@ -209,7 +209,7 @@ class Commands(object):
 
     def firmware_update(self, args):
         if args.file:
-            fp = open(args.file, 'r')
+            fp = open(args.file, 'rb').read()
         elif args.url:
             print("Downloading from", args.url)
             r = requests.get(args.url)
