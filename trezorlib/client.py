@@ -47,7 +47,7 @@ def pprint(msg):
     if isinstance(msg, proto.FirmwareUpload):
         return "<%s> (%d bytes):\n" % (msg_class, msg_size)
     else:
-        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, '#FIXME') # msg)
+        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
 
 def log(msg):
     sys.stderr.write("%s\n" % msg)
