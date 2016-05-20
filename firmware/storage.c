@@ -419,6 +419,15 @@ bool session_isPinCached(void)
 	return sessionPinCached;
 }
 
+void storage_clearPinArea()
+{
+	flash_clear_status_flags();
+	flash_unlock();
+	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
+	flash_lock();
+	storage_check_flash_errors();
+}
+
 void storage_resetPinFails(uint32_t *pinfailsptr)
 {
 	flash_clear_status_flags();

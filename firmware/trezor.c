@@ -50,6 +50,7 @@ int main(void)
 	storage_reset(); // wipe storage if debug link
 	storage_reset_uuid();
 	storage_commit();
+	storage_clearPinArea(); // reset PIN failures if debug link
 #endif
 
 	oledDrawBitmap(40, 0, &bmp_logo64);
