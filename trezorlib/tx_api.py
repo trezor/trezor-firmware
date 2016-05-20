@@ -3,19 +3,13 @@ import json
 from decimal import Decimal
 # from filecache import filecache, DAY
 from . import types_pb2 as proto_types
-
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
+import requests
 
 def insight_tx(url, rawdata=False):
     if not rawdata:
         try:
-            f = urllib2.urlopen(url)
-            data = json.load(f)
+            r = requests.get(url, headers = {'User-agent': 'Mozilla/5.0'})
+            data = r.json()
         except:
             raise Exception('URL error: %s' % url)
     else:
@@ -49,8 +43,8 @@ def insight_tx(url, rawdata=False):
 def smartbit_tx(url, rawdata=False):
     if not rawdata:
         try:
-            f = urllib2.urlopen(url)
-            data = json.load(f)
+            r = requests.get(url, headers = {'User-agent': 'Mozilla/5.0'})
+            data = r.json()
         except:
             raise Exception('URL error: %s' % url)
     else:
@@ -89,6 +83,7 @@ class TXAPIBitcoin(object):
     def get_tx(self, txhash):
         url = 'https://insight.bitpay.com/api/tx/%s' % txhash
         return insight_tx(url)
+
 
 class TXAPITestnet(object):
 

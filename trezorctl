@@ -4,8 +4,9 @@ import binascii
 import argparse
 import json
 import base64
-import urllib
 import tempfile
+import requests
+from io import BytesIO
 
 from trezorlib.client import TrezorClient, TrezorClientDebug
 
@@ -211,12 +212,11 @@ class Commands(object):
             fp = open(args.file, 'r')
         elif args.url:
             print("Downloading from", args.url)
-            resp = urllib.urlretrieve(args.url)
-            fp = open(resp[0], 'r')
-            urllib.urlcleanup() # We still keep file pointer open
+            r = requests.get(args.url)
+            fp = r.content
         else:
-            resp = urllib.urlopen("https://mytrezor.com/data/firmware/releases.json")
-            releases = json.load(resp)
+            r = requests.get('https://mytrezor.com/data/firmware/releases.json')
+            releases = r.json()
             version = lambda r: r['version']
             version_string = lambda r: ".".join(map(str, version(r)))
             if args.version:
@@ -228,25 +228,15 @@ class Commands(object):
             args.url = release['url']
             return self.firmware_update(args)
 
-        if fp.read(8) == '54525a52':
-            print("Converting firmware to binary")
+        if fp[:8] == b'54525a52':
+            fp = binascii.unhexlify(fp)
 
-            fp.seek(0)
-            fp_old = fp
-
-            fp = tempfile.TemporaryFile()
-            fp.write(binascii.unhexlify(fp_old.read()))
-
-            fp_old.close()
-
-        fp.seek(0)
-        if fp.read(4) != 'TRZR':
+        if fp[:4] != b'TRZR':
             raise Exception("TREZOR firmware header expected")
 
         print("Please confirm action on device...")
 
-        fp.seek(0)
-        return self.client.firmware_update(fp=fp)
+        return self.client.firmware_update(fp=BytesIO(fp))
 
     list.help = 'List connected TREZOR USB devices'
     ping.help = 'Send ping message'
