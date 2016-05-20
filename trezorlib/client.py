@@ -203,7 +203,10 @@ class TextUIMixin(object):
 
     def callback_WordRequest(self, msg):
         log("Enter one word of mnemonic: ")
-        word = raw_input()
+        try:
+            word = raw_input()
+        except NameError:
+            word = input() # Python 3
         return proto.WordAck(word=word)
 
 class DebugLinkMixin(object):

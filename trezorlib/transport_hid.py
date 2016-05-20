@@ -53,7 +53,7 @@ class HidTransport(Transport):
                     raise Exception("Unknown USB interface number: %d" % interface_number)
 
         # List of two-tuples (path_normal, path_debuglink)
-        return devices.values()
+        return list(devices.values())
 
     def is_connected(self):
         """

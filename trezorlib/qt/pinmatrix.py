@@ -91,8 +91,8 @@ if __name__ == '__main__':
     matrix = PinMatrixWidget()
 
     def clicked():
-        print "PinMatrix value is", matrix.get_value()
-        print "Possible button combinations:", matrix.get_strength()
+        print("PinMatrix value is", matrix.get_value())
+        print("Possible button combinations:", matrix.get_strength())
         sys.exit()
 
     ok = QPushButton('OK')

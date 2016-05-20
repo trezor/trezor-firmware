@@ -15,6 +15,12 @@ import binascii
 import hashlib
 import mnemonic
 
+# Python2 vs Python3
+try:
+    input = raw_input
+except NameError:
+    pass
+
 def generate_entropy(strength, internal_entropy, external_entropy):
     '''
     strength - length of produced seed. One of 128, 192, 256
@@ -44,11 +50,11 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     return entropy_stripped
 
 def main():
-    print __doc__
+    print(__doc__)
 
-    comp = binascii.unhexlify(raw_input("Please enter computer-generated entropy (in hex): ").strip())
-    trzr = binascii.unhexlify(raw_input("Please enter TREZOR-generated entropy (in hex): ").strip())
-    word_count = int(raw_input("How many words your mnemonic has? "))
+    comp = binascii.unhexlify(input("Please enter computer-generated entropy (in hex): ").strip())
+    trzr = binascii.unhexlify(input("Please enter TREZOR-generated entropy (in hex): ").strip())
+    word_count = int(input("How many words your mnemonic has? "))
 
     strength = word_count * 32 / 3
 
@@ -56,14 +62,14 @@ def main():
 
     words = mnemonic.Mnemonic('english').to_mnemonic(entropy)
     if not mnemonic.Mnemonic('english').check(words):
-        print "Mnemonic is invalid"
+        print("Mnemonic is invalid")
         return
 
     if len(words.split(' ')) != word_count:
-        print "Mnemonic length mismatch!"
+        print("Mnemonic length mismatch!")
         return
 
-    print "Generated mnemonic is:", words
+    print("Generated mnemonic is:", words)
 
 if __name__ == '__main__':
     main()

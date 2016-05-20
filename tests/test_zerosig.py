@@ -33,10 +33,10 @@ class TestZeroSig(common.TrezorTest):
             tx = self.client.call(msg)
 
             siglen = ord(tx.serialized_tx[44])
-            print siglen
+            print(siglen)
             if siglen < 67:
-                print "!!!!", n
-                print binascii.hexlify(tx.serialized_tx)
+                print("!!!!", n)
+                print(binascii.hexlify(tx.serialized_tx))
                 return
     '''
 

@@ -210,7 +210,7 @@ class Commands(object):
         if args.file:
             fp = open(args.file, 'r')
         elif args.url:
-            print "Downloading from", args.url
+            print("Downloading from", args.url)
             resp = urllib.urlretrieve(args.url)
             fp = open(resp[0], 'r')
             urllib.urlcleanup() # We still keep file pointer open
@@ -223,13 +223,13 @@ class Commands(object):
                 release = next((r for r in releases if version_string(r) == args.version))
             else:
                 release = max(releases, key=version)
-                print "No file, url, or version given. Fetching latest version: %s" % version_string(release)
-            print "Firmware fingerprint: %s" % release['fingerprint']
+                print("No file, url, or version given. Fetching latest version: %s" % version_string(release))
+            print("Firmware fingerprint: %s" % release['fingerprint'])
             args.url = release['url']
             return self.firmware_update(args)
 
         if fp.read(8) == '54525a52':
-            print "Converting firmware to binary"
+            print("Converting firmware to binary")
 
             fp.seek(0)
             fp_old = fp
@@ -243,7 +243,7 @@ class Commands(object):
         if fp.read(4) != 'TRZR':
             raise Exception("TREZOR firmware header expected")
 
-        print "Please confirm action on device..."
+        print("Please confirm action on device...")
 
         fp.seek(0)
         return self.client.firmware_update(fp=fp)
@@ -443,13 +443,13 @@ def main():
     if args.cmd == 'list':
         devices = list_usb()
         if args.json:
-            print json.dumps(devices)
+            print(json.dumps(devices))
         else:
             for dev in devices:
                 if dev[1] != None:
-                    print "%s - debuglink enabled" % dev[0]
+                    print("%s - debuglink enabled" % dev[0])
                 else:
-                    print dev[0]
+                    print(dev[0])
         return
 
     transport = get_transport(args.transport, args.path)
@@ -463,9 +463,9 @@ def main():
     res = args.func(cmds, args)
 
     if args.json:
-        print json.dumps(res, sort_keys=True, indent=4)
+        print(json.dumps(res, sort_keys=True, indent=4))
     else:
-        print res
+        print(res)
 
 if __name__ == '__main__':
     main()

@@ -17,11 +17,17 @@ import binascii
 from trezorlib.client import TrezorClient, TrezorClientDebug
 from trezorlib.transport_hid import HidTransport
 
+# Python2 vs Python3
+try:
+    input = raw_input
+except NameError:
+    pass
+
 def wait_for_devices():
     devices = HidTransport.enumerate()
     while not len(devices):
         sys.stderr.write("Please connect TREZOR to computer and press Enter...")
-        raw_input()
+        input()
         devices = HidTransport.enumerate()
 
     return devices
@@ -59,7 +65,7 @@ def choose_device(devices):
     sys.stderr.write("Please choose device to use: ")
 
     try:
-        device_id = int(raw_input())
+        device_id = int(input())
         return HidTransport(devices[device_id])
     except:
         raise Exception("Invalid choice, exiting...")
@@ -76,7 +82,7 @@ def main():
         # New encfs drive, let's generate password
 
         sys.stderr.write('Please provide label for new drive: ')
-        label = raw_input()
+        label = input()
 
         sys.stderr.write('Computer asked TREZOR for new strong password.\n')
         sys.stderr.write('Please confirm action on your device.\n')
@@ -107,7 +113,7 @@ def main():
                 binascii.unhexlify(data['password_encrypted_hex']),
                 False, True)
 
-    print passw
+    print(passw)
 
 if __name__ == '__main__':
     main()
