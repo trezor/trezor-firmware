@@ -52,14 +52,16 @@ class TestProtectionLevels(common.TrezorTest):
     def test_get_public_key(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.PassphraseRequest(),
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                      proto.PassphraseRequest(),
                                       proto.PublicKey()])
             self.client.get_public_node([])
 
     def test_get_address(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.PassphraseRequest(),
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                      proto.PassphraseRequest(),
                                       proto.Address()])
             self.client.get_address('Bitcoin', [])
 
