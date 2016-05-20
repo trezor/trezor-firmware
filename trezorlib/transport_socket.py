@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 '''SocketTransport implements TCP socket interface for Transport.'''
 
 import socket

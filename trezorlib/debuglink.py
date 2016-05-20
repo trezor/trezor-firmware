@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from . import messages_pb2 as proto
 from .transport import NotImplementedException
 

@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import binascii
 import os
 import random
@@ -78,7 +79,7 @@ class MyTXAPIBitcoin(object):
             i.script_sig = os.urandom(100)
             i.sequence = 0xffffffff
             if (nr % 50 == 0):
-                print nr
+                print(nr)
             myout = random.randint(0, txsize-1)
             segwit = 1 #random.randint(0,1)
             for vout in range(txsize):
@@ -118,8 +119,8 @@ class MyTXAPIBitcoin(object):
                         prev_hash=txhash,
                         prev_index = myout
                     ))
-            #print binascii.hexlify(txser)
-            #print binascii.hexlify(txhash)
+            #print(binascii.hexlify(txser))
+            #print(binascii.hexlify(txhash))
             self.txs[binascii.hexlify(txhash)] = t
 
         self.outputs = [
@@ -137,7 +138,7 @@ class MyTXAPIBitcoin(object):
     
     def get_tx(self, txhash):
         t = self.txs[txhash]
-        #print t
+        #print(t)
         return t
 
 def main():
@@ -149,11 +150,11 @@ def main():
 
     # Check whether we found any
     if len(devices) == 0:
-        print 'No TREZOR found'
+        print('No TREZOR found')
         return
 
     # Use first connected device
-    print devices[0][0]
+    print(devices[0][0])
 #    transport = BridgeTransport(devices[0][0])
     transport = HidTransport(devices[0])
     
@@ -164,14 +165,14 @@ def main():
 #    client.set_tx_api(TXAPITestnet())
     txstore.set_client(client)
     txstore.set_publickey(client.get_public_node(client.expand_path("44'/0'/0'")))
-    print "creating input txs"
+    print("creating input txs")
     txstore.create_inputs(numinputs, sizeinputtx)
-    print "go"
+    print("go")
     client.set_tx_api(txstore)
 #    client.set_tx_api(MyTXAPIBitcoin())
 
     # Print out TREZOR's features and settings
-    print client.features
+    print(client.features)
 
     # Get the first address of first BIP44 account
     # (should be the same address as shown in mytrezor.com)
@@ -215,7 +216,7 @@ def main():
  
 #    (signatures, serialized_tx) = client.sign_tx('Testnet', inputs, outputs)
     (signatures, serialized_tx) = client.sign_tx('Bitcoin', txstore.get_inputs(), txstore.get_outputs())
-    print 'Transaction:', binascii.hexlify(serialized_tx)
+    print('Transaction:', binascii.hexlify(serialized_tx))
 
     client.close()
 

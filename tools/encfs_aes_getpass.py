@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 '''
 Use TREZOR as a hardware key for opening EncFS filesystem!

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 __doc__ = '''
     Use this script to cross-check that TREZOR generated valid
     mnemonic sentence for given internal (TREZOR-generated)
@@ -42,7 +44,7 @@ def generate_entropy(strength, internal_entropy, external_entropy):
         raise Exception("External entropy too short")
 
     entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
-    entropy_stripped = entropy[:strength / 8]
+    entropy_stripped = entropy[:strength // 8]
 
     if len(entropy_stripped) * 8 != strength:
         raise Exception("Entropy length mismatch")
@@ -56,7 +58,7 @@ def main():
     trzr = binascii.unhexlify(input("Please enter TREZOR-generated entropy (in hex): ").strip())
     word_count = int(input("How many words your mnemonic has? "))
 
-    strength = word_count * 32 / 3
+    strength = word_count * 32 // 3
 
     entropy = generate_entropy(strength, trzr, comp)
 

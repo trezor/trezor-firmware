@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 '''SerialTransport implements wire transport over serial port.'''
 
 # Local serial port loopback: socat PTY,link=COM8 PTY,link=COM9

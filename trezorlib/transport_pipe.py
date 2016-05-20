@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 '''PipeTransport implements fake wire transport over local named pipe.
 Use this transport for talking with trezor simulator.'''
 
