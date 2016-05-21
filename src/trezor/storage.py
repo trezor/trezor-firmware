@@ -3,8 +3,8 @@ from TrezorStorage import Storage
 _storage = Storage()
 
 
-def get(name):
-    return _storage.get(name)
+def get(name, defval=None):
+    return _storage.get(name, defval)
 
 
 def set(name, value):

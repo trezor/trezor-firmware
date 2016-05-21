@@ -27,10 +27,10 @@ STATIC mp_obj_t mod_TrezorStorage_Storage_make_new(const mp_obj_type_t *type, si
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC mp_obj_t mod_TrezorStorage_Storage_get(mp_obj_t self, mp_obj_t name) {
+STATIC mp_obj_t mod_TrezorStorage_Storage_get(mp_obj_t self, mp_obj_t name, mp_obj_t defval) {
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorStorage_Storage_get_obj, mod_TrezorStorage_Storage_get);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorStorage_Storage_get_obj, mod_TrezorStorage_Storage_get);
 
 STATIC mp_obj_t mod_TrezorStorage_Storage_set(mp_obj_t self, mp_obj_t name, mp_obj_t value) {
     return mp_const_none;
