@@ -2,10 +2,9 @@ from TrezorStorage import Storage
 
 _storage = Storage()
 
+def get(key, defval=None):
+    return _storage.get(key, defval)
 
-def get(name, defval=None):
-    return _storage.get(name, defval)
 
-
-def set(name, value):
-    return _storage.set(name, value)
+def set(key, value):
+    return _storage.set(key, value)

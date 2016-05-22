@@ -16,6 +16,8 @@
 
 #if MICROPY_PY_TREZORSTORAGE
 
+#include "storage.h"
+
 typedef struct _mp_obj_Storage_t {
     mp_obj_base_t base;
 } mp_obj_Storage_t;
@@ -27,12 +29,12 @@ STATIC mp_obj_t mod_TrezorStorage_Storage_make_new(const mp_obj_type_t *type, si
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC mp_obj_t mod_TrezorStorage_Storage_get(mp_obj_t self, mp_obj_t name, mp_obj_t defval) {
+STATIC mp_obj_t mod_TrezorStorage_Storage_get(mp_obj_t self, mp_obj_t key, mp_obj_t defval) {
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorStorage_Storage_get_obj, mod_TrezorStorage_Storage_get);
 
-STATIC mp_obj_t mod_TrezorStorage_Storage_set(mp_obj_t self, mp_obj_t name, mp_obj_t value) {
+STATIC mp_obj_t mod_TrezorStorage_Storage_set(mp_obj_t self, mp_obj_t key, mp_obj_t value) {
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorStorage_Storage_set_obj, mod_TrezorStorage_Storage_set);
