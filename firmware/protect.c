@@ -44,6 +44,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 	resp.has_code = true;
 	resp.code = type;
 	usbTiny(1);
+	buttonUpdate(); // Clear button state
 	msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
 	for (;;) {

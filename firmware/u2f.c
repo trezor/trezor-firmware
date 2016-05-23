@@ -65,14 +65,10 @@ static uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 // Auth/Register request state machine
 typedef enum {
 	INIT = 0,
-	BTN_NO = 1,
-	BTN_YES = 2,
 	AUTH = 10,
-	AUTH_FAIL = 11,
-	AUTH_PASS = 12,
+	AUTH_PASS = 11,
 	REG = 20,
-	REG_FAIL = 21,
-	REG_PASS = 22
+	REG_PASS = 21
 } U2F_STATE;
 
 static U2F_STATE last_req_state = INIT;
@@ -92,16 +88,6 @@ typedef struct {
 	uint8_t chal[U2F_CHAL_SIZE];
 } U2F_AUTHENTICATE_SIG_STR;
 
-uint8_t buttonState(void)
-{
-	buttonUpdate();
-
-	if ((button.NoDown > 10) || button.NoUp)
-		return BTN_NO;
-	if ((button.YesDown > 10) || button.YesUp)
-		return BTN_YES;
-	return 0;
-}
 
 #if DEBUG_LOG
 char *debugInt(const uint32_t i)
@@ -259,18 +245,19 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 		reader->cmd = 0;
 		reader->seq = 255;
 		uint8_t bs = 0;
-		while (dialog_timeout-- && bs == 0 && reader->cmd == 0) {
+		while (dialog_timeout && bs == 0 && reader->cmd == 0) {
+			dialog_timeout--;
 			usbPoll(); // may trigger new request
-			bs = buttonState();
+			buttonUpdate();
+			if (button.YesUp &&
+				(last_req_state == AUTH || last_req_state == REG)) {
+				last_req_state++;
+			}
 		}
 
 		if (reader->cmd == 0) {
 			if (dialog_timeout == 0) {
-				last_req_state += BTN_NO; // Timeout is like button no
-			}
-			else {
-				last_req_state += bs;
-				dialog_timeout = 0;
+				last_req_state = INIT;
 			}
 			cid = 0;
 			reader = 0;
@@ -296,7 +283,7 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 		return send_u2fhid_error(cid, ERR_INVALID_LEN);
 
 	if (dialog_timeout > 0)
-		dialog_timeout = U2F_TIMEOUT;
+		dialog_timeout = 10*U2F_TIMEOUT;
 
 	U2FHID_FRAME f;
 	MEMSET_BZERO(&f, sizeof(f));
@@ -563,16 +550,13 @@ void u2f_register(const APDU *a)
 	}
 
 	// First Time request, return not present and display request dialog
-	if (last_req_state == 0) {
+	if (last_req_state == INIT) {
 		// wake up crypto system to be ready for signing
 		getDerivedNode(NULL, 0);
 		// error: testof-user-presence is required
-		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
 		layoutU2FDialog("Register", getReadableAppId(req->appId));
-		dialog_timeout = 10*U2F_TIMEOUT;
 		last_req_state = REG;
-		return;
 	}
 
 	// Still awaiting Keypress
@@ -580,12 +564,6 @@ void u2f_register(const APDU *a)
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		dialog_timeout = 10*U2F_TIMEOUT;
-		return;
-	}
-
-	// Buttons said no!
-	if (last_req_state == REG_FAIL) {
-		send_u2f_error(U2F_SW_WRONG_DATA); // error:bad key handle
 		return;
 	}
 
@@ -640,6 +618,7 @@ void u2f_register(const APDU *a)
 			sizeof(U2F_ATT_CERT) + sig_len + 2;
 
 		last_req_state = INIT;
+		dialog_timeout = 0;
 		send_u2f_msg(data, l);
 		return;
 	}
@@ -712,13 +691,6 @@ void u2f_authenticate(const APDU *a)
 		return;
 	}
 
-	// Buttons said no!
-	if (last_req_state == AUTH_FAIL) {
-		send_u2f_error(
-			U2F_SW_WRONG_DATA); // error:bad key handle
-		return;
-	}
-
 	// Buttons said yes
 	if (last_req_state == AUTH_PASS) {
 		uint8_t buf[sizeof(U2F_AUTHENTICATE_RESP) + 2];
@@ -751,6 +723,7 @@ void u2f_authenticate(const APDU *a)
 			   U2F_MAX_EC_SIG_SIZE + sig_len,
 			   "\x90\x00", 2);
 		last_req_state = INIT;
+		dialog_timeout = 0;
 		send_u2f_msg(buf, sizeof(U2F_AUTHENTICATE_RESP) -
 					  U2F_MAX_EC_SIG_SIZE + sig_len +
 					  2);
