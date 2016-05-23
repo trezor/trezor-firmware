@@ -44,8 +44,8 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 // About 1/2 Second according to values used in protect.c
-#define U2F_TIMEOUT 840000/2
-#define U2F_OUT_PKT_BUFFER_LEN 16
+#define U2F_TIMEOUT (800000/2)
+#define U2F_OUT_PKT_BUFFER_LEN 128
 
 // Initialise without a cid
 static uint32_t cid = 0;
@@ -120,36 +120,6 @@ char *debugInt(const uint32_t i)
 
 static uint32_t dialog_timeout = 0;
 
-void LayoutHomeAfterTimeout(void)
-{
-	static bool timeoutLock = false;
-
-	if (timeoutLock || dialog_timeout == 0)
-		return; // Dialog has cleared or already in loop
-
-	timeoutLock = true;
-	U2F_STATE rs = last_req_state;
-	U2F_STATE bs = INIT;
-	while (dialog_timeout-- && rs == last_req_state && bs == 0) {
-		usbPoll(); // may trigger new request
-		bs = buttonState();
-	}
-	timeoutLock = false;
-
-	if (rs != last_req_state)
-		return; // Reset by new request don't clear screen
-
-	if (dialog_timeout == 0) {
-		last_req_state += BTN_NO; // Timeout is like button no
-	}
-	else {
-		last_req_state += bs;
-		dialog_timeout = 0;
-	}
-
-	layoutHome();
-}
-
 uint32_t next_cid(void)
 {
 	// extremely unlikely but hey
@@ -171,6 +141,18 @@ U2F_ReadBuffer *reader;
 
 void u2fhid_read(char tiny, const U2FHID_FRAME *f)
 {
+	// Always handle init packets directly
+	if (f->init.cmd == U2FHID_INIT) {
+		u2fhid_init(f);
+		if (tiny && reader && f->cid == cid) {
+			// abort current channel
+			reader->cmd = 0;
+			reader->len = 0;
+			reader->seq = 255;
+		}
+		return;
+	}
+
 	if (tiny) {
 		// read continue packet
 		if (reader == 0 || cid != f->cid) {
@@ -178,8 +160,16 @@ void u2fhid_read(char tiny, const U2FHID_FRAME *f)
 			return;
 		}
 
-		if ((f->type & TYPE_INIT) || reader->seq != f->cont.seq) {
+		if ((f->type & TYPE_INIT) && reader->seq == 255) {
 			u2fhid_init_cmd(f);
+			return;
+		}
+
+		if (reader->seq != f->cont.seq) {
+			send_u2fhid_error(f->cid, ERR_INVALID_SEQ);
+			reader->cmd = 0;
+			reader->len = 0;
+			reader->seq = 255;
 			return;
 		}
 
@@ -204,11 +194,6 @@ void u2fhid_init_cmd(const U2FHID_FRAME *f) {
 	memcpy(reader->buf_ptr, f->init.data, sizeof(f->init.data));
 	reader->buf_ptr += sizeof(f->init.data);
 	cid = f->cid;
-	// Check length isnt bigger than spec max
-	if (reader->len > sizeof(reader->buf)) {
-		reader->len = 0;
-		return send_u2fhid_error(cid, ERR_INVALID_LEN);
-	}
 }
 
 void u2fhid_read_start(const U2FHID_FRAME *f) {
@@ -217,12 +202,19 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 		return;
 	}
 
+	// Broadcast is reserved for init
+	if (f->cid == CID_BROADCAST || f->cid == 0) {
+		send_u2fhid_error(f->cid, ERR_INVALID_CID);
+		return;
+	}
+
+	if ((unsigned)MSG_LEN(*f) > sizeof(reader->buf)) {
+		send_u2fhid_error(f->cid, ERR_INVALID_LEN);
+		return;
+	}
+
 	reader = &readbuffer;
 	u2fhid_init_cmd(f);
-
-	// Broadcast is reserved for init
-	if (f->cid == CID_BROADCAST && reader->cmd != U2FHID_INIT)
-		return;
 
 	usbTiny(1);
 	for(;;) {
@@ -234,8 +226,9 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 			while (reader->seq == lastseq && reader->cmd == lastcmd) {
 				if (counter-- == 0) {
 					// timeout
+					send_u2fhid_error(cid, ERR_MSG_TIMEOUT);
 					cid = 0;
-					send_u2fhid_error(f->cid, ERR_MSG_TIMEOUT);
+					reader = 0;
 					usbTiny(0);
 					return;
 				}
@@ -245,14 +238,14 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 		
 		// We have all the data
 		switch (reader->cmd) {
+		case 0:
+			// message was aborted by init
+			break;
 		case U2FHID_PING:
 			u2fhid_ping(reader->buf, reader->len);
 			break;
 		case U2FHID_MSG:
 			u2fhid_msg((APDU *)reader->buf, reader->len);
-			break;
-		case U2FHID_INIT:
-			u2fhid_init((const U2FHID_INIT_REQ *)reader->buf);
 			break;
 		case U2FHID_WINK:
 			u2fhid_wink(reader->buf, reader->len);
@@ -264,6 +257,7 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 
 		// wait for next commmand/ button press
 		reader->cmd = 0;
+		reader->seq = 255;
 		uint8_t bs = 0;
 		while (dialog_timeout-- && bs == 0 && reader->cmd == 0) {
 			usbPoll(); // may trigger new request
@@ -279,6 +273,7 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 				dialog_timeout = 0;
 			}
 			cid = 0;
+			reader = 0;
 			usbTiny(0);
 			layoutHome();
 			return;
@@ -311,20 +306,27 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 	queue_u2f_pkt(&f);
 }
 
-void u2fhid_init(const U2FHID_INIT_REQ *init_req)
+void u2fhid_init(const U2FHID_FRAME *in)
 {
-	debugLog(0, "", "u2fhid_init");
+	const U2FHID_INIT_REQ *init_req = (const U2FHID_INIT_REQ *)&in->init.data;
 	U2FHID_FRAME f;
 	U2FHID_INIT_RESP *resp = (U2FHID_INIT_RESP *)f.init.data;
 
+	debugLog(0, "", "u2fhid_init");
+
+	if (in->cid == 0) {
+		send_u2fhid_error(in->cid, ERR_INVALID_CID);
+		return;
+	}
+
 	MEMSET_BZERO(&f, sizeof(f));
-	f.cid = cid;
+	f.cid = in->cid;
 	f.init.cmd = U2FHID_INIT;
 	f.init.bcnth = 0;
 	f.init.bcntl = U2FHID_INIT_RESP_SIZE;
 
 	memcpy(resp->nonce, init_req->nonce, sizeof(init_req->nonce));
-	resp->cid = cid == CID_BROADCAST ? next_cid() : cid;
+	resp->cid = in->cid == CID_BROADCAST ? next_cid() : in->cid;
 	resp->versionInterface = U2FHID_IF_VERSION;
 	resp->versionMajor = VERSION_MAJOR;
 	resp->versionMinor = VERSION_MINOR;
@@ -358,8 +360,6 @@ uint8_t *u2f_out_data(void)
 
 void u2fhid_msg(const APDU *a, uint32_t len)
 {
-	static bool lock = false;
-
 	if ((APDU_LEN(*a) + sizeof(APDU)) > len) {
 		debugLog(0, "", "BAD APDU LENGTH");
 		debugInt(APDU_LEN(*a));
@@ -367,12 +367,10 @@ void u2fhid_msg(const APDU *a, uint32_t len)
 		return;
 	}
 
-	// Very crude locking, incase another message comes in while we wait.  This
-	// actually can probably be removed as no code inside calls usbPoll anymore
-	if (lock)
-		return send_u2fhid_error(cid, ERR_CHANNEL_BUSY);
-
-	lock = true;
+	if (a->cla != 0) {
+		send_u2f_error(U2F_SW_CLA_NOT_SUPPORTED);
+		return;
+	}
 
 	switch (a->ins) {
 		case U2F_REGISTER:
@@ -388,10 +386,6 @@ void u2fhid_msg(const APDU *a, uint32_t len)
 			debugLog(0, "", "u2f unknown cmd");
 			send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
 	}
-
-	lock = false;
-
-	//LayoutHomeAfterTimeout();
 }
 
 void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
@@ -447,10 +441,15 @@ void send_u2fhid_error(uint32_t fcid, uint8_t err)
 
 void u2f_version(const APDU *a)
 {
+	if (APDU_LEN(*a) != 0) {
+		debugLog(0, "", "u2f version - badlen");
+		send_u2f_error(U2F_SW_WRONG_LENGTH);
+		return;
+	}
+
 	// INCLUDES SW_NO_ERROR
 	static const uint8_t version_response[] = {'U', '2', 'F',  '_',
 						   'V', '2', 0x90, 0x00};
-	(void)a;
 	debugLog(0, "", "u2f version");
 	send_u2f_msg(version_response, sizeof(version_response));
 }
@@ -553,7 +552,7 @@ void u2f_register(const APDU *a)
 	debugLog(0, "", "u2f register");
 	if (APDU_LEN(*a) != sizeof(U2F_REGISTER_REQ)) {
 		debugLog(0, "", "u2f register - badlen");
-		send_u2f_error(U2F_SW_WRONG_DATA);
+		send_u2f_error(U2F_SW_WRONG_LENGTH);
 		return;
 	}
 
@@ -571,7 +570,7 @@ void u2f_register(const APDU *a)
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
 		layoutU2FDialog("Register", getReadableAppId(req->appId));
-		dialog_timeout = U2F_TIMEOUT;
+		dialog_timeout = 10*U2F_TIMEOUT;
 		last_req_state = REG;
 		return;
 	}
@@ -580,7 +579,7 @@ void u2f_register(const APDU *a)
 	if (last_req_state == REG) {
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
-		dialog_timeout = U2F_TIMEOUT;
+		dialog_timeout = 10*U2F_TIMEOUT;
 		return;
 	}
 
@@ -640,6 +639,7 @@ void u2f_register(const APDU *a)
 			1 /* keyhandleLen */ + resp->keyHandleLen +
 			sizeof(U2F_ATT_CERT) + sig_len + 2;
 
+		last_req_state = INIT;
 		send_u2f_msg(data, l);
 		return;
 	}
@@ -655,7 +655,7 @@ void u2f_authenticate(const APDU *a)
 
 	if (APDU_LEN(*a) < 64) { /// FIXME: decent value
 		debugLog(0, "", "u2f authenticate - badlen");
-		send_u2f_error(U2F_SW_WRONG_DATA);
+		send_u2f_error(U2F_SW_WRONG_LENGTH);
 		return;
 	}
 
@@ -699,19 +699,16 @@ void u2f_authenticate(const APDU *a)
 
 	if (last_req_state == INIT) {
 		// error: testof-user-presence is required
-		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		buttonUpdate(); // Clear button state
 		layoutU2FDialog("Authenticate", getReadableAppId(req->appId));
-		dialog_timeout = U2F_TIMEOUT;
 		last_req_state = AUTH;
-		return;
 	}
 
 	// Awaiting Keypress
 	if (last_req_state == AUTH) {
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
-		dialog_timeout = U2F_TIMEOUT;
+		dialog_timeout = 10*U2F_TIMEOUT;
 		return;
 	}
 
@@ -753,10 +750,10 @@ void u2f_authenticate(const APDU *a)
 		memcpy(buf + sizeof(U2F_AUTHENTICATE_RESP) -
 			   U2F_MAX_EC_SIG_SIZE + sig_len,
 			   "\x90\x00", 2);
+		last_req_state = INIT;
 		send_u2f_msg(buf, sizeof(U2F_AUTHENTICATE_RESP) -
 					  U2F_MAX_EC_SIG_SIZE + sig_len +
 					  2);
-		last_req_state = INIT;
 	}
 }
 

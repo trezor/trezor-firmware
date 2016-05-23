@@ -57,7 +57,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 
 		// button acked - check buttons
 		if (acked) {
-			usbDelay(3500);
+			usbDelay(3300);
 			buttonUpdate();
 			if (button.YesUp) {
 				result = true;
@@ -163,7 +163,7 @@ bool protectPin(bool use_cached)
 		}
 		layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
 		// wait one second
-		usbDelay(840000);
+		usbDelay(800000);
 		wait--;
 	}
 	const char *pin;
