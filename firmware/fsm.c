@@ -419,6 +419,19 @@ void fsm_msgSignTx(SignTx *msg)
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
 }
 
+
+void fsm_msgEthereumSignTx(EthereumSignTx *msg)
+{
+	(void)msg;
+	fsm_sendFailure(FailureType_Failure_Other, "Unsupported feature");
+}
+
+void fsm_msgEthereumTxAck(EthereumTxAck *msg)
+{
+	(void)msg;
+	fsm_sendFailure(FailureType_Failure_Other, "Unsupported feature");
+}
+
 void fsm_msgCancel(Cancel *msg)
 {
 	(void)msg;
@@ -626,6 +639,12 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	msg_write(MessageType_MessageType_Address, resp);
 	layoutHome();
+}
+
+void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
+{
+	(void)msg;
+	fsm_sendFailure(FailureType_Failure_Other, "Unsupported feature");
 }
 
 void fsm_msgEntropyAck(EntropyAck *msg)
