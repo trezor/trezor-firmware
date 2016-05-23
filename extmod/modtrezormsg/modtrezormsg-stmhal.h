@@ -4,12 +4,12 @@ void msg_init(void)
 {
 }
 
-const uint8_t *msg_recv(void)
+ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 {
     return 0;
 }
 
-int msg_send(uint8_t *buf, size_t len)
+ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
     return -1;
 }

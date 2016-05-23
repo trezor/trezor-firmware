@@ -10,8 +10,8 @@ def select(timeout_us):
     return _msg.select(timeout_us)
 
 
-def send(msg):
-    return _msg.send(msg)
+def send(iface, msg):
+    return _msg.send(iface, msg)
 
 
 REPORT_LEN = const(64)
@@ -20,7 +20,7 @@ HEADER_MAGIC = const(35)  # '#'
 
 
 def read():
-    _, rep = yield loop.Select(loop.HID_READ)
+    _, iface, rep = yield loop.Select(loop.HID_READ)
     assert rep[0] == REPORT_NUM
     return rep
 
@@ -69,7 +69,7 @@ def write_wire_msg(mtype, mbuf):
         while i < len(data):
             data[i] = 0
             i += 1
-        send(rep)
+        send(0, rep)
         mbuf = mbuf[n:]
         data = rep[1:]
 

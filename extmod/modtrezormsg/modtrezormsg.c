@@ -36,17 +36,18 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.msg.send(message) -> int
+/// def trezor.msg.send(iface: int, message: bytes) -> int
 ///
 /// Sends message using USB HID (device) or UDP (emulator).
 ///
-STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t message) {
+STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t message) {
+    uint8_t iface_num = mp_obj_get_int(iface);
     mp_buffer_info_t msg;
     mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
-    int r = msg_send(msg.buf, msg.len);
+    ssize_t r = msg_send(iface_num, msg.buf, msg.len);
     return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
 
 #define TICK_RESOLUTION 1000
 
@@ -69,14 +70,17 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             tuple->items[2] = MP_OBJ_NEW_SMALL_INT((e & 0xFF));
             return MP_OBJ_FROM_PTR(tuple);
         }
-        const uint8_t *m = msg_recv();
-        if (m) {
+        uint8_t iface;
+        uint8_t recvbuf[64];
+        ssize_t l = msg_recv(&iface, recvbuf, 64);
+        if (l > 0) {
             vstr_t vstr;
-            vstr_init_len(&vstr, 64);
-            memcpy(vstr.buf, m, 64);
-            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+            vstr_init_len(&vstr, l);
+            memcpy(vstr.buf, recvbuf, l);
+            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
             tuple->items[0] = MP_OBJ_NEW_SMALL_INT(8);
-            tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+            tuple->items[1] = MP_OBJ_NEW_SMALL_INT(iface);
+            tuple->items[2] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
             return MP_OBJ_FROM_PTR(tuple);
          }
         if (timeout <= 0) {
