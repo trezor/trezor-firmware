@@ -34,6 +34,9 @@ GetAddress.coin_name			max_size:17
 
 Address.address				max_size:36
 
+EthereumGetAddress.address_n		max_count:8
+EthereumAddress.address			max_size:20
+
 LoadDevice.mnemonic			max_size:241
 LoadDevice.pin				max_size:10
 LoadDevice.language			max_size:17
@@ -88,6 +91,19 @@ CipheredKeyValue.value			max_size:1024
 EstimateTxSize.coin_name		max_size:17
 
 SignTx.coin_name			max_size:17
+
+EthereumSignTx.address_n		max_count:8
+EthereumSignTx.nonce			max_size:32
+EthereumSignTx.gas_price		max_size:32
+EthereumSignTx.gas_limit		max_size:32
+EthereumSignTx.to			max_size:20
+EthereumSignTx.value			max_size:32
+EthereumSignTx.data_initial_chunk	max_size:1024
+
+EthereumTxRequest.signature_r		max_size:32
+EthereumTxRequest.signature_s		max_size:32
+
+EthereumTxAck.data_chunk		max_size:1024
 
 SignIdentity.challenge_hidden		max_size:256
 SignIdentity.challenge_visual		max_size:256
