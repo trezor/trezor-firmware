@@ -4,6 +4,7 @@ from .TxInputType import TxInputType
 from .TxOutputType import TxOutputType
 from .TransactionType import TransactionType
 t = p.MessageType()
+t.wire_type = 16
 t.add_field(1, 'inputs', p.EmbeddedMessage(TxInputType), flags=p.FLAG_REPEATED)
 t.add_field(2, 'outputs', p.EmbeddedMessage(TxOutputType), flags=p.FLAG_REPEATED)
 t.add_field(3, 'transactions', p.EmbeddedMessage(TransactionType), flags=p.FLAG_REPEATED)
@@ -11,4 +12,3 @@ t.add_field(4, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 t.add_field(5, 'version', p.UVarintType, default=1)
 t.add_field(6, 'lock_time', p.UVarintType, default=0)
 SimpleSignTx = t
-TYPE = const(16)

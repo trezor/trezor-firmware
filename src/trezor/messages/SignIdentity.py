@@ -2,9 +2,9 @@
 from protobuf import protobuf as p
 from .IdentityType import IdentityType
 t = p.MessageType()
+t.wire_type = 53
 t.add_field(1, 'identity', p.EmbeddedMessage(IdentityType))
 t.add_field(2, 'challenge_hidden', p.BytesType)
 t.add_field(3, 'challenge_visual', p.UnicodeType)
 t.add_field(4, 'ecdsa_curve_name', p.UnicodeType)
 SignIdentity = t
-TYPE = const(53)

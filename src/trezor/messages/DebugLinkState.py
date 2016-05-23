@@ -2,6 +2,7 @@
 from protobuf import protobuf as p
 from .HDNodeType import HDNodeType
 t = p.MessageType()
+t.wire_type = 102
 t.add_field(1, 'layout', p.BytesType)
 t.add_field(2, 'pin', p.UnicodeType)
 t.add_field(3, 'matrix', p.UnicodeType)
@@ -13,4 +14,3 @@ t.add_field(8, 'reset_entropy', p.BytesType)
 t.add_field(9, 'recovery_fake_word', p.UnicodeType)
 t.add_field(10, 'recovery_word_pos', p.UVarintType)
 DebugLinkState = t
-TYPE = const(102)

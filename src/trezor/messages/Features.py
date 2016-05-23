@@ -2,6 +2,7 @@
 from protobuf import protobuf as p
 from .CoinType import CoinType
 t = p.MessageType()
+t.wire_type = 17
 t.add_field(1, 'vendor', p.UnicodeType)
 t.add_field(2, 'major_version', p.UVarintType)
 t.add_field(3, 'minor_version', p.UVarintType)
@@ -20,4 +21,3 @@ t.add_field(15, 'imported', p.BoolType)
 t.add_field(16, 'pin_cached', p.BoolType)
 t.add_field(17, 'passphrase_cached', p.BoolType)
 Features = t
-TYPE = const(17)
