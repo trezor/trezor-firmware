@@ -643,8 +643,44 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 {
-	(void)msg;
-	fsm_sendFailure(FailureType_Failure_Other, "Unsupported feature");
+	RESP_INIT(EthereumAddress);
+
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	resp->address.size = 20;
+
+	if (!ecdsa_get_ethereum_pubkeyhash(node->public_key, resp->address.bytes)) return;
+
+	if (msg->has_show_display && msg->show_display) {
+		char desc[16];
+		strlcpy(desc, "Address:", sizeof(desc));
+
+		char address[43];
+		address[0] = '0';
+		address[1] = 'x';
+		data2hex(resp->address.bytes, 20, address + 2);
+
+		layoutAddress(address, desc);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+			layoutHome();
+			return;
+		}
+	}
+
+	msg_write(MessageType_MessageType_Address, resp);
+	layoutHome();
 }
 
 void fsm_msgEntropyAck(EntropyAck *msg)
