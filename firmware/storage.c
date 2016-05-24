@@ -94,7 +94,7 @@ void storage_check_flash_errors(void)
 
 bool storage_from_flash(void)
 {
-	if (memcmp((void *)FLASH_STORAGE_START, "stor", 4) == 0) {
+	if (memcmp((void *)FLASH_STORAGE_START, "stor", 4) != 0) {
 		// wrong magic
 		return false;
 	}
