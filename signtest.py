@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from __future__ import print_function
 import binascii
 import os
@@ -21,7 +21,7 @@ def pack_varint(x):
         return chr(x)
     else:
         return '\xfd'+chr(x & 0xff) + chr((x >> 8) & 0xff)
-    
+
 def int_to_string(x, pad):
     result = ['\x00'] * pad
     while x > 0:
@@ -61,8 +61,8 @@ class MyTXAPIBitcoin(object):
             ser = ser + int_to_string(o.amount, 8)[::-1]
             ser = ser + pack_varint(len(o.script_pubkey)) + o.script_pubkey
         ser = ser + int_to_string(tx.lock_time, 4)[::-1]
-        return ser                                  
-        
+        return ser
+
 
     def create_inputs(self, numinputs, txsize):
         idx = 0
@@ -135,7 +135,7 @@ class MyTXAPIBitcoin(object):
 
     def get_outputs(self):
         return self.outputs
-    
+
     def get_tx(self, txhash):
         t = self.txs[txhash]
         #print(t)
@@ -144,7 +144,7 @@ class MyTXAPIBitcoin(object):
 def main():
     numinputs = 600
     sizeinputtx = 10
-    
+
     # List all connected TREZORs on USB
     devices = HidTransport.enumerate()
 
@@ -157,9 +157,9 @@ def main():
     print(devices[0][0])
 #    transport = BridgeTransport(devices[0][0])
     transport = HidTransport(devices[0])
-    
+
     txstore = MyTXAPIBitcoin()
-    
+
     # Creates object for manipulating TREZOR
     client = TrezorClient(transport)
 #    client.set_tx_api(TXAPITestnet())
@@ -213,7 +213,7 @@ def main():
 #             address='1NcMqUvyWv1K3Zxwmx5sqfj7ZEmPCSdJFM',
 #         ),
     ]
- 
+
 #    (signatures, serialized_tx) = client.sign_tx('Testnet', inputs, outputs)
     (signatures, serialized_tx) = client.sign_tx('Bitcoin', txstore.get_inputs(), txstore.get_outputs())
     print('Transaction:', binascii.hexlify(serialized_tx))
