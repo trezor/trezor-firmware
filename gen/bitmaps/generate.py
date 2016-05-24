@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+#!/usr/bin/env python2
 import glob
 import os
 from PIL import Image

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 bl = open('bl.bin').read()
 fw = open('fw.bin').read()
 combined = bl + fw[:256] + (32768-256)*'\x00' + fw[256:]
