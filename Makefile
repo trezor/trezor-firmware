@@ -10,7 +10,7 @@ OBJS += gen/bitmaps.o
 OBJS += gen/fonts.o
 
 libtrezor.a: $(OBJS)
-	ar rcs libtrezor.a $(OBJS)
+	$(AR) rcs libtrezor.a $(OBJS)
 
 include Makefile.include
 
