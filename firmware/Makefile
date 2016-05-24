@@ -34,6 +34,7 @@ OBJS += ../vendor/trezor-crypto/base58.o
 
 OBJS += ../vendor/trezor-crypto/ripemd160.o
 OBJS += ../vendor/trezor-crypto/sha2.o
+OBJS += ../vendor/trezor-crypto/sha3.o
 
 OBJS += ../vendor/trezor-crypto/aescrypt.o
 OBJS += ../vendor/trezor-crypto/aeskey.o
