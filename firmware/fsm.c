@@ -679,7 +679,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 		}
 	}
 
-	msg_write(MessageType_MessageType_Address, resp);
+	msg_write(MessageType_MessageType_EthereumAddress, resp);
 	layoutHome();
 }
 
