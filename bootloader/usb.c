@@ -278,18 +278,20 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				buttonUpdate();
 			} while (!button.YesUp && !button.NoUp);
 			if (button.YesUp) {
-				layoutProgress("INSTALLING ... Please wait", 0);
 				// backup metadata
 				memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
 				flash_unlock();
 				// erase metadata area
 				for (i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
+					layoutProgress("ERASING ... Please wait", 1000*(i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
 					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
 				}
 				// erase code area
 				for (i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
+					layoutProgress("ERASING ... Please wait", 1000*(i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
 					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
 				}
+				layoutProgress("INSTALLING ... Please wait", 0);
 				flash_lock();
 				send_msg_success(dev);
 				flash_state = STATE_FLASHSTART;
@@ -350,7 +352,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		p = buf + 1;
-		if (flash_anim % 8 == 4) {
+		if (flash_anim % 32 == 4) {
 			layoutProgress("INSTALLING ... Please wait", 1000 * flash_pos / flash_len);
 		}
 		flash_anim++;
@@ -364,7 +366,6 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 					flash_program_word(FLASH_META_START + flash_pos, *w);			// the first 256 bytes of firmware is metadata descriptor
 				} else {
 					flash_program_word(FLASH_APP_START + (flash_pos - FLASH_META_DESC_LEN), *w);	// the rest is code
-					sha256_Update(&ctx, towrite, 4);
 				}
 				flash_pos += 4;
 				wi = 0;
@@ -374,6 +375,8 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		flash_lock();
 		// flashing done
 		if (flash_pos == flash_len) {
+			sha256_Update(&ctx, (unsigned char*) FLASH_APP_START,
+						  flash_len - FLASH_META_DESC_LEN);
 			flash_state = STATE_CHECK;
 			send_msg_buttonrequest_firmwarecheck(dev);
 		}
