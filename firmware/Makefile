@@ -17,6 +17,7 @@ OBJS += recovery.o
 OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
+OBJS += ethereum.o
 
 OBJS += debug.o
 
