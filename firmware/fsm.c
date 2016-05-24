@@ -419,6 +419,22 @@ void fsm_msgSignTx(SignTx *msg)
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
 }
 
+void fsm_msgTxAck(TxAck *msg)
+{
+	if (msg->has_tx) {
+		signing_txack(&(msg->tx));
+	} else {
+		fsm_sendFailure(FailureType_Failure_SyntaxError, "No transaction provided");
+	}
+}
+
+void fsm_msgCancel(Cancel *msg)
+{
+	(void)msg;
+	recovery_abort();
+	signing_abort();
+	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Aborted");
+}
 
 void fsm_msgEthereumSignTx(EthereumSignTx *msg)
 {
@@ -430,23 +446,6 @@ void fsm_msgEthereumTxAck(EthereumTxAck *msg)
 {
 	(void)msg;
 	fsm_sendFailure(FailureType_Failure_Other, "Unsupported feature");
-}
-
-void fsm_msgCancel(Cancel *msg)
-{
-	(void)msg;
-	recovery_abort();
-	signing_abort();
-	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Aborted");
-}
-
-void fsm_msgTxAck(TxAck *msg)
-{
-	if (msg->has_tx) {
-		signing_txack(&(msg->tx));
-	} else {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No transaction provided");
-	}
 }
 
 void fsm_msgCipherKeyValue(CipherKeyValue *msg)
