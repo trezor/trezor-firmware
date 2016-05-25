@@ -175,6 +175,19 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	/* NOTE: in the first stage we'll always request more data */
 	resp.has_data_length = true;
 
+	/* FIXME: simplify this check */
+	if (msg->has_data_initial_chunk) {
+		if (msg->has_data_length && msg->data_initial_chunk.size != 1024) {
+			fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but initial chunk too small");
+			ethereum_signing_abort();
+			return;
+		}
+	} else if (msg->has_data_length) {
+		fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
+		ethereum_signing_abort();
+		return;
+	}
+
 	/* Stage 1: Calculate total RLP length */
 	int total_rlp_length = 0;
 	int total_data_length = 0;
