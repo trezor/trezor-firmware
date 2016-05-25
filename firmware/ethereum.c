@@ -177,6 +177,12 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	/* Stage 1: Calculate total RLP length */
 	int total_rlp_length = 0;
+	int total_data_length = 0;
+
+	if (msg->has_data_initial_chunk)
+		total_data_length += msg->data_initial_chunk.size;
+	if (msg->has_data_length)
+		total_data_length += msg->data_length;
 
 	layoutProgress("Signing Eth", 1);
 
@@ -215,12 +221,9 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutProgress("Signing Eth", 6);
 
-	if (msg->has_data_initial_chunk) {
-		if (msg->has_data_length)
-			total_rlp_length += rlp_calculate_length(msg->data_initial_chunk.size + msg->data_length, msg->data_initial_chunk.bytes[0]);
-		else
-			total_rlp_length += rlp_calculate_length(msg->data_initial_chunk.size, msg->data_initial_chunk.bytes[0]);
-	} else
+	if (msg->has_data_initial_chunk)
+		total_rlp_length += rlp_calculate_length(total_data_length, msg->data_initial_chunk.bytes[0]);
+	else
 		total_rlp_length++;
 
 	layoutProgress("Signing Eth", 7);
@@ -255,9 +258,10 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	else
 		hash_rlp_length(1, 0);
 
-	if (msg->has_data_initial_chunk)
-		hash_rlp_field(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
-	else
+	if (msg->has_data_initial_chunk) {
+		hash_rlp_length(total_data_length, msg->data_initial_chunk.bytes[0]);
+		hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
+	} else
 		hash_rlp_length(1, 0);
 
 	layoutProgress("Signing Eth", 9);
