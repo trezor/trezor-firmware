@@ -27,6 +27,7 @@
 #include "crypto.h"
 #include "secp256k1.h"
 #include "sha3.h"
+#include "util.h"
 
 static bool signing = false;
 static size_t data_left;
@@ -156,6 +157,30 @@ static void send_signature(void)
 	ethereum_signing_abort();
 }
 
+/* FIXME */
+static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value)
+{
+	static char _value[21] = {0};
+	static char _to1[21] = {0};
+	static char _to2[21] = {0};
+
+	data2hex(value, 10, _value);
+	data2hex(to, 10, _to1);
+	data2hex(to + 10, 10, _to2);
+
+	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+		"Cancel",
+		"Confirm",
+		NULL,
+		"Really send",
+		_value,
+		"from your wallet?",
+		"To:",
+		_to1,
+		_to2
+	);
+}
+
 /*
  * RLP fields:
  * - nonce (0 .. 32)
@@ -184,6 +209,14 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		}
 	} else if (msg->has_data_length) {
 		fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
+		ethereum_signing_abort();
+		return;
+	}
+
+	/* FIXME: include default values (0 / 0) */
+	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
 		ethereum_signing_abort();
 		return;
 	}
