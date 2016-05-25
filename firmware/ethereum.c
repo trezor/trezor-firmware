@@ -120,9 +120,9 @@ static void hash_rlp_field(const uint8_t *buf, size_t size)
 		hash_data(buf, size);
 }
 
-static void send_request_chunk(size_t length)
+static void send_request_chunk(void)
 {
-	resp.data_length = length <= 1024 ? length : 1024;
+	resp.data_length = data_left <= 1024 ? data_left : 1024;
 	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
 }
 
@@ -325,7 +325,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	if (msg->has_data_length && msg->data_length > 0) {
 		layoutProgress("Signing Eth", 20);
 		data_left = msg->data_length;
-		send_request_chunk(msg->data_length);
+		send_request_chunk();
 	} else {
 		layoutProgress("Signing Eth", 50);
 		send_signature();
@@ -351,7 +351,7 @@ void ethereum_signing_txack(EthereumTxAck *tx)
 	data_left -= tx->data_chunk.size;
 
 	if (data_left > 0) {
-		send_request_chunk(data_left);
+		send_request_chunk();
 	} else {
 		send_signature();
 	}
