@@ -202,10 +202,17 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	/* FIXME: simplify this check */
 	if (msg->has_data_initial_chunk) {
-		if (msg->has_data_length && msg->data_initial_chunk.size != 1024) {
-			fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but initial chunk too small");
-			ethereum_signing_abort();
-			return;
+		if (msg->has_data_length) {
+			if (msg->data_initial_chunk.size != 1024) {
+				fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but initial chunk too small");
+				ethereum_signing_abort();
+				return;
+			}
+			if (msg->data_length == 0) {
+				fsm_sendFailure(FailureType_Failure_Other, "Invalid data length provided");
+				ethereum_signing_abort();
+				return;
+			}
 		}
 	} else if (msg->has_data_length) {
 		fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
