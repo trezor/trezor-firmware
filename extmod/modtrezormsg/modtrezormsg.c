@@ -36,6 +36,37 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
+/// def trezor.msg.setup(ifaces: list) -> None
+///
+/// Setups USB interfaces with a list of tuples
+///
+STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
+    mp_uint_t iface_cnt;
+    mp_obj_t *iface;
+    if (MP_OBJ_IS_TYPE(ifaces, &mp_type_tuple)) {
+        mp_obj_tuple_get(ifaces, &iface_cnt, &iface);
+    } else
+    if (MP_OBJ_IS_TYPE(ifaces, &mp_type_list)) {
+        mp_obj_list_get(ifaces, &iface_cnt, &iface);
+    } else {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "List or tuple expected"));
+    }
+    for (mp_uint_t i = 0; i < iface_cnt; i++) {
+       if (!MP_OBJ_IS_TYPE(iface[i], &mp_type_tuple)) {
+           nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Tuple expected"));
+       }
+       mp_uint_t attr_cnt;
+       mp_obj_t *attr;
+       mp_obj_tuple_get(iface[i], &attr_cnt, &attr);
+       assert(attr_cnt == 2);
+       uint8_t ep = mp_obj_get_int(attr[0]);
+       uint16_t up = mp_obj_get_int(attr[1]);
+       printf("iface %d: ep=%d up=%04x\n", i, ep, up);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_setup_obj, mod_TrezorMsg_Msg_setup);
+
 /// def trezor.msg.send(iface: int, message: bytes) -> int
 ///
 /// Sends message using USB HID (device) or UDP (emulator).
@@ -100,6 +131,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_select_obj, mod_TrezorMsg_Msg
 STATIC const mp_rom_map_elem_t mod_TrezorMsg_Msg_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorMsg_Msg_select_obj) },
     { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_TrezorMsg_Msg_send_obj) },
+    { MP_ROM_QSTR(MP_QSTR_setup), MP_ROM_PTR(&mod_TrezorMsg_Msg_setup_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_Msg_locals_dict, mod_TrezorMsg_Msg_locals_dict_table);
 
