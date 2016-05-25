@@ -125,6 +125,37 @@ static void send_request_chunk(size_t length)
 	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
 }
 
+static void send_signature(void)
+{
+	keccak_Final(&keccak_ctx, hash);
+	uint8_t v;
+	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v) != 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+		ethereum_signing_abort();
+		return;
+	}
+
+	memset(privkey, 0, sizeof(privkey));
+
+	/* Send back the result */
+	resp.has_data_length = false;
+
+	resp.has_signature_v = true;
+	resp.signature_v = v + 27;
+
+	resp.has_signature_r = true;
+	resp.signature_r.size = 32;
+	memcpy(resp.signature_r.bytes, sig, 32);
+
+	resp.has_signature_s = true;
+	resp.signature_s.size = 32;
+	memcpy(resp.signature_s.bytes, sig + 32, 32);
+
+	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
+
+	ethereum_signing_abort();
+}
+
 /*
  * RLP fields:
  * - nonce (0 .. 32)
@@ -147,30 +178,42 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	/* Stage 1: Calculate total RLP length */
 	int total_rlp_length = 0;
 
+	layoutProgress("Signing Eth", 1);
+
 	if (msg->has_nonce)
 		total_rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
 	else
 		total_rlp_length++;
+
+	layoutProgress("Signing Eth", 2);
 
 	if (msg->has_gas_price)
 		total_rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
 	else
 		total_rlp_length++;
 
+	layoutProgress("Signing Eth", 3);
+
 	if (msg->has_gas_limit)
 		total_rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
 	else
 		total_rlp_length++;
+
+	layoutProgress("Signing Eth", 4);
 
 	if (msg->has_to)
 		total_rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
 	else
 		total_rlp_length++;
 
+	layoutProgress("Signing Eth", 5);
+
 	if (msg->has_value)
 		total_rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
 	else
 		total_rlp_length++;
+
+	layoutProgress("Signing Eth", 6);
 
 	if (msg->has_data_initial_chunk) {
 		if (msg->has_data_length)
@@ -180,28 +223,55 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	} else
 		total_rlp_length++;
 
+	layoutProgress("Signing Eth", 7);
+
 	/* Stage 2: Store header fields */
 	hash_rlp_list_length(total_rlp_length);
 
+	layoutProgress("Signing Eth", 8);
+
 	if (msg->has_nonce)
 		hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
+	else
+		hash_rlp_length(1, 0);
+
 	if (msg->has_gas_price)
 		hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
+	else
+		hash_rlp_length(1, 0);
+
 	if (msg->has_gas_limit)
 		hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
+	else
+		hash_rlp_length(1, 0);
+
 	if (msg->has_to)
 		hash_rlp_field(msg->to.bytes, msg->to.size);
+	else
+		hash_rlp_length(1, 0);
+
 	if (msg->has_value)
 		hash_rlp_field(msg->value.bytes, msg->value.size);
+	else
+		hash_rlp_length(1, 0);
+
 	if (msg->has_data_initial_chunk)
 		hash_rlp_field(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
+	else
+		hash_rlp_length(1, 0);
+
+	layoutProgress("Signing Eth", 9);
 
 	/* FIXME: probably this shouldn't be done here, but at a later stage */
 	memcpy(privkey, node->private_key, 32);
 
 	if (msg->has_data_length && msg->data_length > 0) {
+		layoutProgress("Signing Eth", 20);
 		data_left = msg->data_length;
 		send_request_chunk(msg->data_length);
+	} else {
+		layoutProgress("Signing Eth", 50);
+		send_signature();
 	}
 }
 
@@ -224,35 +294,9 @@ void ethereum_signing_txack(EthereumTxAck *tx)
 	data_left -= tx->data_chunk.size;
 
 	if (data_left > 0) {
-		/* Request more data */
 		send_request_chunk(data_left);
 	} else {
-		/* Create signature */
-		keccak_Final(&keccak_ctx, hash);
-		uint8_t v;
-		if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v) != 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
-			ethereum_signing_abort();
-			return;
-		}
-
-		memset(privkey, 0, sizeof(privkey));
-
-		/* Send back the result */
-		resp.has_data_length = false;
-
-		resp.has_signature_v = true;
-		resp.signature_v = v + 27;
-
-		resp.has_signature_r = true;
-		resp.signature_r.size = 32;
-		memcpy(resp.signature_r.bytes, sig, 32);
-
-		resp.has_signature_s = true;
-		resp.signature_s.size = 32;
-		memcpy(resp.signature_s.bytes, sig + 32, 32);
-
-		msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
+		send_signature();
 	}
 }
 
