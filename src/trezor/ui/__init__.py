@@ -62,3 +62,16 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
         c = blend(ca, cb, y)
         func(c)
         yield loop.Sleep(delay)
+
+
+def rotate_coords(pos: tuple) -> tuple:
+    r = display.orientation()
+    if r == 0:
+        return pos
+    x, y = pos
+    if r == 90:
+        return (240 - y, x)
+    if r == 180:
+        return (240 - x, 240 - y)
+    if r == 270:
+        return (y, 240 - x)

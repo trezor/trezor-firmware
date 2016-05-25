@@ -1,15 +1,11 @@
-# Every application is supposed to have two entry points:
-#
-# boot() is called during device boot time and it should prepare
-# all global things necessary to run.
-#
-# dispatch() is called once event subscribed in boot() is received.
+from trezor.dispatcher import register
+from trezor.messages.Initialize import Initialize
 
-def dispatch():
-    # Callback for HID messages
-    print("Dispatch homescreen")
+
+def dispatch(message):
+    from .layout_homescreen import layout_homescreen
+    return layout_homescreen(message)
+
 
 def boot():
-    # Initilize app on boot time.
-    # This should hookup HID message types dispatcher() wants to receive.
-    print("Boot homescreen")
+    register(Initialize, dispatch)

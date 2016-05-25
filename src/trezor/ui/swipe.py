@@ -1,6 +1,6 @@
 import utime
 
-from . import in_area
+from . import in_area, rotate_coords
 from trezor import loop
 
 
@@ -16,14 +16,18 @@ SWIPE_RIGHT = const(270)
 
 class Swipe():
 
-    def __init__(self, area=None):
+    def __init__(self, area=None, absolute=False):
         self.area = area or (0, 0, 240, 240)
+        self.absolute = absolute
         self.start_pos = None
         self.start_time = 0
         self.end_pos = None
         self.end_time = 0
 
     def send(self, event, pos):
+
+        if not self.absolute:
+            pos = rotate_coords(pos)
 
         if event is loop.TOUCH_START and in_area(pos, self.area):
             self.start_time = utime.time()

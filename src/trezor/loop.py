@@ -73,31 +73,39 @@ class Wait():
         self.gens = gens
         self.wait_for = wait_for
         self.exit_others = exit_others
-        self.received = 0
-        self.scheduled = None
+        self.scheduled = []
+        self.finished = []
         self.callback = None
 
     def handle(self, gen):
-        self.scheduled = [schedule(self._wait(g)) for g in self.gens]
+        self.scheduled = [schedule(self._wait(gen)) for gen in self.gens]
         self.callback = gen
 
+    def exit(self):
+        for gen in self.scheduled:
+            if gen not in self.finished and isinstance(gen, type_gen):
+                unschedule(gen)
+                unblock(gen)
+                gen.close()
+
     def _wait(self, gen):
-        if isinstance(gen, type_gen):
-            result = yield from gen
+        try:
+            if isinstance(gen, type_gen):
+                result = yield from gen
+            else:
+                result = yield gen
+        except Exception as exc:
+            self._finish(gen, exc)
         else:
-            result = yield gen
-        self._finish(gen, result)
+            self._finish(gen, result)
 
     def _finish(self, gen, result):
-        self.received += 1
-        if self.received == self.wait_for:
-            schedule(self.callback, (gen, result))
+        self.finished.append(gen)
+        if self.wait_for == len(self.finished) or isinstance(result, Exception):
             if self.exit_others:
-                for g in self.scheduled:
-                    if g is not gen and isinstance(g, type_gen):
-                        unschedule(g)
-                        unblock(g)
-                        g.close()
+                self.exit()
+            schedule(self.callback, result)
+            self.callback = None
 
 
 def run_forever():
@@ -140,7 +148,10 @@ def run_forever():
                 continue
 
         try:
-            result = gen.send(data)
+            if isinstance(data, Exception):
+                result = gen.throw(data)
+            else:
+                result = gen.send(data)
         except StopIteration as e:
             log.debug(__name__, '%s finished', gen)
             continue

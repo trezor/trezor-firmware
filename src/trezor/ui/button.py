@@ -1,4 +1,4 @@
-from . import display, in_area
+from . import display, in_area, rotate_coords
 from trezor import ui
 from trezor import loop
 
@@ -51,13 +51,12 @@ BTN_DIRTY = const(4)
 
 class Button():
 
-
-
-    def __init__(self, area, text, normal_style=None, active_style=None):
+    def __init__(self, area, text, normal_style=None, active_style=None, absolute=False):
         self.area = area
         self.text = text
         self.normal_style = normal_style or DEFAULT_BUTTON
         self.active_style = active_style or DEFAULT_BUTTON_ACTIVE
+        self.absolute = absolute
         self.state = BTN_DIRTY
 
     def render(self):
@@ -77,6 +76,8 @@ class Button():
         self.state = state
 
     def send(self, event, pos):
+        if not self.absolute:
+            pos = rotate_coords(pos)
         if event is loop.TOUCH_START:
             if in_area(pos, self.area):
                 self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
@@ -91,3 +92,13 @@ class Button():
             self.state = BTN_DIRTY
             if in_area(pos, self.area):
                 return BTN_CLICKED
+
+    def wait(self):
+        while True:
+            self.render()
+            event, *pos = yield loop.Select(loop.TOUCH_START,
+                                            loop.TOUCH_MOVE,
+                                            loop.TOUCH_END)
+            result = self.send(event, pos)
+            if result is not None:
+                return result

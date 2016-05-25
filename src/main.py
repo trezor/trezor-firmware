@@ -2,14 +2,14 @@ import trezor.main
 from trezor import msg
 
 # Load all applications
-from apps import homescreen
 from apps import playground
-# from apps import wallet
+from apps import homescreen
+from apps import wallet
 
 # Initialize all applications
-homescreen.boot()
 playground.boot()
-# wallet.boot()
+homescreen.boot()
+wallet.boot()
 
 # just a demo to show how to register USB ifaces
 msg.setup( [ (1, 0xF53C), (2, 0xF1D0) ] )
