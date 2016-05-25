@@ -6,7 +6,6 @@ import argparse
 import json
 import base64
 import tempfile
-import requests
 from io import BytesIO
 
 from trezorlib.client import TrezorClient, TrezorClientDebug
@@ -209,6 +208,7 @@ class Commands(object):
         return ret
 
     def firmware_update(self, args):
+        import requests
         if args.file:
             fp = open(args.file, 'rb').read()
         elif args.url:
