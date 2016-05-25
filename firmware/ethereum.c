@@ -43,7 +43,8 @@ struct SHA3_CTX keccak_ctx;
 static int rlp_encode_length(uint8_t *buf, int length, uint8_t firstbyte, bool list)
 {
 	if (!list && (length == 1 && firstbyte <= 0x7f)) {
-		buf[0] = firstbyte;
+		/* Extra-special case: null is encoded differently */
+		buf[0] = !firstbyte ? 0x80 : firstbyte;
 		return 1;
 	} else if (length <= 55) {
 		buf[0] = (list ? 0xc0 : 0x80) + length;
