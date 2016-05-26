@@ -97,9 +97,13 @@ static const struct MessagesMap_t MessagesMap[] = {
 //	{'d', 'i', MessageType_MessageType_DebugLinkDecision,	DebugLinkDecision_fields,	(void (*)(void *))fsm_msgDebugLinkDecision},
 	{'d', 'i', MessageType_MessageType_DebugLinkGetState,	DebugLinkGetState_fields,	(void (*)(void *))fsm_msgDebugLinkGetState},
 	{'d', 'i', MessageType_MessageType_DebugLinkStop,		DebugLinkStop_fields,		(void (*)(void *))fsm_msgDebugLinkStop},
+	{'d', 'i', MessageType_MessageType_DebugLinkMemoryRead,	DebugLinkMemoryRead_fields,	(void (*)(void *))fsm_msgDebugLinkMemoryRead},
+	{'d', 'i', MessageType_MessageType_DebugLinkMemoryWrite, DebugLinkMemoryWrite_fields, (void (*)(void *))fsm_msgDebugLinkMemoryWrite},
+	{'d', 'i', MessageType_MessageType_DebugLinkFlashErase,	DebugLinkFlashErase_fields,	(void (*)(void *))fsm_msgDebugLinkFlashErase},
 	// debug out messages
 	{'d', 'o', MessageType_MessageType_DebugLinkState,		DebugLinkState_fields,		0},
 	{'d', 'o', MessageType_MessageType_DebugLinkLog,		DebugLinkLog_fields,		0},
+	{'d', 'o', MessageType_MessageType_DebugLinkMemory,		DebugLinkMemory_fields,		0},
 #endif
 	// end
 	{0, 0, 0, 0, 0}

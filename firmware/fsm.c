@@ -46,6 +46,7 @@
 #include "ripemd160.h"
 #include "curves.h"
 #include "secp256k1.h"
+#include <libopencm3/stm32/flash.h>
 
 // message methods
 
@@ -975,4 +976,41 @@ void fsm_msgDebugLinkStop(DebugLinkStop *msg)
 	(void)msg;
 }
 
+void fsm_msgDebugLinkMemoryRead(DebugLinkMemoryRead *msg)
+{
+	RESP_INIT(DebugLinkMemory);
+
+	uint32_t length = 1024;
+	if (msg->has_length && msg->length < length)
+		length = msg->length;
+	resp->has_memory = true;
+	memcpy(resp->memory.bytes, (void*) msg->address, length);
+	resp->memory.size = length;
+	msg_debug_write(MessageType_MessageType_DebugLinkMemory, resp);
+}
+
+void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
+{
+	uint32_t length = msg->memory.size;
+	if (msg->flash) {
+		flash_clear_status_flags();
+		flash_unlock();
+		uint32_t* src = (uint32_t *) msg->memory.bytes;
+		for (unsigned int i = 0; i < length; i += 4) {
+			flash_program_word(msg->address +  i, *src);
+			src++;
+		}
+		flash_lock();
+	} else {
+		memcpy((void *) msg->address, msg->memory.bytes, length);
+	}
+}
+
+void fsm_msgDebugLinkFlashErase(DebugLinkFlashErase *msg)
+{
+	flash_clear_status_flags();
+	flash_unlock();
+	flash_erase_sector(msg->sector, FLASH_CR_PROGRAM_X32);
+	flash_lock();
+}
 #endif
