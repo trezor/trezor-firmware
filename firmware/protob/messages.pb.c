@@ -9,6 +9,7 @@ const uint32_t ResetDevice_strength_default = 256u;
 const char ResetDevice_language_default[17] = "english";
 const char RecoveryDevice_language_default[17] = "english";
 const char SignMessage_coin_name_default[17] = "Bitcoin";
+const char VerifyMessage_coin_name_default[17] = "Bitcoin";
 const char EncryptMessage_coin_name_default[17] = "Bitcoin";
 const char EstimateTxSize_coin_name_default[17] = "Bitcoin";
 const char SignTx_coin_name_default[17] = "Bitcoin";
@@ -213,10 +214,11 @@ const pb_field_t SignMessage_fields[4] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t VerifyMessage_fields[4] = {
+const pb_field_t VerifyMessage_fields[5] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, VerifyMessage, address, address, 0),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, VerifyMessage, signature, address, 0),
     PB_FIELD2(  3, BYTES   , OPTIONAL, STATIC  , OTHER, VerifyMessage, message, signature, 0),
+    PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, VerifyMessage, coin_name, message, &VerifyMessage_coin_name_default),
     PB_LAST_FIELD
 };
 

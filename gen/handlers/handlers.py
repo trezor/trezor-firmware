@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+#!/usr/bin/env python2
 handlers = [
 	'hard_fault_handler',
 	'mem_manage_handler',

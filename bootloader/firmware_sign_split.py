@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+#!/usr/bin/env python2
 import hashlib
 import os
 import subprocess

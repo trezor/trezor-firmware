@@ -241,6 +241,7 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 	storage_reset();
 	storage_reset_uuid();
 	storage_commit();
+	storage_clearPinArea();
 	// the following does not work on Mac anyway :-/ Linux/Windows are fine, so it is not needed
 	// usbReconnect(); // force re-enumeration because of the serial number change
 	fsm_sendSuccess("Device wiped");
@@ -643,7 +644,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 	if (!node) return;
 
 	layoutProgressSwipe("Signing", 0);
-	if (cryptoMessageSign(node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
+	if (cryptoMessageSign(coin, node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
 		resp->has_address = true;
 		uint8_t addr_raw[21];
 		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
@@ -667,12 +668,14 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 		fsm_sendFailure(FailureType_Failure_Other, "No message provided");
 		return;
 	}
+	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	if (!coin) return;
 	layoutProgressSwipe("Verifying", 0);
 	uint8_t addr_raw[21];
 	if (!ecdsa_address_decode(msg->address, addr_raw)) {
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid address");
 	}
-	if (msg->signature.size == 65 && cryptoMessageVerify(msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
+	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
 		layoutVerifyAddress(msg->address);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
@@ -747,7 +750,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		uint8_t digest[64];
 		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
 		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
-		result = cryptoMessageSign(node, digest, 64, resp->signature.bytes);
+		result = cryptoMessageSign(&(coins[0]), node, digest, 64, resp->signature.bytes);
 	}
 
 	if (result == 0) {

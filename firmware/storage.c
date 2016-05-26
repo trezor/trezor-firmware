@@ -92,14 +92,29 @@ void storage_check_flash_errors(void)
 	}
 }
 
-void storage_from_flash(uint32_t version)
+bool storage_from_flash(void)
 {
+	if (memcmp((void *)FLASH_STORAGE_START, "stor", 4) != 0) {
+		// wrong magic
+		return false;
+	}
+
+	uint32_t version = ((Storage *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)))->version;
 	// version 1: since 1.0.0
 	// version 2: since 1.2.1
 	// version 3: since 1.3.1
 	// version 4: since 1.3.2
 	// version 5: since 1.3.3
 	// version 6: since 1.3.6
+	if (version > STORAGE_VERSION) {
+		// downgrade -> clear storage
+		return false;
+	}
+
+	// load uuid
+	memcpy(storage_uuid, (void *)(FLASH_STORAGE_START + 4), sizeof(storage_uuid));
+	data2hex(storage_uuid, sizeof(storage_uuid), storage_uuid_str);
+	// copy storage
 	memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
 	if (version <= 5) {
 		// convert PIN failure counter from version 5 format
@@ -117,28 +132,21 @@ void storage_from_flash(uint32_t version)
 		storage.has_pin_failed_attempts = false;
 		storage.pin_failed_attempts = 0;
 	}
-	storage.version = STORAGE_VERSION;
+	// upgrade storage version
+	if (version != STORAGE_VERSION) {
+		storage.version = STORAGE_VERSION;
+		storage_commit();
+	}
+	return true;
 }
 
 void storage_init(void)
 {
-	storage_reset();
-	// if magic is ok
-	if (memcmp((void *)FLASH_STORAGE_START, "stor", 4) == 0) {
-		// load uuid
-		memcpy(storage_uuid, (void *)(FLASH_STORAGE_START + 4), sizeof(storage_uuid));
-		data2hex(storage_uuid, sizeof(storage_uuid), storage_uuid_str);
-		// load storage struct
-		uint32_t version = ((Storage *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)))->version;
-		if (version && version <= STORAGE_VERSION) {
-			storage_from_flash(version);
-		}
-		if (version != STORAGE_VERSION) {
-			storage_commit();
-		}
-	} else {
+	if (!storage_from_flash()) {
+		storage_reset();
 		storage_reset_uuid();
 		storage_commit();
+		storage_clearPinArea();
 	}
 }
 
@@ -419,6 +427,15 @@ void session_cachePin(void)
 bool session_isPinCached(void)
 {
 	return sessionPinCached;
+}
+
+void storage_clearPinArea()
+{
+	flash_clear_status_flags();
+	flash_unlock();
+	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
+	flash_lock();
+	storage_check_flash_errors();
 }
 
 void storage_resetPinFails(uint32_t *pinfailsptr)

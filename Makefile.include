@@ -6,6 +6,7 @@ CC      = $(PREFIX)gcc
 LD      = $(PREFIX)gcc
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
+AR      = $(PREFIX)ar
 FLASH   = st-flash
 OPENOCD = openocd
 

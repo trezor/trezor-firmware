@@ -28,7 +28,7 @@ const pb_field_t HDNodePathType_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t CoinType_fields[8] = {
+const pb_field_t CoinType_fields[9] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, CoinType, coin_name, coin_name, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, CoinType, coin_shortcut, coin_name, 0),
     PB_FIELD2(  3, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type, coin_shortcut, &CoinType_address_type_default),
@@ -36,6 +36,7 @@ const pb_field_t CoinType_fields[8] = {
     PB_FIELD2(  5, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2sh, maxfee_kb, &CoinType_address_type_p2sh_default),
     PB_FIELD2(  6, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2wpkh, address_type_p2sh, &CoinType_address_type_p2wpkh_default),
     PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, CoinType, address_type_p2wsh, address_type_p2wpkh, &CoinType_address_type_p2wsh_default),
+    PB_FIELD2(  8, STRING  , OPTIONAL, STATIC  , OTHER, CoinType, signed_message_header, address_type_p2wsh, 0),
     PB_LAST_FIELD
 };
 
