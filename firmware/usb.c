@@ -28,6 +28,12 @@
 #include "storage.h"
 #include "util.h"
 
+#if DEBUG_LINK
+#define USB_INTERFACE_INDEX_U2F 2
+#else
+#define USB_INTERFACE_INDEX_U2F 1
+#endif
+
 #define ENDPOINT_ADDRESS_IN         (0x81)
 #define ENDPOINT_ADDRESS_OUT        (0x01)
 #define ENDPOINT_ADDRESS_DEBUG_IN   (0x82)
@@ -181,11 +187,7 @@ static const struct usb_endpoint_descriptor hid_endpoints_u2f[2] = {{
 static const struct usb_interface_descriptor hid_iface_u2f[] = {{
 	.bLength = USB_DT_INTERFACE_SIZE,
 	.bDescriptorType = USB_DT_INTERFACE,
-#if DEBUG_LINK
-	.bInterfaceNumber = 2,
-#else
-	.bInterfaceNumber = 1,
-#endif
+	.bInterfaceNumber = USB_INTERFACE_INDEX_U2F,
 	.bAlternateSetting = 0,
 	.bNumEndpoints = 2,
 	.bInterfaceClass = USB_CLASS_HID,
@@ -275,18 +277,18 @@ static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uin
 	    (req->wValue != 0x2200))
 		return 0;
 
-    if (req->wIndex==1) {
-        debugLog(0, "", "hid_control_request u2f");
-        *buf = (uint8_t *)hid_report_descriptor_u2f;
-        *len = sizeof(hid_report_descriptor_u2f);
-        return 1;
-    }
+	if (req->wIndex == USB_INTERFACE_INDEX_U2F) {
+		debugLog(0, "", "hid_control_request u2f");
+		*buf = (uint8_t *)hid_report_descriptor_u2f;
+		*len = sizeof(hid_report_descriptor_u2f);
+		return 1;
+	}
 
-    debugLog(0, "", "hid_control_request trezor");
-    /* Handle the HID report descriptor. */
-    *buf = (uint8_t *)hid_report_descriptor;
-    *len = sizeof(hid_report_descriptor);
-    return 1;
+	debugLog(0, "", "hid_control_request trezor");
+	/* Handle the HID report descriptor. */
+	*buf = (uint8_t *)hid_report_descriptor;
+	*len = sizeof(hid_report_descriptor);
+	return 1;
 }
 
 static volatile char tiny = 0;
