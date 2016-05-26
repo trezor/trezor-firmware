@@ -419,7 +419,7 @@ class ProtocolMixin(object):
 
     @field('address')
     @expect(proto.EthereumAddress)
-    def get_ethereum_address(self, n, show_display=False, multisig=None):
+    def ethereum_get_address(self, n, show_display=False, multisig=None):
         n = self._convert_prime(n)
         return self.call(proto.EthereumGetAddress(address_n=n, show_display=show_display))
 
