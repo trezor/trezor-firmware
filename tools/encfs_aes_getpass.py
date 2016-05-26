@@ -110,9 +110,9 @@ def main():
 
     sys.stderr.write('Please confirm action on your device.\n')
     passw = client.decrypt_keyvalue(data['bip32_path'],
-                data['label'],
-                binascii.unhexlify(data['password_encrypted_hex']),
-                False, True)
+                                    data['label'],
+                                    binascii.unhexlify(data['password_encrypted_hex']),
+                                    False, True)
 
     print(passw)
 

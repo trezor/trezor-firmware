@@ -1,17 +1,19 @@
 import binascii
-import json
 from decimal import Decimal
 # from filecache import filecache, DAY
-from . import types_pb2 as proto_types
 import requests
+from . import types_pb2 as proto_types
+
+def fetch_json(url):
+    try:
+        r = requests.get(url, headers={'User-agent': 'Mozilla/5.0'})
+        return r.json()
+    except:
+        raise Exception('URL error: %s' % url)
 
 def insight_tx(url, rawdata=False):
     if not rawdata:
-        try:
-            r = requests.get(url, headers = {'User-agent': 'Mozilla/5.0'})
-            data = r.json()
-        except:
-            raise Exception('URL error: %s' % url)
+        data = fetch_json(url)
     else:
         data = url
 
@@ -42,11 +44,7 @@ def insight_tx(url, rawdata=False):
 
 def smartbit_tx(url, rawdata=False):
     if not rawdata:
-        try:
-            r = requests.get(url, headers = {'User-agent': 'Mozilla/5.0'})
-            data = r.json()
-        except:
-            raise Exception('URL error: %s' % url)
+        data = fetch_json(url)
     else:
         data = url
 

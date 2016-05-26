@@ -1,11 +1,10 @@
 from __future__ import print_function
-
-'''PipeTransport implements fake wire transport over local named pipe.
-Use this transport for talking with trezor simulator.'''
-
 import os
 from select import select
 from .transport import Transport
+
+"""PipeTransport implements fake wire transport over local named pipe.
+Use this transport for talking with trezor simulator."""
 
 class PipeTransport(Transport):
     def __init__(self, device, is_device, *args, **kwargs):

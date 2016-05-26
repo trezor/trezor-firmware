@@ -1,10 +1,8 @@
 from __future__ import print_function
-
 import sys
 import math
-import operator
 from PyQt4.QtGui import (QPushButton, QLineEdit, QSizePolicy, QRegExpValidator, QLabel,
-                        QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout)
+                         QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout)
 from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt
 
 class PinButton(QPushButton):

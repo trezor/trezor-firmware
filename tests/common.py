@@ -1,10 +1,9 @@
 from __future__ import print_function
 
 import unittest
-import config
-
 from trezorlib.client import TrezorDebugClient
 from trezorlib.tx_api import TXAPIBitcoin
+import config
 
 class TrezorTest(unittest.TestCase):
     def setUp(self):

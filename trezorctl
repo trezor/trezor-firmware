@@ -13,7 +13,7 @@ from trezorlib.client import TrezorClient, TrezorClientDebug
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for TREZOR devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
-    parser.add_argument('-t', '--transport', dest='transport',  choices=['usb', 'udp', 'serial', 'pipe', 'socket', 'bridge'], default='usb', help="Transport used for talking with the device")
+    parser.add_argument('-t', '--transport', dest='transport', choices=['usb', 'udp', 'serial', 'pipe', 'socket', 'bridge'], default='usb', help="Transport used for talking with the device")
     parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
 #    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
 #    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
@@ -80,7 +80,7 @@ def get_transport(transport_string, path, **kwargs):
         from trezorlib.transport_fake import FakeTransport
         return FakeTransport(path, **kwargs)
 
-    raise NotImplemented("Unknown transport")
+    raise NotImplementedError("Unknown transport")
 
 class Commands(object):
     def __init__(self, client):
@@ -88,7 +88,7 @@ class Commands(object):
 
     @classmethod
     def _list_commands(cls):
-        return [ x for x in dir(cls) if not x.startswith('_') ]
+        return [x for x in dir(cls) if not x.startswith('_')]
 
     def list(self, args):
         # Fake method for advertising 'list' command
@@ -110,7 +110,7 @@ class Commands(object):
         return self.client.features
 
     def list_coins(self, args):
-        return [ coin.coin_name for coin in self.client.features.coins ]
+        return [coin.coin_name for coin in self.client.features.coins]
 
     def ping(self, args):
         return self.client.ping(args.msg, button_protection=args.button_protection, pin_protection=args.pin_protection, passphrase_protection=args.passphrase_protection)
@@ -122,11 +122,11 @@ class Commands(object):
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
 
-    def set_homescreen(self,args):
+    def set_homescreen(self, args):
         if args.filename:
             from PIL import Image
             im = Image.open(args.filename)
-            if im.size != (128,64):
+            if im.size != (128, 64):
                 raise Exception('Wrong size of the image')
             im = im.convert('1')
             pix = im.load()
@@ -150,7 +150,7 @@ class Commands(object):
 
     def recovery_device(self, args):
         return self.client.recovery_device(args.words, args.passphrase_protection,
-                                    args.pin_protection, args.label, 'english')
+                                           args.pin_protection, args.label, 'english')
 
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
@@ -159,11 +159,13 @@ class Commands(object):
         if args.mnemonic:
             mnemonic = ' '.join(args.mnemonic)
             return self.client.load_device_by_mnemonic(mnemonic, args.pin,
-                        args.passphrase_protection, args.label, 'english', args.skip_checksum)
-
+                                                       args.passphrase_protection,
+                                                       args.label, 'english',
+                                                       args.skip_checksum)
         else:
             return self.client.load_device_by_xprv(args.xprv, args.pin,
-                        args.passphrase_protection, args.label, 'english')
+                                                   args.passphrase_protection,
+                                                   args.label, 'english')
 
     def reset_device(self, args):
         return self.client.reset_device(True, args.strength, args.passphrase_protection,
@@ -296,14 +298,14 @@ class Commands(object):
 
     set_label.arguments = (
         (('-l', '--label',), {'type': str, 'default': ''}),
-#        (('-c', '--clear'), {'action': 'store_true', 'default': False})
+        # (('-c', '--clear'), {'action': 'store_true', 'default': False})
     )
 
     set_homescreen.arguments = (
         (('-f', '--filename',), {'type': str, 'default': ''}),
     )
     change_pin.arguments = (
-         (('-r', '--remove'), {'action': 'store_true', 'default': False}),
+        (('-r', '--remove'), {'action': 'store_true', 'default': False}),
     )
 
     wipe_device.arguments = ()

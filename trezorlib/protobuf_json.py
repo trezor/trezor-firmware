@@ -37,14 +37,13 @@ Provide serialization and de-serialization of Google's protobuf Messages into/fr
 # Note that preservation of unknown fields is currently not available for Python (c) google docs
 # extensions is not supported from 0.0.5 (due to gpb2.3 changes)
 
-__version__='0.0.5'
-__author__='Paul Dovbush <dpp@dpp.su>'
-
-
 import json
 from google.protobuf.descriptor import FieldDescriptor as FD
 import binascii
 from . import types_pb2 as types
+
+__version__ = '0.0.5'
+__author__ = 'Paul Dovbush <dpp@dpp.su>'
 
 class ParseError(Exception): pass
 
@@ -82,7 +81,7 @@ def pb2json(pb):
     js = {}
     # fields = pb.DESCRIPTOR.fields #all fields
     fields = pb.ListFields()    #only filled (including extensions)
-    for field,value in fields:
+    for field, value in fields:
         if field.type == FD.TYPE_MESSAGE:
             ftype = pb2json
         elif field.type == FD.TYPE_ENUM:

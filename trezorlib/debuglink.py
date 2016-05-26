@@ -51,7 +51,7 @@ class DebugLink(object):
         # We have to encode that into encoded pin,
         # because application must send back positions
         # on keypad, not a real PIN.
-        pin_encoded = ''.join([ str(matrix.index(p) + 1) for p in pin])
+        pin_encoded = ''.join([str(matrix.index(p) + 1) for p in pin])
 
         print("Encoded PIN:", pin_encoded)
         return pin_encoded

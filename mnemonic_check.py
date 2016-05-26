@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import binascii
+import hashlib
+import mnemonic
 
 __doc__ = '''
     Use this script to cross-check that TREZOR generated valid
@@ -12,10 +15,6 @@ __doc__ = '''
     highly secured computer (ideally live linux distribution
     without an internet connection).
 '''
-
-import binascii
-import hashlib
-import mnemonic
 
 # Python2 vs Python3
 try:

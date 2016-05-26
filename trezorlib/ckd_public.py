@@ -99,7 +99,7 @@ def serialize(node, version=0x0488B21E):
     s += node.chain_code
     if node.private_key:
         s += '\x00' + node.private_key
-    else :
+    else:
         s += node.public_key
     s += tools.Hash(s)[:4]
     return tools.b58encode(s)

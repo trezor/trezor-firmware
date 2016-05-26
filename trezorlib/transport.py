@@ -77,7 +77,7 @@ class Transport(object):
             return None
 
         data = self._read()
-        if data == None:
+        if data is None:
             return None
 
         return self._parse_message(data)

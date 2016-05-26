@@ -4,8 +4,8 @@ from __future__ import print_function
 
 # Local serial port loopback: socat PTY,link=COM8 PTY,link=COM9
 
-import serial
 from select import select
+import serial
 from .transport import Transport
 
 class SerialTransport(Transport):

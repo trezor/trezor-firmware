@@ -1,9 +1,8 @@
 '''BridgeTransport implements transport TREZOR Bridge (aka trezord).'''
 
-import requests
 import json
+import requests
 from . import protobuf_json
-from . import mapping
 from . import messages_pb2 as proto
 from .transport import Transport
 
@@ -21,7 +20,7 @@ class BridgeTransport(Transport):
 
         self.session = None
         self.response = None
-        self.conn = requests.Session();
+        self.conn = requests.Session()
 
         super(BridgeTransport, self).__init__(device, *args, **kwargs)
 
@@ -81,7 +80,7 @@ class BridgeTransport(Transport):
             self.response = r.json()
 
     def _read(self):
-        if self.response == None:
+        if self.response is None:
             raise Exception('No response stored')
         cls = getattr(proto, self.response['type'])
         inst = cls()
