@@ -477,31 +477,31 @@ const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 
 const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 {
-		uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
+	uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
 
-		// Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-		uint32_t i, key_path[KEY_PATH_ENTRIES];
-		key_path[0] = U2F_KEY_PATH;
-		for (i = 1; i < KEY_PATH_ENTRIES; i++) {
-			// high bit for hardened keys
-			key_path[i]= 0x80000000 | random32();
-		}
+	// Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
+	uint32_t i, key_path[KEY_PATH_ENTRIES];
+	key_path[0] = U2F_KEY_PATH;
+	for (i = 1; i < KEY_PATH_ENTRIES; i++) {
+		// high bit for hardened keys
+		key_path[i]= 0x80000000 | random32();
+	}
 
-		// First half of keyhandle is key_path
-		memcpy(key_handle, &key_path[1], KEY_PATH_LEN);
+	// First half of keyhandle is key_path
+	memcpy(key_handle, &key_path[1], KEY_PATH_LEN);
 
-		// prepare keypair from /random data
-		const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
+	// prepare keypair from /random data
+	const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
 
-		// For second half of keyhandle
-		// Signature of app_id and random data
-		memcpy(&keybase[0], app_id, U2F_APPID_SIZE);
-		memcpy(&keybase[U2F_APPID_SIZE], key_handle, KEY_PATH_LEN);
-		hmac_sha256(node->private_key, sizeof(node->private_key),
+	// For second half of keyhandle
+	// Signature of app_id and random data
+	memcpy(&keybase[0], app_id, U2F_APPID_SIZE);
+	memcpy(&keybase[U2F_APPID_SIZE], key_handle, KEY_PATH_LEN);
+	hmac_sha256(node->private_key, sizeof(node->private_key),
 					keybase, sizeof(keybase), &key_handle[KEY_PATH_LEN]);
 
-		// Done!
-		return node;
+	// Done!
+	return node;
 }
 
 
