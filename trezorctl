@@ -98,6 +98,11 @@ class Commands(object):
         address_n = self.client.expand_path(args.n)
         return self.client.get_address(args.coin, address_n, args.show_display)
 
+    def ethereum_get_address(self, args):
+        address_n = self.client.expand_path(args.n)
+        address = self.client.ethereum_get_address(address_n, args.show_display)
+        return "0x%s" % (binascii.hexlify(address),)
+
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
 
@@ -242,6 +247,7 @@ class Commands(object):
     list.help = 'List connected TREZOR USB devices'
     ping.help = 'Send ping message'
     get_address.help = 'Get bitcoin address in base58 encoding'
+    ethereum_get_address.help = 'Get Ethereum address in hex encoding'
     get_entropy.help = 'Get example entropy'
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
@@ -264,6 +270,11 @@ class Commands(object):
 
     get_address.arguments = (
         (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
+        (('-n', '-address'), {'type': str}),
+        (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
+    )
+
+    ethereum_get_address.arguments = (
         (('-n', '-address'), {'type': str}),
         (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
     )
