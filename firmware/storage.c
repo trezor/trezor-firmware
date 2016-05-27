@@ -98,12 +98,17 @@ static char sessionPassphrase[51];
 
 #define STORAGE_VERSION 6
 
+void storage_show_error(void)
+{
+	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
+	for (;;) { }
+}
+
 void storage_check_flash_errors(void)
 {
 	// flash operation failed
 	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
-		layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
-		for (;;) { }
+		storage_show_error();
 	}
 }
 
@@ -471,15 +476,26 @@ void storage_clearPinArea(void)
 // called when u2f area or pin area overflows
 static void storage_area_recycle(uint32_t new_pinfails)
 {
+	// first clear storage marker.  In case of a failure below it is better
+	// to clear the storage than to allow restarting with zero PIN failures
+	flash_program_word(FLASH_STORAGE_START, 0);
+	if (*(uint32_t *)FLASH_STORAGE_START != 0) {
+		storage_show_error();
+	}
+
 	// erase storage sector
 	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
 	flash_program_word(FLASH_STORAGE_PINAREA, new_pinfails);
+	if (*(uint32_t *)FLASH_STORAGE_PINAREA != new_pinfails) {
+		storage_show_error();
+	}
+
 	if (storage_u2f_offset > 0) {
 		storage.has_u2f_counter = true;
 		storage.u2f_counter += storage_u2f_offset;
-		storage_commit_locked();
 		storage_u2f_offset = 0;
 	}
+	storage_commit_locked();
 }
 
 void storage_resetPinFails(uint32_t *pinfailsptr)
@@ -525,11 +541,6 @@ uint32_t *storage_getPinFailsPtr(void)
 bool storage_isInitialized(void)
 {
 	return storage.has_node || storage.has_mnemonic;
-}
-
-uint32_t storage_getU2FCounter(void)
-{
-	return storage.u2f_counter + storage_u2f_offset;
 }
 
 uint32_t storage_nextU2FCounter(void)
