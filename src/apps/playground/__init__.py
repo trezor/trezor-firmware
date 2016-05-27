@@ -3,6 +3,7 @@ from trezor import ui
 from trezor import msg
 from trezor.ui.pin import PinDialog, PIN_CONFIRMED, PIN_CANCELLED
 from trezor.utils import unimport_func
+from trezor.res import loadres
 
 
 @unimport_func
@@ -17,14 +18,12 @@ def layout_tap_to_confirm(address, amount, currency):
     # ui.display.text(10, 140, address[:18], ui.MONO, ui.BLACK, ui.WHITE)
     # ui.display.text(10, 160, address[18:], ui.MONO, ui.BLACK, ui.WHITE)
 
-    # f = open('apps/playground/tap_64.toig', 'rb')
     # bg = ui.WHITE
     # style = ui.NORMAL
 
     # def func(fg):
     #     ui.display.text(68, 212, 'TAP TO CONFIRM', style, fg, bg)
-    #     f.seek(0)
-    #     ui.display.icon(3, 170, f.read(), bg, fg)
+    #     ui.display.icon(3, 170, loadres('apps/playground/res/tap_64.toig'), bg, fg)
 
     # animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 

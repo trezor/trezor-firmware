@@ -1,7 +1,7 @@
 from trezor import ui
 from trezor import loop
+from trezor.res import loadres
 
-f = open('apps/playground_stick/fingerprint.toig', 'rb')
 c = ui.rgbcolor(0x20, 0x98, 0xD1)
 
 def layout_homescreen():
@@ -12,8 +12,7 @@ def layout_homescreen():
     p = 0
 
     def func(foreground):
-        f.seek(0)
-        ui.display.loader(p, c, 0, f.read(), foreground)
+        ui.display.loader(p, c, 0, loadres('apps/playground_stick/res/fingerprint.toig'), foreground)
         p = (p + 10) % 1000
 
     animation = ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)

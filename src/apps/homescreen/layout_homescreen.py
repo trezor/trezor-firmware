@@ -1,6 +1,7 @@
 from trezor import ui
 from trezor.ui.swipe import Swipe
 from trezor import loop
+from trezor.res import loadres
 
 
 def swipe_to_change_orientation():
@@ -12,11 +13,8 @@ def swipe_to_change_orientation():
 def layout_homescreen():
     print("Homescreen layout!")
 
-    f = open('apps/homescreen/trezor.toig', 'rb')
-
     def func(foreground):
-        f.seek(0)
-        ui.display.icon(0, 0, f.read(), foreground, ui.BLACK)
+        ui.display.icon(0, 0, loadres('apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
 
     orientation = swipe_to_change_orientation()
     animation = ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
