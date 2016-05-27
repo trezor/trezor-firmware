@@ -68,6 +68,26 @@ static const uint8_t hid_report_descriptor[] = {
 	0xc0               // END_COLLECTION
 };
 
+static const uint8_t hid_report_descriptor_debug[] = {
+	0x06, 0x01, 0xff,  // USAGE_PAGE (Vendor Defined)
+	0x09, 0x01,        // USAGE (1)
+	0xa1, 0x01,        // COLLECTION (Application)
+	0x09, 0x20,        // USAGE (Input Report Data)
+	0x15, 0x00,        // LOGICAL_MINIMUM (0)
+	0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
+	0x75, 0x08,        // REPORT_SIZE (8)
+	0x95, 0x40,        // REPORT_COUNT (64)
+	0x81, 0x02,        // INPUT (Data,Var,Abs)
+	0x09, 0x21,        // USAGE (Output Report Data)
+	0x15, 0x00,        // LOGICAL_MINIMUM (0)
+	0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
+	0x75, 0x08,        // REPORT_SIZE (8)
+	0x95, 0x40,        // REPORT_COUNT (64)
+	0x91, 0x02,        // OUTPUT (Data,Var,Abs)
+	0xc0               // END_COLLECTION
+};
+
+
 static const struct {
 	struct usb_hid_descriptor hid_descriptor;
 	struct {
@@ -195,8 +215,13 @@ static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uin
 		return 0;
 
 	/* Handle the HID report descriptor. */
-	*buf = (uint8_t *)hid_report_descriptor;
-	*len = sizeof(hid_report_descriptor);
+	if (req->wIndex == 1) {
+		*buf = (uint8_t *)hid_report_descriptor_debug;
+		*len = sizeof(hid_report_descriptor_debug);
+	} else {
+		*buf = (uint8_t *)hid_report_descriptor;
+		*len = sizeof(hid_report_descriptor);
+	}
 
 	return 1;
 }
