@@ -11,6 +11,28 @@ from io import BytesIO
 
 from trezorlib.client import TrezorClient, TrezorClientDebug
 
+ether_units = {
+    "wei":          1,
+    "kwei":         1000,
+    "babbage":      1000,
+    "femtoether":   1000,
+    "mwei":         1000000,
+    "lovelace":     1000000,
+    "picoether":    1000000,
+    "gwei":         1000000000,
+    "shannon":      1000000000,
+    "nanoether":    1000000000,
+    "nano":         1000000000,
+    "szabo":        1000000000000,
+    "microether":   1000000000000,
+    "micro":        1000000000000,
+    "finney":       1000000000000000,
+    "milliether":   1000000000000000,
+    "milli":        1000000000000000,
+    "ether":        1000000000000000000,
+    "eth":          1000000000000000000,
+}
+
 def parse_args(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for TREZOR devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
@@ -103,6 +125,58 @@ class Commands(object):
         address_n = self.client.expand_path(args.n)
         address = self.client.ethereum_get_address(address_n, args.show_display)
         return "0x%s" % (binascii.hexlify(address),)
+
+    def ethereum_send_tx(self, args):
+        from ethjsonrpc import EthJsonRpc
+        from ethjsonrpc.utils import hex_to_dec
+        import rlp
+
+        if not args.to:
+            raise Exception("Please provide to address in hex format")
+
+        value = args.value
+        if ' ' in value:
+            value, unit = value.split(' ', 1)
+            if unit.lower() not in ether_units:
+                raise Exception("Unrecognized ether unit %r", unit)
+            value = int(value) * ether_units[unit.lower()]
+        else:
+            value = int(value)
+
+        if args.to.startswith('0x') or args.to.startswith('0X'):
+            to_address = args.to[2:].decode('hex')
+        else:
+            to_address = args.to.decode('hex')
+
+        address_n = self.client.expand_path(args.n)
+        address = "0x%s" % (binascii.hexlify(self.client.ethereum_get_address(address_n)),)
+
+        host, port = args.host.split(':')
+        eth = EthJsonRpc(host, int(port))
+
+        gas_price = eth.eth_gasPrice()
+        gas_limit = args.gas
+        if not gas_limit:
+            gas_limit = hex_to_dec(eth.eth_estimateGas(
+                to_address=args.to,
+                from_address=address,
+                value=value,
+                data=args.data))
+        nonce = eth.eth_getTransactionCount(address)
+
+        sig = self.client.ethereum_sign_tx(
+            n=address_n,
+            nonce=nonce,
+            gas_price=gas_price,
+            gas_limit=gas_limit,
+            to=to_address,
+            value=value,
+            data=args.data)
+
+        transaction = rlp.encode(
+            (nonce, gas_price, gas_limit, hex_to_dec(args.to), value, args.data) + sig)
+        tx_hash = eth.eth_sendRawTransaction("0x%s" % (binascii.hexlify(transaction),))
+        return "Transaction sent with ID %s" % (tx_hash,)
 
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
@@ -248,6 +322,7 @@ class Commands(object):
     ping.help = 'Send ping message'
     get_address.help = 'Get bitcoin address in base58 encoding'
     ethereum_get_address.help = 'Get Ethereum address in hex encoding'
+    ethereum_send_tx.help = 'Sign and publish Ethereum transaction'
     get_entropy.help = 'Get example entropy'
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
@@ -277,6 +352,15 @@ class Commands(object):
     ethereum_get_address.arguments = (
         (('-n', '-address'), {'type': str}),
         (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
+    )
+
+    ethereum_send_tx.arguments = (
+        (('-a', '--host'), {'type': str, 'default': 'localhost:8545'}),
+        (('-n', '-address'), {'type': str}),
+        (('-v', '--value'), {'type': str, 'default': "0"}),
+        (('-g', '--gas'), {'type': int}),
+        (('-d', '--data'), {'type': str, 'default': ''}),
+        (('to',), {'type': str}),
     )
 
     get_entropy.arguments = (
