@@ -9,7 +9,7 @@ def process_file(name):
     with open(name, 'rb') as f:
         resources[name] = f.read()
 
-# scan generic resources
+# scan common resources
 for res in os.scandir('src/trezor/res/'):
     if res.is_file():
         process_file('src/trezor/res/%s' % res.name)
