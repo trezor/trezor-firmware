@@ -147,6 +147,7 @@ bool protectPin(bool use_cached)
 	}
 	uint32_t *fails = storage_getPinFailsPtr();
 	uint32_t wait = ~*fails;
+	usbTiny(1);
 	while (wait > 0) {
 		// convert wait to secstr string
 		char secstrbuf[20];
@@ -164,8 +165,16 @@ bool protectPin(bool use_cached)
 		layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
 		// wait one second
 		usbDelay(840000);
+		if (msg_tiny_id == MessageType_MessageType_Initialize) {
+			protectAbortedByInitialize = true;
+			msg_tiny_id = 0xFFFF;
+			usbTiny(0);
+			fsm_sendFailure(FailureType_Failure_PinCancelled, "PIN Cancelled");
+			return false;
+		}
 		wait--;
 	}
+	usbTiny(0);
 	const char *pin;
 	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, "Please enter current PIN:");
 	if (!pin) {
