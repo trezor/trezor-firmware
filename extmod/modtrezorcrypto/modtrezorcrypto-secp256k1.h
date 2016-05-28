@@ -1,8 +1,8 @@
 /*
  * Copyright (c) Pavol Rusnak, SatoshiLabs
  *
- * Licensed under Microsoft Reference Source License (Ms-RSL)
- * see LICENSE.md file for details
+ * Licensed under TREZOR License
+ * see LICENSE file for details
  */
 
 #include "py/objstr.h"
