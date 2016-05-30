@@ -4,7 +4,7 @@ from trezor.utils import unimport_gen
 from trezor.res import loadres
 from trezor import dispatcher
 from trezor import loop
-from trezor import msg
+from trezor import wire
 
 
 def swipe_to_rotate():
@@ -39,7 +39,7 @@ def layout_homescreen(initialize_msg=None):
         features.passphrase_cached = False
         features.passphrase_protection = False
         features.vendor = 'bitcointrezor.com'
-        msg.write_msg(features)
+        wire.write_msg(features)
     yield loop.Wait([dispatcher.dispatch(),
                      swipe_to_rotate(),
                      animate_logo()])

@@ -1,4 +1,4 @@
-from trezor import msg
+from trezor import wire
 from trezor import ui
 from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from trezor.ui.pin import PinDialog
@@ -23,4 +23,4 @@ def layout_get_public_key(message):
     pubkey.node.fingerprint = 0
     pubkey.node.chain_code = 'deadbeef'
     pubkey.node.public_key = 'deadbeef'
-    msg.write_msg(pubkey)
+    wire.write_msg(pubkey)

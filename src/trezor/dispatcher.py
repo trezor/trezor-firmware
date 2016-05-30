@@ -1,4 +1,4 @@
-from . import msg
+from . import wire
 from . import layout
 
 
@@ -15,6 +15,6 @@ def unregister(message_type):
 
 def dispatch():
     mtypes = message_handlers.keys()
-    message = yield from msg.read_msg(*mtypes)
+    message = yield from wire.read_msg(*mtypes)
     handler = message_handlers[message.message_type]
     layout.change(handler(message))

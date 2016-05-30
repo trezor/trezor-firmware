@@ -16,7 +16,7 @@ if __debug__:
 TOUCH = const(256)  # 0-255 is reserved for USB interfaces
 TOUCH_START = const(1)
 TOUCH_MOVE = const(2)
-TOUCH_END = const(3)
+TOUCH_END = const(4)
 
 msg_handlers = {}  # Interface -> generator
 time_queue = []
@@ -138,8 +138,7 @@ def run_forever():
         message = msg.select(delay)
         if message:
             # Run interrupt handler right away, they have priority
-            iface = message[0]
-            data = message
+            iface, *data = message
             gen = msg_handlers.pop(iface, None)
             if not gen:
                 log.info(__name__, 'No handler for message: %s', iface)

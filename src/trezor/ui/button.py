@@ -96,9 +96,7 @@ class Button():
     def wait(self):
         while True:
             self.render()
-            event, *pos = yield loop.Select(loop.TOUCH_START,
-                                            loop.TOUCH_MOVE,
-                                            loop.TOUCH_END)
+            event, *pos = yield loop.Select(loop.TOUCH)
             result = self.send(event, pos)
             if result is not None:
                 return result

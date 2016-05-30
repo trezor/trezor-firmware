@@ -10,7 +10,7 @@ HEADER_MAGIC = const(35)  #
 
 
 def read_report():
-    _, rep = yield loop.Select(IFACE)
+    rep, = yield loop.Select(IFACE)
     assert rep[0] == REPORT_NUM, 'Report number malformed'
     return rep
 
