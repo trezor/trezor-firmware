@@ -12,13 +12,14 @@ if __debug__:
     log_delay_rb_len = const(10)
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
+# Touch interface
+TOUCH = const(256)  # 0-255 is reserved for USB interfaces
 TOUCH_START = const(1)
 TOUCH_MOVE = const(2)
-TOUCH_END = const(4)
-HID_READ = const(8)
+TOUCH_END = const(3)
 
-blocked_gens = {}  # event -> generator
-time_queue = []  # [(int, int, generator, any)]
+msg_handlers = {}  # Interface -> generator
+time_queue = []
 time_ticket = 0
 
 
@@ -37,37 +38,43 @@ def unschedule(gen):
     heapify(time_queue)
 
 
-def block(gen, event):
-    curr_gen = blocked_gens.get(event, None)
-    if curr_gen is not None:
-        log.warning(__name__, 'Closing %s blocked on %s', curr_gen, event)
-        curr_gen.close()
-    blocked_gens[event] = gen
+def block(gen, iface):
+    curr = msg_handlers.get(iface, None)
+    if curr:
+        log.warning(__name__, 'Closing %s blocked on %s', curr, iface)
+        curr.close()
+    msg_handlers[iface] = gen
 
 
 def unblock(gen):
-    for key in blocked_gens:
-        if blocked_gens[key] is gen:
-            blocked_gens[key] = None
+    for iface in msg_handlers:
+        if msg_handlers[iface] is gen:
+            msg_handlers[iface] = None
 
 
-class Sleep():
+class Syscall():
+    pass
+
+
+class Sleep(Syscall):
 
     def __init__(self, us):
         self.time = utime.ticks_us() + us
 
-
-class Select():
-
-    def __init__(self, *events):
-        self.events = events
-
-    def handle(self, gen):
-        for event in self.events:
-            block(gen, event)
+    def register(self, gen):
+        schedule(gen, self, self.time)
 
 
-class Wait():
+class Select(Syscall):
+
+    def __init__(self, iface):
+        self.iface = iface
+
+    def register(self, gen):
+        block(gen, self.iface)
+
+
+class Wait(Syscall):
 
     def __init__(self, gens, wait_for=1, exit_others=True):
         self.gens = gens
@@ -77,8 +84,8 @@ class Wait():
         self.finished = []
         self.callback = None
 
-    def handle(self, gen):
-        self.scheduled = [schedule(self._wait(gen)) for gen in self.gens]
+    def register(self, gen):
+        self.scheduled = [schedule(self._wait(g)) for g in self.gens]
         self.callback = gen
 
     def exit(self):
@@ -111,7 +118,6 @@ class Wait():
 def run_forever():
     if __debug__:
         global log_delay_pos, log_delay_rb, log_delay_rb_len
-    global blocked_events, blocked_gen
 
     DELAY_MAX = const(1000000)
 
@@ -132,14 +138,12 @@ def run_forever():
         message = msg.select(delay)
         if message:
             # Run interrupt handler right away, they have priority
-            event = message[0]
+            iface = message[0]
             data = message
-            gen = blocked_gens.pop(event, None)
+            gen = msg_handlers.pop(iface, None)
             if not gen:
-                log.info(__name__, 'No handler for event: %s', event)
+                log.info(__name__, 'No handler for message: %s', iface)
                 continue
-            # Cancel other registrations of this handler
-            unblock(gen)
         else:
             # Run something from the time queue
             if time_queue:
@@ -159,17 +163,9 @@ def run_forever():
             log.exception(__name__, e)
             continue
 
-        if isinstance(result, Sleep):
-            # Sleep until result.time, call us later
-            schedule(gen, result, result.time)
-
-        elif isinstance(result, Select):
-            # Wait for one or more types of event
-            result.handle(gen)
-
-        elif isinstance(result, Wait):
-            # Register us as a waiting callback
-            result.handle(gen)
+        if isinstance(result, Syscall):
+            # Execute the syscall
+            result.register(gen)
 
         elif result is None:
             # Just call us asap
