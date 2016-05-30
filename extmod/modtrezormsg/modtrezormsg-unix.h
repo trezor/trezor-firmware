@@ -42,7 +42,7 @@ ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
     socklen_t sl = sizeof(si);
     memset(buf, 0, len);
     iface = 0; // UDP uses always interface 0
-    size_t r = recvfrom(s, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
+    ssize_t r = recvfrom(s, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
     if (r < 0) {
         return r;
     }

@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
        assert(attr_cnt == 2);
        uint8_t ep = mp_obj_get_int(attr[0]);
        uint16_t up = mp_obj_get_int(attr[1]);
-       printf("iface %d: ep=%d up=%04x\n", i, ep, up);
+       printf("iface %lu: ep=%d up=%04x\n", i, ep, up);
     }
     return mp_const_none;
 }
@@ -81,6 +81,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t m
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
 
 #define TICK_RESOLUTION 1000
+#define TOUCH_IFACE 256
 
 /// def trezor.msg.select(timeout_us: int) -> tuple
 ///
@@ -95,10 +96,11 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
     for(;;) {
         uint32_t e = msg_poll_ui_event();
         if (e) {
-            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT((e & 0xFF0000) >> 16);
-            tuple->items[1] = MP_OBJ_NEW_SMALL_INT((e & 0xFF00) >> 8);
-            tuple->items[2] = MP_OBJ_NEW_SMALL_INT((e & 0xFF));
+            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(4, NULL));
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(TOUCH_IFACE);
+            tuple->items[1] = MP_OBJ_NEW_SMALL_INT((e & 0xFF0000) >> 16); // event type
+            tuple->items[2] = MP_OBJ_NEW_SMALL_INT((e & 0xFF00) >> 8); // x position
+            tuple->items[3] = MP_OBJ_NEW_SMALL_INT((e & 0xFF)); // y position
             return MP_OBJ_FROM_PTR(tuple);
         }
         uint8_t iface;
@@ -108,10 +110,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             vstr_t vstr;
             vstr_init_len(&vstr, l);
             memcpy(vstr.buf, recvbuf, l);
-            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(8);
-            tuple->items[1] = MP_OBJ_NEW_SMALL_INT(iface);
-            tuple->items[2] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface);
+            tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
             return MP_OBJ_FROM_PTR(tuple);
          }
         if (timeout <= 0) {
