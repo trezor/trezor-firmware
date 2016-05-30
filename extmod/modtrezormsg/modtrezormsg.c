@@ -59,9 +59,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
        mp_obj_t *attr;
        mp_obj_tuple_get(iface[i], &attr_cnt, &attr);
        assert(attr_cnt == 2);
-       uint8_t ep = mp_obj_get_int(attr[0]);
-       uint16_t up = mp_obj_get_int(attr[1]);
-       printf("iface %lu: ep=%d up=%04x\n", i, ep, up);
+       uint8_t endpoint = mp_obj_get_int(attr[0]);
+       uint16_t usage_page = mp_obj_get_int(attr[1]);
+       printf("iface %d: ep=%d up=%04x\n", (uint16_t)i, endpoint, usage_page);
     }
     return mp_const_none;
 }
