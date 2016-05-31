@@ -48,6 +48,10 @@ Syntax used below is a valid Python function declaration with type hints defined
 
 @extmod/modtrezorcrypto/modtrezorcrypto-sha3-512.h
 
+####trezor.crypto.ssss
+
+@extmod/modtrezorcrypto/modtrezorcrypto-ssss.h
+
 ###trezor.crypto.hmac
 
 @src/trezor/crypto/hmac.py

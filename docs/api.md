@@ -233,6 +233,21 @@ def Sha3_512.digest(self) -> bytes
 Returns the digest of hashed data.
 
 
+####trezor.crypto.ssss
+
+``` python
+def trezor.crypto.ssss.split(m: int, n: int, secret: bytes) -> tuple
+```
+
+Split secret to (M of N) shares using Shamir's Secret Sharing Scheme
+
+``` python
+def trezor.crypto.ssss.combine(shares: tuple) -> bytes
+```
+
+Combine M shares of Shamir's Secret Sharing Scheme into secret
+
+
 ###trezor.crypto.hmac
 
 ``` python
@@ -257,7 +272,13 @@ Returns the digest of processed data.
 ##trezor.msg
 
 ``` python
-def trezor.msg.send(message) -> int
+def trezor.msg.setup(ifaces: list) -> None
+```
+
+Configures USB interfaces with a list of tuples (interface_number, usage_page)
+
+``` python
+def trezor.msg.send(iface: int, message: bytes) -> int
 ```
 
 Sends message using USB HID (device) or UDP (emulator).
@@ -286,6 +307,9 @@ def trezor.ui.blend(ca: int, cb: int, t: float) -> int
 ```
 ``` python
 def trezor.ui.animate_pulse(func, ca, cb, speed=200000, delay=30000)
+```
+``` python
+def trezor.ui.rotate_coords(pos: tuple) -> tuple
 ```
 
 ###trezor.ui.display

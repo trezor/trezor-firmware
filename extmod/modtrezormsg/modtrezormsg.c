@@ -38,7 +38,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 
 /// def trezor.msg.setup(ifaces: list) -> None
 ///
-/// Setups USB interfaces with a list of tuples
+/// Configures USB interfaces with a list of tuples (interface_number, usage_page)
 ///
 STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
     mp_uint_t iface_cnt;
