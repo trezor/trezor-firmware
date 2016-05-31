@@ -1,11 +1,17 @@
 from trezor.dispatcher import register
-from trezor.messages.Initialize import Initialize
+from trezor.utils import unimport_func
 
 
-def dispatch(message):
+@unimport_func
+def dispatch_Initialize(mtype, mbuf):
+    from trezor.messages.Initialize import Initialize
+
+    message = Initialize.loads(mbuf)
+
     from .layout_homescreen import layout_homescreen
     return layout_homescreen(message)
 
 
 def boot():
-    register(Initialize, dispatch)
+    Initialize = 0
+    register(Initialize, dispatch_Initialize)

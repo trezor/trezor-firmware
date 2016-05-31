@@ -5,16 +5,15 @@ from . import layout
 message_handlers = {}
 
 
-def register(message_type, handler):
-    message_handlers[message_type] = handler
+def register(mtype, handler):
+    message_handlers[mtype] = handler
 
 
-def unregister(message_type):
-    del message_handlers[message_type]
+def unregister(mtype):
+    del message_handlers[mtype]
 
 
 def dispatch():
-    mtypes = message_handlers.keys()
-    message = yield from wire.read_msg(*mtypes)
-    handler = message_handlers[message.message_type]
-    layout.change(handler(message))
+    mtype, mbuf = yield from wire.read_wire_msg()
+    handler = message_handlers[mtype]
+    layout.change(handler(mtype, mbuf))
