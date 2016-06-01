@@ -4,7 +4,7 @@ from __future__ import print_function
 '''
 Use TREZOR as a hardware key for opening EncFS filesystem!
 
-Demo usage:
+Usage:
 
 encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
 '''
@@ -72,6 +72,12 @@ def choose_device(devices):
         raise Exception("Invalid choice, exiting...")
 
 def main():
+
+    if not 'encfs_root' in os.environ:
+        sys.stderr.write('\nThis is not a standalone script and is not meant to be run independently.\n')
+        sys.stderr.write('\nUsage: encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt\n')
+        sys.exit(1)
+
     devices = wait_for_devices()
     transport = choose_device(devices)
     client = TrezorClient(transport)
