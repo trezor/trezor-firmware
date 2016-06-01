@@ -1,4 +1,6 @@
-from . import button
+from .button import Button, BTN_CLICKED
+from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
+from .button import CANCEL_BUTTON, CANCEL_BUTTON_ACTIVE
 from trezor import loop
 
 
@@ -18,13 +20,13 @@ class PinDialog():
 
     def __init__(self, pin=''):
         self.pin = pin
-        self.confirm_button = button.Button((0, 240 - 60, 120, 60), 'Confirm',
-                                            normal_style=button.CONFIRM_BUTTON,
-                                            active_style=button.CONFIRM_BUTTON_ACTIVE)
-        self.cancel_button = button.Button((120, 240 - 60, 120, 60), 'Cancel',
-                                           normal_style=button.CANCEL_BUTTON,
-                                           active_style=button.CANCEL_BUTTON_ACTIVE)
-        self.pin_buttons = [button.Button(digit_area(dig), str(dig))
+        self.confirm_button = Button((0, 240 - 60, 120, 60), 'Confirm',
+                                     normal_style=CONFIRM_BUTTON,
+                                     active_style=CONFIRM_BUTTON_ACTIVE)
+        self.cancel_button = Button((120, 240 - 60, 120, 60), 'Cancel',
+                                    normal_style=CANCEL_BUTTON,
+                                    active_style=CANCEL_BUTTON_ACTIVE)
+        self.pin_buttons = [Button(digit_area(dig), str(dig))
                             for dig in range(1, 10)]
 
     def render(self):
@@ -35,19 +37,17 @@ class PinDialog():
 
     def send(self, event, pos):
         for btn in self.pin_buttons:
-            if btn.send(event, pos) is button.BTN_CLICKED:
+            if btn.send(event, pos) == BTN_CLICKED:
                 self.pin += btn.text
-        if self.confirm_button.send(event, pos) is button.BTN_CLICKED:
+        if self.confirm_button.send(event, pos) == BTN_CLICKED:
             return PIN_CONFIRMED
-        if self.cancel_button.send(event, pos) is button.BTN_CLICKED:
+        if self.cancel_button.send(event, pos) == BTN_CLICKED:
             return PIN_CANCELLED
 
-    def wait_for_result(self):
+    def wait(self):
         while True:
             self.render()
-            event, *pos = yield loop.Select(loop.TOUCH_START,
-                                            loop.TOUCH_MOVE,
-                                            loop.TOUCH_END)
+            event, *pos = yield loop.Select(loop.TOUCH)
             result = self.send(event, pos)
             if result is not None:
                 return result

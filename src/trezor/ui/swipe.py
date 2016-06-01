@@ -29,11 +29,11 @@ class Swipe():
         if not self.absolute:
             pos = rotate_coords(pos)
 
-        if event is loop.TOUCH_START and in_area(pos, self.area):
+        if event == loop.TOUCH_START and in_area(pos, self.area):
             self.start_time = utime.time()
             self.start_pos = pos
 
-        elif event is loop.TOUCH_END and self.start_pos is not None:
+        elif event == loop.TOUCH_END and self.start_pos is not None:
             self.end_time = utime.time()
             self.end_pos = pos
             td = self.end_time - self.start_time

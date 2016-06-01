@@ -78,17 +78,17 @@ class Button():
     def send(self, event, pos):
         if not self.absolute:
             pos = rotate_coords(pos)
-        if event is loop.TOUCH_START:
+        if event == loop.TOUCH_START:
             if in_area(pos, self.area):
                 self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
-        elif event is loop.TOUCH_MOVE and self.state & BTN_STARTED:
+        elif event == loop.TOUCH_MOVE and self.state & BTN_STARTED:
             if in_area(pos, self.area):
                 if not self.state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
             else:
                 if self.state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY
-        elif event is loop.TOUCH_END and self.state & BTN_STARTED:
+        elif event == loop.TOUCH_END and self.state & BTN_STARTED:
             self.state = BTN_DIRTY
             if in_area(pos, self.area):
                 return BTN_CLICKED
