@@ -29,7 +29,7 @@ def layout_homescreen(initialize_msg=None):
         features.device_id = 'DEADBEEF'
         features.coins = []
         features.imported = False
-        features.initialized = True
+        features.initialized = False
         features.label = 'My TREZOR'
         features.major_version = 2
         features.minor_version = 0
@@ -39,7 +39,7 @@ def layout_homescreen(initialize_msg=None):
         features.passphrase_cached = False
         features.passphrase_protection = False
         features.vendor = 'bitcointrezor.com'
-        wire.write_msg(features)
+        wire.write(features)
     yield loop.Wait([dispatcher.dispatch(),
                      swipe_to_rotate(),
                      animate_logo()])

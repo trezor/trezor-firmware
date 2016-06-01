@@ -39,6 +39,10 @@ NORMAL = const(1)
 BOLD   = const(2)
 
 
+def clear(color=BLACK):
+    display.bar(0, 0, 240, 240, color)
+
+
 def in_area(pos: tuple, area: tuple) -> bool:
     x, y = pos
     ax, ay, aw, ah = area

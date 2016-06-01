@@ -69,7 +69,7 @@ def write_wire_msg(mtype, mbuf):
         data = rep[1:]
 
 
-def read_msg(*types):
+def read(*types):
     mtype, mbuf = yield from read_wire_msg()
     for t in types:
         if t.wire_type == mtype:
@@ -78,13 +78,13 @@ def read_msg(*types):
         raise Exception('Unexpected message')
 
 
-def write_msg(m):
+def write(m):
     mbuf = m.dumps()
     mtype = m.message_type.wire_type
     write_wire_msg(mtype, mbuf)
 
 
 def call(req, *types):
-    write_msg(req)
-    res = yield from read_msg(*types)
+    write(req)
+    res = yield from read(*types)
     return res

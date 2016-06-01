@@ -2,11 +2,11 @@ from trezor import loop
 from trezor import ui
 from trezor import msg
 from trezor.ui.pin import PinDialog, PIN_CONFIRMED, PIN_CANCELLED
-from trezor.utils import unimport_func
+from trezor.utils import unimport_gen
 from trezor.res import loadres
 
 
-@unimport_func
+@unimport_gen
 def layout_tap_to_confirm(address, amount, currency):
 
     # ui.display.bar(0, 0, 240, 40, ui.GREEN)

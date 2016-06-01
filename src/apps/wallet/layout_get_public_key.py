@@ -1,7 +1,6 @@
 from trezor import wire
 from trezor import ui
 from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
-from trezor.ui.pin import PinDialog
 from trezor.utils import unimport_gen
 
 
