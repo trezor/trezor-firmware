@@ -117,9 +117,9 @@ class MessageType:
         self.__flags[tag] = flags
         return self # Allow add_field chaining.
 
-    def __call__(self):
+    def __call__(self, **fields):
         # Creates an instance of this message type.
-        return Message(self)
+        return Message(self, **fields)
 
     def __has_flag(self, tag, flag, mask):
         # Checks whether the field with the specified tag has the specified flag.
@@ -197,9 +197,10 @@ class MessageType:
 class Message:
     # Represents a message instance.
 
-    def __init__(self, message_type):
+    def __init__(self, message_type, **fields):
         # Initializes a new instance of the specified message type.
         self.message_type = message_type
+        self.__dict__.update(fields)
 
     def dump(self, fp):
         # Dumps the message into a write-like object.
