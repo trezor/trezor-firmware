@@ -1,3 +1,4 @@
+#include <string.h>
 #include "rand.h"
 
 #ifdef UNIX
@@ -53,14 +54,14 @@ void random_buffer(uint8_t *buf, size_t len)
 #endif
 }
 
-void random_permute(char *str, size_t len)
+void random_permute(void *buf, size_t size, size_t count)
 {
-	int i, j;
-	char t;
-	for (i = len - 1; i >= 1; i--) {
-		j = random_uniform(i + 1);
-		t = str[j];
-		str[j] = str[i];
-		str[i] = t;
+	uint8_t *d = (uint8_t *)buf;
+	uint8_t t[size];
+	for (size_t i = count - 1; i >= 1; i--) {
+		size_t j = random_uniform(i + 1);
+		memcpy(t, d + j * size, size);
+		memcpy(d + j * size, d + i * size, size);
+		memcpy(d + i * size, t, size);
 	}
 }

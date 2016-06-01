@@ -233,6 +233,27 @@ def Sha3_512.digest(self) -> bytes
 Returns the digest of hashed data.
 
 
+####trezor.crypto.random
+
+``` python
+def trezor.crypto.random.uniform(n: int) -> int
+```
+
+Compute uniform random number from interval 0 ... n - 1
+
+``` python
+def trezor.crypto.random.bytes(len: int) -> bytes
+```
+
+Generate random bytes sequence of length len
+
+``` python
+def trezor.crypto.random.shuffle(data: list) -> None
+```
+
+Shuffles items of given list (in-place)
+
+
 ####trezor.crypto.ssss
 
 ``` python
