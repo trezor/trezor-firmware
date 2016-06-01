@@ -1,7 +1,6 @@
 from trezor import loop
 from trezor import ui
 from trezor import msg
-from trezor.ui.pin import PinDialog, PIN_CONFIRMED, PIN_CANCELLED
 from trezor.utils import unimport_gen
 from trezor.res import loadres
 
@@ -45,7 +44,7 @@ def layout_tap_to_confirm(address, amount, currency):
     from trezor.messages.PublicKey import PublicKey
     from trezor.messages.HDNodeType import HDNodeType
 
-    m = yield from msg.read_msg(Initialize)
+    m = yield from msg.read(Initialize)
     print('Initialize')
 
     m = Features()
