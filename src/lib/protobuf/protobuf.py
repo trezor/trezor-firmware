@@ -200,7 +200,10 @@ class Message:
     def __init__(self, message_type, **fields):
         # Initializes a new instance of the specified message type.
         self.message_type = message_type
-        self.__dict__.update(fields)
+        # In micropython, we cannot use self.__dict__.update(fields),
+        # iterate fields and assign them directly.
+        for key in fields:
+            setattr(self, key, fields[key])
 
     def dump(self, fp):
         # Dumps the message into a write-like object.
