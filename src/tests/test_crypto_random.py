@@ -16,8 +16,7 @@ class TestCryptoRandom(unittest.TestCase):
             r = random.uniform(15)
             c[r] += 1
         for i in range(15):
-            self.assertTrue(c[r] > 900)
-            self.assertTrue(c[r] < 1100)
+            self.assertAlmostEqual(c[r], 1000, delta=150)
 
     def test_bytes_length(self):
         for l in range(1024 + 1):
@@ -33,9 +32,7 @@ class TestCryptoRandom(unittest.TestCase):
             for h in hexlify(b):
                 c[chr(h)] += 1
             for h in '0123456789abcdef':
-                self.assertTrue(c[h] > 900)
-                self.assertTrue(c[h] < 1100)
-
+                self.assertAlmostEqual(c[h], 1000, delta=150)
 
     def test_shuffle(self):
         for l in range(256 + 1):

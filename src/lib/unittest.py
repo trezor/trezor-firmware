@@ -114,7 +114,6 @@ class TestCase:
     def assertRaises(self, exc, func=None, *args, **kwargs):
         if func is None:
             return AssertRaisesContext(exc)
-
         try:
             func(*args, **kwargs)
             assert False, "%r not raised" % exc
@@ -122,7 +121,6 @@ class TestCase:
             if isinstance(e, exc):
                 return
             raise
-
 
 
 def skip(msg):
@@ -141,19 +139,25 @@ def skipUnless(cond, msg):
 
 
 class TestSuite:
+
     def __init__(self):
         self.tests = []
+
     def addTest(self, cls):
         self.tests.append(cls)
 
+
 class TestRunner:
+
     def run(self, suite):
         res = TestResult()
         for c in suite.tests:
             run_class(c, res)
         return res
 
+
 class TestResult:
+
     def __init__(self):
         self.errorsNum = 0
         self.failuresNum = 0
@@ -163,7 +167,7 @@ class TestResult:
     def wasSuccessful(self):
         return self.errorsNum == 0 and self.failuresNum == 0
 
-# TODO: Uncompliant
+
 def run_class(c, test_result):
     o = c()
     set_up = getattr(o, "setUp", lambda: None)
@@ -171,7 +175,7 @@ def run_class(c, test_result):
     print('class', c.__qualname__)
     for name in dir(o):
         if name.startswith("test"):
-            print(name, end=' ...')
+            print(' ', name, end=' ...')
             m = getattr(o, name)
             try:
                 set_up()
