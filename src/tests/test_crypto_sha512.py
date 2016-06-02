@@ -2,7 +2,6 @@ import sys
 sys.path.append('..')
 sys.path.append('../lib')
 import unittest
-import trezor.utils
 from ubinascii import unhexlify
 
 from trezor.crypto import hashlib
