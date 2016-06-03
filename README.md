@@ -7,7 +7,7 @@
 ###Linux
 
 ```
-sudo apt-get install libsdl2-dev:i386 libffi-dev:i386
+sudo apt-get install libsdl2-dev:i386
 make build_unix
 ```
 
