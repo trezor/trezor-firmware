@@ -3,7 +3,7 @@ try:
 except ImportError:
     resdata = None
 
-def loadres(name):
+def load(name):
     if resdata and name in resdata:
         return resdata[name]
     with open(name, 'rb') as f:

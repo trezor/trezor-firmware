@@ -2,7 +2,7 @@ from trezor import loop
 from trezor import ui
 from trezor import msg
 from trezor.utils import unimport_gen
-from trezor.res import loadres
+from trezor import res
 
 
 @unimport_gen
@@ -22,7 +22,7 @@ def layout_tap_to_confirm(address, amount, currency):
 
     # def func(fg):
     #     ui.display.text(68, 212, 'TAP TO CONFIRM', style, fg, bg)
-    #     ui.display.icon(3, 170, loadres('apps/playground/res/tap_64.toig'), bg, fg)
+    #     ui.display.icon(3, 170, res.load('apps/playground/res/tap_64.toig'), bg, fg)
 
     # animation = ui.animate_pulse(func, ui.BLACK, ui.GREY, speed=200000)
 

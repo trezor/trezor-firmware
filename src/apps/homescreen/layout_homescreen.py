@@ -1,9 +1,9 @@
 from trezor import ui
 from trezor.ui.swipe import Swipe
 from trezor.utils import unimport_gen
-from trezor.res import loadres
 from trezor import dispatcher
 from trezor import loop
+from trezor import res
 from trezor import wire
 
 
@@ -15,7 +15,7 @@ def swipe_to_rotate():
 
 def animate_logo():
     def func(foreground):
-        ui.display.icon(0, 0, loadres('apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
+        ui.display.icon(0, 0, res.load('apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
     yield from ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
 
 
