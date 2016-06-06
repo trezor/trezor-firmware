@@ -1,6 +1,3 @@
-import ustruct
-
-from trezor import loop
 from TrezorMsg import Msg
 
 _msg = Msg()

@@ -75,7 +75,15 @@ class TestWire(unittest.TestCase):
         content = bytes([x for x in range(0, 256)])
         message = b'##\xab\xcd\x00\x00\x01\00' + content
         reports = [b'\x3f' + ch + '\x00' * (63 - len(ch)) for ch in chunks(message, 63)]
-        write_wire_msg(int('0xabcd'), content)
+
+        writer = write_wire_msg(int('0xabcd'), content)
+        res = 1  # Something not None
+        try:
+            while True:
+                writer.send(None)
+        except StopIteration as e:
+            res = e.value
+        self.assertEqual(res, None)
         self.assertEqual(sent_reps, reports)
 
 

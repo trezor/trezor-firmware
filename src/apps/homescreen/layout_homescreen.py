@@ -39,7 +39,7 @@ def layout_homescreen(initialize_msg=None):
         features.passphrase_cached = False
         features.passphrase_protection = False
         features.vendor = 'bitcointrezor.com'
-        wire.write(features)
+        yield from wire.write(features)
     yield loop.Wait([dispatcher.dispatch(),
                      swipe_to_rotate(),
                      animate_logo()])

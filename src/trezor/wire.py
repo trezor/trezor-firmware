@@ -18,6 +18,7 @@ def read_report():
 def write_report(rep):
     size = msg.send(IFACE, rep)
     assert size == REPORT_LEN, 'HID write failed'
+    yield  # write_report is a generator for the sake of consistency
 
 
 def read_wire_msg():
@@ -64,7 +65,7 @@ def write_wire_msg(mtype, mbuf):
         while i < len(data):
             data[i] = 0
             i += 1
-        write_report(rep)
+        yield from write_report(rep)
         mbuf = mbuf[n:]
         data = rep[1:]
 
@@ -81,10 +82,10 @@ def read(*types):
 def write(m):
     mbuf = m.dumps()
     mtype = m.message_type.wire_type
-    write_wire_msg(mtype, mbuf)
+    yield from write_wire_msg(mtype, mbuf)
 
 
 def call(req, *types):
-    write(req)
+    yield from write(req)
     res = yield from read(*types)
     return res

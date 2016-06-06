@@ -12,6 +12,18 @@ def dispatch_LoadDevice(mtype, mbuf):
     return layout_load_device(message)
 
 
+@unimport_func
+def dispatch_WipeDevice(mtype, mbuf):
+    from trezor.messages.WipeDevice import WipeDevice
+
+    message = WipeDevice.loads(mbuf)
+
+    from .layout_wipe_device import layout_wipe_device
+    return layout_wipe_device(message)
+
+
 def boot():
     LoadDevice = 13
     register(LoadDevice, dispatch_LoadDevice)
+    WipeDevice = 5
+    register(WipeDevice, dispatch_WipeDevice)
