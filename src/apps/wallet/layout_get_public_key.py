@@ -1,11 +1,11 @@
-from trezor import wire
+from trezor import wire, ui
 from trezor.utils import unimport_gen
 from trezor.workflows.request_pin import request_pin
 
 
 @unimport_gen
 def layout_get_public_key(message):
-
+    ui.clear();
     pin = yield from request_pin()
 
     if pin is not None:

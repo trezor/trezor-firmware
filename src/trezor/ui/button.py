@@ -1,6 +1,5 @@
 from . import display, in_area, rotate_coords
-from trezor import ui
-from trezor import loop
+from trezor import ui, loop
 
 
 DEFAULT_BUTTON = {

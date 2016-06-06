@@ -1,10 +1,6 @@
-from trezor import ui
+from trezor import ui, dispatcher, loop, res, wire
 from trezor.ui.swipe import Swipe
 from trezor.utils import unimport_gen
-from trezor import dispatcher
-from trezor import loop
-from trezor import res
-from trezor import wire
 
 
 def swipe_to_rotate():

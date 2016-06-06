@@ -1,6 +1,5 @@
 from . import display
-from trezor import ui
-from trezor import loop
+from trezor import ui, loop
 from trezor.crypto import random
 from .button import Button, BTN_CLICKED
 from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
@@ -29,7 +28,7 @@ class PinMatrix():
                         for i, d in enumerate(generate_digits())]
 
     def render(self):
-
+        
         # input line with placeholder (x, y, text, style, fg-c, bg-c)
         display.text_center(120, 20, 'Enter PIN', ui.BOLD, ui.GREY, ui.BLACK)
 
