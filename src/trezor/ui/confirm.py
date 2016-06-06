@@ -12,10 +12,10 @@ class ConfirmDialog():
 
     def __init__(self, content=None, confirm='Confirm', cancel='Cancel'):
         self.content = content
-        self.confirm = Button((0, 240 - 60, 120, 60), confirm,
+        self.confirm = Button((0, 240 - 48, 119, 48), confirm,
                               normal_style=CONFIRM_BUTTON,
                               active_style=CONFIRM_BUTTON_ACTIVE)
-        self.cancel = Button((120, 240 - 60, 120, 60), cancel,
+        self.cancel = Button((121, 240 - 48, 119, 48), cancel,
                              normal_style=CANCEL_BUTTON,
                              active_style=CANCEL_BUTTON_ACTIVE)
 

@@ -7,7 +7,7 @@ DEFAULT_BUTTON = {
     'bg-color': ui.BLACK,
     'fg-color': ui.WHITE,
     'text-style': ui.NORMAL,
-    'border-color': ui.blend(ui.BLACK, ui.WHITE, 0.1),
+    'border-color': ui.BLACK,
 }
 DEFAULT_BUTTON_ACTIVE = {
     'bg-color': ui.GREY,
@@ -20,7 +20,7 @@ CANCEL_BUTTON = {
     'bg-color': ui.blend(ui.BLACK, ui.RED, 0.3),
     'fg-color': ui.RED,
     'text-style': ui.NORMAL,
-    'border-color': ui.blend(ui.BLACK, ui.RED, 0.6),
+    'border-color': ui.blend(ui.BLACK, ui.RED, 0.3),
 }
 CANCEL_BUTTON_ACTIVE = {
     'bg-color': ui.RED,
@@ -33,7 +33,7 @@ CONFIRM_BUTTON = {
     'bg-color': ui.blend(ui.BLACK, ui.GREEN, 0.3),
     'fg-color': ui.GREEN,
     'text-style': ui.NORMAL,
-    'border-color': ui.blend(ui.BLACK, ui.GREEN, 0.6),
+    'border-color': ui.blend(ui.BLACK, ui.GREEN, 0.3),
 }
 CONFIRM_BUTTON_ACTIVE = {
     'bg-color': ui.GREEN,
