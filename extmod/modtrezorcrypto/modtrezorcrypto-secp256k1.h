@@ -22,9 +22,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_make_new(const mp_obj_type_t *type, s
 }
 
 /// def trezor.crypto.curve.secp256k1.publickey(secret_key: bytes, compressed: bool=True) -> bytes
-///
-/// Computes public key from secret key.
-///
+///     '''
+///     Computes public key from secret key.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_publickey(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t sk;
     mp_get_buffer_raise(args[1], &sk, MP_BUFFER_READ);
@@ -45,9 +45,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_publickey(size_t n_args, const mp_obj
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Secp256k1_publickey_obj, 2, 3, mod_TrezorCrypto_Secp256k1_publickey);
 
 /// def trezor.crypto.curve.secp256k1.sign(secret_key: bytes, message: bytes) -> bytes
-///
-/// Uses secret key to produce the signature of message.
-///
+///     '''
+///     Uses secret key to produce the signature of message.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_sign(mp_obj_t self, mp_obj_t secret_key, mp_obj_t message) {
     mp_buffer_info_t sk, msg;
     mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
@@ -67,10 +67,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_sign(mp_obj_t self, mp_obj_t secret_k
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Secp256k1_sign_obj, mod_TrezorCrypto_Secp256k1_sign);
 
 /// def trezor.crypto.curve.secp256k1.verify(public_key: bytes, signature: bytes, message: bytes) -> bool
-///
-/// Uses public key to verify the signature of the message
-/// Returns True on success.
-///
+///     '''
+///     Uses public key to verify the signature of the message
+///     Returns True on success.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_verify(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t pk, sig, msg;
     mp_get_buffer_raise(args[1], &pk, MP_BUFFER_READ);

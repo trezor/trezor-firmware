@@ -21,9 +21,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_make_new(const mp_obj_type_t *type, size_
 }
 
 /// def trezor.crypto.bip39.generate(strength: int) -> str
-///
-/// Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits)
-///
+///     '''
+///     Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits)
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_generate(mp_obj_t self, mp_obj_t strength) {
     int bits = mp_obj_get_int(strength);
     if (bits % 32 || bits < 128 || bits > 256) {
@@ -38,9 +38,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_generate(mp_obj_t self, mp_obj_t strength
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_generate_obj, mod_TrezorCrypto_Bip39_generate);
 
 /// def trezor.crypto.bip39.from_data(data: bytes) -> str
-///
-/// Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes)
-///
+///     '''
+///     Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes)
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_from_data(mp_obj_t self, mp_obj_t data) {
     mp_buffer_info_t bin;
     mp_get_buffer_raise(data, &bin, MP_BUFFER_READ);
@@ -56,9 +56,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_from_data(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_from_data_obj, mod_TrezorCrypto_Bip39_from_data);
 
 /// def trezor.crypto.bip39.check(mnemonic: str) -> bool
-///
-/// Check whether given mnemonic is valid
-///
+///     '''
+///     Check whether given mnemonic is valid
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_check(mp_obj_t self, mp_obj_t mnemonic) {
     mp_buffer_info_t text;
     mp_get_buffer_raise(mnemonic, &text, MP_BUFFER_READ);
@@ -67,9 +67,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_check(mp_obj_t self, mp_obj_t mnemonic) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_check_obj, mod_TrezorCrypto_Bip39_check);
 
 /// def trezor.crypto.bip39.seed(mnemonic: str, passphrase: str) -> bytes
-///
-/// Generate seed from mnemonic and passphrase
-///
+///     '''
+///     Generate seed from mnemonic and passphrase
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_seed(mp_obj_t self, mp_obj_t mnemonic, mp_obj_t passphrase) {
     mp_buffer_info_t mnemo;
     mp_buffer_info_t phrase;

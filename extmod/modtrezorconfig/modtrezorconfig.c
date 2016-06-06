@@ -27,11 +27,20 @@ STATIC mp_obj_t mod_TrezorConfig_Config_make_new(const mp_obj_type_t *type, size
     return MP_OBJ_FROM_PTR(o);
 }
 
+/// def trezor.config.get(app: int, key: int) -> bytes
+///     '''
+///     Gets a value of given key for given app (or None if not set).
+///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_get(mp_obj_t self, mp_obj_t app, mp_obj_t key) {
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorConfig_Config_get_obj, mod_TrezorConfig_Config_get);
 
+/// def trezor.config.set(app: int, key: int) -> bool
+///     '''
+///     Sets a value of given key for given app.
+///     Returns True on success.
+///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_set(size_t n_args, const mp_obj_t *args) {
     return mp_const_none;
 }

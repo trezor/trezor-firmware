@@ -28,9 +28,9 @@ STATIC mp_obj_t mod_TrezorUtils_Utils_make_new(const mp_obj_type_t *type, size_t
 }
 
 /// def trezor.utils.memaccess(address: int, length: int) -> bytes
-///
-/// Creates a bytes object that can be used to access certain memory location.
-///
+///     '''
+///     Creates a bytes object that can be used to access certain memory location.
+///     '''
 STATIC mp_obj_t mod_TrezorUtils_Utils_memaccess(mp_obj_t self, mp_obj_t address, mp_obj_t length) {
     uint32_t addr = mp_obj_get_int(address);
     uint32_t len = mp_obj_get_int(length);

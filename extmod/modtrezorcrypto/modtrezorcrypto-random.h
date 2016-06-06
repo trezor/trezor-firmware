@@ -21,9 +21,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_make_new(const mp_obj_type_t *type, size
 }
 
 /// def trezor.crypto.random.uniform(n: int) -> int
-///
-/// Compute uniform random number from interval 0 ... n - 1
-///
+///     '''
+///     Compute uniform random number from interval 0 ... n - 1
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_uniform(mp_obj_t self, mp_obj_t n) {
     uint32_t nn = mp_obj_get_int(n);
     if (nn == 0) {
@@ -34,9 +34,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_uniform(mp_obj_t self, mp_obj_t n) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_uniform_obj, mod_TrezorCrypto_Random_uniform);
 
 /// def trezor.crypto.random.bytes(len: int) -> bytes
-///
-/// Generate random bytes sequence of length len
-///
+///     '''
+///     Generate random bytes sequence of length len
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_bytes(mp_obj_t self, mp_obj_t len) {
     uint32_t l = mp_obj_get_int(len);
     vstr_t vstr;
@@ -47,9 +47,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_bytes(mp_obj_t self, mp_obj_t len) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_bytes_obj, mod_TrezorCrypto_Random_bytes);
 
 /// def trezor.crypto.random.shuffle(data: list) -> None
-///
-/// Shuffles items of given list (in-place)
-///
+///     '''
+///     Shuffles items of given list (in-place)
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_shuffle(mp_obj_t self, mp_obj_t data) {
     mp_uint_t item_cnt;
     mp_obj_t *items;

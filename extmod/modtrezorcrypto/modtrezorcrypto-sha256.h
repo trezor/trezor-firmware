@@ -20,9 +20,9 @@ typedef struct _mp_obj_Sha256_t {
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data);
 
 /// def trezor.crypto.hashlib.sha256(data: bytes=None) -> Sha256
-///
-/// Creates a hash context object.
-///
+///     '''
+///     Creates a hash context object.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha256_t *o = m_new_obj(mp_obj_Sha256_t);
@@ -36,9 +36,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_make_new(const mp_obj_type_t *type, size
 }
 
 /// def Sha256.update(self, data: bytes) -> None
-///
-/// Update the hash context with hashed data.
-///
+///     '''
+///     Update the hash context with hashed data.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t msg;
@@ -49,9 +49,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_update_obj, mod_TrezorCrypto_Sha256_update);
 
 /// def Sha256.digest(self) -> bytes
-///
-/// Returns the digest of hashed data.
-///
+///     '''
+///     Returns the digest of hashed data.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Sha256_digest(mp_obj_t self) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
