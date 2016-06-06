@@ -7,17 +7,6 @@ from trezor import loop
 
 display = Display()
 
-# workaround for missing display.backlight in stmhal
-def backlight(val: int):
-    import sys
-    if sys.platform == 'trezor':
-        import pyb
-        timer = pyb.Timer(1, freq=1000)
-        val = max(0, min(100, val * 100 // 255))
-        timer.channel(1, pyb.Timer.PWM_INVERTED, pin=pyb.Pin.board.LCD_PWM, pulse_width_percent=val)
-    else:
-        display.backlight(val)
-
 
 def rgbcolor(r: int, g: int, b: int) -> int:
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)

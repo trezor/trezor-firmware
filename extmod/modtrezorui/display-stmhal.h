@@ -7,13 +7,19 @@
 
 #include STM32_HAL_H
 
+#define LED_PWM_TIM_PERIOD (10000)
+extern uint32_t timer_get_source_freq(uint32_t tim_id);
+
 #define CMD(X)  (*((__IO uint8_t *)((uint32_t)(0x60000000))) = (X))
 #define DATA(X) (*((__IO uint8_t *)((uint32_t)(0x60000000 | 0x10000))) = (X))
 
 void DATAS(const void *bytes, int len);
 
+static TIM_HandleTypeDef TIM1_Handle;
+
 void display_sram_init(void) {
     __GPIOE_CLK_ENABLE();
+    __TIM1_CLK_ENABLE();
     __FSMC_CLK_ENABLE();
 
 /*
@@ -29,8 +35,13 @@ void display_sram_init(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
 
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStructure.Pull      = GPIO_PULLUP;
+    GPIO_InitStructure.Pull      = GPIO_NOPULL;
     GPIO_InitStructure.Speed     = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
+    //                             LCD_PWM/PB13
+    GPIO_InitStructure.Pin       = GPIO_PIN_13;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+
     GPIO_InitStructure.Alternate = GPIO_AF12_FSMC;
     //                             LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4   LCD_WR/PD5
     GPIO_InitStructure.Pin       = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
@@ -41,6 +52,28 @@ void display_sram_init(void) {
     //                             LCD_D4/PE7   LCD_D5/PE8   LCD_D6/PE9   LCD_D7/PE10
     GPIO_InitStructure.Pin       = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
     HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+
+    // enable PWM timer
+    TIM1_Handle.Instance = TIM1;
+    TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
+    TIM1_Handle.Init.Prescaler = timer_get_source_freq(1) / 1000000 - 1; // TIM runs at 1MHz
+    TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+    TIM1_Handle.Init.RepetitionCounter = 0;
+    HAL_TIM_PWM_Init(&TIM1_Handle);
+
+    TIM_OC_InitTypeDef TIM_OC_InitStructure;
+    TIM_OC_InitStructure.Pulse = 0;
+    TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM2;
+    TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
+    TIM_OC_InitStructure.OCFastMode = TIM_OCFAST_DISABLE;
+    TIM_OC_InitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+    TIM_OC_InitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
+    TIM_OC_InitStructure.OCNIdleState = TIM_OCNIDLESTATE_SET;
+    HAL_TIM_PWM_ConfigChannel(&TIM1_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&TIM1_Handle, TIM_CHANNEL_1);
+    HAL_TIMEx_PWMN_Start(&TIM1_Handle, TIM_CHANNEL_1);
 
     // timing values from:
     // http://ele-tech.com/html/it-is-developed-that-embedded-stm32-fsmc-interface-drives-tft-lcd-to-be-designed.html
@@ -173,5 +206,6 @@ int display_backlight(int val)
     if (val >= 0 && val <= 255) {
         BACKLIGHT = val;
     }
+    __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * BACKLIGHT / 255);
     return BACKLIGHT;
 }
