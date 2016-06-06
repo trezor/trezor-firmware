@@ -128,9 +128,9 @@ int display_orientation(int degrees)
 
 int display_backlight(int val)
 {
-    if (val >= 0 && val <= 255) {
+    if (BACKLIGHT != val && val >= 0 && val <= 255) {
         BACKLIGHT = val;
+        SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     }
-    SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     return BACKLIGHT;
 }

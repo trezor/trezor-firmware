@@ -203,9 +203,9 @@ void display_update(void) {
 
 int display_backlight(int val)
 {
-    if (val >= 0 && val <= 255) {
+    if (BACKLIGHT != val && val >= 0 && val <= 255) {
         BACKLIGHT = val;
+        __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * BACKLIGHT / 255);
     }
-    __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * BACKLIGHT / 255);
     return BACKLIGHT;
 }
