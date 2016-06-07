@@ -15,7 +15,7 @@
 #include "display.h"
 #include <string.h>
 
-static int BACKLIGHT = 0;
+static int BACKLIGHT = 255;
 static int ORIENTATION = 0;
 
 #if defined STM32_HAL_H

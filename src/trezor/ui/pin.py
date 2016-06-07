@@ -30,7 +30,7 @@ class PinMatrix():
     def render(self):
         
         # input line with placeholder (x, y, text, style, fg-c, bg-c)
-        display.text_center(120, 20, 'Enter PIN', ui.BOLD, ui.GREY, ui.BLACK)
+        display.text_center(120, 30, 'Enter PIN', ui.BOLD, ui.GREY, ui.BLACK)
 
         # vertical border bars (x, y, w, h, c)
         display.bar(79, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
