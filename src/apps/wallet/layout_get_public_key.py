@@ -5,7 +5,7 @@ from trezor.workflows.request_pin import request_pin
 
 @unimport_gen
 def layout_get_public_key(message):
-    ui.clear();
+    ui.clear()
     pin = yield from request_pin()
 
     if pin is not None:
