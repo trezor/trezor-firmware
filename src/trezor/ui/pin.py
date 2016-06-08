@@ -5,6 +5,7 @@ from .button import Button, BTN_CLICKED
 from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from .button import CANCEL_BUTTON, CANCEL_BUTTON_ACTIVE
 
+
 def digit_area(i):
     width = const(80)
     height = const(48)
@@ -24,7 +25,7 @@ class PinMatrix():
     def __init__(self, label='Enter PIN', pin=''):
         self.label = label
         self.pin = pin
-        self.clear_button = Button((240 - 48, 0, 48, 42), 'X')
+        self.clear_button = Button((240 - 35, 5, 30, 30), 'CLEAR')
         self.buttons = [Button(digit_area(i), str(d))
                         for i, d in enumerate(generate_digits())]
 
@@ -58,6 +59,7 @@ class PinMatrix():
         if self.clear_button.send(event, pos) == BTN_CLICKED:
             self.pin = ''
             self.label = 'Enter PIN'
+            display.bar(240 - 48, 0, 48, 42, ui.BLACK)
 
 
         for btn in self.buttons:

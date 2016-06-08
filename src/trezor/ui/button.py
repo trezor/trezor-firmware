@@ -1,5 +1,5 @@
 from . import display, in_area, rotate_coords
-from trezor import ui, loop
+from trezor import ui, loop, res
 
 
 DEFAULT_BUTTON = {
@@ -41,6 +41,19 @@ CONFIRM_BUTTON_ACTIVE = {
     'border-color': ui.GREEN,
 }
 
+CLEAR_BUTTON = {
+    'bg-color': ui.BLACK,
+    'fg-color': ui.WHITE,
+    'text-style': ui.NORMAL,
+    'border-color': ui.BLACK,    
+}
+CLEAR_BUTTON_ACTIVE = {
+    'bg-color': ui.BLACK,
+    'fg-color': ui.WHITE,
+    'text-style': ui.NORMAL,
+    'border-color': ui.BLACK,
+}
+
 BTN_CLICKED = const(1)
 
 BTN_STARTED = const(1)
@@ -68,10 +81,16 @@ class Button():
         ty = ay + ah // 2 + 8
         display.bar(ax, ay, aw, ah, style['border-color'])
         display.bar(ax + 1, ay + 1, aw - 2, ah - 2, style['bg-color'])
-        display.text_center(tx, ty, self.text,
-                            style['text-style'],
-                            style['fg-color'],
-                            style['bg-color'])
+        # How to do this smarter way?
+        if self.text == 'CLEAR':
+            ui.display.icon(ax, ay, res.load('trezor/res/close-button.toig'),
+                                ui.blend(ui.BLACK, ui.WHITE, 0.95),
+                                ui.BLACK)
+        else:
+            display.text_center(tx, ty, self.text,
+                                style['text-style'],
+                                style['fg-color'],
+                                style['bg-color'])
         self.state = state
 
     def send(self, event, pos):
