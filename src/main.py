@@ -22,7 +22,7 @@ trezor.ui.display.backlight(255)
 msg.setup([(1, 0xF53C), (2, 0xF1D0)])
 
 # Load default homescreen
-from apps.seed.layout_seed import layout_seed
+from apps.homescreen.layout_homescreen import layout_homescreen
 
 # Run main even loop and specify, which screen is default
-trezor.main.run(main_layout=layout_seed)
+trezor.main.run(main_layout=layout_homescreen)
