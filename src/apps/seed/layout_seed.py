@@ -20,6 +20,18 @@ def layout_seed(initialize_msg=None):
 	# header title
     ui.display.text(10, 30, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
 
+    ui.display.text(10, 60, '1.', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(20, 60, 'auto', ui.BOLD, ui.WHITE, ui.BLACK)
+
+    ui.display.text(10, 90, '2.', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(20, 90, 'model', ui.BOLD, ui.WHITE, ui.BLACK)
+
+    ui.display.text(10, 120, '3.', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(20, 120, 'rifle', ui.BOLD, ui.WHITE, ui.BLACK)
+
+    ui.display.text(10, 150, '4.', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(20, 150, 'digital', ui.BOLD, ui.WHITE, ui.BLACK)
+
     yield loop.Wait([dispatcher.dispatch(),
                      swipe_to_rotate(),
                      animate_logo()])
