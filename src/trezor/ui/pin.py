@@ -1,9 +1,7 @@
-from . import display, clear
-from trezor import ui, loop
+from . import display
+from .button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
+from trezor import ui, res
 from trezor.crypto import random
-from .button import Button, BTN_CLICKED
-from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
-from .button import CANCEL_BUTTON, CANCEL_BUTTON_ACTIVE
 
 
 def digit_area(i):
@@ -25,13 +23,16 @@ class PinMatrix():
     def __init__(self, label='Enter PIN', pin=''):
         self.label = label
         self.pin = pin
-        self.clear_button = Button((240 - 35, 5, 30, 30), 'CLEAR')
-        self.buttons = [Button(digit_area(i), str(d))
-                        for i, d in enumerate(generate_digits())]
+        self.clear_button = Button((240 - 35, 5, 30, 30),
+                                   res.load('trezor/res/close-button.toig'),
+                                   normal_style=CLEAR_BUTTON,
+                                   active_style=CLEAR_BUTTON_ACTIVE)
+        self.pin_buttons = [Button(digit_area(i), str(d))
+                            for i, d in enumerate(generate_digits())]
 
     def render(self):
 
-        header = ''.join(['*' for _ in self.pin]) if self.pin else self.label
+        header = '*' * len(self.pin) if self.pin else self.label
 
         # clear canvas under input line
         display.bar(48, 0, 144, 48, ui.BLACK)
@@ -42,9 +43,11 @@ class PinMatrix():
         # render clear button
         if self.pin:
             self.clear_button.render()
+        else:
+            display.bar(240 - 48, 0, 48, 42, ui.BLACK)
 
         # pin matrix buttons
-        for btn in self.buttons:
+        for btn in self.pin_buttons:
             btn.render()
 
         # vertical border bars
@@ -58,10 +61,6 @@ class PinMatrix():
     def send(self, event, pos):
         if self.clear_button.send(event, pos) == BTN_CLICKED:
             self.pin = ''
-            self.label = 'Enter PIN'
-            display.bar(240 - 48, 0, 48, 42, ui.BLACK)
-
-
-        for btn in self.buttons:
+        for btn in self.pin_buttons:
             if btn.send(event, pos) == BTN_CLICKED:
-                self.pin += btn.text
+                self.pin += btn.content
