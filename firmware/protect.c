@@ -162,7 +162,7 @@ bool protectPin(bool use_cached)
 		if (wait == 1) {
 			secstrbuf[16] = 0;
 		}
-		layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
+		layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
 		// wait one second
 		usbDelay(800000);
 		wait--;
@@ -216,7 +216,7 @@ bool protectPassphrase(void)
 	usbTiny(1);
 	msg_write(MessageType_MessageType_PassphraseRequest, &resp);
 
-	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter your", "passphrase using", "the computer's", "keyboard.", NULL, NULL);
+	layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter your", "passphrase using", "the computer's", "keyboard.", NULL, NULL);
 
 	bool result;
 	for (;;) {

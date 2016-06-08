@@ -52,7 +52,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	data2hex(int_entropy + 24, 8, ent_str[3]);
 
 	if (display_random) {
-		layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Continue", NULL, "Internal entropy:", ent_str[0], ent_str[1], ent_str[2], ent_str[3], NULL);
+		layoutDialogSwipe(&bmp_icon_info, "Cancel", "Continue", NULL, "Internal entropy:", ent_str[0], ent_str[1], ent_str[2], ent_str[3], NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ResetDevice, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Reset cancelled");
 			layoutHome();
@@ -129,15 +129,15 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 			current_word_display[j + 1] = 0;
 			if (word_pos == (int)strength/32*3) { // last word
 				if (pass == 1) {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Finish", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, "Finish", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Again", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, "Again", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				}
 			} else {
 				if (pass == 1) {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, "Next", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
-					layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "Next", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, "Next", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				}
 			}
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {

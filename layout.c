@@ -22,33 +22,13 @@
 #include "layout.h"
 #include "oled.h"
 
-void layoutDialog(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
+void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
 {
 	int left = 0;
 	oledClear();
-	switch (icon) {
-		case DIALOG_NOICON:
-			break;
-		case DIALOG_ICON_ERROR:
-			oledDrawBitmap(0, 0, &bmp_icon_error);
-			left = 20;
-			break;
-		case DIALOG_ICON_INFO:
-			oledDrawBitmap(0, 0, &bmp_icon_info);
-			left = 20;
-			break;
-		case DIALOG_ICON_QUESTION:
-			oledDrawBitmap(0, 0, &bmp_icon_question);
-			left = 20;
-			break;
-		case DIALOG_ICON_WARNING:
-			oledDrawBitmap(0, 0, &bmp_icon_warning);
-			left = 20;
-			break;
-		case DIALOG_ICON_OK:
-			oledDrawBitmap(0, 0, &bmp_icon_ok);
-			left = 20;
-			break;
+	if (icon) {
+		oledDrawBitmap(0, 0, icon);
+		left = icon->width + 4;
 	}
 	if (line1) oledDrawString(left, 0 * 9, line1);
 	if (line2) oledDrawString(left, 1 * 9, line2);

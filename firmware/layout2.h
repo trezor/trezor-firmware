@@ -22,8 +22,9 @@
 
 #include "layout.h"
 #include "types.pb.h"
+#include "bitmaps.h"
 
-void layoutDialogSwipe(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6);
+void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6);
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
