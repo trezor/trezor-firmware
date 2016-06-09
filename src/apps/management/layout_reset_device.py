@@ -71,7 +71,7 @@ def layout_reset_device(m):
 
     def animate_arrow():
         def func(foreground):
-            ui.display.icon(105, 200, res.load('apps/seed/res/small-arrow.toig'), foreground, ui.BLACK)
+            ui.display.icon(105, 200, res.load('apps/management/res/small-arrow.toig'), foreground, ui.BLACK)
         yield from ui.animate_pulse(func, ui.WHITE, ui.BLACK, speed=190000)
 
     yield loop.Wait([paginate(),
