@@ -29,3 +29,7 @@ def unimport_gen(gen):
                 del sys.modules[to_remove]
         return ret
     return inner
+
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]

@@ -6,11 +6,7 @@ import unittest
 from trezor import loop
 from trezor import msg
 from trezor.wire import read_wire_msg, write_wire_msg
-
-
-def chunks(l, n):
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+from trezor.utils import chunks
 
 
 class TestWire(unittest.TestCase):
