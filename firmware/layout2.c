@@ -336,6 +336,9 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		NULL);
 }
 
-void layoutU2FDialog(const char *verb, const char *appid) {
-	layoutDialog(&bmp_icon_question, NULL, verb, NULL, verb, "U2F security key?", "", appid, "", NULL);
+void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon) {
+	if (!appicon) {
+		appicon = &bmp_icon_question;
+	}
+	layoutDialog(appicon, NULL, verb, NULL, verb, "U2F security key?", "", appname, "", NULL);
 }

@@ -27,7 +27,7 @@
 typedef struct {
 	const uint8_t appid[U2F_APPID_SIZE];
 	const char *appname;
-	const BITMAP *icon;
+	const BITMAP *appicon;
 } U2FWellKnown;
 
 static const U2FWellKnown u2f_well_known[4] = {
