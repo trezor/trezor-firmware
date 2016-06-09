@@ -8,7 +8,7 @@ from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 def process_type(t, cls, msg_id):
     imports = ["from protobuf import protobuf as p",]
 
-    out = ["t = p.MessageType()", ]
+    out = ["t = p.MessageType('%s')" % t, ]
 
     if msg_id is not None:
         out.append("t.wire_type = %d" % msg_id)

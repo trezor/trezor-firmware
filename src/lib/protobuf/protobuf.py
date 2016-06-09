@@ -99,12 +99,13 @@ _unpack_key = lambda key: (key >> 3, key & 7)
 class MessageType:
     # Represents a message type.
 
-    def __init__(self):
+    def __init__(self, name=None):
         # Creates a new message type.
         self.__tags_to_types = dict() # Maps a tag to a type instance.
         self.__tags_to_names = dict() # Maps a tag to a given field name.
         self.__defaults = dict()  # Maps a tag to its default value.
         self.__flags = dict()  # Maps a tag to FLAG_
+        self.__name = name
 
     def add_field(self, tag, name, field_type, flags=FLAG_SIMPLE, default=None):
         # Adds a field to the message type.
@@ -194,6 +195,9 @@ class MessageType:
         fp = BytesIO(buf)
         return self.load(fp)
 
+    def __repr__(self):
+        return '<MessageType: %s>' % self.__name
+
 class Message:
     # Represents a message instance.
 
@@ -212,6 +216,11 @@ class Message:
     def dumps(self):
         # Dumps the message into bytes
         return self.message_type.dumps(self)
+
+    def __repr__(self):
+        values = self.__dict__
+        values = {k:values[k] for k in values if k != 'message_type'}
+        return '<%s: %s>' % (self.message_type.__name, values)
 
 # Embedded message. ------------------------------------------------------------
 
