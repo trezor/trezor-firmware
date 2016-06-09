@@ -73,8 +73,17 @@ Example: your PIN is **1234** and TREZOR is displaying the following:
 
 You have to enter: **3795**
 
-How to install (Windows)
-------------------------
+Install
+-------
+
+(Run with sudo if not running in superuser mode)
+
+.. code::
+
+  pip install trezor
+
+How to install from source (Windows)
+------------------------------------
 * Install Python 2.7 (http://python.org)
 * Install Cython (Windows binaries on http://cython.org/#download)
 * Install Microsoft Visual Studio 2008 Express
@@ -82,8 +91,8 @@ How to install (Windows)
 * Clone repository (using TortoiseGit) to local directory
 * Run C:\\python27\\python.exe setup.py install (or develop)
 
-How to install (Debian-Ubuntu)
-------------------------------
+How to install from source (Debian/Ubuntu)
+------------------------------------------
 * sudo apt-get install python-dev python-setuptools cython libusb-1.0-0-dev libudev-dev git
 * git clone https://github.com/trezor/python-trezor.git
 * cd python-trezor
