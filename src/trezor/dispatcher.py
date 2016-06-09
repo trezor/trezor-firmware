@@ -6,6 +6,8 @@ message_handlers = {}
 
 
 def register(mtype, handler):
+    if mtype in message_handlers:
+        raise Exception('Message wire type %s is already registered', mtype)
     message_handlers[mtype] = handler
 
 
