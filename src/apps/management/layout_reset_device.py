@@ -1,5 +1,6 @@
 from trezor import wire, loop, res, ui
 from trezor.ui.swipe import Swipe, SWIPE_UP, SWIPE_DOWN
+from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from trezor.crypto import hashlib, random, bip39
 from trezor.utils import unimport_gen
 
@@ -57,6 +58,9 @@ def layout_reset_device(m):
             top = 74 + i * 30
             ui.display.text_right(40, top, '%d.' % (index + 1), ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
             ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+        if(len(mnemonic_words) // words_per_page == page + 1):
+            finish = Button((0, 240 - 48, 240, 48), 'Finish', normal_style=CONFIRM_BUTTON, active_style=CONFIRM_BUTTON_ACTIVE)
+            finish.render()
 
     def paginate():
         count = len(mnemonic_words) // words_per_page
