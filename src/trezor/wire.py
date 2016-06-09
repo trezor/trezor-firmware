@@ -1,6 +1,7 @@
 import ustruct
 from . import msg
 from . import loop
+from . import log
 
 IFACE = const(0)
 
@@ -58,7 +59,7 @@ def write_wire_msg(mtype, mbuf):
     mbuf = memoryview(mbuf)
     data = rep[9:]
 
-    while mbuf:
+    while True:
         n = min(len(data), len(mbuf))
         data[:n] = mbuf[:n]
         i = n
@@ -67,10 +68,14 @@ def write_wire_msg(mtype, mbuf):
             i += 1
         yield from write_report(rep)
         mbuf = mbuf[n:]
+        if not mbuf:
+            break
         data = rep[1:]
 
 
 def read(*types):
+    if __debug__:
+        log.debug(__name__, 'Reading one of %s', types)
     mtype, mbuf = yield from read_wire_msg()
     for t in types:
         if t.wire_type == mtype:
@@ -80,6 +85,8 @@ def read(*types):
 
 
 def write(m):
+    if __debug__:
+        log.debug(__name__, 'Writing %s', m)
     mbuf = m.dumps()
     mtype = m.message_type.wire_type
     yield from write_wire_msg(mtype, mbuf)
