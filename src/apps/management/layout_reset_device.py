@@ -65,9 +65,9 @@ def layout_reset_device(m):
             render(page)
             degrees = yield from Swipe().wait()
             if degrees == SWIPE_UP:
-                page = max(page - 1, 0)
+                page = max(page + 1, 0)
             elif degrees == SWIPE_DOWN:
-                page = min(page + 1, count)
+                page = min(page - 1, count)
 
     def animate_arrow():
         def func(foreground):
