@@ -22,8 +22,21 @@ def dispatch_SignTx(mtype, mbuf):
     return layout_sign_tx(message)
 
 
+@unimport_func
+def dispatch_SignMessage(mtype, mbuf):
+    from trezor.messages.SignMessage import SignMessage
+
+    message = SignMessage.loads(mbuf)
+
+    from .layout_sign_message import layout_sign_message
+    return layout_sign_message(message)
+
+
 def boot():
     GetPublicKey = 11
     register(GetPublicKey, dispatch_GetPublicKey)
     SignTx = 15
     register(SignTx, dispatch_SignTx)
+    SignMessage = 38
+    register(SignMessage, dispatch_SignMessage)
+
