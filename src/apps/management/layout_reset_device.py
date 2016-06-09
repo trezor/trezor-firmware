@@ -55,8 +55,8 @@ def layout_reset_device(m):
             index = i + page * words_per_page
             word = mnemonic_words[index]
             top = 74 + i * 30
-            ui.display.text(10, top, '%d.' % (index + 1), ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-            ui.display.text(40, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+            ui.display.text_right(40, top, '%d.' % (index + 1), ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+            ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
 
     def paginate():
         count = len(mnemonic_words) // words_per_page
@@ -65,9 +65,9 @@ def layout_reset_device(m):
             render(page)
             degrees = yield from Swipe().wait()
             if degrees == SWIPE_UP:
-                page = max(page + 1, 0)
+                page = min(page + 1, count - 1)
             elif degrees == SWIPE_DOWN:
-                page = min(page - 1, count)
+                page = max(page - 1, 0)
 
     def animate_arrow():
         def func(foreground):
