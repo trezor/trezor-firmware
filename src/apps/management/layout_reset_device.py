@@ -1,6 +1,7 @@
 from trezor import wire, loop, res, ui
 from trezor.ui.swipe import Swipe, SWIPE_UP, SWIPE_DOWN
 from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
+from trezor.ui.scroll import Scroll
 from trezor.crypto import hashlib, random, bip39
 from trezor.utils import unimport_gen
 
@@ -62,23 +63,8 @@ def layout_reset_device(m):
             ui.display.text_right(40, top, '%d.' % (index + 1), ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
             ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
 
-        # print side scrolling indicator
-
-        count = len(mnemonic_words) // words_per_page # 6
-        padding = 20
-        screen_height = const(220)
-        cursor = 8
-        
-        if count * padding > screen_height:
-            padding = screen_height // count
-
-        x = 220
-        y = (10 + (screen_height // 2)) - ((count // 2) * padding)
-
-        for i in range(0, count):
-            if (i != page):
-                ui.display.bar(x, y + i * padding, cursor, cursor, ui.GREY)
-            ui.display.bar(x, y + page * padding, cursor, cursor, ui.WHITE)
+        scroll = Scroll(page=page, totale_lines=mnemonic_words, lines_per_page=words_per_page)
+        scroll.render()
 
         # TODO: remove swipedown icon when this button is showed
             

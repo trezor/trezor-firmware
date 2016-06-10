@@ -8,7 +8,7 @@ from trezor.workflows.confirm import confirm
 def layout_wipe_device(message):
 
     ui.clear()
-    ui.display.text(10, 30, 'Wipe device', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(10, 30, 'Wiping device', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 74, 'Do you really want to', ui.BOLD, ui.WHITE, ui.BLACK)
     ui.display.text(10, 104, 'wipe the device?', ui.BOLD, ui.WHITE, ui.BLACK)
     ui.display.text(10, 164, 'All data will be lost.', ui.NORMAL, ui.WHITE, ui.BLACK)
