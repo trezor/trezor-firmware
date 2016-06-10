@@ -69,6 +69,8 @@ enum MessageType {
 	MessageType_EthereumSignTx = 58 [(wire_in) = true];
 	MessageType_EthereumTxRequest = 59 [(wire_out) = true];
 	MessageType_EthereumTxAck = 60 [(wire_in) = true];
+	MessageType_GetECDHSessionKey = 61 [(wire_in) = true];
+	MessageType_ECDHSessionKey = 62 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -656,6 +658,29 @@ message SignedIdentity {
 	optional string address = 1;			// identity address
 	optional bytes public_key = 2;			// identity public key
 	optional bytes signature = 3;			// signature of the identity data
+}
+
+///////////////////
+// ECDH messages //
+///////////////////
+
+/**
+ * Request: Ask device to generate ECDH session key
+ * @next ECDHSessionKey
+ * @next Failure
+ */
+message GetECDHSessionKey {
+	optional IdentityType identity = 1;		// identity
+	optional bytes peer_public_key = 2;		// peer's public key
+	optional string ecdsa_curve_name = 3;		// ECDSA curve name to use
+}
+
+/**
+ * Response: Device provides ECDH session key
+ * @prev GetECDHSessionKey
+ */
+message ECDHSessionKey {
+	optional bytes session_key = 1;     		// ECDH session key
 }
 
 /////////////////////////
