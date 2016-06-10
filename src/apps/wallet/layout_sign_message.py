@@ -7,7 +7,7 @@ def layout_sign_message(message):
     ui.clear()
     ui.display.text(10, 30, 'Signing message', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 60, message.message, ui.MONO, ui.WHITE, ui.BLACK)
-    confirmed = yield from confirm()
+    confirmed = yield from confirm(confirm='Sign')
     
     if confirmed:
         from trezor.messages.Success import Success

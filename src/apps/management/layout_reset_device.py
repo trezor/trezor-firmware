@@ -52,12 +52,36 @@ def layout_reset_device(m):
     def render(page):
         ui.clear()
         ui.display.text(10, 30, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+
+        # print mnemonic words for proper page
+
         for i in range(0, words_per_page):
             index = i + page * words_per_page
             word = mnemonic_words[index]
             top = 74 + i * 30
             ui.display.text_right(40, top, '%d.' % (index + 1), ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
             ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+
+        # print side scrolling indicator
+
+        count = len(mnemonic_words) // words_per_page # 6
+        padding = 20
+        screen_height = const(220)
+        cursor = 8
+        
+        if count * padding > screen_height:
+            padding = screen_height // count
+
+        x = 220
+        y = (10 + (screen_height // 2)) - ((count // 2) * padding)
+
+        for i in range(0, count):
+            if (i != page):
+                ui.display.bar(x, y + i * padding, cursor, cursor, ui.GREY)
+            ui.display.bar(x, y + page * padding, cursor, cursor, ui.WHITE)
+
+        # TODO: remove swipedown icon when this button is showed
+            
         if(len(mnemonic_words) // words_per_page == page + 1):
             finish = Button((0, 240 - 48, 240, 48), 'Finish', normal_style=CONFIRM_BUTTON, active_style=CONFIRM_BUTTON_ACTIVE)
             finish.render()
