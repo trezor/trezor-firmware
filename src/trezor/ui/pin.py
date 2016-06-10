@@ -9,7 +9,7 @@ def digit_area(i):
     height = const(48)
     x = (i % 3) * width
     y = (i // 3) * height
-    return (x, y + 48, width, height)  # 48px is offset of input line
+    return (x, y + 48, width - 1, height - 1)  # 48px is offset of input line / -1px is due to corner bug of overlaying elements
 
 
 def generate_digits():
