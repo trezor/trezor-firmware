@@ -149,8 +149,19 @@ const pb_field_t GetAddress_fields[5] = {
     PB_LAST_FIELD
 };
 
+const pb_field_t EthereumGetAddress_fields[3] = {
+    PB_FIELD2(  1, UINT32  , REPEATED, CALLBACK, FIRST, EthereumGetAddress, address_n, address_n, 0),
+    PB_FIELD2(  2, BOOL    , OPTIONAL, STATIC  , OTHER, EthereumGetAddress, show_display, address_n, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t Address_fields[2] = {
     PB_FIELD2(  1, STRING  , REQUIRED, STATIC  , FIRST, Address, address, address, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t EthereumAddress_fields[2] = {
+    PB_FIELD2(  1, BYTES   , REQUIRED, CALLBACK, FIRST, EthereumAddress, address, address, 0),
     PB_LAST_FIELD
 };
 
@@ -317,6 +328,31 @@ const pb_field_t TxAck_fields[2] = {
     PB_LAST_FIELD
 };
 
+const pb_field_t EthereumSignTx_fields[9] = {
+    PB_FIELD2(  1, UINT32  , REPEATED, CALLBACK, FIRST, EthereumSignTx, address_n, address_n, 0),
+    PB_FIELD2(  2, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumSignTx, nonce, address_n, 0),
+    PB_FIELD2(  3, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumSignTx, gas_price, nonce, 0),
+    PB_FIELD2(  4, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumSignTx, gas_limit, gas_price, 0),
+    PB_FIELD2(  5, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumSignTx, to, gas_limit, 0),
+    PB_FIELD2(  6, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumSignTx, value, to, 0),
+    PB_FIELD2(  7, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumSignTx, data_initial_chunk, value, 0),
+    PB_FIELD2(  8, UINT32  , OPTIONAL, STATIC  , OTHER, EthereumSignTx, data_length, data_initial_chunk, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t EthereumTxRequest_fields[5] = {
+    PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, EthereumTxRequest, data_length, data_length, 0),
+    PB_FIELD2(  2, UINT32  , OPTIONAL, STATIC  , OTHER, EthereumTxRequest, signature_v, data_length, 0),
+    PB_FIELD2(  3, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumTxRequest, signature_r, signature_v, 0),
+    PB_FIELD2(  4, BYTES   , OPTIONAL, CALLBACK, OTHER, EthereumTxRequest, signature_s, signature_r, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t EthereumTxAck_fields[2] = {
+    PB_FIELD2(  1, BYTES   , OPTIONAL, CALLBACK, FIRST, EthereumTxAck, data_chunk, data_chunk, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t SignIdentity_fields[5] = {
     PB_FIELD2(  1, MESSAGE , OPTIONAL, STATIC  , FIRST, SignIdentity, identity, identity, &IdentityType_fields),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, SignIdentity, challenge_hidden, identity, 0),
@@ -329,6 +365,18 @@ const pb_field_t SignedIdentity_fields[4] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, SignedIdentity, address, address, 0),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, SignedIdentity, public_key, address, 0),
     PB_FIELD2(  3, BYTES   , OPTIONAL, STATIC  , OTHER, SignedIdentity, signature, public_key, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t GetECDHSessionKey_fields[4] = {
+    PB_FIELD2(  1, MESSAGE , OPTIONAL, STATIC  , FIRST, GetECDHSessionKey, identity, identity, &IdentityType_fields),
+    PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, GetECDHSessionKey, peer_public_key, identity, 0),
+    PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, GetECDHSessionKey, ecdsa_curve_name, peer_public_key, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t ECDHSessionKey_fields[2] = {
+    PB_FIELD2(  1, BYTES   , OPTIONAL, STATIC  , FIRST, ECDHSessionKey, session_key, session_key, 0),
     PB_LAST_FIELD
 };
 
@@ -385,7 +433,7 @@ const pb_field_t DebugLinkLog_fields[4] = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_Address_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EncryptMessage_EncryptedMessage_DecryptMessage_DecryptedMessage_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_SignIdentity_SignedIdentity_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog)
+STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EncryptMessage_EncryptedMessage_DecryptMessage_DecryptedMessage_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)
