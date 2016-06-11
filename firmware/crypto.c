@@ -27,6 +27,7 @@
 #include "layout.h"
 #include "curves.h"
 #include "secp256k1.h"
+#include "macros.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -98,6 +99,25 @@ int gpgMessageSign(const HDNode *node, const uint8_t *message, size_t message_le
 	}
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
 	return hdnode_sign_digest(node, message, signature + 1, NULL);
+}
+
+int cryptoGetECDHSessionKey(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key)
+{
+	curve_point point;
+	const ecdsa_curve *curve = node->curve->params;
+	if (!ecdsa_read_pubkey(curve, peer_public_key, &point)) {
+		return 1;
+	}
+	bignum256 k;
+	bn_read_be(node->private_key, &k);
+	point_multiply(curve, &k, &point, &point);
+	MEMSET_BZERO(&k, sizeof(k));
+
+	session_key[0] = 0x04;
+	bn_write_be(&point.x, session_key + 1);
+	bn_write_be(&point.y, session_key + 33);
+	MEMSET_BZERO(&point, sizeof(point));
+	return 0;
 }
 
 int cryptoMessageSign(const CoinType *coin, const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
