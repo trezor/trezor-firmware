@@ -71,6 +71,7 @@ enum MessageType {
 	MessageType_EthereumTxAck = 60 [(wire_in) = true];
 	MessageType_GetECDHSessionKey = 61 [(wire_in) = true];
 	MessageType_ECDHSessionKey = 62 [(wire_out) = true];
+	MessageType_SetU2FCounter = 63 [(wire_in) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -685,6 +686,18 @@ message GetECDHSessionKey {
  */
 message ECDHSessionKey {
 	optional bytes session_key = 1;     		// ECDH session key
+}
+
+///////////////////
+// U2F messages //
+///////////////////
+
+/**
+ * Request: Set U2F counter
+ * @next Success
+ */
+message SetU2FCounter {
+	optional uint32 u2f_counter = 1;		// counter
 }
 
 /////////////////////////
