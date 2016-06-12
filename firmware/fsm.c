@@ -924,6 +924,12 @@ void fsm_msgWordAck(WordAck *msg)
 	recovery_word(msg->word);
 }
 
+void fsm_msgSetU2FCounter(SetU2FCounter *msg)
+{
+	storage_setU2FCounter(msg->u2f_counter);
+	fsm_sendSuccess("U2F counter set");
+}
+
 #if DEBUG_LINK
 
 void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)

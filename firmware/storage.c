@@ -559,3 +559,10 @@ uint32_t storage_nextU2FCounter(void)
 	storage_check_flash_errors();
 	return storage.u2f_counter + storage_u2f_offset;
 }
+
+void storage_setU2FCounter(uint32_t u2fcounter)
+{
+	storage.has_u2f_counter = true;
+	storage.u2f_counter = u2fcounter - storage_u2f_offset;
+	storage_commit();
+}

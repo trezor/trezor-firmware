@@ -380,6 +380,11 @@ const pb_field_t ECDHSessionKey_fields[2] = {
     PB_LAST_FIELD
 };
 
+const pb_field_t SetU2FCounter_fields[2] = {
+    PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, SetU2FCounter, u2f_counter, u2f_counter, 0),
+    PB_LAST_FIELD
+};
+
 const pb_field_t FirmwareErase_fields[1] = {
     PB_LAST_FIELD
 };
@@ -456,7 +461,7 @@ const pb_field_t DebugLinkFlashErase_fields[2] = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EncryptMessage_EncryptedMessage_DecryptMessage_DecryptedMessage_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog_DebugLinkMemoryRead_DebugLinkMemory_DebugLinkMemoryWrite_DebugLinkFlashErase)
+STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(SimpleSignTx, inputs[0]) < 65536 && pb_membersize(SimpleSignTx, outputs[0]) < 65536 && pb_membersize(SimpleSignTx, transactions[0]) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_EncryptMessage_EncryptedMessage_DecryptMessage_DecryptedMessage_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_SimpleSignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_SetU2FCounter_FirmwareErase_FirmwareUpload_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog_DebugLinkMemoryRead_DebugLinkMemory_DebugLinkMemoryWrite_DebugLinkFlashErase)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)
