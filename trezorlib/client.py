@@ -512,6 +512,12 @@ class ProtocolMixin(object):
     def get_ecdh_session_key(self, identity, peer_public_key, ecdsa_curve_name=DEFAULT_CURVE):
         return self.call(proto.GetECDHSessionKey(identity=identity, peer_public_key=peer_public_key, ecdsa_curve_name=ecdsa_curve_name))
 
+    @field('message')
+    @expect(proto.Success)
+    def set_u2f_counter(self, u2f_counter):
+        ret = self.call(proto.SetU2FCounter(u2f_counter = u2f_counter))
+        return ret
+
     def verify_message(self, address, signature, message):
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
         message = normalize_nfc(message)
