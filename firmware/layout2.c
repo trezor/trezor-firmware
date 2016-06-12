@@ -31,7 +31,7 @@
 
 void *layoutLast = layoutHome;
 
-void layoutDialogSwipe(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
+void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
 {
 	layoutLast = layoutDialogSwipe;
 	oledSwipeLeft();
@@ -119,7 +119,7 @@ void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 	static char first_half[17 + 1];
 	strlcpy(first_half, out->address, sizeof(first_half));
 	const char *str_out = str_amount(out->amount, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
 		NULL,
@@ -136,7 +136,7 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 {
 	const char *str_out = str_amount(amount_out, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
 	const char *str_fee = str_amount(amount_fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_fee, sizeof(buf_fee));
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
 		NULL,
@@ -153,7 +153,7 @@ void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee, uint32_t kb)
 {
 	(void)kb;
 	const char *str_out = str_amount(fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
 		NULL,
@@ -191,7 +191,7 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 void layoutSignMessage(const uint8_t *msg, uint32_t len)
 {
 	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm",
 		"Sign message?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
@@ -199,7 +199,7 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 void layoutVerifyAddress(const char *address)
 {
 	const char **str = split_message((const uint8_t *)address, strlen(address), 17);
-	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
+	layoutDialogSwipe(&bmp_icon_info, "Cancel", "Confirm",
 		"Confirm address?",
 		"Message signed by:",
 		NULL, str[0], str[1], str[2], NULL);
@@ -208,7 +208,7 @@ void layoutVerifyAddress(const char *address)
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 {
 	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(DIALOG_ICON_INFO, "Cancel", "Confirm",
+	layoutDialogSwipe(&bmp_icon_info, "Cancel", "Confirm",
 		"Verified message",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
@@ -216,7 +216,7 @@ void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
 void layoutCipherKeyValue(bool encrypt, const char *key)
 {
 	const char **str = split_message((const uint8_t *)key, strlen(key), 16);
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm",
 		encrypt ? "Encode value of this key?" : "Decode value of this key?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
@@ -224,7 +224,7 @@ void layoutCipherKeyValue(bool encrypt, const char *key)
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing)
 {
 	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm",
 		signing ? "Encrypt+Sign message?" : "Encrypt message?",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
@@ -232,7 +232,7 @@ void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing)
 void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 {
 	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, "OK",
+	layoutDialogSwipe(&bmp_icon_info, NULL, "OK",
 		address ? "Decrypted signed message" : "Decrypted message",
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
@@ -286,7 +286,7 @@ void layoutPublicKey(const uint8_t *pubkey)
 	data2hex(pubkey, 1, desc + 12);
 	data2hex(pubkey + 1, 32, hex);
 	const char **str = split_message((const uint8_t *)hex, 32*2, 16);
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, NULL, "Continue", NULL,
+	layoutDialogSwipe(&bmp_icon_question, NULL, "Continue", NULL,
 		desc, str[0], str[1], str[2], str[3], NULL);
 }
 
@@ -326,7 +326,7 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		row_user[0] = 0;
 	}
 
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm",
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm",
 		"Do you want to sign in?",
 		row_proto[0] ? row_proto : NULL,
 		row_hostport[0] ? row_hostport : NULL,
@@ -334,4 +334,11 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		challenge,
 		NULL,
 		NULL);
+}
+
+void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon) {
+	if (!appicon) {
+		appicon = &bmp_icon_question;
+	}
+	layoutDialog(appicon, NULL, verb, NULL, verb, "U2F security key?", "", appname, "", NULL);
 }

@@ -31,5 +31,9 @@ extern const BITMAP bmp_logo48;
 extern const BITMAP bmp_logo48_empty;
 extern const BITMAP bmp_logo64;
 extern const BITMAP bmp_logo64_empty;
+extern const BITMAP bmp_u2f_dropbox;
+extern const BITMAP bmp_u2f_github;
+extern const BITMAP bmp_u2f_google;
+extern const BITMAP bmp_u2f_slushpool;
 
 #endif

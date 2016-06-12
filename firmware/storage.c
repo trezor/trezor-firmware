@@ -48,13 +48,15 @@ char    storage_uuid_str[25];
 /*
  storage layout:
 
- offset | type/length |  description
---------+-------------+-------------------------------
- 0x0000 |   4 bytes   |  magic = 'stor'
- 0x0004 |  12 bytes   |  uuid
- 0x0010 |  ?          |  Storage structure
- 0x4000 |   4 kbytes  |  area for pin failures
- 0x5000 |  12 kbytes  |  reserved
+ offset |  type/length |  description
+--------+--------------+-------------------------------
+ 0x0000 |     4 bytes  |  magic = 'stor'
+ 0x0004 |    12 bytes  |  uuid
+ 0x0010 |     ? bytes  |  Storage structure
+--------+--------------+-------------------------------
+ 0x4000 |     4 kbytes |  area for pin failures
+ 0x5000 |   256 bytes  |  area for u2f counter updates
+ 0x5100 | 11.75 kbytes |  reserved
 
 The area for pin failures looks like this:
 0 ... 0 pinfail 0xffffffff .. 0xffffffff
@@ -63,16 +65,29 @@ the number of zeros is the number of pin failures.
 This layout is used because we can only clear bits without 
 erasing the flash.
 
+The area for u2f counter updates is just a sequence of zero-bits
+followed by a sequence of one-bits.  The bits in a byte are numbered
+from LSB to MSB.  The number of zero bits is the offset that should
+be added to the storage u2f_counter to get the real counter value.
+
  */
 
 #define FLASH_STORAGE_PINAREA     (FLASH_META_START + 0x4000)
 #define FLASH_STORAGE_PINAREA_LEN (0x1000)
+#define FLASH_STORAGE_U2FAREA     (FLASH_STORAGE_PINAREA + FLASH_STORAGE_PINAREA_LEN)
+#define FLASH_STORAGE_U2FAREA_LEN (0x100)
 #define FLASH_STORAGE_REALLEN (4 + sizeof(storage_uuid) + sizeof(Storage))
 _Static_assert(FLASH_STORAGE_START + FLASH_STORAGE_REALLEN <= FLASH_STORAGE_PINAREA, "Storage struct is too large for TREZOR flash");
 _Static_assert((sizeof(storage_uuid) & 3) == 0, "storage uuid unaligned");
 _Static_assert((sizeof(storage) & 3) == 0, "storage unaligned");
 
-static bool sessionSeedCached;
+/* Current u2f offset, i.e. u2f counter is
+ * storage.u2f_counter + storage_u2f_offset.
+ * This corresponds to the number of cleared bits in the U2FAREA.
+ */
+static uint32_t storage_u2f_offset;
+
+static bool sessionSeedCached, sessionSeedUsesPassphrase;
 
 static uint8_t sessionSeed[64];
 
@@ -83,12 +98,17 @@ static char sessionPassphrase[51];
 
 #define STORAGE_VERSION 6
 
+void storage_show_error(void)
+{
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
+	for (;;) { }
+}
+
 void storage_check_flash_errors(void)
 {
 	// flash operation failed
 	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
-		layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
-		for (;;) { }
+		storage_show_error();
 	}
 }
 
@@ -131,6 +151,15 @@ bool storage_from_flash(void)
 		storage_check_flash_errors();
 		storage.has_pin_failed_attempts = false;
 		storage.pin_failed_attempts = 0;
+	}
+	uint32_t *u2fptr = (uint32_t*) FLASH_STORAGE_U2FAREA;
+	while (*u2fptr == 0)
+		u2fptr++;
+	storage_u2f_offset = 32 * (u2fptr - (uint32_t*) FLASH_STORAGE_U2FAREA);
+	uint32_t u2fword = *u2fptr;
+	while ((u2fword & 1) == 0) {
+		storage_u2f_offset++;
+		u2fword >>= 1;
 	}
 	// upgrade storage version
 	if (version != STORAGE_VERSION) {
@@ -185,15 +214,13 @@ static uint32_t storage_flash_words(uint32_t addr, uint32_t *src, int nwords) {
 	return addr;
 }
 
-void storage_commit(void)
+static void storage_commit_locked(void)
 {
 	uint8_t meta_backup[FLASH_META_DESC_LEN];
 
 	// backup meta
 	memcpy(meta_backup, (uint8_t*)FLASH_META_START, FLASH_META_DESC_LEN);
 
-	flash_clear_status_flags();
-	flash_unlock();
 	// erase storage
 	flash_erase_sector(FLASH_META_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
 	// copy meta
@@ -209,6 +236,13 @@ void storage_commit(void)
 		flash_program_word(flash, 0);
 		flash += 4;
 	}
+}
+
+void storage_commit(void)
+{
+	flash_clear_status_flags();
+	flash_unlock();
+	storage_commit_locked();
 	flash_lock();
 	storage_check_flash_errors();
 }
@@ -298,27 +332,29 @@ void get_root_node_callback(uint32_t iter, uint32_t total)
 	layoutProgress("Waking up", 1000 * iter / total);
 }
 
-const uint8_t *storage_getSeed(void)
+const uint8_t *storage_getSeed(bool usePassphrase)
 {
 	// root node is properly cached
-	if (sessionSeedCached) {
+	if (usePassphrase == sessionSeedUsesPassphrase
+		&& sessionSeedCached) {
 		return sessionSeed;
 	}
 
 	// if storage has mnemonic, convert it to node and use it
 	if (storage.has_mnemonic) {
-		if (!protectPassphrase()) {
+		if (usePassphrase && !protectPassphrase()) {
 			return NULL;
 		}
-		mnemonic_to_seed(storage.mnemonic, sessionPassphrase, sessionSeed, get_root_node_callback); // BIP-0039
+		mnemonic_to_seed(storage.mnemonic, usePassphrase ? sessionPassphrase : "", sessionSeed, get_root_node_callback); // BIP-0039
 		sessionSeedCached = true;
+		sessionSeedUsesPassphrase = usePassphrase;
 		return sessionSeed;
 	}
 
 	return NULL;
 }
 
-bool storage_getRootNode(HDNode *node, const char *curve)
+bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
 {
 	// if storage has node, decrypt and use it
 	if (storage.has_node && strcmp(curve, SECP256K1_NAME) == 0) {
@@ -347,7 +383,7 @@ bool storage_getRootNode(HDNode *node, const char *curve)
 		return true;
 	}
 
-	const uint8_t *seed = storage_getSeed();
+	const uint8_t *seed = storage_getSeed(usePassphrase);
 	if (seed == NULL) {
 		return false;
 	}
@@ -427,23 +463,49 @@ bool session_isPinCached(void)
 	return sessionPinCached;
 }
 
-void storage_clearPinArea()
+void storage_clearPinArea(void)
 {
 	flash_clear_status_flags();
 	flash_unlock();
 	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
 	flash_lock();
 	storage_check_flash_errors();
+	storage_u2f_offset = 0;
+}
+
+// called when u2f area or pin area overflows
+static void storage_area_recycle(uint32_t new_pinfails)
+{
+	// first clear storage marker.  In case of a failure below it is better
+	// to clear the storage than to allow restarting with zero PIN failures
+	flash_program_word(FLASH_STORAGE_START, 0);
+	if (*(uint32_t *)FLASH_STORAGE_START != 0) {
+		storage_show_error();
+	}
+
+	// erase storage sector
+	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
+	flash_program_word(FLASH_STORAGE_PINAREA, new_pinfails);
+	if (*(uint32_t *)FLASH_STORAGE_PINAREA != new_pinfails) {
+		storage_show_error();
+	}
+
+	if (storage_u2f_offset > 0) {
+		storage.has_u2f_counter = true;
+		storage.u2f_counter += storage_u2f_offset;
+		storage_u2f_offset = 0;
+	}
+	storage_commit_locked();
 }
 
 void storage_resetPinFails(uint32_t *pinfailsptr)
 {
 	flash_clear_status_flags();
 	flash_unlock();
-	if ((uint32_t) (pinfailsptr + 1) - FLASH_STORAGE_PINAREA
-		>= FLASH_STORAGE_PINAREA_LEN) {
-		// erase extra storage sector
-		flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
+	if ((uint32_t) (pinfailsptr + 1)
+		>= FLASH_STORAGE_PINAREA + FLASH_STORAGE_PINAREA_LEN) {
+		// recycle extra storage sector
+		storage_area_recycle(0xffffffff);
 	} else {
 		flash_program_word((uint32_t) pinfailsptr, 0);
 	}
@@ -479,4 +541,21 @@ uint32_t *storage_getPinFailsPtr(void)
 bool storage_isInitialized(void)
 {
 	return storage.has_node || storage.has_mnemonic;
+}
+
+uint32_t storage_nextU2FCounter(void)
+{
+	uint32_t *ptr = ((uint32_t *) FLASH_STORAGE_U2FAREA) + (storage_u2f_offset / 32);
+	uint32_t newval = 0xfffffffe << (storage_u2f_offset & 31);
+
+	flash_clear_status_flags();
+	flash_unlock();
+	flash_program_word((uint32_t) ptr, newval);
+	storage_u2f_offset++;
+	if (storage_u2f_offset >= 8 * FLASH_STORAGE_U2FAREA_LEN) {
+		storage_area_recycle(*storage_getPinFailsPtr());
+	}
+	flash_lock();
+	storage_check_flash_errors();
+	return storage.u2f_counter + storage_u2f_offset;
 }

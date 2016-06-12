@@ -33,9 +33,9 @@ void session_clear(bool clear_pin);
 
 void storage_loadDevice(LoadDevice *msg);
 
-const uint8_t *storage_getSeed(void);
+const uint8_t *storage_getSeed(bool usePassphrase);
 
-bool storage_getRootNode(HDNode *node, const char *curve);
+bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase);
 
 const char *storage_getLabel(void);
 void storage_setLabel(const char *label);
@@ -60,6 +60,8 @@ void storage_clearPinArea(void);
 void storage_resetPinFails(uint32_t *pinfailptr);
 bool storage_increasePinFails(uint32_t *pinfailptr);
 uint32_t *storage_getPinFailsPtr(void);
+
+uint32_t storage_nextU2FCounter(void);
 
 bool storage_isInitialized(void);
 

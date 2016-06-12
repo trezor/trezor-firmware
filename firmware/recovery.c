@@ -41,7 +41,7 @@ void next_word(void) {
 	if (word_pos == 0) {
 		const char * const *wl = mnemonic_wordlist();
 		strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
-		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the word", NULL, fake_word, NULL, "on your computer", NULL);
+		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter the word", NULL, fake_word, NULL, "on your computer", NULL);
 	} else {
 		fake_word[0] = 0;
 		char desc[] = "##th word";
@@ -60,7 +60,7 @@ void next_word(void) {
 		if (word_pos == 3 || word_pos == 23) {
 			desc[2] = 'r'; desc[3] = 'd';
 		}
-		layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter the", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, "of your mnemonic", NULL);
+		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter the", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, "of your mnemonic", NULL);
 	}
 	WordRequest resp;
 	memset(&resp, 0, sizeof(WordRequest));

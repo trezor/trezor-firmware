@@ -45,18 +45,18 @@ void layoutFirmwareHash(uint8_t *hash)
 	for (i = 0; i < 4; i++) {
 		data2hex(hash + i * 8, 8, str[i]);
 	}
-	layoutDialog(DIALOG_ICON_QUESTION, "Abort", "Continue", "Compare fingerprints", str[0], str[1], str[2], str[3], NULL, NULL);
+	layoutDialog(&bmp_icon_question, "Abort", "Continue", "Compare fingerprints", str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
 void show_halt(void)
 {
-	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
 	system_halt();
 }
 
 void show_unofficial_warning(uint8_t *hash)
 {
-	layoutDialog(DIALOG_ICON_WARNING, "Abort", "I'll take the risk", NULL, "WARNING!", NULL, "Unofficial firmware", "detected.", NULL, NULL);
+	layoutDialog(&bmp_icon_warning, "Abort", "I'll take the risk", NULL, "WARNING!", NULL, "Unofficial firmware", "detected.", NULL, NULL);
 
 	do {
 		delay(100000);
@@ -124,7 +124,7 @@ void check_firmware_sanity(void)
 		broken++;
 	}
 	if (broken) {
-		layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Firmware appears", "to be broken.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
+		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware appears", "to be broken.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
 		system_halt();
 	}
 }
@@ -133,7 +133,7 @@ uint32_t __stack_chk_guard;
 
 void __attribute__((noreturn)) __stack_chk_fail(void)
 {
-	layoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
 	for (;;) {} // loop forever
 }
 

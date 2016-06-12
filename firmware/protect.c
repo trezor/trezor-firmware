@@ -44,6 +44,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 	resp.has_code = true;
 	resp.code = type;
 	usbTiny(1);
+	buttonUpdate(); // Clear button state
 	msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
 	for (;;) {
@@ -57,7 +58,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 
 		// button acked - check buttons
 		if (acked) {
-			usbDelay(3500);
+			usbDelay(3300);
 			buttonUpdate();
 			if (button.YesUp) {
 				result = true;
@@ -162,9 +163,9 @@ bool protectPin(bool use_cached)
 		if (wait == 1) {
 			secstrbuf[16] = 0;
 		}
-		layoutDialog(DIALOG_ICON_INFO, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
+		layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
 		// wait one second
-		usbDelay(840000);
+		usbDelay(800000);
 		if (msg_tiny_id == MessageType_MessageType_Initialize) {
 			protectAbortedByInitialize = true;
 			msg_tiny_id = 0xFFFF;
@@ -224,7 +225,7 @@ bool protectPassphrase(void)
 	usbTiny(1);
 	msg_write(MessageType_MessageType_PassphraseRequest, &resp);
 
-	layoutDialogSwipe(DIALOG_ICON_INFO, NULL, NULL, NULL, "Please enter your", "passphrase using", "the computer's", "keyboard.", NULL, NULL);
+	layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter your", "passphrase using", "the computer's", "keyboard.", NULL, NULL);
 
 	bool result;
 	for (;;) {

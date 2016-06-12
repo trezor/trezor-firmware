@@ -72,7 +72,11 @@ typedef enum _MessageType {
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
     MessageType_MessageType_DebugLinkStop = 103,
-    MessageType_MessageType_DebugLinkLog = 104
+    MessageType_MessageType_DebugLinkLog = 104,
+    MessageType_MessageType_DebugLinkMemoryRead = 110,
+    MessageType_MessageType_DebugLinkMemory = 111,
+    MessageType_MessageType_DebugLinkMemoryWrite = 112,
+    MessageType_MessageType_DebugLinkFlashErase = 113
 } MessageType;
 
 /* Struct definitions */
@@ -197,6 +201,11 @@ typedef struct _DebugLinkDecision {
     bool yes_no;
 } DebugLinkDecision;
 
+typedef struct _DebugLinkFlashErase {
+    bool has_sector;
+    uint32_t sector;
+} DebugLinkFlashErase;
+
 typedef struct _DebugLinkLog {
     bool has_level;
     uint32_t level;
@@ -205,6 +214,37 @@ typedef struct _DebugLinkLog {
     bool has_text;
     char text[256];
 } DebugLinkLog;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} DebugLinkMemory_memory_t;
+
+typedef struct _DebugLinkMemory {
+    bool has_memory;
+    DebugLinkMemory_memory_t memory;
+} DebugLinkMemory;
+
+typedef struct _DebugLinkMemoryRead {
+    bool has_address;
+    uint32_t address;
+    bool has_length;
+    uint32_t length;
+} DebugLinkMemoryRead;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} DebugLinkMemoryWrite_memory_t;
+
+typedef struct _DebugLinkMemoryWrite {
+    bool has_address;
+    uint32_t address;
+    bool has_memory;
+    DebugLinkMemoryWrite_memory_t memory;
+    bool has_flash;
+    bool flash;
+} DebugLinkMemoryWrite;
 
 typedef struct {
     size_t size;
@@ -360,39 +400,100 @@ typedef struct _EstimateTxSize {
     char coin_name[17];
 } EstimateTxSize;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[20];
+} EthereumAddress_address_t;
+
 typedef struct _EthereumAddress {
-    pb_callback_t address;
+    EthereumAddress_address_t address;
 } EthereumAddress;
 
 typedef struct _EthereumGetAddress {
-    pb_callback_t address_n;
+    size_t address_n_count;
+    uint32_t address_n[8];
     bool has_show_display;
     bool show_display;
 } EthereumGetAddress;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} EthereumSignTx_nonce_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} EthereumSignTx_gas_price_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} EthereumSignTx_gas_limit_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[20];
+} EthereumSignTx_to_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} EthereumSignTx_value_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} EthereumSignTx_data_initial_chunk_t;
+
 typedef struct _EthereumSignTx {
-    pb_callback_t address_n;
-    pb_callback_t nonce;
-    pb_callback_t gas_price;
-    pb_callback_t gas_limit;
-    pb_callback_t to;
-    pb_callback_t value;
-    pb_callback_t data_initial_chunk;
+    size_t address_n_count;
+    uint32_t address_n[8];
+    bool has_nonce;
+    EthereumSignTx_nonce_t nonce;
+    bool has_gas_price;
+    EthereumSignTx_gas_price_t gas_price;
+    bool has_gas_limit;
+    EthereumSignTx_gas_limit_t gas_limit;
+    bool has_to;
+    EthereumSignTx_to_t to;
+    bool has_value;
+    EthereumSignTx_value_t value;
+    bool has_data_initial_chunk;
+    EthereumSignTx_data_initial_chunk_t data_initial_chunk;
     bool has_data_length;
     uint32_t data_length;
 } EthereumSignTx;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} EthereumTxAck_data_chunk_t;
+
 typedef struct _EthereumTxAck {
-    pb_callback_t data_chunk;
+    bool has_data_chunk;
+    EthereumTxAck_data_chunk_t data_chunk;
 } EthereumTxAck;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} EthereumTxRequest_signature_r_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[32];
+} EthereumTxRequest_signature_s_t;
 
 typedef struct _EthereumTxRequest {
     bool has_data_length;
     uint32_t data_length;
     bool has_signature_v;
     uint32_t signature_v;
-    pb_callback_t signature_r;
-    pb_callback_t signature_s;
+    bool has_signature_r;
+    EthereumTxRequest_signature_r_t signature_r;
+    bool has_signature_s;
+    EthereumTxRequest_signature_s_t signature_s;
 } EthereumTxRequest;
 
 typedef struct _Failure {
@@ -747,9 +848,9 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
 #define PublicKey_init_default                   {HDNodeType_init_default, false, ""}
 #define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default}
-#define EthereumGetAddress_init_default          {{{NULL}, NULL}, false, 0}
+#define EthereumGetAddress_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, 0}
 #define Address_init_default                     {""}
-#define EthereumAddress_init_default             {{{NULL}, NULL}}
+#define EthereumAddress_init_default             {{0, {0}}}
 #define WipeDevice_init_default                  {0}
 #define LoadDevice_init_default                  {false, "", false, HDNodeType_init_default, false, "", false, 0, false, "english", false, "", false, 0}
 #define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, ""}
@@ -773,9 +874,9 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define SimpleSignTx_init_default                {0, {}, 0, {}, 0, {}, false, "Bitcoin", false, 1u, false, 0u}
 #define TxRequest_init_default                   {false, (RequestType)0, false, TxRequestDetailsType_init_default, false, TxRequestSerializedType_init_default}
 #define TxAck_init_default                       {false, TransactionType_init_default}
-#define EthereumSignTx_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0}
-#define EthereumTxRequest_init_default           {false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define EthereumTxAck_init_default               {{{NULL}, NULL}}
+#define EthereumSignTx_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0}
+#define EthereumTxRequest_init_default           {false, 0, false, 0, false, {0, {0}}, false, {0, {0}}}
+#define EthereumTxAck_init_default               {false, {0, {0}}}
 #define SignIdentity_init_default                {false, IdentityType_init_default, false, {0, {0}}, false, "", false, ""}
 #define SignedIdentity_init_default              {false, "", false, {0, {0}}, false, {0, {0}}}
 #define GetECDHSessionKey_init_default           {false, IdentityType_init_default, false, {0, {0}}, false, ""}
@@ -787,6 +888,10 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define DebugLinkState_init_default              {false, {0, {0}}, false, "", false, "", false, "", false, HDNodeType_init_default, false, 0, false, "", false, {0, {0}}, false, "", false, 0}
 #define DebugLinkStop_init_default               {0}
 #define DebugLinkLog_init_default                {false, 0, false, "", false, ""}
+#define DebugLinkMemoryRead_init_default         {false, 0, false, 0}
+#define DebugLinkMemory_init_default             {false, {0, {0}}}
+#define DebugLinkMemoryWrite_init_default        {false, 0, false, {0, {0}}, false, 0}
+#define DebugLinkFlashErase_init_default         {false, 0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
 #define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0}
@@ -808,9 +913,9 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
 #define PublicKey_init_zero                      {HDNodeType_init_zero, false, ""}
 #define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero}
-#define EthereumGetAddress_init_zero             {{{NULL}, NULL}, false, 0}
+#define EthereumGetAddress_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, 0}
 #define Address_init_zero                        {""}
-#define EthereumAddress_init_zero                {{{NULL}, NULL}}
+#define EthereumAddress_init_zero                {{0, {0}}}
 #define WipeDevice_init_zero                     {0}
 #define LoadDevice_init_zero                     {false, "", false, HDNodeType_init_zero, false, "", false, 0, false, "", false, "", false, 0}
 #define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, false, "", false, ""}
@@ -834,9 +939,9 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define SimpleSignTx_init_zero                   {0, {}, 0, {}, 0, {}, false, "", false, 0, false, 0}
 #define TxRequest_init_zero                      {false, (RequestType)0, false, TxRequestDetailsType_init_zero, false, TxRequestSerializedType_init_zero}
 #define TxAck_init_zero                          {false, TransactionType_init_zero}
-#define EthereumSignTx_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0}
-#define EthereumTxRequest_init_zero              {false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define EthereumTxAck_init_zero                  {{{NULL}, NULL}}
+#define EthereumSignTx_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0}
+#define EthereumTxRequest_init_zero              {false, 0, false, 0, false, {0, {0}}, false, {0, {0}}}
+#define EthereumTxAck_init_zero                  {false, {0, {0}}}
 #define SignIdentity_init_zero                   {false, IdentityType_init_zero, false, {0, {0}}, false, "", false, ""}
 #define SignedIdentity_init_zero                 {false, "", false, {0, {0}}, false, {0, {0}}}
 #define GetECDHSessionKey_init_zero              {false, IdentityType_init_zero, false, {0, {0}}, false, ""}
@@ -848,6 +953,10 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define DebugLinkState_init_zero                 {false, {0, {0}}, false, "", false, "", false, "", false, HDNodeType_init_zero, false, 0, false, "", false, {0, {0}}, false, "", false, 0}
 #define DebugLinkStop_init_zero                  {0}
 #define DebugLinkLog_init_zero                   {false, 0, false, "", false, ""}
+#define DebugLinkMemoryRead_init_zero            {false, 0, false, 0}
+#define DebugLinkMemory_init_zero                {false, {0, {0}}}
+#define DebugLinkMemoryWrite_init_zero           {false, 0, false, {0, {0}}, false, 0}
+#define DebugLinkFlashErase_init_zero            {false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Address_address_tag                      1
@@ -867,9 +976,16 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define CipherKeyValue_iv_tag                    7
 #define CipheredKeyValue_value_tag               1
 #define DebugLinkDecision_yes_no_tag             1
+#define DebugLinkFlashErase_sector_tag           1
 #define DebugLinkLog_level_tag                   1
 #define DebugLinkLog_bucket_tag                  2
 #define DebugLinkLog_text_tag                    3
+#define DebugLinkMemory_memory_tag               1
+#define DebugLinkMemoryRead_address_tag          1
+#define DebugLinkMemoryRead_length_tag           2
+#define DebugLinkMemoryWrite_address_tag         1
+#define DebugLinkMemoryWrite_memory_tag          2
+#define DebugLinkMemoryWrite_flash_tag           3
 #define DebugLinkState_layout_tag                1
 #define DebugLinkState_pin_tag                   2
 #define DebugLinkState_matrix_tag                3
@@ -1072,6 +1188,10 @@ extern const pb_field_t DebugLinkGetState_fields[1];
 extern const pb_field_t DebugLinkState_fields[11];
 extern const pb_field_t DebugLinkStop_fields[1];
 extern const pb_field_t DebugLinkLog_fields[4];
+extern const pb_field_t DebugLinkMemoryRead_fields[3];
+extern const pb_field_t DebugLinkMemory_fields[2];
+extern const pb_field_t DebugLinkMemoryWrite_fields[4];
+extern const pb_field_t DebugLinkFlashErase_fields[2];
 
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
@@ -1095,7 +1215,9 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define GetPublicKey_size                        84
 #define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          (75 + MultisigRedeemScriptType_size)
+#define EthereumGetAddress_size                  50
 #define Address_size                             38
+#define EthereumAddress_size                     22
 #define WipeDevice_size                          0
 #define LoadDevice_size                          (320 + HDNodeType_size)
 #define ResetDevice_size                         66
@@ -1119,6 +1241,9 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define SimpleSignTx_size                        (31 + 0*TxInputType_size + 0*TxOutputType_size + 0*TransactionType_size)
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
+#define EthereumSignTx_size                      1239
+#define EthereumTxRequest_size                   80
+#define EthereumTxAck_size                       1027
 #define SignIdentity_size                        (558 + IdentityType_size)
 #define SignedIdentity_size                      140
 #define GetECDHSessionKey_size                   (107 + IdentityType_size)
@@ -1130,6 +1255,10 @@ extern const pb_field_t DebugLinkLog_fields[4];
 #define DebugLinkState_size                      (1468 + HDNodeType_size)
 #define DebugLinkStop_size                       0
 #define DebugLinkLog_size                        300
+#define DebugLinkMemoryRead_size                 12
+#define DebugLinkMemory_size                     1027
+#define DebugLinkMemoryWrite_size                1035
+#define DebugLinkFlashErase_size                 6
 
 #ifdef __cplusplus
 } /* extern "C" */

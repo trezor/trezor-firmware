@@ -46,6 +46,7 @@
 #include "ripemd160.h"
 #include "curves.h"
 #include "secp256k1.h"
+#include <libopencm3/stm32/flash.h>
 
 // message methods
 
@@ -96,7 +97,7 @@ const CoinType *fsm_getCoin(const char *name)
 const HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
-	if (!storage_getRootNode(&node, curve)) {
+	if (!storage_getRootNode(&node, curve, true)) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized or passphrase request cancelled or unsupported curve");
 		layoutHome();
 		return 0;
@@ -160,7 +161,7 @@ void fsm_msgPing(Ping *msg)
 	RESP_INIT(Success);
 
 	if (msg->has_button_protection && msg->button_protection) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "answer to ping?", NULL, NULL, NULL, NULL);
+		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "answer to ping?", NULL, NULL, NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Ping cancelled");
 			layoutHome();
@@ -195,16 +196,16 @@ void fsm_msgChangePin(ChangePin *msg)
 	bool removal = msg->has_remove && msg->remove;
 	if (removal) {
 		if (storage_hasPin()) {
-			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "remove current PIN?", NULL, NULL, NULL, NULL);
+			layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "remove current PIN?", NULL, NULL, NULL, NULL);
 		} else {
 			fsm_sendSuccess("PIN removed");
 			return;
 		}
 	} else {
 		if (storage_hasPin()) {
-			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change current PIN?", NULL, NULL, NULL, NULL);
+			layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change current PIN?", NULL, NULL, NULL, NULL);
 		} else {
-			layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "set new PIN?", NULL, NULL, NULL, NULL);
+			layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "set new PIN?", NULL, NULL, NULL, NULL);
 		}
 	}
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -232,7 +233,7 @@ void fsm_msgChangePin(ChangePin *msg)
 void fsm_msgWipeDevice(WipeDevice *msg)
 {
 	(void)msg;
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_WipeDevice, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Wipe cancelled");
 		layoutHome();
@@ -262,7 +263,7 @@ void fsm_msgFirmwareUpload(FirmwareUpload *msg)
 
 void fsm_msgGetEntropy(GetEntropy *msg)
 {
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "send entropy?", NULL, NULL, NULL, NULL);
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "send entropy?", NULL, NULL, NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Entropy cancelled");
 		layoutHome();
@@ -331,7 +332,7 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 		return;
 	}
 
-	layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "I take the risk", NULL, "Loading private seed", "is not recommended.", "Continue only if you", "know what you are", "doing!", NULL);
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "I take the risk", NULL, "Loading private seed", "is not recommended.", "Continue only if you", "know what you are", "doing!", NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Load cancelled");
 		layoutHome();
@@ -488,7 +489,7 @@ void fsm_msgClearSession(ClearSession *msg)
 void fsm_msgApplySettings(ApplySettings *msg)
 {
 	if (msg->has_label) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "?", NULL, NULL);
+		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "?", NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
 			layoutHome();
@@ -496,7 +497,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 		}
 	}
 	if (msg->has_language) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change language to", msg->language, "?", NULL, NULL);
+		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change language to", msg->language, "?", NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
 			layoutHome();
@@ -504,7 +505,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 		}
 	}
 	if (msg->has_use_passphrase) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", msg->use_passphrase ? "enable passphrase" : "disable passphrase", "encryption?", NULL, NULL, NULL);
+		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", msg->use_passphrase ? "enable passphrase" : "disable passphrase", "encryption?", NULL, NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
 			layoutHome();
@@ -512,7 +513,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 		}
 	}
 	if (msg->has_homescreen) {
-		layoutDialogSwipe(DIALOG_ICON_QUESTION, "Cancel", "Confirm", NULL, "Do you really want to", "change the home", "screen ?", NULL, NULL, NULL);
+		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change the home", "screen ?", NULL, NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
 			layoutHome();
@@ -975,4 +976,41 @@ void fsm_msgDebugLinkStop(DebugLinkStop *msg)
 	(void)msg;
 }
 
+void fsm_msgDebugLinkMemoryRead(DebugLinkMemoryRead *msg)
+{
+	RESP_INIT(DebugLinkMemory);
+
+	uint32_t length = 1024;
+	if (msg->has_length && msg->length < length)
+		length = msg->length;
+	resp->has_memory = true;
+	memcpy(resp->memory.bytes, (void*) msg->address, length);
+	resp->memory.size = length;
+	msg_debug_write(MessageType_MessageType_DebugLinkMemory, resp);
+}
+
+void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
+{
+	uint32_t length = msg->memory.size;
+	if (msg->flash) {
+		flash_clear_status_flags();
+		flash_unlock();
+		uint32_t* src = (uint32_t *) msg->memory.bytes;
+		for (unsigned int i = 0; i < length; i += 4) {
+			flash_program_word(msg->address +  i, *src);
+			src++;
+		}
+		flash_lock();
+	} else {
+		memcpy((void *) msg->address, msg->memory.bytes, length);
+	}
+}
+
+void fsm_msgDebugLinkFlashErase(DebugLinkFlashErase *msg)
+{
+	flash_clear_status_flags();
+	flash_unlock();
+	flash_erase_sector(msg->sector, FLASH_CR_PROGRAM_X32);
+	flash_lock();
+}
 #endif

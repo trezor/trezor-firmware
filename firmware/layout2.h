@@ -22,8 +22,9 @@
 
 #include "layout.h"
 #include "types.pb.h"
+#include "bitmaps.h"
 
-void layoutDialogSwipe(LayoutDialogIcon icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6);
+void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6);
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
@@ -40,5 +41,6 @@ void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 void layoutAddress(const char *address, const char *desc);
 void layoutPublicKey(const uint8_t *pubkey);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
+void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon);
 
 #endif
