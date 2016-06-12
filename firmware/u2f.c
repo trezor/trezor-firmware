@@ -216,12 +216,13 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 					cid = 0;
 					reader = 0;
 					usbTiny(0);
+					layoutHome();
 					return;
 				}
 				usbPoll();
 			}
 		}
-		
+
 		// We have all the data
 		switch (reader->cmd) {
 		case 0:
@@ -244,21 +245,20 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 		// wait for next commmand/ button press
 		reader->cmd = 0;
 		reader->seq = 255;
-		uint8_t bs = 0;
-		while (dialog_timeout && bs == 0 && reader->cmd == 0) {
+		while (dialog_timeout > 0 && reader->cmd == 0) {
 			dialog_timeout--;
 			usbPoll(); // may trigger new request
 			buttonUpdate();
 			if (button.YesUp &&
 				(last_req_state == AUTH || last_req_state == REG)) {
 				last_req_state++;
+				// standard requires to remember button press for 10 seconds.
+				dialog_timeout = 10 * U2F_TIMEOUT;
 			}
 		}
 
 		if (reader->cmd == 0) {
-			if (dialog_timeout == 0) {
-				last_req_state = INIT;
-			}
+			last_req_state = INIT;
 			cid = 0;
 			reader = 0;
 			usbTiny(0);
@@ -283,7 +283,7 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 		return send_u2fhid_error(cid, ERR_INVALID_LEN);
 
 	if (dialog_timeout > 0)
-		dialog_timeout = 10*U2F_TIMEOUT;
+		dialog_timeout = U2F_TIMEOUT;
 
 	U2FHID_FRAME f;
 	MEMSET_BZERO(&f, sizeof(f));
@@ -496,6 +496,8 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 
 	// prepare keypair from /random data
 	const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
+	if (!node)
+		return NULL;
 
 	// For second half of keyhandle
 	// Signature of app_id and random data
@@ -516,6 +518,8 @@ const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle
 	memcpy(&key_path[1], key_handle, KEY_PATH_LEN);
 
 	const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
+	if (!node)
+		return NULL;
 
 	uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
 	memcpy(&keybase[0], app_id, U2F_APPID_SIZE);
@@ -538,6 +542,11 @@ void u2f_register(const APDU *a)
 {
 	static U2F_REGISTER_REQ last_req;
 	const U2F_REGISTER_REQ *req = (U2F_REGISTER_REQ *)a->data;
+
+	if (!storage_isInitialized()) {
+		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
+		return;
+	}
 
 	// Validate basic request parameters
 	debugLog(0, "", "u2f register");
@@ -570,7 +579,7 @@ void u2f_register(const APDU *a)
 	if (last_req_state == REG) {
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
-		dialog_timeout = 10*U2F_TIMEOUT;
+		dialog_timeout = U2F_TIMEOUT;
 		return;
 	}
 
@@ -639,6 +648,11 @@ void u2f_authenticate(const APDU *a)
 	const U2F_AUTHENTICATE_REQ *req = (U2F_AUTHENTICATE_REQ *)a->data;
 	static U2F_AUTHENTICATE_REQ last_req;
 
+	if (!storage_isInitialized()) {
+		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
+		return;
+	}
+
 	if (APDU_LEN(*a) < 64) { /// FIXME: decent value
 		debugLog(0, "", "u2f authenticate - badlen");
 		send_u2f_error(U2F_SW_WRONG_LENGTH);
@@ -697,7 +711,7 @@ void u2f_authenticate(const APDU *a)
 	if (last_req_state == AUTH) {
 		// error: testof-user-presence is required
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
-		dialog_timeout = 10*U2F_TIMEOUT;
+		dialog_timeout = U2F_TIMEOUT;
 		return;
 	}
 
