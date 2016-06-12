@@ -62,6 +62,7 @@ bool storage_increasePinFails(uint32_t *pinfailptr);
 uint32_t *storage_getPinFailsPtr(void);
 
 uint32_t storage_nextU2FCounter(void);
+void storage_setU2FCounter(uint32_t u2fcounter);
 
 bool storage_isInitialized(void);
 

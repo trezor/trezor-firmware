@@ -71,6 +71,7 @@ static const struct MessagesMap_t MessagesMap[] = {
 	{'n', 'i', MessageType_MessageType_EstimateTxSize,		EstimateTxSize_fields,		(void (*)(void *))fsm_msgEstimateTxSize},
 	{'n', 'i', MessageType_MessageType_RecoveryDevice,		RecoveryDevice_fields,		(void (*)(void *))fsm_msgRecoveryDevice},
 	{'n', 'i', MessageType_MessageType_WordAck,				WordAck_fields,				(void (*)(void *))fsm_msgWordAck},
+	{'n', 'i', MessageType_MessageType_SetU2FCounter,		SetU2FCounter_fields,		(void (*)(void *))fsm_msgSetU2FCounter},
 	// out messages
 	{'n', 'o', MessageType_MessageType_Success,				Success_fields,				0},
 	{'n', 'o', MessageType_MessageType_Failure,				Failure_fields,				0},

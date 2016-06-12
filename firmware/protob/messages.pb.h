@@ -68,6 +68,7 @@ typedef enum _MessageType {
     MessageType_MessageType_EthereumTxAck = 60,
     MessageType_MessageType_GetECDHSessionKey = 61,
     MessageType_MessageType_ECDHSessionKey = 62,
+    MessageType_MessageType_SetU2FCounter = 63,
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
@@ -686,6 +687,11 @@ typedef struct _ResetDevice {
     char label[33];
 } ResetDevice;
 
+typedef struct _SetU2FCounter {
+    bool has_u2f_counter;
+    uint32_t u2f_counter;
+} SetU2FCounter;
+
 typedef struct {
     size_t size;
     uint8_t bytes[256];
@@ -881,6 +887,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define SignedIdentity_init_default              {false, "", false, {0, {0}}, false, {0, {0}}}
 #define GetECDHSessionKey_init_default           {false, IdentityType_init_default, false, {0, {0}}, false, ""}
 #define ECDHSessionKey_init_default              {false, {0, {0}}}
+#define SetU2FCounter_init_default               {false, 0}
 #define FirmwareErase_init_default               {0}
 #define FirmwareUpload_init_default              {{0, {0}}}
 #define DebugLinkDecision_init_default           {0}
@@ -946,6 +953,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define SignedIdentity_init_zero                 {false, "", false, {0, {0}}, false, {0, {0}}}
 #define GetECDHSessionKey_init_zero              {false, IdentityType_init_zero, false, {0, {0}}, false, ""}
 #define ECDHSessionKey_init_zero                 {false, {0, {0}}}
+#define SetU2FCounter_init_zero                  {false, 0}
 #define FirmwareErase_init_zero                  {0}
 #define FirmwareUpload_init_zero                 {{0, {0}}}
 #define DebugLinkDecision_init_zero              {0}
@@ -1093,6 +1101,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define ResetDevice_pin_protection_tag           4
 #define ResetDevice_language_tag                 5
 #define ResetDevice_label_tag                    6
+#define SetU2FCounter_u2f_counter_tag            1
 #define SignIdentity_identity_tag                1
 #define SignIdentity_challenge_hidden_tag        2
 #define SignIdentity_challenge_visual_tag        3
@@ -1181,6 +1190,7 @@ extern const pb_field_t SignIdentity_fields[5];
 extern const pb_field_t SignedIdentity_fields[4];
 extern const pb_field_t GetECDHSessionKey_fields[4];
 extern const pb_field_t ECDHSessionKey_fields[2];
+extern const pb_field_t SetU2FCounter_fields[2];
 extern const pb_field_t FirmwareErase_fields[1];
 extern const pb_field_t FirmwareUpload_fields[2];
 extern const pb_field_t DebugLinkDecision_fields[2];
@@ -1248,6 +1258,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define SignedIdentity_size                      140
 #define GetECDHSessionKey_size                   (107 + IdentityType_size)
 #define ECDHSessionKey_size                      67
+#define SetU2FCounter_size                       6
 #define FirmwareErase_size                       0
 #define FirmwareUpload_size                      2
 #define DebugLinkDecision_size                   2
