@@ -78,30 +78,35 @@ static const uint8_t cornertable[CORNER_RADIUS*CORNER_RADIUS] = {
 };
 
 
-void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, uint16_t b)
+void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, uint16_t b, uint8_t r)
 {
+    if (r != 2 && r != 4 && r != 8 && r != 16) {
+        return;
+    } else {
+        r = 16 / r;
+    }
     uint16_t colortable[16];
     set_color_table(colortable, c, b);
     display_set_window(x, y, w, h);
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
-            if (x < CORNER_RADIUS && y < CORNER_RADIUS) {
-                uint8_t c = cornertable[x + y * CORNER_RADIUS];
+            if (x < CORNER_RADIUS / r && y < CORNER_RADIUS / r) {
+                uint8_t c = cornertable[x * r + y * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else
-            if (x < CORNER_RADIUS && y >= h - CORNER_RADIUS) {
-                uint8_t c = cornertable[x + (h - 1 - y) * CORNER_RADIUS];
+            if (x < CORNER_RADIUS / r && y >= h - CORNER_RADIUS / r) {
+                uint8_t c = cornertable[x * r + (h - 1 - y) * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else
-            if (x >= w - CORNER_RADIUS && y < CORNER_RADIUS) {
-                uint8_t c = cornertable[(w - 1 - x) + y * CORNER_RADIUS];
+            if (x >= w - CORNER_RADIUS / r && y < CORNER_RADIUS / r) {
+                uint8_t c = cornertable[(w - 1 - x) * r + y * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else
-            if (x >= w - CORNER_RADIUS && y >= h - CORNER_RADIUS) {
-                uint8_t c = cornertable[(w - 1 - x) + (h - 1 - y) * CORNER_RADIUS];
+            if (x >= w - CORNER_RADIUS / r && y >= h - CORNER_RADIUS / r) {
+                uint8_t c = cornertable[(w - 1 - x) * r + (h - 1 - y) * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else {

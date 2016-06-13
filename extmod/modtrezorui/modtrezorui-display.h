@@ -21,7 +21,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_make_new(const mp_obj_type_t *type, size_t 
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.ui.display.bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None) -> None
+/// def trezor.ui.display.bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None
 ///     '''
 ///     Renders a bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
 ///     When a bgcolor is set, the bar is drawn with rounded corners and bgcolor is used for background.
@@ -35,15 +35,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
-    if (n_args > 6) {
+    if (n_args > 7) {
         uint16_t b = mp_obj_get_int(args[6]);
-        display_bar_radius(x, y, w, h, c, b);
+        uint8_t r = mp_obj_get_int(args[7]);
+        display_bar_radius(x, y, w, h, c, b, r);
     } else {
         display_bar(x, y, w, h, c);
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 7, mod_TrezorUi_Display_bar);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 8, mod_TrezorUi_Display_bar);
 
 /// def trezor.ui.display.blit(x: int, y: int, w: int, h: int, data: bytes) -> None
 ///     '''
