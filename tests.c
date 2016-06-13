@@ -1507,6 +1507,34 @@ START_TEST(test_pubkey_validity)
 }
 END_TEST
 
+START_TEST(test_pubkey_uncompress)
+{
+	uint8_t pub_key[65];
+	uint8_t uncompressed[65];
+	int res;
+	const ecdsa_curve *curve = &secp256k1;
+
+	memcpy(pub_key, fromhex("0226659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37"), 33);
+	res = ecdsa_uncompress_pubkey(curve, pub_key, uncompressed);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(uncompressed, fromhex("0426659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37b3cfbad6b39a8ce8cb3a675f53b7b57e120fe067b8035d771fd99e3eba7cf4de"), 65);
+
+	memcpy(pub_key, fromhex("03433f246a12e6486a51ff08802228c61cf895175a9b49ed4766ea9a9294a3c7fe"), 33);
+	res = ecdsa_uncompress_pubkey(curve, pub_key, uncompressed);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(uncompressed, fromhex("04433f246a12e6486a51ff08802228c61cf895175a9b49ed4766ea9a9294a3c7feeb4c25bcb840f720a16e8857a011e6b91e0ab2d03dbb5f9762844bb21a7b8ca7"), 65);
+
+	memcpy(pub_key, fromhex("0496e8f2093f018aff6c2e2da5201ee528e2c8accbf9cac51563d33a7bb74a016054201c025e2a5d96b1629b95194e806c63eb96facaedc733b1a4b70ab3b33e3a"), 65);
+	res = ecdsa_uncompress_pubkey(curve, pub_key, uncompressed);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(uncompressed, fromhex("0496e8f2093f018aff6c2e2da5201ee528e2c8accbf9cac51563d33a7bb74a016054201c025e2a5d96b1629b95194e806c63eb96facaedc733b1a4b70ab3b33e3a"), 65);
+
+	memcpy(pub_key, fromhex("00"), 1);
+	res = ecdsa_uncompress_pubkey(curve, pub_key, uncompressed);
+	ck_assert_int_eq(res, 0);
+}
+END_TEST
+
 START_TEST(test_wif)
 {
 	uint8_t priv_key[32];
@@ -1972,6 +2000,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("pubkey_validity");
 	tcase_add_test(tc, test_pubkey_validity);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("pubkey_uncompress");
+	tcase_add_test(tc, test_pubkey_uncompress);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("codepoints");
