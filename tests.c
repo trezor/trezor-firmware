@@ -1923,6 +1923,53 @@ START_TEST(test_output_script) {
 }
 END_TEST
 
+START_TEST(test_ethereum_pubkeyhash)
+{
+	uint8_t pubkeyhash[20];
+	uint8_t pub_key[65];
+	int res;
+
+	memcpy(pub_key, fromhex("0226659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37"), 33);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("dfec07843c46f3fb5e5ef8b70b845231a97ed2c8"), 20);
+
+	memcpy(pub_key, fromhex("025b1654a0e78d28810094f6c5a96b8efb8a65668b578f170ac2b1f83bc63ba856"), 33);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("aa2685dbc0a1820fc4bb03c3154d1cc0b26411ee"), 20);
+
+	memcpy(pub_key, fromhex("03433f246a12e6486a51ff08802228c61cf895175a9b49ed4766ea9a9294a3c7fe"), 33);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("86193afd976244f39f0e9d42a1d2c090080754f1"), 20);
+
+	memcpy(pub_key, fromhex("03aeb03abeee0f0f8b4f7a5d65ce31f9570cef9f72c2dd8a19b4085a30ab033d48"), 33);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("330b7636bff2c8ea728170042ab6af0b826cbdc0"), 20);
+
+	memcpy(pub_key, fromhex("0496e8f2093f018aff6c2e2da5201ee528e2c8accbf9cac51563d33a7bb74a016054201c025e2a5d96b1629b95194e806c63eb96facaedc733b1a4b70ab3b33e3a"), 65);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("10027a9bef3e98be693f8fb4c02f4a7421cdf384"), 20);
+
+	memcpy(pub_key, fromhex("0498010f8a687439ff497d3074beb4519754e72c4b6220fb669224749591dde416f3961f8ece18f8689bb32235e436874d2174048b86118a00afbd5a4f33a24f0f"), 65);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("6d9baaf3db174b9ea498081707289c228108aa9e"), 20);
+
+	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b826b8f40b92719086238e1bebf19b77a4d"), 65);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("addcb46a5ae157c837682689fcd4f80a76bb7740"), 20);
+
+	memcpy(pub_key, fromhex("00"), 1);
+	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	ck_assert_int_eq(res, 0);
+}
+END_TEST
+
 
 // define test suite and cases
 Suite *test_suite(void)
@@ -2032,6 +2079,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("script");
 	tcase_add_test(tc, test_output_script);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("ethereum_pubkeyhash");
+	tcase_add_test(tc, test_ethereum_pubkeyhash);
 	suite_add_tcase(s, tc);
 
 	return s;
