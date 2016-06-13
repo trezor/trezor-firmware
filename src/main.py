@@ -3,12 +3,14 @@ from trezor import msg
 
 # Load all applications
 from apps import playground
+from apps import playground_chren
 from apps import homescreen
 from apps import management
 from apps import wallet
 
 # Initialize all applications
 playground.boot()
+playground_chren.boot()
 homescreen.boot()
 management.boot()
 wallet.boot()
