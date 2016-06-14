@@ -37,6 +37,11 @@ BLUE_GRAY   = rgbcolor(0x60, 0x7D, 0x8B)
 BLACK       = rgbcolor(0x00, 0x00, 0x00)
 WHITE       = rgbcolor(0xFF, 0xFF, 0xFF)
 
+# password manager palette
+
+PM_DARK_BLUE = rgbcolor(0x1A, 0x29, 0x42)
+PM_BLUE      = rgbcolor(0x34, 0x98, 0xdb)
+
 MONO   = const(0)
 NORMAL = const(1)
 BOLD   = const(2)

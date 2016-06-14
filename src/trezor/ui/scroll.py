@@ -10,7 +10,7 @@ class Scroll():
         self.lines_per_page = lines_per_page
 
     def render(self):
-        count = len(self.totale_lines) // self.lines_per_page
+        count = self.totale_lines // self.lines_per_page
         padding = 20
         screen_height = const(220)
         cursor = 8
@@ -18,13 +18,13 @@ class Scroll():
         if count * padding > screen_height:
             padding = screen_height // count
 
-        x = 220
-        y = (10 + (screen_height // 2)) - ((count // 2) * padding)
+        x = 230
+        y = ((screen_height // 2)) - ((count // 2) * padding)
 
         for i in range(0, count):
             if (i != self.page):
-                ui.display.bar(x, y + i * padding, cursor, cursor, ui.GREY)
-            ui.display.bar(x, y + self.page * padding, cursor, cursor, ui.WHITE)
+                ui.display.bar(x, y + i * padding, cursor, cursor, ui.GREY, ui.BLACK, 4)
+            ui.display.bar(x, y + self.page * padding, cursor, cursor, ui.WHITE, ui.BLACK, 4)
 
     def wait(self):
         while True:
