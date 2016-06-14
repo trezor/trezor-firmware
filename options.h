@@ -56,4 +56,14 @@
 #define BIP39_CACHE_SIZE 4
 #endif
 
+// support Ethereum operations
+#ifndef USE_ETHEREUM
+#define USE_ETHEREUM 0
+#endif
+
+// support Keccak hashing
+#ifndef USE_KECCAK
+#define USE_KECCAK USE_ETHEREUM
+#endif
+
 #endif

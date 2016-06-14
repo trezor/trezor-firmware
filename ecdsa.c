@@ -36,6 +36,9 @@
 #include "base58.h"
 #include "macros.h"
 #include "secp256k1.h"
+#if USE_ETHEREUM
+#include "sha3.h"
+#endif
 
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2)
@@ -815,6 +818,21 @@ void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, u
 	MEMSET_BZERO(&k, sizeof(k));
 }
 
+int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, uint8_t *uncompressed)
+{
+	curve_point pub;
+
+	if (!ecdsa_read_pubkey(curve, pub_key, &pub)) {
+		return 0;
+	}
+
+	uncompressed[0] = 4;
+	bn_write_be(&pub.x, uncompressed + 1);
+	bn_write_be(&pub.y, uncompressed + 33);
+
+	return 1;
+}
+
 void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 {
 	uint8_t h[32];
@@ -828,6 +846,27 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 	ripemd160(h, 32, pubkeyhash);
 	MEMSET_BZERO(h, sizeof(h));
 }
+
+#if USE_ETHEREUM
+int ecdsa_get_ethereum_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
+{
+	uint8_t h[65];
+	SHA3_CTX ctx;
+
+	if (!ecdsa_uncompress_pubkey(&secp256k1, pub_key, h)) {
+		return 0;
+	}
+
+	sha3_256_Init(&ctx);
+	sha3_Update(&ctx, h + 1, 64);
+	keccak_Final(&ctx, h);
+
+	// least significant 160 bits
+	memcpy(pubkeyhash, h + 12, 20);
+
+	return 1;
+}
+#endif
 
 void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *addr_raw)
 {
