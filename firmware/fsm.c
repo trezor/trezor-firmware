@@ -775,6 +775,54 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	layoutHome();
 }
 
+void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
+{
+	RESP_INIT(ECDHSessionKey);
+
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
+	// TODO: consider adding appropriate UI for manual confirmation?
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
+	uint8_t hash[32];
+	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Invalid identity");
+		layoutHome();
+		return;
+	}
+
+	uint32_t address_n[5];
+	address_n[0] = 0x80000000 | 17;
+	address_n[1] = 0x80000000 | hash[ 0] | (hash[ 1] << 8) | (hash[ 2] << 16) | (hash[ 3] << 24);
+	address_n[2] = 0x80000000 | hash[ 4] | (hash[ 5] << 8) | (hash[ 6] << 16) | (hash[ 7] << 24);
+	address_n[3] = 0x80000000 | hash[ 8] | (hash[ 9] << 8) | (hash[10] << 16) | (hash[11] << 24);
+	address_n[4] = 0x80000000 | hash[12] | (hash[13] << 8) | (hash[14] << 16) | (hash[15] << 24);
+
+	const char *curve = SECP256K1_NAME;
+	if (msg->has_ecdsa_curve_name) {
+		curve = msg->ecdsa_curve_name;
+	}
+
+	const HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
+	if (!node) return;
+
+	if (cryptoGetECDHSessionKey(node, msg->peer_public_key.bytes, resp->session_key.bytes) == 0) {
+		resp->has_session_key = true;
+		resp->session_key.size = 65;
+		msg_write(MessageType_MessageType_ECDHSessionKey, resp);
+	} else {
+		fsm_sendFailure(FailureType_Failure_Other, "Error getting ECDH session key");
+	}
+	layoutHome();
+}
+
 /* ECIES disabled
 void fsm_msgEncryptMessage(EncryptMessage *msg)
 {
