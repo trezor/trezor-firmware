@@ -18,7 +18,7 @@ TOUCH_START = const(1)
 TOUCH_MOVE = const(2)
 TOUCH_END = const(4)
 
-msg_handlers = {}  # Interface -> generator
+msg_handlers = {}  # Message interface -> [generator]
 time_queue = []
 time_ticket = 0
 
@@ -39,17 +39,16 @@ def unschedule(gen):
 
 
 def block(gen, iface):
-    curr = msg_handlers.get(iface, None)
-    if curr:
-        log.warning(__name__, 'Closing %s blocked on %s', curr, iface)
-        curr.close()
-    msg_handlers[iface] = gen
+    if iface in msg_handlers:
+        msg_handlers[iface].append(gen)
+    else:
+        msg_handlers[iface] = [gen]
 
 
 def unblock(gen):
     for iface in msg_handlers:
-        if msg_handlers[iface] is gen:
-            msg_handlers[iface] = None
+        if gen in msg_handlers[iface]:
+            msg_handlers[iface].remove(gen)
 
 
 class Syscall():
@@ -80,7 +79,7 @@ class Wait(Syscall):
         self.gens = gens
         self.wait_for = wait_for
         self.exit_others = exit_others
-        self.scheduled = []
+        self.scheduled = []  # In uPython, set() cannot contain generators
         self.finished = []
         self.callback = None
 
@@ -115,6 +114,19 @@ class Wait(Syscall):
             self.callback = None
 
 
+def step_task(gen, data):
+    if isinstance(data, Exception):
+        result = gen.throw(data)
+    else:
+        result = gen.send(data)
+    if isinstance(result, Syscall):
+        result.register(gen)  # Execute the syscall
+    elif result is None:
+        schedule(gen)  # Just call us asap
+    else:
+        raise Exception('Unhandled result %s by %s' % (result, gen))
+
+
 def run_forever():
     if __debug__:
         global log_delay_pos, log_delay_rb, log_delay_rb_len
@@ -135,40 +147,27 @@ def run_forever():
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
-        message = msg.select(delay)
-        if message:
-            # Run interrupt handler right away, they have priority
-            iface, *data = message
-            gen = msg_handlers.pop(iface, None)
-            if not gen:
+        m = msg.select(delay)
+        if m:
+            # Run interrupt handlers right away, they have priority
+            iface, *data = m
+            tasks = msg_handlers.pop(iface, None)
+            if not tasks:
                 log.info(__name__, 'No handler for message: %s', iface)
                 continue
         else:
             # Run something from the time queue
             if time_queue:
                 _, _, gen, data = heappop(time_queue)
+                tasks = (gen,)
             else:
                 continue
 
-        try:
-            if isinstance(data, Exception):
-                result = gen.throw(data)
-            else:
-                result = gen.send(data)
-        except StopIteration as e:
-            log.debug(__name__, '%s finished', gen)
-            continue
-        except Exception as e:
-            log.exception(__name__, e)
-            continue
-
-        if isinstance(result, Syscall):
-            # Execute the syscall
-            result.register(gen)
-
-        elif result is None:
-            # Just call us asap
-            schedule(gen)
-
-        else:
-            raise Exception('Unhandled result %s by %s' % (result, gen))
+        # Run the tasks
+        for gen in tasks:
+            try:
+                step_task(gen, data)
+            except StopIteration as e:
+                log.debug(__name__, '%s finished', gen)
+            except Exception as e:
+                log.exception(__name__, e)

@@ -3,7 +3,7 @@ from trezor.ui.swipe import Swipe, SWIPE_UP, SWIPE_DOWN
 from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from trezor.ui.scroll import Scroll
 from trezor.crypto import hashlib, random, bip39
-from trezor.utils import unimport_gen
+from trezor.utils import unimport_gen, chunks
 
 
 def generate_mnemonic(strength, display_random):
@@ -24,7 +24,7 @@ def generate_mnemonic(strength, display_random):
 
 
 def request_new_pin():
-    from trezor.workflows.pin import request_pin
+    from trezor.workflows.request_pin import request_pin
 
     pin = yield from request_pin()
     pin_again = yield from request_pin('Enter PIN again')
@@ -35,6 +35,85 @@ def request_new_pin():
         raise Exception()  # TODO: wrong PIN should be handled in unified way
 
 
+def change_page(page, page_count):
+    while True:
+        swipe = yield from Swipe().wait()
+        if swipe == SWIPE_UP and page < page_count - 1:  # Scroll down
+            return page + 1
+        elif swipe == SWIPE_DOWN and page > 0:  # Scroll up
+            return page - 1
+
+def paginate(render_page, page_count, page=0):
+    while True:
+        changer = change_page(page, page_count)
+        renderer = render_page(page, page_count)
+        waiter = loop.Wait([changer, renderer])
+        result = yield waiter
+        if changer in waiter.finished:
+            page = result
+        else:
+            return result
+
+
+def render_scrollbar(page, page_count):
+    screen_height = const(220)
+    size = const(8)
+
+    padding = 15
+    if page_count * padding > screen_height:
+        padding = screen_height // page_count
+
+    x = 225
+    y = (screen_height // 2) - (page_count // 2) * padding
+
+    for i in range(0, page_count):
+        if i != page:
+            ui.display.bar(x, y + i * padding, size, size, ui.GREY, ui.BLACK, 4)
+    ui.display.bar(x, y + page * padding, size, size, ui.WHITE, ui.BLACK, 4)
+
+
+def animate_swipe():
+    def render(fg):
+        ui.display.bar(102, 214, 36, 4, fg, ui.BLACK, 2)
+        ui.display.bar(106, 222, 28, 4, fg, ui.BLACK, 2)
+        ui.display.bar(110, 230, 20, 4, fg, ui.BLACK, 2)
+    yield from ui.animate_pulse(render, ui.WHITE, ui.GREY, speed=300000, delay=200000)
+
+
+def show_mnemonic(mnemonic):
+    words_per_page = const(4)
+    mnemonic_words = list(enumerate(mnemonic.split()))
+    mnemonic_pages = list(chunks(mnemonic_words, words_per_page))
+
+    def render(page, page_count):
+
+        # Header
+        ui.clear()
+        ui.display.text(10, 30, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+
+        render_scrollbar(page, page_count)
+
+        # Mnemonic page
+        for pi, (wi, word) in enumerate(mnemonic_pages[page]):
+            top = pi * 30 + 74
+            pos = wi + 1
+            ui.display.text_right(40, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+            ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+
+        # Finish button
+        if page + 1 == page_count:
+            finish = Button((0, 240 - 48, 240, 48), 'Finish',
+                            normal_style=CONFIRM_BUTTON,
+                            active_style=CONFIRM_BUTTON_ACTIVE)
+            yield from finish.wait()
+
+        # Swipe icon
+        else:
+            yield from animate_swipe()
+
+    yield from paginate(render, len(mnemonic_pages))
+
+
 @unimport_gen
 def layout_reset_device(m):
 
@@ -42,51 +121,9 @@ def layout_reset_device(m):
 
     mnemonic = yield from generate_mnemonic(m.strength, m.display_random)
 
-    if m.pin_protection:
-        pin = yield from request_new_pin()
-    else:
-        pin = None
+    # if m.pin_protection:
+    #     pin = yield from request_new_pin()
+    # else:
+    #     pin = None
 
-    mnemonic_words = mnemonic.split()
-    words_per_page = const(4)
-
-    def render(page):
-        ui.clear()
-        ui.display.text(10, 30, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-
-        # print mnemonic words for proper page
-
-        for i in range(0, words_per_page):
-            index = i + page * words_per_page
-            word = mnemonic_words[index]
-            top = 74 + i * 30
-            ui.display.text_right(40, top, '%d.' % (index + 1), ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-            ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
-
-        scroll = Scroll(page=page, totale_lines=mnemonic_words, lines_per_page=words_per_page)
-        scroll.render()
-
-        # TODO: remove swipedown icon when this button is showed
-            
-        if(len(mnemonic_words) // words_per_page == page + 1):
-            finish = Button((0, 240 - 48, 240, 48), 'Finish', normal_style=CONFIRM_BUTTON, active_style=CONFIRM_BUTTON_ACTIVE)
-            finish.render()
-
-    def paginate():
-        count = len(mnemonic_words) // words_per_page
-        page = 0
-        while True:
-            render(page)
-            degrees = yield from Swipe().wait()
-            if degrees == SWIPE_UP:
-                page = min(page + 1, count - 1)
-            elif degrees == SWIPE_DOWN:
-                page = max(page - 1, 0)
-
-    def animate_arrow():
-        def func(foreground):
-            ui.display.icon(105, 200, res.load('apps/management/res/small-arrow.toig'), foreground, ui.BLACK)
-        yield from ui.animate_pulse(func, ui.WHITE, ui.BLACK, speed=190000)
-
-    yield loop.Wait([paginate(),
-                     animate_arrow()])
+    yield from show_mnemonic(mnemonic)
