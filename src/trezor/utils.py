@@ -1,12 +1,6 @@
 import sys
-from TrezorUtils import Utils
-
-_utils = Utils()
 
 type_gen = type((lambda: (yield))())
-
-def memaccess(address, length):
-    return _utils.memaccess(address, length)
 
 def unimport_func(func):
     def inner(*args, **kwargs):
