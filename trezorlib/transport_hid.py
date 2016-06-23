@@ -5,7 +5,6 @@ import time
 from .transport import Transport, ConnectionError
 
 DEVICE_IDS = [
-    # (0x10c4, 0xea80),  # TREZOR Shield
     (0x534c, 0x0001),  # TREZOR
 ]
 
@@ -20,6 +19,7 @@ class FakeRead(object):
 class HidTransport(Transport):
     def __init__(self, device, *args, **kwargs):
         self.hid = None
+        self.hid_version = None
         self.buffer = ''
         # self.read_timeout = kwargs.get('read_timeout')
         device = device[int(bool(kwargs.get('debug_link')))]
@@ -69,9 +69,16 @@ class HidTransport(Transport):
         self.hid = hid.device()
         self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)
-        # the following was needed just for TREZOR Shield
-        # self.hid.send_feature_report([0x41, 0x01]) # enable UART
-        # self.hid.send_feature_report([0x43, 0x03]) # purge TX/RX FIFOs
+        # determine hid_version
+        r = self.hid.write([0, 63, ] + [0xFF] * 63)
+        if r == 65:
+            self.hid_version = 2
+            return
+        r = self.hid.write([63, ] + [0xFF] * 63)
+        if r == 64:
+            self.hid_version = 1
+            return
+        raise ConnectionError("Unknown HID version")
 
     def _close(self):
         self.hid.close()
@@ -84,8 +91,10 @@ class HidTransport(Transport):
     def _write(self, msg, protobuf_msg):
         msg = bytearray(msg)
         while len(msg):
-            # Report ID, data padded to 63 bytes
-            self.hid.write([63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
+            if self.hid_version == 2:
+                self.hid.write([0, 63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
+            else:
+                self.hid.write([63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
             msg = msg[63:]
 
     def _read(self):
