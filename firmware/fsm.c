@@ -784,8 +784,6 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 		return;
 	}
 
-	// TODO: consider adding appropriate UI for manual confirmation?
-
 	if (!protectPin(true)) {
 		layoutHome();
 		return;
