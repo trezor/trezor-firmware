@@ -36,7 +36,6 @@ typedef struct {
 
 typedef struct {
 	uint32_t depth;
-	uint32_t fingerprint;
 	uint32_t child_num;
 	uint8_t chain_code[32];
 	uint8_t private_key[32];
@@ -44,9 +43,9 @@ typedef struct {
 	const curve_info *curve;
 } HDNode;
 
-int hdnode_from_xpub(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char *curve, HDNode *out);
+int hdnode_from_xpub(uint32_t depth, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char *curve, HDNode *out);
 
-int hdnode_from_xprv(uint32_t depth, uint32_t fingerprint, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, const char *curve, HDNode *out);
+int hdnode_from_xprv(uint32_t depth, uint32_t child_num, const uint8_t *chain_code, const uint8_t *private_key, const char *curve, HDNode *out);
 
 int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve, HDNode *out);
 
@@ -64,19 +63,23 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count);
 
 #endif
 
+uint32_t hdnode_fingerprint(HDNode *node);
+
 void hdnode_fill_public_key(HDNode *node);
 
-int hdnode_sign(const HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
-int hdnode_sign_digest(const HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby);
+int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
+int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby);
 
-void hdnode_serialize_public(const HDNode *node, char *str, int strsize);
+void hdnode_serialize_public(const HDNode *node, uint32_t fpr, char *str, int strsize);
 
-void hdnode_serialize_private(const HDNode *node, char *str, int strsize);
+void hdnode_serialize_private(const HDNode *node, uint32_t fpr, char *str, int strsize);
 
 int hdnode_deserialize(const char *str, HDNode *node);
 
 // Private
-void hdnode_serialize(const HDNode *node, uint32_t version, char use_public, char *str, int strsize);
+void hdnode_serialize(const HDNode *node, uint32_t fpr, uint32_t version, char use_public, char *str, int strsize);
+
+void hdnode_get_address_raw(HDNode *node, uint8_t version, uint8_t *addr_raw);
 
 const curve_info *get_curve_by_name(const char *curve_name);
 
