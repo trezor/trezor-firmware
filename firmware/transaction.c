@@ -71,7 +71,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 				return 0;
 			}
 			layoutProgressUpdate(true);
-			ecdsa_get_address_raw(node.public_key, coin->address_type, addr_raw);
+			hdnode_get_address_raw(&node, coin->address_type, addr_raw);
 		} else
 		if (in->has_address) { // address provided -> regular output
 			if (needs_confirm) {
