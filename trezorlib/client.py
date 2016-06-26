@@ -283,7 +283,7 @@ class DebugLinkMixin(object):
         self.passphrase = normalize_nfc(passphrase)
 
     def set_mnemonic(self, mnemonic):
-        self.mnemonic = normalize_nfc(passphrase)
+        self.mnemonic = normalize_nfc(mnemonic)
 
     def call_raw(self, msg):
 
