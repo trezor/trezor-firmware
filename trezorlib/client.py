@@ -91,14 +91,14 @@ class expect(object):
 def normalize_nfc(txt):
     if sys.version_info[0] < 3:
         if isinstance(txt, unicode):
-            return unicodedata.normalize('NFC', txt).encode('utf-8')
+            return unicodedata.normalize('NFC', txt)
         if isinstance(txt, str):
-            return unicodedata.normalize('NFC', txt.decode('utf-8')).encode('utf-8')
+            return unicodedata.normalize('NFC', txt.decode('utf-8'))
     else:
         if isinstance(txt, bytes):
-            return unicodedata.normalize('NFC', txt.decode('utf-8')).encode('utf-8')
+            return unicodedata.normalize('NFC', txt.decode('utf-8'))
         if isinstance(txt, str):
-            return unicodedata.normalize('NFC', txt).encode('utf-8')
+            return unicodedata.normalize('NFC', txt)
 
     raise Exception('unicode/str or bytes/str expected')
 
@@ -283,7 +283,7 @@ class DebugLinkMixin(object):
         self.passphrase = normalize_nfc(passphrase)
 
     def set_mnemonic(self, mnemonic):
-        self.mnemonic = normalize_nfc(mnemonic)
+        self.mnemonic = normalize_nfc(mnemonic).split(' ')
 
     def call_raw(self, msg):
 
