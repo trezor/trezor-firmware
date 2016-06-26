@@ -2,56 +2,57 @@
 
 import hid
 import time
-from .transport import Transport, ConnectionError
+from .transport import TransportV1, TransportV2, ConnectionError
 
-DEVICE_IDS = [
-    (0x534c, 0x0001),  # TREZOR
-]
+def enumerate():
+    """
+    Return a list of available TREZOR devices.
+    """
+    devices = {}
+    for d in hid.enumerate(0, 0):
+        vendor_id = d['vendor_id']
+        product_id = d['product_id']
+        serial_number = d['serial_number']
+        interface_number = d['interface_number']
+        path = d['path']
 
-class FakeRead(object):
-    # Let's pretend we have a file-like interface
-    def __init__(self, func):
-        self.func = func
+        # HIDAPI on Mac cannot detect correct HID interfaces, so device with
+        # DebugLink doesn't work on Mac...
+        if devices.get(serial_number) != None and devices[serial_number][0] == path:
+            raise Exception("Two devices with the same path and S/N found. This is Mac, right? :-/")
 
-    def read(self, size):
-        return self.func(size)
+        if (vendor_id, product_id) in [ x[0:2] for x in DEVICE_IDS]:
+            devices.setdefault(serial_number, [None, None])
+            if interface_number == 0 or interface_number == -1:  # normal link
+                devices[serial_number][0] = path
+            elif interface_number == 1:  # debug link
+                devices[serial_number][1] = path
 
-class HidTransport(Transport):
+    # List of two-tuples (path_normal, path_debuglink)
+    return list(devices.values())
+
+def path_to_transport(path):
+    try:
+        device = [ d for d in hid.enumerate(0, 0) if d['path'] == path ][0]
+    except IndexError:
+        raise ConnectionError("Connection failed")
+
+    # VID/PID found, let's find proper transport
+    vid, pid = device['vendor_id'], device['product_id']
+    try:
+        transport = [ transport for (_vid, _pid, transport) in DEVICE_IDS if _vid == vid and _pid == pid ][0]
+    except IndexError:
+        raise Exception("Unknown transport for VID:PID %04x:%04x" % (vid, pid))
+
+    return transport
+
+class _HidTransport(object):
     def __init__(self, device, *args, **kwargs):
         self.hid = None
         self.hid_version = None
-        self.buffer = ''
-        # self.read_timeout = kwargs.get('read_timeout')
+
         device = device[int(bool(kwargs.get('debug_link')))]
-        super(HidTransport, self).__init__(device, *args, **kwargs)
-
-    @classmethod
-    def enumerate(cls):
-        """
-        Return a list of available TREZOR devices.
-        """
-        devices = {}
-        for d in hid.enumerate(0, 0):
-            vendor_id = d['vendor_id']
-            product_id = d['product_id']
-            serial_number = d['serial_number']
-            interface_number = d['interface_number']
-            path = d['path']
-
-            # HIDAPI on Mac cannot detect correct HID interfaces, so device with
-            # DebugLink doesn't work on Mac...
-            if devices.get(serial_number) != None and devices[serial_number][0] == path:
-                raise Exception("Two devices with the same path and S/N found. This is Mac, right? :-/")
-
-            if (vendor_id, product_id) in DEVICE_IDS:
-                devices.setdefault(serial_number, [None, None])
-                if interface_number == 0 or interface_number == -1: # normal link
-                    devices[serial_number][0] = path
-                elif interface_number == 1: # debug link
-                    devices[serial_number][1] = path
-
-        # List of two-tuples (path_normal, path_debuglink)
-        return list(devices.values())
+        super(_HidTransport, self).__init__(device, *args, **kwargs)
 
     def is_connected(self):
         """
@@ -63,10 +64,10 @@ class HidTransport(Transport):
         return False
 
     def _open(self):
-        self.buffer = bytearray()
         self.hid = hid.device()
         self.hid.open_path(self.device)
         self.hid.set_nonblocking(True)
+
         # determine hid_version
         r = self.hid.write([0, 63, ] + [0xFF] * 63)
         if r == 65:
@@ -80,28 +81,21 @@ class HidTransport(Transport):
 
     def _close(self):
         self.hid.close()
-        self.buffer = bytearray()
         self.hid = None
 
-    def ready_to_read(self):
-        return False
+    def _write_chunk(self, chunk):
+        if len(chunk) != 64:
+            raise Exception("Unexpected data length")
 
-    def _write(self, msg, protobuf_msg):
-        msg = bytearray(msg)
-        while len(msg):
-            if self.hid_version == 2:
-                self.hid.write([0, 63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
-            else:
-                self.hid.write([63, ] + list(msg[:63]) + [0] * (63 - len(msg[:63])))
-            msg = msg[63:]
+        if self.hid_version == 2:
+            self.hid.write([0,] + chunk)
+        else:
+            self.hid.write(chunk)
 
-    def _read(self):
-        (msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
-        return (msg_type, self._raw_read(datalen))
-
-    def _raw_read(self, length):
+    def _read_chunk(self):
         start = time.time()
-        while len(self.buffer) < length:
+
+        while True:
             data = self.hid.read(64)
             if not len(data):
                 if time.time() - start > 10:
@@ -109,22 +103,37 @@ class HidTransport(Transport):
                     # device is still alive
                     if not self.is_connected():
                         raise ConnectionError("Connection failed")
-                    else:
-                        # Restart timer
-                        start = time.time()
+
+                    # Restart timer
+                    start = time.time()
 
                 time.sleep(0.001)
                 continue
 
-            report_id = data[0]
+            break
 
-            if report_id > 63:
-                # Command report
-                raise Exception("Not implemented")
+        if len(data) != 64:
+            raise Exception("Unexpected chunk size: %d" % len(data))
 
-            # Payload received, skip the report ID
-            self.buffer.extend(bytearray(data[1:]))
+        return bytearray(data)
 
-        ret = self.buffer[:length]
-        self.buffer = self.buffer[length:]
-        return bytes(ret)
+class HidTransportV1(_HidTransport, TransportV1):
+    pass
+
+class HidTransportV2(_HidTransport, TransportV2):
+    pass
+
+DEVICE_IDS = [
+    (0x534c, 0x0001, HidTransportV1),  # TREZOR
+    (0x1209, 0x53C0, HidTransportV2),  # TREZORv2 Bootloader
+    (0x1209, 0x53C1, HidTransportV2),  # TREZORv2
+]
+
+# Backward compatible wrapper, decides for proper transport
+# based on VID/PID of given path
+def HidTransport(device, *args, **kwargs):
+    transport = path_to_transport(device[0])
+    return transport(device, *args, **kwargs)
+
+# Backward compatibility hack; HidTransport is a function, not a class like before
+HidTransport.enumerate = enumerate

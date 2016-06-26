@@ -43,16 +43,18 @@ class UdpTransport(Transport):
         rlist, _, _ = select([self.socket], [], [], 0)
         return len(rlist) > 0
 
+    def _write_chunk(self, chunk):
+        if len(chunk) != 64:
+            raise Exception("Unexpected data length")
+
+        self.socket.sendall(chunk)
+
     def _write(self, msg, protobuf_msg):
-        msg = bytearray(msg)
-        while len(msg):
-            # Report ID, data padded to 63 bytes
-            self.socket.sendall(chr(63) + msg[:63] + b'\0' * (63 - len(msg[:63])))
-            msg = msg[63:]
+        raise NotImplemented()
 
     def _read(self):
-        (msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
-        return (msg_type, self._raw_read(datalen))
+        (session_id, msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
+        return (session_id, msg_type, self._raw_read(datalen))
 
     def _raw_read(self, length):
         start = time.time()
@@ -71,14 +73,7 @@ class UdpTransport(Transport):
                 time.sleep(0.001)
                 continue
 
-            report_id = ord(data[0])
-
-            if report_id > 63:
-                # Command report
-                raise Exception("Not implemented")
-
-            # Payload received, skip the report ID
-            self.buffer += str(bytearray(data[1:]))
+            self.buffer += data
 
         ret = self.buffer[:length]
         self.buffer = self.buffer[length:]
