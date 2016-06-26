@@ -1,12 +1,12 @@
 from __future__ import print_function
 import os
 from select import select
-from .transport import Transport
+from transport import TransportV1
 
 """PipeTransport implements fake wire transport over local named pipe.
 Use this transport for talking with trezor simulator."""
 
-class PipeTransport(Transport):
+class PipeTransport(TransportV1):
     def __init__(self, device, is_device, *args, **kwargs):
         self.is_device = is_device # Set True if act as device
 
@@ -39,22 +39,36 @@ class PipeTransport(Transport):
             os.unlink(self.filename_read)
             os.unlink(self.filename_write)
 
-    def ready_to_read(self):
+    def _ready_to_read(self):
         rlist, _, _ = select([self.read_f], [], [], 0)
         return len(rlist) > 0
 
-    def _write(self, msg, protobuf_msg):
+    def _write_chunk(self, chunk):
+        if len(chunk) != 64:
+            raise Exception("Unexpected data length")
+
         try:
-            self.write_f.write(msg)
+            self.write_f.write(chunk)
             self.write_f.flush()
         except OSError:
             print("Error while writing to socket")
             raise
 
-    def _read(self):
-        try:
-            (msg_type, datalen) = self._read_headers(self.read_f)
-            return (msg_type, self.read_f.read(datalen))
-        except IOError:
-            print("Failed to read from device")
-            raise
+    def _read_chunk(self):
+        while True:
+            try:
+                data = self.read_f.read(64)
+            except IOError:
+                print("Failed to read from device")
+                raise
+
+            if not len(data):
+                time.sleep(0.001)
+                continue
+
+            break
+
+        if len(data) != 64:
+            raise Exception("Unexpected chunk size: %d" % len(data))
+
+        return bytearray(data)

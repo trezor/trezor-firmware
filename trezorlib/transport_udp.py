@@ -3,20 +3,10 @@
 import socket
 from select import select
 import time
-from .transport import Transport, ConnectionError
+from .transport import TransportV2, ConnectionError
 
-class FakeRead(object):
-    # Let's pretend we have a file-like interface
-    def __init__(self, func):
-        self.func = func
-
-    def read(self, size):
-        return self.func(size)
-
-class UdpTransport(Transport):
+class UdpTransport(TransportV2):
     def __init__(self, device, *args, **kwargs):
-        self.buffer = ''
-
         device = device.split(':')
         if len(device) < 2:
             if not device[0]:
@@ -33,13 +23,13 @@ class UdpTransport(Transport):
     def _open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
+        self.socket.settimeout(10)
 
     def _close(self):
         self.socket.close()
         self.socket = None
-        self.buffer = ''
 
-    def ready_to_read(self):
+    def _ready_to_read(self):
         rlist, _, _ = select([self.socket], [], [], 0)
         return len(rlist) > 0
 
@@ -49,32 +39,9 @@ class UdpTransport(Transport):
 
         self.socket.sendall(chunk)
 
-    def _write(self, msg, protobuf_msg):
-        raise NotImplemented()
+    def _read_chunk(self):
+        data = self.socket.recv(64)
+        if len(data) != 64:
+            raise Exception("Unexpected chunk size: %d" % len(data))
 
-    def _read(self):
-        (session_id, msg_type, datalen) = self._read_headers(FakeRead(self._raw_read))
-        return (session_id, msg_type, self._raw_read(datalen))
-
-    def _raw_read(self, length):
-        start = time.time()
-        while len(self.buffer) < length:
-            data = self.socket.recv(64)
-            if not len(data):
-                if time.time() - start > 10:
-                    # Over 10 s of no response, let's check if
-                    # device is still alive
-                    if not self.is_connected():
-                        raise ConnectionError("Connection failed")
-                    else:
-                        # Restart timer
-                        start = time.time()
-
-                time.sleep(0.001)
-                continue
-
-            self.buffer += data
-
-        ret = self.buffer[:length]
-        self.buffer = self.buffer[length:]
-        return ret
+        return bytearray(data)

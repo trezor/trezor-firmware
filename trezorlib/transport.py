@@ -1,5 +1,5 @@
 import struct
-from . import mapping
+import mapping
 
 class NotImplementedException(Exception):
     pass
@@ -9,7 +9,6 @@ class ConnectionError(Exception):
 
 class Transport(object):
     def __init__(self, device, *args, **kwargs):
-        print("Transport constructor")
         self.device = device
         self.session_id = 0
         self.session_depth = 0
@@ -79,9 +78,7 @@ class Transport(object):
         if msg_type == 'protobuf':
             return data
         else:
-            print mapping.get_class(msg_type)
             inst = mapping.get_class(msg_type)()
-            print inst, data
             inst.ParseFromString(bytes(data))
             return inst
 
@@ -150,7 +147,7 @@ class TransportV1(Transport):
             headerlen = struct.calcsize(">HL")
             (msg_type, datalen) = struct.unpack(">HL", chunk[3:3 + headerlen])
         except:
-            raise Exception("Cannot parse header length")
+            raise Exception("Cannot parse header")
 
         data = chunk[3 + headerlen:]
         return (msg_type, datalen, data)
@@ -163,12 +160,72 @@ class TransportV1(Transport):
 
 class TransportV2(Transport):
     def write(self, msg):
-        ser = msg.SerializeToString()
-        raise NotImplemented()
+        data = bytearray(msg.SerializeToString())
+
+        header1 = struct.pack(">L", self.session_id)
+        header2 = struct.pack(">LL", mapping.get_type(msg), len(data))
+
+        data = header2 + data
+
+        first = True
+        while len(data):
+            if first:
+                # Magic characters, header1, header2, data padded to 64 bytes
+                datalen = 62 - len(header1)
+                chunk = b'?!' + header1 + data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
+            else:
+                # Magic characters, header1, data padded to 64 bytes
+                datalen = 63 - len(header1)
+                chunk = b'?' + header1 + data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
+
+            self._write_chunk(chunk)
+            data = data[datalen:]
+            first = False
 
     def _read(self):
-        pass
+        chunk = self._read_chunk()
+        (session_id, msg_type, datalen, data) = self.parse_first(chunk)
 
+        while len(data) < datalen:
+            chunk = self._read_chunk()
+            (session_id2, data) = self.parse_next(chunk)
+
+            if session_id != session_id2:
+                raise Exception("Session id mismatch")
+
+            data.extend(data)
+
+        # Strip padding zeros
+        data = data[:datalen]
+        return (session_id, msg_type, data)
+
+    def parse_first(self, chunk):
+        if chunk[:2] != b"?!":
+            raise Exception("Unexpected magic characters")
+
+        try:
+            headerlen = struct.calcsize(">LLL")
+            (session_id, msg_type, datalen) = struct.unpack(">LLL", chunk[2:2 + headerlen])
+        except:
+            raise Exception("Cannot parse header")
+
+        data = chunk[2 + headerlen:]
+        return (session_id, msg_type, datalen, data)
+
+    def parse_next(self, chunk):
+        if chunk[0:1] != b"?":
+            raise Exception("Unexpected magic characters")
+
+        try:
+            headerlen = struct.calcsize(">L")
+            session_id = struct.unpack(">L", chunk[1:1 + headerlen])
+        except:
+            raise Exception("Cannot parse header")
+
+        data = chunk[1 + headerlen:]
+        return (session_id, data)
+
+    '''
     def read_headers(self, read_f):
         c = read_f.read(2)
         if c != b"?!":
@@ -180,5 +237,5 @@ class TransportV2(Transport):
         except:
             raise Exception("Cannot parse header length")
 
-        print datalen
         return (0, msg_type, datalen)
+    '''
