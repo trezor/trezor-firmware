@@ -21,7 +21,7 @@ def enumerate():
         if devices.get(serial_number) != None and devices[serial_number][0] == path:
             raise Exception("Two devices with the same path and S/N found. This is Mac, right? :-/")
 
-        if (vendor_id, product_id) in [ x[0:2] for x in DEVICE_IDS]:
+        if (vendor_id, product_id) in DEVICE_IDS:
             devices.setdefault(serial_number, [None, None])
             if interface_number == 0 or interface_number == -1:  # normal link
                 devices[serial_number][0] = path
@@ -38,9 +38,8 @@ def path_to_transport(path):
         raise ConnectionError("Connection failed")
 
     # VID/PID found, let's find proper transport
-    vid, pid = device['vendor_id'], device['product_id']
     try:
-        transport = [ transport for (_vid, _pid, transport) in DEVICE_IDS if _vid == vid and _pid == pid ][0]
+        transport = DEVICE_TRANSPORTS[(device['vendor_id'], device['product_id'])]
     except IndexError:
         raise Exception("Unknown transport for VID:PID %04x:%04x" % (vid, pid))
 
@@ -124,10 +123,16 @@ class HidTransportV2(_HidTransport, TransportV2):
     pass
 
 DEVICE_IDS = [
-    (0x534c, 0x0001, HidTransportV1),  # TREZOR
-    (0x1209, 0x53C0, HidTransportV2),  # TREZORv2 Bootloader
-    (0x1209, 0x53C1, HidTransportV2),  # TREZORv2
+    (0x534c, 0x0001),  # TREZOR
+    (0x1209, 0x53C0),  # TREZORv2 Bootloader
+    (0x1209, 0x53C1),  # TREZORv2
 ]
+
+DEVICE_TRANSPORTS = {
+    (0x534c, 0x0001): HidTransportV1,  # TREZOR
+    (0x1209, 0x53C0): HidTransportV2,  # TREZORv2 Bootloader
+    (0x1209, 0x53C1): HidTransportV2,  # TREZORv2
+}
 
 # Backward compatible wrapper, decides for proper transport
 # based on VID/PID of given path
