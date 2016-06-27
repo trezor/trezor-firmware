@@ -4,7 +4,7 @@ import json
 import requests
 from . import protobuf_json
 from . import messages_pb2 as proto
-from .transport import Transport
+from .transport import TransportV1
 
 TREZORD_HOST = 'https://localback.net:21324'
 CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
@@ -12,7 +12,7 @@ CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
 def get_error(resp):
     return ' (error=%d str=%s)' % (resp.status_code, resp.json()['error'])
 
-class BridgeTransport(Transport):
+class BridgeTransport(TransportV1):
     def __init__(self, device, *args, **kwargs):
         self.configure()
 
@@ -41,7 +41,6 @@ class BridgeTransport(Transport):
         """
         Return a list of available TREZOR devices.
         """
-        devices = {}
         cls.configure()
         r = requests.get(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
@@ -50,7 +49,6 @@ class BridgeTransport(Transport):
         enum = r.json()
 
         return enum
-
 
     def _open(self):
         r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.path)
@@ -66,10 +64,12 @@ class BridgeTransport(Transport):
         else:
             self.session = None
 
-    def ready_to_read(self):
+    def _ready_to_read(self):
         return self.response != None
 
-    def _write(self, msg, protobuf_msg):
+    def write(self, protobuf_msg):
+        # Override main 'write' method, HTTP transport cannot be
+        # splitted to chunks
         cls = protobuf_msg.__class__.__name__
         msg = protobuf_json.pb2json(protobuf_msg)
         payload = '{"type": "%s", "message": %s}' % (cls, json.dumps(msg))
@@ -85,4 +85,4 @@ class BridgeTransport(Transport):
         cls = getattr(proto, self.response['type'])
         inst = cls()
         pb = protobuf_json.json2pb(inst, self.response['message'])
-        return ('protobuf', pb)
+        return (0, 'protobuf', pb)
