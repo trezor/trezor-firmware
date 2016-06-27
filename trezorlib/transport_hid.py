@@ -87,7 +87,7 @@ class _HidTransport(object):
             raise Exception("Unexpected data length")
 
         if self.hid_version == 2:
-            self.hid.write([0,] + chunk)
+            self.hid.write(b'\0' + chunk)
         else:
             self.hid.write(chunk)
 
