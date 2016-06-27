@@ -38,8 +38,8 @@ class TestMsgSignidentity(common.TrezorTest):
         identity = proto_types.IdentityType(proto='https', user='satoshi', host='bitcoin.org', port='', path='/login', index=0)
         sig = self.client.sign_identity(identity, hidden, visual)
         self.assertEqual(sig.address, '17F17smBTX9VTZA9Mj8LM5QGYNZnmziCjL')
-        self.assertEqual(binascii.hexlify(sig.public_key), '023a472219ad3327b07c18273717bb3a40b39b743756bf287fbd5fa9d263237f45')
-        self.assertEqual(binascii.hexlify(sig.signature), '20f2d1a42d08c3a362be49275c3ffeeaa415fc040971985548b9f910812237bb41770bf2c8d488428799fbb7e52c11f1a3404011375e4080e077e0e42ab7a5ba02')
+        self.assertEqual(binascii.hexlify(sig.public_key), b'023a472219ad3327b07c18273717bb3a40b39b743756bf287fbd5fa9d263237f45')
+        self.assertEqual(binascii.hexlify(sig.signature), b'20f2d1a42d08c3a362be49275c3ffeeaa415fc040971985548b9f910812237bb41770bf2c8d488428799fbb7e52c11f1a3404011375e4080e077e0e42ab7a5ba02')
 
         # URI  : ftp://satoshi@bitcoin.org:2323/pub
         # hash : 79a6b53831c6ff224fb283587adc4ebae8fb0d734734a46c876838f52dff53f3
@@ -47,8 +47,8 @@ class TestMsgSignidentity(common.TrezorTest):
         identity = proto_types.IdentityType(proto='ftp', user='satoshi', host='bitcoin.org', port='2323', path='/pub', index=3)
         sig = self.client.sign_identity(identity, hidden, visual)
         self.assertEqual(sig.address, '1KAr6r5qF2kADL8bAaRQBjGKYEGxn9WrbS')
-        self.assertEqual(binascii.hexlify(sig.public_key), '0266cf12d2ba381c5fd797da0d64f59c07a6f1b034ad276cca6bf2729e92b20d9c')
-        self.assertEqual(binascii.hexlify(sig.signature), '20bbd12dc657d534fc0f7e40186e22c447e0866a016f654f380adffa9a84e9faf412a1bb0ae908296537838cf91145e77da08681c63d07b7dca40728b9e6cb17cf')
+        self.assertEqual(binascii.hexlify(sig.public_key), b'0266cf12d2ba381c5fd797da0d64f59c07a6f1b034ad276cca6bf2729e92b20d9c')
+        self.assertEqual(binascii.hexlify(sig.signature), b'20bbd12dc657d534fc0f7e40186e22c447e0866a016f654f380adffa9a84e9faf412a1bb0ae908296537838cf91145e77da08681c63d07b7dca40728b9e6cb17cf')
 
         # URI  : ssh://satoshi@bitcoin.org
         # hash : 5fa612f558a1a3b1fb7f010b2ea0a25cb02520a0ffa202ce74a92fc6145da5f3
@@ -56,8 +56,8 @@ class TestMsgSignidentity(common.TrezorTest):
         identity = proto_types.IdentityType(proto='ssh', user='satoshi', host='bitcoin.org', port='', path='', index=47)
         sig = self.client.sign_identity(identity, hidden, visual, ecdsa_curve_name='nist256p1')
         self.assertEqual(sig.address, '')
-        self.assertEqual(binascii.hexlify(sig.public_key), '0373f21a3da3d0e96fc2189f81dd826658c3d76b2d55bd1da349bc6c3573b13ae4')
-        self.assertEqual(binascii.hexlify(sig.signature), '005122cebabb852cdd32103b602662afa88e54c0c0c1b38d7099c64dcd49efe908288114e66ed2d8c82f23a70b769a4db723173ec53840c08aafb840d3f09a18d3')
+        self.assertEqual(binascii.hexlify(sig.public_key), b'0373f21a3da3d0e96fc2189f81dd826658c3d76b2d55bd1da349bc6c3573b13ae4')
+        self.assertEqual(binascii.hexlify(sig.signature), b'005122cebabb852cdd32103b602662afa88e54c0c0c1b38d7099c64dcd49efe908288114e66ed2d8c82f23a70b769a4db723173ec53840c08aafb840d3f09a18d3')
 
         # URI  : ssh://satoshi@bitcoin.org
         # hash : 5fa612f558a1a3b1fb7f010b2ea0a25cb02520a0ffa202ce74a92fc6145da5f3
@@ -65,8 +65,8 @@ class TestMsgSignidentity(common.TrezorTest):
         identity = proto_types.IdentityType(proto='ssh', user='satoshi', host='bitcoin.org', port='', path='', index=47)
         sig = self.client.sign_identity(identity, hidden, visual, ecdsa_curve_name='ed25519')
         self.assertEqual(sig.address, '')
-        self.assertEqual(binascii.hexlify(sig.public_key), '000fac2a491e0f5b871dc48288a4cae551bac5cb0ed19df0764d6e721ec5fade18')
-        self.assertEqual(binascii.hexlify(sig.signature), '00f05e5085e666429de397c70a081932654369619c0bd2a6579ea6c1ef2af112ef79998d6c862a16b932d44b1ac1b83c8cbcd0fbda228274fde9e0d0ca6e9cb709')
+        self.assertEqual(binascii.hexlify(sig.public_key), b'000fac2a491e0f5b871dc48288a4cae551bac5cb0ed19df0764d6e721ec5fade18')
+        self.assertEqual(binascii.hexlify(sig.signature), b'00f05e5085e666429de397c70a081932654369619c0bd2a6579ea6c1ef2af112ef79998d6c862a16b932d44b1ac1b83c8cbcd0fbda228274fde9e0d0ca6e9cb709')
 
 
 if __name__ == '__main__':

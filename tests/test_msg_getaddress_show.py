@@ -20,7 +20,7 @@ class TestMsgGetaddress(common.TrezorTest):
                             pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
                                      proto_types.HDNodePathType(node=node, address_n=[2]),
                                      proto_types.HDNodePathType(node=node, address_n=[3])],
-                            signatures=['', '', ''],
+                            signatures=[b'', b'', b''],
                             m=2,
                             )
 
@@ -38,7 +38,7 @@ class TestMsgGetaddress(common.TrezorTest):
 
         multisig = proto_types.MultisigRedeemScriptType(
                         pubkeys=pubs,
-                        signatures=[''] * 15,
+                        signatures=[b''] * 15,
                         m=15,
                         )
 

@@ -24,7 +24,7 @@ def insight_tx(url, rawdata=False):
     for vin in data['vin']:
         i = t.inputs.add()
         if 'coinbase' in vin.keys():
-            i.prev_hash = "\0"*32
+            i.prev_hash = b"\0"*32
             i.prev_index = 0xffffffff # signed int -1
             i.script_sig = binascii.unhexlify(vin['coinbase'])
             i.sequence = vin['sequence']
@@ -57,7 +57,7 @@ def smartbit_tx(url, rawdata=False):
     for vin in data['inputs']:
         i = t.inputs.add()
         if 'coinbase' in vin.keys():
-            i.prev_hash = "\0"*32
+            i.prev_hash = b"\0"*32
             i.prev_index = 0xffffffff # signed int -1
             i.script_sig = binascii.unhexlify(vin['coinbase'])
             i.sequence = vin['sequence']
@@ -79,7 +79,7 @@ class TXAPIBitcoin(object):
 
     # @filecache(DAY)
     def get_tx(self, txhash):
-        url = 'https://insight.bitpay.com/api/tx/%s' % txhash
+        url = 'https://insight.bitpay.com/api/tx/%s' % txhash.decode('ascii')
         return insight_tx(url)
 
 
@@ -87,12 +87,12 @@ class TXAPITestnet(object):
 
     # @filecache(DAY)
     def get_tx(self, txhash):
-        url = 'https://test-insight.bitpay.com/api/tx/%s' % txhash
+        url = 'https://test-insight.bitpay.com/api/tx/%s' % txhash.decode('ascii')
         return insight_tx(url)
 
 class TXAPISegnet(object):
 
     # @filecache(DAY)
     def get_tx(self, txhash):
-        url = 'https://segnet-api.smartbit.com.au/v1/blockchain/tx/%s' % txhash
+        url = 'https://segnet-api.smartbit.com.au/v1/blockchain/tx/%s' % txhash.decode('ascii')
         return smartbit_tx(url)

@@ -17,8 +17,12 @@ class TestDeviceLoad(common.TrezorTest):
         passphrase_protection = self.client.debug.read_passphrase_protection()
         self.assertEqual(passphrase_protection, False)
 
+        address = self.client.get_address('Bitcoin', [])
+        self.assertEqual(address, '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK')
+
     def test_load_device_2(self):
         self.setup_mnemonic_pin_passphrase()
+        self.client.set_passphrase('passphrase')
 
         mnemonic = self.client.debug.read_mnemonic()
         self.assertEqual(mnemonic, self.mnemonic12)
@@ -28,6 +32,9 @@ class TestDeviceLoad(common.TrezorTest):
 
         passphrase_protection = self.client.debug.read_passphrase_protection()
         self.assertEqual(passphrase_protection, True)
+
+        address = self.client.get_address('Bitcoin', [])
+        self.assertEqual(address, '15fiTDFwZd2kauHYYseifGi9daH2wniDHH')
 
     def test_load_device_3(self):
         self.client.load_device_by_xprv(xprv='xprv9s21ZrQH143K2JF8RafpqtKiTbsbaxEeUaMnNHsm5o6wCW3z8ySyH4UxFVSfZ8n7ESu7fgir8imbZKLYVBxFPND1pniTZ81vKfd45EHKX73', pin='', passphrase_protection=False, label='test', language='english')

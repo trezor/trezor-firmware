@@ -3,9 +3,16 @@ from __future__ import print_function
 import unittest
 import common
 import binascii
+import sys
 
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
+
+if sys.version_info < (3,):
+    def byteindex(data, index):
+        return ord(data[index])
+else:
+    byteindex = lambda data, index: data[index]
 
 # address_n = [177] < 68
 # address_n = [16518] < 66
@@ -34,7 +41,7 @@ class TestZeroSig(common.TrezorTest):
 
             tx = self.client.call(msg)
 
-            siglen = ord(tx.serialized_tx[44])
+            siglen = byteindex(tx.serialized_tx, 44)
             print(siglen)
             if siglen < 67:
                 print("!!!!", n)
@@ -58,7 +65,7 @@ class TestZeroSig(common.TrezorTest):
                               )
 
         (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
-        siglen = ord(serialized_tx[44])
+        siglen = byteindex(serialized_tx, 44)
 
         # TREZOR must strip leading zero from signature
         self.assertEqual(siglen, 67)
@@ -79,7 +86,7 @@ class TestZeroSig(common.TrezorTest):
                               )
 
         (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
-        siglen = ord(serialized_tx[44])
+        siglen = byteindex(serialized_tx, 44)
 
         # TREZOR must strip leading zero from signature
         self.assertEqual(siglen, 66)

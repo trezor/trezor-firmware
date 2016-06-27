@@ -1,6 +1,16 @@
 import hashlib
 import binascii
+import struct
 import sys
+
+if sys.version_info < (3,):
+    def byteindex(data, index):
+        return ord(data[index])
+    def iterbytes(data):
+        return (ord (char) for char in data)
+else:
+    byteindex = lambda data, index: data[index]
+    iterbytes = iter
 
 Hash = lambda x: hashlib.sha256(hashlib.sha256(x).digest()).digest()
 
@@ -11,14 +21,14 @@ def hash_160(public_key):
 
 
 def hash_160_to_bc_address(h160, address_type):
-    vh160 = chr(address_type) + h160
+    vh160 = struct.pack('<B', address_type) + h160
     h = Hash(vh160)
     addr = vh160 + h[0:4]
     return b58encode(addr)
 
 def compress_pubkey(public_key):
-    if public_key[0] == '\x04':
-        return chr((ord(public_key[64]) & 1) + 2) + public_key[1:33]
+    if byteindex(public_key, 0) == 4:
+        return bytes((byteindex(public_key, 64) & 1) + 2) + public_key[1:33]
     raise Exception("Pubkey is already compressed")
 
 def public_key_to_bc_address(public_key, address_type, compress=True):
@@ -35,8 +45,8 @@ def b58encode(v):
     """ encode v, which is a string of bytes, to base58."""
 
     long_value = 0
-    for (i, c) in enumerate(v[::-1]):
-        long_value += (256 ** i) * ord(c)
+    for c in iterbytes(v):
+        long_value = long_value * 256 + c
 
     result = ''
     while long_value >= __b58base:
@@ -48,8 +58,8 @@ def b58encode(v):
     # Bitcoin does a little leading-zero-compression:
     # leading 0-bytes in the input become leading-1s
     nPad = 0
-    for c in v:
-        if c == '\0':
+    for c in iterbytes(v):
+        if c == 0:
             nPad += 1
         else:
             break
@@ -62,12 +72,12 @@ def b58decode(v, length):
     for (i, c) in enumerate(v[::-1]):
         long_value += __b58chars.find(c) * (__b58base ** i)
 
-    result = ''
+    result = b''
     while long_value >= 256:
         div, mod = divmod(long_value, 256)
-        result = chr(mod) + result
+        result = struct.pack('B', mod) + result
         long_value = div
-    result = chr(long_value) + result
+    result = struct.pack('B', long_value) + result
 
     nPad = 0
     for c in v:
@@ -76,14 +86,11 @@ def b58decode(v, length):
         else:
             break
 
-    result = chr(0) * nPad + result
+    result = b'\x00' * nPad + result
     if length is not None and len(result) != length:
         return None
 
-    if sys.version_info[0] < 3:
-        return result
-    else:
-        return str.encode(result)
+    return result
 
 def monkeypatch_google_protobuf_text_format():
     # monkeypatching: text formatting of protobuf messages
