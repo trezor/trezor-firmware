@@ -7,7 +7,7 @@ from . import messages_pb2 as proto
 from .transport import Transport
 
 TREZORD_HOST = 'https://localback.net:21324'
-CONFIG_URL = 'https://mytrezor.com/data/plugin/config_signed.bin'
+CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
 
 def get_error(resp):
     return ' (error=%d str=%s)' % (resp.status_code, resp.json()['error'])
@@ -26,7 +26,7 @@ class BridgeTransport(Transport):
 
     @staticmethod
     def configure():
-        r = requests.get(CONFIG_URL)
+        r = requests.get(CONFIG_URL, verify=False)
         if r.status_code != 200:
             raise Exception('Could not fetch config from %s' % CONFIG_URL)
 
