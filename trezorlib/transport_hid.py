@@ -49,8 +49,6 @@ class HidTransport(Transport):
                     devices[serial_number][0] = path
                 elif interface_number == 1: # debug link
                     devices[serial_number][1] = path
-                else:
-                    raise Exception("Unknown USB interface number: %d" % interface_number)
 
         # List of two-tuples (path_normal, path_debuglink)
         return list(devices.values())

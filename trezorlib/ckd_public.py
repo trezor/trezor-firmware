@@ -1,6 +1,7 @@
 import struct
 import hmac
 import hashlib
+import sys
 
 import ecdsa
 from ecdsa.util import string_to_number, number_to_string
@@ -12,12 +13,19 @@ from . import types_pb2 as proto_types
 
 PRIME_DERIVATION_FLAG = 0x80000000
 
+if sys.version_info < (3,):
+    def byteindex(data, index):
+        return ord(data[index])
+else:
+    byteindex = lambda data, index: data[index]
+
+
 def point_to_pubkey(point):
     order = SECP256k1.order
     x_str = number_to_string(point.x(), order)
     y_str = number_to_string(point.y(), order)
     vk = x_str + y_str
-    return chr((ord(vk[63]) & 1) + 2) + vk[0:32]  # To compressed key
+    return struct.pack('B', (byteindex(vk, 63) & 1) + 2) + vk[0:32]  # To compressed key
 
 def sec_to_public_pair(pubkey):
     """Convert a public key in sec binary format to a public pair."""
@@ -91,14 +99,14 @@ def get_subnode(node, i):
     return node_out
 
 def serialize(node, version=0x0488B21E):
-    s = ''
+    s = b''
     s += struct.pack('>I', version)
     s += struct.pack('>B', node.depth)
     s += struct.pack('>I', node.fingerprint)
     s += struct.pack('>I', node.child_num)
     s += node.chain_code
     if node.private_key:
-        s += '\x00' + node.private_key
+        s += b'\x00' + node.private_key
     else:
         s += node.public_key
     s += tools.Hash(s)[:4]
@@ -117,7 +125,7 @@ def deserialize(xpub):
     node.chain_code = data[13:45]
 
     key = data[45:-4]
-    if key[0] == '\x00':
+    if byteindex(key, 0) == 0:
         node.private_key = key[1:]
     else:
         node.public_key = key

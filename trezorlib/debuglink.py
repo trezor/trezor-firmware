@@ -97,3 +97,13 @@ class DebugLink(object):
 
     def stop(self):
         self._call(proto.DebugLinkStop(), nowait=True)
+
+    def memory_read(self, address, length):
+        obj = self._call(proto.DebugLinkMemoryRead(address=address, length=length))
+        return obj.memory
+
+    def memory_write(self, address, memory, flash=False):
+        self._call(proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash), nowait=True)
+
+    def flash_erase(self, sector):
+        obj = self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)

@@ -288,6 +288,10 @@ class Commands(object):
         ret = self.client.decrypt_keyvalue(address_n, args.key, args.value.decode("hex"))
         return ret
 
+    def set_u2f_counter(self, args):
+        ret = self.client.set_u2f_counter(args.counter)
+        return ret
+
     def firmware_update(self, args):
         import requests
         if args.file:
@@ -343,6 +347,7 @@ class Commands(object):
     decrypt_message.help = 'Decrypt message'
     encrypt_keyvalue.help = 'Encrypt value by given key and path'
     decrypt_keyvalue.help = 'Decrypt value by given key and path'
+    set_u2f_counter.help = 'Set U2F counter'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     get_address.arguments = (
@@ -458,6 +463,10 @@ class Commands(object):
         (('-n', '-address'), {'type': str}),
         (('-e', '--curve'), {'type': str}),
         (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
+    )
+
+    set_u2f_counter.arguments = (
+        (('counter',), {'type': int}),
     )
 
     firmware_update.arguments = (

@@ -91,14 +91,14 @@ class expect(object):
 def normalize_nfc(txt):
     if sys.version_info[0] < 3:
         if isinstance(txt, unicode):
-            return unicodedata.normalize('NFC', txt).encode('utf-8')
+            return unicodedata.normalize('NFC', txt)
         if isinstance(txt, str):
-            return unicodedata.normalize('NFC', txt.decode('utf-8')).encode('utf-8')
+            return unicodedata.normalize('NFC', txt.decode('utf-8'))
     else:
         if isinstance(txt, bytes):
-            return unicodedata.normalize('NFC', txt.decode('utf-8')).encode('utf-8')
+            return unicodedata.normalize('NFC', txt.decode('utf-8'))
         if isinstance(txt, str):
-            return unicodedata.normalize('NFC', txt).encode('utf-8')
+            return unicodedata.normalize('NFC', txt)
 
     raise Exception('unicode/str or bytes/str expected')
 
@@ -283,7 +283,7 @@ class DebugLinkMixin(object):
         self.passphrase = normalize_nfc(passphrase)
 
     def set_mnemonic(self, mnemonic):
-        self.mnemonic = normalize_nfc(mnemonic)
+        self.mnemonic = normalize_nfc(mnemonic).split(' ')
 
     def call_raw(self, msg):
 
@@ -501,7 +501,7 @@ class ProtocolMixin(object):
     def sign_message(self, coin_name, n, message):
         n = self._convert_prime(n)
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message)
+        message = normalize_nfc(message).encode("utf-8")
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message))
 
     @expect(proto.SignedIdentity)
@@ -512,9 +512,15 @@ class ProtocolMixin(object):
     def get_ecdh_session_key(self, identity, peer_public_key, ecdsa_curve_name=DEFAULT_CURVE):
         return self.call(proto.GetECDHSessionKey(identity=identity, peer_public_key=peer_public_key, ecdsa_curve_name=ecdsa_curve_name))
 
+    @field('message')
+    @expect(proto.Success)
+    def set_u2f_counter(self, u2f_counter):
+        ret = self.call(proto.SetU2FCounter(u2f_counter = u2f_counter))
+        return ret
+
     def verify_message(self, address, signature, message):
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message)
+        message = normalize_nfc(message).encode("utf-8")
         try:
             if address:
                 resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
@@ -541,7 +547,7 @@ class ProtocolMixin(object):
 
     @field('value')
     @expect(proto.CipheredKeyValue)
-    def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=None):
+    def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
         n = self._convert_prime(n)
         return self.call(proto.CipherKeyValue(address_n=n,
                                               key=key,
@@ -549,11 +555,11 @@ class ProtocolMixin(object):
                                               encrypt=True,
                                               ask_on_encrypt=ask_on_encrypt,
                                               ask_on_decrypt=ask_on_decrypt,
-                                              iv=iv if iv is not None else ''))
+                                              iv=iv))
 
     @field('value')
     @expect(proto.CipheredKeyValue)
-    def decrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=None):
+    def decrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
         n = self._convert_prime(n)
         return self.call(proto.CipherKeyValue(address_n=n,
                                               key=key,
@@ -561,7 +567,7 @@ class ProtocolMixin(object):
                                               encrypt=False,
                                               ask_on_encrypt=ask_on_encrypt,
                                               ask_on_decrypt=ask_on_decrypt,
-                                              iv=iv if iv is not None else ''))
+                                              iv=iv))
 
     @field('tx_size')
     @expect(proto.TxSize)
@@ -602,7 +608,7 @@ class ProtocolMixin(object):
         tx.outputs.extend(outputs)
 
         txes = {}
-        txes[''] = tx
+        txes[b''] = tx
 
         known_hashes = []
         for inp in inputs:
@@ -634,7 +640,7 @@ class ProtocolMixin(object):
 
             # Prepare structure for signatures
             signatures = [None] * len(inputs)
-            serialized_tx = ''
+            serialized_tx = b''
 
             counter = 0
             while True:
@@ -753,7 +759,7 @@ class ProtocolMixin(object):
             raise Exception("Invalid response, expected EntropyRequest")
 
         external_entropy = self._get_local_entropy()
-        log("Computer generated entropy: " + binascii.hexlify(external_entropy))
+        log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode('ascii'))
         ret = self.call(proto.EntropyAck(entropy=external_entropy))
         self.init_device()
         return ret
@@ -797,10 +803,10 @@ class ProtocolMixin(object):
         node = types.HDNodeType()
         data = binascii.hexlify(tools.b58decode(xprv, None))
 
-        if data[90:92] != '00':
+        if data[90:92] != b'00':
             raise Exception("Contain invalid private key")
 
-        checksum = hashlib.sha256(hashlib.sha256(binascii.unhexlify(data[:156])).digest()).hexdigest()[:8]
+        checksum = binascii.hexlify(hashlib.sha256(hashlib.sha256(binascii.unhexlify(data[:156])).digest()).digest()[:4])
         if checksum != data[156:]:
             raise Exception("Checksum doesn't match")
 
@@ -815,8 +821,8 @@ class ProtocolMixin(object):
         node.depth = int(data[8:10], 16)
         node.fingerprint = int(data[10:18], 16)
         node.child_num = int(data[18:26], 16)
-        node.chain_code = data[26:90].decode('hex')
-        node.private_key = data[92:156].decode('hex')  # skip 0x00 indicating privkey
+        node.chain_code = binascii.unhexlify(data[26:90])
+        node.private_key = binascii.unhexlify(data[92:156])  # skip 0x00 indicating privkey
 
         resp = self.call(proto.LoadDevice(node=node,
                                           pin=pin,

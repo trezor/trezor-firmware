@@ -15,7 +15,7 @@ def entropy(data):
         else:
             counts[c] = 1
     e = 0
-    for _, v in counts.iteritems():
+    for _, v in counts.items():
         p = 1.0 * v / len(data)
         e -= p * math.log(p, 256)
     return e

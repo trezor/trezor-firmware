@@ -10,22 +10,21 @@ class TestMsgSignmessage(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         sig = self.client.sign_message('Bitcoin', [0], "This is an example of a signed message.")
         self.assertEqual(sig.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
-        self.assertEqual(binascii.hexlify(sig.signature), '209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80')
+        self.assertEqual(binascii.hexlify(sig.signature), b'209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80')
 
     def test_sign_testnet(self):
         self.setup_mnemonic_nopin_nopassphrase()
         sig = self.client.sign_message('Testnet', [0], "This is an example of a signed message.")
 
         self.assertEqual(sig.address, 'mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL')
-        self.assertEqual(binascii.hexlify(sig.signature), '209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80')
+        self.assertEqual(binascii.hexlify(sig.signature), b'209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80')
 
     def test_sign_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
         sig = self.client.sign_message('Bitcoin', [0], "VeryLongMessage!" * 64)
         self.assertEqual(sig.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
-        self.assertEqual(binascii.hexlify(sig.signature), '205ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed')
+        self.assertEqual(binascii.hexlify(sig.signature), b'205ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed')
 
-    """
     def test_sign_utf(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -34,12 +33,11 @@ class TestMsgSignmessage(common.TrezorTest):
 
         sig_nfkd = self.client.sign_message('Bitcoin', [0], words_nfkd)
         self.assertEqual(sig_nfkd.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
-        self.assertEqual(binascii.hexlify(sig_nfkd.signature), '1fd0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda4e39588e4ec2b6a22dda4ec4f562f06e91129eea9a844a7193812de82d47c496b')
+        self.assertEqual(binascii.hexlify(sig_nfkd.signature), b'20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6')
 
         sig_nfc = self.client.sign_message('Bitcoin', [0], words_nfc)
         self.assertEqual(sig_nfc.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
-        self.assertEqual(binascii.hexlify(sig_nfc.signature), '1fd0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda4e39588e4ec2b6a22dda4ec4f562f06e91129eea9a844a7193812de82d47c496b')
-    """
+        self.assertEqual(binascii.hexlify(sig_nfc.signature), b'20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6')
 
 if __name__ == '__main__':
     unittest.main()
