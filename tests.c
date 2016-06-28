@@ -161,6 +161,35 @@ START_TEST(test_base58)
 }
 END_TEST
 
+START_TEST(test_bignum_divmod)
+{
+	uint32_t r;
+	int i;
+
+	bignum256 a = { { 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0xffff} };
+	uint32_t ar[] = { 15, 14, 55, 29, 44, 24, 53, 49, 18, 55, 2, 28, 5, 4, 12, 43, 18, 37, 28, 14, 30, 46, 12, 11, 17, 10, 10, 13, 24, 45, 4, 33, 44, 42, 2, 46, 34, 43, 45, 28, 21, 18, 13, 17 };
+
+	i = 0;
+	while (!bn_is_zero(&a) && i < 44) {
+		bn_divmod58(&a, &r);
+		ck_assert_int_eq(r, ar[i]);
+		i++;
+	}
+	ck_assert_int_eq(i, 44);
+
+	bignum256 b = { { 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0xffff} };
+	uint32_t br[] = { 935, 639, 129, 913, 7, 584, 457, 39, 564, 640, 665, 984, 269, 853, 907, 687, 8, 985, 570, 423, 195, 316, 237, 89, 792, 115 };
+
+	i = 0;
+	while (!bn_is_zero(&b) && i < 26) {
+		bn_divmod1000(&b, &r);
+		ck_assert_int_eq(r, br[i]);
+		i++;
+	}
+	ck_assert_int_eq(i, 26);
+
+}
+END_TEST
 
 // test vector 1 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
 START_TEST(test_bip32_vector_1)
@@ -1979,6 +2008,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("base58");
 	tcase_add_test(tc, test_base58);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("bignum_divmod");
+	tcase_add_test(tc, test_bignum_divmod);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("bip32");

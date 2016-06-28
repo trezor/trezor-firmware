@@ -804,6 +804,30 @@ void bn_divmod58(bignum256 *a, uint32_t *r)
 	*r = rem;
 }
 
+// a / 1000 = a (+r)
+void bn_divmod1000(bignum256 *a, uint32_t *r)
+{
+	int i;
+	uint32_t rem, tmp;
+	rem = a->val[8] % 1000;
+	a->val[8] /= 1000;
+	for (i = 7; i >= 0; i--) {
+		// invariants:
+		//   rem = old(a) >> 30(i+1) % 1000
+		//   a[i+1..8] = old(a[i+1..8])/1000
+		//   a[0..i]   = old(a[0..i])
+		// 2^30 == 1073741*1000 + 824
+		tmp = rem * 824 + a->val[i];
+		// set a[i] = (rem * 2^30 + a[i])/1000
+		//          = rem * 1073741 + (rem * 824 + a[i])/1000
+		a->val[i] = rem * 1073741 + (tmp / 1000);
+		// set rem = (rem * 2^30 + a[i]) mod 1000
+		//         = (rem * 824 + a[i]) mod 1000
+		rem = tmp % 1000;
+	}
+	*r = rem;
+}
+
 #if USE_BN_PRINT
 void bn_print(const bignum256 *a)
 {
