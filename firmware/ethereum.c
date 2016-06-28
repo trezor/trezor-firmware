@@ -81,8 +81,9 @@ static int rlp_calculate_length(int length, uint8_t firstbyte) {
 		return 2 + length;
 	} else if (length <= 0xffff) {
 		return 3 + length;
-	} else
+	} else {
 		return 4 + length;
+	}
 }
 
 static inline void hash_data(const uint8_t *buf, size_t size)
@@ -117,8 +118,9 @@ static void hash_rlp_field(const uint8_t *buf, size_t size)
 {
 	hash_rlp_length(size, buf[0]);
 	/* FIXME: this special case should be handled more nicely */
-	if (!(size == 1 && buf[0] <= 0x7f))
+	if (!(size == 1 && buf[0] <= 0x7f)) {
 		hash_data(buf, size);
+	}
 }
 
 static void send_request_chunk(void)
@@ -233,52 +235,60 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	int total_rlp_length = 0;
 	int total_data_length = 0;
 
-	if (msg->has_data_initial_chunk)
+	if (msg->has_data_initial_chunk) {
 		total_data_length += msg->data_initial_chunk.size;
-	if (msg->has_data_length)
+	}
+	if (msg->has_data_length) {
 		total_data_length += msg->data_length;
+	}
 
 	layoutProgress("Signing Eth", 1);
 
-	if (msg->has_nonce)
+	if (msg->has_nonce) {
 		total_rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
-	else
+	} else {
 		total_rlp_length++;
+	}
 
 	layoutProgress("Signing Eth", 2);
 
-	if (msg->has_gas_price)
+	if (msg->has_gas_price) {
 		total_rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
-	else
+	} else {
 		total_rlp_length++;
+	}
 
 	layoutProgress("Signing Eth", 3);
 
-	if (msg->has_gas_limit)
+	if (msg->has_gas_limit) {
 		total_rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
-	else
+	} else {
 		total_rlp_length++;
+	}
 
 	layoutProgress("Signing Eth", 4);
 
-	if (msg->has_to)
+	if (msg->has_to) {
 		total_rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
-	else
+	} else {
 		total_rlp_length++;
+	}
 
 	layoutProgress("Signing Eth", 5);
 
-	if (msg->has_value)
+	if (msg->has_value) {
 		total_rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
-	else
+	} else {
 		total_rlp_length++;
+	}
 
 	layoutProgress("Signing Eth", 6);
 
-	if (msg->has_data_initial_chunk)
+	if (msg->has_data_initial_chunk) {
 		total_rlp_length += rlp_calculate_length(total_data_length, msg->data_initial_chunk.bytes[0]);
-	else
+	} else {
 		total_rlp_length++;
+	}
 
 	layoutProgress("Signing Eth", 7);
 
@@ -287,36 +297,42 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutProgress("Signing Eth", 8);
 
-	if (msg->has_nonce)
+	if (msg->has_nonce) {
 		hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
-	else
+	} else {
 		hash_rlp_length(1, 0);
+	}
 
-	if (msg->has_gas_price)
+	if (msg->has_gas_price) {
 		hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
-	else
+	} else {
 		hash_rlp_length(1, 0);
+	}
 
-	if (msg->has_gas_limit)
+	if (msg->has_gas_limit) {
 		hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
-	else
+	} else {
 		hash_rlp_length(1, 0);
+	}
 
-	if (msg->has_to)
+	if (msg->has_to) {
 		hash_rlp_field(msg->to.bytes, msg->to.size);
-	else
+	} else {
 		hash_rlp_length(1, 0);
+	}
 
-	if (msg->has_value)
+	if (msg->has_value) {
 		hash_rlp_field(msg->value.bytes, msg->value.size);
-	else
+	} else {
 		hash_rlp_length(1, 0);
+	}
 
 	if (msg->has_data_initial_chunk) {
 		hash_rlp_length(total_data_length, msg->data_initial_chunk.bytes[0]);
 		hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
-	} else
+	} else {
 		hash_rlp_length(1, 0);
+	}
 
 	layoutProgress("Signing Eth", 9);
 
