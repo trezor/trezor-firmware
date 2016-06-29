@@ -106,6 +106,32 @@ enum PinMatrixRequestType {
 }
 
 /**
+ * Type of recovery procedure. These should be used as bitmask, e.g.,
+ * `RecoveryDeviceType_ScrambledWords | RecoveryDeviceType_Matrix`
+ * listing every method supported by the host computer.
+ *
+ * Note that ScrambledWords must be supported by every implementation
+ * for backward compatibility; there is no way to not support it.
+ *
+ * @used_in RecoveryDevice
+ */
+enum RecoveryDeviceType {
+	// use powers of two when extending this field
+	RecoveryDeviceType_ScrambledWords = 0;		// words in scrambled order
+	RecoveryDeviceType_Matrix = 1;				// matrix recovery type
+}
+
+/**
+ * Type of Recovery Word request
+ * @used_in WordRequest
+ */
+enum WordRequestType {
+	WordRequestType_Plain = 0;
+	WordRequestType_Matrix9 = 1;
+	WordRequestType_Matrix6 = 2;
+}
+
+/**
  * Structure representing BIP32 (hierarchical deterministic) node
  * Used for imports of private key into the device and exporting public key out of device
  * @used_in PublicKey

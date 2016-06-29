@@ -390,7 +390,9 @@ message RecoveryDevice {
 	optional string language = 4 [default='english'];	// device language
 	optional string label = 5;				// device label
 	optional bool enforce_wordlist = 6;			// enforce BIP-39 wordlist during the process
-	optional uint32 u2f_counter = 7;			// U2F counter
+	// 7 reserved for unused recovery method
+	optional uint32 type = 8;				// supported recovery type (see RecoveryType)
+	optional uint32 u2f_counter = 9;			// U2F counter
 }
 
 /**
@@ -400,6 +402,7 @@ message RecoveryDevice {
  * @prev WordAck
  */
 message WordRequest {
+	optional WordRequestType type = 1;
 }
 
 /**
