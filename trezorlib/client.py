@@ -30,6 +30,29 @@ DEFAULT_CURVE = 'secp256k1'
 # monkeypatching: text formatting of protobuf messages
 tools.monkeypatch_google_protobuf_text_format()
 
+
+def getch():
+    try:
+        import termios
+    except ImportError:
+        # Non-POSIX. Return msvcrt's (Windows') getch.
+        import msvcrt
+        return msvcrt.getch()
+
+    # POSIX system. Create and return a getch that manipulates the tty.
+    import sys, tty
+    def _getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+    return _getch()
+
 def get_buttonrequest_value(code):
     # Converts integer code to its string representation of ButtonRequestType
     return [ k for k, v in types.ButtonRequestType.items() if v == code][0]
@@ -174,6 +197,29 @@ class TextUIMixin(object):
         # log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
         return proto.ButtonAck()
 
+    def callback_RecoveryMatrix(self, msg):
+        if self.recovery_matrix_first_pass:
+            self.recovery_matrix_first_pass = False
+            log("Use the numeric keypad to describe positions.  For the word list use only left and right keys. The layout is:")
+            log("    7 8 9     7 | 9")
+            log("    4 5 6     4 | 6")
+            log("    1 2 3     1 | 3")
+        while True:
+            character = getch()
+            if character in ('\x03', '\x04'):
+                return proto.Cancel()
+
+            if character in ('\x08', '\x7f'):
+                return proto.WordAck(word='\x08')
+
+            # ignore middle column if only 6 keys requested.
+            if (msg.type == types.WordRequestType_Matrix6 and
+                character in ('2', '5', '8')):
+                continue
+
+            if (ord(character) >= ord('1') and ord(character) <= ord('9')):
+                return proto.WordAck(word=character)
+
     def callback_PinMatrixRequest(self, msg):
         if msg.type == 1:
             desc = 'current PIN'
@@ -204,6 +250,9 @@ class TextUIMixin(object):
             exit()
 
     def callback_WordRequest(self, msg):
+        if msg.type in (types.WordRequestType_Matrix9,
+                        types.WordRequestType_Matrix6):
+            return self.callback_RecoveryMatrix(msg)
         log("Enter one word of mnemonic: ")
         try:
             word = raw_input()
@@ -741,19 +790,21 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language):
+    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language, type=types.RecoveryDeviceType_Matrix):
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
         if word_count not in (12, 18, 24):
             raise Exception("Invalid word count. Use 12/18/24")
 
+        self.recovery_matrix_first_pass = True
         res = self.call(proto.RecoveryDevice(word_count=int(word_count),
                                    passphrase_protection=bool(passphrase_protection),
                                    pin_protection=bool(pin_protection),
                                    label=label,
                                    language=language,
-                                   enforce_wordlist=True))
+                                   enforce_wordlist=True,
+                                   type=type))
 
         self.init_device()
         return res

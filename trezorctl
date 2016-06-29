@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import sys
 import os
 import binascii
 import argparse
@@ -9,9 +10,8 @@ import tempfile
 from trezorlib import types_pb2 as types
 from io import BytesIO
 
-import sys
-
 from trezorlib.client import TrezorClient, TrezorClientDebug, CallException
+import trezorlib.types_pb2 as types
 
 ether_units = {
     "wei":          1,
@@ -218,8 +218,11 @@ class Commands(object):
         return self.client.wipe_device()
 
     def recovery_device(self, args):
+	typemap = { 'scrambled': types.RecoveryDeviceType_ScrambledWords,
+                    'matrix':    types.RecoveryDeviceType_Matrix }
         return self.client.recovery_device(args.words, args.passphrase_protection,
-                                           args.pin_protection, args.label, 'english')
+                                           args.pin_protection, args.label, 'english', 
+                                           typemap[args.type])
 
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
@@ -403,6 +406,7 @@ class Commands(object):
         (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
+        (('-t', '--type'), {'type': str, 'choices': ['scrambled', 'matrix'], 'default': 'matrix'}),
     )
 
     load_device.arguments = (
