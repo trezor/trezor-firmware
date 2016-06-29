@@ -4,6 +4,8 @@
 		"https?://localhost\\.mytrezor\\.com(:\\d+)?(/.*)?",
 		"https://mytrezor\\.com(/.*)?",
 		"https://[\\w\\.-]+\\.mytrezor\\.com(/.*)?",
+		"https://trezor\\.io(/.*)?",
+		"https://[\\w\\.-]+\\.trezor\\.io(/.*)?",
 		"https://trezor\\.github\\.io(/.*)?",
 		"https://greenaddress\\.it(/.*)?",
 		"https://[\\w\\.-]+\\.greenaddress\\.it(/.*)?",
@@ -18,7 +20,8 @@
 	],
 	"known_devices": [
 		["0x534c", "0x0001", "Trezor"],
-		["0x10c4", "0xea80", "Trezor Shield"]
+                ["0x1209", "0x53C0", "Trezor2 Bootloader"],
+                ["0x1209", "0x53C1", "Trezor2"]
 	],
 	"valid_days": 180
 }
