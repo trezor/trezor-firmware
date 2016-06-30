@@ -160,23 +160,87 @@ static void send_signature(void)
 	ethereum_signing_abort();
 }
 
-/* FIXME */
 static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value)
 {
-	static char _value[21] = {0};
+	static bignum256 val;
+	static uint16_t num[26];
+	static uint8_t last_used = 0;
+	if (value) {
+		bn_read_be(value, &val);
+	} else {
+		bn_zero(&val);
+	}
+	for (int i = 0; i < 26; i++) {
+		bn_divmod1000(&val, (uint32_t *)&(num[i]));
+		if (num[i] > 0) {
+			last_used = i;
+		}
+	}
+
+	static char _value[25] = {0};
+	const char *value_ptr = _value;
+
+	if (last_used < 3) {
+		// value is smaller than 1e9 wei => show value in wei
+		_value[0] = '0' + (num[2] / 100) % 10;
+		_value[1] = '0' + (num[2] / 10) % 10;
+		_value[2] = '0' + (num[2]) % 10;
+		_value[3] = '0' + (num[1] / 100) % 10;
+		_value[4] = '0' + (num[1] / 10) % 10;
+		_value[5] = '0' + (num[1]) % 10;
+		_value[6] = '0' + (num[0] / 100) % 10;
+		_value[7] = '0' + (num[0] / 10) % 10;
+		_value[8] = '0' + (num[0]) % 10;
+		strlcpy(_value + 9, " wei", sizeof(_value) - 9);
+	} else if (last_used < 9) {
+		// value is bigger than 1e9 wei and smaller than 1e9 ETH => show value in ETH
+		_value[0] = '0' + (num[8] / 100) % 10;
+		_value[1] = '0' + (num[8] / 10) % 10;
+		_value[2] = '0' + (num[8]) % 10;
+		_value[3] = '0' + (num[7] / 100) % 10;
+		_value[4] = '0' + (num[7] / 10) % 10;
+		_value[5] = '0' + (num[7]) % 10;
+		_value[6] = '0' + (num[6] / 100) % 10;
+		_value[7] = '0' + (num[6] / 10) % 10;
+		_value[8] = '0' + (num[6]) % 10;
+		_value[9] = '.';
+		_value[10] = '0' + (num[5] / 100) % 10;
+		_value[11] = '0' + (num[5] / 10) % 10;
+		_value[12] = '0' + (num[5]) % 10;
+		_value[13] = '0' + (num[4] / 100) % 10;
+		_value[14] = '0' + (num[4] / 10) % 10;
+		_value[15] = '0' + (num[4]) % 10;
+		_value[16] = '0' + (num[3] / 100) % 10;
+		_value[17] = '0' + (num[3] / 10) % 10;
+		_value[18] = '0' + (num[3]) % 10;
+		strlcpy(_value + 19, " ETH", sizeof(_value) - 19);
+	} else {
+		// value is bigger than 1e9 ETH => won't fit on display (probably won't happen unless you are Vitalik)
+		strlcpy(_value, "more than a billion ETH", sizeof(_value));
+	}
+
+	value_ptr = _value;
+	while (*value_ptr == '0') { // skip leading zeroes
+		value_ptr++;
+	}
+
 	static char _to1[21] = {0};
 	static char _to2[21] = {0};
 
-	data2hex(value, 10, _value);
-	data2hex(to, 10, _to1);
-	data2hex(to + 10, 10, _to2);
+	if (to) {
+		data2hex(to, 10, _to1);
+		data2hex(to + 10, 10, _to2);
+	} else {
+		strlcpy(_to1, "no recipient", sizeof(_to1));
+		strlcpy(_to2, "", sizeof(_to2));
+	}
 
 	layoutDialogSwipe(DIALOG_ICON_QUESTION,
 		"Cancel",
 		"Confirm",
 		NULL,
 		"Really send",
-		_value,
+		value_ptr,
 		"from your wallet?",
 		"To:",
 		_to1,
@@ -223,7 +287,6 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		return;
 	}
 
-	/* FIXME: include default values (0 / 0) */
 	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
