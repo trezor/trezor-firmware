@@ -2,7 +2,6 @@
 
 import json
 import requests
-import binascii
 from . import protobuf_json
 from . import messages_pb2 as proto
 from .transport import TransportV1
@@ -17,7 +16,7 @@ class BridgeTransport(TransportV1):
     def __init__(self, device, *args, **kwargs):
         self.configure()
 
-        self.path = binascii.hexlify(device['path'])
+        self.path = device['path']
 
         self.session = None
         self.response = None

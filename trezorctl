@@ -65,15 +65,9 @@ def get_transport(transport_string, path, **kwargs):
     if transport_string == 'usb':
         from trezorlib.transport_hid import HidTransport
 
-        if path == '':
-            try:
-                path = list_usb()[0][0]
-            except IndexError:
-                raise Exception("No TREZOR found on USB")
-
         for d in HidTransport.enumerate():
             # Two-tuple of (normal_interface, debug_interface)
-            if path in d:
+            if path == '' or path in d:
                 return HidTransport(d, **kwargs)
 
         raise Exception("Device not found")
@@ -88,7 +82,13 @@ def get_transport(transport_string, path, **kwargs):
 
     if transport_string == 'bridge':
         from trezorlib.transport_bridge import BridgeTransport
-        return BridgeTransport({'path': path}, **kwargs)
+
+        devices = BridgeTransport.enumerate()
+        for d in devices:
+            if path == '' or d['path'] == binascii.hexlify(path):
+                return BridgeTransport(d, **kwargs)
+
+        raise Exception("Device not found")
 
     raise NotImplementedError("Unknown transport")
 
