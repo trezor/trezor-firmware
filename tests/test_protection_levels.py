@@ -118,7 +118,7 @@ class TestProtectionLevels(common.TrezorTest):
     def test_verify_message(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.Success()])
+            self.client.set_expected_responses([proto.ButtonRequest(),proto.Success()])
             self.client.verify_message(
                 '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
                 binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
