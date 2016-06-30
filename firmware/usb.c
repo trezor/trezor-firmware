@@ -310,8 +310,8 @@ static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uin
 		debugLog(0, "", "hid_control_request debug");
 		*buf = (uint8_t *)hid_report_descriptor_debug;
 		*len = sizeof(hid_report_descriptor_debug);
+		return 1;
 	}
-	return 1;
 #endif
 
 	debugLog(0, "", "hid_control_request main");
