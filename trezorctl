@@ -113,7 +113,7 @@ class Commands(object):
         address = self.client.ethereum_get_address(address_n, args.show_display)
         return "0x%s" % (binascii.hexlify(address),)
 
-    def ethereum_send_tx(self, args):
+    def ethereum_sign_tx(self, args):
         from ethjsonrpc import EthJsonRpc
         from ethjsonrpc.utils import hex_to_dec
         import rlp
@@ -162,8 +162,13 @@ class Commands(object):
 
         transaction = rlp.encode(
             (nonce, gas_price, gas_limit, hex_to_dec(args.to), value, args.data) + sig)
-        tx_hash = eth.eth_sendRawTransaction("0x%s" % (binascii.hexlify(transaction),))
-        return "Transaction sent with ID %s" % (tx_hash,)
+        tx_hex = '0x%s' % binascii.hexlify(transaction)
+
+        if args.publish:
+            tx_hash = eth.eth_sendRawTransaction(tx_hex)
+            return 'Transaction published with ID: %s' % tx_hash
+        else:
+            return 'Signed raw transaction: %s' % tx_hex
 
     def get_entropy(self, args):
         return binascii.hexlify(self.client.get_entropy(args.size))
@@ -316,7 +321,7 @@ class Commands(object):
     ping.help = 'Send ping message'
     get_address.help = 'Get bitcoin address in base58 encoding'
     ethereum_get_address.help = 'Get Ethereum address in hex encoding'
-    ethereum_send_tx.help = 'Sign and publish Ethereum transaction'
+    ethereum_sign_tx.help = 'Sign (and optionally publish) Ethereum transaction'
     get_entropy.help = 'Get example entropy'
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
@@ -349,12 +354,13 @@ class Commands(object):
         (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
     )
 
-    ethereum_send_tx.arguments = (
+    ethereum_sign_tx.arguments = (
         (('-a', '--host'), {'type': str, 'default': 'localhost:8545'}),
         (('-n', '-address'), {'type': str}),
         (('-v', '--value'), {'type': str, 'default': "0"}),
         (('-g', '--gas'), {'type': int}),
         (('-d', '--data'), {'type': str, 'default': ''}),
+        (('-p', '--publish'), {'action': 'store_true', 'default': False}),
         (('to',), {'type': str}),
     )
 
