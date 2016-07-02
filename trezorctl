@@ -78,6 +78,8 @@ def get_transport(transport_string, path, **kwargs):
 
     if transport_string == 'pipe':
         from trezorlib.transport_pipe import PipeTransport
+        if path == '':
+            path = '/tmp/pipe.trezor'
         return PipeTransport(path, is_device=False, **kwargs)
 
     if transport_string == 'bridge':
