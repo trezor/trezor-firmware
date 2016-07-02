@@ -88,7 +88,7 @@ def main():
     if not os.path.exists(passw_file):
         # New encfs drive, let's generate password
 
-        sys.stderr.write('Please provide label for new drive:')
+        sys.stderr.write('Please provide label for new drive: ')
         label = input()
 
         sys.stderr.write('Computer asked TREZOR for new strong password.\n')

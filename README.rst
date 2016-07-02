@@ -14,7 +14,7 @@ See http://bitcointrezor.com for more information.
 Example
 -------
 
-also found in ``helloworld.py``
+also found in ``tools/helloworld.py``
 
 .. code:: python
 
