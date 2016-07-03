@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 IMAGETAG=trezor-mcu-build
 FIRMWARETAG=${1:-master}
 
