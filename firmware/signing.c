@@ -421,7 +421,9 @@ void signing_txack(TransactionType *tx)
 				send_req_2_prev_meta();
 			} else if  (tx->inputs[0].has_amount
 						&& (tx->inputs[0].script_type == InputScriptType_SPENDWMULTISIG
-							|| tx->inputs[0].script_type == InputScriptType_SPENDWADDRESS)) {
+							|| tx->inputs[0].script_type == InputScriptType_SPENDWADDRESS
+							|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWMULTISIG
+							|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWADDRESS)) {
 				if (to_spend + tx->inputs[0].amount < to_spend) {
 					fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 					signing_abort();
@@ -741,7 +743,35 @@ void signing_txack(TransactionType *tx)
 			resp.serialized.has_signature_index = false;
 			resp.serialized.has_signature = false;
 			resp.serialized.has_serialized_tx = true;
-			tx->inputs[0].script_sig.size = 0;
+			if (tx->inputs[0].script_type == InputScriptType_SPENDP2SHWADDRESS) {
+				if (!compile_input_script_sig(&tx->inputs[0])) {
+					fsm_sendFailure(FailureType_Failure_Other, "Failed to compile input");
+					signing_abort();
+					return;
+				}
+				// fixup normal p2pkh script into witness 0 p2wpkh script for p2sh
+				// we convert 76 A9 14 <digest> 88 AC  to 16 00 14 <digest>
+				// P2SH input pushes witness 0 script
+				tx->inputs[0].script_sig.size = 0x17; // drops last 2 bytes.
+				tx->inputs[0].script_sig.bytes[0] = 0x16; // push 22 bytes; replaces OP_DUP
+				tx->inputs[0].script_sig.bytes[1] = 0x00; // witness 0 script ; replaces OP_HASH160
+				// digest is already in right place.
+			} else if (tx->inputs[0].script_type == InputScriptType_SPENDP2SHWMULTISIG) {
+				// Prepare P2SH witness script.
+				tx->inputs[0].script_sig.size = 0x23; // 35 bytes long:
+				tx->inputs[0].script_sig.bytes[0] = 0x22; // push 34 bytes (full witness script)
+				tx->inputs[0].script_sig.bytes[1] = 0x00; // witness 0 script
+				tx->inputs[0].script_sig.bytes[2] = 0x20; // push 32 bytes (digest)
+				// compute disgest of multisig script
+				if (!compile_script_multisig_hash(&tx->inputs[0].multisig, tx->inputs[0].script_sig.bytes + 3)) {
+					fsm_sendFailure(FailureType_Failure_Other, "Failed to compile input");
+					signing_abort();
+					return;
+				}
+			} else {
+				// direct witness scripts require zero scriptSig
+				tx->inputs[0].script_sig.size = 0;
+			}
 			resp.serialized.serialized_tx.size = tx_serialize_input(&to, &tx->inputs[0], resp.serialized.serialized_tx.bytes);
 			update_ctr = 0;
 			if (idx1 < inputs_count - 1) {
@@ -780,16 +810,10 @@ void signing_txack(TransactionType *tx)
 			uint32_t sighash = 1;
 			progress = 500 + ((idx1 * progress_step) >> PROGRESS_PRECISION);
 
-			if (tx->inputs[0].script_type != InputScriptType_SPENDWADDRESS
-				&& tx->inputs[0].script_type != InputScriptType_SPENDWMULTISIG) {
-				// empty witness
-				resp.has_serialized = true;
-				resp.serialized.has_signature_index = false;
-				resp.serialized.has_signature = false;
-				resp.serialized.has_serialized_tx = true;
-				resp.serialized.serialized_tx.bytes[0] = 0;
-				resp.serialized.serialized_tx.size = 1;
-			} else {
+			if (tx->inputs[0].script_type == InputScriptType_SPENDWADDRESS
+				|| tx->inputs[0].script_type == InputScriptType_SPENDWMULTISIG
+				|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWADDRESS
+				|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWMULTISIG) {
 				if (!compile_input_script_sig(&tx->inputs[0])) {
 					fsm_sendFailure(FailureType_Failure_Other, "Failed to compile input");
 					signing_abort();
@@ -823,7 +847,8 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.has_serialized_tx = true;
 				ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, 0);
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
-				if (input.script_type == InputScriptType_SPENDWMULTISIG) {
+				if (input.script_type == InputScriptType_SPENDWMULTISIG
+					|| input.script_type == InputScriptType_SPENDP2SHWMULTISIG) {
 					uint32_t r, i, script_len;
 					if (!input.has_multisig) {
 						fsm_sendFailure(FailureType_Failure_Other, "Multisig info not provided");
@@ -860,6 +885,14 @@ void signing_txack(TransactionType *tx)
 					r += tx_serialize_script(33, node.public_key, resp.serialized.serialized_tx.bytes + r);
 					resp.serialized.serialized_tx.size = r;
 				}
+			} else {
+				// empty witness
+				resp.has_serialized = true;
+				resp.serialized.has_signature_index = false;
+				resp.serialized.has_signature = false;
+				resp.serialized.has_serialized_tx = true;
+				resp.serialized.serialized_tx.bytes[0] = 0;
+				resp.serialized.serialized_tx.size = 1;
 			}
 			if (idx1 == inputs_count - 1) {
 				uint32_t r = resp.serialized.serialized_tx.size;
