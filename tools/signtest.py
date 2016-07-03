@@ -16,6 +16,11 @@ from trezorlib.tx_api import TXAPIBitcoin
 from trezorlib.transport_hid import HidTransport
 from trezorlib.transport_bridge import BridgeTransport
 
+def hash160(x):
+    h = hashlib.new("ripemd160")
+    h.update(hashlib.sha256(x).digest())
+    return h.digest()
+
 def pack_varint(x):
     if (x < 0xfd):
         return chr(x)
@@ -81,7 +86,7 @@ class MyTXAPIBitcoin(object):
             if (nr % 50 == 0):
                 print(nr)
             myout = random.randint(0, txsize-1)
-            segwit = 1 #random.randint(0,1)
+            segwit = random.randint(0,2)
             for vout in range(txsize):
                 o = t.bin_outputs.add()
                 o.amount = random.randint(10000,1000000)
@@ -95,30 +100,26 @@ class MyTXAPIBitcoin(object):
                     pubkey = tools.hash_160(node.public_key)
                 else:
                     pubkey = os.urandom(20)
-                if (segwit):
-                    o.script_pubkey = binascii.unhexlify('0014') + pubkey
+                if (segwit == 2):
+                    # p2sh segwit
+                    o.script_pubkey = b'\xa9\x14' + hash160(b'\x00\x14' + pubkey) + b'\x87'
+                elif (segwit == 1):
+                    o.script_pubkey = b'\x00\x14' + pubkey
                 else:
-                    o.script_pubkey = binascii.unhexlify('76a914') + pubkey + binascii.unhexlify('88ac')
+                    o.script_pubkey = b'\x76\xa9\x14' + pubkey + b'\x88\xac'
 
             txser = self.serialize_tx(t)
             txhash = tools.Hash(txser)[::-1]
-            if (segwit):
-                outi = self.inputs.append(
-                    proto_types.TxInputType(
-                        address_n=self.client.expand_path("44'/0'/0'/0/"+str(idx)),
-                        script_type = proto_types.SPENDWADDRESS,
-                        prev_hash=txhash,
-                        prev_index = myout,
-                        amount = amount
-                    ))
-            else:
-                outi = self.inputs.append(
-                    proto_types.TxInputType(
-                        address_n=self.client.expand_path("44'/0'/0'/0/"+str(idx)),
-                        script_type = proto_types.SPENDADDRESS,
-                        prev_hash=txhash,
-                        prev_index = myout
-                    ))
+            outi = self.inputs.append(
+                proto_types.TxInputType(
+                    address_n=self.client.expand_path("44'/0'/0'/0/"+str(idx)),
+                    script_type = (proto_types.SPENDWADDRESS if segwit == 1 else
+                                   proto_types.SPENDP2SHWADDRESS if segwit == 2 else
+                                   proto_types.SPENDADDRESS),
+                    prev_hash=txhash,
+                    prev_index = myout,
+                    amount = amount if segwit > 0 else 0
+                ))
             #print(binascii.hexlify(txser))
             #print(binascii.hexlify(txhash))
             self.txs[binascii.hexlify(txhash)] = t
@@ -142,7 +143,7 @@ class MyTXAPIBitcoin(object):
         return t
 
 def main():
-    numinputs = 600
+    numinputs = 100
     sizeinputtx = 10
 
     # List all connected TREZORs on USB
