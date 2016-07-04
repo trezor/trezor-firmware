@@ -33,14 +33,14 @@ uint32_t ser_length(uint32_t len, uint8_t *out);
 
 uint32_t ser_length_hash(SHA256_CTX *ctx, uint32_t len);
 
-int sshMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
+int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
-int gpgMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
+int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
 int cryptoGetECDHSessionKey(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key);
 
 
-int cryptoMessageSign(const CoinType *coin, const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
+int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
 int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature);
 

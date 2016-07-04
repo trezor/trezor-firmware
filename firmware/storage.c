@@ -361,7 +361,7 @@ bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
 		if (!protectPassphrase()) {
 			return false;
 		}
-		if (hdnode_from_xprv(storage.node.depth, storage.node.fingerprint, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, curve, node) == 0) {
+		if (hdnode_from_xprv(storage.node.depth, storage.node.child_num, storage.node.chain_code.bytes, storage.node.private_key.bytes, curve, node) == 0) {
 			return false;
 		}
 		if (storage.has_passphrase_protection && storage.passphrase_protection && sessionPassphraseCached && strlen(sessionPassphrase) > 0) {

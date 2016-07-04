@@ -85,13 +85,13 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out)
 	return 1 + 8;
 }
 
-int sshMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
+int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
 	return hdnode_sign(node, message, message_len, signature + 1, NULL);
 }
 
-int gpgMessageSign(const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
+int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	// GPG should sign a SHA256 digest of the original message.
 	if (message_len != 32) {
@@ -120,7 +120,7 @@ int cryptoGetECDHSessionKey(const HDNode *node, const uint8_t *peer_public_key, 
 	return 0;
 }
 
-int cryptoMessageSign(const CoinType *coin, const HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
+int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -294,7 +294,7 @@ uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
 {
 	if (!hdnodepath->node.has_public_key || hdnodepath->node.public_key.size != 33) return 0;
 	static HDNode node;
-	if (hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.fingerprint, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, SECP256K1_NAME, &node) == 0) {
+	if (hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, SECP256K1_NAME, &node) == 0) {
 		return 0;
 	}
 	layoutProgressUpdate(true);

@@ -94,7 +94,7 @@ const CoinType *fsm_getCoin(const char *name)
 	return coin;
 }
 
-const HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
+HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
 {
 	static HDNode node;
 	if (!storage_getRootNode(&node, curve, true)) {
@@ -298,8 +298,21 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	if (msg->has_ecdsa_curve_name) {
 		curve = msg->ecdsa_curve_name;
 	}
-	const HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count);
-	if (!node) return;
+	uint32_t fingerprint;
+	HDNode *node;
+	if (msg->address_n_count == 0) {
+		/* get master node */
+		fingerprint = 0;
+		node = fsm_getDerivedNode(curve, msg->address_n, 0);
+	} else {
+		/* get parent node */
+		node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count - 1);
+		if (!node) return;
+		fingerprint = hdnode_fingerprint(node);
+		/* get child */
+		hdnode_private_ckd(node, msg->address_n[msg->address_n_count - 1]);
+	}
+	hdnode_fill_public_key(node);
 
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(node->public_key);
@@ -311,7 +324,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	}
 
 	resp->node.depth = node->depth;
-	resp->node.fingerprint = node->fingerprint;
+	resp->node.fingerprint = fingerprint;
 	resp->node.child_num = node->child_num;
 	resp->node.chain_code.size = 32;
 	memcpy(resp->node.chain_code.bytes, node->chain_code, 32);
@@ -319,8 +332,12 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
 	memcpy(resp->node.public_key.bytes, node->public_key, 33);
+	if (node->public_key[0] == 1) {
+		/* ed25519 public key */
+		resp->node.public_key.bytes[0] = 0;
+	}
 	resp->has_xpub = true;
-	hdnode_serialize_public(node, resp->xpub, sizeof(resp->xpub));
+	hdnode_serialize_public(node, fingerprint, resp->xpub, sizeof(resp->xpub));
 	msg_write(MessageType_MessageType_PublicKey, resp);
 	layoutHome();
 }
@@ -561,8 +578,9 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
+	hdnode_fill_public_key(node);
 
 	if (msg->has_multisig) {
 		layoutProgressSwipe("Preparing", 0);
@@ -641,14 +659,14 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe("Signing", 0);
 	if (cryptoMessageSign(coin, node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
 		resp->has_address = true;
 		uint8_t addr_raw[21];
-		ecdsa_get_address_raw(node->public_key, coin->address_type, addr_raw);
+		hdnode_get_address_raw(node, coin->address_type, addr_raw);
 		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
 		resp->has_signature = true;
 		resp->signature.size = 65;
@@ -735,7 +753,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	if (msg->has_ecdsa_curve_name) {
 		curve = msg->ecdsa_curve_name;
 	}
-	const HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
+	HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
 	if (!node) return;
 
 	bool sign_ssh = msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
@@ -755,17 +773,22 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 	}
 
 	if (result == 0) {
+		hdnode_fill_public_key(node);
 		if (strcmp(curve, SECP256K1_NAME) != 0) {
 			resp->has_address = false;
 		} else {
 			resp->has_address = true;
 			uint8_t addr_raw[21];
-			ecdsa_get_address_raw(node->public_key, 0x00, addr_raw); // hardcoded Bitcoin address type
+			hdnode_get_address_raw(node, 0x00, addr_raw); // hardcoded Bitcoin address type
 			base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
 		}
 		resp->has_public_key = true;
 		resp->public_key.size = 33;
 		memcpy(resp->public_key.bytes, node->public_key, 33);
+		if (node->public_key[0] == 1) {
+			/* ed25519 public key */
+			resp->public_key.bytes[0] = 0;
+		}
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_SignedIdentity, resp);
@@ -859,9 +882,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 		}
 		node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 		if (!node) return;
-		uint8_t public_key[33];
-		ecdsa_get_public_key33(&secp256k1, node->private_key, public_key);
-		ecdsa_get_address_raw(public_key, coin->address_type, address_raw);
+		hdnode_get_address_raw(node, coin->address_type, address_raw);
 	}
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, signing);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
