@@ -143,6 +143,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				storage_reset();
 				layoutHome();
+				fsm_sendFailure(FailureType_Failure_Other, "Reset device aborted");
 				return;
 			}
 		}
