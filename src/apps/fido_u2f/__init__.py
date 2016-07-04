@@ -1,0 +1,2 @@
+def boot():
+    pass
