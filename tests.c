@@ -2163,6 +2163,7 @@ Suite *test_suite(void)
 
 	tc = tcase_create("codepoints");
 	tcase_add_test(tc, test_codepoints);
+	tcase_set_timeout(tc, 8);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("mult_border_cases");
