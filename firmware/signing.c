@@ -471,6 +471,7 @@ void signing_txack(TransactionType *tx)
 					signing_abort();
 					return;
 				}
+				hdnode_fill_public_key(&node);
 				if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG) {
 					if (!tx->inputs[0].has_multisig) {
 						fsm_sendFailure(FailureType_Failure_Other, "Multisig info not provided");
