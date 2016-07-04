@@ -4,11 +4,6 @@
 test-openssl
 test_speed
 tests
-build-*/
-build/
-dist/
-MANIFEST
-TrezorCrypto.c
 *.os
 *.so
 *.pyc
