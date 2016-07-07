@@ -419,9 +419,11 @@ void usbReconnect(void)
 	usbd_disconnect(usbd_dev, 0);
 }
 
-void usbTiny(char set)
+char usbTiny(char set)
 {
+	char old = tiny;
 	tiny = set;
+	return old;
 }
 
 void usbDelay(int cycles)

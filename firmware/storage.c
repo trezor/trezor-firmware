@@ -39,6 +39,7 @@
 #include "debug.h"
 #include "protect.h"
 #include "layout2.h"
+#include "usb.h"
 
 Storage storage;
 
@@ -337,6 +338,7 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size)
 
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
+	usbDelay(10); // handle up to ten usb interrupts.
 	layoutProgress("Waking up", 1000 * iter / total);
 }
 
@@ -361,7 +363,9 @@ const uint8_t *storage_getSeed(bool usePassphrase)
 				storage_show_error();
 			}
 		}
+		char oldTiny = usbTiny(1);
 		mnemonic_to_seed(storage.mnemonic, usePassphrase ? sessionPassphrase : "", sessionSeed, get_root_node_callback); // BIP-0039
+		usbTiny(oldTiny);
 		sessionSeedCached = true;
 		sessionSeedUsesPassphrase = usePassphrase;
 		return sessionSeed;
