@@ -386,7 +386,8 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_1_INPUT:
 			/* compute multisig fingerprint */
 			/* (if all input share the same fingerprint, outputs having the same fingerprint will be considered as change outputs) */
-			if (tx->inputs[0].has_multisig && !multisig_fp_mismatch) {
+			if (tx->inputs[0].has_multisig && !multisig_fp_mismatch
+				&& tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG) {
 				uint8_t h[32];
 				if (cryptoMultisigFingerprint(&(tx->inputs[0].multisig), h) == 0) {
 					fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingerprint");
@@ -836,29 +837,35 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.has_serialized_tx = true;
 				ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, 0);
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
-				if (input.has_multisig) {
+				if (tx->inputs[0].has_multisig) {
 					uint32_t r, i, script_len;
+					int nwitnesses;
 					// fill in the signature
-					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), node.public_key);
+					int pubkey_idx = cryptoMultisigPubkeyIndex(&(tx->inputs[0].multisig), node.public_key);
 					if (pubkey_idx < 0) {
 						fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
 						signing_abort();
 						return;
 					}
-					memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
-					input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
+					memcpy(tx->inputs[0].multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
+					tx->inputs[0].multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
 
-					r = 0;
-					r += ser_length(input.multisig.signatures_count + 2, resp.serialized.serialized_tx.bytes + r);
+
+					r = 1; // skip number of items (filled in later)
 					resp.serialized.serialized_tx.bytes[r] = 0; r++;
-					for (i = 0; i < input.multisig.signatures_count; i++) {
-						input.multisig.signatures[i].bytes[input.multisig.signatures[i].size] = 1;
-						r += tx_serialize_script(input.multisig.signatures[i].size + 1, input.multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
+					nwitnesses = 2;
+					for (i = 0; i < tx->inputs[0].multisig.signatures_count; i++) {
+						if (tx->inputs[0].multisig.signatures[i].size == 0) {
+							continue;
+						}
+						nwitnesses++;
+						tx->inputs[0].multisig.signatures[i].bytes[tx->inputs[0].multisig.signatures[i].size] = 1;
+						r += tx_serialize_script(tx->inputs[0].multisig.signatures[i].size + 1, tx->inputs[0].multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
 					}
-					script_len = compile_script_multisig(&input.multisig, 0);
+					script_len = compile_script_multisig(&tx->inputs[0].multisig, 0);
 					r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
-					r += compile_script_multisig(&input.multisig, resp.serialized.serialized_tx.bytes + r);
-					r += tx_serialize_script(resp.serialized.signature.size, resp.serialized.signature.bytes, resp.serialized.serialized_tx.bytes + r);
+					r += compile_script_multisig(&tx->inputs[0].multisig, resp.serialized.serialized_tx.bytes + r);
+					resp.serialized.serialized_tx.bytes[0] = nwitnesses;
 					resp.serialized.serialized_tx.size = r;
 				} else { // single signature
 					uint32_t r = 0;
