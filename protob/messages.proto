@@ -291,6 +291,7 @@ message GetAddress {
 	optional string coin_name = 2 [default='Bitcoin'];
 	optional bool show_display = 3;			// optionally show on display before sending the result
 	optional MultisigRedeemScriptType multisig = 4;	// Filled if we are showing a multisig address
+	optional InputScriptType script_type = 5 [default=SPENDADDRESS];	// Used to distinguish segwit addresses
 }
 
 /**
