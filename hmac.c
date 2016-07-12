@@ -69,6 +69,34 @@ void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 	hmac_sha256_Final(&hctx, hmac);
 }
 
+void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen, uint32_t *opad_digest, uint32_t *ipad_digest)
+{
+	int i;
+	uint32_t buf[SHA256_BLOCK_LENGTH/sizeof(uint32_t)];
+	uint32_t o_key_pad[16], i_key_pad[16];
+
+	memset(buf, 0, SHA256_BLOCK_LENGTH);
+	if (keylen > SHA256_BLOCK_LENGTH) {
+		sha256_Raw(key, keylen, (uint8_t*) buf);
+	} else {
+		memcpy(buf, key, keylen);
+	}
+
+	for (i = 0; i < 16; i++) {
+		uint32_t data;
+#if BYTE_ORDER == LITTLE_ENDIAN
+		REVERSE32(buf[i], data);
+#else
+		data = buf[i];
+#endif
+		o_key_pad[i] = data ^ 0x5c5c5c5c;
+		i_key_pad[i] = data ^ 0x36363636;
+	}
+
+	sha256_Transform(sha256_initial_hash_value, o_key_pad, opad_digest);
+	sha256_Transform(sha256_initial_hash_value, i_key_pad, ipad_digest);
+}
+
 void hmac_sha512_Init(HMAC_SHA512_CTX *hctx, const uint8_t *key, const uint32_t keylen)
 {
 	uint8_t i_key_pad[SHA512_BLOCK_LENGTH];
@@ -110,4 +138,32 @@ void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg, 
 	hmac_sha512_Init(&hctx, key, keylen);
 	hmac_sha512_Update(&hctx, msg, msglen);
 	hmac_sha512_Final(&hctx, hmac);
+}
+
+void hmac_sha512_prepare(const uint8_t *key, const uint32_t keylen, uint64_t *opad_digest, uint64_t *ipad_digest)
+{
+	int i;
+	uint64_t buf[SHA512_BLOCK_LENGTH/sizeof(uint64_t)];
+	uint64_t o_key_pad[16], i_key_pad[16];
+
+	memset(buf, 0, SHA512_BLOCK_LENGTH);
+	if (keylen > SHA512_BLOCK_LENGTH) {
+		sha512_Raw(key, keylen, (uint8_t*)buf);
+	} else {
+		memcpy(buf, key, keylen);
+	}
+
+	for (i = 0; i < 16; i++) {
+		uint64_t data;
+#if BYTE_ORDER == LITTLE_ENDIAN
+		REVERSE64(buf[i], data);
+#else
+		data = buf[i];
+#endif
+		o_key_pad[i] = data ^ 0x5c5c5c5c5c5c5c5c;
+		i_key_pad[i] = data ^ 0x3636363636363636;
+	}
+
+	sha512_Transform(sha512_initial_hash_value, o_key_pad, opad_digest);
+	sha512_Transform(sha512_initial_hash_value, i_key_pad, ipad_digest);
 }
