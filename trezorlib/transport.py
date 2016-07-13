@@ -188,12 +188,12 @@ class TransportV2(Transport):
 
         while len(data) < datalen:
             chunk = self._read_chunk()
-            (session_id2, data) = self.parse_next(chunk)
+            (next_session_id, next_data) = self.parse_next(chunk)
 
-            if session_id != session_id2:
+            if next_session_id != session_id:
                 raise Exception("Session id mismatch")
 
-            data.extend(data)
+            data.extend(next_data)
 
         # Strip padding zeros
         data = data[:datalen]
@@ -218,7 +218,7 @@ class TransportV2(Transport):
 
         try:
             headerlen = struct.calcsize(">L")
-            session_id = struct.unpack(">L", chunk[1:1 + headerlen])
+            (session_id,) = struct.unpack(">L", chunk[1:1 + headerlen])
         except:
             raise Exception("Cannot parse header")
 
