@@ -336,6 +336,48 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		NULL);
 }
 
+void layoutDecryptIdentity(const IdentityType *identity)
+{
+	char row_proto[8 + 11 + 1];
+	char row_hostport[64 + 6 + 1];
+	char row_user[64 + 8 + 1];
+
+	if (identity->has_proto && identity->proto[0]) {
+		strlcpy(row_proto, identity->proto, sizeof(row_proto));
+		char *p = row_proto;
+		while (*p) { *p = toupper((int)*p); p++; }
+		strlcat(row_proto, " decrypt for:", sizeof(row_proto));
+	} else {
+		strlcpy(row_proto, "Decrypt for:", sizeof(row_proto));
+	}
+
+	if (identity->has_host && identity->host[0]) {
+		strlcpy(row_hostport, identity->host, sizeof(row_hostport));
+		if (identity->has_port && identity->port[0]) {
+			strlcat(row_hostport, ":", sizeof(row_hostport));
+			strlcat(row_hostport, identity->port, sizeof(row_hostport));
+		}
+	} else {
+		row_hostport[0] = 0;
+	}
+
+	if (identity->has_user && identity->user[0]) {
+		strlcpy(row_user, "user: ", sizeof(row_user));
+		strlcat(row_user, identity->user, sizeof(row_user));
+	} else {
+		row_user[0] = 0;
+	}
+
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm",
+		"Do you want to decrypt?",
+		row_proto[0] ? row_proto : NULL,
+		row_hostport[0] ? row_hostport : NULL,
+		row_user[0] ? row_user : NULL,
+		NULL,
+		NULL,
+		NULL);
+}
+
 void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon) {
 	if (!appicon) {
 		appicon = &bmp_icon_question;
