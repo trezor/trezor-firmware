@@ -2,7 +2,6 @@
 
 import socket
 from select import select
-import time
 from .transport import TransportV2, ConnectionError
 
 class UdpTransport(TransportV2):
@@ -40,7 +39,12 @@ class UdpTransport(TransportV2):
         self.socket.sendall(chunk)
 
     def _read_chunk(self):
-        data = self.socket.recv(64)
+        while True:
+            try:
+                data = self.socket.recv(64)
+                break
+            except socket.timeout:
+                continue
         if len(data) != 64:
             raise Exception("Unexpected chunk size: %d" % len(data))
 
