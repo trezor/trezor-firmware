@@ -226,10 +226,10 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	if (progress_callback) {
 		progress_callback(0, BIP39_PBKDF2_ROUNDS);
 	}
-	for (int i = 0; i < 8; i++) {
-		pbkdf2_hmac_sha512_Update(&pctx, BIP39_PBKDF2_ROUNDS / 8);
+	for (int i = 0; i < 16; i++) {
+		pbkdf2_hmac_sha512_Update(&pctx, BIP39_PBKDF2_ROUNDS / 16);
 		if (progress_callback) {
-			progress_callback((i + 1) * BIP39_PBKDF2_ROUNDS / 8, BIP39_PBKDF2_ROUNDS);
+			progress_callback((i + 1) * BIP39_PBKDF2_ROUNDS / 16, BIP39_PBKDF2_ROUNDS);
 		}
 	}
 	pbkdf2_hmac_sha512_Final(&pctx, seed);

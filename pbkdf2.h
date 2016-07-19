@@ -28,18 +28,18 @@
 #include "sha2.h"
 
 typedef struct _PBKDF2_HMAC_SHA256_CTX {
-	uint8_t f[SHA256_DIGEST_LENGTH];
-	uint8_t g[SHA256_DIGEST_LENGTH];
-	const uint8_t *pass;
-	int passlen;
+	uint32_t odig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
+	uint32_t idig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
+	uint32_t f[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
+	uint32_t g[SHA256_BLOCK_LENGTH / sizeof(uint32_t)];
 	char first;
 } PBKDF2_HMAC_SHA256_CTX;
 
 typedef struct _PBKDF2_HMAC_SHA512_CTX {
-	uint8_t f[SHA512_DIGEST_LENGTH];
-	uint8_t g[SHA512_DIGEST_LENGTH];
-	const uint8_t *pass;
-	int passlen;
+	uint64_t odig[SHA512_DIGEST_LENGTH / sizeof(uint64_t)];
+	uint64_t idig[SHA512_DIGEST_LENGTH / sizeof(uint64_t)];
+	uint64_t f[SHA512_DIGEST_LENGTH / sizeof(uint64_t)];
+	uint64_t g[SHA512_BLOCK_LENGTH / sizeof(uint64_t)];
 	char first;
 } PBKDF2_HMAC_SHA512_CTX;
 
