@@ -16,6 +16,6 @@ def unregister(mtype):
 
 
 def dispatch():
-    mtype, mbuf = yield from wire.read_wire_msg()
+    _, mtype, mbuf = yield from wire.read_wire_msg()
     handler = message_handlers[mtype]
     layout.change(handler(mtype, mbuf))
