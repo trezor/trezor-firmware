@@ -41,6 +41,7 @@ void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 void layoutAddress(const char *address, const char *desc);
 void layoutPublicKey(const uint8_t *pubkey);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
+void layoutDecryptIdentity(const IdentityType *identity);
 void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon);
 
 #endif

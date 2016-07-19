@@ -424,6 +424,7 @@ void fsm_msgCancel(Cancel *msg)
 	(void)msg;
 	recovery_abort();
 	signing_abort();
+	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Aborted");
 }
 
 void fsm_msgTxAck(TxAck *msg)
@@ -804,6 +805,13 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 
 	if (!storage_isInitialized()) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
+	layoutDecryptIdentity(&msg->identity);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "ECDH Session cancelled");
+		layoutHome();
 		return;
 	}
 
