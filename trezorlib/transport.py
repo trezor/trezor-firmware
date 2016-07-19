@@ -145,7 +145,7 @@ class TransportV1(Transport):
 
         try:
             headerlen = struct.calcsize(">HL")
-            (msg_type, datalen) = struct.unpack(">HL", chunk[3:3 + headerlen])
+            (msg_type, datalen) = struct.unpack(">HL", bytes(chunk[3:3 + headerlen]))
         except:
             raise Exception("Cannot parse header")
 
@@ -205,7 +205,7 @@ class TransportV2(Transport):
 
         try:
             headerlen = struct.calcsize(">LLL")
-            (session_id, msg_type, datalen) = struct.unpack(">LLL", chunk[2:2 + headerlen])
+            (session_id, msg_type, datalen) = struct.unpack(">LLL", bytes(chunk[2:2 + headerlen]))
         except:
             raise Exception("Cannot parse header")
 
@@ -218,7 +218,7 @@ class TransportV2(Transport):
 
         try:
             headerlen = struct.calcsize(">L")
-            (session_id,) = struct.unpack(">L", chunk[1:1 + headerlen])
+            (session_id,) = struct.unpack(">L", bytes(chunk[1:1 + headerlen]))
         except:
             raise Exception("Cannot parse header")
 
