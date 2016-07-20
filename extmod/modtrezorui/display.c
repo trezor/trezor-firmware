@@ -182,7 +182,7 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
-void display_text(uint8_t x, uint8_t y, const uint8_t *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
     uint32_t px = x;
     uint16_t colortable[16];
@@ -190,7 +190,7 @@ void display_text(uint8_t x, uint8_t y, const uint8_t *text, int textlen, uint8_
 
     // render glyphs
     for (int i = 0; i < textlen; i++) {
-        const uint8_t *g = get_glyph(font, text[i]);
+        const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
         // g[0], g[1] = width, height
         // g[2]       = advance
