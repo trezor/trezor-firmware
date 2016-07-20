@@ -39,23 +39,19 @@ def _write_report(rep):
 def read_wire_msg():
 
     rep = yield from _read_report()
-    assert rep[0] == _HEADER_MAGIC, 'Incorrect report magic'
-
-    # Parse message header
-    sid, mtype, mlen = ustruct.unpack_from('>LLL', rep, 1)  # Skip magic
+    magic, sid, mtype, mlen = ustruct.unpack('>BLLL', rep)
+    assert magic == _HEADER_MAGIC, 'Incorrect report magic'
     assert mlen < _MAX_DATA_LEN, 'Message too large to read'
 
     mlen += 4  # Account for the checksum
     data = rep[13:][:mlen]  # Skip magic and header, trim to data len
-    buffered = bytearray(data)  # Resulting message data
-    remaining = mlen - len(buffered)
+    remaining = mlen - len(data)
+    buffered = bytearray(data) if remaining > 0 else data  # Avoid the copy if we don't append
 
     while remaining > 0:
         rep = yield from _read_report()
-        assert rep[0] == _DATA_MAGIC, 'Incorrect report magic'
-
-        # Compare the session IDs
-        rsid = ustruct.unpack_from('>L', rep, 1)
+        magic, rsid = ustruct.unpack('>BL', rep)
+        assert magic == _DATA_MAGIC, 'Incorrect report magic'
         assert rsid == sid, 'Session ID mismatch'
 
         data = rep[5:][:remaining]  # Skip magic and session ID, trim
