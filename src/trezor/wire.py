@@ -20,8 +20,8 @@ IFACE = const(0)
 
 _REPORT_LEN = const(64)
 _MAX_DATA_LEN = const(65536)
-_HEADER_MAGIC = const(35)  # ord('#')
-_DATA_MAGIC = const(33)  # ord('!')
+_HEADER_MAGIC = const(33)  # ord('!')
+_DATA_MAGIC = const(35)  # ord('#')
 
 
 def _read_report():
@@ -64,7 +64,8 @@ def read_wire_msg():
     csum = ustruct.unpack_from('>L', buffered, -4)
 
     # Compare the checksums
-    assert csum == ubinascii.crc32(mbuf), 'Message checksum mismatch'
+    if hasattr(ubinascii, 'crc32'):
+        assert csum == ubinascii.crc32(mbuf), 'Message checksum mismatch'
 
     return sid, mtype, mbuf
 
@@ -78,7 +79,10 @@ def write_wire_msg(sid, mtype, mbuf):
     mbuf = memoryview(mbuf)
     data = rep[13:]  # Skip magic and header
 
-    csum = ubinascii.crc32(mbuf)
+    if hasattr(ubinascii, 'crc32'):
+        csum = ubinascii.crc32(mbuf)
+    else:
+        csum = 0
     footer = ustruct.pack('>L', csum)
 
     while True:
@@ -88,8 +92,9 @@ def write_wire_msg(sid, mtype, mbuf):
         data = data[n:]  # Skip written bytes
 
         # Continue with the footer if mbuf is empty and we have space
-        if not mbuf and data:
+        if not mbuf and footer and data:
             mbuf = footer
+            footer = None
             continue
 
         yield from _write_report(rep)
@@ -97,6 +102,7 @@ def write_wire_msg(sid, mtype, mbuf):
             break
 
         # Reset to skip the magic and session ID
+        rep[0] = _DATA_MAGIC
         data = rep[5:]
 
 
