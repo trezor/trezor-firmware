@@ -3,20 +3,20 @@ from trezor.ui.swipe import Swipe
 from trezor.utils import unimport_gen
 
 
-def swipe_to_rotate():
+async def swipe_to_rotate():
     while True:
-        degrees = yield from Swipe(absolute=True).wait()
+        degrees = await Swipe(absolute=True)
         ui.display.orientation(degrees)
 
 
-def animate_logo():
+async def animate_logo():
     def func(foreground):
         ui.display.icon(0, 0, res.load('apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
-    yield from ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
+    await ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
 
 
 @unimport_gen
-def layout_homescreen(initialize_msg=None):
+async def layout_homescreen(initialize_msg=None):
     if initialize_msg is not None:
         from trezor.messages.Features import Features
         features = Features()
@@ -35,7 +35,7 @@ def layout_homescreen(initialize_msg=None):
         features.passphrase_cached = False
         features.passphrase_protection = False
         features.vendor = 'bitcointrezor.com'
-        yield from wire.write(features)
-    yield loop.Wait([dispatcher.dispatch(),
+        await wire.write(features)
+    await loop.Wait([dispatcher.dispatch(),
                      swipe_to_rotate(),
                      animate_logo()])

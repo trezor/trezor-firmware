@@ -63,7 +63,7 @@ class Swipe():
             self.end_pos = None
             self.end_time = 0
 
-    def wait(self):
+    def __iter__(self):
         while True:
             event, *pos = yield loop.Select(loop.TOUCH)
             result = self.send(event, pos)
