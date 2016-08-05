@@ -46,7 +46,8 @@ def read_wire_msg():
     mlen += 4  # Account for the checksum
     data = rep[13:][:mlen]  # Skip magic and header, trim to data len
     remaining = mlen - len(data)
-    buffered = bytearray(data) if remaining > 0 else data  # Avoid the copy if we don't append
+    # Avoid the copy if we don't append
+    buffered = bytearray(data) if remaining > 0 else data
 
     while remaining > 0:
         rep = yield from _read_report()
@@ -71,8 +72,7 @@ def read_wire_msg():
 def write_wire_msg(sid, mtype, mbuf):
 
     rep = bytearray(_REPORT_LEN)
-    rep[0] = _HEADER_MAGIC
-    ustruct.pack_into('>LLL', rep, 1, sid, mtype, len(mbuf))
+    ustruct.pack_into('>BLLL', rep, 0, _HEADER_MAGIC, sid, mtype, len(mbuf))
 
     rep = memoryview(rep)
     mbuf = memoryview(mbuf)

@@ -3,9 +3,9 @@
 # http://eigenein.me/protobuf/
 
 from uio import BytesIO
-import ustruct
 
-# Types. -----------------------------------------------------------------------
+# Types. -----------------------------------------------------------------
+
 
 class UVarintType:
     # Represents an unsigned Varint type.
@@ -27,10 +27,10 @@ class UVarintType:
             value, shift = value + ((quantum & 0x7F) << shift), shift + 7
         return value
 
-# class UInt32Type(UVarintType): pass
 
 class BoolType:
-    # Represents a boolean type. Encodes True as UVarint 1, and False as UVarint 0.
+    # Represents a boolean type.
+    # Encodes True as UVarint 1, and False as UVarint 0.
     WIRE_TYPE = 0
 
     @staticmethod
@@ -41,9 +41,9 @@ class BoolType:
     def load(fp):
         return UVarintType.load(fp) != 0
 
+
 class BytesType:
     # Represents a raw bytes type.
-
     WIRE_TYPE = 2
 
     @staticmethod
@@ -55,7 +55,9 @@ class BytesType:
     def load(fp):
         return fp.read(UVarintType.load(fp))
 
+
 class UnicodeType:
+    # Represents an unicode string type.
     WIRE_TYPE = 2
 
     @staticmethod
@@ -66,17 +68,20 @@ class UnicodeType:
     def load(fp):
         return BytesType.load(fp).decode('utf-8', 'strict')
 
-# Messages. --------------------------------------------------------------------
 
-FLAG_SIMPLE = 0
-FLAG_REQUIRED = 1
-FLAG_REQUIRED_MASK = 1
-FLAG_SINGLE = 0
-FLAG_REPEATED = 2
-FLAG_REPEATED_MASK = 6
+# Messages. --------------------------------------------------------------
+
+FLAG_SIMPLE = const(0)
+FLAG_REQUIRED = const(1)
+FLAG_REQUIRED_MASK = const(1)
+FLAG_SINGLE = const(0)
+FLAG_REPEATED = const(2)
+FLAG_REPEATED_MASK = const(6)
+
 
 class EofWrapper:
     # Wraps a stream to raise EOFError instead of just returning of ''.
+
     def __init__(self, fp, limit=None):
         self.__fp = fp
         self.__limit = limit
@@ -91,20 +96,22 @@ class EofWrapper:
             raise EOFError()
         return s
 
+
 # Packs a tag and a wire_type into single int according to the protobuf spec.
 _pack_key = lambda tag, wire_type: (tag << 3) | wire_type
 # Unpacks a key into a tag and a wire_type according to the protobuf spec.
 _unpack_key = lambda key: (key >> 3, key & 7)
+
 
 class MessageType:
     # Represents a message type.
 
     def __init__(self, name=None):
         # Creates a new message type.
-        self.__tags_to_types = dict() # Maps a tag to a type instance.
-        self.__tags_to_names = dict() # Maps a tag to a given field name.
-        self.__defaults = dict()  # Maps a tag to its default value.
-        self.__flags = dict()  # Maps a tag to FLAG_
+        self.__tags_to_types = {}  # Maps a tag to a type instance.
+        self.__tags_to_names = {}  # Maps a tag to a given field name.
+        self.__defaults = {}  # Maps a tag to its default value.
+        self.__flags = {}  # Maps a tag to FLAG_
         self.__name = name
 
     def add_field(self, tag, name, field_type, flags=FLAG_SIMPLE, default=None):
@@ -116,14 +123,15 @@ class MessageType:
         self.__tags_to_names[tag] = name
         self.__tags_to_types[tag] = field_type
         self.__flags[tag] = flags
-        return self # Allow add_field chaining.
+        return self  # Allow add_field chaining.
 
     def __call__(self, **fields):
         # Creates an instance of this message type.
         return Message(self, **fields)
 
     def __has_flag(self, tag, flag, mask):
-        # Checks whether the field with the specified tag has the specified flag.
+        # Checks whether the field with the specified tag has the specified
+        # flag.
         return (self.__flags[tag] & mask) == flag
 
     def dump(self, fp, value):
@@ -134,7 +142,8 @@ class MessageType:
                 if self.__has_flag(tag, FLAG_SINGLE, FLAG_REPEATED_MASK):
                     # Single value.
                     UVarintType.dump(fp, _pack_key(tag, field_type.WIRE_TYPE))
-                    field_type.dump(fp, getattr(value, self.__tags_to_names[tag]))
+                    field_type.dump(fp, getattr(
+                        value, self.__tags_to_names[tag]))
                 elif self.__has_flag(tag, FLAG_REPEATED, FLAG_REPEATED_MASK):
                     # Repeated value.
                     key = _pack_key(tag, field_type.WIRE_TYPE)
@@ -143,7 +152,8 @@ class MessageType:
                         UVarintType.dump(fp, key)
                         field_type.dump(fp, single_value)
             elif self.__has_flag(tag, FLAG_REQUIRED, FLAG_REQUIRED_MASK):
-                raise ValueError('The field with the tag %s is required but a value is missing.' % tag)
+                raise ValueError(
+                    'The field with the tag %s is required but a value is missing.' % tag)
 
     def load(self, fp):
         fp = EofWrapper(fp)
@@ -154,22 +164,25 @@ class MessageType:
 
                 if tag in self.__tags_to_types:
                     field_type = self.__tags_to_types[tag]
+                    field_name = self.__tags_to_names[tag]
                     if wire_type != field_type.WIRE_TYPE:
                         raise TypeError(
-                            'Value of tag %s has incorrect wiretype %s, %s expected.' % \
+                            'Value of tag %s has incorrect wiretype %s, %s expected.' %
                             (tag, wire_type, field_type.WIRE_TYPE))
                     if self.__has_flag(tag, FLAG_SINGLE, FLAG_REPEATED_MASK):
                         # Single value.
-                        setattr(message, self.__tags_to_names[tag], field_type.load(fp))
+                        setattr(message, field_name, field_type.load(fp))
                     elif self.__has_flag(tag, FLAG_REPEATED, FLAG_REPEATED_MASK):
                         # Repeated value.
-                        if not self.__tags_to_names[tag] in message.__dict__:
-                            setattr(message, self.__tags_to_names[tag], list())
-                        getattr(message, self.__tags_to_names[tag]).append(field_type.load(fp))
+                        if not field_name in message.__dict__:
+                            setattr(message, field_name, [])
+                        getattr(message, field_name).append(
+                            field_type.load(fp))
                 else:
                     # Skip this field.
 
-                    # This used to correctly determine the length of unknown tags when loading a message.
+                    # This used to correctly determine the length of unknown
+                    # tags when loading a message.
                     {0: UVarintType, 2: BytesType}[wire_type].load(fp)
 
             except EOFError:
@@ -181,9 +194,12 @@ class MessageType:
                     # Check if all required fields are present.
                     if self.__has_flag(tag, FLAG_REQUIRED, FLAG_REQUIRED_MASK) and not name in message.__dict__:
                         if self.__has_flag(tag, FLAG_REPEATED, FLAG_REPEATED_MASK):
-                            setattr(message, name, list())  # Empty list (no values was in input stream). But required field.
+                            # Empty list (no values was in input stream). But
+                            # required field.
+                            setattr(message, name, [])
                         else:
-                            raise ValueError('The field %s (\'%s\') is required but missing.' % (tag, name))
+                            raise ValueError(
+                                'The field %s (\'%s\') is required but missing.' % (tag, name))
                 return message
 
     def dumps(self, value):
@@ -197,6 +213,7 @@ class MessageType:
 
     def __repr__(self):
         return '<MessageType: %s>' % self.__name
+
 
 class Message:
     # Represents a message instance.
@@ -219,10 +236,11 @@ class Message:
 
     def __repr__(self):
         values = self.__dict__
-        values = {k:values[k] for k in values if k != 'message_type'}
+        values = {k: values[k] for k in values if k != 'message_type'}
         return '<%s: %s>' % (self.message_type.__name, values)
 
-# Embedded message. ------------------------------------------------------------
+
+# Embedded message. ------------------------------------------------------
 
 class EmbeddedMessage:
     # Represents an embedded message type.
@@ -230,7 +248,8 @@ class EmbeddedMessage:
     WIRE_TYPE = 2
 
     def __init__(self, message_type):
-        # Initializes a new instance. The argument is an underlying message type.
+        # Initializes a new instance. The argument is an underlying message
+        # type.
         self.message_type = message_type
 
     def __call__(self):
@@ -241,4 +260,4 @@ class EmbeddedMessage:
         BytesType.dump(fp, self.message_type.dumps(value))
 
     def load(self, fp):
-        return self.message_type.load(EofWrapper(fp, UVarintType.load(fp)))  # Limit with embedded message length.
+        return self.message_type.load(EofWrapper(fp, UVarintType.load(fp)))
