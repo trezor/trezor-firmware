@@ -10,9 +10,14 @@ async def swipe_to_rotate():
 
 
 async def animate_logo():
-    def func(foreground):
-        ui.display.icon(0, 0, res.load('apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
-    await ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
+    # def func(foreground):
+    #     ui.display.icon(0, 0, res.load(
+    #         'apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
+    # await ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
+
+    async for fg in ui.pulse_animation(ui.WHITE, ui.GREY, speed=400000):
+        icon = res.load('apps/homescreen/res/trezor.toig')
+        ui.display.icon(0, 0, icon, fg, ui.BLACK)
 
 
 @unimport_gen
