@@ -125,6 +125,7 @@ static void hash_rlp_field(const uint8_t *buf, size_t size)
 
 static void send_request_chunk(void)
 {
+	resp.has_data_length = true;
 	resp.data_length = data_left <= 1024 ? data_left : 1024;
 	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
 }
@@ -264,27 +265,23 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	sha3_256_Init(&keccak_ctx);
 
 	memset(&resp, 0, sizeof(EthereumTxRequest));
-	/* NOTE: in the first stage we'll always request more data */
-	resp.has_data_length = true;
 
-	/* FIXME: simplify this check */
-	if (msg->has_data_initial_chunk) {
-		if (msg->has_data_length) {
-			if (msg->data_initial_chunk.size != 1024) {
-				fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but initial chunk too small");
-				ethereum_signing_abort();
-				return;
-			}
-			if (msg->data_length == 0) {
-				fsm_sendFailure(FailureType_Failure_Other, "Invalid data length provided");
-				ethereum_signing_abort();
-				return;
-			}
+	if (msg->has_data_length) {
+		if (msg->data_length == 0) {
+			fsm_sendFailure(FailureType_Failure_Other, "Invalid data length provided");
+			ethereum_signing_abort();
+			return;
 		}
-	} else if (msg->has_data_length) {
-		fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
-		ethereum_signing_abort();
-		return;
+		if (!msg->has_data_initial_chunk || msg->data_initial_chunk.size == 0) {
+			fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
+			ethereum_signing_abort();
+			return;
+		}
+		if (msg->data_initial_chunk.size > msg->data_length) {
+			fsm_sendFailure(FailureType_Failure_Other, "Invalid size of initial chunk");
+			ethereum_signing_abort();
+			return;
+		}
 	}
 
 	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL);
@@ -298,14 +295,11 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	int total_rlp_length = 0;
 	int total_data_length = 0;
 
-	if (msg->has_data_initial_chunk) {
-		total_data_length += msg->data_initial_chunk.size;
-	}
 	if (msg->has_data_length) {
-		total_data_length += msg->data_length;
+		total_data_length = msg->data_length;
 	}
 
-	layoutProgress("Signing Eth", 1);
+	layoutProgress("Signing", 1);
 
 	if (msg->has_nonce) {
 		total_rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
@@ -313,7 +307,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		total_rlp_length++;
 	}
 
-	layoutProgress("Signing Eth", 2);
+	layoutProgress("Signing", 2);
 
 	if (msg->has_gas_price) {
 		total_rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
@@ -321,7 +315,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		total_rlp_length++;
 	}
 
-	layoutProgress("Signing Eth", 3);
+	layoutProgress("Signing", 3);
 
 	if (msg->has_gas_limit) {
 		total_rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
@@ -329,7 +323,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		total_rlp_length++;
 	}
 
-	layoutProgress("Signing Eth", 4);
+	layoutProgress("Signing", 4);
 
 	if (msg->has_to) {
 		total_rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
@@ -337,7 +331,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		total_rlp_length++;
 	}
 
-	layoutProgress("Signing Eth", 5);
+	layoutProgress("Signing", 5);
 
 	if (msg->has_value) {
 		total_rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
@@ -345,7 +339,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		total_rlp_length++;
 	}
 
-	layoutProgress("Signing Eth", 6);
+	layoutProgress("Signing", 6);
 
 	if (msg->has_data_initial_chunk) {
 		total_rlp_length += rlp_calculate_length(total_data_length, msg->data_initial_chunk.bytes[0]);
@@ -353,12 +347,12 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		total_rlp_length++;
 	}
 
-	layoutProgress("Signing Eth", 7);
+	layoutProgress("Signing", 7);
 
 	/* Stage 2: Store header fields */
 	hash_rlp_list_length(total_rlp_length);
 
-	layoutProgress("Signing Eth", 8);
+	layoutProgress("Signing", 8);
 
 	if (msg->has_nonce) {
 		hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
@@ -397,17 +391,17 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		hash_rlp_length(1, 0);
 	}
 
-	layoutProgress("Signing Eth", 9);
+	layoutProgress("Signing", 9);
 
 	/* FIXME: probably this shouldn't be done here, but at a later stage */
 	memcpy(privkey, node->private_key, 32);
 
 	if (msg->has_data_length && msg->data_length > 0) {
-		layoutProgress("Signing Eth", 20);
-		data_left = msg->data_length;
+		layoutProgress("Signing", 20);
+		data_left = msg->data_length - msg->data_initial_chunk.size;
 		send_request_chunk();
 	} else {
-		layoutProgress("Signing Eth", 50);
+		layoutProgress("Signing", 50);
 		send_signature();
 	}
 }
