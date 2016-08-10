@@ -161,16 +161,19 @@ static void send_signature(void)
 	ethereum_signing_abort();
 }
 
-static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value)
+static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value, uint32_t value_len)
 {
-	static bignum256 val;
-	static uint16_t num[26];
-	static uint8_t last_used = 0;
-	if (value) {
-		bn_read_be(value, &val);
+	bignum256 val;
+	if (value && value_len <= 32) {
+		uint8_t pad_val[32];
+		memset(pad_val, 0, sizeof(pad_val));
+		memcpy(pad_val + (32 - value_len), value, value_len);
+		bn_read_be(pad_val, &val);
 	} else {
 		bn_zero(&val);
 	}
+	uint16_t num[26];
+	uint8_t last_used = 0;
 	for (int i = 0; i < 26; i++) {
 		bn_divmod1000(&val, (uint32_t *)&(num[i]));
 		if (num[i] > 0) {
@@ -221,19 +224,24 @@ static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value)
 	}
 
 	value_ptr = _value;
-	while (*value_ptr == '0') { // skip leading zeroes
+	while (*value_ptr == '0' && *(value_ptr + 1) >= '0' && *(value_ptr + 1) <= '9') { // skip leading zeroes
 		value_ptr++;
 	}
 
-	static char _to1[21] = {0};
-	static char _to2[21] = {0};
+	static char _to1[17] = {0};
+	static char _to2[17] = {0};
+	static char _to3[17] = {0};
 
 	if (to) {
-		data2hex(to, 10, _to1);
-		data2hex(to + 10, 10, _to2);
+		strcpy(_to1, "to ");
+		data2hex(to, 6, _to1 + 3);
+		data2hex(to + 6, 7, _to2);
+		data2hex(to + 13, 7, _to3);
+		_to3[14] = '?'; _to3[15] = 0;
 	} else {
-		strlcpy(_to1, "no recipient", sizeof(_to1));
+		strlcpy(_to1, "to no recipient?", sizeof(_to1));
 		strlcpy(_to2, "", sizeof(_to2));
+		strlcpy(_to3, "", sizeof(_to3));
 	}
 
 	layoutDialogSwipe(DIALOG_ICON_QUESTION,
@@ -242,10 +250,10 @@ static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value)
 		NULL,
 		"Really send",
 		value_ptr,
-		"from your wallet?",
-		"To:",
 		_to1,
-		_to2
+		_to2,
+		_to3,
+		NULL
 	);
 }
 
@@ -284,7 +292,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		}
 	}
 
-	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL);
+	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL, msg->has_value ? msg->value.size : 0);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
 		ethereum_signing_abort();
