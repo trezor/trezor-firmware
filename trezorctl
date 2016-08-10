@@ -296,7 +296,7 @@ class Commands(object):
             r = requests.get(args.url)
             fp = r.content
         else:
-            r = requests.get('https://mytrezor.com/data/firmware/releases.json')
+            r = requests.get('https://wallet.trezor.io/data/firmware/releases.json')
             releases = r.json()
             version = lambda r: r['version']
             version_string = lambda r: ".".join(map(str, version(r)))
@@ -306,7 +306,7 @@ class Commands(object):
                 release = max(releases, key=version)
                 print("No file, url, or version given. Fetching latest version: %s" % version_string(release))
             print("Firmware fingerprint: %s" % release['fingerprint'])
-            args.url = release['url']
+            args.url = 'https://wallet.trezor.io/' + release['url']
             return self.firmware_update(args)
 
         if fp[:8] == b'54525a52':
