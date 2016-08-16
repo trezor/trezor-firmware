@@ -38,28 +38,56 @@ struct SHA3_CTX keccak_ctx;
 
 /*
  * Encode length according to RLP.
- * FIXME: improve
  */
-static int rlp_encode_length(uint8_t *buf, int length, uint8_t firstbyte, bool list)
+static int rlp_encode_length(uint8_t *buf, int length, uint8_t firstbyte)
 {
-	if (!list && (length == 1 && firstbyte <= 0x7f)) {
-		/* Extra-special case: null is encoded differently */
-		buf[0] = !firstbyte ? 0x80 : firstbyte;
+	if (length == 1 && firstbyte == 0x00) {
+		// extra-special case: null is encoded differently
+		buf[0] = 0x80;
+		return 1;
+	} else if (length == 1 && firstbyte <= 0x7f) {
+		buf[0] = firstbyte;
 		return 1;
 	} else if (length <= 55) {
-		buf[0] = (list ? 0xc0 : 0x80) + length;
+		buf[0] = 0x80 + length;
 		return 1;
 	} else if (length <= 0xff) {
-		buf[0] = (list ? 0xf7 : 0xb7) + 1;
+		buf[0] = 0xb7 + 1;
 		buf[1] = length;
 		return 2;
 	} else if (length <= 0xffff) {
-		buf[0] = (list ? 0xf7 : 0xb7) + 2;
+		buf[0] = 0xb7 + 2;
 		buf[1] = length >> 8;
 		buf[2] = length & 0xff;
 		return 3;
 	} else {
-		buf[0] = (list ? 0xf7 : 0xb7) + 3;
+		buf[0] = 0xb7 + 3;
+		buf[1] = length >> 16;
+		buf[2] = length >> 8;
+		buf[3] = length & 0xff;
+		return 4;
+	}
+}
+
+/*
+ * Encode list length according to RLP.
+ */
+static int rlp_encode_list_length(uint8_t *buf, int length)
+{
+	if (length <= 55) {
+		buf[0] = 0xc0 + length;
+		return 1;
+	} else if (length <= 0xff) {
+		buf[0] = 0xf7 + 1;
+		buf[1] = length;
+		return 2;
+	} else if (length <= 0xffff) {
+		buf[0] = 0xf7 + 2;
+		buf[1] = length >> 8;
+		buf[2] = length & 0xff;
+		return 3;
+	} else {
+		buf[0] = 0xf7 + 3;
 		buf[1] = length >> 16;
 		buf[2] = length >> 8;
 		buf[3] = length & 0xff;
@@ -97,7 +125,7 @@ static inline void hash_data(const uint8_t *buf, size_t size)
 static void hash_rlp_length(int length, uint8_t firstbyte)
 {
 	uint8_t buf[4];
-	size_t size = rlp_encode_length(buf, length, firstbyte, false);
+	size_t size = rlp_encode_length(buf, length, firstbyte);
 	hash_data(buf, size);
 }
 
@@ -107,7 +135,7 @@ static void hash_rlp_length(int length, uint8_t firstbyte)
 static void hash_rlp_list_length(int length)
 {
 	uint8_t buf[4];
-	size_t size = rlp_encode_length(buf, length, 0, true);
+	size_t size = rlp_encode_list_length(buf, length);
 	hash_data(buf, size);
 }
 
