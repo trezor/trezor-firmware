@@ -5,8 +5,6 @@ sys.path = ['../',] + sys.path
 
 from trezorlib.transport_pipe import PipeTransport
 from trezorlib.transport_hid import HidTransport
-from trezorlib.transport_socket import SocketTransportClient
-#from trezorlib.transport_bridge import BridgeTransport
 
 devices = HidTransport.enumerate()
 
