@@ -280,6 +280,31 @@ static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value, uin
  * - data (0 ..)
  */
 
+static bool ethereum_signing_check(EthereumSignTx *msg)
+{
+	// determine if address == 0
+	bool address_zero = msg->has_to;
+	if (address_zero) {
+		for (size_t i = 0; i < msg->to.size; i++) {
+			if (msg->to.bytes[i] > 0) {
+				address_zero = false;
+				break;
+			}
+		}
+	}
+
+	// sending value to address 0
+	if (address_zero && msg->has_value && msg->value.size) {
+		return false;
+	}
+	// sending transaction to address 0 without a data field
+	if (address_zero && (!msg->has_data_length || msg->data_length == 0)) {
+		return false;
+	}
+
+	return true;
+}
+
 void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 {
 	signing = true;
@@ -306,6 +331,13 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		data_total = msg->data_length;
 	} else {
 		data_total = 0;
+	}
+
+	// safety checks
+	if (!ethereum_signing_check(msg)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing aborted (safety check failed)");
+		ethereum_signing_abort();
+		return;
 	}
 
 	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL, msg->has_value ? msg->value.size : 0);
