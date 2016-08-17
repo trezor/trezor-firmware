@@ -2,6 +2,7 @@
  * This file is part of the TREZOR project.
  *
  * Copyright (C) 2016 Alex Beregszaszi <alex@rtfs.hu>
+ * Copyright (C) 2016 Pavol Rusnak <stick@satoshilabs.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,68 +31,85 @@
 #include "util.h"
 
 static bool signing = false;
-static size_t data_left;
+static uint32_t data_total, data_left;
 static EthereumTxRequest resp;
 static uint8_t hash[32], sig[64], privkey[32];
-// FIXME: this is currently 400 bytes. Could be probably improved.
 struct SHA3_CTX keccak_ctx;
 
-/*
- * Encode length according to RLP.
- */
-static int rlp_encode_length(uint8_t *buf, int length, uint8_t firstbyte)
+static inline void hash_data(const uint8_t *buf, size_t size)
 {
+	sha3_Update(&keccak_ctx, buf, size);
+}
+
+/*
+ * Push an RLP encoded length to the hash buffer.
+ */
+static void hash_rlp_length(uint32_t length, uint8_t firstbyte)
+{
+	uint8_t buf[4];
 	if (length == 1 && firstbyte == 0x00) {
-		// extra-special case: null is encoded differently
+		// special case: null is encoded differently
 		buf[0] = 0x80;
-		return 1;
+		hash_data(buf, 1);
 	} else if (length == 1 && firstbyte <= 0x7f) {
 		buf[0] = firstbyte;
-		return 1;
+		hash_data(buf, 1);
 	} else if (length <= 55) {
 		buf[0] = 0x80 + length;
-		return 1;
+		hash_data(buf, 1);
 	} else if (length <= 0xff) {
 		buf[0] = 0xb7 + 1;
 		buf[1] = length;
-		return 2;
+		hash_data(buf, 2);
 	} else if (length <= 0xffff) {
 		buf[0] = 0xb7 + 2;
 		buf[1] = length >> 8;
 		buf[2] = length & 0xff;
-		return 3;
+		hash_data(buf, 3);
 	} else {
 		buf[0] = 0xb7 + 3;
 		buf[1] = length >> 16;
 		buf[2] = length >> 8;
 		buf[3] = length & 0xff;
-		return 4;
+		hash_data(buf, 4);
 	}
 }
 
 /*
- * Encode list length according to RLP.
+ * Push an RLP encoded list length to the hash buffer.
  */
-static int rlp_encode_list_length(uint8_t *buf, int length)
+static void hash_rlp_list_length(uint32_t length)
 {
+	uint8_t buf[4];
 	if (length <= 55) {
 		buf[0] = 0xc0 + length;
-		return 1;
+		hash_data(buf, 1);
 	} else if (length <= 0xff) {
 		buf[0] = 0xf7 + 1;
 		buf[1] = length;
-		return 2;
+		hash_data(buf, 2);
 	} else if (length <= 0xffff) {
 		buf[0] = 0xf7 + 2;
 		buf[1] = length >> 8;
 		buf[2] = length & 0xff;
-		return 3;
+		hash_data(buf, 3);
 	} else {
 		buf[0] = 0xf7 + 3;
 		buf[1] = length >> 16;
 		buf[2] = length >> 8;
 		buf[3] = length & 0xff;
-		return 4;
+		hash_data(buf, 4);
+	}
+}
+
+/*
+ * Push an RLP encoded length field and data to the hash buffer.
+ */
+static void hash_rlp_field(const uint8_t *buf, size_t size)
+{
+	hash_rlp_length(size, buf[0]);
+	if (size > 1 || buf[0] >= 0x80) {
+		hash_data(buf, size);
 	}
 }
 
@@ -100,7 +118,8 @@ static int rlp_encode_list_length(uint8_t *buf, int length)
  * NOTE: supports up to 16MB of data (how unlikely...)
  * FIXME: improve
  */
-static int rlp_calculate_length(int length, uint8_t firstbyte) {
+static int rlp_calculate_length(int length, uint8_t firstbyte)
+{
 	if (length == 1 && firstbyte <= 0x7f) {
 		return 1;
 	} else if (length <= 55) {
@@ -114,45 +133,10 @@ static int rlp_calculate_length(int length, uint8_t firstbyte) {
 	}
 }
 
-static inline void hash_data(const uint8_t *buf, size_t size)
-{
-	sha3_Update(&keccak_ctx, buf, size);
-}
-
-/*
- * Push an RLP encoded length to the hash buffer.
- */
-static void hash_rlp_length(int length, uint8_t firstbyte)
-{
-	uint8_t buf[4];
-	size_t size = rlp_encode_length(buf, length, firstbyte);
-	hash_data(buf, size);
-}
-
-/*
- * Push an RLP encoded list length to the hash buffer.
- */
-static void hash_rlp_list_length(int length)
-{
-	uint8_t buf[4];
-	size_t size = rlp_encode_list_length(buf, length);
-	hash_data(buf, size);
-}
-
-/*
- * Push an RLP encoded length field and data to the hash buffer.
- */
-static void hash_rlp_field(const uint8_t *buf, size_t size)
-{
-	hash_rlp_length(size, buf[0]);
-	/* FIXME: this special case should be handled more nicely */
-	if (!(size == 1 && buf[0] <= 0x7f)) {
-		hash_data(buf, size);
-	}
-}
 
 static void send_request_chunk(void)
 {
+	layoutProgress("Signing", 1000 - 800 * data_left / data_total);
 	resp.has_data_length = true;
 	resp.data_length = data_left <= 1024 ? data_left : 1024;
 	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
@@ -160,6 +144,7 @@ static void send_request_chunk(void)
 
 static void send_signature(void)
 {
+	layoutProgress("Signing", 1000);
 	keccak_Final(&keccak_ctx, hash);
 	uint8_t v;
 	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v) != 0) {
@@ -318,6 +303,9 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 			ethereum_signing_abort();
 			return;
 		}
+		data_total = msg->data_length;
+	} else {
+		data_total = 0;
 	}
 
 	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL, msg->has_value ? msg->value.size : 0);
@@ -328,67 +316,21 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	}
 
 	/* Stage 1: Calculate total RLP length */
-	int total_rlp_length = 0;
-	int total_data_length = 0;
+	uint32_t rlp_length = 0;
 
-	if (msg->has_data_length) {
-		total_data_length = msg->data_length;
-	}
+	layoutProgress("Signing", 0);
 
-	layoutProgress("Signing", 1);
-
-	if (msg->has_nonce) {
-		total_rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
-	} else {
-		total_rlp_length++;
-	}
-
-	layoutProgress("Signing", 2);
-
-	if (msg->has_gas_price) {
-		total_rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
-	} else {
-		total_rlp_length++;
-	}
-
-	layoutProgress("Signing", 3);
-
-	if (msg->has_gas_limit) {
-		total_rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
-	} else {
-		total_rlp_length++;
-	}
-
-	layoutProgress("Signing", 4);
-
-	if (msg->has_to) {
-		total_rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
-	} else {
-		total_rlp_length++;
-	}
-
-	layoutProgress("Signing", 5);
-
-	if (msg->has_value) {
-		total_rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
-	} else {
-		total_rlp_length++;
-	}
-
-	layoutProgress("Signing", 6);
-
-	if (msg->has_data_initial_chunk) {
-		total_rlp_length += rlp_calculate_length(total_data_length, msg->data_initial_chunk.bytes[0]);
-	} else {
-		total_rlp_length++;
-	}
-
-	layoutProgress("Signing", 7);
+	rlp_length += msg->has_nonce ? rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]) : 1;
+	rlp_length += msg->has_gas_price ? rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]) : 1;
+	rlp_length += msg->has_gas_limit ? rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]) : 1;
+	rlp_length += msg->has_to ? rlp_calculate_length(msg->to.size, msg->to.bytes[0]) : 1;
+	rlp_length += msg->has_value ? rlp_calculate_length(msg->value.size, msg->value.bytes[0]) : 1;
+	rlp_length += (msg->has_data_length && msg->has_data_initial_chunk) ? rlp_calculate_length(msg->data_length, msg->data_initial_chunk.bytes[0]) : 1;
 
 	/* Stage 2: Store header fields */
-	hash_rlp_list_length(total_rlp_length);
+	hash_rlp_list_length(rlp_length);
 
-	layoutProgress("Signing", 8);
+	layoutProgress("Signing", 100);
 
 	if (msg->has_nonce) {
 		hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
@@ -420,24 +362,22 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		hash_rlp_length(1, 0);
 	}
 
-	if (msg->has_data_initial_chunk) {
-		hash_rlp_length(total_data_length, msg->data_initial_chunk.bytes[0]);
+	if (msg->has_data_length && msg->has_data_initial_chunk) {
+		hash_rlp_length(msg->data_length, msg->data_initial_chunk.bytes[0]);
 		hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
 	} else {
 		hash_rlp_length(1, 0);
 	}
 
-	layoutProgress("Signing", 9);
+	layoutProgress("Signing", 200);
 
 	/* FIXME: probably this shouldn't be done here, but at a later stage */
 	memcpy(privkey, node->private_key, 32);
 
-	if (msg->has_data_length && msg->data_length > 0) {
-		layoutProgress("Signing", 20);
+	if (msg->has_data_length && msg->data_length > msg->data_initial_chunk.size) {
 		data_left = msg->data_length - msg->data_initial_chunk.size;
 		send_request_chunk();
 	} else {
-		layoutProgress("Signing", 50);
 		send_signature();
 	}
 }
