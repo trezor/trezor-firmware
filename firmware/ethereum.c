@@ -257,7 +257,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value, uin
 		strlcpy(_to3, "", sizeof(_to3));
 	}
 
-	layoutDialogSwipe(DIALOG_ICON_QUESTION,
+	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
 		NULL,

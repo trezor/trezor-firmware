@@ -672,7 +672,8 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 
 	resp->address.size = 20;
 
-	if (!ecdsa_get_ethereum_pubkeyhash(node->public_key, resp->address.bytes)) return;
+	if (!hdnode_get_ethereum_pubkeyhash(node, resp->address.bytes))
+		return;
 
 	if (msg->has_show_display && msg->show_display) {
 		char desc[16];
