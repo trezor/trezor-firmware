@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2016 Alex Beregszaszi <alex@rtfs.hu>
  * Copyright (C) 2016 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2016 Jochen Hoenicke <hoenicke@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +31,7 @@
 #include "sha3.h"
 #include "util.h"
 
-static bool signing = false;
+static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest resp;
 static uint8_t hash[32], sig[64], privkey[32];
@@ -47,11 +48,7 @@ static inline void hash_data(const uint8_t *buf, size_t size)
 static void hash_rlp_length(uint32_t length, uint8_t firstbyte)
 {
 	uint8_t buf[4];
-	if (length == 1 && firstbyte == 0x00) {
-		// special case: null is encoded differently
-		buf[0] = 0x80;
-		hash_data(buf, 1);
-	} else if (length == 1 && firstbyte <= 0x7f) {
+	if (length == 1 && firstbyte <= 0x7f) {
 		buf[0] = firstbyte;
 		hash_data(buf, 1);
 	} else if (length <= 55) {
@@ -307,7 +304,7 @@ static bool ethereum_signing_check(EthereumSignTx *msg)
 
 void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 {
-	signing = true;
+	ethereum_signing = true;
 	sha3_256_Init(&keccak_ctx);
 
 	memset(&resp, 0, sizeof(EthereumTxRequest));
@@ -323,14 +320,22 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 			ethereum_signing_abort();
 			return;
 		}
-		if (msg->data_initial_chunk.size > msg->data_length) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid size of initial chunk");
+		/* Our encoding only supports transactions up to 2^24 bytes.  To
+		 * prevent exceeding the limit we use a stricter limit on data length.
+		 */
+		if (msg->data_length > 16000000)  {
+			fsm_sendFailure(FailureType_Failure_Other, "Data length exceeds limit");
 			ethereum_signing_abort();
 			return;
 		}
 		data_total = msg->data_length;
 	} else {
 		data_total = 0;
+	}
+	if (msg->data_initial_chunk.size > data_total) {
+		fsm_sendFailure(FailureType_Failure_Other, "Invalid size of initial chunk");
+		ethereum_signing_abort();
+		return;
 	}
 
 	// safety checks
@@ -357,7 +362,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	rlp_length += msg->has_gas_limit ? rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]) : 1;
 	rlp_length += msg->has_to ? rlp_calculate_length(msg->to.size, msg->to.bytes[0]) : 1;
 	rlp_length += msg->has_value ? rlp_calculate_length(msg->value.size, msg->value.bytes[0]) : 1;
-	rlp_length += (msg->has_data_length && msg->has_data_initial_chunk) ? rlp_calculate_length(msg->data_length, msg->data_initial_chunk.bytes[0]) : 1;
+	rlp_length += rlp_calculate_length(data_total, msg->data_initial_chunk.bytes[0]);
 
 	/* Stage 2: Store header fields */
 	hash_rlp_list_length(rlp_length);
@@ -367,47 +372,43 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	if (msg->has_nonce) {
 		hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
 	} else {
-		hash_rlp_length(1, 0);
+		hash_rlp_length(0, 0);
 	}
 
 	if (msg->has_gas_price) {
 		hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
 	} else {
-		hash_rlp_length(1, 0);
+		hash_rlp_length(0, 0);
 	}
 
 	if (msg->has_gas_limit) {
 		hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
 	} else {
-		hash_rlp_length(1, 0);
+		hash_rlp_length(0, 0);
 	}
 
 	if (msg->has_to) {
 		hash_rlp_field(msg->to.bytes, msg->to.size);
 	} else {
-		hash_rlp_length(1, 0);
+		hash_rlp_length(0, 0);
 	}
 
 	if (msg->has_value) {
 		hash_rlp_field(msg->value.bytes, msg->value.size);
 	} else {
-		hash_rlp_length(1, 0);
+		hash_rlp_length(0, 0);
 	}
 
-	if (msg->has_data_length && msg->has_data_initial_chunk) {
-		hash_rlp_length(msg->data_length, msg->data_initial_chunk.bytes[0]);
+	hash_rlp_length(data_total, msg->data_initial_chunk.bytes[0]);
+	if (data_total > 1 || msg->data_initial_chunk.bytes[0] >= 0x80) {
 		hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
-	} else {
-		hash_rlp_length(1, 0);
 	}
-
-	layoutProgress("Signing", 200);
+	data_left = data_total - msg->data_initial_chunk.size;
 
 	/* FIXME: probably this shouldn't be done here, but at a later stage */
 	memcpy(privkey, node->private_key, 32);
 
-	if (msg->has_data_length && msg->data_length > msg->data_initial_chunk.size) {
-		data_left = msg->data_length - msg->data_initial_chunk.size;
+	if (data_left > 0) {
 		send_request_chunk();
 	} else {
 		send_signature();
@@ -416,9 +417,15 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 void ethereum_signing_txack(EthereumTxAck *tx)
 {
-	if (!signing) {
+	if (!ethereum_signing) {
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in Signing mode");
 		layoutHome();
+		return;
+	}
+
+	if (tx->data_chunk.size > data_left) {
+		fsm_sendFailure(FailureType_Failure_Other, "Too much data");
+		ethereum_signing_abort();
 		return;
 	}
 
@@ -441,9 +448,9 @@ void ethereum_signing_txack(EthereumTxAck *tx)
 
 void ethereum_signing_abort(void)
 {
-	if (signing) {
+	if (ethereum_signing) {
 		memset(privkey, 0, sizeof(privkey));
 		layoutHome();
-		signing = false;
+		ethereum_signing = false;
 	}
 }
