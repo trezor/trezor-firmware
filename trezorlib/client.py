@@ -440,8 +440,10 @@ class ProtocolMixin(object):
                 nonce=int_to_big_endian(nonce),
                 gas_price=int_to_big_endian(gas_price),
                 gas_limit=int_to_big_endian(gas_limit),
-                to=to,
                 value=int_to_big_endian(value))
+
+            if to:
+                msg.to = to
 
             if data:
                 msg.data_length = len(data)

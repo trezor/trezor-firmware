@@ -120,9 +120,6 @@ class Commands(object):
         from ethjsonrpc.utils import hex_to_dec
         import rlp
 
-        if not args.to:
-            raise Exception("Please provide to address in hex format")
-
         value = args.value
         if ' ' in value:
             value, unit = value.split(' ', 1)
@@ -145,6 +142,8 @@ class Commands(object):
 
         gas_price = eth.eth_gasPrice()
         gas_limit = args.gas
+        if args.data.startswith('0x'):
+            args.data = args.data[2:]
         data = binascii.unhexlify(args.data)
         if not gas_limit:
             gas_limit = hex_to_dec(eth.eth_estimateGas(
@@ -164,7 +163,7 @@ class Commands(object):
             data=data)
 
         transaction = rlp.encode(
-            (nonce, gas_price, gas_limit, hex_to_dec(args.to), value, data) + sig)
+            (nonce, gas_price, gas_limit, to_address, value, data) + sig)
         tx_hex = '0x%s' % binascii.hexlify(transaction)
 
         if args.publish:
