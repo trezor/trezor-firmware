@@ -67,6 +67,10 @@ uint32_t hdnode_fingerprint(HDNode *node);
 
 void hdnode_fill_public_key(HDNode *node);
 
+#if USE_ETHEREUM
+int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash);
+#endif
+
 int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
 int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby);
 

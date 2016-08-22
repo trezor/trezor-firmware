@@ -37,6 +37,9 @@
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
+#if USE_ETHEREUM
+#include "sha3.h"
+#endif
 
 const curve_info ed25519_info = {
 	/* bip32_name */
@@ -388,6 +391,27 @@ void hdnode_fill_public_key(HDNode *node)
 		ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
 	}
 }
+
+#if USE_ETHEREUM
+int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash)
+{
+	uint8_t buf[65];
+	SHA3_CTX ctx;
+
+	/* get uncompressed public key */
+	ecdsa_get_public_key65(node->curve->params, node->private_key, buf);
+
+	/* compute sha3 of x and y coordinate without 04 prefix */
+	sha3_256_Init(&ctx);
+	sha3_Update(&ctx, buf + 1, 64);
+	keccak_Final(&ctx, buf);
+
+	/* result are the least significant 160 bits */
+	memcpy(pubkeyhash, buf + 12, 20);
+
+	return 1;
+}
+#endif
 
 // msg is a data to be signed
 // msg_len is the message length

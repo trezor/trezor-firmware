@@ -2239,47 +2239,84 @@ END_TEST
 START_TEST(test_ethereum_pubkeyhash)
 {
 	uint8_t pubkeyhash[20];
-	uint8_t pub_key[65];
 	int res;
+	HDNode node;
 
-	memcpy(pub_key, fromhex("0226659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37"), 33);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// init m
+	hdnode_from_seed(fromhex("000102030405060708090a0b0c0d0e0f"), 16, SECP256K1_NAME, &node);
+
+	// [Chain m]
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("dfec07843c46f3fb5e5ef8b70b845231a97ed2c8"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("056db290f8ba3250ca64a45d16284d04bc6f5fbf"), 20);
 
-	memcpy(pub_key, fromhex("025b1654a0e78d28810094f6c5a96b8efb8a65668b578f170ac2b1f83bc63ba856"), 33);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// [Chain m/0']
+	hdnode_private_ckd_prime(&node, 0);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("aa2685dbc0a1820fc4bb03c3154d1cc0b26411ee"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("bf6e48966d0dcf553b53e7b56cb2e0e72dca9e19"), 20);
 
-	memcpy(pub_key, fromhex("03433f246a12e6486a51ff08802228c61cf895175a9b49ed4766ea9a9294a3c7fe"), 33);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// [Chain m/0'/1]
+	hdnode_private_ckd(&node, 1);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("86193afd976244f39f0e9d42a1d2c090080754f1"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("29379f45f515c494483298225d1b347f73d1babf"), 20);
 
-	memcpy(pub_key, fromhex("03aeb03abeee0f0f8b4f7a5d65ce31f9570cef9f72c2dd8a19b4085a30ab033d48"), 33);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// [Chain m/0'/1/2']
+	hdnode_private_ckd_prime(&node, 2);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("330b7636bff2c8ea728170042ab6af0b826cbdc0"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("d8e85fbbb4b3b3c71c4e63a5580d0c12fb4d2f71"), 20);
 
-	memcpy(pub_key, fromhex("0496e8f2093f018aff6c2e2da5201ee528e2c8accbf9cac51563d33a7bb74a016054201c025e2a5d96b1629b95194e806c63eb96facaedc733b1a4b70ab3b33e3a"), 65);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// [Chain m/0'/1/2'/2]
+	hdnode_private_ckd(&node, 2);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("10027a9bef3e98be693f8fb4c02f4a7421cdf384"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("1d3462d2319ac0bfc1a52e177a9d372492752130"), 20);
 
-	memcpy(pub_key, fromhex("0498010f8a687439ff497d3074beb4519754e72c4b6220fb669224749591dde416f3961f8ece18f8689bb32235e436874d2174048b86118a00afbd5a4f33a24f0f"), 65);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// [Chain m/0'/1/2'/2/1000000000]
+	hdnode_private_ckd(&node, 1000000000);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("6d9baaf3db174b9ea498081707289c228108aa9e"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("73659c60270d326c06ac204f1a9c63f889a3d14b"), 20);
 
-	memcpy(pub_key, fromhex("04f80490839af36d13701ec3f9eebdac901b51c362119d74553a3c537faff31b17e2a59ebddbdac9e87b816307a7ed5b826b8f40b92719086238e1bebf19b77a4d"), 65);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
+	// init m
+	hdnode_from_seed(fromhex("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"), 64, SECP256K1_NAME, &node);
+
+	// [Chain m]
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
 	ck_assert_int_eq(res, 1);
-	ck_assert_mem_eq(pubkeyhash, fromhex("addcb46a5ae157c837682689fcd4f80a76bb7740"), 20);
+	ck_assert_mem_eq(pubkeyhash, fromhex("6dd2a6f3b05fd15d901fbeec61b87a34bdcfb843"), 20);
 
-	memcpy(pub_key, fromhex("00"), 1);
-	res = ecdsa_get_ethereum_pubkeyhash(pub_key, pubkeyhash);
-	ck_assert_int_eq(res, 0);
+	// [Chain m/0]
+	hdnode_private_ckd(&node, 0);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("abbcd4471a0b6e76a2f6fdc44008fe53831e208e"), 20);
+
+	// [Chain m/0/2147483647']
+	hdnode_private_ckd_prime(&node, 2147483647);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("40ef2cef1b2588ae862e7a511162ec7ff33c30fd"), 20);
+
+	// [Chain m/0/2147483647'/1]
+	hdnode_private_ckd(&node, 1);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("3f2e8905488f795ebc84a39560d133971ccf9b50"), 20);
+
+	// [Chain m/0/2147483647'/1/2147483646']
+	hdnode_private_ckd_prime(&node, 2147483646);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("a5016fdf975f767e4e6f355c7a82efa69bf42ea7"), 20);
+
+	// [Chain m/0/2147483647'/1/2147483646'/2]
+	hdnode_private_ckd(&node, 2);
+	res = hdnode_get_ethereum_pubkeyhash(&node, pubkeyhash);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(pubkeyhash, fromhex("8ff2a9f7e7917804e8c8ec150d931d9c5a6fbc50"), 20);
 }
 END_TEST
 
