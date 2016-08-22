@@ -145,12 +145,13 @@ class Commands(object):
 
         gas_price = eth.eth_gasPrice()
         gas_limit = args.gas
+        data = binascii.unhexlify(args.data)
         if not gas_limit:
             gas_limit = hex_to_dec(eth.eth_estimateGas(
                 to_address=args.to,
                 from_address=address,
                 value=value,
-                data=args.data))
+                data="0x"+args.data))
         nonce = eth.eth_getTransactionCount(address)
 
         sig = self.client.ethereum_sign_tx(
@@ -160,10 +161,10 @@ class Commands(object):
             gas_limit=gas_limit,
             to=to_address,
             value=value,
-            data=args.data)
+            data=data)
 
         transaction = rlp.encode(
-            (nonce, gas_price, gas_limit, hex_to_dec(args.to), value, args.data) + sig)
+            (nonce, gas_price, gas_limit, hex_to_dec(args.to), value, data) + sig)
         tx_hex = '0x%s' % binascii.hexlify(transaction)
 
         if args.publish:

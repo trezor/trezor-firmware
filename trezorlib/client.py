@@ -424,7 +424,11 @@ class ProtocolMixin(object):
         return self.call(proto.EthereumGetAddress(address_n=n, show_display=show_display))
 
     def ethereum_sign_tx(self, n, nonce, gas_price, gas_limit, to, value, data=None):
-        from rlp.utils import int_to_big_endian
+        def int_to_big_endian(value):
+            import rlp.utils
+            if value == 0:
+                return b''
+            return rlp.utils.int_to_big_endian(value)
 
         n = self._convert_prime(n)
 
