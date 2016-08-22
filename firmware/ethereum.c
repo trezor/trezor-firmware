@@ -133,7 +133,10 @@ static int rlp_calculate_length(int length, uint8_t firstbyte)
 
 static void send_request_chunk(void)
 {
-	layoutProgress("Signing", 1000 - 800 * data_left / data_total);
+	int progress = 1000 - (data_total > 1000000
+						   ? data_left / (data_total/800)
+						   : data_left * 800 / data_total);
+	layoutProgress("Signing", progress);
 	resp.has_data_length = true;
 	resp.data_length = data_left <= 1024 ? data_left : 1024;
 	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
@@ -171,7 +174,7 @@ static void send_signature(void)
 	ethereum_signing_abort();
 }
 
-static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value, uint32_t value_len)
+static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len)
 {
 	bignum256 val;
 	if (value && value_len <= 32) {
@@ -242,14 +245,14 @@ static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value, uin
 	static char _to2[17] = {0};
 	static char _to3[17] = {0};
 
-	if (to) {
+	if (to_len) {
 		strcpy(_to1, "to ");
 		data2hex(to, 6, _to1 + 3);
 		data2hex(to + 6, 7, _to2);
 		data2hex(to + 13, 7, _to3);
 		_to3[14] = '?'; _to3[15] = 0;
 	} else {
-		strlcpy(_to1, "to no recipient?", sizeof(_to1));
+		strlcpy(_to1, "to new contract?", sizeof(_to1));
 		strlcpy(_to2, "", sizeof(_to2));
 		strlcpy(_to3, "", sizeof(_to3));
 	}
@@ -263,6 +266,45 @@ static void layoutEthereumConfirmTx(const uint8_t *to, const uint8_t *value, uin
 		_to1,
 		_to2,
 		_to3,
+		NULL
+	);
+}
+
+static void layoutEthereumData(const uint8_t *data, uint32_t len, uint32_t total_len)
+{
+	char hexdata[3][17];
+	char summary[20];
+	int i;
+	uint32_t printed = 0;
+	for (i = 0; i < 3; i++) {
+		uint32_t linelen = len - printed;
+		if (linelen > 8)
+			linelen = 8;
+		data2hex(data, linelen, hexdata[i]);
+		data += linelen;
+		printed += linelen;
+	}
+
+	strcpy(summary, "...          bytes");
+	char *p = summary + 11;
+	uint32_t number = total_len;
+	while (number > 0) {
+		*p-- = '0' + number % 10;
+		number = number / 10;
+	}
+	char *summarystart = summary;
+	if (total_len == printed)
+		summarystart = summary + 4;
+
+	layoutDialogSwipe(&bmp_icon_question,
+		"Cancel",
+		"Confirm",
+		NULL,
+		"Transaction data:",
+		hexdata[0],
+		hexdata[1],
+		hexdata[2],
+		summarystart,
 		NULL
 	);
 }
@@ -309,6 +351,25 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	memset(&resp, 0, sizeof(EthereumTxRequest));
 
+	if (!msg->has_nonce || !msg->has_gas_price || !msg->has_gas_limit) {
+		fsm_sendFailure(FailureType_Failure_Other, "Required field missing");
+		ethereum_signing_abort();
+		return;
+	}
+	/* set fields to 0, to avoid conditions later */
+	if (!msg->has_value)
+		msg->value.size = 0;
+	if (!msg->has_data_initial_chunk)
+		msg->data_initial_chunk.size = 0;
+
+	if (!msg->has_to) {
+		msg->to.size = 0;
+	} else if (msg->to.size != 20) {
+		fsm_sendFailure(FailureType_Failure_Other, "Address has wrong length");
+		ethereum_signing_abort();
+		return;
+	}
+
 	if (msg->has_data_length) {
 		if (msg->data_length == 0) {
 			fsm_sendFailure(FailureType_Failure_Other, "Invalid data length provided");
@@ -345,11 +406,20 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		return;
 	}
 
-	layoutEthereumConfirmTx(msg->has_to ? msg->to.bytes : NULL, msg->has_value ? msg->value.bytes : NULL, msg->has_value ? msg->value.size : 0);
+	layoutEthereumConfirmTx(msg->to.bytes, msg->to.size, msg->value.bytes, msg->value.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
 		ethereum_signing_abort();
 		return;
+	}
+
+	if (data_total > 0) {
+		layoutEthereumData(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size, data_total);
+		if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
+			ethereum_signing_abort();
+			return;
+		}
 	}
 
 	/* Stage 1: Calculate total RLP length */
@@ -357,11 +427,11 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutProgress("Signing", 0);
 
-	rlp_length += msg->has_nonce ? rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]) : 1;
-	rlp_length += msg->has_gas_price ? rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]) : 1;
-	rlp_length += msg->has_gas_limit ? rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]) : 1;
-	rlp_length += msg->has_to ? rlp_calculate_length(msg->to.size, msg->to.bytes[0]) : 1;
-	rlp_length += msg->has_value ? rlp_calculate_length(msg->value.size, msg->value.bytes[0]) : 1;
+	rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
+	rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
+	rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
+	rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
+	rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
 	rlp_length += rlp_calculate_length(data_total, msg->data_initial_chunk.bytes[0]);
 
 	/* Stage 2: Store header fields */
@@ -369,36 +439,11 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutProgress("Signing", 100);
 
-	if (msg->has_nonce) {
-		hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
-	} else {
-		hash_rlp_length(0, 0);
-	}
-
-	if (msg->has_gas_price) {
-		hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
-	} else {
-		hash_rlp_length(0, 0);
-	}
-
-	if (msg->has_gas_limit) {
-		hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
-	} else {
-		hash_rlp_length(0, 0);
-	}
-
-	if (msg->has_to) {
-		hash_rlp_field(msg->to.bytes, msg->to.size);
-	} else {
-		hash_rlp_length(0, 0);
-	}
-
-	if (msg->has_value) {
-		hash_rlp_field(msg->value.bytes, msg->value.size);
-	} else {
-		hash_rlp_length(0, 0);
-	}
-
+	hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
+	hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
+	hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
+	hash_rlp_field(msg->to.bytes, msg->to.size);
+	hash_rlp_field(msg->value.bytes, msg->value.size);
 	hash_rlp_length(data_total, msg->data_initial_chunk.bytes[0]);
 	if (data_total > 1 || msg->data_initial_chunk.bytes[0] >= 0x80) {
 		hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
