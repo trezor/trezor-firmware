@@ -174,71 +174,82 @@ static void send_signature(void)
 	ethereum_signing_abort();
 }
 
-static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len)
+/* Format a 256 bit number (amount in wei) into a human readable format
+ * using standard ethereum units.
+ * The buffer must be at least 25 bytes.
+ */
+static void ethereumFormatAmount(bignum256 *val, char buffer[25])
 {
-	bignum256 val;
-	if (value && value_len <= 32) {
-		uint8_t pad_val[32];
-		memset(pad_val, 0, sizeof(pad_val));
-		memcpy(pad_val + (32 - value_len), value, value_len);
-		bn_read_be(pad_val, &val);
-	} else {
-		bn_zero(&val);
-	}
+	char value[25] = {0};
+	char *value_ptr = value;
+
 	uint16_t num[26];
 	uint8_t last_used = 0;
 	for (int i = 0; i < 26; i++) {
-		bn_divmod1000(&val, (uint32_t *)&(num[i]));
+		bn_divmod1000(val, (uint32_t *)&(num[i]));
 		if (num[i] > 0) {
 			last_used = i;
 		}
 	}
-
-	static char _value[25] = {0};
-	const char *value_ptr = _value;
-
+	
 	if (last_used < 3) {
 		// value is smaller than 1e9 wei => show value in wei
-		_value[0] = '0' + (num[2] / 100) % 10;
-		_value[1] = '0' + (num[2] / 10) % 10;
-		_value[2] = '0' + (num[2]) % 10;
-		_value[3] = '0' + (num[1] / 100) % 10;
-		_value[4] = '0' + (num[1] / 10) % 10;
-		_value[5] = '0' + (num[1]) % 10;
-		_value[6] = '0' + (num[0] / 100) % 10;
-		_value[7] = '0' + (num[0] / 10) % 10;
-		_value[8] = '0' + (num[0]) % 10;
-		strlcpy(_value + 9, " wei", sizeof(_value) - 9);
-	} else if (last_used < 9) {
-		// value is bigger than 1e9 wei and smaller than 1e9 ETH => show value in ETH
-		_value[0] = '0' + (num[8] / 100) % 10;
-		_value[1] = '0' + (num[8] / 10) % 10;
-		_value[2] = '0' + (num[8]) % 10;
-		_value[3] = '0' + (num[7] / 100) % 10;
-		_value[4] = '0' + (num[7] / 10) % 10;
-		_value[5] = '0' + (num[7]) % 10;
-		_value[6] = '0' + (num[6] / 100) % 10;
-		_value[7] = '0' + (num[6] / 10) % 10;
-		_value[8] = '0' + (num[6]) % 10;
-		_value[9] = '.';
-		_value[10] = '0' + (num[5] / 100) % 10;
-		_value[11] = '0' + (num[5] / 10) % 10;
-		_value[12] = '0' + (num[5]) % 10;
-		_value[13] = '0' + (num[4] / 100) % 10;
-		_value[14] = '0' + (num[4] / 10) % 10;
-		_value[15] = '0' + (num[4]) % 10;
-		_value[16] = '0' + (num[3] / 100) % 10;
-		_value[17] = '0' + (num[3] / 10) % 10;
-		_value[18] = '0' + (num[3]) % 10;
-		strlcpy(_value + 19, " ETH", sizeof(_value) - 19);
+		for (int i = last_used; i >= 0; i--) {
+			*value_ptr++ = '0' + (num[i] / 100) % 10;
+			*value_ptr++ = '0' + (num[i] / 10) % 10;
+			*value_ptr++ = '0' + (num[i]) % 10;
+		}
+		strcpy(value_ptr, " Wei");
+		// value is at most 9 + 4 + 1 characters long
+	} else if (last_used < 10) {
+		// value is bigger than 1e9 wei and smaller than 1e12 ETH => show value in ETH
+		int i = last_used;
+		if (i < 6)
+			i = 6;
+		int end = i - 4;
+		while (i >= end) {
+			*value_ptr++ = '0' + (num[i] / 100) % 10;
+			*value_ptr++ = '0' + (num[i] / 10) % 10;
+			*value_ptr++ = '0' + (num[i]) % 10;
+			if (i == 6)
+				*value_ptr++ = '.';
+			i--;
+		}
+		while (value_ptr[-1] == '0') // remove trailing zeros
+			value_ptr--;
+		// remove trailing dot.
+		if (value_ptr[-1] == '.')
+			value_ptr--;
+		strcpy(value_ptr, " ETH");
+		// value is at most 16 + 4 + 1 characters long
 	} else {
 		// value is bigger than 1e9 ETH => won't fit on display (probably won't happen unless you are Vitalik)
-		strlcpy(_value, "more than a billion ETH", sizeof(_value));
+		strlcpy(value, "trillions of ETH", sizeof(value));
 	}
 
-	value_ptr = _value;
-	while (*value_ptr == '0' && *(value_ptr + 1) >= '0' && *(value_ptr + 1) <= '9') { // skip leading zeroes
+	// skip leading zeroes
+	value_ptr = value;
+	while (*value_ptr == '0' && *(value_ptr + 1) >= '0' && *(value_ptr + 1) <= '9') {
 		value_ptr++;
+	}
+
+	// copy to destination buffer
+	strcpy(buffer, value_ptr);
+}
+
+static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len)
+{
+	bignum256 val;
+	uint8_t pad_val[32];
+	memset(pad_val, 0, sizeof(pad_val));
+	memcpy(pad_val + (32 - value_len), value, value_len);
+	bn_read_be(pad_val, &val);
+
+	char amount[25];
+	if (bn_is_zero(&val)) {
+		strcpy(amount, "message");
+	} else {
+		ethereumFormatAmount(&val, amount);
 	}
 
 	static char _to1[17] = {0};
@@ -261,8 +272,8 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const ui
 		"Cancel",
 		"Confirm",
 		NULL,
-		"Really send",
-		value_ptr,
+		"Send",
+		amount,
 		_to1,
 		_to2,
 		_to3,
@@ -309,6 +320,49 @@ static void layoutEthereumData(const uint8_t *data, uint32_t len, uint32_t total
 	);
 }
 
+static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
+							  const uint8_t *gas_price, uint32_t gas_price_len,
+							  const uint8_t *gas_limit, uint32_t gas_limit_len)
+{
+	bignum256 val, gas;
+	uint8_t pad_val[32];
+	char tx_value[25];
+	char gas_value[25];
+
+	memset(pad_val, 0, sizeof(pad_val));
+	memcpy(pad_val + (32 - gas_price_len), gas_price, gas_price_len);
+	bn_read_be(pad_val, &val);
+
+	memset(pad_val, 0, sizeof(pad_val));
+	memcpy(pad_val + (32 - gas_limit_len), gas_limit, gas_limit_len);
+	bn_read_be(pad_val, &gas);
+	bn_multiply(&val, &gas, &secp256k1.prime);
+
+	ethereumFormatAmount(&gas, gas_value);
+
+	memset(pad_val, 0, sizeof(pad_val));
+	memcpy(pad_val + (32 - value_len), value, value_len);
+	bn_read_be(pad_val, &val);
+
+	if (bn_is_zero(&val)) {
+		strcpy(tx_value, "message");
+	} else {
+		ethereumFormatAmount(&val, tx_value);
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		"Cancel",
+		"Confirm",
+		NULL,
+		"Really send",
+		tx_value,
+		"paying up to",
+		gas_value,
+		"for gas?",
+		NULL
+	);
+}
+
 /*
  * RLP fields:
  * - nonce (0 .. 32)
@@ -321,23 +375,22 @@ static void layoutEthereumData(const uint8_t *data, uint32_t len, uint32_t total
 
 static bool ethereum_signing_check(EthereumSignTx *msg)
 {
-	// determine if address == 0
-	bool address_zero = msg->has_to;
-	if (address_zero) {
-		for (size_t i = 0; i < msg->to.size; i++) {
-			if (msg->to.bytes[i] > 0) {
-				address_zero = false;
-				break;
-			}
-		}
-	}
-
-	// sending value to address 0
-	if (address_zero && msg->has_value && msg->value.size) {
+	if (!msg->has_nonce || !msg->has_gas_price || !msg->has_gas_limit) {
 		return false;
 	}
-	// sending transaction to address 0 without a data field
-	if (address_zero && (!msg->has_data_length || msg->data_length == 0)) {
+	
+	if (msg->to.size != 20 && msg->to.size != 0) {
+		/* Address has wrong length */
+		return false;
+	}
+
+	// sending transaction to address 0 (contract creation) without a data field
+	if (msg->to.size == 0 && (!msg->has_data_length || msg->data_length == 0)) {
+		return false;
+	}
+
+	if (msg->gas_price.size + msg->gas_limit.size  > 30) {
+		// sanity check that fee doesn't overflow
 		return false;
 	}
 
@@ -350,25 +403,13 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	sha3_256_Init(&keccak_ctx);
 
 	memset(&resp, 0, sizeof(EthereumTxRequest));
-
-	if (!msg->has_nonce || !msg->has_gas_price || !msg->has_gas_limit) {
-		fsm_sendFailure(FailureType_Failure_Other, "Required field missing");
-		ethereum_signing_abort();
-		return;
-	}
 	/* set fields to 0, to avoid conditions later */
 	if (!msg->has_value)
 		msg->value.size = 0;
 	if (!msg->has_data_initial_chunk)
 		msg->data_initial_chunk.size = 0;
-
-	if (!msg->has_to) {
+	if (!msg->has_to)
 		msg->to.size = 0;
-	} else if (msg->to.size != 20) {
-		fsm_sendFailure(FailureType_Failure_Other, "Address has wrong length");
-		ethereum_signing_abort();
-		return;
-	}
 
 	if (msg->has_data_length) {
 		if (msg->data_length == 0) {
@@ -422,6 +463,15 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		}
 	}
 
+	layoutEthereumFee(msg->value.bytes, msg->value.size,
+					  msg->gas_price.bytes, msg->gas_price.size,
+					  msg->gas_limit.bytes, msg->gas_limit.size);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
+		ethereum_signing_abort();
+		return;
+	}
+	
 	/* Stage 1: Calculate total RLP length */
 	uint32_t rlp_length = 0;
 
