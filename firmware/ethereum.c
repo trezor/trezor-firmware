@@ -49,8 +49,7 @@ static void hash_rlp_length(uint32_t length, uint8_t firstbyte)
 {
 	uint8_t buf[4];
 	if (length == 1 && firstbyte <= 0x7f) {
-		buf[0] = firstbyte;
-		hash_data(buf, 1);
+		/* empty length header */
 	} else if (length <= 55) {
 		buf[0] = 0x80 + length;
 		hash_data(buf, 1);
@@ -105,9 +104,7 @@ static void hash_rlp_list_length(uint32_t length)
 static void hash_rlp_field(const uint8_t *buf, size_t size)
 {
 	hash_rlp_length(size, buf[0]);
-	if (size > 1 || buf[0] >= 0x80) {
-		hash_data(buf, size);
-	}
+	hash_data(buf, size);
 }
 
 /*
@@ -495,12 +492,9 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	hash_rlp_field(msg->to.bytes, msg->to.size);
 	hash_rlp_field(msg->value.bytes, msg->value.size);
 	hash_rlp_length(data_total, msg->data_initial_chunk.bytes[0]);
-	if (data_total > 1 || msg->data_initial_chunk.bytes[0] >= 0x80) {
-		hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
-	}
+	hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
 	data_left = data_total - msg->data_initial_chunk.size;
 
-	/* FIXME: probably this shouldn't be done here, but at a later stage */
 	memcpy(privkey, node->private_key, 32);
 
 	if (data_left > 0) {
