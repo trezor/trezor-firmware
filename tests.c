@@ -83,6 +83,24 @@ char *tohex(const uint8_t *bin, size_t l)
 #define ck_assert_mem_eq(X, Y, L) _ck_assert_mem(X, Y, L, ==)
 #define ck_assert_mem_ne(X, Y, L) _ck_assert_mem(X, Y, L, !=)
 
+START_TEST(test_bignum_read_be)
+{
+	bignum256 a;
+	uint8_t input[32];
+
+	memcpy(input, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
+
+	bn_read_be(input, &a);
+
+	bignum256 b = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+
+	for (int i = 0; i < 9; i++) {
+		ck_assert_int_eq(a.val[i], b.val[i]);
+	}
+}
+END_TEST
+
+
 // from https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
 START_TEST(test_base58)
 {
@@ -2326,6 +2344,10 @@ Suite *test_suite(void)
 {
 	Suite *s = suite_create("trezor-crypto");
 	TCase *tc;
+
+	tc = tcase_create("bignum");
+	tcase_add_test(tc, test_bignum_read_be);
+	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");
 	tcase_add_test(tc, test_base58);
