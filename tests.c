@@ -111,6 +111,17 @@ START_TEST(test_bignum_write_be)
 }
 END_TEST
 
+START_TEST(test_bignum_equal)
+{
+	bignum256 a = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+	bignum256 b = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+	bignum256 c = { { 0, } };
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+	ck_assert_int_eq(bn_is_equal(&c, &c), 1);
+	ck_assert_int_eq(bn_is_equal(&a, &c), 0);
+}
+END_TEST
 
 // from https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
 START_TEST(test_base58)
@@ -2359,6 +2370,7 @@ Suite *test_suite(void)
 	tc = tcase_create("bignum");
 	tcase_add_test(tc, test_bignum_read_be);
 	tcase_add_test(tc, test_bignum_write_be);
+	tcase_add_test(tc, test_bignum_equal);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");
