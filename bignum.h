@@ -39,9 +39,19 @@ uint32_t read_be(const uint8_t *data);
 // write 4 big endian bytes
 void write_be(uint8_t *data, uint32_t x);
 
+// read 4 little endian bytes into uint32
+uint32_t read_le(const uint8_t *data);
+
+// write 4 little endian bytes
+void write_le(uint8_t *data, uint32_t x);
+
 void bn_read_be(const uint8_t *in_number, bignum256 *out_number);
 
 void bn_write_be(const bignum256 *in_number, uint8_t *out_number);
+
+void bn_read_le(const uint8_t *in_number, bignum256 *out_number);
+
+void bn_write_le(const bignum256 *in_number, uint8_t *out_number);
 
 void bn_zero(bignum256 *a);
 
