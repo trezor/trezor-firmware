@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2013-2014 Tomas Dzetkulic
  * Copyright (c) 2013-2014 Pavol Rusnak
+ * Copyright (c) 2016 Alex Beregszaszi
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -58,6 +59,14 @@ void bn_copy(bignum256 *a, bignum256 *b);
 void bn_zero(bignum256 *a);
 
 int bn_is_zero(const bignum256 *a);
+
+static inline int bn_is_even(const bignum256 *a) {
+	return (a->val[0] & 1) == 0;
+}
+
+static inline int bn_is_odd(const bignum256 *a) {
+	return (a->val[0] & 1) == 1;
+}
 
 int bn_is_less(const bignum256 *a, const bignum256 *b);
 

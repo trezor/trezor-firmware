@@ -165,6 +165,36 @@ START_TEST(test_bignum_copy)
 }
 END_TEST
 
+START_TEST(test_bignum_is_even)
+{
+	bignum256 a;
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	ck_assert_int_eq(bn_is_even(&a), 0);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd2"), &a);
+	ck_assert_int_eq(bn_is_even(&a), 1);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd0"), &a);
+	ck_assert_int_eq(bn_is_even(&a), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_is_odd)
+{
+	bignum256 a;
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	ck_assert_int_eq(bn_is_odd(&a), 1);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd2"), &a);
+	ck_assert_int_eq(bn_is_odd(&a), 0);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd0"), &a);
+	ck_assert_int_eq(bn_is_odd(&a), 0);
+}
+END_TEST
+
 // from https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
 START_TEST(test_base58)
 {
@@ -2416,6 +2446,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_read_le);
 	tcase_add_test(tc, test_bignum_write_le);
 	tcase_add_test(tc, test_bignum_copy);
+	tcase_add_test(tc, test_bignum_is_even);
+	tcase_add_test(tc, test_bignum_is_odd);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");
