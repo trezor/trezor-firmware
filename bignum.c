@@ -156,6 +156,32 @@ void bn_write_le(const bignum256 *in_number, uint8_t *out_number)
 	}
 }
 
+void bn_load_uint32(uint32_t in_number, bignum256 *out_number)
+{
+	out_number->val[0] = in_number & 0x3FFFFFFF;
+	out_number->val[1] = in_number >> 30;
+	out_number->val[2] = 0;
+	out_number->val[3] = 0;
+	out_number->val[4] = 0;
+	out_number->val[5] = 0;
+	out_number->val[6] = 0;
+	out_number->val[7] = 0;
+	out_number->val[8] = 0;
+}
+
+void bn_load_uint64(uint64_t in_number, bignum256 *out_number)
+{
+	out_number->val[0] = in_number & 0x3FFFFFFF;
+	out_number->val[1] = (in_number >>= 30) & 0x3FFFFFFF;
+	out_number->val[2] = in_number >>= 30;
+	out_number->val[3] = 0;
+	out_number->val[4] = 0;
+	out_number->val[5] = 0;
+	out_number->val[6] = 0;
+	out_number->val[7] = 0;
+	out_number->val[8] = 0;
+}
+
 // copies number a to b
 void bn_copy(bignum256 *a, bignum256 *b)
 {
