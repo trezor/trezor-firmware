@@ -53,6 +53,8 @@ void bn_read_le(const uint8_t *in_number, bignum256 *out_number);
 
 void bn_write_le(const bignum256 *in_number, uint8_t *out_number);
 
+void bn_copy(bignum256 *a, bignum256 *b);
+
 void bn_zero(bignum256 *a);
 
 int bn_is_zero(const bignum256 *a);

@@ -156,6 +156,15 @@ void bn_write_le(const bignum256 *in_number, uint8_t *out_number)
 	}
 }
 
+// copies number a to b
+void bn_copy(bignum256 *a, bignum256 *b)
+{
+	int i;
+	for (i = 0; i < 9; i++) {
+		b->val[i] = a->val[i];
+	}
+}
+
 // sets a bignum to zero.
 void bn_zero(bignum256 *a)
 {
