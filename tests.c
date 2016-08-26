@@ -233,6 +233,46 @@ START_TEST(test_bignum_read_uint64)
 }
 END_TEST
 
+START_TEST(test_bignum_write_uint32)
+{
+	bignum256 a;
+
+	// lowest 30 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
+	ck_assert_int_eq(bn_write_uint32(&a), 0x3fffffff);
+
+	// bit 31 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
+	ck_assert_int_eq(bn_write_uint32(&a), 0x40000000);
+}
+END_TEST
+
+START_TEST(test_bignum_write_uint64)
+{
+	bignum256 a;
+
+	// lowest 30 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x3fffffff);
+
+	// bit 31 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x40000000);
+
+	// bit 33 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000100000000"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x100000000LL);
+
+	// bit 61 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000002000000000000000"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x2000000000000000LL);
+
+	// all 64 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000ffffffffffffffff"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0xffffffffffffffffLL);
+}
+END_TEST
+
 START_TEST(test_bignum_copy)
 {
 	bignum256 a;
@@ -2547,6 +2587,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_write_le);
 	tcase_add_test(tc, test_bignum_read_uint32);
 	tcase_add_test(tc, test_bignum_read_uint64);
+	tcase_add_test(tc, test_bignum_write_uint32);
+	tcase_add_test(tc, test_bignum_write_uint64);
 	tcase_add_test(tc, test_bignum_copy);
 	tcase_add_test(tc, test_bignum_is_even);
 	tcase_add_test(tc, test_bignum_is_odd);

@@ -58,6 +58,22 @@ void bn_read_uint32(uint32_t in_number, bignum256 *out_number);
 
 void bn_read_uint64(uint64_t in_number, bignum256 *out_number);
 
+static inline uint32_t bn_write_uint32(const bignum256 *in_number)
+{
+	return in_number->val[0] | (in_number->val[1] << 30);
+}
+
+static inline uint64_t bn_write_uint64(const bignum256 *in_number)
+{
+	uint64_t tmp;
+	tmp = in_number->val[2];
+	tmp <<= 30;
+	tmp |= in_number->val[1];
+	tmp <<= 30;
+	tmp |= in_number->val[0];
+	return tmp;
+}
+
 // copies number a to b
 static inline void bn_copy(const bignum256 *a, bignum256 *b) {
 	*b = *a;
