@@ -58,7 +58,10 @@ void bn_load_uint32(uint32_t in_number, bignum256 *out_number);
 
 void bn_load_uint64(uint64_t in_number, bignum256 *out_number);
 
-void bn_copy(bignum256 *a, bignum256 *b);
+// copies number a to b
+static inline void bn_copy(const bignum256 *a, bignum256 *b) {
+	*b = *a;
+}
 
 void bn_zero(bignum256 *a);
 

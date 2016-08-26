@@ -182,15 +182,6 @@ void bn_load_uint64(uint64_t in_number, bignum256 *out_number)
 	out_number->val[8] = 0;
 }
 
-// copies number a to b
-void bn_copy(bignum256 *a, bignum256 *b)
-{
-	int i;
-	for (i = 0; i < 9; i++) {
-		b->val[i] = a->val[i];
-	}
-}
-
 // sets a bignum to zero.
 void bn_zero(bignum256 *a)
 {
