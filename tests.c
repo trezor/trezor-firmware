@@ -183,52 +183,52 @@ START_TEST(test_bignum_write_le)
 }
 END_TEST
 
-START_TEST(test_bignum_load_uint32)
+START_TEST(test_bignum_read_uint32)
 {
 	bignum256 a;
 	bignum256 b;
 
 	// lowest 30 bits set
 	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
-	bn_load_uint32(0x3fffffff, &b);
+	bn_read_uint32(0x3fffffff, &b);
 
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 
 	// bit 31 set
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
-	bn_load_uint32(0x40000000, &b);
+	bn_read_uint32(0x40000000, &b);
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 }
 END_TEST
 
-START_TEST(test_bignum_load_uint64)
+START_TEST(test_bignum_read_uint64)
 {
 	bignum256 a;
 	bignum256 b;
 
 	// lowest 30 bits set
 	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
-	bn_load_uint64(0x3fffffff, &b);
+	bn_read_uint64(0x3fffffff, &b);
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 
 	// bit 31 set
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
-	bn_load_uint64(0x40000000, &b);
+	bn_read_uint64(0x40000000, &b);
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 
 	// bit 33 set
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000100000000"), &a);
-	bn_load_uint64(0x100000000LL, &b);
+	bn_read_uint64(0x100000000LL, &b);
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 
 	// bit 61 set
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000002000000000000000"), &a);
-	bn_load_uint64(0x2000000000000000LL, &b);
+	bn_read_uint64(0x2000000000000000LL, &b);
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 
 	// all 64 bits set
 	bn_read_be(fromhex("000000000000000000000000000000000000000000000000ffffffffffffffff"), &a);
-	bn_load_uint64(0xffffffffffffffffLL, &b);
+	bn_read_uint64(0xffffffffffffffffLL, &b);
 	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 }
 END_TEST
@@ -2527,8 +2527,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_is_zero);
 	tcase_add_test(tc, test_bignum_read_le);
 	tcase_add_test(tc, test_bignum_write_le);
-	tcase_add_test(tc, test_bignum_load_uint32);
-	tcase_add_test(tc, test_bignum_load_uint64);
+	tcase_add_test(tc, test_bignum_read_uint32);
+	tcase_add_test(tc, test_bignum_read_uint64);
 	tcase_add_test(tc, test_bignum_copy);
 	tcase_add_test(tc, test_bignum_is_even);
 	tcase_add_test(tc, test_bignum_is_odd);

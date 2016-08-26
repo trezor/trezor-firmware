@@ -54,9 +54,9 @@ void bn_read_le(const uint8_t *in_number, bignum256 *out_number);
 
 void bn_write_le(const bignum256 *in_number, uint8_t *out_number);
 
-void bn_load_uint32(uint32_t in_number, bignum256 *out_number);
+void bn_read_uint32(uint32_t in_number, bignum256 *out_number);
 
-void bn_load_uint64(uint64_t in_number, bignum256 *out_number);
+void bn_read_uint64(uint64_t in_number, bignum256 *out_number);
 
 // copies number a to b
 static inline void bn_copy(const bignum256 *a, bignum256 *b) {

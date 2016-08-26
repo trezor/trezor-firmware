@@ -156,7 +156,7 @@ void bn_write_le(const bignum256 *in_number, uint8_t *out_number)
 	}
 }
 
-void bn_load_uint32(uint32_t in_number, bignum256 *out_number)
+void bn_read_uint32(uint32_t in_number, bignum256 *out_number)
 {
 	out_number->val[0] = in_number & 0x3FFFFFFF;
 	out_number->val[1] = in_number >> 30;
@@ -169,7 +169,7 @@ void bn_load_uint32(uint32_t in_number, bignum256 *out_number)
 	out_number->val[8] = 0;
 }
 
-void bn_load_uint64(uint64_t in_number, bignum256 *out_number)
+void bn_read_uint64(uint64_t in_number, bignum256 *out_number)
 {
 	out_number->val[0] = in_number & 0x3FFFFFFF;
 	out_number->val[1] = (in_number >>= 30) & 0x3FFFFFFF;
