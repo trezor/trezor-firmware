@@ -83,6 +83,256 @@ char *tohex(const uint8_t *bin, size_t l)
 #define ck_assert_mem_eq(X, Y, L) _ck_assert_mem(X, Y, L, ==)
 #define ck_assert_mem_ne(X, Y, L) _ck_assert_mem(X, Y, L, !=)
 
+START_TEST(test_bignum_read_be)
+{
+	bignum256 a;
+	uint8_t input[32];
+
+	memcpy(input, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
+
+	bn_read_be(input, &a);
+
+	bignum256 b = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+
+	for (int i = 0; i < 9; i++) {
+		ck_assert_int_eq(a.val[i], b.val[i]);
+	}
+}
+END_TEST
+
+START_TEST(test_bignum_write_be)
+{
+	bignum256 a = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+	uint8_t tmp[32];
+
+	bn_write_be(&a, tmp);
+
+	ck_assert_mem_eq(tmp, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
+}
+END_TEST
+
+START_TEST(test_bignum_equal)
+{
+	bignum256 a = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+	bignum256 b = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
+	bignum256 c = { { 0, } };
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+	ck_assert_int_eq(bn_is_equal(&c, &c), 1);
+	ck_assert_int_eq(bn_is_equal(&a, &c), 0);
+}
+END_TEST
+
+START_TEST(test_bignum_zero)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	bn_zero(&b);
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_is_zero)
+{
+	bignum256 a;
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 1);
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000001"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 0);
+
+	bn_read_be(fromhex("1000000000000000000000000000000000000000000000000000000000000000"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 0);
+
+	bn_read_be(fromhex("f000000000000000000000000000000000000000000000000000000000000000"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 0);
+}
+END_TEST
+
+START_TEST(test_bignum_read_le)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	bn_read_le(fromhex("d58b6de8051f031eeca2c6d7fbe1b5d37c4314fe1068f96352dd0d8b85ce5ec5"), &b);
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_write_le)
+{
+	bignum256 a;
+	bignum256 b;
+	uint8_t tmp[32];
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	bn_write_le(&a, tmp);
+
+	bn_read_le(tmp, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+
+	bn_read_be(fromhex("d58b6de8051f031eeca2c6d7fbe1b5d37c4314fe1068f96352dd0d8b85ce5ec5"), &a);
+	bn_read_be(tmp, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_read_uint32)
+{
+	bignum256 a;
+	bignum256 b;
+
+	// lowest 30 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
+	bn_read_uint32(0x3fffffff, &b);
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+
+	// bit 31 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
+	bn_read_uint32(0x40000000, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_read_uint64)
+{
+	bignum256 a;
+	bignum256 b;
+
+	// lowest 30 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
+	bn_read_uint64(0x3fffffff, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+
+	// bit 31 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
+	bn_read_uint64(0x40000000, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+
+	// bit 33 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000100000000"), &a);
+	bn_read_uint64(0x100000000LL, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+
+	// bit 61 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000002000000000000000"), &a);
+	bn_read_uint64(0x2000000000000000LL, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+
+	// all 64 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000ffffffffffffffff"), &a);
+	bn_read_uint64(0xffffffffffffffffLL, &b);
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_write_uint32)
+{
+	bignum256 a;
+
+	// lowest 30 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
+	ck_assert_int_eq(bn_write_uint32(&a), 0x3fffffff);
+
+	// bit 31 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
+	ck_assert_int_eq(bn_write_uint32(&a), 0x40000000);
+}
+END_TEST
+
+START_TEST(test_bignum_write_uint64)
+{
+	bignum256 a;
+
+	// lowest 30 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000003fffffff"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x3fffffff);
+
+	// bit 31 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000040000000"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x40000000);
+
+	// bit 33 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000100000000"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x100000000LL);
+
+	// bit 61 set
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000002000000000000000"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0x2000000000000000LL);
+
+	// all 64 bits set
+	bn_read_be(fromhex("000000000000000000000000000000000000000000000000ffffffffffffffff"), &a);
+	ck_assert_int_eq(bn_write_uint64(&a), 0xffffffffffffffffLL);
+}
+END_TEST
+
+START_TEST(test_bignum_copy)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	bn_copy(&a, &b);
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_is_even)
+{
+	bignum256 a;
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	ck_assert_int_eq(bn_is_even(&a), 0);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd2"), &a);
+	ck_assert_int_eq(bn_is_even(&a), 1);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd0"), &a);
+	ck_assert_int_eq(bn_is_even(&a), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_is_odd)
+{
+	bignum256 a;
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), &a);
+	ck_assert_int_eq(bn_is_odd(&a), 1);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd2"), &a);
+	ck_assert_int_eq(bn_is_odd(&a), 0);
+
+	bn_read_be(fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd0"), &a);
+	ck_assert_int_eq(bn_is_odd(&a), 0);
+}
+END_TEST
+
+START_TEST(test_bignum_bitcount)
+{
+	bignum256 a;
+
+	bn_zero(&a);
+	ck_assert_int_eq(bn_bitcount(&a), 0);
+
+	bn_read_uint32(0x3fffffff, &a);
+	ck_assert_int_eq(bn_bitcount(&a), 30);
+
+	bn_read_uint32(0xffffffff, &a);
+	ck_assert_int_eq(bn_bitcount(&a), 32);
+
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
+	ck_assert_int_eq(bn_bitcount(&a), 256);
+}
+END_TEST
+
 // from https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
 START_TEST(test_base58)
 {
@@ -2326,6 +2576,24 @@ Suite *test_suite(void)
 {
 	Suite *s = suite_create("trezor-crypto");
 	TCase *tc;
+
+	tc = tcase_create("bignum");
+	tcase_add_test(tc, test_bignum_read_be);
+	tcase_add_test(tc, test_bignum_write_be);
+	tcase_add_test(tc, test_bignum_equal);
+	tcase_add_test(tc, test_bignum_zero);
+	tcase_add_test(tc, test_bignum_is_zero);
+	tcase_add_test(tc, test_bignum_read_le);
+	tcase_add_test(tc, test_bignum_write_le);
+	tcase_add_test(tc, test_bignum_read_uint32);
+	tcase_add_test(tc, test_bignum_read_uint64);
+	tcase_add_test(tc, test_bignum_write_uint32);
+	tcase_add_test(tc, test_bignum_write_uint64);
+	tcase_add_test(tc, test_bignum_copy);
+	tcase_add_test(tc, test_bignum_is_even);
+	tcase_add_test(tc, test_bignum_is_odd);
+	tcase_add_test(tc, test_bignum_bitcount);
+	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");
 	tcase_add_test(tc, test_base58);

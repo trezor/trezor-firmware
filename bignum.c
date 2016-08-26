@@ -2,6 +2,7 @@
  * Copyright (c) 2013-2014 Tomas Dzetkulic
  * Copyright (c) 2013-2014 Pavol Rusnak
  * Copyright (c)      2015 Jochen Hoenicke
+ * Copyright (c)      2016 Alex Beregszaszi
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -69,6 +70,22 @@ inline void write_be(uint8_t *data, uint32_t x)
 	data[3] = x;
 }
 
+inline uint32_t read_le(const uint8_t *data)
+{
+	return (((uint32_t)data[3]) << 24) |
+	       (((uint32_t)data[2]) << 16) |
+	       (((uint32_t)data[1]) << 8)  |
+	       (((uint32_t)data[0]));
+}
+
+inline void write_le(uint8_t *data, uint32_t x)
+{
+	data[3] = x >> 24;
+	data[2] = x >> 16;
+	data[1] = x >> 8;
+	data[0] = x;
+}
+
 // convert a raw bigendian 256 bit value into a normalized bignum.
 // out_number is partly reduced (since it fits in 256 bit).
 void bn_read_be(const uint8_t *in_number, bignum256 *out_number)
@@ -102,6 +119,80 @@ void bn_write_be(const bignum256 *in_number, uint8_t *out_number)
 		write_be(out_number + i * 4, temp);
 		temp = limb << (18 + 2*i);
 	}
+}
+
+// convert a raw little endian 256 bit value into a normalized bignum.
+// out_number is partly reduced (since it fits in 256 bit).
+void bn_read_le(const uint8_t *in_number, bignum256 *out_number)
+{
+	int i;
+	uint32_t temp = 0;
+	for (i = 0; i < 8; i++) {
+		// invariant: temp = (in_number % 2^(32i)) >> 30i
+		// get next limb = (in_number % 2^(32(i+1))) >> 32i
+		uint32_t limb = read_le(in_number + i * 4);
+		// temp = (in_number % 2^(32(i+1))) << 30i
+		temp |= limb << (2*i);
+		// store 30 bits into val[i]
+		out_number->val[i]= temp & 0x3FFFFFFF;
+		// prepare temp for next round
+		temp = limb >> (30 - 2*i);
+	}
+	out_number->val[8] = temp;
+}
+
+// convert a normalized bignum to a raw little endian 256 bit number.
+// in_number must be fully reduced.
+void bn_write_le(const bignum256 *in_number, uint8_t *out_number)
+{
+	int i;
+	uint32_t temp = in_number->val[8] << 16;
+	for (i = 0; i < 8; i++) {
+		// invariant: temp = (in_number >> 30*(8-i)) << (16 + 2i)
+		uint32_t limb = in_number->val[7 - i];
+		temp |= limb >> (14 - 2*i);
+		write_le(out_number + (7 - i) * 4, temp);
+		temp = limb << (18 + 2*i);
+	}
+}
+
+void bn_read_uint32(uint32_t in_number, bignum256 *out_number)
+{
+	out_number->val[0] = in_number & 0x3FFFFFFF;
+	out_number->val[1] = in_number >> 30;
+	out_number->val[2] = 0;
+	out_number->val[3] = 0;
+	out_number->val[4] = 0;
+	out_number->val[5] = 0;
+	out_number->val[6] = 0;
+	out_number->val[7] = 0;
+	out_number->val[8] = 0;
+}
+
+void bn_read_uint64(uint64_t in_number, bignum256 *out_number)
+{
+	out_number->val[0] = in_number & 0x3FFFFFFF;
+	out_number->val[1] = (in_number >>= 30) & 0x3FFFFFFF;
+	out_number->val[2] = in_number >>= 30;
+	out_number->val[3] = 0;
+	out_number->val[4] = 0;
+	out_number->val[5] = 0;
+	out_number->val[6] = 0;
+	out_number->val[7] = 0;
+	out_number->val[8] = 0;
+}
+
+// a must be normalized
+int bn_bitcount(const bignum256 *a)
+{
+	int i;
+	for (i = 8; i >= 0; i--) {
+		int tmp = a->val[i];
+		if (tmp != 0) {
+			return i * 30 + (32 - __builtin_clz(tmp));
+		}
+	}
+	return 0;
 }
 
 // sets a bignum to zero.
