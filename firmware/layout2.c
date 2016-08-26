@@ -261,7 +261,12 @@ void layoutAddress(const char *address, const char *desc)
 		}
 	}
 
-	const char **str = split_message((const uint8_t *)address, strlen(address), 9);
+	uint32_t addrlen = strlen(address);
+	uint32_t rowlen = addrlen / 4;
+	if (addrlen % 4) {
+		rowlen++;
+	}
+	const char **str = split_message((const uint8_t *)address, addrlen, rowlen);
 
 	if (desc) {
 		oledDrawString(68, 0 * 9, desc);

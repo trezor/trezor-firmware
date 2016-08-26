@@ -47,6 +47,7 @@
 #include "curves.h"
 #include "secp256k1.h"
 #include <libopencm3/stm32/flash.h>
+#include "ethereum.h"
 
 // message methods
 
@@ -419,14 +420,6 @@ void fsm_msgSignTx(SignTx *msg)
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
 }
 
-void fsm_msgCancel(Cancel *msg)
-{
-	(void)msg;
-	recovery_abort();
-	signing_abort();
-	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Aborted");
-}
-
 void fsm_msgTxAck(TxAck *msg)
 {
 	if (msg->has_tx) {
@@ -434,6 +427,38 @@ void fsm_msgTxAck(TxAck *msg)
 	} else {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No transaction provided");
 	}
+}
+
+void fsm_msgCancel(Cancel *msg)
+{
+	(void)msg;
+	recovery_abort();
+	signing_abort();
+	ethereum_signing_abort();
+	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Aborted");
+}
+
+void fsm_msgEthereumSignTx(EthereumSignTx *msg)
+{
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	ethereum_signing_init(msg, node);
+}
+
+void fsm_msgEthereumTxAck(EthereumTxAck *msg)
+{
+	ethereum_signing_txack(msg);
 }
 
 void fsm_msgCipherKeyValue(CipherKeyValue *msg)
@@ -625,6 +650,47 @@ void fsm_msgGetAddress(GetAddress *msg)
 	}
 
 	msg_write(MessageType_MessageType_Address, resp);
+	layoutHome();
+}
+
+void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
+{
+	RESP_INIT(EthereumAddress);
+
+	if (!storage_isInitialized()) {
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
+		return;
+	}
+
+	if (!protectPin(true)) {
+		layoutHome();
+		return;
+	}
+
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	resp->address.size = 20;
+
+	if (!hdnode_get_ethereum_pubkeyhash(node, resp->address.bytes))
+		return;
+
+	if (msg->has_show_display && msg->show_display) {
+		char desc[16];
+		strlcpy(desc, "Address:", sizeof(desc));
+
+		char address[41];
+		data2hex(resp->address.bytes, 20, address);
+
+		layoutAddress(address, desc);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+			layoutHome();
+			return;
+		}
+	}
+
+	msg_write(MessageType_MessageType_EthereumAddress, resp);
 	layoutHome();
 }
 

@@ -17,6 +17,7 @@ OBJS += recovery.o
 OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
+OBJS += ethereum.o
 
 OBJS += debug.o
 
@@ -34,6 +35,7 @@ OBJS += ../vendor/trezor-crypto/base58.o
 
 OBJS += ../vendor/trezor-crypto/ripemd160.o
 OBJS += ../vendor/trezor-crypto/sha2.o
+OBJS += ../vendor/trezor-crypto/sha3.o
 
 OBJS += ../vendor/trezor-crypto/aescrypt.o
 OBJS += ../vendor/trezor-crypto/aeskey.o
@@ -59,3 +61,4 @@ CFLAGS += -DDEBUG_LOG=0
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DED25519_CUSTOMRANDOM=1
 CFLAGS += -DED25519_CUSTOMHASH=1
+CFLAGS += -DUSE_ETHEREUM=1
