@@ -63,6 +63,8 @@ static inline void bn_copy(const bignum256 *a, bignum256 *b) {
 	*b = *a;
 }
 
+int bn_bitcount(const bignum256 *a);
+
 void bn_zero(bignum256 *a);
 
 int bn_is_zero(const bignum256 *a);

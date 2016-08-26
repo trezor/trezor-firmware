@@ -275,6 +275,24 @@ START_TEST(test_bignum_is_odd)
 }
 END_TEST
 
+START_TEST(test_bignum_bitcount)
+{
+	bignum256 a;
+
+	bn_zero(&a);
+	ck_assert_int_eq(bn_bitcount(&a), 0);
+
+	bn_read_uint32(0x3fffffff, &a);
+	ck_assert_int_eq(bn_bitcount(&a), 30);
+
+	bn_read_uint32(0xffffffff, &a);
+	ck_assert_int_eq(bn_bitcount(&a), 32);
+
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
+	ck_assert_int_eq(bn_bitcount(&a), 256);
+}
+END_TEST
+
 // from https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
 START_TEST(test_base58)
 {
@@ -2532,6 +2550,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_copy);
 	tcase_add_test(tc, test_bignum_is_even);
 	tcase_add_test(tc, test_bignum_is_odd);
+	tcase_add_test(tc, test_bignum_bitcount);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");

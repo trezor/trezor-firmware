@@ -182,6 +182,19 @@ void bn_read_uint64(uint64_t in_number, bignum256 *out_number)
 	out_number->val[8] = 0;
 }
 
+// a must be normalized
+int bn_bitcount(const bignum256 *a)
+{
+	int i;
+	for (i = 8; i >= 0; i--) {
+		int tmp = a->val[i];
+		if (tmp != 0) {
+			return i * 30 + (32 - __builtin_clz(tmp));
+		}
+	}
+	return 0;
+}
+
 // sets a bignum to zero.
 void bn_zero(bignum256 *a)
 {
