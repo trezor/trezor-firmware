@@ -27,6 +27,7 @@
 #include "layout.h"
 #include "layout2.h"
 #include "rng.h"
+#include "buttons.h"
 
 uint32_t __stack_chk_guard;
 
@@ -34,6 +35,46 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 {
 	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
 	for (;;) {} // loop forever
+}
+
+void check_lock_screen(void)
+{
+	buttonUpdate();
+
+	// wake from screensaver on any button
+	if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
+		layoutHome();
+		return;
+	}
+
+	// button held for long enough
+	if (layoutLast == layoutHome && button.NoDown >= 500000) {
+
+		layoutDialog(&bmp_icon_question, "Cancel", "Lock Device", NULL, "Do you really want to", "lock your TREZOR?", NULL, NULL, NULL, NULL);
+
+		// wait until NoButton is released
+		usbTiny(1);
+		do {
+			usbDelay(3300);
+			buttonUpdate();
+		} while (!button.NoUp);
+
+		// wait for confirmation/cancellation of the dialog
+		do {
+			usbDelay(3300);
+			buttonUpdate();
+		} while (!button.YesUp && !button.NoUp);
+		usbTiny(0);
+
+		if (button.YesUp) {
+			// lock the screen
+			session_clear(true);
+			layoutScreensaver();
+		} else {
+			// resume homescreen
+			layoutHome();
+		}
+	}
 }
 
 int main(void)
@@ -61,6 +102,7 @@ int main(void)
 	usbInit();
 	for (;;) {
 		usbPoll();
+		check_lock_screen();
 	}
 
 	return 0;
