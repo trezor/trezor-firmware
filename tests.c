@@ -123,6 +123,36 @@ START_TEST(test_bignum_equal)
 }
 END_TEST
 
+START_TEST(test_bignum_zero)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	bn_zero(&b);
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
+}
+END_TEST
+
+START_TEST(test_bignum_is_zero)
+{
+	bignum256 a;
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 1);
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000001"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 0);
+
+	bn_read_be(fromhex("1000000000000000000000000000000000000000000000000000000000000000"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 0);
+
+	bn_read_be(fromhex("f000000000000000000000000000000000000000000000000000000000000000"), &a);
+	ck_assert_int_eq(bn_is_zero(&a), 0);
+}
+END_TEST
+
 START_TEST(test_bignum_read_le)
 {
 	bignum256 a;
@@ -2493,6 +2523,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_read_be);
 	tcase_add_test(tc, test_bignum_write_be);
 	tcase_add_test(tc, test_bignum_equal);
+	tcase_add_test(tc, test_bignum_zero);
+	tcase_add_test(tc, test_bignum_is_zero);
 	tcase_add_test(tc, test_bignum_read_le);
 	tcase_add_test(tc, test_bignum_write_le);
 	tcase_add_test(tc, test_bignum_load_uint32);
