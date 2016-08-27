@@ -204,6 +204,20 @@ void bn_zero(bignum256 *a)
 	}
 }
 
+// sets a bignum to one.
+void bn_one(bignum256 *a)
+{
+	a->val[0] = 1;
+	a->val[1] = 0;
+	a->val[2] = 0;
+	a->val[3] = 0;
+	a->val[4] = 0;
+	a->val[5] = 0;
+	a->val[6] = 0;
+	a->val[7] = 0;
+	a->val[8] = 0;
+}
+
 // checks that a bignum is zero.
 // a must be normalized
 // function is constant time (on some architectures, in particular ARM).
@@ -459,7 +473,7 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 	// this method compute x^1/2 = x^(prime+1)/4
 	uint32_t i, j, limb;
 	bignum256 res, p;
-	bn_zero(&res); res.val[0] = 1;
+	bn_one(&res);
 	// compute p = (prime+1)/4
 	memcpy(&p, prime, sizeof(bignum256));
 	bn_addi(&p, 1);
@@ -498,7 +512,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	// this method compute x^-1 = x^(prime-2)
 	uint32_t i, j, limb;
 	bignum256 res;
-	bn_zero(&res); res.val[0] = 1;
+	bn_one(&res);
 	for (i = 0; i < 9; i++) {
 		// invariants:
 		//    x   = old(x)^(2^(i*30))
