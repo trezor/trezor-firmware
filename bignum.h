@@ -85,6 +85,8 @@ void bn_zero(bignum256 *a);
 
 int bn_is_zero(const bignum256 *a);
 
+void bn_one(bignum256 *a);
+
 static inline int bn_is_even(const bignum256 *a) {
 	return (a->val[0] & 1) == 0;
 }

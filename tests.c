@@ -111,7 +111,7 @@ START_TEST(test_bignum_write_be)
 }
 END_TEST
 
-START_TEST(test_bignum_equal)
+START_TEST(test_bignum_is_equal)
 {
 	bignum256 a = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
 	bignum256 b = { { 0x286d8bd5, 0x380c7c17, 0x3c6a2ec1, 0x2d787ef5, 0x14437cd3, 0x25a043f8, 0x1dd5263f, 0x33a162c3, 0x0000c55e } };
@@ -150,6 +150,18 @@ START_TEST(test_bignum_is_zero)
 
 	bn_read_be(fromhex("f000000000000000000000000000000000000000000000000000000000000000"), &a);
 	ck_assert_int_eq(bn_is_zero(&a), 0);
+}
+END_TEST
+
+START_TEST(test_bignum_one)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000001"), &a);
+	bn_one(&b);
+
+	ck_assert_int_eq(bn_is_equal(&a, &b), 1);
 }
 END_TEST
 
@@ -330,6 +342,25 @@ START_TEST(test_bignum_bitcount)
 
 	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
 	ck_assert_int_eq(bn_bitcount(&a), 256);
+}
+END_TEST
+
+START_TEST(test_bignum_is_less)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_uint32(0x1234, &a);
+	bn_read_uint32(0x8765, &b);
+
+	ck_assert_int_eq(bn_is_less(&a, &b), 1);
+	ck_assert_int_eq(bn_is_less(&b, &a), 0);
+
+	bn_zero(&a);
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &b);
+
+	ck_assert_int_eq(bn_is_less(&a, &b), 1);
+	ck_assert_int_eq(bn_is_less(&b, &a), 0);
 }
 END_TEST
 
@@ -2580,9 +2611,10 @@ Suite *test_suite(void)
 	tc = tcase_create("bignum");
 	tcase_add_test(tc, test_bignum_read_be);
 	tcase_add_test(tc, test_bignum_write_be);
-	tcase_add_test(tc, test_bignum_equal);
+	tcase_add_test(tc, test_bignum_is_equal);
 	tcase_add_test(tc, test_bignum_zero);
 	tcase_add_test(tc, test_bignum_is_zero);
+	tcase_add_test(tc, test_bignum_one);
 	tcase_add_test(tc, test_bignum_read_le);
 	tcase_add_test(tc, test_bignum_write_le);
 	tcase_add_test(tc, test_bignum_read_uint32);
@@ -2593,6 +2625,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_is_even);
 	tcase_add_test(tc, test_bignum_is_odd);
 	tcase_add_test(tc, test_bignum_bitcount);
+	tcase_add_test(tc, test_bignum_is_less);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");
