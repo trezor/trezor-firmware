@@ -297,7 +297,7 @@ void u2fhid_init(const U2FHID_FRAME *in)
 {
 	const U2FHID_INIT_REQ *init_req = (const U2FHID_INIT_REQ *)&in->init.data;
 	U2FHID_FRAME f;
-	U2FHID_INIT_RESP *resp = (U2FHID_INIT_RESP *)f.init.data;
+	U2FHID_INIT_RESP resp;
 
 	debugLog(0, "", "u2fhid_init");
 
@@ -312,13 +312,14 @@ void u2fhid_init(const U2FHID_FRAME *in)
 	f.init.bcnth = 0;
 	f.init.bcntl = U2FHID_INIT_RESP_SIZE;
 
-	memcpy(resp->nonce, init_req->nonce, sizeof(init_req->nonce));
-	resp->cid = in->cid == CID_BROADCAST ? next_cid() : in->cid;
-	resp->versionInterface = U2FHID_IF_VERSION;
-	resp->versionMajor = VERSION_MAJOR;
-	resp->versionMinor = VERSION_MINOR;
-	resp->versionBuild = VERSION_PATCH;
-	resp->capFlags = CAPFLAG_WINK;
+	memcpy(resp.nonce, init_req->nonce, sizeof(init_req->nonce));
+	resp.cid = in->cid == CID_BROADCAST ? next_cid() : in->cid;
+	resp.versionInterface = U2FHID_IF_VERSION;
+	resp.versionMajor = VERSION_MAJOR;
+	resp.versionMinor = VERSION_MINOR;
+	resp.versionBuild = VERSION_PATCH;
+	resp.capFlags = CAPFLAG_WINK;
+	memcpy(&f.init.data, &resp, sizeof(resp));
 
 	queue_u2f_pkt(&f);
 }

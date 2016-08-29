@@ -42,7 +42,7 @@
 
 Storage storage;
 
-uint8_t storage_uuid[12];
+uint32_t storage_uuid[12/sizeof(uint32_t)];
 char    storage_uuid_str[25];
 
 /*
@@ -77,6 +77,7 @@ be added to the storage u2f_counter to get the real counter value.
 #define FLASH_STORAGE_U2FAREA     (FLASH_STORAGE_PINAREA + FLASH_STORAGE_PINAREA_LEN)
 #define FLASH_STORAGE_U2FAREA_LEN (0x100)
 #define FLASH_STORAGE_REALLEN (4 + sizeof(storage_uuid) + sizeof(Storage))
+
 _Static_assert(FLASH_STORAGE_START + FLASH_STORAGE_REALLEN <= FLASH_STORAGE_PINAREA, "Storage struct is too large for TREZOR flash");
 _Static_assert((sizeof(storage_uuid) & 3) == 0, "storage uuid unaligned");
 _Static_assert((sizeof(storage) & 3) == 0, "storage unaligned");
@@ -86,6 +87,9 @@ _Static_assert((sizeof(storage) & 3) == 0, "storage unaligned");
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
 static uint32_t storage_u2f_offset;
+
+/* magic constant to check validity of storage block */
+static const uint32_t storage_magic = 0x726f7473;   // 'stor' as uint32_t
 
 static bool sessionSeedCached, sessionSeedUsesPassphrase;
 
@@ -114,7 +118,7 @@ void storage_check_flash_errors(void)
 
 bool storage_from_flash(void)
 {
-	if (memcmp((void *)FLASH_STORAGE_START, "stor", 4) != 0) {
+	if (memcmp((void *)FLASH_STORAGE_START, &storage_magic, 4) != 0) {
 		// wrong magic
 		return false;
 	}
@@ -182,7 +186,7 @@ void storage_init(void)
 void storage_reset_uuid(void)
 {
 	// set random uuid
-	random_buffer(storage_uuid, sizeof(storage_uuid));
+	random_buffer((uint8_t *)storage_uuid, sizeof(storage_uuid));
 	data2hex(storage_uuid, sizeof(storage_uuid), storage_uuid_str);
 }
 
@@ -216,7 +220,7 @@ static uint32_t storage_flash_words(uint32_t addr, uint32_t *src, int nwords) {
 
 static void storage_commit_locked(void)
 {
-	uint8_t meta_backup[FLASH_META_DESC_LEN];
+	uint32_t meta_backup[FLASH_META_DESC_LEN/4];
 
 	// backup meta
 	memcpy(meta_backup, (uint8_t*)FLASH_META_START, FLASH_META_DESC_LEN);
@@ -225,11 +229,11 @@ static void storage_commit_locked(void)
 	flash_erase_sector(FLASH_META_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
 	// copy meta
 	uint32_t flash = FLASH_META_START;
-	flash = storage_flash_words(flash, (uint32_t *)meta_backup, FLASH_META_DESC_LEN/4);
+	flash = storage_flash_words(flash, meta_backup, FLASH_META_DESC_LEN/4);
 	// copy storage
-	flash_program_word(flash, *(uint32_t *) "stor");
+	flash_program_word(flash, storage_magic);
 	flash += 4;
-	flash = storage_flash_words(flash, (uint32_t *)&storage_uuid, sizeof(storage_uuid)/4);
+	flash = storage_flash_words(flash, storage_uuid, sizeof(storage_uuid)/4);
 	flash = storage_flash_words(flash, (uint32_t *)&storage, sizeof(storage)/4);
 	// fill remainder with zero for future extensions
 	while (flash < FLASH_STORAGE_PINAREA) {

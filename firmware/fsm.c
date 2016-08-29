@@ -51,9 +51,9 @@
 
 // message methods
 
-static uint8_t msg_resp[MSG_OUT_SIZE];
+static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 
-#define RESP_INIT(TYPE) TYPE *resp = (TYPE *)msg_resp; \
+#define RESP_INIT(TYPE) TYPE *resp = (TYPE *) (void *) msg_resp; \
 			_Static_assert(sizeof(msg_resp) >= sizeof(TYPE), #TYPE " is too large"); \
 			memset(resp, 0, sizeof(TYPE));
 
@@ -1142,10 +1142,10 @@ void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
 	if (msg->flash) {
 		flash_clear_status_flags();
 		flash_unlock();
-		uint32_t* src = (uint32_t *) msg->memory.bytes;
 		for (unsigned int i = 0; i < length; i += 4) {
-			flash_program_word(msg->address +  i, *src);
-			src++;
+			uint32_t word;
+			memcpy(&word, msg->memory.bytes + i, 4);
+			flash_program_word(msg->address + i, word);
 		}
 		flash_lock();
 	} else {

@@ -180,11 +180,15 @@ static void ethereumFormatAmount(bignum256 *val, char buffer[25])
 	char value[25] = {0};
 	char *value_ptr = value;
 
+	// convert val into base 1000 for easy printing.
 	uint16_t num[26];
 	uint8_t last_used = 0;
 	for (int i = 0; i < 26; i++) {
-		bn_divmod1000(val, (uint32_t *)&(num[i]));
-		if (num[i] > 0) {
+		uint32_t limb;
+		bn_divmod1000(val, &limb);
+		// limb is < 1000.
+		num[i] = (uint16_t) limb;
+		if (limb > 0) {
 			last_used = i;
 		}
 	}
