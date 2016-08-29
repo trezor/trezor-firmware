@@ -480,7 +480,6 @@ void sha256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len) {
 }
 
 void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
-	sha2_word32	*d = (sha2_word32*)(void*)digest;
 	unsigned int	usedspace;
 
 	/* If no digest buffer is passed, we don't bother doing this: */
@@ -489,13 +488,9 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 		/* Begin padding with a 1 bit: */
 		((uint8_t*)context->buffer)[usedspace++] = 0x80;
 		
-		if (usedspace <= SHA256_SHORT_BLOCK_LENGTH) {
-			/* Set-up for the last transform: */
-			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_SHORT_BLOCK_LENGTH - usedspace);
-		} else {
-			if (usedspace < SHA256_BLOCK_LENGTH) {
-				MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_BLOCK_LENGTH - usedspace);
-			}
+		if (usedspace > SHA256_SHORT_BLOCK_LENGTH) {
+			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_BLOCK_LENGTH - usedspace);
+
 #if BYTE_ORDER == LITTLE_ENDIAN
 			/* Convert TO host byte order */
 			for (int j = 0; j < 16; j++) {
@@ -505,9 +500,11 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 			/* Do second-to-last transform: */
 			sha256_Transform(context->state, context->buffer, context->state);
 			
-			/* And set-up for the last transform: */
-			MEMSET_BZERO(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
+			/* And prepare the last transform: */
+			usedspace = 0;
 		}
+		/* Set-up for the last transform: */
+		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_SHORT_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
@@ -528,7 +525,7 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 			REVERSE32(context->state[j],context->state[j]);
 		}
 #endif
-		MEMCPY_BCOPY(d, context->state, SHA256_DIGEST_LENGTH);
+		MEMCPY_BCOPY(digest, context->state, SHA256_DIGEST_LENGTH);
 	}
 
 	/* Clean up state data: */
@@ -770,7 +767,7 @@ void sha512_Update(SHA512_CTX* context, const sha2_byte *data, size_t len) {
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
 		for (int j = 0; j < 16; j++) {
-			REVERSE64(((sha2_word64*)data)[j],context->buffer[j]);
+			REVERSE64(context->buffer[j],context->buffer[j]);
 		}
 #endif
 		sha512_Transform(context->state, context->buffer, context->state);
@@ -794,13 +791,9 @@ static void sha512_Last(SHA512_CTX* context) {
 	/* Begin padding with a 1 bit: */
 	((uint8_t*)context->buffer)[usedspace++] = 0x80;
 	
-	if (usedspace <= SHA512_SHORT_BLOCK_LENGTH) {
-		/* Set-up for the last transform: */
-		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_SHORT_BLOCK_LENGTH - usedspace);
-	} else {
-		if (usedspace < SHA512_BLOCK_LENGTH) {
-			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_BLOCK_LENGTH - usedspace);
-		}
+	if (usedspace > SHA512_SHORT_BLOCK_LENGTH) {
+		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_BLOCK_LENGTH - usedspace);
+
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
 		for (int j = 0; j < 16; j++) {
@@ -810,29 +803,27 @@ static void sha512_Last(SHA512_CTX* context) {
 		/* Do second-to-last transform: */
 		sha512_Transform(context->state, context->buffer, context->state);
 
-		/* And set-up for the last transform: */
-		MEMSET_BZERO(context->buffer, SHA512_BLOCK_LENGTH - 2);
+		/* And prepare the last transform: */
+		usedspace = 0;
 	}
+	/* Set-up for the last transform: */
+	MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_SHORT_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 	/* Convert TO host byte order */
-	for (int j = 0; j < 16; j++) {
+	for (int j = 0; j < 14; j++) {
 		REVERSE64(context->buffer[j],context->buffer[j]);
 	}
 #endif
 	/* Store the length of input data (in bits): */
-	sha2_word64 *t;
-	t = &context->buffer[SHA512_SHORT_BLOCK_LENGTH/sizeof(sha2_word64)];
-	t[0] = context->bitcount[1];
-	t[1] = context->bitcount[0];
+	context->buffer[14] = context->bitcount[1];
+	context->buffer[15] = context->bitcount[0];
 
 	/* Final transform: */
 	sha512_Transform(context->state, context->buffer, context->state);
 }
 
 void sha512_Final(SHA512_CTX* context, sha2_byte digest[]) {
-	sha2_word64	*d = (sha2_word64*)(void*)digest;
-
 	/* If no digest buffer is passed, we don't bother doing this: */
 	if (digest != (sha2_byte*)0) {
 		sha512_Last(context);
@@ -844,7 +835,7 @@ void sha512_Final(SHA512_CTX* context, sha2_byte digest[]) {
 			REVERSE64(context->state[j],context->state[j]);
 		}
 #endif
-		MEMCPY_BCOPY(d, context->state, SHA512_DIGEST_LENGTH);
+		MEMCPY_BCOPY(digest, context->state, SHA512_DIGEST_LENGTH);
 	}
 
 	/* Zero out state data */
