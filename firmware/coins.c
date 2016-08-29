@@ -20,6 +20,7 @@
 #include <string.h>
 #include "coins.h"
 
+// filled CoinType Protobuf structure defined in https://github.com/trezor/trezor-common/blob/master/protob/types.proto#L133
 const CoinType coins[COINS_COUNT] = {
 	{true, "Bitcoin",  true, "BTC",  true,   0, true,     100000, true,   5, true,  6, true, 10, true, "\x18" "Bitcoin Signed Message:\n"},
 	{true, "Testnet",  true, "TEST", true, 111, true,   10000000, true, 196, true,  3, true, 40, true, "\x18" "Bitcoin Signed Message:\n"},
