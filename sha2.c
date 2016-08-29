@@ -480,7 +480,6 @@ void sha256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len) {
 }
 
 void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
-	sha2_word32	*d = (sha2_word32*)(void*)digest;
 	unsigned int	usedspace;
 
 	/* If no digest buffer is passed, we don't bother doing this: */
@@ -528,7 +527,7 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 			REVERSE32(context->state[j],context->state[j]);
 		}
 #endif
-		MEMCPY_BCOPY(d, context->state, SHA256_DIGEST_LENGTH);
+		MEMCPY_BCOPY(digest, context->state, SHA256_DIGEST_LENGTH);
 	}
 
 	/* Clean up state data: */
@@ -770,7 +769,7 @@ void sha512_Update(SHA512_CTX* context, const sha2_byte *data, size_t len) {
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
 		for (int j = 0; j < 16; j++) {
-			REVERSE64(((sha2_word64*)data)[j],context->buffer[j]);
+			REVERSE64(context->buffer[j],context->buffer[j]);
 		}
 #endif
 		sha512_Transform(context->state, context->buffer, context->state);
@@ -831,8 +830,6 @@ static void sha512_Last(SHA512_CTX* context) {
 }
 
 void sha512_Final(SHA512_CTX* context, sha2_byte digest[]) {
-	sha2_word64	*d = (sha2_word64*)(void*)digest;
-
 	/* If no digest buffer is passed, we don't bother doing this: */
 	if (digest != (sha2_byte*)0) {
 		sha512_Last(context);
@@ -844,7 +841,7 @@ void sha512_Final(SHA512_CTX* context, sha2_byte digest[]) {
 			REVERSE64(context->state[j],context->state[j]);
 		}
 #endif
-		MEMCPY_BCOPY(d, context->state, SHA512_DIGEST_LENGTH);
+		MEMCPY_BCOPY(digest, context->state, SHA512_DIGEST_LENGTH);
 	}
 
 	/* Zero out state data */
