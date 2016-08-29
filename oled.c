@@ -82,11 +82,12 @@ static bool is_debug_mode = 0;
 inline void SPISend(uint32_t base, uint8_t *data, int len)
 {
 	int i;
-	delay(400);
+	delay(1);
 	for (i = 0; i < len; i++) {
 		spi_send(base, data[i]);
 	}
-	delay(800);
+	while (!(SPI_SR(base) & SPI_SR_TXE));
+	while ((SPI_SR(base) & SPI_SR_BSY));
 }
 
 /*
@@ -364,18 +365,12 @@ void oledFrame(int x1, int y1, int x2, int y2)
 void oledSwipeLeft(void)
 {
 	int i, j, k;
-	for (i = 0; i < OLED_WIDTH / 4; i++) {
+	for (i = 0; i < OLED_WIDTH; i++) {
 		for (j = 0; j < OLED_HEIGHT / 8; j++) {
-			for (k = OLED_WIDTH / 4 - 1; k > 0; k--) {
-				_oledbuffer[k * 4 + 3 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 1 + j * OLED_WIDTH];
-				_oledbuffer[k * 4 + 2 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 2 + j * OLED_WIDTH];
-				_oledbuffer[k * 4 + 1 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 3 + j * OLED_WIDTH];
-				_oledbuffer[k * 4 + 0 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 4 + j * OLED_WIDTH];
+			for (k = OLED_WIDTH-1; k > 0; k--) {
+				_oledbuffer[j * OLED_WIDTH + k] = _oledbuffer[j * OLED_WIDTH + k - 1];
 			}
 			_oledbuffer[j * OLED_WIDTH] = 0;
-			_oledbuffer[j * OLED_WIDTH + 1] = 0;
-			_oledbuffer[j * OLED_WIDTH + 2] = 0;
-			_oledbuffer[j * OLED_WIDTH + 3] = 0;
 		}
 		oledRefresh();
 	}
