@@ -28,9 +28,9 @@
 
 void fill_serialno_fixed(char *s)
 {
-	uint8_t uuid[32];
-	desig_get_unique_id((uint32_t *)uuid);
-	sha256_Raw(uuid, 12, uuid);
-	sha256_Raw(uuid, 32, uuid);
+	uint32_t uuid[8];
+	desig_get_unique_id(uuid);
+	sha256_Raw((const uint8_t *)uuid, 12, (uint8_t *)uuid);
+	sha256_Raw((const uint8_t *)uuid, 32, (uint8_t *)uuid);
 	data2hex(uuid, 12, s);
 }
