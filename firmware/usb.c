@@ -391,7 +391,7 @@ void usbInit(void)
 
 void usbPoll(void)
 {
-	static uint8_t *data;
+	static const uint8_t *data;
 	// poll read buffer
 	usbd_poll(usbd_dev);
 	// write pending data

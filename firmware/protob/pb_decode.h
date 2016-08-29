@@ -37,7 +37,7 @@ struct _pb_istream_t
     bool (*callback)(pb_istream_t *stream, uint8_t *buf, size_t count);
 #endif
 
-    void *state; /* Free field for use by callback implementation */
+    const void *state; /* Free field for use by callback implementation */
     size_t bytes_left;
     
 #ifndef PB_NO_ERRMSG
@@ -103,7 +103,7 @@ void pb_release(const pb_field_t fields[], void *dest_struct);
  * Alternatively, you can use a custom stream that reads directly from e.g.
  * a file or a network socket.
  */
-pb_istream_t pb_istream_from_buffer(uint8_t *buf, size_t bufsize);
+pb_istream_t pb_istream_from_buffer(const uint8_t *buf, size_t bufsize);
 
 /* Function to read from a pb_istream_t. You can use this if you need to
  * read some custom header data, or to read data in field callbacks.

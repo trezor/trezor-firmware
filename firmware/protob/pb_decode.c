@@ -151,7 +151,7 @@ static bool checkreturn pb_readbyte(pb_istream_t *stream, uint8_t *buf)
     return true;    
 }
 
-pb_istream_t pb_istream_from_buffer(uint8_t *buf, size_t bufsize)
+pb_istream_t pb_istream_from_buffer(const uint8_t *buf, size_t bufsize)
 {
     pb_istream_t stream;
 #ifdef PB_BUFFER_ONLY
