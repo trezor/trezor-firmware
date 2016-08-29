@@ -488,13 +488,9 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 		/* Begin padding with a 1 bit: */
 		((uint8_t*)context->buffer)[usedspace++] = 0x80;
 		
-		if (usedspace <= SHA256_SHORT_BLOCK_LENGTH) {
-			/* Set-up for the last transform: */
-			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_SHORT_BLOCK_LENGTH - usedspace);
-		} else {
-			if (usedspace < SHA256_BLOCK_LENGTH) {
-				MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_BLOCK_LENGTH - usedspace);
-			}
+		if (usedspace > SHA256_SHORT_BLOCK_LENGTH) {
+			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_BLOCK_LENGTH - usedspace);
+
 #if BYTE_ORDER == LITTLE_ENDIAN
 			/* Convert TO host byte order */
 			for (int j = 0; j < 16; j++) {
@@ -504,9 +500,11 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 			/* Do second-to-last transform: */
 			sha256_Transform(context->state, context->buffer, context->state);
 			
-			/* And set-up for the last transform: */
-			MEMSET_BZERO(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
+			/* And prepare the last transform: */
+			usedspace = 0;
 		}
+		/* Set-up for the last transform: */
+		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_SHORT_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
@@ -793,13 +791,9 @@ static void sha512_Last(SHA512_CTX* context) {
 	/* Begin padding with a 1 bit: */
 	((uint8_t*)context->buffer)[usedspace++] = 0x80;
 	
-	if (usedspace <= SHA512_SHORT_BLOCK_LENGTH) {
-		/* Set-up for the last transform: */
-		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_SHORT_BLOCK_LENGTH - usedspace);
-	} else {
-		if (usedspace < SHA512_BLOCK_LENGTH) {
-			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_BLOCK_LENGTH - usedspace);
-		}
+	if (usedspace > SHA512_SHORT_BLOCK_LENGTH) {
+		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_BLOCK_LENGTH - usedspace);
+
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
 		for (int j = 0; j < 16; j++) {
@@ -809,21 +803,21 @@ static void sha512_Last(SHA512_CTX* context) {
 		/* Do second-to-last transform: */
 		sha512_Transform(context->state, context->buffer, context->state);
 
-		/* And set-up for the last transform: */
-		MEMSET_BZERO(context->buffer, SHA512_BLOCK_LENGTH - 2);
+		/* And prepare the last transform: */
+		usedspace = 0;
 	}
+	/* Set-up for the last transform: */
+	MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_SHORT_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 	/* Convert TO host byte order */
-	for (int j = 0; j < 16; j++) {
+	for (int j = 0; j < 14; j++) {
 		REVERSE64(context->buffer[j],context->buffer[j]);
 	}
 #endif
 	/* Store the length of input data (in bits): */
-	sha2_word64 *t;
-	t = &context->buffer[SHA512_SHORT_BLOCK_LENGTH/sizeof(sha2_word64)];
-	t[0] = context->bitcount[1];
-	t[1] = context->bitcount[0];
+	context->buffer[14] = context->bitcount[1];
+	context->buffer[15] = context->bitcount[0];
 
 	/* Final transform: */
 	sha512_Transform(context->state, context->buffer, context->state);
