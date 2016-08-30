@@ -99,7 +99,7 @@ class TestProtectCall(common.TrezorTest):
 
         def test_backoff(attempts, start):
             if attempts <= 1:
-                expected = 0.2
+                expected = 0
             else:
                 expected = (2 ** (attempts - 2))
             got = time.time() - start
