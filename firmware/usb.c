@@ -342,7 +342,7 @@ static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
 
 	debugLog(0, "", "hid_u2f_rx_callback");
     if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
-	u2fhid_read(tiny, (const U2FHID_FRAME *)buf);
+	u2fhid_read(tiny, (const U2FHID_FRAME *) (void*) buf);
 }
 
 #if DEBUG_LINK
