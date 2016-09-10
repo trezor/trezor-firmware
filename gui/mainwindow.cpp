@@ -49,6 +49,7 @@ void MainWindow::on_spinAccount_valueChanged(int arg1)
     const size_t buflen = 128;
     char buf[buflen + 1];
     HDNode node;
+    uint32_t fingerprint;
     // external chain
     for (int chain = 0; chain < 2; chain++) {
         QTableWidget *list = chain == 0 ? ui->listAddress : ui->listChange;
@@ -56,12 +57,14 @@ void MainWindow::on_spinAccount_valueChanged(int arg1)
         hdnode_private_ckd(&node, 44 | 0x80000000);
         hdnode_private_ckd(&node, 0 | 0x80000000); // bitcoin
         hdnode_private_ckd(&node, (arg1 - 1) | 0x80000000);
-        hdnode_serialize_private(&node, buf, buflen); QString xprv = QString(buf); ui->lineXprv->setText(xprv);
-        hdnode_serialize_public(&node, buf, buflen); QString xpub = QString(buf); ui->lineXpub->setText(xpub);
+        fingerprint = hdnode_fingerprint(&node);
+        hdnode_serialize_private(&node, fingerprint, buf, buflen); QString xprv = QString(buf); ui->lineXprv->setText(xprv);
+        hdnode_serialize_public(&node, fingerprint, buf, buflen); QString xpub = QString(buf); ui->lineXpub->setText(xpub);
         hdnode_private_ckd(&node, chain); // external / internal
         for (int i = 0; i < 100; i++) {
             HDNode node2 = node;
             hdnode_private_ckd(&node2, i);
+            hdnode_fill_public_key(&node2);
             ecdsa_get_address(node2.public_key, addr_version, buf, buflen); QString address = QString(buf);
             ecdsa_get_wif(node2.private_key, wif_version, buf, buflen); QString wif = QString(buf);
             list->setItem(i, 0, new QTableWidgetItem(address));
