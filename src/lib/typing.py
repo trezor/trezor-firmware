@@ -58,6 +58,6 @@ def TypeVar(*args):
     return object
 
 def NewType(*args):
-    return object
+    return lambda x: x
 
 TYPE_CHECKING = False
