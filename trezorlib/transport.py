@@ -71,9 +71,10 @@ class Transport(object):
     def _parse_message(self, data):
         (session_id, msg_type, data) = data
 
-        # Raise exception if we get the response with
-        # unexpected session ID
-        self._check_session_id(session_id)
+        # Raise exception if we get the response with unexpected session ID
+        if session_id != self.session_id:
+            raise Exception("Session ID mismatch. Have %d, got %d" %
+                            (self.session_id, session_id))
 
         if msg_type == 'protobuf':
             return data
@@ -81,14 +82,6 @@ class Transport(object):
             inst = mapping.get_class(msg_type)()
             inst.ParseFromString(bytes(data))
             return inst
-
-    def _check_session_id(self, session_id):
-        if self.session_id == 0:
-            # Let the device set the session ID
-            self.session_id = session_id
-        elif session_id != self.session_id:
-            # Session ID has been already set, but it differs from response
-            raise Exception("Session ID mismatch. Have %d, got %d" % (self.session_id, session_id))
 
     # Functions to be implemented in specific transports:
     def _open(self):
@@ -236,6 +229,28 @@ class TransportV2(Transport):
 
         data = chunk[1 + headerlen:]
         return (session_id, data)
+
+    def parse_session(self, chunk):
+        if chunk[0:1] != b"!":
+            raise Exception("Unexpected magic character")
+
+        try:
+            headerlen = struct.calcsize(">LL")
+            (null_session_id, new_session_id) = struct.unpack(
+                ">LL", bytes(chunk[1:1 + headerlen]))
+        except:
+            raise Exception("Cannot parse header")
+
+        if null_session_id != 0:
+            raise Exception("Session response needs to use session ID 0")
+        return new_session_id
+
+    def _session_begin(self):
+        self._write_chunk(b'!' + b'\0' * 63)
+        self.session_id = self.parse_session(self._read_chunk())
+
+    def _session_end(self):
+        pass
 
     '''
     def read_headers(self, read_f):
