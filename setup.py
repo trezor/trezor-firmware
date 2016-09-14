@@ -38,4 +38,5 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
     ],
+    install_requires = ['setuptools>=19.0'],
 )

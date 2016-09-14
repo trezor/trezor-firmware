@@ -11,6 +11,21 @@ Client side implementation for TREZOR-compatible Bitcoin hardware wallets.
 
 See http://bitcointrezor.com for more information.
 
+Install
+-------
+
+(Run with sudo if not running in superuser mode under Linux)
+
+.. code::
+
+  pip install trezor
+
+On Linux you might need to run these commands first:
+
+.. code::
+  sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
+  sudo pip install setuptools
+
 Example
 -------
 
@@ -72,28 +87,3 @@ Example: your PIN is **1234** and TREZOR is displaying the following:
 === === ===
 
 You have to enter: **3795**
-
-Install
--------
-
-(Run with sudo if not running in superuser mode)
-
-.. code::
-
-  pip install trezor
-
-How to install from source (Windows)
-------------------------------------
-* Install Python 2.7 (http://python.org)
-* Install Cython (Windows binaries on http://cython.org/#download)
-* Install Microsoft Visual Studio 2008 Express
-* Add "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0" to system PATH
-* Clone repository (using TortoiseGit) to local directory
-* Run C:\\python27\\python.exe setup.py install (or develop)
-
-How to install from source (Debian/Ubuntu)
-------------------------------------------
-* sudo apt-get install python-dev python-setuptools cython libusb-1.0-0-dev libudev-dev git
-* git clone https://github.com/trezor/python-trezor.git
-* cd python-trezor
-* python setup.py install (or develop)
