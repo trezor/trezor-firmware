@@ -10,6 +10,8 @@ TREZOR Core firmware file consists of 3 parts:
 2. firmware header
 3. firmware code
 
+Hash function used is SHA-256 and signature system is Ed25519 (allows combining signatures by multiple keys into one).
+
 ###Vendor Header
 
 Total length of vendor header is 82 + 32 * (number of pubkeys) + (length of vendor string) + (length of vendor image) bytes rounded up to the closest multiply of 256 bytes.
@@ -48,3 +50,10 @@ Total length of firmware header is 256 bytes.
 | 0x0014 | 1      | vndsigidx | vendor signature indexes (bitmap) |
 | 0x0015 | 64     | vndsig | vendor signature |
 | 0x0079 | 135    | reserved | not used yet |
+
+##Various ideas
+
+* Bootloader should be able to read vendor+firmware header and send info about FW to client in features message.
+* Bootloader should not try to run firmware if there is not any.
+* Storage wiping rule: Don't erase storage when old FW and new FW are signed using the same key set. Otherwise erase.
+* Bootloader should send error to client when firmware update fails and allow client to try one more time. This prevents storage area erasure by accident.
