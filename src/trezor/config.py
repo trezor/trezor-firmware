@@ -18,7 +18,7 @@ else: # emulator (mock implementation using binary file)
     import ustruct
 
     _mock = {}
-    _file = 'trezor.config'
+    _file = '/var/tmp/trezor.config'
 
     def _load():
         try:
