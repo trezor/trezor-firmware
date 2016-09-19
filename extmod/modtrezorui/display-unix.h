@@ -32,6 +32,7 @@ void DATA(uint8_t x) {
     }
 }
 
+// this should match values used in msg_poll_ui_event() in modtrezormsg/modtrezormsg-stmhal.h
 uint32_t trezorui_poll_sdl_event(void)
 {
     SDL_Event event;

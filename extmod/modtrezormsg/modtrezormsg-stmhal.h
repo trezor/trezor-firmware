@@ -14,6 +14,7 @@ ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
     return -1;
 }
 
+// this should match values used in trezorui_poll_sdl_event() in modtrezorui/display-unix.h
 uint32_t msg_poll_ui_event(void)
 {
     static int lp = 0;
@@ -26,7 +27,7 @@ uint32_t msg_poll_ui_event(void)
         r = 0x00020000; // touch move
     }
     if (lp == 1 && p == 0) {
-        r = 0x00030000; // touch end
+        r = 0x00040000; // touch end
     }
     lp = p;
     return r;
