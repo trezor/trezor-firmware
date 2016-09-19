@@ -8,7 +8,7 @@ help: ## show this help
 vendor: ## update git submodules
 	git submodule update --init
 
-build: build_stmhal build_unix ## build both stmhal and 32-bit unix micropython ports
+build: build_stmhal build_unix build_cross ## build stmhal, 32-bit unix and mpy-cross micropython ports
 
 build_stmhal: vendor ## build stmhal port
 	make -C vendor/micropython/stmhal
@@ -46,13 +46,16 @@ run: ## run unix port
 emu: ## run emulator
 	./emu.sh
 
-clean: clean_stmhal clean_unix ## clean all builds
+clean: clean_stmhal clean_unix clean_cross ## clean all builds
 
 clean_stmhal: ## clean stmhal build
 	make -C vendor/micropython/stmhal clean
 
 clean_unix: ## clean unix build
 	make -C vendor/micropython/unix clean
+
+clean_cross: ## clean mpy-cross build
+	make -C vendor/micropython/mpy-cross clean
 
 test: ## run unit tests
 	cd src/tests ; ./run_tests.sh
