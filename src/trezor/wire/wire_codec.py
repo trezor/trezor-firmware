@@ -99,7 +99,7 @@ Throws MessageChecksumError to target if data doesn't match the checksum.
         target.send(data_chunk)
 
         if compute_checksum:
-            checksum = ubinascii.crc32(checksum, data_chunk)
+            checksum = ubinascii.crc32(data_chunk, checksum) & 0xffffffff
 
     msg_footer = data_tail[:_MSG_FOOTER_LEN]
     if len(msg_footer) < _MSG_FOOTER_LEN:
@@ -111,9 +111,10 @@ Throws MessageChecksumError to target if data doesn't match the checksum.
     else:
         data_checksum = checksum
     if data_checksum != checksum:
-        target.throw(MessageChecksumError, 'Message checksum mismatch')
+        target.throw(MessageChecksumError(
+            'Message checksum mismatch, expected %d, received %d' % (checksum, data_checksum)))
     else:
-        target.throw(EOFError)
+        target.throw(EOFError())
 
 
 def encode_wire_message(msg_type, msg_data, session_id, target):
@@ -121,20 +122,21 @@ def encode_wire_message(msg_type, msg_data, session_id, target):
     serialize_report_header(report, REP_MARKER_HEADER, session_id)
     serialize_message_header(report, msg_type, len(msg_data))
 
-    source_data = memoryview(msg_data)
-    target_data = memoryview(report)[_REP_HEADER_LEN + _MSG_HEADER_LEN:]
+    msg_data = memoryview(msg_data)
+    report = memoryview(report)
+
+    source_data = msg_data
+    target_data = report[_REP_HEADER_LEN + _MSG_HEADER_LEN:]
 
     compute_checksum = hasattr(ubinascii, 'crc32')
 
     if compute_checksum:
-        checksum = ubinascii.crc32(msg_data)
+        checksum = ubinascii.crc32(msg_data) & 0xffffffff
     else:
         checksum = 0
 
     msg_footer = bytearray(_MSG_FOOTER_LEN)
     serialize_message_footer(msg_footer, checksum)
-
-    first = True
 
     while True:
         # move as much as possible from source to target
@@ -154,11 +156,9 @@ def encode_wire_message(msg_type, msg_data, session_id, target):
         if not source_data and not msg_footer:
             break
 
-        if first:
-            # reset to skip the magic and session ID
-            serialize_report_header(report, REP_MARKER_DATA, session_id)
-            target_data = report[_REP_HEADER_LEN:]
-            first = False
+        # reset to skip the magic and session ID
+        serialize_report_header(report, REP_MARKER_DATA, session_id)
+        target_data = report[_REP_HEADER_LEN:]
 
 
 def encode_session_open_message(session_id, target):
