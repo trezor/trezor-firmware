@@ -1,9 +1,9 @@
 from trezor import ui
 from trezor import wire
 from trezor import config
-from trezor.utils import unimport_gen
+from trezor.utils import unimport
 
-MGMT_APP = const(1)
+MANAGEMENT_APP = const(1)
 
 PASSPHRASE_PROTECT = (1)  # 0 | 1
 PIN_PROTECT = const(2)  # 0 | 1
@@ -38,13 +38,12 @@ def change_pin():
     pass
 
 
-@unimport_gen
 def protect_with_pin():
     from trezor.messages.Failure import Failure
     from trezor.messages.FailureType import PinInvalid
     from trezor.messages.FailureType import ActionCancelled
 
-    pin_protect = config.get(MGMT_APP, PIN_PROTECT)
+    pin_protect = config.get(MANAGEMENT_APP, PIN_PROTECT)
     if not pin_protect:
         return
 
@@ -53,7 +52,7 @@ def protect_with_pin():
         yield from wire.write(Failure(code=ActionCancelled, message='Cancelled'))
         raise Exception('Cancelled')
 
-    stored_pin = config.get(MGMT_APP, PIN)
+    stored_pin = config.get(MANAGEMENT_APP, PIN)
     if stored_pin != entered_pin:
         yield from wire.write(Failure(code=PinInvalid, message='PIN invalid'))
         raise Exception('PIN invalid')

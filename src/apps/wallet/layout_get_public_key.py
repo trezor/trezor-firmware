@@ -1,9 +1,9 @@
 from trezor import wire, ui
-from trezor.utils import unimport_gen
+from trezor.utils import unimport
 from trezor.workflows.request_pin import request_pin
 
 
-@unimport_gen
+@unimport
 def layout_get_public_key(message):
 
     ui.clear()

@@ -1,8 +1,8 @@
 from trezor import wire, ui
-from trezor.utils import unimport_gen
+from trezor.utils import unimport
 
 
-@unimport_gen
+@unimport
 def layout_sign_tx(message):
     ui.clear()
     print('sending')

@@ -1,11 +1,11 @@
-from trezor import loop
 from trezor import ui
-from trezor import msg
-from trezor.utils import unimport_gen
 from trezor import res
+from trezor import msg
+from trezor import loop
+from trezor.utils import unimport
 
 
-@unimport_gen
+@unimport
 def layout_tap_to_confirm(address, amount, currency):
 
     # ui.display.bar(0, 0, 240, 40, ui.GREEN)

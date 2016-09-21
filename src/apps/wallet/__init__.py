@@ -1,42 +1,28 @@
-from trezor.dispatcher import register
-from trezor.utils import unimport_func
+from trezor.wire import register_type, protobuf_handler
+from trezor.utils import unimport
+from trezor.messages.wire_types import \
+    GetPublicKey, SignTx, SignMessage
 
 
-@unimport_func
-def dispatch_GetPublicKey(mtype, mbuf):
-    from trezor.messages.GetPublicKey import GetPublicKey
-
-    message = GetPublicKey.loads(mbuf)
-
+@unimport
+def dispatch_GetPublicKey(*args, **kwargs):
     from .layout_get_public_key import layout_get_public_key
-    return layout_get_public_key(message)
+    return layout_get_public_key(*args, **kwargs)
 
 
-@unimport_func
-def dispatch_SignTx(mtype, mbuf):
-    from trezor.messages.SignTx import SignTx
-
-    message = SignTx.loads(mbuf)
-
+@unimport
+def dispatch_SignTx(*args, **kwargs):
     from .layout_sign_tx import layout_sign_tx
-    return layout_sign_tx(message)
+    return layout_sign_tx(*args, **kwargs)
 
 
-@unimport_func
-def dispatch_SignMessage(mtype, mbuf):
-    from trezor.messages.SignMessage import SignMessage
-
-    message = SignMessage.loads(mbuf)
-
+@unimport
+def dispatch_SignMessage(*args, **kwargs):
     from .layout_sign_message import layout_sign_message
-    return layout_sign_message(message)
+    return layout_sign_message(*args, **kwargs)
 
 
 def boot():
-    GetPublicKey = 11
-    register(GetPublicKey, dispatch_GetPublicKey)
-    SignTx = 15
-    register(SignTx, dispatch_SignTx)
-    SignMessage = 38
-    register(SignMessage, dispatch_SignMessage)
-
+    register_type(GetPublicKey, protobuf_handler, dispatch_GetPublicKey)
+    register_type(SignTx, protobuf_handler, dispatch_SignTx)
+    register_type(SignMessage, protobuf_handler, dispatch_SignMessage)

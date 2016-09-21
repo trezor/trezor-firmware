@@ -1,44 +1,35 @@
-from trezor.dispatcher import register
-from trezor.utils import unimport_func
+from trezor.wire import register_type, protobuf_handler
+from trezor.utils import unimport
+from trezor.messages.wire_types import \
+    LoadDevice, ResetDevice, WipeDevice, RecoveryDevice
 
 
-@unimport_func
-def dispatch_LoadDevice(mtype, mbuf):
-    from trezor.messages.LoadDevice import LoadDevice
-    message = LoadDevice.loads(mbuf)
+@unimport
+def dispatch_LoadDevice(*args, **kwargs):
     from .layout_load_device import layout_load_device
-    return layout_load_device(message)
+    return layout_load_device(*args, **kwargs)
 
 
-@unimport_func
-def dispatch_ResetDevice(mtype, mbuf):
-    from trezor.messages.ResetDevice import ResetDevice
-    message = ResetDevice.loads(mbuf)
+@unimport
+def dispatch_ResetDevice(*args, **kwargs):
     from .layout_reset_device import layout_reset_device
-    return layout_reset_device(message)
+    return layout_reset_device(*args, **kwargs)
 
 
-@unimport_func
-def dispatch_WipeDevice(mtype, mbuf):
-    from trezor.messages.WipeDevice import WipeDevice
-    message = WipeDevice.loads(mbuf)
+@unimport
+def dispatch_WipeDevice(*args, **kwargs):
     from .layout_wipe_device import layout_wipe_device
-    return layout_wipe_device(message)
+    return layout_wipe_device(*args, **kwargs)
 
 
-@unimport_func
-def dispatch_RecoveryDevice(mtype, mbuf):
-    from trezor.messages.RecoveryDevice import RecoveryDevice
-    message = RecoveryDevice.loads(mbuf)
+@unimport
+def dispatch_RecoveryDevice(*args, **kwargs):
     from .layout_recovery_device import layout_recovery_device
-    return layout_recovery_device(message)
+    return layout_recovery_device(*args, **kwargs)
+
 
 def boot():
-    LoadDevice = 13
-    register(LoadDevice, dispatch_LoadDevice)
-    ResetDevice = 14
-    register(ResetDevice, dispatch_ResetDevice)
-    WipeDevice = 5
-    register(WipeDevice, dispatch_WipeDevice)
-    RecoveryDevice = 45
-    register(RecoveryDevice, dispatch_RecoveryDevice)
+    register_type(LoadDevice, protobuf_handler, dispatch_LoadDevice)
+    register_type(ResetDevice, protobuf_handler, dispatch_ResetDevice)
+    register_type(WipeDevice, protobuf_handler, dispatch_WipeDevice)
+    register_type(RecoveryDevice, protobuf_handler, dispatch_RecoveryDevice)

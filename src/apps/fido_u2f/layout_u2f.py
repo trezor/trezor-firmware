@@ -1,6 +1,6 @@
 from ubinascii import hexlify
 from trezor import ui, loop, res
-from trezor.utils import unimport_gen
+from trezor.utils import unimport
 from trezor.crypto import random
 from . import knownapps
 
@@ -10,12 +10,14 @@ random.shuffle(ids)
 appid = ids[0]
 action = 'Register'
 
-@unimport_gen
+
+@unimport
 def layout_u2f():
 
     if appid in knownapps.knownapps:
         appname = knownapps.knownapps[appid]
-        appicon = res.load('apps/fido_u2f/res/u2f_%s.toif' % appname.lower().replace(' ', '_'))
+        appicon = res.load('apps/fido_u2f/res/u2f_%s.toif' %
+                           appname.lower().replace(' ', '_'))
     else:
         appname = hexlify(appid[:4]) + '...' + hexlify(appid[-4:])
         appicon = res.load('apps/fido_u2f/res/u2f_unknown.toif')
