@@ -1,24 +1,22 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import sys
 import os
 
 from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
-def process_type(t, cls, msg_id):
-    imports = ["from protobuf import protobuf as p",]
+
+def process_type(t, cls, msg_id, indexfile):
+    imports = ["from protobuf import protobuf as p", ]
 
     out = ["t = p.MessageType('%s')" % t, ]
 
     if msg_id is not None:
         out.append("t.wire_type = %d" % msg_id)
+        if indexfile is not None:
+            indexfile.write("%s = %d\n" % (t, msg_id))
 
     print("  * type %s" % t)
-
-    TYPE_STRING = 9
-    TYPE_BYTES = 12
-
-    TYPE_MESSAGE = 11
 
     for v in sorted(cls.DESCRIPTOR.fields_by_name.values(), key=lambda x: x.number):
         number = v.number
@@ -27,7 +25,7 @@ def process_type(t, cls, msg_id):
         repeated = v.label == 3
         required = v.label == 2
 
-        #print v.has_default_value, v.default_value
+        # print v.has_default_value, v.default_value
 
         if v.type in (4, 13, 14):
             # TYPE_UINT64 = 4
@@ -50,7 +48,8 @@ def process_type(t, cls, msg_id):
         elif v.type == 11:
             # TYPE_MESSAGE = 1
             type = "p.EmbeddedMessage(%s)" % v.message_type.name
-            imports.append("from .%s import %s" % (v.message_type.name, v.message_type.name))
+            imports.append("from .%s import %s" %
+                           (v.message_type.name, v.message_type.name))
 
         else:
             raise Exception("Unknown field type %s for field %s" % (v.type, k))
@@ -67,20 +66,21 @@ def process_type(t, cls, msg_id):
         else:
             default = ''
 
-        out.append("t.add_field(%d, '%s', %s%s%s)" % \
+        out.append("t.add_field(%d, '%s', %s%s%s)" %
                    (number, fieldname, type, flags, default))
 
-        #print fieldname, number, type, repeated, default
-        #print v.__dict__
-        #print v.CPPTYPE_STRING
-        #print v.LABEL_REPEATED
-        #print v.enum_type
+        # print fieldname, number, type, repeated, default
+        # print v.__dict__
+        # print v.CPPTYPE_STRING
+        # print v.LABEL_REPEATED
+        # print v.enum_type
         # v.has_default_value, v.default_value
         # v.label == 3 # repeated
-        #print v.number
+        # print v.number
 
     out.append("%s = t" % t)
     return imports + out
+
 
 def process_enum(t, cls):
     out = []
@@ -102,32 +102,38 @@ def process_enum(t, cls):
 
     return out
 
+
 def find_msg_type(msg_types, t):
     for k, v in msg_types:
         msg_name = k.replace('MessageType_', '')
         if msg_name == t:
             return v
 
-def process_module(mod, genpath):
+
+def process_module(mod, genpath, indexfile):
 
     print("Processing module %s" % mod.__name__)
-    types = dict([(name, cls) for name, cls in mod.__dict__.items() if isinstance(cls, type)])
+    types = dict([(name, cls)
+                  for name, cls in mod.__dict__.items() if isinstance(cls, type)])
 
-    msg_types = __import__('pb2', globals(), locals(), ['messages_pb2', ]).messages_pb2.MessageType.items()
+    msg_types = __import__('pb2', globals(), locals(), [
+                           'messages_pb2', ]).messages_pb2.MessageType.items()
 
-    for t, cls in types.iteritems():
+    for t, cls in types.items():
         # Find message type for given class
         msg_id = find_msg_type(msg_types, t)
 
-        out = process_type(t, cls, msg_id)
+        out = process_type(t, cls, msg_id, indexfile)
 
         write_to_file(genpath, t, out)
 
-    enums = dict([(name, cls) for name, cls in mod.__dict__.items() if isinstance(cls, EnumTypeWrapper)])
+    enums = dict([(name, cls) for name, cls in mod.__dict__.items()
+                  if isinstance(cls, EnumTypeWrapper)])
 
-    for t, cls in enums.iteritems():
+    for t, cls in enums.items():
         out = process_enum(t, cls)
         write_to_file(genpath, t, out)
+
 
 def write_to_file(genpath, t, out):
     # Write generated sourcecode to given file
@@ -141,14 +147,19 @@ def write_to_file(genpath, t, out):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: ./pb2py modulename genpath")
+        print("Usage: ./pb2py modulename genpath indexfile")
         sys.exit()
 
     modulename = sys.argv[1]
     genpath = sys.argv[2]
 
+    if len(sys.argv) > 2:
+        indexfile = open(sys.argv[3], 'a')
+    else:
+        indexfile = None
+
     # Dynamically load module from argv[1]
     tmp = __import__('pb2', globals(), locals(), ['%s_pb2' % modulename])
     mod = getattr(tmp, "%s_pb2" % modulename)
 
-    process_module(mod, genpath)
+    process_module(mod, genpath, indexfile)
