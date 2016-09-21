@@ -29,7 +29,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_uniform(mp_obj_t self, mp_obj_t n) {
     if (nn == 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Maximum can't be zero"));
     }
-    return MP_OBJ_NEW_SMALL_INT(random_uniform(nn));
+    return mp_obj_new_int_from_uint(random_uniform(nn));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_uniform_obj, mod_TrezorCrypto_Random_uniform);
 
