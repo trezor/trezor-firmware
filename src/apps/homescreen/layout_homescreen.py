@@ -1,6 +1,5 @@
-from trezor import ui, dispatcher, loop, res, wire
+from trezor import ui, loop, res
 from trezor.ui.swipe import Swipe
-from trezor.utils import unimport_gen
 
 
 async def swipe_to_rotate():
@@ -10,37 +9,14 @@ async def swipe_to_rotate():
 
 
 async def animate_logo():
-    # def func(foreground):
-    #     ui.display.icon(0, 0, res.load(
-    #         'apps/homescreen/res/trezor.toig'), foreground, ui.BLACK)
-    # await ui.animate_pulse(func, ui.WHITE, ui.GREY, speed=400000)
-
+    icon = res.load('apps/homescreen/res/trezor.toig')
     async for fg in ui.pulse_animation(ui.WHITE, ui.GREY, speed=400000):
-        icon = res.load('apps/homescreen/res/trezor.toig')
         ui.display.icon(0, 0, icon, fg, ui.BLACK)
 
 
-@unimport_gen
-async def layout_homescreen(initialize_msg=None):
-    if initialize_msg is not None:
-        from trezor.messages.Features import Features
-        features = Features()
-        features.revision = 'deadbeef'
-        features.bootloader_hash = 'deadbeef'
-        features.device_id = 'DEADBEEF'
-        features.coins = []
-        features.imported = False
-        features.initialized = False
-        features.label = 'My TREZOR'
-        features.major_version = 2
-        features.minor_version = 0
-        features.patch_version = 0
-        features.pin_cached = False
-        features.pin_protection = True
-        features.passphrase_cached = False
-        features.passphrase_protection = False
-        features.vendor = 'bitcointrezor.com'
-        await wire.write(features)
-    await loop.Wait([dispatcher.dispatch(),
-                     swipe_to_rotate(),
-                     animate_logo()])
+async def layout_homescreen():
+    wait = loop.Wait([swipe_to_rotate(), animate_logo()])
+    try:
+        await wait
+    finally:
+        wait.exit()

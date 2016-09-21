@@ -4,7 +4,7 @@ sys.path.append('lib')
 import gc
 
 from trezor import loop
-from trezor import layout
+from trezor import workflow
 from trezor import log
 
 log.level = log.INFO
@@ -20,7 +20,7 @@ def perf_info_debug():
         mem_alloc = gc.mem_alloc()
         gc.collect()
         log.info(__name__, "mem_alloc: %s/%s, delay_avg: %d, delay_last: %d, queue: %s",
-              mem_alloc, gc.mem_alloc(), delay_avg, delay_last, ', '.join(queue))
+                 mem_alloc, gc.mem_alloc(), delay_avg, delay_last, ', '.join(queue))
 
         yield loop.Sleep(1000000)
 
@@ -32,10 +32,10 @@ def perf_info():
         yield loop.Sleep(1000000)
 
 
-def run(main_layout):
+def run(default_workflow):
     if __debug__:
         loop.schedule_task(perf_info_debug())
     else:
         loop.schedule_task(perf_info())
-    loop.schedule_task(layout.set_main(main_layout))
+    workflow.start_default(default_workflow)
     loop.run_forever()
