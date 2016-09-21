@@ -15,6 +15,6 @@ async def confirm(content=None, code=None, **kwargs):
     if code is None:
         code = Other
     ack = await wire.call(ButtonRequest(code=code), ButtonAck)
-    res = await dialog.wait()
+    res = await dialog
 
     return res == CONFIRMED

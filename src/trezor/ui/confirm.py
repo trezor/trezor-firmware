@@ -33,7 +33,7 @@ class ConfirmDialog():
         if self.content is not None:
             return self.content.send(event, pos)
 
-    def wait(self):
+    def __iter__(self):
         while True:
             self.render()
             event, *pos = yield loop.Select(loop.TOUCH)

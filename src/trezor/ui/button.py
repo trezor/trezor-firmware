@@ -113,7 +113,7 @@ class Button():
             if in_area(pos, self.area):
                 return BTN_CLICKED
 
-    def wait(self):
+    def __iter__(self):
         while True:
             self.render()
             event, *pos = yield loop.Select(loop.TOUCH)

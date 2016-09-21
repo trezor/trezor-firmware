@@ -57,11 +57,9 @@ async def show_mnemonic(mnemonic):
             ui.display.text(45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
 
         if page + 1 == page_count:
-            # wait for the finish button
-            finish = Button((0, 240 - 48, 240, 48), 'Finish',
-                            normal_style=CONFIRM_BUTTON,
-                            active_style=CONFIRM_BUTTON_ACTIVE)
-            await finish.wait()
+            await Button((0, 240 - 48, 240, 48), 'Finish',
+                         normal_style=CONFIRM_BUTTON,
+                         active_style=CONFIRM_BUTTON_ACTIVE)
         else:
             await animate_swipe()
 
