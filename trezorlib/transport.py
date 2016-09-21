@@ -1,5 +1,6 @@
 import struct
 import mapping
+import binascii
 
 class NotImplementedException(Exception):
     pass
@@ -156,7 +157,7 @@ class TransportV2(Transport):
         data = bytearray(msg.SerializeToString())
 
         # Convert to unsigned in python2
-        checksum = 0  # binascii.crc32(data) & 0xffffffff
+        checksum = binascii.crc32(data) & 0xffffffff
 
         header1 = struct.pack(">L", self.session_id)
         header2 = struct.pack(">LL", mapping.get_type(msg), len(data))
@@ -169,12 +170,12 @@ class TransportV2(Transport):
             if first:
                 # Magic character, header1, header2, data padded to 64 bytes
                 datalen = 63 - len(header1)
-                chunk = b'!' + header1 + \
+                chunk = b'H' + header1 + \
                     data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
             else:
                 # Magic character, header1, data padded to 64 bytes
                 datalen = 63 - len(header1)
-                chunk = b'#' + header1 + \
+                chunk = b'D' + header1 + \
                     data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
 
             self._write_chunk(chunk)
@@ -199,13 +200,16 @@ class TransportV2(Transport):
         footer = data[-4:]
         data = data[:-4]
 
-        # csum = struct.unpack('>L', footer)
-        # assert csum == binascii.crc32(data), "Checksum mismatch"
+        csum, = struct.unpack('>L', footer)
+        csum_comp = binascii.crc32(data) & 0xffffffff
+        if csum != csum_comp:
+            raise Exception("Message checksum mismatch. Expected %d, got %d" %
+                            (csum_comp, csum))
 
         return (session_id, msg_type, data)
 
     def parse_first(self, chunk):
-        if chunk[0:1] != b"!":
+        if chunk[0:1] != b"H":
             raise Exception("Unexpected magic character")
 
         try:
@@ -218,7 +222,7 @@ class TransportV2(Transport):
         return (session_id, msg_type, datalen, data)
 
     def parse_next(self, chunk):
-        if chunk[0:1] != b"#":
+        if chunk[0:1] != b"D":
             raise Exception("Unexpected magic characters")
 
         try:
@@ -230,27 +234,28 @@ class TransportV2(Transport):
         data = chunk[1 + headerlen:]
         return (session_id, data)
 
-    def parse_session(self, chunk):
-        if chunk[0:1] != b"!":
+    def parse_session_open(self, chunk):
+        if chunk[0:1] != b"O":
             raise Exception("Unexpected magic character")
 
         try:
-            headerlen = struct.calcsize(">LL")
-            (null_session_id, new_session_id) = struct.unpack(
-                ">LL", bytes(chunk[1:1 + headerlen]))
+            headerlen = struct.calcsize(">L")
+            (session_id,) = struct.unpack(">L", bytes(chunk[1:1 + headerlen]))
         except:
             raise Exception("Cannot parse header")
 
-        if null_session_id != 0:
-            raise Exception("Session response needs to use session ID 0")
-        return new_session_id
+        return session_id
 
     def _session_begin(self):
-        self._write_chunk(b'!' + b'\0' * 63)
-        self.session_id = self.parse_session(self._read_chunk())
+        self._write_chunk(b'O' + b'\0' * 63)
+        self.session_id = self.parse_session_open(self._read_chunk())
 
     def _session_end(self):
-        pass
+        header = struct.pack(">L", self.session_id)
+        self._write_chunk(b'C' + header + b'\0' * (63 - len(header)))
+        if self._read_chunk()[0] != ord('C'):
+            raise Exception("Expected session close")
+        self.session_id = None
 
     '''
     def read_headers(self, read_f):
