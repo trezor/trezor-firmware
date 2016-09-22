@@ -50,24 +50,24 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t 
     memset(o->ctr, 0, AES_BLOCK_SIZE);
     switch (key.len) {
         case 16:
-            if ((o->mode & 0x80) == 0x00) {
-                aes_encrypt_key128(key.buf, &(o->ctx.encrypt_ctx));
-            } else {
+            if (o->mode == 0x80 || o->mode == 0x81) {
                 aes_decrypt_key128(key.buf, &(o->ctx.decrypt_ctx));
+            } else {
+                aes_encrypt_key128(key.buf, &(o->ctx.encrypt_ctx));
             }
             break;
         case 24:
-            if ((o->mode & 0x80) == 0x00) {
-                aes_encrypt_key192(key.buf, &(o->ctx.encrypt_ctx));
-            } else {
+            if (o->mode == 0x80 || o->mode == 0x81) {
                 aes_decrypt_key192(key.buf, &(o->ctx.decrypt_ctx));
+            } else {
+                aes_encrypt_key192(key.buf, &(o->ctx.encrypt_ctx));
             }
             break;
         case 32:
-            if ((o->mode & 0x80) == 0x00) {
-                aes_encrypt_key256(key.buf, &(o->ctx.encrypt_ctx));
-            } else {
+            if (o->mode == 0x80 || o->mode == 0x81) {
                 aes_decrypt_key256(key.buf, &(o->ctx.decrypt_ctx));
+            } else {
+                aes_encrypt_key256(key.buf, &(o->ctx.encrypt_ctx));
             }
             break;
     }
