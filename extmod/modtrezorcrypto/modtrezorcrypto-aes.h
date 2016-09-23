@@ -9,9 +9,6 @@
 
 #include "trezor-crypto/aes.h"
 
-/*
-*/
-
 typedef struct _mp_obj_AES_t {
     mp_obj_base_t base;
     union {
@@ -23,10 +20,6 @@ typedef struct _mp_obj_AES_t {
     uint8_t ctr[AES_BLOCK_SIZE];
 } mp_obj_AES_t;
 
-/// def trezor.crypto.aes.AES(mode:int, key: bytes, iv: bytes=None) -> AES:
-///     '''
-///     Create AES context
-///     '''
 STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 2, 3, false);
     mp_obj_AES_t *o = m_new_obj(mp_obj_AES_t);
