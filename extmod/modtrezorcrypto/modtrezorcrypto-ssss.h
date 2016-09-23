@@ -21,7 +21,7 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_make_new(const mp_obj_type_t *type, size_t
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.ssss.split(m: int, n: int, secret: bytes) -> tuple
+/// def trezor.crypto.ssss.split(m: int, n: int, secret: bytes) -> tuple:
 ///     '''
 ///     Split secret to (M of N) shares using Shamir's Secret Sharing Scheme
 ///     '''
@@ -53,7 +53,7 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_split(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_SSSS_split_obj, 4, 4, mod_TrezorCrypto_SSSS_split);
 
-/// def trezor.crypto.ssss.combine(shares: tuple) -> bytes
+/// def trezor.crypto.ssss.combine(shares: tuple) -> bytes:
 ///     '''
 ///     Combine M shares of Shamir's Secret Sharing Scheme into secret
 ///     '''

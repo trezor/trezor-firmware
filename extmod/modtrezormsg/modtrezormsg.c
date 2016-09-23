@@ -36,7 +36,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.msg.setup(ifaces: list) -> None
+/// def trezor.msg.setup(ifaces: list) -> None:
 ///     '''
 ///     Configures USB interfaces with a list of tuples (interface_number, usage_page)
 ///     '''
@@ -67,7 +67,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_setup_obj, mod_TrezorMsg_Msg_setup);
 
-/// def trezor.msg.send(iface: int, message: bytes) -> int
+/// def trezor.msg.send(iface: int, message: bytes) -> int:
 ///     '''
 ///     Sends message using USB HID (device) or UDP (emulator).
 ///     '''
@@ -83,7 +83,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 #define TICK_RESOLUTION 1000
 #define TOUCH_IFACE 256
 
-/// def trezor.msg.select(timeout_us: int) -> tuple
+/// def trezor.msg.select(timeout_us: int) -> tuple:
 ///     '''
 ///     Polls the event queue and returns the event object.
 ///     Function returns None if timeout specified in microseconds is reached.

@@ -19,7 +19,7 @@ typedef struct _mp_obj_Ripemd160_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.ripemd160(data: bytes=None) -> Ripemd160
+/// def trezor.crypto.hashlib.ripemd160(data: bytes=None) -> Ripemd160:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
@@ -35,7 +35,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_make_new(const mp_obj_type_t *type, s
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def Ripemd160.update(self, data: bytes) -> None
+/// def trezor.crypto.hashlib.Ripemd160.update(self, data: bytes) -> None:
 ///     '''
 ///     Update the hash context with hashed data.
 ///     '''
@@ -48,7 +48,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data) 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ripemd160_update_obj, mod_TrezorCrypto_Ripemd160_update);
 
-/// def Ripemd160.digest(self) -> bytes
+/// def trezor.crypto.hashlib.Ripemd160.digest(self) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''

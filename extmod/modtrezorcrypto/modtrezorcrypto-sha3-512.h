@@ -19,7 +19,7 @@ typedef struct _mp_obj_Sha3_512_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.sha3_512(data: bytes=None) -> Sha3_512
+/// def trezor.crypto.hashlib.sha3_512(data: bytes=None) -> Sha3_512:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
@@ -35,7 +35,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_make_new(const mp_obj_type_t *type, si
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def Sha3_512.update(self, data: bytes) -> None
+/// def trezor.crypto.hashlib.Sha3_512.update(self, data: bytes) -> None:
 ///     '''
 ///     Update the hash context with hashed data.
 ///     '''
@@ -48,7 +48,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_512_update_obj, mod_TrezorCrypto_Sha3_512_update);
 
-/// def Sha3_512.digest(self) -> bytes
+/// def trezor.crypto.hashlib.Sha3_512.digest(self) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''
