@@ -1,0 +1,64 @@
+[{
+	"coin_name": "Bitcoin",
+	"coin_shortcut": "BTC",
+	"address_type": 0,
+	"maxfee_kb": 100000,
+	"address_type_p2sh": 5,
+	"address_type_p2wpkh": 6,
+	"address_type_p2wsh": 10,
+	"signed_message_header": "Bitcoin Signed Message:\n"
+}, {
+	"coin_name": "Testnet",
+	"coin_shortcut": "TEST",
+	"address_type": 111,
+	"maxfee_kb": 10000000,
+	"address_type_p2sh": 196,
+	"address_type_p2wpkh": 3,
+	"address_type_p2wsh": 40,
+	"signed_message_header": "Bitcoin Signed Message:\n"
+}, {
+	"coin_name": "Namecoin",
+	"coin_shortcut": "NMC",
+	"address_type": 52,
+	"maxfee_kb": 10000000,
+	"address_type_p2sh": 5,
+	"address_type_p2wpkh": null,
+	"address_type_p2wsh": null,
+	"signed_message_header": "Namecoin Signed Message:\n"
+}, {
+	"coin_name": "Litecoin",
+	"coin_shortcut": "LTC",
+	"address_type": 48,
+	"maxfee_kb": 1000000,
+	"address_type_p2sh": 5,
+	"address_type_p2wpkh": null,
+	"address_type_p2wsh": null,
+	"signed_message_header": "Litecoin Signed Message:\n"
+}, {
+	"coin_name": "Dogecoin",
+	"coin_shortcut": "DOGE",
+	"address_type": 30,
+	"maxfee_kb": 1000000000,
+	"address_type_p2sh": 22,
+	"address_type_p2wpkh": null,
+	"address_type_p2wsh": null,
+	"signed_message_header": "Dogecoin Signed Message:\n"
+}, {
+	"coin_name": "Dash",
+	"coin_shortcut": "DASH",
+	"address_type": 76,
+	"maxfee_kb": 100000,
+	"address_type_p2sh": 16,
+	"address_type_p2wpkh": null,
+	"address_type_p2wsh": null,
+	"signed_message_header": "DarkCoin Signed Message:\n"
+}, {
+	"coin_name": "Zcash",
+	"coin_shortcut": "ZEC",
+	"address_type": 65,
+	"maxfee_kb": 1000000,
+	"address_type_p2sh": 5,
+	"address_type_p2wpkh": null,
+	"address_type_p2wsh": null,
+	"signed_message_header": "Zcash Signed Message:\n"
+}]
