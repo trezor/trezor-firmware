@@ -133,66 +133,64 @@ static uint8_t WINDOW_OFFSET_X = 0, WINDOW_OFFSET_Y = 0;
 
 int display_orientation(int degrees)
 {
-    if (degrees != ORIENTATION) {
-        // memory access control
-        switch (degrees) {
-            case 0:
-                CMD(0x36);
+    // memory access control
+    switch (degrees) {
+        case 0:
+            CMD(0x36);
 #if DISPLAY_ILI9341V
-                DATA(0x08 | (1<<6) | (1<<7));
-                WINDOW_OFFSET_X = 0;
-                WINDOW_OFFSET_Y = 80;
+            DATA(0x08 | (1<<6) | (1<<7));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 80;
 #endif
 #if DISPLAY_ST7789V
-                DATA(0x00 | (1<<5));
-                WINDOW_OFFSET_X = 0;
-                WINDOW_OFFSET_Y = 80;
+            DATA(0x00 | (1<<5));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 80;
 #endif
-                ORIENTATION = 0;
-                break;
-            case 90:
-                CMD(0x36);
+            ORIENTATION = 0;
+            break;
+        case 90:
+            CMD(0x36);
 #if DISPLAY_ILI9341V
-                DATA(0x08 | (1<<5) | (1<<6));
-                WINDOW_OFFSET_X = 0;
-                WINDOW_OFFSET_Y = 0;
+            DATA(0x08 | (1<<5) | (1<<6));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
-                DATA(0x00 | (1<<6));
-                WINDOW_OFFSET_X = 80;
-                WINDOW_OFFSET_Y = 0;
+            DATA(0x00 | (1<<6));
+            WINDOW_OFFSET_X = 80;
+            WINDOW_OFFSET_Y = 0;
 #endif
-                ORIENTATION = 90;
-                break;
-            case 180:
-                CMD(0x36);
+            ORIENTATION = 90;
+            break;
+        case 180:
+            CMD(0x36);
 #if DISPLAY_ILI9341V
-                DATA(0x08);
-                WINDOW_OFFSET_X = 0;
-                WINDOW_OFFSET_Y = 0;
+            DATA(0x08);
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
-                DATA(0x00 | (1<<5) | (1<<6) | (1<<7));
-                WINDOW_OFFSET_X = 0;
-                WINDOW_OFFSET_Y = 0;
+            DATA(0x00 | (1<<5) | (1<<6) | (1<<7));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 0;
 #endif
-                ORIENTATION = 180;
-                break;
-            case 270:
-                CMD(0x36);
+            ORIENTATION = 180;
+            break;
+        case 270:
+            CMD(0x36);
 #if DISPLAY_ILI9341V
-                DATA(0x08 | (1<<5) | (1<<7));
-                WINDOW_OFFSET_X = 80;
-                WINDOW_OFFSET_Y = 0;
+            DATA(0x08 | (1<<5) | (1<<7));
+            WINDOW_OFFSET_X = 80;
+            WINDOW_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
-                DATA(0x00 | (1<<7));
-                WINDOW_OFFSET_X = 0;
-                WINDOW_OFFSET_Y = 0;
+            DATA(0x00 | (1<<7));
+            WINDOW_OFFSET_X = 0;
+            WINDOW_OFFSET_Y = 0;
 #endif
-                ORIENTATION = 270;
-                break;
-        }
+            ORIENTATION = 270;
+            break;
     }
     return ORIENTATION;
 }
@@ -213,7 +211,6 @@ void display_init(void) {
     CMD(0xC1); DATA(0x12);                // power control   SAP[2:0] BT[3:0]
     CMD(0xC5); DATAS("\x60\x44", 2);      // vcm control 1
     CMD(0xC7); DATA(0x8A);                // vcm control 2
-    display_orientation(0);
     CMD(0x3A); DATA(0x55);                // memory access control (16-bit 565)
     CMD(0xB1); DATAS("\x00\x18", 2);      // framerate
 #endif
@@ -232,12 +229,11 @@ void display_init(void) {
 #endif
 #if DISPLAY_ST7789V
     CMD(0x20);                            // don't invert colors
-    // weird hack needed :-/
-    display_orientation(180);
-    display_orientation(0);
 #endif
+    display_orientation(0);
+    display_backlight(0);
     // clear buffer
-    display_bar(0, 0, 240, 240, 0x0000);
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0x0000);
     display_unsleep();
 }
 
@@ -258,7 +254,7 @@ void display_update(void) {
 
 int display_backlight(int val)
 {
-    if (BACKLIGHT != val && val >= 0 && val <= 255) {
+    if (val >= 0 && val <= 255) {
         BACKLIGHT = val;
         __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * BACKLIGHT / 255);
     }

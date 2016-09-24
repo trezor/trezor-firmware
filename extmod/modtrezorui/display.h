@@ -8,8 +8,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
-#define RESX 240
-#define RESY 240
+#define DISPLAY_RESX 240
+#define DISPLAY_RESY 240
 
 void display_init(void);
 void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h);

@@ -32,7 +32,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t w = mp_obj_get_int(args[3]);
     mp_int_t h = mp_obj_get_int(args[4]);
     uint16_t c = mp_obj_get_int(args[5]);
-    if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
+    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
     if (n_args > 7) {
@@ -83,7 +83,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
     mp_int_t datalen = *(uint32_t *)(data + 8);
-    if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
+    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
     if (datalen != image.len - 12) {
@@ -111,7 +111,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
     mp_int_t datalen = *(uint32_t *)(data + 8);
-    if ((x < 0) || (y < 0) || (x + w > RESX) || (y + h > RESY)) {
+    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
     if (datalen != icon.len - 12) {

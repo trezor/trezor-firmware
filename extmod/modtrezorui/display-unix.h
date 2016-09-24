@@ -45,7 +45,7 @@ uint32_t trezorui_poll_sdl_event(void)
             case SDL_MOUSEBUTTONUP:
                 x = event.button.x - DISPLAY_BORDER;
                 y = event.button.y - DISPLAY_BORDER;
-                if (x < 0 || y < 0 || x >= RESX || y >= RESY) break;
+                if (x < 0 || y < 0 || x >= DISPLAY_RESX || y >= DISPLAY_RESY) break;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
                         return (0x00 << 24) | (0x01 << 16) | (x << 8) | y; // touch_start
@@ -80,7 +80,7 @@ void display_init(void)
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
     }
-    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, RESX + 2 * DISPLAY_BORDER, RESY + 2 * DISPLAY_BORDER, SDL_WINDOW_SHOWN);
+    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DISPLAY_RESX + 2 * DISPLAY_BORDER, DISPLAY_RESY + 2 * DISPLAY_BORDER, SDL_WINDOW_SHOWN);
     if (!win) {
         printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
         SDL_Quit();
@@ -93,8 +93,8 @@ void display_init(void)
     }
     SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     SDL_RenderClear(RENDERER);
-    SCREEN = SDL_CreateRGBSurface(0, RESX, RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
-    TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
+    SCREEN = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
+    TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
     SDL_SetTextureAlphaMod(TEXTURE, 0);
 }
@@ -111,7 +111,7 @@ void display_update(void)
 {
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
-    const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, RESX, RESY};
+    const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
 }

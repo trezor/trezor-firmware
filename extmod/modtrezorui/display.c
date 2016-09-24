@@ -258,7 +258,7 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
     if (icon) {
         set_color_table(iconcolortable, iconfgcolor, bgcolor);
     }
-    display_set_window(RESX / 2 - img_loader_size, RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
+    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY * 2 / 5 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
     if (icon && memcmp(icon, "TOIg\x60\x00\x60\x00", 8) == 0 && iconlen == 12 + *(uint32_t *)(icon + 8)) {
         uint8_t icondata[96 * 96 / 2];
         sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
