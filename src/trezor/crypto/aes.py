@@ -1,61 +1,61 @@
-from TrezorCrypto import AES as _AES
+from TrezorCrypto import AES
 
-def AES_ECB_Encrypt(key: bytes):
+def AES_ECB_Encrypt(key: bytes) -> AES:
     '''
     Create AES encryption context in ECB mode
     '''
-    return _AES(0x00, key)
+    return AES(AES.ECB | AES.Encrypt, key)
 
-def AES_ECB_Decrypt(key: bytes):
+def AES_ECB_Decrypt(key: bytes) -> AES:
     '''
     Create AES decryption context in ECB mode
     '''
-    return _AES(0x80, key)
+    return AES(AES.ECB | AES.Decrypt, key)
 
-def AES_CBC_Encrypt(key: bytes, iv: bytes):
+def AES_CBC_Encrypt(key: bytes, iv: bytes) -> AES:
     '''
     Create AES encryption context in CBC mode
     '''
-    return _AES(0x01, key, iv)
+    return AES(AES.CBC | AES.Encrypt, key, iv)
 
-def AES_CBC_Decrypt(key: bytes, iv: bytes):
+def AES_CBC_Decrypt(key: bytes, iv: bytes) -> AES:
     '''
     Create AES decryption context in CBC mode
     '''
-    return _AES(0x81, key, iv)
+    return AES(AES.CBC | AES.Decrypt, key, iv)
 
-def AES_CFB_Encrypt(key: bytes, iv: bytes):
+def AES_CFB_Encrypt(key: bytes, iv: bytes) -> AES:
     '''
     Create AES encryption context in CFB mode
     '''
-    return _AES(0x02, key, iv)
+    return AES(AES.CFB | AES.Encrypt, key, iv)
 
-def AES_CFB_Decrypt(key: bytes, iv: bytes):
+def AES_CFB_Decrypt(key: bytes, iv: bytes) -> AES:
     '''
     Create AES decryption context in CFB mode
     '''
-    return _AES(0x82, key, iv)
+    return AES(AES.CFB | AES.Decrypt, key, iv)
 
-def AES_OFB_Encrypt(key: bytes, iv: bytes):
+def AES_OFB_Encrypt(key: bytes, iv: bytes) -> AES:
     '''
     Create AES encryption context in OFB mode
     '''
-    return _AES(0x03, key, iv)
+    return AES(AES.OFB | AES.Encrypt, key, iv)
 
-def AES_OFB_Decrypt(key: bytes, iv: bytes):
+def AES_OFB_Decrypt(key: bytes, iv: bytes) -> AES:
     '''
     Create AES decryption context in OFB mode
     '''
-    return _AES(0x83, key, iv)
+    return AES(AES.OFB | AES.Decrypt, key, iv)
 
-def AES_CTR_Encrypt(key: bytes):
+def AES_CTR_Encrypt(key: bytes) -> AES:
     '''
     Create AES encryption context in CTR mode
     '''
-    return _AES(0x04, key)
+    return AES(AES.CTR | AES.Encrypt, key)
 
-def AES_CTR_Decrypt(key: bytes):
+def AES_CTR_Decrypt(key: bytes) -> AES:
     '''
     Create AES decryption context in CTR mode
     '''
-    return _AES(0x84, key)
+    return AES(AES.CTR | AES.Decrypt, key)

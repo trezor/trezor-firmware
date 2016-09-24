@@ -20,12 +20,25 @@ typedef struct _mp_obj_AES_t {
     uint8_t ctr[AES_BLOCK_SIZE];
 } mp_obj_AES_t;
 
+enum {
+    ECB = 0x00,
+    CBC = 0x01,
+    CFB = 0x02,
+    OFB = 0x03,
+    CTR = 0x04,
+    Encrypt = 0x40,
+    Decrypt = 0x80,
+};
+
+#define AESModeMask 0x3F
+#define AESDirMask  0xC0
+
 STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 2, 3, false);
     mp_obj_AES_t *o = m_new_obj(mp_obj_AES_t);
     o->base.type = type;
     o->mode = mp_obj_get_int(args[0]);
-    if ((o->mode & 0x7F) > 0x04) {
+    if ((o->mode & AESModeMask) > 0x04) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid AES mode"));
     }
     mp_buffer_info_t key;
@@ -46,21 +59,21 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t 
     memset(o->ctr, 0, AES_BLOCK_SIZE);
     switch (key.len) {
         case 16:
-            if (o->mode == 0x80 || o->mode == 0x81) {
+            if (o->mode == (ECB | Decrypt) || o->mode == (CBC | Decrypt)) {
                 aes_decrypt_key128(key.buf, &(o->ctx.decrypt_ctx));
             } else {
                 aes_encrypt_key128(key.buf, &(o->ctx.encrypt_ctx));
             }
             break;
         case 24:
-            if (o->mode == 0x80 || o->mode == 0x81) {
+            if (o->mode == (ECB | Decrypt) || o->mode == (CBC | Decrypt)) {
                 aes_decrypt_key192(key.buf, &(o->ctx.decrypt_ctx));
             } else {
                 aes_encrypt_key192(key.buf, &(o->ctx.encrypt_ctx));
             }
             break;
         case 32:
-            if (o->mode == 0x80 || o->mode == 0x81) {
+            if (o->mode == (ECB | Decrypt) || o->mode == (CBC |Decrypt)) {
                 aes_decrypt_key256(key.buf, &(o->ctx.decrypt_ctx));
             } else {
                 aes_encrypt_key256(key.buf, &(o->ctx.encrypt_ctx));
@@ -80,38 +93,38 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, buf.len);
-    switch (o->mode & 0x7F) {
-        case 0x00: // ECB
+    switch (o->mode & AESModeMask) {
+        case ECB:
             if (buf.len & (AES_BLOCK_SIZE - 1)) {
                 nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid data length"));
             }
-            if ((o->mode & 0x80) == 0x00) {
+            if ((o->mode & AESDirMask) == Encrypt) {
                 aes_ecb_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, &(o->ctx.encrypt_ctx));
             } else {
                 aes_ecb_decrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, &(o->ctx.decrypt_ctx));
             }
             break;
-        case 0x01: // CBC
+        case CBC:
             if (buf.len & (AES_BLOCK_SIZE - 1)) {
                 nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid data length"));
             }
-            if ((o->mode & 0x80) == 0x00) {
+            if ((o->mode & AESDirMask) == Encrypt) {
                 aes_cbc_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             } else {
                 aes_cbc_decrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.decrypt_ctx));
             }
             break;
-        case 0x02: // CFB
-            if ((o->mode & 0x80) == 0x00) {
+        case CFB:
+            if ((o->mode & AESDirMask) == Encrypt) {
                 aes_cfb_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             } else {
                 aes_cfb_decrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             }
             break;
-        case 0x03: // OFB (encrypt == decrypt)
+        case OFB: // (encrypt == decrypt)
             aes_ofb_crypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             break;
-        case 0x04: // CTR (encrypt == decrypt)
+        case CTR: // (encrypt == decrypt)
             aes_ctr_crypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->ctr, aes_ctr_cbuf_inc, &(o->ctx.encrypt_ctx));
             break;
     }
@@ -129,6 +142,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_AES___del___obj, mod_TrezorCry
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_AES_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_AES_update_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_AES___del___obj) },
+    { MP_ROM_QSTR(MP_QSTR_ECB), MP_OBJ_NEW_SMALL_INT(ECB) },
+    { MP_ROM_QSTR(MP_QSTR_CBC), MP_OBJ_NEW_SMALL_INT(CBC) },
+    { MP_ROM_QSTR(MP_QSTR_CFB), MP_OBJ_NEW_SMALL_INT(CFB) },
+    { MP_ROM_QSTR(MP_QSTR_OFB), MP_OBJ_NEW_SMALL_INT(OFB) },
+    { MP_ROM_QSTR(MP_QSTR_CTR), MP_OBJ_NEW_SMALL_INT(CTR) },
+    { MP_ROM_QSTR(MP_QSTR_Encrypt), MP_OBJ_NEW_SMALL_INT(Encrypt) },
+    { MP_ROM_QSTR(MP_QSTR_Decrypt), MP_OBJ_NEW_SMALL_INT(Decrypt) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_AES_locals_dict, mod_TrezorCrypto_AES_locals_dict_table);
 
