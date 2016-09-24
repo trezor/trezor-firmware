@@ -10,6 +10,9 @@
 #define LED_PWM_TIM_PERIOD (10000)
 extern uint32_t timer_get_source_freq(uint32_t tim_id);
 
+#define DISPLAY_ILI9341V 0
+#define DISPLAY_ST7789V  1
+
 #define CMD(X)  (*((__IO uint8_t *)((uint32_t)(0x60000000))) = (X))
 #define DATA(X) (*((__IO uint8_t *)((uint32_t)(0x60000000 | 0x10000))) = (X))
 
@@ -110,18 +113,20 @@ void display_sram_init(void) {
     __FSMC_NORSRAM_ENABLE(FSMC_NORSRAM_DEVICE, FSMC_NORSRAMInitStructure.NSBank);
 }
 
-/*
-static void display_sleep(void) {
+static void __attribute__((unused)) display_sleep(void) {
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x28); // display off
     HAL_Delay(20);
     CMD(0x10); // enter sleep
+#endif
 }
-*/
 
 static void display_unsleep(void) {
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x11); // exit sleep
     HAL_Delay(20);
     CMD(0x29); // display
+#endif
 }
 
 static uint8_t WINDOW_OFFSET_X = 0, WINDOW_OFFSET_Y = 0;
@@ -132,27 +137,59 @@ int display_orientation(int degrees)
         // memory access control
         switch (degrees) {
             case 0:
-                CMD(0x36); DATA(0x08 | (1<<6) | (1<<7));
+                CMD(0x36);
+#if DISPLAY_ILI9341V
+                DATA(0x08 | (1<<6) | (1<<7));
                 WINDOW_OFFSET_X = 0;
                 WINDOW_OFFSET_Y = 80;
+#endif
+#if DISPLAY_ST7789V
+                DATA(0x00 | (1<<5));
+                WINDOW_OFFSET_X = 0;
+                WINDOW_OFFSET_Y = 80;
+#endif
                 ORIENTATION = 0;
                 break;
             case 90:
-                CMD(0x36); DATA(0x08 | (1<<5) | (1<<6));
+                CMD(0x36);
+#if DISPLAY_ILI9341V
+                DATA(0x08 | (1<<5) | (1<<6));
                 WINDOW_OFFSET_X = 0;
                 WINDOW_OFFSET_Y = 0;
+#endif
+#if DISPLAY_ST7789V
+                DATA(0x00 | (1<<6));
+                WINDOW_OFFSET_X = 80;
+                WINDOW_OFFSET_Y = 0;
+#endif
                 ORIENTATION = 90;
                 break;
             case 180:
-                CMD(0x36); DATA(0x08);
+                CMD(0x36);
+#if DISPLAY_ILI9341V
+                DATA(0x08);
                 WINDOW_OFFSET_X = 0;
                 WINDOW_OFFSET_Y = 0;
+#endif
+#if DISPLAY_ST7789V
+                DATA(0x00 | (1<<5) | (1<<6) | (1<<7));
+                WINDOW_OFFSET_X = 0;
+                WINDOW_OFFSET_Y = 0;
+#endif
                 ORIENTATION = 180;
                 break;
             case 270:
-                CMD(0x36); DATA(0x08 | (1<<5) | (1<<7));
+                CMD(0x36);
+#if DISPLAY_ILI9341V
+                DATA(0x08 | (1<<5) | (1<<7));
                 WINDOW_OFFSET_X = 80;
                 WINDOW_OFFSET_Y = 0;
+#endif
+#if DISPLAY_ST7789V
+                DATA(0x00 | (1<<7));
+                WINDOW_OFFSET_X = 0;
+                WINDOW_OFFSET_Y = 0;
+#endif
                 ORIENTATION = 270;
                 break;
         }
@@ -162,6 +199,7 @@ int display_orientation(int degrees)
 
 void display_init(void) {
     display_sram_init();
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x01); // software reset
     HAL_Delay(20);
     CMD(0x28); // display off
@@ -178,13 +216,28 @@ void display_init(void) {
     display_orientation(0);
     CMD(0x3A); DATA(0x55);                // memory access control (16-bit 565)
     CMD(0xB1); DATAS("\x00\x18", 2);      // framerate
+#endif
+#if DISPLAY_ILI9341V
     CMD(0xB6); DATAS("\x0A\xA2", 2);      // display function control
     CMD(0xF6); DATAS("\x01\x30\x00", 3);  // interface control
     CMD(0xF2); DATA(0x00);                // 3 gamma func disable
+#endif
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x26); DATA(0x01);                // gamma func enable
     CMD(0xE0); DATAS("\x0F\x2F\x2C\x0B\x0F\x09\x56\xD9\x4A\x0B\x14\x05\x0C\x06\x00", 15); // gamma curve 1
     CMD(0xE1); DATAS("\x00\x10\x13\x04\x10\x06\x25\x26\x3B\x04\x0B\x0A\x33\x39\x0F", 15); // gamma curve 2
+#endif
+#if DISPLAY_ILI9341V
     CMD(0x21);                            // invert colors
+#endif
+#if DISPLAY_ST7789V
+    CMD(0x20);                            // don't invert colors
+    // weird hack needed :-/
+    display_orientation(180);
+    display_orientation(0);
+#endif
+    // clear buffer
+    display_bar(0, 0, 240, 240, 0x0000);
     display_unsleep();
 }
 
@@ -193,9 +246,11 @@ void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     y += WINDOW_OFFSET_Y;
     uint16_t x1 = x + w - 1;
     uint16_t y1 = y + h - 1;
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x2A); DATA(x >> 8); DATA(x & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
     CMD(0x2B); DATA(y >> 8); DATA(y & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
     CMD(0x2C);
+#endif
 }
 
 void display_update(void) {
