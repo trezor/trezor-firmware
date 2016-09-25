@@ -58,7 +58,7 @@ class UVarintType:
         value, shift, quantum = 0, 0, 0x80
         while (quantum & 0x80) == 0x80:
             data = yield from source.read(1)
-            quantum = ord(bytes(data))
+            quantum = data[0]
             value, shift = value + ((quantum & 0x7F) << shift), shift + 7
         return value
 
@@ -101,8 +101,7 @@ class UnicodeType:
     @staticmethod
     def load(source):
         data = yield from BytesType.load(source)
-        data = bytes(data)  # TODO: avoid the copy
-        return data.decode('utf-8', 'strict')
+        return str(data, 'utf-8', 'strict')
 
 
 class EmbeddedMessage:
@@ -157,6 +156,7 @@ class StreamReader:
             chunk = yield
             buf.extend(chunk)
 
+        # TODO: is this the most officient way?
         result = buf[:n]
         buf[:] = buf[n:]
         return result
