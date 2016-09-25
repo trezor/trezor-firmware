@@ -111,22 +111,18 @@ void bootloader_loop(void)
 	usbLoop();
 }
 
-void check_firmware_sanity(void)
+int check_firmware_sanity(void)
 {
-	int broken = 0;
 	if (memcmp((void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
-		broken++;
+		return 0;
 	}
 	if (*((uint32_t *)FLASH_META_CODELEN) < 4096) { // firmware reports smaller size than 4kB
-		broken++;
+		return 0;
 	}
 	if (*((uint32_t *)FLASH_META_CODELEN) > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware reports bigger size than flash size
-		broken++;
+		return 0;
 	}
-	if (broken) {
-		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware appears", "to be broken.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
-		system_halt();
-	}
+	return 1;
 }
 
 uint32_t __stack_chk_guard;
@@ -148,18 +144,19 @@ int main(void)
 	uint16_t state = gpio_port_read(BTN_PORT);
 	if ((state & BTN_PIN_YES) == BTN_PIN_YES || (state & BTN_PIN_NO) == BTN_PIN_NO) {
 
-		check_firmware_sanity();
+		if (check_firmware_sanity()) {
 
-		oledClear();
-		oledDrawBitmap(40, 0, &bmp_logo64_empty);
-		oledRefresh();
+			oledClear();
+			oledDrawBitmap(40, 0, &bmp_logo64_empty);
+			oledRefresh();
 
-		uint8_t hash[32];
-		if (!signatures_ok(hash)) {
-			show_unofficial_warning(hash);
+			uint8_t hash[32];
+			if (!signatures_ok(hash)) {
+				show_unofficial_warning(hash);
+			}
+
+			load_app();
 		}
-
-		load_app();
 
 	}
 
