@@ -194,3 +194,10 @@ class Wait(Syscall):
             if self.exit_others:
                 self.exit()
             schedule_task(self.callback, result)
+
+    def __iter__(self):
+        try:
+            return (yield self)
+        except:
+            self.exit()
+            raise

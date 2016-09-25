@@ -15,8 +15,4 @@ async def animate_logo():
 
 
 async def layout_homescreen():
-    wait = loop.Wait([swipe_to_rotate(), animate_logo()])
-    try:
-        await wait
-    finally:
-        wait.exit()
+    await loop.Wait([swipe_to_rotate(), animate_logo()])
