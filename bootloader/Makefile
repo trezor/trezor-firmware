@@ -16,5 +16,8 @@ CFLAGS += -DUSE_PRECOMPUTED_CP=0
 
 include ../Makefile.include
 
-align:
+align: $(NAME).bin
 	./firmware_align.py $(NAME).bin
+
+flash: $(NAME).bin
+	$(FLASH) write $(NAME).bin 0x8000000
