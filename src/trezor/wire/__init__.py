@@ -19,7 +19,7 @@ _opened_sessions = set()  # session ids
 
 def generate_session_id():
     while True:
-        session_id = random.uniform(0x0fffffff) + 1
+        session_id = random.uniform(0xffffffff) + 1
         if session_id not in _opened_sessions:
             return session_id
 
