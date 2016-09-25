@@ -25,7 +25,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_make_new(const mp_obj_type_t *type, size
 ///     Compute uniform random number from interval 0 ... n - 1
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_uniform(mp_obj_t self, mp_obj_t n) {
-    uint32_t nn = mp_obj_get_int(n);
+    uint32_t nn = mp_obj_get_int_truncated(n);
     if (nn == 0) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Maximum can't be zero"));
     }
