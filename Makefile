@@ -3,12 +3,12 @@
 STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-TREZORV2
 
 help: ## show this help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36mmake %-18s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36mmake %-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 vendor: ## update git submodules
 	git submodule update --init
 
-build: build_stmhal build_unix build_cross ## build stmhal, 32-bit unix and mpy-cross micropython ports
+build: build_stmhal build_unix build_cross ## build stmhal, unix and mpy-cross micropython ports
 
 build_stmhal: vendor ## build stmhal port
 	make -C vendor/micropython/stmhal
@@ -16,29 +16,20 @@ build_stmhal: vendor ## build stmhal port
 build_stmhal_debug: vendor ## build stmhal port with debug symbols
 	make -C vendor/micropython/stmhal
 
-build_unix: vendor ## build 32-bit unix port
+build_stmhal_frozen: vendor build_cross ## build stmhal port with frozen modules (from /src)
+	make -C vendor/micropython/stmhal FROZEN_MPY_DIR=../../../src
+
+build_unix: vendor ## build unix port
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
 
-build_unix_debug: vendor ## build 32-bit unix port with debug symbols
+build_unix_debug: vendor ## build unix port with debug symbols
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1 DEBUG=1
 
-build_cross: vendor ## build 32-bit mpy-cross port
+build_unix_frozen: vendor build_cross ## build unix port with frozen modules (from /src)
+	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1 FROZEN_MPY_DIR=../../../src
+
+build_cross: vendor ## build mpy-cross port
 	make -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
-
-build_frozen: vendor build_cross ## build 32-bit unix port with frozen modules (from vendor/micropython/unix/frozen)
-	make -C vendor/micropython/unix FROZEN_MPY_DIR=frozen MICROPY_FORCE_32BIT=1
-
-build_unix64: vendor ## build 64-bit unix port
-	make -C vendor/micropython/unix
-
-build_unix64_debug: vendor ## build 64-bit unix port with debug symbols
-	make -C vendor/micropython/unix
-
-build_cross64: vendor ## build 64-bit mpy-cross port
-	make -C vendor/micropython/mpy-cross
-
-build_frozen64: vendor build_cross ## build 64-bit unix port with frozen modules (from vendor/micropython/unix/frozen)
-	make -C vendor/micropython/unix FROZEN_MPY_DIR=frozen
 
 run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython

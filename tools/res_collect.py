@@ -10,8 +10,10 @@ def process_file(name):
         return
     if name.endswith('.py'):
         return
+    print('processing file %s' % name)
     with open(name, 'rb') as f:
-        resources[name] = f.read()
+        k = name[4:] # remove 'src/' at the beginning
+        resources[k] = f.read()
 
 # scan common resources
 for res in os.scandir('src/trezor/res/'):
@@ -25,8 +27,11 @@ for app in os.scandir('src/apps/'):
             if res.is_file():
                 process_file('src/apps/%s/res/%s' % (app.name, res.name))
 
-with open('src/trezor/res/resources.py', 'wt') as f:
+resfile = 'src/trezor/res/resources.py'
+with open(resfile, 'wt') as f:
     f.write('resdata = {\n')
     for k in sorted(resources.keys()):
         f.write("    '%s': %s,\n" % (k, resources[k]))
     f.write('}\n')
+
+print('written %s with %d entries' % (resfile, len(resources)))
