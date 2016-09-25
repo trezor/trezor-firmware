@@ -103,7 +103,7 @@ void bootloader_loop(void)
 	serial[12] = 0;
 	oledDrawString(52, 30, serial);      // first part of serial
 
-	oledDrawStringRight(OLED_WIDTH - 1, OLED_HEIGHT - 8, "BLv" VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH));
+	oledDrawStringRight(OLED_WIDTH - 1, OLED_HEIGHT - 8, "Loader " VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH));
 
 	oledRefresh();
 
