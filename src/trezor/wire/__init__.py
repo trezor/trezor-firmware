@@ -40,8 +40,7 @@ def close_session(session_id):
 def register_type(wire_type, genfunc, *args):
     if wire_type in _workflow_genfuncs:
         raise KeyError('message of type %d already registered' % wire_type)
-    log.info(__name__, 'registering %s for type %d',
-             (genfunc, args), wire_type)
+    log.info(__name__, 'registering message type %d', wire_type)
     _workflow_genfuncs[wire_type] = (genfunc, args)
 
 
@@ -49,8 +48,8 @@ def register_session(session_id, handler):
     if session_id not in _opened_sessions:
         raise KeyError('session %d is unknown' % session_id)
     if session_id in _session_handlers:
-        raise KeyError('session %d is already registered' % session_id)
-    log.info(__name__, 'registering %s for session %d', handler, session_id)
+        raise KeyError('session %d is already being listened on' % session_id)
+    log.info(__name__, 'listening on session %d', session_id)
     _session_handlers[session_id] = handler
 
 
@@ -78,6 +77,7 @@ def setup():
 
 
 async def read_message(session_id, *exp_types):
+    log.info(__name__, 'reading message, one of %s', exp_types)
     future = Future()
     wire_decoder = decode_wire_stream(
         _dispatch_and_build_protobuf, session_id, exp_types, future)
@@ -87,6 +87,7 @@ async def read_message(session_id, *exp_types):
 
 
 async def write_message(session_id, pbuf_message):
+    log.info(__name__, 'writing message %s', pbuf_message)
     msg_data = await pbuf_message.dumps()
     msg_type = pbuf_message.message_type.wire_type
     writer = write_report_stream()
@@ -94,9 +95,56 @@ async def write_message(session_id, pbuf_message):
     encode_wire_message(msg_type, msg_data, session_id, writer)
 
 
+async def reply_message(session_id, pbuf_message, *exp_types):
+    await write_message(session_id, pbuf_message)
+    return await read_message(session_id, *exp_types)
+
+
+class FailureError(Exception):
+
+    def __init__(self, code, message):
+        super(FailureError, self).__init__(code, message)
+
+    def to_protobuf(self):
+        from trezor.messages.Failure import Failure
+        return Failure(code=self.args[0],
+                       message=self.args[1])
+
+
+async def monitor_workflow(workflow, session_id):
+    try:
+        result = await workflow
+
+    except FailureError as e:
+        await write_message(session_id, e.to_protobuf())
+        raise
+
+    except Exception as e:
+        from trezor.messages.Failure import Failure
+        from trezor.messages.FailureType import FirmwareError
+        await write_message(session_id,
+                            Failure(code=FirmwareError,
+                                    message='Firmware Error'))
+        raise
+
+    else:
+        if result is not None:
+            await write_message(session_id, result)
+        return result
+
+    finally:
+        if session_id in _opened_sessions:
+            wire_decoder = decode_wire_stream(
+                _handle_registered_type, session_id)
+            wire_decoder.send(None)
+            register_session(session_id, wire_decoder)
+
+
 def protobuf_handler(msg_type, data_len, session_id, callback, *args):
     def finalizer(message):
-        start_workflow(callback(message, session_id, *args))
+        workflow = callback(message, session_id, *args)
+        monitored = monitor_workflow(workflow, session_id)
+        start_workflow(monitored)
     pbuf_type = get_protobuf_type(msg_type)
     builder = build_protobuf_message(pbuf_type, finalizer)
     builder.send(None)
@@ -125,10 +173,6 @@ def _handle_unknown_session():
         yield  # TODO
 
 
-class UnexpectedMessageError(Exception):
-    pass
-
-
 def _dispatch_and_build_protobuf(msg_type, data_len, session_id, exp_types, future):
     if msg_type in exp_types:
         pbuf_type = get_protobuf_type(msg_type)
@@ -136,18 +180,20 @@ def _dispatch_and_build_protobuf(msg_type, data_len, session_id, exp_types, futu
         builder.send(None)
         return pbuf_type.load(builder)
     else:
-        future.resolve(UnexpectedMessageError(msg_type))
+        from trezor.messages.FailureType import UnexpectedMessage
+        future.resolve(FailureError(UnexpectedMessage, 'Unexpected message'))
         return _handle_registered_type(msg_type, data_len, session_id)
 
 
 def _handle_registered_type(msg_type, data_len, session_id):
-    genfunc, args = _workflow_genfuncs.get(
-        msg_type, (_handle_unexpected_type, ()))
+    fallback = (_handle_unexpected_type, ())
+    genfunc, args = _workflow_genfuncs.get(msg_type, fallback)
     return genfunc(msg_type, data_len, session_id, *args)
 
 
 def _handle_unexpected_type(msg_type, data_len, session_id):
-    log.info(__name__, 'skipping message %d of len %d' % (msg_type, data_len))
+    log.info(__name__, 'skipping message %d of len %d on session %d' %
+             (msg_type, data_len, session_id))
     try:
         while True:
             yield

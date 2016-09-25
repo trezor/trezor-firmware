@@ -1,58 +1,37 @@
 from trezor import ui
 from trezor import wire
-from trezor import config
 from trezor.utils import unimport
 
-MANAGEMENT_APP = const(1)
 
-PASSPHRASE_PROTECT = (1)  # 0 | 1
-PIN_PROTECT = const(2)  # 0 | 1
-PIN = const(4)  # str
-
-
-def prompt_pin(*args, **kwargs):
-    from trezor.ui.pin import PinMatrix
-    from trezor.ui.confirm import ConfirmDialog, CONFIRMED
-
-    ui.clear()
-
-    matrix = PinMatrix(*args, **kwargs)
-    dialog = ConfirmDialog(matrix)
-    result = yield from dialog.wait()
-
-    return matrix.pin if result == CONFIRMED else None
-
-
-def request_pin(*args, **kwargs):
+@unimport
+async def request_pin(session_id, *args, **kwargs):
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.messages.ButtonRequestType import ProtectCall
-    from trezor.messages.ButtonAck import ButtonAck
+    from trezor.messages.FailureType import PinCancelled
+    from trezor.messages.wire_types import ButtonAck
+    from trezor.ui.confirm import ConfirmDialog, CONFIRMED
+    from trezor.ui.pin import PinMatrix
 
-    ack = yield from wire.call(ButtonRequest(code=ProtectCall), ButtonAck)
-    pin = yield from prompt_pin(*args, **kwargs)
+    await wire.reply_message(session_id,
+                             ButtonRequest(code=ProtectCall),
+                             ButtonAck)
 
-    return pin
+    ui.clear()
+    matrix = PinMatrix(*args, **kwargs)
+    dialog = ConfirmDialog(matrix)
+    if await dialog != CONFIRMED:
+        raise wire.FailureError(PinCancelled, 'PIN cancelled')
+
+    return matrix.pin
 
 
-def change_pin():
-    pass
-
-
-def protect_with_pin():
-    from trezor.messages.Failure import Failure
+@unimport
+async def request_new_pin(session_id):
     from trezor.messages.FailureType import PinInvalid
-    from trezor.messages.FailureType import ActionCancelled
 
-    pin_protect = config.get(MANAGEMENT_APP, PIN_PROTECT)
-    if not pin_protect:
-        return
+    pin_first = await request_pin(session_id)
+    pin_again = await request_pin(session_id, 'Enter PIN again')
+    if pin_first != pin_again:
+        raise wire.FailureError(PinInvalid, 'PIN invalid')
 
-    entered_pin = yield from request_pin()
-    if entered_pin is None:
-        yield from wire.write(Failure(code=ActionCancelled, message='Cancelled'))
-        raise Exception('Cancelled')
-
-    stored_pin = config.get(MANAGEMENT_APP, PIN)
-    if stored_pin != entered_pin:
-        yield from wire.write(Failure(code=PinInvalid, message='PIN invalid'))
-        raise Exception('PIN invalid')
+    return pin_first

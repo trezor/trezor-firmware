@@ -11,10 +11,10 @@ async def change_page(page, page_count):
             return page - 1  # scroll up
 
 
-async def paginate(render_page, page_count, page=0):
+async def paginate(render_page, page_count, page=0, *args):
     while True:
         changer = change_page(page, page_count)
-        renderer = render_page(page, page_count)
+        renderer = render_page(page, page_count, *args)
         waiter = loop.Wait([changer, renderer])
         result = await waiter
         if changer in waiter.finished:
@@ -41,7 +41,7 @@ def render_scrollbar(page, page_count):
     if page_count * padding > screen_height:
         padding = screen_height // page_count
 
-    x = 225
+    x = const(225)
     y = (screen_height // 2) - (page_count // 2) * padding
 
     for i in range(0, page_count):
