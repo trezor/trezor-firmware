@@ -6,7 +6,7 @@ from trezor import loop
 
 SWIPE_DISTANCE_THRESHOLD = const(20)  # Min pixels in the primary direction
 SWIPE_VELOCITY_THRESHOLD = const(200)  # Min pixels/second
-SWIPE_RATIO_THRESHOLD = const(30)  # Max ratio secondary to primary direction in %
+SWIPE_RATIO_THRESHOLD = const(30)  # Max ratio or directions in %
 
 SWIPE_UP = const(180)
 SWIPE_DOWN = const(0)
@@ -30,11 +30,12 @@ class Swipe():
             pos = rotate_coords(pos)
 
         if event == loop.TOUCH_START and in_area(pos, self.area):
-            self.start_time = utime.time()
+            # TODO: do not use floats here
+            self.start_time = utime.ticks_ms() / 1000
             self.start_pos = pos
 
         elif event == loop.TOUCH_END and self.start_pos is not None:
-            self.end_time = utime.time()
+            self.end_time = utime.ticks_ms() / 1000
             self.end_pos = pos
             td = self.end_time - self.start_time
             pdx = self.end_pos[0] - self.start_pos[0]
