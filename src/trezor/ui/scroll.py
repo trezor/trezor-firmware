@@ -24,7 +24,7 @@ async def paginate(render_page, page_count, page=0, *args):
 
 
 async def animate_swipe():
-    await ui.animate_pulse(render_swipe_icon, ui.WHITE, ui.GREY, speed=300000, delay=200000)
+    await ui.animate_pulse(render_swipe_icon, ui.GREY, ui.DARK_GREY, speed=300000, delay=200000)
 
 
 def render_swipe_icon(fg):
@@ -47,5 +47,5 @@ def render_scrollbar(page, page_count):
     for i in range(0, page_count):
         if i != page:
             ui.display.bar(x, y + i * padding, size,
-                           size, ui.GREY, ui.BLACK, 4)
+                           size, ui.DARK_GREY, ui.BLACK, 4)
     ui.display.bar(x, y + page * padding, size, size, ui.WHITE, ui.BLACK, 4)

@@ -82,9 +82,9 @@ async def show_mnemonic_page(page, page_count, mnemonic):
         top = pi * 30 + 74
         pos = wi + 1
         ui.display.text_right(
-            40, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+            15, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
         ui.display.text(
-            45, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+            40, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
 
     if page + 1 == page_count:
         await Button(
