@@ -202,21 +202,34 @@ static void send_msg_failure(usbd_device *dev)
 		, 64) != 64) {}
 }
 
+extern int firmware_present;
+
 static void send_msg_features(usbd_device *dev)
 {
-	// send response: Features message (id 17), payload len 27
+	// send response: Features message (id 17), payload len 30
 		// vendor = "bitcointrezor.com"
 		// major_version = VERSION_MAJOR
 		// minor_version = VERSION_MINOR
 		// patch_version = VERSION_PATCH
 		// bootloader_mode = True
-	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-		"?##"				// header
-		"\x00\x11"			// msg_id
-		"\x00\x00\x00\x1b"	// payload_len
-		"\x0a\x11" "bitcointrezor.com\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
-		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-		, 64) != 64) {}
+		// firmware_present = True/False
+	if (firmware_present) {
+		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
+			"?##"				// header
+			"\x00\x11"			// msg_id
+			"\x00\x00\x00\x1e"	// payload_len
+			"\x0a\x11" "bitcointrezor.com\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
+			"\x90\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			, 64) != 64) {}
+	} else {
+		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
+			"?##"				// header
+			"\x00\x11"			// msg_id
+			"\x00\x00\x00\x1e"	// payload_len
+			"\x0a\x11" "bitcointrezor.com\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
+			"\x90\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			, 64) != 64) {}
+	}
 }
 
 static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev)

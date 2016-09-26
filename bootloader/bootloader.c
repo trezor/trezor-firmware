@@ -89,22 +89,26 @@ void load_app(void)
 	(*(void (**)())(FLASH_APP_START + 4))();
 }
 
+int firmware_present;
+
 void bootloader_loop(void)
 {
-	static char serial[25];
-
-	fill_serialno_fixed(serial);
-
+	oledClear();
 	oledDrawBitmap(0, 0, &bmp_logo64);
-	oledDrawString(52, 0, "TREZOR");
-
-	oledDrawString(52, 20, "Serial No.");
-	oledDrawString(52, 40, serial + 12); // second part of serial
-	serial[12] = 0;
-	oledDrawString(52, 30, serial);      // first part of serial
-
-	oledDrawStringRight(OLED_WIDTH - 1, OLED_HEIGHT - 8, "Loader " VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH));
-
+	if (firmware_present) {
+		oledDrawString(52, 0, "TREZOR");
+		static char serial[25];
+		fill_serialno_fixed(serial);
+		oledDrawString(52, 20, "Serial No.");
+		oledDrawString(52, 40, serial + 12); // second part of serial
+		serial[12] = 0;
+		oledDrawString(52, 30, serial);      // first part of serial
+		oledDrawStringRight(OLED_WIDTH - 1, OLED_HEIGHT - 8, "Loader " VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH));
+	} else {
+		oledDrawString(52, 10, "Welcome!");
+		oledDrawString(52, 30, "Please visit");
+		oledDrawString(52, 50, "trezor.io/start");
+	}
 	oledRefresh();
 
 	usbInit();
@@ -140,24 +144,24 @@ int main(void)
 	memory_protect();
 	oledInit();
 
+	firmware_present = check_firmware_sanity();
+
 	// at least one button is unpressed
 	uint16_t state = gpio_port_read(BTN_PORT);
-	if ((state & BTN_PIN_YES) == BTN_PIN_YES || (state & BTN_PIN_NO) == BTN_PIN_NO) {
+	int unpressed = ((state & BTN_PIN_YES) == BTN_PIN_YES || (state & BTN_PIN_NO) == BTN_PIN_NO);
 
-		if (check_firmware_sanity()) {
+	if (firmware_present && unpressed) {
 
-			oledClear();
-			oledDrawBitmap(40, 0, &bmp_logo64_empty);
-			oledRefresh();
+		oledClear();
+		oledDrawBitmap(40, 0, &bmp_logo64_empty);
+		oledRefresh();
 
-			uint8_t hash[32];
-			if (!signatures_ok(hash)) {
-				show_unofficial_warning(hash);
-			}
-
-			load_app();
+		uint8_t hash[32];
+		if (!signatures_ok(hash)) {
+			show_unofficial_warning(hash);
 		}
 
+		load_app();
 	}
 
 	bootloader_loop();
