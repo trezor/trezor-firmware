@@ -5,10 +5,11 @@ import ustruct
 
 _mock = {}
 
-if sys.platform in ['trezor', 'pyboard']: # stmhal
+if sys.platform in ['trezor', 'pyboard']:  # stmhal
     _file = '/flash/trezor.config'
 else:
     _file = '/var/tmp/trezor.config'
+
 
 def _load():
     try:
@@ -23,6 +24,7 @@ def _load():
     except OSError:
         pass
 
+
 def _save():
     with open(_file, 'wb') as f:
         for k, v in _mock.items():
@@ -31,10 +33,18 @@ def _save():
 
 _load()
 
-def get(app, key, default=None):
-    return _mock.get((app << 8) | key, default)
 
-def set(app, key, value):
-    _mock[(app << 8) | key] = value
+def get(session_id, app_id, key, default=None):
+    # TODO: session_id
+    return _mock.get((app_id << 8) | key, default)
+
+
+def set(session_id, app_id, key, value):
+    # TODO: session_id
+    _mock[(app_id << 8) | key] = value
     _save()
     return True
+
+
+def commit(session_id):
+    pass
