@@ -4,8 +4,8 @@ from trezor.utils import unimport
 
 @unimport
 async def layout_load_device(session_id, message):
-    from trezor.workflows.confirm import protect_with_confirm
     from trezor.messages.Success import Success
+    from .confirm import require_confirm
 
     ui.clear()
     ui.display.text_center(
@@ -13,7 +13,7 @@ async def layout_load_device(session_id, message):
     ui.display.text_center(
         120, 100, 'Never do this, please.', ui.NORMAL, ui.WHITE, ui.BLACK)
 
-    await protect_with_confirm(session_id)
+    await require_confirm(session_id)
 
     # TODO
 

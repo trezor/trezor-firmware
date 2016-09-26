@@ -19,7 +19,7 @@ async def confirm(session_id, content=None, code=None, **kwargs):
 
 
 @unimport
-async def protect_with_confirm(*args, **kwargs):
+async def require_confirm(*args, **kwargs):
     from trezor.messages.FailureType import ActionCancelled
 
     confirmed = await confirm(*args, **kwargs)
