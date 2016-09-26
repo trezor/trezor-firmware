@@ -68,15 +68,18 @@ class _HidTransport(object):
         self.hid.set_nonblocking(True)
 
         # determine hid_version
-        r = self.hid.write([0, 63, ] + [0xFF] * 63)
-        if r == 65:
+        if isinstance(self, HidTransportV2):
             self.hid_version = 2
-            return
-        r = self.hid.write([63, ] + [0xFF] * 63)
-        if r == 64:
-            self.hid_version = 1
-            return
-        raise ConnectionError("Unknown HID version")
+        else:
+            r = self.hid.write([0, 63, ] + [0xFF] * 63)
+            if r == 65:
+                self.hid_version = 2
+                return
+            r = self.hid.write([63, ] + [0xFF] * 63)
+            if r == 64:
+                self.hid_version = 1
+                return
+            raise ConnectionError("Unknown HID version")
 
     def _close(self):
         self.hid.close()
