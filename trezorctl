@@ -309,11 +309,11 @@ class Commands(object):
             args.url = 'https://wallet.trezor.io/' + release['url']
             return self.firmware_update(args)
 
-        if fp[:8] == b'54525a52':
-            fp = binascii.unhexlify(fp)
-
-        if fp[:4] != b'TRZR':
-            raise Exception("TREZOR firmware header expected")
+        if not args.skip_check:
+            if fp[:8] == b'54525a52':
+                fp = binascii.unhexlify(fp)
+            if fp[:4] != b'TRZR':
+                raise Exception("TREZOR firmware header expected")
 
         print("Please confirm action on device...")
 
@@ -469,6 +469,7 @@ class Commands(object):
         (('-f', '--file'), {'type': str}),
         (('-u', '--url'), {'type': str}),
         (('-n', '--version'), {'type': str}),
+        (('-s', '--skip-check'), {'action': 'store_true', 'default': False}),
     )
 
 def list_usb():
