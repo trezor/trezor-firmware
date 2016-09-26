@@ -3,7 +3,7 @@ import os
 
 resources = {}
 
-os.chdir('..')
+os.chdir('../src/')
 
 def process_file(name):
     if name.endswith('.gitignore'):
@@ -12,22 +12,21 @@ def process_file(name):
         return
     print('processing file %s' % name)
     with open(name, 'rb') as f:
-        k = name[4:] # remove 'src/' at the beginning
-        resources[k] = f.read()
+        resources[name] = f.read()
 
 # scan common resources
-for res in os.scandir('src/trezor/res/'):
+for res in os.scandir('trezor/res/'):
     if res.is_file():
-        process_file('src/trezor/res/%s' % res.name)
+        process_file('trezor/res/%s' % res.name)
 
 # scan apps
-for app in os.scandir('src/apps/'):
-    if app.is_dir() and os.path.isdir('src/apps/%s/res/' % app.name):
-        for res in os.scandir('src/apps/%s/res/' % app.name):
+for app in os.scandir('apps/'):
+    if app.is_dir() and os.path.isdir('apps/%s/res/' % app.name):
+        for res in os.scandir('apps/%s/res/' % app.name):
             if res.is_file():
-                process_file('src/apps/%s/res/%s' % (app.name, res.name))
+                process_file('apps/%s/res/%s' % (app.name, res.name))
 
-resfile = 'src/trezor/res/resources.py'
+resfile = 'trezor/res/resources.py'
 with open(resfile, 'wt') as f:
     f.write('resdata = {\n')
     for k in sorted(resources.keys()):
