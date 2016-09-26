@@ -247,12 +247,12 @@ class TransportV2(Transport):
         return session_id
 
     def _session_begin(self):
-        self._write_chunk(b'O' + b'\0' * 63)
+        self._write_chunk(bytearray(b'O' + b'\0' * 63))
         self.session_id = self.parse_session_open(self._read_chunk())
 
     def _session_end(self):
         header = struct.pack(">L", self.session_id)
-        self._write_chunk(b'C' + header + b'\0' * (63 - len(header)))
+        self._write_chunk(bytearray(b'C' + header + b'\0' * (63 - len(header))))
         if self._read_chunk()[0] != ord('C'):
             raise Exception("Expected session close")
         self.session_id = None
