@@ -3,9 +3,9 @@ from .wire_codec import parse_report, REP_MARKER_OPEN, REP_MARKER_CLOSE
 
 
 def dispatch_reports_by_session(handlers,
-                                open_handler,
-                                close_handler,
-                                fallback_handler):
+                                open_callback,
+                                close_callback,
+                                unknown_callback):
     '''
     Consumes reports adhering to the wire codec and dispatches the report
     payloads by between the passed handlers.
@@ -16,21 +16,21 @@ def dispatch_reports_by_session(handlers,
 
         if marker == REP_MARKER_OPEN:
             log.debug(__name__, 'request for new session')
-            open_handler.send(session_id)
+            open_callback()
             continue
 
         elif marker == REP_MARKER_CLOSE:
             log.debug(__name__, 'request for closing session %d', session_id)
-            close_handler.send(session_id)
+            close_callback(session_id)
             continue
 
-        elif session_id in handlers:
-            log.debug(__name__, 'report on session %d', session_id)
-            handler = handlers[session_id]
-
-        else:
+        elif session_id not in handlers:
             log.debug(__name__, 'report on unknown session %d', session_id)
-            handler = fallback_handler
+            unknown_callback(session_id, report_data)
+            continue
+
+        log.debug(__name__, 'report on session %d', session_id)
+        handler = handlers[session_id]
 
         try:
             handler.send(report_data)
