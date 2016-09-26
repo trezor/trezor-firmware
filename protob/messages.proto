@@ -124,6 +124,7 @@ message Features {
 	optional bool imported = 15;			// was storage imported from an external source?
 	optional bool pin_cached = 16;			// is PIN already cached in session?
 	optional bool passphrase_cached = 17;		// is passphrase already cached in session?
+	optional bool firmware_present = 18;		// is valid firmware loaded?
 }
 
 /**
