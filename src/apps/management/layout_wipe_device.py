@@ -1,11 +1,14 @@
 from trezor import wire
 from trezor import ui
 from trezor.utils import unimport
-from trezor.workflows.confirm import confirm
+from trezor.workflows.confirm import protect_with_confirm
+
+from .storage import clear_storage
 
 
 @unimport
-def layout_wipe_device(message):
+async def layout_wipe_device(message, session_id):
+    from trezor.messages.Success import Success
 
     ui.clear()
     ui.display.text(10, 30, 'Wiping device', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
@@ -15,12 +18,8 @@ def layout_wipe_device(message):
     ui.display.text(10, 164, 'All data will be lost.',
                     ui.NORMAL, ui.WHITE, ui.BLACK)
 
-    confirmed = yield from confirm()
+    await protect_with_confirm(session_id)
 
-    if confirmed:
-        from trezor.messages.Success import Success
-        yield from wire.write(Success(message='Wiped'))
-    else:
-        from trezor.messages.Failure import Failure
-        from trezor.messages.FailureType import ActionCancelled
-        yield from wire.write(Failure(message='Cancelled', code=ActionCancelled))
+    clear_storage(session_id)
+
+    return Success(message='Wiped')

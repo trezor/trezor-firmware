@@ -11,7 +11,7 @@ def nth(n):
 
 
 @unimport
-def layout_recovery_device(message):
+async def layout_recovery_device(session_id, message):
 
     msg = 'Please enter ' + nth(message.word_count) + ' word'
 
@@ -20,4 +20,5 @@ def layout_recovery_device(message):
                     ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 74, msg, ui.BOLD, ui.WHITE, ui.BLACK)
     ui.display.text(10, 104, 'of your mnemonic.', ui.BOLD, ui.WHITE, ui.BLACK)
-    yield from wire.read(None)
+
+    # TODO

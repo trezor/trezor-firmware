@@ -1,20 +1,23 @@
-from trezor import wire, ui, config
-from trezor.workflows.request_pin import request_new_pin
+from trezor import wire, ui
+from trezor.workflows.request_pin import request_pin_repeatedly
 from trezor.messages.wire_types import EntropyAck
 from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from trezor.ui.scroll import paginate, render_scrollbar, animate_swipe
 from trezor.crypto import hashlib, random, bip39
 from trezor.utils import unimport, chunks
 
-
-APP_MANAGEMENT = const(1)
-CFG_STORAGE = const(1)
+from .storage import get_storage, set_storage
 
 
 @unimport
 async def layout_reset_device(message, session_id):
     from trezor.messages.Success import Success
     from trezor.messages.Storage import Storage
+    from trezor.messages.FailureType import UnexpectedMessage
+
+    if get_storage(session_id):
+        raise wire.FailureError(
+            UnexpectedMessage, 'Device is already initialized')
 
     mnemonic = await generate_mnemonic(
         message.strength, message.display_random, session_id)
@@ -22,7 +25,7 @@ async def layout_reset_device(message, session_id):
     await show_mnemonic(mnemonic)
 
     if message.pin_protection:
-        pin = await request_new_pin(session_id)
+        pin = await request_pin_repeatedly(session_id)
     else:
         pin = ''
 
@@ -30,10 +33,9 @@ async def layout_reset_device(message, session_id):
         version=1, pin=pin, mnemonic=mnemonic,
         passphrase_protection=message.passphrase_protection,
         language=message.language, label=message.label)
+    set_storage(session_id, await storage.dumps())
 
-    config.set(session_id, APP_MANAGEMENT, CFG_STORAGE, await storage.dumps())
-
-    return Success()
+    return Success(message='Initialized')
 
 
 @unimport

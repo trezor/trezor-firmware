@@ -1,27 +1,22 @@
 from trezor import wire, ui
 from trezor.utils import unimport
-from trezor.workflows.request_pin import request_pin
 
 
 @unimport
-def layout_get_public_key(message):
+async def layout_get_public_key(session_id, message):
+    from trezor.messages.PublicKey import PublicKey
+    from trezor.messages.HDNodeType import HDNodeType
 
-    ui.clear()
-    pin = yield from request_pin()
+    # TODO: protect with pin
+    # TODO: fail if not initialized
+    # TODO: derive correct node
 
-    if pin is not None:
-        from trezor.messages.PublicKey import PublicKey
-        from trezor.messages.HDNodeType import HDNodeType
-        pubkey = PublicKey()
-        pubkey.node = HDNodeType()
-        pubkey.node.depth = 0
-        pubkey.node.child_num = 0
-        pubkey.node.fingerprint = 0
-        pubkey.node.chain_code = 'deadbeef'
-        pubkey.node.public_key = 'deadbeef'
-        yield from wire.write(pubkey)
+    pubkey = PublicKey()
+    pubkey.node = HDNodeType()
+    pubkey.node.depth = 0
+    pubkey.node.child_num = 0
+    pubkey.node.fingerprint = 0
+    pubkey.node.chain_code = 'deadbeef'
+    pubkey.node.public_key = 'deadbeef'
 
-    else:
-        from trezor.messages.Failure import Failure
-        from trezor.messages.FailureType import ActionCancelled
-        yield from wire.write(Failure(message='Cancelled', code=ActionCancelled))
+    return pubkey

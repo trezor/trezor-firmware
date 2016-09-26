@@ -26,7 +26,7 @@ async def request_pin(session_id, *args, **kwargs):
 
 
 @unimport
-async def request_new_pin(session_id):
+async def request_pin_repeatedly(session_id):
     from trezor.messages.FailureType import PinInvalid
 
     pin_first = await request_pin(session_id)
