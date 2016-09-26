@@ -3,10 +3,21 @@ extern uint8_t USBD_HID_SendReport(struct _USBD_HandleTypeDef *pdev, uint8_t *re
 extern int USBD_HID_Rx(uint8_t *buf, uint32_t len, uint32_t timeout);
 
 extern I2C_HandleTypeDef I2CHandle1;
+extern void i2c_init(I2C_HandleTypeDef *i2c);
 extern HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 
 void msg_init(void)
 {
+    I2C_InitTypeDef *init = &(I2CHandle1.Init);
+    init->OwnAddress1 = 0xfe; // master
+    init->ClockSpeed = 400000;
+    init->DutyCycle = I2C_DUTYCYCLE_16_9;
+    init->AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
+    init->DualAddressMode = I2C_DUALADDRESS_DISABLED;
+    init->GeneralCallMode = I2C_GENERALCALL_DISABLED;
+    init->NoStretchMode   = I2C_NOSTRETCH_DISABLED;
+    init->OwnAddress2     = 0;
+    i2c_init(&I2CHandle1);
 }
 
 ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
