@@ -9,5 +9,5 @@ def get_protobuf_type_name(wire_type):
 
 def get_protobuf_type(wire_type):
     name = get_protobuf_type_name(wire_type)
-    module = __import__('.%s' % name, None, None, (name,), 1)
+    module = __import__('trezor.messages.%s' % name, None, None, (name,) , 0)
     return getattr(module, name)
