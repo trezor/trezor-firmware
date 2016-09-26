@@ -35,9 +35,9 @@ def render_swipe_icon(fg):
 
 def render_scrollbar(page, page_count):
     screen_height = const(220)
-    size = const(8)
+    size = const(10)
 
-    padding = 15
+    padding = 18
     if page_count * padding > screen_height:
         padding = screen_height // page_count
 

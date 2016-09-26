@@ -75,16 +75,19 @@ async def show_mnemonic_page(page, page_count, mnemonic):
 
     ui.clear()
     ui.display.text(
-        10, 30, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+        10, 34, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     render_scrollbar(page, page_count)
 
     for pi, (wi, word) in enumerate(mnemonic[page]):
-        top = pi * 30 + 74
+        top = pi * 35 + 68
         pos = wi + 1
-        ui.display.text_right(
-            15, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+        offset = 0
+        if pos > 9:
+            offset += 12
         ui.display.text(
-            40, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+            10, top, '%d.' % pos, ui.BOLD, ui.DARK_GREY, ui.BLACK)
+        ui.display.text(
+            30 + offset, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
 
     if page + 1 == page_count:
         await Button(
