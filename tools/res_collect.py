@@ -15,16 +15,19 @@ def process_file(name):
         resources[name] = f.read()
 
 # scan common resources
-for res in os.scandir('trezor/res/'):
-    if res.is_file():
-        process_file('trezor/res/%s' % res.name)
+for res in os.listdir('trezor/res/'):
+    name = os.path.join('trezor/res/', res)
+    if os.path.isfile(name):
+        process_file(name)
 
 # scan apps
-for app in os.scandir('apps/'):
-    if app.is_dir() and os.path.isdir('apps/%s/res/' % app.name):
-        for res in os.scandir('apps/%s/res/' % app.name):
-            if res.is_file():
-                process_file('apps/%s/res/%s' % (app.name, res.name))
+for app in os.listdir('apps/'):
+    name = os.path.join('apps/', app)
+    if os.path.isdir(name) and os.path.isdir('apps/%s/res/' % app):
+        for res in os.listdir('apps/%s/res/' % app):
+            name = 'apps/%s/res/%s' % (app, res)
+            if os.path.isfile(name):
+                process_file(name)
 
 resfile = 'trezor/res/resources.py'
 with open(resfile, 'wt') as f:
