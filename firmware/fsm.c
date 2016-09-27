@@ -1067,8 +1067,15 @@ void fsm_msgWordAck(WordAck *msg)
 
 void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 {
+	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you want to set", "the U2F counter?", NULL, NULL, NULL, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "SetU2FCounter cancelled");
+		layoutHome();
+		return;
+	}
 	storage_setU2FCounter(msg->u2f_counter);
 	fsm_sendSuccess("U2F counter set");
+	layoutHome();
 }
 
 #if DEBUG_LINK
