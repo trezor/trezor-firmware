@@ -207,10 +207,11 @@ void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t f
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             }
-            display_update();
         }
         px += g[2];
     }
+
+    display_update();
 }
 
 // compute the width of the text (in pixels)
