@@ -27,6 +27,7 @@
 #include "base58.h"
 #include "sha2.h"
 #include "macros.h"
+#include "ripemd160.h"
 
 static const int8_t b58digits_map[] = {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -217,3 +218,58 @@ int base58_decode_check(const char *str, uint8_t *data, int datalen)
 	memcpy(data, nd, res - 4);
 	return res - 4;
 }
+
+#if USE_GRAPHENE
+int b58gphcheck(const void *bin, size_t binsz, const char *base58str)
+{
+	unsigned char buf[32];
+	const uint8_t *binc = bin;
+	unsigned i;
+	if (binsz < 4)
+		return -4;
+	ripemd160(bin, binsz - 4, buf);  // No double SHA256, but a single RIPEMD160
+	if (memcmp(&binc[binsz - 4], buf, 4))
+		return -1;
+
+	// Check number of zeros is correct AFTER verifying checksum (to avoid possibility of accessing base58str beyond the end)
+	for (i = 0; binc[i] == '\0' && base58str[i] == '1'; ++i)
+	{}  // Just finding the end of zeros, nothing to do in loop
+	if (binc[i] == '\0' || base58str[i] == '1')
+		return -3;
+
+	return binc[0];
+}
+
+int base58gph_encode_check(const uint8_t *data, int datalen, char *str, int strsize)
+{
+	if (datalen > 128) {
+		return 0;
+	}
+	uint8_t buf[datalen + 32];
+	uint8_t *hash = buf + datalen;
+	memcpy(buf, data, datalen);
+	ripemd160(data, datalen, hash);  // No double SHA256, but a single RIPEMD160
+	size_t res = strsize;
+	bool success = b58enc(str, &res, buf, datalen + 4);
+	MEMSET_BZERO(buf, sizeof(buf));
+	return success ? res : 0;
+}
+
+int base58gph_decode_check(const char *str, uint8_t *data, int datalen)
+{
+	if (datalen > 128) {
+		return 0;
+	}
+	uint8_t d[datalen + 4];
+	size_t res = datalen + 4;
+	if (b58tobin(d, &res, str) != true) {
+		return 0;
+	}
+	uint8_t *nd = d + datalen + 4 - res;
+	if (b58gphcheck(nd, res, str) < 0) {
+		return 0;
+	}
+	memcpy(data, nd, res - 4);
+	return res - 4;
+}
+#endif

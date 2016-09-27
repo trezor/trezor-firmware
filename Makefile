@@ -31,6 +31,7 @@ CFLAGS += -DED25519_NO_INLINE_ASM
 CFLAGS += -DED25519_FORCE_32BIT=1
 CFLAGS += -Ied25519-donna -Icurve25519-donna -I.
 CFLAGS += -DUSE_ETHEREUM=1
+CFLAGS += -DUSE_GRAPHENE=1
 
 # disable certain optimizations and features when small footprint is required
 ifdef SMALL

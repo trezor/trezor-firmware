@@ -442,6 +442,38 @@ START_TEST(test_base58)
 }
 END_TEST
 
+// Graphene Base85CheckEncoding
+START_TEST(test_base58gph)
+{
+	static const char *base58_vector[] = {
+		"02e649f63f8e8121345fd7f47d0d185a3ccaa843115cd2e9392dcd9b82263bc680", "6dumtt9swxCqwdPZBGXh9YmHoEjFFnNfwHaTqRbQTghGAY2gRz",
+		"021c7359cd885c0e319924d97e3980206ad64387aff54908241125b3a88b55ca16", "5725vivYpuFWbeyTifZ5KevnHyqXCi5hwHbNU9cYz1FHbFXCxX",
+		"02f561e0b57a552df3fa1df2d87a906b7a9fc33a83d5d15fa68a644ecb0806b49a", "6kZKHSuxqAwdCYsMvwTcipoTsNE2jmEUNBQufGYywpniBKXWZK",
+		"03e7595c3e6b58f907bee951dc29796f3757307e700ecf3d09307a0cc4a564eba3", "8b82mpnH8YX1E9RHnU2a2YgLTZ8ooevEGP9N15c1yFqhoBvJur",
+		0, 0,
+	};
+	const char **raw = base58_vector;
+	const char **str = base58_vector + 1;
+	uint8_t rawn[34];
+	char strn[53];
+	int r;
+	while (*raw && *str) {
+		int len = strlen(*raw) / 2;
+
+		memcpy(rawn, fromhex(*raw), len);
+		r = base58gph_encode_check(rawn, len, strn, sizeof(strn));
+		ck_assert_int_eq((size_t)r, strlen(*str) + 1);
+		ck_assert_str_eq(strn, *str);
+
+		r = base58gph_decode_check(strn, rawn, len);
+		ck_assert_int_eq(r, len);
+		ck_assert_mem_eq(rawn,  fromhex(*raw), len);
+
+		raw += 2; str += 2;
+	}
+}
+END_TEST
+
 START_TEST(test_bignum_divmod)
 {
 	uint32_t r;
@@ -2603,7 +2635,6 @@ START_TEST(test_ethereum_pubkeyhash)
 }
 END_TEST
 
-
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -2632,6 +2663,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("base58");
 	tcase_add_test(tc, test_base58);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("base58gph");
+	tcase_add_test(tc, test_base58gph);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("bignum_divmod");
