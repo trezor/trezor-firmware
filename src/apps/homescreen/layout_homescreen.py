@@ -11,11 +11,12 @@ async def swipe_to_rotate():
 
 
 async def animate_logo():
-    icon = res.load('apps/homescreen/res/trezor.toig')
+    image = res.load('apps/homescreen/res/experiment7.toif')
 
     def render(fg):
-        ui.display.icon(0, 0, icon, fg, ui.BLACK)
-    await ui.animate_pulse(render, ui.WHITE, ui.GREY, speed=400000)
+        ui.display.image(0, 0, image)
+        ui.display.text(52, 220, 'Swipe to rotate', ui.NORMAL, fg, ui.BLACK)
+    await ui.animate_pulse(render, ui.GREY, ui.DARK_GREY, speed=400000)
 
 
 @unimport

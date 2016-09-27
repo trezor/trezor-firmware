@@ -85,7 +85,7 @@ async def show_mnemonic_page(page, page_count, mnemonic):
         if pos > 9:
             offset += 12
         ui.display.text(
-            10, top, '%d.' % pos, ui.BOLD, ui.DARK_GREY, ui.BLACK)
+            10, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
         ui.display.text(
             30 + offset, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
 
