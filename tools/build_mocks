@@ -36,7 +36,7 @@ def store_to_file(dest, parts):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
             open(os.path.join(dir_path, '__init__.py'), 'w').close()
-            open(os.path.join(dir_path, '.mock'), 'w').close()
+            open(os.path.join(dir_path, '.mock-generated'), 'w').close()
         
         f = open(os.path.join(dir_path, filename + '.py'), 'a')
         f.write(line)
@@ -63,7 +63,7 @@ def build_directory(dir, dest):
 def clear_directory(top_dir):
     print("Clearing up directory", top_dir)
     for root, dirs, files in os.walk(top_dir, topdown=False):
-        if '.mock' not in files:
+        if '.mock-generated' not in files:
             #print("Not a mock directory", root)
             continue
         for name in files:
