@@ -76,33 +76,14 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
         yield loop.Sleep(delay)
 
 
-class pulse_animation:
-
-    def __init__(self, color_a, color_b, speed=200000, delay=30000):
-        self.color_a = color_a
-        self.color_b = color_b
-        self.speed = speed
-        self.delay = delay
-
-    async def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        # normalize sin from interval -1:1 to 0:1
-        y = 0.5 + 0.5 * math.sin(utime.ticks_us() / self.speed)
-        c = blend(self.color_a, self.color_b, y)
-        await loop.Sleep(self.delay)
-        return c
-
-
 def rotate_coords(pos: tuple) -> tuple:
     r = display.orientation()
     if r == 0:
         return pos
     x, y = pos
     if r == 90:
-        return (240 - y, x)
+        return (y, 240 - x)
     if r == 180:
         return (240 - x, 240 - y)
     if r == 270:
-        return (y, 240 - x)
+        return (240 - y, x)
