@@ -3,7 +3,7 @@
 	url = https://github.com/trezor/trezor-crypto.git
 [submodule "vendor/trezor-qrenc"]
 	path = vendor/trezor-qrenc
-	url = https://github.com/trezor/trezor-qrenc
+	url = https://github.com/trezor/trezor-qrenc.git
 [submodule "vendor/micropython"]
 	path = vendor/micropython
-	url = git@github.com:trezor/micropython.git
+	url = https://github.com/trezor/micropython.git
