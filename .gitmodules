@@ -6,4 +6,4 @@
 	url = https://github.com/trezor/trezor-qrenc
 [submodule "vendor/micropython"]
 	path = vendor/micropython
-	url = git@github.com:satoshilabs/micropython.git
+	url = git@github.com:trezor/micropython.git
