@@ -1,3 +1,6 @@
+def const(c):
+    pass
+
 def mem_info(verbose=None):
     pass
 
