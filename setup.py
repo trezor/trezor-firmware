@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='trezor',
-    version='0.7.1',
+    version='0.7.2',
     author='Bitcoin TREZOR',
     author_email='info@bitcointrezor.com',
     description='Python library for communicating with TREZOR Bitcoin Hardware Wallet',
@@ -18,12 +18,10 @@ setup(
         'trezorlib.qt.pinmatrix',
         'trezorlib.tools',
         'trezorlib.transport',
-        'trezorlib.transport_fake',
-        'trezorlib.transport_hid',
         'trezorlib.transport_bridge',
+        'trezorlib.transport_hid',
         'trezorlib.transport_pipe',
-        'trezorlib.transport_serial',
-        'trezorlib.transport_socket',
+        'trezorlib.transport_udp',
         'trezorlib.tx_api',
         'trezorlib.types_pb2',
     ],
