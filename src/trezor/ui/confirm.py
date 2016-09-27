@@ -1,8 +1,8 @@
-import utime
 from .button import Button, BTN_CLICKED, BTN_STARTED
 from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from .button import CANCEL_BUTTON, CANCEL_BUTTON_ACTIVE
-from trezor import loop, ui
+from .loader import Loader
+from trezor import loop
 
 
 CONFIRMED = const(1)
@@ -43,59 +43,6 @@ class ConfirmDialog():
                 return result
 
 
-DEFAULT_LOADER = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.WHITE,
-    'icon': None,
-    'icon-fg-color': None,
-}
-DEFAULT_LOADER_ACTIVE = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.LIGHT_GREEN,
-    'icon': None,
-    'icon-fg-color': None,
-}
-
-LOADER_MSEC = const(1000)
-
-
-class Loader():
-
-    def __init__(self, normal_style=None, active_style=None):
-        self.start_ticks_ms = None
-        self.normal_style = normal_style or DEFAULT_LOADER
-        self.active_style = active_style or DEFAULT_LOADER_ACTIVE
-
-    def start(self):
-        self.start_ticks_ms = utime.ticks_ms()
-
-    def stop(self):
-        ticks_diff = utime.ticks_ms() - self.start_ticks_ms
-        self.start_ticks_ms = None
-        return ticks_diff >= LOADER_MSEC
-
-    def render(self):
-        if self.start_ticks_ms is None:
-            return False
-
-        progress = min(utime.ticks_ms() - self.start_ticks_ms, LOADER_MSEC)
-        if progress == LOADER_MSEC:
-            style = self.active_style
-        else:
-            style = self.normal_style
-
-        if style['icon'] is None:
-            ui.display.loader(progress, style['fg-color'], style['bg-color'])
-        elif style['icon-fg-color'] is None:
-            ui.display.loader(
-                progress, style['fg-color'], style['bg-color'], style['icon'])
-        else:
-            ui.display.loader(
-                progress, style['fg-color'], style['bg-color'], style['icon'], style['icon-fg-color'])
-
-        return True
-
-
 class HoldToConfirmDialog():
 
     def __init__(self, button, content=None, *args, **kwargs):
@@ -107,13 +54,9 @@ class HoldToConfirmDialog():
         if not self.loader.render():
             if self.content is not None:
                 self.content.render()
-            else:
-                ui.display.bar(0, 0, 240, 240 - 48, ui.BLACK)
         self.button.render()
 
     def send(self, event, pos):
-        if self.content is not None:
-            self.content.send(pos)
         button = self.button
         was_started = button.state & BTN_STARTED
         button.send(event, pos)
@@ -125,7 +68,8 @@ class HoldToConfirmDialog():
             if was_started:
                 if self.loader.stop():
                     return CONFIRMED
-        return None
+        if self.content is not None:
+            return self.content.send(event, pos)
 
     async def __iter__(self):
         await loop.Wait([self._render_loop(),

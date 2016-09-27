@@ -3,13 +3,13 @@ from trezor.utils import unimport
 
 
 @unimport
-async def confirm(session_id, content=None, code=None, **kwargs):
+async def confirm(session_id, content=None, code=None, *args, **kwargs):
     from trezor.ui.confirm import ConfirmDialog, CONFIRMED
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.messages.ButtonRequestType import Other
     from trezor.messages.wire_types import ButtonAck
 
-    dialog = ConfirmDialog(content, **kwargs)
+    dialog = ConfirmDialog(content, *args, **kwargs)
     dialog.render()
 
     if code is None:
@@ -19,7 +19,7 @@ async def confirm(session_id, content=None, code=None, **kwargs):
 
 
 @unimport
-async def hold_to_confirm(session_id, code=None):
+async def hold_to_confirm(session_id, content=None, code=None, *args, **kwargs):
     from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
     from trezor.ui.confirm import HoldToConfirmDialog, CONFIRMED
     from trezor.messages.ButtonRequest import ButtonRequest
@@ -29,7 +29,7 @@ async def hold_to_confirm(session_id, code=None):
     button = Button((0, 240 - 48, 240, 48), 'Hold to confirm',
                     normal_style=CONFIRM_BUTTON,
                     active_style=CONFIRM_BUTTON_ACTIVE)
-    dialog = HoldToConfirmDialog(button)
+    dialog = HoldToConfirmDialog(button, content, *args, **kwargs)
 
     if code is None:
         code = Other

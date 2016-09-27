@@ -5,18 +5,18 @@ from trezor.utils import unimport
 @unimport
 async def layout_wipe_device(message, session_id):
     from trezor.messages.Success import Success
+    from trezor.ui.text import Text
     from .confirm import hold_to_confirm
     from .storage import clear_storage
 
     ui.clear()
-    ui.display.text(10, 30, 'Wiping device', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 74, 'Do you really want to',
-                    ui.BOLD, ui.WHITE, ui.BLACK)
-    ui.display.text(10, 104, 'wipe the device?', ui.BOLD, ui.WHITE, ui.BLACK)
-    ui.display.text(10, 164, 'All data will be lost.',
-                    ui.NORMAL, ui.WHITE, ui.BLACK)
 
-    await hold_to_confirm(session_id)
+    content = Text('Wiping device',
+                   (ui.BOLD, 'Do you really want to'),
+                   (ui.BOLD, 'wipe the device?'),
+                   (ui.NORMAL, ''),
+                   (ui.NORMAL, 'All data will be lost.'))
+    await hold_to_confirm(session_id, content)
 
     clear_storage(session_id)
 
