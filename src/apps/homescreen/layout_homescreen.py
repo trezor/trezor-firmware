@@ -11,12 +11,8 @@ async def swipe_to_rotate():
 
 
 async def animate_logo():
-    image = res.load('apps/homescreen/res/experiment7.toif')
-
-    def render(fg):
-        ui.display.image(0, 0, image)
-        ui.display.text(52, 220, 'Swipe to rotate', ui.NORMAL, fg, ui.BLACK)
-    await ui.animate_pulse(render, ui.GREY, ui.DARK_GREY, speed=400000)
+    image = res.load('apps/homescreen/res/experiment1.toif')
+    ui.display.image(0, 0, image)
 
 
 @unimport
