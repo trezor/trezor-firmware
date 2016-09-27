@@ -1,5 +1,7 @@
+from __future__ import absolute_import
+
 import struct
-import mapping
+from . import mapping
 import binascii
 
 class NotImplementedException(Exception):

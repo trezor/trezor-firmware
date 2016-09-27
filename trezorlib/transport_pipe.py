@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 from select import select
-from transport import TransportV1
+from .transport import TransportV1
 
 """PipeTransport implements fake wire transport over local named pipe.
 Use this transport for talking with trezor simulator."""
