@@ -35,7 +35,7 @@ class PinMatrix():
         header = '*' * len(self.pin) if self.pin else self.label
 
         # clear canvas under input line
-        display.bar(48, 0, 144, 48, ui.BLACK)
+        display.bar(0, 0, 205, 48, ui.BLACK)
 
         # input line with a header
         display.text_center(120, 30, header, ui.BOLD, ui.GREY, ui.BLACK)
@@ -63,4 +63,5 @@ class PinMatrix():
             self.pin = ''
         for btn in self.pin_buttons:
             if btn.send(event, pos) == BTN_CLICKED:
-                self.pin += btn.content
+                if len(self.pin) < 9:
+                    self.pin += btn.content
