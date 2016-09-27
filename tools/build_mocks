@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+import os
+
+COMMENT_PREFIX = '/// '
+
+current_method = None
+current_package = None
+
+def split_to_parts(line):
+    global current_method
+    global current_package
+    # Line is beginning of method
+    if line.startswith('def '):
+        # Parse name of method from line like 'def trezor.config.get():'
+        current_method = line[4:].split('(')[0]
+        #print("Current method", current_method)
+        
+        *current_package, method_name = current_method.split('.')
+
+        line = line.replace(current_method, method_name)
+        
+    yield (current_package, line)
+
+def store_to_file(dest, parts):
+    while True:
+        try:
+            (package, line) = parts.__next__()
+        except StopIteration:
+            return
+    
+        dir_path = os.path.abspath(os.path.join(dest, *package[:-1]))
+        filename = package[-1]
+        
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+            open(os.path.join(dir_path, '__init__.py'), 'w').close()
+            open(os.path.join(dir_path, '.mock'), 'w').close()
+        
+        f = open(os.path.join(dir_path, filename + '.py'), 'a')
+        f.write(line)
+        f.close()
+
+def build_module(mod_file, dest):
+    if not (mod_file.endswith('.h') or mod_file.endswith('.c')):
+        return
+
+    #print(mod_file)
+    for l in open(mod_file):
+        if not l.startswith(COMMENT_PREFIX):
+            continue
+        
+        l = l[len(COMMENT_PREFIX):]#.strip()
+        store_to_file(dest, split_to_parts(l))
+    
+def build_directory(dir, dest):
+    print("Building mocks for", dir, "to", dest)
+    for pkg in os.listdir(dir):
+        for mod in os.listdir(os.path.join(dir, pkg)):
+            build_module(os.path.join(dir, pkg, mod), dest)
+
+def clear_directory(top_dir):
+    print("Clearing up directory", top_dir)
+    for root, dirs, files in os.walk(top_dir, topdown=False):
+        if '.mock' not in files:
+            #print("Not a mock directory", root)
+            continue
+        for name in files:
+            #print('Deleting file', os.path.join(root, name))
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            #print('Deleting directory', os.path.join(root, name))
+            os.rmdir(os.path.join(root, name))
+        
+if __name__ == '__main__':
+    clear_directory('../mocks')
+    build_directory('../extmod', '../mocks')
