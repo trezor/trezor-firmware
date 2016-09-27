@@ -7,19 +7,23 @@ TEXT_MARGIN_LEFT = const(10)
 
 class Text:
 
-    def __init__(self, header, *lines):
+    def __init__(self, header, *content):
         self.header = header
-        self.lines = lines
+        self.content = content
 
     def render(self):
         offset = TEXT_LINE_HEIGHT
         ui.display.text(TEXT_MARGIN_LEFT, offset,
                         self.header, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
         offset += TEXT_HEADER_HEIGHT
-        for style, line in self.lines:
-            ui.display.text(TEXT_MARGIN_LEFT, offset,
-                            line, style, ui.WHITE, ui.BLACK)
-            offset += TEXT_LINE_HEIGHT
+        style = ui.NORMAL
+        for item in self.content:
+            if isinstance(item, str):
+                ui.display.text(TEXT_MARGIN_LEFT, offset,
+                                item, style, ui.WHITE, ui.BLACK)
+                offset += TEXT_LINE_HEIGHT
+            else:
+                style = item
 
     def send(self, event, pos):
         pass
