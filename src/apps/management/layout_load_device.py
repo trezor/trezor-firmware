@@ -1,20 +1,38 @@
-from trezor import ui
+from trezor import wire, ui
 from trezor.utils import unimport
 
 
 @unimport
-async def layout_load_device(session_id, message):
+async def layout_load_device(message, session_id):
+    from trezor.messages.Storage import Storage
     from trezor.messages.Success import Success
-    from .confirm import require_confirm
+    from trezor.messages.FailureType import UnexpectedMessage, Other
+    from trezor.ui.text import Text
+    from ..common.storage import get_storage, set_storage
+    from ..common.confirm import require_confirm
+
+    if get_storage(session_id):
+        raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
     ui.display.clear()
-    ui.display.text_center(
-        120, 40, 'Really load device?', ui.BOLD, ui.WHITE, ui.BLACK)
-    ui.display.text_center(
-        120, 100, 'Never do this, please.', ui.NORMAL, ui.WHITE, ui.BLACK)
 
-    await require_confirm(session_id)
+    await require_confirm(session_id, Text(
+        'Loading seed',
+        ui.BOLD, 'Loading private seed', 'is not recommended.',
+        ui.NORMAL, 'Continue only if you', 'know what you are doing!'))
 
-    # TODO
+    node = getattr(message, 'node', None)
+    mnemonic = getattr(message, 'mnemonic', None)
 
-    return Success(message='Loaded')
+    # if node is not None:
+    #     raise wire.FailureError(Other, 'XPRV import is not implemented')
+    # if mnemonic is not None and not message.skip_checksum:
+    #     raise wire.FailureError(Other, 'Mnemonic checksum is not implemented')
+
+    storage = Storage(
+        version=1, imported=1, mnemonic=mnemonic, node=node,
+        pin=message.pin, passphrase_protection=message.passphrase_protection,
+        language=message.language, label=message.label)
+    set_storage(session_id, await storage.dumps())
+
+    return Success(message='Device loaded')
