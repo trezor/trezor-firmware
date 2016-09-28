@@ -25,17 +25,15 @@ void display_sram_init(void) {
     __TIM1_CLK_ENABLE();
     __FSMC_CLK_ENABLE();
 
-/*
-    // LCD_RST/PA3
-    GPIO_InitStructure.Pin = GPIO_PIN_3;
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    // LCD_RST/PC14
+    GPIO_InitStructure.Pin = GPIO_PIN_14;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
     GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
-*/
-
-    GPIO_InitTypeDef GPIO_InitStructure;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull      = GPIO_NOPULL;
@@ -197,6 +195,11 @@ int display_orientation(int degrees)
 
 void display_init(void) {
     display_sram_init();
+    // hardware reset
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+    HAL_Delay(20);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+    HAL_Delay(5);
 #if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x01); // software reset
     HAL_Delay(20);
