@@ -63,10 +63,9 @@ int main(void) {
     __GPIOC_CLK_ENABLE();
     __GPIOD_CLK_ENABLE();
 
-
     display_init();
-    display_bar(0, 0, RESX, RESY, 0x0000);
-    display_text(0, 0, "TREZOR", 6, 0, 0xFFFF, 0x0000);
+    display_clear();
+    display_text(0, 0, "TREZOR", 6, FONT_MONO, 0xFFFF, 0x0000);
     display_backlight(255);
 
     __fatal_error("end");

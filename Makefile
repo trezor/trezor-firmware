@@ -31,6 +31,9 @@ build_unix_frozen: vendor build_cross ## build unix port with frozen modules (fr
 build_cross: vendor ## build mpy-cross port
 	make -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
 
+build_bootloader: vendor ## build bootloader
+	make -C vendor/micropython/stmhal -f Makefile.bootloader
+
 run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
 
@@ -55,6 +58,11 @@ flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware0.bin 0x8000000
 	sleep 0.1
 	st-flash write $(STMHAL_BUILD_DIR)/firmware1.bin 0x8020000
+
+flash_bootloader: vendor ## build bootloader
+	st-flash write $(STMHAL_BUILD_DIR)/bootloader0.bin 0x8000000
+	sleep 0.1
+	st-flash write $(STMHAL_BUILD_DIR)/bootloader1.bin 0x8020000
 
 openocd: ## start openocd which connects to the device
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg

@@ -42,9 +42,9 @@ WHITE       = rgbcolor(0xFA, 0xFA, 0xFA)
 PM_DARK_BLUE = rgbcolor(0x1A, 0x29, 0x42)
 PM_BLUE      = rgbcolor(0x34, 0x98, 0xdb)
 
-MONO   = const(0)
-NORMAL = const(1)
-BOLD   = const(2)
+MONO   = Display.FONT_MONO
+NORMAL = Display.FONT_NORMAL
+BOLD   = Display.FONT_BOLD
 
 
 def in_area(pos: tuple, area: tuple) -> bool:

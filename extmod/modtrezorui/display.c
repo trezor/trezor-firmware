@@ -178,11 +178,11 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
         return 0;
     }
     switch (font) {
-        case 0:
+        case FONT_MONO:
             return Font_RobotoMono_Regular_20[c - ' '];
-        case 1:
+        case FONT_NORMAL:
             return Font_Roboto_Regular_20[c - ' '];
-        case 2:
+        case FONT_BOLD:
             return Font_Roboto_Bold_20[c - ' '];
     }
     return 0;

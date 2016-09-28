@@ -11,6 +11,10 @@
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 
+#define FONT_MONO   0
+#define FONT_NORMAL 1
+#define FONT_BOLD   2
+
 void display_init(void);
 void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void display_update(void);
