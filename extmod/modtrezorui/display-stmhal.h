@@ -241,7 +241,7 @@ void display_init(void) {
     display_orientation(0);
     display_backlight(0);
     // clear buffer
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0x0000);
+    display_clear();
     display_unsleep();
 }
 
