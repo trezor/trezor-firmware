@@ -204,7 +204,8 @@ class MessageType:
             raise TypeError('Incompatible type')
         for tag, field in self.__fields.items():
             field_type, field_flags, field_name = field
-            if field_name not in value.__dict__:
+            field_value = getattr(value, field_name, None)
+            if field_value is None:
                 if field_flags & FLAG_REQUIRED:
                     raise ValueError(
                         'The field with the tag %s is required but a value is missing.' % tag)
@@ -214,13 +215,13 @@ class MessageType:
                 # repeated value
                 key = _pack_key(tag, field_type.WIRE_TYPE)
                 # send the values sequentially
-                for single_value in getattr(value, field_name):
+                for single_value in field_value:
                     yield from UVarintType.dump(target, key)
                     yield from field_type.dump(target, single_value)
             else:
                 # single value
                 yield from UVarintType.dump(target, _pack_key(tag, field_type.WIRE_TYPE))
-                yield from field_type.dump(target, getattr(value, field_name))
+                yield from field_type.dump(target, field_value)
 
     def load(self, target, source=None):
         if source is None:
