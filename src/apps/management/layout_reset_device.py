@@ -73,7 +73,7 @@ async def show_mnemonic_page(page, page_count, mnemonic):
     from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
     from trezor.ui.scroll import render_scrollbar, animate_swipe
 
-    ui.clear()
+    ui.display.clear()
     ui.display.text(
         10, 34, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     render_scrollbar(page, page_count)

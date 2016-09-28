@@ -46,6 +46,15 @@ void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor
     }
 }
 
+void display_clear(void)
+{
+    display_set_window(0, 0, DISPLAY_RESX, DISPLAY_RESY);
+    for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY * 2; i++) {
+        DATA(0);
+    }
+    display_update();
+}
+
 void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c)
 {
     display_set_window(x, y, w, h);

@@ -18,6 +18,7 @@ int display_orientation(int degrees);
 int display_backlight(int val);
 
 void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor);
+void display_clear(void);
 void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c);
 void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, uint16_t b, uint8_t r);
 void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen);

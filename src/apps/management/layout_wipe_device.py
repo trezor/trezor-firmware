@@ -9,7 +9,7 @@ async def layout_wipe_device(message, session_id):
     from .confirm import hold_to_confirm
     from .storage import clear_storage
 
-    ui.clear()
+    ui.display.clear()
 
     content = Text('Wiping device',
                    ui.BOLD, 'Do you really want to', 'wipe the device?',

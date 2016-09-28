@@ -15,7 +15,7 @@ async def layout_recovery_device(session_id, message):
 
     msg = 'Please enter ' + nth(message.word_count) + ' word'
 
-    ui.clear()
+    ui.display.clear()
     ui.display.text(10, 30, 'Recovering device',
                     ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 74, msg, ui.BOLD, ui.WHITE, ui.BLACK)

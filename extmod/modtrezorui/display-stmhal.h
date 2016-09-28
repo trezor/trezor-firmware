@@ -228,7 +228,7 @@ void display_init(void) {
     CMD(0xE1); DATAS("\x00\x10\x13\x04\x10\x06\x25\x26\x3B\x04\x0B\x0A\x33\x39\x0F", 15); // gamma curve 2
 #endif
 #if DISPLAY_ST7789V
-    CMD(0x26); DATA(0x03);                // gamma func enable
+    CMD(0x26); DATA(0x01);                // gamma func enable
     CMD(0xE0); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 1
     CMD(0xE1); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 2
 #endif
