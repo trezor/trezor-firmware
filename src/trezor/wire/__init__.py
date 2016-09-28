@@ -12,9 +12,7 @@ from .wire_codec import \
     decode_wire_stream, encode_wire_message, \
     encode_session_open_message, encode_session_close_message
 from .wire_codec_v1 import \
-    SESSION_V1, \
-    decode_wire_v1_stream, \
-    encode_wire_v1_message
+    SESSION_V1, decode_wire_v1_stream, encode_wire_v1_message
 
 _session_handlers = {}  # session id -> generator
 _workflow_genfuncs = {}  # wire type -> (generator function, args)
@@ -138,8 +136,8 @@ async def monitor_workflow(workflow, session_id):
     finally:
         if session_id in _opened_sessions:
             if session_id == SESSION_V1:
-                wire_decoder = decode_wire_v1_stream(_handle_registered_type,
-                                                     SESSION_V1)
+                wire_decoder = decode_wire_v1_stream(
+                    _handle_registered_type, session_id)
             else:
                 wire_decoder = decode_wire_stream(
                     _handle_registered_type, session_id)

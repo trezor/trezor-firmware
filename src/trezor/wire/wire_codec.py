@@ -83,12 +83,8 @@ Throws MessageChecksumError to target if data doesn't match the checksum.
     target.send(None)
 
     checksum = 0  # crc32
-    nreports = 1
 
     while data_len > 0:
-        if nreports > 1:
-            data_tail = memoryview((yield))  # read next report
-        nreports += 1
 
         data_chunk = data_tail[:data_len]  # slice off the garbage at the end
         data_tail = data_tail[len(data_chunk):]  # slice off what we have read
@@ -96,6 +92,9 @@ Throws MessageChecksumError to target if data doesn't match the checksum.
         target.send(data_chunk)
 
         checksum = ubinascii.crc32(data_chunk, checksum)
+
+        if data_len > 0:
+            data_tail = memoryview((yield))  # read next report
 
     msg_footer = data_tail[:_MSG_FOOTER_LEN]
     if len(msg_footer) < _MSG_FOOTER_LEN:
@@ -137,7 +136,7 @@ def encode_wire_message(msg_type, msg_data, session_id, target):
             msg_footer = None
             continue
 
-        # FIXME: Optimize speed
+        # FIXME: optimize speed
         x = 0
         to_fill = len(target_data)
         while x < to_fill:
