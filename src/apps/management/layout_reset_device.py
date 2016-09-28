@@ -7,8 +7,8 @@ async def layout_reset_device(message, session_id):
     from trezor.messages.Success import Success
     from trezor.messages.Storage import Storage
     from trezor.messages.FailureType import UnexpectedMessage
-    from .storage import get_storage, set_storage
-    from .request_pin import request_pin_twice
+    from ..common.storage import get_storage, set_storage
+    from ..common.request_pin import request_pin_twice
 
     if get_storage(session_id):
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
