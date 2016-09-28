@@ -1,4 +1,4 @@
-from protobuf.protobuf import build_protobuf_message
+from protobuf import build_protobuf_message
 
 from trezor.loop import schedule_task, Future
 from trezor.crypto import random

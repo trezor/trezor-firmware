@@ -116,7 +116,7 @@ class EmbeddedMessage:
         return self.message_type()
 
     def dump(self, target, value):
-        buf = self.message_type.dumps(value)
+        buf = yield from self.message_type.dumps(value)
         yield from BytesType.dump(target, buf)
 
     def load(self, target, source):
