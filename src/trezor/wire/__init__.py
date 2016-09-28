@@ -82,6 +82,7 @@ async def read_message(session_id, *exp_types):
     future = Future()
     wire_decoder = decode_wire_stream(
         _dispatch_and_build_protobuf, session_id, exp_types, future)
+    wire_decoder.send(None)
     register_session(session_id, wire_decoder)
     return await future
 
