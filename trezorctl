@@ -35,7 +35,7 @@ ether_units = {
     "eth":          1000000000000000000,
 }
 
-def parse_args(commands):
+def init_parser(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for TREZOR devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
     parser.add_argument('-t', '--transport', dest='transport', choices=['usb', 'udp', 'pipe', 'bridge'], default='usb', help="Transport used for talking with the device")
@@ -62,7 +62,7 @@ def parse_args(commands):
         item.set_defaults(func=func)
         item.set_defaults(cmd=cmd)
 
-    return parser.parse_args()
+    return parser
 
 def get_transport(transport_string, path, **kwargs):
     if transport_string == 'usb':
@@ -535,7 +535,12 @@ def qt_pin_func(input_text, message=None):
 '''
 
 def main():
-    args = parse_args(Commands)
+    parser = init_parser(Commands)
+    args = parser.parse_args()
+
+    if not hasattr(args, 'cmd'):
+        parser.print_help()
+        exit(0)
 
     try:
 
