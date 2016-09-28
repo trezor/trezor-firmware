@@ -137,6 +137,13 @@ def encode_wire_message(msg_type, msg_data, session_id, target):
             msg_footer = None
             continue
 
+        # FIXME: Optimize speed
+        x = 0
+        to_fill = len(target_data)
+        while x < to_fill:
+            target_data[x] = 0
+            x += 1
+
         target.send(report)
 
         if not source_data and not msg_footer:

@@ -1,5 +1,6 @@
 from trezor import log
 from .wire_codec import parse_report, REP_MARKER_OPEN, REP_MARKER_CLOSE
+from .wire_codec_v1 import detect_v1, parse_report_v1
 
 
 def dispatch_reports_by_session(handlers,
@@ -12,7 +13,12 @@ def dispatch_reports_by_session(handlers,
     '''
 
     while True:
-        marker, session_id, report_data = parse_report((yield))
+
+        data = (yield)
+        if detect_v1(data):
+            marker, session_id, report_data = parse_report_v1(data)
+        else:
+            marker, session_id, report_data = parse_report(data)
 
         if marker == REP_MARKER_OPEN:
             log.debug(__name__, 'request for new session')
