@@ -28,7 +28,44 @@ void nlr_jump_fail(void *val) {
 
 void SystemClock_Config(void);
 
-// ###
+// ### from stm32_it.c
+
+/**
+  * @brief  This function handles SysTick Handler.
+  * @param  None
+  * @retval None
+  */
+void SysTick_Handler(void) {
+    // Instead of calling HAL_IncTick we do the increment here of the counter.
+    // This is purely for efficiency, since SysTick is called 1000 times per
+    // second at the highest interrupt priority.
+    // Note: we don't need uwTick to be declared volatile here because this is
+    // the only place where it can be modified, and the code is more efficient
+    // without the volatile specifier.
+    extern uint32_t uwTick;
+    uwTick += 1;
+
+    // Read the systick control regster. This has the side effect of clearing
+    // the COUNTFLAG bit, which makes the logic in sys_tick_get_microseconds
+    // work properly.
+    SysTick->CTRL;
+
+#if 0
+    // Right now we have the storage and DMA controllers to process during
+    // this interrupt and we use custom dispatch handlers.  If this needs to
+    // be generalised in the future then a dispatch table can be used as
+    // follows: ((void(*)(void))(systick_dispatch[uwTick & 0xf]))();
+
+    if (STORAGE_IDLE_TICK(uwTick)) {
+        NVIC->STIR = FLASH_IRQn;
+    }
+
+    if (DMA_IDLE_ENABLED() && DMA_IDLE_TICK(uwTick)) {
+        dma_idle_handler(uwTick);
+    }
+#endif
+}
+
 
 // ### from timer.c
 
@@ -65,7 +102,16 @@ int main(void) {
 
     display_init();
     display_clear();
-    display_text(0, 0, "TREZOR", 6, FONT_MONO, 0xFFFF, 0x0000);
+    display_text(100, 120, "TREZOR", 6, FONT_MONO, 0xFFFF, 0x0000);
+    display_text(90, 140, "bootloader", 10, FONT_MONO, 0xFFFF, 0x0000);
+    display_backlight(255);
+        HAL_Delay(250);
+    display_backlight(0);
+        HAL_Delay(250);
+    display_backlight(100);
+        HAL_Delay(250);
+    display_backlight(0);
+        HAL_Delay(250);
     display_backlight(255);
 
     __fatal_error("end");

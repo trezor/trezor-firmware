@@ -89,10 +89,10 @@ openocd: ## start openocd which connects to the device
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
 
 gdb: ## start remote gdb session which connects to the openocd
-	gdb $(STMHAL_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'
+	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'
 
 gdb_bootloader: ## start remote gdb session which connects to the openocd
-	gdb $(STMHAL_BUILD_DIR)/bootloader.elf -ex 'target remote localhost:3333'
+	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)/bootloader.elf -ex 'target remote localhost:3333'
 
 load: ## load contents of src into mass storage of trezor
 	rm -rf /run/media/${USER}/PYBFLASH/*
