@@ -59,10 +59,28 @@ flash: ## flash firmware using st-flash
 	sleep 0.1
 	st-flash write $(STMHAL_BUILD_DIR)/firmware1.bin 0x8020000
 
-flash_bootloader: vendor ## build bootloader
+flash_bootloader: vendor ## flash bootloader using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/bootloader0.bin 0x8000000
 	sleep 0.1
 	st-flash write $(STMHAL_BUILD_DIR)/bootloader1.bin 0x8020000
+
+openocd_flash_bootloader: $(STMHAL_BUILD_DIR)/bootloader.hex ## flash bootloader using openocd
+	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
+		-c "init" \
+		-c "reset init" \
+		-c "stm32f4x mass_erase 0" \
+		-c "flash write_image $(STMHAL_BUILD_DIR)/bootloader.hex" \
+		-c "reset" \
+		-c "shutdown"
+
+openocd_flash_firmware: $(STMHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
+	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
+		-c "init" \
+		-c "reset init" \
+		-c "stm32f4x mass_erase 0" \
+		-c "flash write_image $(STMHAL_BUILD_DIR)/firmware.hex" \
+		-c "reset" \
+		-c "shutdown"
 
 openocd: ## start openocd which connects to the device
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
