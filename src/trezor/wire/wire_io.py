@@ -1,8 +1,6 @@
 import ubinascii
-
-from trezor import msg
-from trezor import loop
-from trezor import log
+from micropython import const
+from trezor import msg, loop, log
 
 _DEFAULT_IFACE = const(0)
 

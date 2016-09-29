@@ -1,5 +1,6 @@
-from . import display, in_area, rotate_coords
+from micropython import const
 from trezor import ui, loop
+from . import display, in_area, rotate_coords
 
 
 DEFAULT_BUTTON = {

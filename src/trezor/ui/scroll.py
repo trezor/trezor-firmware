@@ -1,5 +1,6 @@
-from .swipe import Swipe, SWIPE_UP, SWIPE_DOWN
+from micropython import const
 from trezor import loop, ui
+from .swipe import Swipe, SWIPE_UP, SWIPE_DOWN
 
 
 async def change_page(page, page_count):

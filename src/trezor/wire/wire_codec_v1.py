@@ -1,3 +1,4 @@
+from micropython import const
 import ustruct
 
 SESSION_V1 = const(0)

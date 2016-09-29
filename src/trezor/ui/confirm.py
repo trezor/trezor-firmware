@@ -1,8 +1,9 @@
+from micropython import const
+from trezor import loop
 from .button import Button, BTN_CLICKED, BTN_STARTED
 from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from .button import CANCEL_BUTTON, CANCEL_BUTTON_ACTIVE
 from .loader import Loader
-from trezor import loop
 
 
 CONFIRMED = const(1)

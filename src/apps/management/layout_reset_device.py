@@ -1,3 +1,4 @@
+from micropython import const
 from trezor import wire, ui
 from trezor.utils import unimport, chunks
 

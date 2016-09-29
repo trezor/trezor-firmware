@@ -1,5 +1,5 @@
 import utime
-
+from micropython import const
 from uheapq import heappop, heappush, heapify
 from .utils import type_gen
 from . import msg

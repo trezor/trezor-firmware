@@ -1,3 +1,4 @@
+from micropython import const
 from trezor import config
 
 
@@ -14,4 +15,4 @@ def set_storage(session_id, buf):
 
 
 def clear_storage(session_id):
-    set_storage(session_id, '')
+    set_storage(session_id, b'')

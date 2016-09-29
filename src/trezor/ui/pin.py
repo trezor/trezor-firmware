@@ -1,7 +1,8 @@
-from . import display
-from .button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
-from trezor import ui, res
+from micropython import const
 from trezor.crypto import random
+from trezor import ui, res
+from .button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
+from . import display
 
 
 def digit_area(i):

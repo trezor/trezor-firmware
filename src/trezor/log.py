@@ -1,3 +1,4 @@
+from micropython import const
 import uio
 import sys
 import utime

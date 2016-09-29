@@ -1,4 +1,5 @@
 import utime
+from micropython import const
 from trezor import ui
 
 

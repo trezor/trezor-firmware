@@ -1,7 +1,7 @@
 import utime
-
-from . import in_area, rotate_coords
+from micropython import const
 from trezor import loop
+from . import in_area, rotate_coords
 
 
 SWIPE_DISTANCE_THRESHOLD = const(20)  # Min pixels in the primary direction

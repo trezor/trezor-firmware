@@ -10,6 +10,8 @@ Value format: ((field_type, field_flags, field_name), field_value)
     field_value: Depends on field_type.  EmbeddedMessage has `field_value == None`.
 '''
 
+from micropython import const
+
 
 def build_protobuf_message(message_type, callback, *args):
     message = message_type()
