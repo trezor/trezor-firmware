@@ -1604,6 +1604,57 @@ END_TEST
   "\x6a\x0f\x85\xe6\xa9\x1d\x39\x6f\x5b\x5c\xbe\x57\x7f\x9b\x38\x80" \
   "\x7c\x7d\x52\x3d\x6d\x79\x2f\x6e\xbc\x24\xa4\xec\xf2\xb3\xa4\x27" \
   "\xcd\xbb\xfb"
+#define length(x) (sizeof(x)-1)
+
+// test vectors from rfc-4634
+START_TEST(test_sha1)
+{
+	struct {
+		const char* test;
+		int   length;
+		int   repeatcount;
+		int   extrabits;
+		int   numberExtrabits;
+		const char* result;
+	} tests[] = {
+		/* 1 */ { TEST1, length(TEST1), 1, 0, 0,
+				  "A9993E364706816ABA3E25717850C26C9CD0D89D" },
+		/* 2 */ { TEST2_1, length(TEST2_1), 1, 0, 0,
+				  "84983E441C3BD26EBAAE4AA1F95129E5E54670F1" },
+		/* 3 */ { TEST3, length(TEST3), 1000000, 0, 0,
+				  "34AA973CD4C4DAA4F61EEB2BDBAD27316534016F" },
+		/* 4 */ { TEST4, length(TEST4), 10, 0, 0,
+				  "DEA356A2CDDD90C7A7ECEDC5EBB563934F460452" },
+		/* 5 */ {  "", 0, 0, 0x98, 5,
+				  "29826B003B906E660EFF4027CE98AF3531AC75BA" },
+		/* 6 */ {  "\x5e", 1, 1, 0, 0,
+				  "5E6F80A34A9798CAFC6A5DB96CC57BA4C4DB59C2" },
+		/* 7 */ { TEST7_1, length(TEST7_1), 1, 0x80, 3,
+				  "6239781E03729919C01955B3FFA8ACB60B988340" },
+		/* 8 */ { TEST8_1, length(TEST8_1), 1, 0, 0,
+				  "82ABFF6605DBE1C17DEF12A394FA22A82B544A35" },
+		/* 9 */ { TEST9_1, length(TEST9_1), 1, 0xE0, 3,
+				  "8C5B2A5DDAE5A97FC7F9D85661C672ADBF7933D4" },
+		/* 10 */ { TEST10_1, length(TEST10_1), 1, 0, 0,
+				  "CB0082C8F197D260991BA6A460E76E202BAD27B3" }
+	};
+
+	for (int i = 0; i < 10; i++) {
+		SHA1_CTX ctx;
+		uint8_t digest[SHA1_DIGEST_LENGTH];
+		sha1_Init(&ctx);
+		/* extra bits are not supported */
+		if (tests[i].numberExtrabits)
+			continue;
+		for (int j = 0; j < tests[i].repeatcount; j++) {
+			sha1_Update(&ctx, (const uint8_t*) tests[i].test, tests[i].length);
+		}
+		sha1_Final(&ctx, digest);
+		ck_assert_mem_eq(digest, fromhex(tests[i].result), SHA1_DIGEST_LENGTH);
+	}
+}
+END_TEST
+
 #define TEST7_256 \
   "\xbe\x27\x46\xc6\xdb\x52\x76\x5f\xdb\x2f\x88\x70\x0f\x9a\x73"
 #define TEST8_256 \
@@ -1626,7 +1677,6 @@ END_TEST
   "\xa9\x7d\x13\x8f\x12\x92\x28\x96\x6f\x6c\x0a\xdc\x10\x6a\xad\x5a" \
   "\x9f\xdd\x30\x82\x57\x69\xb2\xc6\x71\xaf\x67\x59\xdf\x28\xeb\x39" \
   "\x3d\x54\xd6"
-#define length(x) (sizeof(x)-1)
 
 // test vectors from rfc-4634
 START_TEST(test_sha256)
@@ -2850,6 +2900,7 @@ Suite *test_suite(void)
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("sha2");
+	tcase_add_test(tc, test_sha1);
 	tcase_add_test(tc, test_sha256);
 	tcase_add_test(tc, test_sha512);
 	suite_add_tcase(s, tc);
