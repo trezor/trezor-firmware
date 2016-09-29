@@ -672,6 +672,13 @@ char *sha1_End(SHA1_CTX* context, char buffer[]) {
 	return buffer;
 }
 
+void sha1_Raw(const sha2_byte* data, size_t len, uint8_t digest[SHA1_DIGEST_LENGTH]) {
+	SHA1_CTX	context;
+	sha1_Init(&context);
+	sha1_Update(&context, data, len);
+	sha1_Final(&context, digest);
+}
+
 char* sha1_Data(const sha2_byte* data, size_t len, char digest[SHA1_DIGEST_STRING_LENGTH]) {
 	SHA1_CTX	context;
 
