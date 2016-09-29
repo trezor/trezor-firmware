@@ -7,7 +7,7 @@ from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 
 def process_type(t, cls, msg_id, indexfile):
-    imports = ["import protobuf as p", ]
+    imports = ["import protobuf as p", "from micropython import const"]
 
     out = ["t = p.MessageType('%s')" % t, ]
 
