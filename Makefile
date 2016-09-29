@@ -8,27 +8,30 @@ help: ## show this help
 vendor: ## update git submodules
 	git submodule update --init
 
+res: ## update resources
+	python3 tools/res_collect.py
+
 build: build_stmhal build_unix build_cross ## build stmhal, unix and mpy-cross micropython ports
 
-build_stmhal: vendor ## build stmhal port
+build_stmhal: vendor res ## build stmhal port
 	make -C vendor/micropython/stmhal
 
-build_stmhal_debug: vendor ## build stmhal port with debug symbols
+build_stmhal_debug: vendor res ## build stmhal port with debug symbols
 	make -C vendor/micropython/stmhal
 
-build_stmhal_frozen: vendor build_cross ## build stmhal port with frozen modules (from /src)
+build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
 	make -C vendor/micropython/stmhal FROZEN_MPY_DIR=../../../src
 
-build_unix: vendor ## build unix port
+build_unix: vendor res ## build unix port
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
 
-build_unix_debug: vendor ## build unix port with debug symbols
+build_unix_debug: vendor res ## build unix port with debug symbols
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1 DEBUG=1
 
-build_unix_frozen: vendor build_cross ## build unix port with frozen modules (from /src)
+build_unix_frozen: vendor res build_cross ## build unix port with frozen modules (from /src)
 	make -C vendor/micropython/unix MICROPY_FORCE_32BIT=1 FROZEN_MPY_DIR=../../../src
 
-build_cross: vendor ## build mpy-cross port
+build_cross: vendor res ## build mpy-cross port
 	make -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
 
 build_bootloader: vendor ## build bootloader

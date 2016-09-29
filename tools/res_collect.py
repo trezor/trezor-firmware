@@ -3,6 +3,7 @@ import os
 
 resources = {}
 
+os.chdir(os.path.dirname(__file__))
 os.chdir('../src/')
 
 def process_file(name):
