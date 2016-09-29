@@ -2,7 +2,7 @@
 
 * [Documentation](docs/)
 
-##Build instructions
+##Build instructions for emulator
 
 ###Linux
 
@@ -37,3 +37,14 @@ make build_unix
 ### Windows
 
 Not supported yet ...
+
+##Build instructions for ARM
+
+###Linux
+
+####Debian/Ubuntu
+
+```
+sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
+make build_strmhal_frozen
+```
