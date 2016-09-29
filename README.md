@@ -42,6 +42,8 @@ Not supported yet ...
 
 ###Linux
 
+For flashing firmware to blank device (without bootloader) by ```make flash```, please install https://github.com/texane/stlink
+
 ####Debian/Ubuntu
 
 ```
