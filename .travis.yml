@@ -2,14 +2,14 @@ dist: trusty
 
 language: c
 
-install:
-  - sudo dpkg --add-architecture i386
+before_install:
   - sudo apt-get update
+
+install:
   - sudo apt-get install gcc-multilib
-  - sudo apt-get install libsdl2-dev:i386
 
 before_script:
-  - make build_unix
+  - make build_unix TREZORUI_NOUI=1
 
 script:
   - make test
