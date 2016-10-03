@@ -14,13 +14,13 @@ def split_to_parts(line, mod_file=None):
         # Parse name of method from line like 'def trezor.config.get():'
         current_method = line[4:].split('(')[0]
         #print("Current method", current_method)
-        
+
         *current_package, method_name = current_method.split('.')
 
         yield (current_package, "\n")
         yield (current_package, '# ' + mod_file + "\n")
         line = line.replace(current_method, method_name)
-        
+
     yield (current_package, line)
 
 def store_to_file(dest, parts):
@@ -29,15 +29,15 @@ def store_to_file(dest, parts):
             (package, line) = parts.__next__()
         except StopIteration:
             return
-    
+
         dir_path = os.path.abspath(os.path.join(dest, *package[:-1]))
         filename = package[-1]
-        
+
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
             open(os.path.join(dir_path, '__init__.py'), 'w').close()
             open(os.path.join(dir_path, '.mock-generated'), 'w').close()
-        
+
         f = open(os.path.join(dir_path, filename + '.py'), 'a')
         f.write(line)
         f.close()
@@ -50,10 +50,10 @@ def build_module(mod_file, dest):
     for l in open(mod_file):
         if not l.startswith(COMMENT_PREFIX):
             continue
-        
+
         l = l[len(COMMENT_PREFIX):]#.strip()
         store_to_file(dest, split_to_parts(l, mod_file))
-    
+
 def build_directory(dir, dest):
     print("Building mocks for", dir, "to", dest)
     for pkg in os.listdir(dir):
@@ -77,7 +77,7 @@ def clear_directory(top_dir):
                 pass
 
         os.rmdir(root)
-        
+
 if __name__ == '__main__':
     clear_directory('../mocks')
     build_directory('../extmod', '../mocks')

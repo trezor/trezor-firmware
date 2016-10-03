@@ -1,5 +1,17 @@
 
 # ../extmod/modtrezorui/modtrezorui-display.h
+def clear() -> None
+    '''
+    Clear display (with black color)
+    '''
+
+# ../extmod/modtrezorui/modtrezorui-display.h
+def refresh() -> None
+    '''
+    Refresh display (update screen)
+    '''
+
+# ../extmod/modtrezorui/modtrezorui-display.h
 def bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None:
     '''
     Renders a bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
