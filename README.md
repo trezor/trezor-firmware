@@ -11,6 +11,8 @@
 ####Debian/Ubuntu
 
 ```
+sudo dpkg --add-architecture i386
+sudo apt-get update
 sudo apt-get install libsdl2-dev:i386
 make build_unix
 ```
