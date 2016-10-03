@@ -2,6 +2,7 @@
 import os
 
 resources = {}
+resources_size = 0
 
 os.chdir(os.path.dirname(__file__))
 os.chdir('../src/')
@@ -11,9 +12,12 @@ def process_file(name):
         return
     if name.endswith('.py'):
         return
-    print('processing file %s' % name)
     with open(name, 'rb') as f:
-        resources[name] = f.read()
+        data = f.read()
+        resources[name] = data
+        print('processing file %s (%d bytes)' % (name, len(data)))
+        global resources_size
+        resources_size += len(data)
 
 # scan common resources
 for res in os.listdir('trezor/res/'):
@@ -37,4 +41,4 @@ with open(resfile, 'wt') as f:
         f.write("    '%s': %s,\n" % (k, resources[k]))
     f.write('}\n')
 
-print('written %s with %d entries' % (resfile, len(resources)))
+print('written %s with %d entries (total %d bytes)' % (resfile, len(resources), resources_size))
