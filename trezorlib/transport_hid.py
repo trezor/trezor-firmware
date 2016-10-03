@@ -14,18 +14,15 @@ def enumerate():
         product_id = d['product_id']
         serial_number = d['serial_number']
         interface_number = d['interface_number']
+        usage_page = d['usage_page']
         path = d['path']
-
-        # HIDAPI on Mac cannot detect correct HID interfaces, so device with
-        # DebugLink doesn't work on Mac...
-        if devices.get(serial_number) != None and devices[serial_number][0] == path:
-            raise Exception("Two devices with the same path and S/N found. This is Mac, right? :-/")
 
         if (vendor_id, product_id) in DEVICE_IDS:
             devices.setdefault(serial_number, [None, None])
-            if interface_number == 0 or interface_number == -1:  # normal link
+            # first match by usage_page, then try interface number
+            if usage_page == 0xFF00 or interface_number == 0:  # normal link
                 devices[serial_number][0] = path
-            elif interface_number == 1:  # debug link
+            elif usage_page == 0xFF01 or interface_number == 1:  # debug link
                 devices[serial_number][1] = path
 
     # List of two-tuples (path_normal, path_debuglink)
