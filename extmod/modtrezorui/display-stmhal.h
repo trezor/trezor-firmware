@@ -257,7 +257,7 @@ void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 #endif
 }
 
-void display_update(void) {
+void display_refresh(void) {
 }
 
 int display_backlight(int val)

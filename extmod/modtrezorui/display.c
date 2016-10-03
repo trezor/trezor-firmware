@@ -52,7 +52,6 @@ void display_clear(void)
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY * 2; i++) {
         DATA(0);
     }
-    display_update();
 }
 
 void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c)
@@ -62,7 +61,6 @@ void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c)
         DATA(c >> 8);
         DATA(c & 0xFF);
     }
-    display_update();
 }
 
 #define CORNER_RADIUS 16
@@ -124,14 +122,12 @@ void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, 
             }
         }
     }
-    display_update();
 }
 
 void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen)
 {
     display_set_window(x, y, w, h);
     DATAS(data, datalen);
-    display_update();
 }
 
 static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
@@ -143,7 +139,6 @@ void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data,
 {
     display_set_window(x, y, w, h);
     sinf_inflate(data, datalen, inflate_callback_image, NULL);
-    display_update();
 }
 
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
@@ -161,7 +156,6 @@ void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, 
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
     sinf_inflate(data, datalen, inflate_callback_icon, colortable);
-    display_update();
 }
 
 static const uint8_t *get_glyph(uint8_t font, uint8_t c)
@@ -219,8 +213,6 @@ void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t f
         }
         px += g[2];
     }
-
-    display_update();
 }
 
 // compute the width of the text (in pixels)
@@ -250,7 +242,6 @@ void display_qrcode(uint8_t x, uint8_t y, const char *data, int datalen, int sca
             }
         }
     }
-    display_update();
 }
 
 #include "loader.h"
@@ -318,7 +309,6 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
             }
         }
     }
-    display_update();
 }
 
 void display_raw(uint8_t reg, const uint8_t *data, int datalen)

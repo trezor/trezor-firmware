@@ -107,7 +107,7 @@ void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
     DATAODD = 0;
 }
 
-void display_update(void)
+void display_refresh(void)
 {
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
@@ -121,7 +121,6 @@ int display_orientation(int degrees)
     if (degrees != ORIENTATION) {
         if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
             ORIENTATION = degrees;
-            display_update();
         }
     }
     return ORIENTATION;

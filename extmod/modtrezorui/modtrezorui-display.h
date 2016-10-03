@@ -31,6 +31,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_clear(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorUi_Display_clear_obj, mod_TrezorUi_Display_clear);
 
+/// def trezor.ui.display.refresh() -> None
+///     '''
+///     Refresh display (update screen)
+///     '''
+STATIC mp_obj_t mod_TrezorUi_Display_refresh(mp_obj_t self) {
+    display_refresh();
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorUi_Display_refresh_obj, mod_TrezorUi_Display_refresh);
+
 /// def trezor.ui.display.bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None:
 ///     '''
 ///     Renders a bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
@@ -319,6 +329,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_raw_obj, mod_TrezorUi_Disp
 
 STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_TrezorUi_Display_clear_obj) },
+    { MP_ROM_QSTR(MP_QSTR_refresh), MP_ROM_PTR(&mod_TrezorUi_Display_refresh_obj) },
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
     { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&mod_TrezorUi_Display_blit_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
