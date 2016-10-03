@@ -175,8 +175,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    uint32_t w = display_text_width(text.buf, text.len, font);
-    display_text(x - w / 2, y, text.buf, text.len, font, fgcolor, bgcolor);
+    display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
@@ -194,8 +193,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *a
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    uint32_t w = display_text_width(text.buf, text.len, font);
-    display_text(x - w, y, text.buf, text.len, font, fgcolor, bgcolor);
+    display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);

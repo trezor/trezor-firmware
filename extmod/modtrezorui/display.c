@@ -195,6 +195,10 @@ void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t f
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
 
+    // determine text length if not provided
+    if (textlen < 0) {
+        textlen = strlen(text);
+    }
     // render glyphs
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
@@ -219,12 +223,28 @@ void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t f
     }
 }
 
+void display_text_center(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+{
+    uint32_t w = display_text_width(text, textlen, font);
+    display_text(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
+}
+
+void display_text_right(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+{
+    uint32_t w = display_text_width(text, textlen, font);
+    display_text(x - w, y, text, textlen, font, fgcolor, bgcolor);
+}
+
 // compute the width of the text (in pixels)
-uint32_t display_text_width(const uint8_t *text, int textlen, uint8_t font)
+uint32_t display_text_width(const char *text, int textlen, uint8_t font)
 {
     uint32_t w = 0;
+    // determine text length if not provided
+    if (textlen < 0) {
+        textlen = strlen(text);
+    }
     for (int i = 0; i < textlen; i++) {
-        const uint8_t *g = get_glyph(font, text[i]);
+        const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
         w += g[2];
     }

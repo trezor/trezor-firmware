@@ -44,7 +44,6 @@ INC += -I$(CMSIS_DIR)/devinc
 INC += -I$(HAL_DIR)/inc
 INC += -I$(USBDEV_DIR)/core/inc -I$(USBDEV_DIR)/class/inc
 #INC += -I$(USBHOST_DIR)
-INC += -I../extmod/modtrezorui
 
 CFLAGS_CORTEX_M = -mthumb -mabi=aapcs-linux -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant -Wdouble-promotion
 CFLAGS_MCU_f4 = $(CFLAGS_CORTEX_M) -mtune=cortex-m4 -mcpu=cortex-m4 -DMCU_SERIES_F4
@@ -75,6 +74,10 @@ endif
 
 # uncomment this if you want libgcc
 LIBS += $(shell $(CC) -print-libgcc-file-name)
+
+SRC_LIB = $(addprefix lib/,\
+	libc/string0.c \
+	)
 
 SRC_C = \
 	bootloader.c \
@@ -128,18 +131,22 @@ SRC_USBDEV = $(addprefix $(USBDEV_DIR)/,\
 	class/src/usbd_msc_data.c \
 	)
 
-SRC_MODUI = $(addprefix extmod/modtrezorui/,\
+ifeq ($(MICROPY_PY_TREZORUI),1)
+INC += -I../extmod/modtrezorui
+SRC_MOD += $(addprefix extmod/modtrezorui/,\
 	display.c \
 	inflate.c \
 	font_robotomono_regular.c \
 	)
+endif
 
 OBJ =
+OBJ += $(addprefix $(BUILD)/, $(SRC_LIB:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_O))
 OBJ += $(addprefix $(BUILD)/, $(SRC_HAL:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_USBDEV:.c=.o))
-OBJ += $(addprefix $(BUILD)/, $(SRC_MODUI:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(SRC_MOD:.c=.o))
 OBJ += $(BUILD)/pins_$(BOARD).o
 
 # We put ff.o and stm32f4xx_hal_sd.o into the first 16K section with the ISRs.
@@ -203,6 +210,8 @@ CDCINF_TEMPLATE = pybcdc.inf_template
 GEN_CDCINF_FILE = $(HEADER_BUILD)/pybcdc.inf
 GEN_CDCINF_HEADER = $(HEADER_BUILD)/pybcdc_inf.h
 
+# List of sources for qstr extraction
+SRC_QSTR += $(SRC_C) $(SRC_MOD) $(SRC_LIB)
 # Append any auto-generated sources that are needed by sources listed in
 # SRC_QSTR
 SRC_QSTR_AUTO_DEPS += $(GEN_CDCINF_HEADER)
