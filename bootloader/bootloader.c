@@ -67,27 +67,6 @@ void SysTick_Handler(void) {
 #endif
 }
 
-
-// ### from timer.c
-
-uint32_t timer_get_source_freq(uint32_t tim_id) {
-    uint32_t source;
-    if (tim_id == 1 || (8 <= tim_id && tim_id <= 11)) {
-        // TIM{1,8,9,10,11} are on APB2
-        source = HAL_RCC_GetPCLK2Freq();
-        if ((uint32_t)((RCC->CFGR & RCC_CFGR_PPRE2) >> 3) != RCC_HCLK_DIV1) {
-            source *= 2;
-        }
-    } else {
-        // TIM{2,3,4,5,6,7,12,13,14} are on APB1
-        source = HAL_RCC_GetPCLK1Freq();
-        if ((uint32_t)(RCC->CFGR & RCC_CFGR_PPRE1) != RCC_HCLK_DIV1) {
-            source *= 2;
-        }
-    }
-    return source;
-}
-
 // ###
 
 int main(void) {

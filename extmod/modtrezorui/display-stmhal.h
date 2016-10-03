@@ -7,8 +7,6 @@
 
 #include STM32_HAL_H
 
-#define LED_PWM_TIM_PERIOD (10000)
-extern uint32_t timer_get_source_freq(uint32_t tim_id);
 
 #define DISPLAY_ILI9341V 0
 #define DISPLAY_ST7789V  1
@@ -19,6 +17,18 @@ extern uint32_t timer_get_source_freq(uint32_t tim_id);
 void DATAS(const void *bytes, int len);
 
 static TIM_HandleTypeDef TIM1_Handle;
+
+#define LED_PWM_TIM_PERIOD (10000)
+
+static uint32_t timer1_get_source_freq() {
+    uint32_t source;
+    // TIM1 is on APB2
+    source = HAL_RCC_GetPCLK2Freq();
+    if ((uint32_t)((RCC->CFGR & RCC_CFGR_PPRE2) >> 3) != RCC_HCLK_DIV1) {
+        source *= 2;
+    }
+    return source;
+}
 
 void display_sram_init(void) {
     __GPIOE_CLK_ENABLE();
@@ -58,7 +68,7 @@ void display_sram_init(void) {
     // enable PWM timer
     TIM1_Handle.Instance = TIM1;
     TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
-    TIM1_Handle.Init.Prescaler = timer_get_source_freq(1) / 1000000 - 1; // TIM runs at 1MHz
+    TIM1_Handle.Init.Prescaler = timer1_get_source_freq() / 1000000 - 1; // TIM runs at 1MHz
     TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
     TIM1_Handle.Init.RepetitionCounter = 0;
