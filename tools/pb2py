@@ -12,9 +12,9 @@ def process_type(t, cls, msg_id, indexfile):
     out = ["t = p.MessageType('%s')" % t, ]
 
     if msg_id is not None:
-        out.append("t.wire_type = %d" % msg_id)
+        out.append("t.wire_type = const(%d)" % msg_id)
         if indexfile is not None:
-            indexfile.write("%s = %d\n" % (t, msg_id))
+            indexfile.write("%s = const(%d)\n" % (t, msg_id))
 
     print("  * type %s" % t)
 
