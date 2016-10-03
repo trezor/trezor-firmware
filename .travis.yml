@@ -1,0 +1,12 @@
+language: c
+
+install:
+  - sudo dpkg --add-architecture i386
+  - sudo apt-get update
+  - sudo apt-get install libsdl2-dev:i386
+
+before_script:
+  - make build_unix
+
+script:
+  - cd src/tests && bash ./runtests.sh

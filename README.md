@@ -1,5 +1,7 @@
 ![TREZOR Core](docs/logo.png)
 
+[![Build Status](https://travis-ci.org/trezor/trezor-core.svg?branch=master)](https://travis-ci.org/trezor/trezor-core) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
+
 * [Documentation](docs/)
 
 ##Build instructions for emulator
