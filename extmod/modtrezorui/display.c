@@ -21,7 +21,11 @@ static int ORIENTATION = 0;
 #if defined STM32_HAL_H
 #include "display-stmhal.h"
 #else
-#include "display-unix.h"
+#ifndef TREZORUI_NOUI
+#include "display-unix-sdl.h"
+#else
+#include "display-unix-null.h"
+#endif
 #endif
 
 // common display functions

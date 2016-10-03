@@ -62,6 +62,6 @@ ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 }
 
 // from modtrezorui:
-uint32_t trezorui_poll_sdl_event(void);
+uint32_t trezorui_poll_event(void);
 
-#define msg_poll_ui_event trezorui_poll_sdl_event
+#define msg_poll_ui_event trezorui_poll_event
