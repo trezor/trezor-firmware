@@ -291,14 +291,15 @@ class Commands(object):
         return ret
 
     def firmware_update(self, args):
-        import requests
         if args.file:
             fp = open(args.file, 'rb').read()
         elif args.url:
+            import requests
             print("Downloading from", args.url)
             r = requests.get(args.url)
             fp = r.content
         else:
+            import requests
             r = requests.get('https://wallet.trezor.io/data/firmware/releases.json')
             releases = r.json()
             version = lambda r: r['version']
