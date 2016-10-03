@@ -12,4 +12,4 @@ before_script:
   - make build_unix
 
 script:
-  - cd src/tests && bash ./runtests.sh
+  - make test
