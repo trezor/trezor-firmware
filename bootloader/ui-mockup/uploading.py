@@ -6,8 +6,7 @@ from trezor import ui
 
 ui.display.backlight(255)
 
-ui.display.bar(0, 192, 240, 48, ui.ORANGE)
-ui.display.text_center(120, 192 + 32, "Installing Update", 1, ui.WHITE, ui.ORANGE)
+ui.display.text_center(120, 192 + 32, "Uploading firmware", 1, ui.WHITE, ui.BLACK)
 
 p = 0
 while True:
