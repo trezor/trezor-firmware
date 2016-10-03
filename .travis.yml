@@ -5,6 +5,7 @@ language: c
 install:
   - sudo dpkg --add-architecture i386
   - sudo apt-get update
+  - sudo apt-get install gcc-multilib
   - sudo apt-get install libsdl2-dev:i386
 
 before_script:
