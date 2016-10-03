@@ -8,6 +8,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+#include <stdint.h>
+
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 

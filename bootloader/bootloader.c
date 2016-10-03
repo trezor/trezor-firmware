@@ -1,6 +1,7 @@
 #include STM32_HAL_H
 
 #include "display.h"
+#include "bootloader_ui.h"
 
 // ### from main.c
 
@@ -102,17 +103,15 @@ int main(void) {
 
     display_init();
     display_clear();
-    display_text(100, 120, "TREZOR", 6, FONT_MONO, 0xFFFF, 0x0000);
-    display_text(90, 140, "bootloader", 10, FONT_MONO, 0xFFFF, 0x0000);
-    display_backlight(255);
+
+    screen_welcome();
+
+    for (;;) {
+        display_backlight(255);
         HAL_Delay(250);
-    display_backlight(0);
+        display_backlight(0);
         HAL_Delay(250);
-    display_backlight(100);
-        HAL_Delay(250);
-    display_backlight(0);
-        HAL_Delay(250);
-    display_backlight(255);
+    }
 
     __fatal_error("end");
 
