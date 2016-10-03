@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 from setuptools import setup
 
+install_requires = ['ecdsa>=0.9', 'protobuf>=2.6.1', 'mnemonic>=0.8', 'setuptools>=19.0']
+
+import sys
+if '--disable-hidapi' in sys.argv:
+    sys.argv.remove('--disable-hidapi')
+else:
+    install_requires.append('hidapi>=0.7.99')
+
 setup(
     name='trezor',
     version='0.7.4',
@@ -27,7 +35,7 @@ setup(
     ],
     scripts = ['trezorctl'],
     test_suite='tests',
-    install_requires=['ecdsa>=0.9', 'protobuf>=2.6.1', 'mnemonic>=0.8', 'hidapi>=0.7.99', 'setuptools>=19.0'],
+    install_requires=install_requires,
     include_package_data=True,
     zip_safe=False,
     classifiers=[
