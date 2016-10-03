@@ -1,7 +1,7 @@
 #!/bin/bash
 results=()
 error=0
-for i in *.py; do
+for i in test_*.py; do
    echo
     if ../../vendor/micropython/unix/micropython $i; then
        results+=("OK   $i")
