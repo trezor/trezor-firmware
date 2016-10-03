@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('Initialize')
-t.wire_type = 0
+t.wire_type = const(0)
 Initialize = t

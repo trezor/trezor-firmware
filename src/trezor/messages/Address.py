@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('Address')
-t.wire_type = 30
+t.wire_type = const(30)
 t.add_field(1, 'address', p.UnicodeType, flags=p.FLAG_REQUIRED)
 Address = t

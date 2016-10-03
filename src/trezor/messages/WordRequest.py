@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('WordRequest')
-t.wire_type = 46
+t.wire_type = const(46)
 WordRequest = t

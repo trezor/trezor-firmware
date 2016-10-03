@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('DebugLinkDecision')
-t.wire_type = 100
+t.wire_type = const(100)
 t.add_field(1, 'yes_no', p.BoolType, flags=p.FLAG_REQUIRED)
 DebugLinkDecision = t

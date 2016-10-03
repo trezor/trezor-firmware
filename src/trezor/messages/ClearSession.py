@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('ClearSession')
-t.wire_type = 24
+t.wire_type = const(24)
 ClearSession = t

@@ -2,7 +2,7 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('ResetDevice')
-t.wire_type = 14
+t.wire_type = const(14)
 t.add_field(1, 'display_random', p.BoolType)
 t.add_field(2, 'strength', p.UVarintType, default=256)
 t.add_field(3, 'passphrase_protection', p.BoolType)

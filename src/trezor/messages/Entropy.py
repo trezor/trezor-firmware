@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('Entropy')
-t.wire_type = 10
+t.wire_type = const(10)
 t.add_field(1, 'entropy', p.BytesType, flags=p.FLAG_REQUIRED)
 Entropy = t

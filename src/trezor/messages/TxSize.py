@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('TxSize')
-t.wire_type = 44
+t.wire_type = const(44)
 t.add_field(1, 'tx_size', p.UVarintType)
 TxSize = t

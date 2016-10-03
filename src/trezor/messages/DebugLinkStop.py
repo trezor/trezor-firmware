@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('DebugLinkStop')
-t.wire_type = 103
+t.wire_type = const(103)
 DebugLinkStop = t

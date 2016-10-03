@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('ButtonAck')
-t.wire_type = 27
+t.wire_type = const(27)
 ButtonAck = t

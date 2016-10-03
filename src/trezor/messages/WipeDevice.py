@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('WipeDevice')
-t.wire_type = 5
+t.wire_type = const(5)
 WipeDevice = t

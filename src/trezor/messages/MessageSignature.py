@@ -2,7 +2,7 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('MessageSignature')
-t.wire_type = 40
+t.wire_type = const(40)
 t.add_field(1, 'address', p.UnicodeType)
 t.add_field(2, 'signature', p.BytesType)
 MessageSignature = t

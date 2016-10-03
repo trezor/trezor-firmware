@@ -9,4 +9,5 @@ t.add_field(4, 'maxfee_kb', p.UVarintType)
 t.add_field(5, 'address_type_p2sh', p.UVarintType, default=5)
 t.add_field(6, 'address_type_p2wpkh', p.UVarintType, default=6)
 t.add_field(7, 'address_type_p2wsh', p.UVarintType, default=10)
+t.add_field(8, 'signed_message_header', p.UnicodeType)
 CoinType = t

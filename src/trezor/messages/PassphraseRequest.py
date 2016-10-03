@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('PassphraseRequest')
-t.wire_type = 41
+t.wire_type = const(41)
 PassphraseRequest = t

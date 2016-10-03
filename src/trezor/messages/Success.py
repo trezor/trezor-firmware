@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('Success')
-t.wire_type = 2
+t.wire_type = const(2)
 t.add_field(1, 'message', p.UnicodeType)
 Success = t

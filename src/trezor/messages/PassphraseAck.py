@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('PassphraseAck')
-t.wire_type = 42
+t.wire_type = const(42)
 t.add_field(1, 'passphrase', p.UnicodeType, flags=p.FLAG_REQUIRED)
 PassphraseAck = t

@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('EntropyRequest')
-t.wire_type = 35
+t.wire_type = const(35)
 EntropyRequest = t

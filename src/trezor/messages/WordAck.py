@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('WordAck')
-t.wire_type = 47
+t.wire_type = const(47)
 t.add_field(1, 'word', p.UnicodeType, flags=p.FLAG_REQUIRED)
 WordAck = t

@@ -2,6 +2,6 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('ChangePin')
-t.wire_type = 4
+t.wire_type = const(4)
 t.add_field(1, 'remove', p.BoolType)
 ChangePin = t

@@ -2,7 +2,7 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('EncryptedMessage')
-t.wire_type = 50
+t.wire_type = const(50)
 t.add_field(1, 'nonce', p.BytesType)
 t.add_field(2, 'message', p.BytesType)
 t.add_field(3, 'hmac', p.BytesType)

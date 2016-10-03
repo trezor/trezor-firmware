@@ -2,7 +2,7 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('Failure')
-t.wire_type = 3
+t.wire_type = const(3)
 t.add_field(1, 'code', p.UVarintType)
 t.add_field(2, 'message', p.UnicodeType)
 Failure = t

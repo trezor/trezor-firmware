@@ -2,7 +2,7 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('RecoveryDevice')
-t.wire_type = 45
+t.wire_type = const(45)
 t.add_field(1, 'word_count', p.UVarintType)
 t.add_field(2, 'passphrase_protection', p.BoolType)
 t.add_field(3, 'pin_protection', p.BoolType)

@@ -3,7 +3,7 @@ import protobuf as p
 from micropython import const
 from .HDNodeType import HDNodeType
 t = p.MessageType('DebugLinkState')
-t.wire_type = 102
+t.wire_type = const(102)
 t.add_field(1, 'layout', p.BytesType)
 t.add_field(2, 'pin', p.UnicodeType)
 t.add_field(3, 'matrix', p.UnicodeType)

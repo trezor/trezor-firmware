@@ -3,9 +3,10 @@ import protobuf as p
 from micropython import const
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
 t = p.MessageType('GetAddress')
-t.wire_type = 29
+t.wire_type = const(29)
 t.add_field(1, 'address_n', p.UVarintType, flags=p.FLAG_REPEATED)
 t.add_field(2, 'coin_name', p.UnicodeType, default=u'Bitcoin')
 t.add_field(3, 'show_display', p.BoolType)
 t.add_field(4, 'multisig', p.EmbeddedMessage(MultisigRedeemScriptType))
+t.add_field(5, 'script_type', p.UVarintType, default=0)
 GetAddress = t

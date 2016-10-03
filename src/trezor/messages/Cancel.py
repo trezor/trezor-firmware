@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('Cancel')
-t.wire_type = 20
+t.wire_type = const(20)
 Cancel = t

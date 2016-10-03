@@ -2,7 +2,7 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('SignTx')
-t.wire_type = 15
+t.wire_type = const(15)
 t.add_field(1, 'outputs_count', p.UVarintType, flags=p.FLAG_REQUIRED)
 t.add_field(2, 'inputs_count', p.UVarintType, flags=p.FLAG_REQUIRED)
 t.add_field(3, 'coin_name', p.UnicodeType, default=u'Bitcoin')

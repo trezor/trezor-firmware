@@ -10,4 +10,5 @@ t.add_field(4, 'script_sig', p.BytesType)
 t.add_field(5, 'sequence', p.UVarintType, default=4294967295)
 t.add_field(6, 'script_type', p.UVarintType, default=0)
 t.add_field(7, 'multisig', p.EmbeddedMessage(MultisigRedeemScriptType))
+t.add_field(8, 'amount', p.UVarintType)
 TxInputType = t

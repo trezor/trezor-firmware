@@ -2,5 +2,5 @@
 import protobuf as p
 from micropython import const
 t = p.MessageType('GetFeatures')
-t.wire_type = 55
+t.wire_type = const(55)
 GetFeatures = t
