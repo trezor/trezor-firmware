@@ -81,7 +81,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
     if (data.len != 2 * w * h) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Wrong data size (got %d bytes, expected %d bytes)", data.len, 2 * w * h));
     }
-    display_blit(x, y, w, h, data.buf, data.len);
+    if (w > 0 && h > 0) {
+        display_blit(x, y, w, h, data.buf, data.len);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, mod_TrezorUi_Display_blit);
@@ -157,7 +159,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+    if (text.len > 0) {
+        display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
@@ -175,7 +179,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+    if (text.len > 0) {
+        display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
@@ -193,7 +199,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *a
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+    if (text.len > 0) {
+        display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);
@@ -206,7 +214,10 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_width(mp_obj_t self, mp_obj_t text, mp
     mp_buffer_info_t txt;
     mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
     mp_int_t f = mp_obj_get_int(font);
-    uint32_t w = display_text_width(txt.buf, txt.len, f);
+    uint32_t w = 0;
+    if (txt.len > 0) {
+        w = display_text_width(txt.buf, txt.len, f);
+    }
     return MP_OBJ_NEW_SMALL_INT(w);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_text_width_obj, mod_TrezorUi_Display_text_width);
@@ -225,7 +236,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
     }
     mp_buffer_info_t data;
     mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
-    display_qrcode(x, y, data.buf, data.len, scale);
+    if (data.len > 0) {
+        display_qrcode(x, y, data.buf, data.len, scale);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
@@ -320,7 +333,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_raw(mp_obj_t self, mp_obj_t reg, mp_obj_t d
     mp_int_t r = mp_obj_get_int(reg);
     mp_buffer_info_t raw;
     mp_get_buffer_raise(data, &raw, MP_BUFFER_READ);
-    display_raw(r, raw.buf, raw.len);
+    if (raw.len > 0) {
+        display_raw(r, raw.buf, raw.len);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_raw_obj, mod_TrezorUi_Display_raw);

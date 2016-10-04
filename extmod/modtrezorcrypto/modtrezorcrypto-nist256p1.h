@@ -55,6 +55,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_k
     if (sk.len != 32) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of secret key"));
     }
+    if (msg.len == 0) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Empty data to sign"));
+    }
     vstr_t vstr;
     vstr_init_len(&vstr, 65);
     uint8_t pby;
@@ -81,6 +84,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_verify(size_t n_args, const mp_obj_t 
     }
     if (sig.len != 65) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of signature"));
+    }
+    if (msg.len == 0) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Empty data to verify"));
     }
     return mp_obj_new_bool(0 == ecdsa_verify(&nist256p1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf, (const uint8_t *)msg.buf, msg.len));
 }

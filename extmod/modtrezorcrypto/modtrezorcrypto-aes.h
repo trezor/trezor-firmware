@@ -90,9 +90,12 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t 
 STATIC mp_obj_t mod_TrezorCrypto_AES_update(mp_obj_t self, mp_obj_t data) {
     mp_buffer_info_t buf;
     mp_get_buffer_raise(data, &buf, MP_BUFFER_READ);
-    mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, buf.len);
+    if (buf.len == 0) {
+        return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    }
+    mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
     switch (o->mode & AESModeMask) {
         case ECB:
             if (buf.len & (AES_BLOCK_SIZE - 1)) {

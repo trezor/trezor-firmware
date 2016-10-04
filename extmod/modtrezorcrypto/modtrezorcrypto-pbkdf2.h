@@ -34,6 +34,13 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
     mp_buffer_info_t salt;
     mp_get_buffer_raise(args[2], &salt, MP_BUFFER_READ);
 
+    if (password.len == 0) {
+        password.buf = "";
+    }
+    if (salt.len == 0) {
+        salt.buf = "";
+    }
+
     o->prf = 0;
     if (prf.len == 11 && memcmp(prf.buf, "hmac-sha256", prf.len) == 0) {
         pbkdf2_hmac_sha256_Init(&(o->ctx256), password.buf, password.len, salt.buf, salt.len);

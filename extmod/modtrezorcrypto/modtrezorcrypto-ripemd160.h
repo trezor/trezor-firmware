@@ -43,7 +43,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data) 
     mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t msg;
     mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
-    ripemd160_Update(&(o->ctx), msg.buf, msg.len);
+    if (msg.len > 0) {
+        ripemd160_Update(&(o->ctx), msg.buf, msg.len);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ripemd160_update_obj, mod_TrezorCrypto_Ripemd160_update);

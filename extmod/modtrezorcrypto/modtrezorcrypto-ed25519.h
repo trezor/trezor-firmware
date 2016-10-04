@@ -48,6 +48,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_sign(mp_obj_t self, mp_obj_t secret_key
     if (sk.len != 32) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of secret key"));
     }
+    if (msg.len == 0) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Empty data to sign"));
+    }
     ed25519_public_key pk;
     ed25519_publickey(*(const ed25519_secret_key *)sk.buf, pk);
     vstr_t vstr;
@@ -72,6 +75,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_verify(size_t n_args, const mp_obj_t *a
     }
     if (sig.len != 64) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of signature"));
+    }
+    if (msg.len == 0) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Empty data to verify"));
     }
     return (0 == ed25519_sign_open(msg.buf, msg.len, *(const ed25519_public_key *)pk.buf, *(const ed25519_signature *)sig.buf)) ? mp_const_true : mp_const_false;
 }

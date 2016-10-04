@@ -62,7 +62,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_from_data_obj, mod_Trezo
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_check(mp_obj_t self, mp_obj_t mnemonic) {
     mp_buffer_info_t text;
     mp_get_buffer_raise(mnemonic, &text, MP_BUFFER_READ);
-    return mnemonic_check(text.buf) ? mp_const_true : mp_const_false;
+    return (text.len > 0 && mnemonic_check(text.buf)) ? mp_const_true : mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_check_obj, mod_TrezorCrypto_Bip39_check);
 
@@ -77,7 +77,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_seed(mp_obj_t self, mp_obj_t mnemonic, mp
     mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
     vstr_t vstr;
     vstr_init_len(&vstr, 64);
-    mnemonic_to_seed(mnemo.buf, phrase.buf, (uint8_t *)vstr.buf, NULL); // no callback for now
+    const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
+    const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
+    mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t *)vstr.buf, NULL); // no callback for now
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Bip39_seed_obj, mod_TrezorCrypto_Bip39_seed);

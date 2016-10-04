@@ -54,8 +54,8 @@ ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
     (void)iface; // ignore interface for UDP
-    ssize_t r = -1;
-    if (slen) {
+    ssize_t r = len;
+    if (slen > 0) {
         r = sendto(s, buf, len, MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);
     }
     return r;

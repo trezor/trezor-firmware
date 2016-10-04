@@ -29,7 +29,9 @@ ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
     (void)iface; // ignore interface for now
-    USBD_HID_SendReport(&hUSBDDevice, (uint8_t *)buf, len);
+    if (len > 0) {
+        USBD_HID_SendReport(&hUSBDDevice, (uint8_t *)buf, len);
+    }
     return len;
 }
 

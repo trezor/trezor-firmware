@@ -76,6 +76,9 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_combine(mp_obj_t self, mp_obj_t shares) {
         if (MP_OBJ_IS_TYPE(share[i], &mp_type_bytes)) {
             mp_buffer_info_t s;
             mp_get_buffer_raise(share[i], &s, MP_BUFFER_READ);
+            if (s.len != 32) {
+                nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Length of share has to be 256 bits"));
+            }
             bn_read_be(s.buf, &bnshares[n]);
         } else {
             memset(&bnshares[i], 0, sizeof(bignum256));

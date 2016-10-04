@@ -43,7 +43,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
     mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t msg;
     mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
-    sha256_Update(&(o->ctx), msg.buf, msg.len);
+    if (msg.len > 0) {
+        sha256_Update(&(o->ctx), msg.buf, msg.len);
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha256_update_obj, mod_TrezorCrypto_Sha256_update);
