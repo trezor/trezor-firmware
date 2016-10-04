@@ -2,7 +2,7 @@
 import sys
 sys.path.append('../../src')
 
-from trezor import ui, res
+from trezor import ui
 from trezor.ui import button
 
 CONFIRM_BUTTON = {
@@ -31,10 +31,26 @@ CANCEL_BUTTON_ACTIVE = {
 }
 
 ui.display.backlight(255)
-ui.display.text(10, 30, 'Firmware upload', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-ui.display.text(10, 60, 'Install new firmware?', ui.BOLD, ui.WHITE, ui.BLACK)
-ui.display.text(10, 90, 'Never do this without', ui.NORMAL, ui.WHITE, ui.BLACK)
-ui.display.text(10, 120, 'your recovery card!', ui.NORMAL, ui.WHITE, ui.BLACK)
+
+# header
+ui.display.bar(0, 0, 240, 30, ui.ORANGE, ui.BLACK, 4)
+ui.display.bar(0, 10, 240, 20, ui.ORANGE)
+ui.display.text(10, 23, 'Install new firmware', ui.BOLD, ui.WHITE, ui.ORANGE)
+
+# content
+ui.display.text(10, 53, 'vendor:', ui.BOLD, ui.GREY, ui.BLACK)
+ui.display.text(85, 53, 'Monero', ui.NORMAL, ui.WHITE, ui.BLACK)
+
+ui.display.text(10, 76, 'version:', ui.BOLD, ui.GREY, ui.BLACK)
+ui.display.text(85, 76, '0.1.1', ui.NORMAL, ui.WHITE, ui.BLACK)
+
+# fingerprint box
+ui.display.bar(10, 82, 220, 102, ui.DARK_GREY)
+s = 105
+ui.display.text(15, s, '5764715dbcf8ed88', ui.MONO, ui.GREY, ui.DARK_GREY)
+ui.display.text(15, s + 1 * 23, 'bc0ae1c2f715277f', ui.MONO, ui.GREY, ui.DARK_GREY)
+ui.display.text(15, s + 2 * 23, '22b67f26c15e1f75', ui.MONO, ui.GREY, ui.DARK_GREY)
+ui.display.text(15, s + 3 * 23, '43b2b44913b5c255', ui.MONO, ui.GREY, ui.DARK_GREY)
 
 confirm = button.Button((121, 240 - 48, 119, 48), 'Confirm', normal_style=CONFIRM_BUTTON, active_style=CONFIRM_BUTTON_ACTIVE)
 confirm.render()

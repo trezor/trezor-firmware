@@ -13,5 +13,6 @@ ui.display.bar(0, 175, 240, 48, ui.BLACK)
 
 ui.display.text_center(120, 192 + 32, "Visit TREZOR.io/start", 1, ui.WHITE, ui.BLACK)
 
+
 while True:
     ui.display.refresh()
