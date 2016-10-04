@@ -1,7 +1,9 @@
 #include STM32_HAL_H
 
+#include "crypto.h"
+#include "ui.h"
+
 #include "display.h"
-#include "bootloader_ui.h"
 
 // ### from main.c
 
@@ -83,7 +85,14 @@ int main(void) {
     display_init();
     display_clear();
 
+    uint8_t hash[32];
+    hash_flash(hash);
+
     screen_welcome();
+
+    uint8_t *pubkey = (uint8_t *)"ThisIsJustAFakePublicKeyForTest!";
+    uint8_t *signature = (uint8_t *)"ThisIsJustAFakeSignatureToTestTheVerifyMechanismInTRZRBootloader";
+    ed25519_verify(hash, 32, pubkey, signature);
 
     for (;;) {
         display_backlight(255);

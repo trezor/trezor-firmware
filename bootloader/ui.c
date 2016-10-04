@@ -1,5 +1,8 @@
+#include "ui.h"
+
 #include "display.h"
-#include "bootloader_trezor.h"
+
+#include "toi_trezor.h"
 
 #define ui_WHITE 0xFFFF
 #define ui_BLACK 0x0000
