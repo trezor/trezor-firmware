@@ -4,6 +4,7 @@ from uheapq import heappop, heappush, heapify
 from .utils import type_gen
 from . import msg
 from . import log
+from . import ui
 
 if __debug__:
     # for performance stats
@@ -99,6 +100,7 @@ def run_forever():
             # add current delay to ring buffer for performance stats
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
+        ui.display.refresh()
         message = msg.select(delay)
         if message:
             handle_message(message)
