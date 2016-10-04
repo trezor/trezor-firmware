@@ -2,8 +2,8 @@
 import math
 import sys
 
-outer = 83
-inner = 55
+outer = 64
+inner = 42
 
 with open('loader.h', 'wt') as f:
     f.write('static const int img_loader_size = %d;\n' % outer)

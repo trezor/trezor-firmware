@@ -12,7 +12,7 @@ p = 0
 while True:
 
     ui.display.loader(p, ui.BLUE, ui.BLACK)
-    ui.display.text_center(120, 192 // 2 + 14 // 2, "%d%%" % (p // 10), 2, ui.WHITE, ui.BLACK)
+    ui.display.text_center(120, 240 // 2 + 14 // 2, "%d%%" % (p // 10), 2, ui.WHITE, ui.BLACK)
 
     ui.display.refresh()
 
