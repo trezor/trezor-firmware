@@ -13,28 +13,28 @@
 ```
 sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install libsdl2-dev:i386
+sudo apt-get install libsdl2-dev:i386 libsdl2-image-dev:i386
 make build_unix
 ```
 
 ####Fedora
 
 ```
-sudo yum install SDL2-devel.i686
+sudo yum install SDL2-devel.i686 SDL2_image-devel.i686
 make build_unix
 ```
 
 ####openSUSE
 
 ```
-sudo zypper install libSDL2-devel-32bit
+sudo zypper install libSDL2-devel-32bit libSDL2_image-devel-32bit
 make build_unix
 ```
 
 ###OS X
 
 ```
-brew install --universal sdl2
+brew install --universal sdl2 sdl2_image
 make build_unix
 ```
 

@@ -7,11 +7,12 @@
 
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define DISPLAY_BORDER 16
 
 static SDL_Renderer *RENDERER = 0;
-static SDL_Surface  *SCREEN   = 0;
+static SDL_Surface  *BUFFER   = 0;
 static SDL_Texture  *TEXTURE  = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
@@ -20,7 +21,7 @@ static int POSX, POSY, SX, SY, EX, EY = 0;
 
 void DATA(uint8_t x) {
     if (POSX <= EX && POSY <= EY) {
-        ((uint8_t *)SCREEN->pixels)[POSX * 2 + POSY * SCREEN->pitch + (DATAODD ^ 1)] = x;
+        ((uint8_t *)BUFFER->pixels)[POSX * 2 + POSY * BUFFER->pitch + (DATAODD ^ 1)] = x;
     }
     DATAODD = !DATAODD;
     if (DATAODD == 0) {
@@ -93,7 +94,7 @@ void display_init(void)
     }
     SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     SDL_RenderClear(RENDERER);
-    SCREEN = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
+    BUFFER = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
     SDL_SetTextureAlphaMod(TEXTURE, 0);
@@ -110,7 +111,7 @@ void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 void display_refresh(void)
 {
     SDL_RenderClear(RENDERER);
-    SDL_UpdateTexture(TEXTURE, NULL, SCREEN->pixels, SCREEN->pitch);
+    SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
@@ -133,4 +134,9 @@ int display_backlight(int val)
         SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
     }
     return BACKLIGHT;
+}
+
+void display_save(const char *filename)
+{
+    IMG_SavePNG(BUFFER, filename);
 }

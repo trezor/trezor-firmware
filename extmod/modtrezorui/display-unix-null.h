@@ -34,3 +34,7 @@ int display_backlight(int val)
 {
     return BACKLIGHT;
 }
+
+void display_save(const char *filename)
+{
+}
