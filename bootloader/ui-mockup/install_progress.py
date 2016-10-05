@@ -4,8 +4,8 @@ sys.path.append('../../src')
 
 from trezor import ui, res
 
+ui.display.clear()
 ui.display.backlight(255)
-
 
 # header
 ui.display.bar(0, 0, 240, 32, ui.ORANGE, ui.BLACK, 4)
@@ -24,6 +24,6 @@ while True:
     ui.display.loader(p, ui.BLUE, ui.BLACK)
     ui.display.text_center(120, 240 // 2 + 14 // 2, "%d%%" % (p // 10), 2, ui.WHITE, ui.BLACK)
 
-    ui.display.refresh()
+    if hasattr(ui.display, 'refresh'): ui.display.refresh()
 
     p = (p + 1) % 1000

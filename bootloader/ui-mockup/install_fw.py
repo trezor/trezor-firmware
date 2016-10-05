@@ -30,6 +30,7 @@ CANCEL_BUTTON_ACTIVE = {
     'border-color': ui.RED,
 }
 
+ui.display.clear()
 ui.display.backlight(255)
 
 # header
@@ -59,4 +60,4 @@ cancel = button.Button((0, 240 - 48, 119, 48), 'Cancel', normal_style=CANCEL_BUT
 cancel.render()
 
 while True:
-    ui.display.refresh()
+    if hasattr(ui.display, 'refresh'): ui.display.refresh()

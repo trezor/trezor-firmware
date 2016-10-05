@@ -18,6 +18,7 @@ DEFAULT_BUTTON_ACTIVE = {
     'border-color': ui.GREY,
 }
 
+ui.display.clear()
 ui.display.backlight(255)
 
 # header
@@ -38,4 +39,4 @@ reboot = button.Button((0, 240 - 48, 240, 48), 'Reboot', normal_style=DEFAULT_BU
 reboot.render()
 
 while True:
-    ui.display.refresh()
+    if hasattr(ui.display, 'refresh'): ui.display.refresh()

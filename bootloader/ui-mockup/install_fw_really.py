@@ -18,6 +18,7 @@ CONFIRM_BUTTON_ACTIVE = {
     'border-color': ui.BLACK,
 }
 
+ui.display.clear()
 ui.display.backlight(255)
 
 # header
@@ -41,4 +42,4 @@ confirm = button.Button((0, 240 - 48, 240, 48), 'Hold to confirm', normal_style=
 confirm.render()
 
 while True:
-    ui.display.refresh()
+    if hasattr(ui.display, 'refresh'): ui.display.refresh()

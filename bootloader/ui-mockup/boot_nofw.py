@@ -4,6 +4,7 @@ sys.path.append('../../src')
 
 from trezor import ui, res
 
+ui.display.clear()
 ui.display.backlight(255)
 
 image = res.load('../../src/apps/homescreen/res/trezor.toig')
@@ -15,4 +16,4 @@ ui.display.text_center(120, 192 + 32, "Visit TREZOR.io/start", 1, ui.WHITE, ui.B
 
 
 while True:
-    ui.display.refresh()
+    if hasattr(ui.display, 'refresh'): ui.display.refresh()
