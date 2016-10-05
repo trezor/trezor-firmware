@@ -11,7 +11,6 @@ display = Display()
 def rgbcolor(r: int, g: int, b: int) -> int:
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
 
-
 LIGHT_RED   = rgbcolor(0xFF, 0x00, 0x00)
 RED         = rgbcolor(0x66, 0x00, 0x00)
 PINK        = rgbcolor(0xE9, 0x1E, 0x63)
@@ -40,7 +39,7 @@ WHITE       = rgbcolor(0xFA, 0xFA, 0xFA)
 # password manager palette
 
 PM_DARK_BLUE = rgbcolor(0x1A, 0x29, 0x42)
-PM_BLUE      = rgbcolor(0x34, 0x98, 0xdb)
+PM_BLUE      = rgbcolor(0x34, 0x98, 0xDB)
 
 MONO   = Display.FONT_MONO
 NORMAL = Display.FONT_NORMAL

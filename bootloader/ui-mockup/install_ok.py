@@ -4,6 +4,7 @@ sys.path.append('../../src')
 
 from trezor import ui, res
 from trezor.ui import button
+from bl_common import bl_header
 
 DEFAULT_BUTTON = {
     'bg-color': ui.DARK_GREY,
@@ -22,12 +23,7 @@ ui.display.clear()
 ui.display.backlight(255)
 
 # header
-ui.display.bar(0, 0, 240, 32, ui.ORANGE)
-
-image = res.load('./res/bootloader.toig')
-ui.display.icon(8, 4, image, ui.ORANGE, ui.WHITE)
-
-ui.display.text(35, 23, 'Install done', ui.BOLD, ui.WHITE, ui.ORANGE)
+bl_header('Install done')
 
 # content
 # content

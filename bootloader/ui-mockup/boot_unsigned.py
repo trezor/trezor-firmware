@@ -4,6 +4,7 @@ sys.path.append('../../src')
 
 from trezor import ui, res
 from trezor.ui import button
+from bl_common import bl_header
 
 CANCEL_BUTTON = {
     'bg-color': ui.RED,
@@ -25,12 +26,7 @@ ui.display.bar(0, 10, 240, 240 - 50, ui.LIGHT_RED)
 ui.display.bar(3, 3, 234, 240 - 54, ui.BLACK)
 
 # header
-ui.display.bar(0, 0, 240, 32, ui.ORANGE)
-
-image = res.load('./res/bootloader.toig')
-ui.display.icon(8, 4, image, ui.ORANGE, ui.WHITE)
-
-ui.display.text(35, 23, 'Unsigned firmware!', ui.BOLD, ui.WHITE, ui.ORANGE)
+bl_header('Unsigned firmware!')
 
 # content
 ui.display.text(10, 60, 'Check your fingeprint', ui.NORMAL, ui.WHITE, ui.BLACK)

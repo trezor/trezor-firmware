@@ -3,17 +3,13 @@ import sys
 sys.path.append('../../src')
 
 from trezor import ui, res
+from bl_common import bl_header
 
 ui.display.clear()
 ui.display.backlight(255)
 
 # header
-ui.display.bar(0, 0, 240, 32, ui.ORANGE)
-
-image = res.load('./res/bootloader.toig')
-ui.display.icon(8, 4, image, ui.ORANGE, ui.WHITE)
-
-ui.display.text(35, 23, 'Installing firmware', ui.BOLD, ui.WHITE, ui.ORANGE)
+bl_header('Installing firmware')
 
 ui.display.text_center(120, 192 + 32, "In progress ...", 1, ui.WHITE, ui.BLACK)
 
