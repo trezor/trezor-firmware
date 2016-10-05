@@ -33,8 +33,8 @@ CANCEL_BUTTON_ACTIVE = {
 ui.display.backlight(255)
 
 # header
-ui.display.bar(0, 0, 240, 30, ui.ORANGE, ui.BLACK, 4)
-ui.display.bar(0, 10, 240, 20, ui.ORANGE)
+ui.display.bar(0, 0, 240, 32, ui.ORANGE, ui.BLACK, 4)
+ui.display.bar(0, 10, 240, 22, ui.ORANGE)
 ui.display.text(10, 23, 'Install new firmware', ui.BOLD, ui.WHITE, ui.ORANGE)
 
 # content

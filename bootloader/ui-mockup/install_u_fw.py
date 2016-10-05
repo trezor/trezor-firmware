@@ -37,8 +37,8 @@ ui.display.backlight(255)
 # ui.display.bar(3, 3, 234, 240 - 54, ui.BLACK)
 
 # header
-ui.display.bar(0, 0, 240, 30, ui.LIGHT_RED, ui.BLACK, 4)
-ui.display.bar(0, 10, 240, 20, ui.LIGHT_RED)
+ui.display.bar(0, 0, 240, 32, ui.LIGHT_RED, ui.BLACK, 4)
+ui.display.bar(0, 10, 240, 22, ui.LIGHT_RED)
 ui.display.text(10, 23, 'Install new firmware', ui.BOLD, ui.WHITE, ui.LIGHT_RED)
 
 # content
