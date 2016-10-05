@@ -29,9 +29,9 @@ async def animate_swipe():
 
 
 def render_swipe_icon(fg):
-    ui.display.bar(102, 214, 36, 4, fg, ui.BLACK, 2)
-    ui.display.bar(106, 222, 28, 4, fg, ui.BLACK, 2)
-    ui.display.bar(110, 230, 20, 4, fg, ui.BLACK, 2)
+    ui.display.bar_radius(102, 214, 36, 4, fg, ui.BLACK, 2)
+    ui.display.bar_radius(106, 222, 28, 4, fg, ui.BLACK, 2)
+    ui.display.bar_radius(110, 230, 20, 4, fg, ui.BLACK, 2)
 
 
 def render_scrollbar(page, page_count):
@@ -47,6 +47,6 @@ def render_scrollbar(page, page_count):
 
     for i in range(0, page_count):
         if i != page:
-            ui.display.bar(x, y + i * padding, size,
+            ui.display.bar_radius(x, y + i * padding, size,
                            size, ui.DARK_GREY, ui.BLACK, 4)
-    ui.display.bar(x, y + page * padding, size, size, ui.WHITE, ui.BLACK, 4)
+    ui.display.bar_radius(x, y + page * padding, size, size, ui.WHITE, ui.BLACK, 4)

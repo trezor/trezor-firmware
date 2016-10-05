@@ -22,8 +22,7 @@ ui.display.clear()
 ui.display.backlight(255)
 
 # header
-ui.display.bar(0, 0, 240, 32, ui.ORANGE, ui.BLACK, 4)
-ui.display.bar(0, 10, 240, 22, ui.ORANGE)
+ui.display.bar(0, 0, 240, 32, ui.ORANGE)
 
 image = res.load('./res/bootloader.toig')
 ui.display.icon(8, 4, image, ui.ORANGE, ui.WHITE)
