@@ -4,13 +4,11 @@ from trezor import ui
 from trezor import wire
 
 # Load all applications
-from apps import playground
 from apps import homescreen
 from apps import management
 from apps import wallet
 
 # Initialize all applications
-playground.boot()
 homescreen.boot()
 management.boot()
 wallet.boot()
