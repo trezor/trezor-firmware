@@ -38,11 +38,8 @@ ui.display.bar(0, 10, 240, 20, ui.ORANGE)
 ui.display.text(10, 23, 'Install new firmware', ui.BOLD, ui.WHITE, ui.ORANGE)
 
 # content
-ui.display.text(10, 53, 'vendor:', ui.BOLD, ui.GREY, ui.BLACK)
-ui.display.text(85, 53, 'Monero', ui.NORMAL, ui.WHITE, ui.BLACK)
-
-ui.display.text(10, 76, 'version:', ui.BOLD, ui.GREY, ui.BLACK)
-ui.display.text(85, 76, '0.1.1', ui.NORMAL, ui.WHITE, ui.BLACK)
+ui.display.text(10, 53, 'Monero v.1.1', ui.NORMAL, ui.WHITE, ui.BLACK)
+ui.display.text(10, 76, 'Check fingerprint:', ui.BOLD, ui.GREY, ui.BLACK)
 
 # fingerprint box
 ui.display.bar(10, 82, 220, 102, ui.DARK_GREY)
