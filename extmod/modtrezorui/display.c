@@ -88,7 +88,6 @@ static const uint8_t cornertable[CORNER_RADIUS*CORNER_RADIUS] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 };
 
-
 void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, uint16_t b, uint8_t r)
 {
     if (r != 2 && r != 4 && r != 8 && r != 16) {

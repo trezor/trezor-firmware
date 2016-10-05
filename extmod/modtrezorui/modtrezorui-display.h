@@ -41,10 +41,9 @@ STATIC mp_obj_t mod_TrezorUi_Display_refresh(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorUi_Display_refresh_obj, mod_TrezorUi_Display_refresh);
 
-/// def trezor.ui.display.bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None:
+/// def trezor.ui.display.bar(x: int, y: int, w: int, h: int, color: int) -> None:
 ///     '''
-///     Renders a bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
-///     When a bgcolor is set, the bar is drawn with rounded corners and bgcolor is used for background.
+///     Renders a bar at position (x,y = upper left corner) with width w and height h of color color.
 ///     '''
 STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
@@ -55,16 +54,31 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
         nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
     }
-    if (n_args > 7) {
-        uint16_t b = mp_obj_get_int(args[6]);
-        uint8_t r = mp_obj_get_int(args[7]);
-        display_bar_radius(x, y, w, h, c, b, r);
-    } else {
-        display_bar(x, y, w, h, c);
-    }
+    display_bar(x, y, w, h, c);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 8, mod_TrezorUi_Display_bar);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_obj, 6, 6, mod_TrezorUi_Display_bar);
+
+/// def trezor.ui.display.bar_radius(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None:
+///     '''
+///     Renders a rounded bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
+///     Background is set to bgcolor and corners are drawn with radius radius.
+///     '''
+STATIC mp_obj_t mod_TrezorUi_Display_bar_radius(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_int_t w = mp_obj_get_int(args[3]);
+    mp_int_t h = mp_obj_get_int(args[4]);
+    uint16_t c = mp_obj_get_int(args[5]);
+    uint16_t b = mp_obj_get_int(args[6]);
+    uint8_t r = mp_obj_get_int(args[7]);
+    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
+        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
+    }
+    display_bar_radius(x, y, w, h, c, b, r);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_radius_obj, 8, 8, mod_TrezorUi_Display_bar_radius);
 
 /// def trezor.ui.display.blit(x: int, y: int, w: int, h: int, data: bytes) -> None:
 ///     '''
@@ -344,6 +358,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_TrezorUi_Display_clear_obj) },
     { MP_ROM_QSTR(MP_QSTR_refresh), MP_ROM_PTR(&mod_TrezorUi_Display_refresh_obj) },
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
+    { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_TrezorUi_Display_bar_radius_obj) },
     { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&mod_TrezorUi_Display_blit_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
