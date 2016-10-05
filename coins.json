@@ -45,7 +45,7 @@
 	"hash_genesis_block": "000000000062b72c5e2ceb45fbc8587e807c155b0da735e6483dfba2f0a9c770",
 	"xpub_magic": "019da462",
 	"xprv_magic": "019d9cfe",
-	"bip44": 1,
+	"bip44": 7,
 	"default_fee_b": {
 		"Normal": 10
 	}
@@ -114,6 +114,7 @@
 		"Normal": 10
 	}
 }, {
+	"comment": "Zcash testnet",
 	"coin_name": "Testnet",
 	"coin_shortcut": "TAZ",
 	"address_type": 111,
