@@ -43,17 +43,21 @@ def print_protobuf_message(message_type):
         print('CLOSE', message_type)
 
 
+_UVARINT_DUMP_BUFFER = bytearray(1)
+
+
 class UVarintType:
     WIRE_TYPE = 0
 
     @staticmethod
-    def dump(target, value):
-        shifted_value = True
-        while shifted_value:
-            shifted_value = value >> 7
-            yield from target.write(chr((value & 0x7F) | (
-                0x80 if shifted_value != 0 else 0x00)))
-            value = shifted_value
+    async def dump(target, value):
+        shifted = True
+        while shifted:
+            shifted = value >> 7
+            _UVARINT_DUMP_BUFFER[0] = (value & 0x7F) | (
+                0x80 if shifted else 0x00)
+            await target.write(_UVARINT_DUMP_BUFFER)
+            value = shifted
 
     @staticmethod
     def load(source):
