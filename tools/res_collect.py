@@ -12,6 +12,8 @@ def process_file(name):
         return
     if name.endswith('.py'):
         return
+    if os.path.basename(name).startswith('.'):
+        return
     with open(name, 'rb') as f:
         data = f.read()
         resources[name] = data
