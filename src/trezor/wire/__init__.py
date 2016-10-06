@@ -34,20 +34,20 @@ def open_session(session_id=None):
     if session_id is None:
         session_id = generate_session_id()
     _opened_sessions.add(session_id)
-    log.info(__name__, 'opened session %d: %s', session_id, _opened_sessions)
+    log.info(__name__, 'session %d: open', session_id)
     return session_id
 
 
 def close_session(session_id):
     _opened_sessions.discard(session_id)
     _session_handlers.pop(session_id, None)
-    log.info(__name__, 'closed session %d: %s', session_id, _opened_sessions)
+    log.info(__name__, 'session %d: close', session_id)
 
 
 def register_type(wire_type, genfunc, *args):
     if wire_type in _workflow_genfuncs:
         raise KeyError('message of type %d already registered' % wire_type)
-    log.info(__name__, 'registering message type %d', wire_type)
+    log.info(__name__, 'register type %d', wire_type)
     _workflow_genfuncs[wire_type] = (genfunc, args)
 
 
@@ -56,7 +56,7 @@ def register_session(session_id, handler):
         raise KeyError('session %d is unknown' % session_id)
     if session_id in _session_handlers:
         raise KeyError('session %d is already being listened on' % session_id)
-    log.info(__name__, 'listening on session %d', session_id)
+    log.info(__name__, 'session %d: listening', session_id)
     _session_handlers[session_id] = handler
 
 
@@ -76,7 +76,7 @@ def setup():
 
 
 async def read_message(session_id, *exp_types):
-    log.info(__name__, 'reading message of types %s', exp_types)
+    log.info(__name__, 'session %d: read types %s', session_id, exp_types)
     future = Future()
     if session_id == SESSION_V1:
         wire_decoder = decode_wire_v1_stream(
@@ -90,7 +90,7 @@ async def read_message(session_id, *exp_types):
 
 
 async def write_message(session_id, pbuf_message):
-    log.info(__name__, 'writing message %s', pbuf_message)
+    log.info(__name__, 'session %d: write %s', session_id, pbuf_message)
     msg_data = pbuf_message.dumps()
     msg_type = pbuf_message.message_type.wire_type
 
@@ -196,8 +196,8 @@ def _handle_registered_type(msg_type, data_len, session_id):
 
 
 def _handle_unexpected_type(msg_type, data_len, session_id):
-    log.info(__name__, 'skipping message %d of len %d on session %d' %
-             (msg_type, data_len, session_id))
+    log.warning(__name__, 'session %d: skip type %d, len %d',
+                session_id, msg_type, data_len)
     try:
         while True:
             yield

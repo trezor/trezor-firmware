@@ -14,8 +14,7 @@ def _unimport_func(func):
             ret = func(*args, **kwargs)
         finally:
             for to_remove in set(sys.modules) - mods:
-                print('removing module', to_remove)
-                # log.info(__name__, 'removing module %s', to_remove)
+                log.debug(__name__, 'unimport %s', to_remove)
                 del sys.modules[to_remove]
             gc.collect()
         return ret
@@ -29,8 +28,7 @@ def _unimport_genfunc(genfunc):
             ret = await genfunc(*args, **kwargs)
         finally:
             for to_remove in set(sys.modules) - mods:
-                print('removing module', to_remove)
-                # log.info(__name__, 'removing module %s', to_remove)
+                log.debug(__name__, 'unimport %s', to_remove)
                 del sys.modules[to_remove]
             gc.collect()
         return ret
