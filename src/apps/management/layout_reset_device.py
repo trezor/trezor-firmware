@@ -8,10 +8,10 @@ async def layout_reset_device(message, session_id):
     from trezor.messages.Success import Success
     from trezor.messages.Storage import Storage
     from trezor.messages.FailureType import UnexpectedMessage
-    from ..common.storage import get_storage, set_storage
     from ..common.request_pin import request_pin_twice
+    from ..common import storage
 
-    if get_storage(session_id):
+    if storage.has(session_id):
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
     mnemonic = await generate_mnemonic(
@@ -23,11 +23,10 @@ async def layout_reset_device(message, session_id):
     else:
         pin = ''
 
-    storage = Storage(
+    storage.set(session_id, Storage(
         version=1, pin=pin, mnemonic=mnemonic,
         passphrase_protection=message.passphrase_protection,
-        language=message.language, label=message.label)
-    set_storage(session_id, await storage.dumps())
+        language=message.language, label=message.label))
 
     return Success(message='Initialized')
 

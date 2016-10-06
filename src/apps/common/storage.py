@@ -1,18 +1,27 @@
 from micropython import const
 from trezor import config
+from trezor.messages.Storage import Storage
 
 
-APP_MANAGEMENT = const(1)
+APP_COMMON = const(1)
 CFG_STORAGE = const(1)
 
 
-def get_storage(session_id):
-    return config.get(session_id, APP_MANAGEMENT, CFG_STORAGE)
+def has(session_id):
+    buf = config.get(session_id, APP_COMMON, CFG_STORAGE)
+    return bool(buf)
 
 
-def set_storage(session_id, buf):
-    config.set(session_id, APP_MANAGEMENT, CFG_STORAGE, buf)
+def get(session_id):
+    buf = config.get(session_id, APP_COMMON, CFG_STORAGE)
+    if not buf:
+        raise KeyError('Storage is not initialized')
+    return Storage.loads(buf)
 
 
-def clear_storage(session_id):
-    set_storage(session_id, b'')
+def set(session_id, st):
+    config.set(session_id, APP_COMMON, CFG_STORAGE, st.dumps())
+
+
+def clear(session_id):
+    config.set(session_id, APP_COMMON, CFG_STORAGE, b'')
