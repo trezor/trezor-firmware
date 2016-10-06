@@ -29,7 +29,7 @@ ui.display.bar(3, 3, 234, 240 - 54, ui.BLACK)
 bl_header('Unsigned firmware!')
 
 # content
-ui.display.text(10, 60, 'Check your fingeprint', ui.NORMAL, ui.WHITE, ui.BLACK)
+ui.display.text(10, 60, 'Fingeprint', ui.NORMAL, ui.WHITE, ui.BLACK)
 
 # fingerprint box
 ui.display.bar(10, 76, 220, 105, ui.DARK_GREY)

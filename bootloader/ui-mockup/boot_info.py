@@ -21,7 +21,7 @@ ui.display.clear()
 ui.display.backlight(255)
 
 image = res.load('./res/sl_logo.toif')
-ui.display.image(60, 0, image)
+ui.display.image(60, 10, image)
 
 ui.display.text_center(120, 160, "SatoshiLabs", 1, ui.WHITE, ui.BLACK)
 ui.display.text_center(120, 183, "v0.1.1", 1, ui.GREY, ui.BLACK)
