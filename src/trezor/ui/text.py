@@ -1,8 +1,8 @@
 from micropython import const
 from trezor import ui
 
-TEXT_HEADER_HEIGHT = const(44)
-TEXT_LINE_HEIGHT = const(30)
+TEXT_HEADER_HEIGHT = const(32)
+TEXT_LINE_HEIGHT = const(23)
 TEXT_MARGIN_LEFT = const(10)
 
 
@@ -14,8 +14,6 @@ class Text:
 
     def render(self):
         offset = TEXT_LINE_HEIGHT
-        ui.display.text(TEXT_MARGIN_LEFT, offset,
-                        self.header, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
         offset += TEXT_HEADER_HEIGHT
         style = ui.NORMAL
         for item in self.content:

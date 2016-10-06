@@ -74,8 +74,7 @@ async def show_mnemonic_page(page, page_count, mnemonic):
     from trezor.ui.scroll import render_scrollbar, animate_swipe
 
     ui.display.clear()
-    ui.display.text(
-        10, 34, 'Write down your seed', ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.header('Write down your seed', ui.ICON_RESET, ui.BLACK, ui.LIGHT_GREEN)
     render_scrollbar(page, page_count)
 
     for pi, (wi, word) in enumerate(mnemonic[page]):

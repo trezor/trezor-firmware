@@ -2,7 +2,7 @@ import math
 import utime
 
 from TrezorUi import Display
-from trezor import loop
+from trezor import loop, res
 
 
 display = Display()
@@ -45,6 +45,10 @@ MONO   = Display.FONT_MONO
 NORMAL = Display.FONT_NORMAL
 BOLD   = Display.FONT_BOLD
 
+# icons
+ICON_RESET    = 'trezor/res/reset.toig'
+ICON_WIPE     = 'trezor/res/wipe.toig'
+ICON_RECOVERY = 'trezor/res/recovery.toig'
 
 def in_area(pos: tuple, area: tuple) -> bool:
     x, y = pos
@@ -70,6 +74,11 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
         func(c)
         yield loop.Sleep(delay)
 
+def header(title, icon=ICON_RESET, fg=BLACK, bg=PM_DARK_BLUE):
+    display.bar(0, 0, 240, 32, bg)
+    image = res.load(icon)
+    display.icon(8, 4, image, fg, bg)
+    display.text(8 + 24 + 8, 23, title, BOLD, fg, bg)
 
 def rotate_coords(pos: tuple) -> tuple:
     r = display.orientation()
