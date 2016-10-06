@@ -2,9 +2,7 @@ import utime
 from micropython import const
 from uheapq import heappop, heappush, heapify
 from .utils import type_gen
-from . import msg
-from . import log
-from . import ui
+from . import msg, log, ui
 
 if __debug__:
     # for performance stats
@@ -70,6 +68,10 @@ def run_task(task, value):
         else:
             log.error(__name__, '%s is unknown syscall', result)
 
+        # after every task step, refresh the screen
+        # TODO: do not complect the event loop and display
+        ui.display.refresh()
+
 
 def handle_message(message):
     if not paused_tasks:
@@ -100,7 +102,6 @@ def run_forever():
             # add current delay to ring buffer for performance stats
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
-        ui.display.refresh()
         message = msg.select(delay)
         if message:
             handle_message(message)
@@ -201,5 +202,7 @@ class Wait(Syscall):
         try:
             return (yield self)
         except:
+            # exception was raised on the waiting task externally with
+            # close() or throw(), kill the child tasks and re-raise
             self.exit()
             raise
