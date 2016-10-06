@@ -22,8 +22,9 @@ def build_protobuf_message(message_type, callback, *args):
             if not _is_scalar_type(field_type):
                 field_value = yield from build_protobuf_message(field_type, callback)
             if field_flags & FLAG_REPEATED:
-                field_value = getattr(
-                    message, field_name, []).append(field_value)
+                prev_value = getattr(message, field_name, [])
+                prev_value.append(field_value)
+                field_value = prev_value
             setattr(message, field_name, field_value)
     except EOFError:
         callback(message, *args)
