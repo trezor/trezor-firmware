@@ -34,7 +34,7 @@
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest resp;
-static uint8_t hash[32], sig[64], privkey[32];
+static uint8_t privkey[32];
 struct SHA3_CTX keccak_ctx;
 
 static inline void hash_data(const uint8_t *buf, size_t size)
@@ -139,12 +139,19 @@ static void send_request_chunk(void)
 	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
 }
 
+static int ethereum_is_canonic(uint8_t v, uint8_t signature[64])
+{
+	(void) signature;
+	return (v & 2) == 0;
+}
+
 static void send_signature(void)
 {
+	uint8_t hash[32], sig[64];
+	uint8_t v;
 	layoutProgress("Signing", 1000);
 	keccak_Final(&keccak_ctx, hash);
-	uint8_t v;
-	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v) != 0) {
+	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v, ethereum_is_canonic) != 0) {
 		fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
 		ethereum_signing_abort();
 		return;

@@ -88,7 +88,7 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out)
 int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
-	return hdnode_sign(node, message, message_len, signature + 1, NULL);
+	return hdnode_sign(node, message, message_len, signature + 1, NULL, NULL);
 }
 
 int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
@@ -98,7 +98,7 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 		return 1;
 	}
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
-	return hdnode_sign_digest(node, message, signature + 1, NULL);
+	return hdnode_sign_digest(node, message, signature + 1, NULL, NULL);
 }
 
 int cryptoGetECDHSessionKey(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key)
@@ -133,7 +133,7 @@ int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message
 	sha256_Final(&ctx, hash);
 	sha256_Raw(hash, 32, hash);
 	uint8_t pby;
-	int result = hdnode_sign_digest(node, hash, signature + 1, &pby);
+	int result = hdnode_sign_digest(node, hash, signature + 1, &pby, NULL);
 	if (result == 0) {
 		signature[0] = 27 + pby + 4;
 	}
