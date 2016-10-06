@@ -169,22 +169,22 @@ void display_init(void) {
     CMD(0x21);                               // invert colors
 #endif
 #if DISPLAY_ST7789V
-    CMD(0x01);                               // software reset
+    CMD(0x01);                                   // software reset
     HAL_Delay(20);
-    CMD(0x28);                               // display off
-    CMD(0x3A); DATA(0x55);                   // COLMOD: Interface Pixel format
-    CMD(0xB2); DATA("\x0C\x0C\x00\x33\x33"); // PORCTRK: Porch setting
-    CMD(0xB7); DATA(0x35);                   // GCTRL: Gate Control
-    CMD(0xBB); DATA(0x2B);                   // VCOMS: VCOM setting
-    CMD(0xC0); DATA(0x2C);                   // LCMCTRL: LCM Control
-    CMD(0xC2); DATA("\x01\xFF");             // VDVVRHEN: VDV and VRH Command Enable
-    CMD(0xC3); DATA(0x11);                   // VRHS: VRH Set
-    CMD(0xC4); DATA(0x20);                   // VDVS: VDV Set
-    CMD(0xC6); DATA(0x0F);                   // FRCTRL2: Frame Rate control in normal mode
-    CMD(0xD0); DATAS("\xA4\xA1");            // PWCTRL1: Power Control 1
-    CMD(0xE0); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 1
-    CMD(0xE1); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 2
-    CMD(0x20);                               // don't invert colors
+    CMD(0x28);                                   // display off
+    CMD(0x3A); DATA(0x55);                       // COLMOD: Interface Pixel format
+    CMD(0xB2); DATAS("\x08\x08\x00\x22\x22", 5); // PORCTRK: Porch setting
+    CMD(0xB7); DATA(0x35);                       // GCTRL: Gate Control
+    CMD(0xC2); DATAS("\x01\xFF", 2);             // VDVVRHEN: VDV and VRH Command Enable
+    CMD(0xC3); DATA(0x0B);                       // VRHS: VRH Set
+    CMD(0xC4); DATA(0x20);                       // VDVS: VDV Set
+    CMD(0xBB); DATA(0x20);                       // VCOMS: VCOM setting
+    CMD(0xC5); DATA(0x20);                       // VCMOFSET
+    CMD(0xD0); DATAS("\xA4\xA1", 2);             // PWCTRL1: Power Control 1
+    // CMD(0xE0); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 1
+    // CMD(0xE1); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 2
+    CMD(0x26); DATA(0x01);                       // gamma func (gc3) enable
+    CMD(0x20);                                   // don't invert colors
 #endif
     display_orientation(0);
     display_backlight(0);
@@ -212,17 +212,22 @@ void display_refresh(void) {
 
 int display_orientation(int degrees)
 {
+#define RGB (0)
+#define BGR (1 << 3)
+#define MV  (1 << 5)
+#define MX  (1 << 6)
+#define MY  (1 << 7)
     // memory access control
     switch (degrees) {
         case 0:
             CMD(0x36);
 #if DISPLAY_ILI9341V
-            DATA(0x08 | (1<<6) | (1<<7));
+            DATA(BGR | MX | MY);
             WINDOW_OFFSET_X = 0;
             WINDOW_OFFSET_Y = 80;
 #endif
 #if DISPLAY_ST7789V
-            DATA(0x00 | (1<<5));
+            DATA(RGB | MX | MY );
             WINDOW_OFFSET_X = 0;
             WINDOW_OFFSET_Y = 80;
 #endif
@@ -231,12 +236,12 @@ int display_orientation(int degrees)
         case 90:
             CMD(0x36);
 #if DISPLAY_ILI9341V
-            DATA(0x08 | (1<<5) | (1<<6));
+            DATA(BGR | MV | MX);
             WINDOW_OFFSET_X = 0;
             WINDOW_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
-            DATA(0x00 | (1<<6));
+            DATA(RGB | MV | MY );
             WINDOW_OFFSET_X = 80;
             WINDOW_OFFSET_Y = 0;
 #endif
@@ -245,12 +250,12 @@ int display_orientation(int degrees)
         case 180:
             CMD(0x36);
 #if DISPLAY_ILI9341V
-            DATA(0x08);
+            DATA(BGR);
             WINDOW_OFFSET_X = 0;
             WINDOW_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
-            DATA(0x00 | (1<<5) | (1<<6) | (1<<7));
+            DATA(RGB);
             WINDOW_OFFSET_X = 0;
             WINDOW_OFFSET_Y = 0;
 #endif
@@ -259,12 +264,12 @@ int display_orientation(int degrees)
         case 270:
             CMD(0x36);
 #if DISPLAY_ILI9341V
-            DATA(0x08 | (1<<5) | (1<<7));
+            DATA(BGR | MV | MY);
             WINDOW_OFFSET_X = 80;
             WINDOW_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
-            DATA(0x00 | (1<<7));
+            DATA(RGB | MV | MX);
             WINDOW_OFFSET_X = 0;
             WINDOW_OFFSET_Y = 0;
 #endif
