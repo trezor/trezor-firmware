@@ -78,8 +78,12 @@ def setup():
 async def read_message(session_id, *exp_types):
     log.info(__name__, 'reading message of types %s', exp_types)
     future = Future()
-    wire_decoder = decode_wire_stream(
-        _dispatch_and_build_protobuf, session_id, exp_types, future)
+    if session_id == SESSION_V1:
+        wire_decoder = decode_wire_v1_stream(
+            _dispatch_and_build_protobuf, session_id, exp_types, future)
+    else:
+        wire_decoder = decode_wire_stream(
+            _dispatch_and_build_protobuf, session_id, exp_types, future)
     wire_decoder.send(None)
     register_session(session_id, wire_decoder)
     return await future
