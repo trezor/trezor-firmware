@@ -91,7 +91,7 @@ async def read_message(session_id, *exp_types):
 
 async def write_message(session_id, pbuf_message):
     log.info(__name__, 'writing message %s', pbuf_message)
-    msg_data = await pbuf_message.dumps()
+    msg_data = pbuf_message.dumps()
     msg_type = pbuf_message.message_type.wire_type
 
     if session_id == SESSION_V1:
