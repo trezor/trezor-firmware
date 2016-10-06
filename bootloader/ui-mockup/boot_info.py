@@ -30,4 +30,4 @@ reboot = button.Button((0, 240 - 48, 240, 48), 'Reboot', normal_style=DEFAULT_BU
 reboot.render()
 
 while True:
-    if hasattr(ui.display, 'refresh'): ui.display.refresh()
+    ui.display.refresh()

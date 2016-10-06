@@ -37,4 +37,4 @@ confirm = button.Button((0, 240 - 48, 240, 48), 'Hold to confirm', normal_style=
 confirm.render()
 
 while True:
-    if hasattr(ui.display, 'refresh'): ui.display.refresh()
+    ui.display.refresh()

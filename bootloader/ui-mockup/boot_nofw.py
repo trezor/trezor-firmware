@@ -16,4 +16,4 @@ ui.display.text_center(120, 192 + 32, "Visit TREZOR.io/start", 1, ui.WHITE, ui.B
 
 
 while True:
-    if hasattr(ui.display, 'refresh'): ui.display.refresh()
+    ui.display.refresh()

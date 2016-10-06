@@ -63,9 +63,9 @@ cancel.render()
 
 while True:
     logo()
-    if hasattr(ui.display, 'refresh'): ui.display.refresh()
+    ui.display.refresh()
     utime.sleep(2)
 
     fingerprint()
-    if hasattr(ui.display, 'refresh'): ui.display.refresh()
+    ui.display.refresh()
     utime.sleep(2)

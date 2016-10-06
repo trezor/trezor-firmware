@@ -58,4 +58,4 @@ cancel = button.Button((0, 240 - 48, 119, 48), 'Cancel', normal_style=CANCEL_BUT
 cancel.render()
 
 while True:
-    if hasattr(ui.display, 'refresh'): ui.display.refresh()
+    ui.display.refresh()
