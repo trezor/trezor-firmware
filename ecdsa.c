@@ -614,79 +614,62 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k, curve_point *
 #endif
 
 // generate random K for signing
-int generate_k_random(const ecdsa_curve *curve, bignum256 *k) {
-	int i, j;
-	for (j = 0; j < 10000; j++) {
-		for (i = 0; i < 8; i++) {
-			k->val[i] = random32() & 0x3FFFFFFF;
-		}
-		k->val[8] = random32() & 0xFFFF;
-		// if k is too big or too small, we don't like it
-		if ( !bn_is_zero(k) && bn_is_less(k, &curve->order) ) {
-			return 0; // good number - no error
-		}
+void generate_k_random(bignum256 *k) {
+	int i;
+	for (i = 0; i < 8; i++) {
+		k->val[i] = random32() & 0x3FFFFFFF;
 	}
-	// we generated 10000 numbers, none of them is good -> fail
-	return 1;
+	k->val[8] = random32() & 0xFFFF;
+}
+
+void init_k_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *state) {
+	uint8_t bx[2*32];
+	uint8_t buf[32 + 1 + 2*32];
+
+	memcpy(bx, priv_key, 32);
+	memcpy(bx+32, hash, 32);
+
+	memset(state->v, 1, sizeof(state->v));
+	memset(state->k, 0, sizeof(state->k));
+
+	memcpy(buf, state->v, sizeof(state->v));
+	buf[sizeof(state->v)] = 0x00;
+	memcpy(buf + sizeof(state->v) + 1, bx, 64);
+	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
+	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+
+	memcpy(buf, state->v, sizeof(state->v));
+	buf[sizeof(state->v)] = 0x01;
+	memcpy(buf + sizeof(state->v) + 1, bx, 64);
+	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
+	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+
+	MEMSET_BZERO(bx, sizeof(bx));
+	MEMSET_BZERO(buf, sizeof(buf));
 }
 
 // generate K in a deterministic way, according to RFC6979
 // http://tools.ietf.org/html/rfc6979
-int generate_k_rfc6979(const ecdsa_curve *curve, bignum256 *secret, const uint8_t *priv_key, const uint8_t *hash)
+void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
 {
-	int i, error;
-	uint8_t v[32], k[32], bx[2*32], buf[32 + 1 + sizeof(bx)];
-	bignum256 z1;
+	uint8_t buf[32 + 1];
 
-	memcpy(bx, priv_key, 32);
-	bn_read_be(hash, &z1);
-	bn_mod(&z1, &curve->order);
-	bn_write_be(&z1, bx + 32);
-
-	memset(v, 1, sizeof(v));
-	memset(k, 0, sizeof(k));
-
-	memcpy(buf, v, sizeof(v));
-	buf[sizeof(v)] = 0x00;
-	memcpy(buf + sizeof(v) + 1, bx, 64);
-	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
-	hmac_sha256(k, sizeof(k), v, sizeof(v), v);
-
-	memcpy(buf, v, sizeof(v));
-	buf[sizeof(v)] = 0x01;
-	memcpy(buf + sizeof(v) + 1, bx, 64);
-	hmac_sha256(k, sizeof(k), buf, sizeof(buf), k);
-	hmac_sha256(k, sizeof(k), v, sizeof(v), v);
-
-	error = 1;
-	for (i = 0; i < 10000; i++) {
-		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
-		bn_read_be(v, secret);
-		if ( !bn_is_zero(secret) && bn_is_less(secret, &curve->order) ) {
-			error = 0; // good number -> no error
-			break;
-		}
-		memcpy(buf, v, sizeof(v));
-		buf[sizeof(v)] = 0x00;
-		hmac_sha256(k, sizeof(k), buf, sizeof(v) + 1, k);
-		hmac_sha256(k, sizeof(k), v, sizeof(v), v);
-	}
-	// we generated 10000 numbers, none of them is good -> fail
-
-	MEMSET_BZERO(v, sizeof(v));
-	MEMSET_BZERO(k, sizeof(k));
-	MEMSET_BZERO(bx, sizeof(bx));
+	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+	bn_read_be(state->v, k);
+	memcpy(buf, state->v, sizeof(state->v));
+	buf[sizeof(state->v)] = 0x00;
+	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
+	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 	MEMSET_BZERO(buf, sizeof(buf));
-	return error;
 }
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby)
+int ecdsa_sign(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
-	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby);
+	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
 
@@ -694,12 +677,12 @@ int ecdsa_sign(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t 
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign_double(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby)
+int ecdsa_sign_double(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
 	uint8_t hash[32];
 	sha256_Raw(msg, msg_len, hash);
 	sha256_Raw(hash, 32, hash);
-	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby);
+	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
 }
@@ -708,82 +691,93 @@ int ecdsa_sign_double(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 // priv_key is a 32 byte big endian stored number
 // sig is 64 bytes long array for the signature
 // digest is 32 bytes of digest
-int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig, uint8_t *pby)
+// is_canonical is an optional function that checks if the signature
+// conforms to additional coin-specific rules.
+int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
-	uint32_t i;
+	int i;
 	curve_point R;
 	bignum256 k, z;
-	bignum256 *da = &R.y;
-	int result = 0;
-	bn_read_be(digest, &z);
+	bignum256 *s = &R.y;
+	uint8_t by; // signature recovery byte
 
 #if USE_RFC6979
-	// generate K deterministically
-	if (generate_k_rfc6979(curve, &k, priv_key, digest) != 0) {
-		result = 1;
-	}
-#else
-	// generate random number k
-	if (generate_k_random(curve, &k) != 0) {
-		result = 1;
-	}
+	rfc6979_state rng;
+	init_k_rfc6979(priv_key, digest, &rng);
 #endif
 
-	if (result == 0) {
+	bn_read_be(digest, &z);
+
+	for (i = 0; i < 10000; i++) {
+
+#if USE_RFC6979
+		// generate K deterministically
+		generate_k_rfc6979(&k, &rng);
+#else
+		// generate random number k
+		generate_k_random(&k);
+#endif
+		// if k is too big or too small, we don't like it
+		if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+			continue;
+		}
+
 		// compute k*G
 		scalar_multiply(curve, &k, &R);
-		if (pby) {
-			*pby = R.y.val[0] & 1;
-		}
+		by = R.y.val[0] & 1;
 		// r = (rx mod n)
 		if (!bn_is_less(&R.x, &curve->order)) {
 			bn_subtract(&R.x, &curve->order, &R.x);
-			if (pby) {
-				*pby |= 2;
-			}
+			by |= 2;
 		}
-		// if r is zero, we fail
-		if (bn_is_zero(&R.x))
-		{
-			result = 2;
+		// if r is zero, we retry
+		if (bn_is_zero(&R.x)) {
+			continue;
 		}
-	}
 
-	if (result == 0) {
 		bn_inverse(&k, &curve->order);
-		bn_read_be(priv_key, da);
-		bn_multiply(&R.x, da, &curve->order);
-		for (i = 0; i < 8; i++) {
-			da->val[i] += z.val[i];
-			da->val[i + 1] += (da->val[i] >> 30);
-			da->val[i] &= 0x3FFFFFFF;
+		bn_read_be(priv_key, s);
+		bn_multiply(&R.x, s, &curve->order);
+		bn_add(s, &z);
+		bn_multiply(&k, s, &curve->order);
+		bn_mod(s, &curve->order);
+		// if s is zero, we retry
+		if (bn_is_zero(s)) {
+			continue;
 		}
-		da->val[8] += z.val[8];
-		bn_multiply(da, &k, &curve->order);
-		bn_mod(&k, &curve->order);
-		// if k is zero, we fail
-		if (bn_is_zero(&k)) {
-			result = 3;
-		}
-	}
 
-	if (result == 0) {
 		// if S > order/2 => S = -S
-		if (bn_is_less(&curve->order_half, &k)) {
-			bn_subtract(&curve->order, &k, &k);
-			if (pby) {
-				*pby ^= 1;
-			}
+		if (bn_is_less(&curve->order_half, s)) {
+			bn_subtract(&curve->order, s, s);
+			by ^= 1;
 		}
-		// we are done, R.x and k is the result signature
+		// we are done, R.x and s is the result signature
 		bn_write_be(&R.x, sig);
-		bn_write_be(&k, sig + 32);
+		bn_write_be(s, sig + 32);
+
+		// check if the signature is acceptable or retry
+		if (is_canonical && !is_canonical(by, sig)) {
+			continue;
+		}
+
+		if (pby) {
+			*pby = by;
+		}
+
+		MEMSET_BZERO(&k, sizeof(k));
+#if USE_RFC6979
+		MEMSET_BZERO(&rng, sizeof(rng));
+#endif
+		return 0;
 	}
 
+	// Too many retries without a valid signature
+	// -> fail with an error
 	MEMSET_BZERO(&k, sizeof(k));
-	MEMSET_BZERO(&z, sizeof(z));
-	MEMSET_BZERO(&R, sizeof(R));
-	return result;
+#if USE_RFC6979
+	MEMSET_BZERO(&rng, sizeof(rng));
+#endif
+	return -1;
 }
 
 void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key, uint8_t *pub_key)

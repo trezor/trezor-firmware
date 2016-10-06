@@ -1266,18 +1266,17 @@ END_TEST
 
 #define test_deterministic(KEY, MSG, K) do {	  \
 	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
-	res = generate_k_rfc6979(curve, &k, fromhex(KEY), buf); \
-	ck_assert_int_eq(res, 0); \
+	init_k_rfc6979(fromhex(KEY), buf, &rng); \
+	generate_k_rfc6979(&k, &rng); \
 	bn_write_be(&k, buf); \
 	ck_assert_mem_eq(buf, fromhex(K), 32); \
 } while (0)
 
 START_TEST(test_rfc6979)
 {
-	int res;
 	bignum256 k;
 	uint8_t buf[32];
-	const ecdsa_curve *curve = &secp256k1;
+	rfc6979_state rng;
 
 	test_deterministic("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50", "sample", "2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3");
 	test_deterministic("0000000000000000000000000000000000000000000000000000000000000001", "Satoshi Nakamoto", "8f8a276c19f4149656b280621e358cce24f5f52542772691ee69063b74f15d15");
@@ -1303,13 +1302,13 @@ START_TEST(test_sign_speed)
 
 	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, 0);
+		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
 		ck_assert_int_eq(res, 0);
 	}
 
 	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, 0);
+		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
 		ck_assert_int_eq(res, 0);
 	}
 
@@ -1320,13 +1319,13 @@ START_TEST(test_sign_speed)
 
 	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, 0);
+		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
 		ck_assert_int_eq(res, 0);
 	}
 
 	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
 	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, 0);
+		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
 		ck_assert_int_eq(res, 0);
 	}
 

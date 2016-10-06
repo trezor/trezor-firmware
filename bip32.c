@@ -415,25 +415,25 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash)
 
 // msg is a data to be signed
 // msg_len is the message length
-int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby)
+int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
 	if (node->curve == &ed25519_info) {
 		hdnode_fill_public_key(node);
 		ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
 		return 0;
 	} else {
-		return ecdsa_sign(node->curve->params, node->private_key, msg, msg_len, sig, pby);
+		return ecdsa_sign(node->curve->params, node->private_key, msg, msg_len, sig, pby, is_canonical);
 	}
 }
 
-int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby)
+int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
 	if (node->curve == &ed25519_info) {
 		hdnode_fill_public_key(node);
 		ed25519_sign(digest, 32, node->private_key, node->public_key + 1, sig);
 		return 0;
 	} else {
-		return ecdsa_sign_digest(node->curve->params, node->private_key, digest, sig, pby);
+		return ecdsa_sign_digest(node->curve->params, node->private_key, digest, sig, pby, is_canonical);
 	}
 }
 

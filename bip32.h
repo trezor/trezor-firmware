@@ -71,8 +71,8 @@ void hdnode_fill_public_key(HDNode *node);
 int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash);
 #endif
 
-int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby);
-int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby);
+int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
+int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 
 int hdnode_serialize_public(const HDNode *node, uint32_t fingerprint, char *str, int strsize);
 

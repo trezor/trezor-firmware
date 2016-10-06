@@ -380,7 +380,7 @@ def test_sign(curve, r):
     digest = r.randbytes(32)
     sig = r.randbytes(64)
 
-    lib.ecdsa_sign_digest(curve.ptr, priv, digest, sig, c.c_void_p(0))
+    lib.ecdsa_sign_digest(curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0))
 
     exp = bytes2num(priv)
     sk = ecdsa.SigningKey.from_secret_exponent(exp, curve,

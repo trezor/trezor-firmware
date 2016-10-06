@@ -25,7 +25,7 @@ void bench_secp256k1(void) {
 
 	memcpy(priv, "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3\xb5\xe1\xfb\xd7\xc6\xa2\xec\x1e\x03\x1f\x05\xe8\x6d\x8b\xd5", 32);
 	ecdsa_get_public_key33(curve, priv, pub);
-	ecdsa_sign(curve, priv, msg, sizeof(msg), sig, &pby);
+	ecdsa_sign(curve, priv, msg, sizeof(msg), sig, &pby, NULL);
 
 	clock_t t = clock();
 	for (int i = 0 ; i < 500; i++) {
@@ -42,7 +42,7 @@ void bench_nist256p1(void) {
 
 	memcpy(priv, "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3\xb5\xe1\xfb\xd7\xc6\xa2\xec\x1e\x03\x1f\x05\xe8\x6d\x8b\xd5", 32);
 	ecdsa_get_public_key33(curve, priv, pub);
-	ecdsa_sign(curve, priv, msg, sizeof(msg), sig, &pby);
+	ecdsa_sign(curve, priv, msg, sizeof(msg), sig, &pby, NULL);
 
 	clock_t t = clock();
 	for (int i = 0 ; i < 500; i++) {
