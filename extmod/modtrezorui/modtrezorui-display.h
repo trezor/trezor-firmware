@@ -347,9 +347,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_raw(mp_obj_t self, mp_obj_t reg, mp_obj_t d
     mp_int_t r = mp_obj_get_int(reg);
     mp_buffer_info_t raw;
     mp_get_buffer_raise(data, &raw, MP_BUFFER_READ);
-    if (raw.len > 0) {
-        display_raw(r, raw.buf, raw.len);
-    }
+    display_raw(r, (raw.len > 0) ? raw.buf : "" , raw.len);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_raw_obj, mod_TrezorUi_Display_raw);
