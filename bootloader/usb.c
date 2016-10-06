@@ -483,9 +483,26 @@ void usbInit(void)
 	usbd_register_set_config_callback(usbd_dev, hid_set_config);
 }
 
+void checkButtons(void)
+{
+	uint16_t state = gpio_port_read(BTN_PORT);
+	if ((state & (BTN_PIN_YES | BTN_PIN_NO)) != (BTN_PIN_YES | BTN_PIN_NO)) {
+		if ((state & BTN_PIN_NO) != BTN_PIN_NO) {
+			oledInvert(0, 0, 3, 3);
+		}
+		if ((state & BTN_PIN_YES) != BTN_PIN_YES) {
+			oledInvert(OLED_WIDTH - 4, 0, OLED_WIDTH - 1, 3);
+		}
+		oledRefresh();
+	}
+}
+
 void usbLoop(void)
 {
 	for (;;) {
 		usbd_poll(usbd_dev);
+		if (flash_state == STATE_READY || flash_state == STATE_OPEN) {
+			checkButtons();
+		}
 	}
 }

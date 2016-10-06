@@ -161,6 +161,8 @@ int main(void)
 			show_unofficial_warning(hash);
 		}
 
+		delay(100000);
+
 		load_app();
 	}
 
