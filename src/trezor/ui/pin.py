@@ -52,12 +52,12 @@ class PinMatrix():
             btn.render()
 
         # vertical border bars
-        display.bar(79, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
-        display.bar(158, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
+        # display.bar(79, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
+        # display.bar(158, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
 
         # horizontal border bars
-        display.bar(0, 95, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
-        display.bar(0, 142, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
+        # display.bar(0, 95, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
+        # display.bar(0, 142, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
 
     def send(self, event, pos):
         if self.clear_button.send(event, pos) == BTN_CLICKED:

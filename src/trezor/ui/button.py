@@ -4,7 +4,7 @@ from . import display, in_area, rotate_coords
 
 
 DEFAULT_BUTTON = {
-    'bg-color': ui.BLACK,
+    'bg-color': ui.BLACKISH,
     'fg-color': ui.WHITE,
     'text-style': ui.NORMAL,
     'border-color': ui.BLACK,
