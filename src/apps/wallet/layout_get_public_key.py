@@ -1,22 +1,19 @@
-from trezor import wire, ui
 from trezor.utils import unimport
 
 
 @unimport
-async def layout_get_public_key(session_id, message):
-    from trezor.messages.PublicKey import PublicKey
+async def layout_get_public_key(message, session_id):
     from trezor.messages.HDNodeType import HDNodeType
+    from trezor.messages.PublicKey import PublicKey
+    from ..common.seed import get_node
 
-    # TODO: protect with pin
-    # TODO: fail if not initialized
-    # TODO: derive correct node
+    node = await get_node(session_id, message.address_n)
 
-    pubkey = PublicKey()
-    pubkey.node = HDNodeType()
-    pubkey.node.depth = 0
-    pubkey.node.child_num = 0
-    pubkey.node.fingerprint = 0
-    pubkey.node.chain_code = 'deadbeef'
-    pubkey.node.public_key = 'deadbeef'
-
-    return pubkey
+    node_xpub = node.serialize_public(0x0488B21E)
+    node_type = HDNodeType(
+        depth=node.depth(),
+        child_num=node.child_num(),
+        fingerprint=node.fingerprint(),
+        chain_code=node.chain_code(),
+        public_key=node.public_key())
+    return PublicKey(node=node_type, xpub=node_xpub)
