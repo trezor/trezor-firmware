@@ -438,7 +438,7 @@ int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_
 }
 
 
-void hdnode_serialize(const HDNode *node, uint32_t fingerprint, uint32_t version, char use_public, char *str, int strsize)
+int hdnode_serialize(const HDNode *node, uint32_t fingerprint, uint32_t version, char use_public, char *str, int strsize)
 {
 	uint8_t node_data[78];
 	write_be(node_data, version);
@@ -452,19 +452,19 @@ void hdnode_serialize(const HDNode *node, uint32_t fingerprint, uint32_t version
 		node_data[45] = 0;
 		memcpy(node_data + 46, node->private_key, 32);
 	}
-	base58_encode_check(node_data, sizeof(node_data), str, strsize);
-
+	int ret = base58_encode_check(node_data, sizeof(node_data), str, strsize);
 	MEMSET_BZERO(node_data, sizeof(node_data));
+	return ret;
 }
 
-void hdnode_serialize_public(const HDNode *node, uint32_t fingerprint, char *str, int strsize)
+int hdnode_serialize_public(const HDNode *node, uint32_t fingerprint, char *str, int strsize)
 {
-	hdnode_serialize(node, fingerprint, 0x0488B21E, 1, str, strsize);
+	return hdnode_serialize(node, fingerprint, 0x0488B21E, 1, str, strsize);
 }
 
-void hdnode_serialize_private(const HDNode *node, uint32_t fingerprint, char *str, int strsize)
+int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint, char *str, int strsize)
 {
-	hdnode_serialize(node, fingerprint, 0x0488ADE4, 0, str, strsize);
+	return hdnode_serialize(node, fingerprint, 0x0488ADE4, 0, str, strsize);
 }
 
 // check for validity of curve point in case of public data not performed
