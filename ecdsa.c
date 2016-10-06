@@ -424,8 +424,10 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 	assert (bn_is_less(k, &curve->order));
 
 	int i, j;
-	int pos, shift;
 	bignum256 a;
+	uint32_t *aptr;
+	uint32_t abits;
+	int ashift;
 	uint32_t is_even = (k->val[0] & 1) - 1;
 	uint32_t bits, sign, nsign;
 	jacobian_curve_point jres;
@@ -485,7 +487,10 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 	// and - (16 - (a>>(4*i) & 0xf)) otherwise.   We can compute this as
 	//   ((a ^ (((a >> 4) & 1) - 1)) & 0xf) >> 1
 	// since a is odd.
-	bits = a.val[8] >> 12;
+	aptr = &a.val[8];
+	abits = *aptr;
+	ashift = 12;
+	bits = abits >> ashift;
 	sign = (bits >> 4) - 1;
 	bits ^= sign;
 	bits &= 15;
@@ -493,6 +498,7 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 	for (i = 62; i >= 0; i--) {
 		// sign = sign(a[i+1])  (0xffffffff for negative, 0 for positive)
 		// invariant jres = (-1)^sign sum_{j=i+1..63} (a[j] * 16^{j-i-1} * p)
+		// abits >> (ashift - 4) = lowbits(a >> (i*4))
 
 		point_jacobian_double(&jres, curve);
 		point_jacobian_double(&jres, curve);
@@ -500,8 +506,18 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 		point_jacobian_double(&jres, curve);
 
 		// get lowest 5 bits of a >> (i*4).
-		pos = i*4/30; shift = i*4 % 30;
-		bits = (a.val[pos+1]<<(30-shift) | a.val[pos] >> shift) & 31;
+		ashift -= 4;
+		if (ashift < 0) {
+			// the condition only depends on the iteration number and
+			// leaks no private information to a side-channel.
+			bits = abits << (-ashift);
+			abits = *(--aptr);
+			ashift += 30;
+			bits |= abits >> ashift;
+		} else {
+			bits = abits >> ashift;
+		}
+		bits &= 31;
 		nsign = (bits >> 4) - 1;
 		bits ^= nsign;
 		bits &= 15;
