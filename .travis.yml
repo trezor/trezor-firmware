@@ -26,3 +26,9 @@ script:
   - make build_unix TREZORUI_NOUI=1
 
   - make test
+
+notifications:
+  webhooks: http://sway.gk2.sk:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always
