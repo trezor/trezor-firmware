@@ -16,7 +16,7 @@ async def request_pin(session_id, *args, **kwargs):
                              ButtonRequest(code=ProtectCall),
                              ButtonAck)
 
-    ui.clear()
+    ui.display.clear()
     matrix = PinMatrix(*args, **kwargs)
     dialog = ConfirmDialog(matrix)
     if await dialog != CONFIRMED:
