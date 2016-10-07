@@ -195,7 +195,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip32_make_new(const mp_obj_type_t *type, size_
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.Bip32.from_seed(seed: bytes, curve_name: str) -> HDNode:
+/// def trezor.crypto.bip32.from_seed(seed: bytes, curve_name: str) -> HDNode:
 ///     '''
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     '''

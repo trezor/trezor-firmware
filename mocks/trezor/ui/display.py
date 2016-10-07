@@ -12,10 +12,16 @@ def refresh() -> None
     '''
 
 # ../extmod/modtrezorui/modtrezorui-display.h
-def bar(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None:
+def bar(x: int, y: int, w: int, h: int, color: int) -> None:
     '''
-    Renders a bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
-    When a bgcolor is set, the bar is drawn with rounded corners and bgcolor is used for background.
+    Renders a bar at position (x,y = upper left corner) with width w and height h of color color.
+    '''
+
+# ../extmod/modtrezorui/modtrezorui-display.h
+def bar_radius(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, radius: int=None) -> None:
+    '''
+    Renders a rounded bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
+    Background is set to bgcolor and corners are drawn with radius radius.
     '''
 
 # ../extmod/modtrezorui/modtrezorui-display.h
@@ -101,4 +107,10 @@ def backlight(val: int=None) -> int:
 def raw(reg: int, data: bytes) -> None:
     '''
     Performs a raw command on the display. Read the datasheet to learn more.
+    '''
+
+# ../extmod/modtrezorui/modtrezorui-display.h
+def save(filename: string) -> None:
+    '''
+    Saves current display contents to file filename.
     '''

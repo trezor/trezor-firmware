@@ -1,8 +1,12 @@
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 def update(self, iterations: int) -> None:
-    pass
+    '''
+    Update a PBKDF2 context
+    '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 def key(self) -> bytes:
-    pass
+    '''
+    Retreive derived key
+    '''
