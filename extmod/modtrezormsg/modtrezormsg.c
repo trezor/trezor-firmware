@@ -13,6 +13,7 @@
 #include "py/runtime.h"
 #include "py/binary.h"
 #include "py/mphal.h"
+#include "py/objstr.h"
 
 #if MICROPY_PY_TREZORMSG
 
@@ -107,12 +108,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
         uint8_t recvbuf[64];
         ssize_t l = msg_recv(&iface, recvbuf, 64);
         if (l > 0) {
-            vstr_t vstr;
-            vstr_init_len(&vstr, l);
-            memcpy(vstr.buf, recvbuf, l);
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
             tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface);
-            tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+            tuple->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, recvbuf, l);
             return MP_OBJ_FROM_PTR(tuple);
          }
         if (timeout <= 0) {

@@ -30,10 +30,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_generate(mp_obj_t self, mp_obj_t strength
         mp_raise_ValueError("Invalid bit strength (only 128, 160, 192, 224 and 256 values are allowed)");
     }
     const char *mnemo = mnemonic_generate(bits);
-    vstr_t vstr;
-    vstr_init_len(&vstr, strlen(mnemo));
-    strcpy(vstr.buf, mnemo);
-    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+    return mp_obj_new_str_of_type(&mp_type_str, (uint8_t *)mnemo, strlen(mnemo));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_generate_obj, mod_TrezorCrypto_Bip39_generate);
 
@@ -48,10 +45,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_from_data(mp_obj_t self, mp_obj_t data) {
         mp_raise_ValueError("Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)");
     }
     const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
-    vstr_t vstr;
-    vstr_init_len(&vstr, strlen(mnemo));
-    strcpy(vstr.buf, mnemo);
-    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+    return mp_obj_new_str_of_type(&mp_type_str, (uint8_t *)mnemo, strlen(mnemo));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_from_data_obj, mod_TrezorCrypto_Bip39_from_data);
 

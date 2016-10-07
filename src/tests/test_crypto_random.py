@@ -23,6 +23,10 @@ class TestCryptoRandom(unittest.TestCase):
             lst = random.bytes(l)
             self.assertEqual(len(lst), l)
 
+    def test_bytes_big_length(self):
+        with self.assertRaises(ValueError):
+            random.bytes(10000)
+
     def test_bytes_uniform(self):
         for _ in range(100):
             b = random.bytes(8000)

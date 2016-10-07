@@ -39,6 +39,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_uniform_obj, mod_Trezor
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_bytes(mp_obj_t self, mp_obj_t len) {
     uint32_t l = mp_obj_get_int(len);
+    if (l > 8192) {
+        mp_raise_ValueError("Maximum requested size is 8192");
+    }
     vstr_t vstr;
     vstr_init_len(&vstr, l);
     random_buffer((uint8_t *)vstr.buf, l);
