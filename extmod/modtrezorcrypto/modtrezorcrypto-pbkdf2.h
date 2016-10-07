@@ -51,7 +51,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
         o->prf = 512;
     } else
     if (o->prf == 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid PRF"));
+        mp_raise_ValueError("Invalid PRF");
     }
     // constructor called with iterations as fourth parameter
     if (n_args > 3) {

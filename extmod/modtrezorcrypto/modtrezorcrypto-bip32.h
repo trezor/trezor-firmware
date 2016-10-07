@@ -26,7 +26,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive(mp_obj_t self, mp_obj_t index) {
 
     if (!hdnode_private_ckd(&o->hdnode, i)) {
         memset(&o->hdnode, 0, sizeof(o->hdnode));
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Failed to derive"));
+        mp_raise_ValueError("Failed to derive");
     }
     o->fingerprint = fp;
 
@@ -50,7 +50,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
             // some value from the path is not integer, reset the state and raise
             o->fingerprint = 0;
             memset(&o->hdnode, 0, sizeof(o->hdnode));
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_TypeError, "Index has to be int"));
+            mp_raise_TypeError("Index has to be int");
         }
         uint32_t i = mp_obj_get_int_truncated(iobj);
 
@@ -62,7 +62,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
             // derivation failed, reset the state and raise
             o->fingerprint = 0;
             memset(&o->hdnode, 0, sizeof(o->hdnode));
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Failed to derive path"));
+            mp_raise_ValueError("Failed to derive path");
         }
     }
 
@@ -78,7 +78,7 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, mp_obj_t version, bool u
     hdnode_fill_public_key(&o->hdnode);
     int written = hdnode_serialize(&o->hdnode, o->fingerprint, ver, use_public, vstr.buf, vstr.alloc);
     if (written <= 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Failed to serialize"));
+        mp_raise_ValueError("Failed to serialize");
     }
     vstr.len = written - 1; // written includes 0 at the end
     return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
@@ -203,16 +203,16 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip32_from_seed(mp_obj_t self, mp_obj_t seed, m
     mp_buffer_info_t seedb;
     mp_get_buffer_raise(seed, &seedb, MP_BUFFER_READ);
     if (seedb.len == 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid seed"));
+        mp_raise_ValueError("Invalid seed");
     }
     mp_buffer_info_t curveb;
     mp_get_buffer_raise(curve_name, &curveb, MP_BUFFER_READ);
     if (curveb.len == 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid curve name"));
+        mp_raise_ValueError("Invalid curve name");
     }
     HDNode hdnode;
     if (!hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid seed"));
+        mp_raise_ValueError("Invalid seed");
     }
     mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
     o->base.type = &mod_TrezorCrypto_HDNode_type;

@@ -27,7 +27,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_make_new(const mp_obj_type_t *type, size
 STATIC mp_obj_t mod_TrezorCrypto_Random_uniform(mp_obj_t self, mp_obj_t n) {
     uint32_t nn = mp_obj_get_int_truncated(n);
     if (nn == 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Maximum can't be zero"));
+        mp_raise_ValueError("Maximum can't be zero");
     }
     return mp_obj_new_int_from_uint(random_uniform(nn));
 }
@@ -56,10 +56,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_shuffle(mp_obj_t self, mp_obj_t data) {
     if (MP_OBJ_IS_TYPE(data, &mp_type_list)) {
         mp_obj_list_get(data, &item_cnt, &items);
     } else {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "List expected"));
+        mp_raise_TypeError("List expected");
     }
     if (item_cnt > 256) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Maximum list size is 256 items"));
+        mp_raise_ValueError("Maximum list size is 256 items");
     }
     random_permute(items, sizeof(mp_obj_t *), item_cnt);
     return mp_const_none;

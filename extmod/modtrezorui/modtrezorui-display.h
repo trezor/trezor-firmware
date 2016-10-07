@@ -52,7 +52,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t h = mp_obj_get_int(args[4]);
     uint16_t c = mp_obj_get_int(args[5]);
     if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
+        mp_raise_ValueError("Coordinates out of bounds");
     }
     display_bar(x, y, w, h, c);
     return mp_const_none;
@@ -73,7 +73,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar_radius(size_t n_args, const mp_obj_t *a
     uint16_t b = mp_obj_get_int(args[6]);
     uint8_t r = mp_obj_get_int(args[7]);
     if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
+        mp_raise_ValueError("Coordinates out of bounds");
     }
     display_bar_radius(x, y, w, h, c, b, r);
     return mp_const_none;
@@ -114,16 +114,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     mp_get_buffer_raise(args[3], &image, MP_BUFFER_READ);
     const uint8_t *data = image.buf;
     if (image.len < 8 || memcmp(data, "TOIf", 4) != 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
+        mp_raise_ValueError("Invalid image format");
     }
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
     mp_int_t datalen = *(uint32_t *)(data + 8);
     if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
+        mp_raise_ValueError("Coordinates out of bounds");
     }
     if (datalen != image.len - 12) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
+        mp_raise_ValueError("Invalid size of data");
     }
     display_image(x, y, w, h, data + 12, image.len - 12);
     return mp_const_none;
@@ -142,16 +142,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_get_buffer_raise(args[3], &icon, MP_BUFFER_READ);
     const uint8_t *data = icon.buf;
     if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
+        mp_raise_ValueError("Invalid image format");
     }
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
     mp_int_t datalen = *(uint32_t *)(data + 8);
     if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Out of bounds"));
+        mp_raise_ValueError("Coordinates out of bounds");
     }
     if (datalen != icon.len - 12) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
+        mp_raise_ValueError("Invalid size of data");
     }
     mp_int_t fgcolor = mp_obj_get_int(args[4]);
     mp_int_t bgcolor = mp_obj_get_int(args[5]);
@@ -246,7 +246,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_int_t scale = mp_obj_get_int(args[4]);
     if (scale < 1 || scale > 10) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Scale has to be between 1 and 10"));
+        mp_raise_ValueError("Scale has to be between 1 and 10");
     }
     mp_buffer_info_t data;
     mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
@@ -273,16 +273,16 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         mp_get_buffer_raise(args[4], &icon, MP_BUFFER_READ);
         const uint8_t *data = icon.buf;
         if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid image format"));
+            mp_raise_ValueError("Invalid image format");
         }
         mp_int_t w = *(uint16_t *)(data + 4);
         mp_int_t h = *(uint16_t *)(data + 6);
         mp_int_t datalen = *(uint32_t *)(data + 8);
         if (w != 96 || h != 96) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid icon size"));
+            mp_raise_ValueError("Invalid icon size");
         }
         if (datalen != icon.len - 12) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid size of data"));
+            mp_raise_ValueError("Invalid size of data");
         }
         uint16_t iconfgcolor;
         if (n_args > 5) { // icon color provided
@@ -309,7 +309,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_orientation(size_t n_args, const mp_obj_t *
     if (n_args > 1) {
         deg = mp_obj_get_int(args[1]);
         if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Value must be 0, 90, 180 or 270"));
+            mp_raise_ValueError("Value must be 0, 90, 180 or 270");
         }
         deg = display_orientation(deg);
     } else {
@@ -329,7 +329,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_backlight(size_t n_args, const mp_obj_t *ar
     if (n_args > 1) {
         val = mp_obj_get_int(args[1]);
         if (val < 0 || val > 255) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Value must be between 0 and 255"));
+            mp_raise_ValueError("Value must be between 0 and 255");
         }
         val = display_backlight(val);
     } else {

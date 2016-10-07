@@ -39,18 +39,18 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t 
     o->base.type = type;
     o->mode = mp_obj_get_int(args[0]);
     if ((o->mode & AESModeMask) > 0x04) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid AES mode"));
+        mp_raise_ValueError("Invalid AES mode");
     }
     mp_buffer_info_t key;
     mp_get_buffer_raise(args[1], &key, MP_BUFFER_READ);
     if (key.len != 16 && key.len != 24 && key.len != 32) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of key (has to be 128, 192 or 256 bits)"));
+        mp_raise_ValueError("Invalid length of key (has to be 128, 192 or 256 bits)");
     }
     if (n_args > 2) {
         mp_buffer_info_t iv;
         mp_get_buffer_raise(args[2], &iv, MP_BUFFER_READ);
         if (iv.len != AES_BLOCK_SIZE) {
-            nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of initialization vector (has to be 128 bits)"));
+            mp_raise_ValueError("Invalid length of initialization vector (has to be 128 bits)");
         }
         memcpy(o->iv, iv.buf, AES_BLOCK_SIZE);
     } else {
@@ -99,7 +99,7 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_update(mp_obj_t self, mp_obj_t data) {
     switch (o->mode & AESModeMask) {
         case ECB:
             if (buf.len & (AES_BLOCK_SIZE - 1)) {
-                nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid data length"));
+                mp_raise_ValueError("Invalid data length");
             }
             if ((o->mode & AESDirMask) == Encrypt) {
                 aes_ecb_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, &(o->ctx.encrypt_ctx));
@@ -109,7 +109,7 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_update(mp_obj_t self, mp_obj_t data) {
             break;
         case CBC:
             if (buf.len & (AES_BLOCK_SIZE - 1)) {
-                nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid data length"));
+                mp_raise_ValueError("Invalid data length");
             }
             if ((o->mode & AESDirMask) == Encrypt) {
                 aes_cbc_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));

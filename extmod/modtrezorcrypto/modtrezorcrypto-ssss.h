@@ -31,16 +31,16 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_split(size_t n_args, const mp_obj_t *args)
     mp_buffer_info_t secret;
     mp_get_buffer_raise(args[3], &secret, MP_BUFFER_READ);
     if (secret.len != 32) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Length of the secret has to be 256 bits"));
+        mp_raise_ValueError("Length of the secret has to be 256 bits");
     }
     if (m < 1 || n < 1 || m > 15 || n > 15 || m > n) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid number of shares"));
+        mp_raise_ValueError("Invalid number of shares");
     }
     bignum256 sk;
     bignum256 shares[n];
     bn_read_be(secret.buf, &sk);
     if (!ssss_split(&sk, m, n, shares)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error splitting secret"));
+        mp_raise_ValueError("Error splitting secret");
     }
     mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(n, NULL));
     vstr_t vstr[n];
@@ -66,10 +66,10 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_combine(mp_obj_t self, mp_obj_t shares) {
     if (MP_OBJ_IS_TYPE(shares, &mp_type_list)) {
         mp_obj_list_get(shares, &n, &share);
     } else {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "List or tuple expected"));
+        mp_raise_TypeError("List or tuple expected");
     }
     if (n < 1 || n > 15) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid number of shares"));
+        mp_raise_ValueError("Invalid number of shares");
     }
     bignum256 bnshares[n];
     for (mp_uint_t i = 0; i < n; i++) {
@@ -77,7 +77,7 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_combine(mp_obj_t self, mp_obj_t shares) {
             mp_buffer_info_t s;
             mp_get_buffer_raise(share[i], &s, MP_BUFFER_READ);
             if (s.len != 32) {
-                nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Length of share has to be 256 bits"));
+                mp_raise_ValueError("Length of share has to be 256 bits");
             }
             bn_read_be(s.buf, &bnshares[n]);
         } else {
@@ -86,7 +86,7 @@ STATIC mp_obj_t mod_TrezorCrypto_SSSS_combine(mp_obj_t self, mp_obj_t shares) {
     }
     bignum256 sk;
     if (!ssss_combine(bnshares, n, &sk)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Error combining secret"));
+        mp_raise_ValueError("Error combining secret");
     }
     vstr_t vstr;
     vstr_init_len(&vstr, 32);

@@ -29,7 +29,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_publickey(size_t n_args, const mp_obj
     mp_buffer_info_t sk;
     mp_get_buffer_raise(args[1], &sk, MP_BUFFER_READ);
     if (sk.len != 32) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of secret key"));
+        mp_raise_ValueError("Invalid length of secret key");
     }
     bool compressed = n_args < 3 || args[2] == mp_const_true;
     vstr_t vstr;
@@ -53,16 +53,16 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_sign(mp_obj_t self, mp_obj_t secret_k
     mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
     mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
     if (sk.len != 32) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of secret key"));
+        mp_raise_ValueError("Invalid length of secret key");
     }
     if (msg.len == 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Empty data to sign"));
+        mp_raise_ValueError("Empty data to sign");
     }
     vstr_t vstr;
     vstr_init_len(&vstr, 65);
     uint8_t pby;
     if (0 != ecdsa_sign(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)msg.buf, msg.len, (uint8_t *)vstr.buf, &pby)) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Signing failed"));
+        mp_raise_ValueError("Signing failed");
     }
     (void)pby;
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
@@ -80,13 +80,13 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_verify(size_t n_args, const mp_obj_t 
     mp_get_buffer_raise(args[2], &sig, MP_BUFFER_READ);
     mp_get_buffer_raise(args[3], &msg, MP_BUFFER_READ);
     if (pk.len != 33 && pk.len != 65) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of public key"));
+        mp_raise_ValueError("Invalid length of public key");
     }
     if (sig.len != 65) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Invalid length of signature"));
+        mp_raise_ValueError("Invalid length of signature");
     }
     if (msg.len == 0) {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Empty data to verify"));
+        mp_raise_ValueError("Empty data to verify");
     }
     return mp_obj_new_bool(0 == ecdsa_verify(&secp256k1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf, (const uint8_t *)msg.buf, msg.len));
 }

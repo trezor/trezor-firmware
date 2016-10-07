@@ -49,11 +49,11 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
     if (MP_OBJ_IS_TYPE(ifaces, &mp_type_list)) {
         mp_obj_list_get(ifaces, &iface_cnt, &iface);
     } else {
-        nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "List or tuple expected"));
+        mp_raise_TypeError("List or tuple expected");
     }
     for (mp_uint_t i = 0; i < iface_cnt; i++) {
        if (!MP_OBJ_IS_TYPE(iface[i], &mp_type_tuple)) {
-           nlr_raise(mp_obj_new_exception_msg(&mp_type_ValueError, "Tuple expected"));
+           mp_raise_TypeError("Tuple expected");
        }
        mp_uint_t attr_cnt;
        mp_obj_t *attr;
