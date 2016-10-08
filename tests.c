@@ -2150,9 +2150,8 @@ END_TEST
 START_TEST(test_address_decode)
 {
 	int res;
-	uint8_t decode[21];
-	// byte      0 : address type
-	// bytes  1-20 : pubkey hash 160
+	uint8_t decode[MAX_ADDR_RAW_SIZE];
+
 	res = ecdsa_address_decode("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T", decode);
 	ck_assert_int_eq(res, 1);
 	ck_assert_mem_eq(decode, fromhex("00c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827"), 21);

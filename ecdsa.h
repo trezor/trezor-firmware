@@ -48,6 +48,9 @@ typedef struct {
 
 } ecdsa_curve;
 
+#define MAX_ADDR_RAW_SIZE (4 + 20)
+#define MAX_WIF_RAW_SIZE (4 + 32 + 1)
+
 // rfc6979 pseudo random number generator state
 typedef struct {
 	uint8_t v[32], k[32];

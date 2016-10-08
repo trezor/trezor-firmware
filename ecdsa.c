@@ -879,7 +879,7 @@ void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version, uint8_t *ad
 
 void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize)
 {
-	uint8_t raw[20+4];
+	uint8_t raw[MAX_ADDR_RAW_SIZE];
 	ecdsa_get_address_raw(pub_key, version, raw);
 	if (version <= 0xFF) {
 		base58_encode_check(raw, 21, addr, addrsize);
@@ -896,7 +896,7 @@ void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, char *addr, int
 
 void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, char *wif, int wifsize)
 {
-	uint8_t wif_raw[4 + 32 + 1];
+	uint8_t wif_raw[MAX_WIF_RAW_SIZE];
 
 	if (version <= 0xFF) {
 		wif_raw[0] = version;
