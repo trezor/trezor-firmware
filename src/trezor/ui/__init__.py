@@ -45,6 +45,10 @@ MONO   = Display.FONT_MONO
 NORMAL = Display.FONT_NORMAL
 BOLD   = Display.FONT_BOLD
 
+BACKLIGHT_NORMAL = const(127)
+BACKLIGHT_DIM = const(70)
+BACKLIGHT_MAX = const(255)
+
 # icons
 ICON_RESET    = 'trezor/res/reset.toig'
 ICON_WIPE     = 'trezor/res/wipe.toig'
@@ -65,6 +69,25 @@ def blend(ca: int, cb: int, t: float) -> int:
                     lerpi((ca >> 3) & 0xFC, (cb >> 3) & 0xFC, t),
                     lerpi((ca << 3) & 0xF8, (cb << 3) & 0xF8, t))
 
+
+def alert(count=3):
+    current = display.backlight()
+    for i in range(count*2):
+        if i % 2 == 0:
+            display.backlight(BACKLIGHT_MAX)
+            yield loop.Sleep(20000)
+        else:
+            display.backlight(BACKLIGHT_NORMAL)
+            yield loop.Sleep(80000)
+
+    display.backlight(current)
+
+def backlight_slide(val, speed=20000):
+    current = display.backlight()
+
+    for i in range(current, val, -1 if current > val else 1):
+        display.backlight(i)
+        await loop.Sleep(speed)
 
 def animate_pulse(func, ca, cb, speed=200000, delay=30000):
     while True:
