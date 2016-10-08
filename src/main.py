@@ -14,7 +14,7 @@ management.boot()
 wallet.boot()
 
 # Change backlight to white for better visibility
-ui.display.backlight(255)
+ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
 # Just a demo to show how to register USB ifaces
 msg.setup([(1, 0xF53C), (2, 0xF1D0)])
