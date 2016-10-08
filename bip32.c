@@ -266,7 +266,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint8_t version, char *addr, int addrsize)
+int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize)
 {
 	uint8_t data[1 + 32 + 4];
 	uint8_t I[32 + 32];
@@ -374,7 +374,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count)
 
 #endif
 
-void hdnode_get_address_raw(HDNode *node, uint8_t version, uint8_t *addr_raw)
+void hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw)
 {
 	hdnode_fill_public_key(node);
 	ecdsa_get_address_raw(node->public_key, version, addr_raw);

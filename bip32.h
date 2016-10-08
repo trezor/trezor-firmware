@@ -55,7 +55,7 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i);
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i);
 
-int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint8_t version, char *addr, int addrsize);
+int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize);
 
 #if USE_BIP32_CACHE
 
@@ -83,7 +83,7 @@ int hdnode_deserialize(const char *str, HDNode *node);
 // Private
 int hdnode_serialize(const HDNode *node, uint32_t fingerprint, uint32_t version, char use_public, char *str, int strsize);
 
-void hdnode_get_address_raw(HDNode *node, uint8_t version, uint8_t *addr_raw);
+void hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw);
 
 const curve_info *get_curve_by_name(const char *curve_name);
 

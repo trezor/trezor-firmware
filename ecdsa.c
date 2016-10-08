@@ -854,32 +854,80 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
 	MEMSET_BZERO(h, sizeof(h));
 }
 
-void ecdsa_get_address_raw(const uint8_t *pub_key, uint8_t version, uint8_t *addr_raw)
+void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version, uint8_t *addr_raw)
 {
-	addr_raw[0] = version;
-	ecdsa_get_pubkeyhash(pub_key, addr_raw + 1);
+	if (version <= 0xFF) {
+		addr_raw[0] = version;
+		ecdsa_get_pubkeyhash(pub_key, addr_raw + 1);
+	} else if (version <= 0xFFFF) {
+		addr_raw[0] = version >> 8;
+		addr_raw[1] = version & 0xFF;
+		ecdsa_get_pubkeyhash(pub_key, addr_raw + 2);
+	} else if (version <= 0xFFFFFF) {
+		addr_raw[0] = version >> 16;
+		addr_raw[1] = (version >> 8) & 0xFF;
+		addr_raw[2] = version & 0xFF;
+		ecdsa_get_pubkeyhash(pub_key, addr_raw + 3);
+	} else {
+		addr_raw[0] = version >> 24;
+		addr_raw[1] = (version >> 16) & 0xFF;
+		addr_raw[2] = (version >> 8) & 0xFF;
+		addr_raw[3] = version & 0xFF;
+		ecdsa_get_pubkeyhash(pub_key, addr_raw + 4);
+	}
 }
 
-void ecdsa_get_address(const uint8_t *pub_key, uint8_t version, char *addr, int addrsize)
+void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize)
 {
-	uint8_t raw[21];
+	uint8_t raw[20+4];
 	ecdsa_get_address_raw(pub_key, version, raw);
-	base58_encode_check(raw, 21, addr, addrsize);
-
+	if (version <= 0xFF) {
+		base58_encode_check(raw, 21, addr, addrsize);
+	} else if (version <= 0xFFFF) {
+		base58_encode_check(raw, 22, addr, addrsize);
+	} else if (version <= 0xFFFFFF) {
+		base58_encode_check(raw, 23, addr, addrsize);
+	} else {
+		base58_encode_check(raw, 24, addr, addrsize);
+	}
 	// not as important to clear this one, but we might as well
 	MEMSET_BZERO(raw, sizeof(raw));
 }
 
-void ecdsa_get_wif(const uint8_t *priv_key, uint8_t version, char *wif, int wifsize)
+void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, char *wif, int wifsize)
 {
-	uint8_t data[34];
-	data[0] = version;
-	memcpy(data + 1, priv_key, 32);
-	data[33] = 0x01;
-	base58_encode_check(data, 34, wif, wifsize);
+	uint8_t wif_raw[4 + 32 + 1];
+
+	if (version <= 0xFF) {
+		wif_raw[0] = version;
+		memcpy(wif_raw + 1, priv_key, 32);
+		wif_raw[33] = 0x01;
+		base58_encode_check(wif_raw, 1 + 32 + 1, wif, wifsize);
+	} else if (version <= 0xFFFF) {
+		wif_raw[0] = version >> 8;
+		wif_raw[1] = version & 0xFF;
+		memcpy(wif_raw + 2, priv_key, 32);
+		wif_raw[34] = 0x01;
+		base58_encode_check(wif_raw, 2 + 32 + 1, wif, wifsize);
+	} else if (version <= 0xFFFFFF) {
+		wif_raw[0] = version >> 16;
+		wif_raw[1] = (version >> 8) & 0xFF;
+		wif_raw[2] = version & 0xFF;
+		memcpy(wif_raw + 3, priv_key, 32);
+		wif_raw[35] = 0x01;
+		base58_encode_check(wif_raw, 3 + 32 + 1, wif, wifsize);
+	} else {
+		wif_raw[0] = version >> 24;
+		wif_raw[1] = (version >> 16) & 0xFF;
+		wif_raw[2] = (version >> 8) & 0xFF;
+		wif_raw[3] = version & 0xFF;
+		memcpy(wif_raw + 4, priv_key, 32);
+		wif_raw[36] = 0x01;
+		base58_encode_check(wif_raw, 4 + 32 + 1, wif, wifsize);
+	}
 
 	// private keys running around our stack can cause trouble
-	MEMSET_BZERO(data, sizeof(data));
+	MEMSET_BZERO(wif_raw, sizeof(wif_raw));
 }
 
 int ecdsa_address_decode(const char *addr, uint8_t *out)
