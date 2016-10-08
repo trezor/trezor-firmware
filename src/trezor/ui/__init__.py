@@ -45,8 +45,8 @@ MONO   = Display.FONT_MONO
 NORMAL = Display.FONT_NORMAL
 BOLD   = Display.FONT_BOLD
 
-BACKLIGHT_NORMAL = const(127)
-BACKLIGHT_DIM = const(70)
+BACKLIGHT_NORMAL = const(60)
+BACKLIGHT_DIM = const(5)
 BACKLIGHT_MAX = const(255)
 
 # icons
@@ -70,7 +70,7 @@ def blend(ca: int, cb: int, t: float) -> int:
                     lerpi((ca << 3) & 0xF8, (cb << 3) & 0xF8, t))
 
 
-def alert(count=3):
+async def alert(count=3):
     current = display.backlight()
     for i in range(count*2):
         if i % 2 == 0:
@@ -82,7 +82,7 @@ def alert(count=3):
 
     display.backlight(current)
 
-def backlight_slide(val, speed=20000):
+async def backlight_slide(val, speed=20000):
     current = display.backlight()
 
     for i in range(current, val, -1 if current > val else 1):
