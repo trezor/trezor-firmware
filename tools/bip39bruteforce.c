@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "\"%s\" is not a valid mnemonic\n", mnemonic);
 		return 2;
 	}
-	if (!ecdsa_address_decode(address, addr)) {
+	if (!ecdsa_address_decode(address, 0, addr)) {
 		fprintf(stderr, "\"%s\" is not a valid address\n", address);
 		return 3;
 	}

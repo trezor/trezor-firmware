@@ -930,10 +930,18 @@ void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, char *wif, int wif
 	MEMSET_BZERO(wif_raw, sizeof(wif_raw));
 }
 
-int ecdsa_address_decode(const char *addr, uint8_t *out)
+int ecdsa_address_decode(const char *addr, uint32_t version, uint8_t *out)
 {
 	if (!addr) return 0;
-	return base58_decode_check(addr, out, 21) == 21;
+	if (version <= 0xFF) {
+		return base58_decode_check(addr, out, 21) == 21 && out[0] == (version & 0xFF);
+	} else if (version <= 0xFFFF) {
+		return base58_decode_check(addr, out, 22) == 22 && out[0] == ((version >> 8)) && out[1] == (version & 0xFF);
+	} else if (version <= 0xFFFF) {
+		return base58_decode_check(addr, out, 23) == 23 && out[0] == ((version >> 16)) && out[1] == ((version >> 8) & 0xFF) && out[2] == (version & 0xFF);
+	} else {
+		return base58_decode_check(addr, out, 24) == 24 && out[0] == (version >> 24) && out[1] == ((version >> 16) & 0xFF) && out[2] == ((version >> 8) & 0xFF) && out[3] == (version & 0xFF);
+	}
 }
 
 void uncompress_coords(const ecdsa_curve *curve, uint8_t odd, const bignum256 *x, bignum256 *y)

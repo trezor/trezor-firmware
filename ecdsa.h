@@ -78,7 +78,7 @@ void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version, uint8_t *ad
 void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize);
 void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, char *wif, int wifsize);
 
-int ecdsa_address_decode(const char *addr, uint8_t *out);
+int ecdsa_address_decode(const char *addr, uint32_t version, uint8_t *out);
 int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, curve_point *pub);
 int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub);
 int ecdsa_verify(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len);
