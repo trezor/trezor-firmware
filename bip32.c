@@ -380,6 +380,12 @@ void hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw)
 	ecdsa_get_address_raw(node->public_key, version, addr_raw);
 }
 
+void hdnode_get_address(HDNode *node, uint32_t version, char *addr, int addrsize)
+{
+	hdnode_fill_public_key(node);
+	ecdsa_get_address(node->public_key, version, addr, addrsize);
+}
+
 void hdnode_fill_public_key(HDNode *node)
 {
 	if (node->public_key[0] != 0)
