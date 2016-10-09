@@ -936,9 +936,9 @@ int ecdsa_address_decode(const char *addr, uint32_t version, uint8_t *out)
 	if (version <= 0xFF) {
 		return base58_decode_check(addr, out, 21) == 21 && out[0] == (version & 0xFF);
 	} else if (version <= 0xFFFF) {
-		return base58_decode_check(addr, out, 22) == 22 && out[0] == ((version >> 8)) && out[1] == (version & 0xFF);
-	} else if (version <= 0xFFFF) {
-		return base58_decode_check(addr, out, 23) == 23 && out[0] == ((version >> 16)) && out[1] == ((version >> 8) & 0xFF) && out[2] == (version & 0xFF);
+		return base58_decode_check(addr, out, 22) == 22 && out[0] == ((version >> 8) & 0xFF) && out[1] == (version & 0xFF);
+	} else if (version <= 0xFFFFFF) {
+		return base58_decode_check(addr, out, 23) == 23 && out[0] == ((version >> 16) & 0xFF) && out[1] == ((version >> 8) & 0xFF) && out[2] == (version & 0xFF);
 	} else {
 		return base58_decode_check(addr, out, 24) == 24 && out[0] == (version >> 24) && out[1] == ((version >> 16) & 0xFF) && out[2] == ((version >> 8) & 0xFF) && out[3] == (version & 0xFF);
 	}
