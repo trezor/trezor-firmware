@@ -732,9 +732,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 	layoutProgressSwipe("Signing", 0);
 	if (cryptoMessageSign(coin, node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
 		resp->has_address = true;
-		uint8_t addr_raw[21];
-		hdnode_get_address_raw(node, coin->address_type, addr_raw);
-		base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+		hdnode_get_address(node, coin->address_type, resp->address, sizeof(resp->address));
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);
@@ -757,11 +755,13 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
 	layoutProgressSwipe("Verifying", 0);
-	uint8_t addr_raw[21];
-	if (!ecdsa_address_decode(msg->address, addr_raw)) {
+	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
+	uint32_t address_type;
+	if (!getAddressType(coin, (const uint8_t *) msg->address, &address_type) || !ecdsa_address_decode(msg->address, address_type, addr_raw)) {
 		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid address");
+		return;
 	}
-	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, addr_raw, msg->signature.bytes) == 0) {
+	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, address_type, addr_raw, msg->signature.bytes) == 0) {
 		layoutVerifyAddress(msg->address);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
@@ -845,9 +845,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 			resp->has_address = false;
 		} else {
 			resp->has_address = true;
-			uint8_t addr_raw[21];
-			hdnode_get_address_raw(node, 0x00, addr_raw); // hardcoded Bitcoin address type
-			base58_encode_check(addr_raw, 21, resp->address, sizeof(resp->address));
+			hdnode_get_address(node, 0x00, resp->address, sizeof(resp->address)); // hardcoded Bitcoin address type
 		}
 		resp->has_public_key = true;
 		resp->public_key.size = 33;
@@ -943,7 +941,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	RESP_INIT(EncryptedMessage);
 	const CoinType *coin = 0;
 	const HDNode *node = 0;
-	uint8_t address_raw[21];
+	uint8_t address_raw[MAX_ADDR_RAW_SIZE];
 	if (signing) {
 		coin = coinByName(msg->coin_name);
 		if (!coin) {
@@ -1011,7 +1009,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 	RESP_INIT(DecryptedMessage);
 	bool display_only = false;
 	bool signing = false;
-	uint8_t address_raw[21];
+	uint8_t address_raw[MAX_ADDR_RAW_SIZE];
 	if (cryptoMessageDecrypt(&nonce_pubkey, msg->message.bytes, msg->message.size, msg->hmac.bytes, msg->hmac.size, node->private_key, resp->message.bytes, &(resp->message.size), &display_only, &signing, address_raw) != 0) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error decrypting message");
 		layoutHome();

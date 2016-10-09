@@ -28,6 +28,7 @@
 #include "curves.h"
 #include "secp256k1.h"
 #include "macros.h"
+#include "coins.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -140,10 +141,10 @@ int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message
 	return result;
 }
 
-int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
+int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature)
 {
 	SHA256_CTX ctx;
-	uint8_t pubkey[65], addr_raw[21], hash[32];
+	uint8_t pubkey[65], addr_raw[MAX_ADDR_RAW_SIZE], hash[32];
 
 	// calculate hash
 	sha256_Init(&ctx);
@@ -171,8 +172,8 @@ int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t mes
 		pubkey[0] = 0x02 | (pubkey[64] & 1);
 	}
 	// check if the address is correct
-	ecdsa_get_address_raw(pubkey, address_raw[0], addr_raw);
-	if (memcmp(addr_raw, address_raw, 21) != 0) {
+	ecdsa_get_address_raw(pubkey, address_type, addr_raw);
+	if (memcmp(addr_raw, address_raw, prefixBytesByAddressType(address_type) + 20) != 0) {
 		return 2;
 	}
 	return 0;
@@ -272,9 +273,11 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_le
 	uint32_t l, o;
 	l = deser_length(payload + 1, &o);
 	if (*signing) {
+		// FIXME: assumes a raw address is 21 bytes (also below).
 		if (1 + l + o + 21 + 65 != payload_len) {
 			return 4;
 		}
+		// FIXME: cryptoMessageVerify changed to take the address_type as a parameter.
 		if (cryptoMessageVerify(payload + 1 + l, o, payload + 1 + l + o, payload + 1 + l + o + 21) != 0) {
 			return 5;
 		}

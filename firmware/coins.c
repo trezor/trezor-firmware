@@ -55,7 +55,7 @@ const CoinType *coinByName(const char *name)
 	return 0;
 }
 
-const CoinType *coinByAddressType(uint8_t address_type)
+const CoinType *coinByAddressType(uint32_t address_type)
 {
 	int i;
 	for (i = 0; i < COINS_COUNT; i++) {
@@ -64,4 +64,56 @@ const CoinType *coinByAddressType(uint8_t address_type)
 		}
 	}
 	return 0;
+}
+
+size_t prefixBytesByAddressType(uint32_t address_type)
+{
+	if (address_type <= 0xFF)     return 1;
+	if (address_type <= 0xFFFF)   return 2;
+	if (address_type <= 0xFFFFFF) return 3;
+	return 4;
+}
+
+bool addressHasExpectedPrefix(const uint8_t *addr, uint32_t address_type)
+{
+	if (address_type <= 0xFF) {
+		return address_type == (uint32_t)(addr[0]);
+	}
+	if (address_type <= 0xFFFF) {
+		return address_type == ((uint32_t)(addr[0] << 8) | (uint32_t)(addr[1]));
+	}
+	if (address_type <= 0xFFFFFF) {
+		return address_type == ((uint32_t)(addr[0] << 16) | (uint32_t)(addr[1] << 8) | (uint32_t)(addr[2]));
+	}
+	return address_type == ((uint32_t)(addr[0] << 24) | (uint32_t)(addr[1] << 16) | (uint32_t)(addr[2] << 8) | (uint32_t)(addr[3]));
+}
+
+void writeAddressPrefix(uint8_t *addr, uint32_t address_type)
+{
+	if (address_type > 0xFFFFFF) *(addr++) =  address_type >> 24;
+	if (address_type > 0xFFFF)   *(addr++) = (address_type >> 16) & 0xFF;
+	if (address_type > 0xFF)     *(addr++) = (address_type >>  8) & 0xFF;
+	*(addr++) = address_type & 0xFF;
+}
+
+bool getAddressType(const CoinType *coin, const uint8_t *addr, uint32_t *address_type)
+{
+	if (coin->has_address_type && addressHasExpectedPrefix(addr, coin->address_type)) {
+		*address_type = coin->address_type;
+		return true;
+	}
+	if (coin->has_address_type_p2sh && addressHasExpectedPrefix(addr, coin->address_type_p2sh)) {
+		*address_type = coin->address_type_p2sh;
+		return true;
+	}
+	if (coin->has_address_type_p2wpkh && addressHasExpectedPrefix(addr, coin->address_type_p2wpkh)) {
+		*address_type = coin->address_type_p2wpkh;
+		return true;
+	}
+	if (coin->has_address_type_p2wsh && addressHasExpectedPrefix(addr, coin->address_type_p2wsh)) {
+		*address_type = coin->address_type_p2wsh;
+		return true;
+	}
+	*address_type = 0;
+	return false;
 }
