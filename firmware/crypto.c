@@ -27,6 +27,7 @@
 #include "layout.h"
 #include "curves.h"
 #include "secp256k1.h"
+#include "address.h"
 #include "macros.h"
 #include "coins.h"
 
@@ -173,11 +174,11 @@ int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t mes
 	}
 	// check if the address is correct
 	uint32_t address_type;
-	if (!getAddressType(coin, address_raw, &address_type)) {
+	if (!coinExtractAddressType(coin, address_raw, &address_type)) {
 		return 2;
 	}
 	ecdsa_get_address_raw(pubkey, address_type, addr_raw);
-	if (memcmp(addr_raw, address_raw, prefixBytesByAddressType(address_type) + 20) != 0) {
+	if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
 		return 2;
 	}
 	return 0;

@@ -28,6 +28,7 @@
 #include "crypto.h"
 #include "ripemd160.h"
 #include "base58.h"
+#include "address.h"
 #include "messages.pb.h"
 #include "types.pb.h"
 
@@ -91,7 +92,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		out->script_pubkey.bytes[0] = 0x76; // OP_DUP
 		out->script_pubkey.bytes[1] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[2] = 0x14; // pushing 20 bytes
-		memcpy(out->script_pubkey.bytes + 3, addr_raw + prefixBytesByAddressType(coin->address_type), 20);
+		memcpy(out->script_pubkey.bytes + 3, addr_raw + address_prefix_bytes_len(coin->address_type), 20);
 		out->script_pubkey.bytes[23] = 0x88; // OP_EQUALVERIFY
 		out->script_pubkey.bytes[24] = 0xAC; // OP_CHECKSIG
 		out->script_pubkey.size = 25;
@@ -110,7 +111,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		}
 		out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
-		memcpy(out->script_pubkey.bytes + 2, addr_raw + prefixBytesByAddressType(coin->address_type_p2sh), 20);
+		memcpy(out->script_pubkey.bytes + 2, addr_raw + address_prefix_bytes_len(coin->address_type_p2sh), 20);
 		out->script_pubkey.bytes[22] = 0x87; // OP_EQUAL
 		out->script_pubkey.size = 23;
 		return 23;
@@ -118,14 +119,14 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 
 	if (in->script_type == OutputScriptType_PAYTOMULTISIG) {
 		uint8_t buf[32];
-		size_t prefix_bytes = prefixBytesByAddressType(coin->address_type_p2sh);
+		size_t prefix_bytes = address_prefix_bytes_len(coin->address_type_p2sh);
 		if (!in->has_multisig) {
 			return 0;
 		}
 		if (compile_script_multisig_hash(&(in->multisig), buf) == 0) {
 			return 0;
 		}
-		writeAddressPrefix(addr_raw, coin->address_type_p2sh);
+		address_write_prefix_bytes(coin->address_type_p2sh, addr_raw);
 		ripemd160(buf, 32, addr_raw + prefix_bytes);
 		if (needs_confirm) {
 			base58_encode_check(addr_raw, prefix_bytes + 20, in->address, sizeof(in->address));

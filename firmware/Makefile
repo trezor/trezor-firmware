@@ -21,6 +21,7 @@ OBJS += ethereum.o
 
 OBJS += debug.o
 
+OBJS += ../vendor/trezor-crypto/address.o
 OBJS += ../vendor/trezor-crypto/bignum.o
 OBJS += ../vendor/trezor-crypto/ecdsa.o
 OBJS += ../vendor/trezor-crypto/curves.o
