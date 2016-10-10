@@ -18,10 +18,10 @@ def process_rgb(w, h, pix):
 def process_grayscale(w, h, pix):
     data = bytes()
     for j in range(h):
-            for i in range(w // 2):
-                l1, l2 = pix[i * 2, j], pix[i * 2 + 1, j]
-                c = (l1 & 0xF0) | (l2 >> 4)
-                data += struct.pack('>B', c)
+        for i in range(w // 2):
+            l1, l2 = pix[i * 2, j], pix[i * 2 + 1, j]
+            c = (l1 & 0xF0) | (l2 >> 4)
+            data += struct.pack('>B', c)
     return data
 
 
@@ -55,9 +55,9 @@ def process_image(ifn):
 
     with open(ofn, 'wb') as f:
         if im.mode == 'RGB':
-            f.write(bytes('TOIf', 'ascii'))
+            f.write(b'TOIf')
         else:
-            f.write(bytes('TOIg', 'ascii'))
+            f.write(b'TOIg')
         f.write(struct.pack('<HH', w, h))
         f.write(struct.pack('<I', len(zdata)))
         f.write(zdata)
