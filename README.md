@@ -7,6 +7,8 @@ This is the core of the upcoming TREZOR v2. It consists of several parts:
 * patched version of [MicroPython](https://github.com/micropython/micropython) - in `vendor/micropython`
 * application logic - in `src`
 
+##Documentation
+
 * [Documentation](docs/)
 
 ##Build instructions for emulator
