@@ -16,3 +16,11 @@
 | Sector  9 | 0x080A0000 - 0x080BFFFF | 128 KiB | application code
 | Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | application code
 | Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | application code
+
+##RAM
+
+| region  | range                   |  size   | function
+|---------|-------------------------|--------:|----------------------
+| CCM RAM | 0x10000000 - 0x1000FFFF |  64 KiB | Core Coupled Memory
+| SRAM1   | 0x20000000 - 0x2001BFFF | 112 KiB | General Purpose SRAM
+| SRAM2   | 0x2001C000 - 0x2001FFFF |  16 KiB | General Purpose SRAM
