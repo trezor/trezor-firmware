@@ -526,14 +526,11 @@ class ProtocolMixin(object):
         ret = self.call(proto.SetU2FCounter(u2f_counter = u2f_counter))
         return ret
 
-    def verify_message(self, address, signature, message):
+    def verify_message(self, coin_name, address, signature, message):
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
         message = normalize_nfc(message).encode("utf-8")
         try:
-            if address:
-                resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message))
-            else:
-                resp = self.call(proto.VerifyMessage(signature=signature, message=message))
+            resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message, coin_name=coin_name))
         except CallException as e:
             resp = e
         if isinstance(resp, proto.Success):
