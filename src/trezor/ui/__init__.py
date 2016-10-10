@@ -50,9 +50,9 @@ BACKLIGHT_DIM = const(5)
 BACKLIGHT_MAX = const(255)
 
 # icons
-ICON_RESET    = 'trezor/res/reset.toig'
-ICON_WIPE     = 'trezor/res/wipe.toig'
-ICON_RECOVERY = 'trezor/res/recovery.toig'
+ICON_RESET    = 'trezor/res/header_icons/reset.toig'
+ICON_WIPE     = 'trezor/res/header_icons/wipe.toig'
+ICON_RECOVERY = 'trezor/res/header_icons/recovery.toig'
 
 def in_area(pos: tuple, area: tuple) -> bool:
     x, y = pos

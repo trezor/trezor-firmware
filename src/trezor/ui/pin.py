@@ -25,7 +25,7 @@ class PinMatrix():
         self.label = label
         self.pin = pin
         self.clear_button = Button((240 - 35, 5, 30, 30),
-                                   res.load('trezor/res/close-button.toig'),
+                                   res.load('trezor/res/pin_close.toig'),
                                    normal_style=CLEAR_BUTTON,
                                    active_style=CLEAR_BUTTON_ACTIVE)
         self.pin_buttons = [Button(digit_area(i), str(d))

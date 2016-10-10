@@ -283,8 +283,8 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
         set_color_table(iconcolortable, iconfgcolor, bgcolor);
     }
     display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
-    if (icon && memcmp(icon, "TOIg\x60\x00\x60\x00", 8) == 0 && iconlen == 12 + *(uint32_t *)(icon + 8)) {
-        uint8_t icondata[96 * 96 / 2];
+    if (icon && memcmp(icon, "TOIg", 4) == 0 && LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) && LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) && iconlen == 12 + *(uint32_t *)(icon + 8)) {
+        uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
         sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
         icon = icondata;
     } else {
@@ -310,8 +310,9 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
                 a = 999 - (img_loader[my][mx] >> 8);
             }
             // inside of circle - draw glyph
-            if (icon && mx + my > (48 * 2) && mx >= img_loader_size - 48 && my >= img_loader_size - 48) {
-                int i = (x - (img_loader_size - 48)) + (y - (img_loader_size - 48)) * 96;
+            #define LOADER_ICON_CORNER_CUT 2
+            if (icon && mx + my > (((LOADER_ICON_SIZE / 2) + LOADER_ICON_CORNER_CUT) * 2) && mx >= img_loader_size - (LOADER_ICON_SIZE / 2) && my >= img_loader_size - (LOADER_ICON_SIZE / 2)) {
+                int i = (x - (img_loader_size - (LOADER_ICON_SIZE / 2))) + (y - (img_loader_size - (LOADER_ICON_SIZE / 2))) * LOADER_ICON_SIZE;
                 uint8_t c;
                 if (i % 2) {
                     c = icon[i / 2] & 0x0F;

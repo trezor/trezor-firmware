@@ -262,7 +262,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5
 ///     Renders a rotating loader graphic.
 ///     Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
 ///     When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
-///     Icon needs to be of exaclty 96x96 pixels size.
+///     Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
 ///     '''
 STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
     mp_int_t progress = mp_obj_get_int(args[1]);
@@ -278,7 +278,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
         mp_int_t w = *(uint16_t *)(data + 4);
         mp_int_t h = *(uint16_t *)(data + 6);
         mp_int_t datalen = *(uint32_t *)(data + 8);
-        if (w != 96 || h != 96) {
+        if (w != LOADER_ICON_SIZE || h != LOADER_ICON_SIZE) {
             mp_raise_ValueError("Invalid icon size");
         }
         if (datalen != icon.len - 12) {

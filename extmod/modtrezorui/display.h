@@ -17,6 +17,8 @@
 #define FONT_NORMAL 1
 #define FONT_BOLD   2
 
+#define LOADER_ICON_SIZE 64
+
 void display_init(void);
 void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 int display_orientation(int degrees);
