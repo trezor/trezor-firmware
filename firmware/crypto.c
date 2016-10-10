@@ -142,7 +142,7 @@ int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message
 	return result;
 }
 
-int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, const uint8_t *address_raw, const uint8_t *signature)
+int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	uint8_t pubkey[65], addr_raw[MAX_ADDR_RAW_SIZE], hash[32];
@@ -173,10 +173,6 @@ int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t mes
 		pubkey[0] = 0x02 | (pubkey[64] & 1);
 	}
 	// check if the address is correct
-	uint32_t address_type;
-	if (!coinExtractAddressType(coin, address_raw, &address_type)) {
-		return 2;
-	}
 	ecdsa_get_address_raw(pubkey, address_type, addr_raw);
 	if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
 		return 2;
