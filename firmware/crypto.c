@@ -172,8 +172,12 @@ int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t mes
 		pubkey[0] = 0x02 | (pubkey[64] & 1);
 	}
 	// check if the address is correct
-	ecdsa_get_address_raw(pubkey, coin->address_type, addr_raw);
-	if (memcmp(addr_raw, address_raw, prefixBytesByAddressType(coin->address_type) + 20) != 0) {
+	uint32_t address_type;
+	if (!getAddressType(coin, address_raw, &address_type)) {
+		return 2;
+	}
+	ecdsa_get_address_raw(pubkey, address_type, addr_raw);
+	if (memcmp(addr_raw, address_raw, prefixBytesByAddressType(address_type) + 20) != 0) {
 		return 2;
 	}
 	return 0;
