@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-set(SOURCES aescrypt.c aeskey.c aes_modes.c aestab.c base58.c bignum.c bip32.c bip39.c ecdsa.c hmac.c nist256p1.c pbkdf2.c rand.c ripemd160.c secp256k1.c sha2.c ed25519-donna/ed25519.c sha3.c)
+set(SOURCES address.c aescrypt.c aeskey.c aes_modes.c aestab.c base58.c bignum.c bip32.c bip39.c ecdsa.c hmac.c nist256p1.c pbkdf2.c rand.c ripemd160.c secp256k1.c sha2.c ed25519-donna/ed25519.c sha3.c)
 include_directories(ed25519-donna)
 
 # disable sequence point warnings where they are expected
