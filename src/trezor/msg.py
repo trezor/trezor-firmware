@@ -3,8 +3,12 @@ from TrezorMsg import Msg
 _msg = Msg()
 
 
-def setup(ifaces):
-    return _msg.setup(ifaces)
+def set_interfaces(ifaces):
+    return _msg.set_interfaces(ifaces)
+
+
+def get_interfaces():
+    return _msg.get_interfaces()
 
 
 def select(timeout_us):

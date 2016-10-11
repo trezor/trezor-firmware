@@ -25,8 +25,12 @@
 #error Unsupported port. Only STMHAL and UNIX ports are supported.
 #endif
 
+#define MAX_INTERFACES 8
+
 typedef struct _mp_obj_Msg_t {
     mp_obj_base_t base;
+    uint16_t usage_pages[MAX_INTERFACES];
+    mp_uint_t interface_count;
 } mp_obj_Msg_t;
 
 STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
@@ -34,14 +38,15 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     msg_init();
     mp_obj_Msg_t *o = m_new_obj(mp_obj_Msg_t);
     o->base.type = type;
+    o->interface_count = 0;
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.msg.setup(ifaces: list) -> None:
+/// def trezor.msg.set_interfaces(ifaces: list/tuple) -> None:
 ///     '''
-///     Configures USB interfaces with a list of (usage_page, ...)
+///     Configures USB interfaces with a list/tuple of (usage_page, ...)
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
+STATIC mp_obj_t mod_TrezorMsg_Msg_set_interfaces(mp_obj_t self, mp_obj_t ifaces) {
     mp_uint_t iface_cnt;
     mp_obj_t *usage_pages;
     if (MP_OBJ_IS_TYPE(ifaces, &mp_type_tuple)) {
@@ -52,13 +57,32 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
     } else {
         mp_raise_TypeError("List or tuple expected");
     }
+    if (iface_cnt > MAX_INTERFACES) {
+        mp_raise_ValueError("Maximum number of interfaces exceeded");
+    }
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     for (mp_uint_t i = 0; i < iface_cnt; i++) {
        uint16_t usage_page = mp_obj_get_int(usage_pages[i]);
-       printf("iface %d: usage_page=%04x\n", i + 1, usage_page);
+       o->usage_pages[i] = usage_page;
     }
+    o->interface_count = iface_cnt;
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_setup_obj, mod_TrezorMsg_Msg_setup);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_set_interfaces_obj, mod_TrezorMsg_Msg_set_interfaces);
+
+/// def trezor.msg.get_interfaces() -> tuple:
+///     '''
+///     Reads a tuple (of usage pages) of configured USB interfaces
+///     '''
+STATIC mp_obj_t mod_TrezorMsg_Msg_get_interfaces(mp_obj_t self) {
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
+    mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(o->interface_count, NULL));
+    for (mp_uint_t i = 0; i < o->interface_count; i++) {
+        tuple->items[i] = MP_OBJ_NEW_SMALL_INT(o->usage_pages[i]);
+    }
+    return MP_OBJ_FROM_PTR(tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg_get_interfaces_obj, mod_TrezorMsg_Msg_get_interfaces);
 
 /// def trezor.msg.send(usage_page: int, message: bytes) -> int:
 ///     '''
@@ -122,7 +146,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_select_obj, mod_TrezorMsg_Msg
 STATIC const mp_rom_map_elem_t mod_TrezorMsg_Msg_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorMsg_Msg_select_obj) },
     { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_TrezorMsg_Msg_send_obj) },
-    { MP_ROM_QSTR(MP_QSTR_setup), MP_ROM_PTR(&mod_TrezorMsg_Msg_setup_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_interfaces), MP_ROM_PTR(&mod_TrezorMsg_Msg_set_interfaces_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_interfaces), MP_ROM_PTR(&mod_TrezorMsg_Msg_get_interfaces_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_Msg_locals_dict, mod_TrezorMsg_Msg_locals_dict_table);
 

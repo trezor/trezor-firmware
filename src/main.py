@@ -17,7 +17,11 @@ wallet.boot()
 ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
 # Just a demo to show how to register USB ifaces
-msg.setup([0xFF00, 0xFF01, 0xF1D0])
+msg.set_interfaces([0xFF00, 0xFF01, 0xF1D0])
+# and list them
+for i, up in enumerate(msg.get_interfaces()):
+    print("iface %d: usage_page 0x%04x" % (i + 1, up))
+
 
 # Initialize the wire codec pipeline
 wire.setup()
