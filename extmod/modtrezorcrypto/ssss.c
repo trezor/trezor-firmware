@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include "ssss.h"
 
 bool ssss_split(const bignum256 *secret, int m, int n, bignum256 *shares)

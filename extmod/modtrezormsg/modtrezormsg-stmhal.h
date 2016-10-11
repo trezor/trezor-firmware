@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 extern struct _USBD_HandleTypeDef hUSBDDevice;
 extern uint8_t USBD_HID_SendReport(struct _USBD_HandleTypeDef *pdev, uint8_t *report, uint16_t len);
 extern int USBD_HID_Rx(uint8_t *buf, uint32_t len, uint32_t timeout);
