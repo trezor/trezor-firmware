@@ -1,6 +1,7 @@
 import sys
 import gc
 
+from TrezorUtils import memcpy
 from trezor import log
 
 type_gen = type((lambda: (yield))())
