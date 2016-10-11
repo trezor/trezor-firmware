@@ -39,50 +39,42 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 
 /// def trezor.msg.setup(ifaces: list) -> None:
 ///     '''
-///     Configures USB interfaces with a list of tuples (interface_number, usage_page)
+///     Configures USB interfaces with a list of (usage_page, ...)
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_setup(mp_obj_t self, mp_obj_t ifaces) {
     mp_uint_t iface_cnt;
-    mp_obj_t *iface;
+    mp_obj_t *usage_pages;
     if (MP_OBJ_IS_TYPE(ifaces, &mp_type_tuple)) {
-        mp_obj_tuple_get(ifaces, &iface_cnt, &iface);
+        mp_obj_tuple_get(ifaces, &iface_cnt, &usage_pages);
     } else
     if (MP_OBJ_IS_TYPE(ifaces, &mp_type_list)) {
-        mp_obj_list_get(ifaces, &iface_cnt, &iface);
+        mp_obj_list_get(ifaces, &iface_cnt, &usage_pages);
     } else {
         mp_raise_TypeError("List or tuple expected");
     }
     for (mp_uint_t i = 0; i < iface_cnt; i++) {
-       if (!MP_OBJ_IS_TYPE(iface[i], &mp_type_tuple)) {
-           mp_raise_TypeError("Tuple expected");
-       }
-       mp_uint_t attr_cnt;
-       mp_obj_t *attr;
-       mp_obj_tuple_get(iface[i], &attr_cnt, &attr);
-       assert(attr_cnt == 2);
-       uint8_t endpoint = mp_obj_get_int(attr[0]);
-       uint16_t usage_page = mp_obj_get_int(attr[1]);
-       printf("iface %d: ep=%d up=%04x\n", (uint16_t)i, endpoint, usage_page);
+       uint16_t usage_page = mp_obj_get_int(usage_pages[i]);
+       printf("iface %d: usage_page=%04x\n", i + 1, usage_page);
     }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_setup_obj, mod_TrezorMsg_Msg_setup);
 
-/// def trezor.msg.send(iface: int, message: bytes) -> int:
+/// def trezor.msg.send(usage_page: int, message: bytes) -> int:
 ///     '''
 ///     Sends message using USB HID (device) or UDP (emulator).
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t message) {
-    uint8_t iface_num = mp_obj_get_int(iface);
+STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t usage_page, mp_obj_t message) {
+    uint16_t up = mp_obj_get_int(usage_page);
     mp_buffer_info_t msg;
     mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
-    ssize_t r = msg_send(iface_num, msg.buf, msg.len);
+    ssize_t r = msg_send(up, msg.buf, msg.len);
     return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
 
 #define TICK_RESOLUTION 1000
-#define TOUCH_IFACE 256
+#define TOUCH_IFACE 0
 
 /// def trezor.msg.select(timeout_us: int) -> tuple:
 ///     '''
@@ -104,12 +96,12 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             tuple->items[3] = MP_OBJ_NEW_SMALL_INT((e & 0xFF)); // y position
             return MP_OBJ_FROM_PTR(tuple);
         }
-        uint8_t iface;
+        uint16_t iface_usage_page;
         uint8_t recvbuf[64];
-        ssize_t l = msg_recv(&iface, recvbuf, 64);
+        ssize_t l = msg_recv(&iface_usage_page, recvbuf, 64);
         if (l > 0) {
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface);
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface_usage_page);
             tuple->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, recvbuf, l);
             return MP_OBJ_FROM_PTR(tuple);
          }

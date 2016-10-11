@@ -17,7 +17,7 @@ wallet.boot()
 ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
 # Just a demo to show how to register USB ifaces
-msg.setup([(1, 0xF53C), (2, 0xF1D0)])
+msg.setup([0xFF00, 0xFF01, 0xF1D0])
 
 # Initialize the wire codec pipeline
 wire.setup()

@@ -17,10 +17,10 @@ scheduled_tasks = []  # heap: [(time, counter, task, value)]
 MAX_SELECT_DELAY = const(1000000)
 
 # message interfaces:
-# 0-255  - USB HID
-# 256    - touch event interface
+# 0x0000           - touch event interface
+# 0x0001 - 0xFFFF  - USB HID
 
-TOUCH = const(256)  # interface
+TOUCH = const(0)  # interface
 TOUCH_START = const(1)  # event
 TOUCH_MOVE = const(2)  # event
 TOUCH_END = const(4)  # event

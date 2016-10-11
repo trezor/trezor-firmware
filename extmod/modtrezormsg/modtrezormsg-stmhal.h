@@ -20,15 +20,15 @@ void msg_init(void)
     i2c_init(&I2CHandle1);
 }
 
-ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
+ssize_t msg_recv(uint16_t *usage_page, uint8_t *buf, size_t len)
 {
-    *iface = 0; // use always interface 0 for now
+    *usage_page = 0xFF00; // TODO: return proper usage page
     return USBD_HID_Rx(buf, len, 1);
 }
 
-ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
+ssize_t msg_send(uint16_t usage_page, const uint8_t *buf, size_t len)
 {
-    (void)iface; // ignore interface for now
+    (void)usage_page; // TODO: ignore usage page for now
     if (len > 0) {
         USBD_HID_SendReport(&hUSBDDevice, (uint8_t *)buf, len);
     }
