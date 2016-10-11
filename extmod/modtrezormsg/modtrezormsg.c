@@ -89,11 +89,20 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg_get_interfaces_obj, mod_Trezo
 ///     Sends message using USB HID (device) or UDP (emulator).
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t usage_page, mp_obj_t message) {
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
+    if (o->interface_count == 0) {
+        mp_raise_TypeError("No interfaces registered");
+    }
     uint16_t up = mp_obj_get_int(usage_page);
-    mp_buffer_info_t msg;
-    mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
-    ssize_t r = msg_send(up, msg.buf, msg.len);
-    return MP_OBJ_NEW_SMALL_INT(r);
+    for (uint8_t i = 0; i < o->interface_count; i++) {
+        if (o->usage_pages[i] == up) {
+            mp_buffer_info_t msg;
+            mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+            ssize_t r = msg_send(i, msg.buf, msg.len);
+            return MP_OBJ_NEW_SMALL_INT(r);
+        }
+    }
+    mp_raise_TypeError("Interface not found");
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
 
@@ -106,6 +115,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 ///     Function returns None if timeout specified in microseconds is reached.
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     int timeout = mp_obj_get_int(timeout_us);
     if (timeout < 0) {
         timeout = 0;
@@ -120,15 +130,19 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             tuple->items[3] = MP_OBJ_NEW_SMALL_INT((e & 0xFF)); // y position
             return MP_OBJ_FROM_PTR(tuple);
         }
-        uint16_t iface_usage_page;
-        uint8_t recvbuf[64];
-        ssize_t l = msg_recv(&iface_usage_page, recvbuf, 64);
-        if (l > 0) {
-            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface_usage_page);
-            tuple->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, recvbuf, l);
-            return MP_OBJ_FROM_PTR(tuple);
-         }
+        // check for interfaces only when some have been registered
+        if (o->interface_count > 0) {
+            uint8_t iface;
+            uint8_t recvbuf[64];
+            ssize_t l = msg_recv(&iface, recvbuf, 64);
+            if (l > 0 && iface < o->interface_count) {
+                uint16_t iface_usage_page = o->usage_pages[iface];
+                mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+                tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface_usage_page);
+                tuple->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, recvbuf, l);
+                return MP_OBJ_FROM_PTR(tuple);
+             }
+        }
         if (timeout <= 0) {
             break;
         }

@@ -36,12 +36,12 @@ void msg_init(void)
     assert(b != -1);
 }
 
-ssize_t msg_recv(uint16_t *usage_page, uint8_t *buf, size_t len)
+ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 {
     struct sockaddr_in si;
     socklen_t sl = sizeof(si);
     memset(buf, 0, len);
-    *usage_page = 0xFF00; // TODO: return proper usage page
+    *iface = 0; // TODO: return proper interface
     ssize_t r = recvfrom(s, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
     if (r < 0) {
         return r;
@@ -51,9 +51,9 @@ ssize_t msg_recv(uint16_t *usage_page, uint8_t *buf, size_t len)
     return r;
 }
 
-ssize_t msg_send(uint16_t usage_page, const uint8_t *buf, size_t len)
+ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
-    (void)usage_page; // TODO: ignore usage page for now
+    (void)iface; // TODO: ignore interface for now
     ssize_t r = len;
     if (slen > 0) {
         r = sendto(s, buf, len, MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);

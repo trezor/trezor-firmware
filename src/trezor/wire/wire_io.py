@@ -2,7 +2,7 @@ import ubinascii
 from micropython import const
 from trezor import msg, loop, log
 
-_DEFAULT_IFACE = const(0xFF00)
+_DEFAULT_IFACE = const(0xFF00) # TODO: use proper interface
 
 
 def read_report_stream(target, iface=_DEFAULT_IFACE):

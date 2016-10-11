@@ -9,7 +9,7 @@ extern HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_
 void msg_init(void)
 {
     I2C_InitTypeDef *init = &(I2CHandle1.Init);
-    init->OwnAddress1 = 0xfe; // master
+    init->OwnAddress1 = 0xFE; // master
     init->ClockSpeed = 400000;
     init->DutyCycle = I2C_DUTYCYCLE_16_9;
     init->AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
@@ -20,15 +20,15 @@ void msg_init(void)
     i2c_init(&I2CHandle1);
 }
 
-ssize_t msg_recv(uint16_t *usage_page, uint8_t *buf, size_t len)
+ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 {
-    *usage_page = 0xFF00; // TODO: return proper usage page
+    *iface = 0; // TODO: return proper interface
     return USBD_HID_Rx(buf, len, 1);
 }
 
-ssize_t msg_send(uint16_t usage_page, const uint8_t *buf, size_t len)
+ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
-    (void)usage_page; // TODO: ignore usage page for now
+    (void)iface; // TODO: ignore interface for now
     if (len > 0) {
         USBD_HID_SendReport(&hUSBDDevice, (uint8_t *)buf, len);
     }
