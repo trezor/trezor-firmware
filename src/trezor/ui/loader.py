@@ -28,10 +28,10 @@ class Loader():
 
     def start(self):
         self.start_ticks_ms = utime.ticks_ms()
-        ui.display.bar(0, 48, 240, 240 - 96, ui.BLACK)
+        ui.display.bar(0, 32, 240, 240 - 80, ui.BLACK)
 
     def stop(self):
-        ui.display.bar(0, 48, 240, 240 - 96, ui.BLACK)
+        ui.display.bar(0, 32, 240, 240 - 80, ui.BLACK)
         ticks_diff = utime.ticks_ms() - self.start_ticks_ms
         self.start_ticks_ms = None
         return ticks_diff >= LOADER_MSEC
