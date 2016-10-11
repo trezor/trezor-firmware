@@ -5,7 +5,7 @@ if not __debug__:
 
 from TrezorDebug import Debug
 
-_utils = Debug()
+_debug = Debug()
 
 MEM_FLASH_BASE = const(0x08000000)
 MEM_FLASH_SIZE = const(1024 * 1024)
@@ -18,4 +18,4 @@ MEM_SRAM_SIZE = const(128 * 1024)
 MEM_SRAM_END = const(MEM_SRAM_BASE + MEM_SRAM_SIZE - 1)
 
 def memaccess(address, length):
-    return _utils.memaccess(address, length)
+    return _debug.memaccess(address, length)
