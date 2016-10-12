@@ -7,6 +7,7 @@ resources_size = 0
 os.chdir(os.path.dirname(__file__))
 os.chdir('../src/')
 
+
 def process_file(name):
     if name.endswith('.gitignore'):
         return
@@ -21,20 +22,21 @@ def process_file(name):
         global resources_size
         resources_size += len(data)
 
-# scan common resources
-for res in os.listdir('trezor/res/'):
-    name = os.path.join('trezor/res/', res)
-    if os.path.isfile(name):
-        process_file(name)
 
-# scan apps
-for app in os.listdir('apps/'):
-    name = os.path.join('apps/', app)
-    if os.path.isdir(name) and os.path.isdir('apps/%s/res/' % app):
-        for res in os.listdir('apps/%s/res/' % app):
-            name = 'apps/%s/res/%s' % (app, res)
-            if os.path.isfile(name):
-                process_file(name)
+def process_dir_rec(dir):
+    for name in os.listdir(dir):
+        path = os.path.join(dir, name)
+        if os.path.isfile(path):
+            process_file(path)
+        elif os.path.isdir(path):
+            process_dir_rec(path)
+
+
+process_dir_rec('trezor/res/')
+for name in os.listdir('apps/'):
+    path = os.path.join('apps/', name, 'res/')
+    if os.path.isdir(path):
+        process_dir_rec(path)
 
 resfile = 'trezor/res/resources.py'
 with open(resfile, 'wt') as f:
@@ -43,4 +45,5 @@ with open(resfile, 'wt') as f:
         f.write("    '%s': %s,\n" % (k, resources[k]))
     f.write('}\n')
 
-print('written %s with %d entries (total %d bytes)' % (resfile, len(resources), resources_size))
+print('written %s with %d entries (total %d bytes)' %
+      (resfile, len(resources), resources_size))
