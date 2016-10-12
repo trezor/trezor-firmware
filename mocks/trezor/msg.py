@@ -1,12 +1,18 @@
 
 # ../extmod/modtrezormsg/modtrezormsg.c
-def setup(ifaces: list) -> None:
+def set_interfaces(ifaces: list/tuple) -> None:
     '''
-    Configures USB interfaces with a list of tuples (interface_number, usage_page)
+    Configures USB interfaces with a list/tuple of (usage_page, ...)
     '''
 
 # ../extmod/modtrezormsg/modtrezormsg.c
-def send(iface: int, message: bytes) -> int:
+def get_interfaces() -> tuple:
+    '''
+    Reads a tuple (of usage pages) of configured USB interfaces
+    '''
+
+# ../extmod/modtrezormsg/modtrezormsg.c
+def send(usage_page: int, message: bytes) -> int:
     '''
     Sends message using USB HID (device) or UDP (emulator).
     '''

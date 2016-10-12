@@ -17,6 +17,7 @@
 
 static int BACKLIGHT = 0;
 static int ORIENTATION = 0;
+static int OFFSET[2] = {0, 0};
 
 #if defined STM32_HAL_H
 #include "display-stmhal.h"
@@ -341,4 +342,13 @@ void display_raw(uint8_t reg, const uint8_t *data, int datalen)
         CMD(reg);
     }
     DATAS(data, datalen);
+}
+
+int *display_offset(int xy[2])
+{
+    if (xy) {
+        OFFSET[0] = xy[0];
+        OFFSET[1] = xy[1];
+    }
+    return OFFSET;
 }

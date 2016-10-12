@@ -339,6 +339,38 @@ STATIC mp_obj_t mod_TrezorUi_Display_backlight(size_t n_args, const mp_obj_t *ar
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_backlight_obj, 1, 2, mod_TrezorUi_Display_backlight);
 
+/// def trezor.ui.display.offset(xy: tuple=None) -> tuple:
+///     '''
+///     Sets offset (x, y) for all subsequent drawing calls.
+///     Call without the xy parameter to just perform the read of the value.
+///     '''
+STATIC mp_obj_t mod_TrezorUi_Display_offset(size_t n_args, const mp_obj_t *args) {
+    int xy[2], *ret;
+    if (n_args > 1) {
+        mp_uint_t xy_cnt;
+        mp_obj_t *xy_obj;
+        if (MP_OBJ_IS_TYPE(args[1], &mp_type_tuple)) {
+            mp_obj_tuple_get(args[1], &xy_cnt, &xy_obj);
+        } else {
+            mp_raise_TypeError("Tuple expected");
+        }
+        if (xy_cnt != 2) {
+            mp_raise_ValueError("Tuple of 2 values expected");
+        }
+        xy[0] = mp_obj_get_int(xy_obj[0]);
+        xy[1] = mp_obj_get_int(xy_obj[1]);
+        ret = display_offset(xy);
+    } else {
+        ret = display_offset(0);
+    }
+    mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+    tuple->items[0] = MP_OBJ_NEW_SMALL_INT(ret[0]);
+    tuple->items[1] = MP_OBJ_NEW_SMALL_INT(ret[1]);
+    return MP_OBJ_FROM_PTR(tuple);
+
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_offset_obj, 1, 2, mod_TrezorUi_Display_offset);
+
 /// def trezor.ui.display.raw(reg: int, data: bytes) -> None:
 ///     '''
 ///     Performs a raw command on the display. Read the datasheet to learn more.
@@ -382,6 +414,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_TrezorUi_Display_loader_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
     { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUi_Display_backlight_obj) },
+    { MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_TrezorUi_Display_offset_obj) },
     { MP_ROM_QSTR(MP_QSTR_raw), MP_ROM_PTR(&mod_TrezorUi_Display_raw_obj) },
     { MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_TrezorUi_Display_save_obj) },
     { MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_OBJ_NEW_SMALL_INT(FONT_MONO) },

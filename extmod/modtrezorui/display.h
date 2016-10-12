@@ -23,6 +23,7 @@ void display_init(void);
 void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 int display_orientation(int degrees);
 int display_backlight(int val);
+int *display_offset(int xy[2]);
 
 void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor);
 void display_clear(void);
