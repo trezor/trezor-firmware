@@ -1,1 +1,3 @@
 node_modules/
+test-browserify.js
+trezor-crypto.js
