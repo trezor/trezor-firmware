@@ -37,6 +37,7 @@
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
+#include "curve25519-donna.h"
 #if USE_ETHEREUM
 #include "sha3.h"
 #endif
@@ -44,6 +45,12 @@
 const curve_info ed25519_info = {
 	/* bip32_name */
 	"ed25519 seed",
+	0
+};
+
+const curve_info curve25519_info = {
+	/* bip32_name */
+	"curve25519 seed",
 	0
 };
 
@@ -393,6 +400,9 @@ void hdnode_fill_public_key(HDNode *node)
 	if (node->curve == &ed25519_info) {
 		node->public_key[0] = 1;
 		ed25519_publickey(node->private_key, node->public_key + 1);
+	} else if (node->curve == &curve25519_info) {
+		node->public_key[0] = 1;
+		curve25519_publickey(node->public_key + 1, node->private_key);
 	} else {
 		ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
 	}
@@ -427,6 +437,8 @@ int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig
 		hdnode_fill_public_key(node);
 		ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
 		return 0;
+	} else if (node->curve == &curve25519_info) {
+		return 1;  // signatures are not supported
 	} else {
 		return ecdsa_sign(node->curve->params, node->private_key, msg, msg_len, sig, pby, is_canonical);
 	}
@@ -438,8 +450,44 @@ int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_
 		hdnode_fill_public_key(node);
 		ed25519_sign(digest, 32, node->private_key, node->public_key + 1, sig);
 		return 0;
+	} else if (node->curve == &curve25519_info) {
+		return 1;  // signatures are not supported
 	} else {
 		return ecdsa_sign_digest(node->curve->params, node->private_key, digest, sig, pby, is_canonical);
+	}
+}
+
+int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key, int *result_size)
+{
+	// Use elliptic curve Diffie-Helman to compute shared session key
+	if (node->curve == &ed25519_info) {
+		*result_size = 0;
+		return 1;  // ECDH is not supported
+	} else if (node->curve == &curve25519_info) {
+		session_key[0] = 0x04;
+		if (peer_public_key[0] != 0x40) {
+			return 1;  // Curve25519 public key should start with 0x40 byte.
+		}
+		curve25519_scalarmult(session_key + 1, node->private_key, peer_public_key + 1);
+		*result_size = 33;
+		return 0;
+	} else {
+		curve_point point;
+		const ecdsa_curve *curve = node->curve->params;
+		if (!ecdsa_read_pubkey(curve, peer_public_key, &point)) {
+			return 1;
+		}
+		bignum256 k;
+		bn_read_be(node->private_key, &k);
+		point_multiply(curve, &k, &point, &point);
+		MEMSET_BZERO(&k, sizeof(k));
+
+		session_key[0] = 0x04;
+		bn_write_be(&point.x, session_key + 1);
+		bn_write_be(&point.y, session_key + 33);
+		MEMSET_BZERO(&point, sizeof(point));
+		*result_size = 65;
+		return 0;
 	}
 }
 
@@ -513,6 +561,9 @@ const curve_info *get_curve_by_name(const char *curve_name) {
 	}
 	if (strcmp(curve_name, ED25519_NAME) == 0) {
 		return &ed25519_info;
+	}
+	if (strcmp(curve_name, CURVE25519_NAME) == 0) {
+		return &curve25519_info;
 	}
 	return 0;
 }
