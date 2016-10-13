@@ -29,7 +29,7 @@ CFLAGS += -DED25519_CUSTOMRANDOM=1
 CFLAGS += -DED25519_CUSTOMHASH=1
 CFLAGS += -DED25519_NO_INLINE_ASM
 CFLAGS += -DED25519_FORCE_32BIT=1
-CFLAGS += -Ied25519-donna -I.
+CFLAGS += -Ied25519-donna -Icurve25519-donna -I.
 CFLAGS += -DUSE_ETHEREUM=1
 
 # disable certain optimizations and features when small footprint is required
@@ -45,6 +45,7 @@ SRCS  += sha2.c
 SRCS  += sha3.c
 SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
 SRCS  += ed25519-donna/ed25519.c
+SRCS  += curve25519-donna/curve25519-donna.c
 
 OBJS   = $(SRCS:.c=.o)
 
@@ -80,5 +81,5 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
 
 clean:
-	rm -f *.o ed25519-donna/*.o tests test_speed test-openssl libtrezor-crypto.so
+	rm -f *.o ed25519-donna/*.o curve25519-donna/*.o tests test_speed test-openssl libtrezor-crypto.so
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
