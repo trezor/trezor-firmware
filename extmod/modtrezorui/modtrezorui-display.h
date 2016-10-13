@@ -51,9 +51,6 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t w = mp_obj_get_int(args[3]);
     mp_int_t h = mp_obj_get_int(args[4]);
     uint16_t c = mp_obj_get_int(args[5]);
-    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        mp_raise_ValueError("Coordinates out of bounds");
-    }
     display_bar(x, y, w, h, c);
     return mp_const_none;
 }
@@ -72,35 +69,10 @@ STATIC mp_obj_t mod_TrezorUi_Display_bar_radius(size_t n_args, const mp_obj_t *a
     uint16_t c = mp_obj_get_int(args[5]);
     uint16_t b = mp_obj_get_int(args[6]);
     uint8_t r = mp_obj_get_int(args[7]);
-    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        mp_raise_ValueError("Coordinates out of bounds");
-    }
     display_bar_radius(x, y, w, h, c, b, r);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_bar_radius_obj, 8, 8, mod_TrezorUi_Display_bar_radius);
-
-/// def trezor.ui.display.blit(x: int, y: int, w: int, h: int, data: bytes) -> None:
-///     '''
-///     Renders rectangle at position (x,y = upper left corner) with width w and height h with data.
-///     The data needs to have the correct format.
-///     '''
-STATIC mp_obj_t mod_TrezorUi_Display_blit(size_t n_args, const mp_obj_t *args) {
-    mp_int_t x = mp_obj_get_int(args[1]);
-    mp_int_t y = mp_obj_get_int(args[2]);
-    mp_int_t w = mp_obj_get_int(args[3]);
-    mp_int_t h = mp_obj_get_int(args[4]);
-    mp_buffer_info_t data;
-    mp_get_buffer_raise(args[5], &data, MP_BUFFER_READ);
-    if (data.len != 2 * w * h) {
-        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Wrong data size (got %d bytes, expected %d bytes)", data.len, 2 * w * h));
-    }
-    if (w > 0 && h > 0) {
-        display_blit(x, y, w, h, data.buf, data.len);
-    }
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_blit_obj, 6, 6, mod_TrezorUi_Display_blit);
 
 /// def trezor.ui.display.image(x: int, y: int, image: bytes) -> None:
 ///     '''
@@ -119,9 +91,6 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
     mp_int_t datalen = *(uint32_t *)(data + 8);
-    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        mp_raise_ValueError("Coordinates out of bounds");
-    }
     if (datalen != image.len - 12) {
         mp_raise_ValueError("Invalid size of data");
     }
@@ -147,9 +116,6 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
     mp_int_t datalen = *(uint32_t *)(data + 8);
-    if ((x < 0) || (y < 0) || (x + w > DISPLAY_RESX) || (y + h > DISPLAY_RESY)) {
-        mp_raise_ValueError("Coordinates out of bounds");
-    }
     if (datalen != icon.len - 12) {
         mp_raise_ValueError("Invalid size of data");
     }
@@ -403,7 +369,6 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_refresh), MP_ROM_PTR(&mod_TrezorUi_Display_refresh_obj) },
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUi_Display_bar_obj) },
     { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_TrezorUi_Display_bar_radius_obj) },
-    { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&mod_TrezorUi_Display_blit_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },

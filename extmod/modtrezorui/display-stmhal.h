@@ -193,16 +193,14 @@ void display_init(void) {
     display_unsleep();
 }
 
-static uint8_t WINDOW_OFFSET_X = 0, WINDOW_OFFSET_Y = 0;
+static uint16_t BUFFER_OFFSET_X = 0, BUFFER_OFFSET_Y = 0;
 
-void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
-    x += WINDOW_OFFSET_X;
-    y += WINDOW_OFFSET_Y;
-    uint16_t x1 = x + w - 1;
-    uint16_t y1 = y + h - 1;
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+    x0 += BUFFER_OFFSET_X; y0 += BUFFER_OFFSET_Y;
+    x1 += BUFFER_OFFSET_X; y1 += BUFFER_OFFSET_Y;
 #if DISPLAY_ILI9341V || DISPLAY_ST7789V
-    CMD(0x2A); DATA(x >> 8); DATA(x & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
-    CMD(0x2B); DATA(y >> 8); DATA(y & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
+    CMD(0x2A); DATA(x0 >> 8); DATA(x0 & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
+    CMD(0x2B); DATA(y0 >> 8); DATA(y0 & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
     CMD(0x2C);
 #endif
 }
@@ -223,13 +221,13 @@ int display_orientation(int degrees)
             CMD(0x36);
 #if DISPLAY_ILI9341V
             DATA(BGR | MX | MY);
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 80;
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = 80;
 #endif
 #if DISPLAY_ST7789V
             DATA(RGB | MX | MY );
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 80;
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = 80;
 #endif
             ORIENTATION = 0;
             break;
@@ -237,13 +235,13 @@ int display_orientation(int degrees)
             CMD(0x36);
 #if DISPLAY_ILI9341V
             DATA(BGR | MV | MX);
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 0;
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
             DATA(RGB | MV | MY );
-            WINDOW_OFFSET_X = 80;
-            WINDOW_OFFSET_Y = 0;
+            BUFFER_OFFSET_X = 80;
+            BUFFER_OFFSET_Y = 0;
 #endif
             ORIENTATION = 90;
             break;
@@ -251,13 +249,13 @@ int display_orientation(int degrees)
             CMD(0x36);
 #if DISPLAY_ILI9341V
             DATA(BGR);
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 0;
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
             DATA(RGB);
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 0;
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = 0;
 #endif
             ORIENTATION = 180;
             break;
@@ -265,13 +263,13 @@ int display_orientation(int degrees)
             CMD(0x36);
 #if DISPLAY_ILI9341V
             DATA(BGR | MV | MY);
-            WINDOW_OFFSET_X = 80;
-            WINDOW_OFFSET_Y = 0;
+            BUFFER_OFFSET_X = 80;
+            BUFFER_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
             DATA(RGB | MV | MX);
-            WINDOW_OFFSET_X = 0;
-            WINDOW_OFFSET_Y = 0;
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = 0;
 #endif
             ORIENTATION = 270;
             break;

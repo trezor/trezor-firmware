@@ -100,10 +100,10 @@ void display_init(void)
     SDL_SetTextureAlphaMod(TEXTURE, 0);
 }
 
-void display_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-    SX = x; SY = y;
-    EX = x + w - 1; EY = y + h - 1;
+    SX = x0; SY = y0;
+    EX = x1; EY = y1;
     POSX = SX; POSY = SY;
     DATAODD = 0;
 }

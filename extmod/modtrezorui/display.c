@@ -40,7 +40,7 @@ void DATAS(const void *bytes, int len)
     }
 }
 
-void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
+static void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
 {
     uint8_t cr, cg, cb;
     for (int i = 0; i < 16; i++) {
@@ -51,18 +51,32 @@ void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor
     }
 }
 
+static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0, int *x1, int *y1)
+{
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+    *x0 = MAX(x, 0);
+    *y0 = MAX(y, 0);
+    *x1 = MIN(x + w - 1, DISPLAY_RESX - 1);
+    *y1 = MIN(y + h - 1, DISPLAY_RESY - 1);
+}
+
 void display_clear(void)
 {
-    display_set_window(0, 0, DISPLAY_RESX, DISPLAY_RESY);
+    display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY * 2; i++) {
-        DATA(0);
+        DATA(0x00);
     }
 }
 
-void display_bar(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c)
+void display_bar(int x, int y, int w, int h, uint16_t c)
 {
-    display_set_window(x, y, w, h);
-    for (int i = 0; i < w * h; i++) {
+    x += OFFSET[0];
+    y += OFFSET[1];
+    int x0, y0, x1, y1;
+    clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
+    display_set_window(x0, y0, x1, y1);
+    for (int i = 0; i < (x1 - x0 + 1) * (y1 - y0 + 1); i++) {
         DATA(c >> 8);
         DATA(c & 0xFF);
     }
@@ -89,7 +103,7 @@ static const uint8_t cornertable[CORNER_RADIUS*CORNER_RADIUS] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 };
 
-void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, uint16_t b, uint8_t r)
+void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint8_t r)
 {
     if (r != 2 && r != 4 && r != 8 && r != 16) {
         return;
@@ -98,26 +112,32 @@ void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, 
     }
     uint16_t colortable[16];
     set_color_table(colortable, c, b);
-    display_set_window(x, y, w, h);
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            if (x < CORNER_RADIUS / r && y < CORNER_RADIUS / r) {
-                uint8_t c = cornertable[x * r + y * r * CORNER_RADIUS];
+    x += OFFSET[0];
+    y += OFFSET[1];
+    int x0, y0, x1, y1;
+    clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
+    display_set_window(x0, y0, x1, y1);
+    for (int j = y0; j <= y1; j++) {
+        for (int i = x0; i <= x1; i++) {
+            int rx = i - x;
+            int ry = j - y;
+            if (rx < CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
+                uint8_t c = cornertable[rx * r + ry * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else
-            if (x < CORNER_RADIUS / r && y >= h - CORNER_RADIUS / r) {
-                uint8_t c = cornertable[x * r + (h - 1 - y) * r * CORNER_RADIUS];
+            if (rx < CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
+                uint8_t c = cornertable[rx * r + (h - 1 - ry) * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else
-            if (x >= w - CORNER_RADIUS / r && y < CORNER_RADIUS / r) {
-                uint8_t c = cornertable[(w - 1 - x) * r + y * r * CORNER_RADIUS];
+            if (rx >= w - CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
+                uint8_t c = cornertable[(w - 1 - rx) * r + ry * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else
-            if (x >= w - CORNER_RADIUS / r && y >= h - CORNER_RADIUS / r) {
-                uint8_t c = cornertable[(w - 1 - x) * r + (h - 1 - y) * r * CORNER_RADIUS];
+            if (rx >= w - CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
+                uint8_t c = cornertable[(w - 1 - rx) * r + (h - 1 - ry) * r * CORNER_RADIUS];
                 DATA(colortable[c] >> 8);
                 DATA(colortable[c] & 0xFF);
             } else {
@@ -128,38 +148,70 @@ void display_bar_radius(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t c, 
     }
 }
 
-void display_blit(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen)
-{
-    display_set_window(x, y, w, h);
-    DATAS(data, datalen);
-}
-
 static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
 {
-    DATA(byte);
+    int w = ((int *)userdata)[0];
+    int x0 = ((int *)userdata)[1];
+    int x1 = ((int *)userdata)[2];
+    int y0 = ((int *)userdata)[3];
+    int y1 = ((int *)userdata)[4];
+    int px = (pos / 2) % w;
+    int py = (pos / 2) / w;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+        DATA(byte);
+    }
 }
 
-void display_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen)
+void display_image(int x, int y, int w, int h, const void *data, int datalen)
 {
-    display_set_window(x, y, w, h);
-    sinf_inflate(data, datalen, inflate_callback_image, NULL);
+    x += OFFSET[0];
+    y += OFFSET[1];
+    int x0, y0, x1, y1;
+    clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
+    display_set_window(x0, y0, x1, y1);
+    int userdata[5];
+    userdata[0] = w;
+    userdata[1] = x0 - x;
+    userdata[2] = x1 - x;
+    userdata[3] = y0 - y;
+    userdata[4] = y1 - y;
+    sinf_inflate(data, datalen, inflate_callback_image, userdata);
 }
 
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 {
-    uint16_t *colortable = (uint16_t *)userdata;
-    DATA(colortable[byte >> 4] >> 8);
-    DATA(colortable[byte >> 4] & 0xFF);
-    DATA(colortable[byte & 0x0F] >> 8);
-    DATA(colortable[byte & 0x0F] & 0xFF);
+    uint16_t *colortable = (uint16_t *)(((int *)userdata) + 5);
+    int w = ((int *)userdata)[0];
+    int x0 = ((int *)userdata)[1];
+    int x1 = ((int *)userdata)[2];
+    int y0 = ((int *)userdata)[3];
+    int y1 = ((int *)userdata)[4];
+    int px = (pos * 2) % w;
+    int py = (pos * 2) / w;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+        DATA(colortable[byte >> 4] >> 8);
+        DATA(colortable[byte >> 4] & 0xFF);
+        DATA(colortable[byte & 0x0F] >> 8);
+        DATA(colortable[byte & 0x0F] & 0xFF);
+    }
 }
 
-void display_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
+void display_icon(int x, int y, int w, int h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
 {
-    display_set_window(x, y, w, h);
-    uint16_t colortable[16];
-    set_color_table(colortable, fgcolor, bgcolor);
-    sinf_inflate(data, datalen, inflate_callback_icon, colortable);
+    x += OFFSET[0];
+    y += OFFSET[1];
+    x &= ~1; // cannot draw at odd coordinate
+    int x0, y0, x1, y1;
+    clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
+    display_set_window(x0, y0, x1, y1);
+    int userdata[5 + 16 * sizeof(uint16_t) / sizeof(int)];
+    userdata[0] = w;
+    userdata[1] = x0 - x;
+    userdata[2] = x1 - x;
+    userdata[3] = y0 - y;
+    userdata[4] = y1 - y;
+    set_color_table((uint16_t *)(userdata + 5), fgcolor, bgcolor);
+    sinf_inflate(data, datalen, inflate_callback_icon, userdata);
 }
 
 static const uint8_t *get_glyph(uint8_t font, uint8_t c)
@@ -189,9 +241,8 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // rest is packed 4-bit glyph data
-void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    uint32_t px = x;
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
 
@@ -199,6 +250,9 @@ void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t f
     if (textlen < 0) {
         textlen = strlen(text);
     }
+
+    int px = x + OFFSET[0];
+    y += OFFSET[1];
     // render glyphs
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
@@ -207,38 +261,49 @@ void display_text(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t f
         // g[2]       = advance
         // g[3], g[4] = bearingX, bearingY
         if (g[0] && g[1]) {
-            display_set_window(px + (int8_t)(g[3]), y - (int8_t)(g[4]), g[0], g[1]);
-            for (int j = 0; j < g[0] * g[1]; j++) {
-                uint8_t c;
-                if (j % 2 == 0) {
-                    c = g[5 + j/2] >> 4;
-                } else {
-                    c = g[5 + j/2] & 0x0F;
+            int sx = px + (int8_t)(g[3]);
+            int sy = y - (int8_t)(g[4]);
+            int w = g[0];
+            int h = g[1];
+            int x0, y0, x1, y1;
+            clamp_coords(sx, sy, w, h, &x0, &y0, &x1, &y1);
+            display_set_window(x0, y0, x1, y1);
+            for (int j = y0; j <= y1; j++) {
+                for (int i = x0; i <= x1; i++) {
+                    int rx = i - sx;
+                    int ry = j - sy;
+                    int a = rx + ry * w;
+                    uint8_t c;
+                    if (a % 2 == 0) {
+                        c = g[5 + a/2] >> 4;
+                    } else {
+                        c = g[5 + a/2] & 0x0F;
+                    }
+                    DATA(colortable[c] >> 8);
+                    DATA(colortable[c] & 0xFF);
                 }
-                DATA(colortable[c] >> 8);
-                DATA(colortable[c] & 0xFF);
             }
         }
         px += g[2];
     }
 }
 
-void display_text_center(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    uint32_t w = display_text_width(text, textlen, font);
+    int w = display_text_width(text, textlen, font);
     display_text(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_right(uint8_t x, uint8_t y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    uint32_t w = display_text_width(text, textlen, font);
+    int w = display_text_width(text, textlen, font);
     display_text(x - w, y, text, textlen, font, fgcolor, bgcolor);
 }
 
 // compute the width of the text (in pixels)
-uint32_t display_text_width(const char *text, int textlen, uint8_t font)
+int display_text_width(const char *text, int textlen, uint8_t font)
 {
-    uint32_t w = 0;
+    int w = 0;
     // determine text length if not provided
     if (textlen < 0) {
         textlen = strlen(text);
@@ -251,18 +316,25 @@ uint32_t display_text_width(const char *text, int textlen, uint8_t font)
     return w;
 }
 
-void display_qrcode(uint8_t x, uint8_t y, const char *data, int datalen, int scale)
+void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
 {
+    if (scale < 1 || scale > 10) return;
     uint8_t bitdata[QR_MAX_BITDATA];
     int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
-    display_set_window(x, y, side * scale, side * scale);
-    for (int i = 0; i < side * scale; i++) {
-        for (int j = 0; j < side; j++) {
-            int a = j * side + (i / scale);
+    x += OFFSET[0];
+    y += OFFSET[1];
+    int x0, y0, x1, y1;
+    clamp_coords(x, y, side * scale, side * scale, &x0, &y0, &x1, &y1);
+    display_set_window(x0, y0, x1, y1);
+    for (int j = y0; j <= y1; j++) {
+        for (int i = x0; i <= x1; i++) {
+            int rx = i - x;
+            int ry = j - y;
+            int a = (rx / scale)  * side + (ry / scale);
             if (bitdata[a / 8] & (1 << (7 - a % 8))) {
-                for (a = 0; a < scale * 2; a++) { DATA(0x00); }
+                DATA(0x00); DATA(0x00);
             } else {
-                for (a = 0; a < scale * 2; a++) { DATA(0xFF); }
+                DATA(0xFF); DATA(0xFF);
             }
         }
     }
@@ -283,7 +355,7 @@ void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const
     if (icon) {
         set_color_table(iconcolortable, iconfgcolor, bgcolor);
     }
-    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size, img_loader_size * 2, img_loader_size * 2);
+    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size, DISPLAY_RESX / 2 + img_loader_size - 1, DISPLAY_RESY / 2 + img_loader_size - 1);
     if (icon && memcmp(icon, "TOIg", 4) == 0 && LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) && LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) && iconlen == 12 + *(uint32_t *)(icon + 8)) {
         uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
         sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
