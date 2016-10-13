@@ -906,9 +906,10 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 	const HDNode *node = fsm_getDerivedNode(curve, address_n, 5);
 	if (!node) return;
 
-	if (cryptoGetECDHSessionKey(node, msg->peer_public_key.bytes, resp->session_key.bytes) == 0) {
+	int result_size = 0;
+	if (hdnode_get_shared_key(node, msg->peer_public_key.bytes, resp->session_key.bytes, &result_size) == 0) {
 		resp->has_session_key = true;
-		resp->session_key.size = 65;
+		resp->session_key.size = result_size;
 		msg_write(MessageType_MessageType_ECDHSessionKey, resp);
 	} else {
 		fsm_sendFailure(FailureType_Failure_Other, "Error getting ECDH session key");

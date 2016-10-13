@@ -37,8 +37,6 @@ int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 
 int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
-int cryptoGetECDHSessionKey(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key);
-
 int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
 int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature);

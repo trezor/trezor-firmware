@@ -103,25 +103,6 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 	return hdnode_sign_digest(node, message, signature + 1, NULL, NULL);
 }
 
-int cryptoGetECDHSessionKey(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key)
-{
-	curve_point point;
-	const ecdsa_curve *curve = node->curve->params;
-	if (!ecdsa_read_pubkey(curve, peer_public_key, &point)) {
-		return 1;
-	}
-	bignum256 k;
-	bn_read_be(node->private_key, &k);
-	point_multiply(curve, &k, &point, &point);
-	MEMSET_BZERO(&k, sizeof(k));
-
-	session_key[0] = 0x04;
-	bn_write_be(&point.x, session_key + 1);
-	bn_write_be(&point.y, session_key + 33);
-	MEMSET_BZERO(&point, sizeof(point));
-	return 0;
-}
-
 int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	SHA256_CTX ctx;
