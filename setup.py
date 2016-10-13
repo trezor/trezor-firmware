@@ -10,6 +10,7 @@ srcs = [
 	'bignum',
 	'bip32',
 	'ecdsa',
+	'curve25519',
 	'hmac',
 	'rand',
 	'ripemd160',

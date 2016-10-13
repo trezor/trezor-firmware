@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import ctypes as c
+import curve25519
 import random
 import ecdsa
 import hashlib
@@ -399,3 +400,39 @@ def test_validate_pubkey(curve, r):
 
 def test_validate_pubkey_direct(point):
     assert lib.ecdsa_validate_pubkey(point.ptr, to_POINT(point.p))
+
+
+def test_curve25519(r):
+    sec1 = bytes(bytearray(r.randbytes(32)))
+    sec2 = bytes(bytearray(r.randbytes(32)))
+    pub1 = curve25519.Private(sec1).get_public()
+    pub2 = curve25519.Private(sec2).get_public()
+
+    session1 = r.randbytes(32)
+    lib.curve25519_scalarmult(session1, sec2, pub1.public)
+    session2 = r.randbytes(32)
+    lib.curve25519_scalarmult(session2, sec1, pub2.public)
+    assert bytearray(session1) == bytearray(session2)
+
+    shared1 = curve25519.Private(sec2).get_shared_key(pub1, hashfunc=lambda x: x)
+    shared2 = curve25519.Private(sec1).get_shared_key(pub2, hashfunc=lambda x: x)
+    assert shared1 == shared2
+    assert bytearray(session1) == shared1
+    assert bytearray(session2) == shared2
+
+
+def test_curve25519_pubkey(r):
+    sec = bytes(bytearray(r.randbytes(32)))
+    pub = curve25519.Private(sec).get_public()
+    res = r.randbytes(32)
+    lib.curve25519_publickey(res, sec)
+    assert bytearray(res) == pub.public
+
+
+def test_curve25519_scalarmult_from_gpg(r):
+    sec = binascii.unhexlify('4a1e76f133afb29dbc7860bcbc16d0e829009cc15c2f81ed26de1179b1d9c938')
+    pub = binascii.unhexlify('5d6fc75c016e85b17f54e0128a216d5f9229f25bac1ec85cecab8daf48621b31')
+    res = r.randbytes(32)
+    lib.curve25519_scalarmult(res, sec[::-1], pub[::-1])
+    expected = 'a93dbdb23e5c99da743e203bd391af79f2b83fb8d0fd6ec813371c71f08f2d4d'
+    assert binascii.hexlify(bytearray(res)) == expected
