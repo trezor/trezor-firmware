@@ -45,11 +45,18 @@ void display_sram_init(void) {
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
+    // LCD_FMARK/PD12
+    GPIO_InitStructure.Pin = GPIO_PIN_12;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    // LCD_PWM/PB13
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull      = GPIO_NOPULL;
     GPIO_InitStructure.Speed     = GPIO_SPEED_HIGH;
     GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
-    //                             LCD_PWM/PB13
     GPIO_InitStructure.Pin       = GPIO_PIN_13;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
@@ -180,6 +187,8 @@ void display_init(void) {
     CMD(0xC4); DATA(0x20);                       // VDVS: VDV Set
     CMD(0xBB); DATA(0x20);                       // VCOMS: VCOM setting
     CMD(0xC5); DATA(0x20);                       // VCMOFSET
+    // CMD(0xC6); DATA(0x0F);                       // FRCTRL2: Framerate Control (60 Hz)
+    CMD(0x35); DATA(0x00);                       // TEON: Tearing Effect Line On
     CMD(0xD0); DATAS("\xA4\xA1", 2);             // PWCTRL1: Power Control 1
     // CMD(0xE0); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 1
     // CMD(0xE1); DATAS("\x70\x2C\x2E\x15\x10\x09\x48\x33\x53\x0B\x19\x18\x20\x25", 14); // gamma curve 2
@@ -206,6 +215,8 @@ void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
 }
 
 void display_refresh(void) {
+    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
+    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
 }
 
 int display_orientation(int degrees)
