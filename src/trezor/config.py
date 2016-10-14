@@ -34,17 +34,11 @@ def _save():
 _load()
 
 
-def get(session_id, app_id, key, default=None):
-    # TODO: session_id
+def get(app_id, key, default=None):
     return _mock.get((app_id << 8) | key, default)
 
 
-def set(session_id, app_id, key, value):
-    # TODO: session_id
+def set(app_id, key, value):
     _mock[(app_id << 8) | key] = value
     _save()
     return True
-
-
-def commit(session_id):
-    pass

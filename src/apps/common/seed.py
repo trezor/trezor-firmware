@@ -12,11 +12,6 @@ _cached_root_node = None
 
 
 async def get_node(session_id: int, path: list):
-    from trezor import ui
-    ui.display.clear()
-    ui.display.text_center(120, 120, 'Deriving key...',
-                           ui.NORMAL, ui.GREY, ui.BLACK)
-    ui.display.refresh()
     node = await get_root_node(session_id)
     node.derive_path(path)
     return node
@@ -48,17 +43,15 @@ async def compute_seed(session_id):
     from .request_pin import request_pin
     from . import storage
 
-    try:
-        st = storage.get(session_id)
-    except KeyError:
+    if not storage.is_initialized():
         raise wire.FailureError(Other, 'Device is not initialized')
 
-    st_pin = getattr(st, 'pin', '')
-    if st_pin and st_pin != await request_pin(session_id):
-        raise wire.FailureError(PinInvalid, 'PIN is incorrect')
+    if storage.is_protected_by_pin():
+        pin = await request_pin(session_id)
+        if not storage.check_pin(pin):
+            raise wire.FailureError(PinInvalid, 'PIN is incorrect')
 
-    st_passphrase_protection = getattr(st, 'passphrase_protection', False)
-    if st_passphrase_protection:
+    if storage.is_protected_by_passphrase():
         from trezor.messages.PassphraseRequest import PassphraseRequest
         from trezor.messages.wire_types import PassphraseAck
         ack = await wire.reply_message(session_id, PassphraseRequest(), PassphraseAck)
@@ -66,4 +59,4 @@ async def compute_seed(session_id):
     else:
         passphrase = ''
 
-    return bip39.seed(st.mnemonic, passphrase)
+    return bip39.seed(storage.get_mnemonic(), passphrase)
