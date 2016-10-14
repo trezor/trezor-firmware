@@ -474,7 +474,7 @@ int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint, char *str
 }
 
 // check for validity of curve point in case of public data not performed
-int hdnode_deserialize(const char *str, HDNode *node)
+int hdnode_deserialize(const char *str, HDNode *node, uint32_t *fingerprint)
 {
 	uint8_t node_data[78];
 	memset(node, 0, sizeof(HDNode));
@@ -496,6 +496,9 @@ int hdnode_deserialize(const char *str, HDNode *node)
 		return -3; // invalid version
 	}
 	node->depth = node_data[4];
+	if (fingerprint) {
+		*fingerprint = read_be(node_data + 5);
+	}
 	node->child_num = read_be(node_data + 9);
 	memcpy(node->chain_code, node_data + 13, 32);
 	return 0;

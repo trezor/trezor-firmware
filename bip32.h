@@ -78,7 +78,7 @@ int hdnode_serialize_public(const HDNode *node, uint32_t fingerprint, char *str,
 
 int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint, char *str, int strsize);
 
-int hdnode_deserialize(const char *str, HDNode *node);
+int hdnode_deserialize(const char *str, HDNode *node, uint32_t *fingerprint);
 
 // Private
 int hdnode_serialize(const HDNode *node, uint32_t fingerprint, uint32_t version, char use_public, char *str, int strsize);
