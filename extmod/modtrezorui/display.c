@@ -413,7 +413,9 @@ void display_raw(uint8_t reg, const uint8_t *data, int datalen)
     if (reg) {
         CMD(reg);
     }
-    DATAS(data, datalen);
+    if (data && datalen > 0) {
+        DATAS(data, datalen);
+    }
 }
 
 int *display_offset(int xy[2])
