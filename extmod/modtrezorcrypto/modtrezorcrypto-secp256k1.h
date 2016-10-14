@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_sign(mp_obj_t self, mp_obj_t secret_k
     vstr_t vstr;
     vstr_init_len(&vstr, 65);
     uint8_t pby;
-    if (0 != ecdsa_sign(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)msg.buf, msg.len, (uint8_t *)vstr.buf, &pby)) {
+    if (0 != ecdsa_sign(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)msg.buf, msg.len, (uint8_t *)vstr.buf, &pby, NULL)) { // TODO: is_canonical
         mp_raise_ValueError("Signing failed");
     }
     (void)pby;
