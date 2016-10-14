@@ -26,7 +26,7 @@ def enumerate():
                 devices[serial_number][1] = path
 
     # List of two-tuples (path_normal, path_debuglink)
-    return list(devices.values())
+    return sorted(devices.values())
 
 def path_to_transport(path):
     try:
