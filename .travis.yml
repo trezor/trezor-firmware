@@ -9,7 +9,7 @@ addons:
     - python-pip
 
 install:
-  - pip install --user pytest ecdsa
+  - pip install --user pytest ecdsa curve25519-donna
 
 script:
   - make
