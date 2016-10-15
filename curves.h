@@ -26,5 +26,6 @@
 extern const char SECP256K1_NAME[];
 extern const char NIST256P1_NAME[];
 extern const char ED25519_NAME[];
+extern const char CURVE25519_NAME[];
 
 #endif
