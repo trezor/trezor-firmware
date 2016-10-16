@@ -32,7 +32,7 @@ PublicKey.xpub				max_size:113
 GetAddress.address_n			max_count:8
 GetAddress.coin_name			max_size:17
 
-Address.address				max_size:36
+Address.address				max_size:41
 
 EthereumGetAddress.address_n		max_count:8
 EthereumAddress.address			max_size:20
@@ -56,12 +56,12 @@ SignMessage.address_n			max_count:8
 SignMessage.message			max_size:1024
 SignMessage.coin_name			max_size:17
 
-VerifyMessage.address			max_size:36
+VerifyMessage.address			max_size:41
 VerifyMessage.signature			max_size:65
 VerifyMessage.message			max_size:1024
 VerifyMessage.coin_name			max_size:17
 
-MessageSignature.address		max_size:36
+MessageSignature.address		max_size:41
 MessageSignature.signature		max_size:65
 
 EncryptMessage.pubkey			max_size:33
@@ -78,7 +78,7 @@ DecryptMessage.nonce			max_size:33
 DecryptMessage.message			max_size:1120 # 1 + 9 + 1024 + 21 + 65
 DecryptMessage.hmac			max_size:8
 
-DecryptedMessage.address		max_size:36
+DecryptedMessage.address		max_size:41
 DecryptedMessage.message		max_size:1024
 
 CipherKeyValue.address_n		max_count:8
@@ -109,7 +109,7 @@ SignIdentity.challenge_hidden		max_size:256
 SignIdentity.challenge_visual		max_size:256
 SignIdentity.ecdsa_curve_name		max_size:32
 
-SignedIdentity.address			max_size:36
+SignedIdentity.address			max_size:41
 SignedIdentity.public_key		max_size:33
 SignedIdentity.signature		max_size:65
 
