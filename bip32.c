@@ -132,7 +132,7 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 	}
 	memcpy(out->private_key, I, 32);
 	memcpy(out->chain_code, I + 32, 32);
-
+	MEMSET_BZERO(out->public_key, sizeof(out->public_key));
 	MEMSET_BZERO(I, sizeof(I));
 	return 1;
 }
@@ -215,7 +215,6 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 {
 	uint8_t data[1 + 32 + 4];
 	uint8_t I[32 + 32];
-	uint8_t fingerprint[32];
 	curve_point a, b;
 	bignum256 c;
 
@@ -265,7 +264,6 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	// Wipe all stack data.
 	MEMSET_BZERO(data, sizeof(data));
 	MEMSET_BZERO(I, sizeof(I));
-	MEMSET_BZERO(fingerprint, sizeof(fingerprint));
 	MEMSET_BZERO(&a, sizeof(a));
 	MEMSET_BZERO(&b, sizeof(b));
 	MEMSET_BZERO(&c, sizeof(c));
@@ -295,7 +293,7 @@ int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *p
 			failed = true;
 		} else {
 			scalar_multiply(&secp256k1, &c, &b); // b = c * G
-			point_add(&secp256k1, pub, &b);       // b = a + b
+			point_add(&secp256k1, pub, &b);      // b = a + b
 			if (point_is_infinity(&b)) {
 				failed = true;
 			}

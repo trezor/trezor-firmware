@@ -9,7 +9,7 @@
 #include "nist256p1.h"
 #include "ed25519.h"
 
-uint8_t msg[32];
+static uint8_t msg[32];
 
 void prepare_msg(void)
 {
@@ -76,49 +76,52 @@ void test_verify_speed(void) {
 	bench_ed25519();
 }
 
-HDNode root;
+static HDNode root;
 
 void prepare_node(void)
 {
 	hdnode_from_seed((uint8_t *)"NothingToSeeHere", 16, SECP256K1_NAME, &root);
+	hdnode_fill_public_key(&root);
 }
 
-void bench_ckd_normal(void) {
-	char addr[40];
+void bench_ckd_normal(int iterations) {
+	char addr[MAX_ADDR_SIZE];
+	HDNode node;
 	clock_t t = clock();
-	for (int i = 0; i < 1000; i++) {
-		HDNode node = root;
+	for (int i = 0; i < iterations; i++) {
+		memcpy(&node, &root, sizeof(HDNode));
 		hdnode_public_ckd(&node, i);
-		ecdsa_get_address(node.public_key, 0, addr, 40);
-		if (i == 0) {
+		hdnode_fill_public_key(&node);
+		ecdsa_get_address(node.public_key, 0, addr, sizeof(addr));
+		if (i == 0 || i == iterations - 1) {
 			printf("address = %s\n", addr);
 		}
 	}
-	printf("CKD normal speed: %0.2f iter/s\n", 1000.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
+	printf("CKD normal speed: %0.2f iter/s\n", iterations / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
 
-void bench_ckd_optimized(void) {
-	char addr[40];
+void bench_ckd_optimized(int iterations) {
+	char addr[MAX_ADDR_SIZE];
 	curve_point pub;
-	ecdsa_read_pubkey(0, root.public_key, &pub);
+	ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
 	clock_t t = clock();
-	for (int i = 0; i < 1000; i++) {
-		hdnode_public_ckd_address_optimized(&pub, root.public_key, root.chain_code, i, 0, addr, 40);
-		if (i == 0) {
+	for (int i = 0; i < iterations; i++) {
+		hdnode_public_ckd_address_optimized(&pub, root.public_key, root.chain_code, i, 0, addr, sizeof(addr));
+		if (i == 0 || i == iterations -1) {
 			printf("address = %s\n", addr);
 		}
 	}
-	printf("CKD optim speed: %0.2f iter/s\n", 1000.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
+	printf("CKD optim speed: %0.2f iter/s\n", iterations / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
 
-void test_ckd_speed(void) {
+void test_ckd_speed(int iterations) {
 	prepare_node();
-	bench_ckd_normal();
-	bench_ckd_optimized();
+	bench_ckd_normal(iterations);
+	bench_ckd_optimized(iterations);
 }
 
 int main(void) {
 	test_verify_speed();
-	test_ckd_speed();
+	test_ckd_speed(1000);
 	return 0;
 }
