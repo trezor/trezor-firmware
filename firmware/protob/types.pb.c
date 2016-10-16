@@ -47,7 +47,7 @@ const pb_field_t MultisigRedeemScriptType_fields[4] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t TxInputType_fields[8] = {
+const pb_field_t TxInputType_fields[9] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, TxInputType, address_n, address_n, 0),
     PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, TxInputType, prev_hash, address_n, 0),
     PB_FIELD2(  3, UINT32  , REQUIRED, STATIC  , OTHER, TxInputType, prev_index, prev_hash, 0),
@@ -55,6 +55,7 @@ const pb_field_t TxInputType_fields[8] = {
     PB_FIELD2(  5, UINT32  , OPTIONAL, STATIC  , OTHER, TxInputType, sequence, script_sig, &TxInputType_sequence_default),
     PB_FIELD2(  6, ENUM    , OPTIONAL, STATIC  , OTHER, TxInputType, script_type, sequence, &TxInputType_script_type_default),
     PB_FIELD2(  7, MESSAGE , OPTIONAL, STATIC  , OTHER, TxInputType, multisig, script_type, &MultisigRedeemScriptType_fields),
+    PB_FIELD2(  8, UINT64  , OPTIONAL, STATIC  , OTHER, TxInputType, amount, multisig, 0),
     PB_LAST_FIELD
 };
 

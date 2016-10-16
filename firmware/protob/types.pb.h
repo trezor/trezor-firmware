@@ -28,12 +28,17 @@ typedef enum _OutputScriptType {
     OutputScriptType_PAYTOADDRESS = 0,
     OutputScriptType_PAYTOSCRIPTHASH = 1,
     OutputScriptType_PAYTOMULTISIG = 2,
-    OutputScriptType_PAYTOOPRETURN = 3
+    OutputScriptType_PAYTOOPRETURN = 3,
+    OutputScriptType_PAYTOWITNESS = 4,
+    OutputScriptType_PAYTOP2SHWITNESS = 5
 } OutputScriptType;
 
 typedef enum _InputScriptType {
     InputScriptType_SPENDADDRESS = 0,
-    InputScriptType_SPENDMULTISIG = 1
+    InputScriptType_SPENDMULTISIG = 1,
+    InputScriptType_EXTERNAL = 2,
+    InputScriptType_SPENDWITNESS = 3,
+    InputScriptType_SPENDP2SHWITNESS = 4
 } InputScriptType;
 
 typedef enum _RequestType {
@@ -208,6 +213,8 @@ typedef struct _TxInputType {
     InputScriptType script_type;
     bool has_multisig;
     MultisigRedeemScriptType multisig;
+    bool has_amount;
+    uint64_t amount;
 } TxInputType;
 
 typedef struct {
@@ -217,7 +224,7 @@ typedef struct {
 
 typedef struct _TxOutputType {
     bool has_address;
-    char address[36];
+    char address[41];
     size_t address_n_count;
     uint32_t address_n[8];
     uint64_t amount;
@@ -265,7 +272,7 @@ extern const uint32_t IdentityType_index_default;
 #define HDNodePathType_init_default              {HDNodeType_init_default, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
 #define CoinType_init_default                    {false, "", false, "", false, 0u, false, 0, false, 5u, false, 6u, false, 10u, false, ""}
 #define MultisigRedeemScriptType_init_default    {0, {HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
-#define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default}
+#define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default, false, 0}
 #define TxOutputType_init_default                {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_default, false, {0, {0}}}
 #define TxOutputBinType_init_default             {0, {0, {0}}}
 #define TransactionType_init_default             {false, 0, 0, {TxInputType_init_default}, 0, {TxOutputBinType_init_default}, false, 0, 0, {TxOutputType_init_default}, false, 0, false, 0}
@@ -276,7 +283,7 @@ extern const uint32_t IdentityType_index_default;
 #define HDNodePathType_init_zero                 {HDNodeType_init_zero, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
 #define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, ""}
 #define MultisigRedeemScriptType_init_zero       {0, {HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
-#define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero}
+#define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero, false, 0}
 #define TxOutputType_init_zero                   {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_zero, false, {0, {0}}}
 #define TxOutputBinType_init_zero                {0, {0, {0}}}
 #define TransactionType_init_zero                {false, 0, 0, {TxInputType_init_zero}, 0, {TxOutputBinType_init_zero}, false, 0, 0, {TxOutputType_init_zero}, false, 0, false, 0}
@@ -324,6 +331,7 @@ extern const uint32_t IdentityType_index_default;
 #define TxInputType_sequence_tag                 5
 #define TxInputType_script_type_tag              6
 #define TxInputType_multisig_tag                 7
+#define TxInputType_amount_tag                   8
 #define TxOutputType_address_tag                 1
 #define TxOutputType_address_n_tag               2
 #define TxOutputType_amount_tag                  3
@@ -347,7 +355,7 @@ extern const pb_field_t HDNodeType_fields[7];
 extern const pb_field_t HDNodePathType_fields[3];
 extern const pb_field_t CoinType_fields[9];
 extern const pb_field_t MultisigRedeemScriptType_fields[4];
-extern const pb_field_t TxInputType_fields[8];
+extern const pb_field_t TxInputType_fields[9];
 extern const pb_field_t TxOutputType_fields[7];
 extern const pb_field_t TxOutputBinType_fields[3];
 extern const pb_field_t TransactionType_fields[8];
@@ -360,10 +368,10 @@ extern const pb_field_t IdentityType_fields[7];
 #define HDNodePathType_size                      171
 #define CoinType_size                            99
 #define MultisigRedeemScriptType_size            3741
-#define TxInputType_size                         5497
-#define TxOutputType_size                        3929
+#define TxInputType_size                         5508
+#define TxOutputType_size                        3934
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     9993
+#define TransactionType_size                     10009
 #define TxRequestDetailsType_size                40
 #define TxRequestSerializedType_size             2132
 #define IdentityType_size                        416

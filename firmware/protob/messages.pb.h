@@ -130,7 +130,7 @@ typedef struct _WordRequest {
 } WordRequest;
 
 typedef struct _Address {
-    char address[36];
+    char address[41];
 } Address;
 
 typedef struct {
@@ -315,7 +315,7 @@ typedef struct _DecryptedMessage {
     bool has_message;
     DecryptedMessage_message_t message;
     bool has_address;
-    char address[36];
+    char address[41];
 } DecryptedMessage;
 
 typedef struct {
@@ -549,6 +549,8 @@ typedef struct _Features {
     bool pin_cached;
     bool has_passphrase_cached;
     bool passphrase_cached;
+    bool has_firmware_present;
+    bool firmware_present;
 } Features;
 
 typedef struct {
@@ -569,6 +571,8 @@ typedef struct _GetAddress {
     bool show_display;
     bool has_multisig;
     MultisigRedeemScriptType multisig;
+    bool has_script_type;
+    InputScriptType script_type;
 } GetAddress;
 
 typedef struct {
@@ -622,7 +626,7 @@ typedef struct {
 
 typedef struct _MessageSignature {
     bool has_address;
-    char address[36];
+    char address[41];
     bool has_signature;
     MessageSignature_signature_t signature;
 } MessageSignature;
@@ -744,7 +748,7 @@ typedef struct {
 
 typedef struct _SignedIdentity {
     bool has_address;
-    char address[36];
+    char address[41];
     bool has_public_key;
     SignedIdentity_public_key_t public_key;
     bool has_signature;
@@ -802,7 +806,7 @@ typedef struct {
 
 typedef struct _VerifyMessage {
     bool has_address;
-    char address[36];
+    char address[41];
     bool has_signature;
     VerifyMessage_signature_t signature;
     bool has_message;
@@ -817,6 +821,7 @@ typedef struct _WordAck {
 
 /* Default values for struct fields */
 extern const char GetAddress_coin_name_default[17];
+extern const InputScriptType GetAddress_script_type_default;
 extern const char LoadDevice_language_default[17];
 extern const uint32_t ResetDevice_strength_default;
 extern const char ResetDevice_language_default[17];
@@ -835,7 +840,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_default                {0}
 #define ApplySettings_init_default               {false, "", false, "", false, 0, false, {0, {0}}}
 #define ChangePin_init_default                   {false, 0}
@@ -853,7 +858,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Entropy_init_default                     {{0, {0}}}
 #define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
 #define PublicKey_init_default                   {HDNodeType_init_default, false, ""}
-#define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default}
+#define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default, false, InputScriptType_SPENDADDRESS}
 #define EthereumGetAddress_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, 0}
 #define Address_init_default                     {""}
 #define EthereumAddress_init_default             {{0, {0}}}
@@ -901,7 +906,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define DebugLinkFlashErase_init_default         {false, 0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_zero                   {0}
 #define ApplySettings_init_zero                  {false, "", false, "", false, 0, false, {0, {0}}}
 #define ChangePin_init_zero                      {false, 0}
@@ -919,7 +924,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Entropy_init_zero                        {{0, {0}}}
 #define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
 #define PublicKey_init_zero                      {HDNodeType_init_zero, false, ""}
-#define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero}
+#define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero, false, (InputScriptType)0}
 #define EthereumGetAddress_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, 0}
 #define Address_init_zero                        {""}
 #define EthereumAddress_init_zero                {{0, {0}}}
@@ -1059,11 +1064,13 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Features_imported_tag                    15
 #define Features_pin_cached_tag                  16
 #define Features_passphrase_cached_tag           17
+#define Features_firmware_present_tag            18
 #define FirmwareUpload_payload_tag               1
 #define GetAddress_address_n_tag                 1
 #define GetAddress_coin_name_tag                 2
 #define GetAddress_show_display_tag              3
 #define GetAddress_multisig_tag                  4
+#define GetAddress_script_type_tag               5
 #define GetECDHSessionKey_identity_tag           1
 #define GetECDHSessionKey_peer_public_key_tag    2
 #define GetECDHSessionKey_ecdsa_curve_name_tag   3
@@ -1138,7 +1145,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t GetFeatures_fields[1];
-extern const pb_field_t Features_fields[18];
+extern const pb_field_t Features_fields[19];
 extern const pb_field_t ClearSession_fields[1];
 extern const pb_field_t ApplySettings_fields[5];
 extern const pb_field_t ChangePin_fields[2];
@@ -1156,7 +1163,7 @@ extern const pb_field_t GetEntropy_fields[2];
 extern const pb_field_t Entropy_fields[2];
 extern const pb_field_t GetPublicKey_fields[4];
 extern const pb_field_t PublicKey_fields[3];
-extern const pb_field_t GetAddress_fields[5];
+extern const pb_field_t GetAddress_fields[6];
 extern const pb_field_t EthereumGetAddress_fields[3];
 extern const pb_field_t Address_fields[2];
 extern const pb_field_t EthereumAddress_fields[2];
@@ -1206,7 +1213,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-#define Features_size                            (254 + 8*CoinType_size)
+#define Features_size                            (257 + 8*CoinType_size)
 #define ClearSession_size                        0
 #define ApplySettings_size                       1083
 #define ChangePin_size                           2
@@ -1224,9 +1231,9 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define Entropy_size                             1027
 #define GetPublicKey_size                        84
 #define PublicKey_size                           (121 + HDNodeType_size)
-#define GetAddress_size                          (75 + MultisigRedeemScriptType_size)
+#define GetAddress_size                          (81 + MultisigRedeemScriptType_size)
 #define EthereumGetAddress_size                  50
-#define Address_size                             38
+#define Address_size                             43
 #define EthereumAddress_size                     22
 #define WipeDevice_size                          0
 #define LoadDevice_size                          (320 + HDNodeType_size)
@@ -1237,12 +1244,12 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define WordRequest_size                         0
 #define WordAck_size                             14
 #define SignMessage_size                         1094
-#define VerifyMessage_size                       1151
-#define MessageSignature_size                    105
+#define VerifyMessage_size                       1156
+#define MessageSignature_size                    110
 #define EncryptMessage_size                      1131
 #define EncryptedMessage_size                    1168
 #define DecryptMessage_size                      1216
-#define DecryptedMessage_size                    1065
+#define DecryptedMessage_size                    1070
 #define CipherKeyValue_size                      1358
 #define CipheredKeyValue_size                    1027
 #define EstimateTxSize_size                      31
@@ -1255,7 +1262,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define EthereumTxRequest_size                   80
 #define EthereumTxAck_size                       1027
 #define SignIdentity_size                        (558 + IdentityType_size)
-#define SignedIdentity_size                      140
+#define SignedIdentity_size                      145
 #define GetECDHSessionKey_size                   (107 + IdentityType_size)
 #define ECDHSessionKey_size                      67
 #define SetU2FCounter_size                       6

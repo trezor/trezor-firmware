@@ -4,6 +4,7 @@
 #include "messages.pb.h"
 
 const char GetAddress_coin_name_default[17] = "Bitcoin";
+const InputScriptType GetAddress_script_type_default = InputScriptType_SPENDADDRESS;
 const char LoadDevice_language_default[17] = "english";
 const uint32_t ResetDevice_strength_default = 256u;
 const char ResetDevice_language_default[17] = "english";
@@ -28,7 +29,7 @@ const pb_field_t GetFeatures_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t Features_fields[18] = {
+const pb_field_t Features_fields[19] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, Features, vendor, vendor, 0),
     PB_FIELD2(  2, UINT32  , OPTIONAL, STATIC  , OTHER, Features, major_version, vendor, 0),
     PB_FIELD2(  3, UINT32  , OPTIONAL, STATIC  , OTHER, Features, minor_version, major_version, 0),
@@ -46,6 +47,7 @@ const pb_field_t Features_fields[18] = {
     PB_FIELD2( 15, BOOL    , OPTIONAL, STATIC  , OTHER, Features, imported, bootloader_hash, 0),
     PB_FIELD2( 16, BOOL    , OPTIONAL, STATIC  , OTHER, Features, pin_cached, imported, 0),
     PB_FIELD2( 17, BOOL    , OPTIONAL, STATIC  , OTHER, Features, passphrase_cached, pin_cached, 0),
+    PB_FIELD2( 18, BOOL    , OPTIONAL, STATIC  , OTHER, Features, firmware_present, passphrase_cached, 0),
     PB_LAST_FIELD
 };
 
@@ -141,11 +143,12 @@ const pb_field_t PublicKey_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t GetAddress_fields[5] = {
+const pb_field_t GetAddress_fields[6] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, GetAddress, address_n, address_n, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, GetAddress, coin_name, address_n, &GetAddress_coin_name_default),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, GetAddress, show_display, coin_name, 0),
     PB_FIELD2(  4, MESSAGE , OPTIONAL, STATIC  , OTHER, GetAddress, multisig, show_display, &MultisigRedeemScriptType_fields),
+    PB_FIELD2(  5, ENUM    , OPTIONAL, STATIC  , OTHER, GetAddress, script_type, multisig, &GetAddress_script_type_default),
     PB_LAST_FIELD
 };
 
