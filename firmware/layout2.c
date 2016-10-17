@@ -304,6 +304,8 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 	if (identity->has_proto && identity->proto[0]) {
 		if (strcmp(identity->proto, "https") == 0) {
 			strlcpy(row_proto, "Web sign in to:", sizeof(row_proto));
+		} else if (strcmp(identity->proto, "gpg") == 0) {
+			strlcpy(row_proto, "GPG sign for:", sizeof(row_proto));
 		} else {
 			strlcpy(row_proto, identity->proto, sizeof(row_proto));
 			char *p = row_proto;
