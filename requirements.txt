@@ -1,0 +1,4 @@
+ecdsa>=0.9
+protobuf>=2.6.1
+mnemonic>=0.8
+hidapi>=0.7.99

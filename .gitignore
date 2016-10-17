@@ -10,3 +10,4 @@ distribute-*.egg
 distribute-*.tar.gz
 docs/_build
 docs/.docs-build-environment
+.tox/
