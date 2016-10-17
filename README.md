@@ -59,5 +59,10 @@ For flashing firmware to blank device (without bootloader) by `make flash`, plea
 
 ```
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
-make build_strmhal_frozen
+make build_stmhal_frozen
 ```
+
+###OS X
+
+Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/) and follow the [instructions in readme.txt](https://launchpadlibrarian.net/287100883/readme.txt).
+To install stlink, run `brew install stlink`.
