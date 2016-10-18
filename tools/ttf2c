@@ -4,10 +4,18 @@ import freetype
 MIN_GLYPH = ord(' ')
 MAX_GLYPH = ord('~')
 
+# metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
+
 def process_face(name, style, size):
+    print('Processing ... %s %s %s' % (name, style, size))
     face = freetype.Face('/usr/share/fonts/truetype/%s-%s.ttf' % (name, style))
     face.set_pixel_sizes(0, size)
-    with open('%s-%s-%s.c' % (name.lower(), style.lower(), size), 'wt') as f:
+    fontname = '%s_%s_%d' % (name.lower(), style.lower(), size)
+    with open('font_%s.h' % fontname, 'wt') as f:
+        f.write('#include <stdint.h>\n\n')
+        f.write('const uint8_t * const Font_%s_%s_%d[%d + 1 - %d];\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))
+    with open('font_%s.c' % fontname, 'wt') as f:
+        f.write('#include "font_%s.h"\n\n' % fontname)
         f.write('// first two bytes are width and height of the glyph\n')
         f.write('// third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n')
         f.write('// rest is packed 4-bit glyph data\n\n')
@@ -38,3 +46,5 @@ def process_face(name, style, size):
         f.write('};\n')
 
 process_face('Roboto', 'Regular', 20)
+process_face('Roboto', 'Bold', 20)
+process_face('RobotoMono', 'Regular', 20)

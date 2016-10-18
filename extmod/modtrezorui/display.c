@@ -6,9 +6,9 @@
  */
 
 #include "inflate.h"
-#include "font_robotomono_regular.h"
-#include "font_roboto_regular.h"
-#include "font_roboto_bold.h"
+#include "font_robotomono_regular_20.h"
+#include "font_roboto_regular_20.h"
+#include "font_roboto_bold_20.h"
 
 #include "trezor-qrenc/qr_encode.h"
 
