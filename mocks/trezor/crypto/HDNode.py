@@ -12,13 +12,13 @@ def derive_path(path: list) -> None:
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def serialize_public(version: int) -> str:
+def serialize_public() -> str:
     '''
     Serialize the public info from HD node to base58 string.
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def serialize_private(version: int) -> str:
+def serialize_private() -> str:
     '''
     Serialize the private info HD node to base58 string.
     '''

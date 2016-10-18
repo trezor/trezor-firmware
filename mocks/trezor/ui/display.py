@@ -25,13 +25,6 @@ def bar_radius(x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int=None, 
     '''
 
 # ../extmod/modtrezorui/modtrezorui-display.h
-def blit(x: int, y: int, w: int, h: int, data: bytes) -> None:
-    '''
-    Renders rectangle at position (x,y = upper left corner) with width w and height h with data.
-    The data needs to have the correct format.
-    '''
-
-# ../extmod/modtrezorui/modtrezorui-display.h
 def image(x: int, y: int, image: bytes) -> None:
     '''
     Renders an image at position (x,y).
@@ -111,7 +104,7 @@ def offset(xy: tuple=None) -> tuple:
     '''
 
 # ../extmod/modtrezorui/modtrezorui-display.h
-def raw(reg: int, data: bytes) -> None:
+def raw(reg: int, data: bytes=None) -> None:
     '''
     Performs a raw command on the display. Read the datasheet to learn more.
     '''
