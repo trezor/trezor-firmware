@@ -47,12 +47,12 @@ class Loader():
             style = self.normal_style
 
         if style['icon'] is None:
-            ui.display.loader(progress, style['fg-color'], style['bg-color'])
+            ui.display.loader(progress, -8, style['fg-color'], style['bg-color'])
         elif style['icon-fg-color'] is None:
             ui.display.loader(
-                progress, style['fg-color'], style['bg-color'], style['icon'])
+                progress, -8, style['fg-color'], style['bg-color'], style['icon'])
         else:
             ui.display.loader(
-                progress, style['fg-color'], style['bg-color'], style['icon'], style['icon-fg-color'])
+                progress, -8, style['fg-color'], style['bg-color'], style['icon'], style['icon-fg-color'])
 
         return True

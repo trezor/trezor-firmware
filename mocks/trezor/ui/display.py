@@ -73,7 +73,7 @@ def qrcode(x: int, y: int, data: bytes, scale: int) -> None:
     '''
 
 # ../extmod/modtrezorui/modtrezorui-display.h
-def loader(progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None:
+def loader(progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None:
     '''
     Renders a rotating loader graphic.
     Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.

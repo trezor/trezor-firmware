@@ -348,14 +348,18 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
-void display_loader(uint16_t progress, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor)
+void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor)
 {
     uint16_t colortable[16], iconcolortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
     if (icon) {
         set_color_table(iconcolortable, iconfgcolor, bgcolor);
     }
-    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size, DISPLAY_RESX / 2 + img_loader_size - 1, DISPLAY_RESY / 2 + img_loader_size - 1);
+    if ((DISPLAY_RESY / 2 - img_loader_size + yoffset < 0) ||
+        (DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset >= DISPLAY_RESY)) {
+       return;
+    }
+    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size + yoffset, DISPLAY_RESX / 2 + img_loader_size - 1, DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
     if (icon && memcmp(icon, "TOIg", 4) == 0 && LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) && LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) && iconlen == 12 + *(uint32_t *)(icon + 8)) {
         uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
         sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);

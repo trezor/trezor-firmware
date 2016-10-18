@@ -223,7 +223,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5, mod_TrezorUi_Display_qrcode);
 
-/// def trezor.ui.display.loader(progress: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None:
+/// def trezor.ui.display.loader(progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes=None, iconfgcolor: int=None) -> None:
 ///     '''
 ///     Renders a rotating loader graphic.
 ///     Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
@@ -232,11 +232,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_qrcode_obj, 5, 5
 ///     '''
 STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args) {
     mp_int_t progress = mp_obj_get_int(args[1]);
-    mp_int_t fgcolor = mp_obj_get_int(args[2]);
-    mp_int_t bgcolor = mp_obj_get_int(args[3]);
-    if (n_args > 4) { // icon provided
+    mp_int_t yoffset = mp_obj_get_int(args[2]);
+    mp_int_t fgcolor = mp_obj_get_int(args[3]);
+    mp_int_t bgcolor = mp_obj_get_int(args[4]);
+    if (n_args > 5) { // icon provided
         mp_buffer_info_t icon;
-        mp_get_buffer_raise(args[4], &icon, MP_BUFFER_READ);
+        mp_get_buffer_raise(args[5], &icon, MP_BUFFER_READ);
         const uint8_t *data = icon.buf;
         if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
             mp_raise_ValueError("Invalid image format");
@@ -251,18 +252,18 @@ STATIC mp_obj_t mod_TrezorUi_Display_loader(size_t n_args, const mp_obj_t *args)
             mp_raise_ValueError("Invalid size of data");
         }
         uint16_t iconfgcolor;
-        if (n_args > 5) { // icon color provided
-            iconfgcolor = mp_obj_get_int(args[5]);
+        if (n_args > 6) { // icon color provided
+            iconfgcolor = mp_obj_get_int(args[6]);
         } else {
             iconfgcolor = ~bgcolor; // invert
         }
-        display_loader(progress, fgcolor, bgcolor, icon.buf, icon.len, iconfgcolor);
+        display_loader(progress, yoffset, fgcolor, bgcolor, icon.buf, icon.len, iconfgcolor);
     } else {
-        display_loader(progress, fgcolor, bgcolor, NULL, 0, 0);
+        display_loader(progress, yoffset, fgcolor, bgcolor, NULL, 0, 0);
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 4, 6, mod_TrezorUi_Display_loader);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_loader_obj, 5, 7, mod_TrezorUi_Display_loader);
 
 /// def trezor.ui.display.orientation(degrees: int=None) -> int:
 ///     '''
