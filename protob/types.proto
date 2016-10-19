@@ -74,6 +74,7 @@ enum RequestType {
 	TXOUTPUT = 1;
 	TXMETA = 2;
 	TXFINISHED = 3;
+	TXEXTRADATA = 4;
 }
 
 /**
@@ -202,6 +203,8 @@ message TransactionType {
 	optional uint32 lock_time = 4;
 	optional uint32 inputs_cnt = 6;
 	optional uint32 outputs_cnt = 7;
+	optional bytes extra_data = 8;
+	optional uint32 extra_data_len = 9;
 }
 
 /**
@@ -211,6 +214,7 @@ message TransactionType {
 message TxRequestDetailsType {
 	optional uint32 request_index = 1;	// device expects TxAck message from the computer
 	optional bytes tx_hash = 2;		// tx_hash of requested transaction
+	optional uint32 extra_data_len = 3;	// length of requested extra data
 }
 
 /**
