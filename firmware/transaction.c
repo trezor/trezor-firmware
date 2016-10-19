@@ -407,7 +407,27 @@ uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output)
 	return r;
 }
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, bool add_hash_type)
+uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_t datalen)
+{
+	if (tx->have_inputs < tx->inputs_len) {
+		// not all inputs provided
+		return 0;
+	}
+	if (tx->have_outputs < tx->outputs_len) {
+		// not all inputs provided
+		return 0;
+	}
+	if (tx->extra_data_received + datalen > tx->extra_data_len) {
+		// we are receiving too much data
+		return 0;
+	}
+	sha256_Update(&(tx->ctx), data, datalen);
+	tx->extra_data_received += datalen;
+	tx->size += datalen;
+	return datalen;
+}
+
+void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t extra_data_len, bool add_hash_type)
 {
 	tx->inputs_len = inputs_len;
 	tx->outputs_len = outputs_len;
@@ -416,6 +436,8 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->add_hash_type = add_hash_type;
 	tx->have_inputs = 0;
 	tx->have_outputs = 0;
+	tx->extra_data_len = extra_data_len;
+	tx->extra_data_received = 0;
 	tx->size = 0;
 	sha256_Init(&(tx->ctx));
 }

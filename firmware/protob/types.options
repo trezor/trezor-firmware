@@ -21,6 +21,7 @@ TxOutputBinType.script_pubkey		max_size:520
 TransactionType.inputs			max_count:1
 TransactionType.bin_outputs		max_count:1
 TransactionType.outputs			max_count:1
+TransactionType.extra_data		max_size:1024
 
 TxRequestDetailsType.tx_hash		max_size:32
 

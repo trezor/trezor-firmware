@@ -45,7 +45,8 @@ typedef enum _RequestType {
     RequestType_TXINPUT = 0,
     RequestType_TXOUTPUT = 1,
     RequestType_TXMETA = 2,
-    RequestType_TXFINISHED = 3
+    RequestType_TXFINISHED = 3,
+    RequestType_TXEXTRADATA = 4
 } RequestType;
 
 typedef enum _ButtonRequestType {
@@ -149,6 +150,10 @@ typedef struct _TxRequestDetailsType {
     uint32_t request_index;
     bool has_tx_hash;
     TxRequestDetailsType_tx_hash_t tx_hash;
+    bool has_extra_data_len;
+    uint32_t extra_data_len;
+    bool has_extra_data_offset;
+    uint32_t extra_data_offset;
 } TxRequestDetailsType;
 
 typedef struct {
@@ -235,6 +240,11 @@ typedef struct _TxOutputType {
     TxOutputType_op_return_data_t op_return_data;
 } TxOutputType;
 
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} TransactionType_extra_data_t;
+
 typedef struct _TransactionType {
     bool has_version;
     uint32_t version;
@@ -250,6 +260,10 @@ typedef struct _TransactionType {
     uint32_t inputs_cnt;
     bool has_outputs_cnt;
     uint32_t outputs_cnt;
+    bool has_extra_data;
+    TransactionType_extra_data_t extra_data;
+    bool has_extra_data_len;
+    uint32_t extra_data_len;
 } TransactionType;
 
 /* Extensions */
@@ -275,8 +289,8 @@ extern const uint32_t IdentityType_index_default;
 #define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default, false, 0}
 #define TxOutputType_init_default                {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_default, false, {0, {0}}}
 #define TxOutputBinType_init_default             {0, {0, {0}}}
-#define TransactionType_init_default             {false, 0, 0, {TxInputType_init_default}, 0, {TxOutputBinType_init_default}, false, 0, 0, {TxOutputType_init_default}, false, 0, false, 0}
-#define TxRequestDetailsType_init_default        {false, 0, false, {0, {0}}}
+#define TransactionType_init_default             {false, 0, 0, {TxInputType_init_default}, 0, {TxOutputBinType_init_default}, false, 0, 0, {TxOutputType_init_default}, false, 0, false, 0, false, {0, {0}}, false, 0}
+#define TxRequestDetailsType_init_default        {false, 0, false, {0, {0}}, false, 0, false, 0}
 #define TxRequestSerializedType_init_default     {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define IdentityType_init_default                {false, "", false, "", false, "", false, "", false, "", false, 0u}
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
@@ -286,8 +300,8 @@ extern const uint32_t IdentityType_index_default;
 #define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero, false, 0}
 #define TxOutputType_init_zero                   {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_zero, false, {0, {0}}}
 #define TxOutputBinType_init_zero                {0, {0, {0}}}
-#define TransactionType_init_zero                {false, 0, 0, {TxInputType_init_zero}, 0, {TxOutputBinType_init_zero}, false, 0, 0, {TxOutputType_init_zero}, false, 0, false, 0}
-#define TxRequestDetailsType_init_zero           {false, 0, false, {0, {0}}}
+#define TransactionType_init_zero                {false, 0, 0, {TxInputType_init_zero}, 0, {TxOutputBinType_init_zero}, false, 0, 0, {TxOutputType_init_zero}, false, 0, false, 0, false, {0, {0}}, false, 0}
+#define TxRequestDetailsType_init_zero           {false, 0, false, {0, {0}}, false, 0, false, 0}
 #define TxRequestSerializedType_init_zero        {false, 0, false, {0, {0}}, false, {0, {0}}}
 #define IdentityType_init_zero                   {false, "", false, "", false, "", false, "", false, "", false, 0}
 
@@ -316,6 +330,8 @@ extern const uint32_t IdentityType_index_default;
 #define TxOutputBinType_script_pubkey_tag        2
 #define TxRequestDetailsType_request_index_tag   1
 #define TxRequestDetailsType_tx_hash_tag         2
+#define TxRequestDetailsType_extra_data_len_tag  3
+#define TxRequestDetailsType_extra_data_offset_tag 4
 #define TxRequestSerializedType_signature_index_tag 1
 #define TxRequestSerializedType_signature_tag    2
 #define TxRequestSerializedType_serialized_tx_tag 3
@@ -345,6 +361,8 @@ extern const uint32_t IdentityType_index_default;
 #define TransactionType_lock_time_tag            4
 #define TransactionType_inputs_cnt_tag           6
 #define TransactionType_outputs_cnt_tag          7
+#define TransactionType_extra_data_tag           8
+#define TransactionType_extra_data_len_tag       9
 #define wire_in_tag                              50002
 #define wire_out_tag                             50003
 #define wire_debug_in_tag                        50004
@@ -358,8 +376,8 @@ extern const pb_field_t MultisigRedeemScriptType_fields[4];
 extern const pb_field_t TxInputType_fields[9];
 extern const pb_field_t TxOutputType_fields[7];
 extern const pb_field_t TxOutputBinType_fields[3];
-extern const pb_field_t TransactionType_fields[8];
-extern const pb_field_t TxRequestDetailsType_fields[3];
+extern const pb_field_t TransactionType_fields[10];
+extern const pb_field_t TxRequestDetailsType_fields[5];
 extern const pb_field_t TxRequestSerializedType_fields[4];
 extern const pb_field_t IdentityType_fields[7];
 
@@ -371,8 +389,8 @@ extern const pb_field_t IdentityType_fields[7];
 #define TxInputType_size                         5508
 #define TxOutputType_size                        3934
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     10009
-#define TxRequestDetailsType_size                40
+#define TransactionType_size                     11042
+#define TxRequestDetailsType_size                52
 #define TxRequestSerializedType_size             2132
 #define IdentityType_size                        416
 

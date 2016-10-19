@@ -75,7 +75,7 @@ const pb_field_t TxOutputBinType_fields[3] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t TransactionType_fields[8] = {
+const pb_field_t TransactionType_fields[10] = {
     PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, TransactionType, version, version, 0),
     PB_FIELD2(  2, MESSAGE , REPEATED, STATIC  , OTHER, TransactionType, inputs, version, &TxInputType_fields),
     PB_FIELD2(  3, MESSAGE , REPEATED, STATIC  , OTHER, TransactionType, bin_outputs, inputs, &TxOutputBinType_fields),
@@ -83,12 +83,16 @@ const pb_field_t TransactionType_fields[8] = {
     PB_FIELD2(  5, MESSAGE , REPEATED, STATIC  , OTHER, TransactionType, outputs, lock_time, &TxOutputType_fields),
     PB_FIELD2(  6, UINT32  , OPTIONAL, STATIC  , OTHER, TransactionType, inputs_cnt, outputs, 0),
     PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, TransactionType, outputs_cnt, inputs_cnt, 0),
+    PB_FIELD2(  8, BYTES   , OPTIONAL, STATIC  , OTHER, TransactionType, extra_data, outputs_cnt, 0),
+    PB_FIELD2(  9, UINT32  , OPTIONAL, STATIC  , OTHER, TransactionType, extra_data_len, extra_data, 0),
     PB_LAST_FIELD
 };
 
-const pb_field_t TxRequestDetailsType_fields[3] = {
+const pb_field_t TxRequestDetailsType_fields[5] = {
     PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, TxRequestDetailsType, request_index, request_index, 0),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, TxRequestDetailsType, tx_hash, request_index, 0),
+    PB_FIELD2(  3, UINT32  , OPTIONAL, STATIC  , OTHER, TxRequestDetailsType, extra_data_len, tx_hash, 0),
+    PB_FIELD2(  4, UINT32  , OPTIONAL, STATIC  , OTHER, TxRequestDetailsType, extra_data_offset, extra_data_len, 0),
     PB_LAST_FIELD
 };
 
