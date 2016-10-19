@@ -21,12 +21,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <check.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include <check.h>
+#include "check_mem.h"
 
 #include "aes.h"
 #include "bignum.h"
@@ -60,28 +62,6 @@ uint8_t *fromhex(const char *str)
 	}
 	return buf;
 }
-
-char *tohex(const uint8_t *bin, size_t l)
-{
-	char *buf = (char *)malloc(l * 2 + 1);
-	static char digits[] = "0123456789abcdef";
-	for (size_t i = 0; i < l; i++) {
-		buf[i*2  ] = digits[(bin[i] >> 4) & 0xF];
-		buf[i*2+1] = digits[bin[i] & 0xF];
-	}
-	buf[l * 2] = 0;
-	return buf;
-}
-
-#define _ck_assert_mem(X, Y, L, OP) do { \
-  const void* _ck_x = (X); \
-  const void* _ck_y = (Y); \
-  size_t _ck_l = (L); \
-  ck_assert_msg(0 OP memcmp(_ck_y, _ck_x, _ck_l), \
-    "Assertion '"#X#OP#Y"' failed: "#X"==\"%s\", "#Y"==\"%s\"", tohex(_ck_x, _ck_l), tohex(_ck_y, _ck_l)); \
-} while (0)
-#define ck_assert_mem_eq(X, Y, L) _ck_assert_mem(X, Y, L, ==)
-#define ck_assert_mem_ne(X, Y, L) _ck_assert_mem(X, Y, L, !=)
 
 START_TEST(test_bignum_read_be)
 {
