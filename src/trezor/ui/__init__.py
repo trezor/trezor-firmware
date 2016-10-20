@@ -72,22 +72,22 @@ def blend(ca: int, cb: int, t: float) -> int:
 
 async def alert(count=3):
     current = display.backlight()
-    for i in range(count*2):
+    for i in range(count * 2):
         if i % 2 == 0:
             display.backlight(BACKLIGHT_MAX)
             yield loop.Sleep(20000)
         else:
             display.backlight(BACKLIGHT_NORMAL)
             yield loop.Sleep(80000)
-
     display.backlight(current)
+
 
 async def backlight_slide(val, speed=20000):
     current = display.backlight()
-
     for i in range(current, val, -1 if current > val else 1):
         display.backlight(i)
         await loop.Sleep(speed)
+
 
 def animate_pulse(func, ca, cb, speed=200000, delay=30000):
     while True:
@@ -97,11 +97,14 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
         func(c)
         yield loop.Sleep(delay)
 
+
 def header(title, icon=ICON_RESET, fg=BLACK, bg=PM_DARK_BLUE):
     display.bar(0, 0, 240, 32, bg)
-    image = res.load(icon)
-    display.icon(8, 4, image, fg, bg)
+    if icon is not None:
+        image = res.load(icon)
+        display.icon(8, 4, image, fg, bg)
     display.text(8 + 24 + 8, 23, title, BOLD, fg, bg)
+
 
 def rotate_coords(pos: tuple) -> tuple:
     r = display.orientation()
