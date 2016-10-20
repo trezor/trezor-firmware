@@ -215,6 +215,7 @@ message TxRequestDetailsType {
 	optional uint32 request_index = 1;	// device expects TxAck message from the computer
 	optional bytes tx_hash = 2;		// tx_hash of requested transaction
 	optional uint32 extra_data_len = 3;	// length of requested extra data
+	optional uint32 extra_data_offset = 4;	// offset of requested extra data
 }
 
 /**
