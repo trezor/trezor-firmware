@@ -52,9 +52,10 @@ class HoldToConfirmDialog():
         self.loader = Loader(*args, **kwargs)
 
     def render(self):
-        if not self.loader.render():
-            if self.content is not None:
-                self.content.render()
+        if self.loader.is_active():
+            self.loader.render()
+        elif self.content is not None:
+            self.content.render()
         self.button.render()
 
     def send(self, event, pos):

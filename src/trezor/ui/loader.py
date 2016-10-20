@@ -16,7 +16,7 @@ DEFAULT_LOADER_ACTIVE = {
     'icon-fg-color': None,
 }
 
-LOADER_MSEC = const(1000)
+_LOADER_MSEC = const(1000)
 
 
 class Loader():
@@ -34,25 +34,23 @@ class Loader():
         ui.display.bar(0, 32, 240, 240 - 80, ui.BLACK)
         ticks_diff = utime.ticks_ms() - self.start_ticks_ms
         self.start_ticks_ms = None
-        return ticks_diff >= LOADER_MSEC
+        return ticks_diff >= _LOADER_MSEC
+
+    def is_active(self):
+        return self.start_ticks_ms is not None
 
     def render(self):
-        if self.start_ticks_ms is None:
-            return False
-
-        progress = min(utime.ticks_ms() - self.start_ticks_ms, LOADER_MSEC)
-        if progress == LOADER_MSEC:
+        progress = min(utime.ticks_ms() - self.start_ticks_ms, _LOADER_MSEC)
+        if progress == _LOADER_MSEC:
             style = self.active_style
         else:
             style = self.normal_style
-
         if style['icon'] is None:
-            ui.display.loader(progress, -8, style['fg-color'], style['bg-color'])
+            ui.display.loader(
+                progress, -8, style['fg-color'], style['bg-color'])
         elif style['icon-fg-color'] is None:
             ui.display.loader(
                 progress, -8, style['fg-color'], style['bg-color'], style['icon'])
         else:
             ui.display.loader(
                 progress, -8, style['fg-color'], style['bg-color'], style['icon'], style['icon-fg-color'])
-
-        return True
