@@ -2,7 +2,7 @@
 import json
 from collections import OrderedDict
 
-coins = json.load(open('../../../../trezor-common/coins.json', 'r'))
+coins = json.load(open('../../trezor-common/coins.json', 'r'))
 
 print('_coins = [')
 for c in coins:

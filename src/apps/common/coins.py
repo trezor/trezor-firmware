@@ -1,3 +1,4 @@
+# the following list is generated using tools/coins-gen.py
 _coins = [
     {'coin_name': 'Bitcoin', 'coin_shortcut': 'BTC', 'maxfee_kb': 100000, 'address_type': 0, 'address_type_p2sh': 5, 'address_type_p2wpkh': 6, 'address_type_p2wsh': 10, 'signed_message_header': 'Bitcoin Signed Message:\n', 'bip44': 0, 'xpub_magic': 76067358, 'xprv_magic': 76066276, },
     {'coin_name': 'Testnet', 'coin_shortcut': 'TEST', 'maxfee_kb': 10000000, 'address_type': 111, 'address_type_p2sh': 196, 'address_type_p2wpkh': 3, 'address_type_p2wsh': 40, 'signed_message_header': 'Bitcoin Signed Message:\n', 'bip44': 1, 'xpub_magic': 70617039, 'xprv_magic': 70615956, },
