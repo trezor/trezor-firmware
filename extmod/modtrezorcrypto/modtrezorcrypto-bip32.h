@@ -15,6 +15,9 @@ typedef struct _mp_obj_HDNode_t {
     HDNode hdnode;
 } mp_obj_HDNode_t;
 
+#define XPUB_MAXLEN 128
+#define ADDRESS_MAXLEN 36
+
 /// def trezor.crypto.HDNode.derive(index: int) -> None:
 ///     '''
 ///     Derive a BIP0032 child node in place.
@@ -74,7 +77,7 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
     vstr_t vstr;
-    vstr_init(&vstr, 120); // maximum length of base58-serialized node
+    vstr_init(&vstr, XPUB_MAXLEN);
 
     int written;
     if (use_public) {
@@ -149,6 +152,16 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_chain_code(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_chain_code_obj, mod_TrezorCrypto_HDNode_chain_code);
 
+/// def trezor.crypto.HDNode.private_key() -> bytes:
+///     '''
+///     Returns a private key of the HD node.
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_HDNode_private_key(mp_obj_t self) {
+    mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+    return mp_obj_new_str_of_type(&mp_type_bytes, o->hdnode.private_key, sizeof(o->hdnode.private_key));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_private_key_obj, mod_TrezorCrypto_HDNode_private_key);
+
 /// def trezor.crypto.HDNode.public_key() -> bytes:
 ///     '''
 ///     Returns a public key of the HD node.
@@ -160,15 +173,22 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_public_key(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_public_key_obj, mod_TrezorCrypto_HDNode_public_key);
 
-/// def trezor.crypto.HDNode.private_key() -> bytes:
+/// def trezor.crypto.HDNode.address(version: int) -> str:
 ///     '''
-///     Returns a private key of the HD node.
+///     Compute a base58-encoded address string from the HD node.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_HDNode_private_key(mp_obj_t self) {
+STATIC mp_obj_t mod_TrezorCrypto_HDNode_address(mp_obj_t self, mp_obj_t version) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-    return mp_obj_new_str_of_type(&mp_type_bytes, o->hdnode.private_key, sizeof(o->hdnode.private_key));
+
+    uint32_t v = mp_obj_get_int_truncated(version);
+    vstr_t vstr;
+    vstr_init(&vstr, ADDRESS_MAXLEN);
+
+    hdnode_get_address(&o->hdnode, v, vstr.buf, vstr.alloc);
+    vstr.len = strlen(vstr.buf);
+    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_private_key_obj, mod_TrezorCrypto_HDNode_private_key);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_address_obj, mod_TrezorCrypto_HDNode_address);
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_HDNode_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_derive), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_derive_obj) },
@@ -182,6 +202,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorCrypto_HDNode_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_chain_code), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_chain_code_obj) },
     { MP_ROM_QSTR(MP_QSTR_private_key), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_private_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_public_key), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_public_key_obj) },
+    { MP_ROM_QSTR(MP_QSTR_address), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_address_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_HDNode_locals_dict, mod_TrezorCrypto_HDNode_locals_dict_table);
 
