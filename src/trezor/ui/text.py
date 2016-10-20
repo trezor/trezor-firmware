@@ -8,23 +8,27 @@ TEXT_MARGIN_LEFT = const(10)
 
 class Text:
 
-    def __init__(self, header, icon, *content):
-        self.header = header
-        self.icon = icon
+    def __init__(self, header_text, header_icon, *content):
+        self.header_text = header_text
+        self.header_icon = header_icon
         self.content = content
 
     def render(self):
-        offset = TEXT_LINE_HEIGHT
-        offset += TEXT_HEADER_HEIGHT
+        offset_x = TEXT_MARGIN_LEFT
+        offset_y = TEXT_LINE_HEIGHT + TEXT_HEADER_HEIGHT
         style = ui.NORMAL
-        ui.header(self.header, self.icon, ui.BLACK, ui.LIGHT_GREEN)
+        fg = ui.WHITE
+        bg = ui.BLACK
+        ui.header(self.header_text, self.header_icon, ui.BLACK, ui.LIGHT_GREEN)
+
         for item in self.content:
             if isinstance(item, str):
-                ui.display.text(TEXT_MARGIN_LEFT, offset,
-                                item, style, ui.WHITE, ui.BLACK)
-                offset += TEXT_LINE_HEIGHT
-            else:
+                ui.display.text(offset_x, offset_y, item, style, fg, bg)
+                offset_y += TEXT_LINE_HEIGHT
+            elif item == ui.MONO or item == ui.NORMAL or item == ui.BOLD:
                 style = item
+            else:
+                fg = item
 
     def send(self, event, pos):
         pass
