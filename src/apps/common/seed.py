@@ -40,6 +40,7 @@ async def get_seed(session_id: int) -> bytes:
 async def compute_seed(session_id):
     from trezor.crypto import bip39
     from trezor.messages.FailureType import PinInvalid, Other
+    from .request_passphrase import request_passphrase
     from .request_pin import request_pin
     from . import storage
 
@@ -52,10 +53,7 @@ async def compute_seed(session_id):
             raise wire.FailureError(PinInvalid, 'PIN is incorrect')
 
     if storage.is_protected_by_passphrase():
-        from trezor.messages.PassphraseRequest import PassphraseRequest
-        from trezor.messages.wire_types import PassphraseAck
-        ack = await wire.reply_message(session_id, PassphraseRequest(), PassphraseAck)
-        passphrase = ack.passphrase
+        passphrase = await request_passphrase(session_id)
     else:
         passphrase = ''
 
