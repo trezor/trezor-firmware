@@ -4,9 +4,9 @@ from trezor import loop
 from . import in_area, rotate_coords
 
 
-SWIPE_DISTANCE_THRESHOLD = const(20)  # Min pixels in the primary direction
-SWIPE_VELOCITY_THRESHOLD = const(200)  # Min pixels/second
-SWIPE_RATIO_THRESHOLD = const(30)  # Max ratio or directions in %
+_SWIPE_DISTANCE_THRESHOLD = const(20)  # Min pixels in the primary direction
+_SWIPE_VELOCITY_THRESHOLD = const(200)  # Min pixels per second
+_SWIPE_RATIO_THRESHOLD = const(30)  # Max ratio or directions in %
 
 SWIPE_UP = const(180)
 SWIPE_DOWN = const(0)
@@ -46,17 +46,17 @@ class Swipe():
                 # Horizontal direction
                 velxa = abs(pdx / td)
                 ratio = int(pdya / pdxa * 100) if pdxa > 0 else 100
-                if (velxa >= SWIPE_VELOCITY_THRESHOLD
-                        and pdxa >= SWIPE_DISTANCE_THRESHOLD
-                        and ratio <= SWIPE_RATIO_THRESHOLD):
+                if (velxa >= _SWIPE_VELOCITY_THRESHOLD
+                        and pdxa >= _SWIPE_DISTANCE_THRESHOLD
+                        and ratio <= _SWIPE_RATIO_THRESHOLD):
                     return SWIPE_RIGHT if pdx > 0 else SWIPE_LEFT
             else:
                 # Vertical direction
                 velya = abs(pdy / td)
                 ratio = int(pdxa / pdya * 100) if pdya > 0 else 100
-                if (velya >= SWIPE_VELOCITY_THRESHOLD
-                        and pdya >= SWIPE_DISTANCE_THRESHOLD
-                        and ratio <= SWIPE_RATIO_THRESHOLD):
+                if (velya >= _SWIPE_VELOCITY_THRESHOLD
+                        and pdya >= _SWIPE_DISTANCE_THRESHOLD
+                        and ratio <= _SWIPE_RATIO_THRESHOLD):
                     return SWIPE_DOWN if pdy > 0 else SWIPE_UP
             # No swipe, reset the state
             self.start_pos = None
