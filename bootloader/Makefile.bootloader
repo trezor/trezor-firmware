@@ -137,7 +137,7 @@ INC += -I../extmod/modtrezorui
 SRC_MOD += $(addprefix extmod/modtrezorui/,\
 	display.c \
 	inflate.c \
-	font_robotomono_regular.c \
+	font_robotomono_regular_20.c \
 	)
 endif
 
