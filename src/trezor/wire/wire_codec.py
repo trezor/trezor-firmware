@@ -76,8 +76,10 @@ Receives report payloads.
 Sends (msg_type, data_len) to target, followed by data chunks.
 Throws EOFError after last data chunk, in case of valid checksum.
 Throws MessageChecksumError to target if data doesn't match the checksum.
+
+Pass report payloads as `memoryview` for cheaper slicing.
 '''
-    message = memoryview((yield))  # read first report
+    message = yield  # read first report
     msg_type, data_len, data_tail = parse_message(message)
 
     target = genfunc(msg_type, data_len, session_id, *args)
@@ -95,7 +97,7 @@ Throws MessageChecksumError to target if data doesn't match the checksum.
         checksum = ubinascii.crc32(data_chunk, checksum)
 
         if data_len > 0:
-            data_tail = memoryview((yield))  # read next report
+            data_tail = yield  # read next report
 
     msg_footer = data_tail[:_MSG_FOOTER_LEN]
     if len(msg_footer) < _MSG_FOOTER_LEN:

@@ -40,6 +40,8 @@ Receives report payloads.
 Sends (msg_type, data_len) to target, followed by data chunks.
 Throws EOFError after last data chunk, in case of valid checksum.
 Throws MessageChecksumError to target if data doesn't match the checksum.
+
+Pass report payloads as `memoryview` for cheaper slicing.
 '''
 
     message = yield  # read first report
