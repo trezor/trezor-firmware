@@ -8,7 +8,7 @@ from trezor.crypto.curve import ed25519
 
 class TestCryptoEd25519(unittest.TestCase):
 
-    # vectors from https://github.com/torproject/tor/blob/master/src/test/ed25519_vectors.in
+    # vectors from https://github.com/torproject/tor/blob/master/src/test/ed25519_vectors.inc
     vectors = [
         ('26c76712d89d906e6672dafa614c42e5cb1caac8c6568e4d2493087db51f0d36', 'c2247870536a192d142d056abefca68d6193158e7c1a59c1654c954eccaff894', 'd23188eac3773a316d46006fa59c095060be8b1a23582a0dd99002a82a0662bd246d8449e172e04c5f46ac0d1404cebe4aabd8a75a1457aa06cae41f3334f104'),
         ('fba7a5366b5cb98c2667a18783f5cf8f4f8d1a2ce939ad22a6e685edde85128d', '1519a3b15816a1aafab0b213892026ebf5c0dc232c58b21088d88cb90e9b940d', '3a785ac1201c97ee5f6f0d99323960d5f264c7825e61aa7cc81262f15bef75eb4fa5723add9b9d45b12311b6d403eb3ac79ff8e4e631fc3cd51e4ad2185b200b'),

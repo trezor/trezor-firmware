@@ -92,10 +92,35 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_verify(size_t n_args, const mp_obj_t 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Nist256p1_verify_obj, 4, 4, mod_TrezorCrypto_Nist256p1_verify);
 
+/// def trezor.crypto.curve.nist256p1.multiply(secret_key: bytes, public_key: bytes) -> bytes:
+///     '''
+///     Multiplies point defined by public_key with scalar defined by secret_key
+///     Useful for ECDH
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_multiply(mp_obj_t self, mp_obj_t secret_key, mp_obj_t public_key) {
+    mp_buffer_info_t sk, pk;
+    mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
+    mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
+    if (sk.len != 32) {
+        mp_raise_ValueError("Invalid length of secret key");
+    }
+    if (pk.len != 33 && pk.len != 65) {
+        mp_raise_ValueError("Invalid length of public key");
+    }
+    vstr_t vstr;
+    vstr_init_len(&vstr, 65);
+    if (0 != ecdh_multiply(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf, (uint8_t *)vstr.buf)) {
+        mp_raise_ValueError("Multiply failed");
+    }
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Nist256p1_multiply_obj, mod_TrezorCrypto_Nist256p1_multiply);
+
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Nist256p1_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_publickey), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_publickey_obj) },
     { MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_sign_obj) },
     { MP_ROM_QSTR(MP_QSTR_verify), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_verify_obj) },
+    { MP_ROM_QSTR(MP_QSTR_multiply), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_multiply_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Nist256p1_locals_dict, mod_TrezorCrypto_Nist256p1_locals_dict_table);
 
