@@ -11,7 +11,7 @@ def fetch_json(url):
     except:
         raise Exception('URL error: %s' % url)
 
-def insight_tx(url, rawdata=False):
+def insight_tx(url, rawdata=False, zcash=False):
     if not rawdata:
         data = fetch_json(url)
     else:
@@ -39,6 +39,17 @@ def insight_tx(url, rawdata=False):
         o = t.bin_outputs.add()
         o.amount = int(Decimal(str(vout['value'])) * 100000000)
         o.script_pubkey = binascii.unhexlify(vout['scriptPubKey']['hex'])
+
+    if zcash:
+        if t.version == 2:
+            joinsplit_cnt = len(data['vjoinsplit'])
+            if joinsplit_cnt == 0:
+                t.extra_data =b'\x00'
+            else:
+                extra_data_len = 1 + joinsplit_cnt * 1802 + 32 + 64 # we assume cnt < 253, so we can treat varIntLen(cnt) as 1
+                raw = fetch_json(url.replace('/tx/', '/rawtx/'))
+                raw = binascii.unhexlify(raw['rawtx'])
+                t.extra_data = raw[-extra_data_len:]
 
     return t
 
@@ -96,3 +107,10 @@ class TXAPISegnet(object):
     def get_tx(self, txhash):
         url = 'https://segnet-api.smartbit.com.au/v1/blockchain/tx/%s' % txhash.decode('ascii')
         return smartbit_tx(url)
+
+class TXAPIZcashTestnet(object):
+
+    # @filecache(DAY)
+    def get_tx(self, txhash):
+        url = 'https://explorer.testnet.z.cash/api/tx/%s' % txhash.decode('ascii')
+        return insight_tx(url, zcash=True)

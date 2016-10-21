@@ -18,6 +18,7 @@ class TrezorTest(unittest.TestCase):
         self.mnemonic12 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
         self.mnemonic18 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
         self.mnemonic24 = 'dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic'
+        self.mnemonic_all = ' '.join(['all'] * 12)
 
         self.pin4 = '1234'
         self.pin6 = '789456'
@@ -27,6 +28,9 @@ class TrezorTest(unittest.TestCase):
 
         print("Setup finished")
         print("--------------")
+
+    def setup_mnemonic_allallall(self):
+        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic_all, pin='', passphrase_protection=False, label='test', language='english')
 
     def setup_mnemonic_nopin_nopassphrase(self):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin='', passphrase_protection=False, label='test', language='english')

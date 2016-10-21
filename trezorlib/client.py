@@ -681,6 +681,7 @@ class ProtocolMixin(object):
                     msg.outputs_cnt = len(current_tx.bin_outputs)
                 else:
                     msg.outputs_cnt = len(current_tx.outputs)
+                msg.extra_data_len = len(current_tx.extra_data)
                 res = self.call(proto.TxAck(tx=msg))
                 continue
 
@@ -703,6 +704,13 @@ class ProtocolMixin(object):
                     # This is useful for unit tests, see test_msg_signtx
                     msg = debug_processor(res, msg)
 
+                res = self.call(proto.TxAck(tx=msg))
+                continue
+
+            elif res.request_type == types.TXEXTRADATA:
+                o, l = res.details.extra_data_offset, res.details.extra_data_len
+                msg = types.TransactionType()
+                msg.extra_data = current_tx.extra_data[o:o + l]
                 res = self.call(proto.TxAck(tx=msg))
                 continue
 
