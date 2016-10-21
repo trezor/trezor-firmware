@@ -13,6 +13,7 @@ These include:
   uses RFC6979 for deterministic signatures)
 - ECDSA public key derivation + Base58 address representation
 - Ed25519 signing/verifying
+- ECDH using secp256k1, nist256p1 and Curve25519
 - HMAC-SHA256 and HMAC-SHA512
 - PBKDF2
 - RIPEMD-160
