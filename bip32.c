@@ -470,20 +470,9 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, ui
 		*result_size = 33;
 		return 0;
 	} else {
-		curve_point point;
-		const ecdsa_curve *curve = node->curve->params;
-		if (!ecdsa_read_pubkey(curve, peer_public_key, &point)) {
+		if (!ecdh_multiply(node->curve->params, node->private_key, peer_public_key, session_key)) {
 			return 1;
 		}
-		bignum256 k;
-		bn_read_be(node->private_key, &k);
-		point_multiply(curve, &k, &point, &point);
-		MEMSET_BZERO(&k, sizeof(k));
-
-		session_key[0] = 0x04;
-		bn_write_be(&point.x, session_key + 1);
-		bn_write_be(&point.y, session_key + 33);
-		MEMSET_BZERO(&point, sizeof(point));
 		*result_size = 65;
 		return 0;
 	}

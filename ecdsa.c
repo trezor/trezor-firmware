@@ -629,6 +629,26 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k, curve_point *
 
 #endif
 
+int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *pub_key, uint8_t *session_key)
+{
+	curve_point point;
+	if (!ecdsa_read_pubkey(curve, pub_key, &point)) {
+		return 1;
+	}
+
+	bignum256 k;
+	bn_read_be(priv_key, &k);
+	point_multiply(curve, &k, &point, &point);
+	MEMSET_BZERO(&k, sizeof(k));
+
+	session_key[0] = 0x04;
+	bn_write_be(&point.x, session_key + 1);
+	bn_write_be(&point.y, session_key + 33);
+	MEMSET_BZERO(&point, sizeof(point));
+
+	return 0;
+}
+
 // generate random K for signing
 void generate_k_random(bignum256 *k) {
 	int i;
