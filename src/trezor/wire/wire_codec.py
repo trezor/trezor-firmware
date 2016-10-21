@@ -35,29 +35,41 @@ _MSG_FOOTER_LEN = ustruct.calcsize(_MSG_FOOTER)
 
 
 def parse_report(data):
+    if len(data) != _REP_LEN:
+        raise ValueError('Invalid buffer size')
     marker, session_id = ustruct.unpack(_REP_HEADER, data)
     return marker, session_id, data[_REP_HEADER_LEN:]
 
 
 def parse_message(data):
+    if len(data) != _REP_LEN - _REP_HEADER_LEN:
+        raise ValueError('Invalid buffer size')
     msg_type, data_len = ustruct.unpack(_MSG_HEADER, data)
     return msg_type, data_len, data[_MSG_HEADER_LEN:]
 
 
 def parse_message_footer(data):
+    if len(data) != _MSG_FOOTER_LEN:
+        raise ValueError('Invalid buffer size')
     data_checksum, = ustruct.unpack(_MSG_FOOTER, data)
     return data_checksum,
 
 
 def serialize_report_header(data, marker, session_id):
+    if len(data) < _REP_HEADER_LEN:
+        raise ValueError('Invalid buffer size')
     ustruct.pack_into(_REP_HEADER, data, 0, marker, session_id)
 
 
 def serialize_message_header(data, msg_type, msg_len):
+    if len(data) < _REP_HEADER_LEN + _MSG_HEADER_LEN:
+        raise ValueError('Invalid buffer size')
     ustruct.pack_into(_MSG_HEADER, data, _REP_HEADER_LEN, msg_type, msg_len)
 
 
 def serialize_message_footer(data, checksum):
+    if len(data) < _MSG_FOOTER_LEN:
+        raise ValueError('Invalid buffer size')
     ustruct.pack_into(_MSG_FOOTER, data, 0, checksum)
 
 
@@ -112,6 +124,11 @@ Pass report payloads as `memoryview` for cheaper slicing.
 
 
 def encode_wire_message(msg_type, msg_data, session_id, target):
+    '''Encode a full wire message directly to reports and stream it to target.
+
+Target receives `memoryview`s of HID reports which are valid until the targets
+`send()` method returns.
+    '''
     report = memoryview(bytearray(_REP_LEN))
     serialize_report_header(report, REP_MARKER_HEADER, session_id)
     serialize_message_header(report, msg_type, len(msg_data))
@@ -139,7 +156,7 @@ def encode_wire_message(msg_type, msg_data, session_id, target):
             msg_footer = None
             continue
 
-        # FIXME: optimize speed
+        # fill the rest of the report with 0x00
         x = 0
         to_fill = len(target_data)
         while x < to_fill:
@@ -154,8 +171,8 @@ def encode_wire_message(msg_type, msg_data, session_id, target):
         # reset to skip the magic and session ID
         if first:
             serialize_report_header(report, REP_MARKER_DATA, session_id)
-            target_data = report[_REP_HEADER_LEN:]
             first = False
+        target_data = report[_REP_HEADER_LEN:]
 
 
 def encode_session_open_message(session_id, target):
