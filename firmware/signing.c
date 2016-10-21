@@ -334,7 +334,12 @@ void signing_txack(TransactionType *tx)
 			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len, false);
 			progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
 			idx2 = 0;
-			send_req_2_prev_input();
+			if (tp.inputs_len > 0) {
+				send_req_2_prev_input();
+			} else {
+				tx_serialize_header_hash(&tp);
+				send_req_2_prev_output();
+			}
 			return;
 		case STAGE_REQUEST_2_PREV_INPUT:
 			progress = (idx1 * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION;
