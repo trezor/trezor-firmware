@@ -470,7 +470,7 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, ui
 		*result_size = 33;
 		return 0;
 	} else {
-		if (!ecdh_multiply(node->curve->params, node->private_key, peer_public_key, session_key)) {
+		if (ecdh_multiply(node->curve->params, node->private_key, peer_public_key, session_key) != 0) {
 			return 1;
 		}
 		*result_size = 65;
