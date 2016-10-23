@@ -5,6 +5,7 @@ import unittest
 from ubinascii import unhexlify
 
 from trezor.crypto.curve import curve25519
+from trezor.crypto import random
 
 class TestCryptoCurve25519(unittest.TestCase):
 
@@ -16,6 +17,19 @@ class TestCryptoCurve25519(unittest.TestCase):
         for sk, pk, session in self.vectors:
             session2 = curve25519.multiply(unhexlify(sk), unhexlify(pk))
             self.assertEqual(session2, unhexlify(session))
+
+    def test_multiply_random(self):
+        for _ in range(100):
+            sk1 = bytearray(random.bytes(32))
+            sk2 = bytearray(random.bytes(32))
+            # taken from https://cr.yp.to/ecdh.html
+            sk1[0] &= 248 ; sk1[31] &= 127 ; sk1[31] |= 64
+            sk2[0] &= 248 ; sk2[31] &= 127 ; sk2[31] |= 64
+            pk1 = curve25519.publickey(sk1)
+            pk2 = curve25519.publickey(sk2)
+            session1 = curve25519.multiply(sk1, pk2)
+            session2 = curve25519.multiply(sk2, pk1)
+            self.assertEqual(session1, session2)
 
 if __name__ == '__main__':
     unittest.main()

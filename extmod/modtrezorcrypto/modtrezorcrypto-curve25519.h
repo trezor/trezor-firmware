@@ -20,6 +20,23 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_make_new(const mp_obj_type_t *type, 
     return MP_OBJ_FROM_PTR(o);
 }
 
+/// def trezor.crypto.curve.curve25519.publickey(secret_key: bytes) -> bytes:
+///     '''
+///     Computes public key from secret key.
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_Curve25519_publickey(mp_obj_t self, mp_obj_t secret_key) {
+    mp_buffer_info_t sk;
+    mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
+    if (sk.len != 32) {
+        mp_raise_ValueError("Invalid length of secret key");
+    }
+    vstr_t vstr;
+    vstr_init_len(&vstr, 32);
+    curve25519_publickey((uint8_t *)vstr.buf, (const uint8_t *)sk.buf);
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Curve25519_publickey_obj, mod_TrezorCrypto_Curve25519_publickey);
+
 /// def trezor.crypto.curve.curve25519.multiply(secret_key: bytes, public_key: bytes) -> bytes:
 ///     '''
 ///     Multiplies point defined by public_key with scalar defined by secret_key
@@ -43,6 +60,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_multiply(mp_obj_t self, mp_obj_t sec
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Curve25519_multiply_obj, mod_TrezorCrypto_Curve25519_multiply);
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Curve25519_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_publickey), MP_ROM_PTR(&mod_TrezorCrypto_Curve25519_publickey_obj) },
     { MP_ROM_QSTR(MP_QSTR_multiply), MP_ROM_PTR(&mod_TrezorCrypto_Curve25519_multiply_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Curve25519_locals_dict, mod_TrezorCrypto_Curve25519_locals_dict_table);
