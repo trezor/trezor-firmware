@@ -12,4 +12,6 @@ t.add_field(4, 'lock_time', p.UVarintType)
 t.add_field(5, 'outputs', p.EmbeddedMessage(TxOutputType), flags=p.FLAG_REPEATED)
 t.add_field(6, 'inputs_cnt', p.UVarintType)
 t.add_field(7, 'outputs_cnt', p.UVarintType)
+t.add_field(8, 'extra_data', p.BytesType)
+t.add_field(9, 'extra_data_len', p.UVarintType)
 TransactionType = t

@@ -4,4 +4,6 @@ from micropython import const
 t = p.MessageType('TxRequestDetailsType')
 t.add_field(1, 'request_index', p.UVarintType)
 t.add_field(2, 'tx_hash', p.BytesType)
+t.add_field(3, 'extra_data_len', p.UVarintType)
+t.add_field(4, 'extra_data_offset', p.UVarintType)
 TxRequestDetailsType = t
