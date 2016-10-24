@@ -5,6 +5,7 @@ import unittest
 from ubinascii import hexlify, unhexlify
 
 from trezor.crypto.curve import nist256p1
+from trezor.crypto import random
 
 class TestCryptoNist256p1(unittest.TestCase):
 
@@ -84,6 +85,14 @@ class TestCryptoNist256p1(unittest.TestCase):
                 self.assertEqual(pk33, '02' + pk[:64])
             else:
                 self.assertEqual(pk33, '03' + pk[:64])
+
+    def test_sign_verify_random(self):
+        for l in range(1, 300):
+            sk = nist256p1.generate_secret()
+            pk = nist256p1.publickey(sk)
+            msg = random.bytes(l)
+            sig = nist256p1.sign(sk, msg)
+            self.assertTrue(nist256p1.verify(pk, sig, msg))
 
 if __name__ == '__main__':
     unittest.main()

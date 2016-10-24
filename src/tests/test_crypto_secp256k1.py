@@ -5,6 +5,7 @@ import unittest
 from ubinascii import hexlify, unhexlify
 
 from trezor.crypto.curve import secp256k1
+from trezor.crypto import random
 
 class TestCryptoSecp256k1(unittest.TestCase):
 
@@ -77,6 +78,14 @@ class TestCryptoSecp256k1(unittest.TestCase):
                 self.assertEqual(pk33, '02' + pk[:64])
             else:
                 self.assertEqual(pk33, '03' + pk[:64])
+
+    def test_sign_verify_random(self):
+        for l in range(1, 300):
+            sk = secp256k1.generate_secret()
+            pk = secp256k1.publickey(sk)
+            msg = random.bytes(l)
+            sig = secp256k1.sign(sk, msg)
+            self.assertTrue(secp256k1.verify(pk, sig, msg))
 
 if __name__ == '__main__':
     unittest.main()

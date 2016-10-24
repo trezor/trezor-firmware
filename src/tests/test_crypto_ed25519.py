@@ -43,7 +43,7 @@ class TestCryptoEd25519(unittest.TestCase):
             self.assertTrue(len(sk) == 32)
             self.assertTrue(sk[0] & 7 == 0 and sk[31] & 128 == 0 and sk[31] & 64 == 64)
 
-    def test_random(self):
+    def test_sign_verify_random(self):
         for l in range(1, 300):
             sk = ed25519.generate_secret()
             pk = ed25519.publickey(sk)
