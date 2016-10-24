@@ -57,6 +57,13 @@ class TestCryptoSecp256k1(unittest.TestCase):
         (115792089237316195423570985008687907852837564279074904382605163141518161494336, '79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798B7C52588D95C3B9AA25B0403F1EEF75702E84BB7597AABE663B82F6F04EF2777'),
     ]
 
+    def test_generate_secret(self):
+        for _ in range(100):
+            sk = secp256k1.generate_secret()
+            self.assertTrue(len(sk) == 32)
+            self.assertTrue(sk != b'\x00' * 32)
+            self.assertTrue(sk < b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE\xBA\xAE\xDC\xE6\xAF\x48\xA0\x3B\xBF\xD2\x5E\x8C\xD0\x36\x41\x41')
+
     def test_publickey(self):
         for sk, pk in self.vectors:
             sk = hex(sk)[2:]

@@ -9,6 +9,8 @@
 
 #include "trezor-crypto/ed25519-donna/ed25519.h"
 
+#include "rand.h"
+
 typedef struct _mp_obj_Ed25519_t {
     mp_obj_base_t base;
 } mp_obj_Ed25519_t;
@@ -19,6 +21,22 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_make_new(const mp_obj_type_t *type, siz
     o->base.type = type;
     return MP_OBJ_FROM_PTR(o);
 }
+
+/// def trezor.crypto.curve.ed25519.generate_secret() -> bytes:
+///     '''
+///     Generate secret key.
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_Ed25519_generate_secret(mp_obj_t self) {
+    vstr_t vstr;
+    vstr_init_len(&vstr, 32);
+    random_buffer((uint8_t *)vstr.buf, 32);
+    // taken from https://cr.yp.to/ecdh.html
+    vstr.buf[0] &= 248;
+    vstr.buf[31] &= 127;
+    vstr.buf[31] |= 64;
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Ed25519_generate_secret_obj, mod_TrezorCrypto_Ed25519_generate_secret);
 
 /// def trezor.crypto.curve.ed25519.publickey(secret_key: bytes) -> bytes:
 ///     '''
@@ -84,6 +102,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_verify(size_t n_args, const mp_obj_t *a
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Ed25519_verify_obj, 4, 4, mod_TrezorCrypto_Ed25519_verify);
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Ed25519_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_generate_secret), MP_ROM_PTR(&mod_TrezorCrypto_Ed25519_generate_secret_obj) },
     { MP_ROM_QSTR(MP_QSTR_publickey), MP_ROM_PTR(&mod_TrezorCrypto_Ed25519_publickey_obj) },
     { MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_TrezorCrypto_Ed25519_sign_obj) },
     { MP_ROM_QSTR(MP_QSTR_verify), MP_ROM_PTR(&mod_TrezorCrypto_Ed25519_verify_obj) },

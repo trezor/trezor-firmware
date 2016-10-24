@@ -64,6 +64,13 @@ class TestCryptoNist256p1(unittest.TestCase):
         (115792089210356248762697446949407573529996955224135760342422259061068512044368, '6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296B01CBD1C01E58065711814B583F061E9D431CCA994CEA1313449BF97C840AE0A'),
     ]
 
+    def test_generate_secret(self):
+        for _ in range(100):
+            sk = nist256p1.generate_secret()
+            self.assertTrue(len(sk) == 32)
+            self.assertTrue(sk != b'\x00' * 32)
+            self.assertTrue(sk < b'\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xBC\xE6\xFA\xAD\xA7\x17\x9E\x84\xF3\xB9\xCA\xC2\xFC\x63\x25\x51')
+
     def test_publickey(self):
         for sk, pk in self.vectors:
             sk = hex(sk)[2:]

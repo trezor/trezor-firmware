@@ -5,6 +5,7 @@ import unittest
 from ubinascii import unhexlify
 
 from trezor.crypto.curve import ed25519
+from trezor.crypto import random
 
 class TestCryptoEd25519(unittest.TestCase):
 
@@ -35,6 +36,20 @@ class TestCryptoEd25519(unittest.TestCase):
             # msg = pk
             self.assertTrue(ed25519.verify(unhexlify(pk), unhexlify(sig), unhexlify(pk)))
             pass
+
+    def test_generate_secret(self):
+        for _ in range(100):
+            sk = ed25519.generate_secret()
+            self.assertTrue(len(sk) == 32)
+            self.assertTrue(sk[0] & 7 == 0 and sk[31] & 128 == 0 and sk[31] & 64 == 64)
+
+    def test_random(self):
+        for l in range(1, 300):
+            sk = ed25519.generate_secret()
+            pk = ed25519.publickey(sk)
+            msg = random.bytes(l)
+            sig = ed25519.sign(sk, msg)
+            self.assertTrue(ed25519.verify(pk, sig, msg))
 
 if __name__ == '__main__':
     unittest.main()

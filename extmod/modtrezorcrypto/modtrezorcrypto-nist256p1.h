@@ -21,6 +21,24 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_make_new(const mp_obj_type_t *type, s
     return MP_OBJ_FROM_PTR(o);
 }
 
+/// def trezor.crypto.curve.nist256p1.generate_secret() -> bytes:
+///     '''
+///     Generate secret key.
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_generate_secret(mp_obj_t self) {
+    vstr_t vstr;
+    vstr_init_len(&vstr, 32);
+    for (;;) {
+        random_buffer((uint8_t *)vstr.buf, 32);
+        // check whether secret > 0 && secret < curve_order
+        if (0 == memcmp(vstr.buf, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) continue;
+        if (0 <= memcmp(vstr.buf, "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xBC\xE6\xFA\xAD\xA7\x17\x9E\x84\xF3\xB9\xCA\xC2\xFC\x63\x25\x51", 32)) continue;
+        break;
+    }
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Nist256p1_generate_secret_obj, mod_TrezorCrypto_Nist256p1_generate_secret);
+
 /// def trezor.crypto.curve.nist256p1.publickey(secret_key: bytes, compressed: bool=True) -> bytes:
 ///     '''
 ///     Computes public key from secret key.
@@ -117,6 +135,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_multiply(mp_obj_t self, mp_obj_t secr
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Nist256p1_multiply_obj, mod_TrezorCrypto_Nist256p1_multiply);
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Nist256p1_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_generate_secret), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_generate_secret_obj) },
     { MP_ROM_QSTR(MP_QSTR_publickey), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_publickey_obj) },
     { MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_sign_obj) },
     { MP_ROM_QSTR(MP_QSTR_verify), MP_ROM_PTR(&mod_TrezorCrypto_Nist256p1_verify_obj) },
