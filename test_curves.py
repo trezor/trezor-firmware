@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/py.test
 import ctypes as c
 import curve25519
 import random
