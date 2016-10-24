@@ -423,6 +423,8 @@ START_TEST(test_base58)
 }
 END_TEST
 
+#if USE_GRAPHENE
+
 // Graphene Base85CheckEncoding
 START_TEST(test_base58gph)
 {
@@ -454,6 +456,8 @@ START_TEST(test_base58gph)
 	}
 }
 END_TEST
+
+#endif
 
 START_TEST(test_bignum_divmod)
 {
@@ -2712,9 +2716,11 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_base58);
 	suite_add_tcase(s, tc);
 
+#if USE_GRAPHENE
 	tc = tcase_create("base58gph");
 	tcase_add_test(tc, test_base58gph);
 	suite_add_tcase(s, tc);
+#endif
 
 	tc = tcase_create("bignum_divmod");
 	tcase_add_test(tc, test_bignum_divmod);
