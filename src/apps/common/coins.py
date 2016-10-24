@@ -14,16 +14,16 @@ def by_shortcut(shortcut):
     for c in _couns:
         if c['coin_shortcut'] == shortcut:
             return c
-    return None
+    raise Exception('Unknown coin shortcut "%s"' % shortcut)
 
 def by_name(name):
     for c in _couns:
         if c['coin_name'] == name:
             return c
-    return None
+    raise Exception('Unknown coin name "%s"' % name)
 
 def by_address_type(version):
     for c in _couns:
         if c['address_type'] == version:
             return c
-    return None
+    raise Exception('Unknown coin address type %d' % version)
