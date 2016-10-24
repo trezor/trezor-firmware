@@ -2510,6 +2510,72 @@ START_TEST(test_ed25519) {
 }
 END_TEST
 
+static void test_bip32_ecdh_init_node(HDNode *node, const char *seed_str, const char *curve_name) {
+	hdnode_from_seed((const uint8_t *)seed_str, strlen(seed_str), curve_name, node);
+	hdnode_fill_public_key(node);
+	if (node->public_key[0] == 1) {
+		node->public_key[0] = 0x40;  // Curve25519 public keys start with 0x40 byte
+	}
+}
+
+static void test_bip32_ecdh(const char *curve_name, int expected_key_size, const uint8_t *expected_key) {
+	int res, key_size;
+	HDNode alice, bob;
+	uint8_t session_key1[expected_key_size], session_key2[expected_key_size];
+
+	test_bip32_ecdh_init_node(&alice, "Alice", curve_name);
+	test_bip32_ecdh_init_node(&bob, "Bob", curve_name);
+
+	// Generate shared key from Alice's secret key and Bob's public key
+	res = hdnode_get_shared_key(&alice, bob.public_key, session_key1, &key_size);
+	ck_assert_int_eq(res, 0);
+	ck_assert_int_eq(key_size, expected_key_size);
+	ck_assert_mem_eq(session_key1, expected_key, key_size);
+
+	// Generate shared key from Bob's secret key and Alice's public key
+	res = hdnode_get_shared_key(&bob, alice.public_key, session_key2, &key_size);
+	ck_assert_int_eq(res, 0);
+	ck_assert_int_eq(key_size, expected_key_size);
+	ck_assert_mem_eq(session_key2, expected_key, key_size);
+}
+
+START_TEST(test_bip32_ecdh_nist256p1) {
+	test_bip32_ecdh(
+		NIST256P1_NAME, 65,
+		fromhex("044aa56f917323f071148cd29aa423f6bee96e7fe87f914d0b91a0f95388c6631646ea92e882773d7b0b1bec356b842c8559a1377673d3965fb931c8fe51e64873"));
+}
+END_TEST
+
+START_TEST(test_bip32_ecdh_curve25519) {
+	test_bip32_ecdh(
+		CURVE25519_NAME, 33,
+		fromhex("04f34e35516325bb0d4a58507096c444a05ba13524ccf66910f11ce96c62224169"));
+}
+END_TEST
+
+START_TEST(test_bip32_ecdh_errors) {
+	HDNode node;
+	const uint8_t peer_public_key[65] = {0};  // invalid public key
+	uint8_t session_key[65];
+	int res, key_size = 0;
+
+	test_bip32_ecdh_init_node(&node, "Seed", ED25519_NAME);
+	res = hdnode_get_shared_key(&node, peer_public_key, session_key, &key_size);
+	ck_assert_int_eq(res, 1);
+	ck_assert_int_eq(key_size, 0);
+
+	test_bip32_ecdh_init_node(&node, "Seed", CURVE25519_NAME);
+	res = hdnode_get_shared_key(&node, peer_public_key, session_key, &key_size);
+	ck_assert_int_eq(res, 1);
+	ck_assert_int_eq(key_size, 0);
+
+	test_bip32_ecdh_init_node(&node, "Seed", NIST256P1_NAME);
+	res = hdnode_get_shared_key(&node, peer_public_key, session_key, &key_size);
+	ck_assert_int_eq(res, 1);
+	ck_assert_int_eq(key_size, 0);
+}
+END_TEST
+
 START_TEST(test_output_script) {
 	static const char *vectors[] = {
 		"76A914010966776006953D5567439E5E39F86A0D273BEE88AC", "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM",
@@ -2674,7 +2740,13 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_ed25519_vector_1);
 	tcase_add_test(tc, test_bip32_ed25519_vector_2);
 	suite_add_tcase(s, tc);
-	
+
+	tc = tcase_create("bip32-ecdh");
+	tcase_add_test(tc, test_bip32_ecdh_nist256p1);
+	tcase_add_test(tc, test_bip32_ecdh_curve25519);
+	tcase_add_test(tc, test_bip32_ecdh_errors);
+	suite_add_tcase(s, tc);
+
 	tc = tcase_create("ecdsa");
 	tcase_add_test(tc, test_ecdsa_signature);
 	suite_add_tcase(s, tc);
