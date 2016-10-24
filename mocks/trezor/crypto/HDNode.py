@@ -48,13 +48,19 @@ def chain_code() -> bytes:
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
+def private_key() -> bytes:
+    '''
+    Returns a private key of the HD node.
+    '''
+
+# ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
 def public_key() -> bytes:
     '''
     Returns a public key of the HD node.
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def private_key() -> bytes:
+def address(version: int) -> str:
     '''
-    Returns a private key of the HD node.
+    Compute a base58-encoded address string from the HD node.
     '''

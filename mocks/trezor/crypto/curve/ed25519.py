@@ -1,5 +1,11 @@
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def generate_secret() -> bytes:
+    '''
+    Generate secret key.
+    '''
+
+# ../extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def publickey(secret_key: bytes) -> bytes:
     '''
     Computes public key from secret key.
