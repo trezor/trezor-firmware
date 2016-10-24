@@ -8,7 +8,7 @@
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
-#include "curve25519-donna.h"
+#include "curve25519.h"
 
 static uint8_t msg[32];
 
@@ -92,7 +92,7 @@ void bench_curve25519(void)
 
 	clock_t t = clock();
 	for (int i = 0 ; i < 500; i++) {
-		curve25519_scalarmult(result, secret, basepoint);
+		curve25519_donna(result, secret, basepoint);
 	}
 	printf("Curve25519 multiplying speed: %0.2f mul/s\n", 500.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }

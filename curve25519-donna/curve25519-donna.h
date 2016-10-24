@@ -1,11 +1,32 @@
-#ifndef CURVE25519_H
-#define CURVE25519_H
+#include "curve25519.h"
+#include "curve25519-donna-portable.h"
 
-#include <stdint.h>
+#if defined(CURVE25519_SSE2)
+#else
+	#if defined(HAVE_UINT128) && !defined(CURVE25519_FORCE_32BIT)
+		#define CURVE25519_64BIT
+	#else
+		#define CURVE25519_32BIT
+	#endif
+#endif
 
-typedef uint8_t u8;
+#if !defined(CURVE25519_NO_INLINE_ASM)
+#endif
 
-void curve25519_scalarmult(u8 *result, const u8 *secret, const u8 *basepoint);
-void curve25519_publickey(u8 *public, const u8 *secret);
 
-#endif  // CURVE25519_H
+#if defined(CURVE25519_SSE2)
+	#include "curve25519-donna-sse2.h"
+#elif defined(CURVE25519_64BIT)
+	#include "curve25519-donna-64bit.h"
+#else
+	#include "curve25519-donna-32bit.h"
+#endif
+
+#include "curve25519-donna-common.h"
+
+#if defined(CURVE25519_SSE2)
+	#include "curve25519-donna-scalarmult-sse2.h"
+#else
+	#include "curve25519-donna-scalarmult-base.h"
+#endif
+

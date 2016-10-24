@@ -46,7 +46,7 @@ SRCS  += sha2.c
 SRCS  += sha3.c
 SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
 SRCS  += ed25519-donna/ed25519.c
-SRCS  += curve25519-donna/curve25519-donna.c
+SRCS  += curve25519-donna/curve25519.c
 
 OBJS   = $(SRCS:.c=.o)
 
@@ -62,7 +62,7 @@ tests: tests.o $(OBJS)
 	$(CC) tests.o $(OBJS) $(TESTLIBS) -o tests
 
 test_speed: test_speed.o $(OBJS)
-	$(CC) test_speed.o $(OBJS) $(TESTLIBS) -o test_speed
+	$(CC) test_speed.o $(OBJS) -o test_speed
 
 test-openssl: test-openssl.o $(OBJS)
 	$(CC) test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
