@@ -95,12 +95,18 @@ int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 
 int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
-	// GPG should sign a SHA256 digest of the original message.
-	if (message_len != 32) {
-		return 1;
-	}
 	signature[0] = 0; // prefix: pad with zero, so all signatures are 65 bytes
-	return hdnode_sign_digest(node, message, signature + 1, NULL, NULL);
+	const curve_info *ed25519_curve_info = get_curve_by_name(ED25519_NAME);
+	if (ed25519_curve_info && node->curve == ed25519_curve_info) {
+		// GPG supports variable size digest for Ed25519 signatures
+		return hdnode_sign(node, message, message_len, signature + 1, NULL, NULL);
+	} else {
+		// Ensure 256-bit digest before proceeding
+		if (message_len != 32) {
+			return 1;
+		}
+		return hdnode_sign_digest(node, message, signature + 1, NULL, NULL);
+	}
 }
 
 int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
