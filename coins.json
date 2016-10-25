@@ -106,7 +106,7 @@
 	"address_type_p2wpkh": null,
 	"address_type_p2wsh": null,
 	"signed_message_header": "Zcash Signed Message:\n",
-	"hash_genesis_block": "027e3758c3a65b12aa1046462b486d0a63bfa1beae327897f56c5cfb7daaae71",
+	"hash_genesis_block": "01f4137ae8aced18e017119ec1a5ddd7f29a163e84e5809eb37aa6bd736b86a2",
 	"xpub_magic": "0488b21e",
 	"xprv_magic": "0488ade4",
 	"bip44": 133,
