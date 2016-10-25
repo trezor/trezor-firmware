@@ -20,6 +20,8 @@
 #include <string.h>
 #include "coins.h"
 #include "address.h"
+#include "ecdsa.h"
+#include "base58.h"
 
 // filled CoinType Protobuf structure defined in https://github.com/trezor/trezor-common/blob/master/protob/types.proto#L133
 // address types > 0xFF represent a two-byte prefix in big-endian order
@@ -69,21 +71,32 @@ const CoinType *coinByAddressType(uint32_t address_type)
 	return 0;
 }
 
-bool coinExtractAddressType(const CoinType *coin, const uint8_t *addr, uint32_t *address_type)
+bool coinExtractAddressType(const CoinType *coin, const char *addr, uint32_t *address_type)
 {
-	if (coin->has_address_type && address_check_prefix(addr, coin->address_type)) {
+	if (!addr) return false;
+	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
+	int len = base58_decode_check(addr, addr_raw, MAX_ADDR_RAW_SIZE);
+	if (len >= 21) {
+		return coinExtractAddressTypeRaw(coin, addr_raw, address_type);
+	}
+	return false;
+}
+
+bool coinExtractAddressTypeRaw(const CoinType *coin, const uint8_t *addr_raw, uint32_t *address_type)
+{
+	if (coin->has_address_type && address_check_prefix(addr_raw, coin->address_type)) {
 		*address_type = coin->address_type;
 		return true;
 	}
-	if (coin->has_address_type_p2sh && address_check_prefix(addr, coin->address_type_p2sh)) {
+	if (coin->has_address_type_p2sh && address_check_prefix(addr_raw, coin->address_type_p2sh)) {
 		*address_type = coin->address_type_p2sh;
 		return true;
 	}
-	if (coin->has_address_type_p2wpkh && address_check_prefix(addr, coin->address_type_p2wpkh)) {
+	if (coin->has_address_type_p2wpkh && address_check_prefix(addr_raw, coin->address_type_p2wpkh)) {
 		*address_type = coin->address_type_p2wpkh;
 		return true;
 	}
-	if (coin->has_address_type_p2wsh && address_check_prefix(addr, coin->address_type_p2wsh)) {
+	if (coin->has_address_type_p2wsh && address_check_prefix(addr_raw, coin->address_type_p2wsh)) {
 		*address_type = coin->address_type_p2wsh;
 		return true;
 	}
