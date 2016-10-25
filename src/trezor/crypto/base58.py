@@ -13,8 +13,6 @@
 # This module adds shiny packaging and support for python3.
 #
 
-from .hashlib import sha256
-
 # 58 character alphabet used
 _alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -36,7 +34,7 @@ def encode(data: bytes) -> str:
         acc, mod = divmod(acc, 58)
         result += _alphabet[mod]
 
-    return ''.join([c for c in reversed(result + _alphabet[0] * (origlen - newlen))])
+    return ''.join((c for c in reversed(result + _alphabet[0] * (origlen - newlen))))
 
 
 def decode(string: str) -> bytes:
@@ -57,25 +55,31 @@ def decode(string: str) -> bytes:
         acc, mod = divmod(acc, 256)
         result.append(mod)
 
-    return bytes([b for b in reversed(result +[0] * (origlen - newlen))])
+    return bytes((b for b in reversed(result +[0] * (origlen - newlen))))
 
 
-def encode_check(data: bytes) -> str:
+def encode_check(data: bytes, digestfunc=None) -> str:
     '''
     Convert bytes to base58 encoded string, append checksum.
     '''
-    digest = sha256(sha256(data).digest()).digest()
-    return encode(data + digest[:4])
+    if digestfunc is None:
+        from .hashlib import sha256
+        digestfunc = lambda x: sha256(sha256(x).digest()).digest()[:4]
+    return encode(data + digestfunc(data))
 
-def decode_check(string: str) -> bytes:
+def decode_check(string: str, digestfunc=None) -> bytes:
     '''
     Convert base58 encoded string to bytes and verify checksum.
     '''
     result = decode(string)
-    result, check = result[:-4], result[-4:]
-    digest = sha256(sha256(result).digest()).digest()
 
-    if check != digest[:4]:
+    if digestfunc is None:
+        from .hashlib import sha256
+        digestfunc = lambda x: sha256(sha256(x).digest()).digest()[:4]
+    digestlen = len(digestfunc(b''))
+    result, check = result[:-digestlen], result[-digestlen:]
+
+    if check != digestfunc(result):
         raise ValueError('Invalid checksum')
 
     return result

@@ -5,6 +5,9 @@ import unittest
 from ubinascii import unhexlify
 
 from trezor.crypto import base58
+from trezor.crypto.hashlib import ripemd160
+
+digestfunc_graphene = lambda x: ripemd160(x).digest()[:4]
 
 class TestCryptoBase58(unittest.TestCase):
 
@@ -62,13 +65,24 @@ class TestCryptoBase58(unittest.TestCase):
         ('055ece0cadddc415b1980f001785947120acdb36fc', '3ALJH9Y951VCGcVZYAdpA3KchoP9McEj1G'),
     ]
 
+    vectors_graphene = [
+        ('02e649f63f8e8121345fd7f47d0d185a3ccaa843115cd2e9392dcd9b82263bc680', '6dumtt9swxCqwdPZBGXh9YmHoEjFFnNfwHaTqRbQTghGAY2gRz'),
+        ('021c7359cd885c0e319924d97e3980206ad64387aff54908241125b3a88b55ca16', '5725vivYpuFWbeyTifZ5KevnHyqXCi5hwHbNU9cYz1FHbFXCxX'),
+        ('02f561e0b57a552df3fa1df2d87a906b7a9fc33a83d5d15fa68a644ecb0806b49a', '6kZKHSuxqAwdCYsMvwTcipoTsNE2jmEUNBQufGYywpniBKXWZK'),
+        ('03e7595c3e6b58f907bee951dc29796f3757307e700ecf3d09307a0cc4a564eba3', '8b82mpnH8YX1E9RHnU2a2YgLTZ8ooevEGP9N15c1yFqhoBvJur'),
+    ]
+
     def test_decode_check(self):
         for a, b in self.vectors:
             self.assertEqual(base58.decode_check(b), unhexlify(a))
+        for a, b in self.vectors_graphene:
+            self.assertEqual(base58.decode_check(b, digestfunc=digestfunc_graphene), unhexlify(a))
 
     def test_encode_check(self):
         for a, b in self.vectors:
             self.assertEqual(base58.encode_check(unhexlify(a)), b)
+        for a, b in self.vectors_graphene:
+            self.assertEqual(base58.encode_check(unhexlify(a), digestfunc=digestfunc_graphene), b)
 
 if __name__ == '__main__':
     unittest.main()
