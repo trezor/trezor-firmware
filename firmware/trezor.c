@@ -37,18 +37,21 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 	for (;;) {} // loop forever
 }
 
+static uint32_t saver_counter = 0;
+
 void check_lock_screen(void)
 {
 	buttonUpdate();
 
 	// wake from screensaver on any button
 	if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
+		saver_counter = 0;
 		layoutHome();
 		return;
 	}
 
-	// button held for long enough
-	if (layoutLast == layoutHome && button.NoDown >= 500000) {
+	// button held for long enough (2 seconds)
+	if (layoutLast == layoutHome && button.NoDown >= 285000 * 2) {
 
 		layoutDialog(&bmp_icon_question, "Cancel", "Lock Device", NULL, "Do you really want to", "lock your TREZOR?", NULL, NULL, NULL, NULL);
 
@@ -74,6 +77,19 @@ void check_lock_screen(void)
 			// resume homescreen
 			layoutHome();
 		}
+	}
+
+	// if homescreen is shown for longer than 10 minutes, lock too
+	if (layoutLast == layoutHome) {
+		saver_counter++;
+		if (saver_counter > 285000 * 60 * 10) {
+			// lock the screen
+			session_clear(true);
+			layoutScreensaver();
+			saver_counter = 0;
+		}
+	} else {
+		saver_counter = 0;
 	}
 }
 
