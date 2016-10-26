@@ -1,0 +1,84 @@
+Version 1.4.1
+* Stable release, optional update
+* Support for Zcash JoinSplit transactions
+* Enable device lock after 10 minutes of inactivity
+* Enable device lock by pressing left button for 2 seconds
+* Confirm dialog for U2F counter change
+
+Version 1.4.0
+* Stable release, optional update
+* U2F support
+* Ethereum support
+* GPG decryption support
+* Zcash support
+
+Version 1.3.6
+* Stable release, optional update
+* Enable advanced transactions such as ones with REPLACE-BY-FEE and CHECKLOCKTIMEVERIFY
+* Fix message signing for altcoins
+* Message verification now shows address
+* Enable GPG signing support
+* Enable Ed25519 curve (for SSH and GPG)
+* Use separate deterministic hierarchy for NIST256P1 and Ed25519 curves
+* Users using SSH already need to regenerate their keys using the new firmware!!!
+
+Version 1.3.5
+* Stable release, optional update
+* Double size font for recovery words during the device setup
+* Optimizations for simultaneous access when more applications try communicate with the device
+
+Version 1.3.4
+* Stable release, optional update
+* Screensaver active on ClearSession message
+* Support for NIST P-256 curve
+* Updated SignIdentity to v2 format
+* Show seconds counter during PIN lockdown
+* Updated maxfee per kb for coins
+
+Version 1.3.3
+* Stable release, optional update
+* Ask for PIN on GetAddress and GetPublicKey
+* Signing speed improved
+
+Version 1.3.2
+* Stable release, optional update
+* Fix check during transaction streaming
+* Login feature via SignIdentity message
+* GetAddress for multisig shows M of N description
+* PIN checking in constant time
+
+Version 1.3.1
+* Stable release, optional update
+* Optimized signing speed
+* Enabled OP_RETURN
+* Added option to change home screen
+* Moved fee calculation before any signing
+* Made PIN delay increase immune against hardware hacking
+
+Version 1.3.0
+* Stable release, optional update
+* Added multisig support
+* Added visual validation of receiving address
+* Added ECIES encryption capabilities
+
+Version 1.2.1
+* Stable release, mandatory update
+* Added stack overflow protection
+* Added compatibility with TREZOR Bridge
+
+Version 1.2.0
+* Stable release, optional update
+* Fix false positives for fee warning
+* Better UI for signing/verifying messages
+* Smaller firmware size
+
+Version 1.1.0
+* Stable release, optional update
+* Minor UI fixes
+* Better handling of unexpected messages
+* Added AES support
+
+Version 1.0.0
+* Stable release, mandatory update
+* Added support for streaming of transactions into the device
+* Removed all current limits on size of signed transaction
