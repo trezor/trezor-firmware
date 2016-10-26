@@ -2,8 +2,10 @@
 import protobuf as p
 from micropython import const
 from .HDNodePathType import HDNodePathType
-t = p.MessageType('MultisigRedeemScriptType')
-t.add_field(1, 'pubkeys', p.EmbeddedMessage(HDNodePathType), flags=p.FLAG_REPEATED)
-t.add_field(2, 'signatures', p.BytesType, flags=p.FLAG_REPEATED)
-t.add_field(3, 'm', p.UVarintType)
-MultisigRedeemScriptType = t
+
+class MultisigRedeemScriptType(p.MessageType):
+    FIELDS = {
+        1: ('pubkeys', HDNodePathType, p.FLAG_REPEATED),
+        2: ('signatures', p.BytesType, p.FLAG_REPEATED),
+        3: ('m', p.UVarintType, 0),
+    }

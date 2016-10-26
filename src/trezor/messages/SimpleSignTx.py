@@ -4,12 +4,14 @@ from micropython import const
 from .TxInputType import TxInputType
 from .TxOutputType import TxOutputType
 from .TransactionType import TransactionType
-t = p.MessageType('SimpleSignTx')
-t.wire_type = const(16)
-t.add_field(1, 'inputs', p.EmbeddedMessage(TxInputType), flags=p.FLAG_REPEATED)
-t.add_field(2, 'outputs', p.EmbeddedMessage(TxOutputType), flags=p.FLAG_REPEATED)
-t.add_field(3, 'transactions', p.EmbeddedMessage(TransactionType), flags=p.FLAG_REPEATED)
-t.add_field(4, 'coin_name', p.UnicodeType, default=u'Bitcoin')
-t.add_field(5, 'version', p.UVarintType, default=1)
-t.add_field(6, 'lock_time', p.UVarintType, default=0)
-SimpleSignTx = t
+
+class SimpleSignTx(p.MessageType):
+    FIELDS = {
+        1: ('inputs', TxInputType, p.FLAG_REPEATED),
+        2: ('outputs', TxOutputType, p.FLAG_REPEATED),
+        3: ('transactions', TransactionType, p.FLAG_REPEATED),
+        4: ('coin_name', p.UnicodeType, 0), # default=u'Bitcoin'
+        5: ('version', p.UVarintType, 0), # default=1
+        6: ('lock_time', p.UVarintType, 0), # default=0
+    }
+    MESSAGE_WIRE_TYPE = 16

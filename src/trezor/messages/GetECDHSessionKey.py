@@ -2,9 +2,11 @@
 import protobuf as p
 from micropython import const
 from .IdentityType import IdentityType
-t = p.MessageType('GetECDHSessionKey')
-t.wire_type = const(61)
-t.add_field(1, 'identity', p.EmbeddedMessage(IdentityType))
-t.add_field(2, 'peer_public_key', p.BytesType)
-t.add_field(3, 'ecdsa_curve_name', p.UnicodeType)
-GetECDHSessionKey = t
+
+class GetECDHSessionKey(p.MessageType):
+    FIELDS = {
+        1: ('identity', IdentityType, 0),
+        2: ('peer_public_key', p.BytesType, 0),
+        3: ('ecdsa_curve_name', p.UnicodeType, 0),
+    }
+    MESSAGE_WIRE_TYPE = 61

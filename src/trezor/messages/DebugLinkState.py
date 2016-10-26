@@ -2,16 +2,18 @@
 import protobuf as p
 from micropython import const
 from .HDNodeType import HDNodeType
-t = p.MessageType('DebugLinkState')
-t.wire_type = const(102)
-t.add_field(1, 'layout', p.BytesType)
-t.add_field(2, 'pin', p.UnicodeType)
-t.add_field(3, 'matrix', p.UnicodeType)
-t.add_field(4, 'mnemonic', p.UnicodeType)
-t.add_field(5, 'node', p.EmbeddedMessage(HDNodeType))
-t.add_field(6, 'passphrase_protection', p.BoolType)
-t.add_field(7, 'reset_word', p.UnicodeType)
-t.add_field(8, 'reset_entropy', p.BytesType)
-t.add_field(9, 'recovery_fake_word', p.UnicodeType)
-t.add_field(10, 'recovery_word_pos', p.UVarintType)
-DebugLinkState = t
+
+class DebugLinkState(p.MessageType):
+    FIELDS = {
+        1: ('layout', p.BytesType, 0),
+        2: ('pin', p.UnicodeType, 0),
+        3: ('matrix', p.UnicodeType, 0),
+        4: ('mnemonic', p.UnicodeType, 0),
+        5: ('node', HDNodeType, 0),
+        6: ('passphrase_protection', p.BoolType, 0),
+        7: ('reset_word', p.UnicodeType, 0),
+        8: ('reset_entropy', p.BytesType, 0),
+        9: ('recovery_fake_word', p.UnicodeType, 0),
+        10: ('recovery_word_pos', p.UVarintType, 0),
+    }
+    MESSAGE_WIRE_TYPE = 102

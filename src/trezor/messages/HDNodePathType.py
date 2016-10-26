@@ -2,7 +2,9 @@
 import protobuf as p
 from micropython import const
 from .HDNodeType import HDNodeType
-t = p.MessageType('HDNodePathType')
-t.add_field(1, 'node', p.EmbeddedMessage(HDNodeType), flags=p.FLAG_REQUIRED)
-t.add_field(2, 'address_n', p.UVarintType, flags=p.FLAG_REPEATED)
-HDNodePathType = t
+
+class HDNodePathType(p.MessageType):
+    FIELDS = {
+        1: ('node', HDNodeType, 0), # required
+        2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+    }

@@ -2,24 +2,26 @@
 import protobuf as p
 from micropython import const
 from .CoinType import CoinType
-t = p.MessageType('Features')
-t.wire_type = const(17)
-t.add_field(1, 'vendor', p.UnicodeType)
-t.add_field(2, 'major_version', p.UVarintType)
-t.add_field(3, 'minor_version', p.UVarintType)
-t.add_field(4, 'patch_version', p.UVarintType)
-t.add_field(5, 'bootloader_mode', p.BoolType)
-t.add_field(6, 'device_id', p.UnicodeType)
-t.add_field(7, 'pin_protection', p.BoolType)
-t.add_field(8, 'passphrase_protection', p.BoolType)
-t.add_field(9, 'language', p.UnicodeType)
-t.add_field(10, 'label', p.UnicodeType)
-t.add_field(11, 'coins', p.EmbeddedMessage(CoinType), flags=p.FLAG_REPEATED)
-t.add_field(12, 'initialized', p.BoolType)
-t.add_field(13, 'revision', p.BytesType)
-t.add_field(14, 'bootloader_hash', p.BytesType)
-t.add_field(15, 'imported', p.BoolType)
-t.add_field(16, 'pin_cached', p.BoolType)
-t.add_field(17, 'passphrase_cached', p.BoolType)
-t.add_field(18, 'firmware_present', p.BoolType)
-Features = t
+
+class Features(p.MessageType):
+    FIELDS = {
+        1: ('vendor', p.UnicodeType, 0),
+        2: ('major_version', p.UVarintType, 0),
+        3: ('minor_version', p.UVarintType, 0),
+        4: ('patch_version', p.UVarintType, 0),
+        5: ('bootloader_mode', p.BoolType, 0),
+        6: ('device_id', p.UnicodeType, 0),
+        7: ('pin_protection', p.BoolType, 0),
+        8: ('passphrase_protection', p.BoolType, 0),
+        9: ('language', p.UnicodeType, 0),
+        10: ('label', p.UnicodeType, 0),
+        11: ('coins', CoinType, p.FLAG_REPEATED),
+        12: ('initialized', p.BoolType, 0),
+        13: ('revision', p.BytesType, 0),
+        14: ('bootloader_hash', p.BytesType, 0),
+        15: ('imported', p.BoolType, 0),
+        16: ('pin_cached', p.BoolType, 0),
+        17: ('passphrase_cached', p.BoolType, 0),
+        18: ('firmware_present', p.BoolType, 0),
+    }
+    MESSAGE_WIRE_TYPE = 17

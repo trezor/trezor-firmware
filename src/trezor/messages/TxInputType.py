@@ -2,13 +2,15 @@
 import protobuf as p
 from micropython import const
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
-t = p.MessageType('TxInputType')
-t.add_field(1, 'address_n', p.UVarintType, flags=p.FLAG_REPEATED)
-t.add_field(2, 'prev_hash', p.BytesType, flags=p.FLAG_REQUIRED)
-t.add_field(3, 'prev_index', p.UVarintType, flags=p.FLAG_REQUIRED)
-t.add_field(4, 'script_sig', p.BytesType)
-t.add_field(5, 'sequence', p.UVarintType, default=4294967295)
-t.add_field(6, 'script_type', p.UVarintType, default=0)
-t.add_field(7, 'multisig', p.EmbeddedMessage(MultisigRedeemScriptType))
-t.add_field(8, 'amount', p.UVarintType)
-TxInputType = t
+
+class TxInputType(p.MessageType):
+    FIELDS = {
+        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+        2: ('prev_hash', p.BytesType, 0), # required
+        3: ('prev_index', p.UVarintType, 0), # required
+        4: ('script_sig', p.BytesType, 0),
+        5: ('sequence', p.UVarintType, 0), # default=4294967295
+        6: ('script_type', p.UVarintType, 0), # default=0
+        7: ('multisig', MultisigRedeemScriptType, 0),
+        8: ('amount', p.UVarintType, 0),
+    }

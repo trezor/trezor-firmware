@@ -2,16 +2,18 @@
 import protobuf as p
 from micropython import const
 from .HDNodeType import HDNodeType
-t = p.MessageType('Storage')
-t.add_field(1, 'version', p.UVarintType, flags=p.FLAG_REQUIRED)
-t.add_field(2, 'node', p.EmbeddedMessage(HDNodeType))
-t.add_field(3, 'mnemonic', p.UnicodeType)
-t.add_field(4, 'passphrase_protection', p.BoolType)
-t.add_field(5, 'pin_failed_attempts', p.UVarintType)
-t.add_field(6, 'pin', p.UnicodeType)
-t.add_field(7, 'language', p.UnicodeType)
-t.add_field(8, 'label', p.UnicodeType)
-t.add_field(9, 'imported', p.BoolType)
-t.add_field(10, 'homescreen', p.BytesType)
-t.add_field(11, 'u2f_counter', p.UVarintType)
-Storage = t
+
+class Storage(p.MessageType):
+    FIELDS = {
+        1: ('version', p.UVarintType, 0), # required
+        2: ('node', HDNodeType, 0),
+        3: ('mnemonic', p.UnicodeType, 0),
+        4: ('passphrase_protection', p.BoolType, 0),
+        5: ('pin_failed_attempts', p.UVarintType, 0),
+        6: ('pin', p.UnicodeType, 0),
+        7: ('language', p.UnicodeType, 0),
+        8: ('label', p.UnicodeType, 0),
+        9: ('imported', p.BoolType, 0),
+        10: ('homescreen', p.BytesType, 0),
+        11: ('u2f_counter', p.UVarintType, 0),
+    }

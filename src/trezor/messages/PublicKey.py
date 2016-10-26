@@ -2,8 +2,10 @@
 import protobuf as p
 from micropython import const
 from .HDNodeType import HDNodeType
-t = p.MessageType('PublicKey')
-t.wire_type = const(12)
-t.add_field(1, 'node', p.EmbeddedMessage(HDNodeType), flags=p.FLAG_REQUIRED)
-t.add_field(2, 'xpub', p.UnicodeType)
-PublicKey = t
+
+class PublicKey(p.MessageType):
+    FIELDS = {
+        1: ('node', HDNodeType, 0), # required
+        2: ('xpub', p.UnicodeType, 0),
+    }
+    MESSAGE_WIRE_TYPE = 12

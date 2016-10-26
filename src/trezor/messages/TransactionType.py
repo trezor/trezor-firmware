@@ -4,14 +4,16 @@ from micropython import const
 from .TxInputType import TxInputType
 from .TxOutputBinType import TxOutputBinType
 from .TxOutputType import TxOutputType
-t = p.MessageType('TransactionType')
-t.add_field(1, 'version', p.UVarintType)
-t.add_field(2, 'inputs', p.EmbeddedMessage(TxInputType), flags=p.FLAG_REPEATED)
-t.add_field(3, 'bin_outputs', p.EmbeddedMessage(TxOutputBinType), flags=p.FLAG_REPEATED)
-t.add_field(4, 'lock_time', p.UVarintType)
-t.add_field(5, 'outputs', p.EmbeddedMessage(TxOutputType), flags=p.FLAG_REPEATED)
-t.add_field(6, 'inputs_cnt', p.UVarintType)
-t.add_field(7, 'outputs_cnt', p.UVarintType)
-t.add_field(8, 'extra_data', p.BytesType)
-t.add_field(9, 'extra_data_len', p.UVarintType)
-TransactionType = t
+
+class TransactionType(p.MessageType):
+    FIELDS = {
+        1: ('version', p.UVarintType, 0),
+        2: ('inputs', TxInputType, p.FLAG_REPEATED),
+        3: ('bin_outputs', TxOutputBinType, p.FLAG_REPEATED),
+        4: ('lock_time', p.UVarintType, 0),
+        5: ('outputs', TxOutputType, p.FLAG_REPEATED),
+        6: ('inputs_cnt', p.UVarintType, 0),
+        7: ('outputs_cnt', p.UVarintType, 0),
+        8: ('extra_data', p.BytesType, 0),
+        9: ('extra_data_len', p.UVarintType, 0),
+    }
