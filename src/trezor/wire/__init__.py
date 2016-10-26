@@ -91,8 +91,9 @@ async def read_message(session_id, *exp_types):
 
 async def write_message(session_id, pbuf_message):
     log.info(__name__, 'session %d: write %s', session_id, pbuf_message)
-    msg_data = pbuf_message.dumps()
-    msg_type = pbuf_message.message_type.wire_type
+    pbuf_type = pbuf_message.__class__
+    msg_data = pbuf_type.dumps(pbuf_message)
+    msg_type = pbuf_type.MESSAGE_WIRE_TYPE
 
     if session_id == SESSION_V1:
         encode_wire_v1_message(msg_type, msg_data, report_writer)
@@ -157,7 +158,7 @@ def protobuf_handler(msg_type, data_len, session_id, callback, *args):
     pbuf_type = get_protobuf_type(msg_type)
     builder = build_protobuf_message(pbuf_type, finalizer)
     builder.send(None)
-    return pbuf_type.load(builder)
+    return pbuf_type.load(target=builder)
 
 
 def _handle_open_session():
@@ -182,7 +183,7 @@ def _dispatch_and_build_protobuf(msg_type, data_len, session_id, exp_types, futu
         pbuf_type = get_protobuf_type(msg_type)
         builder = build_protobuf_message(pbuf_type, future.resolve)
         builder.send(None)
-        return pbuf_type.load(builder)
+        return pbuf_type.load(target=builder)
     else:
         from trezor.messages.FailureType import UnexpectedMessage
         future.resolve(FailureError(UnexpectedMessage, 'Unexpected message'))
