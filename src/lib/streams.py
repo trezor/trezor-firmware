@@ -38,13 +38,13 @@ class StreamReader:
         self._buffer = buf
         self._ofs = ofs
 
-    def with_limit(self, n):
+    def set_limit(self, n):
         '''
         Makes this reader to signal EOF after reading `n` bytes.
 
         Returns the number of bytes that the reader can read after
         raising EOF (intended to be restored with another call to
-        `with_limit`).
+        `set_limit`).
         '''
         if self._limit is not None:
             rem = self._limit - n
