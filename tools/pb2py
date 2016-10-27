@@ -9,7 +9,7 @@ from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 def process_type(t, cls, msg_id, indexfile):
     print("  * type %s" % t)
 
-    imports = ["import protobuf as p", "from micropython import const", ]
+    imports = ["import protobuf as p", ]
 
     out = ["", "class %s(p.MessageType):" % t, ]
 
@@ -85,7 +85,7 @@ def process_type(t, cls, msg_id, indexfile):
     if msg_id is not None:
         out.append("    MESSAGE_WIRE_TYPE = %d" % msg_id)
         if indexfile is not None:
-            indexfile.write("%s = const(%d)\n" % (t, msg_id))
+            indexfile.write("%s = %d\n" % (t, msg_id))
 
     return imports + out
 
