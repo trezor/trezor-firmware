@@ -389,6 +389,11 @@ class ProtocolMixin(object):
         if n[0] == 'm':
             n = n[1:]
 
+        # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
+        coins = { "Bitcoin": 0, "Testnet": 1, "Namecoin": 7, "Litecoin": 2, "Dogecoin": 3, "Dash": 5, "Zcash": 133, }
+        if n[0] in coins:
+            n = ["44'", "%d'" % coins[n[0]] ] + n[1:]
+
         path = []
         for x in n:
             prime = False
