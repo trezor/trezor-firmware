@@ -384,6 +384,11 @@ class ProtocolMixin(object):
             return []
 
         n = n.split('/')
+
+        # m/a/b/c => a/b/c
+        if n[0] == 'm':
+            n = n[1:]
+
         path = []
         for x in n:
             prime = False
