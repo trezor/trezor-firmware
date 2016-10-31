@@ -62,6 +62,10 @@ static uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 // Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
 #define KEY_PATH_ENTRIES (1 + KEY_PATH_LEN / sizeof(uint32_t))
 
+// Defined as UsbSignHandler.BOGUS_APP_ID_HASH
+// in https://github.com/google/u2f-ref-code/blob/master/u2f-chrome-extension/usbsignhandler.js#L118
+#define BOGUS_APPID "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
 // Auth/Register request state machine
 typedef enum {
 	INIT = 0,
@@ -569,10 +573,14 @@ void u2f_register(const APDU *a)
 		getDerivedNode(NULL, 0);
 		// error: testof-user-presence is required
 		buttonUpdate(); // Clear button state
-		const char *appname;
-		const BITMAP *appicon;
-		getReadableAppId(req->appId, &appname, &appicon);
-		layoutU2FDialog("Register", appname, appicon);
+		if (0 == memcmp(req->appId, BOGUS_APPID, U2F_APPID_SIZE)) {
+			layoutDialog(&bmp_icon_warning, NULL, "OK", NULL, "Another U2F device", "was used to register", "in this application.", NULL, NULL, NULL);
+		} else {
+			const char *appname;
+			const BITMAP *appicon;
+			getReadableAppId(req->appId, &appname, &appicon);
+			layoutU2FDialog("Register", appname, appicon);
+		}
 		last_req_state = REG;
 	}
 

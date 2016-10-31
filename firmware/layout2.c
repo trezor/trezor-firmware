@@ -389,5 +389,5 @@ void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appico
 	if (!appicon) {
 		appicon = &bmp_icon_question;
 	}
-	layoutDialog(appicon, NULL, verb, NULL, verb, "U2F security key?", "", appname, "", NULL);
+	layoutDialog(appicon, NULL, verb, NULL, verb, "U2F security key?", NULL, appname, NULL, NULL);
 }
