@@ -67,7 +67,7 @@ void next_word(void) {
 	msg_write(MessageType_MessageType_WordRequest, &resp);
 }
 
-void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_protection, const char *language, const char *label, bool _enforce_wordlist)
+void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_protection, const char *language, const char *label, bool _enforce_wordlist, uint32_t u2f_counter)
 {
 	if (_word_count != 12 && _word_count != 18 && _word_count != 24) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid word count (has to be 12, 18 or 24 bits)");
@@ -88,6 +88,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	storage.passphrase_protection = passphrase_protection;
 	storage_setLanguage(language);
 	storage_setLabel(label);
+	storage_setU2FCounter(u2f_counter);
 
 	uint32_t i;
 	for (i = 0; i < word_count; i++) {

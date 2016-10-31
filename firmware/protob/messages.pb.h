@@ -617,6 +617,8 @@ typedef struct _LoadDevice {
     char label[33];
     bool has_skip_checksum;
     bool skip_checksum;
+    bool has_u2f_counter;
+    uint32_t u2f_counter;
 } LoadDevice;
 
 typedef struct {
@@ -674,6 +676,8 @@ typedef struct _RecoveryDevice {
     char label[33];
     bool has_enforce_wordlist;
     bool enforce_wordlist;
+    bool has_u2f_counter;
+    uint32_t u2f_counter;
 } RecoveryDevice;
 
 typedef struct _ResetDevice {
@@ -689,6 +693,8 @@ typedef struct _ResetDevice {
     char language[17];
     bool has_label;
     char label[33];
+    bool has_u2f_counter;
+    uint32_t u2f_counter;
 } ResetDevice;
 
 typedef struct _SetU2FCounter {
@@ -863,11 +869,11 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Address_init_default                     {""}
 #define EthereumAddress_init_default             {{0, {0}}}
 #define WipeDevice_init_default                  {0}
-#define LoadDevice_init_default                  {false, "", false, HDNodeType_init_default, false, "", false, 0, false, "english", false, "", false, 0}
-#define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, ""}
+#define LoadDevice_init_default                  {false, "", false, HDNodeType_init_default, false, "", false, 0, false, "english", false, "", false, 0, false, 0}
+#define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, "", false, 0}
 #define EntropyRequest_init_default              {0}
 #define EntropyAck_init_default                  {false, {0, {0}}}
-#define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0}
+#define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0, false, 0}
 #define WordRequest_init_default                 {0}
 #define WordAck_init_default                     {""}
 #define SignMessage_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin"}
@@ -929,11 +935,11 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Address_init_zero                        {""}
 #define EthereumAddress_init_zero                {{0, {0}}}
 #define WipeDevice_init_zero                     {0}
-#define LoadDevice_init_zero                     {false, "", false, HDNodeType_init_zero, false, "", false, 0, false, "", false, "", false, 0}
-#define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, false, "", false, ""}
+#define LoadDevice_init_zero                     {false, "", false, HDNodeType_init_zero, false, "", false, 0, false, "", false, "", false, 0, false, 0}
+#define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, 0}
 #define EntropyRequest_init_zero                 {0}
 #define EntropyAck_init_zero                     {false, {0, {0}}}
-#define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, false, "", false, "", false, 0}
+#define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0}
 #define WordRequest_init_zero                    {0}
 #define WordAck_init_zero                        {""}
 #define SignMessage_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, ""}
@@ -1085,6 +1091,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define LoadDevice_language_tag                  5
 #define LoadDevice_label_tag                     6
 #define LoadDevice_skip_checksum_tag             7
+#define LoadDevice_u2f_counter_tag               8
 #define MessageSignature_address_tag             1
 #define MessageSignature_signature_tag           2
 #define PassphraseAck_passphrase_tag             1
@@ -1102,12 +1109,14 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define RecoveryDevice_language_tag              4
 #define RecoveryDevice_label_tag                 5
 #define RecoveryDevice_enforce_wordlist_tag      6
+#define RecoveryDevice_u2f_counter_tag           7
 #define ResetDevice_display_random_tag           1
 #define ResetDevice_strength_tag                 2
 #define ResetDevice_passphrase_protection_tag    3
 #define ResetDevice_pin_protection_tag           4
 #define ResetDevice_language_tag                 5
 #define ResetDevice_label_tag                    6
+#define ResetDevice_u2f_counter_tag              7
 #define SetU2FCounter_u2f_counter_tag            1
 #define SignIdentity_identity_tag                1
 #define SignIdentity_challenge_hidden_tag        2
@@ -1168,11 +1177,11 @@ extern const pb_field_t EthereumGetAddress_fields[3];
 extern const pb_field_t Address_fields[2];
 extern const pb_field_t EthereumAddress_fields[2];
 extern const pb_field_t WipeDevice_fields[1];
-extern const pb_field_t LoadDevice_fields[8];
-extern const pb_field_t ResetDevice_fields[7];
+extern const pb_field_t LoadDevice_fields[9];
+extern const pb_field_t ResetDevice_fields[8];
 extern const pb_field_t EntropyRequest_fields[1];
 extern const pb_field_t EntropyAck_fields[2];
-extern const pb_field_t RecoveryDevice_fields[7];
+extern const pb_field_t RecoveryDevice_fields[8];
 extern const pb_field_t WordRequest_fields[1];
 extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
@@ -1236,11 +1245,11 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define Address_size                             43
 #define EthereumAddress_size                     22
 #define WipeDevice_size                          0
-#define LoadDevice_size                          (320 + HDNodeType_size)
-#define ResetDevice_size                         66
+#define LoadDevice_size                          (326 + HDNodeType_size)
+#define ResetDevice_size                         72
 #define EntropyRequest_size                      0
 #define EntropyAck_size                          131
-#define RecoveryDevice_size                      66
+#define RecoveryDevice_size                      72
 #define WordRequest_size                         0
 #define WordAck_size                             14
 #define SignMessage_size                         1094

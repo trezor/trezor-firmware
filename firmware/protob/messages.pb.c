@@ -172,7 +172,7 @@ const pb_field_t WipeDevice_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t LoadDevice_fields[8] = {
+const pb_field_t LoadDevice_fields[9] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, LoadDevice, mnemonic, mnemonic, 0),
     PB_FIELD2(  2, MESSAGE , OPTIONAL, STATIC  , OTHER, LoadDevice, node, mnemonic, &HDNodeType_fields),
     PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, LoadDevice, pin, node, 0),
@@ -180,16 +180,18 @@ const pb_field_t LoadDevice_fields[8] = {
     PB_FIELD2(  5, STRING  , OPTIONAL, STATIC  , OTHER, LoadDevice, language, passphrase_protection, &LoadDevice_language_default),
     PB_FIELD2(  6, STRING  , OPTIONAL, STATIC  , OTHER, LoadDevice, label, language, 0),
     PB_FIELD2(  7, BOOL    , OPTIONAL, STATIC  , OTHER, LoadDevice, skip_checksum, label, 0),
+    PB_FIELD2(  8, UINT32  , OPTIONAL, STATIC  , OTHER, LoadDevice, u2f_counter, skip_checksum, 0),
     PB_LAST_FIELD
 };
 
-const pb_field_t ResetDevice_fields[7] = {
+const pb_field_t ResetDevice_fields[8] = {
     PB_FIELD2(  1, BOOL    , OPTIONAL, STATIC  , FIRST, ResetDevice, display_random, display_random, 0),
     PB_FIELD2(  2, UINT32  , OPTIONAL, STATIC  , OTHER, ResetDevice, strength, display_random, &ResetDevice_strength_default),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, ResetDevice, passphrase_protection, strength, 0),
     PB_FIELD2(  4, BOOL    , OPTIONAL, STATIC  , OTHER, ResetDevice, pin_protection, passphrase_protection, 0),
     PB_FIELD2(  5, STRING  , OPTIONAL, STATIC  , OTHER, ResetDevice, language, pin_protection, &ResetDevice_language_default),
     PB_FIELD2(  6, STRING  , OPTIONAL, STATIC  , OTHER, ResetDevice, label, language, 0),
+    PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, ResetDevice, u2f_counter, label, 0),
     PB_LAST_FIELD
 };
 
@@ -202,13 +204,14 @@ const pb_field_t EntropyAck_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t RecoveryDevice_fields[7] = {
+const pb_field_t RecoveryDevice_fields[8] = {
     PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, RecoveryDevice, word_count, word_count, 0),
     PB_FIELD2(  2, BOOL    , OPTIONAL, STATIC  , OTHER, RecoveryDevice, passphrase_protection, word_count, 0),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, RecoveryDevice, pin_protection, passphrase_protection, 0),
     PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, language, pin_protection, &RecoveryDevice_language_default),
     PB_FIELD2(  5, STRING  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, label, language, 0),
     PB_FIELD2(  6, BOOL    , OPTIONAL, STATIC  , OTHER, RecoveryDevice, enforce_wordlist, label, 0),
+    PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, u2f_counter, enforce_wordlist, 0),
     PB_LAST_FIELD
 };
 

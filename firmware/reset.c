@@ -33,7 +33,7 @@ static uint32_t strength;
 static uint8_t  int_entropy[32];
 static bool     awaiting_entropy = false;
 
-void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label)
+void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label, uint32_t u2f_counter)
 {
 	if (_strength != 128 && _strength != 192 && _strength != 256) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid strength (has to be 128, 192 or 256 bits)");
@@ -70,6 +70,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	storage.passphrase_protection = passphrase_protection;
 	storage_setLanguage(language);
 	storage_setLabel(label);
+	storage_setU2FCounter(u2f_counter);
 
 	EntropyRequest resp;
 	memset(&resp, 0, sizeof(EntropyRequest));

@@ -290,6 +290,10 @@ void storage_loadDevice(LoadDevice *msg)
 	if (msg->has_label) {
 		storage_setLabel(msg->label);
 	}
+
+	if (msg->has_u2f_counter) {
+		storage_setU2FCounter(msg->u2f_counter);
+	}
 }
 
 void storage_setLabel(const char *label)
