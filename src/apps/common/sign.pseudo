@@ -1,0 +1,91 @@
+from ..common.seed import get_root_node
+
+import coins
+
+async def getPrevTxOutputValue(prev_hash, prev_index):
+
+    # STAGE_REQUEST_2_PREV_META
+    tx = await TxRequest(type=META, hash=prev_hash)
+    tx_hash = TxHash()
+
+    # STAGE_REQUEST_2_PREV_INPUT
+    msgs = ((i, TxRequest(type=INPUT, hash=prev_hash, index=i)) for i in range(tx.inputs_count))
+    for _, tx_input in await msgs:
+        tx_hash.update(serialize(tx_input))
+
+    # STAGE_REQUEST_2_PREV_OUTPUT
+    msgs = ((i, TxRequest(type=OUTPUT, hash=prev_hash, index=i)) for i in range(tx.outputs_count))
+    for o, tx_output in await msgs:
+        tx_hash.update(serialize(tx_output))
+        if o == prev_index:
+            total_spend += tx_output.value
+
+    # TODO: EXTRADATA
+
+    if tx_hash.digest() != prev_hash:
+        raise Exception('PrevTx mismatch')
+
+
+async def doSignTx(SignTx tx):
+
+    session_id = 0
+    coin = coins.by_name(tx.coin_name)
+    node = await get_root_node(session_id)
+
+    ins = tx.inputs_count
+    outs = tx.outputs_count
+    ver = tx.version
+    lock = tx.lock_time
+
+    total_spend = 0
+
+    # STAGE_REQUEST_1_INPUT
+    checktx_hash = TxHash()
+    msgs1 = ((i, TxRequest(type=INPUT, index=i)) for i in range(ins))
+    for _, input in await msgs1:
+        checktx_hash.update(serialize(input))
+        total_spend += await getTxPrevOutputValue(input.prev_hash, input.prev_index)
+
+    # STAGE_REQUEST_3_OUTPUT
+    msgs1 = ((i, TxRequest(type=OUTPUT, index=i)) for i in range(outs))
+    for output in await msgs1:
+        checktx_hash.update(serialize(output))
+        # display output
+        # confirm output
+
+    # Check tx fee
+    # Ask for confirmation
+
+    signed_tx = TxHash()
+    checked_tx = TxHash()
+
+    msgs1 = ((i, TxRequest(type=INPUT, index=i)) for i in range(ins))
+    for i1, input1 in await msgs1:
+
+        # STAGE_REQUEST_4_INPUT
+        msgs2 = ((i, TxRequest(type=INPUT, index=i)) for i in range(ins))
+        for i2, input2 in await msgs2:
+            if i1 == i2:
+                signing_key = extract_key()
+                fill_scriptsig_with_signature()
+
+            signed_tx.update(serialize(input1))
+            checked_tx.update(serialize(input1))
+
+        # STAGE_REQUEST_4_OUTPUT
+        msgs2 = ((i, TxRequest(type=OUTPUT, index=i)) for i in range(outs))
+        for _, output in await msgs2:
+            signed_tx.update(serialize(output))
+            checked_tx.update(serialize(output))
+
+        if check_tx.digest() != checked_tx.digest():
+            raise Exception('CheckTx mismatch')
+
+        yield sign(signing_key, signed_tx.digest())
+
+    # STAGE_REQUEST_5_OUTPUT
+    msgs1 = ((i, TxRequest(type=OUTPUT, index=i)) for i in range(outs))
+    for _, output in await msgs1:
+        if output.is_change_address():
+            output.rewrite_change()
+        yield output
