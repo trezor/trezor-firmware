@@ -105,6 +105,14 @@ void bn_lshift(bignum256 *a);
 
 void bn_rshift(bignum256 *a);
 
+void bn_setbit(bignum256 *a, uint8_t bit);
+
+void bn_clearbit(bignum256 *a, uint8_t bit);
+
+uint32_t bn_testbit(bignum256 *a, uint8_t bit);
+
+void bn_xor(bignum256 *a, const bignum256 *b, const bignum256 *c);
+
 void bn_mult_half(bignum256 *x, const bignum256 *prime);
 
 void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime);

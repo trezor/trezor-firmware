@@ -296,6 +296,33 @@ void bn_rshift(bignum256 *a)
 	a->val[8] >>= 1;
 }
 
+// sets bit in bignum
+void bn_setbit(bignum256 *a, uint8_t bit)
+{
+	a->val[bit / 30] |= (1 << (bit % 30));
+}
+
+// clears bit in bignum
+void bn_clearbit(bignum256 *a, uint8_t bit)
+{
+	a->val[bit / 30] &= ~(1 << (bit % 30));
+}
+
+// tests bit in bignum
+uint32_t bn_testbit(bignum256 *a, uint8_t bit)
+{
+	return a->val[bit / 30] & (1 << (bit % 30));
+}
+
+// a = b ^ c
+void bn_xor(bignum256 *a, const bignum256 *b, const bignum256 *c)
+{
+	int i;
+	for (i = 0; i < 9; i++) {
+		a->val[i] = b->val[i] ^ c->val[i];
+	}
+}
+
 // multiply x by 1/2 modulo prime.
 // it computes x = (x & 1) ? (x + prime) >> 1 : x >> 1.
 // assumes x is normalized.
