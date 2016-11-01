@@ -10,7 +10,7 @@
 #include "trezor-crypto/sha3.h"
 
 #define HASH_SHA3_512_BLOCK_SIZE   128
-#define HASH_SHA3_512_DIGEST_SIZE  64
+#define HASH_SHA3_512_DIGEST_SIZE  sha3_512_hash_size
 
 typedef struct _mp_obj_Sha3_512_t {
     mp_obj_base_t base;

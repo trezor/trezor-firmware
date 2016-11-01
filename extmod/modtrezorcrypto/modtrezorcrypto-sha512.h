@@ -9,8 +9,8 @@
 
 #include "trezor-crypto/sha2.h"
 
-#define HASH_SHA512_BLOCK_SIZE   128
-#define HASH_SHA512_DIGEST_SIZE  64
+#define HASH_SHA512_BLOCK_SIZE   SHA512_BLOCK_LENGTH
+#define HASH_SHA512_DIGEST_SIZE  SHA512_DIGEST_LENGTH
 
 typedef struct _mp_obj_Sha512_t {
     mp_obj_base_t base;

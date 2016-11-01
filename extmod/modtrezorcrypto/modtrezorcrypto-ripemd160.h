@@ -9,8 +9,8 @@
 
 #include "trezor-crypto/ripemd160.h"
 
-#define HASH_RIPEMD160_BLOCK_SIZE   64
-#define HASH_RIPEMD160_DIGEST_SIZE  20
+#define HASH_RIPEMD160_BLOCK_SIZE   RIPEMD160_BLOCK_LENGTH
+#define HASH_RIPEMD160_DIGEST_SIZE  RIPEMD160_DIGEST_LENGTH
 
 typedef struct _mp_obj_Ripemd160_t {
     mp_obj_base_t base;
