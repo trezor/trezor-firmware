@@ -19,17 +19,24 @@ typedef struct _mp_obj_Blake2s_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Blake2s_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.blake2s(data: bytes=None) -> Blake2s:
+/// def trezor.crypto.hashlib.blake2s(data: bytes=None, key: bytes=None) -> Blake2s:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Blake2s_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 0, 1, false);
+    mp_arg_check_num(n_args, n_kw, 0, 2, false);
     mp_obj_Blake2s_t *o = m_new_obj(mp_obj_Blake2s_t);
     o->base.type = type;
-    blake2s_Init(&(o->ctx), BLAKE2S_OUTBYTES);
-    // constructor called with bytes/str as first parameter
-    if (n_args == 1) {
+    // constructor called with key argument set
+    if (n_args == 2) {
+        mp_buffer_info_t key;
+        mp_get_buffer_raise(args[1], &key, MP_BUFFER_READ);
+        blake2s_InitKey(&(o->ctx), BLAKE2S_OUTBYTES, key.buf, key.len);
+    } else {
+        blake2s_Init(&(o->ctx), BLAKE2S_OUTBYTES);
+    }
+    // constructor called with data argument set
+    if (n_args >= 1) {
         mod_TrezorCrypto_Blake2s_update(MP_OBJ_FROM_PTR(o), args[0]);
     }
     return MP_OBJ_FROM_PTR(o);
