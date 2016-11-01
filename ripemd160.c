@@ -70,7 +70,7 @@ void ripemd160_Init(RIPEMD160_CTX *ctx)
 /*
  * Process one block
  */
-void ripemd160_process( RIPEMD160_CTX *ctx, const uint8_t data[64] )
+void ripemd160_process( RIPEMD160_CTX *ctx, const uint8_t data[RIPEMD160_BLOCK_LENGTH] )
 {
     uint32_t A, B, C, D, E, Ap, Bp, Cp, Dp, Ep, X[16];
 
@@ -260,7 +260,7 @@ void ripemd160_Update( RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen )
         return;
 
     left = ctx->total[0] & 0x3F;
-    fill = 64 - left;
+    fill = RIPEMD160_BLOCK_LENGTH - left;
 
     ctx->total[0] += (uint32_t) ilen;
     ctx->total[0] &= 0xFFFFFFFF;
@@ -277,11 +277,11 @@ void ripemd160_Update( RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen )
         left = 0;
     }
 
-    while( ilen >= 64 )
+    while( ilen >= RIPEMD160_BLOCK_LENGTH )
     {
         ripemd160_process( ctx, input );
-        input += 64;
-        ilen  -= 64;
+        input += RIPEMD160_BLOCK_LENGTH;
+        ilen  -= RIPEMD160_BLOCK_LENGTH;
     }
 
     if( ilen > 0 )
@@ -290,7 +290,7 @@ void ripemd160_Update( RIPEMD160_CTX *ctx, const uint8_t *input, uint32_t ilen )
     }
 }
 
-static const uint8_t ripemd160_padding[64] =
+static const uint8_t ripemd160_padding[RIPEMD160_BLOCK_LENGTH] =
 {
  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -301,7 +301,7 @@ static const uint8_t ripemd160_padding[64] =
 /*
  * RIPEMD-160 final digest
  */
-void ripemd160_Final( RIPEMD160_CTX *ctx, uint8_t output[20] )
+void ripemd160_Final( RIPEMD160_CTX *ctx, uint8_t output[RIPEMD160_DIGEST_LENGTH] )
 {
     uint32_t last, padn;
     uint32_t high, low;
@@ -330,7 +330,7 @@ void ripemd160_Final( RIPEMD160_CTX *ctx, uint8_t output[20] )
 /*
  * output = RIPEMD-160( input buffer )
  */
-void ripemd160(const uint8_t *msg, uint32_t msg_len, uint8_t hash[20])
+void ripemd160(const uint8_t *msg, uint32_t msg_len, uint8_t hash[RIPEMD160_DIGEST_LENGTH])
 {
     RIPEMD160_CTX ctx;
     ripemd160_Init( &ctx );
