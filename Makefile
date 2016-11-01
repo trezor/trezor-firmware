@@ -47,6 +47,7 @@ SRCS  += sha3.c
 SRCS  += aescrypt.c aeskey.c aestab.c aes_modes.c
 SRCS  += ed25519-donna/ed25519.c
 SRCS  += curve25519-donna/curve25519.c
+SRCS  += blake2s.c
 
 OBJS   = $(SRCS:.c=.o)
 

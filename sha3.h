@@ -67,6 +67,9 @@ void sha3_Final(SHA3_CTX *ctx, unsigned char* result);
 void keccak_Final(SHA3_CTX *ctx, unsigned char* result);
 #endif
 
+void sha3_256(const unsigned char* data, size_t len, unsigned char* digest);
+void sha3_512(const unsigned char* data, size_t len, unsigned char* digest);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
