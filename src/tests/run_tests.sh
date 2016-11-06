@@ -1,10 +1,10 @@
 #!/bin/bash
 results=()
 error=0
-if [ -z "$1" ]; then
+if [ -z "$*" ]; then
     list="test_*.py"
 else
-    list="$1"
+    list="$*"
 fi
 for i in $list; do
    echo

@@ -50,21 +50,25 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_512_update_obj, mod_TrezorCrypto_Sha3_512_update);
 
-/// def trezor.crypto.hashlib.Sha3_512.digest(self) -> bytes:
+/// def trezor.crypto.hashlib.Sha3_512.digest(self, keccak: bool=False) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_digest(mp_obj_t self) {
-    mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(self);
+STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_digest(size_t n_args, const mp_obj_t *args) {
+    mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(args[0]);
     vstr_t vstr;
     vstr_init_len(&vstr, HASH_SHA3_512_DIGEST_SIZE);
     SHA3_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
-    sha3_Final(&ctx, (uint8_t *)vstr.buf);
+    if (n_args >= 1 && args[1] == mp_const_true) {
+        keccak_Final(&ctx, (uint8_t *)vstr.buf);
+    } else {
+        sha3_Final(&ctx, (uint8_t *)vstr.buf);
+    }
     memset(&ctx, 0, sizeof(SHA3_CTX));
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Sha3_512_digest_obj, mod_TrezorCrypto_Sha3_512_digest);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Sha3_512_digest_obj, 1, 2, mod_TrezorCrypto_Sha3_512_digest);
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_512___del__(mp_obj_t self) {
     mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(self);

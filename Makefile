@@ -1,9 +1,10 @@
 .PHONY: vendor
 
-STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-TREZORV2
-
 JOBS=4
 MAKE=make -j $(JOBS)
+BOARD=TREZORV2
+
+STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-$(BOARD)
 
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36mmake %-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -17,13 +18,13 @@ res: ## update resources
 build: build_stmhal build_unix build_cross ## build stmhal, unix and mpy-cross micropython ports
 
 build_stmhal: vendor ## build stmhal port
-	$(MAKE) -C vendor/micropython/stmhal
+	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD)
 
 build_stmhal_debug: vendor ## build stmhal port with debug symbols
-	$(MAKE) -C vendor/micropython/stmhal
+	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD)
 
 build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
-	$(MAKE) -C vendor/micropython/stmhal FROZEN_MPY_DIR=../../../src
+	$(MAKE) -C vendor/micropython/stmhal FROZEN_MPY_DIR=../../../src BOARD=$(BOARD)
 
 build_unix: vendor ## build unix port
 	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
@@ -38,7 +39,7 @@ build_cross: vendor ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
 
 build_bootloader: vendor ## build bootloader
-	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader
+	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD)
 
 run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
@@ -49,7 +50,7 @@ emu: ## run emulator
 clean: clean_stmhal clean_unix clean_cross ## clean all builds
 
 clean_stmhal: ## clean stmhal build
-	$(MAKE) -C vendor/micropython/stmhal clean
+	$(MAKE) -C vendor/micropython/stmhal clean BOARD=$(BOARD)
 
 clean_unix: ## clean unix build
 	$(MAKE) -C vendor/micropython/unix clean

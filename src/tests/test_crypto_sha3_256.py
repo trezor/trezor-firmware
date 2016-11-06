@@ -16,6 +16,12 @@ class TestCryptoSha3_256(unittest.TestCase):
         self.assertEqual(hashlib.sha3_256(b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq').digest(), unhexlify('41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376'))
         self.assertEqual(hashlib.sha3_256(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu').digest(), unhexlify('916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18'))
 
+    def test_digest_keccak(self):
+        self.assertEqual(hashlib.sha3_256(b'').digest(True), unhexlify('c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470'))
+        self.assertEqual(hashlib.sha3_256(b'abc').digest(True), unhexlify('4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45'))
+        self.assertEqual(hashlib.sha3_256(b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq').digest(True), unhexlify('45d3b367a6904e6e8d502ee04999a7c27647f91fa845d456525fd352ae3d7371'))
+        self.assertEqual(hashlib.sha3_256(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu').digest(True), unhexlify('f519747ed599024f3882238e5ab43960132572b7345fbeb9a90769dafd21ad67'))
+
     def test_update(self):
         x = hashlib.sha3_256()
         self.assertEqual(x.digest(), unhexlify('a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a'))
