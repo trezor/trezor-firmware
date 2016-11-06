@@ -191,13 +191,21 @@ typedef struct jacobian_curve_point {
 	bignum256 x, y, z;
 } jacobian_curve_point;
 
+// generate random K for signing/side-channel noise
+void generate_k_random(bignum256 *k, const bignum256 *prime) {
+	do {
+		int i;
+		for (i = 0; i < 8; i++) {
+			k->val[i] = random32() & 0x3FFFFFFF;
+		}
+		k->val[8] = random32() & 0xFFFF;
+		// check that k is in range and not zero.
+	} while (bn_is_zero(k) || !bn_is_less(k, prime));
+}
+
 void curve_to_jacobian(const curve_point *p, jacobian_curve_point *jp, const bignum256 *prime) {
-	int i;
 	// randomize z coordinate
-	for (i = 0; i < 8; i++) {
-		jp->z.val[i] = random32() & 0x3FFFFFFF;
-	}
-	jp->z.val[8] = (random32() & 0x7fff) + 1;
+	generate_k_random(&jp->z, prime);
 
 	jp->x = jp->z;
 	bn_multiply(&jp->z, &jp->x, prime);
@@ -649,15 +657,6 @@ int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8
 	return 0;
 }
 
-// generate random K for signing
-void generate_k_random(bignum256 *k) {
-	int i;
-	for (i = 0; i < 8; i++) {
-		k->val[i] = random32() & 0x3FFFFFFF;
-	}
-	k->val[8] = random32() & 0xFFFF;
-}
-
 void init_k_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *state) {
 	uint8_t bx[2*32];
 	uint8_t buf[32 + 1 + 2*32];
@@ -733,7 +732,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 {
 	int i;
 	curve_point R;
-	bignum256 k, z;
+	bignum256 k, z, randk;
 	bignum256 *s = &R.y;
 	uint8_t by; // signature recovery byte
 
@@ -749,14 +748,14 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 #if USE_RFC6979
 		// generate K deterministically
 		generate_k_rfc6979(&k, &rng);
-#else
-		// generate random number k
-		generate_k_random(&k);
-#endif
 		// if k is too big or too small, we don't like it
 		if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
 			continue;
 		}
+#else
+		// generate random number k
+		generate_k_random(&k, &curve->order);
+#endif
 
 		// compute k*G
 		scalar_multiply(curve, &k, &R);
@@ -771,11 +770,15 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 			continue;
 		}
 
-		bn_inverse(&k, &curve->order);
-		bn_read_be(priv_key, s);
-		bn_multiply(&R.x, s, &curve->order);
-		bn_add(s, &z);
-		bn_multiply(&k, s, &curve->order);
+		// randomize operations to counter side-channel attacks
+		generate_k_random(&randk, &curve->order);
+		bn_multiply(&randk, &k, &curve->order); // k*rand
+		bn_inverse(&k, &curve->order);         // (k*rand)^-1
+		bn_read_be(priv_key, s);               // priv
+		bn_multiply(&R.x, s, &curve->order);   // R.x*priv
+		bn_add(s, &z);                         // R.x*priv + z
+		bn_multiply(&k, s, &curve->order);     // (k*rand)^-1 (R.x*priv + z)
+		bn_multiply(&randk, s, &curve->order);  // k^-1 (R.x*priv + z)
 		bn_mod(s, &curve->order);
 		// if s is zero, we retry
 		if (bn_is_zero(s)) {
@@ -801,6 +804,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 		}
 
 		MEMSET_BZERO(&k, sizeof(k));
+		MEMSET_BZERO(&randk, sizeof(randk));
 #if USE_RFC6979
 		MEMSET_BZERO(&rng, sizeof(rng));
 #endif
@@ -810,6 +814,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 	// Too many retries without a valid signature
 	// -> fail with an error
 	MEMSET_BZERO(&k, sizeof(k));
+	MEMSET_BZERO(&randk, sizeof(randk));
 #if USE_RFC6979
 	MEMSET_BZERO(&rng, sizeof(rng));
 #endif
