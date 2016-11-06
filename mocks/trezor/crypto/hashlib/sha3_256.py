@@ -6,7 +6,7 @@ def update(self, data: bytes) -> None:
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-sha3-256.h
-def digest(self) -> bytes:
+def digest(self, keccak: bool=False) -> bytes:
     '''
     Returns the digest of hashed data.
     '''

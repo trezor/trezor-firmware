@@ -42,7 +42,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Blake2s_make_new(const mp_obj_type_t *type, siz
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.hashlib.Blake2s.update(self, data: bytes) -> None:
+/// def trezor.crypto.hashlib.blake2s.update(self, data: bytes) -> None:
 ///     '''
 ///     Update the hash context with hashed data.
 ///     '''
@@ -57,7 +57,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Blake2s_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Blake2s_update_obj, mod_TrezorCrypto_Blake2s_update);
 
-/// def trezor.crypto.hashlib.Blake2s.digest(self) -> bytes:
+/// def trezor.crypto.hashlib.blake2s.digest(self) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''

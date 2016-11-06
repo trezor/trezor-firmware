@@ -62,7 +62,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.pbkdf2.Pbkdf2.update(self, iterations: int) -> None:
+/// def trezor.crypto.pbkdf2.update(self, iterations: int) -> None:
 ///     '''
 ///     Update a PBKDF2 context
 ///     '''
@@ -79,7 +79,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iteration
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Pbkdf2_update_obj, mod_TrezorCrypto_Pbkdf2_update);
 
-/// def trezor.crypto.pbkdf2.Pbkdf2.key(self) -> bytes:
+/// def trezor.crypto.pbkdf2.key(self) -> bytes:
 ///     '''
 ///     Retreive derived key
 ///     '''

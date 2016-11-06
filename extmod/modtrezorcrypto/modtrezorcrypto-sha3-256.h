@@ -35,7 +35,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_make_new(const mp_obj_type_t *type, si
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.hashlib.Sha3_256.update(self, data: bytes) -> None:
+/// def trezor.crypto.hashlib.sha3_256.update(self, data: bytes) -> None:
 ///     '''
 ///     Update the hash context with hashed data.
 ///     '''
@@ -50,7 +50,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_256_update_obj, mod_TrezorCrypto_Sha3_256_update);
 
-/// def trezor.crypto.hashlib.Sha3_256.digest(self, keccak: bool=False) -> bytes:
+/// def trezor.crypto.hashlib.sha3_256.digest(self, keccak: bool=False) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''
