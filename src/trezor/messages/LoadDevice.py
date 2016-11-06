@@ -11,5 +11,6 @@ class LoadDevice(p.MessageType):
         5: ('language', p.UnicodeType, 0), # default=u'english'
         6: ('label', p.UnicodeType, 0),
         7: ('skip_checksum', p.BoolType, 0),
+        8: ('u2f_counter', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 13

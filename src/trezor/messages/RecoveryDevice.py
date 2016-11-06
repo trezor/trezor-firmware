@@ -9,5 +9,6 @@ class RecoveryDevice(p.MessageType):
         4: ('language', p.UnicodeType, 0), # default=u'english'
         5: ('label', p.UnicodeType, 0),
         6: ('enforce_wordlist', p.BoolType, 0),
+        7: ('u2f_counter', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 45
