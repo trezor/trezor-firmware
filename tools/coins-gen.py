@@ -11,8 +11,8 @@ for c in coins:
         d[n] = c[n]
     d['xpub_magic'] = int(c['xpub_magic'], 16)
     d['xprv_magic'] = int(c['xprv_magic'], 16)
-    print('    {', end='')
+    print('    {')
     for k in d:
-        print('%s: %s, ' % (repr(k), repr(d[k])), end='')
-    print('},')
+        print('        %s: %s,' % (repr(k), repr(d[k])))
+    print('    },')
 print(']\n')
