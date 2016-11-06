@@ -15,6 +15,8 @@ typedef struct _mp_obj_HDNode_t {
     HDNode hdnode;
 } mp_obj_HDNode_t;
 
+STATIC const mp_obj_type_t mod_TrezorCrypto_HDNode_type;
+
 #define XPUB_MAXLEN 128
 #define ADDRESS_MAXLEN 36
 
