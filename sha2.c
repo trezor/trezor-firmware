@@ -592,7 +592,7 @@ void sha1_Final(SHA1_CTX* context, sha2_byte digest[]) {
 		 * No digest buffer, so we can do nothing
 		 * except clean up and go home
 		 */
-		MEMSET_BZERO(context, sizeof(context));
+		MEMSET_BZERO(context, sizeof(SHA1_CTX));
 		return;
 	}
 
@@ -649,7 +649,7 @@ void sha1_Final(SHA1_CTX* context, sha2_byte digest[]) {
 #endif
 
 	/* Clean up: */
-	MEMSET_BZERO(context, sizeof(context));
+	MEMSET_BZERO(context, sizeof(SHA1_CTX));
 }
 
 char *sha1_End(SHA1_CTX* context, char buffer[]) {
@@ -666,7 +666,7 @@ char *sha1_End(SHA1_CTX* context, char buffer[]) {
 		}
 		*buffer = (char)0;
 	} else {
-		MEMSET_BZERO(context, sizeof(context));
+		MEMSET_BZERO(context, sizeof(SHA1_CTX));
 	}
 	MEMSET_BZERO(digest, SHA1_DIGEST_LENGTH);
 	return buffer;
