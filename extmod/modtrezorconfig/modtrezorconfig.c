@@ -74,9 +74,20 @@ STATIC mp_obj_t mod_TrezorConfig_Config_set(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorConfig_Config_set_obj, 4, 4, mod_TrezorConfig_Config_set);
 
+/// def trezor.config.wipe() -> None:
+///     '''
+///     Erases the whole config (use with caution!)
+///     '''
+STATIC mp_obj_t mod_TrezorConfig_Config_wipe(mp_obj_t self) {
+    // TODO
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorConfig_Config_wipe_obj, mod_TrezorConfig_Config_wipe);
+
 STATIC const mp_rom_map_elem_t mod_TrezorConfig_Config_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mod_TrezorConfig_Config_get_obj) },
     { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mod_TrezorConfig_Config_set_obj) },
+    { MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_TrezorConfig_Config_wipe_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorConfig_Config_locals_dict, mod_TrezorConfig_Config_locals_dict_table);
 

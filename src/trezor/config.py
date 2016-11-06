@@ -41,4 +41,7 @@ def get(app_id, key, default=None):
 def set(app_id, key, value):
     _mock[(app_id << 8) | key] = value
     _save()
-    return True
+
+def wipe():
+    _mock = {}
+    _save()

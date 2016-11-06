@@ -8,3 +8,6 @@ def get(app, key, default=None):
 
 def set(app, key, value):
     return _config.set(app, key, value)
+
+def wipe():
+    return _config.wipe()
