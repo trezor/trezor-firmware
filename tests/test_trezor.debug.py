@@ -1,7 +1,4 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
+from common import *
 
 from trezor import debug
 

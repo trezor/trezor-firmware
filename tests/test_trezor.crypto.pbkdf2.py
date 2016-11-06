@@ -1,8 +1,4 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
-from ubinascii import unhexlify
+from common import *
 
 from trezor.crypto import pbkdf2
 

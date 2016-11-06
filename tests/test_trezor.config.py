@@ -1,10 +1,8 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
+from common import *
+
+from trezor.crypto import random
 
 from trezor import config
-from trezor.crypto import random
 
 class TestConfig(unittest.TestCase):
 

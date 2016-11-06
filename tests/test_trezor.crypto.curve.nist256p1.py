@@ -1,11 +1,8 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
-from ubinascii import hexlify, unhexlify
+from common import *
+
+from trezor.crypto import random
 
 from trezor.crypto.curve import nist256p1
-from trezor.crypto import random
 
 class TestCryptoNist256p1(unittest.TestCase):
 

@@ -8,7 +8,7 @@ else
 fi
 for i in $list; do
    echo
-    if ../../vendor/micropython/unix/micropython $i; then
+    if ../vendor/micropython/unix/micropython $i; then
        results+=("OK   $i")
     else
        results+=("FAIL $i")

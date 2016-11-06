@@ -1,6 +1,6 @@
 #!/bin/bash
-find ../../mocks -name '*.py' | sort | while read module; do
-    module=$(echo $module | sed 's:^\.\./\.\./mocks/::')
+find ../mocks -name '*.py' | sort | while read module; do
+    module=$(echo $module | sed 's:^\.\./mocks/::')
     base=$(basename $module)
     # skip __init__.py
     if [[ $base == "__init__.py" ]]; then

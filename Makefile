@@ -59,7 +59,7 @@ clean_cross: ## clean mpy-cross build
 	$(MAKE) -C vendor/micropython/mpy-cross clean
 
 test: ## run unit tests
-	cd src/tests ; ./run_tests.sh
+	cd tests ; ./run_tests.sh
 
 flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware0.bin 0x8000000

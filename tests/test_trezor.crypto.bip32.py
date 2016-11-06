@@ -1,13 +1,8 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
-from ubinascii import unhexlify
+from common import *
 
 from trezor.crypto import bip32
 
 SECP256K1_NAME = 'secp256k1'
-
 
 class TestCryptoBip32(unittest.TestCase):
 

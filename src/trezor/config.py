@@ -12,6 +12,7 @@ else:
 
 
 def _load():
+    global _mock
     try:
         with open(_file, 'rb') as f:
             while True:
@@ -26,6 +27,7 @@ def _load():
 
 
 def _save():
+    global _mock
     with open(_file, 'wb') as f:
         for k, v in _mock.items():
             f.write(ustruct.pack('<HH', k, len(v)))
@@ -35,13 +37,16 @@ _load()
 
 
 def get(app_id, key, default=None):
+    global _mock
     return _mock.get((app_id << 8) | key, default)
 
 
 def set(app_id, key, value):
+    global _mock
     _mock[(app_id << 8) | key] = value
     _save()
 
 def wipe():
+    global _mock
     _mock = {}
     _save()

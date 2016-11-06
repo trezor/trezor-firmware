@@ -1,14 +1,12 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
+from common import *
+
 import ustruct
 import ubinascii
 
-from trezor.wire import wire_codec
-from trezor.utils import chunks
 from trezor.crypto import random
+from trezor.utils import chunks
 
+from trezor.wire import wire_codec
 
 class TestWireCodec(unittest.TestCase):
     # pylint: disable=C0301

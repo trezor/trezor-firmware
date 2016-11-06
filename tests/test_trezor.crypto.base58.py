@@ -1,11 +1,8 @@
-import sys
-sys.path.append('..')
-sys.path.append('../lib')
-import unittest
-from ubinascii import unhexlify
+from common import *
+
+from trezor.crypto.hashlib import ripemd160
 
 from trezor.crypto import base58
-from trezor.crypto.hashlib import ripemd160
 
 digestfunc_graphene = lambda x: ripemd160(x).digest()[:4]
 
