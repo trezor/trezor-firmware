@@ -112,6 +112,20 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_private(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_serialize_private_obj, mod_TrezorCrypto_HDNode_serialize_private);
 
+/// def trezor.crypto.HDNode.clone() -> HDNode:
+///     '''
+///     Returns a copy of the HD node.
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_HDNode_clone(mp_obj_t self) {
+    mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+    mp_obj_HDNode_t *copy = m_new_obj(mp_obj_HDNode_t);
+    copy->base.type = &mod_TrezorCrypto_HDNode_type;
+    copy->hdnode = o->hdnode;
+    copy->fingerprint = o->fingerprint;
+    return MP_OBJ_FROM_PTR(copy);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_clone_obj, mod_TrezorCrypto_HDNode_clone);
+
 /// def trezor.crypto.HDNode.depth() -> int:
 ///     '''
 ///     Returns a depth of the HD node.
@@ -196,6 +210,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorCrypto_HDNode_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_serialize_private), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_serialize_private_obj) },
     { MP_ROM_QSTR(MP_QSTR_serialize_public), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_serialize_public_obj) },
 
+    { MP_ROM_QSTR(MP_QSTR_clone), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_clone_obj) },
     { MP_ROM_QSTR(MP_QSTR_depth), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_depth_obj) },
     { MP_ROM_QSTR(MP_QSTR_fingerprint), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_fingerprint_obj) },
     { MP_ROM_QSTR(MP_QSTR_child_num), MP_ROM_PTR(&mod_TrezorCrypto_HDNode_child_num_obj) },
