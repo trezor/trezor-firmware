@@ -27,11 +27,19 @@ void display_refresh(void)
 
 int display_orientation(int degrees)
 {
+    if (degrees != ORIENTATION) {
+        if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
+            ORIENTATION = degrees;
+        }
+    }
     return ORIENTATION;
 }
 
 int display_backlight(int val)
 {
+    if (BACKLIGHT != val && val >= 0 && val <= 255) {
+        BACKLIGHT = val;
+    }
     return BACKLIGHT;
 }
 
