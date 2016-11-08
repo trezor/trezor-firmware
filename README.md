@@ -64,5 +64,6 @@ make build_stmhal_frozen
 
 ###OS X
 
-Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/) and follow the [instructions in readme.txt](https://launchpadlibrarian.net/287100883/readme.txt).
-To install stlink, run `brew install stlink`.
+1. Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/)
+2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
+3. To install stlink, run `brew install stlink`
