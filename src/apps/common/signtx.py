@@ -328,7 +328,7 @@ def ecdsa_hash_pubkey(pubkey: bytes) -> bytes:
 
 def ecdsa_sign(node, digest: bytes) -> bytes:
     sig = secp256k1.sign(node.private_key(), digest)
-    sigder = der.encode_seq((sig[:32], sig[32:]))
+    sigder = der.encode_seq((sig[1:33], sig[33:65]))
     return sigder
 
 

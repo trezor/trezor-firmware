@@ -77,12 +77,12 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_k
         mp_raise_ValueError("Invalid length of digest");
     }
     vstr_t vstr;
-    vstr_init_len(&vstr, 64);
+    vstr_init_len(&vstr, 65);
     uint8_t pby;
-    if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, (uint8_t *)vstr.buf, &pby, NULL)) {  // TODO: is_canonical
+    if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, (uint8_t *)vstr.buf + 1, &pby, NULL)) {  // TODO: is_canonical
         mp_raise_ValueError("Signing failed");
     }
-    (void)pby;
+    vstr.buf[0] = 27 + pby + 4;
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Nist256p1_sign_obj, mod_TrezorCrypto_Nist256p1_sign);
@@ -100,13 +100,14 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_verify(size_t n_args, const mp_obj_t 
     if (pk.len != 33 && pk.len != 65) {
         mp_raise_ValueError("Invalid length of public key");
     }
-    if (sig.len != 64) {
+    if (sig.len != 64 && sig.len != 65) {
         mp_raise_ValueError("Invalid length of signature");
     }
+    int offset = sig.len - 64;
     if (dig.len != 32) {
         mp_raise_ValueError("Invalid length of digest");
     }
-    return mp_obj_new_bool(0 == ecdsa_verify_digest(&nist256p1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf, (const uint8_t *)dig.buf));
+    return mp_obj_new_bool(0 == ecdsa_verify_digest(&nist256p1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf + offset, (const uint8_t *)dig.buf));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Nist256p1_verify_obj, 4, 4, mod_TrezorCrypto_Nist256p1_verify);
 

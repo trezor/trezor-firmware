@@ -90,14 +90,17 @@ class TestCryptoNist256p1(unittest.TestCase):
         dig = bytes([1] + [0]*31)
         sig = nist256p1.sign(sk, dig)
         self.assertTrue(nist256p1.verify(pk, sig, dig))
+        self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
         dig = bytes([0]*31 + [1])
         sig = nist256p1.sign(sk, dig)
         self.assertTrue(nist256p1.verify(pk, sig, dig))
+        self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
         dig = bytes([0xFF]*32)
         sig = nist256p1.sign(sk, dig)
         self.assertTrue(nist256p1.verify(pk, sig, dig))
+        self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
     def test_sign_verify_random(self):
         for _ in range(100):
@@ -106,6 +109,7 @@ class TestCryptoNist256p1(unittest.TestCase):
             dig = random.bytes(32)
             sig = nist256p1.sign(sk, dig)
             self.assertTrue(nist256p1.verify(pk, sig, dig))
+            self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
 if __name__ == '__main__':
     unittest.main()
