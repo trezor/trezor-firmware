@@ -1,4 +1,5 @@
 #!/bin/bash
+MICROPYTHON=../vendor/micropython/unix/micropython
 results=()
 error=0
 if [ -z "$*" ]; then
@@ -8,7 +9,7 @@ else
 fi
 for i in $list; do
    echo
-    if ../vendor/micropython/unix/micropython $i; then
+    if $MICROPYTHON $i; then
        results+=("OK   $i")
     else
        results+=("FAIL $i")
