@@ -5,7 +5,7 @@ import binascii
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
-from trezorlib.tx_api import TXAPITestnet
+from trezorlib.tx_api import TxApiTestnet
 
 class TestMsgSigntx(common.TrezorTest):
     def test_one_one_fee(self):
@@ -68,7 +68,7 @@ class TestMsgSigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPITestnet())
+            self.client.set_tx_api(TxApiTestnet)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify(b"6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54"))),
@@ -113,7 +113,7 @@ class TestMsgSigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPITestnet())
+            self.client.set_tx_api(TxApiTestnet)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify(b"6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54"))),
@@ -574,7 +574,7 @@ class TestMsgSigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPITestnet())
+            self.client.set_tx_api(TxApiTestnet)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify(b"d6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236"))),

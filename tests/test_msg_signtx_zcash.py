@@ -5,7 +5,7 @@ import binascii
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
-from trezorlib.tx_api import TXAPIZcashTestnet
+from trezorlib.tx_api import TxApiZcashTestnet
 
 class TestMsgSigntx(common.TrezorTest):
 
@@ -27,7 +27,7 @@ class TestMsgSigntx(common.TrezorTest):
                               )
 
         with self.client:
-            self.client.set_tx_api(TXAPIZcashTestnet())
+            self.client.set_tx_api(TxApiZcashTestnet)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify(b"93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c"))),
