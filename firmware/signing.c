@@ -592,7 +592,11 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.signature_index = idx1;
 				resp.serialized.has_signature = true;
 				resp.serialized.has_serialized_tx = true;
-				ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL);
+				if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL) != 0) {
+					fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+					signing_abort();
+					return;
+				}
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 				if (input.script_type == InputScriptType_SPENDMULTISIG) {
 					if (!input.has_multisig) {
