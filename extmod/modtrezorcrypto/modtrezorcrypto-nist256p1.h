@@ -62,24 +62,24 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_publickey(size_t n_args, const mp_obj
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Nist256p1_publickey_obj, 2, 3, mod_TrezorCrypto_Nist256p1_publickey);
 
-/// def trezor.crypto.curve.nist256p1.sign(secret_key: bytes, message: bytes) -> bytes:
+/// def trezor.crypto.curve.nist256p1.sign(secret_key: bytes, digest: bytes) -> bytes:
 ///     '''
-///     Uses secret key to produce the signature of message.
+///     Uses secret key to produce the signature of the digest.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_key, mp_obj_t message) {
-    mp_buffer_info_t sk, msg;
+STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_key, mp_obj_t digest) {
+    mp_buffer_info_t sk, dig;
     mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
-    mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+    mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
     if (sk.len != 32) {
         mp_raise_ValueError("Invalid length of secret key");
     }
-    if (msg.len == 0) {
-        mp_raise_ValueError("Empty data to sign");
+    if (dig.len != 32) {
+        mp_raise_ValueError("Invalid length of digest");
     }
     vstr_t vstr;
     vstr_init_len(&vstr, 65);
     uint8_t pby;
-    if (0 != ecdsa_sign(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)msg.buf, msg.len, (uint8_t *)vstr.buf, &pby, NULL)) {  // TODO: is_canonical
+    if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, (uint8_t *)vstr.buf, &pby, NULL)) {  // TODO: is_canonical
         mp_raise_ValueError("Signing failed");
     }
     (void)pby;
@@ -87,26 +87,26 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_k
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Nist256p1_sign_obj, mod_TrezorCrypto_Nist256p1_sign);
 
-/// def trezor.crypto.curve.nist256p1.verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
+/// def trezor.crypto.curve.nist256p1.verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     '''
-///     Uses public key to verify the signature of the message
+///     Uses public key to verify the signature of the digest.
 ///     Returns True on success.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_verify(size_t n_args, const mp_obj_t *args) {
-    mp_buffer_info_t pk, sig, msg;
+    mp_buffer_info_t pk, sig, dig;
     mp_get_buffer_raise(args[1], &pk, MP_BUFFER_READ);
     mp_get_buffer_raise(args[2], &sig, MP_BUFFER_READ);
-    mp_get_buffer_raise(args[3], &msg, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[3], &dig, MP_BUFFER_READ);
     if (pk.len != 33 && pk.len != 65) {
         mp_raise_ValueError("Invalid length of public key");
     }
     if (sig.len != 65) {
         mp_raise_ValueError("Invalid length of signature");
     }
-    if (msg.len == 0) {
-        mp_raise_ValueError("Empty data to verify");
+    if (dig.len != 32) {
+        mp_raise_ValueError("Invalid length of digest");
     }
-    return mp_obj_new_bool(0 == ecdsa_verify(&nist256p1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf, (const uint8_t *)msg.buf, msg.len));
+    return mp_obj_new_bool(0 == ecdsa_verify_digest(&nist256p1, (const uint8_t *)pk.buf, (const uint8_t *)sig.buf, (const uint8_t *)dig.buf));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Nist256p1_verify_obj, 4, 4, mod_TrezorCrypto_Nist256p1_verify);
 

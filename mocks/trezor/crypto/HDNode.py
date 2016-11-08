@@ -24,6 +24,12 @@ def serialize_private() -> str:
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
+def clone() -> HDNode:
+    '''
+    Returns a copy of the HD node.
+    '''
+
+# ../extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
 def depth() -> int:
     '''
     Returns a depth of the HD node.

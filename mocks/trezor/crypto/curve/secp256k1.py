@@ -12,15 +12,15 @@ def publickey(secret_key: bytes, compressed: bool=True) -> bytes:
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-def sign(secret_key: bytes, message: bytes) -> bytes:
+def sign(secret_key: bytes, digest: bytes) -> bytes:
     '''
-    Uses secret key to produce the signature of message.
+    Uses secret key to produce the signature of the digest.
     '''
 
 # ../extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
+def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
     '''
-    Uses public key to verify the signature of the message
+    Uses public key to verify the signature of the digest.
     Returns True on success.
     '''
 

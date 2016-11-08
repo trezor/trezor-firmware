@@ -76,13 +76,29 @@ class TestCryptoSecp256k1(unittest.TestCase):
             else:
                 self.assertEqual(pk33, '03' + pk[:64])
 
+    def test_sign_verify_min_max(self):
+        sk = secp256k1.generate_secret()
+        pk = secp256k1.publickey(sk)
+
+        dig = bytes([1] + [0]*31)
+        sig = secp256k1.sign(sk, dig)
+        self.assertTrue(secp256k1.verify(pk, sig, dig))
+
+        dig = bytes([0]*31 + [1])
+        sig = secp256k1.sign(sk, dig)
+        self.assertTrue(secp256k1.verify(pk, sig, dig))
+
+        dig = bytes([0xFF]*32)
+        sig = secp256k1.sign(sk, dig)
+        self.assertTrue(secp256k1.verify(pk, sig, dig))
+
     def test_sign_verify_random(self):
-        for l in range(1, 300):
+        for _ in range(100):
             sk = secp256k1.generate_secret()
             pk = secp256k1.publickey(sk)
-            msg = random.bytes(l)
-            sig = secp256k1.sign(sk, msg)
-            self.assertTrue(secp256k1.verify(pk, sig, msg))
+            dig = random.bytes(32)
+            sig = secp256k1.sign(sk, dig)
+            self.assertTrue(secp256k1.verify(pk, sig, dig))
 
 if __name__ == '__main__':
     unittest.main()

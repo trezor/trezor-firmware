@@ -11,3 +11,9 @@ def set(app: int, key: int, value: bytes) -> None:
     Sets a value of given key for given app.
     Returns True on success.
     '''
+
+# ../extmod/modtrezorconfig/modtrezorconfig.c
+def wipe() -> None:
+    '''
+    Erases the whole config (use with caution!)
+    '''
