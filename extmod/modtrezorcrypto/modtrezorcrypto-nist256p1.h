@@ -77,7 +77,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(mp_obj_t self, mp_obj_t secret_k
         mp_raise_ValueError("Invalid length of digest");
     }
     vstr_t vstr;
-    vstr_init_len(&vstr, 65);
+    vstr_init_len(&vstr, 64);
     uint8_t pby;
     if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, (uint8_t *)vstr.buf, &pby, NULL)) {  // TODO: is_canonical
         mp_raise_ValueError("Signing failed");
@@ -100,7 +100,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_verify(size_t n_args, const mp_obj_t 
     if (pk.len != 33 && pk.len != 65) {
         mp_raise_ValueError("Invalid length of public key");
     }
-    if (sig.len != 65) {
+    if (sig.len != 64) {
         mp_raise_ValueError("Invalid length of signature");
     }
     if (dig.len != 32) {
