@@ -100,5 +100,15 @@ class TestCryptoSecp256k1(unittest.TestCase):
             sig = secp256k1.sign(sk, dig)
             self.assertTrue(secp256k1.verify(pk, sig, dig))
 
+    def test_verify_recover(self):
+        for compressed in [False, True]:
+            for _ in range(100):
+                sk = secp256k1.generate_secret()
+                pk = secp256k1.publickey(sk, compressed)
+                dig = random.bytes(32)
+                sig = secp256k1.sign(sk, dig, compressed)
+                pk2 = secp256k1.verify_recover(sig, dig)
+                self.assertEqual(pk, pk2)
+
 if __name__ == '__main__':
     unittest.main()

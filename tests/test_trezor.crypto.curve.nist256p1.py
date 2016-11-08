@@ -111,5 +111,15 @@ class TestCryptoNist256p1(unittest.TestCase):
             self.assertTrue(nist256p1.verify(pk, sig, dig))
             self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
+    def test_verify_recover(self):
+        for compressed in [False, True]:
+            for _ in range(100):
+                sk = nist256p1.generate_secret()
+                pk = nist256p1.publickey(sk, compressed)
+                dig = random.bytes(32)
+                sig = nist256p1.sign(sk, dig, compressed)
+                pk2 = nist256p1.verify_recover(sig, dig)
+                self.assertEqual(pk, pk2)
+
 if __name__ == '__main__':
     unittest.main()
