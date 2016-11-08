@@ -140,6 +140,17 @@ class MessageType(Type):
     WIRE_TYPE = 2
     FIELDS = {}
 
+    def __init__(self, **kwargs):
+        for kw in kwargs:
+            setattr(self, kw, kwargs[kw])
+
+    def __eq__(self, rhs):
+        return (self.__class__ is rhs.__class__ and
+                self.__dict__ == rhs.__dict__)
+
+    def __repr__(self):
+        return '<%s: %s>' % (self.__class__.__name__, self.__dict__)
+
     @classmethod
     async def load(cls, source=None, target=None):
         if target is None:
