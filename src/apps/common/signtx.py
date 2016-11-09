@@ -161,8 +161,6 @@ async def sign_tx(tx: SignTx, root):
 
         write_uint32(h_sign, 0x0000001) # hash_type
 
-        import ubinascii
-
         # check the control digests
         if tx_hash_digest(h_first, False) != tx_hash_digest(h_second, False):
             raise ValueError('Transaction has changed during signing')
