@@ -105,7 +105,7 @@ static char sessionPassphrase[51];
 void storage_show_error(void)
 {
 	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
-	for (;;) { }
+	system_halt();
 }
 
 void storage_check_flash_errors(void)
@@ -352,6 +352,14 @@ const uint8_t *storage_getSeed(bool usePassphrase)
 	if (storage.has_mnemonic) {
 		if (usePassphrase && !protectPassphrase()) {
 			return NULL;
+		}
+		// if storage was not imported (i.e. it was properly generated or recovered)
+		if (!storage.has_imported || !storage.imported) {
+			// test whether mnemonic is a valid BIP-0039 mnemonic
+			if (!mnemonic_check(storage.mnemonic)) {
+				// and if not then halt the device
+				storage_show_error();
+			}
 		}
 		mnemonic_to_seed(storage.mnemonic, usePassphrase ? sessionPassphrase : "", sessionSeed, get_root_node_callback); // BIP-0039
 		sessionSeedCached = true;
