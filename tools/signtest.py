@@ -11,8 +11,8 @@ import trezorlib.ckd_public as bip32
 import hashlib
 from trezorlib.client import TrezorClient
 from trezorlib.client import TrezorClientDebug
-from trezorlib.tx_api import TXAPITestnet
-from trezorlib.tx_api import TXAPIBitcoin
+from trezorlib.tx_api import TxApiTestnet
+from trezorlib.tx_api import TxApiBitcoin
 from trezorlib.transport_hid import HidTransport
 from trezorlib.transport_bridge import BridgeTransport
 
@@ -44,7 +44,7 @@ def string_to_int(s):
         result = (result << 8) + c
     return result
 
-class MyTXAPIBitcoin(object):
+class MyTxApiBitcoin(object):
 
     def set_publickey(self, node):
         self.node = node.node
@@ -113,8 +113,8 @@ class MyTXAPIBitcoin(object):
             outi = self.inputs.append(
                 proto_types.TxInputType(
                     address_n=self.client.expand_path("44'/0'/0'/0/"+str(idx)),
-                    script_type = (proto_types.SPENDWADDRESS if segwit == 1 else
-                                   proto_types.SPENDP2SHWADDRESS if segwit == 2 else
+                    script_type = (proto_types.SPENDWITNESS if segwit == 1 else
+                                   proto_types.SPENDP2SHWITNESS if segwit == 2 else
                                    proto_types.SPENDADDRESS),
                     prev_hash=txhash,
                     prev_index = myout,
@@ -159,18 +159,18 @@ def main():
 #    transport = BridgeTransport(devices[0][0])
     transport = HidTransport(devices[0])
 
-    txstore = MyTXAPIBitcoin()
+    txstore = MyTxApiBitcoin()
 
     # Creates object for manipulating TREZOR
     client = TrezorClient(transport)
-#    client.set_tx_api(TXAPITestnet())
+#    client.set_tx_api(TxApiTestnet)
     txstore.set_client(client)
     txstore.set_publickey(client.get_public_node(client.expand_path("44'/0'/0'")))
     print("creating input txs")
     txstore.create_inputs(numinputs, sizeinputtx)
     print("go")
     client.set_tx_api(txstore)
-#    client.set_tx_api(MyTXAPIBitcoin())
+#    client.set_tx_api(MyTxApiBitcoin())
 
     # Print out TREZOR's features and settings
     print(client.features)
