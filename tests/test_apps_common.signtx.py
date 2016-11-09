@@ -1,5 +1,6 @@
 from common import *
 
+from trezor.utils import chunks
 from trezor.crypto import bip32, bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
@@ -78,17 +79,10 @@ class TestSignTx(unittest.TestCase):
         root = bip32.from_seed(seed, 'secp256k1')
 
         signer = signtx.sign_tx(tx, root)
-        i = 0
-        try:
-            for i in range(0, len(messages) - 1, 2):
-                res = signer.send(messages[i])
-                self.assertEqual(res, messages[i + 1])
-        except StopIteration:
-            pass
-        self.assertEqual(i, len(messages) - 2)
-
-        # Accepted by network: tx fd79435246dee76b2f159d2db08032d666c95adc544de64c8c49f474df4a7fee
-        # self.assertEqual(hexlify(serialized_tx), b'010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
+        for request, response in chunks(messages, 2):
+            self.assertEqual(signer.send(request), response)
+        with self.assertRaises(StopIteration):
+            signer.send(None)
 
 
 if __name__ == '__main__':
