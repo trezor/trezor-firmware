@@ -159,7 +159,7 @@ async def sign_tx(tx: SignTx, root):
 
         write_uint32(h_sign, tx_lock_time)
 
-        write_uint32(h_sign, 0x0000001) # hash_type
+        write_uint32(h_sign, 0x00000001)  # SIGHASH_ALL hash_type
 
         # check the control digests
         if tx_hash_digest(h_first, False) != tx_hash_digest(h_second, False):
@@ -173,12 +173,12 @@ async def sign_tx(tx: SignTx, root):
         # serialize input with correct signature
         txi_sign.script_sig = input_derive_script_post_sign(
             txi_sign, key_sign_pub, signature)
-        w_txi_sign = BufferWriter()
-        if i_sign == 0: # serializing first input => prepend tx version and inputs count
+        w_txi_sign = bytearray()
+        if i_sign == 0:  # serializing first input => prepend tx version and inputs count
             write_uint32(w_txi_sign, tx_version)
             write_varint(w_txi_sign, tx_inputs_count)
         write_tx_input(w_txi_sign, txi_sign)
-        tx_ser.serialized_tx = w_txi_sign.getvalue()
+        tx_ser.serialized_tx = w_txi_sign
 
         tx_req.serialized = tx_ser
 
@@ -189,15 +189,15 @@ async def sign_tx(tx: SignTx, root):
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
 
         # serialize output
-        w_txo_bin = BufferWriter()
-        if o == 0: # serializing first output => prepend outputs count
+        w_txo_bin = bytearray()
+        if o == 0:  # serializing first output => prepend outputs count
             write_varint(w_txo_bin, tx_outputs_count)
         write_tx_output(w_txo_bin, txo_bin)
-        if o == tx_outputs_count - 1: # serializing last output => append tx lock_time
+        if o == tx_outputs_count - 1:  # serializing last output => append tx lock_time
             write_uint32(w_txo_bin, tx_lock_time)
         tx_ser.signature_index = None
         tx_ser.signature = None
-        tx_ser.serialized_tx = w_txo_bin.getvalue()
+        tx_ser.serialized_tx = w_txo_bin
 
         tx_req.serialized = tx_ser
 
@@ -276,7 +276,7 @@ def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, roo
         raw_address = base58.decode_check(o_address)
     else:
         raise ValueError('Missing address')
-    if raw_address[0] != coin['address_type']:
+    if raw_address[0] != coin.address_type:
         raise ValueError('Invalid address type')
     return raw_address
 
@@ -346,13 +346,13 @@ def script_paytoaddress_new(pubkeyhash: bytes) -> bytearray:
 
 
 def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
-    w = BufferWriter()
+    w = bytearray()
     write_op_push(w, len(signature) + 1)
     write_bytes(w, signature)
-    w.writebyte(0x01)
+    w.append(0x01)
     write_op_push(w, len(pubkey))
     write_bytes(w, pubkey)
-    return w.getvalue()
+    return w
 
 
 # TX Serialization
@@ -384,7 +384,7 @@ def write_tx_output(w, o: TxOutputBinType):
 
 
 def write_op_push(w, n: int):
-    wb = w.writebyte
+    wb = w.append
     if n < 0x4C:
         wb(n & 0xFF)
     elif n < 0xFF:
@@ -407,7 +407,7 @@ def write_op_push(w, n: int):
 
 
 def write_varint(w, n: int):
-    wb = w.writebyte
+    wb = w.append
     if n < 253:
         wb(n & 0xFF)
     elif n < 65536:
@@ -423,7 +423,7 @@ def write_varint(w, n: int):
 
 
 def write_uint32(w, n: int):
-    wb = w.writebyte
+    wb = w.append
     wb(n & 0xFF)
     wb((n >> 8) & 0xFF)
     wb((n >> 16) & 0xFF)
@@ -431,7 +431,7 @@ def write_uint32(w, n: int):
 
 
 def write_uint64(w, n: int):
-    wb = w.writebyte
+    wb = w.append
     wb(n & 0xFF)
     wb((n >> 8) & 0xFF)
     wb((n >> 16) & 0xFF)
@@ -443,40 +443,23 @@ def write_uint64(w, n: int):
 
 
 def write_bytes(w, buf: bytearray):
-    w.write(buf)
+    w.extend(buf)
 
 
 def write_bytes_rev(w, buf: bytearray):
-    w.write(bytearray(reversed(buf)))
-
-
-class BufferWriter:
-
-    def __init__(self, buf: bytearray=None):
-        if buf is None:
-            buf = bytearray()
-        self.buf = buf
-
-    def write(self, buf: bytearray):
-        self.buf.extend(buf)
-
-    def writebyte(self, b: int):
-        self.buf.append(b)
-
-    def getvalue(self) -> bytearray:
-        return self.buf
+    w.extend(bytearray(reversed(buf)))
 
 
 class HashWriter:
 
     def __init__(self, hashfunc):
         self.ctx = hashfunc()
-        self.buf = bytearray(1)  # used in writebyte()
+        self.buf = bytearray(1)  # used in append()
 
-    def write(self, buf: bytearray):
+    def extend(self, buf: bytearray):
         self.ctx.update(buf)
 
-    def writebyte(self, b: int):
+    def append(self, b: int):
         self.buf[0] = b
         self.ctx.update(self.buf)
 
