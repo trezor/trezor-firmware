@@ -12,7 +12,7 @@ from trezor.messages.TransactionType import TransactionType
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXFINISHED
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
-from trezor.messages import OutputScriptType, InputScriptType
+from trezor.messages import OutputScriptType
 
 from apps.common import signtx
 
@@ -57,6 +57,10 @@ class TestSignTx(unittest.TestCase):
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
+            signtx.UiConfirmOutput(out1),
+            True,
+            signtx.UiConfirmTotal(380000, 10000),
+            True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
@@ -80,9 +84,17 @@ class TestSignTx(unittest.TestCase):
 
         signer = signtx.sign_tx(tx, root)
         for request, response in chunks(messages, 2):
-            self.assertEqual(signer.send(request), response)
+            self.assertEqualEx(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
+
+    def assertEqualEx(self, a, b):
+        # hack to avoid adding __eq__ to signtx.Ui* classes
+        if ((isinstance(a, signtx.UiConfirmOutput) and isinstance(b, signtx.UiConfirmOutput)) or
+                (isinstance(a, signtx.UiConfirmTotal) and isinstance(b, signtx.UiConfirmTotal))):
+            return self.assertEqual(a.__dict__, b.__dict__)
+        else:
+            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':
