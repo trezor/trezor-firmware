@@ -15,7 +15,8 @@
 		"https://[\\w\\.-]+\\.bitex\\.la(/.*)?",
 		"https://quorumwallet\\.com(/.*)?",
 		"https://[\\w\\.-]+\\.quorumwallet\\.com(/.*)?",
-		"chrome-extension://jcjjhjgimijdkoamemaghajlhegmoclj(/.*)?"
+		"chrome-extension://jcjjhjgimijdkoamemaghajlhegmoclj(/.*)?",
+		"null"
 		],
 	"blacklist_urls": [
 	],
