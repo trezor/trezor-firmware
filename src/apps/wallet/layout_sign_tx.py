@@ -2,12 +2,34 @@ from trezor.utils import unimport
 from trezor import wire
 
 
-async def confirm_output(output):
-    return True
+def format_amount(amount, coin):
+    return '%s %s' % (amount / 1e8, coin.coin_shortcut)
 
 
-async def confirm_total(total_out, fee):
-    return True
+async def confirm_output(session_id, output, coin):
+    from trezor import ui
+    from trezor.ui.text import Text
+    from trezor.messages.ButtonRequestType import ConfirmOutput
+    from ..common.confirm import confirm
+
+    content = Text('Confirm output', ui.ICON_RESET,
+                   ui.BOLD, format_amount(output.amount, coin),
+                   ui.NORMAL, 'to',
+                   ui.MONO, output.address[0:17],
+                   ui.MONO, output.address[17:])
+    return await confirm(session_id, content, ConfirmOutput)
+
+
+async def confirm_total(session_id, total_out, fee, coin):
+    from trezor import ui
+    from trezor.ui.text import Text
+    from trezor.messages.ButtonRequestType import SignTx
+    from ..common.confirm import confirm
+
+    content = Text('Confirm transaction', ui.ICON_RESET,
+                   'Sending: %s' % format_amount(total_out, coin),
+                   'Fee: %s' % format_amount(fee, coin))
+    return await confirm(session_id, content, SignTx)
 
 
 @unimport
@@ -33,9 +55,10 @@ async def layout_sign_tx(message, session_id):
                 break
             res = await wire.reply_message(session_id, req, TxAck)
         elif isinstance(req, signtx.UiConfirmOutput):
-            res = await confirm_output(req.output)
+            res = await confirm_output(session_id, req.output, req.coin)
         elif isinstance(req, signtx.UiConfirmTotal):
-            res = await confirm_total(req.total_out, req.fee)
+            res = await confirm_total(session_id, req.total_out, req.fee, req.coin)
         else:
+            print(req)
             raise ValueError('Invalid signing instruction')
     return req
