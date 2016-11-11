@@ -4,7 +4,7 @@ from trezor.messages.wire_types import Initialize, GetFeatures
 
 
 async def respond(_, session_id):
-    from ..common import storage
+    from ..common import storage, coins
     from trezor.messages.Features import Features
 
     f = Features()
@@ -14,7 +14,7 @@ async def respond(_, session_id):
     f.major_version = 2
     f.minor_version = 0
     f.patch_version = 0
-    f.coins = []
+    f.coins = coins.COINS
 
     f.device_id = storage.get_device_id()
     f.label = storage.get_label()

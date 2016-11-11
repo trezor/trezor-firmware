@@ -2,7 +2,7 @@ from trezor.messages.CoinType import CoinType
 
 # the following list is generated using tools/coins-gen.py
 # do not edit manually!
-_coins = [
+COINS = [
     CoinType(
         coin_name='Bitcoin',
         coin_shortcut='BTC',
@@ -87,21 +87,21 @@ _coins = [
 
 
 def by_shortcut(shortcut):
-    for c in _coins:
+    for c in COINS:
         if c.coin_shortcut == shortcut:
             return c
     raise Exception('Unknown coin shortcut "%s"' % shortcut)
 
 
 def by_name(name):
-    for c in _coins:
+    for c in COINS:
         if c.coin_name == name:
             return c
     raise Exception('Unknown coin name "%s"' % name)
 
 
 def by_address_type(version):
-    for c in _coins:
+    for c in COINS:
         if c.address_type == version:
             return c
     raise Exception('Unknown coin address type %d' % version)
