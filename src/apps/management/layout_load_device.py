@@ -14,7 +14,14 @@ async def layout_load_device(message, session_id):
     if storage.is_initialized():
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
-    if not message.skip_checksum and not bip39.check(message.mnemonic):
+    skip_checksum = getattr(message, 'skip_checksum', False)
+    mnemonic = getattr(message, 'mnemonic')
+    pin = getattr(message, 'pin', None)
+    label = getattr(message, 'label', None)
+    language = getattr(message, 'language', None)
+    passphrase_protection = getattr(message, 'passphrase_protection', False)
+
+    if not skip_checksum and not bip39.check(mnemonic):
         raise wire.FailureError(Other, 'Mnemonic is not valid')
 
     await require_confirm(session_id, Text(
@@ -22,10 +29,10 @@ async def layout_load_device(message, session_id):
         ui.BOLD, 'Loading private seed', 'is not recommended.',
         ui.NORMAL, 'Continue only if you', 'know what you are doing!'))
 
-    storage.load_mnemonic(message.mnemonic)
-    storage.load_settings(pin=message.pin,
-                          passphrase_protection=message.passphrase_protection,
-                          language=message.language,
-                          label=message.label)
+    storage.load_mnemonic(mnemonic)
+    storage.load_settings(pin=pin,
+                          passphrase_protection=passphrase_protection,
+                          language=language,
+                          label=label)
 
     return Success(message='Device loaded')
