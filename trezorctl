@@ -483,61 +483,6 @@ def list_usb():
     from trezorlib.transport_hid import HidTransport
     return HidTransport.enumerate()
 
-'''
-class PinMatrixThread(threading.Thread):
-    # Hacked PinMatrixWidget into command line tool :-).
-    def __init__(self, input_text, message):
-        super(PinMatrixThread, self).__init__()
-        self.input_text = input_text
-        self.message = message
-        self.pin_value = ''
-
-    def run(self):
-        from trezorlib.pinmatrix import PinMatrixWidget
-
-        import sys
-        from PyQt4.Qt import QApplication, QWidget, QVBoxLayout
-        from PyQt4.QtGui import QPushButton, QLabel
-        from PyQt4.QtCore import QObject, SIGNAL
-
-        a = QApplication(sys.argv)
-pass
-        matrix = PinMatrixWidget()
-
-        def clicked():
-            self.pin_value = str(matrix.get_value())
-            a.closeAllWindows()
-
-        ok = QPushButton('OK')
-        QObject.connect(ok, SIGNAL('clicked()'), clicked)
-
-        vbox = QVBoxLayout()
-        vbox.addWidget(QLabel(self.input_text + self.message))
-        vbox.addWidget(matrix)
-        vbox.addWidget(ok)
-
-        w = QWidget()
-        w.setLayout(vbox)
-        w.move(100, 100)
-        w.show()
-
-        a.exec_()
-
-def qt_pin_func(input_text, message=None):
-    # This is a hack to display Qt window in non-qt application.
-    # Qt window just asks for PIN and closes itself, which trigger join().
-    if False:  # os.getenv('DISPLAY'):
-        # Let's hope that system is configured properly and this won't crash
-        t = PinMatrixThread(input_text, message)
-        t.start()
-        t.join()
-        return t.pin_value
-    else:
-        # Most likely no X is running,
-        # let's fallback to default pin_func implementation
-        return pin_func(input_text, message)
-'''
-
 def main():
     parser = init_parser(Commands)
     args = parser.parse_args()
