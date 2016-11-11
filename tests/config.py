@@ -9,24 +9,15 @@ from trezorlib.transport_hid import HidTransport
 devices = HidTransport.enumerate()
 
 if len(devices) > 0:
-    if devices[0][1] != None:
-        print('Using TREZOR')
-        TRANSPORT = HidTransport
-        TRANSPORT_ARGS = (devices[0],)
-        TRANSPORT_KWARGS = {'debug_link': False}
-        DEBUG_TRANSPORT = HidTransport
-        DEBUG_TRANSPORT_ARGS = (devices[0],)
-        DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
-    else:
-        print('Using Raspberry Pi')
-        TRANSPORT = HidTransport
-        TRANSPORT_ARGS = (devices[0],)
-        TRANSPORT_KWARGS = {'debug_link': False}
-        DEBUG_TRANSPORT = SocketTransportClient
-        DEBUG_TRANSPORT_ARGS = ('trezor.bo:2000',)
-        DEBUG_TRANSPORT_KWARGS = {}
+    print('Using TREZOR')
+    TRANSPORT = HidTransport
+    TRANSPORT_ARGS = (devices[0],)
+    TRANSPORT_KWARGS = {'debug_link': False}
+    DEBUG_TRANSPORT = HidTransport
+    DEBUG_TRANSPORT_ARGS = (devices[0],)
+    DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
 else:
-    print('Using Emulator')
+    print('Using Emulator(v1)')
     TRANSPORT = PipeTransport
     TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
     TRANSPORT_KWARGS = {}
