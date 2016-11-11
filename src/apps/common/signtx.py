@@ -186,11 +186,11 @@ async def sign_tx(tx: SignTx, root):
         write_uint32(h_sign, 0x00000001)  # SIGHASH_ALL hash_type
 
         # check the control digests
-        if tx_hash_digest(h_first, False) != tx_hash_digest(h_second, False):
+        if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
             raise SigningError('Transaction has changed during signing')
 
         # compute the signature from the tx digest
-        signature = ecdsa_sign(key_sign, tx_hash_digest(h_sign, True))
+        signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, True))
         tx_ser.signature_index = i_sign
         tx_ser.signature = signature
 
@@ -261,17 +261,18 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
 
     write_uint32(txh, tx_lock_time)
 
-    prev_hash_rev = bytes(reversed(prev_hash))  # TODO: improve performance
-    if tx_hash_digest(txh, True) != prev_hash_rev:
+    if get_tx_hash(txh, True, True) != prev_hash:
         raise SigningError('Encountered invalid prev_hash')
 
     return total_out
 
 
-def tx_hash_digest(w, double: bool) -> bytes:
+def get_tx_hash(w, double: bool, reverse: bool=False) -> bytes:
     d = w.getvalue()
     if double:
         d = sha256(d).digest()
+    if reverse:
+        d = bytes(reversed(d))
     return d
 
 
