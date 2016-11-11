@@ -12,7 +12,8 @@ _cached_root_node = None
 
 
 async def get_node(session_id: int, path: list):
-    node = await get_root_node(session_id)
+    root = await get_root_node(session_id)
+    node = root.clone()
     node.derive_path(path)
     return node
 
