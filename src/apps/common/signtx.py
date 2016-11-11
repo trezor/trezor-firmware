@@ -296,13 +296,13 @@ def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, roo
     # TODO: detect correct address type
     if o_address_n is not None:
         n = node_derive(root, o_address_n)
-        raw_address = base58.decode_check(n.address())
+        raw_address = base58.decode_check(n.address(coin.address_type))
     elif o_address:
         raw_address = base58.decode_check(o_address)
+        if raw_address[0] != coin.address_type:
+            raise SigningError('Invalid address type')
     else:
         raise SigningError('Missing address')
-    if raw_address[0] != coin.address_type:
-        raise SigningError('Invalid address type')
     return raw_address
 
 
