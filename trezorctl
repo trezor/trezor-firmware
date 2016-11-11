@@ -39,11 +39,8 @@ def init_parser(commands):
     parser = argparse.ArgumentParser(description='Commandline tool for TREZOR devices.')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Prints communication to device')
     parser.add_argument('-t', '--transport', dest='transport', choices=['usb', 'udp', 'pipe', 'bridge'], default='usb', help="Transport used for talking with the device")
-    parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport (usually serial port)")
-#    parser.add_argument('-dt', '--debuglink-transport', dest='debuglink_transport', choices=['usb', 'serial', 'pipe', 'socket'], default='usb', help="Debuglink transport")
-#    parser.add_argument('-dp', '--debuglink-path', dest='debuglink_path', default='', help="Path used by the transport (usually serial port)")
+    parser.add_argument('-p', '--path', dest='path', default='', help="Path used by the transport")
     parser.add_argument('-j', '--json', dest='json', action='store_true', help="Prints result as json object")
-#    parser.add_argument('-d', '--debug', dest='debug', action='store_true', help='Enable low-level debugging')
 
     cmdparser = parser.add_subparsers(title='Available commands')
 
