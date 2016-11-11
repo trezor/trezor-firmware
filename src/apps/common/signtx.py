@@ -33,8 +33,8 @@ class UiConfirmOutput:
 
 class UiConfirmTotal:
 
-    def __init__(self, total_out: int, fee: int, coin: CoinType):
-        self.total_out = total_out
+    def __init__(self, spending: int, fee: int, coin: CoinType):
+        self.spending = spending
         self.fee = fee
         self.coin = coin
 
@@ -43,8 +43,8 @@ def confirm_output(output: TxOutputType, coin: CoinType):
     return (yield UiConfirmOutput(output, coin))
 
 
-def confirm_total(total_out: int, fee: int, coin: CoinType):
-    return (yield UiConfirmTotal(total_out, fee, coin))
+def confirm_total(spending: int, fee: int, coin: CoinType):
+    return (yield UiConfirmTotal(spending, fee, coin))
 
 
 def request_tx_meta(tx_req: TxRequest, tx_hash: bytes=None):
@@ -141,7 +141,11 @@ async def sign_tx(tx: SignTx, root):
 
     fee = total_in - total_out
 
-    if not await confirm_total(total_out, fee, coin):
+    if fee < 0:
+        raise SigningError(FailureType.NotEnoughFunds,
+                           'Not enough funds')
+
+    if not await confirm_total(total_out - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled,
                            'Total cancelled')
 
