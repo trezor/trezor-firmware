@@ -176,6 +176,7 @@ class MessageType(Type):
                 if issubclass(ftype, MessageType):
                     flen = await UVarintType.load(source)
                     slen = source.set_limit(flen)
+                    target.send((field, None))
                     await ftype.load(source, target)
                     source.set_limit(slen)
                 else:
