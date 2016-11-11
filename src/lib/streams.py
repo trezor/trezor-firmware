@@ -46,7 +46,7 @@ class StreamReader:
         raising EOF (intended to be restored with another call to
         `set_limit`).
         '''
-        if self._limit is not None:
+        if self._limit is not None and n is not None:
             rem = self._limit - n
         else:
             rem = None
