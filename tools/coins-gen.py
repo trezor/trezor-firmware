@@ -14,7 +14,7 @@ fields = [
 
 coins = json.load(open('../../trezor-common/coins.json', 'r'))
 
-print('_coins = [')
+print('COINS = [')
 for c in coins:
     print('    CoinType(')
     for n in fields:
