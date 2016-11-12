@@ -13,7 +13,7 @@ if __debug__:
 
 paused_tasks = {}  # {message interface: [task]}
 schedule_counter = 0
-scheduled_tasks = []  # heap: [(time, counter, task, value)]
+scheduled_tasks = []  # heap: [(deadline, counter, task, value)]
 MAX_SELECT_DELAY = const(1000000)
 
 # message interfaces:
@@ -26,11 +26,11 @@ TOUCH_MOVE = const(2)  # event
 TOUCH_END = const(4)  # event
 
 
-def schedule_task(task, value=None, time=None):
+def schedule_task(task, value=None, deadline=None):
     global schedule_counter
-    if time is None:
-        time = utime.ticks_us()
-    heappush(scheduled_tasks, (time, schedule_counter, task, value))
+    if deadline is None:
+        deadline = utime.ticks_us()
+    heappush(scheduled_tasks, (deadline, schedule_counter, task, value))
     schedule_counter += 1
 
 
@@ -94,8 +94,8 @@ def run_forever():
         global log_delay_pos
     while True:
         if scheduled_tasks:
-            t, _, _, _ = scheduled_tasks[0]
-            delay = t - utime.ticks_us()
+            deadline = scheduled_tasks[0][0]
+            delay = utime.ticks_diff(deadline, utime.ticks_us())
         else:
             delay = MAX_SELECT_DELAY
         if __debug__:
@@ -118,10 +118,10 @@ class Syscall():
 class Sleep(Syscall):
 
     def __init__(self, delay_us):
-        self.time = delay_us + utime.ticks_us()
+        self.deadline = utime.ticks_add(utime.ticks_us(), delay_us)
 
     def handle(self, task):
-        schedule_task(task, self, self.time)
+        schedule_task(task, self, self.deadline)
 
 
 class Select(Syscall):
