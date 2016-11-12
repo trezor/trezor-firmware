@@ -1,16 +1,19 @@
 from __future__ import print_function
 
 import unittest
-from trezorlib.client import TrezorDebugClient
+from trezorlib.client import TrezorClient, TrezorDebugClient
 from trezorlib.tx_api import TxApiBitcoin
 import config
 
 class TrezorTest(unittest.TestCase):
     def setUp(self):
-        self.debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS, **config.DEBUG_TRANSPORT_KWARGS)
-        self.transport = config.TRANSPORT(*config.TRANSPORT_ARGS, **config.TRANSPORT_KWARGS)
-        self.client = TrezorDebugClient(self.transport)
-        self.client.set_debuglink(self.debug_transport)
+        transport = config.TRANSPORT(*config.TRANSPORT_ARGS, **config.TRANSPORT_KWARGS)
+        if hasattr(config, 'DEBUG_TRANSPORT'):
+            debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS, **config.DEBUG_TRANSPORT_KWARGS)
+            self.client = TrezorDebugClient(transport)
+            self.client.set_debuglink(debug_transport)
+        else:
+            self.client = TrezorClient(transport)
         self.client.set_tx_api(TxApiBitcoin)
         # self.client.set_buttonwait(3)
 

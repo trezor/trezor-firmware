@@ -38,8 +38,5 @@ elif pipe_exists('/tmp/pipe.trezor.to'):
 elif True:
     print('Using Emulator (v2=udp)')
     TRANSPORT = UdpTransport
-    TRANSPORT_ARGS = ('127.0.0.1:21324')
+    TRANSPORT_ARGS = ('', )
     TRANSPORT_KWARGS = {}
-    DEBUG_TRANSPORT = UdpTransport
-    DEBUG_TRANSPORT_ARGS = ('127.0.0.1:21324')
-    DEBUG_TRANSPORT_KWARGS = {}
