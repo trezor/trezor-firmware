@@ -108,4 +108,4 @@ def _set(key: int, val):
 def _new_device_id() -> str:
     from ubinascii import hexlify
     from trezor.crypto import random
-    return str(hexlify(random.bytes(16)))
+    return hexlify(random.bytes(12)).decode('ascii').upper()
