@@ -1,9 +1,9 @@
 from trezor.wire import register_type, protobuf_handler, write_message
 from trezor.utils import unimport
-from trezor.messages.wire_types import Initialize, GetFeatures
+from trezor.messages.wire_types import Initialize, GetFeatures, Ping
 
 
-async def respond(_, session_id):
+async def respond_Features(_, session_id):
     from ..common import storage, coins
     from trezor.messages.Features import Features
 
@@ -25,6 +25,18 @@ async def respond(_, session_id):
     await write_message(session_id, f)
 
 
+async def respond_Pong(ping, session_id):
+    from trezor.messages.Success import Success
+
+    # TODO: handle button_protection, passphrase_protection and pin_protection flags of Ping message
+
+    f = Success()
+    f.message = ping.message
+
+    await write_message(session_id, f)
+
+
 def boot():
-    register_type(Initialize, protobuf_handler, respond)
-    register_type(GetFeatures, protobuf_handler, respond)
+    register_type(Initialize, protobuf_handler, respond_Features)
+    register_type(GetFeatures, protobuf_handler, respond_Features)
+    register_type(Ping, protobuf_handler, respond_Pong)
