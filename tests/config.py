@@ -40,3 +40,6 @@ elif True:
     TRANSPORT = UdpTransport
     TRANSPORT_ARGS = ('', )
     TRANSPORT_KWARGS = {}
+    DEBUG_TRANSPORT = UdpTransport
+    DEBUG_TRANSPORT_ARGS = ('', )
+    DEBUG_TRANSPORT_KWARGS = {}
