@@ -116,7 +116,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
     mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
-    uint8_t ping_array[64] = { [0 ... 63] = 255 };
     int timeout = mp_obj_get_int(timeout_us);
     if (timeout < 0) {
         timeout = 0;
@@ -137,8 +136,8 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
             uint8_t recvbuf[64];
             ssize_t l = msg_recv(&iface, recvbuf, 64);
             if (l > 0 && iface < o->interface_count) {
-                if (memcmp(ping_array, recvbuf, 64) == 0) {
-                    msg_send(iface, ping_array, 64);
+                if (l == 8 && memcmp("PINGPING", recvbuf, 8) == 0) {
+                    msg_send(iface, (const uint8_t *)"PONGPONG", 8);
                     return mp_const_none;
                 } else {
                     uint16_t iface_usage_page = o->usage_pages[iface];
