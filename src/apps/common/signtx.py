@@ -158,7 +158,6 @@ async def sign_tx(tx: SignTx, root):
     for i_sign in range(tx_inputs_count):
         # hash of what we are signing with this input
         h_sign = HashWriter(sha256)
-        # h_sign = BufferWriter()
         # same as h_first, checked at the end of this iteration
         h_second = HashWriter(sha256)
 
@@ -178,8 +177,7 @@ async def sign_tx(tx: SignTx, root):
                 txi_sign = txi
                 key_sign = node_derive(root, txi.address_n)
                 key_sign_pub = key_sign.public_key()
-                txi.script_sig = input_derive_script_pre_sign(
-                    txi, key_sign_pub)
+                txi.script_sig = input_derive_script(txi, key_sign_pub)
             else:
                 txi.script_sig = bytes()
             write_tx_input(h_sign, txi)
@@ -209,7 +207,7 @@ async def sign_tx(tx: SignTx, root):
         tx_ser.signature = signature
 
         # serialize input with correct signature
-        txi_sign.script_sig = input_derive_script_post_sign(
+        txi_sign.script_sig = input_derive_script(
             txi_sign, key_sign_pub, signature)
         w_txi_sign = bytearray()
         if i_sign == 0:  # serializing first input => prepend tx version and inputs count
@@ -333,19 +331,13 @@ def output_is_change(o: TxOutputType):
 # ===
 
 
-def input_derive_script_pre_sign(i: TxInputType, pubkey: bytes) -> bytes:
+def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes = None) -> bytes:
     i_script_type = getattr(i, 'script_type', InputScriptType.SPENDADDRESS)
     if i_script_type == InputScriptType.SPENDADDRESS:
-        return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
-    else:
-        raise SigningError(FailureType.SyntaxError,
-                           'Unknown input script type')
-
-
-def input_derive_script_post_sign(i: TxInputType, pubkey: bytes, signature: bytes) -> bytes:
-    i_script_type = getattr(i, 'script_type', InputScriptType.SPENDADDRESS)
-    if i_script_type == InputScriptType.SPENDADDRESS:
-        return script_spendaddress_new(pubkey, signature)
+        if signature is None:
+            return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
+        else:
+            return script_spendaddress_new(pubkey, signature)
     else:
         raise SigningError(FailureType.SyntaxError,
                            'Unknown input script type')
