@@ -7,11 +7,13 @@ from trezor import wire
 from apps import homescreen
 from apps import management
 from apps import wallet
+from apps import debug
 
 # Initialize all applications
 homescreen.boot()
 management.boot()
 wallet.boot()
+debug.boot()
 
 # Change backlight to white for better visibility
 ui.display.backlight(ui.BACKLIGHT_NORMAL)
