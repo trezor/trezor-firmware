@@ -8,4 +8,5 @@ knownapps = {
     hashlib.sha256(b'https://gitlab.com').digest()                               : 'GitLab',
     hashlib.sha256(b'https://www.gstatic.com/securitykey/origins.json').digest() : 'Google',
     hashlib.sha256(b'https://slushpool.com/static/security/u2f.json').digest()   : 'Slush Pool',
+    hashlib.sha256(b'https://demo.yubico.com').digest()                          : 'Yubico U2F Demo',
 }
