@@ -299,7 +299,7 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
         return script_paytoaddress_new(ra[1:])
     elif o.script_type == OutputScriptType.PAYTOSCRIPTHASH:
         ra = output_paytoaddress_extract_raw_address(o, coin, root, p2sh=True)
-        return script_paytoaddress_new(ra[1:])
+        return script_paytoscripthash_new(ra[1:])
     else:
         raise SigningError(FailureType.SyntaxError,
                            'Invalid output script type')
@@ -394,6 +394,13 @@ def script_paytoaddress_new(pubkeyhash: bytes) -> bytearray:
     s[24] = 0xAC  # OP_CHECKSIG
     return s
 
+def script_paytoscripthash_new(scripthash: bytes) -> bytearray:
+    s = bytearray(23)
+    s[0] = 0xA9  # OP_HASH_160
+    s[1] = 0x14  # pushing 20 bytes
+    s[2:22] = scripthash
+    s[22] = 0x87  # OP_EQUAL
+    return s
 
 def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
     w = bytearray()
