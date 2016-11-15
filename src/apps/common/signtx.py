@@ -130,14 +130,14 @@ async def sign_tx(tx: SignTx, root):
                 raise SigningError(FailureType.Other,
                                    'Only one change output is valid')
             change_out = txo.amount
+        else:
+            if not await confirm_output(txo, coin):
+                raise SigningError(FailureType.ActionCancelled,
+                                   'Output cancelled')
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         write_tx_output(h_first, txo_bin)
         total_out += txo_bin.amount
-
-        if not output_is_change(txo) and not await confirm_output(txo, coin):
-            raise SigningError(FailureType.ActionCancelled,
-                               'Output cancelled')
 
     fee = total_in - total_out
 
