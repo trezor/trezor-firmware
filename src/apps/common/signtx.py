@@ -305,20 +305,22 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
                            'Invalid output script type')
     return
 
+
 def check_address_type(address_type, raw_address):
     if address_type <= 0xFF:
         return raw_address[0] == address_type
     if address_type <= 0xFFFF:
         return raw_address[0] == (address_type >> 8) \
-           and raw_address[1] == (address_type & 0xFF)
+            and raw_address[1] == (address_type & 0xFF)
     if address_type <= 0xFFFFFF:
         return raw_address[0] == (address_type >> 16) \
-           and raw_address[1] == ((address_type >> 8) & 0xFF) \
-           and raw_address[2] == (address_type & 0xFF)
+            and raw_address[1] == ((address_type >> 8) & 0xFF) \
+            and raw_address[2] == (address_type & 0xFF)
     return raw_address[0] == (address_type >> 24) \
-       and raw_address[1] == ((address_type >> 16) & 0xFF) \
-       and raw_address[2] == ((address_type >> 8) & 0xFF) \
-       and raw_address[3] == (address_type & 0xFF)
+        and raw_address[1] == ((address_type >> 16) & 0xFF) \
+        and raw_address[2] == ((address_type >> 8) & 0xFF) \
+        and raw_address[3] == (address_type & 0xFF)
+
 
 def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, root, p2sh=False) -> bytes:
     address_type = coin.address_type_p2sh if p2sh else coin.address_type
@@ -331,12 +333,13 @@ def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, roo
     address = getattr(o, 'address', None)
     if address:
         raw = base58.decode_check(address)
-        if not check_address_type(address_type, raw_address):
+        if not check_address_type(address_type, raw):
             raise SigningError(FailureType.SyntaxError,
                                'Invalid address type')
         return raw
     raise SigningError(FailureType.SyntaxError,
                        'Missing address')
+
 
 def output_is_change(o: TxOutputType):
     address_n = getattr(o, 'address_n', None)
