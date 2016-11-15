@@ -144,17 +144,17 @@ class Future(Syscall):
 
     def handle(self, task):
         self.task = task
-        if self.value is not NO_VALUE:
-            self._deliver()
+        self._deliver()
 
     def resolve(self, value):
-        if self.value is NO_VALUE:
-            self.value = value
-            if self.task is not None:
-                self._deliver()
+        self.value = value
+        self._deliver()
 
     def _deliver(self):
-        schedule_task(self.task, self.value)
+        if self.task is not None and self.value is not NO_VALUE:
+            schedule_task(self.task, self.value)
+            self.task = None
+            self.value = NO_VALUE
 
 
 class Wait(Syscall):
@@ -180,12 +180,9 @@ class Wait(Syscall):
                 unpause_task(task)
                 task.close()
 
-    def _wait(self, child):
+    async def _wait(self, child):
         try:
-            if isinstance(child, type_gen):
-                result = yield from child
-            else:
-                result = yield child
+            result = await child
         except Exception as e:
             self._finish(child, e)
         else:
