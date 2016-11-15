@@ -24,12 +24,12 @@ async def confirm_total(session_id, spending, fee, coin):
     from trezor import ui
     from trezor.ui.text import Text
     from trezor.messages.ButtonRequestType import SignTx
-    from ..common.confirm import confirm
+    from ..common.confirm import hold_to_confirm
 
     content = Text('Confirm transaction', ui.ICON_RESET,
                    'Sending: %s' % format_amount(spending, coin),
                    'Fee: %s' % format_amount(fee, coin))
-    return await confirm(session_id, content, SignTx)
+    return await hold_to_confirm(session_id, content, SignTx)
 
 
 @unimport
@@ -59,6 +59,5 @@ async def layout_sign_tx(message, session_id):
         elif isinstance(req, signtx.UiConfirmTotal):
             res = await confirm_total(session_id, req.spending, req.fee, req.coin)
         else:
-            print(req)
             raise ValueError('Invalid signing instruction')
     return req
