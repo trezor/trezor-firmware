@@ -32,7 +32,7 @@ async def confirm_total(session_id, spending, fee, coin):
     return await hold_to_confirm(session_id, content, SignTx)
 
 
-@unimport
+# @unimport
 async def layout_sign_tx(message, session_id):
     from ..common.seed import get_root_node
     from ..common import signtx
