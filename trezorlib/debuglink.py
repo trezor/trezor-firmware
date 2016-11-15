@@ -15,11 +15,13 @@ def pprint(msg):
 class DebugLink(object):
     def __init__(self, transport, pin_func=pin_info, button_func=button_press):
         self.transport = transport
+        self.transport.session_begin()
 
         self.pin_func = pin_func
         self.button_func = button_func
 
     def close(self):
+        self.transport.session_end()
         self.transport.close()
 
     def _call(self, msg, nowait=False):

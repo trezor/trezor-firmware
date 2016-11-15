@@ -156,6 +156,9 @@ class TransportV1(Transport):
 
 class TransportV2(Transport):
     def write(self, msg):
+        if not self.session_id:
+            raise Exception('Missing session_id for v2 transport')
+
         data = bytearray(msg.SerializeToString())
 
         # Convert to unsigned in python2
@@ -185,6 +188,9 @@ class TransportV2(Transport):
             first = False
 
     def _read(self):
+        if not self.session_id:
+            raise Exception('Missing session_id for v2 transport')
+
         chunk = self._read_chunk()
         (session_id, msg_type, datalen, data) = self.parse_first(chunk)
         payloadlen = datalen + 4  # For the checksum
