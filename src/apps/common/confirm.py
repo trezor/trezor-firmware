@@ -1,5 +1,9 @@
-from trezor import wire, ui
+from trezor import wire, ui, loop
 from trezor.utils import unimport
+
+# used to confirm/cancel the dialogs from outside of this module (i.e.
+# through debug link)
+future = loop.Future()
 
 
 @unimport
@@ -16,7 +20,7 @@ async def confirm(session_id, content=None, code=None, *args, **kwargs):
     if code is None:
         code = Other
     await wire.reply_message(session_id, ButtonRequest(code=code), ButtonAck)
-    return await dialog == CONFIRMED
+    return await loop.Wait((future, dialog)) == CONFIRMED
 
 
 @unimport
@@ -36,7 +40,7 @@ async def hold_to_confirm(session_id, content=None, code=None, *args, **kwargs):
     if code is None:
         code = Other
     await wire.reply_message(session_id, ButtonRequest(code=code), ButtonAck)
-    return await dialog == CONFIRMED
+    return await loop.Wait((future, dialog)) == CONFIRMED
 
 
 @unimport
