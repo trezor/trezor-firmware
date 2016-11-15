@@ -38,5 +38,6 @@ extern const BITMAP bmp_u2f_github;
 extern const BITMAP bmp_u2f_gitlab;
 extern const BITMAP bmp_u2f_google;
 extern const BITMAP bmp_u2f_slushpool;
+extern const BITMAP bmp_u2f_yubico;
 
 #endif
