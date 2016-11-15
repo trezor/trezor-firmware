@@ -49,6 +49,10 @@ def check_pin(pin: str) -> bool:
     return _get(_CFG_PIN) == pin
 
 
+def get_pin() -> str:
+    return _get(_CFG_PIN)
+
+
 def get_label() -> str:
     return _get(_CFG_LABEL)
 
