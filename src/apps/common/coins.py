@@ -90,18 +90,18 @@ def by_shortcut(shortcut):
     for c in COINS:
         if c.coin_shortcut == shortcut:
             return c
-    raise Exception('Unknown coin shortcut "%s"' % shortcut)
+    raise ValueError('Unknown coin shortcut "%s"' % shortcut)
 
 
 def by_name(name):
     for c in COINS:
         if c.coin_name == name:
             return c
-    raise Exception('Unknown coin name "%s"' % name)
+    raise ValueError('Unknown coin name "%s"' % name)
 
 
 def by_address_type(version):
     for c in COINS:
         if c.address_type == version:
             return c
-    raise Exception('Unknown coin address type %d' % version)
+    raise ValueError('Unknown coin address type %d' % version)

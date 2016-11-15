@@ -17,7 +17,6 @@ from trezor.messages import OutputScriptType
 from apps.common import coins
 from apps.common import signtx
 
-
 class TestSignTx(unittest.TestCase):
     # pylint: disable=C0301
 
