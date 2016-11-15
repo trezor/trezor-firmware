@@ -14,6 +14,7 @@ from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import OutputScriptType
 
+from apps.common import coins
 from apps.common import signtx
 
 
@@ -23,6 +24,8 @@ class TestSignTx(unittest.TestCase):
     def test_one_one_fee(self):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
+
+        coin_bitcoin = coins.by_name('Bitcoin')
 
         ptx1 = TransactionType(version=1, lock_time=0, inputs_cnt=2, outputs_cnt=1)
         pinp1 = TxInputType(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
@@ -57,9 +60,9 @@ class TestSignTx(unittest.TestCase):
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
-            signtx.UiConfirmOutput(out1),
+            signtx.UiConfirmOutput(out1, coin_bitcoin),
             True,
-            signtx.UiConfirmTotal(380000, 10000),
+            signtx.UiConfirmTotal(380000, 10000, coin_bitcoin),
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
