@@ -297,30 +297,46 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         ra = output_paytoaddress_extract_raw_address(o, coin, root)
         return script_paytoaddress_new(ra[1:])
+    elif o.script_type == OutputScriptType.PAYTOSCRIPTHASH:
+        ra = output_paytoaddress_extract_raw_address(o, coin, root, p2sh=True)
+        return script_paytoaddress_new(ra[1:])
     else:
         raise SigningError(FailureType.SyntaxError,
                            'Invalid output script type')
     return
 
+def check_address_type(address_type, raw_address):
+    if address_type <= 0xFF:
+        return raw_address[0] == address_type
+    if address_type <= 0xFFFF:
+        return raw_address[0] == (address_type >> 8) \
+           and raw_address[1] == (address_type & 0xFF)
+    if address_type <= 0xFFFFFF:
+        return raw_address[0] == (address_type >> 16) \
+           and raw_address[1] == ((address_type >> 8) & 0xFF) \
+           and raw_address[2] == (address_type & 0xFF)
+    return raw_address[0] == (address_type >> 24) \
+       and raw_address[1] == ((address_type >> 16) & 0xFF) \
+       and raw_address[2] == ((address_type >> 8) & 0xFF) \
+       and raw_address[3] == (address_type & 0xFF)
 
-def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, root) -> bytes:
+def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, root, p2sh=False) -> bytes:
+    address_type = coin.address_type_p2sh if p2sh else coin.address_type
     # TODO: dont encode/decode more then necessary
-    # TODO: detect correct address type
     address_n = getattr(o, 'address_n', None)
     if address_n is not None:
         node = node_derive(root, address_n)
-        address = node.address(coin.address_type)
+        address = node.address(address_type)
         return base58.decode_check(address)
     address = getattr(o, 'address', None)
     if address:
         raw = base58.decode_check(address)
-        if raw[0] != coin.address_type:
+        if not check_address_type(address_type, raw_address):
             raise SigningError(FailureType.SyntaxError,
                                'Invalid address type')
         return raw
     raise SigningError(FailureType.SyntaxError,
                        'Missing address')
-
 
 def output_is_change(o: TxOutputType):
     address_n = getattr(o, 'address_n', None)
