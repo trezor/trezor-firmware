@@ -116,8 +116,7 @@ Pass report payloads as `memoryview` for cheaper slicing.
     if len(msg_footer) < _MSG_FOOTER_LEN:
         data_tail = yield  # read report with the rest of checksum
         footer_tail = data_tail[:_MSG_FOOTER_LEN - len(msg_footer)]
-        if isinstance(msg_footer, memoryview):
-            msg_footer = bytearray(msg_footer)
+        msg_footer = bytearray(msg_footer)
         msg_footer.extend(footer_tail)
 
     data_checksum, = parse_message_footer(msg_footer)
