@@ -3,11 +3,13 @@ from ..common import seed
 
 
 @unimport
-async def layout_get_public_key(message, session_id):
+async def layout_get_public_key(msg, session_id):
     from trezor.messages.HDNodeType import HDNodeType
     from trezor.messages.PublicKey import PublicKey
 
-    node = await seed.get_node(session_id, message.address_n)
+    address_n = getattr(msg, 'address_n', ())
+
+    node = await seed.get_node(session_id, address_n)
 
     node_xpub = node.serialize_public()
     node_type = HDNodeType(
