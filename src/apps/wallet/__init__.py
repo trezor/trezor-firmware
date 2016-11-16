@@ -25,8 +25,9 @@ def dispatch_SignTx(*args, **kwargs):
 @unimport
 async def dispatch_EstimateTxSize(msg, session_id):
     from trezor.messages.TxSize import TxSize
+    from ..common.signtx import estimate_tx_size
     m = TxSize()
-    m.tx_size =  10 + msg.inputs_count * 149 + msg.outputs_count * 35
+    m.tx_size = estimate_tx_size(msg.inputs_count, msg.outputs_count)
     return m
 
 

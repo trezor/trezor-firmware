@@ -32,7 +32,18 @@ async def confirm_total(session_id, spending, fee, coin):
     return await hold_to_confirm(session_id, content, SignTx)
 
 
-# @unimport
+async def confirm_feeoverthreshold(session_id, fee, coin):
+    from trezor import ui
+    from trezor.ui.text import Text
+    from trezor.messages.ButtonRequestType import FeeOverThreshold
+    from ..common.confirm import confirm
+
+    content = Text('Confirm high fee:', ui.ICON_RESET,
+                   ui.BOLD, format_amount(fee, coin))
+    return await confirm(session_id, content, FeeOverThreshold)
+
+
+@unimport
 async def layout_sign_tx(message, session_id):
     from ..common.seed import get_root_node
     from ..common import signtx
@@ -50,14 +61,16 @@ async def layout_sign_tx(message, session_id):
             req = signer.send(res)
         except signtx.SigningError as e:
             raise wire.FailureError(*e.args)
-        if isinstance(req, TxRequest):
+        if req.__qualname__ == 'TxRequest':
             if req.request_type == RequestType.TXFINISHED:
                 break
             res = await wire.reply_message(session_id, req, TxAck)
-        elif isinstance(req, signtx.UiConfirmOutput):
+        elif req.__qualname__ == 'UiConfirmOutput':
             res = await confirm_output(session_id, req.output, req.coin)
-        elif isinstance(req, signtx.UiConfirmTotal):
+        elif req.__qualname__ == 'UiConfirmTotal':
             res = await confirm_total(session_id, req.spending, req.fee, req.coin)
-        else:
+        elif req.__qualname__ == 'UiConfirmFeeOverThreshold':
+            res = await confirm_feeoverthreshold(session_id, req.fee, req.coin)
+    else:
             raise ValueError('Invalid signing instruction')
     return req

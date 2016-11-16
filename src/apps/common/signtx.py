@@ -39,12 +39,23 @@ class UiConfirmTotal:
         self.coin = coin
 
 
+class UiConfirmFeeOverThreshold:
+
+    def __init__(self, fee: int, coin: CoinType):
+        self.fee = fee
+        self.coin = coin
+
+
 def confirm_output(output: TxOutputType, coin: CoinType):
     return (yield UiConfirmOutput(output, coin))
 
 
 def confirm_total(spending: int, fee: int, coin: CoinType):
     return (yield UiConfirmTotal(spending, fee, coin))
+
+
+def confirm_feeoverthreshold(fee: int, coin: CoinType):
+    return (yield UiConfirmFeeOverThreshold(fee, coin))
 
 
 def request_tx_meta(tx_req: TxRequest, tx_hash: bytes=None):
@@ -83,6 +94,8 @@ def request_tx_finish(tx_req: TxRequest):
     yield tx_req
     tx_req.serialized = None
 
+def estimate_tx_size(inputs, outputs):
+    return 10 + inputs * 149 + outputs * 35
 
 # Transaction signing
 # ===
@@ -144,6 +157,12 @@ async def sign_tx(tx: SignTx, root):
     if fee < 0:
         raise SigningError(FailureType.NotEnoughFunds,
                            'Not enough funds')
+
+    if fee > coin.maxfee_kb * ((estimate_tx_size(tx_inputs_count, tx_outputs_count) + 999) // 1000):
+        if not await confirm_feeoverthreshold(fee, coin):
+            raise SigningError(FailureType.ActionCancelled,
+                               'Signing cancelled')
+
 
     if not await confirm_total(total_out - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled,
