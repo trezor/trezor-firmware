@@ -144,9 +144,10 @@ async def sign_tx(tx: SignTx, root):
                                    'Only one change output is valid')
             change_out = txo.amount
         else:
-            if not await confirm_output(txo, coin):
-                raise SigningError(FailureType.ActionCancelled,
-                                   'Output cancelled')
+            if txo.script_type != OutputScriptType.PAYTOOPRETURN:
+                if not await confirm_output(txo, coin):
+                    raise SigningError(FailureType.ActionCancelled,
+                                       'Output cancelled')
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         write_tx_output(h_first, txo_bin)
@@ -319,6 +320,12 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
     elif o.script_type == OutputScriptType.PAYTOSCRIPTHASH:
         ra = output_paytoaddress_extract_raw_address(o, coin, root, p2sh=True)
         return script_paytoscripthash_new(ra[1:])
+    elif o.script_type == OutputScriptType.PAYTOOPRETURN:
+        if o.amount == 0:
+            return script_paytoopreturn_new(o.op_return_data)
+        else:
+            raise SigningError(FailureType.SyntaxError,
+                               'OP_RETURN output with non-zero amount')
     else:
         raise SigningError(FailureType.SyntaxError,
                            'Invalid output script type')
@@ -420,6 +427,13 @@ def script_paytoscripthash_new(scripthash: bytes) -> bytearray:
     s[2:22] = scripthash
     s[22] = 0x87  # OP_EQUAL
     return s
+
+def script_paytoopreturn_new(data: bytes) -> bytearray:
+    w = bytearray()
+    w.append(0x6A) # OP_RETURN
+    write_op_push(w, len(data))
+    w.extend(data)
+    return w
 
 def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
     w = bytearray()
