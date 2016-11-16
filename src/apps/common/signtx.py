@@ -95,8 +95,6 @@ def request_tx_finish(tx_req: TxRequest):
     yield tx_req
     tx_req.serialized = None
 
-def estimate_tx_size(inputs, outputs):
-    return 10 + inputs * 149 + outputs * 35
 
 # Transaction signing
 # ===
@@ -144,11 +142,10 @@ async def sign_tx(tx: SignTx, root):
                 raise SigningError(FailureType.Other,
                                    'Only one change output is valid')
             change_out = txo.amount
-        else:
-            if txo.script_type != OutputScriptType.PAYTOOPRETURN:
-                if not await confirm_output(txo, coin):
-                    raise SigningError(FailureType.ActionCancelled,
-                                       'Output cancelled')
+        elif txo.script_type != OutputScriptType.PAYTOOPRETURN:
+            if not await confirm_output(txo, coin):
+                raise SigningError(FailureType.ActionCancelled,
+                                   'Output cancelled')
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         write_tx_output(h_first, txo_bin)
@@ -164,7 +161,6 @@ async def sign_tx(tx: SignTx, root):
         if not await confirm_feeoverthreshold(fee, coin):
             raise SigningError(FailureType.ActionCancelled,
                                'Signing cancelled')
-
 
     if not await confirm_total(total_out - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled,
@@ -310,28 +306,35 @@ def get_tx_hash(w, double: bool, reverse: bool=False) -> bytes:
     return d
 
 
+def estimate_tx_size(inputs, outputs):
+    return 10 + inputs * 149 + outputs * 35
+
+
 # TX Outputs
 # ===
+
 
 def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         ra = output_paytoaddress_extract_raw_address(o, coin, root)
         ra = address_type.strip(coin.address_type, ra)
         return script_paytoaddress_new(ra)
+
     elif o.script_type == OutputScriptType.PAYTOSCRIPTHASH:
         ra = output_paytoaddress_extract_raw_address(o, coin, root, p2sh=True)
         ra = address_type.strip(coin.address_type_p2sh, ra)
         return script_paytoscripthash_new(ra)
+
     elif o.script_type == OutputScriptType.PAYTOOPRETURN:
         if o.amount == 0:
             return script_paytoopreturn_new(o.op_return_data)
         else:
             raise SigningError(FailureType.SyntaxError,
                                'OP_RETURN output with non-zero amount')
+
     else:
         raise SigningError(FailureType.SyntaxError,
                            'Invalid output script type')
-    return
 
 
 def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, root, p2sh=False) -> bytes:
@@ -362,13 +365,15 @@ def output_is_change(o: TxOutputType):
 # ===
 
 
-def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes = None) -> bytes:
+def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
     i_script_type = getattr(i, 'script_type', InputScriptType.SPENDADDRESS)
+
     if i_script_type == InputScriptType.SPENDADDRESS:
         if signature is None:
             return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
         else:
             return script_spendaddress_new(pubkey, signature)
+
     else:
         raise SigningError(FailureType.SyntaxError,
                            'Unknown input script type')
@@ -412,6 +417,7 @@ def script_paytoaddress_new(pubkeyhash: bytes) -> bytearray:
     s[24] = 0xAC  # OP_CHECKSIG
     return s
 
+
 def script_paytoscripthash_new(scripthash: bytes) -> bytearray:
     s = bytearray(23)
     s[0] = 0xA9  # OP_HASH_160
@@ -420,12 +426,14 @@ def script_paytoscripthash_new(scripthash: bytes) -> bytearray:
     s[22] = 0x87  # OP_EQUAL
     return s
 
+
 def script_paytoopreturn_new(data: bytes) -> bytearray:
     w = bytearray()
-    w.append(0x6A) # OP_RETURN
+    w.append(0x6A)  # OP_RETURN
     write_op_push(w, len(data))
     w.extend(data)
     return w
+
 
 def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
     w = bytearray()
@@ -439,6 +447,7 @@ def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
 
 # TX Serialization
 # ===
+
 
 def write_tx_input(w, i: TxInputType):
     i_sequence = getattr(i, 'sequence', 4294967295)
