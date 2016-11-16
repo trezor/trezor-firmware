@@ -312,14 +312,25 @@ def get_tx_hash(w, double: bool, reverse: bool=False) -> bytes:
 # TX Outputs
 # ===
 
+def len_address_type(address_type):
+    if address_type <= 0xFF:
+        return 1
+    if address_type <= 0xFFFF:
+        return 2
+    if address_type <= 0xFFFFFF:
+        return 3
+    # else
+    return 4
 
 def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         ra = output_paytoaddress_extract_raw_address(o, coin, root)
-        return script_paytoaddress_new(ra[1:])
+        at = len_address_type(coin.address_type)
+        return script_paytoaddress_new(ra[at:])
     elif o.script_type == OutputScriptType.PAYTOSCRIPTHASH:
         ra = output_paytoaddress_extract_raw_address(o, coin, root, p2sh=True)
-        return script_paytoscripthash_new(ra[1:])
+        at = len_address_type(coin.address_type_p2sh)
+        return script_paytoscripthash_new(ra[at:])
     elif o.script_type == OutputScriptType.PAYTOOPRETURN:
         if o.amount == 0:
             return script_paytoopreturn_new(o.op_return_data)
