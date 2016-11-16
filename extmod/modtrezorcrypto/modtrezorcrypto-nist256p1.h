@@ -70,7 +70,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Nist256p1_sign(size_t n_args, const mp_obj_t *a
     mp_buffer_info_t sk, dig;
     mp_get_buffer_raise(args[1], &sk, MP_BUFFER_READ);
     mp_get_buffer_raise(args[2], &dig, MP_BUFFER_READ);
-    bool compressed = n_args > 3 && args[3] == mp_const_true;
+    bool compressed = n_args < 4 || args[3] == mp_const_true;
     if (sk.len != 32) {
         mp_raise_ValueError("Invalid length of secret key");
     }
