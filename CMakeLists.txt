@@ -1,20 +1,22 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 set(SOURCES address.c aescrypt.c aeskey.c aes_modes.c aestab.c base58.c bignum.c bip32.c bip39.c ecdsa.c hmac.c nist256p1.c pbkdf2.c rand.c ripemd160.c secp256k1.c sha2.c ed25519-donna/ed25519.c sha3.c)
-include_directories(ed25519-donna)
-include_directories(curve25519-donna)
+
+add_library(TrezorCrypto STATIC ${SOURCES})
+
+target_include_directories(TrezorCrypto PUBLIC .)
+target_include_directories(TrezorCrypto PUBLIC ed25519-donna)
+target_include_directories(TrezorCrypto PUBLIC curve25519-donna)
 
 # disable sequence point warnings where they are expected
 set_source_files_properties(aeskey.c PROPERTIES
                             COMPILE_FLAGS -Wno-sequence-point)
 
-set(CMAKE_C_FLAGS "-std=c99")
+target_compile_options(TrezorCrypto PRIVATE "-std=c99")
 
 if(MSVC)
   set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CXX)
 endif(MSVC)
-
-add_library(TrezorCrypto STATIC ${SOURCES})
 
 # Build trezor-crypto tests (requires OpenSSL)
 if (TREZOR_CRYPTO_TESTS)
