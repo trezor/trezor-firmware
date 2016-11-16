@@ -1,7 +1,7 @@
 from trezor.wire import register_type, protobuf_handler
 from trezor.utils import unimport
 from trezor.messages.wire_types import \
-    GetPublicKey, GetAddress, SignTx, EstimateTxSize, SignMessage
+    GetPublicKey, GetAddress, SignTx, EstimateTxSize, SignMessage, VerifyMessage
 
 
 @unimport
@@ -37,9 +37,16 @@ def dispatch_SignMessage(*args, **kwargs):
     return layout_sign_message(*args, **kwargs)
 
 
+@unimport
+def dispatch_VerifyMessage(*args, **kwargs):
+    from .layout_verify_message import layout_verify_message
+    return layout_verify_message(*args, **kwargs)
+
+
 def boot():
     register_type(GetPublicKey, protobuf_handler, dispatch_GetPublicKey)
     register_type(GetAddress, protobuf_handler, dispatch_GetAddress)
     register_type(SignTx, protobuf_handler, dispatch_SignTx)
     register_type(EstimateTxSize, protobuf_handler, dispatch_EstimateTxSize)
     register_type(SignMessage, protobuf_handler, dispatch_SignMessage)
+    register_type(VerifyMessage, protobuf_handler, dispatch_VerifyMessage)
