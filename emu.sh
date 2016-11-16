@@ -1,8 +1,13 @@
 #!/bin/bash
 
-ARGS="${ARGS:--O0 -X heapsize=100000}"
+source emu.config 2>/dev/null
+
+OPTLEVEL="${OPTLEVEL:-0}"
+HEAPSIZE="${HEAPSIZE:-100000}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"
+
+ARGS="-O${OPTLEVEL} -X heapsize=${HEAPSIZE}"
 
 cd `dirname $0`/src
 
