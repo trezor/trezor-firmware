@@ -14,6 +14,9 @@ async def layout_load_device(message, session_id):
     if storage.is_initialized():
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
+    if hasattr(message, 'node'):
+        raise wire.FailureError(Other, 'LoadDevice.node is not supported')
+
     skip_checksum = getattr(message, 'skip_checksum', False)
     mnemonic = getattr(message, 'mnemonic')
     pin = getattr(message, 'pin', None)
