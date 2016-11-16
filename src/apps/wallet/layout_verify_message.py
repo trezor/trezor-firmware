@@ -9,7 +9,7 @@ async def layout_verify_message(msg, session_id):
     from trezor.crypto import base58
     from ..common import address_type
     from ..common import coins
-    from ..common.signtx import node_derive, HashWriter, write_varint
+    from ..common.signverify import message_digest
 
     address = msg.address
     message = msg.message
@@ -23,13 +23,7 @@ async def layout_verify_message(msg, session_id):
     ui.display.text(10, 60, message, ui.MONO, ui.WHITE, ui.BLACK)
     ui.display.text(10, 80, address, ui.MONO, ui.WHITE, ui.BLACK)
 
-    h = HashWriter(sha256)
-    write_varint(h, len(coin.signed_message_header))
-    h.extend(coin.signed_message_header)
-    write_varint(h, len(message))
-    h.extend(message)
-
-    digest = sha256(h.getvalue()).digest()
+    digest = message_digest(coin, message)
     pubkey = secp256k1.verify_recover(signature, digest)
 
     if not pubkey:

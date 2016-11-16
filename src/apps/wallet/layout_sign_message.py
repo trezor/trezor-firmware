@@ -5,11 +5,11 @@ from trezor.utils import unimport
 @unimport
 async def layout_sign_message(msg, session_id):
     from trezor.messages.MessageSignature import MessageSignature
-    from trezor.crypto.hashlib import sha256
     from trezor.crypto.curve import secp256k1
-    from ..common.signtx import node_derive, HashWriter, write_varint
+    from ..common.signtx import node_derive
     from ..common.seed import get_root_node
     from ..common import coins
+    from ..common.signverify import message_digest
 
     ui.display.clear()
     ui.display.text(10, 30, 'Signing message',
@@ -26,13 +26,7 @@ async def layout_sign_message(msg, session_id):
     seckey = node.private_key()
     address = node.address(coin.address_type)
 
-    h = HashWriter(sha256)
-    write_varint(h, len(coin.signed_message_header))
-    h.extend(coin.signed_message_header)
-    write_varint(h, len(message))
-    h.extend(message)
-
-    digest = sha256(h.getvalue()).digest()
+    digest = message_digest(coin, message)
 
     signature = secp256k1.sign(seckey, digest)
 
