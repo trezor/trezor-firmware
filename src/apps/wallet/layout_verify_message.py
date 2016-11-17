@@ -11,29 +11,26 @@ async def layout_verify_message(msg, session_id):
     from ..common import coins
     from ..common.signverify import message_digest
 
-    address = msg.address
-    message = msg.message
-    signature = msg.signature
     coin_name = getattr(msg, 'coin_name', 'Bitcoin')
     coin = coins.by_name(coin_name)
 
-    ui.display.clear()
-    ui.display.text(10, 30, 'Verifying message',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 60, message, ui.MONO, ui.WHITE, ui.BLACK)
-    ui.display.text(10, 80, address, ui.MONO, ui.WHITE, ui.BLACK)
-
-    digest = message_digest(coin, message)
-    pubkey = secp256k1.verify_recover(signature, digest)
+    digest = message_digest(coin, msg.message)
+    pubkey = secp256k1.verify_recover(msg.signature, digest)
 
     if not pubkey:
         raise ValueError('Invalid signature')
 
-    raw_address = base58.decode_check(address)
+    raw_address = base58.decode_check(msg.address)
     at, pkh = address_type.split(coin, raw_address)
     pkh2 = ripemd160(sha256(pubkey).digest()).digest()
 
     if pkh != pkh2:
         raise ValueError('Invalid signature')
+
+    ui.display.clear()
+    ui.display.text(10, 30, 'Verifying message',
+                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(10, 60, msg.message, ui.MONO, ui.WHITE, ui.BLACK)
+    ui.display.text(10, 80, msg.address, ui.MONO, ui.WHITE, ui.BLACK)
 
     return Success(message='Message verified')
