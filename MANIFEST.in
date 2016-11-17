@@ -1,1 +1,2 @@
 recursive-include tests *.py *.sh
+include COPYING
