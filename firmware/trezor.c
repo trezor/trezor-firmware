@@ -38,15 +38,12 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 	for (;;) {} // loop forever
 }
 
-static uint32_t saver_counter = 0;
-
 void check_lock_screen(void)
 {
 	buttonUpdate();
 
 	// wake from screensaver on any button
 	if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
-		saver_counter = 0;
 		layoutHome();
 		return;
 	}
@@ -82,15 +79,11 @@ void check_lock_screen(void)
 
 	// if homescreen is shown for longer than 10 minutes, lock too
 	if (layoutLast == layoutHome) {
-		saver_counter++;
-		if (saver_counter > 285000 * 60 * 10) {
+		if (system_millis >= system_millis_lock) {
 			// lock the screen
 			session_clear(true);
 			layoutScreensaver();
-			saver_counter = 0;
 		}
-	} else {
-		saver_counter = 0;
 	}
 }
 

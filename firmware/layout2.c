@@ -28,6 +28,7 @@
 #include "string.h"
 #include "util.h"
 #include "qr_encode.h"
+#include "timer.h"
 
 void *layoutLast = layoutHome;
 
@@ -81,6 +82,9 @@ void layoutHome(void)
 		}
 	}
 	oledRefresh();
+
+	// Reset lock screen timeout
+	system_millis_lock = system_millis + SCREEN_TIMEOUT_MILLIS;
 }
 
 const char *str_amount(uint64_t amnt, const char *abbr, char *buf, int len)

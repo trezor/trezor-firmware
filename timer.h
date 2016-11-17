@@ -23,6 +23,11 @@
 /* 1 tick = 1 ms */
 extern volatile uint32_t system_millis;
 
+/* Screen timeout */
+extern uint32_t system_millis_lock;
+
+#define SCREEN_TIMEOUT_MILLIS (1000 * 60 * 10) /* 10 minutes */
+
 void timer_init(void);
 
 void sys_tick_handler(void);
