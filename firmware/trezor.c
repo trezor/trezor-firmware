@@ -27,6 +27,7 @@
 #include "layout.h"
 #include "layout2.h"
 #include "rng.h"
+#include "timer.h"
 #include "buttons.h"
 
 uint32_t __stack_chk_guard;
@@ -58,13 +59,13 @@ void check_lock_screen(void)
 		// wait until NoButton is released
 		usbTiny(1);
 		do {
-			usbDelay(3300);
+			usbSleep(5);
 			buttonUpdate();
 		} while (!button.NoUp);
 
 		// wait for confirmation/cancellation of the dialog
 		do {
-			usbDelay(3300);
+			usbSleep(5);
 			buttonUpdate();
 		} while (!button.YesUp && !button.NoUp);
 		usbTiny(0);
@@ -102,6 +103,9 @@ int main(void)
 #else
 	setupApp();
 #endif
+
+	timer_init();
+
 #if DEBUG_LINK
 	oledSetDebug(1);
 	storage_reset(); // wipe storage if debug link

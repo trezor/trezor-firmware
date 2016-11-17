@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project.
  *
- * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2016 Saleem Rashid <trezor@saleemrashid.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,13 +17,12 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __USB_H__
-#define __USB_H__
 
-void usbInit(void);
-void usbPoll(void);
-void usbReconnect(void);
-char usbTiny(char set);
-void usbSleep(uint32_t millis);
+#include <stdint.h>
 
-#endif
+/* 1 tick = 1 ms */
+extern volatile uint32_t system_millis;
+
+void timer_init(void);
+
+void sys_tick_handler(void);

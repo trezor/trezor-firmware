@@ -338,7 +338,7 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size)
 
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
-	usbDelay(10); // handle up to ten usb interrupts.
+	usbSleep(1);
 	layoutProgress("Waking up", 1000 * iter / total);
 }
 

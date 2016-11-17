@@ -27,6 +27,7 @@
 #include "u2f.h"
 #include "storage.h"
 #include "util.h"
+#include "timer.h"
 
 #define USB_INTERFACE_INDEX_MAIN 0
 #if DEBUG_LINK
@@ -426,9 +427,10 @@ char usbTiny(char set)
 	return old;
 }
 
-void usbDelay(int cycles)
+void usbSleep(uint32_t millis)
 {
-	while (cycles--) {
+	uint32_t end = system_millis + millis;
+	while (end > system_millis) {
 		usbd_poll(usbd_dev);
 	}
 }
