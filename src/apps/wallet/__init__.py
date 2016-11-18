@@ -3,7 +3,8 @@ from trezor.utils import unimport
 from trezor.messages.wire_types import \
     GetPublicKey, GetAddress, SignTx, EstimateTxSize, \
     SignMessage, VerifyMessage, \
-    SignIdentity
+    SignIdentity, \
+    CipherKeyValue
 
 
 @unimport
@@ -51,6 +52,12 @@ def dispatch_SignIdentity(*args, **kwargs):
     return layout_sign_identity(*args, **kwargs)
 
 
+@unimport
+def dispatch_CipherKeyValue(*args, **kwargs):
+    from .layout_cipherkeyvalue import layout_cipherkeyvalue
+    return layout_cipherkeyvalue(*args, **kwargs)
+
+
 def boot():
     register_type(GetPublicKey, protobuf_handler, dispatch_GetPublicKey)
     register_type(GetAddress, protobuf_handler, dispatch_GetAddress)
@@ -59,3 +66,4 @@ def boot():
     register_type(SignMessage, protobuf_handler, dispatch_SignMessage)
     register_type(VerifyMessage, protobuf_handler, dispatch_VerifyMessage)
     register_type(SignIdentity, protobuf_handler, dispatch_SignIdentity)
+    register_type(CipherKeyValue, protobuf_handler, dispatch_CipherKeyValue)
