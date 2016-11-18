@@ -7,7 +7,7 @@ def to_binary(x: int):
         x //= 256
     return bytes(reversed(r))
 
-def encode_length(l, offset):
+def encode_length(l: int, offset: int):
     if l < 56:
          return bytes([l + offset])
     elif l < 256 ** 8:
