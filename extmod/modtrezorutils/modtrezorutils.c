@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "py/nlr.h"
 #include "py/runtime.h"
@@ -55,9 +56,28 @@ STATIC mp_obj_t mod_TrezorUtils_memcpy(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_memcpy_obj, 5, 5, mod_TrezorUtils_memcpy);
 
+/// def trezor.utils.halt(msg: str=None) -> None:
+///     '''
+///     Halts execution
+///     '''
+STATIC mp_obj_t mod_TrezorUtils_halt(size_t n_args, const mp_obj_t *args) {
+    // TODO: is this the best we can do?
+#if defined STM32_HAL_H
+    // loop forever
+    for (;;) {}
+#elif defined UNIX
+    exit(1);
+#else
+#error Unsupported port. Only STMHAL and UNIX ports are supported.
+#endif
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_halt_obj, 0, 1, mod_TrezorUtils_halt);
+
 STATIC const mp_rom_map_elem_t mp_module_TrezorUtils_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorUtils) },
     { MP_ROM_QSTR(MP_QSTR_memcpy), MP_ROM_PTR(&mod_TrezorUtils_memcpy_obj) },
+    { MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_TrezorUtils_halt_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_TrezorUtils_globals, mp_module_TrezorUtils_globals_table);
