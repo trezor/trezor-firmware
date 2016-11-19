@@ -61,6 +61,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_memcpy_obj, 5, 5, mod
 ///     Halts execution
 ///     '''
 STATIC mp_obj_t mod_TrezorUtils_halt(size_t n_args, const mp_obj_t *args) {
+    mp_buffer_info_t msg;
+    if (n_args > 0 && mp_get_buffer(args[0], &msg, MP_BUFFER_READ)) {
+        printf("HALT! %s\n", (const char *)msg.buf);
+    } else {
+        printf("HALT!\n");
+    }
     // TODO: is this the best we can do?
 #if defined STM32_HAL_H
     // loop forever
