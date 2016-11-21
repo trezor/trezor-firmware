@@ -9,9 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "py/nlr.h"
 #include "py/runtime.h"
-#include "py/binary.h"
 
 #if MICROPY_PY_TREZORUI
 

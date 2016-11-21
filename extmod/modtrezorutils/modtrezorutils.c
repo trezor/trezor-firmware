@@ -10,10 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "py/nlr.h"
 #include "py/runtime.h"
-#include "py/binary.h"
-#include "py/objstr.h"
 
 #if MICROPY_PY_TREZORUTILS
 
