@@ -1,6 +1,10 @@
-from TrezorConfig import Config
-
-_config = Config()
+import sys
+if sys.platform in ['trezor', 'pyboard']:  # stmhal
+    from config_mock import Config
+    _config = Config('/sd/trezor.config')
+else:
+    from TrezorConfig import Config
+    _config = Config()
 
 def get(app, key, default=None):
     v = _config.get(app, key)
