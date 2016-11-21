@@ -26,7 +26,10 @@ STATIC mp_obj_t mod_TrezorConfig_Config_make_new(const mp_obj_type_t *type, size
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Config_t *o = m_new_obj(mp_obj_Config_t);
     o->base.type = type;
-    norcow_init();
+    bool r = norcow_init();
+    if (!r) {
+        mp_raise_msg(&mp_type_RuntimeError, "Could not initialize storage");
+    }
     return MP_OBJ_FROM_PTR(o);
 }
 
@@ -41,7 +44,9 @@ STATIC mp_obj_t mod_TrezorConfig_Config_get(mp_obj_t self, mp_obj_t app, mp_obj_
     const void *val;
     uint32_t len;
     bool r = norcow_get(appkey, &val, &len);
-    if (!r) return mp_const_none;
+    if (!r) {
+        return mp_const_none;
+    }
     vstr_t vstr;
     vstr_init_len(&vstr, len);
     memcpy(vstr.buf, val, len);
@@ -62,7 +67,7 @@ STATIC mp_obj_t mod_TrezorConfig_Config_set(size_t n_args, const mp_obj_t *args)
     mp_get_buffer_raise(args[3], &value, MP_BUFFER_READ);
     bool r = norcow_set(appkey, value.buf, value.len);
     if (!r) {
-        mp_raise_ValueError("Could not save value");
+        mp_raise_msg(&mp_type_RuntimeError, "Could not save value");
     }
     return mp_const_none;
 }
@@ -73,7 +78,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorConfig_Config_set_obj, 4, 4
 ///     Erases the whole config (use with caution!)
 ///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_wipe(mp_obj_t self) {
-    norcow_wipe();
+    bool r = norcow_wipe();
+    if (!r) {
+       mp_raise_msg(&mp_type_RuntimeError, "Could not wipe storage");
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorConfig_Config_wipe_obj, mod_TrezorConfig_Config_wipe);
