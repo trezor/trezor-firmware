@@ -14,15 +14,9 @@
 #include "py/binary.h"
 #include "py/objstr.h"
 
+#include "norcow.h"
+
 #if MICROPY_PY_TREZORCONFIG
-
-
-// temporary function stubs from norcow
-void norcow_init(void) { }
-bool norcow_get(uint16_t key, const void **val, uint32_t *len) { *val = "Works!"; *len = 6; return true; }
-bool norcow_set(uint16_t key, const void *val, uint32_t len) { return true; }
-// end
-
 
 typedef struct _mp_obj_Config_t {
     mp_obj_base_t base;
@@ -79,7 +73,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorConfig_Config_set_obj, 4, 4
 ///     Erases the whole config (use with caution!)
 ///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_wipe(mp_obj_t self) {
-    // TODO
+    norcow_wipe();
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorConfig_Config_wipe_obj, mod_TrezorConfig_Config_wipe);

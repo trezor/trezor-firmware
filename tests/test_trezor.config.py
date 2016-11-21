@@ -22,7 +22,7 @@ class TestConfig(unittest.TestCase):
 
     def test_set_get(self):
         config.wipe()
-        for _ in range(128):
+        for _ in range(64):
            appid, key = random.uniform(256), random.uniform(256)
            value = random.bytes(128)
            config.set(appid, key, value)
@@ -31,7 +31,7 @@ class TestConfig(unittest.TestCase):
 
     def test_get_default(self):
         config.wipe()
-        for _ in range(128):
+        for _ in range(64):
            appid, key = random.uniform(256), random.uniform(256)
            value = random.bytes(128)
            value2 = config.get(appid, key, value)
