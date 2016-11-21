@@ -21,9 +21,9 @@ def Config():
 
     def _save(self):
         with open(self._file, 'wb') as f:
-        for k, v in self._data.items():
-            f.write(ustruct.pack('<HH', k, len(v)))
-            f.write(v)
+            for k, v in self._data.items():
+                f.write(ustruct.pack('<HH', k, len(v)))
+                f.write(v)
 
     def get(self, app_id, key, default=None):
         return self._data.get((app_id << 8) | key, default)
