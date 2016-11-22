@@ -941,15 +941,11 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	bool display_only = msg->has_display_only && msg->display_only;
 	bool signing = msg->address_n_count > 0;
 	RESP_INIT(EncryptedMessage);
-	const CoinType *coin = 0;
 	const HDNode *node = 0;
 	uint8_t address_raw[MAX_ADDR_RAW_SIZE];
 	if (signing) {
-		coin = coinByName(msg->coin_name);
-		if (!coin) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
-			return;
-		}
+		const CoinType *coin = fsm_getCoin(msg->coin_name);
+		if (!coin) return;
 		if (!protectPin(true)) {
 			layoutHome();
 			return;
