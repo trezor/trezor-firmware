@@ -16,8 +16,8 @@ class TestProtectionLevels(common.TrezorTest):
     def test_apply_settings(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.PinMatrixRequest(),
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                      proto.ButtonRequest(),
                                       proto.Success(),
                                       proto.Features()])  # TrezorClient reinitializes device
             self.client.apply_settings(label='nazdar')
