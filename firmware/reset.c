@@ -35,11 +35,7 @@ static bool     awaiting_entropy = false;
 
 void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label, uint32_t u2f_counter)
 {
-	if (_strength != 128 && _strength != 192 && _strength != 256) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid strength (has to be 128, 192 or 256 bits)");
-		layoutHome();
-		return;
-	}
+	if (_strength != 128 && _strength != 192 && _strength != 256) return;
 
 	strength = _strength;
 

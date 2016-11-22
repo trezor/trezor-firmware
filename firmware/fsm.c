@@ -82,6 +82,13 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 		return; \
 	}
 
+#define CHECK_PARAM(cond, errormsg) \
+	if (!(cond)) { \
+		fsm_sendFailure(FailureType_Failure_SyntaxError, (errormsg)); \
+		layoutHome(); \
+		return; \
+	}
+
 void fsm_sendSuccess(const char *text)
 {
 	RESP_INIT(Success);
@@ -387,6 +394,8 @@ void fsm_msgResetDevice(ResetDevice *msg)
 {
 	CHECK_NOT_INITIALIZED
 
+	CHECK_PARAM(!msg->has_strength || msg->strength == 128 || msg->strength == 192 || msg->strength == 256, "Invalid seed strength");
+
 	reset_init(
 		msg->has_display_random && msg->display_random,
 		msg->has_strength ? msg->strength : 128,
@@ -402,17 +411,8 @@ void fsm_msgSignTx(SignTx *msg)
 {
 	CHECK_INITIALIZED
 
-	if (msg->inputs_count < 1) {
-		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one input");
-		layoutHome();
-		return;
-	}
-
-	if (msg->outputs_count < 1) {
-		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one output");
-		layoutHome();
-		return;
-	}
+	CHECK_PARAM(msg->inputs_count > 0, "Transaction must have at least one input");
+	CHECK_PARAM(msg->outputs_count > 0, "Transaction must have at least one output");
 
 	CHECK_PIN
 
@@ -426,11 +426,9 @@ void fsm_msgSignTx(SignTx *msg)
 
 void fsm_msgTxAck(TxAck *msg)
 {
-	if (msg->has_tx) {
-		signing_txack(&(msg->tx));
-	} else {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No transaction provided");
-	}
+	CHECK_PARAM(msg->has_tx, "No transaction provided");
+
+	signing_txack(&(msg->tx));
 }
 
 void fsm_msgCancel(Cancel *msg)
@@ -463,18 +461,9 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 {
 	CHECK_INITIALIZED
 
-	if (!msg->has_key) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No key provided");
-		return;
-	}
-	if (!msg->has_value) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No value provided");
-		return;
-	}
-	if (msg->value.size % 16) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Value length must be a multiple of 16");
-		return;
-	}
+	CHECK_PARAM(msg->has_key, "No key provided");
+	CHECK_PARAM(msg->has_value, "No value provided");
+	CHECK_PARAM(msg->value.size % 16 == 0, "Value length must be a multiple of 16");
 
 	CHECK_PIN
 
@@ -526,6 +515,10 @@ void fsm_msgClearSession(ClearSession *msg)
 
 void fsm_msgApplySettings(ApplySettings *msg)
 {
+	CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase || msg->has_homescreen, "No setting provided");
+
+	CHECK_PIN
+
 	if (msg->has_label) {
 		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "?", NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -558,12 +551,6 @@ void fsm_msgApplySettings(ApplySettings *msg)
 			return;
 		}
 	}
-	if (!msg->has_label && !msg->has_language && !msg->has_use_passphrase && !msg->has_homescreen) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No setting provided");
-		return;
-	}
-
-	CHECK_PIN
 
 	if (msg->has_label) {
 		storage_setLabel(msg->label);
@@ -720,14 +707,9 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 void fsm_msgVerifyMessage(VerifyMessage *msg)
 {
-	if (!msg->has_address) {
-		fsm_sendFailure(FailureType_Failure_Other, "No address provided");
-		return;
-	}
-	if (!msg->has_message) {
-		fsm_sendFailure(FailureType_Failure_Other, "No message provided");
-		return;
-	}
+	CHECK_PARAM(msg->has_address, "No address provided");
+	CHECK_PARAM(msg->has_message, "No message provided");
+
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
@@ -886,19 +868,12 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 {
 	CHECK_INITIALIZED
 
-	if (!msg->has_pubkey) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No public key provided");
-		return;
-	}
-	if (!msg->has_message) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message provided");
-		return;
-	}
+	CHECK_PARAM(msg->has_pubkey, "No public key provided");
+	CHECK_PARAM(msg->has_message, "No message provided");
+	CHECK_PARAM(msg->pubkey.size == 33, "Invalid public key provided");
 	curve_point pubkey;
-	if (msg->pubkey.size != 33 || ecdsa_read_pubkey(&secp256k1, msg->pubkey.bytes, &pubkey) == 0) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid public key provided");
-		return;
-	}
+	CHECK_PARAM(ecdsa_read_pubkey(&secp256k1, msg->pubkey.bytes, &pubkey) == 1, "Invalid public key provided");
+
 	bool display_only = msg->has_display_only && msg->display_only;
 	bool signing = msg->address_n_count > 0;
 	RESP_INIT(EncryptedMessage);
@@ -937,23 +912,13 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 {
 	CHECK_INITIALIZED
 
-	if (!msg->has_nonce) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No nonce provided");
-		return;
-	}
-	if (!msg->has_message) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message provided");
-		return;
-	}
-	if (!msg->has_hmac) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "No message hmac provided");
-		return;
-	}
+	CHECK_PARAM(msg->has_nonce, "No nonce provided");
+	CHECK_PARAM(msg->has_message, "No message provided");
+	CHECK_PARAM(msg->has_hmac, "No message hmac provided");
+
+	CHECK_PARAM(msg->nonce.size == 33, "Invalid nonce key provided");
 	curve_point nonce_pubkey;
-	if (msg->nonce.size != 33 || ecdsa_read_pubkey(&secp256k1, msg->nonce.bytes, &nonce_pubkey) == 0) {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid nonce provided");
-		return;
-	}
+	CHECK_PARAM(ecdsa_read_pubkey(&secp256k1, msg->nonce.bytes, &nonce_pubkey) == 1, "Invalid nonce provided");
 
 	CHECK_PIN
 
@@ -1000,6 +965,8 @@ void fsm_msgEstimateTxSize(EstimateTxSize *msg)
 void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 {
 	CHECK_NOT_INITIALIZED
+
+	CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 || msg->word_count == 18 || msg->word_count == 24, "Invalid word count");
 
 	recovery_init(
 		msg->has_word_count ? msg->word_count : 12,
