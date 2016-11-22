@@ -70,6 +70,18 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 		return; \
 	}
 
+#define CHECK_PIN \
+	if (!protectPin(true)) { \
+		layoutHome(); \
+		return; \
+	}
+
+#define CHECK_PIN_UNCACHED \
+	if (!protectPin(false)) { \
+		layoutHome(); \
+		return; \
+	}
+
 void fsm_sendSuccess(const char *text)
 {
 	RESP_INIT(Success);
@@ -184,10 +196,7 @@ void fsm_msgPing(Ping *msg)
 	}
 
 	if (msg->has_pin_protection && msg->pin_protection) {
-		if (!protectPin(true)) {
-			layoutHome();
-			return;
-		}
+		CHECK_PIN
 	}
 
 	if (msg->has_passphrase_protection && msg->passphrase_protection) {
@@ -227,10 +236,9 @@ void fsm_msgChangePin(ChangePin *msg)
 		layoutHome();
 		return;
 	}
-	if (!protectPin(false)) {
-		layoutHome();
-		return;
-	}
+
+	CHECK_PIN_UNCACHED
+
 	if (removal) {
 		storage_setPin(0);
 		fsm_sendSuccess("PIN removed");
@@ -300,10 +308,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 
 	CHECK_INITIALIZED
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	const char *curve = SECP256K1_NAME;
 	if (msg->has_ecdsa_curve_name) {
@@ -409,10 +414,7 @@ void fsm_msgSignTx(SignTx *msg)
 		return;
 	}
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
@@ -444,10 +446,7 @@ void fsm_msgEthereumSignTx(EthereumSignTx *msg)
 {
 	CHECK_INITIALIZED
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
@@ -476,10 +475,9 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Value length must be a multiple of 16");
 		return;
 	}
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+
+	CHECK_PIN
+
 	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
@@ -564,10 +562,9 @@ void fsm_msgApplySettings(ApplySettings *msg)
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No setting provided");
 		return;
 	}
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+
+	CHECK_PIN
+
 	if (msg->has_label) {
 		storage_setLabel(msg->label);
 	}
@@ -591,10 +588,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	CHECK_INITIALIZED
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
@@ -653,10 +647,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 
 	CHECK_INITIALIZED
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
@@ -707,10 +698,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 		return;
 	}
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	const CoinType *coin = fsm_getCoin(msg->coin_name);
 	if (!coin) return;
@@ -782,10 +770,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		return;
 	}
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	uint8_t hash[32];
 	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
@@ -861,10 +846,7 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 		return;
 	}
 
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+	CHECK_PIN
 
 	uint8_t hash[32];
 	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
@@ -925,10 +907,9 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	if (signing) {
 		const CoinType *coin = fsm_getCoin(msg->coin_name);
 		if (!coin) return;
-		if (!protectPin(true)) {
-			layoutHome();
-			return;
-		}
+
+		CHECK_PIN
+
 		node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 		if (!node) return;
 		hdnode_get_address_raw(node, coin->address_type, address_raw);
@@ -973,10 +954,9 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid nonce provided");
 		return;
 	}
-	if (!protectPin(true)) {
-		layoutHome();
-		return;
-	}
+
+	CHECK_PIN
+
 	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
