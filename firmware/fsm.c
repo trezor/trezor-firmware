@@ -53,9 +53,22 @@
 
 static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 
-#define RESP_INIT(TYPE) TYPE *resp = (TYPE *) (void *) msg_resp; \
+#define RESP_INIT(TYPE) \
+			TYPE *resp = (TYPE *) (void *) msg_resp; \
 			_Static_assert(sizeof(msg_resp) >= sizeof(TYPE), #TYPE " is too large"); \
 			memset(resp, 0, sizeof(TYPE));
+
+#define CHECK_INITIALIZED \
+	if (!storage_isInitialized()) { \
+		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized"); \
+		return; \
+	}
+
+#define CHECK_NOT_INITIALIZED \
+	if (storage_isInitialized()) { \
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first."); \
+		return; \
+	}
 
 void fsm_sendSuccess(const char *text)
 {
@@ -285,10 +298,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 {
 	RESP_INIT(PublicKey);
 
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	if (!protectPin(true)) {
 		layoutHome();
@@ -345,10 +355,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 
 void fsm_msgLoadDevice(LoadDevice *msg)
 {
-	if (storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first.");
-		return;
-	}
+	CHECK_NOT_INITIALIZED
 
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "I take the risk", NULL, "Loading private seed", "is not recommended.", "Continue only if you", "know what you are", "doing!", NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -373,10 +380,7 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 
 void fsm_msgResetDevice(ResetDevice *msg)
 {
-	if (storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first.");
-		return;
-	}
+	CHECK_NOT_INITIALIZED
 
 	reset_init(
 		msg->has_display_random && msg->display_random,
@@ -391,10 +395,7 @@ void fsm_msgResetDevice(ResetDevice *msg)
 
 void fsm_msgSignTx(SignTx *msg)
 {
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	if (msg->inputs_count < 1) {
 		fsm_sendFailure(FailureType_Failure_Other, "Transaction must have at least one input");
@@ -441,10 +442,7 @@ void fsm_msgCancel(Cancel *msg)
 
 void fsm_msgEthereumSignTx(EthereumSignTx *msg)
 {
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	if (!protectPin(true)) {
 		layoutHome();
@@ -464,10 +462,8 @@ void fsm_msgEthereumTxAck(EthereumTxAck *msg)
 
 void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 {
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
+
 	if (!msg->has_key) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No key provided");
 		return;
@@ -593,10 +589,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 {
 	RESP_INIT(Address);
 
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	if (!protectPin(true)) {
 		layoutHome();
@@ -658,10 +651,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 {
 	RESP_INIT(EthereumAddress);
 
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	if (!protectPin(true)) {
 		layoutHome();
@@ -708,10 +698,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 {
 	RESP_INIT(MessageSignature);
 
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	layoutSignMessage(msg->message.bytes, msg->message.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -786,10 +773,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 {
 	RESP_INIT(SignedIdentity);
 
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	layoutSignIdentity(&(msg->identity), msg->has_challenge_visual ? msg->challenge_visual : 0);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -868,10 +852,7 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 {
 	RESP_INIT(ECDHSessionKey);
 
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
 
 	layoutDecryptIdentity(&msg->identity);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -921,10 +902,8 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 /* ECIES disabled
 void fsm_msgEncryptMessage(EncryptMessage *msg)
 {
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
+
 	if (!msg->has_pubkey) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No public key provided");
 		return;
@@ -975,10 +954,8 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 
 void fsm_msgDecryptMessage(DecryptMessage *msg)
 {
-	if (!storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_NotInitialized, "Device not initialized");
-		return;
-	}
+	CHECK_INITIALIZED
+
 	if (!msg->has_nonce) {
 		fsm_sendFailure(FailureType_Failure_SyntaxError, "No nonce provided");
 		return;
@@ -1042,10 +1019,8 @@ void fsm_msgEstimateTxSize(EstimateTxSize *msg)
 
 void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 {
-	if (storage_isInitialized()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Device is already initialized. Use Wipe first.");
-		return;
-	}
+	CHECK_NOT_INITIALIZED
+
 	recovery_init(
 		msg->has_word_count ? msg->word_count : 12,
 		msg->has_passphrase_protection && msg->passphrase_protection,
