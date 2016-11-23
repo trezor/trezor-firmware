@@ -17,8 +17,8 @@ class TestConfig(unittest.TestCase):
         config.wipe()
         v0 = config.get(0, 0)
         v1 = config.get(1, 1)
-        self.assertIsNone(v0)
-        self.assertIsNone(v1)
+        self.assertEqual(v0, bytes())
+        self.assertEqual(v1, bytes())
 
     def test_set_get(self):
         config.wipe()
