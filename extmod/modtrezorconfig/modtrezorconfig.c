@@ -32,7 +32,7 @@ STATIC mp_obj_t mod_TrezorConfig_Config_make_new(const mp_obj_type_t *type, size
 
 /// def trezor.config.get(app: int, key: int) -> bytes:
 ///     '''
-///     Gets a value of given key for given app (or None if not set).
+///     Gets a value of given key for given app (or empty bytes if not set).
 ///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_get(mp_obj_t self, mp_obj_t app, mp_obj_t key) {
     uint8_t a = mp_obj_get_int(app);
@@ -41,8 +41,8 @@ STATIC mp_obj_t mod_TrezorConfig_Config_get(mp_obj_t self, mp_obj_t app, mp_obj_
     const void *val;
     uint32_t len;
     bool r = norcow_get(appkey, &val, &len);
-    if (!r) {
-        return mp_const_none;
+    if (!r || len == 0) {
+        return mp_const_empty_bytes;
     }
     vstr_t vstr;
     vstr_init_len(&vstr, len);

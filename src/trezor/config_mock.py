@@ -2,7 +2,8 @@
 
 import ustruct
 
-def Config():
+
+class Config:
 
     def __init__(self, filename):
         self._data = {}
@@ -25,8 +26,8 @@ def Config():
                 f.write(ustruct.pack('<HH', k, len(v)))
                 f.write(v)
 
-    def get(self, app_id, key, default=None):
-        return self._data.get((app_id << 8) | key, default)
+    def get(self, app_id, key):
+        return self._data.get((app_id << 8) | key, bytes())
 
     def set(self, app_id, key, value):
         self._data[(app_id << 8) | key] = value
