@@ -24,9 +24,7 @@
 extern volatile uint32_t system_millis;
 
 /* Screen timeout */
-extern uint32_t system_millis_lock;
-
-#define SCREEN_TIMEOUT_MILLIS (1000 * 60 * 10) /* 10 minutes */
+extern uint32_t system_millis_lock_start;
 
 void timer_init(void);
 

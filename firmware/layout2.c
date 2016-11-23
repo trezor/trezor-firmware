@@ -84,7 +84,7 @@ void layoutHome(void)
 	oledRefresh();
 
 	// Reset lock screen timeout
-	system_millis_lock = system_millis + SCREEN_TIMEOUT_MILLIS;
+	system_millis_lock_start = system_millis;
 }
 
 const char *str_amount(uint64_t amnt, const char *abbr, char *buf, int len)
