@@ -20,8 +20,8 @@ from micropython import const
 from streams import StreamReader, BufferWriter
 
 
-def build_protobuf_message(message_type, callback=None, *args):
-    message = message_type()
+def build_protobuf_message(msg_type, callback=None, *args):
+    msg = msg_type()
     try:
         while True:
             field, fvalue = yield
@@ -29,14 +29,22 @@ def build_protobuf_message(message_type, callback=None, *args):
             if issubclass(ftype, MessageType):
                 fvalue = yield from build_protobuf_message(ftype)
             if fflags & FLAG_REPEATED:
-                prev_value = getattr(message, fname, [])
+                prev_value = getattr(msg, fname, [])
                 prev_value.append(fvalue)
                 fvalue = prev_value
-            setattr(message, fname, fvalue)
+            setattr(msg, fname, fvalue)
     except EOFError:
+        fill_missing_fields(msg)
         if callback is not None:
-            callback(message, *args)
-        return message
+            callback(msg, *args)
+        return msg
+
+
+def fill_missing_fields(msg):
+    for tag in msg.FIELDS:
+        field = msg.FIELDS[tag]
+        if not hasattr(msg, field[0]):
+            setattr(msg, field[0], None)
 
 
 class Type:
@@ -189,10 +197,10 @@ class MessageType(Type):
                 return e.value
 
     @classmethod
-    async def dump(cls, message, target):
+    async def dump(cls, msg, target):
         for ftag in cls.FIELDS:
             fname, ftype, fflags = cls.FIELDS[ftag]
-            fvalue = getattr(message, fname, None)
+            fvalue = getattr(msg, fname, None)
             if fvalue is None:
                 continue
             key = (ftag << 3) | ftype.WIRE_TYPE
