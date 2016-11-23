@@ -21,10 +21,10 @@ build_stmhal: vendor ## build stmhal port
 	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD)
 
 build_stmhal_debug: vendor ## build stmhal port with debug symbols
-	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD)
+	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) DEBUG=1
 
 build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
-	$(MAKE) -C vendor/micropython/stmhal FROZEN_MPY_DIR=../../../src BOARD=$(BOARD)
+	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) FROZEN_MPY_DIR=../../../src
 
 build_unix: vendor ## build unix port
 	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
