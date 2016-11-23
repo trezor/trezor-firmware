@@ -46,3 +46,8 @@ def unimport(func):
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
+
+
+def ensure(cond):
+    if not cond:
+        raise AssertionError()
