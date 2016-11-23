@@ -135,36 +135,27 @@ void recovery_word(const char *word)
 		strlcpy(words[word_pos - 1], word, sizeof(words[word_pos - 1]));
 	}
 
-	if (word_index + 1 < 24) { // not the last one
-		word_index++;
-		next_word();
-		return;
-	}
-
-	// the last one
-	strlcpy(storage.mnemonic, words[0], sizeof(storage.mnemonic));
-	for (uint32_t i = 1; i < word_count; i++) {
-		strlcat(storage.mnemonic, " ", sizeof(storage.mnemonic));
-		strlcat(storage.mnemonic, words[i], sizeof(storage.mnemonic));
-	}
-
-	awaiting_word = false;
-	layoutHome();
-
-	if (!mnemonic_check(storage.mnemonic)) {
-		if (enforce_wordlist) {
+	if (word_index + 1 == 24) { // last one
+		uint32_t i;
+		strlcpy(storage.mnemonic, words[0], sizeof(storage.mnemonic));
+		for (i = 1; i < word_count; i++) {
+			strlcat(storage.mnemonic, " ", sizeof(storage.mnemonic));
+			strlcat(storage.mnemonic, words[i], sizeof(storage.mnemonic));
+		}
+		if (!enforce_wordlist || mnemonic_check(storage.mnemonic)) {
+			storage.has_mnemonic = true;
+			storage_commit();
+			fsm_sendSuccess("Device recovered");
+		} else {
 			storage_reset();
 			fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid mnemonic, are words in correct order?");
-			return;
-		} else { // not enforcing => mark storage as imported
-			storage.has_imported = true;
-			storage.imported = true;
 		}
+		awaiting_word = false;
+		layoutHome();
+	} else {
+		word_index++;
+		next_word();
 	}
-
-	storage.has_mnemonic = true;
-	storage_commit();
-	fsm_sendSuccess("Device recovered");
 }
 
 void recovery_abort(void)
