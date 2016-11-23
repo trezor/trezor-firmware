@@ -2,8 +2,8 @@ from trezor import ui
 from trezor import wire
 from trezor.utils import unimport
 
-# TODO: publish only when debuglink is on
-matrix = None
+if __debug__:
+    matrix = None
 
 
 @unimport
@@ -15,7 +15,8 @@ async def request_pin_on_display(session_id: int, code: int=None) -> str:
     from trezor.ui.confirm import ConfirmDialog, CONFIRMED
     from trezor.ui.pin import PinMatrix
 
-    global matrix
+    if __debug__:
+        global matrix
 
     _, label = _get_code_and_label(code)
 
@@ -41,7 +42,8 @@ async def request_pin_on_client(session_id: int, code: int=None) -> str:
     from trezor.messages.wire_types import PinMatrixAck, Cancel
     from trezor.ui.pin import PinMatrix
 
-    global matrix
+    if __debug__:
+        global matrix
 
     code, label = _get_code_and_label(code)
 
@@ -74,6 +76,20 @@ async def request_pin_twice(session_id: int) -> str:
         raise wire.FailureError(PinInvalid, 'PIN invalid')
 
     return pin_first
+
+
+async def protect_by_pin(session_id: int):
+    from . import storage
+
+    while storage.is_locked():
+        pin = await request_pin(session_id)
+        storage.unlock(pin, _render_pin_failure)
+
+
+def _render_pin_failure(sleep_ms: int):
+    ui.display.clear()
+    ui.display.text_center(240, 240, 'Sleeping for %d seconds' % sleep_ms / 1000,
+                           ui.BOLD, ui.RED, ui.BLACK)
 
 
 def _get_code_and_label(code: int) -> str:

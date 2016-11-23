@@ -2,11 +2,6 @@ from trezor import wire
 
 # FIXME: this is a stub
 
-# TODO: decomplect the MVC layers
-# TODO: most likely storage sensitive data in c
-# TODO: check pin in constant time
-# TODO: pin failure counter
-
 _cached_seed = None
 _cached_root_node = None
 
@@ -40,22 +35,18 @@ async def get_seed(session_id: int) -> bytes:
 
 async def compute_seed(session_id):
     from trezor.crypto import bip39
-    from trezor.messages.FailureType import PinInvalid, Other
+    from trezor.messages.FailureType import Other
     from .request_passphrase import request_passphrase
-    from .request_pin import request_pin
+    from .request_pin import protect_by_pin
     from . import storage
 
     if not storage.is_initialized():
         raise wire.FailureError(Other, 'Device is not initialized')
 
-    if storage.is_protected_by_pin():
-        pin = await request_pin(session_id)
-        if not storage.check_pin(pin):
-            raise wire.FailureError(PinInvalid, 'PIN is incorrect')
+    await protect_by_pin(session_id)
 
     if storage.is_protected_by_passphrase():
         passphrase = await request_passphrase(session_id)
     else:
         passphrase = ''
-
     return bip39.seed(storage.get_mnemonic(), passphrase)
