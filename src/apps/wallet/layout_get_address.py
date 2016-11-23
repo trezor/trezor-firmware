@@ -9,23 +9,18 @@ async def layout_get_address(msg, session_id):
     from ..common.seed import get_node
     from ..common import coins
 
-    address_n = getattr(msg, 'address_n', ())
-    coin_name = getattr(msg, 'coin_name', 'Bitcoin')
-    multisig = getattr(msg, 'multisig', None)
-    show_display = getattr(msg, 'show_display', False)
-
-    # TODO: support multisig addresses
-
-    if multisig:
+    if msg.multisig:
         raise wire.FailureError(Other, 'GetAddress.multisig is unsupported')
 
+    address_n = msg.address_n or ()
+    coin_name = msg.coin_name or 'Bitcoin'
     node = await get_node(session_id, address_n)
-
     coin = coins.by_name(coin_name)
     address = node.address(coin.address_type)
 
-    if show_display:
+    if msg.show_display:
         await _show_address(session_id, address)
+
     return Address(address=address)
 
 

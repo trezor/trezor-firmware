@@ -101,11 +101,11 @@ def request_tx_finish(tx_req: TxRequest):
 
 
 async def sign_tx(tx: SignTx, root):
-    tx_version = getattr(tx, 'version', 1)
-    tx_lock_time = getattr(tx, 'lock_time', 0)
-    tx_inputs_count = getattr(tx, 'inputs_count', 0)
-    tx_outputs_count = getattr(tx, 'outputs_count', 0)
-    coin_name = getattr(tx, 'coin_name', 'Bitcoin')
+    tx_version = tx.version if tx.version is not None else 1
+    tx_lock_time = tx.lock_time or 0
+    tx_inputs_count = tx.inputs_count or 0
+    tx_outputs_count = tx.outputs_count or 0
+    coin_name = tx.coin_name or 'Bitcoin'
 
     coin = coins.by_name(coin_name)
 
@@ -265,10 +265,10 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
     # STAGE_REQUEST_2_PREV_META
     tx = await request_tx_meta(tx_req, prev_hash)
 
-    tx_version = getattr(tx, 'version', 0)
-    tx_lock_time = getattr(tx, 'lock_time', 1)
-    tx_inputs_count = getattr(tx, 'inputs_cnt', 0)
-    tx_outputs_count = getattr(tx, 'outputs_cnt', 0)
+    tx_version = tx.version if tx.version is not None else 1
+    tx_lock_time = tx.lock_time or 0
+    tx_inputs_count = tx.inputs_cnt or 0
+    tx_outputs_count = tx.outputs_cnt or 0
 
     txh = HashWriter(sha256)
 
@@ -339,17 +339,16 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
                            'Invalid output script type')
 
 
-def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, root, p2sh=False) -> bytes:
+def output_paytoaddress_extract_raw_address(
+        o: TxOutputType, coin: CoinType, root, p2sh: bool=False) -> bytes:
     addr_type = coin.address_type_p2sh if p2sh else coin.address_type
     # TODO: dont encode/decode more then necessary
-    address_n = getattr(o, 'address_n', None)
-    if address_n is not None:
-        node = node_derive(root, address_n)
+    if o.address_n is not None:
+        node = node_derive(root, o.address_n)
         address = node.address(addr_type)
         return base58.decode_check(address)
-    address = getattr(o, 'address', None)
-    if address:
-        raw = base58.decode_check(address)
+    if o.address:
+        raw = base58.decode_check(o.address)
         if not address_type.check(addr_type, raw):
             raise SigningError(FailureType.SyntaxError,
                                'Invalid address type')
@@ -358,9 +357,8 @@ def output_paytoaddress_extract_raw_address(o: TxOutputType, coin: CoinType, roo
                        'Missing address')
 
 
-def output_is_change(o: TxOutputType):
-    address_n = getattr(o, 'address_n', None)
-    return bool(address_n)
+def output_is_change(o: TxOutputType) -> bool:
+    return bool(o.address_n)
 
 
 # Tx Inputs
@@ -368,9 +366,9 @@ def output_is_change(o: TxOutputType):
 
 
 def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
-    i_script_type = getattr(i, 'script_type', InputScriptType.SPENDADDRESS)
+    script_type = i.script_type if i.script_type is not None else InputScriptType.SPENDADDRESS
 
-    if i_script_type == InputScriptType.SPENDADDRESS:
+    if script_type == InputScriptType.SPENDADDRESS:
         if signature is None:
             return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
         else:
@@ -452,7 +450,7 @@ def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
 
 
 def write_tx_input(w, i: TxInputType):
-    i_sequence = getattr(i, 'sequence', 4294967295)
+    i_sequence = i.sequence if i.sequence is not None else 4294967295
     write_bytes_rev(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_varint(w, len(i.script_sig))
@@ -461,7 +459,7 @@ def write_tx_input(w, i: TxInputType):
 
 
 def write_tx_input_check(w, i: TxInputType):
-    i_sequence = getattr(i, 'sequence', 4294967295)
+    i_sequence = i.sequence if i.sequence is not None else 4294967295
     write_bytes(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_uint32(w, len(i.address_n))

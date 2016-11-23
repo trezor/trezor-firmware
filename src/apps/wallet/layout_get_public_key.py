@@ -7,8 +7,7 @@ async def layout_get_public_key(msg, session_id):
     from trezor.messages.HDNodeType import HDNodeType
     from trezor.messages.PublicKey import PublicKey
 
-    address_n = getattr(msg, 'address_n', ())
-
+    address_n = msg.address_n or ()
     node = await seed.get_node(session_id, address_n)
 
     node_xpub = node.serialize_public()

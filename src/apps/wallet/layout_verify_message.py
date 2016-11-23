@@ -1,5 +1,6 @@
-from trezor import wire, ui
+from trezor import ui
 from trezor.utils import unimport
+
 
 @unimport
 async def layout_verify_message(msg, session_id):
@@ -11,7 +12,7 @@ async def layout_verify_message(msg, session_id):
     from ..common import coins
     from ..common.signverify import message_digest
 
-    coin_name = getattr(msg, 'coin_name', 'Bitcoin')
+    coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
     digest = message_digest(coin, msg.message)

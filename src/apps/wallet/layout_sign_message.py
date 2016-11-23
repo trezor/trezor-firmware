@@ -1,4 +1,4 @@
-from trezor import wire, ui
+from trezor import ui
 from trezor.utils import unimport
 
 
@@ -15,7 +15,7 @@ async def layout_sign_message(msg, session_id):
                     ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 60, msg.message, ui.MONO, ui.WHITE, ui.BLACK)
 
-    coin_name = getattr(msg, 'coin_name', 'Bitcoin')
+    coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
     node = await get_node(session_id, msg.address_n)

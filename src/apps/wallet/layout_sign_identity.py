@@ -1,4 +1,4 @@
-from trezor import wire, ui
+from trezor import ui
 from trezor.utils import unimport
 
 @unimport
@@ -12,18 +12,18 @@ async def layout_sign_identity(msg, session_id):
     from ..common.signverify import message_digest
 
     identity = ''
-    if hasattr(msg.identity, 'proto') and msg.identity.proto:
+    if msg.identity.proto:
         identity += msg.identity.proto + '://'
-    if hasattr(msg.identity, 'user') and msg.identity.user:
+    if msg.identity.user:
         identity += msg.identity.user + '@'
-    if hasattr(msg.identity, 'host') and msg.identity.host:
+    if msg.identity.host:
         identity += msg.identity.host
-    if hasattr(msg.identity, 'port') and msg.identity.port:
+    if msg.identity.port:
         identity += ':' + msg.identity.port
-    if hasattr(msg.identity, 'path') and msg.identity.path:
+    if msg.identity.path:
         identity += msg.identity.path
 
-    index = getattr(msg.identity, 'index', 0)
+    index = msg.identity.index or 0
     identity_hash = sha256(pack('<I', index) + identity).digest()
 
     address_n = (13, ) + unpack('<IIII', identity_hash[:16])

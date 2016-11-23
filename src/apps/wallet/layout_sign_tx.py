@@ -6,6 +6,11 @@ def format_amount(amount, coin):
     return '%s %s' % (amount / 1e8, coin.coin_shortcut)
 
 
+def split_address(address):
+    from trezor.utils import chunks
+    return chunks(address, 17)
+
+
 async def confirm_output(session_id, output, coin):
     from trezor import ui
     from trezor.ui.text import Text
@@ -15,8 +20,7 @@ async def confirm_output(session_id, output, coin):
     content = Text('Confirm output', ui.ICON_RESET,
                    ui.BOLD, format_amount(output.amount, coin),
                    ui.NORMAL, 'to',
-                   ui.MONO, output.address[0:17],
-                   ui.MONO, output.address[17:])
+                   ui.MONO, *split_address(output.address))
     return await confirm(session_id, content, ConfirmOutput)
 
 
@@ -44,17 +48,16 @@ async def confirm_feeoverthreshold(session_id, fee, coin):
 
 
 @unimport
-async def layout_sign_tx(message, session_id):
+async def layout_sign_tx(msg, session_id):
     from ..common.seed import get_root_node
     from ..common import signtx
 
-    from trezor.messages import RequestType
-    from trezor.messages.TxRequest import TxRequest
+    from trezor.messages.RequestType import TXFINISHED
     from trezor.messages.wire_types import TxAck
 
     root = await get_root_node(session_id)
 
-    signer = signtx.sign_tx(message, root)
+    signer = signtx.sign_tx(msg, root)
     res = None
     while True:
         try:
@@ -62,7 +65,7 @@ async def layout_sign_tx(message, session_id):
         except signtx.SigningError as e:
             raise wire.FailureError(*e.args)
         if req.__qualname__ == 'TxRequest':
-            if req.request_type == RequestType.TXFINISHED:
+            if req.request_type == TXFINISHED:
                 break
             res = await wire.reply_message(session_id, req, TxAck)
         elif req.__qualname__ == 'UiConfirmOutput':
@@ -71,6 +74,6 @@ async def layout_sign_tx(message, session_id):
             res = await confirm_total(session_id, req.spending, req.fee, req.coin)
         elif req.__qualname__ == 'UiConfirmFeeOverThreshold':
             res = await confirm_feeoverthreshold(session_id, req.fee, req.coin)
-    else:
-            raise ValueError('Invalid signing instruction')
+        else:
+            raise TypeError('Invalid signing instruction')
     return req
