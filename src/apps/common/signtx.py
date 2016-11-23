@@ -226,7 +226,8 @@ async def sign_tx(tx: SignTx, root):
         # serialize input with correct signature
         txi_sign.script_sig = input_derive_script(
             txi_sign, key_sign_pub, signature)
-        w_txi_sign = bytearray()
+        w_txi_sign = bytearray_with_cap(
+            len(txi_sign.prev_hash) + 4 + 5 + len(txi_sign.script_sig) + 4)
         if i_sign == 0:  # serializing first input => prepend tx version and inputs count
             write_uint32(w_txi_sign, tx_version)
             write_varint(w_txi_sign, tx_inputs_count)
@@ -242,7 +243,8 @@ async def sign_tx(tx: SignTx, root):
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
 
         # serialize output
-        w_txo_bin = bytearray()
+        w_txo_bin = bytearray_with_cap(
+            5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
         if o == 0:  # serializing first output => prepend outputs count
             write_varint(w_txo_bin, tx_outputs_count)
         write_tx_output(w_txo_bin, txo_bin)
@@ -428,7 +430,7 @@ def script_paytoscripthash_new(scripthash: bytes) -> bytearray:
 
 
 def script_paytoopreturn_new(data: bytes) -> bytearray:
-    w = bytearray()
+    w = bytearray_with_cap(1 + 5 + len(data))
     w.append(0x6A)  # OP_RETURN
     write_op_push(w, len(data))
     w.extend(data)
@@ -436,7 +438,7 @@ def script_paytoopreturn_new(data: bytes) -> bytearray:
 
 
 def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
-    w = bytearray()
+    w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
     write_op_push(w, len(signature) + 1)
     write_bytes(w, signature)
     w.append(0x01)
@@ -539,6 +541,12 @@ def write_bytes(w, buf: bytearray):
 
 def write_bytes_rev(w, buf: bytearray):
     w.extend(bytearray(reversed(buf)))
+
+
+def bytearray_with_cap(cap: int) -> bytearray:
+    b = bytearray(cap)
+    b[:] = bytes()
+    return b
 
 
 class HashWriter:
