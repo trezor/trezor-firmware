@@ -218,10 +218,10 @@ class Commands(object):
         return self.client.wipe_device()
 
     def recovery_device(self, args):
-	typemap = { 'scrambled': types.RecoveryDeviceType_ScrambledWords,
+        typemap = { 'scrambled': types.RecoveryDeviceType_ScrambledWords,
                     'matrix':    types.RecoveryDeviceType_Matrix }
         return self.client.recovery_device(args.words, args.passphrase_protection,
-                                           args.pin_protection, args.label, 'english', 
+                                           args.pin_protection, args.label, 'english',
                                            typemap[args.type])
 
     def load_device(self, args):
