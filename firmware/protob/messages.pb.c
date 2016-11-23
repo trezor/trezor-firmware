@@ -204,18 +204,20 @@ const pb_field_t EntropyAck_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t RecoveryDevice_fields[8] = {
+const pb_field_t RecoveryDevice_fields[9] = {
     PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, RecoveryDevice, word_count, word_count, 0),
     PB_FIELD2(  2, BOOL    , OPTIONAL, STATIC  , OTHER, RecoveryDevice, passphrase_protection, word_count, 0),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, RecoveryDevice, pin_protection, passphrase_protection, 0),
     PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, language, pin_protection, &RecoveryDevice_language_default),
     PB_FIELD2(  5, STRING  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, label, language, 0),
     PB_FIELD2(  6, BOOL    , OPTIONAL, STATIC  , OTHER, RecoveryDevice, enforce_wordlist, label, 0),
-    PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, u2f_counter, enforce_wordlist, 0),
+    PB_FIELD2(  8, UINT32  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, type, enforce_wordlist, 0),
+    PB_FIELD2(  9, UINT32  , OPTIONAL, STATIC  , OTHER, RecoveryDevice, u2f_counter, type, 0),
     PB_LAST_FIELD
 };
 
-const pb_field_t WordRequest_fields[1] = {
+const pb_field_t WordRequest_fields[2] = {
+    PB_FIELD2(  1, ENUM    , OPTIONAL, STATIC  , FIRST, WordRequest, type, type, 0),
     PB_LAST_FIELD
 };
 

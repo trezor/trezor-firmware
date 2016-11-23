@@ -69,6 +69,17 @@ typedef enum _PinMatrixRequestType {
     PinMatrixRequestType_PinMatrixRequestType_NewSecond = 3
 } PinMatrixRequestType;
 
+typedef enum _RecoveryDeviceType {
+    RecoveryDeviceType_RecoveryDeviceType_ScrambledWords = 0,
+    RecoveryDeviceType_RecoveryDeviceType_Matrix = 1
+} RecoveryDeviceType;
+
+typedef enum _WordRequestType {
+    WordRequestType_WordRequestType_Plain = 0,
+    WordRequestType_WordRequestType_Matrix9 = 1,
+    WordRequestType_WordRequestType_Matrix6 = 2
+} WordRequestType;
+
 /* Struct definitions */
 typedef struct _CoinType {
     bool has_coin_name;
