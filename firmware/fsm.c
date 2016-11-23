@@ -974,7 +974,8 @@ void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 		msg->has_pin_protection && msg->pin_protection,
 		msg->has_language ? msg->language : 0,
 		msg->has_label ? msg->label : 0,
-		msg->has_enforce_wordlist ? msg->enforce_wordlist : false,
+		msg->has_enforce_wordlist && msg->enforce_wordlist,
+		msg->has_type ? msg->type : 0,
 		msg->has_u2f_counter ? msg->u2f_counter : 0
 	);
 }
