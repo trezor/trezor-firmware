@@ -61,6 +61,9 @@ clean_cross: ## clean mpy-cross build
 test: ## run unit tests
 	cd tests ; ./run_tests.sh
 
+testpy: ## run selected unit tests from python-trezor
+	cd tests ; ./run_tests_python_trezor.sh
+
 flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware0.bin 0x8000000
 	sleep 0.1

@@ -9,8 +9,7 @@ async def layout_ethereum_get_address(msg, session_id):
     from trezor.crypto.hashlib import sha3_256
     from ..common.seed import get_node
 
-    address_n = getattr(msg, 'address_n', ())
-    show_display = getattr(msg, 'show_display', False)
+    address_n = msg.address_n or ()
 
     node = await get_node(session_id, address_n)
 
@@ -18,7 +17,7 @@ async def layout_ethereum_get_address(msg, session_id):
     public_key = secp256k1.publickey(seckey, False) # uncompressed
     address = sha3_256(public_key[1:]).digest(True)[12:] # Keccak
 
-    if show_display:
+    if msg.show_display:
         await _show_address(session_id, address)
     return EthereumAddress(address=address)
 
