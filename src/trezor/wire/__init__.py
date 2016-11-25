@@ -77,16 +77,16 @@ def setup():
 
 async def read_message(session_id, *exp_types):
     log.info(__name__, 'session %d: read types %s', session_id, exp_types)
-    future = Future()
+    signal = Signal()
     if session_id == SESSION_V1:
         wire_decoder = decode_wire_v1_stream(
-            _dispatch_and_build_protobuf, session_id, exp_types, future)
+            _dispatch_and_build_protobuf, session_id, exp_types, signal)
     else:
         wire_decoder = decode_wire_stream(
-            _dispatch_and_build_protobuf, session_id, exp_types, future)
+            _dispatch_and_build_protobuf, session_id, exp_types, signal)
     wire_decoder.send(None)
     register_session(session_id, wire_decoder)
-    return await future
+    return await signal
 
 
 async def write_message(session_id, pbuf_message):
@@ -178,15 +178,15 @@ def _handle_unknown_session(session_id, report_data):
     pass  # TODO
 
 
-def _dispatch_and_build_protobuf(msg_type, data_len, session_id, exp_types, future):
+def _dispatch_and_build_protobuf(msg_type, data_len, session_id, exp_types, signal):
     if msg_type in exp_types:
         pbuf_type = get_protobuf_type(msg_type)
-        builder = build_protobuf_message(pbuf_type, future.resolve)
+        builder = build_protobuf_message(pbuf_type, signal.send)
         builder.send(None)
         return pbuf_type.load(target=builder)
     else:
         from trezor.messages.FailureType import UnexpectedMessage
-        future.resolve(FailureError(UnexpectedMessage, 'Unexpected message'))
+        signal.send(FailureError(UnexpectedMessage, 'Unexpected message'))
         return _handle_registered_type(msg_type, data_len, session_id)
 
 

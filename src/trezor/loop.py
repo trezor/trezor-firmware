@@ -1,7 +1,6 @@
 import utime
 from micropython import const
 from uheapq import heappop, heappush, heapify
-from .utils import type_gen
 from . import msg, log, ui
 
 if __debug__:
@@ -136,7 +135,7 @@ class Select(Syscall):
 NO_VALUE = ()
 
 
-class Future(Syscall):
+class Signal(Syscall):
 
     def __init__(self):
         self.value = NO_VALUE
@@ -146,7 +145,7 @@ class Future(Syscall):
         self.task = task
         self._deliver()
 
-    def resolve(self, value):
+    def send(self, value):
         self.value = value
         self._deliver()
 

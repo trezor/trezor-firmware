@@ -6,8 +6,8 @@ from trezor.messages.wire_types import \
 
 async def dispatch_DebugLinkDecision(msg, session_id):
     from trezor.ui.confirm import CONFIRMED, CANCELLED
-    from ..common.confirm import future
-    future.resolve(CONFIRMED if msg.yes_no else CANCELLED)
+    from ..common.confirm import signal
+    signal.send(CONFIRMED if msg.yes_no else CANCELLED)
 
 
 async def dispatch_DebugLinkGetState(msg, session_id):
