@@ -1,12 +1,11 @@
 from common import *
 
 import ustruct
-import ubinascii
 
 from trezor.crypto import random
 from trezor.utils import chunks
 
-from trezor.wire import wire_codec_v1
+from trezor.wire import codec_v1
 
 class TestWireCodecV1(unittest.TestCase):
     # pylint: disable=C0301
@@ -14,21 +13,21 @@ class TestWireCodecV1(unittest.TestCase):
     def test_detect(self):
         for i in range(0, 256):
             if i == ord(b'?'):
-                self.assertTrue(wire_codec_v1.detect_v1(bytes([i]) + b'\x00' * 63))
+                self.assertTrue(codec_v1.detect_v1(bytes([i]) + b'\x00' * 63))
             else:
-                self.assertFalse(wire_codec_v1.detect_v1(bytes([i]) + b'\x00' * 63))
+                self.assertFalse(codec_v1.detect_v1(bytes([i]) + b'\x00' * 63))
 
     def test_parse(self):
         d = bytes(range(0, 55))
         m = b'##\x00\x00\x00\x00\x00\x37' + d
         r = b'?' + m
 
-        rm, rs, rd = wire_codec_v1.parse_report_v1(r)
+        rm, rs, rd = codec_v1.parse_report_v1(r)
         self.assertEqual(rm, None)
         self.assertEqual(rs, 0)
         self.assertEqual(rd, m)
 
-        mt, ml, md = wire_codec_v1.parse_message(m)
+        mt, ml, md = codec_v1.parse_message(m)
         self.assertEqual(mt, 0)
         self.assertEqual(ml, len(d))
         self.assertEqual(md, d)
@@ -36,34 +35,34 @@ class TestWireCodecV1(unittest.TestCase):
         for i in range(0, 1024):
             if i != 64:
                 with self.assertRaises(ValueError):
-                    wire_codec_v1.parse_report_v1(bytes(range(0, i)))
+                    codec_v1.parse_report_v1(bytes(range(0, i)))
 
         for hx in range(0, 256):
             for hy in range(0, 256):
                 if hx != ord(b'#') and hy != ord(b'#'):
                     with self.assertRaises(ValueError):
-                        wire_codec_v1.parse_message(bytes([hx, hy]) + m[2:])
+                        codec_v1.parse_message(bytes([hx, hy]) + m[2:])
 
     def test_serialize(self):
         data = bytearray(range(0, 10))
-        wire_codec_v1.serialize_message_header(data, 0x1234, 0x56789abc)
+        codec_v1.serialize_message_header(data, 0x1234, 0x56789abc)
         self.assertEqual(data, b'\x00##\x12\x34\x56\x78\x9a\xbc\x09')
 
         data = bytearray(9)
         with self.assertRaises(ValueError):
-            wire_codec_v1.serialize_message_header(data, 65536, 0)
+            codec_v1.serialize_message_header(data, 65536, 0)
 
         for i in range(0, 8):
             data = bytearray(i)
             with self.assertRaises(ValueError):
-                wire_codec_v1.serialize_message_header(data, 0x1234, 0x56789abc)
+                codec_v1.serialize_message_header(data, 0x1234, 0x56789abc)
 
     def test_decode_empty(self):
         message = b'##' + b'\xab\xcd' + b'\x00\x00\x00\x00' + b'\x00' * 55
 
         record = []
         genfunc = self._record(record, 0xabcd, 0, 0xdeadbeef, 'dummy')
-        decoder = wire_codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
+        decoder = codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
         decoder.send(None)
 
         try:
@@ -80,7 +79,7 @@ class TestWireCodecV1(unittest.TestCase):
 
         record = []
         genfunc = self._record(record, 0xabcd, 55, 0xdeadbeef, 'dummy')
-        decoder = wire_codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
+        decoder = codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
         decoder.send(None)
 
         try:
@@ -105,7 +104,7 @@ class TestWireCodecV1(unittest.TestCase):
 
             record = []
             genfunc = self._record(record, msg_type, data_len, 0xdeadbeef, 'dummy')
-            decoder = wire_codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
+            decoder = codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
             decoder.send(None)
 
             res = 1
@@ -125,7 +124,7 @@ class TestWireCodecV1(unittest.TestCase):
         target = self._record(record)()
         target.send(None)
 
-        wire_codec_v1.encode_wire_v1_message(0xabcd, b'', target)
+        codec_v1.encode_wire_v1_message(0xabcd, b'', target)
         self.assertEqual(len(record), 1)
         self.assertEqual(record[0], b'?##\xab\xcd\x00\x00\x00\x00' + '\0' * 55)
 
@@ -136,7 +135,7 @@ class TestWireCodecV1(unittest.TestCase):
         target = self._record(record)()
         target.send(None)
 
-        wire_codec_v1.encode_wire_v1_message(0xabcd, data, target)
+        codec_v1.encode_wire_v1_message(0xabcd, data, target)
         self.assertEqual(record, [b'?##\xab\xcd\x00\x00\x00\x37' + data])
 
     def test_encode_generated_range(self):
@@ -159,7 +158,7 @@ class TestWireCodecV1(unittest.TestCase):
             target = genfunc()
             target.send(None)
 
-            wire_codec_v1.encode_wire_v1_message(msg_type, data, target)
+            codec_v1.encode_wire_v1_message(msg_type, data, target)
             self.assertEqual(received, len(reports))
 
     def _record(self, record, *_args):

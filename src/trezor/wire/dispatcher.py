@@ -1,6 +1,6 @@
 from trezor import log
-from .wire_codec import parse_report, REP_MARKER_OPEN, REP_MARKER_CLOSE
-from .wire_codec_v1 import detect_v1, parse_report_v1
+from .codec import parse_report, REP_MARKER_OPEN, REP_MARKER_CLOSE
+from .codec_v1 import detect_v1, parse_report_v1
 
 
 def dispatch_reports_by_session(handlers,

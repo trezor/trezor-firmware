@@ -1,5 +1,5 @@
-from ubinascii import hexlify
 from micropython import const
+from ubinascii import hexlify
 from trezor import msg, loop, log
 
 _DEFAULT_IFACE = const(0xFF00)  # TODO: use proper interface
@@ -15,5 +15,5 @@ def read_report_stream(target, iface=_DEFAULT_IFACE):
 def write_report_stream(iface=_DEFAULT_IFACE):
     while True:
         report = yield
-        log.debug(__name__, 'write report %s', hexlify(report))
+        log.info(__name__, 'write report %s', hexlify(report))
         msg.send(iface, report)

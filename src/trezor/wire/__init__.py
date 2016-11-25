@@ -6,12 +6,12 @@ from trezor.messages import get_protobuf_type
 from trezor.workflow import start_workflow
 from trezor import log
 
-from .wire_io import read_report_stream, write_report_stream
-from .wire_dispatcher import dispatch_reports_by_session
-from .wire_codec import \
+from .io import read_report_stream, write_report_stream
+from .dispatcher import dispatch_reports_by_session
+from .codec import \
     decode_wire_stream, encode_wire_message, \
     encode_session_open_message, encode_session_close_message
-from .wire_codec_v1 import \
+from .codec_v1 import \
     SESSION_V1, decode_wire_v1_stream, encode_wire_v1_message
 
 _session_handlers = {}  # session id -> generator
