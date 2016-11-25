@@ -34,7 +34,6 @@ setup(
         'trezorlib.types_pb2',
     ],
     scripts = ['trezorctl'],
-    test_suite='tests',
     install_requires=install_requires,
     include_package_data=True,
     zip_safe=False,
