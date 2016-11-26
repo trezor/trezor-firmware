@@ -79,7 +79,7 @@ void check_lock_screen(void)
 
 	// if homescreen is shown for longer than 10 minutes, lock too
 	if (layoutLast == layoutHome) {
-		if ((system_millis - system_millis_lock_start) >= 60000) {
+		if ((system_millis - system_millis_lock_start) >= 600000) {
 			// lock the screen
 			session_clear(true);
 			layoutScreensaver();
