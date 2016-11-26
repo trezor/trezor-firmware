@@ -305,10 +305,12 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 	char row_hostport[64 + 6 + 1];
 	char row_user[64 + 8 + 1];
 
+	bool is_gpg = (strcmp(identity->proto, "gpg") == 0);
+
 	if (identity->has_proto && identity->proto[0]) {
 		if (strcmp(identity->proto, "https") == 0) {
 			strlcpy(row_proto, "Web sign in to:", sizeof(row_proto));
-		} else if (strcmp(identity->proto, "gpg") == 0) {
+		} else if (is_gpg) {
 			strlcpy(row_proto, "GPG sign for:", sizeof(row_proto));
 		} else {
 			strlcpy(row_proto, identity->proto, sizeof(row_proto));
@@ -335,6 +337,21 @@ void layoutSignIdentity(const IdentityType *identity, const char *challenge)
 		strlcat(row_user, identity->user, sizeof(row_user));
 	} else {
 		row_user[0] = 0;
+	}
+
+	if (is_gpg) {
+		// Split "First Last <first@last.com>" into 2 lines:
+		// "First Last"
+		// "first@last.com"
+		char *email_start = strchr(row_hostport, '<');
+		if (email_start) {
+			strlcpy(row_user, email_start + 1, sizeof(row_user));
+			*email_start = 0;
+			char *email_end = strchr(row_user, '>');
+			if (email_end) {
+				*email_end = 0;
+			}
+		}
 	}
 
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm",
