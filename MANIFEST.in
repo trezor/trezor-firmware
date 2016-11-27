@@ -1,2 +1,3 @@
 recursive-include tests *.py *.sh
+recursive-include bash_completion.d *.sh
 include COPYING
