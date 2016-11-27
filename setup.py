@@ -12,9 +12,9 @@ else:
 setup(
     name='trezor',
     version='0.7.7',
-    author='Bitcoin TREZOR',
-    author_email='info@bitcointrezor.com',
-    description='Python library for communicating with TREZOR Bitcoin Hardware Wallet',
+    author='TREZOR',
+    author_email='info@trezor.io',
+    description='Python library for communicating with TREZOR Hardware Wallet',
     url='https://github.com/trezor/python-trezor',
     py_modules=[
         'trezorlib.ckd_public',

@@ -7,9 +7,9 @@ python-trezor
 .. image:: https://badges.gitter.im/trezor/community.svg
     :target: https://gitter.im/trezor/community
 
-Client side implementation for TREZOR-compatible Bitcoin hardware wallets.
+Python library for communicating with TREZOR Hardware Wallet
 
-See http://bitcointrezor.com for more information.
+See https://trezor.io for more information
 
 Install
 -------
