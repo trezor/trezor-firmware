@@ -31,9 +31,9 @@ class TxApi(object):
         self.url = url
 
     def fetch_json(self, url, resource, resourceid):
-        cachefile = '%s_%s_%s' % (self.network, resource, resourceid)
+        cachefile = 'txcache/%s_%s_%s.json' % (self.network, resource, resourceid)
         try: # looking into cache first
-            j = json.load(open('txcache/' + cachefile))
+            j = json.load(open(cachefile))
             return j
         except:
             pass
@@ -43,7 +43,7 @@ class TxApi(object):
         except:
             raise Exception('URL error: %s' % url)
         try: # saving into cache
-            json.dump(j, open('txcache/' + cachefile, 'w'))
+            json.dump(j, open(cachefile, 'w'))
         except:
             pass
         return j
