@@ -23,6 +23,7 @@ import requests
 import json
 from . import types_pb2 as proto_types
 
+cache_dir = None
 
 class TxApi(object):
 
@@ -31,21 +32,24 @@ class TxApi(object):
         self.url = url
 
     def fetch_json(self, url, resource, resourceid):
-        cachefile = 'txcache/%s_%s_%s.json' % (self.network, resource, resourceid)
-        try: # looking into cache first
-            j = json.load(open(cachefile))
-            return j
-        except:
-            pass
+        global cache_dir
+        if cache_dir:
+            cache_file = '%s/%s_%s_%s.json' % (cache_dir, self.network, resource, resourceid)
+            try: # looking into cache first
+                j = json.load(open(cache_file))
+                return j
+            except:
+                pass
         try:
             r = requests.get('%s/%s/%s' % (self.url, resource, resourceid), headers={'User-agent': 'Mozilla/5.0'})
             j = r.json()
         except:
             raise Exception('URL error: %s' % url)
-        try: # saving into cache
-            json.dump(j, open(cachefile, 'w'))
-        except:
-            pass
+        if cache_file:
+            try: # saving into cache
+                json.dump(j, open(cachefile, 'w'))
+            except:
+                pass
         return j
 
     def get_tx(self, txhash):
@@ -91,7 +95,10 @@ class TxApiInsight(TxApi):
                 if joinsplit_cnt == 0:
                     t.extra_data =b'\x00'
                 else:
-                    extra_data_len = 1 + joinsplit_cnt * 1802 + 32 + 64 # we assume cnt < 253, so we can treat varIntLen(cnt) as 1
+                    if joinsplit_cnt >= 253:
+                        # we assume cnt < 253, so we can treat varIntLen(cnt) as 1
+                        raise ValueError('Too many joinsplits')
+                    extra_data_len = 1 + joinsplit_cnt * 1802 + 32 + 64
                     raw = fetch_json(self.url, 'rawtx', txhash)
                     raw = binascii.unhexlify(raw['rawtx'])
                     t.extra_data = raw[-extra_data_len:]

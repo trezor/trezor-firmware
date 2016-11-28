@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import sys
-sys.path = ['../',] + sys.path
+sys.path = ['../../'] + sys.path
 
 from trezorlib.transport_pipe import PipeTransport
 from trezorlib.transport_hid import HidTransport

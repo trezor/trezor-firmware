@@ -2,8 +2,12 @@ from __future__ import print_function
 
 import unittest
 from trezorlib.client import TrezorClient, TrezorDebugClient
-from trezorlib.tx_api import TxApiBitcoin
+from trezorlib import tx_api
 import config
+
+
+tx_api.cache_dir = '../txcache'
+
 
 class TrezorTest(unittest.TestCase):
     def setUp(self):
@@ -14,7 +18,7 @@ class TrezorTest(unittest.TestCase):
             self.client.set_debuglink(debug_transport)
         else:
             self.client = TrezorClient(transport)
-        self.client.set_tx_api(TxApiBitcoin)
+        self.client.set_tx_api(tx_api.TxApiBitcoin)
         # self.client.set_buttonwait(3)
 
         #                     1      2     3    4      5      6      7     8      9    10    11    12
