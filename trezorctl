@@ -149,29 +149,52 @@ class Commands(object):
         else:
             value = int(value)
 
+        gas_price = args.gas_price
+        if gas_price:
+            if ' ' in gas_price:
+                gas_price, unit = gas_price.split(' ', 1)
+                if unit.lower() not in ether_units:
+                    raise CallException(types.Failure_Other, "Unrecognized gas price unit %r" % unit)
+                gas_price = int(gas_price) * ether_units[unit.lower()]
+            else:
+                gas_price = int(gas_price)
+
+        gas_limit = args.gas
+        if gas_limit:
+            gas_limit = int(gas_limit)
+
         if args.to.startswith('0x') or args.to.startswith('0X'):
             to_address = args.to[2:].decode('hex')
         else:
             to_address = args.to.decode('hex')
 
+        nonce = args.nonce
+        if nonce:
+            nonce = int(nonce)
+
         address_n = self.client.expand_path(args.n)
         address = "0x%s" % (binascii.hexlify(self.client.ethereum_get_address(address_n)),)
 
-        host, port = args.host.split(':')
-        eth = EthJsonRpc(host, int(port))
+        if not gas_price or not gas_limit or not nonce or args.data:
+            host, port = args.host.split(':')
+            eth = EthJsonRpc(host, int(port))
 
-        gas_price = eth.eth_gasPrice()
-        gas_limit = args.gas
         if args.data.startswith('0x'):
             args.data = args.data[2:]
         data = binascii.unhexlify(args.data)
-        if not gas_limit:
+
+        if not gas_price:
+            gas_price = eth.eth_gasPrice()
+
+        if args.data:
             gas_limit = hex_to_dec(eth.eth_estimateGas(
                 to_address=args.to,
                 from_address=address,
                 value=value,
                 data="0x"+args.data))
-        nonce = eth.eth_getTransactionCount(address)
+
+        if not nonce:
+            nonce = eth.eth_getTransactionCount(address)
 
         sig = self.client.ethereum_sign_tx(
             n=address_n,
@@ -386,7 +409,9 @@ class Commands(object):
         (('-a', '--host'), {'type': str, 'default': 'localhost:8545'}),
         (('-n', '-address'), {'type': str}),
         (('-v', '--value'), {'type': str, 'default': "0"}),
-        (('-g', '--gas'), {'type': int}),
+        (('-g', '--gas'), {'type': int, 'help': 'Required for offline signing'}),
+        (('-t', '--gas-price'), {'type': str, 'help': 'Required for offline signing' }),
+        (('-i', '--nonce'), {'type': str, 'help': 'Required for offline signing'}),
         (('-d', '--data'), {'type': str, 'default': ''}),
         (('-p', '--publish'), {'action': 'store_true', 'default': False}),
         (('to',), {'type': str}),
