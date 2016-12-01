@@ -4,22 +4,22 @@ import binascii
 import itertools
 
 import trezorlib.messages_pb2 as proto
-import trezorlib.ckd_public as ckd_public
+import trezorlib.ckd_public as bip32
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
 
 class TestMultisigChange(common.TrezorTest):
 
-    node_ext1 = ckd_public.deserialize('xpub6E2LkiC2h7icfcjXPFDmwufDRaaTjTRYcS2nD7eGQeFx1WwZxxvCya5GefiJND6ddJnAjzzMusLcCnu6WyhZPrF6e5G71MWjNJVfs6u9csg')
+    node_ext1 = bip32.deserialize('xpub6E2LkiC2h7icfcjXPFDmwufDRaaTjTRYcS2nD7eGQeFx1WwZxxvCya5GefiJND6ddJnAjzzMusLcCnu6WyhZPrF6e5G71MWjNJVfs6u9csg')
     # m/1 => 02c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e
 
-    node_ext2 = ckd_public.deserialize('xpub6FKKCwdfD85eHmKn7d3mmbhqsHnGkB2n7Hmre29gbnR1cR4U1wrtf2akh1VVqjcTdfkxmwPjQyYPhLLgwBijfFPAYqTZzcjj4awB1BMUxq2')
+    node_ext2 = bip32.deserialize('xpub6FKKCwdfD85eHmKn7d3mmbhqsHnGkB2n7Hmre29gbnR1cR4U1wrtf2akh1VVqjcTdfkxmwPjQyYPhLLgwBijfFPAYqTZzcjj4awB1BMUxq2')
     # m/1 => 0388460dc439f4c8f5bcfc268c36e11b4375cad5c3535c336cfdf8c32c3afad5c1
 
-    node_ext3 = ckd_public.deserialize('xpub69rsKg2fef3GzETrukhsR3U9i4nL3dXKy3cjSpm44Cg8waqrnyupanaLQt4bYjn2HTmH1NusFt9DAh6absMQqE4E66q7EYTyEsorZKXdWWx')
+    node_ext3 = bip32.deserialize('xpub69rsKg2fef3GzETrukhsR3U9i4nL3dXKy3cjSpm44Cg8waqrnyupanaLQt4bYjn2HTmH1NusFt9DAh6absMQqE4E66q7EYTyEsorZKXdWWx')
     # m/1 => 02e0c21e2a7cf00b94c5421725acff97f9826598b91f2340c5ddda730caca7d648
 
-    node_int = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+    node_int = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
     # m/1 => 0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6
 
     # ext1 + ext2 + int

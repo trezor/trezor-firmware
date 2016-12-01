@@ -6,7 +6,7 @@ import binascii
 import itertools
 
 import trezorlib.messages_pb2 as proto
-import trezorlib.ckd_public as ckd_public
+import trezorlib.ckd_public as bip32
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
 
@@ -25,7 +25,7 @@ class TestMultisig(common.TrezorTest):
         #key3 = self.client.get_public_node([3])
 
         # xpub:
-        # print(ckd_public.serialize(self.client.get_public_node([]).node))
+        # print(bip32.serialize(self.client.get_public_node([]).node))
         # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
 
         # pubkeys:
@@ -41,7 +41,7 @@ class TestMultisig(common.TrezorTest):
         # tx: c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52
         # input 1: 0.001 BTC
 
-        node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+        node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
 
         multisig = proto_types.MultisigRedeemScriptType(
                             pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
@@ -135,9 +135,9 @@ class TestMultisig(common.TrezorTest):
         """
 
         # xpub:
-        # print(ckd_public.serialize(self.client.get_public_node([]).node))
+        # print(bip32.serialize(self.client.get_public_node([]).node))
         # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
-        node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+        node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
 
         pubs = []
         for x in range(15):
@@ -191,9 +191,9 @@ class TestMultisig(common.TrezorTest):
         # multisig address: 3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz
 
         # xpub:
-        # print(ckd_public.serialize(self.client.get_public_node([]).node))
+        # print(bip32.serialize(self.client.get_public_node([]).node))
         # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
-        node = ckd_public.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
+        node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
 
         multisig = proto_types.MultisigRedeemScriptType(
                             pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
