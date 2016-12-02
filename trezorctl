@@ -27,7 +27,6 @@ import argparse
 import json
 import base64
 import tempfile
-from trezorlib import types_pb2 as types
 from io import BytesIO
 
 from trezorlib.client import TrezorClient, TrezorClientDebug, CallException
