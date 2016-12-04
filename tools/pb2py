@@ -2,11 +2,12 @@
 
 import sys
 import os
+import argparse
 
 from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 
-def process_type(t, cls, msg_id, indexfile):
+def process_type(t, cls, msg_id, indexfile, is_upy):
     print("  * type %s" % t)
 
     imports = ["import protobuf as p", ]
@@ -85,12 +86,15 @@ def process_type(t, cls, msg_id, indexfile):
     if msg_id is not None:
         out.append("    MESSAGE_WIRE_TYPE = %d" % msg_id)
         if indexfile is not None:
-            indexfile.write("%s = %d\n" % (t, msg_id))
+            if is_upy:
+                indexfile.write("%s = const(%d)\n" % (t, msg_id))
+            else:
+                indexfile.write("%s = %d\n" % (t, msg_id))
 
     return imports + out
 
 
-def process_enum(t, cls):
+def process_enum(t, cls, is_upy):
     out = []
 
     print("  * enum %s" % t)
@@ -106,7 +110,10 @@ def process_enum(t, cls):
         if t.endswith("Type") and k.startswith("%s_" % t.replace("Type", '')):
             k = k.replace("%s_" % t.replace("Type", ''), '')
 
-        out.append("%s = const(%s)" % (k, v))
+        if is_upy:
+            out.append("%s = const(%s)" % (k, v))
+        else:
+            out.append("%s = %s" % (k, v))
 
     return out
 
@@ -118,7 +125,7 @@ def find_msg_type(msg_types, t):
             return v
 
 
-def process_module(mod, genpath, indexfile):
+def process_module(mod, genpath, indexfile, is_upy):
 
     print("Processing module %s" % mod.__name__)
     types = dict([(name, cls)
@@ -131,7 +138,7 @@ def process_module(mod, genpath, indexfile):
         # Find message type for given class
         msg_id = find_msg_type(msg_types, t)
 
-        out = process_type(t, cls, msg_id, indexfile)
+        out = process_type(t, cls, msg_id, indexfile, is_upy)
 
         write_to_file(genpath, t, out)
 
@@ -139,7 +146,7 @@ def process_module(mod, genpath, indexfile):
                   if isinstance(cls, EnumTypeWrapper)])
 
     for t, cls in enums.items():
-        out = process_enum(t, cls)
+        out = process_enum(t, cls, is_upy)
         write_to_file(genpath, t, out)
 
 
@@ -154,20 +161,20 @@ def write_to_file(genpath, t, out):
     f.close()
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage: ./pb2py modulename genpath indexfile")
-        sys.exit()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('modulename', type=str, help="Name of module to generate")
+    parser.add_argument('genpath', type=str, help="Directory for generated source code")
+    parser.add_argument('-i', '--indexfile', type=str, help="[optional] Generate index file of wire types")
+    parser.add_argument('-m', '--micropython', action='store_true', help="Use micropython-favoured source code")
+    args = parser.parse_args()
 
-    modulename = sys.argv[1]
-    genpath = sys.argv[2]
-
-    if len(sys.argv) > 2:
-        indexfile = open(sys.argv[3], 'a')
+    if args.indexfile:
+        indexfile = open(args.indexfile, 'a')
     else:
         indexfile = None
 
     # Dynamically load module from argv[1]
-    tmp = __import__('pb2', globals(), locals(), ['%s_pb2' % modulename])
-    mod = getattr(tmp, "%s_pb2" % modulename)
+    tmp = __import__('pb2', globals(), locals(), ['%s_pb2' % args.modulename])
+    mod = getattr(tmp, "%s_pb2" % args.modulename)
 
-    process_module(mod, genpath, indexfile)
+    process_module(mod, args.genpath, indexfile, args.micropython)
