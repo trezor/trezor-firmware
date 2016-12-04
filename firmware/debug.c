@@ -20,6 +20,7 @@
 #include "trezor.h"
 #include "debug.h"
 #include "oled.h"
+#include "util.h"
 
 #if DEBUG_LOG
 
@@ -48,6 +49,17 @@ void debugLog(int level, const char *bucket, const char *text)
 	(void)level;
 	(void)bucket;
 	oledDebug(text);
+}
+
+char *debugInt(const uint32_t i)
+{
+	static uint8_t n = 0;
+	static char id[8][9];
+	uint32hex(i, id[n]);
+	debugLog(0, "", id[n]);
+	char *ret = (char *)id[n];
+	n = (n + 1) % 8;
+	return ret;
 }
 
 #endif

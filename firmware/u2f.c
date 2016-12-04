@@ -92,22 +92,6 @@ typedef struct {
 	uint8_t chal[U2F_CHAL_SIZE];
 } U2F_AUTHENTICATE_SIG_STR;
 
-
-#if DEBUG_LOG
-char *debugInt(const uint32_t i)
-{
-	static uint8_t n = 0;
-	static char id[8][9];
-	uint32hex(i, id[n]);
-	debugLog(0, "", id[n]);
-	char *ret = (char *)id[n];
-	n = (n + 1) % 8;
-	return ret;
-}
-#else
-#define debugInt(I) do{}while(0)
-#endif
-
 static uint32_t dialog_timeout = 0;
 
 uint32_t next_cid(void)

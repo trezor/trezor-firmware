@@ -21,14 +21,17 @@
 #define __DEBUG_H__
 
 #include "trezor.h"
+#include <stdint.h>
 
 #if DEBUG_LOG
 
 void debugLog(int level, const char *bucket, const char *text);
+char *debugInt(const uint32_t i);
 
 #else
 
 #define debugLog(L, B, T) do{}while(0)
+#define debugInt(I) do{}while(0)
 
 #endif
 
