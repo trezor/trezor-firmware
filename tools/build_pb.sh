@@ -15,7 +15,7 @@ done
 for i in types messages storage ; do
     # Convert google protobuf library to trezor's internal format
     cd $CURDIR
-    ./pb2py -m -i $INDEX $i ../src/trezor/messages/
+    ../../trezor-common/tools/pb2py -m -p $CURDIR -i $INDEX $i ../src/trezor/messages/
 done
 
 rm -rf $CURDIR/pb2/
