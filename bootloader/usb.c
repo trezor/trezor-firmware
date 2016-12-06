@@ -485,15 +485,30 @@ void usbInit(void)
 
 void checkButtons(void)
 {
+	static bool btn_left = false, btn_right = false, btn_final = false;
+	if (btn_final) {
+		return;
+	}
 	uint16_t state = gpio_port_read(BTN_PORT);
 	if ((state & (BTN_PIN_YES | BTN_PIN_NO)) != (BTN_PIN_YES | BTN_PIN_NO)) {
 		if ((state & BTN_PIN_NO) != BTN_PIN_NO) {
-			oledInvert(0, 0, 3, 3);
+			btn_left = true;
 		}
 		if ((state & BTN_PIN_YES) != BTN_PIN_YES) {
-			oledInvert(OLED_WIDTH - 4, 0, OLED_WIDTH - 1, 3);
+			btn_right = true;
 		}
+	}
+	if (btn_left) {
+		oledBox(0, 0, 3, 3, true);
+	}
+	if (btn_right) {
+		oledBox(OLED_WIDTH - 4, 0, OLED_WIDTH - 1, 3, true);
+	}
+	if (btn_left || btn_right) {
 		oledRefresh();
+	}
+	if (btn_left && btn_right) {
+		btn_final = true;
 	}
 }
 
@@ -501,7 +516,7 @@ void usbLoop(void)
 {
 	for (;;) {
 		usbd_poll(usbd_dev);
-		if (flash_state == STATE_READY || flash_state == STATE_OPEN) {
+		if (!firmware_present && (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
 			checkButtons();
 		}
 	}
