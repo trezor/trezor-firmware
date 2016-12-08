@@ -14,10 +14,12 @@ UPY_PID=$!
 
 sleep 1
 
-cd ../tests/python-trezor/tests
-export PYTHONPATH=".."
+cd ../tests/python-trezor/tests/device_tests
+export PYTHONPATH="../.."
 
 error=0
+
+PYTHON="${PYTHON:-python2}"
 
 for i in \
     test_msg_cipherkeyvalue.py \
@@ -29,7 +31,7 @@ for i in \
     test_msg_signtx.py \
     test_msg_verifymessage.py \
     ; do
-        if ! python2 $i ; then
+        if ! $PYTHON $i ; then
             error=1
             break
         fi
