@@ -1,6 +1,6 @@
 from trezor.crypto.hashlib import sha256
 
-from .signtx import HashWriter, write_varint
+from apps.wallet.sign_tx.signing import HashWriter, write_varint
 
 def message_digest(coin, message):
 

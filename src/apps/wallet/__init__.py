@@ -54,8 +54,8 @@ def dispatch_SignIdentity(*args, **kwargs):
 
 @unimport
 def dispatch_CipherKeyValue(*args, **kwargs):
-    from .cipherkeyvalue import layout_cipherkeyvalue
-    return layout_cipherkeyvalue(*args, **kwargs)
+    from .cipher_key_value import layout_cipher_key_value
+    return layout_cipher_key_value(*args, **kwargs)
 
 
 def boot():
