@@ -20,14 +20,14 @@ from micropython import const
 from streams import StreamReader, BufferWriter
 
 
-def build_protobuf_message(msg_type, callback=None, *args):
+def build_message(msg_type, callback=None, *args):
     msg = msg_type()
     try:
         while True:
             field, fvalue = yield
             fname, ftype, fflags = field
             if issubclass(ftype, MessageType):
-                fvalue = yield from build_protobuf_message(ftype)
+                fvalue = yield from build_message(ftype)
             if fflags & FLAG_REPEATED:
                 prev_value = getattr(msg, fname, [])
                 prev_value.append(fvalue)

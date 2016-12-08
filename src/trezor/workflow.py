@@ -21,15 +21,15 @@ def close_default():
     _default = None
 
 
-def start_workflow(workflow):
+def start(workflow):
     if _default is not None:
         close_default()
     _started.append(workflow)
     log.info(__name__, 'start %s', workflow)
-    loop.schedule_task(_watch_workflow(workflow))
+    loop.schedule_task(_watch(workflow))
 
 
-async def _watch_workflow(workflow):
+async def _watch(workflow):
     try:
         return await workflow
     finally:

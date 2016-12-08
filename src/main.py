@@ -26,12 +26,11 @@ msg.set_interfaces([0xFF00, 0xFF01, 0xF1D0])
 for i, up in enumerate(msg.get_interfaces()):
     print("iface %d: usage_page 0x%04x" % (i + 1, up))
 
-
 # Initialize the wire codec pipeline
-wire.setup()
+wire.setup(0xFF00)
 
 # Load default homescreen
-from apps.homescreen.layout_homescreen import layout_homescreen
+from apps.homescreen.homescreen import layout_homescreen
 
-# Run main even loop and specify, which screen is default
+# Run main even loop and specify which screen is default
 trezor.main.run(default_workflow=layout_homescreen)

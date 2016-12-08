@@ -72,10 +72,10 @@ def run_task(task, value):
         ui.display.refresh()
 
 
-def handle_message(message):
+def handle_message(m):
     if not paused_tasks:
         return
-    iface, *value = message
+    iface, *value = m
     tasks = paused_tasks.pop(iface, ())
     for task in tasks:
         run_task(task, value)
@@ -101,9 +101,9 @@ def run_forever():
             # add current delay to ring buffer for performance stats
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
-        message = msg.select(delay)
-        if message:
-            handle_message(message)
+        m = msg.select(delay)
+        if m:
+            handle_message(m)
         else:
             handle_timeout()
 
