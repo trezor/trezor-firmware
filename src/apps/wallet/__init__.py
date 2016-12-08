@@ -21,7 +21,7 @@ def dispatch_GetAddress(*args, **kwargs):
 
 @unimport
 def dispatch_SignTx(*args, **kwargs):
-    from .sign_tx.workflow import sign_tx
+    from .sign_tx import sign_tx
     return sign_tx(*args, **kwargs)
 
 
