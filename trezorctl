@@ -450,7 +450,7 @@ class Commands(object):
         (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
-        (('-t', '--type'), {'type': str, 'choices': ['scrambled', 'matrix'], 'default': 'matrix'}),
+        (('-t', '--type'), {'type': str, 'choices': ['scrambled', 'matrix'], 'default': 'scrambled'}),
     )
 
     load_device.arguments = (
