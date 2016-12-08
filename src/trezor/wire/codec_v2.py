@@ -81,11 +81,11 @@ class MessageChecksumError(Exception):
     pass
 
 
-def decode_wire_stream(genfunc, session_id, *args):
+def decode_stream(session_id, callback, *args):
     '''Decode a wire message from the report data and stream it to target.
 
 Receives report payloads.  After first report, creates target by calling
-`genfunc(msg_type, data_len, session_id, *args)` and sends chunks of message
+`callback(session_id, msg_type, data_len, *args)` and sends chunks of message
 data.
 Throws `EOFError` to target after last data chunk, in case of valid checksum.
 Throws `MessageChecksumError` to target if data doesn't match the checksum.
@@ -95,7 +95,7 @@ Pass report payloads as `memoryview` for cheaper slicing.
     message = yield  # read first report
     msg_type, data_len, data_tail = parse_message(message)
 
-    target = genfunc(msg_type, data_len, session_id, *args)
+    target = callback(session_id, msg_type, data_len, *args)
     target.send(None)
 
     checksum = 0  # crc32
@@ -126,11 +126,11 @@ Pass report payloads as `memoryview` for cheaper slicing.
         target.throw(EOFError())
 
 
-def encode_wire_message(msg_type, msg_data, session_id, target):
-    '''Encode a full wire message directly to reports and stream it to target.
+def encode(session_id, msg_type, msg_data, callback):
+    '''Encode a full wire message directly to reports and stream it to callback.
 
-Target receives `memoryview`s of HID reports which are valid until the targets
-`send()` method returns.
+Callback receives `memoryview`s of HID reports which are valid until the
+callback returns.
     '''
     report = memoryview(bytearray(_REP_LEN))
     serialize_report_header(report, REP_MARKER_HEADER, session_id)
@@ -166,7 +166,7 @@ Target receives `memoryview`s of HID reports which are valid until the targets
             target_data[x] = 0
             x += 1
 
-        target.send(report)
+        callback(report)
 
         if not source_data and not msg_footer:
             break
@@ -178,13 +178,13 @@ Target receives `memoryview`s of HID reports which are valid until the targets
         target_data = report[_REP_HEADER_LEN:]
 
 
-def encode_session_open_message(session_id, target):
+def encode_session_open(session_id, callback):
     report = bytearray(_REP_LEN)
     serialize_report_header(report, REP_MARKER_OPEN, session_id)
-    target.send(report)
+    callback(report)
 
 
-def encode_session_close_message(session_id, target):
+def encode_session_close(session_id, callback):
     report = bytearray(_REP_LEN)
     serialize_report_header(report, REP_MARKER_CLOSE, session_id)
-    target.send(report)
+    callback(report)

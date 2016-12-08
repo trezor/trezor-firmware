@@ -13,16 +13,16 @@ class TestWireCodecV1(unittest.TestCase):
     def test_detect(self):
         for i in range(0, 256):
             if i == ord(b'?'):
-                self.assertTrue(codec_v1.detect_v1(bytes([i]) + b'\x00' * 63))
+                self.assertTrue(codec_v1.detect(bytes([i]) + b'\x00' * 63))
             else:
-                self.assertFalse(codec_v1.detect_v1(bytes([i]) + b'\x00' * 63))
+                self.assertFalse(codec_v1.detect(bytes([i]) + b'\x00' * 63))
 
     def test_parse(self):
         d = bytes(range(0, 55))
         m = b'##\x00\x00\x00\x00\x00\x37' + d
         r = b'?' + m
 
-        rm, rs, rd = codec_v1.parse_report_v1(r)
+        rm, rs, rd = codec_v1.parse_report(r)
         self.assertEqual(rm, None)
         self.assertEqual(rs, 0)
         self.assertEqual(rd, m)
@@ -35,7 +35,7 @@ class TestWireCodecV1(unittest.TestCase):
         for i in range(0, 1024):
             if i != 64:
                 with self.assertRaises(ValueError):
-                    codec_v1.parse_report_v1(bytes(range(0, i)))
+                    codec_v1.parse_report(bytes(range(0, i)))
 
         for hx in range(0, 256):
             for hy in range(0, 256):
@@ -61,8 +61,8 @@ class TestWireCodecV1(unittest.TestCase):
         message = b'##' + b'\xab\xcd' + b'\x00\x00\x00\x00' + b'\x00' * 55
 
         record = []
-        genfunc = self._record(record, 0xabcd, 0, 0xdeadbeef, 'dummy')
-        decoder = codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
+        genfunc = self._record(record, 0xdeadbeef, 0xabcd, 0, 'dummy')
+        decoder = codec_v1.decode_stream(0xdeadbeef, genfunc, 'dummy')
         decoder.send(None)
 
         try:
@@ -78,8 +78,8 @@ class TestWireCodecV1(unittest.TestCase):
         message = b'##' + b'\xab\xcd' + b'\x00\x00\x00\x37' + data
 
         record = []
-        genfunc = self._record(record, 0xabcd, 55, 0xdeadbeef, 'dummy')
-        decoder = codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
+        genfunc = self._record(record, 0xdeadbeef, 0xabcd, 55, 'dummy')
+        decoder = codec_v1.decode_stream(0xdeadbeef, genfunc, 'dummy')
         decoder.send(None)
 
         try:
@@ -103,8 +103,8 @@ class TestWireCodecV1(unittest.TestCase):
             message_chunks = [c + '\x00' * (63 - len(c)) for c in list(chunks(message, 63))]
 
             record = []
-            genfunc = self._record(record, msg_type, data_len, 0xdeadbeef, 'dummy')
-            decoder = codec_v1.decode_wire_v1_stream(genfunc, 0xdeadbeef, 'dummy')
+            genfunc = self._record(record, 0xdeadbeef, msg_type, data_len, 'dummy')
+            decoder = codec_v1.decode_stream(0xdeadbeef, genfunc, 'dummy')
             decoder.send(None)
 
             res = 1
@@ -124,7 +124,7 @@ class TestWireCodecV1(unittest.TestCase):
         target = self._record(record)()
         target.send(None)
 
-        codec_v1.encode_wire_v1_message(0xabcd, b'', target)
+        codec_v1.encode(codec_v1.SESSION, 0xabcd, b'', target.send)
         self.assertEqual(len(record), 1)
         self.assertEqual(record[0], b'?##\xab\xcd\x00\x00\x00\x00' + '\0' * 55)
 
@@ -135,7 +135,7 @@ class TestWireCodecV1(unittest.TestCase):
         target = self._record(record)()
         target.send(None)
 
-        codec_v1.encode_wire_v1_message(0xabcd, data, target)
+        codec_v1.encode(codec_v1.SESSION, 0xabcd, data, target.send)
         self.assertEqual(record, [b'?##\xab\xcd\x00\x00\x00\x37' + data])
 
     def test_encode_generated_range(self):
@@ -158,7 +158,7 @@ class TestWireCodecV1(unittest.TestCase):
             target = genfunc()
             target.send(None)
 
-            codec_v1.encode_wire_v1_message(msg_type, data, target)
+            codec_v1.encode(codec_v1.SESSION, msg_type, data, target.send)
             self.assertEqual(received, len(reports))
 
     def _record(self, record, *_args):
