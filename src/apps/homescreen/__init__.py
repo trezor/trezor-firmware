@@ -1,9 +1,9 @@
-from trezor.wire import register_type, protobuf_handler, write_message
+from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
 from trezor.messages.wire_types import Initialize, GetFeatures, Ping
 
 
-async def respond_Features(msg, session_id):
+async def respond_Features(session_id, msg):
     from ..common import storage, coins
     from trezor.messages.Features import Features
 
@@ -25,7 +25,7 @@ async def respond_Features(msg, session_id):
     return f
 
 
-async def respond_Pong(msg, session_id):
+async def respond_Pong(session_id, msg):
     from trezor.messages.Success import Success
     s = Success()
     s.message = msg.message
@@ -37,6 +37,6 @@ async def respond_Pong(msg, session_id):
 
 
 def boot():
-    register_type(Initialize, protobuf_handler, respond_Features)
-    register_type(GetFeatures, protobuf_handler, respond_Features)
-    register_type(Ping, protobuf_handler, respond_Pong)
+    register(Initialize, protobuf_workflow, respond_Features)
+    register(GetFeatures, protobuf_workflow, respond_Features)
+    register(Ping, protobuf_workflow, respond_Pong)

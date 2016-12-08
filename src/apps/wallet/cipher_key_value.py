@@ -1,11 +1,11 @@
-from trezor import wire, ui
+from trezor import ui
 from trezor.utils import unimport
 
 
 @unimport
-async def layout_cipherkeyvalue(msg, session_id):
+async def layout_cipher_key_value(session_id, msg):
     from trezor.messages.CipheredKeyValue import CipheredKeyValue
-    from ..common.seed import get_node
+    from ..common import seed
     from trezor.crypto.hashlib import sha512
     from trezor.crypto import hmac
     from trezor.crypto.aes import AES_CBC_Encrypt, AES_CBC_Decrypt
@@ -18,7 +18,7 @@ async def layout_cipherkeyvalue(msg, session_id):
                     ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 60, msg.key, ui.MONO, ui.WHITE, ui.BLACK)
 
-    node = await get_node(session_id, msg.address_n)
+    node = await seed.get_node(session_id, msg.address_n)
     seckey = node.private_key()
 
     data = msg.key

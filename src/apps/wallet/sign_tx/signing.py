@@ -1,9 +1,7 @@
 from trezor.crypto.hashlib import sha256, ripemd160
 from trezor.crypto.curve import secp256k1
 from trezor.crypto import base58, der
-
-from . import address_type
-from . import coins
+from trezor.utils import ensure
 
 from trezor.messages.CoinType import CoinType
 from trezor.messages.SignTx import SignTx
@@ -16,6 +14,9 @@ from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXFINISHED
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages import OutputScriptType, InputScriptType, FailureType
+
+from apps.common import address_type
+from apps.common import coins
 
 
 # Machine instructions
@@ -412,11 +413,11 @@ def node_derive(root, address_n: list):
 
 def ecdsa_hash_pubkey(pubkey: bytes) -> bytes:
     if pubkey[0] == 0x04:
-        assert len(pubkey) == 65  # uncompressed format
+        ensure(len(pubkey) == 65)  # uncompressed format
     elif pubkey[0] == 0x00:
-        assert len(pubkey) == 1   # point at infinity
+        ensure(len(pubkey) == 1)   # point at infinity
     else:
-        assert len(pubkey) == 33  # compresssed format
+        ensure(len(pubkey) == 33)  # compresssed format
     h = sha256(pubkey).digest()
     h = ripemd160(h).digest()
     return h
@@ -473,9 +474,11 @@ def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
 # TX Serialization
 # ===
 
+_DEFAULT_SEQUENCE = 4294967295
+
 
 def write_tx_input(w, i: TxInputType):
-    i_sequence = i.sequence if i.sequence is not None else 4294967295
+    i_sequence = i.sequence if i.sequence is not None else _DEFAULT_SEQUENCE
     write_bytes_rev(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_varint(w, len(i.script_sig))
@@ -484,7 +487,7 @@ def write_tx_input(w, i: TxInputType):
 
 
 def write_tx_input_check(w, i: TxInputType):
-    i_sequence = i.sequence if i.sequence is not None else 4294967295
+    i_sequence = i.sequence if i.sequence is not None else _DEFAULT_SEQUENCE
     write_bytes(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_uint32(w, len(i.address_n))
@@ -500,22 +503,21 @@ def write_tx_output(w, o: TxOutputBinType):
 
 
 def write_op_push(w, n: int):
-    wb = w.append
     if n < 0x4C:
-        wb(n & 0xFF)
+        w.append(n & 0xFF)
     elif n < 0xFF:
-        wb(0x4C)
-        wb(n & 0xFF)
+        w.append(0x4C)
+        w.append(n & 0xFF)
     elif n < 0xFFFF:
-        wb(0x4D)
-        wb(n & 0xFF)
-        wb((n >> 8) & 0xFF)
+        w.append(0x4D)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
     else:
-        wb(0x4E)
-        wb(n & 0xFF)
-        wb((n >> 8) & 0xFF)
-        wb((n >> 16) & 0xFF)
-        wb((n >> 24) & 0xFF)
+        w.append(0x4E)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
+        w.append((n >> 16) & 0xFF)
+        w.append((n >> 24) & 0xFF)
 
 
 # Buffer IO & Serialization
@@ -523,39 +525,36 @@ def write_op_push(w, n: int):
 
 
 def write_varint(w, n: int):
-    wb = w.append
     if n < 253:
-        wb(n & 0xFF)
+        w.append(n & 0xFF)
     elif n < 65536:
-        wb(253)
-        wb(n & 0xFF)
-        wb((n >> 8) & 0xFF)
+        w.append(253)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
     else:
-        wb(254)
-        wb(n & 0xFF)
-        wb((n >> 8) & 0xFF)
-        wb((n >> 16) & 0xFF)
-        wb((n >> 24) & 0xFF)
+        w.append(254)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
+        w.append((n >> 16) & 0xFF)
+        w.append((n >> 24) & 0xFF)
 
 
 def write_uint32(w, n: int):
-    wb = w.append
-    wb(n & 0xFF)
-    wb((n >> 8) & 0xFF)
-    wb((n >> 16) & 0xFF)
-    wb((n >> 24) & 0xFF)
+    w.append(n & 0xFF)
+    w.append((n >> 8) & 0xFF)
+    w.append((n >> 16) & 0xFF)
+    w.append((n >> 24) & 0xFF)
 
 
 def write_uint64(w, n: int):
-    wb = w.append
-    wb(n & 0xFF)
-    wb((n >> 8) & 0xFF)
-    wb((n >> 16) & 0xFF)
-    wb((n >> 24) & 0xFF)
-    wb((n >> 32) & 0xFF)
-    wb((n >> 40) & 0xFF)
-    wb((n >> 48) & 0xFF)
-    wb((n >> 56) & 0xFF)
+    w.append(n & 0xFF)
+    w.append((n >> 8) & 0xFF)
+    w.append((n >> 16) & 0xFF)
+    w.append((n >> 24) & 0xFF)
+    w.append((n >> 32) & 0xFF)
+    w.append((n >> 40) & 0xFF)
+    w.append((n >> 48) & 0xFF)
+    w.append((n >> 56) & 0xFF)
 
 
 def write_bytes(w, buf: bytearray):

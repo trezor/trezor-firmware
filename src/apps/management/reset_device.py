@@ -4,7 +4,7 @@ from trezor.utils import unimport, chunks
 
 
 @unimport
-async def layout_reset_device(msg, session_id):
+async def layout_reset_device(session_id, msg):
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import UnexpectedMessage
     from ..common.request_pin import request_pin_twice
@@ -14,7 +14,7 @@ async def layout_reset_device(msg, session_id):
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
     mnemonic = await generate_mnemonic(
-        msg.strength, msg.display_random, session_id)
+        session_id, msg.strength, msg.display_random)
 
     await show_mnemonic(mnemonic)
 
@@ -33,7 +33,7 @@ async def layout_reset_device(msg, session_id):
 
 
 @unimport
-async def generate_mnemonic(strength, display_random, session_id):
+async def generate_mnemonic(session_id, strength, display_random):
     from trezor.crypto import hashlib, random, bip39
     from trezor.messages.EntropyRequest import EntropyRequest
     from trezor.messages.FailureType import Other
@@ -46,7 +46,7 @@ async def generate_mnemonic(strength, display_random, session_id):
     # if display_random:
     #     raise wire.FailureError(Other, 'Entropy display not implemented')
 
-    ack = await wire.reply_message(session_id, EntropyRequest(), EntropyAck)
+    ack = await wire.call(session_id, EntropyRequest(), EntropyAck)
 
     if len(ack.entropy) != 32:
         raise wire.FailureError(Other, 'Invalid entropy (has to be 32 bytes)')

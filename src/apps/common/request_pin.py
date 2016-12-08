@@ -20,9 +20,9 @@ async def request_pin_on_display(session_id: int, code: int=None) -> str:
 
     _, label = _get_code_and_label(code)
 
-    await wire.reply_message(session_id,
-                             ButtonRequest(code=ProtectCall),
-                             ButtonAck)
+    await wire.call(session_id,
+                    ButtonRequest(code=ProtectCall),
+                    ButtonAck)
 
     ui.display.clear()
     matrix = PinMatrix(label)
@@ -51,9 +51,9 @@ async def request_pin_on_client(session_id: int, code: int=None) -> str:
     matrix = PinMatrix(label)
     matrix.render()
 
-    ack = await wire.reply_message(session_id,
-                                   PinMatrixRequest(code=code),
-                                   PinMatrixAck, Cancel)
+    ack = await wire.call(session_id,
+                          PinMatrixRequest(code=code),
+                          PinMatrixAck, Cancel)
     digits = matrix.digits
     matrix = None
 

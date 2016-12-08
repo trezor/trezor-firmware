@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_ethereum_get_address(msg, session_id):
+async def layout_ethereum_get_address(session_id, msg):
     from trezor.messages.EthereumAddress import EthereumAddress
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256

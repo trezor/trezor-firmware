@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_verify_message(msg, session_id):
+async def layout_verify_message(session_id, msg):
     from trezor.messages.Success import Success
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import ripemd160, sha256

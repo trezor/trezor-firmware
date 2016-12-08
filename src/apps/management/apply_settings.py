@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_apply_settings(msg, session_id):
+async def layout_apply_settings(session_id, msg):
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import Other
     from trezor.ui.text import Text

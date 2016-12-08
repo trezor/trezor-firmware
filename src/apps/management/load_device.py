@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_load_device(msg, session_id):
+async def layout_load_device(session_id, msg):
     from trezor.crypto import bip39
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import UnexpectedMessage, Other

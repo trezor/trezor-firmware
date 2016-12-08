@@ -1,11 +1,11 @@
 from trezor.utils import unimport
-from ..common import seed
 
 
 @unimport
-async def layout_get_public_key(msg, session_id):
+async def layout_get_public_key(session_id, msg):
     from trezor.messages.HDNodeType import HDNodeType
     from trezor.messages.PublicKey import PublicKey
+    from ..common import seed
 
     address_n = msg.address_n or ()
     node = await seed.get_node(session_id, address_n)

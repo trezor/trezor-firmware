@@ -19,7 +19,7 @@ async def confirm(session_id, content=None, code=None, *args, **kwargs):
 
     if code is None:
         code = Other
-    await wire.reply_message(session_id, ButtonRequest(code=code), ButtonAck)
+    await wire.call(session_id, ButtonRequest(code=code), ButtonAck)
     return await loop.Wait((signal, dialog)) == CONFIRMED
 
 
@@ -39,7 +39,7 @@ async def hold_to_confirm(session_id, content=None, code=None, *args, **kwargs):
 
     if code is None:
         code = Other
-    await wire.reply_message(session_id, ButtonRequest(code=code), ButtonAck)
+    await wire.call(session_id, ButtonRequest(code=code), ButtonAck)
     return await loop.Wait((signal, dialog)) == CONFIRMED
 
 

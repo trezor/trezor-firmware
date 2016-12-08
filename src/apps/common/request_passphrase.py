@@ -11,5 +11,5 @@ async def request_passphrase(session_id):
                 'Please enter passphrase', 'on your computer.')
     text.render()
 
-    ack = await wire.reply_message(session_id, PassphraseRequest(), PassphraseAck)
+    ack = await wire.call(session_id, PassphraseRequest(), PassphraseAck)
     return ack.passphrase

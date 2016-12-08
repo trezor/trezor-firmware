@@ -2,13 +2,13 @@ from trezor import ui
 from trezor.utils import unimport
 
 @unimport
-async def layout_sign_identity(msg, session_id):
+async def layout_sign_identity(session_id, msg):
     from trezor.messages.SignedIdentity import SignedIdentity
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
     from ustruct import pack, unpack
-    from ..common.seed import get_node
     from ..common import coins
+    from ..common import seed
     from ..common.signverify import message_digest
 
     identity = ''
@@ -38,7 +38,7 @@ async def layout_sign_identity(msg, session_id):
     ui.display.text(10, 60, msg.challenge_visual, ui.MONO, ui.WHITE, ui.BLACK)
     ui.display.text(10, 80, identity, ui.MONO, ui.WHITE, ui.BLACK)
 
-    node = await get_node(session_id, address_n)
+    node = await seed.get_node(session_id, address_n)
 
     coin = coins.by_name('Bitcoin')
     address = node.address(coin.address_type) # hardcoded Bitcoin address type

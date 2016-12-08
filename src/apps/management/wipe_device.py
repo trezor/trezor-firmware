@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_wipe_device(_, session_id):
+async def layout_wipe_device(session_id, msg):
     from trezor.messages.Success import Success
     from trezor.ui.text import Text
     from ..common.confirm import hold_to_confirm
