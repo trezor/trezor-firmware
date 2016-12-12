@@ -18,7 +18,9 @@ async def layout_sign_message(session_id, msg):
     coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
-    node = await seed.get_node(session_id, msg.address_n)
+    node = await seed.get_root(session_id)
+    node.derive_path(msg.address_n)
+
     seckey = node.private_key()
     address = node.address(coin.address_type)
 

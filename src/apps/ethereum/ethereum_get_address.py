@@ -7,11 +7,10 @@ async def layout_ethereum_get_address(session_id, msg):
     from trezor.messages.EthereumAddress import EthereumAddress
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256
-    from ..common.seed import get_node
+    from ..common import seed
 
-    address_n = msg.address_n or ()
-
-    node = await get_node(session_id, address_n)
+    node = await seed.get_root(session_id)
+    node.derive_path(msg.address_n or ())
 
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False) # uncompressed

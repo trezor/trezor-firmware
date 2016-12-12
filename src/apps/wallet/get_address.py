@@ -14,7 +14,9 @@ async def layout_get_address(session_id, msg):
 
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
-    node = await seed.get_node(session_id, address_n)
+
+    node = await seed.get_root(session_id)
+    node.derive_path(address_n)
     coin = coins.by_name(coin_name)
     address = node.address(coin.address_type)
 

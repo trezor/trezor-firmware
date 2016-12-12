@@ -2,24 +2,10 @@ from trezor import ui
 from trezor.utils import unimport
 
 
-@unimport
-async def layout_cipher_key_value(session_id, msg):
-    from trezor.messages.CipheredKeyValue import CipheredKeyValue
-    from ..common import seed
+def cipher_key_value(msg, seckey: bytes) -> bytes:
     from trezor.crypto.hashlib import sha512
     from trezor.crypto import hmac
     from trezor.crypto.aes import AES_CBC_Encrypt, AES_CBC_Decrypt
-
-    if len(msg.value) % 16 > 0:
-        raise ValueError('Value length must be a multiple of 16')
-
-    ui.display.clear()
-    ui.display.text(10, 30, 'CipherKeyValue',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 60, msg.key, ui.MONO, ui.WHITE, ui.BLACK)
-
-    node = await seed.get_node(session_id, msg.address_n)
-    seckey = node.private_key()
 
     data = msg.key
     data += 'E1' if msg.ask_on_encrypt else 'E0'
@@ -36,6 +22,25 @@ async def layout_cipher_key_value(session_id, msg):
     else:
         aes = AES_CBC_Decrypt(key=key, iv=iv)
 
-    value = aes.update(msg.value)
+    return aes.update(msg.value)
+
+
+@unimport
+async def layout_cipher_key_value(session_id, msg):
+    from trezor.messages.CipheredKeyValue import CipheredKeyValue
+    from ..common import seed
+
+    if len(msg.value) % 16 > 0:
+        raise ValueError('Value length must be a multiple of 16')
+
+    ui.display.clear()
+    ui.display.text(10, 30, 'CipherKeyValue',
+                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+    ui.display.text(10, 60, msg.key, ui.MONO, ui.WHITE, ui.BLACK)
+
+    node = await seed.get_root(session_id)
+    node.derive_path(msg.address_n)
+
+    value = cipher_key_value(msg, node.private_key())
 
     return CipheredKeyValue(value=value)

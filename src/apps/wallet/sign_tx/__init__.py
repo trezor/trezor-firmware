@@ -11,7 +11,7 @@ async def sign_tx(session_id, msg):
     from . import signing
     from . import layout
 
-    root = await seed.get_root_node(session_id)
+    root = await seed.get_root(session_id)
 
     signer = signing.sign_tx(msg, root)
     res = None
