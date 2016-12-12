@@ -47,12 +47,11 @@ def unlock(user_pin: str, failure_callback=None) -> bool:
         # lock, run the callback (ie for ui) and sleep for a quadratic delay
         _locked = True
         delay_ms = fails * fails * 1000
-        if failure_callback:
-            try:
+        try:
+            if failure_callback:
                 failure_callback(delay_ms)
-            except:
-                pass
-        utime.sleep_ms(delay_ms)
+        finally:
+            utime.sleep_ms(delay_ms)
         return False
 
 
@@ -157,6 +156,8 @@ def config_set_checked(key, value: bytes):
     if check != value:
         utils.halt('config.set failed')
 
+
+# TODO: store ints as varints
 
 def int_to_bytes(i: int) -> bytes:
     return ustruct.pack('>L', i) if i else bytes()
