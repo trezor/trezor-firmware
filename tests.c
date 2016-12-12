@@ -817,7 +817,7 @@ START_TEST(test_bip32_cache_1)
 	for (i = 0; i < 8; i++) {
 		r = hdnode_private_ckd(&node1, ii[i]); ck_assert_int_eq(r, 1);
 	}
-	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
+	r = hdnode_private_ckd_cached(&node2, ii, 8, NULL); ck_assert_int_eq(r, 1);
 	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
 
 	hdnode_from_seed(fromhex("301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"), 64, SECP256K1_NAME, &node1);
@@ -828,7 +828,7 @@ START_TEST(test_bip32_cache_1)
 	for (i = 0; i < 8; i++) {
 		r = hdnode_private_ckd(&node1, ii[i]); ck_assert_int_eq(r, 1);
 	}
-	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
+	r = hdnode_private_ckd_cached(&node2, ii, 8, NULL); ck_assert_int_eq(r, 1);
 	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
 
 	// test different root node
@@ -838,7 +838,7 @@ START_TEST(test_bip32_cache_1)
 	for (i = 0; i < 8; i++) {
 		r = hdnode_private_ckd(&node1, ii[i]); ck_assert_int_eq(r, 1);
 	}
-	r = hdnode_private_ckd_cached(&node2, ii, 8); ck_assert_int_eq(r, 1);
+	r = hdnode_private_ckd_cached(&node2, ii, 8, NULL); ck_assert_int_eq(r, 1);
 	ck_assert_mem_eq(&node1, &node2, sizeof(HDNode));
 }
 END_TEST
@@ -860,7 +860,7 @@ START_TEST(test_bip32_cache_2)
 			r = hdnode_private_ckd(&(nodea[j]), ii[i - 1]); ck_assert_int_eq(r, 1);
 		}
 		// cached
-		r = hdnode_private_ckd_cached(&(nodeb[j]), ii, j); ck_assert_int_eq(r, 1);
+		r = hdnode_private_ckd_cached(&(nodeb[j]), ii, j, NULL); ck_assert_int_eq(r, 1);
 	}
 
 	ck_assert_mem_eq(&(nodea[0]), &(nodeb[0]), sizeof(HDNode));
