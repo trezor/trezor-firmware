@@ -45,30 +45,30 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_derive_obj, mod_TrezorC
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+
+    // get path objects and length
     mp_uint_t plen;
     mp_obj_t *pitems;
     mp_obj_get_array(path, &plen, &pitems);
+    if (plen > 32) {
+        mp_raise_ValueError("Path cannot be longer than 32 indexes");
+    }
 
-    for (uint32_t pi = 0; pi < plen; pi++) {
-        mp_obj_t iobj = pitems[pi];
-        if (!MP_OBJ_IS_INT(iobj)) {
-            // some value from the path is not integer, reset the state and raise
-            o->fingerprint = 0;
-            memset(&o->hdnode, 0, sizeof(o->hdnode));
+    // convert path to int array
+    uint32_t pi;
+    uint32_t pints[plen];
+    for (pi = 0; pi < plen; pi++) {
+        if (!MP_OBJ_IS_INT(pitems[pi])) {
             mp_raise_TypeError("Index has to be int");
         }
-        uint32_t i = mp_obj_get_int_truncated(iobj);
+        pints[pi] = mp_obj_get_int_truncated(pitems[pi]);
+    }
 
-        if (pi == plen - 1) {
-            // compute fingerprint before overwriting the node, but only for the nth-1 node
-            o->fingerprint = hdnode_fingerprint(&o->hdnode);
-        }
-        if (!hdnode_private_ckd(&o->hdnode, i)) {
-            // derivation failed, reset the state and raise
-            o->fingerprint = 0;
-            memset(&o->hdnode, 0, sizeof(o->hdnode));
-            mp_raise_ValueError("Failed to derive path");
-        }
+    if (!hdnode_private_ckd_cached(&o->hdnode, pints, plen, &o->fingerprint)) {
+        // derivation failed, reset the state and raise
+        o->fingerprint = 0;
+        memset(&o->hdnode, 0, sizeof(o->hdnode));
+        mp_raise_ValueError("Failed to derive path");
     }
 
     return mp_const_none;
