@@ -1,29 +1,16 @@
 from trezor import wire
+from trezor.crypto import bip32
+from trezor.crypto import bip39
 
-# FIXME: this is a stub
+_DEFAULT_CURVE = 'secp256k1'
 
 _cached_seed = None
-_cached_root_node = None
 
 
-async def get_node(session_id: int, path: list):
-    root = await get_root_node(session_id)
-    node = root.clone()
-    node.derive_path(path)
-    return node
-
-
-async def get_root_node(session_id: int):
-    global _cached_root_node
-    if _cached_root_node is None:
-        _cached_root_node = await compute_root_node(session_id)
-    return _cached_root_node
-
-
-async def compute_root_node(session_id: int):
-    from trezor.crypto import bip32
+async def get_root(session_id: int, curve_name=_DEFAULT_CURVE):
     seed = await get_seed(session_id)
-    return bip32.from_seed(seed, 'secp256k1')
+    root = bip32.from_seed(seed, curve_name)
+    return root
 
 
 async def get_seed(session_id: int) -> bytes:
@@ -33,8 +20,7 @@ async def get_seed(session_id: int) -> bytes:
     return _cached_seed
 
 
-async def compute_seed(session_id):
-    from trezor.crypto import bip39
+async def compute_seed(session_id: int) -> bytes:
     from trezor.messages.FailureType import Other
     from .request_passphrase import request_passphrase
     from .request_pin import protect_by_pin
