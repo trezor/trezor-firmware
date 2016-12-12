@@ -518,7 +518,7 @@ void signing_txack(TransactionType *tx)
 			if (idx2 == idx1) {
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
 				memcpy(&node, root, sizeof(HDNode));
-				if (hdnode_private_ckd_cached(&node, tx->inputs[0].address_n, tx->inputs[0].address_n_count) == 0) {
+				if (hdnode_private_ckd_cached(&node, tx->inputs[0].address_n, tx->inputs[0].address_n_count, NULL) == 0) {
 					fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
 					signing_abort();
 					return;

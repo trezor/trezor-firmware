@@ -460,7 +460,7 @@ const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 	if (!address_n || address_n_count == 0) {
 		return &node;
 	}
-	if (hdnode_private_ckd_cached(&node, address_n, address_n_count) == 0) {
+	if (hdnode_private_ckd_cached(&node, address_n, address_n_count, NULL) == 0) {
 		layoutHome();
 		debugLog(0, "", "ERR: Derive private failed");
 		return 0;

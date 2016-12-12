@@ -138,7 +138,7 @@ HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t addres
 	if (!address_n || address_n_count == 0) {
 		return &node;
 	}
-	if (hdnode_private_ckd_cached(&node, address_n, address_n_count) == 0) {
+	if (hdnode_private_ckd_cached(&node, address_n, address_n_count, NULL) == 0) {
 		fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
 		layoutHome();
 		return 0;
