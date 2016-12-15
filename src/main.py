@@ -4,18 +4,20 @@ from trezor import ui
 from trezor import wire
 
 # Load all applications
+if __debug__:
+    from apps import debug
 from apps import homescreen
 from apps import management
 from apps import wallet
 from apps import ethereum
-from apps import debug
 
 # Initialize all applications
+if __debug__:
+    debug.boot()
 homescreen.boot()
 management.boot()
 wallet.boot()
 ethereum.boot()
-debug.boot()
 
 # Change backlight to white for better visibility
 ui.display.backlight(ui.BACKLIGHT_NORMAL)
