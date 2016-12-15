@@ -4,7 +4,7 @@ from trezor.messages.wire_types import Initialize, GetFeatures, Ping
 
 
 async def respond_Features(session_id, msg):
-    from ..common import storage, coins
+    from apps.common import storage, coins
     from trezor.messages.Features import Features
 
     f = Features()
@@ -27,12 +27,17 @@ async def respond_Features(session_id, msg):
 
 async def respond_Pong(session_id, msg):
     from trezor.messages.Success import Success
+
     s = Success()
     s.message = msg.message
+
+    if msg.pin_protection:
+        from apps.common.request_pin import protect_by_pin
+        await protect_by_pin(session_id)
+
     # TODO: handle other fields:
     # button_protection
     # passphrase_protection
-    # pin_protection
     return s
 
 
