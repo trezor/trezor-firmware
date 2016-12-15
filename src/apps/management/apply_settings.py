@@ -11,6 +11,8 @@ async def layout_apply_settings(session_id, msg):
     from ..common.request_pin import protect_by_pin
     from ..common import storage
 
+    await protect_by_pin(session_id)
+
     if msg.homescreen is not None:
         raise wire.FailureError(
             Other, 'ApplySettings.homescreen is not supported')
@@ -39,8 +41,6 @@ async def layout_apply_settings(session_id, msg):
             'Do you really want to',
             'enable passphrase' if msg.use_passphrase else 'disable passphrase',
             'encryption?'))
-
-    await protect_by_pin(session_id)
 
     storage.load_settings(label=msg.label,
                           language=msg.language,
