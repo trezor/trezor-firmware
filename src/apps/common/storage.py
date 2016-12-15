@@ -70,7 +70,7 @@ def const_equal(a: bytes, b: bytes) -> bool:
 
 def get_device_id() -> str:
     dev_id = config_get(_DEVICE_ID).decode()
-    if dev_id is None:
+    if not dev_id:
         dev_id = new_device_id()
         config_set(_DEVICE_ID, dev_id.encode())
     return dev_id
@@ -133,6 +133,7 @@ def load_settings(language: str=None,
 
 
 def wipe():
+    lock()
     config.wipe()
 
 
