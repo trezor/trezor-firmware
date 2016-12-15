@@ -96,6 +96,10 @@ def get_label() -> str:
     return config_get(_LABEL).decode()
 
 
+def get_language() -> str:
+    return config_get(_LANGUAGE).decode() or _DEFAULT_LANGUAGE
+
+
 def get_mnemonic() -> str:
     utils.ensure(is_initialized())
     utils.ensure(not is_locked())
@@ -114,6 +118,10 @@ def load_mnemonic(mnemonic: str):
     config_set(_MNEMONIC, mnemonic.encode())
 
 
+_ALLOWED_LANGUAGES = ('english')
+_DEFAULT_LANGUAGE = 'english'
+
+
 def load_settings(language: str=None,
                   label: str=None,
                   pin: str=None,
@@ -121,8 +129,11 @@ def load_settings(language: str=None,
     utils.ensure(is_initialized())
     utils.ensure(not is_locked())
 
-    if language is not None:
-        config_set(_LANGUAGE, language.encode())
+    if language is not None and language in _ALLOWED_LANGUAGES:
+        if language is _DEFAULT_LANGUAGE:
+            config_set(_LANGUAGE, b'')
+        else:
+            config_set(_LANGUAGE, language.encode())
     if label is not None:
         config_set(_LABEL, label.encode())
     if pin is not None:

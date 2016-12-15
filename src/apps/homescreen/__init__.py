@@ -3,6 +3,7 @@ from trezor.utils import unimport
 from trezor.messages.wire_types import Initialize, GetFeatures, Ping
 
 
+@unimport
 async def respond_Features(session_id, msg):
     from apps.common import storage, coins
     from trezor.messages.Features import Features
@@ -18,6 +19,7 @@ async def respond_Features(session_id, msg):
 
     f.device_id = storage.get_device_id()
     f.label = storage.get_label()
+    f.language = storage.get_language()
     f.initialized = storage.is_initialized()
     f.pin_protection = storage.is_protected_by_pin()
     f.passphrase_protection = storage.is_protected_by_passphrase()
@@ -25,6 +27,7 @@ async def respond_Features(session_id, msg):
     return f
 
 
+@unimport
 async def respond_Pong(session_id, msg):
     from trezor.messages.Success import Success
 
