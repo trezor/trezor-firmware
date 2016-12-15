@@ -1,7 +1,7 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
 from trezor.messages.wire_types import \
-    LoadDevice, ResetDevice, WipeDevice, RecoveryDevice, ApplySettings
+    LoadDevice, ResetDevice, WipeDevice, RecoveryDevice, ApplySettings, ChangePin
 
 
 @unimport
@@ -34,9 +34,16 @@ def dispatch_ApplySettings(*args, **kwargs):
     return layout_apply_settings(*args, **kwargs)
 
 
+@unimport
+def dispatch_ChangePin(*args, **kwargs):
+    from .change_pin import layout_change_pin
+    return layout_change_pin(*args, **kwargs)
+
+
 def boot():
     register(LoadDevice, protobuf_workflow, dispatch_LoadDevice)
     register(ResetDevice, protobuf_workflow, dispatch_ResetDevice)
     register(WipeDevice, protobuf_workflow, dispatch_WipeDevice)
     register(RecoveryDevice, protobuf_workflow, dispatch_RecoveryDevice)
     register(ApplySettings, protobuf_workflow, dispatch_ApplySettings)
+    register(ChangePin, protobuf_workflow, dispatch_ChangePin)
