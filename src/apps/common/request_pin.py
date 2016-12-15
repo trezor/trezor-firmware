@@ -57,7 +57,7 @@ async def request_pin_on_client(session_id: int, code: int=None) -> str:
     digits = matrix.digits
     matrix = None
 
-    if ack.WIRE_TYPE == Cancel:
+    if ack.MESSAGE_WIRE_TYPE == Cancel:
         raise wire.FailureError(PinCancelled, 'PIN cancelled')
     return _decode_pin(ack.pin, digits)
 
