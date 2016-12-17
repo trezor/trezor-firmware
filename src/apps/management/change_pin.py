@@ -50,4 +50,6 @@ async def layout_change_pin(session_id, msg):
             await confirm_set_pin(session_id)
         pin = await request_pin_twice(session_id)
         storage.load_settings(pin=pin)
+        if pin:
+            storage.lock()
         return Success(message='PIN changed')

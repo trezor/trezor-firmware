@@ -30,6 +30,8 @@ for i in \
     test_msg_signmessage.py \
     test_msg_signtx.py \
     test_msg_verifymessage.py \
+    test_msg_wipedevice.py \
+    test_msg_changepin.py \
     ; do
         if ! $PYTHON $i ; then
             error=1

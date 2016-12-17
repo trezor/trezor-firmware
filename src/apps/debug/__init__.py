@@ -6,24 +6,32 @@ from trezor.messages.wire_types import \
 
 async def dispatch_DebugLinkDecision(session_id, msg):
     from trezor.ui.confirm import CONFIRMED, CANCELLED
-    from ..common.confirm import signal
+    from apps.common.confirm import signal
     signal.send(CONFIRMED if msg.yes_no else CANCELLED)
 
 
 async def dispatch_DebugLinkGetState(session_id, msg):
     from trezor.messages.DebugLinkState import DebugLinkState
-    from ..common import storage, request_pin
+    from apps.common import storage, request_pin
 
     if request_pin.matrix:
         matrix = ''.join([str(d) for d in request_pin.matrix.digits])
     else:
         matrix = None
 
-    m = DebugLinkState()
-    m.pin = storage.get_pin()
-    m.mnemonic = storage.get_mnemonic()
-    m.passphrase_protection = storage.is_protected_by_passphrase()
-    m.matrix = matrix
+    # TODO: do this differently
+    locked = storage.is_locked()
+    try:
+        if locked:
+            storage.unlock(storage.get_pin())
+        m = DebugLinkState()
+        m.pin = storage.get_pin()
+        m.mnemonic = storage.get_mnemonic()
+        m.passphrase_protection = storage.is_protected_by_passphrase()
+        m.matrix = matrix
+    finally:
+        if locked:
+            storage.lock()
 
     # TODO: handle other fields:
     # f.reset_entropy = reset_get_internal_entropy()
