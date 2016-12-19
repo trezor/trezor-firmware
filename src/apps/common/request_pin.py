@@ -78,12 +78,13 @@ async def request_pin_twice(session_id: int) -> str:
     return pin_first
 
 
-async def protect_by_pin(session_id: int):
+async def protect_by_pin(session_id: int, at_least_once: bool=False):
     from . import storage
 
-    while storage.is_locked():
+    locked = storage.is_locked() or at_least_once
+    while locked:
         pin = await request_pin(session_id)
-        storage.unlock(pin, _render_pin_failure)
+        locked = not storage.unlock(pin, _render_pin_failure)
 
 
 def _render_pin_failure(sleep_ms: int):
@@ -99,7 +100,7 @@ def _get_code_and_label(code: int) -> str:
     if code == PinMatrixRequestType.NewFirst:
         label = 'Enter new PIN'
     elif code == PinMatrixRequestType.NewSecond:
-        label = 'Enter new PIN again'
+        label = 'Enter PIN again'
     else:  # PinMatrixRequestType.Current
         label = 'Enter PIN'
     return code, label
