@@ -32,24 +32,26 @@ def confirm_remove_pin(session_id):
 @unimport
 async def layout_change_pin(session_id, msg):
     from trezor.messages.Success import Success
-    from ..common.request_pin import protect_by_pin, request_pin_twice
-    from ..common import storage
+    from apps.common.request_pin import protect_by_pin, request_pin_twice
+    from apps.common import storage
 
     if msg.remove:
         if storage.is_protected_by_pin():
             await confirm_remove_pin(session_id)
-            await protect_by_pin(session_id)
-        storage.load_settings(pin='')
-        return Success(message='PIN removed')
+            await protect_by_pin(session_id, at_least_once=True)
+        pin = ''
 
     else:
         if storage.is_protected_by_pin():
             await confirm_change_pin(session_id)
-            await protect_by_pin(session_id)
+            await protect_by_pin(session_id, at_least_once=True)
         else:
             await confirm_set_pin(session_id)
         pin = await request_pin_twice(session_id)
-        storage.load_settings(pin=pin)
-        if pin:
-            storage.lock()
+
+    storage.load_settings(pin=pin)
+    if pin:
+        storage.lock()
         return Success(message='PIN changed')
+    else:
+        return Success(message='PIN removed')
