@@ -5,6 +5,10 @@
  * @version	1.0
  */
 
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.protobuf";
+option java_outer_classname = "TrezorConfig";
+
 import "google/protobuf/descriptor.proto";
 
 /**
