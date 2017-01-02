@@ -489,12 +489,12 @@ class ProtocolMixin(object):
 
     @field('address')
     @expect(proto.Address)
-    def get_address(self, coin_name, n, show_display=False, multisig=None):
+    def get_address(self, coin_name, n, show_display=False, multisig=None, script_type=types.SPENDADDRESS):
         n = self._convert_prime(n)
         if multisig:
-            return self.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, multisig=multisig))
+            return self.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, multisig=multisig, script_type=script_type))
         else:
-            return self.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display))
+            return self.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, script_type=script_type))
 
     @field('address')
     @expect(proto.EthereumAddress)
