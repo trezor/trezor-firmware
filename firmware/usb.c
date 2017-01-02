@@ -80,6 +80,7 @@ static const uint8_t hid_report_descriptor[] = {
 	0xc0               // END_COLLECTION
 };
 
+#if DEBUG_LINK
 static const uint8_t hid_report_descriptor_debug[] = {
 	0x06, 0x01, 0xff,  // USAGE_PAGE (Vendor Defined)
 	0x09, 0x01,        // USAGE (1)
@@ -98,6 +99,7 @@ static const uint8_t hid_report_descriptor_debug[] = {
 	0x91, 0x02,        // OUTPUT (Data,Var,Abs)
 	0xc0               // END_COLLECTION
 };
+#endif
 
 static const uint8_t hid_report_descriptor_u2f[] = {
 	0x06, 0xd0, 0xf1,  // USAGE_PAGE (FIDO Alliance)
