@@ -1,15 +1,19 @@
+import sys
 import math
 import utime
 
 from TrezorUi import Display
 from trezor import loop, res
 
-
 display = Display()
+
+if sys.platform not in ('trezor', 'pyboard'):  # stmhal
+    loop.after_step_hook = display.refresh
 
 
 def rgbcolor(r: int, g: int, b: int) -> int:
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+
 
 LIGHT_RED   = rgbcolor(0xFF, 0x00, 0x00)
 RED         = rgbcolor(0x66, 0x00, 0x00)
@@ -53,6 +57,7 @@ BACKLIGHT_MAX = const(255)
 ICON_RESET    = 'trezor/res/header_icons/reset.toig'
 ICON_WIPE     = 'trezor/res/header_icons/wipe.toig'
 ICON_RECOVERY = 'trezor/res/header_icons/recovery.toig'
+
 
 def in_area(pos: tuple, area: tuple) -> bool:
     x, y = pos
@@ -101,8 +106,7 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
 def header(title, icon=ICON_RESET, fg=BLACK, bg=PM_DARK_BLUE):
     display.bar(0, 0, 240, 32, bg)
     if icon is not None:
-        image = res.load(icon)
-        display.icon(8, 4, image, fg, bg)
+        display.icon(8, 4, res.load(icon), fg, bg)
     display.text(8 + 24 + 8, 23, title, BOLD, fg, bg)
 
 
