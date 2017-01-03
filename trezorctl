@@ -127,7 +127,11 @@ class Commands(object):
 
     def get_address(self, args):
         address_n = self.client.expand_path(args.n)
-        return self.client.get_address(args.coin, address_n, args.show_display)
+        typemap = { 'address': types.SPENDADDRESS,
+                    'segwit': types.SPENDWITNESS,
+                    'p2shsegwit': types.SPENDP2SHWITNESS }
+        script_type = typemap[args.script_type];
+        return self.client.get_address(args.coin, address_n, args.show_display, script_type=script_type)
 
     def ethereum_get_address(self, args):
         address_n = self.client.expand_path(args.n)
@@ -396,6 +400,7 @@ class Commands(object):
     get_address.arguments = (
         (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
         (('-n', '-address'), {'type': str}),
+        (('-t', '--script-type'), {'type': str, 'choices': ['address', 'segwit', 'p2shsegwit'], 'default': 'address'}),
         (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
     )
 
