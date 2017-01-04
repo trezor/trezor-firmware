@@ -2799,6 +2799,65 @@ START_TEST(test_ethereum_pubkeyhash)
 }
 END_TEST
 
+START_TEST(test_multibyte_address)
+{
+	uint8_t priv_key[32];
+	char wif[57];
+	uint8_t pub_key[33];
+	char address[40];
+	uint8_t decode[24];
+	int res;
+
+	memcpy(priv_key, fromhex("47f7616ea6f9b923076625b4488115de1ef1187f760e65f89eb6f4f7ff04b012"), 32);
+	ecdsa_get_wif(priv_key, 0, wif, sizeof(wif)); ck_assert_str_eq(wif, "13QtoXmbhELWcrwD9YA9KzvXy5rTaptiNuFR8L8ArpBNn4xmQj4N");
+	ecdsa_get_wif(priv_key, 0x12, wif, sizeof(wif)); ck_assert_str_eq(wif, "3hrF6SFnqzpzABB36uGDf8dJSuUCcMmoJrTmCWMshRkBr2Vx86qJ");
+	ecdsa_get_wif(priv_key, 0x1234, wif, sizeof(wif)); ck_assert_str_eq(wif, "CtPTF9awbVbfDWGepGdVhB3nBhr4HktUGya8nf8dLxgC8tbqBreB9");
+	ecdsa_get_wif(priv_key, 0x123456, wif, sizeof(wif)); ck_assert_str_eq(wif, "uTrDevVQt5QZgoL3iJ1cPWHaCz7ZMBncM7QXZfCegtxiMHqBvWoYJa");
+	ecdsa_get_wif(priv_key, 0x12345678, wif, sizeof(wif)); ck_assert_str_eq(wif, "4zZWMzv1SVbs95pmLXWrXJVp9ntPEam1mfwb6CXBLn9MpWNxLg9huYgv");
+	ecdsa_get_wif(priv_key, 0xffffffff, wif, sizeof(wif)); ck_assert_str_eq(wif, "y9KVfV1RJXcTxpVjeuh6WYWh8tMwnAUeyUwDEiRviYdrJ61njTmnfUjE");
+
+	memcpy(pub_key, fromhex("0378d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c71"), 33);
+	ecdsa_get_address(pub_key, 0, address, sizeof(address)); ck_assert_str_eq(address, "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8");
+	ecdsa_get_address(pub_key, 0x12, address, sizeof(address)); ck_assert_str_eq(address, "8SCrMR2yYF7ciqoDbav7VLLTsVx5dTVPPq");
+	ecdsa_get_address(pub_key, 0x1234, address, sizeof(address)); ck_assert_str_eq(address, "ZLH8q1UgMPg8o2s1MD55YVMpPV7vqms9kiV");
+	ecdsa_get_address(pub_key, 0x123456, address, sizeof(address)); ck_assert_str_eq(address, "3ThqvsQVFnbiF66NwHtfe2j6AKn75DpLKpQSq");
+	ecdsa_get_address(pub_key, 0x12345678, address, sizeof(address)); ck_assert_str_eq(address, "BrsGxAHga3VbopvSnb3gmLvMBhJNCGuDxBZL44");
+	ecdsa_get_address(pub_key, 0xffffffff, address, sizeof(address)); ck_assert_str_eq(address, "3diW7paWGJyZRLGqMJZ55DMfPExob8QxQHkrfYT");
+
+
+	res = ecdsa_address_decode("1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8", 0, decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("0079fbfc3f34e7745860d76137da68f362380c606c"), 21);
+	res = ecdsa_address_decode("8SCrMR2yYF7ciqoDbav7VLLTsVx5dTVPPq", 0x12, decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("1279fbfc3f34e7745860d76137da68f362380c606c"), 21);
+	res = ecdsa_address_decode("ZLH8q1UgMPg8o2s1MD55YVMpPV7vqms9kiV", 0x1234, decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("123479fbfc3f34e7745860d76137da68f362380c606c"), 21);
+	res = ecdsa_address_decode("3ThqvsQVFnbiF66NwHtfe2j6AKn75DpLKpQSq", 0x123456, decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("12345679fbfc3f34e7745860d76137da68f362380c606c"), 21);
+	res = ecdsa_address_decode("BrsGxAHga3VbopvSnb3gmLvMBhJNCGuDxBZL44", 0x12345678, decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("1234567879fbfc3f34e7745860d76137da68f362380c606c"), 21);
+	res = ecdsa_address_decode("3diW7paWGJyZRLGqMJZ55DMfPExob8QxQHkrfYT", 0xffffffff, decode);
+	ck_assert_int_eq(res, 1);
+	ck_assert_mem_eq(decode, fromhex("ffffffff79fbfc3f34e7745860d76137da68f362380c606c"), 21);
+
+	// wrong length
+	res = ecdsa_address_decode("BrsGxAHga3VbopvSnb3gmLvMBhJNCGuDxBZL44", 0x123456, decode);
+	ck_assert_int_eq(res, 0);
+	
+	// wrong address prefix
+	res = ecdsa_address_decode("BrsGxAHga3VbopvSnb3gmLvMBhJNCGuDxBZL44", 0x22345678, decode);
+	ck_assert_int_eq(res, 0);
+
+	// wrong checksum
+	res = ecdsa_address_decode("BrsGxAHga3VbopvSnb3gmLvMBhJNCGuDxBZL45", 0x12345678, decode);
+	ck_assert_int_eq(res, 0);
+}
+END_TEST
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -2963,6 +3022,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("ethereum_pubkeyhash");
 	tcase_add_test(tc, test_ethereum_pubkeyhash);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("multibyte_addresse");
+	tcase_add_test(tc, test_multibyte_address);
 	suite_add_tcase(s, tc);
 
 	return s;
