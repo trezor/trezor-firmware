@@ -32,7 +32,7 @@ PublicKey.xpub				max_size:113
 GetAddress.address_n			max_count:8
 GetAddress.coin_name			max_size:17
 
-Address.address				max_size:41
+Address.address				max_size:60
 
 EthereumGetAddress.address_n		max_count:8
 EthereumAddress.address			max_size:20

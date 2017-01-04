@@ -391,3 +391,18 @@ void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appico
 	}
 	layoutDialog(appicon, NULL, verb, NULL, verb, "U2F security key?", NULL, appname, NULL, NULL);
 }
+
+void layoutSegwitWarning()
+{
+	layoutDialogSwipe(&bmp_icon_info,
+		"Cancel",
+		"Understood",
+		NULL,
+		"The following address",
+		"is for SegWit soft fork.",
+		NULL,
+		"It is unsafe to use",
+		"until segwit activates.",
+		NULL
+	);
+}

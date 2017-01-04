@@ -31,6 +31,8 @@
 #include "protect.h"
 #include "pinmatrix.h"
 #include "layout2.h"
+#include "address.h"
+#include "base58.h"
 #include "ecdsa.h"
 #include "reset.h"
 #include "recovery.h"
@@ -608,6 +610,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 	hdnode_fill_public_key(node);
+	int is_segwit = 0;
 
 	if (msg->has_multisig) {
 		layoutProgressSwipe("Preparing", 0);
@@ -625,11 +628,52 @@ void fsm_msgGetAddress(GetAddress *msg)
 		ripemd160(buf, 32, buf + 1);
 		buf[0] = coin->address_type_p2sh; // multisig cointype
 		base58_encode_check(buf, 21, resp->address, sizeof(resp->address));
+	} else if (msg->has_script_type
+			   && msg->script_type == InputScriptType_SPENDWITNESS
+			   && coin->has_address_type_p2wpkh) {
+		uint8_t raw[22+4];
+		int prelen = address_prefix_bytes_len(coin->address_type_p2wpkh);
+		address_write_prefix_bytes(coin->address_type_p2wpkh, raw);
+		raw[prelen] = 0; // version byte
+		raw[prelen + 1] = 0; // always 0, see bip-142
+		ecdsa_get_pubkeyhash(node->public_key, raw + prelen + 2);
+		if (!base58_encode_check(raw, prelen + 22, resp->address, sizeof(resp->address))) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
+			layoutHome();
+			return;
+		}
+		is_segwit = 1;
+	} else if (msg->has_script_type
+			   && msg->script_type == InputScriptType_SPENDP2SHWITNESS
+			   && coin->has_address_type_p2sh) {
+		uint8_t script[22];
+		uint8_t digest[32];
+		int prelen = address_prefix_bytes_len(coin->address_type_p2sh);
+		script[0] = 0; // version byte
+		script[1] = 20; // push 20 bytes
+		ecdsa_get_pubkeyhash(node->public_key, script + 2);
+		sha256_Raw(script, 22, digest);
+		ripemd160(digest, 32, digest + prelen);
+		address_write_prefix_bytes(coin->address_type_p2sh, digest);
+		if (!base58_encode_check(digest, 21, resp->address, sizeof(resp->address))) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
+			layoutHome();
+			return;
+		}
+		is_segwit = 1;
 	} else {
 		ecdsa_get_address(node->public_key, coin->address_type, resp->address, sizeof(resp->address));
 	}
 
 	if (msg->has_show_display && msg->show_display) {
+		if (is_segwit) {
+			layoutSegwitWarning();
+			if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
+				fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+				layoutHome();
+				return;
+			}
+		}
 		char desc[16];
 		if (msg->has_multisig) {
 			strlcpy(desc, "Msig __ of __:", sizeof(desc));

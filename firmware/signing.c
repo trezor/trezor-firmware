@@ -315,6 +315,7 @@ bool compile_input_script_sig(TxInputType *tinput)
 		// Failed to derive private key
 		return false;
 	}
+	hdnode_fill_public_key(&node);
 	if (tinput->has_multisig) {
 		tinput->script_sig.size = compile_script_multisig(&(tinput->multisig), tinput->script_sig.bytes);
 	} else { // SPENDADDRESS
@@ -478,6 +479,7 @@ void signing_txack(TransactionType *tx)
 				idx2++;
 				send_req_2_prev_output();
 			} else { // last output
+				uint8_t hash[32];
 				if (tp.extra_data_len > 0) { // has extra data
 					send_req_2_prev_extradata(0, MIN(1024, tp.extra_data_len));
 					return;
@@ -488,13 +490,7 @@ void signing_txack(TransactionType *tx)
 					signing_abort();
 					return;
 				}
-				if (idx1 < inputs_count - 1) {
-					idx1++;
-					send_req_1_input();
-				} else {
-					idx1 = 0;
-					send_req_3_output();
-				}
+				phase1_request_next_input();
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_EXTRADATA:
@@ -821,7 +817,7 @@ void signing_txack(TransactionType *tx)
 				sha256_Update(&hashers[0], hash_prevouts, 32);
 				sha256_Update(&hashers[0], hash_sequence, 32);
 				tx_prevout_hash(&hashers[0], &tx->inputs[0]);
-				tx_script_hash(&hashers[0], tx->inputs[0].script_sig.size, tx->inputs[0].script_sig.bytes);			
+				tx_script_hash(&hashers[0], tx->inputs[0].script_sig.size, tx->inputs[0].script_sig.bytes);
 				sha256_Update(&hashers[0], (const uint8_t*) &tx->inputs[0].amount, 8);
 				tx_sequence_hash(&hashers[0], &tx->inputs[0]);
 				sha256_Update(&hashers[0], hash_outputs, 32);
@@ -835,7 +831,7 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.signature_index = idx1;
 				resp.serialized.has_signature = true;
 				resp.serialized.has_serialized_tx = true;
-				ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, 0);
+				ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, NULL, NULL);
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 				if (tx->inputs[0].has_multisig) {
 					uint32_t r, i, script_len;
