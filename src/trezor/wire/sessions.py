@@ -18,13 +18,13 @@ def generate():
 def open(session_id=None):
     if session_id is None:
         session_id = generate()
-    log.info(__name__, 'session %d: open', session_id)
+    log.info(__name__, 'session %x: open', session_id)
     opened.add(session_id)
     return session_id
 
 
 def close(session_id):
-    log.info(__name__, 'session %d: close', session_id)
+    log.info(__name__, 'session %x: close', session_id)
     opened.discard(session_id)
     readers.pop(session_id, None)
 
@@ -38,10 +38,10 @@ def get_codec(session_id):
 
 def listen(session_id, handler, *args):
     if session_id not in opened:
-        raise KeyError('Session %d is unknown' % session_id)
+        raise KeyError('Session %x is unknown' % session_id)
     if session_id in readers:
-        raise KeyError('Session %d is already being listened on' % session_id)
-    log.info(__name__, 'session %d: listening', session_id)
+        raise KeyError('Session %x is already being listened on' % session_id)
+    log.info(__name__, 'session %x: listening', session_id)
     decoder = get_codec(session_id).decode_stream(session_id, handler, *args)
     decoder.send(None)
     readers[session_id] = decoder
@@ -62,16 +62,16 @@ def dispatch(report, open_callback, close_callback, unknown_callback):
             open_callback()
             return
         elif marker == codec_v2.REP_MARKER_CLOSE:
-            log.debug(__name__, 'request for closing session %d', session_id)
+            log.debug(__name__, 'request for closing session %x', session_id)
             close_callback(session_id)
             return
 
     if session_id not in readers:
-        log.warning(__name__, 'report on unknown session %d', session_id)
+        log.warning(__name__, 'report on unknown session %x', session_id)
         unknown_callback(session_id, report_data)
         return
 
-    log.debug(__name__, 'report on session %d', session_id)
+    log.debug(__name__, 'report on session %x', session_id)
     reader = readers[session_id]
 
     try:

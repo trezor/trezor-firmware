@@ -39,14 +39,14 @@ def setup(iface):
 
 
 async def read(session_id, *wire_types):
-    log.info(__name__, 'session %d: read types %s', session_id, wire_types)
+    log.info(__name__, 'session %x: read(%s)', session_id, wire_types)
     signal = loop.Signal()
     sessions.listen(session_id, _handle_response, wire_types, signal)
     return await signal
 
 
 async def write(session_id, pbuf_msg):
-    log.info(__name__, 'session %d: write %s', session_id, pbuf_msg)
+    log.info(__name__, 'session %x: write(%s)', session_id, pbuf_msg)
     pbuf_type = pbuf_msg.__class__
     msg_data = pbuf_type.dumps(pbuf_msg)
     msg_type = pbuf_type.MESSAGE_WIRE_TYPE
@@ -131,7 +131,8 @@ def _handle_workflow(session_id, msg_type, data_len):
 
 def _handle_unexpected(session_id, msg_type, data_len):
     log.warning(
-        __name__, 'session %d: skip type %d, len %d', session_id, msg_type, data_len)
+        __name__, 'session %x: skip type %d, len %d', session_id, msg_type, data_len)
+
     try:
         while True:
             yield
