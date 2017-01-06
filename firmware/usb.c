@@ -27,6 +27,7 @@
 #include "u2f.h"
 #include "storage.h"
 #include "util.h"
+#include "timer.h"
 
 #define USB_INTERFACE_INDEX_MAIN 0
 #if DEBUG_LINK
@@ -79,6 +80,7 @@ static const uint8_t hid_report_descriptor[] = {
 	0xc0               // END_COLLECTION
 };
 
+#if DEBUG_LINK
 static const uint8_t hid_report_descriptor_debug[] = {
 	0x06, 0x01, 0xff,  // USAGE_PAGE (Vendor Defined)
 	0x09, 0x01,        // USAGE (1)
@@ -97,6 +99,7 @@ static const uint8_t hid_report_descriptor_debug[] = {
 	0x91, 0x02,        // OUTPUT (Data,Var,Abs)
 	0xc0               // END_COLLECTION
 };
+#endif
 
 static const uint8_t hid_report_descriptor_u2f[] = {
 	0x06, 0xd0, 0xf1,  // USAGE_PAGE (FIDO Alliance)
@@ -262,8 +265,8 @@ static const struct usb_interface ifaces[] = {{
 	.altsetting = hid_iface_debug,
 #endif
 }, {
-    .num_altsetting = 1,
-    .altsetting = hid_iface_u2f,
+	.num_altsetting = 1,
+	.altsetting = hid_iface_u2f,
 }};
 
 static const struct usb_config_descriptor config = {
@@ -341,7 +344,7 @@ static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
 	static uint8_t buf[64] __attribute__ ((aligned(4)));
 
 	debugLog(0, "", "hid_u2f_rx_callback");
-    if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
+	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
 	u2fhid_read(tiny, (const U2FHID_FRAME *) (void*) buf);
 }
 
@@ -419,14 +422,18 @@ void usbReconnect(void)
 	usbd_disconnect(usbd_dev, 0);
 }
 
-void usbTiny(char set)
+char usbTiny(char set)
 {
+	char old = tiny;
 	tiny = set;
+	return old;
 }
 
-void usbDelay(int cycles)
+void usbSleep(uint32_t millis)
 {
-	while (cycles--) {
+	uint32_t start = system_millis;
+
+	while ((system_millis - start) < millis) {
 		usbd_poll(usbd_dev);
 	}
 }

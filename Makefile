@@ -6,6 +6,7 @@ OBJS += serialno.o
 OBJS += setup.o
 OBJS += util.o
 OBJS += memory.o
+OBJS += timer.o
 OBJS += gen/bitmaps.o
 OBJS += gen/fonts.o
 

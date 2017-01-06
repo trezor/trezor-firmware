@@ -58,7 +58,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 
 		// button acked - check buttons
 		if (acked) {
-			usbDelay(3300);
+			usbSleep(5);
 			buttonUpdate();
 			if (button.YesUp) {
 				result = true;
@@ -165,7 +165,7 @@ bool protectPin(bool use_cached)
 		}
 		layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
 		// wait one second
-		usbDelay(800000);
+		usbSleep(1000);
 		if (msg_tiny_id == MessageType_MessageType_Initialize) {
 			protectAbortedByInitialize = true;
 			msg_tiny_id = 0xFFFF;

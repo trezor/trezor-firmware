@@ -92,22 +92,6 @@ typedef struct {
 	uint8_t chal[U2F_CHAL_SIZE];
 } U2F_AUTHENTICATE_SIG_STR;
 
-
-#if DEBUG_LOG
-char *debugInt(const uint32_t i)
-{
-	static uint8_t n = 0;
-	static char id[8][9];
-	uint32hex(i, id[n]);
-	debugLog(0, "", id[n]);
-	char *ret = (char *)id[n];
-	n = (n + 1) % 8;
-	return ret;
-}
-#else
-#define debugInt(I) do{}while(0)
-#endif
-
 static uint32_t dialog_timeout = 0;
 
 uint32_t next_cid(void)
@@ -476,7 +460,7 @@ const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 	if (!address_n || address_n_count == 0) {
 		return &node;
 	}
-	if (hdnode_private_ckd_cached(&node, address_n, address_n_count) == 0) {
+	if (hdnode_private_ckd_cached(&node, address_n, address_n_count, NULL) == 0) {
 		layoutHome();
 		debugLog(0, "", "ERR: Derive private failed");
 		return 0;
@@ -624,8 +608,10 @@ void u2f_register(const APDU *a)
 		memcpy(sig_base.chal, req->chal, U2F_CHAL_SIZE);
 		memcpy(sig_base.keyHandle, &resp->keyHandleCertSig, KEY_HANDLE_LEN);
 		memcpy(sig_base.pubKey, &resp->pubKey, U2F_PUBKEY_LEN);
-		ecdsa_sign(&nist256p1, U2F_ATT_PRIV_KEY, (uint8_t *)&sig_base,
-			   sizeof(sig_base), sig, NULL, NULL);
+		if (ecdsa_sign(&nist256p1, U2F_ATT_PRIV_KEY, (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL, NULL) != 0) {
+			send_u2f_error(U2F_SW_WRONG_DATA);
+			return;
+		}
 
 		// Where to write the signature in the response
 		uint8_t *resp_sig = resp->keyHandleCertSig +
@@ -744,9 +730,10 @@ void u2f_authenticate(const APDU *a)
 		sig_base.flags = resp->flags;
 		memcpy(sig_base.ctr, resp->ctr, 4);
 		memcpy(sig_base.chal, req->chal, U2F_CHAL_SIZE);
-		ecdsa_sign(&nist256p1, node->private_key,
-			   (uint8_t *)&sig_base, sizeof(sig_base), sig,
-			   NULL, NULL);
+		if (ecdsa_sign(&nist256p1, node->private_key, (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL, NULL) != 0) {
+			send_u2f_error(U2F_SW_WRONG_DATA);
+			return;
+		}
 
 		// Copy DER encoded signature into response
 		const uint8_t sig_len = ecdsa_sig_to_der(sig, resp->sig);

@@ -39,6 +39,7 @@
 #include "debug.h"
 #include "protect.h"
 #include "layout2.h"
+#include "usb.h"
 
 Storage storage;
 
@@ -105,7 +106,7 @@ static char sessionPassphrase[51];
 void storage_show_error(void)
 {
 	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
-	for (;;) { }
+	system_halt();
 }
 
 void storage_check_flash_errors(void)
@@ -337,6 +338,7 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size)
 
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
+	usbSleep(1);
 	layoutProgress("Waking up", 1000 * iter / total);
 }
 
@@ -353,7 +355,17 @@ const uint8_t *storage_getSeed(bool usePassphrase)
 		if (usePassphrase && !protectPassphrase()) {
 			return NULL;
 		}
+		// if storage was not imported (i.e. it was properly generated or recovered)
+		if (!storage.has_imported || !storage.imported) {
+			// test whether mnemonic is a valid BIP-0039 mnemonic
+			if (!mnemonic_check(storage.mnemonic)) {
+				// and if not then halt the device
+				storage_show_error();
+			}
+		}
+		char oldTiny = usbTiny(1);
 		mnemonic_to_seed(storage.mnemonic, usePassphrase ? sessionPassphrase : "", sessionSeed, get_root_node_callback); // BIP-0039
+		usbTiny(oldTiny);
 		sessionSeedCached = true;
 		sessionSeedUsesPassphrase = usePassphrase;
 		return sessionSeed;

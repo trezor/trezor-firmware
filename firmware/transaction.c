@@ -128,7 +128,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 			in->address_n_count > 0) {
 			HDNode node;
 			memcpy(&node, root, sizeof(HDNode));
-			if (hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count) == 0) {
+			if (hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count, NULL) == 0) {
 				return 0;
 			}
 			layoutProgressUpdate(true);

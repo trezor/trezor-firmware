@@ -69,6 +69,17 @@ typedef enum _PinMatrixRequestType {
     PinMatrixRequestType_PinMatrixRequestType_NewSecond = 3
 } PinMatrixRequestType;
 
+typedef enum _RecoveryDeviceType {
+    RecoveryDeviceType_RecoveryDeviceType_ScrambledWords = 0,
+    RecoveryDeviceType_RecoveryDeviceType_Matrix = 1
+} RecoveryDeviceType;
+
+typedef enum _WordRequestType {
+    WordRequestType_WordRequestType_Plain = 0,
+    WordRequestType_WordRequestType_Matrix9 = 1,
+    WordRequestType_WordRequestType_Matrix6 = 2
+} WordRequestType;
+
 /* Struct definitions */
 typedef struct _CoinType {
     bool has_coin_name;
@@ -389,8 +400,8 @@ extern const pb_field_t IdentityType_fields[7];
 #define TxInputType_size                         5508
 #define TxOutputType_size                        3947
 #define TxOutputBinType_size                     534
-#define TransactionType_size                     10022
-#define TxRequestDetailsType_size                40
+#define TransactionType_size                     11055
+#define TxRequestDetailsType_size                52
 #define TxRequestSerializedType_size             2132
 #define IdentityType_size                        416
 

@@ -27,6 +27,7 @@
 #include "layout.h"
 #include "layout2.h"
 #include "rng.h"
+#include "timer.h"
 #include "buttons.h"
 
 uint32_t __stack_chk_guard;
@@ -37,15 +38,12 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 	for (;;) {} // loop forever
 }
 
-static uint32_t saver_counter = 0;
-
 void check_lock_screen(void)
 {
 	buttonUpdate();
 
 	// wake from screensaver on any button
 	if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
-		saver_counter = 0;
 		layoutHome();
 		return;
 	}
@@ -58,13 +56,13 @@ void check_lock_screen(void)
 		// wait until NoButton is released
 		usbTiny(1);
 		do {
-			usbDelay(3300);
+			usbSleep(5);
 			buttonUpdate();
 		} while (!button.NoUp);
 
 		// wait for confirmation/cancellation of the dialog
 		do {
-			usbDelay(3300);
+			usbSleep(5);
 			buttonUpdate();
 		} while (!button.YesUp && !button.NoUp);
 		usbTiny(0);
@@ -81,15 +79,11 @@ void check_lock_screen(void)
 
 	// if homescreen is shown for longer than 10 minutes, lock too
 	if (layoutLast == layoutHome) {
-		saver_counter++;
-		if (saver_counter > 285000 * 60 * 10) {
+		if ((system_millis - system_millis_lock_start) >= 600000) {
 			// lock the screen
 			session_clear(true);
 			layoutScreensaver();
-			saver_counter = 0;
 		}
-	} else {
-		saver_counter = 0;
 	}
 }
 
@@ -102,8 +96,14 @@ int main(void)
 #else
 	setupApp();
 #endif
-#if DEBUG_LINK
+
+	timer_init();
+
+#if DEBUG_LOG
 	oledSetDebug(1);
+#endif
+
+#if DEBUG_LINK
 	storage_reset(); // wipe storage if debug link
 	storage_reset_uuid();
 	storage_commit();

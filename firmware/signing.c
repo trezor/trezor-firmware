@@ -311,7 +311,7 @@ bool compile_input_script_sig(TxInputType *tinput)
 		}
 	}
 	memcpy(&node, root, sizeof(HDNode));
-	if (hdnode_private_ckd_cached(&node, tinput->address_n, tinput->address_n_count) == 0) {
+	if (hdnode_private_ckd_cached(&node, tinput->address_n, tinput->address_n_count, NULL) == 0) {
 		// Failed to derive private key
 		return false;
 	}
@@ -687,7 +687,11 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.signature_index = idx1;
 				resp.serialized.has_signature = true;
 				resp.serialized.has_serialized_tx = true;
-				ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL);
+				if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL) != 0) {
+					fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+					signing_abort();
+					return;
+				}
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 				
 				if (input.has_multisig) {
@@ -831,7 +835,12 @@ void signing_txack(TransactionType *tx)
 				resp.serialized.signature_index = idx1;
 				resp.serialized.has_signature = true;
 				resp.serialized.has_serialized_tx = true;
-				ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, NULL, NULL);
+				if (ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, NULL, NULL) != 0) {
+					fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+					signing_abort();
+					return;
+				}
+
 				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 				if (tx->inputs[0].has_multisig) {
 					uint32_t r, i, script_len;
