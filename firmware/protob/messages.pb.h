@@ -130,7 +130,7 @@ typedef struct _WordRequest {
 } WordRequest;
 
 typedef struct _Address {
-    char address[41];
+    char address[60];
 } Address;
 
 typedef struct {
@@ -1242,7 +1242,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          (81 + MultisigRedeemScriptType_size)
 #define EthereumGetAddress_size                  50
-#define Address_size                             43
+#define Address_size                             62
 #define EthereumAddress_size                     22
 #define WipeDevice_size                          0
 #define LoadDevice_size                          (326 + HDNodeType_size)
