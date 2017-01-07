@@ -23,6 +23,7 @@ import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
 from trezorlib.tx_api import TxApiTestnet
+from trezorlib.ckd_public import deserialize
 
 class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_p2sh(self):
@@ -160,6 +161,111 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         # 0e480a97c7a545c85e101a2f13c9af0e115d43734e1448f0cac3e55fe8e7399d
         self.assertEqual(binascii.hexlify(serialized_tx), b'010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090100000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787870d859b03000000001976a914a579388225827d9f2fe9014add644487808c695d88ac02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902483045022100b4099ec4c7b3123795b3c080a86f4b745f3784eb3f77de79bef1d8da319cbee5022039766865d448a4a3e435a95d0df3ff56ebc6532bf538988a7e8a679b40ec41b6012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000')
 
+    def test_send_multisig_1(self):
+        self.setup_mnemonic_allallall()
+        self.client.set_tx_api(TxApiTestnet)
+        nodes = map(lambda index : self.client.get_public_node(self.client.expand_path("999'/1'/"+str(index)+"'")), range(1,4))
+        multisig = proto_types.MultisigRedeemScriptType(
+            pubkeys=map(lambda n : proto_types.HDNodePathType(node=deserialize(n.xpub), address_n=[2,0]), nodes),
+            signatures=[b'', b'', b''],
+            m=2,
+        )
+
+        inp1 = proto_types.TxInputType(address_n=self.client.expand_path("999'/1'/1'/2/0"),
+                                       prev_hash=binascii.unhexlify('9c31922be756c06d02167656465c8dc83bb553bf386a3f478ae65b5c021002be'),
+                                       prev_index=1,
+                                       script_type=proto_types.SPENDP2SHWITNESS,
+                                       multisig=multisig,
+                                       amount=1610436
+        )
+
+        out1 = proto_types.TxOutputType(address='T7nZJt6QbGJy6Hok4EF2LqtJPcT7z7VFSrSysGS3tEqCfDPwizqy4',
+                                        amount=1605000,
+                                        script_type=proto_types.PAYTOADDRESS)
+
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXFINISHED),
+            ])
+            (signatures1, _) = self.client.sign_tx('Testnet', [inp1], [out1 ])
+            # store signature
+            inp1.multisig.signatures[0] = signatures1[0]
+            # sign with third key
+            inp1.address_n[2] = 0x80000003;
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXFINISHED),
+            ])
+            (signatures2, serialized_tx) = self.client.sign_tx('Testnet', [inp1], [out1 ])
+
+        # f41cbedd8becee05a830f418d13aa665125464547db5c7a6cd28f21639fe1228
+        self.assertEqual(binascii.hexlify(serialized_tx), b'01000000000101be0210025c5be68a473f6a38bf53b53bc88d5c46567616026dc056e72b92319c01000000232200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a1ffffffff01887d180000000000220020c5f4a0a4ea7c0392efe0a9670a73264cffa90b19107cd8a8e9750ff93c77fdfb0400483045022100a9b681f324ff4cf419ab06820d07248cc4e359c77334bf448ae7b5cdf3995ddf022039811f91f55b602368b4ba08a217b82bfd62d1a97dc635deb1457e7cfcc1550b0147304402201ad86a795c3d26881d696fa0a0619c24c4d505718132a82965cc2a609c9d8798022067cd490ce1366cde77e307ced5b13040bbc04991619ea6f49e06cece9a83268b01695221038e81669c085a5846e68e03875113ddb339ecbb7cb11376d4163bca5dc2e2a0c1210348c5c3be9f0e6cf1954ded1c0475beccc4d26aaa9d0cce2dd902538ff1018a112103931140ebe0fbbb7df0be04ed032a54e9589e30339ba7bbb8b0b71b15df1294da53ae00000000')
+
+    def test_send_multisig_2(self):
+        self.setup_mnemonic_allallall()
+        self.client.set_tx_api(TxApiTestnet)
+        nodes = map(lambda index : self.client.get_public_node(self.client.expand_path("999'/1'/"+str(index)+"'")), range(1,4))
+        multisig = proto_types.MultisigRedeemScriptType(
+            pubkeys=map(lambda n : proto_types.HDNodePathType(node=deserialize(n.xpub), address_n=[2,1]), nodes),
+            signatures=[b'', b'', b''],
+            m=2,
+        )
+
+        inp1 = proto_types.TxInputType(address_n=self.client.expand_path("999'/1'/2'/2/1"),
+                                       prev_hash=binascii.unhexlify('f41cbedd8becee05a830f418d13aa665125464547db5c7a6cd28f21639fe1228'),
+                                       prev_index=0,
+                                       script_type=proto_types.SPENDWITNESS,
+                                       multisig=multisig,
+                                       amount=1605000
+        )
+
+        out1 = proto_types.TxOutputType(address='T7nY3A3kewpDKumsdhonP4TBDfTXFSc2RNhZxkqmeeszRDHjM5yUn',
+                                        amount=1604000,
+                                        script_type=proto_types.PAYTOADDRESS)
+
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXFINISHED),
+            ])
+            (signatures1, _) = self.client.sign_tx('Testnet', [inp1], [out1 ])
+            # store signature
+            inp1.multisig.signatures[1] = signatures1[0]
+            # sign with first key
+            inp1.address_n[2] = 0x80000001;
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXFINISHED),
+            ])
+            (signatures2, serialized_tx) = self.client.sign_tx('Testnet', [inp1], [out1 ])
+
+        # c9348040bbc2024e12dcb4a0b4806b0398646b91acf314da028c3f03dd0179fc
+        self.assertEqual(binascii.hexlify(serialized_tx), b'010000000001012812fe3916f228cda6c7b57d5464541265a63ad118f430a805eeec8bddbe1cf40000000000ffffffff01a0791800000000002200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a10400483045022100cc97f21a7cabc543a9b4ac52424e8f7e420622903f2417a1c08a6af68058ec4a02200baca0b222fc825078d94e8e1b55f174c4828bed16697e4281cda2a0c799eecf01473044022009b8058dc30fa7a13310dd8f1a99c4341c4cd95f771c5a41c4381f956e2344c102205e829c560c0184fd4b4db8971f99711e2a87409afa4df0840b4f12a87b2c8afc0169522102740ec30d0af8591a0dd4a3e3b274e57f3f73bdc0638a9603f9ee6ade0475ba57210311aada919974e882abf0c67b5c0fba00000b26997312ca00345027d22359443021029382591271a79d4b12365fa27c67fad3753150d8eaa987e5a12dc5ba1bb2fa1653ae00000000')
 
 if __name__ == '__main__':
     unittest.main()
