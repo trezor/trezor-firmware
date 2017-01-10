@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
-http://bitcointrezor.com/
+https://trezor.io/
 
 ## How to build TREZOR firmware?
 
@@ -24,8 +24,8 @@ This creates file `output/bootloader.bin` and prints its fingerprint and size at
 
 ## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
-1. Pick version of firmware binary listed on https://wallet.mytrezor.com/data/firmware/releases.json
-2. Download it: `wget -O trezor.signed.bin https://wallet.mytrezor.com/data/firmware/trezor-1.3.6.bin`
+1. Pick version of firmware binary listed on https://wallet.trezor.io/data/firmware/releases.json
+2. Download it: `wget -O trezor.signed.bin https://wallet.trezor.io/data/firmware/trezor-1.3.6.bin`
 3. `./firmware-fingerprint.sh trezor.signed.bin`
 
 Step 3 should produce the same sha256 fingerprint like your local build (for the same version tag).
