@@ -57,7 +57,7 @@ also found in ``tools/helloworld.py``
       print(client.features)
 
       # Get the first address of first BIP44 account
-      # (should be the same address as shown in mytrezor.com)
+      # (should be the same address as shown in wallet.trezor.io)
       bip32_path = client.expand_path("44'/0'/0'/0/0")
       address = client.get_address('Bitcoin', bip32_path)
       print('Bitcoin address:', address)

@@ -176,7 +176,7 @@ def main():
     print(client.features)
 
     # Get the first address of first BIP44 account
-    # (should be the same address as shown in mytrezor.com)
+    # (should be the same address as shown in wallet.trezor.io)
 
     outputs = [
         proto_types.TxOutputType(
