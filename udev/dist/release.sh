@@ -23,7 +23,7 @@ for TYPE in "deb" "rpm"; do
 		--vendor "SatoshiLabs" \
 		--description "Udev rules for TREZOR" \
 		--maintainer "SatoshiLabs <stick@satoshilabs.com>" \
-		--url "http://bitcointrezor.com/" \
+		--url "https://trezor.io/" \
 		--category "Productivity/Security" \
 		$NAME-$VERSION.tar.bz2
 done
