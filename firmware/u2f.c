@@ -505,6 +505,12 @@ const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle
 	uint32_t key_path[KEY_PATH_ENTRIES];
 	key_path[0] = U2F_KEY_PATH;
 	memcpy(&key_path[1], key_handle, KEY_PATH_LEN);
+	for (unsigned int i = 1; i < KEY_PATH_ENTRIES; i++) {
+		// check high bit for hardened keys
+		if (! (key_path[i] & 0x80000000)) {
+			return NULL;
+		}
+	}
 
 	const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
 	if (!node)
