@@ -65,7 +65,7 @@ void layoutHome(void)
 		oledSwipeLeft();
 	}
 	layoutLast = layoutHome;
-	const char *label = storage_isInitialized() ? storage_getLabel() : "Go to mytrezor.com";
+	const char *label = storage_isInitialized() ? storage_getLabel() : "Go to trezor.io/start";
 	const uint8_t *homescreen = storage_getHomescreen();
 	if (homescreen) {
 		BITMAP b;
