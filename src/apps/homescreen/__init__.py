@@ -9,7 +9,7 @@ async def respond_Features(session_id, msg):
     from trezor.messages.Features import Features
 
     f = Features()
-    f.vendor = 'bitcointrezor.com'
+    f.vendor = 'trezor.io'
     f.revision = '0123456789'
     f.bootloader_hash = '0123456789'
     f.major_version = 2
