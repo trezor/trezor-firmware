@@ -90,7 +90,7 @@ flash2: $(NAME).hex
 		-c "reset" \
 		-c "shutdown"
 
-upload:
+upload: sign
 	trezorctl firmware_update -f $(NAME).bin
 
 sign: $(NAME).bin
