@@ -118,10 +118,10 @@ $(NAME).elf: $(OBJS) $(LDSCRIPT) $(TOOLCHAIN_DIR)/lib/libopencm3_stm32f2.a $(TOP
 	$(LD) -o $(NAME).elf $(OBJS) -ltrezor -lopencm3_stm32f2 $(LDFLAGS)
 
 %.o: %.c Makefile
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -MMD -o $@ -c $<
 
 %.small.o: %.c Makefile
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) -MMD -o $@ -c $<
 
 clean:
 	rm -f $(OBJS)
@@ -133,3 +133,5 @@ clean:
 	rm -f *.list
 	rm -f *.log
 	rm -f *.srec
+
+-include $(OBJS:.o=.d)
