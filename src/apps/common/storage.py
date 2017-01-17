@@ -61,7 +61,7 @@ def lock():
 
 
 def const_equal(a: bytes, b: bytes) -> bool:
-    return a == b
+    return a == b  # TODO: proper const equal
 
 
 # settings
@@ -176,4 +176,4 @@ def int_to_bytes(i: int) -> bytes:
 
 
 def bytes_to_int(b: bytes) -> int:
-    return ustruct.unpack('>L', b) if b else 0
+    return ustruct.unpack('>L', b)[0] if b else 0

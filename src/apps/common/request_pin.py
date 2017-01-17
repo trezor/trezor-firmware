@@ -52,7 +52,7 @@ async def request_pin_on_client(session_id: int, code: int=None) -> str:
     matrix.render()
 
     ack = await wire.call(session_id,
-                          PinMatrixRequest(code=code),
+                          PinMatrixRequest(type=code),
                           PinMatrixAck, Cancel)
     digits = matrix.digits
     matrix = None
@@ -78,7 +78,7 @@ async def request_pin_twice(session_id: int) -> str:
     return pin_first
 
 
-async def protect_by_pin(session_id: int, at_least_once: bool=False):
+async def protect_by_pin_repeatedly(session_id: int, at_least_once: bool=False):
     from . import storage
 
     locked = storage.is_locked() or at_least_once
@@ -87,9 +87,23 @@ async def protect_by_pin(session_id: int, at_least_once: bool=False):
         locked = not storage.unlock(pin, _render_pin_failure)
 
 
+async def protect_by_pin_or_fail(session_id: int, at_least_once: bool=False):
+    from trezor.messages.FailureType import PinInvalid
+    from . import storage
+
+    locked = storage.is_locked() or at_least_once
+    if locked:
+        pin = await request_pin(session_id)
+        if not storage.unlock(pin, _render_pin_failure):
+            raise wire.FailureError(PinInvalid, 'PIN invalid')
+
+
+protect_by_pin = protect_by_pin_or_fail
+
+
 def _render_pin_failure(sleep_ms: int):
     ui.display.clear()
-    ui.display.text_center(240, 240, 'Sleeping for %d seconds' % sleep_ms / 1000,
+    ui.display.text_center(240, 240, 'Sleeping for %d seconds' % (sleep_ms / 1000),
                            ui.BOLD, ui.RED, ui.BLACK)
 
 
