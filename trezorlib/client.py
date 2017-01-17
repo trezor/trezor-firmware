@@ -422,7 +422,7 @@ class DebugLinkMixin(object):
 
 class ProtocolMixin(object):
     PRIME_DERIVATION_FLAG = 0x80000000
-    VENDORS = ('bitcointrezor.com',)
+    VENDORS = ('bitcointrezor.com', 'trezor.io')
 
     def __init__(self, *args, **kwargs):
         super(ProtocolMixin, self).__init__(*args, **kwargs)
