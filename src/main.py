@@ -19,6 +19,9 @@ management.boot()
 wallet.boot()
 ethereum.boot()
 
+# HACK: keep storage loaded at all times
+from apps.common import storage
+
 # Change backlight to white for better visibility
 ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
