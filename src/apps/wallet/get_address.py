@@ -29,12 +29,14 @@ async def layout_get_address(session_id, msg):
 async def _show_address(session_id, address):
     from trezor.messages.ButtonRequestType import Address
     from trezor.ui.text import Text
+    from trezor.ui.qr import Qr
+    from trezor.ui.container import Container
     from ..common.confirm import require_confirm
 
-    # TODO: qr code
-
-    content = Text('Confirm address', ui.ICON_RESET,
-                   ui.MONO, *_split_address(address))
+    lines = _split_address(address)
+    content = Container(
+        Qr(address, (76, 90), 3),
+        Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines))
     await require_confirm(session_id, content, code=Address)
 
 
