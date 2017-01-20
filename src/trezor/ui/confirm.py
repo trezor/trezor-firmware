@@ -74,8 +74,8 @@ class HoldToConfirmDialog():
             return self.content.send(event, pos)
 
     async def __iter__(self):
-        await loop.Wait([self._render_loop(),
-                         self._event_loop()])
+        return await loop.Wait([self._render_loop(),
+                                self._event_loop()])
 
     def _render_loop(self):
         RENDER_DELAY = const(1000000 // 60)
