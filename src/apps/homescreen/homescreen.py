@@ -8,6 +8,7 @@ async def swipe_to_rotate():
     while True:
         degrees = await Swipe(absolute=True)
         ui.display.orientation(degrees)
+        display_homescreen()
 
 
 async def dim_screen():
@@ -27,12 +28,12 @@ async def dim_screen():
 def display_homescreen():
     from apps.common import storage
 
-    image = res.load('apps/homescreen/res/trezor.toig')
+    image = res.load('apps/homescreen/res/trezor_logo.toig')
     ui.display.icon(0, 0, image, ui.WHITE, ui.BLACK)
 
-    ui.display.bar(0, 180, 240, 240, ui.BLACK)
-
-    label = storage.get_label() or 'My TREZOR'
+    label = storage.get_label()
+    if not label:
+        label = 'My TREZOR'
     ui.display.text_center(120, 210, label, ui.BOLD, ui.WHITE, ui.BLACK)
 
 
