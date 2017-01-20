@@ -5,24 +5,19 @@ from trezor.utils import unimport
 async def swipe_to_rotate():
     from trezor.ui.swipe import Swipe
 
-    while True:
-        degrees = await Swipe(absolute=True)
-        ui.display.orientation(degrees)
-        display_homescreen()
+    degrees = await Swipe(absolute=True)
+    ui.display.orientation(degrees)
 
 
 async def dim_screen():
-    current = ui.display.backlight()
-
-    await loop.Sleep(5 * 1000000)
-    await ui.backlight_slide(ui.BACKLIGHT_DIM)
-
+    original = ui.display.backlight()
     try:
+        await loop.Sleep(5 * 1000000)
+        await ui.backlight_slide(ui.BACKLIGHT_DIM)
         while True:
             await loop.Sleep(1000000)
     finally:
-        # Return back to original brightness
-        ui.display.backlight(current)
+        ui.display.backlight(original)
 
 
 def display_homescreen():
@@ -39,6 +34,8 @@ def display_homescreen():
 
 @unimport
 async def layout_homescreen():
-    display_homescreen()
     ui.display.backlight(ui.BACKLIGHT_NORMAL)
-    await loop.Wait([swipe_to_rotate(), dim_screen()])
+
+    while True:
+        display_homescreen()
+        await loop.Wait([swipe_to_rotate(), dim_screen()])
