@@ -383,7 +383,7 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 
 static bool ethereum_signing_check(EthereumSignTx *msg)
 {
-	if (!msg->has_nonce || !msg->has_gas_price || !msg->has_gas_limit) {
+	if (!msg->has_gas_price || !msg->has_gas_limit) {
 		return false;
 	}
 	
@@ -418,13 +418,10 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		msg->data_initial_chunk.size = 0;
 	if (!msg->has_to)
 		msg->to.size = 0;
+	if (!msg->has_nonce)
+		msg->nonce.size = 0;
 
-	if (msg->has_data_length) {
-		if (msg->data_length == 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid data length provided");
-			ethereum_signing_abort();
-			return;
-		}
+	if (msg->has_data_length && msg->data_length > 0) {
 		if (!msg->has_data_initial_chunk || msg->data_initial_chunk.size == 0) {
 			fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
 			ethereum_signing_abort();
