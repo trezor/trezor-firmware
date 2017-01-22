@@ -460,6 +460,8 @@ typedef struct _EthereumSignTx {
     EthereumSignTx_data_initial_chunk_t data_initial_chunk;
     bool has_data_length;
     uint32_t data_length;
+    bool has_chain_id;
+    uint32_t chain_id;
 } EthereumSignTx;
 
 typedef struct {
@@ -894,7 +896,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define SimpleSignTx_init_default                {0, {}, 0, {}, 0, {}, false, "Bitcoin", false, 1u, false, 0u}
 #define TxRequest_init_default                   {false, (RequestType)0, false, TxRequestDetailsType_init_default, false, TxRequestSerializedType_init_default}
 #define TxAck_init_default                       {false, TransactionType_init_default}
-#define EthereumSignTx_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0}
+#define EthereumSignTx_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0}
 #define EthereumTxRequest_init_default           {false, 0, false, 0, false, {0, {0}}, false, {0, {0}}}
 #define EthereumTxAck_init_default               {false, {0, {0}}}
 #define SignIdentity_init_default                {false, IdentityType_init_default, false, {0, {0}}, false, "", false, ""}
@@ -960,7 +962,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define SimpleSignTx_init_zero                   {0, {}, 0, {}, 0, {}, false, "", false, 0, false, 0}
 #define TxRequest_init_zero                      {false, (RequestType)0, false, TxRequestDetailsType_init_zero, false, TxRequestSerializedType_init_zero}
 #define TxAck_init_zero                          {false, TransactionType_init_zero}
-#define EthereumSignTx_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0}
+#define EthereumSignTx_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0}
 #define EthereumTxRequest_init_zero              {false, 0, false, 0, false, {0, {0}}, false, {0, {0}}}
 #define EthereumTxAck_init_zero                  {false, {0, {0}}}
 #define SignIdentity_init_zero                   {false, IdentityType_init_zero, false, {0, {0}}, false, "", false, ""}
@@ -1049,6 +1051,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define EthereumSignTx_value_tag                 6
 #define EthereumSignTx_data_initial_chunk_tag    7
 #define EthereumSignTx_data_length_tag           8
+#define EthereumSignTx_chain_id_tag              9
 #define EthereumTxAck_data_chunk_tag             1
 #define EthereumTxRequest_data_length_tag        1
 #define EthereumTxRequest_signature_v_tag        2
@@ -1204,7 +1207,7 @@ extern const pb_field_t SignTx_fields[6];
 extern const pb_field_t SimpleSignTx_fields[7];
 extern const pb_field_t TxRequest_fields[4];
 extern const pb_field_t TxAck_fields[2];
-extern const pb_field_t EthereumSignTx_fields[9];
+extern const pb_field_t EthereumSignTx_fields[10];
 extern const pb_field_t EthereumTxRequest_fields[5];
 extern const pb_field_t EthereumTxAck_fields[2];
 extern const pb_field_t SignIdentity_fields[5];
@@ -1272,7 +1275,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define SimpleSignTx_size                        (31 + 0*TxInputType_size + 0*TxOutputType_size + 0*TransactionType_size)
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
-#define EthereumSignTx_size                      1239
+#define EthereumSignTx_size                      1245
 #define EthereumTxRequest_size                   80
 #define EthereumTxAck_size                       1027
 #define SignIdentity_size                        (558 + IdentityType_size)
