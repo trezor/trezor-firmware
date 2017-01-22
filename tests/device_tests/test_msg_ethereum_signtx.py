@@ -180,5 +180,60 @@ class TestMsgEthereumSigntx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(sig_r), '699428a6950e23c6843f1bf3754f847e64e047e829978df80d55187d19a401ce')
         self.assertEqual(binascii.hexlify(sig_s), '087343d0a3a2f10842218ffccb146b59a8431b6245ab389fde22dc833f171e6e')
 
+    def test_ethereum_signtx_data_eip155(self):
+        self.setup_mnemonic_allallall()
+
+        sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            nonce=2,
+            gas_price=20000000000,
+            gas_limit=21004,
+            to=binascii.unhexlify('8ea7a3fccc211ed48b763b4164884ddbcf3b0a98'),
+            value=100000000000000000,
+            data='\0',
+            chain_id=3)
+        self.assertEqual(sig_v, 42)
+        self.assertEqual(binascii.hexlify(sig_r), 'ba85b622a8bb82606ba96c132e81fa8058172192d15bc41d7e57c031bca17df4')
+        self.assertEqual(binascii.hexlify(sig_s), '6473b75997634b6f692f8d672193591d299d5bf1c2d6e51f1a14ed0530b91c7d')
+
+        sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            nonce=3,
+            gas_price=20000000000,
+            gas_limit=299732,
+            to=binascii.unhexlify('8ea7a3fccc211ed48b763b4164884ddbcf3b0a98'),
+            value=100000000000000000,
+            data='ABCDEFGHIJKLMNOP' * 256 + '!!!',
+            chain_id=3)
+        self.assertEqual(sig_v, 42)
+        self.assertEqual(binascii.hexlify(sig_r), 'd021c98f92859c8db5e4de2f0e410a8deb0c977eb1a631e323ebf7484bd0d79a')
+        self.assertEqual(binascii.hexlify(sig_s), '2c0e9defc9b1e895dc9520ff25ba3c635b14ad70aa86a5ad6c0a3acb82b569b6')
+
+        sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            nonce=4,
+            gas_price=20000000000,
+            gas_limit=21004,
+            to=binascii.unhexlify('8ea7a3fccc211ed48b763b4164884ddbcf3b0a98'),
+            value=0,
+            data='\0',
+            chain_id=3)
+        self.assertEqual(sig_v, 42)
+        self.assertEqual(binascii.hexlify(sig_r), 'dd52f026972a83c56b7dea356836fcfc70a68e3b879cdc8ef2bb5fea23e0a7aa')
+        self.assertEqual(binascii.hexlify(sig_s), '079285fe579c9a2da25c811b1c5c0a74cd19b6301ee42cf20ef7b3b1353f7242')
+
+        sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            nonce=5,
+            gas_price=0,
+            gas_limit=21004,
+            to=binascii.unhexlify('8ea7a3fccc211ed48b763b4164884ddbcf3b0a98'),
+            value=0,
+            data='\0',
+            chain_id=3)
+        self.assertEqual(sig_v, 42)
+        self.assertEqual(binascii.hexlify(sig_r), 'f7505f709d5999343aea3c384034c62d0514336ff6c6af65582006f708f81503')
+        self.assertEqual(binascii.hexlify(sig_s), '44e09e29a4b6247000b46ddc94fe391e94deb2b39ad6ac6398e6db5bec095ba9')
+
 if __name__ == '__main__':
     unittest.main()
