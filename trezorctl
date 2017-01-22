@@ -153,7 +153,7 @@ class Commands(object):
             value = int(value)
 
         gas_price = args.gas_price
-        if gas_price:
+        if gas_price is not None:
             if ' ' in gas_price:
                 gas_price, unit = gas_price.split(' ', 1)
                 if unit.lower() not in ether_units:
@@ -163,7 +163,7 @@ class Commands(object):
                 gas_price = int(gas_price)
 
         gas_limit = args.gas
-        if gas_limit:
+        if gas_limit is not None:
             gas_limit = int(gas_limit)
 
         if args.to.startswith('0x') or args.to.startswith('0X'):
@@ -178,27 +178,27 @@ class Commands(object):
         address_n = self.client.expand_path(args.n)
         address = "0x%s" % (binascii.hexlify(self.client.ethereum_get_address(address_n)),)
 
-        if not gas_price or not gas_limit or not nonce or args.data:
+        if gas_price is None or gas_limit is None or nonce is None:
             host, port = args.host.split(':')
             eth = EthJsonRpc(host, int(port))
 
         if not args.data:
-            args.gata = ''
-        if args.data.startswith('0x'):
+            args.data = ''
+        elif args.data.startswith('0x'):
             args.data = args.data[2:]
         data = binascii.unhexlify(args.data)
 
-        if not gas_price:
+        if gas_price is None:
             gas_price = eth.eth_gasPrice()
 
-        if not gas_limit:
+        if gas_limit is None:
             gas_limit = eth.eth_estimateGas(
                 to_address=args.to,
                 from_address=address,
                 value=("0x%x" % value),
                 data="0x"+args.data)
 
-        if not nonce:
+        if nonce is None:
             nonce = eth.eth_getTransactionCount(address)
 
         sig = self.client.ethereum_sign_tx(
@@ -413,16 +413,16 @@ class Commands(object):
     )
 
     ethereum_sign_tx.arguments = (
-        (('-a', '--host'), {'type': str, 'default': 'localhost:8545'}),
+        (('-a', '--host'), {'type': str, 'help': 'RPC port of ethereum node for automatic gas/nonce estimation', 'default': 'localhost:8545'}),
         (('-c', '--chain-id'), {'type' : int, 'help': 'EIP-155 chain id (replay protection)', 'default': None}),
-        (('-n', '-address'), {'type': str}),
-        (('-v', '--value'), {'type': str, 'default': "0"}),
-        (('-g', '--gas'), {'type': int, 'help': 'Required for offline signing'}),
-        (('-t', '--gas-price'), {'type': str, 'help': 'Required for offline signing' }),
-        (('-i', '--nonce'), {'type': str, 'help': 'Required for offline signing'}),
-        (('-d', '--data'), {'type': str, 'default': ''}),
-        (('-p', '--publish'), {'action': 'store_true', 'default': False}),
-        (('to',), {'type': str}),
+        (('-n', '-address'), {'type': str, 'help': 'BIP-32 path to signing key'}),
+        (('-v', '--value'), {'type': str, 'help': 'Ether amount to transfer, e.g., "100 milliether"', 'default': "0"}),
+        (('-g', '--gas'), {'type': int, 'help': 'Gas limit - Required for offline signing', 'default': None}),
+        (('-t', '--gas-price'), {'type': str, 'help': 'Gas price, e.g., "20 nanoether" - Required for offline signing', 'default': None }),
+        (('-i', '--nonce'), {'type': int, 'help': 'Transaction counter - Required for offline signing', 'default': None}),
+        (('-d', '--data'), {'type': str, 'help': 'Data as hex string, e.g., 0x12345678', 'default': ''}),
+        (('-p', '--publish'), {'action': 'store_true', 'help': 'publish transaction via RPC', 'default': False}),
+        (('to',), {'type': str, 'help': 'Destination address; "" for contract creation'}),
     )
 
     get_entropy.arguments = (
