@@ -35,6 +35,7 @@ static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest resp;
 static uint8_t privkey[32];
+static uint8_t chain_id;
 struct SHA3_CTX keccak_ctx;
 
 static inline void hash_data(const uint8_t *buf, size_t size)
@@ -150,6 +151,15 @@ static void send_signature(void)
 	uint8_t hash[32], sig[64];
 	uint8_t v;
 	layoutProgress("Signing", 1000);
+
+	/* eip-155 replay protection */
+	if (chain_id != 0) {
+		/* hash v=chain_id, r=0, s=0 */
+		hash_rlp_field(&chain_id, 1);
+		hash_rlp_length(0, 0);
+		hash_rlp_length(0, 0);
+	}
+
 	keccak_Final(&keccak_ctx, hash);
 	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v, ethereum_is_canonic) != 0) {
 		fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
@@ -163,7 +173,11 @@ static void send_signature(void)
 	resp.has_data_length = false;
 
 	resp.has_signature_v = true;
-	resp.signature_v = v + 27;
+	if (chain_id) {
+		resp.signature_v = v + 2*chain_id + 35;
+	} else {
+		resp.signature_v = v + 27;
+	}
 
 	resp.has_signature_r = true;
 	resp.signature_r.size = 32;
@@ -421,6 +435,18 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	if (!msg->has_nonce)
 		msg->nonce.size = 0;
 
+	/* eip-155 chain id */
+	if (msg->has_chain_id) {
+		if (msg->chain_id < 1 || msg->chain_id > 109) {
+			fsm_sendFailure(FailureType_Failure_Other, "Chain Id out of bounds");
+			ethereum_signing_abort();
+			return;
+		}
+		chain_id = (uint8_t) msg->chain_id;
+	} else {
+		chain_id = 0;
+	}
+
 	if (msg->has_data_length && msg->data_length > 0) {
 		if (!msg->has_data_initial_chunk || msg->data_initial_chunk.size == 0) {
 			fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
@@ -488,6 +514,11 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
 	rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
 	rlp_length += rlp_calculate_length(data_total, msg->data_initial_chunk.bytes[0]);
+	if (chain_id) {
+		rlp_length += rlp_calculate_length(1, chain_id);
+		rlp_length += rlp_calculate_length(0, 0);
+		rlp_length += rlp_calculate_length(0, 0);
+	}
 
 	/* Stage 2: Store header fields */
 	hash_rlp_list_length(rlp_length);
