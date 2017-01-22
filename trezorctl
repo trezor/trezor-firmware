@@ -182,6 +182,8 @@ class Commands(object):
             host, port = args.host.split(':')
             eth = EthJsonRpc(host, int(port))
 
+        if not args.data:
+            args.gata = ''
         if args.data.startswith('0x'):
             args.data = args.data[2:]
         data = binascii.unhexlify(args.data)
@@ -189,12 +191,12 @@ class Commands(object):
         if not gas_price:
             gas_price = eth.eth_gasPrice()
 
-        if args.data:
-            gas_limit = hex_to_dec(eth.eth_estimateGas(
+        if not gas_limit:
+            gas_limit = eth.eth_estimateGas(
                 to_address=args.to,
                 from_address=address,
-                value=value,
-                data="0x"+args.data))
+                value=("0x%x" % value),
+                data="0x"+args.data)
 
         if not nonce:
             nonce = eth.eth_getTransactionCount(address)
@@ -206,7 +208,8 @@ class Commands(object):
             gas_limit=gas_limit,
             to=to_address,
             value=value,
-            data=data)
+            data=data,
+            chain_id=args.chain_id)
 
         transaction = rlp.encode(
             (nonce, gas_price, gas_limit, to_address, value, data) + sig)
@@ -411,6 +414,7 @@ class Commands(object):
 
     ethereum_sign_tx.arguments = (
         (('-a', '--host'), {'type': str, 'default': 'localhost:8545'}),
+        (('-c', '--chain-id'), {'type' : int, 'help': 'EIP-155 chain id (replay protection)', 'default': None}),
         (('-n', '-address'), {'type': str}),
         (('-v', '--value'), {'type': str, 'default': "0"}),
         (('-g', '--gas'), {'type': int, 'help': 'Required for offline signing'}),

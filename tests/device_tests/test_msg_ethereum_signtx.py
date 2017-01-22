@@ -153,5 +153,32 @@ class TestMsgEthereumSigntx(common.TrezorTest):
             to=binascii.unhexlify('1d1c328764a41bda0492b66baa30c4a339ff85ef'),
             value=12345678901234567890)
 
+    def test_ethereum_signtx_nodata_eip155(self):
+        self.setup_mnemonic_allallall()
+
+        sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            nonce=0,
+            gas_price=20000000000,
+            gas_limit=21000,
+            to=binascii.unhexlify('8ea7a3fccc211ed48b763b4164884ddbcf3b0a98'),
+            value=100000000000000000,
+            chain_id=3)
+        self.assertEqual(sig_v, 41)
+        self.assertEqual(binascii.hexlify(sig_r), 'a90d0bc4f8d63be69453dd62f2bb5fff53c610000abf956672564d8a654d401a')
+        self.assertEqual(binascii.hexlify(sig_s), '544a2e57bc8b4da18660a1e6036967ea581cc635f5137e3ba97a750867c27cf2')
+
+        sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            nonce=1,
+            gas_price=20000000000,
+            gas_limit=21000,
+            to=binascii.unhexlify('8ea7a3fccc211ed48b763b4164884ddbcf3b0a98'),
+            value=100000000000000000,
+            chain_id=3)
+        self.assertEqual(sig_v, 42)
+        self.assertEqual(binascii.hexlify(sig_r), '699428a6950e23c6843f1bf3754f847e64e047e829978df80d55187d19a401ce')
+        self.assertEqual(binascii.hexlify(sig_s), '087343d0a3a2f10842218ffccb146b59a8431b6245ab389fde22dc833f171e6e')
+
 if __name__ == '__main__':
     unittest.main()
