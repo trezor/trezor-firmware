@@ -26,6 +26,9 @@ build_stmhal_debug: vendor ## build stmhal port with debug symbols
 build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
 	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) FROZEN_MPY_DIR=../../../src
 
+build_bootloader: vendor ## build bootloader
+	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD)
+
 build_unix: vendor ## build unix port
 	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
 
@@ -37,9 +40,6 @@ build_unix_frozen: vendor res build_cross ## build unix port with frozen modules
 
 build_cross: vendor ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
-
-build_bootloader: vendor ## build bootloader
-	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD)
 
 run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
