@@ -132,6 +132,42 @@ SRC_USBDEV = $(addprefix $(USBDEV_DIR)/,\
 	class/src/usbd_msc_data.c \
 	)
 
+ifeq ($(MICROPY_PY_WIZNET5K),1)
+WIZNET5K_DIR=drivers/wiznet5k
+INC += -I$(TOP)/$(WIZNET5K_DIR)
+CFLAGS_MOD += -DMICROPY_PY_WIZNET5K=1
+SRC_MOD += modnwwiznet5k.c
+SRC_MOD += $(addprefix $(WIZNET5K_DIR)/,\
+	ethernet/w5200/w5200.c \
+	ethernet/wizchip_conf.c \
+	ethernet/socket.c \
+	internet/dns/dns.c \
+	)
+endif
+
+# for CC3000 module
+ifeq ($(MICROPY_PY_CC3K),1)
+CC3000_DIR=drivers/cc3000
+INC += -I$(TOP)/$(CC3000_DIR)/inc
+CFLAGS_MOD += -DMICROPY_PY_CC3K=1
+SRC_MOD += modnwcc3k.c
+SRC_MOD += $(addprefix $(CC3000_DIR)/src/,\
+	cc3000_common.c \
+	evnt_handler.c \
+	hci.c \
+	netapp.c \
+	nvmem.c \
+	security.c \
+	socket.c \
+	wlan.c \
+	ccspi.c \
+	inet_ntop.c \
+	inet_pton.c \
+	patch.c \
+	patch_prog.c \
+	)
+endif
+
 ifeq ($(MICROPY_PY_TREZORUI),1)
 INC += -I../extmod/modtrezorui
 SRC_MOD += $(addprefix extmod/modtrezorui/,\
@@ -160,11 +196,24 @@ $(PY_BUILD)/formatfloat.o: COPT += -Os
 $(PY_BUILD)/parsenum.o: COPT += -Os
 $(PY_BUILD)/mpprint.o: COPT += -Os
 
-all: $(BUILD)/bootloader.dfu $(BUILD)/bootloader.hex
+all: $(BUILD)/firmware.dfu $(BUILD)/firmware.hex
+
+ifneq ($(FROZEN_DIR),)
+# To use frozen source modules, put your .py files in a subdirectory (eg scripts/)
+# and then invoke make with FROZEN_DIR=scripts (be sure to build from scratch).
+CFLAGS += -DMICROPY_MODULE_FROZEN_STR
+endif
+
+ifneq ($(FROZEN_MPY_DIR),)
+# To use frozen bytecode, put your .py files in a subdirectory (eg frozen/) and
+# then invoke make with FROZEN_MPY_DIR=frozen (be sure to build from scratch).
+CFLAGS += -DMICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
+CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
+endif
 
 .PHONY: deploy
 
-deploy: $(BUILD)/bootloader.dfu
+deploy: $(BUILD)/firmware.dfu
 	$(ECHO) "Writing $< to the board"
 ifeq ($(USE_PYDFU),1)
 	$(Q)$(PYTHON) $(PYDFU) -u $<
@@ -175,27 +224,27 @@ endif
 FLASH_ADDR ?= 0x08000000
 TEXT_ADDR ?= 0x08020000
 
-deploy-stlink: $(BUILD)/bootloader.dfu
-	$(ECHO) "Writing $(BUILD)/bootloader0.bin to the board via ST-LINK"
-	$(Q)$(STFLASH) write $(BUILD)/bootloader0.bin $(FLASH_ADDR)
-	$(ECHO) "Writing $(BUILD)/bootloader1.bin to the board via ST-LINK"
-	$(Q)$(STFLASH) --reset write $(BUILD)/bootloader1.bin $(TEXT_ADDR)
+deploy-stlink: $(BUILD)/firmware.dfu
+	$(ECHO) "Writing $(BUILD)/firmware0.bin to the board via ST-LINK"
+	$(Q)$(STFLASH) write $(BUILD)/firmware0.bin $(FLASH_ADDR)
+	$(ECHO) "Writing $(BUILD)/firmware1.bin to the board via ST-LINK"
+	$(Q)$(STFLASH) --reset write $(BUILD)/firmware1.bin $(TEXT_ADDR)
 
-deploy-openocd: $(BUILD)/bootloader.dfu
-	$(ECHO) "Writing $(BUILD)/bootloader{0,1}.bin to the board via ST-LINK using OpenOCD"
-	$(Q)$(OPENOCD) -f $(OPENOCD_CONFIG) -c "stm_flash $(BUILD)/bootloader0.bin $(FLASH_ADDR) $(BUILD)/bootloader1.bin $(TEXT_ADDR)"
+deploy-openocd: $(BUILD)/firmware.dfu
+	$(ECHO) "Writing $(BUILD)/firmware{0,1}.bin to the board via ST-LINK using OpenOCD"
+	$(Q)$(OPENOCD) -f $(OPENOCD_CONFIG) -c "stm_flash $(BUILD)/firmware0.bin $(FLASH_ADDR) $(BUILD)/firmware1.bin $(TEXT_ADDR)"
 
-$(BUILD)/bootloader.dfu: $(BUILD)/bootloader.elf
+$(BUILD)/firmware.dfu: $(BUILD)/firmware.elf
 	$(ECHO) "Create $@"
-	$(Q)$(OBJCOPY) -O binary -j .isr_vector $^ $(BUILD)/bootloader0.bin
-	$(Q)$(OBJCOPY) -O binary -j .text -j .data $^ $(BUILD)/bootloader1.bin
-	$(Q)$(PYTHON) $(DFU) -b $(FLASH_ADDR):$(BUILD)/bootloader0.bin -b $(TEXT_ADDR):$(BUILD)/bootloader1.bin $@
+	$(Q)$(OBJCOPY) -O binary -j .isr_vector $^ $(BUILD)/firmware0.bin
+	$(Q)$(OBJCOPY) -O binary -j .text -j .data $^ $(BUILD)/firmware1.bin
+	$(Q)$(PYTHON) $(DFU) -b $(FLASH_ADDR):$(BUILD)/firmware0.bin -b $(TEXT_ADDR):$(BUILD)/firmware1.bin $@
 
-$(BUILD)/bootloader.hex: $(BUILD)/bootloader.elf
+$(BUILD)/firmware.hex: $(BUILD)/firmware.elf
 	$(ECHO) "Create $@"
 	$(Q)$(OBJCOPY) -O ihex $< $@
 
-$(BUILD)/bootloader.elf: $(OBJ)
+$(BUILD)/firmware.elf: $(OBJ)
 	$(ECHO) "LINK $@"
 	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 	$(Q)$(SIZE) $@

@@ -27,7 +27,7 @@ build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen mod
 	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) FROZEN_MPY_DIR=../../../src
 
 build_bootloader: vendor ## build bootloader
-	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD)
+	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD) BUILD=build-$(BOARD)_bootloader
 
 build_unix: vendor ## build unix port
 	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
@@ -47,10 +47,13 @@ run: ## run unix port
 emu: ## run emulator
 	./emu.sh
 
-clean: clean_stmhal clean_unix clean_cross ## clean all builds
+clean: clean_stmhal clean_bootloader clean_unix clean_cross ## clean all builds
 
 clean_stmhal: ## clean stmhal build
 	$(MAKE) -C vendor/micropython/stmhal clean BOARD=$(BOARD)
+
+clean_bootloader: ## clean stmhal build
+	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader clean BOARD=$(BOARD) BUILD=build-$(BOARD)_bootloader
 
 clean_unix: ## clean unix build
 	$(MAKE) -C vendor/micropython/unix clean
@@ -70,9 +73,9 @@ flash: ## flash firmware using st-flash
 	st-flash write $(STMHAL_BUILD_DIR)/firmware1.bin 0x8020000
 
 flash_bl: vendor ## flash bootloader using st-flash
-	st-flash write $(STMHAL_BUILD_DIR)/bootloader0.bin 0x8000000
+	st-flash write $(STMHAL_BUILD_DIR)_bootloader/firmware0.bin 0x8000000
 	sleep 0.1
-	st-flash write $(STMHAL_BUILD_DIR)/bootloader1.bin 0x8020000
+	st-flash write $(STMHAL_BUILD_DIR)_bootloader/firmware1.bin 0x8020000
 
 openocd_flash: $(STMHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
@@ -83,12 +86,12 @@ openocd_flash: $(STMHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
 		-c "reset" \
 		-c "shutdown"
 
-openocd_flash_bl: $(STMHAL_BUILD_DIR)/bootloader.hex ## flash bootloader using openocd
+openocd_flash_bl: $(STMHAL_BUILD_DIR)_bootloader/firmware.hex ## flash bootloader using openocd
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
 		-c "init" \
 		-c "reset init" \
 		-c "stm32f4x mass_erase 0" \
-		-c "flash write_image $(STMHAL_BUILD_DIR)/bootloader.hex" \
+		-c "flash write_image $(STMHAL_BUILD_DIR)_bootloader/firmware.hex" \
 		-c "reset" \
 		-c "shutdown"
 
@@ -99,7 +102,7 @@ gdb: ## start remote gdb session which connects to the openocd
 	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'
 
 gdb_bl: ## start remote gdb session which connects to the openocd
-	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)/bootloader.elf -ex 'target remote localhost:3333'
+	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)_bootloader/firmware.elf -ex 'target remote localhost:3333'
 
 load: ## load contents of src into mass storage of trezor
 	rm -rf /run/media/${USER}/PYBFLASH/*
