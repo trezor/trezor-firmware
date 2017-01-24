@@ -174,7 +174,7 @@ static void send_signature(void)
 
 	resp.has_signature_v = true;
 	if (chain_id) {
-		resp.signature_v = v + 2*chain_id + 35;
+		resp.signature_v = v + 2 * chain_id + 35;
 	} else {
 		resp.signature_v = v + 27;
 	}
@@ -242,7 +242,11 @@ static void ethereumFormatAmount(bignum256 *val, char buffer[25])
 		// remove trailing dot.
 		if (value_ptr[-1] == '.')
 			value_ptr--;
-		strcpy(value_ptr, " ETH");
+		if (chain_id == 61 || chain_id == 62) {
+			strcpy(value_ptr, " ETC");
+		} else {
+			strcpy(value_ptr, " ETH");
+		}
 		// value is at most 16 + 4 + 1 characters long
 	} else {
 		// value is bigger than 1e9 ETH => won't fit on display (probably won't happen unless you are Vitalik)
