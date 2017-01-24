@@ -22,7 +22,7 @@ async def get_seed(session_id: int) -> bytes:
 
 async def compute_seed(session_id: int) -> bytes:
     from trezor.messages.FailureType import Other
-    from .request_passphrase import request_passphrase
+    from .request_passphrase import protect_by_passphrase
     from .request_pin import protect_by_pin
     from . import storage
 
@@ -31,8 +31,5 @@ async def compute_seed(session_id: int) -> bytes:
 
     await protect_by_pin(session_id)
 
-    if storage.is_protected_by_passphrase():
-        passphrase = await request_passphrase(session_id)
-    else:
-        passphrase = ''
+    passphrase = await protect_by_passphrase(session_id)
     return bip39.seed(storage.get_mnemonic(), passphrase)
