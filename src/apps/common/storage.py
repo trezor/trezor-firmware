@@ -7,14 +7,14 @@ from trezor import utils
 
 _APP = const(1)
 
-_DEVICE_ID = const(0)  # str
-_VERSION = const(1)  # varint
-_MNEMONIC = const(2)  # str
-_LANGUAGE = const(3)  # str
-_LABEL = const(4)  # str
-_PIN = const(5)  # bytes
-_PIN_FAILS = const(6)  # varint
-_PASSPHRASE_PROTECTION = const(7)  # varint
+DEVICE_ID = const(0)  # str
+VERSION = const(1)  # varint
+MNEMONIC = const(2)  # str
+LANGUAGE = const(3)  # str
+LABEL = const(4)  # str
+PIN = const(5)  # bytes
+PIN_FAILS = const(6)  # varint
+PASSPHRASE_PROTECTION = const(7)  # varint
 
 
 # pin lock
@@ -34,13 +34,13 @@ def unlock(user_pin: str, failure_callback=None) -> bool:
         return True
 
     # increment the pin fail counter before checking the pin
-    fails = bytes_to_int(config_get(_PIN_FAILS)) + 1
-    config_set_checked(_PIN_FAILS, int_to_bytes(fails))
+    fails = bytes_to_int(config_get(PIN_FAILS)) + 1
+    config_set_checked(PIN_FAILS, int_to_bytes(fails))
 
-    if const_equal(config_get(_PIN), user_pin.encode()):
+    if const_equal(config_get(PIN), user_pin.encode()):
         # unlock and reset the counter
         _locked = False
-        config_set(_PIN_FAILS, int_to_bytes(0))
+        config_set(PIN_FAILS, int_to_bytes(0))
         return True
 
     else:
@@ -69,42 +69,42 @@ def const_equal(a: bytes, b: bytes) -> bool:
 
 
 def get_device_id() -> str:
-    dev_id = config_get(_DEVICE_ID).decode()
+    dev_id = config_get(DEVICE_ID).decode()
     if not dev_id:
         dev_id = new_device_id()
-        config_set(_DEVICE_ID, dev_id.encode())
+        config_set(DEVICE_ID, dev_id.encode())
     return dev_id
 
 
 def is_initialized() -> bool:
-    return bool(config_get(_VERSION))
+    return bool(config_get(VERSION))
 
 
 def is_protected_by_pin() -> bool:
-    return bool(config_get(_PIN))
+    return bool(config_get(PIN))
 
 
 def is_protected_by_passphrase() -> bool:
-    return bool(bytes_to_int(config_get(_PASSPHRASE_PROTECTION)))
+    return bool(bytes_to_int(config_get(PASSPHRASE_PROTECTION)))
 
 
 def get_pin() -> str:
-    return config_get(_PIN).decode()
+    return config_get(PIN).decode()
 
 
 def get_label() -> str:
-    return config_get(_LABEL).decode()
+    return config_get(LABEL).decode()
 
 
 def get_language() -> str:
-    return config_get(_LANGUAGE).decode() or _DEFAULT_LANGUAGE
+    return config_get(LANGUAGE).decode() or _DEFAULT_LANGUAGE
 
 
 def get_mnemonic() -> str:
     utils.ensure(is_initialized())
     utils.ensure(not is_locked())
 
-    return config_get(_MNEMONIC).decode()
+    return config_get(MNEMONIC).decode()
 
 
 # settings configuration
@@ -114,8 +114,8 @@ def get_mnemonic() -> str:
 def load_mnemonic(mnemonic: str):
     utils.ensure(not is_initialized())
 
-    config_set(_VERSION, int_to_bytes(1))
-    config_set(_MNEMONIC, mnemonic.encode())
+    config_set(VERSION, int_to_bytes(1))
+    config_set(MNEMONIC, mnemonic.encode())
 
 
 _ALLOWED_LANGUAGES = ('english')
@@ -131,15 +131,15 @@ def load_settings(language: str=None,
 
     if language is not None and language in _ALLOWED_LANGUAGES:
         if language is _DEFAULT_LANGUAGE:
-            config_set(_LANGUAGE, b'')
+            config_set(LANGUAGE, b'')
         else:
-            config_set(_LANGUAGE, language.encode())
+            config_set(LANGUAGE, language.encode())
     if label is not None:
-        config_set(_LABEL, label.encode())
+        config_set(LABEL, label.encode())
     if pin is not None:
-        config_set(_PIN, pin.encode())
+        config_set(PIN, pin.encode())
     if passphrase_protection is not None:
-        config_set(_PASSPHRASE_PROTECTION,
+        config_set(PASSPHRASE_PROTECTION,
                    int_to_bytes(passphrase_protection))
 
 
