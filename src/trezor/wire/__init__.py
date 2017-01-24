@@ -148,8 +148,9 @@ def _handle_unexpected(session_id, msg_type, data_len):
     from trezor.messages.Failure import Failure
     from trezor.messages.FailureType import UnexpectedMessage
     failure = Failure(code=UnexpectedMessage, message='Unexpected message')
+    failure = Failure.dumps(failure)
     sessions.get_codec(session_id).encode(
-        session_id, failure.MESSAGE_WIRE_TYPE, failure.dumps(), _write_report)
+        session_id, Failure.MESSAGE_WIRE_TYPE, failure, _write_report)
 
 
 def _write_report(report):
