@@ -1,27 +1,58 @@
 from micropython import const
 from trezor import wire, ui
 from trezor.utils import unimport, chunks
+import ubinascii
+
+if __debug__:
+    internal_entropy = None
+    current_word = None
 
 
 @unimport
 async def layout_reset_device(session_id, msg):
+    from trezor.ui.text import Text
+    from trezor.crypto import hashlib, random, bip39
+    from trezor.messages.EntropyRequest import EntropyRequest
     from trezor.messages.Success import Success
-    from trezor.messages.FailureType import UnexpectedMessage
-    from ..common.request_pin import request_pin_twice
-    from ..common import storage
+    from trezor.messages import FailureType
+    from trezor.messages import ButtonRequestType
+    from trezor.messages.wire_types import EntropyAck
+
+    from apps.common.request_pin import request_pin_twice
+    from apps.common.confirm import require_confirm
+    from apps.common import storage
+
+    if __debug__:
+        global internal_entropy
+
+    if msg.strength not in (128, 192, 256):
+        raise wire.FailureError(
+            FailureType.Other, 'Invalid strength (has to be 128, 192 or 256 bits)')
 
     if storage.is_initialized():
-        raise wire.FailureError(UnexpectedMessage, 'Already initialized')
+        raise wire.FailureError(
+            FailureType.UnexpectedMessage, 'Already initialized')
 
-    mnemonic = await generate_mnemonic(
-        session_id, msg.strength, msg.display_random)
+    internal_entropy = random.bytes(32)
 
-    await show_mnemonic(mnemonic)
+    if msg.display_random:
+        entropy_lines = chunks(ubinascii.hexlify(internal_entropy), 16)
+        entropy_content = Text('Internal entropy', ui.ICON_RESET, *entropy_lines)
+        await require_confirm(session_id, entropy_content, ButtonRequestType.ResetDevice)
 
     if msg.pin_protection:
         pin = await request_pin_twice(session_id)
     else:
         pin = None
+
+    external_entropy_ack = await wire.call(session_id, EntropyRequest(), EntropyAck)
+    ctx = hashlib.sha256()
+    ctx.update(internal_entropy)
+    ctx.update(external_entropy_ack.entropy)
+    entropy = ctx.digest()
+    mnemonic = bip39.from_data(entropy[:msg.strength // 8])
+
+    await show_mnemonic_by_word(session_id, mnemonic)
 
     storage.load_mnemonic(mnemonic)
     storage.load_settings(pin=pin,
@@ -32,34 +63,31 @@ async def layout_reset_device(session_id, msg):
     return Success(message='Initialized')
 
 
-@unimport
-async def generate_mnemonic(session_id, strength, display_random):
-    from trezor.crypto import hashlib, random, bip39
-    from trezor.messages.EntropyRequest import EntropyRequest
-    from trezor.messages.FailureType import Other
-    from trezor.messages.wire_types import EntropyAck
+async def show_mnemonic_by_word(session_id, mnemonic):
+    from trezor.ui.text import Text
+    from trezor.messages.ButtonRequestType import ConfirmWord
+    from apps.common.confirm import confirm
 
-    if strength not in (128, 192, 256):
-        raise wire.FailureError(
-            Other, 'Invalid strength (has to be 128, 192 or 256 bits)')
+    words = mnemonic.split()
 
-    # if display_random:
-    #     raise wire.FailureError(Other, 'Entropy display not implemented')
+    if __debug__:
+        global current_word
 
-    ack = await wire.call(session_id, EntropyRequest(), EntropyAck)
+    for index, word in enumerate(words):
+        current_word = word
+        await confirm(session_id,
+                      Text('Write down seed', ui.ICON_RESET,
+                           '%d. %s' % (index, word)),
+                      ConfirmWord)
 
-    if len(ack.entropy) != 32:
-        raise wire.FailureError(Other, 'Invalid entropy (has to be 32 bytes)')
-
-    ctx = hashlib.sha256()
-    ctx.update(random.bytes(32))
-    ctx.update(ack.entropy)
-    entropy = ctx.digest()
-
-    return bip39.from_data(entropy[:strength // 8])
+    for index, word in enumerate(words):
+        current_word = word
+        await confirm(session_id,
+                      Text('Confirm seed', ui.ICON_RESET,
+                           '%d. %s' % (index, word)),
+                      ConfirmWord)
 
 
-@unimport
 async def show_mnemonic(mnemonic):
     from trezor.ui.scroll import paginate
 
