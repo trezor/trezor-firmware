@@ -38,9 +38,12 @@ async def respond_Pong(session_id, msg):
         from apps.common.request_pin import protect_by_pin
         await protect_by_pin(session_id)
 
+    if msg.passphrase_protection:
+        from apps.common.request_passphrase import protect_by_passphrase
+        await protect_by_passphrase(session_id)
+
     # TODO: handle other fields:
     # button_protection
-    # passphrase_protection
     return s
 
 
