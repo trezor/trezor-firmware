@@ -13,29 +13,22 @@ async def dispatch_DebugLinkDecision(session_id, msg):
 async def dispatch_DebugLinkGetState(session_id, msg):
     from trezor.messages.DebugLinkState import DebugLinkState
     from apps.common import storage, request_pin
+    from apps.management import reset_device
 
     if request_pin.matrix:
         matrix = ''.join([str(d) for d in request_pin.matrix.digits])
     else:
         matrix = None
 
-    # TODO: do this differently
-    locked = storage.is_locked()
-    try:
-        if locked:
-            storage.unlock(storage.get_pin())
-        m = DebugLinkState()
-        m.pin = storage.get_pin()
-        m.mnemonic = storage.get_mnemonic()
-        m.passphrase_protection = storage.is_protected_by_passphrase()
-        m.matrix = matrix
-    finally:
-        if locked:
-            storage.lock()
+    m = DebugLinkState()
+    m.pin = storage.config_get(storage.PIN).decode()
+    m.mnemonic = storage.config_get(storage.MNEMONIC).decode()
+    m.passphrase_protection = storage.is_protected_by_passphrase()
+    m.matrix = matrix
+    m.reset_entropy = reset_device.internal_entropy
+    m.reset_word = reset_device.current_word
 
     # TODO: handle other fields:
-    # f.reset_entropy = reset_get_internal_entropy()
-    # f.reset_word = reset_get_word()
     # f.recovery_fake_word = recovery_get_fake_word()
     # f.recovery_word_pos = recovery_get_word_pos()
     # f.node = storage.get_node()
