@@ -812,7 +812,7 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language, type=types.RecoveryDeviceType_Matrix):
+    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language, type=types.RecoveryDeviceType_ScrambledWords):
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
