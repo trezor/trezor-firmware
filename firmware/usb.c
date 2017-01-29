@@ -47,7 +47,10 @@
 #define USB_STRINGS \
 	X(MANUFACTURER, "SatoshiLabs") \
 	X(PRODUCT, "TREZOR") \
-	X(SERIAL_NUMBER, storage_uuid_str)
+	X(SERIAL_NUMBER, storage_uuid_str) \
+	X(INTERFACE_MAIN,  "TREZOR Interface") \
+	X(INTERFACE_DEBUG, "TREZOR Debug Link Interface") \
+	X(INTERFACE_U2F,   "U2F Interface")
 
 #define X(name, value) USB_STRING_##name,
 enum {
@@ -204,7 +207,7 @@ static const struct usb_interface_descriptor hid_iface[] = {{
 	.bInterfaceClass = USB_CLASS_HID,
 	.bInterfaceSubClass = 0,
 	.bInterfaceProtocol = 0,
-	.iInterface = 0,
+	.iInterface = USB_STRING_INTERFACE_MAIN,
 	.endpoint = hid_endpoints,
 	.extra = &hid_function,
 	.extralen = sizeof(hid_function),
@@ -235,7 +238,7 @@ static const struct usb_interface_descriptor hid_iface_u2f[] = {{
 	.bInterfaceClass = USB_CLASS_HID,
 	.bInterfaceSubClass = 0,
 	.bInterfaceProtocol = 0,
-	.iInterface = 0,
+	.iInterface = USB_STRING_INTERFACE_U2F,
 	.endpoint = hid_endpoints_u2f,
 	.extra = &hid_function_u2f,
 	.extralen = sizeof(hid_function_u2f),
@@ -267,7 +270,7 @@ static const struct usb_interface_descriptor hid_iface_debug[] = {{
 	.bInterfaceClass = USB_CLASS_HID,
 	.bInterfaceSubClass = 0,
 	.bInterfaceProtocol = 0,
-	.iInterface = 0,
+	.iInterface = USB_STRING_INTERFACE_DEBUG,
 	.endpoint = hid_endpoints_debug,
 	.extra = &hid_function,
 	.extralen = sizeof(hid_function),
