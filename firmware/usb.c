@@ -44,6 +44,24 @@
 #define ENDPOINT_ADDRESS_U2F_IN     (0x83)
 #define ENDPOINT_ADDRESS_U2F_OUT    (0x03)
 
+#define USB_STRINGS \
+	X(MANUFACTURER, "SatoshiLabs") \
+	X(PRODUCT, "TREZOR") \
+	X(SERIAL_NUMBER, storage_uuid_str)
+
+#define X(name, value) USB_STRING_##name,
+enum {
+	USB_STRING_LANGID_CODES, // LANGID code array
+	USB_STRINGS
+};
+#undef X
+
+#define X(name, value) value,
+static const char *usb_strings[] = {
+	USB_STRINGS
+};
+#undef X
+
 static const struct usb_device_descriptor dev_descr = {
 	.bLength = USB_DT_DEVICE_SIZE,
 	.bDescriptorType = USB_DT_DEVICE,
@@ -55,9 +73,9 @@ static const struct usb_device_descriptor dev_descr = {
 	.idVendor = 0x534c,
 	.idProduct = 0x0001,
 	.bcdDevice = 0x0100,
-	.iManufacturer = 1,
-	.iProduct = 2,
-	.iSerialNumber = 3,
+	.iManufacturer = USB_STRING_MANUFACTURER,
+	.iProduct = USB_STRING_PRODUCT,
+	.iSerialNumber = USB_STRING_SERIAL_NUMBER,
 	.bNumConfigurations = 1,
 };
 
@@ -285,12 +303,6 @@ static const struct usb_config_descriptor config = {
 	.interface = ifaces,
 };
 
-static const char *usb_strings[] = {
-	"SatoshiLabs",
-	"TREZOR",
-	(const char *)storage_uuid_str,
-};
-
 static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len, usbd_control_complete_callback *complete)
 {
 	(void)complete;
@@ -388,7 +400,7 @@ static uint8_t usbd_control_buffer[128];
 
 void usbInit(void)
 {
-	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
+	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, sizeof(usb_strings) / sizeof(*usb_strings), usbd_control_buffer, sizeof(usbd_control_buffer));
 	usbd_register_set_config_callback(usbd_dev, hid_set_config);
 }
 
