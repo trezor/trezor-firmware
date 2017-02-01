@@ -1,9 +1,15 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
+from __future__ import print_function
 import argparse
 import hashlib
 import struct
 import binascii
 import ecdsa
+
+try:
+    raw_input
+except:
+    raw_input = input
 
 SLOTS = 3
 
@@ -31,17 +37,17 @@ def prepare(data):
     # Takes raw OR signed firmware and clean out metadata structure
     # This produces 'clean' data for signing
 
-    meta = 'TRZR'  # magic
-    if data[:4] == 'TRZR':
+    meta = b'TRZR'  # magic
+    if data[:4] == b'TRZR':
         meta += data[4:4 + struct.calcsize('<I')]
     else:
         meta += struct.pack('<I', len(data))  # length of the code
-    meta += '\x00' * SLOTS  # signature index #1-#3
-    meta += '\x01'       # flags
-    meta += '\x00' * 52  # reserved
-    meta += '\x00' * 64 * SLOTS  # signature #1-#3
+    meta += b'\x00' * SLOTS  # signature index #1-#3
+    meta += b'\x01'       # flags
+    meta += b'\x00' * 52  # reserved
+    meta += b'\x00' * 64 * SLOTS  # signature #1-#3
 
-    if data[:4] == 'TRZR':
+    if data[:4] == b'TRZR':
         # Replace existing header
         out = meta + data[len(meta):]
     else:
@@ -54,19 +60,22 @@ def check_signatures(data):
     # Analyses given firmware and prints out
     # status of included signatures
 
-    indexes = [ ord(x) for x in data[INDEXES_START:INDEXES_START + SLOTS] ]
+    try:
+        indexes = [ ord(x) for x in data[INDEXES_START:INDEXES_START + SLOTS] ]
+    except:
+        indexes = [ x for x in data[INDEXES_START:INDEXES_START + SLOTS] ]
 
     to_sign = prepare(data)[256:] # without meta
     fingerprint = hashlib.sha256(to_sign).hexdigest()
 
-    print "Firmware fingerprint:", fingerprint
+    print("Firmware fingerprint:", fingerprint)
 
     used = []
     for x in range(SLOTS):
         signature = data[SIG_START + 64 * x:SIG_START + 64 * x + 64]
 
         if indexes[x] == 0:
-            print "Slot #%d" % (x + 1), 'is empty'
+            print("Slot #%d" % (x + 1), 'is empty')
         else:
             pk = pubkeys[indexes[x]]
             verify = ecdsa.VerifyingKey.from_string(binascii.unhexlify(pk)[1:],
@@ -76,13 +85,13 @@ def check_signatures(data):
                 verify.verify(signature, to_sign, hashfunc=hashlib.sha256)
 
                 if indexes[x] in used:
-                    print "Slot #%d signature: DUPLICATE" % (x + 1), binascii.hexlify(signature)
+                    print("Slot #%d signature: DUPLICATE" % (x + 1), binascii.hexlify(signature))
                 else:
                     used.append(indexes[x])
-                    print "Slot #%d signature: VALID" % (x + 1), binascii.hexlify(signature)
+                    print("Slot #%d signature: VALID" % (x + 1), binascii.hexlify(signature))
 
             except:
-                print "Slot #%d signature: INVALID" % (x + 1), binascii.hexlify(signature)
+                print("Slot #%d signature: INVALID" % (x + 1), binascii.hexlify(signature))
 
 
 def modify(data, slot, index, signature):
@@ -104,8 +113,8 @@ def sign(data, is_pem):
         raise Exception("Invalid slot")
 
     if is_pem:
-        print "Paste ECDSA private key in PEM format and press Enter:"
-        print "(blank private key removes the signature on given index)"
+        print("Paste ECDSA private key in PEM format and press Enter:")
+        print("(blank private key removes the signature on given index)")
         pem_key = ''
         while True:
             key = raw_input()
@@ -117,8 +126,8 @@ def sign(data, is_pem):
             return modify(data, slot, 0, '\x00' * 64)
         key = ecdsa.SigningKey.from_pem(pem_key)
     else:
-        print "Paste SECEXP (in hex) and press Enter:"
-        print "(blank private key removes the signature on given index)"
+        print("Paste SECEXP (in hex) and press Enter:")
+        print("(blank private key removes the signature on given index)")
         secexp = raw_input()
         if secexp.strip() == '':
             # Blank key,let's remove existing signature from slot
@@ -128,9 +137,9 @@ def sign(data, is_pem):
     to_sign = prepare(data)[256:] # without meta
 
     # Locate proper index of current signing key
-    pubkey = '04' + binascii.hexlify(key.get_verifying_key().to_string())
+    pubkey = b'04' + binascii.hexlify(key.get_verifying_key().to_string())
     index = None
-    for i, pk in pubkeys.iteritems():
+    for i, pk in pubkeys.items():
         if pk == pubkey:
             index = i
             break
@@ -148,15 +157,15 @@ def main(args):
             curve=ecdsa.curves.SECP256k1,
             hashfunc=hashlib.sha256)
 
-        print "PRIVATE KEY (SECEXP):"
-        print binascii.hexlify(key.to_string())
-        print
+        print("PRIVATE KEY (SECEXP):")
+        print(binascii.hexlify(key.to_string()))
+        print()
 
-        print "PRIVATE KEY (PEM):"
-        print key.to_pem()
+        print("PRIVATE KEY (PEM):")
+        print(key.to_pem())
 
-        print "PUBLIC KEY:"
-        print '04' + binascii.hexlify(key.get_verifying_key().to_string())
+        print("PUBLIC KEY:")
+        print('04' + binascii.hexlify(key.get_verifying_key().to_string()))
         return
 
     if not args.path:
@@ -165,14 +174,14 @@ def main(args):
     data = open(args.path, 'rb').read()
     assert len(data) % 4 == 0
 
-    if data[:4] != 'TRZR':
-        print "Metadata has been added..."
+    if data[:4] != b'TRZR':
+        print("Metadata has been added...")
         data = prepare(data)
 
-    if data[:4] != 'TRZR':
+    if data[:4] != b'TRZR':
         raise Exception("Firmware header expected")
 
-    print "Firmware size %d bytes" % len(data)
+    print("Firmware size %d bytes" % len(data))
 
     check_signatures(data)
 

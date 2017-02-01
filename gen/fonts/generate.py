@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
+from __future__ import print_function
 from PIL import Image
 
 class Img(object):
@@ -23,12 +24,12 @@ cur = ''
 
 for i in range(256):
     x = (i % 16) * 10
-    y = (i / 16) * 10
+    y = (i // 16) * 10
     cur = ''
     while img.pixel(x, y) != None:
         val = ''.join(img.pixel(x, y + j) for j in range(8))
         x += 1
         cur += '\\x%02x' % int(val, 2)
-    cur = '\\x%02x' % (len(cur) / 4) + cur
+    cur = '\\x%02x' % (len(cur) // 4) + cur
     ch = chr(i) if i >= 32 and i <= 126 else '_'
-    print '\t/* 0x%02x %c */ (uint8_t *)"%s",' % (i, ch , cur)
+    print('\t/* 0x%02x %c */ (uint8_t *)"%s",' % (i, ch , cur))
