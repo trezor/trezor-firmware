@@ -121,3 +121,20 @@ def rotate_coords(pos: tuple) -> tuple:
         return (240 - x, 240 - y)
     if r == 270:
         return (240 - y, x)
+
+
+class Widget:
+
+    def render(self):
+        pass
+
+    def touch(self, event, pos):
+        pass
+
+    def __iter__(self):
+        while True:
+            self.render()
+            event, *pos = yield loop.Select(loop.TOUCH)
+            result = self.touch(event, pos)
+            if result is not None:
+                return result
