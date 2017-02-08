@@ -1,5 +1,6 @@
 from micropython import const
 from trezor import loop
+from trezor.ui import Widget
 from .button import Button, BTN_CLICKED, BTN_STARTED
 from .button import CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
 from .button import CANCEL_BUTTON, CANCEL_BUTTON_ACTIVE
@@ -10,7 +11,7 @@ CONFIRMED = const(1)
 CANCELLED = const(2)
 
 
-class ConfirmDialog():
+class ConfirmDialog(Widget):
 
     def __init__(self, content=None, confirm='Confirm', cancel='Cancel'):
         self.content = content
@@ -22,26 +23,17 @@ class ConfirmDialog():
                              active_style=CANCEL_BUTTON_ACTIVE)
 
     def render(self):
-        if self.content is not None:
-            self.content.render()
         self.confirm.render()
         self.cancel.render()
 
-    def send(self, event, pos):
-        if self.confirm.send(event, pos) == BTN_CLICKED:
+    def touch(self, event, pos):
+        if self.confirm.touch(event, pos) == BTN_CLICKED:
             return CONFIRMED
-        if self.cancel.send(event, pos) == BTN_CLICKED:
+        if self.cancel.touch(event, pos) == BTN_CLICKED:
             return CANCELLED
-        if self.content is not None:
-            return self.content.send(event, pos)
 
     def __iter__(self):
-        while True:
-            self.render()
-            event, *pos = yield loop.Select(loop.TOUCH)
-            result = self.send(event, pos)
-            if result is not None:
-                return result
+        yield loop.Wait((super().__iter__(), self.content))
 
 
 class HoldToConfirmDialog():
