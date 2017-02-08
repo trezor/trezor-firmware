@@ -73,7 +73,7 @@ def process_image(ifn):
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage toi2png image.toi[fg]')
+        print('Usage: toi2png image.toi[fg]')
         return 1
 
     ifn = sys.argv[1]

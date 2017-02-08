@@ -80,6 +80,7 @@ SRC_LIB = $(addprefix lib/,\
 	)
 
 SRC_C = \
+	bootloader/basic.c \
 	bootloader/bootloader.c \
 	bootloader/crypto.c \
 	bootloader/ui.c \

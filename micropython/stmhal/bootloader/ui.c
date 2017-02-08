@@ -10,7 +10,7 @@
 
 void screen_welcome(void)
 {
-    display_image(0, 0, 240, 240, toi_trezor, sizeof(toi_trezor));
+    display_icon(0, 0, 240, 240, toi_trezor, sizeof(toi_trezor), ui_WHITE, ui_BLACK);
     display_text(0, 240, "bootloader", 10, FONT_MONO, ui_WHITE, ui_BLACK);
 }
 

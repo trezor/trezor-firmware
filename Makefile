@@ -13,7 +13,7 @@ vendor: ## update git submodules
 	git submodule update --init
 
 res: ## update resources
-	./tools/res_collect.py
+	./tools/res_collect
 
 build: build_stmhal build_unix build_cross ## build stmhal, unix and mpy-cross micropython ports
 
