@@ -1,6 +1,6 @@
 from micropython import const
 from trezor import ui, loop
-from . import display, in_area, rotate_coords
+from . import display, in_area, rotate_coords, Widget
 
 
 DEFAULT_BUTTON = {
@@ -14,6 +14,12 @@ DEFAULT_BUTTON_ACTIVE = {
     'fg-color': ui.BLACK,
     'text-style': ui.BOLD,
     'border-color': ui.GREY,
+}
+DEFAULT_BUTTON_DISABLED = {
+    'bg-color': ui.BLACK,
+    'fg-color': ui.GREY,
+    'text-style': ui.NORMAL,
+    'border-color': ui.BLACK,
 }
 
 CANCEL_BUTTON = {
@@ -60,23 +66,44 @@ BTN_CLICKED = const(1)
 BTN_STARTED = const(1)
 BTN_ACTIVE = const(2)
 BTN_DIRTY = const(4)
+BTN_DISABLED = const(8)
 
 
-class Button():
+class Button(Widget):
 
-    def __init__(self, area, content, normal_style=None, active_style=None, absolute=False):
+    def __init__(self, area, content,
+                 normal_style=None,
+                 active_style=None,
+                 disabled_style=None,
+                 absolute=False):
         self.area = area
         self.content = content
         self.normal_style = normal_style or DEFAULT_BUTTON
         self.active_style = active_style or DEFAULT_BUTTON_ACTIVE
+        self.disabled_style = disabled_style or DEFAULT_BUTTON_DISABLED
         self.absolute = absolute
         self.state = BTN_DIRTY
+
+    def enable(self):
+        self.state &= ~BTN_DISABLED
+        self.state |= BTN_DIRTY
+
+    def disable(self):
+        self.state |= BTN_DISABLED | BTN_DIRTY
+
+    def taint(self):
+        self.state |= BTN_DIRTY
 
     def render(self):
         if not self.state & BTN_DIRTY:
             return
         state = self.state & ~BTN_DIRTY
-        style = self.active_style if state & BTN_ACTIVE else self.normal_style
+        if state & BTN_DISABLED:
+            style = self.disabled_style
+        elif state & BTN_ACTIVE:
+            style = self.active_style
+        else:
+            style = self.normal_style
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
@@ -96,7 +123,9 @@ class Button():
 
         self.state = state
 
-    def send(self, event, pos):
+    def touch(self, event, pos):
+        if self.state & BTN_DISABLED:
+            return
         if not self.absolute:
             pos = rotate_coords(pos)
         if event == loop.TOUCH_START:
@@ -113,11 +142,3 @@ class Button():
             self.state = BTN_DIRTY
             if in_area(pos, self.area):
                 return BTN_CLICKED
-
-    def __iter__(self):
-        while True:
-            self.render()
-            event, *pos = yield loop.Select(loop.TOUCH)
-            result = self.send(event, pos)
-            if result is not None:
-                return result
