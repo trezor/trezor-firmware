@@ -20,6 +20,53 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_make_new(const mp_obj_type_t *type, size_
     return MP_OBJ_FROM_PTR(o);
 }
 
+/// def trezor.crypto.bip39.find_word(prefix: str) -> str:
+///     '''
+///     Return the first word from the wordlist starting with prefix
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_Bip39_find_word(mp_obj_t self, mp_obj_t prefix)
+{
+    mp_buffer_info_t pfx;
+    mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
+    if (pfx.len == 0) {
+        mp_raise_ValueError("Invalid word prefix");
+    }
+    for (const char * const *w = mnemonic_wordlist(); *w != 0; w++) {
+        if (strncmp(*w, pfx.buf, pfx.len) == 0) {
+            return mp_obj_new_str_of_type(&mp_type_str, (const byte *)*w, strlen(*w));
+        }
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_find_word_obj, mod_TrezorCrypto_Bip39_find_word);
+
+/// def trezor.crypto.bip39.complete_word(prefix: str) -> int:
+///     '''
+///     Return possible 1-letter suffixes for given word prefix
+///     Result is a bitmask, with 'a' on the lowest bit, 'b' on the second lowest, etc.
+///     '''
+STATIC mp_obj_t mod_TrezorCrypto_Bip39_complete_word(mp_obj_t self, mp_obj_t prefix)
+{
+    mp_buffer_info_t pfx;
+    mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
+    if (pfx.len == 0) {
+        mp_raise_ValueError("Invalid word prefix");
+    }
+    uint32_t res = 0;
+    uint8_t bit;
+    const char *word;
+    const char *const *wlist;
+    for (wlist = mnemonic_wordlist(); *wlist != 0; wlist++) {
+        word = *wlist;
+        if (strncmp(word, pfx.buf, pfx.len) == 0 && strlen(word) > pfx.len) {
+            bit = word[pfx.len] - 'a';
+            res |= 1 << bit;
+        }
+    }
+    return mp_obj_new_int(res);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_complete_word_obj, mod_TrezorCrypto_Bip39_complete_word);
+
 /// def trezor.crypto.bip39.generate(strength: int) -> str:
 ///     '''
 ///     Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits)
@@ -79,6 +126,8 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_seed(mp_obj_t self, mp_obj_t mnemonic, mp
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Bip39_seed_obj, mod_TrezorCrypto_Bip39_seed);
 
 STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Bip39_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_find_word), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_find_word_obj) },
+    { MP_ROM_QSTR(MP_QSTR_complete_word), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_complete_word_obj) },
     { MP_ROM_QSTR(MP_QSTR_generate), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_generate_obj) },
     { MP_ROM_QSTR(MP_QSTR_from_data), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_from_data_obj) },
     { MP_ROM_QSTR(MP_QSTR_check), MP_ROM_PTR(&mod_TrezorCrypto_Bip39_check_obj) },
