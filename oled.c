@@ -74,7 +74,7 @@
 #define OLED_BUFTGL(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] ^= (1 << (7 - (Y)%8))
 
 static uint8_t _oledbuffer[OLED_BUFSIZE];
-static bool is_debug_mode = 0;
+static bool is_debug_link = 0;
 
 /*
  * Send a block of data via the SPI bus.
@@ -161,7 +161,7 @@ void oledRefresh()
 	static uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
 
 	// draw triangle in upper right corner
-	if (is_debug_mode) {
+	if (is_debug_link) {
 		OLED_BUFTGL(OLED_WIDTH - 5, 0); OLED_BUFTGL(OLED_WIDTH - 4, 0); OLED_BUFTGL(OLED_WIDTH - 3, 0); OLED_BUFTGL(OLED_WIDTH - 2, 0); OLED_BUFTGL(OLED_WIDTH - 1, 0);
 		OLED_BUFTGL(OLED_WIDTH - 4, 1); OLED_BUFTGL(OLED_WIDTH - 3, 1); OLED_BUFTGL(OLED_WIDTH - 2, 1); OLED_BUFTGL(OLED_WIDTH - 1, 1); 
 		OLED_BUFTGL(OLED_WIDTH - 3, 2); OLED_BUFTGL(OLED_WIDTH - 2, 2); OLED_BUFTGL(OLED_WIDTH - 1, 2);
@@ -180,7 +180,7 @@ void oledRefresh()
 	gpio_clear(OLED_DC_PORT, OLED_DC_PIN);		// set to CMD
 
 	// return it back
-	if (is_debug_mode) {
+	if (is_debug_link) {
 		OLED_BUFTGL(OLED_WIDTH - 5, 0); OLED_BUFTGL(OLED_WIDTH - 4, 0); OLED_BUFTGL(OLED_WIDTH - 3, 0); OLED_BUFTGL(OLED_WIDTH - 2, 0); OLED_BUFTGL(OLED_WIDTH - 1, 0);
 		OLED_BUFTGL(OLED_WIDTH - 4, 1); OLED_BUFTGL(OLED_WIDTH - 3, 1); OLED_BUFTGL(OLED_WIDTH - 2, 1); OLED_BUFTGL(OLED_WIDTH - 1, 1); 
 		OLED_BUFTGL(OLED_WIDTH - 3, 2); OLED_BUFTGL(OLED_WIDTH - 2, 2); OLED_BUFTGL(OLED_WIDTH - 1, 2);
@@ -194,9 +194,9 @@ const uint8_t *oledGetBuffer()
 	return _oledbuffer;
 }
 
-void oledSetDebug(bool set)
+void oledSetDebugLink(bool set)
 {
-	is_debug_mode = set;
+	is_debug_link = set;
 	oledRefresh();
 }
 

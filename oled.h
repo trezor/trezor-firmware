@@ -34,7 +34,7 @@ void oledInit(void);
 void oledClear(void);
 void oledRefresh(void);
 
-void oledSetDebug(bool set);
+void oledSetDebugLink(bool set);
 void oledSetBuffer(uint8_t *buf);
 const uint8_t *oledGetBuffer(void);
 void oledDrawPixel(int x, int y);

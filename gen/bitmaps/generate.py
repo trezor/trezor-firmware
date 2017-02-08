@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
+from __future__ import print_function
 import glob
 import os
 from PIL import Image
@@ -10,14 +11,14 @@ imgs = []
 def encode_pixels(img):
 	r = ''
 	img = [ (x[0] + x[1] + x[2] > 384 and '1' or '0') for x in img]
-	for i in range(len(img) / 8):
+	for i in range(len(img) // 8):
 		c = ''.join(img[i * 8 : i * 8 + 8])
 		r += '0x%02x, ' % int(c, 2)
 	return r
 
 cnt = 0
 for fn in sorted(glob.glob('*.png')):
-	print 'Processing:', fn
+	print('Processing:', fn)
 	im = Image.open(fn)
 	name = os.path.splitext(fn)[0]
 	w, h = im.size

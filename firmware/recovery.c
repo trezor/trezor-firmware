@@ -214,7 +214,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 		format_number(desc, nr);
 		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter the", (nr < 10 ? desc + 1 : desc), "of your mnemonic", NULL, NULL, NULL);
 	} else {
-		oledBox(0, 18, 127, 63, false);
+		oledBox(0, 27, 127, 63, false);
 	}
 
 	for (row = 0; row < 3; row ++) {
@@ -224,6 +224,11 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 			int choice = word_matrix[nColumns*row + col];
 			const char *text = choice < num ? choices[choice] : "-";
 			oledDrawString(x - oledStringWidth(text)/2, y, text);
+			if (twoColumn) {
+				oledInvert(x - 32 + 1, y - 1, x - 32 + 63 - 1, y + 8);
+			} else {
+				oledInvert(x - 22 + 1, y - 1, x - 22 + 41 - 1, y + 8);
+			}
 		}
 	}
 	oledRefresh();
@@ -324,7 +329,7 @@ static void recovery_digit(const char digit) {
 		/* received final word */
 		int y = 54 - ((digit - '1')/3)*11;
 		int x = 64 * (((digit - '1') % 3) > 0);
-		oledInvert(x, y, x + 63, y + 9);
+		oledInvert(x + 1, y, x + 62, y + 9);
 		oledRefresh();
 		usbSleep(250);
 

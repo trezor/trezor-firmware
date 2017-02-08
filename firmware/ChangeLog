@@ -1,3 +1,9 @@
+Version 1.4.2
+* Stable release, optional update
+* New Matrix-based recovery method
+* Minor Ethereum fixes (including EIP-155 replay protection)
+* Minor USB, U2F and GPG fixes
+
 Version 1.4.1
 * Stable release, optional update
 * Support for Zcash JoinSplit transactions
@@ -36,7 +42,7 @@ Version 1.3.4
 * Updated maxfee per kb for coins
 
 Version 1.3.3
-* Stable release, optional update
+* Stable release, required update
 * Ask for PIN on GetAddress and GetPublicKey
 * Signing speed improved
 

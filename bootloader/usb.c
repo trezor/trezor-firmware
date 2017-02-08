@@ -335,7 +335,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			if (flash_len > FLASH_TOTAL_SIZE + FLASH_META_DESC_LEN - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware is too big
 				send_msg_failure(dev);
 				flash_state = STATE_END;
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware is too big.", NULL, "Get official firmware", "from mytrezor.com", NULL, NULL);
+				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware is too big.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
 				return;
 			}
 			sha256_Init(&ctx);

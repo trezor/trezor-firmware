@@ -50,7 +50,7 @@ void layoutFirmwareHash(uint8_t *hash)
 
 void show_halt(void)
 {
-	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "and see our support", "page at mytrezor.com");
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "contact our support.", NULL);
 	system_halt();
 }
 

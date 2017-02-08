@@ -99,11 +99,8 @@ int main(void)
 
 	timer_init();
 
-#if DEBUG_LOG
-	oledSetDebug(1);
-#endif
-
 #if DEBUG_LINK
+	oledSetDebugLink(1);
 	storage_reset(); // wipe storage if debug link
 	storage_reset_uuid();
 	storage_commit();
