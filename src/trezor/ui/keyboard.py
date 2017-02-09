@@ -27,6 +27,7 @@ def cell_area(i, n_x=3, n_y=3, start_x=0, start_y=40, end_x=240, end_y=240 - 48,
 
 def key_buttons():
     keys = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
+    # keys = [' ', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
     return [Button(cell_area(i), k,
                    normal_style=KEY_BUTTON,
                    active_style=KEY_BUTTON_ACTIVE) for i, k in enumerate(keys)]
@@ -35,7 +36,10 @@ def key_buttons():
 def compute_mask(text):
     mask = 0
     for c in text:
-        mask |= 1 << (ord(c) - ord('a'))
+        shift = ord(c) - 97  # ord('a') == 97
+        if shift < 0:
+            continue
+        mask |= 1 << shift
     return mask
 
 
@@ -90,7 +94,8 @@ class KeyboardMultiTap:
             self.content = self.content[:-1]
             self.pending_button = None
             self.pending_index = 0
-            self._update()
+            self._update_suggestion()
+            self._update_buttons()
             return
         for btn in self.key_buttons:
             if btn.touch(event, pos) == BTN_CLICKED:
@@ -99,21 +104,25 @@ class KeyboardMultiTap:
                         self.pending_index + 1) % len(btn.content)
                     self.content = self.content[:-1]
                     self.content += btn.content[self.pending_index]
+                    self._update_suggestion()
                 else:
                     self.content += btn.content[0]
+                    self._update_suggestion()
                     if self.pending_button:
-                        self._update()
+                        self._update_buttons()
                     self.pending_button = btn
                     self.pending_index = 0
                 return
 
-    def _update(self):
+    def _update_suggestion(self):
         if self.content:
             self.sugg_word = bip39.find_word(self.content)
             self.sugg_mask = bip39.complete_word(self.content)
         else:
             self.sugg_word = None
             self.sugg_mask = 0xffffffff
+
+    def _update_buttons(self):
         for btn in self.key_buttons:
             if compute_mask(btn.content) & self.sugg_mask:
                 btn.enable()
@@ -133,7 +142,8 @@ class KeyboardMultiTap:
             else:
                 self.pending_button = None
                 self.pending_index = 0
-                self._update()
+                self._update_suggestion()
+                self._update_buttons()
 
 
 def zoom_buttons(keys, upper=False):
