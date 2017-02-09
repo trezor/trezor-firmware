@@ -159,10 +159,11 @@ class Sleep(Syscall):
     '''
 
     def __init__(self, delay_us):
-        self.deadline = utime.ticks_add(utime.ticks_us(), delay_us)
+        self.delay_us = delay_us
 
     def handle(self, task):
-        schedule_task(task, self.deadline, self.deadline)
+        deadline = utime.ticks_add(utime.ticks_us(), self.delay_us)
+        schedule_task(task, deadline, deadline)
 
 
 class Select(Syscall):
@@ -248,12 +249,13 @@ class Wait(Syscall):
         self.children = children
         self.wait_for = wait_for
         self.exit_others = exit_others
-        self.scheduled = []
-        self.finished = []
+        self.scheduled = None
+        self.finished = None
         self.callback = None
 
     def handle(self, task):
         self.callback = task
+        self.finished = []
         self.scheduled = [self._wait(c) for c in self.children]
         for ct in self.scheduled:
             schedule_task(ct)
