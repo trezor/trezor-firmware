@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+import sys
+import struct
+import binascii
+import hashlib
+
+import ed25519
+
+# bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
+
+# converts 8-bit bitmap to tuple of values
+def bitmap_to_tuple(b):
+    return tuple([ i + 1 for i in range(8) if b & (1 << i) ])
+
+
+# converts tuple of values to 8-bit bitmap
+def tuple_to_bitmap(t):
+    b = 0
+    for i in t:
+        if i >= 1 and i <= 8:
+            b |= (1 << (i - 1))
+    return b
+
+
+def get_sig(data):
+    print('Enter privkey: ', end='')
+    seckey = binascii.unhexlify(input())
+    signkey = ed25519.SigningKey(seckey)
+    digest = hashlib.sha256(data).digest()
+    sigidx = (1, )
+    sig = signkey.sign(digest)
+    return sigidx, sig
+
+
+class BootloaderImage:
+
+    def __init__(self, data):
+        header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
+        self.magic, self.hdrlen, self.expiry, self.codelen, \
+            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
+            self.reserved, self.sigidx, self.sig = header
+        assert self.magic == b'TRZB'
+        assert self.hdrlen == 256
+        assert self.codelen == 64*1024
+        assert self.reserved == 171 * b'\x00'
+        self.sigidx = bitmap_to_tuple(self.sigidx)
+        self.code = data[256:]
+        assert len(self.code) == self.codelen
+
+    def print(self):
+        print('TREZOR Bootloader Image')
+        print('  * magic   :', self.magic.decode('ascii'))
+        print('  * hdrlen  :', self.hdrlen)
+        print('  * expiry  :', self.expiry)
+        print('  * codelen :', self.codelen)
+        print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
+        print('  * sigidx  :', self.sigidx)
+        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+
+    def header(self, sig=True):
+        header = struct.pack('<4sIIIBBBB171s', \
+            self.magic, self.hdrlen, self.expiry, self.codelen, \
+            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
+            self.reserved)
+        if sig:
+            sigidx = tuple_to_bitmap(self.sigidx)
+            header += struct.pack('<B64s', sigidx, self.sig)
+        else:
+            header += 65 * b'\x00'
+        return header
+
+    def sign(self):
+        header = self.header(sig=False)
+        data = header + self.code
+        self.sigidx, self.sig = get_sig(data)
+
+    def write(self, filename):
+        with open(filename, 'wb') as f:
+            f.write(self.header())
+            f.write(self.code)
+
+
+class VendorHeader:
+
+    def __init__(self, data):
+        pass
+
+    def print(self):
+        pass
+
+    def sign(self):
+        pass
+
+
+class FirmwareImage:
+
+    def __init__(self, data):
+        pass
+
+    def print(self):
+        pass
+
+    def sign(self):
+        pass
+
+
+def binopen(filename):
+    print()
+    print('Opening file', filename)
+    print()
+    data = open(filename, 'rb').read()
+    magic = data[:4]
+    if magic == b'TRZB':
+        return BootloaderImage(data)
+    if magic == b'TRZV':
+        return VendorHeader(data)
+    if magic == b'TRZF':
+        return FirmwareImage(data)
+    raise Exception('Unknown file format')
+
+
+def main():
+    if len(sys.argv) < 2:
+        print('Usage: firmwarectl file.bin [-s]')
+        return 1
+    fn = sys.argv[1]
+    sign = len(sys.argv) > 2 and sys.argv[2] == '-s'
+    b = binopen(fn)
+    b.print()
+    if sign:
+        print()
+        b.sign()
+        print()
+        b.print()
+        b.write(fn)
+
+
+if __name__ == '__main__':
+    main()
