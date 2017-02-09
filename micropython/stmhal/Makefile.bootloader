@@ -83,6 +83,7 @@ SRC_C = \
 	bootloader/basic.c \
 	bootloader/bootloader.c \
 	bootloader/crypto.c \
+	bootloader/header.c \
 	bootloader/ui.c \
 	system_stm32.c \
 	$(wildcard boards/$(BOARD)/*.c)

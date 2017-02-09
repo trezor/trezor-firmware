@@ -60,7 +60,7 @@ TREZOR Core firmware consists of 3 parts:
 
 ###Vendor Header
 
-Total length of vendor header is 82 + 32 * (number of pubkeys) + (length of vendor string) + (length of vendor image) bytes rounded up to the closest multiply of 256 bytes.
+Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vendor string) + (length of vendor image) bytes rounded up to the closest multiply of 256 bytes.
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
