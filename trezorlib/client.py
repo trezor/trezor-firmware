@@ -859,15 +859,15 @@ class ProtocolMixin(object):
     @field('message')
     @expect(proto.Success)
     def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language, skip_checksum=False):
-        m = Mnemonic('english')
-        if not skip_checksum and not m.check(mnemonic):
-            raise Exception("Invalid mnemonic checksum")
-
         # Convert mnemonic to UTF8 NKFD
         mnemonic = Mnemonic.normalize_string(mnemonic)
 
         # Convert mnemonic to ASCII stream
         mnemonic = normalize_nfc(mnemonic)
+
+        m = Mnemonic('english')
+        if not skip_checksum and not m.check(mnemonic):
+            raise Exception("Invalid mnemonic checksum")
 
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
