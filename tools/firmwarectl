@@ -3,10 +3,11 @@ import sys
 import struct
 import binascii
 import hashlib
-
 import ed25519
 
+
 # bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
+
 
 # converts 8-bit bitmap to tuple of values
 def bitmap_to_tuple(b):
@@ -83,25 +84,120 @@ class BootloaderImage:
 class VendorHeader:
 
     def __init__(self, data):
-        pass
+        header = struct.unpack('<4sIIBBBB', data[:16])
+        self.magic, self.hdrlen, self.expiry, \
+            self.vmajor, self.vminor, \
+            self.vsig_m, self.vsig_n = header
+        assert self.magic == b'TRZF'
+        assert self.vsig_m > 0 and self.vsig_m <= self.vsig_n
+        assert self.vsig_n > 0 and self.vsig_n <= 8
+        p = 16
+        self.vpub = []
+        for _ in range(self.vsig_n):
+            self.vpub.append(data[p:p + 32])
+            p += 32
+        self.vstr_len = data[p]
+        p += 1
+        self.vstr = data[p:p + self.vstr_len]
+        p += self.vstr_len
+        self.vimg_len, _ = struct.unpack('<H', data[p: p + 2])
+        p += 2
+        self.vimg = data[p:p + self.vimg_len]
+        p += self.vimg_len
+        self.sigidx = bitmap_to_tuple(data[p])
+        p += 1
+        self.sig = data[p:p+64]
+        assert len(data) == 4 + 4 + 4 + 1 + 1 + 1 + 1 + \
+                            32 * len(self.vpub) + \
+                            1 + self.vstr_len + \
+                            2 + self.vimg_len + \
+                            1 + 64
 
     def print(self):
-        pass
+        print('TREZOR Vendor Header')
+        print('  * magic   :', self.magic.decode('ascii'))
+        print('  * hdrlen  :', self.hdrlen)
+        print('  * expiry  :', self.expiry)
+        print('  * version : %d.%d' % (self.vmajor, self.vminor))
+        print('  * scheme  : %d out of %d' % (self.vsig_m, self.vsig_n))
+        for i in range(self.vsig_n):
+            print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode('ascii'))
+        print('  * vstr     :', self.vstr.decode('ascii'))
+        print('  * vimg     : (%d bytes)', len(self.vimg))
+        print('  * sigidx  :', self.sigidx)
+        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+
+    def header(self, sig=True):
+        header = struct.pack('<4sIIBBBB', \
+            self.magic, self.hdrlen, self.expiry, \
+            self.vmajor, self.vminor, \
+            self.vsig_m, self.vsig_n)
+        for i in range(self.vsig_n):
+            header += self.vpub[i]
+        header += struct.pack('<B', self.vstr_len) + self.vstr
+        header += struct.pack('<H', self.vimg_len) + self.vimg
+        if sig:
+            sigidx = tuple_to_bitmap(self.sigidx)
+            header += struct.pack('<B64s', sigidx, self.sig)
+        else:
+            header += 65 * b'\x00'
+        return header
 
     def sign(self):
-        pass
+        header = self.header(sig=False)
+        self.sigidx, self.sig = get_sig(header)
+
+    def write(self, filename):
+        with open(filename, 'wb') as f:
+            f.write(self.header())
 
 
 class FirmwareImage:
 
     def __init__(self, data):
-        pass
+        header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
+        self.magic, self.hdrlen, self.expiry, self.codelen, \
+            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
+            self.reserved, self.sigidx, self.sig = header
+        assert self.magic == b'TRZF'
+        assert self.hdrlen == 256
+        assert self.codelen % 4 == 0
+        assert self.reserved == 171 * b'\x00'
+        self.sigidx = bitmap_to_tuple(self.sigidx)
+        self.code = data[256:]
+        assert len(self.code) == self.codelen
 
     def print(self):
-        pass
+        print('TREZOR Firmware Image')
+        print('  * magic   :', self.magic.decode('ascii'))
+        print('  * hdrlen  :', self.hdrlen)
+        print('  * expiry  :', self.expiry)
+        print('  * codelen :', self.codelen)
+        print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
+        print('  * sigidx  :', self.sigidx)
+        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+
+    def header(self, sig=True):
+        header = struct.pack('<4sIIIBBBB171s', \
+            self.magic, self.hdrlen, self.expiry, self.codelen, \
+            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
+            self.reserved)
+        if sig:
+            sigidx = tuple_to_bitmap(self.sigidx)
+            header += struct.pack('<B64s', sigidx, self.sig)
+        else:
+            header += 65 * b'\x00'
+        return header
 
     def sign(self):
-        pass
+        header = self.header(sig=False)
+        data = header + self.code
+        self.sigidx, self.sig = get_sig(data)
+
+    def write(self, filename):
+        with open(filename, 'wb') as f:
+            f.write(self.header())
+            f.write(self.code)
 
 
 def binopen(filename):
