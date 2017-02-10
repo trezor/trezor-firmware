@@ -23,6 +23,7 @@ Install
 On Linux you might need to run these commands first:
 
 .. code::
+
   sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
   sudo pip install setuptools
 
