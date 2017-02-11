@@ -58,7 +58,7 @@ CFLAGS += -Iboards/$(BOARD)
 CFLAGS += -DSTM32_HAL_H='<stm32$(MCU_SERIES)xx_hal.h>'
 
 LDFLAGS = -nostdlib -L $(LD_DIR) -T $(LD_FILE) -Map=$(@:.elf=.map) --cref
-LIBS =
+LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 # Remove uncalled code from the final image.
 CFLAGS += -fdata-sections -ffunction-sections
@@ -72,9 +72,6 @@ else
 COPT += -Os -DNDEBUG
 endif
 
-# uncomment this if you want libgcc
-LIBS += $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-
 SRC_LIB = $(addprefix lib/,\
 	libc/string0.c \
 	)
@@ -83,7 +80,7 @@ SRC_C = \
 	bootloader/basic.c \
 	bootloader/bootloader.c \
 	bootloader/crypto.c \
-	bootloader/header.c \
+	bootloader/sdcard.c \
 	bootloader/ui.c \
 	system_stm32.c \
 	$(wildcard boards/$(BOARD)/*.c)

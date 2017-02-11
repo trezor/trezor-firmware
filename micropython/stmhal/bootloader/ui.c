@@ -1,10 +1,20 @@
 #include "ui.h"
 #include "display.h"
 
-#define ui_WHITE 0xFFFF
-#define ui_BLACK 0x0000
-
-void screen_welcome(void)
+void screen_stage1(void)
 {
-    display_text(0, 240, "bootloader", 10, FONT_MONO, ui_WHITE, ui_BLACK);
+    display_clear();
+    display_text(0, 240, "BL stage 1", -1, FONT_MONO, ui_WHITE, ui_BLACK);
+}
+
+void screen_stage2_jump(void)
+{
+    display_clear();
+    display_text(0, 240, "BL stage 2 jump", -1, FONT_MONO, ui_WHITE, ui_BLACK);
+}
+
+void screen_stage2_invalid(void)
+{
+    display_clear();
+    display_text(0, 240, "BL stage 2 invalid", -1, FONT_MONO, ui_WHITE, ui_BLACK);
 }
