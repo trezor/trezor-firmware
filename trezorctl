@@ -271,7 +271,7 @@ class Commands(object):
                     'matrix':    types.RecoveryDeviceType_Matrix }
         return self.client.recovery_device(args.words, args.passphrase_protection,
                                            args.pin_protection, args.label, 'english',
-                                           typemap[args.type])
+                                           typemap[args.type], args.expand)
 
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
@@ -282,7 +282,8 @@ class Commands(object):
             return self.client.load_device_by_mnemonic(mnemonic, args.pin,
                                                        args.passphrase_protection,
                                                        args.label, 'english',
-                                                       args.skip_checksum)
+                                                       args.skip_checksum,
+                                                       args.expand)
         else:
             return self.client.load_device_by_xprv(args.xprv, args.pin,
                                                    args.passphrase_protection,
@@ -456,6 +457,7 @@ class Commands(object):
 
     recovery_device.arguments = (
         (('-w', '--words'), {'type': int, 'choices': [12, 18, 24], 'default': 24}),
+        (('-e', '--expand'), {'action': 'store_true', 'default': False}),
         (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
@@ -464,6 +466,7 @@ class Commands(object):
 
     load_device.arguments = (
         (('-m', '--mnemonic'), {'type': str, 'nargs': '+'}),
+        (('-e', '--expand'), {'action': 'store_true', 'default': False}),
         (('-x', '--xprv'), {'type': str}),
         (('-p', '--pin'), {'type': str, 'default': ''}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
