@@ -126,6 +126,23 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
 
+/// def trezor.ui.display.btext(x: int, y: int, text: bytes, color: int) -> None:
+///     '''
+///     Renders text using 5x8 bitmap font at position (x,y) using color
+///     '''
+STATIC mp_obj_t mod_TrezorUi_Display_btext(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_buffer_info_t text;
+    mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
+    mp_int_t color = mp_obj_get_int(args[4]);
+    if (text.len > 0) {
+        display_btext(x, y, text.buf, text.len, color);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_btext_obj, 5, 5, mod_TrezorUi_Display_btext);
+
 /// def trezor.ui.display.text(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders left-aligned text at position (x,y) where x is left position and y is baseline.
@@ -376,6 +393,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_TrezorUi_Display_bar_radius_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
+    { MP_ROM_QSTR(MP_QSTR_btext), MP_ROM_PTR(&mod_TrezorUi_Display_btext_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_center), MP_ROM_PTR(&mod_TrezorUi_Display_text_center_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_right), MP_ROM_PTR(&mod_TrezorUi_Display_text_right_obj) },

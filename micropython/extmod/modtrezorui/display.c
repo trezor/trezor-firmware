@@ -6,6 +6,7 @@
  */
 
 #include "inflate.h"
+#include "font_bitmap.h"
 #include "font_robotomono_regular_20.h"
 #include "font_roboto_regular_20.h"
 #include "font_roboto_bold_20.h"
@@ -236,6 +237,33 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
             return Font_Roboto_Bold_20[c - ' '];
     }
     return 0;
+}
+
+// display text using bitmap font
+void display_btext(int x, int y, const char *text, int textlen, uint16_t color)
+{
+    // determine text length if not provided
+    if (textlen < 0) {
+        textlen = strlen(text);
+    }
+
+    for (int i = 0; i < textlen; i++) {
+        char c = text[i];
+        if (c < ' ' || c >= 0x80) c = ' ';
+        const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
+        display_set_window(x + i * 6, y, x + i * 6 + 4, y + 7);
+        for (int j = 0; j < 8; j++) {
+            for (int k = 0; k < 5; k++) {
+                if (g[k] & (1 << j)) {
+                    DATA(color >> 8);
+                    DATA(color & 0xFF);
+                } else {
+                    DATA(0x00);
+                    DATA(0x00);
+                }
+            }
+        }
+    }
 }
 
 // first two bytes are width and height of the glyph
