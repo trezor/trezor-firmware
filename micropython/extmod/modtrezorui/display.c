@@ -240,28 +240,60 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
 }
 
 // display text using bitmap font
-void display_btext(int x, int y, const char *text, int textlen, uint16_t color)
+void display_print(const char *text, int textlen)
 {
+    #define COLS (DISPLAY_RESX / 6)
+    #define ROWS (DISPLAY_RESY / 8)
+    static char textbuf[ROWS][COLS] = {0};
+    static uint8_t row = 0, col = 0;
+
     // determine text length if not provided
     if (textlen < 0) {
         textlen = strlen(text);
     }
 
     for (int i = 0; i < textlen; i++) {
-        char c = text[i];
-        if (c < ' ' || c >= 0x80) c = ' ';
-        const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
-        display_set_window(x + i * 6, y, x + i * 6 + 4, y + 7);
-        for (int j = 0; j < 8; j++) {
-            for (int k = 0; k < 5; k++) {
-                if (g[k] & (1 << j)) {
-                    DATA(color >> 8);
-                    DATA(color & 0xFF);
-                } else {
-                    DATA(0x00);
-                    DATA(0x00);
-                }
+        switch (text[i]) {
+             case '\r':
+                 break;
+             case '\n':
+                 row++;
+                 col = 0;
+                 break;
+             default:
+                 textbuf[row][col] = text[i];
+                 col++;
+                 break;
+        }
+        if (col >= COLS) {
+            col = 0;
+            row++;
+        }
+        if (row >= ROWS) {
+            for (int j = 0; j < ROWS - 1; j++) {
+                memcpy(textbuf[j], textbuf[j + 1], COLS);
             }
+            memset(textbuf[ROWS - 1], 0x00, COLS);
+            row = ROWS - 1;
+        }
+    }
+
+    display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+    for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
+        int x = (i % DISPLAY_RESX);
+        int y = (i / DISPLAY_RESX);
+        int j = y % 8; y /= 8;
+        int k = x % 6; x /= 6;
+        char c = textbuf[y][x] & 0x7F;
+        // char invert = textbuf[y][x] & 0x80;
+        if (c < ' ') c = ' ';
+        const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
+        if (k < 5 && (g[k] & (1 << j))) {
+            DATA(0xFF);
+            DATA(0xFF);
+        } else {
+            DATA(0x00);
+            DATA(0x00);
         }
     }
 }

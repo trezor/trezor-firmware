@@ -126,24 +126,21 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
 
-/// def trezor.ui.display.btext(x: int, y: int, text: bytes, color: int) -> None:
+/// def trezor.ui.display.print(text: str) -> None:
 ///     '''
-///     Renders text using 5x8 bitmap font at position (x,y) using color
+///     Renders text using 5x8 bitmap font (using special text mode)
 ///     '''
-STATIC mp_obj_t mod_TrezorUi_Display_btext(size_t n_args, const mp_obj_t *args) {
-    mp_int_t x = mp_obj_get_int(args[1]);
-    mp_int_t y = mp_obj_get_int(args[2]);
-    mp_buffer_info_t text;
-    mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
-    mp_int_t color = mp_obj_get_int(args[4]);
-    if (text.len > 0) {
-        display_btext(x, y, text.buf, text.len, color);
+STATIC mp_obj_t mod_TrezorUi_Display_print(mp_obj_t self, mp_obj_t text) {
+    mp_buffer_info_t buf;
+    mp_get_buffer_raise(text, &buf, MP_BUFFER_READ);
+    if (buf.len > 0) {
+        display_print(buf.buf, buf.len);
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_btext_obj, 5, 5, mod_TrezorUi_Display_btext);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_print_obj, mod_TrezorUi_Display_print);
 
-/// def trezor.ui.display.text(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
+/// def trezor.ui.display.text(x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders left-aligned text at position (x,y) where x is left position and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -163,7 +160,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_obj, 7, 7, mod_TrezorUi_Display_text);
 
-/// def trezor.ui.display.text_center(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
+/// def trezor.ui.display.text_center(x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders text centered at position (x,y) where x is text center and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -183,7 +180,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_center(size_t n_args, const mp_obj_t *
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_center_obj, 7, 7, mod_TrezorUi_Display_text_center);
 
-/// def trezor.ui.display.text_right(x: int, y: int, text: bytes, font: int, fgcolor: int, bgcolor: int) -> None:
+/// def trezor.ui.display.text_right(x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders right-aligned text at position (x,y) where x is right position and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -203,7 +200,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_text_right(size_t n_args, const mp_obj_t *a
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_text_right_obj, 7, 7, mod_TrezorUi_Display_text_right);
 
-/// def trezor.ui.display.text_width(text: bytes, font: int) -> int:
+/// def trezor.ui.display.text_width(text: str, font: int) -> int:
 ///     '''
 ///     Returns a width of text in pixels. Font font is used for rendering.
 ///     '''
@@ -393,7 +390,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_TrezorUi_Display_bar_radius_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUi_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUi_Display_icon_obj) },
-    { MP_ROM_QSTR(MP_QSTR_btext), MP_ROM_PTR(&mod_TrezorUi_Display_btext_obj) },
+    { MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&mod_TrezorUi_Display_print_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUi_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_center), MP_ROM_PTR(&mod_TrezorUi_Display_text_center_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_right), MP_ROM_PTR(&mod_TrezorUi_Display_text_right_obj) },
