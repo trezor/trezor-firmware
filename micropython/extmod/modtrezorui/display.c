@@ -244,7 +244,7 @@ void display_print(const char *text, int textlen)
 {
     #define COLS (DISPLAY_RESX / 6)
     #define ROWS (DISPLAY_RESY / 8)
-    static char textbuf[ROWS][COLS] = {0};
+    static char textbuf[ROWS][COLS];
     static uint8_t row = 0, col = 0;
 
     // determine text length if not provided
