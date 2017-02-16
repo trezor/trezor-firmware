@@ -98,6 +98,8 @@ int main(void) {
 
     check_sdcard();
 
+    check_signature();
+
     if (check_header((const uint8_t *)STAGE2_START)) {
         screen_stage2_jump();
         // TODO: jump to second stage

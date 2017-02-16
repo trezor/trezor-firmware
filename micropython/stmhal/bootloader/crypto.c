@@ -5,17 +5,17 @@
 
 #include "crypto.h"
 
-/*
+#define FLASH_BASE 0x08000000
+
 void hash_flash(uint8_t hash[SHA256_DIGEST_LENGTH])
 {
      sha256_Raw((const uint8_t *)FLASH_BASE, 1024*1024, hash);
 }
 
-bool ed25519_verify(const uint8_t *msg, uint32_t msglen, uint8_t *pubkey, uint8_t *signature)
+bool ed25519_verify(const uint8_t *msg, uint32_t msglen, const uint8_t *pubkey, const uint8_t *signature)
 {
     return (0 == ed25519_sign_open(msg, msglen, *(const ed25519_public_key *)pubkey, *(const ed25519_signature *)signature));
 }
-*/
 
 bool check_header(const uint8_t *data)
 {
@@ -49,4 +49,14 @@ bool check_header(const uint8_t *data)
     // TODO: check signature
 
     return true;
+}
+
+bool check_signature(void)
+{
+    uint8_t hash[SHA256_DIGEST_LENGTH];
+    hash_flash(hash);
+
+    const uint8_t *pub = (const uint8_t *)"0123456789ABCDEF0123456789ABCDEF";
+    const uint8_t *sig = (const uint8_t *)"0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
+    return ed25519_verify(hash, SHA256_DIGEST_LENGTH, pub, sig);
 }

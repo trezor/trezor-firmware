@@ -6,4 +6,6 @@
 
 bool check_header(const uint8_t *data);
 
+bool check_signature(void);
+
 #endif

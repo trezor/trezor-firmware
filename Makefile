@@ -17,10 +17,10 @@ res: ## update resources
 
 build: build_stmhal build_unix build_cross ## build stmhal, unix and mpy-cross micropython ports
 
-build_stmhal: vendor ## build stmhal port
+build_stmhal: vendor build_cross ## build stmhal port
 	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD)
 
-build_stmhal_debug: vendor ## build stmhal port with debug symbols
+build_stmhal_debug: vendor build_cross ## build stmhal port with debug symbols
 	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) DEBUG=1
 
 build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
