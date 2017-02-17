@@ -1,18 +1,17 @@
 #include STM32_HAL_H
+#include "display.h"
 
 // ### from main.c
 
 void __attribute__((noreturn)) __fatal_error(const char *msg) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {
     }
-    // TODO: printf("FATAL ERROR: %s\n", msg);
+    display_print("FATAL ERROR:\n", -1);
+    display_print(msg, -1);
+    display_print("\n", -1);
     for (;;) {
         __WFI();
     }
-}
-
-void nlr_jump_fail(void *val) {
-    __fatal_error("FATAL: uncaught exception");
 }
 
 // ### from stm32_it.c

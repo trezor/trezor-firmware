@@ -42,7 +42,7 @@ class BootloaderImage:
             self.reserved, self.sigidx, self.sig = header
         assert self.magic == b'TRZB'
         assert self.hdrlen == 256
-        assert self.codelen == 64*1024
+        assert self.codelen == 64*1024 - 256
         assert self.reserved == 171 * b'\x00'
         self.sigidx = bitmap_to_tuple(self.sigidx)
         self.code = data[256:]

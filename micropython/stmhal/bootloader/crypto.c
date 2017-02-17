@@ -33,7 +33,7 @@ bool check_header(const uint8_t *data)
 
     uint32_t codelen;
     memcpy(&codelen, data + 12, 4);
-    if (codelen != 64 * 1024) return false;
+    if (codelen != 64 * 1024 - 256) return false;
 
     uint32_t version;
     memcpy(&version, data + 16, 4);
@@ -45,8 +45,6 @@ bool check_header(const uint8_t *data)
 
     uint8_t sig[64];
     memcpy(sig, data + 0x00C0, 64);
-
-    // TODO: check signature
 
     return true;
 }
