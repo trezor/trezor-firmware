@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-bool check_header(const uint8_t *data);
+bool parse_header(const uint8_t *data, uint32_t *codelen);
 
 bool check_signature(void);
 

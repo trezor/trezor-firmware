@@ -42,10 +42,12 @@ class BootloaderImage:
             self.reserved, self.sigidx, self.sig = header
         assert self.magic == b'TRZB'
         assert self.hdrlen == 256
-        assert self.codelen == 64*1024 - 256
+        assert self.codelen + self.hdrlen >= 4 * 1024
+        assert self.codelen + self.hdrlen <= 64 * 1024 + 7 * 128 * 1024
+        assert (self.codelen + self.hdrlen) % 512 == 0
         assert self.reserved == 171 * b'\x00'
         self.sigidx = bitmap_to_tuple(self.sigidx)
-        self.code = data[256:]
+        self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
     def print(self):
@@ -68,11 +70,13 @@ class BootloaderImage:
             header += struct.pack('<B64s', sigidx, self.sig)
         else:
             header += 65 * b'\x00'
+        assert len(header) == self.hdrlen
         return header
 
     def sign(self):
         header = self.header(sig=False)
         data = header + self.code
+        assert len(data) == self.hdrlen + self.codelen
         self.sigidx, self.sig = get_sig(data)
 
     def write(self, filename):
@@ -141,6 +145,7 @@ class VendorHeader:
             header += struct.pack('<B64s', sigidx, self.sig)
         else:
             header += 65 * b'\x00'
+        assert len(header) == self.hdrlen
         return header
 
     def sign(self):
@@ -164,7 +169,7 @@ class FirmwareImage:
         assert self.codelen % 4 == 0
         assert self.reserved == 171 * b'\x00'
         self.sigidx = bitmap_to_tuple(self.sigidx)
-        self.code = data[256:]
+        self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
     def print(self):
@@ -187,11 +192,13 @@ class FirmwareImage:
             header += struct.pack('<B64s', sigidx, self.sig)
         else:
             header += 65 * b'\x00'
+        assert len(header) == self.hdrlen
         return header
 
     def sign(self):
         header = self.header(sig=False)
         data = header + self.code
+        assert len(data) == self.hdrlen + self.codelen
         self.sigidx, self.sig = get_sig(data)
 
     def write(self, filename):

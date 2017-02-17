@@ -17,7 +17,7 @@ bool ed25519_verify(const uint8_t *msg, uint32_t msglen, const uint8_t *pubkey, 
     return (0 == ed25519_sign_open(msg, msglen, *(const ed25519_public_key *)pubkey, *(const ed25519_signature *)signature));
 }
 
-bool check_header(const uint8_t *data)
+bool parse_header(const uint8_t *data, uint32_t *codelen)
 {
     uint32_t magic;
     memcpy(&magic, data, 4);
@@ -31,9 +31,11 @@ bool check_header(const uint8_t *data)
     memcpy(&expiry, data + 8, 4);
     if (expiry != 0) return false;
 
-    uint32_t codelen;
-    memcpy(&codelen, data + 12, 4);
-    if (codelen != 64 * 1024 - 256) return false;
+    memcpy(codelen, data + 12, 4);
+    // stage 2 (+header) must fit into sectors 4...11 - see docs/memory.md for more info
+    if (*codelen + hdrlen < 4 * 1024) return false;
+    if (*codelen + hdrlen > 64 * 1024 + 7 * 128 * 1024) return false;
+    if ((*codelen + hdrlen) % 512 != 0) return false;
 
     uint32_t version;
     memcpy(&version, data + 16, 4);
