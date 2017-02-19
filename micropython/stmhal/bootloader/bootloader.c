@@ -68,8 +68,7 @@ bool check_sdcard(void)
 
     sdcard_power_off();
 
-    uint32_t codelen;
-    if (parse_header(buf, &codelen)) {
+    if (parse_header(buf, NULL, NULL, NULL)) {
         BOOTLOADER_PRINTLN("SD card header is valid");
         return true;
     } else {
@@ -112,7 +111,7 @@ bool copy_sdcard(void)
     sdcard_read_blocks((uint8_t *)buf, 0, 1);
 
     uint32_t codelen;
-    if (!parse_header((uint8_t *)buf, &codelen)) {
+    if (!parse_header((uint8_t *)buf, &codelen, NULL, NULL)) {
         BOOTLOADER_PRINTLN("wrong header");
         return false;
     }
@@ -153,10 +152,9 @@ int main(void)
     }
 
     BOOTLOADER_PRINTLN("checking stage 2");
-    uint32_t codelen;
-    if (parse_header((const uint8_t *)STAGE2_START, &codelen)) {
+    if (parse_header((const uint8_t *)STAGE2_START, NULL, NULL, NULL)) {
         BOOTLOADER_PRINTLN("valid stage 2 header");
-        if (check_signature()) {
+        if (check_signature((const uint8_t *)STAGE2_START)) {
             BOOTLOADER_PRINTLN("valid stage 2 signature");
             BOOTLOADER_PRINTLN("JUMP!");
             // TODO: jump to second stage
