@@ -26,6 +26,9 @@ build_stmhal_debug: vendor build_cross ## build stmhal port with debug symbols
 build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
 	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) FROZEN_MPY_DIR=../../../src
 
+build_trezorhal_frozen: vendor res build_cross ## build trezorhal port with frozen modules (from /src)
+	$(MAKE) -C vendor/micropython/trezorhal FROZEN_MPY_DIR=../../../src
+
 build_bootloader: vendor ## build bootloader
 	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD) BUILD=build-$(BOARD)_bootloader
 
@@ -47,10 +50,13 @@ run: ## run unix port
 emu: ## run emulator
 	./emu.sh
 
-clean: clean_stmhal clean_bootloader clean_unix clean_cross ## clean all builds
+clean: clean_stmhal clean_trezorhal clean_bootloader clean_unix clean_cross ## clean all builds
 
 clean_stmhal: ## clean stmhal build
 	$(MAKE) -C vendor/micropython/stmhal clean BOARD=$(BOARD)
+
+clean_trezorhal: ## clean trezorhal build
+	$(MAKE) -C vendor/micropython/trezorhal clean
 
 clean_bootloader: ## clean stmhal build
 	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader clean BOARD=$(BOARD) BUILD=build-$(BOARD)_bootloader
