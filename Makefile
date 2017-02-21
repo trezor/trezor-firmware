@@ -74,14 +74,10 @@ testpy: ## run selected unit tests from python-trezor
 	cd tests ; ./run_tests_python_trezor.sh
 
 flash: ## flash firmware using st-flash
-	st-flash write $(STMHAL_BUILD_DIR)/firmware0.bin 0x8000000
-	sleep 0.1
-	st-flash write $(STMHAL_BUILD_DIR)/firmware1.bin 0x8020000
+	st-flash write $(STMHAL_BUILD_DIR)/firmware.bin 0x8000000
 
 flash_bl: vendor ## flash bootloader using st-flash
-	st-flash write $(STMHAL_BUILD_DIR)_bootloader/firmware0.bin 0x8000000
-	sleep 0.1
-	st-flash write $(STMHAL_BUILD_DIR)_bootloader/firmware1.bin 0x8020000
+	st-flash write $(STMHAL_BUILD_DIR)_bootloader/firmware.bin 0x8000000
 
 openocd_flash: $(STMHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
