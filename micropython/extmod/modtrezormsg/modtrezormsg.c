@@ -149,11 +149,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
         if (timeout <= 0) {
             break;
         }
-#if defined UNIX
         mp_hal_delay_us(TICK_RESOLUTION);
-#else
-        mp_hal_delay_us_fast(TICK_RESOLUTION);
-#endif
         timeout -= TICK_RESOLUTION;
     }
     return mp_const_none;
