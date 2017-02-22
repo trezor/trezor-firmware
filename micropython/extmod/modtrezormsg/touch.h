@@ -16,7 +16,7 @@ void touch_init(void)
     i2c_init(&I2CHandle1);
 }
 
-uint32_t touch_event(void)
+uint32_t touch_read(void)
 {
     static uint8_t data[16], old_data[16];
     if (HAL_OK != HAL_I2C_Master_Receive(&I2CHandle1, 56 << 1, data, 16, 1)) {

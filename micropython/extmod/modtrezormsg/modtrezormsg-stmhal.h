@@ -31,8 +31,7 @@ ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
     return len;
 }
 
-// this should match values used in trezorui_poll_sdl_event() in modtrezorui/display-unix.h
-uint32_t msg_poll_ui_event(void)
+uint32_t msg_poll_touch(void)
 {
-    return touch_event();
+    return touch_read();
 }

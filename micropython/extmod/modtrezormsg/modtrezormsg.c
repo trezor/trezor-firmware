@@ -119,7 +119,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
         timeout = 0;
     }
     for(;;) {
-        uint32_t e = msg_poll_ui_event();
+        uint32_t e = msg_poll_touch();
         if (e) {
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(4, NULL));
             tuple->items[0] = MP_OBJ_NEW_SMALL_INT(TOUCH_IFACE);

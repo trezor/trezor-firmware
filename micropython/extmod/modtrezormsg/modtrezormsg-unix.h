@@ -68,7 +68,9 @@ ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
     return r;
 }
 
-// from modtrezorui:
-uint32_t trezorui_poll_event(void);
+extern uint32_t trezorui_poll_event(void);
 
-#define msg_poll_ui_event trezorui_poll_event
+uint32_t msg_poll_touch(void)
+{
+    return trezorui_poll_event();
+}
