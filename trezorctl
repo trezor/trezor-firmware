@@ -237,6 +237,12 @@ class Commands(object):
         address_n = self.client.expand_path(args.n)
         return self.client.get_public_node(address_n, ecdsa_curve_name=args.curve, show_display=args.show_display)
 
+    def enable_passphrase(self, args):
+        return self.client.apply_settings(use_passphrase=True)
+
+    def disable_passphrase(self, args):
+        return self.client.apply_settings(use_passphrase=False)
+
     def set_label(self, args):
         return self.client.apply_settings(label=args.label)
 
@@ -381,6 +387,8 @@ class Commands(object):
     get_entropy.help = 'Get example entropy'
     get_features.help = 'Retrieve device features and settings'
     get_public_node.help = 'Get public node of given path'
+    enable_passphrase.help = 'Enable passphrase'
+    disable_passphrase.help = 'Disable passphrase'
     set_label.help = 'Set new wallet label'
     set_homescreen.help = 'Set new homescreen'
     clear_session.help = 'Clear session (remove cached PIN, passphrase, etc.)'
@@ -440,6 +448,10 @@ class Commands(object):
         (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
     )
+
+    enable_passphrase.arguments = ()
+
+    disable_passphrase.arguments = ()
 
     set_label.arguments = (
         (('-l', '--label',), {'type': str, 'default': ''}),
