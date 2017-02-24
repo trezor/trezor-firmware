@@ -2,9 +2,12 @@
 
 JOBS=4
 MAKE=make -j $(JOBS)
-BOARD=TREZORV2
 
-STMHAL_BUILD_DIR=vendor/micropython/stmhal/build-$(BOARD)
+TREZORHAL_BUILD_DIR=micropython/trezorhal/build
+
+TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=../../../src
+UNIX_PORT_OPTS=MICROPY_FORCE_32BIT=1 MICROPY_PY_BTREE=0 MICROPY_PY_TERMIOS=0 MICROPY_PY_FFI=0 MICROPY_PY_USSL=0 MICROPY_SSL_AXTLS=0
+CROSS_PORT_OPTS=MICROPY_FORCE_32BIT=1
 
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36mmake %-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -15,34 +18,22 @@ vendor: ## update git submodules
 res: ## update resources
 	./tools/res_collect
 
-build: build_stmhal build_unix build_cross ## build stmhal, unix and mpy-cross micropython ports
+build: build_trezorhal build_unix build_cross ## build trezorhal, unix and mpy-cross micropython ports
 
-build_stmhal: vendor build_cross ## build stmhal port
-	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD)
+build_trezorhal: vendor res build_cross ## build trezorhal port with frozen modules
+	$(MAKE) -C vendor/micropython/trezorhal $(TREZORHAL_PORT_OPTS)
 
-build_stmhal_debug: vendor build_cross ## build stmhal port with debug symbols
-	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) DEBUG=1
-
-build_stmhal_frozen: vendor res build_cross ## build stmhal port with frozen modules (from /src)
-	$(MAKE) -C vendor/micropython/stmhal BOARD=$(BOARD) FROZEN_MPY_DIR=../../../src
-
-build_trezorhal_frozen: vendor res build_cross ## build trezorhal port with frozen modules (from /src)
-	$(MAKE) -C vendor/micropython/trezorhal FROZEN_MPY_DIR=../../../src
-
-build_bootloader: vendor ## build bootloader
-	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader BOARD=$(BOARD) BUILD=build-$(BOARD)_bootloader
+build_trezorhal_debug: vendor res build_cross ## build trezorhal port with frozen modules and debug symbols
+	$(MAKE) -C vendor/micropython/trezorhal $(TREZORHAL_PORT_OPTS) DEBUG=1
 
 build_unix: vendor ## build unix port
-	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1
+	$(MAKE) -C vendor/micropython/unix $(UNIX_PORT_OPTS)
 
 build_unix_debug: vendor ## build unix port with debug symbols
-	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1 DEBUG=1
-
-build_unix_frozen: vendor res build_cross ## build unix port with frozen modules (from /src)
-	$(MAKE) -C vendor/micropython/unix MICROPY_FORCE_32BIT=1 FROZEN_MPY_DIR=../../../src
+	$(MAKE) -C vendor/micropython/unix $(UNIX_PORT_OPTS) DEBUG=1
 
 build_cross: vendor ## build mpy-cross port
-	$(MAKE) -C vendor/micropython/mpy-cross MICROPY_FORCE_32BIT=1
+	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
 
 run: ## run unix port
 	cd src ; ../vendor/micropython/unix/micropython
@@ -50,50 +41,26 @@ run: ## run unix port
 emu: ## run emulator
 	./emu.sh
 
-clean: clean_stmhal clean_trezorhal clean_bootloader clean_unix clean_cross ## clean all builds
-
-clean_stmhal: ## clean stmhal build
-	$(MAKE) -C vendor/micropython/stmhal clean BOARD=$(BOARD)
+clean: clean_trezorhal clean_unix clean_cross ## clean all builds
 
 clean_trezorhal: ## clean trezorhal build
-	$(MAKE) -C vendor/micropython/trezorhal clean
-
-clean_bootloader: ## clean stmhal build
-	$(MAKE) -C vendor/micropython/stmhal -f Makefile.bootloader clean BOARD=$(BOARD) BUILD=build-$(BOARD)_bootloader
+	$(MAKE) -C vendor/micropython/trezorhal clean $(TREZORHAL_PORT_OPTS)
 
 clean_unix: ## clean unix build
-	$(MAKE) -C vendor/micropython/unix clean
+	$(MAKE) -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
 
 clean_cross: ## clean mpy-cross build
-	$(MAKE) -C vendor/micropython/mpy-cross clean
-
-test: ## run unit tests
-	cd tests ; ./run_tests.sh
-
-testpy: ## run selected unit tests from python-trezor
-	cd tests ; ./run_tests_python_trezor.sh
+	$(MAKE) -C vendor/micropython/mpy-cross clean $(CROSS_PORT_OPTS)
 
 flash: ## flash firmware using st-flash
-	st-flash write $(STMHAL_BUILD_DIR)/firmware.bin 0x8000000
+	st-flash write $(TREZORHAL_BUILD_DIR)/firmware.bin 0x8000000
 
-flash_bl: vendor ## flash bootloader using st-flash
-	st-flash write $(STMHAL_BUILD_DIR)_bootloader/firmware.bin 0x8000000
-
-openocd_flash: $(STMHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
+flash_openocd: $(TREZORHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
 		-c "init" \
 		-c "reset init" \
 		-c "stm32f4x mass_erase 0" \
-		-c "flash write_image $(STMHAL_BUILD_DIR)/firmware.hex" \
-		-c "reset" \
-		-c "shutdown"
-
-openocd_flash_bl: $(STMHAL_BUILD_DIR)_bootloader/firmware.hex ## flash bootloader using openocd
-	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
-		-c "init" \
-		-c "reset init" \
-		-c "stm32f4x mass_erase 0" \
-		-c "flash write_image $(STMHAL_BUILD_DIR)_bootloader/firmware.hex" \
+		-c "flash write_image $(TREZORHAL_BUILD_DIR)/firmware.hex" \
 		-c "reset" \
 		-c "shutdown"
 
@@ -101,15 +68,10 @@ openocd: ## start openocd which connects to the device
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
 
 gdb: ## start remote gdb session which connects to the openocd
-	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'
+	arm-none-eabi-gdb $(TREZORHAL_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'
 
-gdb_bl: ## start remote gdb session which connects to the openocd
-	arm-none-eabi-gdb $(STMHAL_BUILD_DIR)_bootloader/firmware.elf -ex 'target remote localhost:3333'
+test: ## run unit tests
+	cd tests ; ./run_tests.sh
 
-load: ## load contents of src into mass storage of trezor
-	rm -rf /run/media/${USER}/PYBFLASH/*
-	cp -a src/apps /run/media/${USER}/PYBFLASH/
-	cp -a src/lib /run/media/${USER}/PYBFLASH/
-	cp -a src/trezor /run/media/${USER}/PYBFLASH/
-	cp -a src/*.py /run/media/${USER}/PYBFLASH/
-	sync
+testpy: ## run selected unit tests from python-trezor
+	cd tests ; ./run_tests_python_trezor.sh

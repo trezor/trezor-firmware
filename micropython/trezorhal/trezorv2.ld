@@ -7,8 +7,6 @@
 MEMORY
 {
     FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 0x100000 /* entire flash, 1 MiB */
-    FLASH_ISR (rx)  : ORIGIN = 0x08000000, LENGTH = 0x004000 /* sector 0, 16 KiB */
-    FLASH_TEXT (rx) : ORIGIN = 0x08020000, LENGTH = 0x0E0000 /* sectors 5,6,7,8,9,10,11 7*128KiB = 896 KiB */
     CCMRAM (xrw)    : ORIGIN = 0x10000000, LENGTH = 0x010000 /* 64 KiB */
     RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 0x020000 /* 128 KiB */
 }
@@ -28,42 +26,16 @@ ENTRY(Reset_Handler)
 SECTIONS
 {
     /* The startup code goes first into FLASH */
-    .isr_vector :
+    .flash :
     {
         . = ALIGN(4);
         KEEP(*(.isr_vector)) /* Startup code */
-
-        /* This first flash block is 16K annd the isr vectors only take up
-           about 400 bytes. So we pull in a couple of object files to pad it
-           out. */
-
-        . = ALIGN(4);
-
-        /* NOTE: If you update the list of files contained in .isr_vector,
-                 then be sure to also update smhal/Makefile where it forcibly
-           builds each of these files with -Os */
-
-        */ff.o(.text*)
-        */vfs_fat_*.o(.text*)
-        */py/formatfloat.o(.text*)
-        */py/parsenum.o(.text*)
-        */py/mpprint.o(.text*)
-
-        . = ALIGN(4);
-    } >FLASH_ISR
-
-    /* The program code and other data goes into FLASH */
-    .text :
-    {
         . = ALIGN(4);
         *(.text*)          /* .text* sections (code) */
         *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
-    /*  *(.glue_7)   */    /* glue arm to thumb code */
-    /*  *(.glue_7t)  */    /* glue thumb to arm code */
-
         . = ALIGN(4);
         _etext = .;        /* define a global symbol at end of code */
-    } >FLASH_TEXT
+    } >FLASH
 
     /* used by the startup to initialize data */
     _sidata = LOADADDR(.data);
@@ -80,7 +52,7 @@ SECTIONS
 
         . = ALIGN(4);
         _edata = .;        /* define a global symbol at data end; used by startup code in order to initialise the .data section in RAM */
-    } >RAM AT> FLASH_TEXT
+    } >RAM AT> FLASH
 
     /* Uninitialized data section */
     .bss :

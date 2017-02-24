@@ -12,12 +12,6 @@ install:
 script:
   - make build_cross
 
-  - make build_bootloader
-  - make clean_stmhal
-
-  - make build_stmhal
-  - make clean_stmhal
-
   - make build_stmhal_frozen
 
   - make build_unix_frozen TREZORUI_NOUI=1

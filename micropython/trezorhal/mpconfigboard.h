@@ -23,9 +23,14 @@
 #define MICROPY_HW_CLK_LAST_FREQ (1)
 
 // I2C busses
-#define MICROPY_HW_I2C1_NAME "X"
+#define MICROPY_HW_I2C1_NAME "I2C"
 #define MICROPY_HW_I2C1_SCL (pin_B6)
 #define MICROPY_HW_I2C1_SDA (pin_B7)
+
+// UART config
+#define MICROPY_HW_UART1_NAME   "UART"
+#define MICROPY_HW_UART1_TX     (pin_A2)
+#define MICROPY_HW_UART1_RX     (pin_A3)
 
 // The board has 2 LEDs
 #define MICROPY_HW_LED1             (pin_C6)
@@ -39,3 +44,6 @@
 #define MICROPY_HW_SDCARD_DETECT_PIN        (pin_C13)
 #define MICROPY_HW_SDCARD_DETECT_PULL       (GPIO_PULLUP)
 #define MICROPY_HW_SDCARD_DETECT_PRESENT    (GPIO_PIN_RESET)
+
+// USB config
+#define MICROPY_HW_USB_VBUS_DETECT_PIN (pin_A9)
