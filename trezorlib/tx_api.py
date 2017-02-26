@@ -41,7 +41,7 @@ class TxApi(object):
             except:
                 pass
         try:
-            r = requests.get('%s/%s/%s' % (self.url, resource, resourceid), headers={'User-agent': 'Mozilla/5.0'})
+            r = requests.get('%s%s/%s' % (self.url, resource, resourceid), headers={'User-agent': 'Mozilla/5.0'})
             j = r.json()
         except:
             raise Exception('URL error: %s' % url)
@@ -140,7 +140,40 @@ class TxApiSmartbit(TxApi):
         return t
 
 
+class TxApiBlockCypher(TxApi):
+
+    def get_tx(self, txhash):
+
+        data = self.fetch_json(self.url, 'txs', txhash)
+
+        t = proto_types.TransactionType()
+        t.version = data['ver']
+        t.lock_time = data['lock_time']
+
+        for vin in data['inputs']:
+            i = t.inputs.add()
+            if 'prev_hash' not in vin:
+                i.prev_hash = b"\0"*32
+                i.prev_index = 0xffffffff # signed int -1
+                i.script_sig = binascii.unhexlify(vin['script'])
+                i.sequence = vin['sequence']
+            else:
+                i.prev_hash = binascii.unhexlify(vin['prev_hash'])
+                i.prev_index = vin['output_index']
+                i.script_sig = binascii.unhexlify(vin['script'])
+                i.sequence = vin['sequence']
+
+        for vout in data['outputs']:
+            o = t.bin_outputs.add()
+            o.amount = int(str(vout['value']), 10)
+            o.script_pubkey = binascii.unhexlify(vout['script'])
+
+        return t
+
+
 TxApiBitcoin = TxApiInsight(network='insight_bitcoin', url='https://insight.bitpay.com/api/')
 TxApiTestnet = TxApiInsight(network='insight_testnet', url='https://test-insight.bitpay.com/api/')
+TxApiLitecoin = TxApiBlockCypher(network='blockcypher_litecoin', url='https://api.blockcypher.com/v1/ltc/main/')
 TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
 TxApiZcashTestnet = TxApiInsight(network='insight_zcashtestnet', url='https://explorer.testnet.z.cash/api/', zcash=True)
+
