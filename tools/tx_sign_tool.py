@@ -23,46 +23,54 @@ from trezorlib.transport_hid import HidTransport
 from trezorlib.tx_api import *
 from trezorlib import types_pb2 as types
 
-def main():
-    print('Welcome to the user-unfriendly transaction signing tool')
-    print('USE AT YOUR OWN RISK')
 
+def get_client():
+    devices = HidTransport.enumerate()   # List all connected TREZORs on USB
+    if len(devices) == 0:                # Check whether we found any
+        return None
+    transport = HidTransport(devices[0]) # Use first connected device
+    return TrezorClient(transport)       # Creates object for communicating with TREZOR
+
+
+def get_txapi():
     coin = raw_input('Which coin {Bitcoin, Testnet, Litecoin}? ').strip()
-
     if coin not in {'Bitcoin', 'Testnet', 'Litecoin'}:
-        print('not supported')
-        exit(1)
-
-    # List all connected TREZORs on USB
-    devices = HidTransport.enumerate()
-
-    # Check whether we found any
-    if len(devices) == 0:
-        print('No TREZOR found')
-        return
-
-    # Use first connected device
-    transport = HidTransport(devices[0])
-
-    # Creates object for manipulating TREZOR
-    client = TrezorClient(transport)
-
+        return None, None
     txapi_lookup = {
         'Bitcoin': TxApiBitcoin,
         'Testnet': TxApiTestnet,
         'Litecoin': TxApiLitecoin
     }
+    return coin, txapi_lookup[coin]
 
-    client.set_tx_api(txapi_lookup[coin])
+
+def main():
+    client = get_client()
+    if not client:
+        print('No TREZOR connected')
+        return
+
+    print()
+    print('Welcome to the user-unfriendly transaction signing tool')
+    print('USE AT YOUR OWN RISK!!!')
+    print()
+
+    coin, txapi = get_txapi()
+    if not txapi:
+        print('Coin not supported')
+        return
+
+    client.set_tx_api(txapi)
 
     inputs = []
 
     while True:
-        prev_in_hash = raw_input('Previous input hash (enter nothing to move on): ').strip()
+        print()
+        prev_in_hash = raw_input('Previous input hash (empty to move on): ').strip()
         if prev_in_hash == '':
             break
-        prev_in_vout = raw_input('    Previous input index: ').strip()
-        addrn = raw_input("    Node to sign with (e.g.- " + coin + "/0'/0/0): ").strip()
+        prev_in_vout = raw_input('Previous input index: ').strip()
+        addrn = raw_input("Node path to sign with (e.g.- %s/0'/0/0): " % coin).strip()
         inputs.append(types.TxInputType(
             prev_hash = binascii.unhexlify(prev_in_hash),
             prev_index = int(prev_in_vout, 10),
@@ -72,10 +80,11 @@ def main():
     outputs = []
 
     while True:
-        out_addr = raw_input('Pay to address (enter nothing to move on): ').strip()
+        print()
+        out_addr = raw_input('Pay to address (empty to move on): ').strip()
         if out_addr == '':
             break
-        out_amount = raw_input('    Amount (in satoshis): ').strip()
+        out_amount = raw_input('Amount (in satoshis): ').strip()
         outputs.append(types.TxOutputType(
             amount = int(out_amount, 10),
             script_type = types.PAYTOADDRESS,
@@ -84,6 +93,9 @@ def main():
 
     (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs)
 
+    client.close()
+
+    print()
     print('Signed Transaction:', binascii.hexlify(serialized_tx))
 
     # note: these api's are useful for checking and sending the output of this tool:
@@ -91,7 +103,6 @@ def main():
     # https://tbtc.blockr.io/tx/push -or- https://live.blockcypher.com/btc-testnet/pushtx/
     # https://ltc.blockr.io/tx/push -or - https://live.blockcypher.com/ltc/pushtx/
 
-    client.close()
 
 if __name__ == '__main__':
     main()
