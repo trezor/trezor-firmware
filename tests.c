@@ -42,6 +42,7 @@
 #include "rand.h"
 #include "sha2.h"
 #include "sha3.h"
+#include "blake2b.h"
 #include "blake2s.h"
 #include "curves.h"
 #include "secp256k1.h"
@@ -1865,6 +1866,28 @@ START_TEST(test_sha3_512)
 }
 END_TEST
 
+// test vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2b-kat.txt
+START_TEST(test_blake2b)
+{
+	uint8_t key[BLAKE2B_KEYBYTES];
+	memcpy(key, fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"), BLAKE2B_KEYBYTES);
+
+	uint8_t digest[BLAKE2B_OUTBYTES];
+
+	blake2b_Key((uint8_t *)"", 0, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
+	ck_assert_mem_eq(digest, fromhex("10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e996e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568"), BLAKE2B_OUTBYTES);
+
+	blake2b_Key(fromhex("000102"), 3, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
+	ck_assert_mem_eq(digest, fromhex("33d0825dddf7ada99b0e7e307104ad07ca9cfd9692214f1561356315e784f3e5a17e364ae9dbb14cb2036df932b77f4b292761365fb328de7afdc6d8998f5fc1"), BLAKE2B_OUTBYTES);
+
+	blake2b_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"), 56, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
+	ck_assert_mem_eq(digest, fromhex("f8f3726ac5a26cc80132493a6fedcb0e60760c09cfc84cad178175986819665e76842d7b9fedf76dddebf5d3f56faaad4477587af21606d396ae570d8e719af2"), BLAKE2B_OUTBYTES);
+
+	blake2b_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"), 112, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
+	ck_assert_mem_eq(digest, fromhex("227e3aed8d2cb10b918fcb04f9de3e6d0a57e08476d93759cd7b2ed54a1cbf0239c528fb04bbf288253e601d3bc38b21794afef90b17094a182cac557745e75f"), BLAKE2B_OUTBYTES);
+}
+END_TEST
+
 // test vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
 START_TEST(test_blake2s)
 {
@@ -2969,7 +2992,8 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_sha3_512);
 	suite_add_tcase(s, tc);
 
-	tc = tcase_create("blake2s");
+	tc = tcase_create("blake2");
+	tcase_add_test(tc, test_blake2b);
 	tcase_add_test(tc, test_blake2s);
 	suite_add_tcase(s, tc);
 

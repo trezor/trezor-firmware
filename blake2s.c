@@ -17,6 +17,7 @@
 
 #include "macros.h"
 #include "blake2s.h"
+#include "blake2_common.h"
 
 typedef struct blake2s_param__
 {
@@ -53,28 +54,6 @@ static const uint8_t blake2s_sigma[10][16] =
   {  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 } ,
   { 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13 , 0 } ,
 };
-
-static inline uint32_t load32( const void *src )
-{
-    uint32_t w;
-    memcpy(&w, src, sizeof w);
-    return w;
-}
-
-static inline void store16( void *dst, uint16_t w )
-{
-    memcpy(dst, &w, sizeof w);
-}
-
-static inline void store32( void *dst, uint32_t w )
-{
-    memcpy(dst, &w, sizeof w);
-}
-
-static inline uint32_t rotr32( const uint32_t w, const unsigned c )
-{
-    return ( w >> c ) | ( w << ( 32 - c ) );
-}
 
 static void blake2s_set_lastnode( blake2s_state *S )
 {
@@ -130,7 +109,6 @@ int blake2s_Init( blake2s_state *S, size_t outlen )
 {
   blake2s_param P[1];
 
-  /* Move interval verification here? */
   if ( ( !outlen ) || ( outlen > BLAKE2S_OUTBYTES ) ) return -1;
 
   P->digest_length = (uint8_t)outlen;
