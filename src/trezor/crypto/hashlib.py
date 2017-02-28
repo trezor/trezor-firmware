@@ -1,3 +1,4 @@
+from TrezorCrypto import Blake2b as blake2b
 from TrezorCrypto import Blake2s as blake2s
 from TrezorCrypto import Ripemd160 as ripemd160
 from TrezorCrypto import Sha1 as sha1

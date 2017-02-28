@@ -4,7 +4,7 @@ from trezor.crypto import hashlib
 
 class TestCryptoBlake2s(unittest.TestCase):
 
-    # vectors from http://www.di-mgt.com.au/sha_testvectors.html
+    # vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
 
     vectors = [
         ('', '48a8997da407876b3d79c0d92325ad3b89cbb754d86ab71aee047ad345fd2c49'),
