@@ -56,11 +56,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_bytes_obj, mod_TrezorCr
 STATIC mp_obj_t mod_TrezorCrypto_Random_shuffle(mp_obj_t self, mp_obj_t data) {
     mp_uint_t item_cnt;
     mp_obj_t *items;
-    if (MP_OBJ_IS_TYPE(data, &mp_type_list)) {
-        mp_obj_list_get(data, &item_cnt, &items);
-    } else {
-        mp_raise_TypeError("List expected");
-    }
+    mp_obj_get_array(data, &item_cnt, &items);
     if (item_cnt > 256) {
         mp_raise_ValueError("Maximum list size is 256 items");
     }

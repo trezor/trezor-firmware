@@ -60,14 +60,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_SSSS_split_obj, 4, 4
 STATIC mp_obj_t mod_TrezorCrypto_SSSS_combine(mp_obj_t self, mp_obj_t shares) {
     mp_uint_t n;
     mp_obj_t *share;
-    if (MP_OBJ_IS_TYPE(shares, &mp_type_tuple)) {
-        mp_obj_tuple_get(shares, &n, &share);
-    } else
-    if (MP_OBJ_IS_TYPE(shares, &mp_type_list)) {
-        mp_obj_list_get(shares, &n, &share);
-    } else {
-        mp_raise_TypeError("List or tuple expected");
-    }
+    mp_obj_get_array(shares, &n, &share);
     if (n < 1 || n > 15) {
         mp_raise_ValueError("Invalid number of shares");
     }

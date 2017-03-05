@@ -47,14 +47,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 STATIC mp_obj_t mod_TrezorMsg_Msg_set_interfaces(mp_obj_t self, mp_obj_t ifaces) {
     mp_uint_t iface_cnt;
     mp_obj_t *usage_pages;
-    if (MP_OBJ_IS_TYPE(ifaces, &mp_type_tuple)) {
-        mp_obj_tuple_get(ifaces, &iface_cnt, &usage_pages);
-    } else
-    if (MP_OBJ_IS_TYPE(ifaces, &mp_type_list)) {
-        mp_obj_list_get(ifaces, &iface_cnt, &usage_pages);
-    } else {
-        mp_raise_TypeError("List or tuple expected");
-    }
+    mp_obj_get_array(ifaces, &iface_cnt, &usage_pages);
     if (iface_cnt > MAX_INTERFACES) {
         mp_raise_ValueError("Maximum number of interfaces exceeded");
     }
