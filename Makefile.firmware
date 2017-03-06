@@ -63,6 +63,7 @@ OBJ_MOD += \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bignum.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip32.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip39.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2b.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna/curve25519.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curves.o \

@@ -12,10 +12,7 @@ install:
 script:
   - make build_cross
 
-  - make build_stmhal_frozen
-
-  - make build_unix_frozen TREZORUI_NOUI=1
-  - make clean_unix
+  - make build_trezorhal
 
   - make build_unix TREZORUI_NOUI=1
 

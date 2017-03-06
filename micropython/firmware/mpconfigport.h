@@ -185,16 +185,6 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 #define free(p) m_free(p)
 #define realloc(p, n) m_realloc(p, n)
 
-// Timing functions
-
-#include "stmhal/systick.h"
-
-#define mp_hal_delay_ms HAL_Delay
-#define mp_hal_delay_us(us) sys_tick_udelay(us)
-#define mp_hal_delay_us_fast(us) sys_tick_udelay(us)
-#define mp_hal_ticks_ms HAL_GetTick
-#define mp_hal_ticks_us() sys_tick_get_microseconds()
-
 extern bool mp_hal_ticks_cpu_enabled;
 
 void mp_hal_ticks_cpu_enable(void);
