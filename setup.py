@@ -7,7 +7,7 @@ import sys
 if '--disable-hidapi' in sys.argv:
     sys.argv.remove('--disable-hidapi')
 else:
-    install_requires.append('hidapi>=0.7.99')
+    install_requires.append('hidapi>=0.7.99.post20')
 
 setup(
     name='trezor',
