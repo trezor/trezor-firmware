@@ -8,6 +8,11 @@ class Config:
     def __init__(self, filename):
         self._data = {}
         self._file = filename
+        self._load()
+
+    def _load(self):
+        if not self._file:
+            return
         try:
             with open(self._file, 'rb') as f:
                 while True:
@@ -21,6 +26,8 @@ class Config:
             pass
 
     def _save(self):
+        if not self._file:
+            return
         with open(self._file, 'wb') as f:
             for k, v in self._data.items():
                 f.write(ustruct.pack('<HH', k, len(v)))

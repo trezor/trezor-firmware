@@ -1,10 +1,11 @@
-extern I2C_HandleTypeDef I2CHandle1;
 extern void i2c_init(I2C_HandleTypeDef *i2c);
 extern HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 
+static I2C_HandleTypeDef touch_i2c_handle;
+
 void touch_init(void)
 {
-    I2C_InitTypeDef *init = &(I2CHandle1.Init);
+    I2C_InitTypeDef *init = &(touch_i2c_handle.Init);
     init->OwnAddress1 = 0xFE; // master
     init->ClockSpeed = 400000;
     init->DutyCycle = I2C_DUTYCYCLE_16_9;
@@ -13,13 +14,13 @@ void touch_init(void)
     init->GeneralCallMode = I2C_GENERALCALL_DISABLED;
     init->NoStretchMode   = I2C_NOSTRETCH_DISABLED;
     init->OwnAddress2     = 0;
-    i2c_init(&I2CHandle1);
+    i2c_init(&touch_i2c_handle);
 }
 
 uint32_t touch_read(void)
 {
     static uint8_t data[16], old_data[16];
-    if (HAL_OK != HAL_I2C_Master_Receive(&I2CHandle1, 56 << 1, data, 16, 1)) {
+    if (HAL_OK != HAL_I2C_Master_Receive(&touch_i2c_handle, 56 << 1, data, 16, 1)) {
         return 0; // read failure
     }
     if (0 == memcmp(data, old_data, 16)) {

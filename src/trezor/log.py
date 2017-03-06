@@ -1,5 +1,4 @@
 from micropython import const
-import uio
 import sys
 import utime
 
@@ -27,7 +26,7 @@ def _log(name, mlevel, msg, *args):
             fmt = '%d \x1b[35m%s\x1b[0m %s \x1b[' + _leveldict[mlevel][1] + 'm' + msg + '\x1b[0m'
         else:
             fmt = '%d %s %s ' + msg
-        print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args), file=sys.stderr)
+        print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args))
 
 def debug(name, msg, *args):
     _log(name, DEBUG, msg, *args)
@@ -42,9 +41,8 @@ def error(name, msg, *args):
     _log(name, ERROR, msg, *args)
 
 def exception(name, exc):
-    out = uio.StringIO()
-    sys.print_exception(exc, out)
-    _log(name, ERROR, out.getvalue())
+    _log(name, ERROR, 'exception:')
+    sys.print_exception(exc)
 
 def critical(name, msg, *args):
     _log(name, CRITICAL, msg, *args)

@@ -1,7 +1,37 @@
+/*
+ * This file is part of the MicroPython project, http://micropython.org/
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2015 Damien P. George
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <limits.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <alloca.h>
+
+#include "mpconfigboard.h"
+
+#define MICROPY_DEBUG_PRINTERS (1)
 
 // Memory allocation policies
 #define MICROPY_ALLOC_PATH_MAX      (128)
@@ -12,13 +42,12 @@
 #define MICROPY_EMIT_INLINE_THUMB   (0)
 
 // Compiler configuration
-#define MICROPY_ENABLE_COMPILER     (1)
 #define MICROPY_COMP_MODULE_CONST   (1)
-#define MICROPY_COMP_DOUBLE_TUPLE_ASSIGN (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
 
 // Optimisations
 #define MICROPY_OPT_COMPUTED_GOTO   (1)
+#define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (0)
 #define MICROPY_OPT_MPZ_BITWISE     (1)
 
 // Python internal features
@@ -37,12 +66,10 @@
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_STREAMS_NON_BLOCK   (1)
 #define MICROPY_MODULE_WEAK_LINKS   (1)
-#define MICROPY_MODULE_FROZEN_MPY   (1)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (1)
 #define MICROPY_USE_INTERNAL_ERRNO  (1)
 #define MICROPY_VFS                 (0)
 #define MICROPY_VFS_FAT             (0)
-#define MICROPY_QSTR_EXTRA_POOL     mp_qstr_frozen_const_pool
 
 // Control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
@@ -91,16 +118,6 @@
 
 #include STM32_HAL_H
 
-static inline void enable_irq(uint32_t state) {
-    __set_PRIMASK(state);
-}
-
-static inline uint32_t disable_irq(void) {
-    uint32_t st = __get_PRIMASK();
-    __disable_irq();
-    return st;
-}
-
 #define BYTES_PER_WORD (4)
 #define MP_HAL_UNIQUE_ID_ADDRESS (0x1fff7a10)
 #define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p) | 1))
@@ -117,6 +134,21 @@ typedef unsigned mp_uint_t; // must be pointer size
 typedef long mp_off_t;
 
 #define MP_SSIZE_MAX INT_MAX
+
+static inline void enable_irq(mp_uint_t state) {
+    __set_PRIMASK(state);
+}
+
+static inline mp_uint_t disable_irq(void) {
+    mp_uint_t state = __get_PRIMASK();
+    __disable_irq();
+    return state;
+}
+
+#define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
+#define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
+#define MICROPY_EVENT_POLL_HOOK            __WFI();
+
 #define MICROPY_MIN_USE_CORTEX_CPU  (1)
 #define MICROPY_MIN_USE_STM32_MCU   (1)
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
@@ -124,7 +156,8 @@ typedef long mp_off_t;
 #define MICROPY_PY_SYS_PLATFORM "trezor"
 
 #define MP_STATE_PORT MP_STATE_VM
-#define MICROPY_PORT_ROOT_POINTERS const char *readline_hist[8];
+#define MICROPY_PORT_ROOT_POINTERS
+#define USE_DEVICE_MODE
 
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_TrezorConfig;
@@ -147,6 +180,10 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 // Extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj },
+
+#define malloc(n) m_malloc(n)
+#define free(p) m_free(p)
+#define realloc(p, n) m_realloc(p, n)
 
 // Timing functions
 

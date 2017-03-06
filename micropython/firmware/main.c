@@ -152,7 +152,7 @@ void usb_init(void) {
 
 // I2C
 
-I2C_HandleTypeDef *I2CHandle1;
+I2C_HandleTypeDef *i2c_handle = 0;
 
 void i2c_init(I2C_HandleTypeDef *i2c) {
 
@@ -177,7 +177,7 @@ void i2c_init(I2C_HandleTypeDef *i2c) {
     }
 
     // Enable IRQs
-    I2CHandle1 = i2c;
+    i2c_handle = i2c;
     HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
     HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
@@ -232,6 +232,10 @@ int mp_hal_stdin_rx_chr(void) {
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
     USBD_CDC_TxAlways((const uint8_t*)str, len);
+}
+
+int mp_reader_new_file(mp_reader_t *reader, const char *filename) {
+    return 2; // assume error was "file not found"
 }
 
 // Time

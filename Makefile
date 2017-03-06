@@ -3,9 +3,9 @@
 JOBS=4
 MAKE=make -j $(JOBS)
 
-TREZORHAL_BUILD_DIR=micropython/trezorhal/build
+TREZORHAL_BUILD_DIR=micropython/firmware/build
 
-TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=../../../src
+TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=src
 UNIX_PORT_OPTS=MICROPY_FORCE_32BIT=1 MICROPY_PY_BTREE=0 MICROPY_PY_TERMIOS=0 MICROPY_PY_FFI=0 MICROPY_PY_USSL=0 MICROPY_SSL_AXTLS=0
 CROSS_PORT_OPTS=MICROPY_FORCE_32BIT=1
 
@@ -13,7 +13,7 @@ help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36mmake %-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 vendor: ## update git submodules
-	git submodule update --init
+	# git submodule update --init
 
 res: ## update resources
 	./tools/res_collect
@@ -21,10 +21,10 @@ res: ## update resources
 build: build_trezorhal build_unix build_cross ## build trezorhal, unix and mpy-cross micropython ports
 
 build_trezorhal: vendor res build_cross ## build trezorhal port with frozen modules
-	$(MAKE) -C vendor/micropython/trezorhal $(TREZORHAL_PORT_OPTS)
+	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
 
 build_trezorhal_debug: vendor res build_cross ## build trezorhal port with frozen modules and debug symbols
-	$(MAKE) -C vendor/micropython/trezorhal $(TREZORHAL_PORT_OPTS) DEBUG=1
+	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS) DEBUG=1
 
 build_unix: vendor ## build unix port
 	$(MAKE) -C vendor/micropython/unix $(UNIX_PORT_OPTS)
@@ -44,7 +44,7 @@ emu: ## run emulator
 clean: clean_trezorhal clean_unix clean_cross ## clean all builds
 
 clean_trezorhal: ## clean trezorhal build
-	$(MAKE) -C vendor/micropython/trezorhal clean $(TREZORHAL_PORT_OPTS)
+	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
 
 clean_unix: ## clean unix build
 	$(MAKE) -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)

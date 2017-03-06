@@ -24,8 +24,6 @@
  * THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
 #include STM32_HAL_H
 
 #include "py/nlr.h"

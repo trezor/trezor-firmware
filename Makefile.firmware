@@ -1,0 +1,456 @@
+# directory containing scripts to be frozen as bytecode
+FROZEN_MPY_DIR ?= src
+
+# target directory
+BUILD ?= micropython/firmware/build
+
+# include py core make definitions
+include vendor/micropython/py/mkenv.mk
+
+MAKE_FROZEN = vendor/micropython/tools/make-frozen.py
+MPY_CROSS = vendor/micropython/mpy-cross/mpy-cross
+MPY_TOOL = vendor/micropython/tools/mpy-tool.py
+
+# sources
+# =====================================
+
+SRCDIR_MP = vendor/micropython
+SRCDIR_FW = micropython
+
+BUILD_MP = $(BUILD)/$(SRCDIR_MP)
+BUILD_FW = $(BUILD)/$(SRCDIR_FW)
+BUILD_HDR = $(BUILD)/genhdr
+
+MICROPY_PY_TREZORCONFIG = 1
+MICROPY_PY_TREZORCRYPTO = 1
+MICROPY_PY_TREZORDEBUG = 1
+MICROPY_PY_TREZORMSG = 1
+MICROPY_PY_TREZORUI = 1
+MICROPY_PY_TREZORUTILS = 1
+MICROPY_PY_UTIME = 1
+
+# OBJ micropython/extmod/modtrezorconfig
+ifeq ($(MICROPY_PY_TREZORCONFIG),1)
+OBJ_MOD += \
+	$(BUILD_FW)/extmod/modtrezorconfig/modtrezorconfig.o \
+	$(BUILD_FW)/extmod/modtrezorconfig/norcow.o
+endif
+
+# OBJ micropython/extmod/modtrezorcrypto
+ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
+CFLAGS_MOD += \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
+	-DED25519_CUSTOMRANDOM=1 \
+	-DED25519_CUSTOMHASH=1 \
+	-DED25519_NO_INLINE_ASM \
+	-DED25519_FORCE_32BIT=1 \
+	-DAES_128 \
+	-DAES_192 \
+	-DUSE_KECCAK=1 \
+	-Wno-sequence-point
+OBJ_MOD += \
+	$(BUILD_FW)/extmod/modtrezorcrypto/modtrezorcrypto.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/rand.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/ssss.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/address.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aescrypt.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aeskey.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aes_modes.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aestab.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/base58.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bignum.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip32.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip39.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna/curve25519.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curves.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ecdsa.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/hmac.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/nist256p1.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/pbkdf2.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ripemd160.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/secp256k1.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha3.o
+endif
+
+# OBJ micropython/extmod/modtrezordebug
+ifeq ($(MICROPY_PY_TREZORDEBUG),1)
+OBJ_MOD += $(BUILD_FW)/extmod/modtrezordebug/modtrezordebug.o
+endif
+
+# OBJ micropython/extmod/modtrezormsg
+ifeq ($(MICROPY_PY_TREZORMSG),1)
+OBJ_MOD += $(BUILD_FW)/extmod/modtrezormsg/modtrezormsg.o
+endif
+
+# OBJ micropython/extmod/modtrezorui
+ifeq ($(MICROPY_PY_TREZORUI),1)
+CFLAGS_MOD += -DQR_MAX_VERSION=0
+OBJ_MOD += \
+	$(BUILD_FW)/extmod/modtrezorui/display.o \
+	$(BUILD_FW)/extmod/modtrezorui/inflate.o \
+	$(BUILD_FW)/extmod/modtrezorui/font_bitmap.o \
+	$(BUILD_FW)/extmod/modtrezorui/font_roboto_bold_20.o \
+	$(BUILD_FW)/extmod/modtrezorui/font_roboto_regular_20.o \
+	$(BUILD_FW)/extmod/modtrezorui/font_robotomono_regular_20.o \
+	$(BUILD_FW)/extmod/modtrezorui/modtrezorui.o \
+	$(BUILD_FW)/extmod/modtrezorui/trezor-qrenc/qr_encode.o
+endif
+
+# OBJ micropython/extmod/modtrezorutils
+ifeq ($(MICROPY_PY_TREZORUTILS),1)
+OBJ_MOD += $(BUILD_FW)/extmod/modtrezorutils/modtrezorutils.o
+endif
+
+# OBJ micropython/extmod/modutime
+ifeq ($(MICROPY_PY_UTIME),1)
+OBJ_MOD += $(BUILD_FW)/extmod/modutime/modutime.o
+SRC_QSTR += $(SRCDIR_FW)/extmod/modutime/modutime.c
+endif
+
+# OBJ vendor/micropython
+OBJ_MP += $(addprefix $(BUILD_MP)/,\
+	\
+    extmod/modubinascii.o \
+    extmod/moductypes.o \
+    extmod/moduheapq.o \
+    extmod/modutimeq.o \
+    extmod/moduzlib.o \
+    extmod/utime_mphal.o \
+	\
+    lib/embed/abort_.o \
+    lib/libc/string0.o \
+    lib/libc/string0.o \
+    lib/libm/acoshf.o \
+    lib/libm/asinfacosf.o \
+    lib/libm/asinhf.o \
+    lib/libm/atan2f.o \
+    lib/libm/atanf.o \
+    lib/libm/atanhf.o \
+    lib/libm/ef_rem_pio2.o \
+    lib/libm/erf_lgamma.o \
+    lib/libm/fmodf.o \
+    lib/libm/kf_cos.o \
+    lib/libm/kf_rem_pio2.o \
+    lib/libm/kf_sin.o \
+    lib/libm/kf_tan.o \
+    lib/libm/log1pf.o \
+    lib/libm/math.o \
+    lib/libm/roundf.o \
+    lib/libm/sf_cos.o \
+    lib/libm/sf_erf.o \
+    lib/libm/sf_frexp.o \
+    lib/libm/sf_ldexp.o \
+    lib/libm/sf_modf.o \
+    lib/libm/sf_sin.o \
+    lib/libm/sf_tan.o \
+    lib/libm/thumb_vfp_sqrtf.o \
+    lib/libm/wf_lgamma.o \
+    lib/libm/wf_tgamma.o \
+	lib/utils/interrupt_char.o \
+    lib/utils/printf.o \
+    lib/utils/pyexec.o \
+    lib/utils/stdout_helpers.o \
+	\
+    py/argcheck.o \
+    py/asmarm.o \
+    py/asmbase.o \
+    py/asmthumb.o \
+    py/asmx64.o \
+    py/asmx86.o \
+    py/asmxtensa.o \
+    py/bc.o \
+    py/binary.o \
+    py/builtinevex.o \
+    py/builtinhelp.o \
+    py/builtinimport.o \
+    py/compile.o \
+    py/emitbc.o \
+    py/emitcommon.o \
+    py/emitglue.o \
+    py/emitinlinethumb.o \
+    py/emitinlinextensa.o \
+    py/formatfloat.o \
+    py/frozenmod.o \
+    py/gc.o \
+    py/lexer.o \
+    py/malloc.o \
+    py/map.o \
+    py/modarray.o \
+    py/modbuiltins.o \
+    py/modcmath.o \
+    py/modcollections.o \
+    py/modgc.o \
+    py/modio.o \
+    py/modmath.o \
+    py/modmicropython.o \
+    py/modstruct.o \
+    py/modsys.o \
+    py/modthread.o \
+    py/moduerrno.o \
+    py/mpprint.o \
+    py/mpstate.o \
+    py/mpz.o \
+    py/nativeglue.o \
+    py/nlrsetjmp.o \
+    py/nlrthumb.o \
+    py/nlrx64.o \
+    py/nlrx86.o \
+    py/nlrxtensa.o \
+    py/obj.o \
+    py/objarray.o \
+    py/objattrtuple.o \
+    py/objbool.o \
+    py/objboundmeth.o \
+    py/objcell.o \
+    py/objclosure.o \
+    py/objcomplex.o \
+    py/objdict.o \
+    py/objenumerate.o \
+    py/objexcept.o \
+    py/objfilter.o \
+    py/objfloat.o \
+    py/objfun.o \
+    py/objgenerator.o \
+    py/objgetitemiter.o \
+    py/objint_longlong.o \
+    py/objint_mpz.o \
+    py/objint.o \
+    py/objlist.o \
+    py/objmap.o \
+    py/objmodule.o \
+    py/objnamedtuple.o \
+    py/objnone.o \
+    py/objobject.o \
+    py/objpolyiter.o \
+    py/objproperty.o \
+    py/objrange.o \
+    py/objreversed.o \
+    py/objset.o \
+    py/objsingleton.o \
+    py/objslice.o \
+    py/objstr.o \
+    py/objstringio.o \
+    py/objstrunicode.o \
+    py/objtuple.o \
+    py/objtype.o \
+    py/objzip.o \
+    py/opmethods.o \
+    py/parse.o \
+    py/parsenum.o \
+    py/parsenumbase.o \
+    py/persistentcode.o \
+    py/qstr.o \
+    py/reader.o \
+    py/repl.o \
+    py/runtime_utils.o \
+    py/runtime.o \
+    py/scope.o \
+    py/sequence.o \
+    py/showbc.o \
+    py/smallint.o \
+    py/stackctrl.o \
+    py/stream.o \
+    py/unicode.o \
+    py/vm.o \
+    py/vstr.o \
+    py/warning.o \
+	\
+    stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_adc.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_can.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_cortex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_dac_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_dac.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_dma.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_flash_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_flash.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_gpio.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_i2c.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_pcd_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_pcd.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_pwr_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_pwr.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_rcc_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_rcc.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_rng.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_rtc_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_rtc.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_sd.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_spi.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_tim_ex.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_tim.o \
+    stmhal/hal/f4/src/stm32f4xx_hal_uart.o \
+    stmhal/hal/f4/src/stm32f4xx_hal.o \
+    stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
+    stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
+	\
+    stmhal/gccollect.o \
+    stmhal/gchelper.o \
+    stmhal/pendsv.o \
+    stmhal/startup_stm32.o \
+    stmhal/system_stm32.o \
+    stmhal/systick.o \
+	\
+    stmhal/usbd_cdc_interface.o \
+    stmhal/usbd_conf.o \
+    stmhal/usbd_desc.o \
+    stmhal/usbd_hid_interface.o \
+	\
+    stmhal/usbdev/class/src/usbd_cdc_msc_hid.o \
+    stmhal/usbdev/class/src/usbd_msc_bot.o \
+    stmhal/usbdev/class/src/usbd_msc_data.o \
+    stmhal/usbdev/class/src/usbd_msc_scsi.o \
+    stmhal/usbdev/core/src/usbd_core.o \
+    stmhal/usbdev/core/src/usbd_ctlreq.o \
+    stmhal/usbdev/core/src/usbd_ioreq.o \
+    )
+
+# OBJ micropython/
+OBJ_FW += $(addprefix $(BUILD_FW)/, \
+    firmware/main.o \
+    trezorhal/stm32_it.o \
+	trezorhal/stm32f4xx_hal_sram.o \
+	trezorhal/stm32f4xx_ll_fsmc.o \
+    )
+
+# make a list of all the .py files that need compiling and freezing
+FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | $(SED) -e 's=^$(FROZEN_MPY_DIR)/==')
+FROZEN_MPY_MPY_FILES := $(addprefix $(BUILD)/frozen_mpy/,$(FROZEN_MPY_PY_FILES:.py=.mpy))
+
+OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW) $(BUILD)/frozen_mpy.o
+SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
+SRC_FW = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_FW))
+SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
+
+# comp flags
+# =====================================
+
+CROSS_COMPILE = arm-none-eabi-
+
+INC += -I.
+INC += -Imicropython/firmware
+INC += -Imicropython/trezorhal
+INC += -Ivendor/micropython
+INC += -Ivendor/micropython/stmhal
+INC += -Ivendor/micropython/stmhal/cmsis
+INC += -Ivendor/micropython/stmhal/hal/f4/inc
+INC += -Ivendor/micropython/stmhal/usbdev/core/inc
+INC += -Ivendor/micropython/stmhal/usbdev/class/inc
+INC += -Ivendor/micropython/lib/cmsis/inc
+INC += -I$(BUILD)
+
+ifeq ($(DEBUG), 1)
+CFLAGS += -O0 -ggdb
+else
+CFLAGS += -Os -DNDEBUG
+endif
+
+CFLAGS += $(INC) $(CFLAGS_MOD) $(CFLAGS_EXTRA)
+CFLAGS += -std=gnu99 -nostdlib -Wall -Werror -Wdouble-promotion -Wpointer-arith
+CFLAGS += -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant
+
+CFLAGS += -DSTM32F405xx -DMCU_SERIES_F4
+CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
+
+CFLAGS += -DMICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
+CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
+
+LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+LDFLAGS = -nostdlib -T micropython/trezorhal/trezorv2.ld -Map=$@.map --cref
+
+# remove uncalled code from the final image
+CFLAGS += -fdata-sections -ffunction-sections
+LDFLAGS += --gc-sections
+
+# QSTR file locations
+QSTR_DEFS = $(SRCDIR_MP)/py/qstrdefs.h
+QSTR_DEFS_COLLECTED = $(BUILD_HDR)/qstrdefs.collected.h
+
+# SRC files for QSTR extraction
+SRC_QSTR_IGNORE = $(addprefix $(SRCDIR_MP)/py/, \
+	nlr% emitnx86% emitnx64% emitnthumb% emitnarm% emitnxtensa%)
+SRC_QSTR += $(SRC_MOD)
+SRC_QSTR += $(filter $(SRCDIR_MP)/lib/%,$(SRC_MP))
+SRC_QSTR += $(filter $(SRCDIR_MP)/extmod/%,$(SRC_MP))
+# SRC_QSTR += $(filter $(SRCDIR_MP)/stmhal/%,$(filter-out %/gchelper.o,$(SRC_MP)))
+SRC_QSTR += $(filter-out $(SRC_QSTR_IGNORE),$(filter $(SRCDIR_MP)/py/%,$(SRC_MP)))
+
+# extra cpp CFLAGS for QSTR extraction
+QSTR_GEN_EXTRA_CFLAGS += -DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB -DN_ARM -DN_XTENSA
+
+# comp rules
+# =====================================
+
+all: $(BUILD)/firmware.bin
+
+$(BUILD)/firmware.elf: $(OBJ)
+	$(ECHO) "LINK $@"
+	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(Q)$(SIZE) $@
+
+$(BUILD)/firmware.bin: $(BUILD)/firmware.elf
+	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/firmware.bin
+
+$(BUILD)/%.o: %.S
+	$(ECHO) "CC $<"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILD)/%.o: %.s
+	$(ECHO) "AS $<"
+	$(Q)$(AS) -o $@ $<
+
+$(BUILD)/%.o: %.c
+	$(ECHO) "CC $<"
+	$(Q)$(CC) $(CFLAGS) -c -MD -o $@ $<
+
+OBJ_DIRS = $(sort $(dir $(OBJ)))
+$(OBJ): | $(OBJ_DIRS)
+$(OBJ_DIRS) $(BUILD_HDR):
+	$(MKDIR) -p $@
+
+$(OBJ): | $(BUILD_HDR)/qstrdefs.generated.h $(BUILD_HDR)/mpversion.h
+
+$(BUILD_HDR)/qstr.i.last: $(SRC_QSTR) | $(BUILD_HDR)/mpversion.h
+	$(ECHO) "GEN $@"
+	$(Q)$(CPP) $(QSTR_GEN_EXTRA_CFLAGS) $(CFLAGS) $^ >$(BUILD_HDR)/qstr.i.last; \
+
+$(BUILD_HDR)/qstr.split: $(BUILD_HDR)/qstr.i.last
+	$(ECHO) "GEN $@"
+	$(Q)$(PYTHON) $(PY_SRC)/makeqstrdefs.py split $(BUILD_HDR)/qstr.i.last $(BUILD_HDR)/qstr $(QSTR_DEFS_COLLECTED)
+	$(Q)touch $@
+
+$(QSTR_DEFS_COLLECTED): $(BUILD_HDR)/qstr.split
+	$(ECHO) "GEN $@"
+	$(Q)$(PYTHON) $(PY_SRC)/makeqstrdefs.py cat $(BUILD_HDR)/qstr.i.last $(BUILD_HDR)/qstr $(QSTR_DEFS_COLLECTED)
+
+$(BUILD_HDR)/qstrdefs.generated.h: $(QSTR_DEFS) $(QSTR_DEFS_COLLECTED) $(SRCDIR_FW)/firmware/mpconfigport.h | $(BUILD_HDR)
+	$(ECHO) "GEN $@"
+	$(Q)cat $(QSTR_DEFS) $(QSTR_DEFS_COLLECTED) \
+		| $(SED) 's/^Q(.*)/"&"/' \
+		| $(CPP) $(CFLAGS) - \
+		| $(SED) 's/^"\(Q(.*)\)"/\1/' \
+		> $(BUILD_HDR)/qstrdefs.preprocessed.h
+	$(Q)$(PYTHON) $(PY_SRC)/makeqstrdata.py $(BUILD_HDR)/qstrdefs.preprocessed.h > $@
+
+$(BUILD_HDR)/mpversion.h: | $(BUILD_HDR)
+	$(Q)$(PYTHON) $(PY_SRC)/makeversionhdr.py $@
+
+$(BUILD)/frozen_mpy/%.mpy: $(FROZEN_MPY_DIR)/%.py
+	@$(ECHO) "MPY $<"
+	$(Q)$(MKDIR) -p $(dir $@)
+	$(Q)$(MPY_CROSS) -o $@ -s $(^:$(FROZEN_MPY_DIR)/%=%) $^
+
+$(BUILD)/frozen_mpy.c: $(FROZEN_MPY_MPY_FILES) $(BUILD)/genhdr/qstrdefs.generated.h
+	@$(ECHO) "Creating $@"
+	$(Q)PYTHONPATH=$(SRCDIR_MP)/py $(PYTHON) $(MPY_TOOL) -f -q $(BUILD)/genhdr/qstrdefs.preprocessed.h $(FROZEN_MPY_MPY_FILES) > $@
+
+clean:
+	$(RM) -rf $(BUILD)
+
+.PHONY: all clean

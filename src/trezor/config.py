@@ -1,8 +1,8 @@
 import sys
 
-if sys.platform in ('trezor', 'pyboard'):  # stmhal
+if sys.platform == 'trezor':
     from .config_mock import Config
-    _config = Config('/sd/trezor.config')
+    _config = Config(None)
 else:
     from TrezorConfig import Config
     _config = Config()
