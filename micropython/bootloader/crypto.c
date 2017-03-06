@@ -48,28 +48,31 @@ bool parse_header(const uint8_t *data, uint32_t *codelen, uint8_t *sigidx, uint8
     return true;
 }
 
-const uint8_t *SL_PUBKEY[5] = {
-    (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-    (const uint8_t *)"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-    (const uint8_t *)"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-    (const uint8_t *)"DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
-    (const uint8_t *)"EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
-};
+#define KEYMASK(A, B, C) ((1 << (A - 1)) | (1 << (B - 1)) | (1 << (C - 1)))
 
 const uint8_t *get_pubkey(uint8_t index)
 {
-    // TODO: compute combinations of pubkeys from index
     switch (index) {
-        case 0x01:
-            return SL_PUBKEY[0];
-        case 0x02:
-            return SL_PUBKEY[1];
-        case 0x04:
-            return SL_PUBKEY[2];
-        case 0x08:
-            return SL_PUBKEY[3];
-        case 0x10:
-            return SL_PUBKEY[4];
+        case KEYMASK(1, 2, 3):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(1, 2, 4):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(1, 2, 5):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(1, 3, 4):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(1, 3, 5):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(1, 4, 5):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(2, 3, 4):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(2, 3, 5):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(2, 4, 5):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        case KEYMASK(3, 4, 5):
+            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
         default:
             return NULL;
     }
