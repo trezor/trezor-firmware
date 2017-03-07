@@ -312,16 +312,17 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 
 # OBJ micropython/
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
-    firmware/main.o \
+	firmware/main.o \
 	trezorhal/flash.o \
-	trezorhal/i2c.o \
-    trezorhal/rng.o \
+	trezorhal/rng.o \
+	trezorhal/sdcard.o \
+	trezorhal/touch.o \
 	trezorhal/usb.o \
-    trezorhal/stm32_it.o \
+	trezorhal/stm32_it.o \
 	trezorhal/stm32_system.o \
-    trezorhal/hal/stm32f4xx_hal_sram.o \
+	trezorhal/hal/stm32f4xx_hal_sram.o \
 	trezorhal/hal/stm32f4xx_ll_fsmc.o \
-    )
+	)
 
 # make a list of all the .py files that need compiling and freezing
 FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | $(SED) -e 's=^$(FROZEN_MPY_DIR)/==')

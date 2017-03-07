@@ -8,9 +8,7 @@
 
 USBD_HandleTypeDef hUSBDDevice;
 
-void __fatal_error(const char *msg);
-
-void usb_init(void) {
+int usb_init(void) {
     const uint16_t vid = 0x1209;
     const uint16_t pid = 0x53C1;
 
@@ -25,12 +23,13 @@ void usb_init(void) {
 
     USBD_SetVIDPIDRelease(vid, pid, 0x0200, 0);
     if (USBD_SelectMode(USBD_MODE_CDC_HID, &hid_info) != 0) {
-        __fatal_error("USB init failed");
-        return;
+        return 1;
     }
     USBD_Init(&hUSBDDevice, (USBD_DescriptorsTypeDef*)&USBD_Descriptors, 0); // 0 == full speed
     USBD_RegisterClass(&hUSBDDevice, &USBD_CDC_MSC_HID);
     USBD_CDC_RegisterInterface(&hUSBDDevice, (USBD_CDC_ItfTypeDef*)&USBD_CDC_fops);
     USBD_HID_RegisterInterface(&hUSBDDevice, (USBD_HID_ItfTypeDef*)&USBD_HID_fops);
     USBD_Start(&hUSBDDevice);
+
+    return 0;
 }

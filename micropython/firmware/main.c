@@ -13,13 +13,25 @@
 #include "gccollect.h"
 #include "pendsv.h"
 
+#include "flash.h"
+#include "rng.h"
+#include "sdcard.h"
+#include "touch.h"
+#include "usb.h"
+
 void SystemClock_Config(void);
 void USBD_CDC_TxAlways(const uint8_t * buf, uint32_t len);
 int USBD_CDC_Rx(uint8_t * buf, uint32_t len, uint32_t timeout);
 
-void flash_init(void);
-void usb_init(void);
-void i2c_init(void);
+// Errors
+
+void NORETURN nlr_jump_fail(void *val) {
+    for (;;) {}
+}
+
+void NORETURN __fatal_error(const char *msg) {
+    for (;;) {}
+}
 
 int main(void) {
 
@@ -49,11 +61,26 @@ int main(void) {
     RCC->CSR |= RCC_CSR_RMVF;
 
     pendsv_init();
-    flash_init();
-    usb_init();
-    i2c_init();
 
-    // TODO: sdcard
+    if (0 != flash_init()) {
+        __fatal_error("flash_init failed");
+    }
+
+    if (0 != rng_init()) {
+        __fatal_error("rng_init failed");
+    }
+
+    if (0 != sdcard_init()) {
+        __fatal_error("sdcard_init failed");
+    }
+
+    if (0 != touch_init()) {
+        __fatal_error("touch_init failed");
+    }
+
+    if (0 != usb_init()) {
+        __fatal_error("usb_init failed");
+    }
 
     for (;;) {
         // Stack limit should be less than real stack size, so we have a chance
@@ -78,16 +105,6 @@ int main(void) {
     }
 
     return 0;
-}
-
-// Errors
-
-void NORETURN nlr_jump_fail(void *val) {
-    for (;;) {}
-}
-
-void NORETURN __fatal_error(const char *msg) {
-    for (;;) {}
 }
 
 #ifndef NDEBUG
