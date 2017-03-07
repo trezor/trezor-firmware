@@ -294,7 +294,6 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	stmhal/gchelper.o \
 	stmhal/pendsv.o \
 	stmhal/startup_stm32.o \
-	stmhal/system_stm32.o \
 	stmhal/systick.o \
 	\
 	stmhal/usbd_cdc_interface.o \
@@ -313,11 +312,16 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 
 # OBJ micropython/
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
-	firmware/main.o \
-	trezorhal/stm32_it.o \
-	trezorhal/stm32f4xx_hal_sram.o \
-	trezorhal/stm32f4xx_ll_fsmc.o \
-	)
+    firmware/main.o \
+	trezorhal/flash.o \
+	trezorhal/i2c.o \
+    trezorhal/rng.o \
+	trezorhal/usb.o \
+    trezorhal/stm32_it.o \
+	trezorhal/stm32_system.o \
+    trezorhal/hal/stm32f4xx_hal_sram.o \
+	trezorhal/hal/stm32f4xx_ll_fsmc.o \
+    )
 
 # make a list of all the .py files that need compiling and freezing
 FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | $(SED) -e 's=^$(FROZEN_MPY_DIR)/==')
@@ -336,6 +340,7 @@ CROSS_COMPILE = arm-none-eabi-
 INC += -I.
 INC += -Imicropython/firmware
 INC += -Imicropython/trezorhal
+INC += -Imicropython/trezorhal/hal
 INC += -Ivendor/micropython
 INC += -Ivendor/micropython/stmhal
 INC += -Ivendor/micropython/stmhal/cmsis
@@ -363,7 +368,7 @@ CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T micropython/trezorhal/trezorv2.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T micropython/trezorhal/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections

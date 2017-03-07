@@ -29,8 +29,6 @@
 #include <stdbool.h>
 #include <alloca.h>
 
-#include "mpconfigboard.h"
-
 #define MICROPY_DEBUG_PRINTERS (1)
 
 // Memory allocation policies

@@ -2,12 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "usbd_core.h"
-#include "usbd_desc.h"
-#include "usbd_cdc_msc_hid.h"
-#include "usbd_cdc_interface.h"
-#include "usbd_hid_interface.h"
-
 #include "py/nlr.h"
 #include "py/compile.h"
 #include "py/runtime.h"
@@ -16,21 +10,12 @@
 #include "py/gc.h"
 #include "lib/utils/pyexec.h"
 
+#include "gccollect.h"
 #include "pendsv.h"
 
 void SystemClock_Config(void);
-
-extern uint32_t _etext;
-extern uint32_t _sidata;
-extern uint32_t _ram_start;
-extern uint32_t _sdata;
-extern uint32_t _edata;
-extern uint32_t _sbss;
-extern uint32_t _ebss;
-extern uint32_t _heap_start;
-extern uint32_t _heap_end;
-extern uint32_t _estack;
-extern uint32_t _ram_end;
+void USBD_CDC_TxAlways(const uint8_t * buf, uint32_t len);
+int USBD_CDC_Rx(uint8_t * buf, uint32_t len, uint32_t timeout);
 
 void flash_init(void);
 void usb_init(void);
@@ -109,102 +94,6 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
     __fatal_error("Assertion failed");
 }
 #endif
-
-// Flash
-
-void flash_init(void) {
-    // Enable the flash IRQ, which is used to also call our storage IRQ handler
-    // It needs to go at a higher priority than all those components that rely on
-    // the flash storage (eg higher than USB MSC).
-    HAL_NVIC_SetPriority(FLASH_IRQn, 2, 0);
-    HAL_NVIC_EnableIRQ(FLASH_IRQn);
-}
-
-// USB
-
-USBD_HandleTypeDef hUSBDDevice;
-
-void usb_init(void) {
-    const uint16_t vid = 0x1209;
-    const uint16_t pid = 0x53C1;
-
-    USBD_HID_ModeInfoTypeDef hid_info = {
-        .subclass = 0,
-        .protocol = 0,
-        .max_packet_len = 64,
-        .polling_interval = 1,
-        .report_desc = (const uint8_t*)"\x06\x00\xff\x09\x01\xa1\x01\x09\x20\x15\x00\x26\xff\x00\x75\x08\x95\x40\x81\x02\x09\x21\x15\x00\x26\xff\x00\x75\x08\x95\x40\x91\x02\xc0",
-        .report_desc_len = 34,
-    };
-
-    USBD_SetVIDPIDRelease(vid, pid, 0x0200, 0);
-    if (USBD_SelectMode(USBD_MODE_CDC_HID, &hid_info) != 0) {
-        for (;;) {
-            __fatal_error("USB init failed");
-        }
-    }
-    USBD_Init(&hUSBDDevice, (USBD_DescriptorsTypeDef*)&USBD_Descriptors, 0); // 0 == full speed
-    USBD_RegisterClass(&hUSBDDevice, &USBD_CDC_MSC_HID);
-    USBD_CDC_RegisterInterface(&hUSBDDevice, (USBD_CDC_ItfTypeDef*)&USBD_CDC_fops);
-    USBD_HID_RegisterInterface(&hUSBDDevice, (USBD_HID_ItfTypeDef*)&USBD_HID_fops);
-    USBD_Start(&hUSBDDevice);
-}
-
-// I2C
-
-I2C_HandleTypeDef *i2c_handle = 0;
-
-void i2c_init(I2C_HandleTypeDef *i2c) {
-
-    // Enable I2C clock
-    __HAL_RCC_I2C1_CLK_ENABLE();
-
-    // Init SCL and SDA GPIO lines (PB6 & PB7)
-    GPIO_InitTypeDef GPIO_InitStructure = {
-        .Pin = GPIO_PIN_6 | GPIO_PIN_7,
-        .Mode = GPIO_MODE_AF_OD,
-        .Pull = GPIO_NOPULL,
-        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
-        .Alternate = GPIO_AF4_I2C1,
-    };
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-    // Init I2C handle
-    if (HAL_I2C_Init(i2c) != HAL_OK) {
-        for (;;) {
-            __fatal_error("i2c_init failed");
-        }
-    }
-
-    // Enable IRQs
-    i2c_handle = i2c;
-    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-    HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
-}
-
-// RNG
-
-STATIC RNG_HandleTypeDef rng_handle = {
-    .State = HAL_RNG_STATE_RESET,
-    .Instance = RNG,
-};
-
-void rng_init(RNG_HandleTypeDef *rng) {
-
-    // Enable RNG clock
-    __HAL_RCC_RNG_CLK_ENABLE();
-
-    // Init RNG handle
-    HAL_RNG_Init(rng);
-}
-
-uint32_t rng_get(void) {
-    if (rng_handle.State == HAL_RNG_STATE_RESET) {
-        rng_init(&rng_handle);
-    }
-
-    return HAL_RNG_GetRandomNumber(&rng_handle);
-}
 
 // I/O
 
