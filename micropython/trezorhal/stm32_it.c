@@ -736,22 +736,16 @@ void FLASH_IRQHandler(void) {
 // }
 // #endif // MICROPY_HW_ENABLE_CAN
 
-extern I2C_HandleTypeDef *i2c_handle;
+extern I2C_HandleTypeDef i2c_handle;
 
 void I2C1_EV_IRQHandler(void) {
-    printf("ev\n");
     IRQ_ENTER(I2C1_EV_IRQn);
-    if (i2c_handle) {
-        HAL_I2C_EV_IRQHandler(i2c_handle);
-    }
+    HAL_I2C_EV_IRQHandler(&i2c_handle);
     IRQ_EXIT(I2C1_EV_IRQn);
 }
 
 void I2C1_ER_IRQHandler(void) {
-    printf("er\n");
     IRQ_ENTER(I2C1_ER_IRQn);
-    if (i2c_handle) {
-        HAL_I2C_ER_IRQHandler(i2c_handle);
-    }
+    HAL_I2C_ER_IRQHandler(&i2c_handle);
     IRQ_EXIT(I2C1_ER_IRQn);
 }

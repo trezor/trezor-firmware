@@ -19,6 +19,7 @@ int USBD_CDC_Rx(uint8_t * buf, uint32_t len, uint32_t timeout);
 
 void flash_init(void);
 void usb_init(void);
+void i2c_init(void);
 
 int main(void) {
 
@@ -50,6 +51,7 @@ int main(void) {
     pendsv_init();
     flash_init();
     usb_init();
+    i2c_init();
 
     // TODO: sdcard
 
