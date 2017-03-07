@@ -27,10 +27,10 @@ build_trezorhal_debug: vendor res build_cross ## build trezorhal port with froze
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS) DEBUG=1
 
 build_unix: vendor ## build unix port
-	$(MAKE) -C vendor/micropython/unix $(UNIX_PORT_OPTS)
+	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
 
 build_unix_debug: vendor ## build unix port with debug symbols
-	$(MAKE) -C vendor/micropython/unix $(UNIX_PORT_OPTS) DEBUG=1
+	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS) DEBUG=1
 
 build_cross: vendor ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -47,7 +47,7 @@ clean_trezorhal: ## clean trezorhal build
 	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
 
 clean_unix: ## clean unix build
-	$(MAKE) -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
+	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
 
 clean_cross: ## clean mpy-cross build
 	$(MAKE) -C vendor/micropython/mpy-cross clean $(CROSS_PORT_OPTS)

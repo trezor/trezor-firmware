@@ -14,7 +14,7 @@ script:
 
   - make build_trezorhal
 
-  - make build_unix TREZORUI_NOUI=1
+  - make build_unix MICROPY_PY_TREZORUI_NOUI=1
 
   - make test
 
