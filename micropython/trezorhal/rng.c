@@ -1,7 +1,6 @@
 #include STM32_HAL_H
 
 static RNG_HandleTypeDef rng_handle = {
-    .State = HAL_RNG_STATE_RESET,
     .Instance = RNG,
 };
 

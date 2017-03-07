@@ -66,3 +66,11 @@ uint32_t touch_read(void) {
     memcpy(old_data, data, 16);
     return r;
 }
+
+void I2C1_EV_IRQHandler(void) {
+    HAL_I2C_EV_IRQHandler(&i2c_handle);
+}
+
+void I2C1_ER_IRQHandler(void) {
+    HAL_I2C_ER_IRQHandler(&i2c_handle);
+}

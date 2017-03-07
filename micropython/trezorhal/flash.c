@@ -9,3 +9,15 @@ int flash_init(void) {
 
     return 0;
 }
+
+void FLASH_IRQHandler(void) {
+    // This calls the real flash IRQ handler, if needed
+    /*
+    uint32_t flash_cr = FLASH->CR;
+    if ((flash_cr & FLASH_IT_EOP) || (flash_cr & FLASH_IT_ERR)) {
+        HAL_FLASH_IRQHandler();
+    }
+    */
+    // This call the storage IRQ handler, to check if the flash cache needs flushing
+    // storage_irq_handler();
+}
