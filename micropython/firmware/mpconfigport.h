@@ -155,7 +155,6 @@ static inline mp_uint_t disable_irq(void) {
 
 #define MP_STATE_PORT MP_STATE_VM
 #define MICROPY_PORT_ROOT_POINTERS
-#define USE_DEVICE_MODE
 
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_TrezorConfig;
