@@ -313,6 +313,7 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 # OBJ micropython/
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	firmware/main.o \
+	firmware/mphalport.o \
 	trezorhal/flash.o \
 	trezorhal/rng.o \
 	trezorhal/sdcard.o \

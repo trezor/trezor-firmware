@@ -24,12 +24,8 @@
  * THE SOFTWARE.
  */
 
-#include <limits.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <alloca.h>
-
-#define MICROPY_DEBUG_PRINTERS (1)
+#include <stdbool.h> // bool
+#include <alloca.h>  // alloca
 
 // Memory allocation policies
 #define MICROPY_ALLOC_PATH_MAX      (128)
@@ -117,21 +113,16 @@
 #include STM32_HAL_H
 
 #define BYTES_PER_WORD (4)
-#define MP_HAL_UNIQUE_ID_ADDRESS (0x1fff7a10)
+
 #define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p) | 1))
-#define MP_PLAT_PRINT_STRN(str, len) mp_hal_stdout_tx_strn_cooked(str, len)
 
-// This port is intended to be 32-bit, but unfortunately, int32_t for
-// different targets may be defined in different ways - either as int
-// or as long. This requires different printf formatting specifiers
-// to print such value. So, we avoid int32_t and use int directly.
+#define INT_FMT  "%d"
 #define UINT_FMT "%u"
-#define INT_FMT "%d"
-typedef int mp_int_t; // must be pointer size
-typedef unsigned mp_uint_t; // must be pointer size
-typedef long mp_off_t;
+#define MP_SSIZE_MAX (0x0fffffff)
 
-#define MP_SSIZE_MAX INT_MAX
+typedef long mp_off_t;
+typedef int mp_int_t;
+typedef unsigned mp_uint_t;
 
 static inline void enable_irq(mp_uint_t state) {
     __set_PRIMASK(state);
@@ -147,15 +138,15 @@ static inline mp_uint_t disable_irq(void) {
 #define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
 #define MICROPY_EVENT_POLL_HOOK            __WFI();
 
-#define MICROPY_MIN_USE_CORTEX_CPU  (1)
-#define MICROPY_MIN_USE_STM32_MCU   (1)
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F405VG"
 #define MICROPY_PY_SYS_PLATFORM "trezor"
 
-#define MP_STATE_PORT MP_STATE_VM
 #define MICROPY_PORT_ROOT_POINTERS
 
+#define MP_STATE_PORT MP_STATE_VM
+
+// Extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_TrezorConfig;
 extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
@@ -163,8 +154,6 @@ extern const struct _mp_obj_module_t mp_module_TrezorDebug;
 extern const struct _mp_obj_module_t mp_module_TrezorMsg;
 extern const struct _mp_obj_module_t mp_module_TrezorUi;
 extern const struct _mp_obj_module_t mp_module_TrezorUtils;
-
-// Extra built in modules to add to the list of known ones
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorConfig), (mp_obj_t)&mp_module_TrezorConfig }, \
@@ -178,17 +167,7 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 #define MICROPY_PORT_BUILTINS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj },
 
+// Make sure all allocations are done through GC
 #define malloc(n) m_malloc(n)
 #define free(p) m_free(p)
 #define realloc(p, n) m_realloc(p, n)
-
-extern bool mp_hal_ticks_cpu_enabled;
-
-void mp_hal_ticks_cpu_enable(void);
-
-static inline mp_uint_t mp_hal_ticks_cpu(void) {
-    if (!mp_hal_ticks_cpu_enabled) {
-        mp_hal_ticks_cpu_enable();
-    }
-    return DWT->CYCCNT;
-}

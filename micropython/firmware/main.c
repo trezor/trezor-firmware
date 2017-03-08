@@ -20,10 +20,6 @@
 #include "usb.h"
 
 void SystemClock_Config(void);
-void USBD_CDC_TxAlways(const uint8_t * buf, uint32_t len);
-int USBD_CDC_Rx(uint8_t * buf, uint32_t len, uint32_t timeout);
-
-// Errors
 
 void NORETURN nlr_jump_fail(void *val) {
     for (;;) {}
@@ -59,6 +55,11 @@ int main(void) {
         PWR->CR |= PWR_CR_CSBF;
     }
     RCC->CSR |= RCC_CSR_RMVF;
+
+    // Enable CPU ticks
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
     pendsv_init();
 
@@ -114,7 +115,7 @@ void MP_WEAK __assert_func(const char *file, int line, const char *func, const c
 }
 #endif
 
-// I/O
+// Micropython file I/O stubs
 
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     return NULL;
@@ -129,32 +130,6 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
 
-int mp_hal_stdin_rx_chr(void) {
-    for (;;) {
-        byte c;
-        if (USBD_CDC_Rx(&c, 1, 0) != 0) {
-            return c;
-        }
-    }
-}
-
-void mp_hal_stdout_tx_strn(const char *str, size_t len) {
-    USBD_CDC_TxAlways((const uint8_t*)str, len);
-}
-
 int mp_reader_new_file(mp_reader_t *reader, const char *filename) {
     return 2; // assume error was "file not found"
-}
-
-// Time
-
-bool mp_hal_ticks_cpu_enabled;
-
-void mp_hal_ticks_cpu_enable(void) {
-    if (!mp_hal_ticks_cpu_enabled) {
-        // CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-        // DWT->CYCCNT = 0;
-        // DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-        mp_hal_ticks_cpu_enabled = true;
-    }
 }
