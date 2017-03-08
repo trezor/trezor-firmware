@@ -50,16 +50,14 @@ int main(void) {
     // Enable the CCM RAM
     __HAL_RCC_CCMDATARAMEN_CLK_ENABLE();
 
-    // machine_init
-    if (PWR->CSR & PWR_CSR_SBF) {
-        PWR->CR |= PWR_CR_CSBF;
-    }
+    // Clear the reset flags
+    PWR->CR |= PWR_CR_CSBF;
     RCC->CSR |= RCC_CSR_RMVF;
 
     // Enable CPU ticks
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // Enable DWT
+    DWT->CYCCNT = 0;  // Reset Cycle Count Register
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable Cycle Count Register
 
     pendsv_init();
 
