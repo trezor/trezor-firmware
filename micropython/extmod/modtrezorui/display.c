@@ -32,15 +32,6 @@ static int OFFSET[2] = {0, 0};
 
 // common display functions
 
-void DATAS(const void *bytes, int len)
-{
-    const uint8_t *c = (const uint8_t *)bytes;
-    while (len-- > 0) {
-        DATA(*c);
-        c++;
-    }
-}
-
 static void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
 {
     uint8_t cr, cg, cb;
@@ -472,16 +463,6 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
     }
 }
 
-void display_raw(uint8_t reg, const uint8_t *data, int datalen)
-{
-    if (reg) {
-        CMD(reg);
-    }
-    if (data && datalen > 0) {
-        DATAS(data, datalen);
-    }
-}
-
 int *display_offset(int xy[2])
 {
     if (xy) {
@@ -489,4 +470,24 @@ int *display_offset(int xy[2])
         OFFSET[1] = xy[1];
     }
     return OFFSET;
+}
+
+int display_orientation(int degrees)
+{
+    if (degrees != ORIENTATION) {
+        if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
+            ORIENTATION = degrees;
+            display_set_orientation(degrees);
+        }
+    }
+    return ORIENTATION;
+}
+
+int display_backlight(int val)
+{
+    if (BACKLIGHT != val && val >= 0 && val <= 255) {
+        BACKLIGHT = val;
+        display_set_backlight(val);
+    }
+    return BACKLIGHT;
 }

@@ -24,8 +24,6 @@ int display_orientation(int degrees);
 int display_backlight(int val);
 int *display_offset(int xy[2]);
 
-void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-
 void display_clear(void);
 void display_refresh(void);
 
@@ -40,8 +38,5 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
 void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
 void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
 int display_text_width(const char *text, int textlen, uint8_t font);
-
-void display_raw(uint8_t reg, const uint8_t *data, int datalen);
-void display_save(const char *filename);
 
 #endif
