@@ -115,7 +115,7 @@ void SDIO_IRQHandler(void) {
     HAL_SD_IRQHandler(&sd_handle);
 }
 
-uint32_t sdcard_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blocks) {
+uint32_t sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
         return SD_ERROR;
@@ -123,13 +123,13 @@ uint32_t sdcard_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_bloc
 
     // check that dest pointer is aligned on a 4-byte boundary
     if (((uint32_t)dest & 3) != 0) {
-        return SD_ERROR;
+        return SD_INVALID_PARAMETER;
     }
 
     return HAL_SD_ReadBlocks_BlockNumber(&sd_handle, (uint32_t*)dest, block_num, SDCARD_BLOCK_SIZE, num_blocks);
 }
 
-uint32_t sdcard_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t num_blocks) {
+uint32_t sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
         return SD_ERROR;
@@ -137,7 +137,7 @@ uint32_t sdcard_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t nu
 
     // check that src pointer is aligned on a 4-byte boundary
     if (((uint32_t)src & 3) != 0) {
-        return SD_ERROR;
+        return SD_INVALID_PARAMETER;
     }
 
     return HAL_SD_WriteBlocks_BlockNumber(&sd_handle, (uint32_t*)src, block_num, SDCARD_BLOCK_SIZE, num_blocks);
