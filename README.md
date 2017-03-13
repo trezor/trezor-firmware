@@ -59,7 +59,7 @@ For flashing firmware to blank device (without bootloader) by `make flash`, plea
 
 ```
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
-make build_stmhal_frozen
+make build_trezorhal
 ```
 
 ###OS X
