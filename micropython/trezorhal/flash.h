@@ -3,4 +3,6 @@
 
 int flash_init(void);
 
+void flash_set_option_bytes(void);
+
 #endif
