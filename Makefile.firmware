@@ -109,8 +109,8 @@ endif
 
 # OBJ micropython/extmod/modutime
 ifeq ($(MICROPY_PY_UTIME),1)
-OBJ_MOD += $(BUILD_FW)/extmod/modutime/modutime.o
-SRC_QSTR += $(SRCDIR_FW)/extmod/modutime/modutime.c
+OBJ_MOD += $(BUILD_FW)/firmware/modutime.o
+SRC_QSTR += $(SRCDIR_FW)/firmware/modutime.c
 endif
 
 # OBJ vendor/micropython

@@ -24,11 +24,6 @@
  * THE SOFTWARE.
  */
 
-#include STM32_HAL_H
-
-#include "py/nlr.h"
-#include "py/smallint.h"
-#include "py/obj.h"
 #include "extmod/utime_mphal.h"
 
 STATIC const mp_rom_map_elem_t time_module_globals_table[] = {
