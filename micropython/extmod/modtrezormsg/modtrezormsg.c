@@ -99,6 +99,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 
 #define TICK_RESOLUTION 1000
 #define TOUCH_IFACE 0
+extern uint32_t touch_read(void); // defined in HAL
 
 /// def trezor.msg.select(timeout_us: int) -> tuple:
 ///     '''
@@ -112,7 +113,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
         timeout = 0;
     }
     for(;;) {
-        uint32_t e = msg_poll_touch();
+        uint32_t e = touch_read();
         if (e) {
             mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(4, NULL));
             tuple->items[0] = MP_OBJ_NEW_SMALL_INT(TOUCH_IFACE);

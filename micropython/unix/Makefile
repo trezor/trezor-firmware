@@ -69,6 +69,7 @@ endif
 
 # OBJ micropython/extmod/modtrezormsg
 ifeq ($(MICROPY_PY_TREZORMSG),1)
+	SRC_MOD += $(EXTMOD_DIR)/../unix/touch.c
 	SRC_MOD += $(EXTMOD_DIR)/modtrezormsg/modtrezormsg.c
 endif
 
