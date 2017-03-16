@@ -8,11 +8,6 @@
 #define CMD(X) (void)(X);
 #define DATA(X) (void)(X);
 
-uint32_t trezorui_poll_event(void)
-{
-    return 0;
-}
-
 void display_init(void)
 {
 }

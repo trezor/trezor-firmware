@@ -5,12 +5,16 @@
  * see LICENSE file for details
  */
 
+#include <stdint.h>
+#ifndef TREZOR_NOUI
 #include <SDL2/SDL.h>
+#endif
 
 #include "options.h"
 
 uint32_t touch_read(void)
 {
+#ifndef TREZOR_NOUI
     SDL_Event event;
     int x, y;
     SDL_PumpEvents();
@@ -48,5 +52,6 @@ uint32_t touch_read(void)
                 break;
         }
     }
+#endif
     return 0;
 }

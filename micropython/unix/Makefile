@@ -7,9 +7,10 @@ MICROPY_PY_TREZORDEBUG = 1
 MICROPY_PY_TREZORMSG = 1
 
 MICROPY_PY_TREZORUI = 1
-MICROPY_PY_TREZORUI_NOUI = 0
 
 MICROPY_PY_TREZORUTILS = 1
+
+TREZOR_NOUI = 0
 
 EXTMOD_DIR = ../../micropython/extmod
 
@@ -85,10 +86,10 @@ ifeq ($(MICROPY_PY_TREZORUI),1)
 		$(EXTMOD_DIR)/modtrezorui/font_robotomono_regular_20.c \
 		$(EXTMOD_DIR)/modtrezorui/modtrezorui.c \
 		$(EXTMOD_DIR)/modtrezorui/trezor-qrenc/qr_encode.c
-ifeq ($(MICROPY_PY_TREZORUI_NOUI),1)
-	CFLAGS_MOD += -DTREZORUI_NOUI=1
+ifeq ($(TREZOR_NOUI),1)
+	CFLAGS_MOD += -DTREZOR_NOUI=1
 else
-	LDFLAGS_MOD += -lSDL2 -lSDL2_image
+	LDFLAGS_MOD += -lSDL2
 endif
 endif
 
