@@ -10,8 +10,12 @@
 #define DISPLAY_ILI9341V 0
 #define DISPLAY_ST7789V  1
 
-#define CMD(X)  (*((__IO uint8_t *)((uint32_t)(0x60000000))) = (X))
-#define DATA(X) (*((__IO uint8_t *)((uint32_t)(0x60000000 | 0x10000))) = (X))
+// FSMC Bank 1 - NOR/PSRAM 1
+#define DISPLAY_FSMC_BASE   0x60000000
+#define DISPLAY_FSMC_DC_PIN 0x10000
+
+#define CMD(X)  (*((__IO uint8_t *)((uint32_t)(DISPLAY_FSMC_BASE))) = (X))
+#define DATA(X) (*((__IO uint8_t *)((uint32_t)(DISPLAY_FSMC_BASE | DISPLAY_FSMC_DC_PIN))) = (X))
 
 static TIM_HandleTypeDef TIM1_Handle;
 
