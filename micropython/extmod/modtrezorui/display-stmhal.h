@@ -111,7 +111,7 @@ void display_set_orientation(int degrees)
 
 void display_set_backlight(int val)
 {
-    __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * BACKLIGHT / 255);
+    __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * val / 255);
 }
 
 void display_init(void) {

@@ -52,7 +52,7 @@ void display_init(void)
         SDL_DestroyWindow(win);
         SDL_Quit();
     }
-    SDL_SetRenderDrawColor(RENDERER, BACKLIGHT, BACKLIGHT, BACKLIGHT, 255);
+    SDL_SetRenderDrawColor(RENDERER, DISPLAY_BACKLIGHT, DISPLAY_BACKLIGHT, DISPLAY_BACKLIGHT, 255);
     SDL_RenderClear(RENDERER);
     BUFFER = SDL_CreateRGBSurface(0, DISPLAY_RESX, DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
@@ -77,7 +77,7 @@ void display_refresh(void)
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
-    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ORIENTATION, NULL, 0);
+    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
 #endif
 }

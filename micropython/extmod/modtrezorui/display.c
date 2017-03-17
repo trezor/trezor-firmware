@@ -16,9 +16,9 @@
 #include "display.h"
 #include <string.h>
 
-static int BACKLIGHT = 0;
-static int ORIENTATION = 0;
-static int OFFSET[2] = {0, 0};
+static int DISPLAY_BACKLIGHT = 0;
+static int DISPLAY_ORIENTATION = 0;
+static int DISPLAY_OFFSET[2] = {0, 0};
 
 #if defined STM32_HAL_H
 #include "display-stmhal.h"
@@ -59,8 +59,8 @@ void display_clear(void)
 
 void display_bar(int x, int y, int w, int h, uint16_t c)
 {
-    x += OFFSET[0];
-    y += OFFSET[1];
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -72,7 +72,7 @@ void display_bar(int x, int y, int w, int h, uint16_t c)
 
 #define CORNER_RADIUS 16
 
-static const uint8_t cornertable[CORNER_RADIUS*CORNER_RADIUS] = {
+static const uint8_t cornertable[CORNER_RADIUS * CORNER_RADIUS] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 9, 12, 14, 15,
     0, 0, 0, 0, 0, 0, 0, 0, 3, 9, 15, 15, 15, 15, 15, 15,
     0, 0, 0, 0, 0, 0, 0, 8, 15, 15, 15, 15, 15, 15, 15, 15,
@@ -100,8 +100,8 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
     }
     uint16_t colortable[16];
     set_color_table(colortable, c, b);
-    x += OFFSET[0];
-    y += OFFSET[1];
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -152,8 +152,8 @@ static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
 
 void display_image(int x, int y, int w, int h, const void *data, int datalen)
 {
-    x += OFFSET[0];
-    y += OFFSET[1];
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -186,8 +186,8 @@ static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 
 void display_icon(int x, int y, int w, int h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
 {
-    x += OFFSET[0];
-    y += OFFSET[1];
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     x &= ~1; // cannot draw at odd coordinate
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
@@ -298,8 +298,8 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
         textlen = strlen(text);
     }
 
-    int px = x + OFFSET[0];
-    y += OFFSET[1];
+    int px = x + DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     // render glyphs
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
@@ -368,8 +368,8 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
     if (scale < 1 || scale > 10) return;
     uint8_t bitdata[QR_MAX_BITDATA];
     int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
-    x += OFFSET[0];
-    y += OFFSET[1];
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     int x0, y0, x1, y1;
     clamp_coords(x, y, side * scale, side * scale, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -462,28 +462,28 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
 int *display_offset(int xy[2])
 {
     if (xy) {
-        OFFSET[0] = xy[0];
-        OFFSET[1] = xy[1];
+        DISPLAY_OFFSET[0] = xy[0];
+        DISPLAY_OFFSET[1] = xy[1];
     }
-    return OFFSET;
+    return DISPLAY_OFFSET;
 }
 
 int display_orientation(int degrees)
 {
-    if (degrees != ORIENTATION) {
+    if (degrees != DISPLAY_ORIENTATION) {
         if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
-            ORIENTATION = degrees;
+            DISPLAY_ORIENTATION = degrees;
             display_set_orientation(degrees);
         }
     }
-    return ORIENTATION;
+    return DISPLAY_ORIENTATION;
 }
 
 int display_backlight(int val)
 {
-    if (BACKLIGHT != val && val >= 0 && val <= 255) {
-        BACKLIGHT = val;
+    if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
+        DISPLAY_BACKLIGHT = val;
         display_set_backlight(val);
     }
-    return BACKLIGHT;
+    return DISPLAY_BACKLIGHT;
 }
