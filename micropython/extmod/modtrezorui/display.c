@@ -23,11 +23,7 @@ static int OFFSET[2] = {0, 0};
 #if defined STM32_HAL_H
 #include "display-stmhal.h"
 #else
-#ifndef TREZOR_NOUI
-#include "display-unix-sdl.h"
-#else
-#include "display-unix-null.h"
-#endif
+#include "display-unix.h"
 #endif
 
 // common display functions

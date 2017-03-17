@@ -48,6 +48,8 @@ clean_trezorhal: ## clean trezorhal build
 
 clean_unix: ## clean unix build
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
+	# workaround for relative paths containing ../.. in unix Makefile
+	rm -rf vendor/micropython/micropython
 
 clean_cross: ## clean mpy-cross build
 	$(MAKE) -C vendor/micropython/mpy-cross clean $(CROSS_PORT_OPTS)

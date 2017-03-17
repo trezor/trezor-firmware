@@ -6,7 +6,9 @@
  */
 
 #include <stdlib.h>
+#ifndef TREZOR_NOUI
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define DISPLAY_BORDER 16
 
@@ -15,8 +17,6 @@ static SDL_Surface  *BUFFER   = 0;
 static SDL_Texture  *TEXTURE  = 0;
 static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
-
-#define CMD(X) (void)(X);
 
 void DATA(uint8_t x) {
     if (POSX <= EX && POSY <= EY) {
@@ -31,9 +31,13 @@ void DATA(uint8_t x) {
         }
     }
 }
+#else
+#define DATA(X) (void)(X);
+#endif
 
 void display_init(void)
 {
+#ifndef TREZOR_NOUI
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
     }
@@ -54,23 +58,28 @@ void display_init(void)
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
     SDL_SetTextureAlphaMod(TEXTURE, 0);
+#endif
 }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
+#ifndef TREZOR_NOUI
     SX = x0; SY = y0;
     EX = x1; EY = y1;
     POSX = SX; POSY = SY;
     DATAODD = 0;
+#endif
 }
 
 void display_refresh(void)
 {
+#ifndef TREZOR_NOUI
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
+#endif
 }
 
 static void display_set_orientation(int degrees)
@@ -79,5 +88,14 @@ static void display_set_orientation(int degrees)
 
 static void display_set_backlight(int val)
 {
+#ifndef TREZOR_NOUI
     SDL_SetRenderDrawColor(RENDERER, val, val, val, 255);
+#endif
+}
+
+void display_save(const char *filename)
+{
+#ifndef TREZOR_NOUI
+    IMG_SavePNG(BUFFER, filename);
+#endif
 }

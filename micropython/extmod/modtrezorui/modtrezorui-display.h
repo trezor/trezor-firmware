@@ -352,6 +352,20 @@ STATIC mp_obj_t mod_TrezorUi_Display_offset(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_offset_obj, 1, 2, mod_TrezorUi_Display_offset);
 
+/// def trezor.ui.display.save(filename: string) -> None:
+///     '''
+///     Saves current display contents to file filename.
+///     '''
+STATIC mp_obj_t mod_TrezorUi_Display_save(mp_obj_t self, mp_obj_t filename) {
+    mp_buffer_info_t fn;
+    mp_get_buffer_raise(filename, &fn, MP_BUFFER_READ);
+    if (fn.len > 0) {
+        display_save(fn.buf);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_save_obj, mod_TrezorUi_Display_save);
+
 STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_TrezorUi_Display_clear_obj) },
     { MP_ROM_QSTR(MP_QSTR_refresh), MP_ROM_PTR(&mod_TrezorUi_Display_refresh_obj) },
@@ -369,6 +383,7 @@ STATIC const mp_rom_map_elem_t mod_TrezorUi_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUi_Display_orientation_obj) },
     { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUi_Display_backlight_obj) },
     { MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_TrezorUi_Display_offset_obj) },
+    { MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_TrezorUi_Display_save_obj) },
     { MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_OBJ_NEW_SMALL_INT(FONT_MONO) },
     { MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_OBJ_NEW_SMALL_INT(FONT_NORMAL) },
     { MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_OBJ_NEW_SMALL_INT(FONT_BOLD) },

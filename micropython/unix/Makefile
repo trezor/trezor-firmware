@@ -89,7 +89,7 @@ ifeq ($(MICROPY_PY_TREZORUI),1)
 ifeq ($(TREZOR_NOUI),1)
 	CFLAGS_MOD += -DTREZOR_NOUI=1
 else
-	LDFLAGS_MOD += -lSDL2
+	LDFLAGS_MOD += -lSDL2 -lSDL2_image
 endif
 endif
 

@@ -285,3 +285,7 @@ void display_refresh(void) {
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
 }
+
+void display_save(const char *filename)
+{
+}
