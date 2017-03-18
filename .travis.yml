@@ -12,6 +12,8 @@ install:
 script:
   - make build_cross
 
+  - make build_bootloader
+
   - make build_trezorhal
 
   - make build_unix TREZOR_NOUI=1

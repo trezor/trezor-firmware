@@ -13,6 +13,24 @@
 
 void SystemClock_Config(void);
 
+void __attribute__((noreturn)) nlr_jump_fail(void *val) {
+    for (;;) {}
+}
+
+void __attribute__((noreturn)) __fatal_error(const char *msg) {
+    for (volatile uint32_t delay = 0; delay < 10000000; delay++) {
+    }
+    display_print("FATAL ERROR:\n", -1);
+    display_print(msg, -1);
+    display_print("\n", -1);
+    for (;;) {
+        __WFI();
+    }
+}
+
+void mp_hal_stdout_tx_str(const char *str) {
+}
+
 void halt(void)
 {
     BOOTLOADER_PRINTLN("HALT!");

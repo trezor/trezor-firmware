@@ -26,6 +26,9 @@ build_trezorhal: vendor res build_cross ## build trezorhal port with frozen modu
 build_trezorhal_debug: vendor res build_cross ## build trezorhal port with frozen modules and debug symbols
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS) DEBUG=1
 
+build_bootloader: vendor ## build bootloader
+	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
+
 build_unix: vendor ## build unix port
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
 

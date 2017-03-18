@@ -125,7 +125,6 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	\
 	lib/embed/abort_.o \
 	lib/libc/string0.o \
-	lib/libc/string0.o \
 	lib/libm/acoshf.o \
 	lib/libm/asinfacosf.o \
 	lib/libm/asinhf.o \
