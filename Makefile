@@ -3,6 +3,7 @@
 JOBS=4
 MAKE=make -j $(JOBS)
 
+BOOTLOADER_BUILD_DIR=micropython/bootloader/build
 TREZORHAL_BUILD_DIR=micropython/firmware/build
 
 TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=src
@@ -59,6 +60,9 @@ clean_cross: ## clean mpy-cross build
 
 flash: ## flash firmware using st-flash
 	st-flash write $(TREZORHAL_BUILD_DIR)/firmware.bin 0x8000000
+
+flash_bootloader: ## flash bootloader using st-flash
+	st-flash write $(BOOTLOADER_BUILD_DIR)/bootloader.bin 0x8000000
 
 flash_openocd: $(TREZORHAL_BUILD_DIR)/firmware.hex ## flash firmware using openocd
 	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg \
