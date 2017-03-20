@@ -1,6 +1,6 @@
-#Memory Layout
+# Memory Layout
 
-##Flash
+## Flash
 
 | sector    | range                   |  size   | function
 |-----------|-------------------------|--------:|----------------------
@@ -17,7 +17,7 @@
 | Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | firmware
 | Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | firmware
 
-##RAM
+## RAM
 
 | region  | range                   |  size   | function
 |---------|-------------------------|--------:|----------------------

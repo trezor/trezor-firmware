@@ -1,38 +1,37 @@
-#TREZOR Core Bootloader
+# TREZOR Core Bootloader
 
 Bootloader is split into two stages. See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
 
 First stage is stored in write-protected area, which means it is non-upgradable. Only second stage bootloader update is allowed.
 
-##First Stage Bootloader
+## First Stage Bootloader
 
 First stage checks the integrity and signatures of the second stage and runs it if everything is OK.
 
 If first stage bootloader finds a valid second stage bootloader image on the SD card (in raw format, no filesystem),
 it will replace the internal second stage, allowing a second stage update via SD card.
 
-##Second Stage Bootloader
+## Second Stage Bootloader
 
 Second stage checks the integrity and signatures of the firmware and runs it if everything is OK.
 
 If second stage bootloader detects a pressed finger on the display or there is no firmware loaded in the device,
 it will start in a firmware update mode, allowing a firmware update via USB.
 
-##Common notes
+## Common notes
 
 * Hash function used below is SHA-256 and signature system is Ed25519 (allows combining signatures by multiple keys into one).
 * All multibyte integer values are little endian.
 * There is a tool called [firmwarectl](../tools/firmwarectl) which checks validity of the bootloader/firmware images including their headers.
 
-##Bootloader Format
+## Bootloader Format
 
 TREZOR Core (second stage) bootloader consists of 2 parts:
 
 1. bootloader header
 2. bootloader code
 
-
-###Bootloader Header
+### Bootloader Header
 
 Total length of bootloader header is always 256 bytes.
 
@@ -50,7 +49,7 @@ Total length of bootloader header is always 256 bytes.
 | 0x00BF | 1      | sigidx | SatoshiLabs signature indexes (bitmap) |
 | 0x00C0 | 64     | sig | SatoshiLabs signature |
 
-##Firmware Format
+## Firmware Format
 
 TREZOR Core firmware consists of 3 parts:
 
@@ -58,7 +57,7 @@ TREZOR Core firmware consists of 3 parts:
 2. firmware header
 3. firmware code
 
-###Vendor Header
+### Vendor Header
 
 Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vendor string) + (length of vendor image) bytes rounded up to the closest multiply of 256 bytes.
 
@@ -81,7 +80,7 @@ Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vend
 | ?      | 1      | sigidx | SatoshiLabs signature indexes (bitmap) |
 | ?      | 64     | sig | SatoshiLabs signature |
 
-###Firmware Header
+### Firmware Header
 
 Total length of firmware header is always 256 bytes.
 
@@ -99,7 +98,7 @@ Total length of firmware header is always 256 bytes.
 | 0x00BF | 1      | sigidx | vendor signature indexes (bitmap) |
 | 0x00C0 | 64     | sig | vendor signature |
 
-##Various ideas
+## Various ideas
 
 * Bootloader should be able to read vendor+firmware header and send info about FW to client in features message.
 * Bootloader should not try to run firmware if there is not any.

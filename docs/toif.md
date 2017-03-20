@@ -1,8 +1,8 @@
-#TREZOR Optimized Image Format
+# TREZOR Optimized Image Format
 
 All multibyte integer values are little endian!
 
-##Header
+## Header
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
@@ -13,14 +13,14 @@ All multibyte integer values are little endian!
 | 0x0008 | 4      | datasize | length of the compressed data |
 | 0x000A | ?      | data | compressed data (see below) |
 
-##Format
+## Format
 
 TOI currently supports 2 variants:
 
 * `f`: full-color, file extension `.toif`
 * `g`: gray-scale, file extension `.toig`
 
-###Full-color
+### Full-color
 
 For each pixel a 16-bit value is used. First 5 bits are used for red component, next 6 bits are green, final 5 bits are blue, so it looks like this:
 
@@ -28,7 +28,7 @@ For each pixel a 16-bit value is used. First 5 bits are used for red component, 
 |----|----|----|----|----|----|---|---|---|---|---|---|---|---|---|---|
 | R | R | R | R | R | G | G | G | G | G | G | B | B | B | B | B |
 
-###Gray-scale
+### Gray-scale
 
 Each pixel is encoded using a 4-bit value. Each byte contains color of two pixels, so it looks like this:
 
@@ -38,17 +38,17 @@ Each pixel is encoded using a 4-bit value. Each byte contains color of two pixel
 
 Where Po is odd pixel and Pe is even pixel.
 
-##Compression
+## Compression
 
 Pixel data is compressed using DEFLATE algorithm with 10-bit sliding window and no header. This can be achieved with ZLIB library by using the following:
 
-``` python
+```python
 import zlib
 z = zlib.compressobj(level=9, wbits=10)
 zdata = z.compress(pixeldata) + z.flush()
 zdata = zdata[2:-4] # strip header and checksum
 ```
 
-##Tools
+## Tools
 
 * [png2toi](../tools/png2toi) - tool for converting PNG into TOI format
