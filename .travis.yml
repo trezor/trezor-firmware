@@ -16,7 +16,7 @@ script:
 
   - make build_loader
 
-  - make build_trezorhal
+  - make build_firmware
 
   - make build_unix TREZOR_NOUI=1
 
