@@ -3,6 +3,7 @@ FROZEN_MPY_DIR ?= src
 
 # target directory
 BUILD ?= micropython/firmware/build
+TARGET ?= firmware
 
 # include py core make definitions
 include vendor/micropython/py/mkenv.mk
@@ -394,15 +395,15 @@ QSTR_GEN_EXTRA_CFLAGS += -DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB -DN_ARM -DN_XTENSA
 # comp rules
 # =====================================
 
-all: $(BUILD)/firmware.bin
+all: $(BUILD)/$(TARGET).bin
 
-$(BUILD)/firmware.elf: $(OBJ)
+$(BUILD)/$(TARGET).elf: $(OBJ)
 	$(ECHO) "LINK $@"
 	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 	$(Q)$(SIZE) $@
 
-$(BUILD)/firmware.bin: $(BUILD)/firmware.elf
-	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/firmware.bin
+$(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
+	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
 
 $(BUILD)/%.o: %.S
 	$(ECHO) "CC $<"

@@ -20,7 +20,19 @@ vendor: ## update git submodules
 res: ## update resources
 	./tools/res_collect
 
-build: build_firmware build_unix build_cross ## build firmware, unix and mpy-cross micropython ports
+run: ## run unix port
+	cd src ; ../vendor/micropython/unix/micropython
+
+emu: ## run emulator
+	./emu.sh
+
+test: ## run unit tests
+	cd tests ; ./run_tests.sh
+
+testpy: ## run selected unit tests from python-trezor
+	cd tests ; ./run_tests_python_trezor.sh
+
+build: build_firmware build_bootloader build_loader build_unix build_cross ## build all
 
 build_firmware: vendor res build_cross ## build firmware with frozen modules
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
@@ -43,16 +55,16 @@ build_unix_debug: vendor ## build unix port with debug symbols
 build_cross: vendor ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
 
-run: ## run unix port
-	cd src ; ../vendor/micropython/unix/micropython
-
-emu: ## run emulator
-	./emu.sh
-
-clean: clean_firmware clean_unix clean_cross ## clean all builds
+clean: clean_firmware clean_bootloader clean_loader clean_unix clean_cross ## clean all
 
 clean_firmware: ## clean firmware build
 	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
+
+clean_bootloader: ## clean bootloader build
+	$(MAKE) -f Makefile.bootloader clean $(TREZORHAL_PORT_OPTS)
+
+clean_loader: ## clean loader build
+	$(MAKE) -f Makefile.loader clean $(TREZORHAL_PORT_OPTS)
 
 clean_unix: ## clean unix build
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
@@ -85,9 +97,3 @@ openocd: ## start openocd which connects to the device
 
 gdb: ## start remote gdb session which connects to the openocd
 	arm-none-eabi-gdb $(FIRMWARE_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'
-
-test: ## run unit tests
-	cd tests ; ./run_tests.sh
-
-testpy: ## run selected unit tests from python-trezor
-	cd tests ; ./run_tests_python_trezor.sh

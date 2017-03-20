@@ -1,5 +1,6 @@
 # target directory
 BUILD ?= micropython/loader/build
+TARGET ?= loader
 
 # include py core make definitions
 include vendor/micropython/py/mkenv.mk
@@ -134,15 +135,15 @@ LDFLAGS += --gc-sections
 # comp rules
 # =====================================
 
-all: $(BUILD)/loader.bin
+all: $(BUILD)/$(TARGET).bin
 
-$(BUILD)/loader.elf: $(OBJ)
+$(BUILD)/$(TARGET).elf: $(OBJ)
 	$(ECHO) "LINK $@"
 	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 	$(Q)$(SIZE) $@
 
-$(BUILD)/loader.bin: $(BUILD)/loader.elf
-	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/loader.bin
+$(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
+	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
 
 $(BUILD)/%.o: %.S
 	$(ECHO) "CC $<"
@@ -158,13 +159,12 @@ $(BUILD)/%.o: %.c
 
 OBJ_DIRS = $(sort $(dir $(OBJ)))
 $(OBJ): | $(OBJ_DIRS)
-$(OBJ_DIRS):
+$(OBJ_DIRS) $(BUILD_HDR):
 	$(MKDIR) -p $@
 
 $(OBJ): | $(BUILD_HDR)/qstrdefs.generated.h
 
-$(BUILD_HDR)/qstrdefs.generated.h:
-	$(MKDIR) -p $(BUILD_HDR)
+$(BUILD_HDR)/qstrdefs.generated.h: | $(BUILD_HDR)
 	touch $(BUILD_HDR)/qstrdefs.generated.h
 
 clean:
