@@ -9,9 +9,6 @@
 
 #include "trezor-crypto/sha3.h"
 
-#define HASH_SHA3_512_BLOCK_SIZE   128
-#define HASH_SHA3_512_DIGEST_SIZE  sha3_512_hash_size
-
 typedef struct _mp_obj_Sha3_512_t {
     mp_obj_base_t base;
     SHA3_CTX ctx;
@@ -57,7 +54,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_512_update_obj, mod_Trezo
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_digest(size_t n_args, const mp_obj_t *args) {
     mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(args[0]);
     vstr_t vstr;
-    vstr_init_len(&vstr, HASH_SHA3_512_DIGEST_SIZE);
+    vstr_init_len(&vstr, SHA3_512_DIGEST_LENGTH);
     SHA3_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
     if (n_args >= 1 && args[1] == mp_const_true) {
@@ -81,8 +78,8 @@ STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Sha3_512_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Sha3_512_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Sha3_512_digest_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_Sha3_512___del___obj) },
-    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(HASH_SHA3_512_BLOCK_SIZE) },
-    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(HASH_SHA3_512_DIGEST_SIZE) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(SHA3_512_BLOCK_LENGTH) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(SHA3_512_DIGEST_LENGTH) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Sha3_512_locals_dict, mod_TrezorCrypto_Sha3_512_locals_dict_table);
 

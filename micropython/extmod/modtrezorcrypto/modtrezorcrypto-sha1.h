@@ -9,9 +9,6 @@
 
 #include "trezor-crypto/sha2.h"
 
-#define HASH_SHA1_BLOCK_SIZE   SHA1_BLOCK_LENGTH
-#define HASH_SHA1_DIGEST_SIZE  SHA1_DIGEST_LENGTH
-
 typedef struct _mp_obj_Sha1_t {
     mp_obj_base_t base;
     SHA1_CTX ctx;
@@ -57,7 +54,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha1_update_obj, mod_TrezorCry
 STATIC mp_obj_t mod_TrezorCrypto_Sha1_digest(mp_obj_t self) {
     mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
-    vstr_init_len(&vstr, HASH_SHA1_DIGEST_SIZE);
+    vstr_init_len(&vstr, SHA1_DIGEST_LENGTH);
     SHA1_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(SHA1_CTX));
     sha1_Final(&ctx, (uint8_t *)vstr.buf);
@@ -77,8 +74,8 @@ STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Sha1_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Sha1_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Sha1_digest_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_Sha1___del___obj) },
-    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(HASH_SHA1_BLOCK_SIZE) },
-    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(HASH_SHA1_DIGEST_SIZE) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(SHA1_BLOCK_LENGTH) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(SHA1_DIGEST_LENGTH) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Sha1_locals_dict, mod_TrezorCrypto_Sha1_locals_dict_table);
 

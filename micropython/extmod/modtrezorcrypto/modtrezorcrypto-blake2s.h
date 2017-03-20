@@ -9,9 +9,6 @@
 
 #include "trezor-crypto/blake2s.h"
 
-#define HASH_BLAKE2S_BLOCK_SIZE   BLAKE2S_BLOCKBYTES
-#define HASH_BLAKE2S_DIGEST_SIZE  BLAKE2S_OUTBYTES
-
 typedef struct _mp_obj_Blake2s_t {
     mp_obj_base_t base;
     BLAKE2S_CTX ctx;
@@ -31,9 +28,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Blake2s_make_new(const mp_obj_type_t *type, siz
     if (n_args == 2) {
         mp_buffer_info_t key;
         mp_get_buffer_raise(args[1], &key, MP_BUFFER_READ);
-        blake2s_InitKey(&(o->ctx), BLAKE2S_OUTBYTES, key.buf, key.len);
+        blake2s_InitKey(&(o->ctx), BLAKE2S_DIGEST_LENGTH, key.buf, key.len);
     } else {
-        blake2s_Init(&(o->ctx), BLAKE2S_OUTBYTES);
+        blake2s_Init(&(o->ctx), BLAKE2S_DIGEST_LENGTH);
     }
     // constructor called with data argument set
     if (n_args >= 1) {
@@ -64,10 +61,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Blake2s_update_obj, mod_Trezor
 STATIC mp_obj_t mod_TrezorCrypto_Blake2s_digest(mp_obj_t self) {
     mp_obj_Blake2s_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
-    vstr_init_len(&vstr, HASH_BLAKE2S_DIGEST_SIZE);
+    vstr_init_len(&vstr, BLAKE2S_DIGEST_LENGTH);
     BLAKE2S_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(BLAKE2S_CTX));
-    blake2s_Final(&ctx, (uint8_t *)vstr.buf, BLAKE2S_OUTBYTES);
+    blake2s_Final(&ctx, (uint8_t *)vstr.buf, BLAKE2S_DIGEST_LENGTH);
     memset(&ctx, 0, sizeof(BLAKE2S_CTX));
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -84,8 +81,8 @@ STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Blake2s_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Blake2s_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Blake2s_digest_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_Blake2s___del___obj) },
-    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(HASH_BLAKE2S_BLOCK_SIZE) },
-    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(HASH_BLAKE2S_DIGEST_SIZE) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(BLAKE2S_BLOCK_LENGTH) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(BLAKE2S_DIGEST_LENGTH) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Blake2s_locals_dict, mod_TrezorCrypto_Blake2s_locals_dict_table);
 

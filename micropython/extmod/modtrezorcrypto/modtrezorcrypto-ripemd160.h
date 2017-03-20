@@ -9,9 +9,6 @@
 
 #include "trezor-crypto/ripemd160.h"
 
-#define HASH_RIPEMD160_BLOCK_SIZE   RIPEMD160_BLOCK_LENGTH
-#define HASH_RIPEMD160_DIGEST_SIZE  RIPEMD160_DIGEST_LENGTH
-
 typedef struct _mp_obj_Ripemd160_t {
     mp_obj_base_t base;
     RIPEMD160_CTX ctx;
@@ -57,7 +54,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ripemd160_update_obj, mod_Trez
 STATIC mp_obj_t mod_TrezorCrypto_Ripemd160_digest(mp_obj_t self) {
     mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
-    vstr_init_len(&vstr, HASH_RIPEMD160_DIGEST_SIZE);
+    vstr_init_len(&vstr, RIPEMD160_DIGEST_LENGTH);
     RIPEMD160_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(RIPEMD160_CTX));
     ripemd160_Final(&ctx, (uint8_t *)vstr.buf);
@@ -77,8 +74,8 @@ STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Ripemd160_locals_dict_table[] = 
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160_digest_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_Ripemd160___del___obj) },
-    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(HASH_RIPEMD160_BLOCK_SIZE) },
-    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(HASH_RIPEMD160_DIGEST_SIZE) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(RIPEMD160_BLOCK_LENGTH) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(RIPEMD160_DIGEST_LENGTH) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Ripemd160_locals_dict, mod_TrezorCrypto_Ripemd160_locals_dict_table);
 
