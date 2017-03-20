@@ -29,13 +29,9 @@ build_firmware_debug: vendor res build_cross ## build firmware with frozen modul
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS) DEBUG=1
 
 build_bootloader: vendor ## build bootloader
-	mkdir -p $(BOOTLOADER_BUILD_DIR)/genhdr
-	touch $(BOOTLOADER_BUILD_DIR)/genhdr/qstrdefs.generated.h
 	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
 
 build_loader: vendor ## build loader
-	mkdir -p $(LOADER_BUILD_DIR)/genhdr
-	touch $(LOADER_BUILD_DIR)/genhdr/qstrdefs.generated.h
 	$(MAKE) -f Makefile.loader $(TREZORHAL_PORT_OPTS)
 
 build_unix: vendor ## build unix port

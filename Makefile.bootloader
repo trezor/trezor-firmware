@@ -12,6 +12,7 @@ SRCDIR_FW = micropython
 
 BUILD_MP = $(BUILD)/$(SRCDIR_MP)
 BUILD_FW = $(BUILD)/$(SRCDIR_FW)
+BUILD_HDR = $(BUILD)/genhdr
 
 # OBJ vendor/micropython
 OBJ_MP += $(addprefix $(BUILD_MP)/,\
@@ -161,6 +162,12 @@ OBJ_DIRS = $(sort $(dir $(OBJ)))
 $(OBJ): | $(OBJ_DIRS)
 $(OBJ_DIRS):
 	$(MKDIR) -p $@
+
+$(OBJ): | $(BUILD_HDR)/qstrdefs.generated.h
+
+$(BUILD_HDR)/qstrdefs.generated.h:
+	$(MKDIR) -p $(BUILD_HDR)
+	touch $(BUILD_HDR)/qstrdefs.generated.h
 
 clean:
 	$(RM) -rf $(BUILD)
