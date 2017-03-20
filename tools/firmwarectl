@@ -6,7 +6,7 @@ import hashlib
 import ed25519
 
 
-# bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
+# loader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
 
 # converts 8-bit bitmap to tuple of values
@@ -33,14 +33,14 @@ def get_sig(data):
     return sigidx, sig
 
 
-class BootloaderImage:
+class LoaderImage:
 
     def __init__(self, data):
         header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
         self.magic, self.hdrlen, self.expiry, self.codelen, \
             self.vmajor, self.vminor, self.vpatch, self.vbuild, \
             self.reserved, self.sigidx, self.sig = header
-        assert self.magic == b'TRZB'
+        assert self.magic == b'TRZL'
         assert self.hdrlen == 256
         assert self.codelen + self.hdrlen >= 4 * 1024
         assert self.codelen + self.hdrlen <= 64 * 1024 + 7 * 128 * 1024
@@ -51,7 +51,7 @@ class BootloaderImage:
         assert len(self.code) == self.codelen
 
     def print(self):
-        print('TREZOR Bootloader Image')
+        print('TREZOR Loader Image')
         print('  * magic   :', self.magic.decode('ascii'))
         print('  * hdrlen  :', self.hdrlen)
         print('  * expiry  :', self.expiry)
@@ -213,8 +213,8 @@ def binopen(filename):
     print()
     data = open(filename, 'rb').read()
     magic = data[:4]
-    if magic == b'TRZB':
-        return BootloaderImage(data)
+    if magic == b'TRZL':
+        return LoaderImage(data)
     if magic == b'TRZV':
         return VendorHeader(data)
     if magic == b'TRZF':
