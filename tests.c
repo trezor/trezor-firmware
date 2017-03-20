@@ -1831,82 +1831,82 @@ END_TEST
 // test vectors from http://www.di-mgt.com.au/sha_testvectors.html
 START_TEST(test_sha3_256)
 {
-	uint8_t digest[sha3_256_hash_size];
+	uint8_t digest[SHA3_256_DIGEST_LENGTH];
 
 	sha3_256((uint8_t *)"", 0, digest);
-	ck_assert_mem_eq(digest, fromhex("a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"), sha3_256_hash_size);
+	ck_assert_mem_eq(digest, fromhex("a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"), SHA3_256_DIGEST_LENGTH);
 
 	sha3_256((uint8_t *)"abc", 3, digest);
-	ck_assert_mem_eq(digest, fromhex("3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532"), sha3_256_hash_size);
+	ck_assert_mem_eq(digest, fromhex("3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532"), SHA3_256_DIGEST_LENGTH);
 
 	sha3_256((uint8_t *)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56, digest);
-	ck_assert_mem_eq(digest, fromhex("41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376"), sha3_256_hash_size);
+	ck_assert_mem_eq(digest, fromhex("41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376"), SHA3_256_DIGEST_LENGTH);
 
 	sha3_256((uint8_t *)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112, digest);
-	ck_assert_mem_eq(digest, fromhex("916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18"), sha3_256_hash_size);
+	ck_assert_mem_eq(digest, fromhex("916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18"), SHA3_256_DIGEST_LENGTH);
 }
 END_TEST
 
 // test vectors from http://www.di-mgt.com.au/sha_testvectors.html
 START_TEST(test_sha3_512)
 {
-	uint8_t digest[sha3_512_hash_size];
+	uint8_t digest[SHA3_512_DIGEST_LENGTH];
 
 	sha3_512((uint8_t *)"", 0, digest);
-	ck_assert_mem_eq(digest, fromhex("a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b2123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26"), sha3_512_hash_size);
+	ck_assert_mem_eq(digest, fromhex("a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b2123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26"), SHA3_512_DIGEST_LENGTH);
 
 	sha3_512((uint8_t *)"abc", 3, digest);
-	ck_assert_mem_eq(digest, fromhex("b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e116e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0"), sha3_512_hash_size);
+	ck_assert_mem_eq(digest, fromhex("b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e116e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0"), SHA3_512_DIGEST_LENGTH);
 
 	sha3_512((uint8_t *)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56, digest);
-	ck_assert_mem_eq(digest, fromhex("04a371e84ecfb5b8b77cb48610fca8182dd457ce6f326a0fd3d7ec2f1e91636dee691fbe0c985302ba1b0d8dc78c086346b533b49c030d99a27daf1139d6e75e"), sha3_512_hash_size);
+	ck_assert_mem_eq(digest, fromhex("04a371e84ecfb5b8b77cb48610fca8182dd457ce6f326a0fd3d7ec2f1e91636dee691fbe0c985302ba1b0d8dc78c086346b533b49c030d99a27daf1139d6e75e"), SHA3_512_DIGEST_LENGTH);
 
 	sha3_512((uint8_t *)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112, digest);
-	ck_assert_mem_eq(digest, fromhex("afebb2ef542e6579c50cad06d2e578f9f8dd6881d7dc824d26360feebf18a4fa73e3261122948efcfd492e74e82e2189ed0fb440d187f382270cb455f21dd185"), sha3_512_hash_size);
+	ck_assert_mem_eq(digest, fromhex("afebb2ef542e6579c50cad06d2e578f9f8dd6881d7dc824d26360feebf18a4fa73e3261122948efcfd492e74e82e2189ed0fb440d187f382270cb455f21dd185"), SHA3_512_DIGEST_LENGTH);
 }
 END_TEST
 
 // test vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2b-kat.txt
 START_TEST(test_blake2b)
 {
-	uint8_t key[BLAKE2B_KEYBYTES];
-	memcpy(key, fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"), BLAKE2B_KEYBYTES);
+	uint8_t key[BLAKE2B_KEY_LENGTH];
+	memcpy(key, fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"), BLAKE2B_KEY_LENGTH);
 
-	uint8_t digest[BLAKE2B_OUTBYTES];
+	uint8_t digest[BLAKE2B_DIGEST_LENGTH];
 
-	blake2b_Key((uint8_t *)"", 0, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e996e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568"), BLAKE2B_OUTBYTES);
+	blake2b_Key((uint8_t *)"", 0, key, BLAKE2B_KEY_LENGTH, digest, BLAKE2B_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e996e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568"), BLAKE2B_DIGEST_LENGTH);
 
-	blake2b_Key(fromhex("000102"), 3, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("33d0825dddf7ada99b0e7e307104ad07ca9cfd9692214f1561356315e784f3e5a17e364ae9dbb14cb2036df932b77f4b292761365fb328de7afdc6d8998f5fc1"), BLAKE2B_OUTBYTES);
+	blake2b_Key(fromhex("000102"), 3, key, BLAKE2B_KEY_LENGTH, digest, BLAKE2B_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("33d0825dddf7ada99b0e7e307104ad07ca9cfd9692214f1561356315e784f3e5a17e364ae9dbb14cb2036df932b77f4b292761365fb328de7afdc6d8998f5fc1"), BLAKE2B_DIGEST_LENGTH);
 
-	blake2b_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"), 56, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("f8f3726ac5a26cc80132493a6fedcb0e60760c09cfc84cad178175986819665e76842d7b9fedf76dddebf5d3f56faaad4477587af21606d396ae570d8e719af2"), BLAKE2B_OUTBYTES);
+	blake2b_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"), 56, key, BLAKE2B_KEY_LENGTH, digest, BLAKE2B_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("f8f3726ac5a26cc80132493a6fedcb0e60760c09cfc84cad178175986819665e76842d7b9fedf76dddebf5d3f56faaad4477587af21606d396ae570d8e719af2"), BLAKE2B_DIGEST_LENGTH);
 
-	blake2b_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"), 112, key, BLAKE2B_KEYBYTES, digest, BLAKE2B_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("227e3aed8d2cb10b918fcb04f9de3e6d0a57e08476d93759cd7b2ed54a1cbf0239c528fb04bbf288253e601d3bc38b21794afef90b17094a182cac557745e75f"), BLAKE2B_OUTBYTES);
+	blake2b_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"), 112, key, BLAKE2B_KEY_LENGTH, digest, BLAKE2B_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("227e3aed8d2cb10b918fcb04f9de3e6d0a57e08476d93759cd7b2ed54a1cbf0239c528fb04bbf288253e601d3bc38b21794afef90b17094a182cac557745e75f"), BLAKE2B_DIGEST_LENGTH);
 }
 END_TEST
 
 // test vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
 START_TEST(test_blake2s)
 {
-	uint8_t key[BLAKE2S_KEYBYTES];
-	memcpy(key, fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"), BLAKE2S_KEYBYTES);
+	uint8_t key[BLAKE2S_KEY_LENGTH];
+	memcpy(key, fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"), BLAKE2S_KEY_LENGTH);
 
-	uint8_t digest[BLAKE2S_OUTBYTES];
+	uint8_t digest[BLAKE2S_DIGEST_LENGTH];
 
-	blake2s_Key((uint8_t *)"", 0, key, BLAKE2S_KEYBYTES, digest, BLAKE2S_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("48a8997da407876b3d79c0d92325ad3b89cbb754d86ab71aee047ad345fd2c49"), BLAKE2S_OUTBYTES);
+	blake2s_Key((uint8_t *)"", 0, key, BLAKE2S_KEY_LENGTH, digest, BLAKE2S_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("48a8997da407876b3d79c0d92325ad3b89cbb754d86ab71aee047ad345fd2c49"), BLAKE2S_DIGEST_LENGTH);
 
-	blake2s_Key(fromhex("000102"), 3, key, BLAKE2S_KEYBYTES, digest, BLAKE2S_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("1d220dbe2ee134661fdf6d9e74b41704710556f2f6e5a091b227697445dbea6b"), BLAKE2S_OUTBYTES);
+	blake2s_Key(fromhex("000102"), 3, key, BLAKE2S_KEY_LENGTH, digest, BLAKE2S_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("1d220dbe2ee134661fdf6d9e74b41704710556f2f6e5a091b227697445dbea6b"), BLAKE2S_DIGEST_LENGTH);
 
-	blake2s_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"), 56, key, BLAKE2S_KEYBYTES, digest, BLAKE2S_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("2966b3cfae1e44ea996dc5d686cf25fa053fb6f67201b9e46eade85d0ad6b806"), BLAKE2S_OUTBYTES);
+	blake2s_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031323334353637"), 56, key, BLAKE2S_KEY_LENGTH, digest, BLAKE2S_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("2966b3cfae1e44ea996dc5d686cf25fa053fb6f67201b9e46eade85d0ad6b806"), BLAKE2S_DIGEST_LENGTH);
 
-	blake2s_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"), 112, key, BLAKE2S_KEYBYTES, digest, BLAKE2S_OUTBYTES);
-	ck_assert_mem_eq(digest, fromhex("90a83585717b75f0e9b725e055eeeeb9e7a028ea7e6cbc07b20917ec0363e38c"), BLAKE2S_OUTBYTES);
+	blake2s_Key(fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"), 112, key, BLAKE2S_KEY_LENGTH, digest, BLAKE2S_DIGEST_LENGTH);
+	ck_assert_mem_eq(digest, fromhex("90a83585717b75f0e9b725e055eeeeb9e7a028ea7e6cbc07b20917ec0363e38c"), BLAKE2S_DIGEST_LENGTH);
 }
 END_TEST
 

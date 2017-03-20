@@ -27,6 +27,7 @@ typedef struct __blake2b_state
 #define BLAKE2B_CTX blake2b_state
 #define BLAKE2B_BLOCK_LENGTH   BLAKE2B_BLOCKBYTES
 #define BLAKE2B_DIGEST_LENGTH  BLAKE2B_OUTBYTES
+#define BLAKE2B_KEY_LENGTH     BLAKE2B_KEYBYTES
 
 int blake2b_Init(blake2b_state *S, size_t outlen);
 int blake2b_InitKey(blake2b_state *S, size_t outlen, const void *key, size_t keylen);

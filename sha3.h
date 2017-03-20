@@ -34,6 +34,16 @@ extern "C" {
 #define sha3_max_permutation_size 25
 #define sha3_max_rate_in_qwords 24
 
+#define SHA3_224_BLOCK_LENGTH   144
+#define SHA3_256_BLOCK_LENGTH   136
+#define SHA3_384_BLOCK_LENGTH   104
+#define SHA3_512_BLOCK_LENGTH   72
+
+#define SHA3_224_DIGEST_LENGTH  sha3_224_hash_size
+#define SHA3_256_DIGEST_LENGTH  sha3_256_hash_size
+#define SHA3_384_DIGEST_LENGTH  sha3_384_hash_size
+#define SHA3_512_DIGEST_LENGTH  sha3_512_hash_size
+
 /**
  * SHA3 Algorithm context.
  */
