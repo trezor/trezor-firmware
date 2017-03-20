@@ -14,6 +14,7 @@ void __attribute__((noreturn)) __fatal_error(const char *msg) {
     display_print("FATAL ERROR:\n", -1);
     display_print(msg, -1);
     display_print("\n", -1);
+    display_print_out(0xFFFF, 0x001F);
     for (;;) {
         __WFI();
     }

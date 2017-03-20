@@ -8,8 +8,8 @@
 
 #define STAGE2_START   0x08010000
 
-#define BOOTLOADER_PRINT(X) display_print(X, -1)
-#define BOOTLOADER_PRINTLN(X) display_print(X "\n", -1)
+#define BOOTLOADER_PRINT(X)   do { display_print(X, -1);      display_print_out(0xFFFF, 0x001F); } while(0)
+#define BOOTLOADER_PRINTLN(X) do { display_print(X "\n", -1); display_print_out(0xFFFF, 0x001F); } while(0)
 
 void SystemClock_Config(void);
 
@@ -23,6 +23,7 @@ void __attribute__((noreturn)) __fatal_error(const char *msg) {
     display_print("FATAL ERROR:\n", -1);
     display_print(msg, -1);
     display_print("\n", -1);
+    display_print_out(0xFFFF, 0x001F);
     for (;;) {
         __WFI();
     }

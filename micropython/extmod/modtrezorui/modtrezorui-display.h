@@ -126,19 +126,22 @@ STATIC mp_obj_t mod_TrezorUi_Display_icon(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_icon_obj, 6, 6, mod_TrezorUi_Display_icon);
 
-/// def trezor.ui.display.print(text: str) -> None:
+/// def trezor.ui.display.print(text: str, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders text using 5x8 bitmap font (using special text mode)
 ///     '''
-STATIC mp_obj_t mod_TrezorUi_Display_print(mp_obj_t self, mp_obj_t text) {
+STATIC mp_obj_t mod_TrezorUi_Display_print(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t buf;
-    mp_get_buffer_raise(text, &buf, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[1], &buf, MP_BUFFER_READ);
+    mp_int_t fgcolor = mp_obj_get_int(args[2]);
+    mp_int_t bgcolor = mp_obj_get_int(args[3]);
     if (buf.len > 0) {
         display_print(buf.buf, buf.len);
     }
+    display_print_out(fgcolor, bgcolor);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUi_Display_print_obj, mod_TrezorUi_Display_print);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_print_obj, 4, 4, mod_TrezorUi_Display_print);
 
 /// def trezor.ui.display.text(x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
