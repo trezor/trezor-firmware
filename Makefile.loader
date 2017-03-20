@@ -1,15 +1,16 @@
+# source directories
+SRCDIR_MP = vendor/micropython
+SRCDIR_FW = micropython
+
 # target directory
 BUILD ?= micropython/loader/build
 TARGET ?= loader
 
 # include py core make definitions
-include vendor/micropython/py/mkenv.mk
+include $(SRCDIR_MP)/py/mkenv.mk
 
 # sources
 # =====================================
-
-SRCDIR_MP = vendor/micropython
-SRCDIR_FW = micropython
 
 BUILD_MP = $(BUILD)/$(SRCDIR_MP)
 BUILD_FW = $(BUILD)/$(SRCDIR_FW)
@@ -97,18 +98,18 @@ SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
-INC += -Imicropython/extmod/modtrezorui
-INC += -Imicropython/firmware
-INC += -Imicropython/trezorhal
-INC += -Imicropython/trezorhal/hal
-INC += -Ivendor/trezor-crypto
-INC += -Ivendor/micropython
-INC += -Ivendor/micropython/stmhal
-INC += -Ivendor/micropython/stmhal/cmsis
-INC += -Ivendor/micropython/stmhal/hal/f4/inc
-INC += -Ivendor/micropython/stmhal/usbdev/core/inc
-INC += -Ivendor/micropython/stmhal/usbdev/class/inc
-INC += -Ivendor/micropython/lib/cmsis/inc
+INC += -I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto
+INC += -I$(SRCDIR_FW)/extmod/modtrezorui
+INC += -I$(SRCDIR_FW)/firmware
+INC += -I$(SRCDIR_FW)/trezorhal
+INC += -I$(SRCDIR_FW)/trezorhal/hal
+INC += -I$(SRCDIR_MP)
+INC += -I$(SRCDIR_MP)/stmhal
+INC += -I$(SRCDIR_MP)/stmhal/cmsis
+INC += -I$(SRCDIR_MP)/stmhal/hal/f4/inc
+INC += -I$(SRCDIR_MP)/stmhal/usbdev/core/inc
+INC += -I$(SRCDIR_MP)/stmhal/usbdev/class/inc
+INC += -I$(SRCDIR_MP)/lib/cmsis/inc
 INC += -I$(BUILD)
 
 ifeq ($(DEBUG), 1)
@@ -126,7 +127,7 @@ CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T micropython/trezorhal/memory.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T $(SRCDIR_FW)/trezorhal/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections
