@@ -1,12 +1,10 @@
-TREZOR LICENSE
-==============
+# TREZOR LICENSE
 
 This license governs use of the accompanying software. If you use the software,
 you accept this license. If you do not accept the license, do not use the
 software.
 
-1. Definitions
---------------
+## 1. Definitions
 
 The terms "reproduce," "reproduction" and "distribution" have the same meaning
 here as under U.S. copyright law.
@@ -25,8 +23,7 @@ software outside of your company.
 "Licensed patents" means any Licensor patent claims which read directly on the
 software as distributed by the Licensor under this license.
 
-2. Grant of Rights
-------------------
+## 2. Grant of Rights
 
 (A) Copyright Grant - Subject to the terms of this license, the Licensor grants
 you a non-transferable, non-exclusive, worldwide, royalty-free copyright
@@ -36,8 +33,7 @@ license to reproduce the software for reference use.
 you a non-transferable, non-exclusive, worldwide, royalty-free patent license
 under licensed patents for reference use.
 
-3. Limitations
---------------
+## 3. Limitations
 
 (A) No Trademark License - This license does not grant you any rights to use
 the Licensor's name, logo, or trademarks.
