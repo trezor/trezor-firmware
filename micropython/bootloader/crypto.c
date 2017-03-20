@@ -11,7 +11,7 @@ bool parse_header(const uint8_t *data, uint32_t *codelen, uint8_t *sigidx, uint8
 {
     uint32_t magic;
     memcpy(&magic, data, 4);
-    if (magic != 0x425A5254) return false; // TRZB
+    if (magic != 0x4C5A5254) return false; // TRZL
 
     uint32_t hdrlen;
     memcpy(&hdrlen, data + 4, 4);

@@ -4,11 +4,11 @@
 
 | sector    | range                   |  size   | function
 |-----------|-------------------------|--------:|----------------------
-| Sector  0 | 0x08000000 - 0x08003FFF |  16 KiB | bootloader 1st stage (write-protected)
-| Sector  1 | 0x08004000 - 0x08007FFF |  16 KiB | bootloader 1st stage (write-protected)
+| Sector  0 | 0x08000000 - 0x08003FFF |  16 KiB | bootloader (1st stage) (write-protected)
+| Sector  1 | 0x08004000 - 0x08007FFF |  16 KiB | bootloader (1st stage) (write-protected)
 | Sector  2 | 0x08008000 - 0x0800BFFF |  16 KiB | storage area
 | Sector  3 | 0x0800C000 - 0x0800FFFF |  16 KiB | storage area
-| Sector  4 | 0x08010000 - 0x0801FFFF |  64 KiB | bootloader 2nd stage
+| Sector  4 | 0x08010000 - 0x0801FFFF |  64 KiB | loader (2nd stage)
 | Sector  5 | 0x08020000 - 0x0803FFFF | 128 KiB | firmware
 | Sector  6 | 0x08040000 - 0x0805FFFF | 128 KiB | firmware
 | Sector  7 | 0x08060000 - 0x0807FFFF | 128 KiB | firmware
