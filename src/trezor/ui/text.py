@@ -19,7 +19,7 @@ class Text:
         style = ui.NORMAL
         fg = ui.WHITE
         bg = ui.BLACK
-        ui.header(self.header_text, self.header_icon, ui.BLACK, ui.LIGHT_GREEN)
+        ui.header(self.header_text, self.header_icon, ui.GREEN, ui.BLACK)
 
         for item in self.content:
             if isinstance(item, str):

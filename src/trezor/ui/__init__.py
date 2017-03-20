@@ -25,7 +25,7 @@ BLUE        = rgbcolor(0x21, 0x96, 0xF3)
 LIGHT_BLUE  = rgbcolor(0x03, 0xA9, 0xF4)
 CYAN        = rgbcolor(0x00, 0xBC, 0xD4)
 TEAL        = rgbcolor(0x00, 0x96, 0x88)
-GREEN       = rgbcolor(0x44, 0x55, 0x14)
+GREEN       = rgbcolor(0x4C, 0xC1, 0x48)
 LIGHT_GREEN = rgbcolor(0x87, 0xCE, 0x26)
 LIME        = rgbcolor(0xCD, 0xDC, 0x39)
 YELLOW      = rgbcolor(0xFF, 0xEB, 0x3B)
@@ -48,6 +48,9 @@ PM_BLUE      = rgbcolor(0x34, 0x98, 0xDB)
 MONO   = Display.FONT_MONO
 NORMAL = Display.FONT_NORMAL
 BOLD   = Display.FONT_BOLD
+
+# radius for buttons and other elemts
+BTN_RADIUS = const(2)
 
 BACKLIGHT_NORMAL = const(60)
 BACKLIGHT_DIM = const(5)

@@ -8,18 +8,21 @@ DEFAULT_BUTTON = {
     'fg-color': ui.WHITE,
     'text-style': ui.NORMAL,
     'border-color': ui.BLACK,
+    'radius': ui.BTN_RADIUS,
 }
 DEFAULT_BUTTON_ACTIVE = {
     'bg-color': ui.GREY,
     'fg-color': ui.BLACK,
     'text-style': ui.BOLD,
     'border-color': ui.GREY,
+    'radius': ui.BTN_RADIUS,
 }
 DEFAULT_BUTTON_DISABLED = {
     'bg-color': ui.BLACK,
     'fg-color': ui.GREY,
     'text-style': ui.NORMAL,
     'border-color': ui.BLACK,
+    'radius': ui.BTN_RADIUS,
 }
 
 CANCEL_BUTTON = {
@@ -27,25 +30,29 @@ CANCEL_BUTTON = {
     'fg-color': ui.LIGHT_RED,
     'text-style': ui.BOLD,
     'border-color': ui.RED,
+    'radius': ui.BTN_RADIUS,
 }
 CANCEL_BUTTON_ACTIVE = {
     'bg-color': ui.RED,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
     'border-color': ui.RED,
+    'radius': ui.BTN_RADIUS,
 }
 
 CONFIRM_BUTTON = {
     'bg-color': ui.GREEN,
-    'fg-color': ui.LIGHT_GREEN,
+    'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
     'border-color': ui.GREEN,
+    'radius': ui.BTN_RADIUS,
 }
 CONFIRM_BUTTON_ACTIVE = {
     'bg-color': ui.GREEN,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
     'border-color': ui.GREEN,
+    'radius': ui.BTN_RADIUS,
 }
 
 CLEAR_BUTTON = {
@@ -53,12 +60,14 @@ CLEAR_BUTTON = {
     'fg-color': ui.WHITE,
     'text-style': ui.NORMAL,
     'border-color': ui.BLACK,
+    'radius': ui.BTN_RADIUS,
 }
 CLEAR_BUTTON_ACTIVE = {
     'bg-color': ui.BLACK,
     'fg-color': ui.GREY,
     'text-style': ui.NORMAL,
     'border-color': ui.BLACK,
+    'radius': ui.BTN_RADIUS,
 }
 
 BTN_CLICKED = const(1)
@@ -107,8 +116,8 @@ class Button(Widget):
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
-        display.bar(ax, ay, aw, ah, style['border-color'])
-        display.bar(ax + 1, ay + 1, aw - 2, ah - 2, style['bg-color'])
+        display.bar_radius(ax, ay, aw, ah, style['border-color'], ui.BLACK, style['radius'])
+        display.bar_radius(ax + 1, ay + 1, aw - 2, ah - 2, style['bg-color'], style['border-color'], style['radius'])
 
         if isinstance(self.content, str):
             display.text_center(tx, ty, self.content,

@@ -38,8 +38,10 @@ class ConfirmDialog(Widget):
 
 class HoldToConfirmDialog():
 
-    def __init__(self, button, content=None, *args, **kwargs):
-        self.button = button
+    def __init__(self, content=None, hold='Hold to confirm', *args, **kwargs):
+        self.button = Button((0, 240 - 48, 240, 48), hold,
+                    normal_style=CONFIRM_BUTTON,
+                    active_style=CONFIRM_BUTTON_ACTIVE)
         self.content = content
         self.loader = Loader(*args, **kwargs)
 
@@ -53,7 +55,7 @@ class HoldToConfirmDialog():
     def send(self, event, pos):
         button = self.button
         was_started = button.state & BTN_STARTED
-        button.send(event, pos)
+        button.touch(event, pos)
         is_started = button.state & BTN_STARTED
         if is_started:
             if not was_started:
