@@ -156,7 +156,6 @@ bool copy_sdcard(void)
 
 int main(void)
 {
-
     periph_init();
 
     BOOTLOADER_PRINTLN("TREZOR Bootloader");

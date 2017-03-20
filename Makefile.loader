@@ -1,0 +1,166 @@
+# target directory
+BUILD ?= micropython/loader/build
+
+# include py core make definitions
+include vendor/micropython/py/mkenv.mk
+
+# sources
+# =====================================
+
+SRCDIR_MP = vendor/micropython
+SRCDIR_FW = micropython
+
+BUILD_MP = $(BUILD)/$(SRCDIR_MP)
+BUILD_FW = $(BUILD)/$(SRCDIR_FW)
+
+# OBJ vendor/micropython
+OBJ_MP += $(addprefix $(BUILD_MP)/,\
+	\
+	lib/libc/string0.o \
+	\
+	stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_adc.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_can.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_cortex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_dac_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_dac.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_dma.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_flash_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_flash.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_gpio.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_i2c.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_pcd_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_pcd.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_pwr_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_pwr.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_rcc_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_rcc.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_rng.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_rtc_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_rtc.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_sd.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_spi.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_tim_ex.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_tim.o \
+	stmhal/hal/f4/src/stm32f4xx_hal_uart.o \
+	stmhal/hal/f4/src/stm32f4xx_hal.o \
+	stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
+	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
+	\
+	py/mpstate.o \
+	py/nlrthumb.o \
+	\
+	stmhal/pendsv.o \
+	stmhal/startup_stm32.o \
+	stmhal/systick.o \
+	)
+
+# OBJ micropython/
+OBJ_FW += $(addprefix $(BUILD_FW)/, \
+	loader/main.o \
+	extmod/modtrezorui/display.o \
+	extmod/modtrezorui/font_bitmap.o \
+	trezorhal/stm32_it.o \
+	trezorhal/stm32_system.o \
+	trezorhal/hal/stm32f4xx_hal_sram.o \
+	trezorhal/hal/stm32f4xx_ll_fsmc.o \
+	)
+
+# OBJ micropython/extmod/modtrezorcrypto
+CFLAGS_MOD += \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
+	-DED25519_CUSTOMRANDOM=1 \
+	-DED25519_CUSTOMHASH=1 \
+	-DED25519_NO_INLINE_ASM \
+	-DED25519_FORCE_32BIT=1 \
+	-DAES_128 \
+	-DAES_192 \
+	-DUSE_KECCAK=1 \
+	-Wno-sequence-point
+
+OBJ_MOD += \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
+
+OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW)
+SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
+SRC_FW = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_FW))
+SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
+
+# comp flags
+# =====================================
+
+CROSS_COMPILE = arm-none-eabi-
+
+INC += -I.
+INC += -Imicropython/extmod/modtrezorui
+INC += -Imicropython/firmware
+INC += -Imicropython/trezorhal
+INC += -Imicropython/trezorhal/hal
+INC += -Ivendor/trezor-crypto
+INC += -Ivendor/micropython
+INC += -Ivendor/micropython/stmhal
+INC += -Ivendor/micropython/stmhal/cmsis
+INC += -Ivendor/micropython/stmhal/hal/f4/inc
+INC += -Ivendor/micropython/stmhal/usbdev/core/inc
+INC += -Ivendor/micropython/stmhal/usbdev/class/inc
+INC += -Ivendor/micropython/lib/cmsis/inc
+INC += -I$(BUILD)
+
+ifeq ($(DEBUG), 1)
+CFLAGS += -O0 -ggdb
+else
+CFLAGS += -Os -DNDEBUG
+endif
+
+CFLAGS += $(INC) $(CFLAGS_MOD) $(CFLAGS_EXTRA)
+CFLAGS += -std=gnu99 -nostdlib -Wall -Werror -Wdouble-promotion -Wpointer-arith
+CFLAGS += -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant
+
+CFLAGS += -DSTM32F405xx -DMCU_SERIES_F4
+CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
+
+LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+LDFLAGS = -nostdlib -T micropython/trezorhal/memory.ld -Map=$@.map --cref
+
+# remove uncalled code from the final image
+CFLAGS += -fdata-sections -ffunction-sections
+LDFLAGS += --gc-sections
+
+# comp rules
+# =====================================
+
+all: $(BUILD)/loader.bin
+
+$(BUILD)/loader.elf: $(OBJ)
+	$(ECHO) "LINK $@"
+	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(Q)$(SIZE) $@
+
+$(BUILD)/loader.bin: $(BUILD)/loader.elf
+	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/loader.bin
+
+$(BUILD)/%.o: %.S
+	$(ECHO) "CC $<"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILD)/%.o: %.s
+	$(ECHO) "AS $<"
+	$(Q)$(AS) -o $@ $<
+
+$(BUILD)/%.o: %.c
+	$(ECHO) "CC $<"
+	$(Q)$(CC) $(CFLAGS) -c -MD -o $@ $<
+
+OBJ_DIRS = $(sort $(dir $(OBJ)))
+$(OBJ): | $(OBJ_DIRS)
+$(OBJ_DIRS):
+	$(MKDIR) -p $@
+
+clean:
+	$(RM) -rf $(BUILD)
+
+.PHONY: all clean
