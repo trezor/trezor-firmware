@@ -13,21 +13,13 @@
 #include "gccollect.h"
 #include "pendsv.h"
 
+#include "common.h"
+#include "display.h"
 #include "flash.h"
 #include "rng.h"
 #include "sdcard.h"
 #include "touch.h"
 #include "usb.h"
-
-void SystemClock_Config(void);
-
-void NORETURN nlr_jump_fail(void *val) {
-    for (;;) {}
-}
-
-void NORETURN __fatal_error(const char *msg) {
-    for (;;) {}
-}
 
 int main(void) {
 
@@ -60,6 +52,10 @@ int main(void) {
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable Cycle Count Register
 
     pendsv_init();
+
+    if (0 != display_init()) {
+        __fatal_error("display_init failed");
+    }
 
     if (0 != flash_init()) {
         __fatal_error("flash_init failed");

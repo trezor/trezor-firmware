@@ -118,7 +118,7 @@ void display_set_backlight(int val)
     __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * val / 255);
 }
 
-void display_init(void) {
+int display_init(void) {
     // init peripherials
     __GPIOE_CLK_ENABLE();
     __TIM1_CLK_ENABLE();
@@ -273,6 +273,8 @@ void display_init(void) {
     // clear buffer
     display_clear();
     display_unsleep();
+
+    return 0;
 }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {

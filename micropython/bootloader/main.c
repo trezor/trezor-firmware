@@ -3,44 +3,20 @@
 #include <string.h>
 
 #include "crypto.h"
+
+#include "common.h"
 #include "display.h"
 #include "sdcard.h"
 
 #define STAGE2_START   0x08010000
 
-#define BOOTLOADER_PRINT(X)   do { display_print(X, -1);      display_print_out(0xFFFF, 0x001F); } while(0)
-#define BOOTLOADER_PRINTLN(X) do { display_print(X "\n", -1); display_print_out(0xFFFF, 0x001F); } while(0)
+#define BOOTLOADER_FGCOLOR 0xFFFF
+#define BOOTLOADER_BGCOLOR 0x0000
 
-void SystemClock_Config(void);
-
-void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-    for (;;) {}
-}
-
-void __attribute__((noreturn)) __fatal_error(const char *msg) {
-    for (volatile uint32_t delay = 0; delay < 10000000; delay++) {
-    }
-    display_print("FATAL ERROR:\n", -1);
-    display_print(msg, -1);
-    display_print("\n", -1);
-    display_print_out(0xFFFF, 0x001F);
-    for (;;) {
-        __WFI();
-    }
-}
+#define BOOTLOADER_PRINT(X)   do { display_print(X, -1);      display_print_out(BOOTLOADER_FGCOLOR, BOOTLOADER_BGCOLOR); } while(0)
+#define BOOTLOADER_PRINTLN(X) do { display_print(X "\n", -1); display_print_out(BOOTLOADER_FGCOLOR, BOOTLOADER_BGCOLOR); } while(0)
 
 void mp_hal_stdout_tx_str(const char *str) {
-}
-
-void halt(void)
-{
-    BOOTLOADER_PRINTLN("HALT!");
-    for (;;) {
-        display_backlight(255);
-        HAL_Delay(950);
-        display_backlight(0);
-        HAL_Delay(50);
-    }
 }
 
 void periph_init(void)
@@ -165,7 +141,7 @@ int main(void)
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
-            halt();
+            __fatal_error("halt");
         }
     }
 
@@ -176,7 +152,7 @@ int main(void)
             BOOTLOADER_PRINTLN("valid stage 2 signature");
             BOOTLOADER_PRINTLN("JUMP!");
             // TODO: jump to second stage
-            halt();
+            __fatal_error("halt");
         } else {
             BOOTLOADER_PRINTLN("invalid stage 2 signature");
         }
@@ -184,7 +160,7 @@ int main(void)
         BOOTLOADER_PRINTLN("invalid stage 2 header");
     }
 
-    halt();
+    __fatal_error("halt");
 
     return 0;
 }

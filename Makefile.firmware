@@ -315,6 +315,7 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	firmware/main.o \
 	firmware/mphalport.o \
+	trezorhal/common.o \
 	trezorhal/flash.o \
 	trezorhal/rng.o \
 	trezorhal/sdcard.o \
@@ -341,6 +342,7 @@ SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
+INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/firmware
 INC += -I$(SRCDIR_FW)/trezorhal
 INC += -I$(SRCDIR_FW)/trezorhal/hal

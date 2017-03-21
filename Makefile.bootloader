@@ -64,6 +64,7 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	bootloader/main.o \
 	extmod/modtrezorui/display.o \
 	extmod/modtrezorui/font_bitmap.o \
+	trezorhal/common.o \
 	trezorhal/sdcard.o \
 	trezorhal/stm32_it.o \
 	trezorhal/stm32_system.o \

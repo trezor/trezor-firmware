@@ -35,7 +35,7 @@ void DATA(uint8_t x) {
 #define DATA(X) (void)(X);
 #endif
 
-void display_init(void)
+int display_init(void)
 {
 #ifndef TREZOR_NOUI
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -59,6 +59,7 @@ void display_init(void)
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
     SDL_SetTextureAlphaMod(TEXTURE, 0);
 #endif
+    return 0;
 }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
