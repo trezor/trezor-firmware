@@ -3,7 +3,7 @@
 #include "display.h"
 
 #define FATAL_FGCOLOR 0xFFFF
-#define FATAL_BGCOLOR 0x001F
+#define FATAL_BGCOLOR 0x7800
 
 void __attribute__((noreturn)) __fatal_error(const char *msg) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {

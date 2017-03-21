@@ -8,7 +8,7 @@
 #include "display.h"
 #include "sdcard.h"
 
-#define STAGE2_START   0x08010000
+#define LOADER_START   0x08010000
 
 #define BOOTLOADER_FGCOLOR 0xFFFF
 #define BOOTLOADER_BGCOLOR 0x0000
@@ -78,7 +78,7 @@ bool copy_sdcard(void)
 
     BOOTLOADER_PRINT("erasing flash ");
 
-    // erase flash (except stage 1)
+    // erase flash (except bootloader)
     HAL_FLASH_Unlock();
     FLASH_EraseInitTypeDef EraseInitStruct;
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
@@ -98,11 +98,11 @@ bool copy_sdcard(void)
     }
     BOOTLOADER_PRINTLN(" done");
 
-    BOOTLOADER_PRINTLN("copying new stage 2 from SD card");
+    BOOTLOADER_PRINTLN("copying new loader from SD card");
 
     sdcard_power_on();
 
-    // copy stage 2 from SD card to Flash
+    // copy loader from SD card to Flash
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
     sdcard_read_blocks((uint8_t *)buf, 0, 1);
 
@@ -115,7 +115,7 @@ bool copy_sdcard(void)
     for (int i = 0; i < codelen / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            if (HAL_FLASH_Program(TYPEPROGRAM_WORD, STAGE2_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
+            if (HAL_FLASH_Program(TYPEPROGRAM_WORD, LOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
                 BOOTLOADER_PRINTLN("copy failed");
                 sdcard_power_off();
                 HAL_FLASH_Lock();
@@ -138,7 +138,7 @@ int main(void)
 
     BOOTLOADER_PRINTLN("TREZOR Bootloader");
     BOOTLOADER_PRINTLN("=================");
-    BOOTLOADER_PRINTLN("starting stage 1");
+    BOOTLOADER_PRINTLN("starting bootloader");
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
@@ -146,19 +146,19 @@ int main(void)
         }
     }
 
-    BOOTLOADER_PRINTLN("checking stage 2");
-    if (parse_header((const uint8_t *)STAGE2_START, NULL, NULL, NULL)) {
-        BOOTLOADER_PRINTLN("valid stage 2 header");
-        if (check_signature((const uint8_t *)STAGE2_START)) {
-            BOOTLOADER_PRINTLN("valid stage 2 signature");
+    BOOTLOADER_PRINTLN("checking loader");
+    if (parse_header((const uint8_t *)LOADER_START, NULL, NULL, NULL)) {
+        BOOTLOADER_PRINTLN("valid loader header");
+        if (check_signature((const uint8_t *)LOADER_START)) {
+            BOOTLOADER_PRINTLN("valid loader signature");
             BOOTLOADER_PRINTLN("JUMP!");
-            // TODO: jump to second stage
+            // TODO: jump to loader
             __fatal_error("halt");
         } else {
-            BOOTLOADER_PRINTLN("invalid stage 2 signature");
+            BOOTLOADER_PRINTLN("invalid loader signature");
         }
     } else {
-        BOOTLOADER_PRINTLN("invalid stage 2 header");
+        BOOTLOADER_PRINTLN("invalid loader header");
     }
 
     __fatal_error("halt");
