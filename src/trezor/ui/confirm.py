@@ -36,7 +36,7 @@ class ConfirmDialog(Widget):
         yield loop.Wait((super().__iter__(), self.content))
 
 
-class HoldToConfirmDialog():
+class HoldToConfirmDialog(Widget):
 
     def __init__(self, content=None, hold='Hold to confirm', *args, **kwargs):
         self.button = Button((0, 240 - 48, 240, 48), hold,

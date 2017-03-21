@@ -107,7 +107,7 @@ def _render_pin_failure(sleep_ms: int):
                            ui.BOLD, ui.RED, ui.BLACK)
 
 
-def _get_code_and_label(code: int) -> str:
+def _get_code_and_label(code: int):
     from trezor.messages import PinMatrixRequestType
     if code is None:
         code = PinMatrixRequestType.Current
