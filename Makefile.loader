@@ -50,12 +50,7 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
 	\
-	py/mpstate.o \
-	py/nlrthumb.o \
-	\
-	stmhal/pendsv.o \
 	stmhal/startup_stm32.o \
-	stmhal/systick.o \
 	)
 
 # OBJ micropython/

@@ -3,7 +3,10 @@
 #include "common.h"
 #include "display.h"
 
-void mp_hal_stdout_tx_str(const char *str) {
+#define FIRMWARE_START   0x08020000
+
+void pendsv_isr_handler(void) {
+    __fatal_error("pendsv");
 }
 
 void periph_init(void)

@@ -16,7 +16,8 @@
 #define BOOTLOADER_PRINT(X)   do { display_print(X, -1);      display_print_out(BOOTLOADER_FGCOLOR, BOOTLOADER_BGCOLOR); } while(0)
 #define BOOTLOADER_PRINTLN(X) do { display_print(X "\n", -1); display_print_out(BOOTLOADER_FGCOLOR, BOOTLOADER_BGCOLOR); } while(0)
 
-void mp_hal_stdout_tx_str(const char *str) {
+void pendsv_isr_handler(void) {
+    __fatal_error("pendsv");
 }
 
 void periph_init(void)

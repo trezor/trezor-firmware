@@ -65,13 +65,12 @@
   ******************************************************************************
   */
 
-#include <stdio.h>
-
 #include STM32_HAL_H
 
-#include "py/mphal.h"
 #include "pendsv.h"
 #include "gccollect.h"
+
+#include "display.h"
 
 #define IRQ_ENTER(irq)
 #define IRQ_EXIT(irq)
@@ -86,7 +85,7 @@ extern void __fatal_error(const char*);
 // More information about decoding the fault registers can be found here:
 // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646a/Cihdjcfc.html
 
-STATIC char *fmt_hex(uint32_t val, char *buf) {
+static char *fmt_hex(uint32_t val, char *buf) {
     const char *hexDig = "0123456789abcdef";
 
     buf[0] = hexDig[(val >> 28) & 0x0f];
@@ -102,21 +101,21 @@ STATIC char *fmt_hex(uint32_t val, char *buf) {
     return buf;
 }
 
-STATIC void print_reg(const char *label, uint32_t val) {
+static void print_reg(const char *label, uint32_t val) {
     char hexStr[9];
 
-    mp_hal_stdout_tx_str(label);
-    mp_hal_stdout_tx_str(fmt_hex(val, hexStr));
-    mp_hal_stdout_tx_str("\r\n");
+    display_print(label, -1);
+    display_print(fmt_hex(val, hexStr), -1);
+    display_print("\n", 1);
 }
 
-STATIC void print_hex_hex(const char *label, uint32_t val1, uint32_t val2) {
+static void print_hex_hex(const char *label, uint32_t val1, uint32_t val2) {
     char hex_str[9];
-    mp_hal_stdout_tx_str(label);
-    mp_hal_stdout_tx_str(fmt_hex(val1, hex_str));
-    mp_hal_stdout_tx_str("  ");
-    mp_hal_stdout_tx_str(fmt_hex(val2, hex_str));
-    mp_hal_stdout_tx_str("\r\n");
+    display_print(label, -1 );
+    display_print(fmt_hex(val1, hex_str), -1);
+    display_print("  ", 2);
+    display_print(fmt_hex(val2, hex_str), -1);
+    display_print("\n", 1);
 }
 
 // The ARMv7M Architecture manual (section B.1.5.6) says that upon entry
@@ -138,7 +137,7 @@ void HardFault_C_Handler(ExceptionRegisters_t *regs) {
     // the VCP and then block indefinitely waiting for the buffer to drain.
     // pyb_usb_flags = 0;
 
-    mp_hal_stdout_tx_str("HardFault\r\n");
+    display_print("HardFault\n", -1);
 
     print_reg("R0    ", regs->r0);
     print_reg("R1    ", regs->r1);
@@ -162,7 +161,7 @@ void HardFault_C_Handler(ExceptionRegisters_t *regs) {
     }
 
     if ((void*)&_ram_start <= (void*)regs && (void*)regs < (void*)&_ram_end) {
-        mp_hal_stdout_tx_str("Stack:\r\n");
+        display_print("Stack:\n", -1);
         uint32_t *stack_top = &_estack;
         if ((void*)regs < (void*)&_heap_end) {
             // stack not in static stack area so limit the amount we print
