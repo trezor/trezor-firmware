@@ -32,9 +32,8 @@ class ConfirmDialog(Widget):
         if self.cancel.touch(event, pos) == BTN_CLICKED:
             return CANCELLED
 
-    def __iter__(self):
-        result = yield loop.Wait((super().__iter__(), self.content))
-        return result
+    async def __iter__(self):
+        return await loop.Wait((super().__iter__(), self.content))
 
 
 class HoldToConfirmDialog(Widget):
@@ -68,9 +67,8 @@ class HoldToConfirmDialog(Widget):
         if self.content is not None:
             return self.content.send(event, pos)
 
-    def __iter__(self):
-        result = yield loop.Wait((self._render_loop(), self._event_loop()))
-        return result
+    async def __iter__(self):
+        return await loop.Wait((self._render_loop(), self._event_loop()))
 
     def _render_loop(self):
         RENDER_DELAY = const(1000000 // 60)
