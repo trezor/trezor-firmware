@@ -10,9 +10,9 @@ async def layout_wipe_device(session_id, msg):
     from ..common import storage
 
     await hold_to_confirm(session_id, Text(
-        'Wiping device',
+        'WIPE DEVICE',
         ui.ICON_WIPE,
-        ui.BOLD, 'Do you really want to', 'wipe the device?',
+        ui.NORMAL, 'Do you really want to', 'wipe the device?',
         ui.NORMAL, '', 'All data will be lost.'))
 
     storage.wipe()

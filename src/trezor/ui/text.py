@@ -1,12 +1,13 @@
 from micropython import const
 from trezor import ui
+from trezor.ui import Widget
 
 TEXT_HEADER_HEIGHT = const(32)
 TEXT_LINE_HEIGHT = const(23)
 TEXT_MARGIN_LEFT = const(10)
 
 
-class Text:
+class Text(Widget):
 
     def __init__(self, header_text, header_icon, *content):
         self.header_text = header_text
