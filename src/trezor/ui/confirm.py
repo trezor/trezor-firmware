@@ -33,7 +33,8 @@ class ConfirmDialog(Widget):
             return CANCELLED
 
     def __iter__(self):
-        yield loop.Wait((super().__iter__(), self.content))
+        result = yield loop.Wait((super().__iter__(), self.content))
+        return result
 
 
 class HoldToConfirmDialog(Widget):
@@ -67,9 +68,9 @@ class HoldToConfirmDialog(Widget):
         if self.content is not None:
             return self.content.send(event, pos)
 
-    async def __iter__(self):
-        return await loop.Wait([self._render_loop(),
-                                self._event_loop()])
+    def __iter__(self):
+        result = yield loop.Wait((self._render_loop(), self._event_loop()))
+        return result
 
     def _render_loop(self):
         RENDER_DELAY = const(1000000 // 60)
