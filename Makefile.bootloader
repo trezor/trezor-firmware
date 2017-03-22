@@ -83,6 +83,7 @@ CFLAGS_MOD += \
 
 OBJ_MOD += \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
+	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
 
 OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW)

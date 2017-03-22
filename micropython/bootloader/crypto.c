@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "sha2.h"
+#include "blake2s.h"
 #include "ed25519-donna/ed25519.h"
 
 #include "crypto.h"
@@ -87,17 +87,17 @@ bool check_signature(const uint8_t *start)
         return false;
     }
 
-    uint8_t hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX ctx;
-    sha256_Init(&ctx);
-    sha256_Update(&ctx, start, 256 - 65);
+    uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+    BLAKE2S_CTX ctx;
+    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+    blake2s_Update(&ctx, start, 256 - 65);
     for (int i = 0; i < 65; i++) {
-        sha256_Update(&ctx, (const uint8_t *)"\x00", 1);
+        blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
     }
-    sha256_Update(&ctx, start + 256, codelen);
-    sha256_Final(&ctx, hash);
+    blake2s_Update(&ctx, start + 256, codelen);
+    blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     const uint8_t *pub = get_pubkey(sigidx);
 
-    return pub && (0 == ed25519_sign_open(hash, SHA256_DIGEST_LENGTH, *(const ed25519_public_key *)pub, *(const ed25519_signature *)sig));
+    return pub && (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, *(const ed25519_public_key *)pub, *(const ed25519_signature *)sig));
 }
