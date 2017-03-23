@@ -23,33 +23,7 @@
 
 int main(void) {
 
-    // STM32F4xx HAL library initialization:
-    //  - configure the Flash prefetch, instruction and data caches
-    //  - configure the Systick to generate an interrupt each 1 msec
-    //  - set NVIC Group Priority to 4
-    //  - global MSP (MCU Support Package) initialization
-    HAL_Init();
-
-    // Set the system clock to be HSE
-    SystemClock_Config();
-
-    // Enable GPIO clocks
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-
-    // Enable the CCM RAM
-    __HAL_RCC_CCMDATARAMEN_CLK_ENABLE();
-
-    // Clear the reset flags
-    PWR->CR |= PWR_CR_CSBF;
-    RCC->CSR |= RCC_CSR_RMVF;
-
-    // Enable CPU ticks
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // Enable DWT
-    DWT->CYCCNT = 0;  // Reset Cycle Count Register
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable Cycle Count Register
+    periph_init();
 
     pendsv_init();
 

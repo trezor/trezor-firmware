@@ -20,24 +20,6 @@ void pendsv_isr_handler(void) {
     __fatal_error("pendsv");
 }
 
-void periph_init(void)
-{
-    HAL_Init();
-
-    SystemClock_Config();
-
-    __GPIOA_CLK_ENABLE();
-    __GPIOB_CLK_ENABLE();
-    __GPIOC_CLK_ENABLE();
-    __GPIOD_CLK_ENABLE();
-
-    sdcard_init();
-
-    display_init();
-    display_clear();
-    display_backlight(255);
-}
-
 bool check_sdcard(void)
 {
     BOOTLOADER_PRINTLN("checking for SD card");
@@ -135,6 +117,12 @@ bool copy_sdcard(void)
 int main(void)
 {
     periph_init();
+
+    sdcard_init();
+
+    display_init();
+    display_clear();
+    display_backlight(255);
 
     BOOTLOADER_PRINTLN("TREZOR Bootloader");
     BOOTLOADER_PRINTLN("=================");
