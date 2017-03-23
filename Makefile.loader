@@ -96,7 +96,6 @@ SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
-INC += -I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto
 INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/firmware
 INC += -I$(SRCDIR_FW)/trezorhal
