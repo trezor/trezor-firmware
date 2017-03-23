@@ -262,6 +262,20 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	py/vstr.o \
 	py/warning.o \
 	\
+	stmhal/gccollect.o \
+	stmhal/gchelper.o \
+	stmhal/pendsv.o \
+	stmhal/startup_stm32.o \
+	stmhal/systick.o \
+	\
+	stmhal/usbd_cdc_interface.o \
+	stmhal/usbd_conf.o \
+	stmhal/usbd_desc.o \
+	stmhal/usbd_hid_interface.o \
+	)
+
+# OBJ vendor/micropython
+OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_adc.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_can.o \
@@ -290,17 +304,6 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
-	\
-	stmhal/gccollect.o \
-	stmhal/gchelper.o \
-	stmhal/pendsv.o \
-	stmhal/startup_stm32.o \
-	stmhal/systick.o \
-	\
-	stmhal/usbd_cdc_interface.o \
-	stmhal/usbd_conf.o \
-	stmhal/usbd_desc.o \
-	stmhal/usbd_hid_interface.o \
 	\
 	stmhal/usbdev/class/src/usbd_cdc_msc_hid.o \
 	stmhal/usbdev/class/src/usbd_msc_bot.o \
@@ -331,7 +334,7 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | $(SED) -e 's=^$(FROZEN_MPY_DIR)/==')
 FROZEN_MPY_MPY_FILES := $(addprefix $(BUILD)/frozen_mpy/,$(FROZEN_MPY_PY_FILES:.py=.mpy))
 
-OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW) $(BUILD)/frozen_mpy.o
+OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW) $(OBJ_HAL) $(BUILD)/frozen_mpy.o
 SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
 SRC_FW = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_FW))
 SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))

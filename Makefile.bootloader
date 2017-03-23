@@ -18,9 +18,12 @@ BUILD_HDR = $(BUILD)/genhdr
 
 # OBJ vendor/micropython
 OBJ_MP += $(addprefix $(BUILD_MP)/,\
-	\
 	lib/libc/string0.o \
-	\
+	stmhal/startup_stm32.o \
+	)
+
+# OBJ vendor/micropython
+OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_adc.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_can.o \
@@ -49,8 +52,6 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
-	\
-	stmhal/startup_stm32.o \
 	)
 
 # OBJ micropython/
@@ -86,7 +87,7 @@ OBJ_MOD += \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
 
-OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW)
+OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_HAL) $(OBJ_FW)
 SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
 SRC_FW = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_FW))
 SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
