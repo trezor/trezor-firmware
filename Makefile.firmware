@@ -262,11 +262,6 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	stmhal/pendsv.o \
 	stmhal/startup_stm32.o \
 	stmhal/systick.o \
-	\
-	stmhal/usbd_cdc_interface.o \
-	stmhal/usbd_conf.o \
-	stmhal/usbd_desc.o \
-	stmhal/usbd_hid_interface.o \
 	)
 
 # OBJ vendor/micropython
@@ -300,10 +295,6 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
 	\
-	stmhal/usbdev/class/src/usbd_cdc_msc_hid.o \
-	stmhal/usbdev/class/src/usbd_msc_bot.o \
-	stmhal/usbdev/class/src/usbd_msc_data.o \
-	stmhal/usbdev/class/src/usbd_msc_scsi.o \
 	stmhal/usbdev/core/src/usbd_core.o \
 	stmhal/usbdev/core/src/usbd_ctlreq.o \
 	stmhal/usbdev/core/src/usbd_ioreq.o \
@@ -321,6 +312,7 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	trezorhal/sdcard.o \
 	trezorhal/touch.o \
 	trezorhal/usb.o \
+	trezorhal/usbd_conf.o \
 	trezorhal/stm32_it.o \
 	trezorhal/stm32_system.o \
 	trezorhal/hal/stm32f4xx_hal_sram.o \

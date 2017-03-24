@@ -22,6 +22,43 @@
 #include "touch.h"
 #include "usb.h"
 
+int usb_init_all(void) {
+    static const usb_dev_info_t dev_info = {
+        .vendor_id = 0x1209,
+        .product_id = 0x53C1,
+        .release_num = 0x0002,
+        .product_str = (uint8_t *)"product_str",
+        .manufacturer_str = (uint8_t *)"manufacturer_str",
+        .serial_number_str = (uint8_t *)"serial_number_str",
+        .configuration_str = (uint8_t *)"configuration_str",
+        .interface_str = (uint8_t *)"interface_str",
+    };
+    static uint8_t rx_buffer[64];
+    static const usb_hid_info_t hid_info = {
+        .iface_num = 0,
+        .ep_in = 0x81,
+        .ep_out = 0x01,
+        .subclass = 0,
+        .protocol = 0,
+        .max_packet_len = sizeof(rx_buffer),
+        .polling_interval = 1,
+        .report_desc_len = 34,
+        .report_desc = (uint8_t*)"\x06\x00\xff\x09\x01\xa1\x01\x09\x20\x15\x00\x26\xff\x00\x75\x08\x95\x40\x81\x02\x09\x21\x15\x00\x26\xff\x00\x75\x08\x95\x40\x91\x02\xc0",
+    };
+
+    if (0 != usb_init(&dev_info)) {
+        __fatal_error("usb_init failed");
+    }
+    if (0 != usb_hid_add(&hid_info)) {
+        __fatal_error("usb_hid_add failed");
+    }
+    if (0 != usb_start()) {
+        __fatal_error("usb_start failed");
+    }
+
+    return 0;
+}
+
 int main(void) {
 
     periph_init();
@@ -48,8 +85,8 @@ int main(void) {
         __fatal_error("touch_init failed");
     }
 
-    if (0 != usb_init()) {
-        __fatal_error("usb_init failed");
+    if (0 != usb_init_all()) {
+        __fatal_error("usb_init_all failed");
     }
 
     for (;;) {

@@ -66,7 +66,7 @@ typedef struct __attribute__((packed)) {
     uint16_t wReportDescriptorLength;
 } usb_hid_descriptor_t;
 
-struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) {
     usb_interface_descriptor_t iface;
     usb_hid_descriptor_t hid;
     usb_endpoint_descriptor_t ep_in;
@@ -146,9 +146,9 @@ typedef struct {
 
 typedef enum {
     USB_IFACE_TYPE_DISABLED = 0,
-    USB_IFACE_TYPE_CDC      = 1,
-    USB_IFACE_TYPE_MSC      = 2,
-    USD_IFACE_TYPE_HID      = 3,
+    // USB_IFACE_TYPE_CDC      = 1,
+    // USB_IFACE_TYPE_MSC      = 2,
+    USB_IFACE_TYPE_HID      = 3,
 } usb_iface_type_t;
 
 typedef struct {
@@ -165,7 +165,10 @@ int usb_stop(void);
 int usb_hid_add(const usb_hid_info_t *hid_info);
 int usb_hid_can_read(uint8_t iface_num);
 int usb_hid_can_write(uint8_t iface_num);
-int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t *len);
+int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
+
+int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, uint32_t timeout);
+int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, uint32_t timeout);
 
 #endif

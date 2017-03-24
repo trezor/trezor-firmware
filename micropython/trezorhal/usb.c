@@ -1,15 +1,20 @@
+// TODO: max size of user strings from dev_info
+
 #include STM32_HAL_H
 
+#include "usb.h"
 #include "usbd_core.h"
-#include "usbd_desc.h"
 
-#define USBD_MAX_NUM_INTERFACES  (3)
+#define USB_MAX_CONFIG_DESC_SIZE     128
+#define USB_MAX_STR_DESC_SIZE        256
 
-#define USB_MAX_CONFIG_DESC_SIZE (128)
-#define USB_MAX_STR_DESC_SIZE    (256)
+#define USB_DESC_TYPE_HID            0x21
+#define USB_DESC_TYPE_REPORT         0x22
 
-#define USB_DESC_TYPE_HID        (0x21)
-#define USB_DESC_TYPE_REPORT     (0x22)
+#define HID_REQ_SET_PROTOCOL         0x0b
+#define HID_REQ_GET_PROTOCOL         0x03
+#define HID_REQ_SET_IDLE             0x0a
+#define HID_REQ_GET_IDLE             0x02
 
 extern PCD_HandleTypeDef pcd_fs_handle;
 
@@ -28,6 +33,9 @@ static usb_interface_descriptor_t *usb_next_iface_desc;
 static usb_string_table_t usb_str_table;
 static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
 
+static const USBD_DescriptorsTypeDef usb_descriptors;
+static const USBD_ClassTypeDef usb_class;
+
 int usb_init(const usb_dev_info_t *dev_info) {
 
     // Device descriptor
@@ -37,7 +45,7 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.bDeviceClass       = 0xef;                  // Composite Device Class
     usb_dev_desc.bDeviceSubClass    = 0x02;                  // Common Class
     usb_dev_desc.bDeviceProtocol    = 0x01;                  // Interface Association Descriptor
-    usb_dev_desc.bMaxPacketSize     = USB_MAX_EP0_SIZE;
+    usb_dev_desc.bMaxPacketSize0    = USB_MAX_EP0_SIZE;
     usb_dev_desc.idVendor           = dev_info->vendor_id;
     usb_dev_desc.idProduct          = dev_info->product_id;
     usb_dev_desc.bcdDevice          = dev_info->release_num;
@@ -45,6 +53,13 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.iProduct           = USBD_IDX_PRODUCT_STR;  // Index of product string
     usb_dev_desc.iSerialNumber      = USBD_IDX_SERIAL_STR;   // Index of serial number string
     usb_dev_desc.bNumConfigurations = 0x01;
+
+    // String table
+    usb_str_table.manufacturer_str = dev_info->manufacturer_str;
+    usb_str_table.product_str      = dev_info->product_str;
+    usb_str_table.serial_str       = dev_info->serial_number_str;
+    usb_str_table.config_str       = dev_info->configuration_str;
+    usb_str_table.interface_str    = dev_info->interface_str;
 
     // Configuration descriptor
     usb_config_desc->bLength             = USB_LEN_CFG_DESC;
@@ -60,17 +75,10 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
 
     // Reset the iface state map
-    usb_iface_list = {};
+    memset(&usb_ifaces, 0, sizeof(usb_ifaces));
 
-    // String table
-    usb_str_table->manufacturer_str = dev_info->manufacturer_str;
-    usb_str_table->product_str      = dev_info->product_str;
-    usb_str_table->serial_str       = dev_info->serial_number_str;
-    usb_str_table->config_str       = dev_info->configuration_str;
-    usb_str_table->interface_str    = dev_info->interface_str;
-
-    USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, 0); // 0 == full speed
-    USBD_RegisterClass(&usb_dev_handle, &usb_class);
+    USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_FS_ID);
+    USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class);
 
     return 0;
 }
@@ -85,36 +93,36 @@ int usb_stop(void) {
 
 static uint8_t *usb_get_dev_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
     *length = sizeof(usb_dev_desc);
-    return (uint8_t *)usb_dev_desc;
+    return (uint8_t *)&usb_dev_desc;
 }
 
 static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
     *length = sizeof(usb_langid_str_desc);
-    return (uint8_t *)usb_langid_str_desc;
+    return (uint8_t *)&usb_langid_str_desc;
 }
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.manufacturer_str, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.manufacturer_str, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.product_str, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.product_str, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.serial_str, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.serial_str, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_config_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.config_str, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.config_str, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.interface_str, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.interface_str, usb_str_buf, length);
     return usb_str_buf;
 }
 
@@ -132,7 +140,7 @@ static void *usb_desc_alloc_iface(size_t desc_len) {
     if (usb_config_desc->wTotalLength + desc_len > USB_MAX_CONFIG_DESC_SIZE) {
         return NULL;  // Not enough space in the descriptor
     }
-    if (usb_config_desc->bNumInterfaces + 1 >= USBD_MAX_NUM_INTERFACES)
+    if (usb_config_desc->bNumInterfaces + 1 >= USBD_MAX_NUM_INTERFACES) {
         return NULL;  // Already using all the interfaces
     }
     return usb_next_iface_desc;
@@ -144,6 +152,20 @@ static void usb_desc_add_iface(size_t desc_len) {
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
 }
 
+static uint8_t usb_ep_set_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+    PCD_HandleTypeDef *hpcd = dev->pData;
+    USB_OTG_GlobalTypeDef *USBx = hpcd->Instance;
+    USBx_OUTEP(ep_num)->DOEPCTL |= USB_OTG_DOEPCTL_SNAK;
+    return USBD_OK;
+}
+
+static uint8_t usb_ep_clear_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+    PCD_HandleTypeDef *hpcd = dev->pData;
+    USB_OTG_GlobalTypeDef *USBx = hpcd->Instance;
+    USBx_OUTEP(ep_num)->DOEPCTL |= USB_OTG_DOEPCTL_CNAK;
+    return USBD_OK;
+}
+
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
 int usb_hid_add(const usb_hid_info_t *info) {
@@ -153,7 +175,7 @@ int usb_hid_add(const usb_hid_info_t *info) {
         return 1; // Not enough space in the configuration descriptor
     }
 
-    if ((info->iface_num < usb_config_desc->bNumInterfaces)
+    if ((info->iface_num < usb_config_desc->bNumInterfaces) ||
         (info->iface_num >= USBD_MAX_NUM_INTERFACES) ||
         ((info->ep_in & 0x80) == 0) ||
         ((info->ep_out & 0x80) != 0)) {
@@ -169,7 +191,7 @@ int usb_hid_add(const usb_hid_info_t *info) {
     d->iface.bNumEndpoints      = 0x02;
     d->iface.bInterfaceClass    = 0x03; // HID Class
     d->iface.bInterfaceSubClass = info->subclass;
-    d->iface.nInterfaceProtocol = info->protocol;
+    d->iface.bInterfaceProtocol = info->protocol;
     d->iface.iInterface         = 0x00; // Index of string descriptor describing the interface
 
     // HID descriptor
@@ -204,25 +226,27 @@ int usb_hid_add(const usb_hid_info_t *info) {
     usb_iface_t *i = &usb_ifaces[info->iface_num];
     i->hid.ep_in = info->ep_in;
     i->hid.ep_out = info->ep_out;
-    i->hid.rx_buffer = info->hid_buffer;
+    i->hid.rx_buffer = info->rx_buffer;
     i->hid.max_packet_len = info->max_packet_len;
     i->hid.report_desc_len = info->report_desc_len;
     i->hid.report_desc = info->report_desc;
     i->hid.desc_block = d;
+
+    return 0;
 }
 
 int usb_hid_can_read(uint8_t iface_num) {
     return ((iface_num < USBD_MAX_NUM_INTERFACES) &&
             (usb_ifaces[iface_num].type == USB_IFACE_TYPE_HID) &&
             (usb_ifaces[iface_num].hid.rx_buffer_len > 0) &&
-            usb_dev_handle.dev_state == USBD_STATE_CONFIGURED);
+            (usb_dev_handle.dev_state == USBD_STATE_CONFIGURED));
 }
 
 int usb_hid_can_write(uint8_t iface_num) {
     return ((iface_num < USBD_MAX_NUM_INTERFACES) &&
             (usb_ifaces[iface_num].type == USB_IFACE_TYPE_HID) &&
-            (usb_ifaces[iface_num].hid.is_idle) &&
-            usb_dev_handle.dev_state == USBD_STATE_CONFIGURED);
+            (usb_ifaces[iface_num].hid.in_idle) &&
+            (usb_dev_handle.dev_state == USBD_STATE_CONFIGURED));
 }
 
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
@@ -256,6 +280,30 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
 
     state->in_idle = 0;
     USBD_LL_Transmit(&usb_dev_handle, state->ep_in, (uint8_t *)buf, (uint16_t)len);
+
+    return len;
+}
+
+int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, uint32_t timeout) {
+    uint32_t start = HAL_GetTick();
+    while (!usb_hid_can_read(iface_num)) {
+        if (HAL_GetTick() - start >= timeout) {
+            return 0;  // Timeout
+        }
+        __WFI();  // Enter sleep mode, waiting for interrupt
+    }
+    return usb_hid_read(iface_num, buf, len);
+}
+
+int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, uint32_t timeout) {
+    uint32_t start = HAL_GetTick();
+    while (!usb_hid_can_write(iface_num)) {
+        if (HAL_GetTick() - start >= timeout) {
+            return 0;  // Timeout
+        }
+        __WFI();  // Enter sleep mode, waiting for interrupt
+    }
+    return usb_hid_write(iface_num, buf, len);
 }
 
 static int usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t cfg_idx) {
@@ -266,17 +314,21 @@ static int usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, u
     // Reset the state
     state->in_idle = 1;
     state->protocol = 0;
-    state->idle_state = 0;
+    state->idle_rate = 0;
     state->alt_setting = 0;
 
     // Prepare Out endpoint to receive next packet
-    USBD_LL_PrepareReceive(dev, hid_out_ep, state->rx_buffer, state->max_packet_len);
+    USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer, state->max_packet_len);
+
+    return USBD_OK;
 }
 
 static int usb_hid_class_deinit(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t cfg_idx) {
     // Close endpoints
     USBD_LL_CloseEP(dev, state->ep_in);
     USBD_LL_CloseEP(dev, state->ep_out);
+
+    return USBD_OK;
 }
 
 static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, USBD_SetupReqTypedef *req) {
@@ -328,7 +380,7 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
                 break;
 
             case USB_DESC_TYPE_REPORT:
-                USBD_CtlSendData(dev, state->report_desc, MIN(req->wLength, state->report_desc_len));
+                USBD_CtlSendData(dev, (uint8_t*)state->report_desc, MIN(req->wLength, state->report_desc_len));
                 break;
             }
             break;
@@ -345,6 +397,7 @@ static uint8_t usb_hid_class_data_in(USBD_HandleTypeDef *dev, usb_hid_state_t *s
         // before the end of the previous transfer.
         state->in_idle = 1;
     }
+    return USBD_OK;
 }
 
 static uint8_t usb_hid_class_data_out(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
@@ -358,6 +411,7 @@ static uint8_t usb_hid_class_data_out(USBD_HandleTypeDef *dev, usb_hid_state_t *
             usb_ep_set_nak(dev, ep_num);
         }
     }
+    return USBD_OK;
 }
 
 static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
@@ -365,6 +419,8 @@ static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
         switch (usb_ifaces[i].type) {
         case USB_IFACE_TYPE_HID:
             usb_hid_class_init(dev, &usb_ifaces[i].hid, cfg_idx);
+            break;
+        default:
             break;
         }
     }
@@ -376,6 +432,8 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
         switch (usb_ifaces[i].type) {
         case USB_IFACE_TYPE_HID:
             usb_hid_class_deinit(dev, &usb_ifaces[i].hid, cfg_idx);
+            break;
+        default:
             break;
         }
     }
@@ -402,11 +460,13 @@ static uint8_t usb_class_ep0_rx_ready(USBD_HandleTypeDef *dev) {
     return USBD_OK;
 }
 
-static uint8_t usb_class_data_in(USBD_HandleTypeDef *pdev, uint8_t ep_num) {
+static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
         case USB_IFACE_TYPE_HID:
             usb_hid_class_data_in(dev, &usb_ifaces[i].hid, ep_num);
+            break;
+        default:
             break;
         }
     }
@@ -418,6 +478,8 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
         switch (usb_ifaces[i].type) {
         case USB_IFACE_TYPE_HID:
             usb_hid_class_data_out(dev, &usb_ifaces[i].hid, ep_num);
+            break;
+        default:
             break;
         }
     }
@@ -445,20 +507,6 @@ static const USBD_ClassTypeDef usb_class = {
     .GetOtherSpeedConfigDescriptor = usb_class_get_cfg_desc,
     .GetDeviceQualifierDescriptor  = NULL,
 };
-
-static uint8_t usb_ep_set_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-    PCD_HandleTypeDef *hpcd = dev->pData;
-    USB_OTG_GlobalTypeDef *USBx = hpcd->Instance;
-    USBx_OUTEP(ep_num)->DOEPCTL |= USB_OTG_DOEPCTL_SNAK;
-    return USBD_OK;
-}
-
-static uint8_t usb_ep_clear_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-    PCD_HandleTypeDef *hpcd = dev->pData;
-    USB_OTG_GlobalTypeDef *USBx = hpcd->Instance;
-    USBx_OUTEP(ep_num)->DOEPCTL |= USB_OTG_DOEPCTL_CNAK;
-    return USBD_OK;
-}
 
 /**
   * @brief  This function handles USB-On-The-Go FS global interrupt request.
