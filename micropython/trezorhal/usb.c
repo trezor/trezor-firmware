@@ -224,6 +224,7 @@ int usb_hid_add(const usb_hid_info_t *info) {
 
     // Interface state
     usb_iface_t *i = &usb_ifaces[info->iface_num];
+    i->type = USB_IFACE_TYPE_HID;
     i->hid.ep_in = info->ep_in;
     i->hid.ep_out = info->ep_out;
     i->hid.rx_buffer = info->rx_buffer;
@@ -254,7 +255,7 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
         return -1;  // Invalid interface number
     }
     if (usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
-        return -1;  // Invalid interface number
+        return -2;  // Invalid interface type
     }
     usb_hid_state_t *state = &usb_ifaces[iface_num].hid;
     if (len < state->rx_buffer_len) {
@@ -274,7 +275,7 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
         return -1;  // Invalid interface number
     }
     if (usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
-        return -1;  // Invalid interface number
+        return -2;  // Invalid interface type
     }
     usb_hid_state_t *state = &usb_ifaces[iface_num].hid;
 
