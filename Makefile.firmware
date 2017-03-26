@@ -142,6 +142,7 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	lib/libm/kf_tan.o \
 	lib/libm/log1pf.o \
 	lib/libm/math.o \
+	lib/libm/nearbyintf.o \
 	lib/libm/roundf.o \
 	lib/libm/sf_cos.o \
 	lib/libm/sf_erf.o \

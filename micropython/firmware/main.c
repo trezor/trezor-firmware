@@ -8,6 +8,7 @@
 #include "py/stackctrl.h"
 #include "py/repl.h"
 #include "py/gc.h"
+#include "py/mperrno.h"
 #include "lib/utils/pyexec.h"
 
 #include "gccollect.h"
@@ -98,6 +99,6 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
 
-int mp_reader_new_file(mp_reader_t *reader, const char *filename) {
-    return 2; // assume error was "file not found"
+void mp_reader_new_file(mp_reader_t *reader, const char *filename) {
+    mp_raise_OSError(MP_ENOENT); // assume "file not found"
 }
