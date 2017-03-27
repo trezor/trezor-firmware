@@ -40,6 +40,7 @@ int usb_init_all(void) {
         .ep_out = 0x01,
         .subclass = 0,
         .protocol = 0,
+        .rx_buffer = rx_buffer,
         .max_packet_len = sizeof(rx_buffer),
         .polling_interval = 1,
         .report_desc_len = 34,

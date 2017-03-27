@@ -18,7 +18,8 @@ int usb_hid_add(const usb_hid_info_t *info) {
     if ((info->iface_num < usb_config_desc->bNumInterfaces) ||
         (info->iface_num >= USBD_MAX_NUM_INTERFACES) ||
         ((info->ep_in & 0x80) == 0) ||
-        ((info->ep_out & 0x80) != 0)) {
+        ((info->ep_out & 0x80) != 0) ||
+        (info->rx_buffer == NULL)) {
 
         return 1; // Invalid configuration values
     }
