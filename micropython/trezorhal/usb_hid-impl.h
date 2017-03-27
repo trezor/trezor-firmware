@@ -98,16 +98,19 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
         return -2;  // Invalid interface type
     }
     usb_hid_state_t *state = &usb_ifaces[iface_num].hid;
+
+    // Copy maximum possible amount of data and truncate the buffer length
     if (len < state->rx_buffer_len) {
         return 0;  // Not enough data in the read buffer
     }
-
-    memcpy(buf, state->rx_buffer, state->rx_buffer_len);
+    len = state->rx_buffer_len;
+    state->rx_buffer_len = 0;
+    memcpy(buf, state->rx_buffer, len);
 
     // Clear NAK to indicate we are ready to read more data
     usb_ep_clear_nak(&usb_dev_handle, state->ep_out);
 
-    return state->rx_buffer_len;
+    return len;
 }
 
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
