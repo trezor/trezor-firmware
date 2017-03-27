@@ -124,7 +124,7 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     usb_hid_state_t *state = &usb_ifaces[iface_num].hid;
 
     state->in_idle = 0;
-    USBD_LL_Transmit(&usb_dev_handle, state->ep_in, (uint8_t *)buf, (uint16_t)len);
+    USBD_LL_Transmit(&usb_dev_handle, state->ep_in, UNCONST(buf), (uint16_t)len);
 
     return len;
 }

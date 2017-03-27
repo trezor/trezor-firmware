@@ -5,6 +5,8 @@
 #include "usb.h"
 #include "usbd_core.h"
 
+#define UNCONST(X) ((uint8_t *)(X))
+
 #define USB_MAX_CONFIG_DESC_SIZE     128
 #define USB_MAX_STR_DESC_SIZE        256
 
@@ -94,27 +96,27 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
 }
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString((uint8_t *)usb_str_table.manufacturer_str, usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.manufacturer_str), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString((uint8_t *)usb_str_table.product_str, usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.product_str), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString((uint8_t *)usb_str_table.serial_str, usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.serial_str), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_config_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString((uint8_t *)usb_str_table.config_str, usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.config_str), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString((uint8_t *)usb_str_table.interface_str, usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.interface_str), usb_str_buf, length);
     return usb_str_buf;
 }
 
