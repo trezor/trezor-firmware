@@ -162,7 +162,7 @@ static int usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, u
     state->idle_rate = 0;
     state->alt_setting = 0;
 
-    // Prepare Out endpoint to receive next packet
+    // Prepare the OUT EP to receive next packet
     USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer, state->max_packet_len);
 
     return USBD_OK;
@@ -252,6 +252,9 @@ static uint8_t usb_hid_class_data_out(USBD_HandleTypeDef *dev, usb_hid_state_t *
         state->rx_buffer_len = USBD_LL_GetRxDataSize(dev, ep_num);
 
         if (state->rx_buffer_len > 0) {
+            // Prepare the OUT EP to receive next packet
+            USBD_LL_PrepareReceive(dev, ep_num, state->rx_buffer, state->max_packet_len);
+
             // Block the OUT EP until we process received data
             usb_ep_set_nak(dev, ep_num);
         }
