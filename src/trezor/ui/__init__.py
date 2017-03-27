@@ -16,7 +16,10 @@ def rgbcolor(r: int, g: int, b: int) -> int:
 
 
 LIGHT_RED   = rgbcolor(0xFF, 0x00, 0x00)
-RED         = rgbcolor(0x66, 0x00, 0x00)
+#RED E4572E
+RED         = rgbcolor(0xE4, 0x57, 0x2E)
+#ACTIVE DARK RED A64022
+ACTIVE_RED  = rgbcolor(0xA6, 0x40, 0x22)
 PINK        = rgbcolor(0xE9, 0x1E, 0x63)
 PURPLE      = rgbcolor(0x9C, 0x27, 0xB0)
 DEEP_PURPLE = rgbcolor(0x67, 0x3A, 0xB7)
@@ -25,7 +28,12 @@ BLUE        = rgbcolor(0x21, 0x96, 0xF3)
 LIGHT_BLUE  = rgbcolor(0x03, 0xA9, 0xF4)
 CYAN        = rgbcolor(0x00, 0xBC, 0xD4)
 TEAL        = rgbcolor(0x00, 0x96, 0x88)
+
+#GREEN 4CC148
 GREEN       = rgbcolor(0x4C, 0xC1, 0x48)
+#ACTIVE DARK GREEN 1A8C14
+ACTIVE_GREEN = rgbcolor(0x1A, 0x8C, 0x14)
+
 LIGHT_GREEN = rgbcolor(0x87, 0xCE, 0x26)
 LIME        = rgbcolor(0xCD, 0xDC, 0x39)
 YELLOW      = rgbcolor(0xFF, 0xEB, 0x3B)
@@ -40,16 +48,12 @@ BLUE_GRAY   = rgbcolor(0x60, 0x7D, 0x8B)
 BLACK       = rgbcolor(0x00, 0x00, 0x00)
 WHITE       = rgbcolor(0xFA, 0xFA, 0xFA)
 
-# custom palette
 BLACKISH     = rgbcolor(0x20, 0x20, 0x20)
-PM_DARK_BLUE = rgbcolor(0x1A, 0x29, 0x42)
-PM_BLUE      = rgbcolor(0x34, 0x98, 0xDB)
-
 MONO   = Display.FONT_MONO
 NORMAL = Display.FONT_NORMAL
 BOLD   = Display.FONT_BOLD
 
-# radius for buttons and other elemts
+# radius for buttons and other elements
 BTN_RADIUS = const(2)
 
 BACKLIGHT_NORMAL = const(60)
@@ -106,11 +110,11 @@ def animate_pulse(func, ca, cb, speed=200000, delay=30000):
         yield loop.Sleep(delay)
 
 
-def header(title, icon=ICON_RESET, fg=BLACK, bg=PM_DARK_BLUE):
+def header(title, icon=ICON_RESET, fg=BLACK, bg=BLACK):
     display.bar(0, 0, 240, 32, bg)
     if icon is not None:
         display.icon(8, 4, res.load(icon), fg, bg)
-    display.text(8 + 24 + 8, 23, title, BOLD, fg, bg)
+    display.text(8 + 24 + 2, 24, title, BOLD, fg, bg)
 
 
 def rotate_coords(pos: tuple) -> tuple:

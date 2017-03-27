@@ -11,7 +11,7 @@ DEFAULT_LOADER = {
 }
 DEFAULT_LOADER_ACTIVE = {
     'bg-color': ui.BLACK,
-    'fg-color': ui.LIGHT_GREEN,
+    'fg-color': ui.ACTIVE_GREEN,
     'icon': None,
     'icon-fg-color': None,
 }

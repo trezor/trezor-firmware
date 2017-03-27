@@ -26,7 +26,7 @@ def layout_u2f():
     ui.display.bar(0, 0, 240, 240, ui.BLACK)
 
     # top header bar
-    ui.display.text(10, 28, 'U2F Login', ui.BOLD, ui.PM_BLUE, ui.BLACK)
+    ui.display.text(10, 28, 'U2F Login', ui.BOLD, ui.WHITE, ui.BLACK)
 
     # content
     ui.display.text_center(120, 70, '%s:' % action, ui.BOLD, ui.GREY, ui.BLACK)

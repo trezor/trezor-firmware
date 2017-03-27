@@ -4,7 +4,7 @@ from . import display, in_area, rotate_coords, Widget
 
 
 DEFAULT_BUTTON = {
-    'bg-color': ui.BLACKISH,
+    'bg-color': ui.BLACK,
     'fg-color': ui.WHITE,
     'text-style': ui.NORMAL,
     'border-color': ui.BLACK,
@@ -27,16 +27,16 @@ DEFAULT_BUTTON_DISABLED = {
 
 CANCEL_BUTTON = {
     'bg-color': ui.RED,
-    'fg-color': ui.LIGHT_RED,
+    'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
     'border-color': ui.RED,
     'radius': ui.BTN_RADIUS,
 }
 CANCEL_BUTTON_ACTIVE = {
-    'bg-color': ui.RED,
+    'bg-color': ui.ACTIVE_RED,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
-    'border-color': ui.RED,
+    'border-color': ui.ACTIVE_RED,
     'radius': ui.BTN_RADIUS,
 }
 
@@ -48,10 +48,10 @@ CONFIRM_BUTTON = {
     'radius': ui.BTN_RADIUS,
 }
 CONFIRM_BUTTON_ACTIVE = {
-    'bg-color': ui.GREEN,
+    'bg-color': ui.ACTIVE_GREEN,
     'fg-color': ui.WHITE,
     'text-style': ui.BOLD,
-    'border-color': ui.GREEN,
+    'border-color': ui.ACTIVE_GREEN,
     'radius': ui.BTN_RADIUS,
 }
 
