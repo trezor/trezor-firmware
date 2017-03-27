@@ -236,7 +236,7 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
 }
 
 static uint8_t usb_hid_class_data_in(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
-    if (ep_num == state->ep_in) {
+    if ((ep_num | 0x80) == state->ep_in) {
         // Ensure that the FIFO is empty before a new transfer,
         // this condition could be caused by a new transfer
         // before the end of the previous transfer.
