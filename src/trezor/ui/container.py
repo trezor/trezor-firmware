@@ -1,5 +1,7 @@
+from trezor.ui import Widget
 
-class Container:
+
+class Container(Widget):
 
     def __init__(self, *children):
         self.children = children
