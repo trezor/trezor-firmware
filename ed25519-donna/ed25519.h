@@ -1,8 +1,6 @@
 #ifndef ED25519_H
 #define ED25519_H
 
-#include <stdlib.h>
-
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -10,6 +8,8 @@ extern "C" {
 typedef unsigned char ed25519_signature[64];
 typedef unsigned char ed25519_public_key[32];
 typedef unsigned char ed25519_secret_key[32];
+
+typedef unsigned char curve25519_key[32];
 
 typedef unsigned char curved25519_key[32];
 
@@ -20,6 +20,9 @@ void ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key 
 int ed25519_sign_open_batch(const unsigned char **m, size_t *mlen, const unsigned char **pk, const unsigned char **RS, size_t num, int *valid);
 
 void curved25519_scalarmult_basepoint(curved25519_key pk, const curved25519_key e);
+
+void curve25519_donna(curve25519_key mypublic, const curve25519_key secret, const curve25519_key basepoint);
+void curve25519_donna_basepoint(curve25519_key mypublic, const curve25519_key secret);
 
 #if defined(__cplusplus)
 }

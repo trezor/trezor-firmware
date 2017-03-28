@@ -8,7 +8,6 @@
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
-#include "curve25519.h"
 
 static uint8_t msg[32];
 

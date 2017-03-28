@@ -179,7 +179,7 @@ ge25519_pnielsadd(ge25519_pniels *r, const ge25519 *p, const ge25519_pniels *q) 
 	pack & unpack
 */
 
-STATIC void
+static void
 ge25519_pack(unsigned char r[32], const ge25519 *p) {
 	bignum25519 tx, ty, zi;
 	unsigned char parity[32];
@@ -191,7 +191,7 @@ ge25519_pack(unsigned char r[32], const ge25519 *p) {
 	r[31] ^= ((parity[0] & 1) << 7);
 }
 
-STATIC int ge25519_unpack_negative_vartime(ge25519 *r, const unsigned char p[32]) {
+static int ge25519_unpack_negative_vartime(ge25519 *r, const unsigned char p[32]) {
 	static const unsigned char zero[32] = {0};
 	static const bignum25519 one = {1};
 	unsigned char parity = p[31] >> 7;
@@ -258,7 +258,7 @@ DONNA_INLINE static void ge25519_set_neutral(ge25519 *r)
 #define S2_TABLE_SIZE (1<<(S2_SWINDOWSIZE-2))
 
 /* computes [s1]p1 + [s2]base */
-STATIC void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2) {
+static void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2) {
 	signed char slide1[256], slide2[256];
 	ge25519_pniels pre1[S1_TABLE_SIZE];
 	ge25519 d1;
@@ -298,7 +298,7 @@ STATIC void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, con
 
 /* computes [s1]p1 */
 #if 0 // UNUSED
-STATIC void ge25519_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
+static void ge25519_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
 	signed char slide1[256];
 	ge25519_pniels pre1[S1_TABLE_SIZE];
 	ge25519 d1;
@@ -382,7 +382,7 @@ DONNA_INLINE static void ge25519_cmove_stride4b(long * r, long * p, long * pos, 
 #define HAS_CMOVE_STRIDE4B
 
 #if 0 // UNUSED
-STATIC void ge25519_move_conditional_pniels_array(ge25519_pniels * r, const ge25519_pniels * p, int pos, int n) {
+static void ge25519_move_conditional_pniels_array(ge25519_pniels * r, const ge25519_pniels * p, int pos, int n) {
 #ifdef HAS_CMOVE_STRIDE4B
   size_t i;
   for(i=0; i<sizeof(ge25519_pniels)/sizeof(long); i+=4) {
@@ -401,7 +401,7 @@ STATIC void ge25519_move_conditional_pniels_array(ge25519_pniels * r, const ge25
 }
 #endif
 
-STATIC void ge25519_move_conditional_niels_array(ge25519_niels * r, const uint8_t p[8][96], int pos, int n) {
+static void ge25519_move_conditional_niels_array(ge25519_niels * r, const uint8_t p[8][96], int pos, int n) {
   size_t i;
   for(i=0; i<96/sizeof(long); i+=4) {
     ge25519_cmove_stride4(((long*)r)+i,
@@ -414,7 +414,7 @@ STATIC void ge25519_move_conditional_niels_array(ge25519_niels * r, const uint8_
 
 /* computes [s1]p1, constant time */
 #if 0 // UNUSED
-STATIC void ge25519_scalarmult(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
+static void ge25519_scalarmult(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
 	signed char slide1[64];
 	ge25519_pniels pre1[9];
 	ge25519_pniels pre;

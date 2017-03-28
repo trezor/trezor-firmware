@@ -5,19 +5,11 @@
 */
 
 
-/* define ED25519_SUFFIX to have it appended to the end of each public function */
-#if !defined(ED25519_SUFFIX)
-#define ED25519_SUFFIX 
-#endif
-
-#define ED25519_FN3(fn,suffix) fn##suffix
-#define ED25519_FN2(fn,suffix) ED25519_FN3(fn,suffix)
-#define ED25519_FN(fn)         ED25519_FN2(fn,ED25519_SUFFIX)
-#define STATIC static
-
 #include "ed25519-donna.h"
 #include "ed25519.h"
 #include "ed25519-hash-custom.h"
+
+#include "curve25519-donna-scalarmult-base.h"
 
 /*
 	Generates a (extsk[0..31]) and aExt (extsk[32..63])
@@ -42,7 +34,7 @@ ed25519_hram(hash_512bits hram, const ed25519_signature RS, const ed25519_public
 }
 
 void
-ED25519_FN(ed25519_publickey) (const ed25519_secret_key sk, ed25519_public_key pk) {
+ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk) {
 	bignum256modm a;
 	ge25519 ALIGN(16) A;
 	hash_512bits extsk;
@@ -56,7 +48,7 @@ ED25519_FN(ed25519_publickey) (const ed25519_secret_key sk, ed25519_public_key p
 
 
 void
-ED25519_FN(ed25519_sign) (const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS) {
+ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS) {
 	ed25519_hash_context ctx;
 	bignum256modm r, S, a;
 	ge25519 ALIGN(16) R;
@@ -91,7 +83,7 @@ ED25519_FN(ed25519_sign) (const unsigned char *m, size_t mlen, const ed25519_sec
 }
 
 int
-ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS) {
+ed25519_sign_open(const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS) {
 	ge25519 ALIGN(16) R, A;
 	hash_512bits hash;
 	bignum256modm hram, S;
@@ -120,7 +112,7 @@ ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed2551
 */
 
 void
-ED25519_FN(curved25519_scalarmult_basepoint) (curved25519_key pk, const curved25519_key e) {
+curved25519_scalarmult_basepoint(curved25519_key pk, const curved25519_key e) {
 	curved25519_key ec;
 	bignum256modm s;
 	bignum25519 ALIGN(16) yplusz, zminusy;
@@ -146,3 +138,20 @@ ED25519_FN(curved25519_scalarmult_basepoint) (curved25519_key pk, const curved25
 	curve25519_contract(pk, yplusz);
 }
 
+void
+curve25519_donna(curve25519_key mypublic, const curve25519_key secret, const curve25519_key basepoint) {
+	curve25519_key e;
+	size_t i;
+
+	for (i = 0;i < 32;++i) e[i] = secret[i];
+	e[0] &= 0xf8;
+	e[31] &= 0x7f;
+	e[31] |= 0x40;
+	curve25519_scalarmult_donna(mypublic, e, basepoint);
+}
+
+void
+curve25519_donna_basepoint(curve25519_key mypublic, const curve25519_key secret) {
+	static const curve25519_key basepoint = {9};
+	curve25519_donna(mypublic, secret, basepoint);
+}
