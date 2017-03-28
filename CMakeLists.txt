@@ -6,7 +6,6 @@ add_library(TrezorCrypto STATIC ${SOURCES})
 
 target_include_directories(TrezorCrypto PUBLIC .)
 target_include_directories(TrezorCrypto PUBLIC ed25519-donna)
-target_include_directories(TrezorCrypto PUBLIC curve25519-donna)
 
 # disable sequence point warnings where they are expected
 set_source_files_properties(aeskey.c PROPERTIES
