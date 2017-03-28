@@ -45,6 +45,7 @@ ge25519_double_p1p1(ge25519_p1p1 *r, const ge25519 *p) {
 	curve25519_sub_after_basic(r->t, c, r->z);
 }
 
+#ifndef ED25519_NO_PRECOMP
 static void
 ge25519_nielsadd2_p1p1(ge25519_p1p1 *r, const ge25519 *p, const ge25519_niels *q, unsigned char signbit) {
 	const bignum25519 *qb = (const bignum25519 *)q;
@@ -63,6 +64,7 @@ ge25519_nielsadd2_p1p1(ge25519_p1p1 *r, const ge25519 *p, const ge25519_niels *q
 	curve25519_add(rb[2+signbit], rb[2+signbit], c); /* z for +, t for - */
 	curve25519_sub(rb[2+(signbit^1)], rb[2+(signbit^1)], c); /* t for +, z for - */
 }
+#endif
 
 static void
 ge25519_pnielsadd_p1p1(ge25519_p1p1 *r, const ge25519 *p, const ge25519_pniels *q, unsigned char signbit) {
@@ -222,24 +224,38 @@ DONNA_INLINE static void ge25519_set_neutral(ge25519 *r)
 
 #define S1_SWINDOWSIZE 5
 #define S1_TABLE_SIZE (1<<(S1_SWINDOWSIZE-2))
+#ifdef ED25519_NO_PRECOMP
+#define S2_SWINDOWSIZE 5
+#else
 #define S2_SWINDOWSIZE 7
+#endif
 #define S2_TABLE_SIZE (1<<(S2_SWINDOWSIZE-2))
 
 /* computes [s1]p1 + [s2]base */
 static void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2) {
 	signed char slide1[256], slide2[256];
 	ge25519_pniels pre1[S1_TABLE_SIZE];
-	ge25519 d1;
+#ifdef ED25519_NO_PRECOMP
+	ge25519_pniels pre2[S2_TABLE_SIZE];
+#endif
+	ge25519 dp;
 	ge25519_p1p1 t;
 	int32_t i;
 
 	contract256_slidingwindow_modm(slide1, s1, S1_SWINDOWSIZE);
 	contract256_slidingwindow_modm(slide2, s2, S2_SWINDOWSIZE);
 
-	ge25519_double(&d1, p1);
+	ge25519_double(&dp, p1);
 	ge25519_full_to_pniels(pre1, p1);
 	for (i = 0; i < S1_TABLE_SIZE - 1; i++)
-		ge25519_pnielsadd(&pre1[i+1], &d1, &pre1[i]);
+		ge25519_pnielsadd(&pre1[i+1], &dp, &pre1[i]);
+
+#ifdef ED25519_NO_PRECOMP
+	ge25519_double(&dp, &ge25519_basepoint);
+	ge25519_full_to_pniels(pre2, &ge25519_basepoint);
+	for (i = 0; i < S2_TABLE_SIZE - 1; i++)
+		ge25519_pnielsadd(&pre2[i+1], &dp, &pre2[i]);
+#endif
 
 	ge25519_set_neutral(r);
 
@@ -257,7 +273,11 @@ static void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, con
 
 		if (slide2[i]) {
 			ge25519_p1p1_to_full(r, &t);
+#ifdef ED25519_NO_PRECOMP
+			ge25519_pnielsadd_p1p1(&t, r, &pre2[abs(slide2[i]) / 2], (unsigned char)slide2[i] >> 7);
+#else
 			ge25519_nielsadd2_p1p1(&t, r, &ge25519_niels_sliding_multiples[abs(slide2[i]) / 2], (unsigned char)slide2[i] >> 7);
+#endif
 		}
 
 		ge25519_p1p1_to_partial(r, &t);
