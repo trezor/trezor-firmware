@@ -1,5 +1,6 @@
 from micropython import const
 from trezor import wire, ui
+from trezor.ui.container import Container
 from trezor.utils import unimport, chunks
 import ubinascii
 
@@ -64,7 +65,7 @@ async def layout_reset_device(session_id, msg):
 
 
 async def show_mnemonic_by_word(session_id, mnemonic):
-    from trezor.ui.text import Text
+    from trezor.ui.text import Text, RecoveryWordText
     from trezor.messages.ButtonRequestType import ConfirmWord
     from apps.common.confirm import confirm
 
@@ -75,16 +76,20 @@ async def show_mnemonic_by_word(session_id, mnemonic):
 
     for index, word in enumerate(words):
         current_word = word
+        content = Container(
+            Text('Recovery seed setup', ui.ICON_RESET, 'Write down seed word'),
+            RecoveryWordText(index + 1, word))
         await confirm(session_id,
-                      Text('Write down seed', ui.ICON_RESET,
-                           '%d. %s' % (index, word)),
+                      content,
                       ConfirmWord)
 
     for index, word in enumerate(words):
         current_word = word
+        content = Container(
+            Text('Recovery seed setup', ui.ICON_RESET, 'Confirm seed word'),
+            RecoveryWordText(index + 1, word))
         await confirm(session_id,
-                      Text('Confirm seed', ui.ICON_RESET,
-                           '%d. %s' % (index, word)),
+                      content,
                       ConfirmWord)
 
 
