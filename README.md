@@ -19,7 +19,7 @@ This is the core of the upcoming TREZOR v2.
 ```sh
 sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install libsdl2-dev:i386 libsdl2-image-dev:i386
+sudo apt-get install libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
 make build_unix
 ```
 
