@@ -7,7 +7,7 @@ BOOTLOADER_BUILD_DIR=micropython/bootloader/build
 LOADER_BUILD_DIR=micropython/loader/build
 FIRMWARE_BUILD_DIR=micropython/firmware/build
 
-TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=src
+TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=src DEBUG=1
 UNIX_PORT_OPTS=MICROPY_FORCE_32BIT=1 MICROPY_PY_BTREE=0 MICROPY_PY_TERMIOS=0 MICROPY_PY_FFI=0 MICROPY_PY_USSL=0 MICROPY_SSL_AXTLS=0 DEBUG=1
 CROSS_PORT_OPTS=MICROPY_FORCE_32BIT=1
 
@@ -46,9 +46,6 @@ build: build_firmware build_bootloader build_loader build_unix build_cross ## bu
 
 build_firmware: vendor res build_cross ## build firmware with frozen modules
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
-
-build_firmware_debug: vendor res build_cross ## build firmware with frozen modules and debug symbols
-	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS) DEBUG=1
 
 build_bootloader: vendor ## build bootloader
 	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
