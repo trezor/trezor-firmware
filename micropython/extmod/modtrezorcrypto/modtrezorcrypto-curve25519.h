@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/curve25519-donna/curve25519.h"
+#include "trezor-crypto/ed25519-donna/ed25519.h"
 
 #include "rand.h"
 

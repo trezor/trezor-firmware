@@ -42,12 +42,7 @@ endif
 ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
 CFLAGS_MOD += \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
-	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
-	-DED25519_CUSTOMRANDOM=1 \
-	-DED25519_CUSTOMHASH=1 \
-	-DED25519_NO_INLINE_ASM \
-	-DED25519_FORCE_32BIT=1 \
 	-DAES_128 \
 	-DAES_192 \
 	-DUSE_KECCAK=1 \
@@ -67,7 +62,6 @@ OBJ_MOD += \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip39.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2b.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna/curve25519.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curves.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ecdsa.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \

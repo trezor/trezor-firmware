@@ -25,12 +25,7 @@ endif
 # OBJ micropython/extmod/modtrezorcrypto
 ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
 	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto
-	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/curve25519-donna
 	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/ed25519-donna
-	CFLAGS_MOD += -DED25519_CUSTOMRANDOM=1
-	CFLAGS_MOD += -DED25519_CUSTOMHASH=1
-	CFLAGS_MOD += -DED25519_NO_INLINE_ASM
-	CFLAGS_MOD += -DED25519_FORCE_32BIT=1
 	CFLAGS_MOD += -DAES_128
 	CFLAGS_MOD += -DAES_192
 	CFLAGS_MOD += -DUSE_KECCAK=1
@@ -50,7 +45,6 @@ SRC_MOD += \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/bip39.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/blake2b.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/blake2s.c \
-	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/curve25519-donna/curve25519.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/curves.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/ecdsa.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.c \

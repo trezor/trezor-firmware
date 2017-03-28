@@ -69,12 +69,7 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 # OBJ micropython/extmod/modtrezorcrypto
 CFLAGS_MOD += \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
-	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/curve25519-donna \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
-	-DED25519_CUSTOMRANDOM=1 \
-	-DED25519_CUSTOMHASH=1 \
-	-DED25519_NO_INLINE_ASM \
-	-DED25519_FORCE_32BIT=1 \
 	-DAES_128 \
 	-DAES_192 \
 	-DUSE_KECCAK=1 \
