@@ -1,6 +1,6 @@
 #include "font_bitmap.h"
 
-const uint8_t *Font_Bitmap = (const uint8_t *)
+const uint8_t * const Font_Bitmap = (const uint8_t * const)
     "\x00\x00\x00\x00\x00"
     "\x00\x00\x5f\x00\x00"
     "\x00\x07\x00\x07\x00"
