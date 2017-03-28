@@ -541,39 +541,6 @@ curve25519_contract(unsigned char out[32], const bignum25519 in) {
 	#undef F
 }
 
-/* out = (flag) ? in : out */
-DONNA_INLINE static void
-curve25519_move_conditional_bytes(uint8_t out[96], const uint8_t in[96], uint32_t flag) {
-	const uint32_t nb = flag - 1, b = ~nb;
-	const uint32_t *inl = (const uint32_t *)in;
-	uint32_t *outl = (uint32_t *)out;
-	outl[0] = (outl[0] & nb) | (inl[0] & b);
-	outl[1] = (outl[1] & nb) | (inl[1] & b);
-	outl[2] = (outl[2] & nb) | (inl[2] & b);
-	outl[3] = (outl[3] & nb) | (inl[3] & b);
-	outl[4] = (outl[4] & nb) | (inl[4] & b);
-	outl[5] = (outl[5] & nb) | (inl[5] & b);
-	outl[6] = (outl[6] & nb) | (inl[6] & b);
-	outl[7] = (outl[7] & nb) | (inl[7] & b);
-	outl[8] = (outl[8] & nb) | (inl[8] & b);
-	outl[9] = (outl[9] & nb) | (inl[9] & b);
-	outl[10] = (outl[10] & nb) | (inl[10] & b);
-	outl[11] = (outl[11] & nb) | (inl[11] & b);
-	outl[12] = (outl[12] & nb) | (inl[12] & b);
-	outl[13] = (outl[13] & nb) | (inl[13] & b);
-	outl[14] = (outl[14] & nb) | (inl[14] & b);
-	outl[15] = (outl[15] & nb) | (inl[15] & b);
-	outl[16] = (outl[16] & nb) | (inl[16] & b);
-	outl[17] = (outl[17] & nb) | (inl[17] & b);
-	outl[18] = (outl[18] & nb) | (inl[18] & b);
-	outl[19] = (outl[19] & nb) | (inl[19] & b);
-	outl[20] = (outl[20] & nb) | (inl[20] & b);
-	outl[21] = (outl[21] & nb) | (inl[21] & b);
-	outl[22] = (outl[22] & nb) | (inl[22] & b);
-	outl[23] = (outl[23] & nb) | (inl[23] & b);
-
-}
-
 /* if (iswap) swap(a, b) */
 DONNA_INLINE static void
 curve25519_swap_conditional(bignum25519 a, bignum25519 b, uint32_t iswap) {

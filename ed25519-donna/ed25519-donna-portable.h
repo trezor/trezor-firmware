@@ -4,8 +4,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define DONNA_INLINE inline __attribute__((always_inline))
-#define DONNA_NOINLINE __attribute__((noinline))
+#define DONNA_INLINE
 #undef ALIGN
 #define ALIGN(x) __attribute__((aligned(x)))
 #define ROTL32(a,b) (((a) << (b)) | ((a) >> (32 - b)))
