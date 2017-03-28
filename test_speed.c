@@ -91,7 +91,7 @@ void bench_curve25519(void)
 
 	clock_t t = clock();
 	for (int i = 0 ; i < 500; i++) {
-		curve25519_donna(result, secret, basepoint);
+		curve25519_scalarmult(result, secret, basepoint);
 	}
 	printf("Curve25519 multiplying speed: %0.2f mul/s\n", 500.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }

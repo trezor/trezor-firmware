@@ -406,7 +406,7 @@ void hdnode_fill_public_key(HDNode *node)
 		ed25519_publickey(node->private_key, node->public_key + 1);
 	} else if (node->curve == &curve25519_info) {
 		node->public_key[0] = 1;
-		curve25519_donna_basepoint(node->public_key + 1, node->private_key);
+		curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
 	} else {
 		ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
 	}
@@ -472,7 +472,7 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, ui
 		if (peer_public_key[0] != 0x40) {
 			return 1;  // Curve25519 public key should start with 0x40 byte.
 		}
-		curve25519_donna(session_key + 1, node->private_key, peer_public_key + 1);
+		curve25519_scalarmult(session_key + 1, node->private_key, peer_public_key + 1);
 		*result_size = 33;
 		return 0;
 	} else {

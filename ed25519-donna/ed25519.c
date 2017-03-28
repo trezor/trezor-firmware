@@ -108,8 +108,8 @@ ed25519_sign_open(const unsigned char *m, size_t mlen, const ed25519_public_key 
 	Fast Curve25519 basepoint scalar multiplication
 */
 void
-curved25519_scalarmult_basepoint(curved25519_key pk, const curved25519_key e) {
-	curved25519_key ec;
+curve25519_scalarmult_basepoint(curve25519_key pk, const curve25519_key e) {
+	curve25519_key ec;
 	bignum256modm s;
 	bignum25519 ALIGN(16) yplusz, zminusy;
 	ge25519 ALIGN(16) p;
@@ -135,7 +135,7 @@ curved25519_scalarmult_basepoint(curved25519_key pk, const curved25519_key e) {
 }
 
 void
-curve25519_donna(curve25519_key mypublic, const curve25519_key secret, const curve25519_key basepoint) {
+curve25519_scalarmult(curve25519_key mypublic, const curve25519_key secret, const curve25519_key basepoint) {
 	curve25519_key e;
 	size_t i;
 
@@ -144,10 +144,4 @@ curve25519_donna(curve25519_key mypublic, const curve25519_key secret, const cur
 	e[31] &= 0x7f;
 	e[31] |= 0x40;
 	curve25519_scalarmult_donna(mypublic, e, basepoint);
-}
-
-void
-curve25519_donna_basepoint(curve25519_key mypublic, const curve25519_key secret) {
-	static const curve25519_key basepoint = {9};
-	curve25519_donna(mypublic, secret, basepoint);
 }
