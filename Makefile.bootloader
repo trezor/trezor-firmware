@@ -75,6 +75,7 @@ CFLAGS_MOD += \
 	-DAES_128 \
 	-DAES_192 \
 	-DUSE_KECCAK=1 \
+	-DED25519_NO_PRECOMP=1 \
 	-Wno-sequence-point
 
 OBJ_MOD += \

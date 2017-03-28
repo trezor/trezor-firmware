@@ -50,7 +50,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_publickey(mp_obj_t self, mp_obj_t se
     }
     vstr_t vstr;
     vstr_init_len(&vstr, 32);
-    curve25519_donna_basepoint((uint8_t *)vstr.buf, (const uint8_t *)sk.buf);
+    curve25519_scalarmult_basepoint((uint8_t *)vstr.buf, (const uint8_t *)sk.buf);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Curve25519_publickey_obj, mod_TrezorCrypto_Curve25519_publickey);
@@ -72,7 +72,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_multiply(mp_obj_t self, mp_obj_t sec
     }
     vstr_t vstr;
     vstr_init_len(&vstr, 32);
-    curve25519_donna((uint8_t *)vstr.buf, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf);
+    curve25519_scalarmult((uint8_t *)vstr.buf, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Curve25519_multiply_obj, mod_TrezorCrypto_Curve25519_multiply);
