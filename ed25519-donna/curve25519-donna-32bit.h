@@ -6,11 +6,9 @@
 */
 
 typedef uint32_t bignum25519[10];
-typedef uint32_t bignum25519align16[12];
 
 static const uint32_t reduce_mask_25 = (1 << 25) - 1;
 static const uint32_t reduce_mask_26 = (1 << 26) - 1;
-
 
 /* out = in */
 DONNA_INLINE static void
@@ -98,6 +96,24 @@ curve25519_sub(bignum25519 out, const bignum25519 a, const bignum25519 b) {
 	out[9] = twoP13579 + a[9] - b[9]    ;
 }
 
+/* out = in * scalar */
+DONNA_INLINE static void
+curve25519_scalar_product(bignum25519 out, const bignum25519 in, const uint32_t scalar) {
+	uint64_t a;
+	uint32_t c;
+	a = mul32x32_64(in[0], scalar);     out[0] = (uint32_t)a & reduce_mask_26; c = (uint32_t)(a >> 26);
+	a = mul32x32_64(in[1], scalar) + c; out[1] = (uint32_t)a & reduce_mask_25; c = (uint32_t)(a >> 25);
+	a = mul32x32_64(in[2], scalar) + c; out[2] = (uint32_t)a & reduce_mask_26; c = (uint32_t)(a >> 26);
+	a = mul32x32_64(in[3], scalar) + c; out[3] = (uint32_t)a & reduce_mask_25; c = (uint32_t)(a >> 25);
+	a = mul32x32_64(in[4], scalar) + c; out[4] = (uint32_t)a & reduce_mask_26; c = (uint32_t)(a >> 26);
+	a = mul32x32_64(in[5], scalar) + c; out[5] = (uint32_t)a & reduce_mask_25; c = (uint32_t)(a >> 25);
+	a = mul32x32_64(in[6], scalar) + c; out[6] = (uint32_t)a & reduce_mask_26; c = (uint32_t)(a >> 26);
+	a = mul32x32_64(in[7], scalar) + c; out[7] = (uint32_t)a & reduce_mask_25; c = (uint32_t)(a >> 25);
+	a = mul32x32_64(in[8], scalar) + c; out[8] = (uint32_t)a & reduce_mask_26; c = (uint32_t)(a >> 26);
+	a = mul32x32_64(in[9], scalar) + c; out[9] = (uint32_t)a & reduce_mask_25; c = (uint32_t)(a >> 25);
+	                                    out[0] += c * 19;
+}
+
 /* out = a - b, where a is the result of a basic op (add,sub) */
 DONNA_INLINE static void
 curve25519_sub_after_basic(bignum25519 out, const bignum25519 a, const bignum25519 b) {
@@ -150,7 +166,7 @@ curve25519_neg(bignum25519 out, const bignum25519 a) {
 
 /* out = a * b */
 #define curve25519_mul_noinline curve25519_mul
-static void
+DONNA_INLINE static void
 curve25519_mul(bignum25519 out, const bignum25519 a, const bignum25519 b) {
 	uint32_t r0,r1,r2,r3,r4,r5,r6,r7,r8,r9;
 	uint32_t s0,s1,s2,s3,s4,s5,s6,s7,s8,s9;
@@ -247,8 +263,8 @@ curve25519_mul(bignum25519 out, const bignum25519 a, const bignum25519 b) {
 	out[9] = r9;
 }
 
-/* out = in*in */
-static void
+/* out = in * in */
+DONNA_INLINE static void
 curve25519_square(bignum25519 out, const bignum25519 in) {
 	uint32_t r0,r1,r2,r3,r4,r5,r6,r7,r8,r9;
 	uint32_t d6,d7,d8,d9;
@@ -320,7 +336,6 @@ curve25519_square(bignum25519 out, const bignum25519 in) {
 	out[8] = r8;
 	out[9] = r9;
 }
-
 
 /* out = in ^ (2 * count) */
 static void
@@ -430,16 +445,16 @@ curve25519_expand(bignum25519 out, const unsigned char in[32]) {
 		#undef F
 	}
 
-	out[0] = (                        x0       ) & 0x3ffffff;
-	out[1] = ((((uint64_t)x1 << 32) | x0) >> 26) & 0x1ffffff;
-	out[2] = ((((uint64_t)x2 << 32) | x1) >> 19) & 0x3ffffff;
-	out[3] = ((((uint64_t)x3 << 32) | x2) >> 13) & 0x1ffffff;
-	out[4] = ((                       x3) >>  6) & 0x3ffffff;
-	out[5] = (                        x4       ) & 0x1ffffff;
-	out[6] = ((((uint64_t)x5 << 32) | x4) >> 25) & 0x3ffffff;
-	out[7] = ((((uint64_t)x6 << 32) | x5) >> 19) & 0x1ffffff;
-	out[8] = ((((uint64_t)x7 << 32) | x6) >> 12) & 0x3ffffff;
-	out[9] = ((                       x7) >>  6) & 0x1ffffff;
+	out[0] = (                        x0       ) & reduce_mask_26;
+	out[1] = ((((uint64_t)x1 << 32) | x0) >> 26) & reduce_mask_25;
+	out[2] = ((((uint64_t)x2 << 32) | x1) >> 19) & reduce_mask_26;
+	out[3] = ((((uint64_t)x3 << 32) | x2) >> 13) & reduce_mask_25;
+	out[4] = ((                       x3) >>  6) & reduce_mask_26;
+	out[5] = (                        x4       ) & reduce_mask_25;
+	out[6] = ((((uint64_t)x5 << 32) | x4) >> 25) & reduce_mask_26;
+	out[7] = ((((uint64_t)x6 << 32) | x5) >> 19) & reduce_mask_25;
+	out[8] = ((((uint64_t)x7 << 32) | x6) >> 12) & reduce_mask_26;
+	out[9] = ((                       x7) >>  6) & reduce_mask_25; /* ignore the top bit */
 }
 
 /* Take a fully reduced polynomial form number and contract it into a
@@ -525,7 +540,6 @@ curve25519_contract(unsigned char out[32], const bignum25519 in) {
 	F(9,28);
 	#undef F
 }
-
 
 /* out = (flag) ? in : out */
 DONNA_INLINE static void
