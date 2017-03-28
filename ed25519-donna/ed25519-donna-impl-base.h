@@ -6,15 +6,15 @@ DONNA_INLINE static void
 ge25519_p1p1_to_partial(ge25519 *r, const ge25519_p1p1 *p) {
 	curve25519_mul(r->x, p->x, p->t);
 	curve25519_mul(r->y, p->y, p->z);
-	curve25519_mul(r->z, p->z, p->t); 
+	curve25519_mul(r->z, p->z, p->t);
 }
 
 DONNA_INLINE static void
 ge25519_p1p1_to_full(ge25519 *r, const ge25519_p1p1 *p) {
 	curve25519_mul(r->x, p->x, p->t);
 	curve25519_mul(r->y, p->y, p->z);
-	curve25519_mul(r->z, p->z, p->t); 
-	curve25519_mul(r->t, p->x, p->y); 
+	curve25519_mul(r->z, p->z, p->t);
+	curve25519_mul(r->t, p->x, p->y);
 }
 
 static void
@@ -208,7 +208,6 @@ static int ge25519_unpack_negative_vartime(ge25519 *r, const unsigned char p[32]
 	curve25519_mul(r->t, r->x, r->y);
 	return 1;
 }
-
 
 /*
 	scalarmults

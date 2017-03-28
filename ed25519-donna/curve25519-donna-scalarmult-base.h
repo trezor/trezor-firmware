@@ -15,7 +15,7 @@ curve25519_scalarmult_donna(curve25519_key mypublic, const curve25519_key n, con
 	curve25519_expand(q, basepoint);
 	curve25519_copy(nqx, q);
 
-	/* bit 255 is always 0, and bit 254 is always 1, so skip bit 255 and 
+	/* bit 255 is always 0, and bit 254 is always 1, so skip bit 255 and
 	   start pre-swapped on bit 254 */
 	lastbit = 1;
 
@@ -63,4 +63,3 @@ curve25519_scalarmult_donna(curve25519_key mypublic, const curve25519_key n, con
 	curve25519_mul(nqz, nqx, zmone);
 	curve25519_contract(mypublic, nqz);
 }
-

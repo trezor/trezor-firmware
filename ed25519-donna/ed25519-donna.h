@@ -8,7 +8,6 @@
 		Bo-Yin Yang
 */
 
-
 #include "ed25519-donna-portable.h"
 
 #include "curve25519-donna-32bit.h"
@@ -29,7 +28,6 @@ ed25519_verify(const unsigned char *x, const unsigned char *y, size_t len) {
 		differentbits |= (*x++ ^ *y++);
 	return (int) (1 & ((differentbits - 1) >> 8));
 }
-
 
 /*
  * Arithmetic on the twisted Edwards curve -x^2 + y^2 = 1 + dx^2y^2

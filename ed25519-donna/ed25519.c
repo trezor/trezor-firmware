@@ -4,7 +4,6 @@
 	Ed25519 reference implementation using Ed25519-donna
 */
 
-
 #include "ed25519-donna.h"
 #include "ed25519.h"
 #include "ed25519-hash-custom.h"
@@ -14,7 +13,6 @@
 /*
 	Generates a (extsk[0..31]) and aExt (extsk[32..63])
 */
-
 DONNA_INLINE static void
 ed25519_extsk(hash_512bits extsk, const ed25519_secret_key sk) {
 	ed25519_hash(extsk, sk, 32);
@@ -45,7 +43,6 @@ ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk) {
 	ge25519_scalarmult_base_niels(&A, ge25519_niels_base_multiples, a);
 	ge25519_pack(pk, &A);
 }
-
 
 void
 ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS) {
@@ -110,7 +107,6 @@ ed25519_sign_open(const unsigned char *m, size_t mlen, const ed25519_public_key 
 /*
 	Fast Curve25519 basepoint scalar multiplication
 */
-
 void
 curved25519_scalarmult_basepoint(curved25519_key pk, const curved25519_key e) {
 	curved25519_key ec;

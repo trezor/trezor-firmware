@@ -40,7 +40,7 @@ curve25519_add(bignum25519 out, const bignum25519 a, const bignum25519 b) {
 	out[9] = a[9] + b[9];
 }
 
-DONNA_INLINE static void 
+DONNA_INLINE static void
 curve25519_add_after_basic(bignum25519 out, const bignum25519 a, const bignum25519 b) {
 	uint32_t c;
 	out[0] = a[0] + b[0]    ; c = (out[0] >> 26); out[0] &= reduce_mask_26;
