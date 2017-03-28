@@ -140,8 +140,7 @@ barrett_reduce256_modm(bignum256modm r, const bignum256modm q1, const bignum256m
 }
 
 /* addition modulo m */
-static void
-add256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
+STATIC void add256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
 	bignum256modm_element_t c;
 
 	c  = x[0] + y[0]; r[0] = c & 0x3fffffff; c >>= 30;
@@ -158,8 +157,7 @@ add256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
 }
 
 /* multiplication modulo m */
-static void 
-mul256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
+STATIC void mul256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
 	bignum256modm r1, q1;
 	uint64_t c;
 	bignum256modm_element_t f;
@@ -204,8 +202,7 @@ mul256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
 	barrett_reduce256_modm(r, q1, r1);
 }
 
-static void
-expand256_modm(bignum256modm out, const unsigned char *in, size_t len) {
+STATIC void expand256_modm(bignum256modm out, const unsigned char *in, size_t len) {
 	unsigned char work[64] = {0};
 	bignum256modm_element_t x[16];
 	bignum256modm q1;
@@ -257,8 +254,7 @@ expand256_modm(bignum256modm out, const unsigned char *in, size_t len) {
 	barrett_reduce256_modm(out, q1, out);
 }
 
-static void
-expand_raw256_modm(bignum256modm out, const unsigned char in[32]) {
+STATIC void expand_raw256_modm(bignum256modm out, const unsigned char in[32]) {
 	bignum256modm_element_t x[8];
 
 	x[0] = U8TO32_LE(in +  0);
@@ -281,8 +277,7 @@ expand_raw256_modm(bignum256modm out, const unsigned char in[32]) {
 	out[8] = ((x[ 7] >> 16)                ) & 0x0000ffff;
 }
 
-static void
-contract256_modm(unsigned char out[32], const bignum256modm in) {
+STATIC void contract256_modm(unsigned char out[32], const bignum256modm in) {
 	U32TO8_LE(out +  0, (in[0]      ) | (in[1] << 30));
 	U32TO8_LE(out +  4, (in[1] >>  2) | (in[2] << 28));
 	U32TO8_LE(out +  8, (in[2] >>  4) | (in[3] << 26));
@@ -295,8 +290,7 @@ contract256_modm(unsigned char out[32], const bignum256modm in) {
 
 
 
-static void
-contract256_window4_modm(signed char r[64], const bignum256modm in) {
+STATIC void contract256_window4_modm(signed char r[64], const bignum256modm in) {
 	char carry;
 	signed char *quads = r;
 	bignum256modm_element_t i, j, v;
@@ -331,8 +325,7 @@ contract256_window4_modm(signed char r[64], const bignum256modm in) {
 	r[63] += carry;
 }
 
-static void
-contract256_slidingwindow_modm(signed char r[256], const bignum256modm s, int windowsize) {
+STATIC void contract256_slidingwindow_modm(signed char r[256], const bignum256modm s, int windowsize) {
 	int i,j,k,b;
 	int m = (1 << (windowsize - 1)) - 1, soplen = 256;
 	signed char *bits = r;
@@ -379,8 +372,7 @@ contract256_slidingwindow_modm(signed char r[256], const bignum256modm s, int wi
 */
 
 /* out = a - b, a must be larger than b */
-static void
-sub256_modm_batch(bignum256modm out, const bignum256modm a, const bignum256modm b, size_t limbsize) {
+STATIC void sub256_modm_batch(bignum256modm out, const bignum256modm a, const bignum256modm b, size_t limbsize) {
 	size_t i = 0;
 	bignum256modm_element_t carry = 0;
 	switch (limbsize) {
@@ -399,8 +391,7 @@ sub256_modm_batch(bignum256modm out, const bignum256modm a, const bignum256modm 
 
 
 /* is a < b */
-static int
-lt256_modm_batch(const bignum256modm a, const bignum256modm b, size_t limbsize) {
+STATIC int lt256_modm_batch(const bignum256modm a, const bignum256modm b, size_t limbsize) {
 	switch (limbsize) {
 		case 8: if (a[8] > b[8]) return 0; if (a[8] < b[8]) return 1;
 		case 7: if (a[7] > b[7]) return 0; if (a[7] < b[7]) return 1;
@@ -416,8 +407,7 @@ lt256_modm_batch(const bignum256modm a, const bignum256modm b, size_t limbsize) 
 }
 
 /* is a <= b */
-static int
-lte256_modm_batch(const bignum256modm a, const bignum256modm b, size_t limbsize) {
+STATIC int lte256_modm_batch(const bignum256modm a, const bignum256modm b, size_t limbsize) {
 	switch (limbsize) {
 		case 8: if (a[8] > b[8]) return 0; if (a[8] < b[8]) return 1;
 		case 7: if (a[7] > b[7]) return 0; if (a[7] < b[7]) return 1;
@@ -434,8 +424,7 @@ lte256_modm_batch(const bignum256modm a, const bignum256modm b, size_t limbsize)
 
 
 /* is a == 0 */
-static int
-iszero256_modm_batch(const bignum256modm a) {
+STATIC int iszero256_modm_batch(const bignum256modm a) {
 	size_t i;
 	for (i = 0; i < 9; i++)
 		if (a[i])
@@ -444,8 +433,7 @@ iszero256_modm_batch(const bignum256modm a) {
 }
 
 /* is a == 1 */
-static int
-isone256_modm_batch(const bignum256modm a) {
+STATIC int isone256_modm_batch(const bignum256modm a) {
 	size_t i;
 	if (a[0] != 1)
 		return 0;
@@ -456,8 +444,7 @@ isone256_modm_batch(const bignum256modm a) {
 }
 
 /* can a fit in to (at most) 128 bits */
-static int
-isatmost128bits256_modm_batch(const bignum256modm a) {
+STATIC int isatmost128bits256_modm_batch(const bignum256modm a) {
 	uint32_t mask =
 		((a[8]             )  | /*  16 */
 		 (a[7]             )  | /*  46 */

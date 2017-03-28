@@ -49,6 +49,9 @@
 	#define CPU_X86_64
 #elif defined(__i586__) || defined(__i686__) || (defined(_M_IX86) && (_M_IX86 >= 500))
 	#define CPU_X86 500
+	#ifdef __SSE2__
+		#define ED25519_SSE2
+	#endif
 #elif defined(__i486__) || (defined(_M_IX86) && (_M_IX86 >= 400))
 	#define CPU_X86 400
 #elif defined(__i386__) || (defined(_M_IX86) && (_M_IX86 >= 300)) || defined(__X86__) || defined(_X86_) || defined(__I86__)

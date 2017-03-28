@@ -21,6 +21,7 @@ CFLAGS   += $(OPTFLAGS) \
             -Winit-self \
             -Wuninitialized \
             -Wformat-security \
+            -Wno-unused-function \
             -Werror
 
 # disable sequence point warning because of AES code

@@ -403,8 +403,8 @@ static void
 curve25519_expand(bignum25519 out, const unsigned char in[32]) {
 	static const union { uint8_t b[2]; uint16_t s; } endian_check = {{1,0}};
 	uint32_t x0,x1,x2,x3,x4,x5,x6,x7;
-
 	if (endian_check.s == 1) {
+	  /* Take care, this only works when in is aligned */
 		x0 = *(uint32_t *)(in + 0);
 		x1 = *(uint32_t *)(in + 4);
 		x2 = *(uint32_t *)(in + 8);
