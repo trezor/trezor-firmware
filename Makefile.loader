@@ -52,6 +52,10 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.o \
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
+	\
+	stmhal/usbdev/core/src/usbd_core.o \
+	stmhal/usbdev/core/src/usbd_ctlreq.o \
+	stmhal/usbdev/core/src/usbd_ioreq.o \
 	)
 
 # OBJ micropython/
@@ -66,7 +70,10 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	extmod/modtrezorui/font_robotomono_regular_20.o \
 	trezorhal/common.o \
 	trezorhal/image.o \
+	trezorhal/flash.o \
 	trezorhal/touch.o \
+	trezorhal/usb.o \
+	trezorhal/usbd_conf.o \
 	trezorhal/stm32_it.o \
 	trezorhal/stm32_system.o \
 	trezorhal/hal/stm32f4xx_hal_sram.o \

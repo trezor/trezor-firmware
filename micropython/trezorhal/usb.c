@@ -10,10 +10,6 @@
 #define USB_MAX_CONFIG_DESC_SIZE     128
 #define USB_MAX_STR_DESC_SIZE        256
 
-#define USB_EP_DIR_OUT              0x00
-#define USB_EP_DIR_IN               0x80
-#define USB_EP_DIR_MSK              0x80
-
 extern PCD_HandleTypeDef pcd_fs_handle;
 
 static USBD_HandleTypeDef usb_dev_handle;

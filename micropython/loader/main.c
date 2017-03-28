@@ -5,7 +5,9 @@
 #include "common.h"
 #include "display.h"
 #include "image.h"
+#include "flash.h"
 #include "touch.h"
+#include "usb.h"
 #include "version.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
@@ -81,9 +83,42 @@ void check_and_jump(void)
     }
 }
 
-void mainloop(void)
-{
-    __fatal_error("touch detected - launch aborted");
+int usb_init_all(void) {
+    static const usb_dev_info_t dev_info = {
+        .vendor_id         = 0x1209,
+        .product_id        = 0x53C0,
+        .release_num       = 0x0002,
+        .manufacturer_str  = (const uint8_t *)"manufacturer_str",
+        .product_str       = (const uint8_t *)"product_str",
+        .serial_number_str = (const uint8_t *)"serial_number_str",
+        .configuration_str = (const uint8_t *)"configuration_str",
+        .interface_str     = (const uint8_t *)"interface_str",
+    };
+    static uint8_t hid_rx_buffer[64];
+    static const usb_hid_info_t hid_info = {
+        .iface_num        = 0x00,
+        .ep_in            = USB_EP_DIR_IN | 0x01,
+        .ep_out           = USB_EP_DIR_OUT | 0x01,
+        .subclass         = 0,
+        .protocol         = 0,
+        .rx_buffer        = hid_rx_buffer,
+        .max_packet_len   = sizeof(hid_rx_buffer),
+        .polling_interval = 1,
+        .report_desc_len  = 34,
+        .report_desc      = (const uint8_t *)"\x06\x00\xff\x09\x01\xa1\x01\x09\x20\x15\x00\x26\xff\x00\x75\x08\x95\x40\x81\x02\x09\x21\x15\x00\x26\xff\x00\x75\x08\x95\x40\x91\x02\xc0",
+    };
+
+    if (0 != usb_init(&dev_info)) {
+        __fatal_error("usb_init failed");
+    }
+    if (0 != usb_hid_add(&hid_info)) {
+        __fatal_error("usb_hid_add failed");
+    }
+    if (0 != usb_start()) {
+        __fatal_error("usb_start failed");
+    }
+
+    return 0;
 }
 
 int main(void)
@@ -91,9 +126,22 @@ int main(void)
     SCB->VTOR = LOADER_START + HEADER_SIZE;
     periph_init();
 
-    touch_init();
+    if (0 != display_init()) {
+        __fatal_error("display_init failed");
+    }
 
-    display_init();
+    if (0 != flash_init()) {
+        __fatal_error("flash_init failed");
+    }
+
+    if (0 != touch_init()) {
+        __fatal_error("touch_init failed");
+    }
+
+    if (0 != usb_init_all()) {
+        __fatal_error("usb_init_all failed");
+    }
+
     display_clear();
     display_backlight(255);
 

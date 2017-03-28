@@ -1,6 +1,10 @@
 #ifndef __TREZORHAL_USB_H__
 #define __TREZORHAL_USB_H__
 
+#define USB_EP_DIR_OUT              0x00
+#define USB_EP_DIR_IN               0x80
+#define USB_EP_DIR_MSK              0x80
+
 typedef struct __attribute__((packed)) {
     uint8_t bLength;
     uint8_t bDescriptorType;
@@ -83,8 +87,8 @@ typedef struct {
     uint16_t vendor_id;
     uint16_t product_id;
     uint16_t release_num;
-    const uint8_t *product_str;
     const uint8_t *manufacturer_str;
+    const uint8_t *product_str;
     const uint8_t *serial_number_str;
     const uint8_t *configuration_str;
     const uint8_t *interface_str;

@@ -5,6 +5,7 @@
 #include "common.h"
 #include "display.h"
 #include "image.h"
+#include "flash.h"
 #include "sdcard.h"
 #include "version.h"
 
@@ -144,9 +145,18 @@ int main(void)
     SCB->VTOR = BOOTLOADER_START;
     periph_init();
 
-    sdcard_init();
+    if (0 != display_init()) {
+        __fatal_error("display_init failed");
+    }
 
-    display_init();
+    if (0 != flash_init()) {
+        __fatal_error("flash_init failed");
+    }
+
+    if (0 != sdcard_init()) {
+        __fatal_error("sdcard_init failed");
+    }
+
     display_clear();
     display_backlight(255);
 
