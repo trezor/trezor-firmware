@@ -372,16 +372,21 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
     if (scale < 1 || scale > 10) return;
     uint8_t bitdata[QR_MAX_BITDATA];
     int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET[0] - (side + 2) * scale / 2;
+    y += DISPLAY_OFFSET[1] - (side + 2) * scale / 2;
     int x0, y0, x1, y1;
-    clamp_coords(x, y, side * scale, side * scale, &x0, &y0, &x1, &y1);
+    clamp_coords(x, y, (side + 2) * scale, (side + 2) * scale, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
     for (int j = y0; j <= y1; j++) {
         for (int i = x0; i <= x1; i++) {
-            int rx = i - x;
-            int ry = j - y;
-            int a = (rx / scale)  * side + (ry / scale);
+            int rx = (i - x) / scale - 1;
+            int ry = (j - y) / scale - 1;
+            // 1px border
+            if (rx < 0 || ry < 0 || rx >= side || ry >= side) {
+                DATA(0xFF); DATA(0xFF);
+                continue;
+            }
+            int a = rx * side + ry;
             if (bitdata[a / 8] & (1 << (7 - a % 8))) {
                 DATA(0x00); DATA(0x00);
             } else {

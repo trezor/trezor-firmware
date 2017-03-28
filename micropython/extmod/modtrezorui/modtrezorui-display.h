@@ -221,7 +221,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUi_Display_text_width_obj, mod_Trezor
 
 /// def trezor.ui.display.qrcode(x: int, y: int, data: bytes, scale: int) -> None:
 ///     '''
-///     Renders data encoded as a QR code at position (x,y).
+///     Renders data encoded as a QR code centered at position (x,y).
 ///     Scale determines a zoom factor.
 ///     '''
 STATIC mp_obj_t mod_TrezorUi_Display_qrcode(size_t n_args, const mp_obj_t *args) {
