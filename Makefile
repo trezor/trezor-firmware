@@ -19,7 +19,7 @@ help: ## show this help
 ## dependencies commands:
 
 vendor: ## update git submodules
-	# git submodule update --init
+	git submodule update --init
 
 res: ## update resources
 	./tools/res_collect
