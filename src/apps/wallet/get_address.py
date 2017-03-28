@@ -35,7 +35,7 @@ async def _show_address(session_id, address):
 
     lines = _split_address(address)
     content = Container(
-        Qr(address, (76, 90), 3),
+        Qr(address, (120, 135), 3),
         Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines))
     await require_confirm(session_id, content, code=Address)
 
