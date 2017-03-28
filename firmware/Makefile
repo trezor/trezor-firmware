@@ -28,7 +28,6 @@ OBJS += ../vendor/trezor-crypto/curves.o
 OBJS += ../vendor/trezor-crypto/secp256k1.o
 OBJS += ../vendor/trezor-crypto/nist256p1.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519.o
-OBJS += ../vendor/trezor-crypto/curve25519-donna/curve25519.o
 OBJS += ../vendor/trezor-crypto/hmac.o
 OBJS += ../vendor/trezor-crypto/bip32.o
 OBJS += ../vendor/trezor-crypto/bip39.o
@@ -61,6 +60,4 @@ CFLAGS += -DQR_MAX_VERSION=0
 CFLAGS += -DDEBUG_LINK=0
 CFLAGS += -DDEBUG_LOG=0
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
-CFLAGS += -DED25519_CUSTOMRANDOM=1
-CFLAGS += -DED25519_CUSTOMHASH=1
 CFLAGS += -DUSE_ETHEREUM=1
