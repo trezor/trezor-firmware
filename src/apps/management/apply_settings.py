@@ -24,8 +24,7 @@ async def layout_apply_settings(session_id, msg):
         await require_confirm(session_id, Text(
             'Change label', ui.ICON_RESET,
             'Do you really want to', 'change label to',
-            ui.BOLD, '%s' % msg.label,
-            ui.NORMAL, '?'))
+            ui.BOLD, '%s' % msg.label))
 
     if msg.language is not None:
         await require_confirm(session_id, Text(

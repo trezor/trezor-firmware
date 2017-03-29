@@ -65,7 +65,7 @@ async def layout_reset_device(session_id, msg):
 
 
 async def show_mnemonic_by_word(session_id, mnemonic):
-    from trezor.ui.text import Text, RecoveryWordText
+    from trezor.ui.text import Text
     from trezor.messages.ButtonRequestType import ConfirmWord
     from apps.common.confirm import confirm
 
@@ -74,23 +74,23 @@ async def show_mnemonic_by_word(session_id, mnemonic):
     if __debug__:
         global current_word
 
-    for index, word in enumerate(words):
-        current_word = word
-        content = Container(
-            Text('Recovery seed setup', ui.ICON_RESET, 'Write down seed word'),
-            RecoveryWordText(index + 1, word))
-        await confirm(session_id,
-                      content,
-                      ConfirmWord)
+    index = 0
+    recovery = True
 
-    for index, word in enumerate(words):
+    while index < len(words):
+        word = words[index]
         current_word = word
-        content = Container(
-            Text('Recovery seed setup', ui.ICON_RESET, 'Confirm seed word'),
-            RecoveryWordText(index + 1, word))
         await confirm(session_id,
-                      content,
-                      ConfirmWord)
+                      Text(
+                          'Recovery seed setup', ui.ICON_RESET,
+                          ui.NORMAL, 'Write down seed word' if recovery else 'Confirm seed word', ' ',
+                          ui.BOLD, '%d. %s' % (index + 1, word)),
+                      ConfirmWord,
+                      'Next', None)
+        index += 1
+        if index == len(words) and recovery:
+            recovery = False
+            index = 0
 
 
 async def show_mnemonic(mnemonic):

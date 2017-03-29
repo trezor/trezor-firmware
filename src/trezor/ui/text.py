@@ -32,25 +32,3 @@ class Text(ui.Widget):
 
     def send(self, event, pos):
         pass
-
-
-class RecoveryWordText(ui.Widget):
-
-    def __init__(self, number, word):
-        self.number = ('%d.' % number)
-        self.word = word
-
-    def render(self):
-        offset_y = 96
-        style = ui.BOLD
-        fg = ui.WHITE
-        bg = ui.BLACKISH
-        ui.display.bar(0, offset_y - TEXT_LINE_HEIGHT, 240, TEXT_LINE_HEIGHT + 10, bg)
-        ui.display.text(TEXT_MARGIN_LEFT, offset_y, self.number, style, fg, bg)
-        if len(self.number) < 3:
-            ui.display.text(TEXT_MARGIN_LEFT + 20, offset_y, self.word, style, fg, bg)
-        else:
-            ui.display.text(TEXT_MARGIN_LEFT + 30, offset_y, self.word, style, fg, bg)
-
-    def send(self, event, pos):
-        pass
