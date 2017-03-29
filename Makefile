@@ -42,16 +42,16 @@ testpy: ## run selected unit tests from python-trezor
 
 ## build commands:
 
-build: build_firmware build_bootloader build_loader build_unix build_cross ## build all
-
-build_firmware: vendor res build_cross ## build firmware with frozen modules
-	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
+build: build_bootloader build_loader build_firmware build_unix build_cross ## build all
 
 build_bootloader: vendor ## build bootloader
 	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
 
 build_loader: vendor ## build loader
 	$(MAKE) -f Makefile.loader $(TREZORHAL_PORT_OPTS)
+
+build_firmware: vendor res build_cross ## build firmware with frozen modules
+	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
 
 build_unix: vendor ## build unix port
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
@@ -61,16 +61,16 @@ build_cross: vendor ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_firmware clean_bootloader clean_loader clean_unix clean_cross ## clean all
-
-clean_firmware: ## clean firmware build
-	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
+clean: clean_bootloader clean_loader clean_firmware clean_unix clean_cross ## clean all
 
 clean_bootloader: ## clean bootloader build
 	$(MAKE) -f Makefile.bootloader clean $(TREZORHAL_PORT_OPTS)
 
 clean_loader: ## clean loader build
 	$(MAKE) -f Makefile.loader clean $(TREZORHAL_PORT_OPTS)
+
+clean_firmware: ## clean firmware build
+	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
 
 clean_unix: ## clean unix build
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
@@ -82,14 +82,16 @@ clean_cross: ## clean mpy-cross build
 
 ## flash commands:
 
-flash_firmware: ## flash firmware using st-flash
-	st-flash write $(FIRMWARE_BUILD_DIR)/firmware.bin 0x8000000
+flash: flash_bootloader flash_loader flash_firmware ## flash everything using st-flash
 
 flash_bootloader: ## flash bootloader using st-flash
-	st-flash write $(BOOTLOADER_BUILD_DIR)/bootloader.bin 0x8000000
+	st-flash write $(BOOTLOADER_BUILD_DIR)/bootloader.bin 0x08000000
 
 flash_loader: ## flash loader using st-flash
-	st-flash write $(LOADER_BUILD_DIR)/loader.bin 0x8000000
+	st-flash write $(LOADER_BUILD_DIR)/loader.bin 0x08010000
+
+flash_firmware: ## flash firmware using st-flash
+	st-flash write $(FIRMWARE_BUILD_DIR)/firmware.bin 0x08020000
 
 ## openocd debug commands:
 

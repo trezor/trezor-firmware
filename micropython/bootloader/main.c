@@ -128,6 +128,9 @@ int main(void)
     BOOTLOADER_PRINTLN("=================");
     BOOTLOADER_PRINTLN("starting bootloader");
 
+    // TODO: remove debug
+    jump_to(LOADER_START);
+
     if (check_sdcard()) {
         if (!copy_sdcard()) {
             __fatal_error("halt");
@@ -140,7 +143,7 @@ int main(void)
         if (check_signature((const uint8_t *)LOADER_START)) {
             BOOTLOADER_PRINTLN("valid loader signature");
             BOOTLOADER_PRINTLN("JUMP!");
-            jump_to(LOADER_START);
+            jump_to(LOADER_START + 256);
         } else {
             BOOTLOADER_PRINTLN("invalid loader signature");
         }

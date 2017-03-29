@@ -371,7 +371,7 @@ CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T $(SRCDIR_FW)/trezorhal/memory.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T $(SRCDIR_FW)/firmware/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections
