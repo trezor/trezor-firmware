@@ -23,7 +23,11 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    __fatal_error("end reached");
+    LOADER_PRINTLN("reached loader");
+    HAL_Delay(1000);
+    LOADER_PRINTLN("jumping to firmware");
+
+    jump_to(FIRMWARE_START);
 
     return 0;
 }

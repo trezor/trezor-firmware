@@ -56,3 +56,10 @@ void periph_init(void) {
     DWT->CYCCNT = 0;  // Reset Cycle Count Register
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable Cycle Count Register
 }
+
+void jump_to(uint32_t start)
+{
+    SCB->VTOR = start;
+    __asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)start));
+    (*(void (**)())(start + 4))();
+}

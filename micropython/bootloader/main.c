@@ -140,8 +140,7 @@ int main(void)
         if (check_signature((const uint8_t *)LOADER_START)) {
             BOOTLOADER_PRINTLN("valid loader signature");
             BOOTLOADER_PRINTLN("JUMP!");
-            // TODO: jump to loader
-            __fatal_error("halt");
+            jump_to(LOADER_START);
         } else {
             BOOTLOADER_PRINTLN("invalid loader signature");
         }
