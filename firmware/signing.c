@@ -62,6 +62,9 @@ static uint32_t next_nonsegwit_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static bool multisig_fp_set, multisig_fp_mismatch;
 static uint8_t multisig_fp[32];
+static uint32_t in_address_n[8];
+static size_t in_address_n_count;
+
 
 /* progress_step/meta_step are fixed point numbers, giving the 
  * progress per input in permille with these many additional bits.
@@ -298,6 +301,40 @@ void phase2_request_next_input(void)
 	}
 }
 
+void set_input_bip32_path(const TxInputType *tinput)
+{
+	size_t count = tinput->address_n_count;
+	if (count < 2) {
+		// no change address allowed
+		in_address_n_count = (size_t) -1;
+	} else if (in_address_n_count == 0) {
+		// initialize in_address_n on first input seen
+		in_address_n_count = count;
+		memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
+	} else if (in_address_n_count != count
+			   || memcmp(in_address_n, tinput->address_n, (count-2) * sizeof(uint32_t)) != 0) {
+		// mismatch -> no change address allowed
+		in_address_n_count = (size_t) -1;
+	}
+}
+
+bool check_change_bip32_path(const TxOutputType *toutput)
+{
+	size_t count = toutput->address_n_count;
+	// check that the last two components specify a sane address on the change chain
+	if (count < 2
+		|| toutput->address_n[count-2] != 1
+		|| toutput->address_n[count-1] > 1000000)
+		return 0;
+
+	// check that the other components exactly match input.
+	if (in_address_n_count != count
+		|| memcmp(in_address_n, toutput->address_n, (count-2) * sizeof(uint32_t)) != 0)
+		return 0;
+
+	return 1;
+}
+
 bool compile_input_script_sig(TxInputType *tinput)
 {
 	if (!multisig_fp_mismatch) {
@@ -349,6 +386,7 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinTyp
 	// this means 50 % per phase.
 	progress_step = (500 << PROGRESS_PRECISION) / inputs_count;
 
+	in_address_n_count = 0;
 	multisig_fp_set = false;
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
@@ -406,6 +444,7 @@ void signing_txack(TransactionType *tx)
 			} else { // single signature
 				multisig_fp_mismatch = true;
 			}
+			set_input_bip32_path(&tx->inputs[0]);
 			// compute segwit hashPrevouts & hashSequence
 			tx_prevout_hash(&hashers[0], &tx->inputs[0]);
 			tx_sequence_hash(&hashers[1], &tx->inputs[0]);
@@ -520,19 +559,28 @@ void signing_txack(TransactionType *tx)
 			 *  Ask for permission.
 			 */
 			bool is_change = false;
-			if (tx->outputs[0].script_type == OutputScriptType_PAYTOMULTISIG) {
-				uint8_t h[32];
-				if (!multisig_fp_set || multisig_fp_mismatch
-					|| cryptoMultisigFingerprint(&(tx->outputs[0].multisig), h) == 0
-					|| memcmp(multisig_fp, h, 32) != 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig change address");
+			if (tx->outputs[0].address_n_count > 0) {
+				if (tx->outputs[0].has_address) {
+					fsm_sendFailure(FailureType_Failure_Other, "Address in change output");
 					signing_abort();
 					return;
 				}
-				is_change = true;
-			} else if (tx->outputs[0].script_type == OutputScriptType_PAYTOADDRESS &&
-					   tx->outputs[0].address_n_count > 0) {
-				is_change = true;
+				if (tx->outputs[0].script_type == OutputScriptType_PAYTOMULTISIG) {
+					uint8_t h[32];
+					if (!multisig_fp_set || multisig_fp_mismatch
+						|| cryptoMultisigFingerprint(&(tx->outputs[0].multisig), h) == 0
+						|| memcmp(multisig_fp, h, 32) != 0) {
+						fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig change address");
+						signing_abort();
+						return;
+					}
+					is_change = check_change_bip32_path(&tx->outputs[0]);
+				} else if (tx->outputs[0].script_type == OutputScriptType_PAYTOADDRESS
+						   || ((tx->outputs[0].script_type == OutputScriptType_PAYTOWITNESS
+								|| tx->outputs[0].script_type == OutputScriptType_PAYTOP2SHWITNESS)
+							   && tx->outputs[0].amount < segwit_to_spend)) {
+					is_change = check_change_bip32_path(&tx->outputs[0]);
+				}
 			}
 			
 			if (is_change) {
@@ -545,7 +593,7 @@ void signing_txack(TransactionType *tx)
 				}
 			}
 
-			if (spending + tx->inputs[0].amount < spending) {
+			if (spending + tx->outputs[0].amount < spending) {
 				fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 				signing_abort();
 			}
