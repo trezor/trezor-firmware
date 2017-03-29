@@ -69,7 +69,7 @@ bool copy_sdcard(void)
     EraseInitStruct.VoltageRange = VOLTAGE_RANGE_3; // voltage range needs to be 2.7V to 3.6V
     EraseInitStruct.NbSectors = 1;
     uint32_t SectorError = 0;
-    for (int i = 3; i <= 11; i++) { // TODO: change start to 2
+    for (int i = 2; i < 12; i++) {
         EraseInitStruct.Sector = i;
         if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
             HAL_FLASH_Lock();
