@@ -584,85 +584,10 @@ void fsm_msgGetAddress(GetAddress *msg)
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 	hdnode_fill_public_key(node);
-	int is_segwit = 0;
-	uint8_t digest[32];
-	uint8_t raw[32+2+4];
-	size_t prelen;
+	bool is_segwit = 0;
 
-	if (msg->has_multisig) {
-		layoutProgressSwipe("Preparing", 0);
-		if (cryptoMultisigPubkeyIndex(&(msg->multisig), node->public_key) < 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
-			layoutHome();
-			return;
-		}
-		if (compile_script_multisig_hash(&(msg->multisig), digest) == 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig script");
-			layoutHome();
-			return;
-		}
-		if (msg->has_script_type
-			&& (msg->script_type == InputScriptType_SPENDWITNESS
-				|| msg->script_type == InputScriptType_SPENDP2SHWITNESS)) {
-			is_segwit = 1;
-			// segwit p2wsh:  script hash is single sha256
-			if (msg->script_type == InputScriptType_SPENDWITNESS) {
-				prelen = address_prefix_bytes_len(coin->address_type_p2wsh);
-				address_write_prefix_bytes(coin->address_type_p2wsh, raw);
-				raw[prelen] = 0; // version byte
-				raw[prelen + 1] = 0; // always 0, see bip-142
-				memcpy(raw+prelen+2, digest, 32);
-				base58_encode_check(raw, prelen + 34, resp->address, sizeof(resp->address));
-			} else {
-				// segwit p2wsh encapsuled in p2sh address
-				raw[0] = 0; // push version
-				raw[1] = 32; // push 32 bytes
-				memcpy(raw+2, digest, 32); // push hash
-				sha256_Raw(raw, 34, digest);
-				prelen = address_prefix_bytes_len(coin->address_type_p2wsh);
-				address_write_prefix_bytes(coin->address_type_p2sh, raw);
-				ripemd160(digest, 32, raw + prelen);
-				base58_encode_check(raw, prelen + 20, resp->address, sizeof(resp->address));
-			}
-		} else {
-			// non-segwit p2sh multisig
-			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
-			address_write_prefix_bytes(coin->address_type_p2sh, raw);
-			ripemd160(digest, 32, raw + prelen);
-			base58_encode_check(raw, prelen + 20, resp->address, sizeof(resp->address));
-		}
-	} else if (msg->has_script_type
-			   && msg->script_type == InputScriptType_SPENDWITNESS
-			   && coin->has_address_type_p2wpkh) {
-		prelen = address_prefix_bytes_len(coin->address_type_p2wpkh);
-		address_write_prefix_bytes(coin->address_type_p2wpkh, raw);
-		raw[prelen] = 0; // version byte
-		raw[prelen + 1] = 0; // always 0, see bip-142
-		ecdsa_get_pubkeyhash(node->public_key, raw + prelen + 2);
-		if (!base58_encode_check(raw, prelen + 22, resp->address, sizeof(resp->address))) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
-			layoutHome();
-			return;
-		}
-		is_segwit = 1;
-	} else if (msg->has_script_type
-			   && msg->script_type == InputScriptType_SPENDP2SHWITNESS
-			   && coin->has_address_type_p2sh) {
-		prelen = address_prefix_bytes_len(coin->address_type_p2sh);
-		raw[0] = 0; // version byte
-		raw[1] = 20; // push 20 bytes
-		ecdsa_get_pubkeyhash(node->public_key, raw + 2);
-		sha256_Raw(raw, 22, digest);
-		address_write_prefix_bytes(coin->address_type_p2sh, raw);
-		ripemd160(digest, 32, raw + prelen);
-		if (!base58_encode_check(raw, 21, resp->address, sizeof(resp->address))) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
-			layoutHome();
-			return;
-		}
-		is_segwit = 1;
-	} else {
-		ecdsa_get_address(node->public_key, coin->address_type, resp->address, sizeof(resp->address));
+	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address, &is_segwit)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
 	}
 
 	if (msg->has_show_display && msg->show_display) {
