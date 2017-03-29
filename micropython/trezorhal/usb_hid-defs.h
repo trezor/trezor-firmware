@@ -27,38 +27,33 @@ typedef enum {
 } usb_hid_protocol_t;
 
 typedef struct {
-    // Interface configuration
-    uint8_t iface_num;  // Address of this HID interface
-    uint8_t ep_in;      // Address of IN endpoint (with the highest bit set)
-    uint8_t ep_out;     // Address of OUT endpoint
-
-    // HID configuration
-    uint8_t subclass;          // usb_iface_subclass_t
-    uint8_t protocol;          // usb_iface_protocol_t
-    uint8_t max_packet_len;    // rx_buffer should be big enough
-    uint8_t polling_interval;  // In units of 1ms
+    uint8_t iface_num;          // Address of this HID interface
+    uint8_t ep_in;              // Address of IN endpoint (with the highest bit set)
+    uint8_t ep_out;             // Address of OUT endpoint
+    uint8_t subclass;           // usb_iface_subclass_t
+    uint8_t protocol;           // usb_iface_protocol_t
+    uint8_t max_packet_len;     // rx_buffer should be big enough
+    uint8_t polling_interval;   // In units of 1ms
     uint8_t report_desc_len;
     const uint8_t *report_desc;
-
-    // HID read buffer
-    uint8_t *rx_buffer;  // Big enough for max_packet_len
+    uint8_t *rx_buffer;         // Big enough for max_packet_len
 } usb_hid_info_t;
 
 typedef struct {
-    // HID state
     uint8_t in_idle;       // Set to 1 after IN endpoint gets idle
     uint8_t protocol;      // For SET_PROTOCOL/GET_PROTOCOL setup reqs
     uint8_t idle_rate;     // For SET_IDLE/GET_IDLE setup reqs
     uint8_t alt_setting;   // For SET_INTERFACE/GET_INTERFACE setup reqs
     uint8_t rx_buffer_len; // Length of data read into rx_buffer
 
-    // HID configuration (copied from usb_hid_info_t on init)
+    // Configuration (copied from usb_hid_info_t on init)
     uint8_t ep_in;
     uint8_t ep_out;
     uint8_t max_packet_len;
     uint8_t report_desc_len;
     uint8_t *rx_buffer;
     const uint8_t *report_desc;
+
     const usb_hid_descriptor_block_t *desc_block;
 } usb_hid_state_t;
 

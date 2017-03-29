@@ -9,20 +9,33 @@
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
 int usb_hid_add(const usb_hid_info_t *info) {
-    if ((info->iface_num >= USBD_MAX_NUM_INTERFACES) || (info->iface_num < usb_config_desc->bNumInterfaces)) {
-        return -1; // Invalid interface number
+
+    usb_iface_t *iface = usb_get_iface(info->iface_num);
+
+    if (iface == NULL) {
+        return 1; // Invalid interface number
     }
-    if (((info->ep_in & USB_EP_DIR_MSK) == 0) || ((info->ep_out & USB_EP_DIR_MSK) != 0)) {
-        return -2; // Invalid endpoints
-    }
-    if ((info->rx_buffer == NULL) || (info->report_desc == NULL)) {
-        return -3; // Invalid buffers
+    if (iface->type != USB_IFACE_TYPE_DISABLED) {
+        return 1; // Interface is already enabled
     }
 
     usb_hid_descriptor_block_t *d = usb_desc_alloc_iface(sizeof(usb_hid_descriptor_block_t));
 
-    if (!d) {
-        return -4; // Not enough space in the configuration descriptor
+    if (d == NULL) {
+        return 1; // Not enough space in the configuration descriptor
+    }
+
+    if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
+        return 1; // IN EP is invalid
+    }
+    if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
+        return 1; // OUT EP is invalid
+    }
+    if (info->rx_buffer == NULL) {
+        return 1;
+    }
+    if (info->report_desc == NULL) {
+        return 1;
     }
 
     // Interface descriptor
@@ -65,59 +78,61 @@ int usb_hid_add(const usb_hid_info_t *info) {
     usb_desc_add_iface(sizeof(usb_hid_descriptor_block_t));
 
     // Interface state
-    usb_iface_t *i = &usb_ifaces[info->iface_num];
-    i->type = USB_IFACE_TYPE_HID;
-    i->hid.ep_in = info->ep_in;
-    i->hid.ep_out = info->ep_out;
-    i->hid.rx_buffer = info->rx_buffer;
-    i->hid.max_packet_len = info->max_packet_len;
-    i->hid.report_desc_len = info->report_desc_len;
-    i->hid.report_desc = info->report_desc;
-    i->hid.desc_block = d;
+    iface->type = USB_IFACE_TYPE_HID;
+    iface->hid.ep_in = info->ep_in;
+    iface->hid.ep_out = info->ep_out;
+    iface->hid.rx_buffer = info->rx_buffer;
+    iface->hid.max_packet_len = info->max_packet_len;
+    iface->hid.report_desc_len = info->report_desc_len;
+    iface->hid.report_desc = info->report_desc;
+    iface->hid.desc_block = d;
 
     return 0;
 }
 
 int usb_hid_can_read(uint8_t iface_num) {
-    if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
-        return 0; // Device is not configured
-    }
-    if (iface_num >= USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = usb_get_iface(iface_num);
+    if (iface == NULL) {
         return 0; // Invalid interface number
     }
-    if (usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
+    if (iface->type != USB_IFACE_TYPE_HID) {
         return 0; // Invalid interface type
     }
-    if (usb_ifaces[iface_num].hid.rx_buffer_len == 0) {
+    if (iface->hid.rx_buffer_len == 0) {
         return 0; // Nothing in the receiving buffer
+    }
+    if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
+        return 0; // Device is not configured
     }
     return 1;
 }
 
 int usb_hid_can_write(uint8_t iface_num) {
-    if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
-        return 0; // Device is not configured
-    }
-    if (iface_num >= USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = usb_get_iface(iface_num);
+    if (iface == NULL) {
         return 0; // Invalid interface number
     }
-    if (usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
+    if (iface->type != USB_IFACE_TYPE_HID) {
         return 0; // Invalid interface type
     }
-    if (usb_ifaces[iface_num].hid.in_idle == 0) {
+    if (iface->hid.in_idle == 0) {
         return 0; // Last transmission is not over yet
+    }
+    if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
+        return 0; // Device is not configured
     }
     return 1;
 }
 
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-    if (iface_num >= USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = usb_get_iface(iface_num);
+    if (iface == NULL) {
         return -1; // Invalid interface number
     }
-    if (usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
+    if (iface->type != USB_IFACE_TYPE_HID) {
         return -2; // Invalid interface type
     }
-    usb_hid_state_t *state = &usb_ifaces[iface_num].hid;
+    usb_hid_state_t *state = &iface->hid;
 
     // Copy maximum possible amount of data and truncate the buffer length
     if (len < state->rx_buffer_len) {
@@ -134,13 +149,14 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
 }
 
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-    if (iface_num >= USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = usb_get_iface(iface_num);
+    if (iface == NULL) {
         return -1; // Invalid interface number
     }
-    if (usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
+    if (iface->type != USB_IFACE_TYPE_HID) {
         return -2; // Invalid interface type
     }
-    usb_hid_state_t *state = &usb_ifaces[iface_num].hid;
+    usb_hid_state_t *state = &iface->hid;
 
     state->in_idle = 0;
     USBD_LL_Transmit(&usb_dev_handle, state->ep_in, UNCONST(buf), (uint16_t)len);
@@ -256,9 +272,6 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
 
 static uint8_t usb_hid_class_data_in(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
     if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
-        // Ensure that the FIFO is empty before a new transfer,
-        // this condition could be caused by a new transfer
-        // before the end of the previous transfer.
         state->in_idle = 1;
     }
     return USBD_OK;

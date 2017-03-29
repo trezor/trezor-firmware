@@ -134,14 +134,20 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
     .GetInterfaceStrDescriptor     = usb_get_interface_str_descriptor,
 };
 
+static usb_iface_t *usb_get_iface(uint8_t iface_num) {
+    if (iface_num < USBD_MAX_NUM_INTERFACES) {
+        return &usb_ifaces[iface_num];
+    } else {
+        return NULL; // Invalid interface number
+    }
+}
+
 static void *usb_desc_alloc_iface(size_t desc_len) {
-    if (usb_config_desc->wTotalLength + desc_len > USB_MAX_CONFIG_DESC_SIZE) {
-        return NULL;  // Not enough space in the descriptor
+    if (usb_config_desc->wTotalLength + desc_len < USB_MAX_CONFIG_DESC_SIZE) {
+        return usb_next_iface_desc;
+    } else {
+        return NULL; // Not enough space in the descriptor
     }
-    if (usb_config_desc->bNumInterfaces + 1 >= USBD_MAX_NUM_INTERFACES) {
-        return NULL;  // Already using all the interfaces
-    }
-    return usb_next_iface_desc;
 }
 
 static void usb_desc_add_iface(size_t desc_len) {
