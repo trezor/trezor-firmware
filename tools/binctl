@@ -23,9 +23,17 @@ class LoaderImage:
 
     def __init__(self, data):
         header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
-        self.magic, self.hdrlen, self.expiry, self.codelen, \
-            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
-            self.reserved, self.sigidx, self.sig = header
+        self.magic, \
+        self.hdrlen, \
+        self.expiry, \
+        self.codelen, \
+        self.vmajor, \
+        self.vminor, \
+        self.vpatch, \
+        self.vbuild, \
+        self.reserved, \
+        self.sigidx, \
+        self.sig = header
         assert self.magic == b'TRZL'
         assert self.hdrlen == 256
         assert self.codelen + self.hdrlen >= 4 * 1024
@@ -45,7 +53,7 @@ class LoaderImage:
         print('  * sigidx  :', self.sigidx)
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
-    def header(self, sig=True):
+    def serialize_header(self, sig=True):
         header = struct.pack('<4sIIIBBBB171s', \
             self.magic, self.hdrlen, self.expiry, self.codelen, \
             self.vmajor, self.vminor, self.vpatch, self.vbuild, \
@@ -58,14 +66,14 @@ class LoaderImage:
         return header
 
     def sign(self):
-        header = self.header(sig=False)
+        header = self.serialize_header(sig=False)
         data = header + self.code
         assert len(data) == self.hdrlen + self.codelen
         self.sigidx, self.sig = get_sig(data)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
-            f.write(self.header())
+            f.write(self.serialize_header())
             f.write(self.code)
 
 
@@ -73,9 +81,13 @@ class VendorHeader:
 
     def __init__(self, data):
         header = struct.unpack('<4sIIBBBB', data[:16])
-        self.magic, self.hdrlen, self.expiry, \
-            self.vmajor, self.vminor, \
-            self.vsig_m, self.vsig_n = header
+        self.magic, \
+        self.hdrlen, \
+        self.expiry, \
+        self.vmajor, \
+        self.vminor, \
+        self.vsig_m, \
+        self.vsig_n = header
         assert self.magic == b'TRZF'
         assert self.vsig_m > 0 and self.vsig_m <= self.vsig_n
         assert self.vsig_n > 0 and self.vsig_n <= 8
@@ -115,7 +127,7 @@ class VendorHeader:
         print('  * sigidx  :', self.sigidx)
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
-    def header(self, sig=True):
+    def serialize_header(self, sig=True):
         header = struct.pack('<4sIIBBBB', \
             self.magic, self.hdrlen, self.expiry, \
             self.vmajor, self.vminor, \
@@ -132,21 +144,29 @@ class VendorHeader:
         return header
 
     def sign(self):
-        header = self.header(sig=False)
+        header = self.serialize_header(sig=False)
         self.sigidx, self.sig = get_sig(header)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
-            f.write(self.header())
+            f.write(self.serialize_header())
 
 
 class FirmwareImage:
 
     def __init__(self, data):
         header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
-        self.magic, self.hdrlen, self.expiry, self.codelen, \
-            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
-            self.reserved, self.sigidx, self.sig = header
+        self.magic, \
+        self.hdrlen, \
+        self.expiry, \
+        self.codelen, \
+        self.vmajor, \
+        self.vminor, \
+        self.vpatch, \
+        self.vbuild, \
+        self.reserved, \
+        self.sigidx, \
+        self.sig = header
         assert self.magic == b'TRZF'
         assert self.hdrlen == 256
         assert self.codelen % 4 == 0
@@ -164,7 +184,7 @@ class FirmwareImage:
         print('  * sigidx  :', self.sigidx)
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
-    def header(self, sig=True):
+    def serialize_header(self, sig=True):
         header = struct.pack('<4sIIIBBBB171s', \
             self.magic, self.hdrlen, self.expiry, self.codelen, \
             self.vmajor, self.vminor, self.vpatch, self.vbuild, \
@@ -177,14 +197,14 @@ class FirmwareImage:
         return header
 
     def sign(self):
-        header = self.header(sig=False)
+        header = self.serialize_header(sig=False)
         data = header + self.code
         assert len(data) == self.hdrlen + self.codelen
         self.sigidx, self.sig = get_sig(data)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
-            f.write(self.header())
+            f.write(self.serialize_header())
             f.write(self.code)
 
 

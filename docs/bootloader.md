@@ -24,7 +24,7 @@ it will start in a firmware update mode, allowing a firmware update via USB.
 * Hash function used for computing data digest for signatures is BLAKE2s.
 * Signature system is Ed25519 (allows combining signatures by multiple keys into one).
 * All multibyte integer values are little endian.
-* There is a tool called [firmwarectl](../tools/firmwarectl) which checks validity of the loader/firmware images including their headers.
+* There is a tool called [binctl](../tools/binctl) which checks validity of the loader/firmware images including their headers.
 
 ## Loader Format
 
