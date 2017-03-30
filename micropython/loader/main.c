@@ -23,6 +23,7 @@ int main(void)
     display_backlight(255);
 
     LOADER_PRINTLN("reached loader");
+    LOADER_PRINTLN("waiting 1 second");
     HAL_Delay(1000);
     LOADER_PRINTLN("jumping to firmware");
 

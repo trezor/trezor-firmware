@@ -128,7 +128,11 @@ int main(void)
     BOOTLOADER_PRINTLN("starting bootloader");
 
     // TODO: remove debug
+    BOOTLOADER_PRINTLN("waiting 1 second");
+    HAL_Delay(1000);
+    BOOTLOADER_PRINTLN("jumping to loader");
     jump_to(LOADER_START);
+    // end
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
