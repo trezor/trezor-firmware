@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#define BOOTLOADER_START  0x08000000
+#define LOADER_START      0x08010000
+#define FIRMWARE_START    0x08020000
+
 void periph_init(void);
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val);

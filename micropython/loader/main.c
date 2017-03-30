@@ -3,8 +3,6 @@
 #include "common.h"
 #include "display.h"
 
-#define FIRMWARE_START   0x08020000
-
 #define LOADER_FGCOLOR 0xFFFF
 #define LOADER_BGCOLOR 0x0000
 
@@ -17,6 +15,7 @@ void pendsv_isr_handler(void) {
 
 int main(void)
 {
+    SCB->VTOR = LOADER_START;
     periph_init();
 
     display_init();

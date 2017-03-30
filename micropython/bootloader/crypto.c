@@ -5,8 +5,6 @@
 
 #include "crypto.h"
 
-#define FLASH_BASE 0x08000000
-
 bool parse_header(const uint8_t *data, uint32_t *codelen, uint8_t *sigidx, uint8_t *sig)
 {
     uint32_t magic;

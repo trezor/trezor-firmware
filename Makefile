@@ -44,19 +44,19 @@ testpy: ## run selected unit tests from python-trezor
 
 build: build_bootloader build_loader build_firmware build_unix build_cross ## build all
 
-build_bootloader: vendor ## build bootloader
+build_bootloader: ## build bootloader
 	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
 
-build_loader: vendor ## build loader
+build_loader: ## build loader
 	$(MAKE) -f Makefile.loader $(TREZORHAL_PORT_OPTS)
 
-build_firmware: vendor res build_cross ## build firmware with frozen modules
+build_firmware: res build_cross ## build firmware with frozen modules
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
 
-build_unix: vendor ## build unix port
+build_unix: ## build unix port
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
 
-build_cross: vendor ## build mpy-cross port
+build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
 
 ## clean commands:

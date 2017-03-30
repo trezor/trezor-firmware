@@ -144,13 +144,6 @@ const uint32_t MSIRangeTable[12] = {100000, 200000, 400000, 800000, 1000000, 200
 
 /************************* Miscellaneous Configuration ************************/
 
-/*!< Uncomment the following line if you need to relocate your vector Table in
-     Internal SRAM. */
-/* #define VECT_TAB_SRAM */
-#define VECT_TAB_OFFSET  0x00 /*!< Vector Table base offset field.
-                                   This value must be a multiple of 0x200. */
-/******************************************************************************/
-
 /**
   * @}
   */
@@ -228,13 +221,6 @@ void SystemInit(void)
   #elif defined(MCU_SERIES_L4)
   RCC->CIER = 0x00000000;
   #endif
-
-  /* Configure the Vector Table location add offset address ------------------*/
-#ifdef VECT_TAB_SRAM
-  SCB->VTOR = SRAM1_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
-#else
-  SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
-#endif
 
   /* dpgeorge: enable 8-byte stack alignment for IRQ handlers, in accord with EABI */
   SCB->CCR |= SCB_CCR_STKALIGN_Msk;

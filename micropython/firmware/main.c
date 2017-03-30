@@ -24,6 +24,7 @@
 
 int main(void) {
 
+    SCB->VTOR = FIRMWARE_START;
     periph_init();
 
     pendsv_init();

@@ -8,8 +8,6 @@
 #include "display.h"
 #include "sdcard.h"
 
-#define LOADER_START   0x08010000
-
 #define BOOTLOADER_FGCOLOR 0xFFFF
 #define BOOTLOADER_BGCOLOR 0x0000
 
@@ -116,6 +114,7 @@ bool copy_sdcard(void)
 
 int main(void)
 {
+    SCB->VTOR = BOOTLOADER_START;
     periph_init();
 
     sdcard_init();
