@@ -5,8 +5,7 @@
  * see LICENSE file for details
  */
 
-extern int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, uint32_t timeout);
-extern int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, uint32_t timeout);
+#include "usb.h"
 
 void msg_init(void)
 {
@@ -14,15 +13,15 @@ void msg_init(void)
 
 ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 {
-    *iface = 0; // TODO: return proper interface
-    return usb_hid_read_blocking(0x00, buf, len, 1);
+    int i = usb_hid_read_select(1); // 1ms timeout
+    if (i < 0) {
+        return 0;
+    }
+    *iface = i;
+    return usb_hid_read(i, buf, len);
 }
 
 ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
-    (void)iface; // TODO: ignore interface for now
-    if (len > 0) {
-        usb_hid_write_blocking(0x00, buf, len, 1);
-    }
-    return len;
+    return usb_hid_write_blocking(iface, buf, len, 1); // 1ms timeout
 }
