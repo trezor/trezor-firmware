@@ -1,12 +1,6 @@
-import sys
+from TrezorConfig import Config
 
-if sys.platform == 'trezor':
-    from .config_mock import Config
-    _config = Config(None)
-else:
-    from TrezorConfig import Config
-    _config = Config()
-
+_config = Config()
 
 def get(app: int, key: int) -> bytes:
     return _config.get(app, key)
