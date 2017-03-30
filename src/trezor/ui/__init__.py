@@ -58,7 +58,11 @@ BTN_RADIUS = const(2)
 
 BACKLIGHT_NORMAL = const(60)
 BACKLIGHT_DIM = const(5)
+BACKLIGHT_NONE = const(2)
 BACKLIGHT_MAX = const(255)
+
+# display width and height
+SCREEN = const(240)
 
 # icons
 ICON_RESET    = 'trezor/res/header_icons/reset.toig'
