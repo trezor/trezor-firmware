@@ -92,7 +92,7 @@ def run_forever():
         # compute the maximum amount of time we can wait for a message
         if _scheduled_tasks:
             delay = utime.ticks_diff(
-                _scheduled_tasks.min_time(), utime.ticks_us())
+                _scheduled_tasks.peektime(), utime.ticks_us())
         else:
             delay = _MAX_SELECT_DELAY
 
