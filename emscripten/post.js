@@ -24,7 +24,7 @@ var CHAINCODE_SIZE = 32;
 var _chaincode = _malloc(CHAINCODE_SIZE);
 
 // address string global
-var ADDRESS_SIZE = 40; // maximum size
+var ADDRESS_SIZE = 60; // maximum size
 var _address = _malloc(ADDRESS_SIZE);
 
 /*
@@ -52,7 +52,7 @@ function serializeNode(node) {
  * @return {String}
  */
 function deriveAddress(index, version) {
-    _hdnode_public_ckd_address_optimized(_pubpoint, _pubkey, _chaincode, index, version, _address, ADDRESS_SIZE);
+    _hdnode_public_ckd_address_optimized(_pubpoint, _chaincode, index, version, _address, ADDRESS_SIZE);
     return Pointer_stringify(_address);
 }
 
