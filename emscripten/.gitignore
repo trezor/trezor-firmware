@@ -1,2 +1,3 @@
 node_modules/
+benchmark-browserify.js
 test-browserify.js
