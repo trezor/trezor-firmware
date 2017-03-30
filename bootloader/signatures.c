@@ -47,6 +47,12 @@ int signatures_ok(uint8_t *store_hash)
 	sigindex2 = *((uint8_t *)FLASH_META_SIGINDEX2);
 	sigindex3 = *((uint8_t *)FLASH_META_SIGINDEX3);
 
+	uint8_t hash[32];
+	sha256_Raw((uint8_t *)FLASH_APP_START, codelen, hash);
+	if (store_hash) {
+		memcpy(store_hash, hash, 32);
+	}
+
 	if (sigindex1 < 1 || sigindex1 > PUBKEYS) return 0; // invalid index
 	if (sigindex2 < 1 || sigindex2 > PUBKEYS) return 0; // invalid index
 	if (sigindex3 < 1 || sigindex3 > PUBKEYS) return 0; // invalid index
@@ -54,12 +60,6 @@ int signatures_ok(uint8_t *store_hash)
 	if (sigindex1 == sigindex2) return 0; // duplicate use
 	if (sigindex1 == sigindex3) return 0; // duplicate use
 	if (sigindex2 == sigindex3) return 0; // duplicate use
-
-	uint8_t hash[32];
-	sha256_Raw((uint8_t *)FLASH_APP_START, codelen, hash);
-	if (store_hash) {
-		memcpy(store_hash, hash, 32);
-	}
 
 	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex1 - 1], (uint8_t *)FLASH_META_SIG1, hash) != 0) { // failure
 		return 0;
