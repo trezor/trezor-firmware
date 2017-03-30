@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "curves.h"
 #include "ecdsa.h"
+#include "bip32.h"
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
@@ -133,7 +134,7 @@ void bench_ckd_optimized(int iterations)
 	ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
 	clock_t t = clock();
 	for (int i = 0; i < iterations; i++) {
-		hdnode_public_ckd_address_optimized(&pub, root.public_key, root.chain_code, i, 0, addr, sizeof(addr));
+		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, addr, sizeof(addr));
 		if (i == 0 || i == iterations -1) {
 			printf("address = %s\n", addr);
 		}

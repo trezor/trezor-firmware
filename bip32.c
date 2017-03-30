@@ -210,101 +210,74 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-int hdnode_public_ckd(HDNode *inout, uint32_t i)
-{
+int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent, const uint8_t *parent_chain_code, uint32_t i, curve_point *child, uint8_t *child_chain_code) {
 	uint8_t data[1 + 32 + 4];
 	uint8_t I[32 + 32];
-	curve_point a, b;
 	bignum256 c;
 
 	if (i & 0x80000000) { // private derivation
 		return 0;
-	} else { // public derivation
-		if (!inout->curve->params) {
-			return 0;
-		}
-		memcpy(data, inout->public_key, 33);
 	}
-	write_be(data + 33, i);
-	memset(inout->private_key, 0, 32);
 
-	if (!ecdsa_read_pubkey(inout->curve->params, inout->public_key, &a)) {
-		return 0;
-	}
+	data[0] = 0x02 | (parent->y.val[0] & 0x01);
+	bn_write_be(&parent->x, data + 1);
+	write_be(data + 33, i);
 
 	while (true) {
-		bool failed = false;
-		hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
+		hmac_sha512(parent_chain_code, 32, data, sizeof(data), I);
 		bn_read_be(I, &c);
-		if (!bn_is_less(&c, &inout->curve->params->order)) { // >= order
-			failed = true;
-		} else {
-			scalar_multiply(inout->curve->params, &c, &b); // b = c * G
-			point_add(inout->curve->params, &a, &b);       // b = a + b
-			if (point_is_infinity(&b)) {
-				failed = true;
+		if (bn_is_less(&c, &curve->order)) { // < order
+			scalar_multiply(curve, &c, child); // b = c * G
+			point_add(curve, parent, child);       // b = a + b
+			if (!point_is_infinity(child)) {
+				if (child_chain_code) {
+					memcpy(child_chain_code, I + 32, 32);
+				}
+
+				// Wipe all stack data.
+				MEMSET_BZERO(data, sizeof(data));
+				MEMSET_BZERO(I, sizeof(I));
+				MEMSET_BZERO(&c, sizeof(c));
+				return 1;
 			}
 		}
 		
-		if (!failed) {
-			inout->public_key[0] = 0x02 | (b.y.val[0] & 0x01);
-			bn_write_be(&b.x, inout->public_key + 1);
-			break;
-		}
-
 		data[0] = 1;
 		memcpy(data + 1, I + 32, 32);
 	}
+}
 
+int hdnode_public_ckd(HDNode *inout, uint32_t i)
+{
+	curve_point parent, child;
+
+	if (!ecdsa_read_pubkey(inout->curve->params, inout->public_key, &parent)) {
+		return 0;
+	}
+	if (!hdnode_public_ckd_cp(inout->curve->params, &parent, inout->chain_code, i, &child, inout->chain_code)) {
+		return 0;
+	}
+	memset(inout->private_key, 0, 32);
 	inout->depth++;
 	inout->child_num = i;
-	memcpy(inout->chain_code, I + 32, 32);
+	inout->public_key[0] = 0x02 | (child.y.val[0] & 0x01);
+	bn_write_be(&child.x, inout->public_key + 1);
 
 	// Wipe all stack data.
-	MEMSET_BZERO(data, sizeof(data));
-	MEMSET_BZERO(I, sizeof(I));
-	MEMSET_BZERO(&a, sizeof(a));
-	MEMSET_BZERO(&b, sizeof(b));
-	MEMSET_BZERO(&c, sizeof(c));
+	MEMSET_BZERO(&parent, sizeof(parent));
+	MEMSET_BZERO(&child, sizeof(child));
 
 	return 1;
 }
 
-int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *public_key, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize)
+int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize)
 {
-	uint8_t data[1 + 32 + 4];
-	uint8_t I[32 + 32];
 	uint8_t child_pubkey[33];
 	curve_point b;
-	bignum256 c;
 
-	if (i & 0x80000000) { // private derivation
-		return 0;
-	}
-	memcpy(data, public_key, 33);
-	write_be(data + 33, i);
-
-	while (true) {
-		bool failed = false;
-		hmac_sha512(chain_code, 32, data, sizeof(data), I);
-		bn_read_be(I, &c);
-		if (!bn_is_less(&c, &secp256k1.order)) { // >= order
-			failed = true;
-		} else {
-			scalar_multiply(&secp256k1, &c, &b); // b = c * G
-			point_add(&secp256k1, pub, &b);      // b = a + b
-			if (point_is_infinity(&b)) {
-				failed = true;
-			}
-		}
-		if (!failed) {
-			child_pubkey[0] = 0x02 | (b.y.val[0] & 0x01);
-			bn_write_be(&b.x, child_pubkey + 1);
-			break;
-		}
-		data[0] = 1;
-		memcpy(data + 1, I + 32, 32);
-	}
+	hdnode_public_ckd_cp(&secp256k1, pub, chain_code, i, &b, NULL);
+	child_pubkey[0] = 0x02 | (b.y.val[0] & 0x01);
+	bn_write_be(&b.x, child_pubkey + 1);
 	ecdsa_get_address(child_pubkey, version, addr, addrsize);
 	return 1;
 }
