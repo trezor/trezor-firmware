@@ -1,23 +1,79 @@
 typedef struct __attribute__((packed)) {
-} usb_vcp_descriptor_t;
+    uint8_t bFunctionLength;
+    uint8_t bDescriptorType;
+    uint8_t bDescriptorSubtype;
+    uint16_t bcdCDC;
+} usb_vcp_header_descriptor_t;
 
 typedef struct __attribute__((packed)) {
-    usb_interface_descriptor_t iface;
-    usb_vcp_descriptor_t vcp;
+    uint8_t bFunctionLength;
+    uint8_t bDescriptorType;
+    uint8_t bDescriptorSubtype;
+    uint8_t bmCapabilities;
+    uint8_t bDataInterface;
+} usb_vcp_cm_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t bFunctionLength;
+    uint8_t bDescriptorType;
+    uint8_t bDescriptorSubtype;
+    uint8_t bmCapabilities;
+} usb_vcp_acm_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t bFunctionLength;
+    uint8_t bDescriptorType;
+    uint8_t bDescriptorSubtype;
+    uint8_t bControlInterface;
+    uint8_t bSubordinateInterface0;
+} usb_vcp_union_descriptor_t;
+
+typedef struct __attribute__((packed)) {
+    usb_interface_assoc_descriptor_t assoc;
+    usb_interface_descriptor_t iface_cdc;
+    usb_vcp_header_descriptor_t fheader; // Class-Specific Descriptor Header Format
+    usb_vcp_cm_descriptor_t fcm;         // Call Management Functional Descriptor
+    usb_vcp_acm_descriptor_t facm;       // Abstract Control Management Functional Descriptor
+    usb_vcp_union_descriptor_t funion;   // Union Interface Functional Descriptor
+    usb_endpoint_descriptor_t ep_cmd;
+    usb_interface_descriptor_t iface_data;
     usb_endpoint_descriptor_t ep_in;
     usb_endpoint_descriptor_t ep_out;
-    usb_endpoint_descriptor_t ep_cmd;
 } usb_vcp_descriptor_block_t;
 
 typedef struct {
-    // Interface configuration
-    uint8_t iface_num;  // Address of this VCP interface
-    uint8_t ep_in;      // Address of IN endpoint (with the highest bit set)
-    uint8_t ep_out;     // Address of OUT endpoint
-    uint8_t ep_cmd;     // Address of CMD endpoint
+    uint8_t iface_num;           // Address of this VCP interface
+    uint8_t data_iface_num;      // Address of data interface of the VCP interface association
+    uint8_t ep_cmd;              // Address of IN CMD endpoint (with the highest bit set)
+    uint8_t ep_in;               // Address of IN endpoint (with the highest bit set)
+    uint8_t ep_out;              // Address of OUT endpoint
+    uint8_t polling_interval;    // In units of 1ms
+    uint8_t max_cmd_packet_len;
+    uint8_t max_data_packet_len;
 } usb_vcp_info_t;
 
+// typedef struct {
+//     uint32_t cap;
+//     uint32_t read;
+//     uint32_t write;
+//     uint8_t *buf;
+// } ring_buffer_t;
+
 typedef struct {
+    uint8_t is_connected;
+    uint8_t in_idle;
+    // uint8_t cmd_op_code;
+    // uint8_t cmd_length;
+
+    // Configuration (copied from usb_vcp_info_t on init)
+    uint8_t data_iface_num;
+    uint8_t ep_cmd;
+    uint8_t ep_in;
+    uint8_t ep_out;
+    uint8_t polling_interval;
+    uint8_t max_cmd_packet_len;
+    uint8_t max_data_packet_len;
+
     const usb_vcp_descriptor_block_t *desc_block;
 } usb_vcp_state_t;
 
