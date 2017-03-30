@@ -37,9 +37,8 @@ STATIC mp_obj_t mod_TrezorConfig_Config_make_new(const mp_obj_type_t *type, size
 STATIC mp_obj_t mod_TrezorConfig_Config_get(mp_obj_t self, mp_obj_t app, mp_obj_t key) {
     uint8_t a = mp_obj_get_int(app);
     uint8_t k = mp_obj_get_int(key);
-    uint16_t appkey = a << 8 | k;
+    uint16_t appkey = a << 8 | k, len;
     const void *val;
-    uint32_t len;
     bool r = norcow_get(appkey, &val, &len);
     if (!r || len == 0) {
         return mp_const_empty_bytes;

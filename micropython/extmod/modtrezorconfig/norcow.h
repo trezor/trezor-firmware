@@ -24,11 +24,11 @@ bool norcow_wipe(void);
 /*
  * Looks for the given key, returns status of the operation
  */
-bool norcow_get(uint16_t key, const void **val, uint32_t *len);
+bool norcow_get(uint16_t key, const void **val, uint16_t *len);
 
 /*
  * Sets the given key, returns status of the operation
  */
-bool norcow_set(uint16_t key, const void *val, uint32_t len);
+bool norcow_set(uint16_t key, const void *val, uint16_t len);
 
 #endif

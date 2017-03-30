@@ -9,8 +9,7 @@
 #define MAXVALLEN 1024
 
 uint8_t val[MAXVALLEN], *v;
-uint16_t key;
-uint32_t vallen, vlen;
+uint16_t key, vallen, vlen;
 
 int main()
 {

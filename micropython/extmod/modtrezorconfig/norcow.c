@@ -59,9 +59,9 @@ static bool norcow_erase(uint8_t sector)
     EraseInitStruct.TypeErase = TYPEERASE_SECTORS;
     EraseInitStruct.VoltageRange = VOLTAGE_RANGE_3; // voltage range needs to be 2.7V to 3.6V
     EraseInitStruct.NbSectors = 1;
-    uint32_t SectorError = 0;
     EraseInitStruct.Sector = NORCOW_START_SECTOR + sector;
     HAL_StatusTypeDef r;
+    uint32_t SectorError = 0;
     r = HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError);
     HAL_FLASH_Lock();
     return r == HAL_OK;
@@ -93,7 +93,7 @@ static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size)
 /*
  * Writes data to given sector, starting from offset
  */
-static bool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const uint8_t *data, uint32_t len)
+static bool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const uint8_t *data, uint16_t len)
 {
     if (offset % 4) { // we write only at 4-byte boundary
         return false;
@@ -108,7 +108,7 @@ static bool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const
     if ((*(uint32_t *)ptr & prefix) != prefix) {
         return false;
     }
-    for (uint32_t i = 0; i < len; i++) {
+    for (uint16_t i = 0; i < len; i++) {
         if ((ptr[sizeof(uint32_t) + i] & data[i]) != data[i]) {
             return false;
         }
@@ -144,7 +144,7 @@ static inline void align4(uint32_t *pos)
 /*
  * Reads one item starting from offset
  */
-static bool read_item(uint8_t sector, uint32_t offset, uint16_t *key, const void **val, uint32_t *len, uint32_t *pos)
+static bool read_item(uint8_t sector, uint32_t offset, uint16_t *key, const void **val, uint16_t *len, uint32_t *pos)
 {
     *pos = offset;
 
@@ -171,7 +171,7 @@ static bool read_item(uint8_t sector, uint32_t offset, uint16_t *key, const void
 /*
  * Writes one item starting from offset
  */
-static bool write_item(uint8_t sector, uint32_t offset, uint16_t key, const void *val, uint32_t len, uint32_t *pos)
+static bool write_item(uint8_t sector, uint32_t offset, uint16_t key, const void *val, uint16_t len, uint32_t *pos)
 {
     uint32_t prefix = (len << 16) | key;
     *pos = offset + sizeof(uint32_t) + len;
@@ -182,15 +182,15 @@ static bool write_item(uint8_t sector, uint32_t offset, uint16_t key, const void
 /*
  * Finds item in given sector
  */
-static bool find_item(uint8_t sector, uint16_t key, const void **val, uint32_t *len)
+static bool find_item(uint8_t sector, uint16_t key, const void **val, uint16_t *len)
 {
     *val = 0;
     *len = 0;
     uint32_t offset = 0;
     for (;;) {
-        uint16_t k;
+        uint16_t k, l;
         const void *v;
-        uint32_t l, pos;
+        uint32_t pos;
         bool r = read_item(sector, offset, &k, &v, &l, &pos);
         if (!r) break;
         if (key == k) {
@@ -209,9 +209,9 @@ static uint32_t find_free_offset(uint8_t sector)
 {
     uint32_t offset = 0;
     for (;;) {
-        uint16_t key;
+        uint16_t key, len;
         const void *val;
-        uint32_t len, pos;
+        uint32_t pos;
         bool r = read_item(sector, offset, &key, &val, &len, &pos);
         if (!r) break;
         offset = pos;
@@ -230,16 +230,16 @@ static void compact()
 
     for (;;) {
         // read item
-        uint16_t k;
+        uint16_t k, l;
         const void *v;
-        uint32_t l, pos;
+        uint32_t pos;
         bool r = read_item(norcow_active_sector, offset, &k, &v, &l, &pos);
         if (!r) break;
         offset = pos;
 
         // check if not already saved
         const void *v2;
-        uint32_t l2;
+        uint16_t l2;
         r = find_item(norcow_next_sector, k, &v2, &l2);
         if (r) {
             continue;
@@ -318,7 +318,7 @@ bool norcow_wipe(void)
 /*
  * Looks for the given key, returns status of the operation
  */
-bool norcow_get(uint16_t key, const void **val, uint32_t *len)
+bool norcow_get(uint16_t key, const void **val, uint16_t *len)
 {
     return find_item(norcow_active_sector, key, val, len);
 }
@@ -326,7 +326,7 @@ bool norcow_get(uint16_t key, const void **val, uint32_t *len)
 /*
  * Sets the given key, returns status of the operation
  */
-bool norcow_set(uint16_t key, const void *val, uint32_t len)
+bool norcow_set(uint16_t key, const void *val, uint16_t len)
 {
     // check whether there is enough free space
     // and compact if full
