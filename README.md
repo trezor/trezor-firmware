@@ -19,7 +19,7 @@ These include:
 - RIPEMD-160
 - SHA256/SHA512
 - SHA3/Keccak
-- BLAKE2s/Blake2b
+- BLAKE2s/BLAKE2b
 - unit tests (using Check - check.sf.net; in tests.c)
 - tests against OpenSSL (in test-openssl.c)
 
