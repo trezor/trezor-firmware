@@ -34,4 +34,4 @@ docker-build:
 	docker run --rm -v $(shell pwd)/..:/src apiaryio/emcc /bin/bash -c 'cd emscripten && make'
 
 test-correctness: node_modules
-	node test-correctness.js
+	node test-correctness.js test-correctness-segwit-p2sh.js
