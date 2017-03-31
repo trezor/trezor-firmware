@@ -13,7 +13,10 @@ var nodeStruct = {
     public_key: node.keyPair.getPublicKeyBuffer()
 };
 
-var addresses = crypto.deriveAddressRange(nodeStruct, 0, 999, 0);
+var addresses = crypto.deriveAddressRange(nodeStruct, 0, 999, 0, false);
+
+// for segwit:
+// var addresses = crypto.deriveAddressRange(nodeStruct, 0, 999, 5, true);
 
 var fs = require('fs');
 var loaded = fs.readFileSync('test-addresses.txt').toString().split("\n");

@@ -51,8 +51,8 @@ function serializeNode(node) {
  * @param {Number} version  address version byte
  * @return {String}
  */
-function deriveAddress(index, version) {
-    _hdnode_public_ckd_address_optimized(_pubpoint, _chaincode, index, version, _address, ADDRESS_SIZE);
+function deriveAddress(index, version, segwit) {
+    _hdnode_public_ckd_address_optimized(_pubpoint, _chaincode, index, version, _address, ADDRESS_SIZE, segwit);
     return Pointer_stringify(_address);
 }
 
@@ -63,12 +63,12 @@ function deriveAddress(index, version) {
  * @param {Number} version     address version byte
  * @return {Array<String>}
  */
-function deriveAddressRange(node, firstIndex, lastIndex, version) {
+function deriveAddressRange(node, firstIndex, lastIndex, version, segwit) {
     var addresses = [];
     serializeNode(node);
     var i;
     for (i = firstIndex; i <= lastIndex; i++) {
-        addresses.push(deriveAddress(i, version));
+        addresses.push(deriveAddress(i, version, segwit));
     }
     return addresses;
 }
