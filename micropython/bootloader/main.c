@@ -131,7 +131,7 @@ int main(void)
     BOOTLOADER_PRINTLN("waiting 1 second");
     HAL_Delay(1000);
     BOOTLOADER_PRINTLN("jumping to loader");
-    jump_to(LOADER_START);
+    jump_to(LOADER_START + HEADER_SIZE);
     // end
 
     if (check_sdcard()) {
@@ -146,7 +146,7 @@ int main(void)
         if (check_signature((const uint8_t *)LOADER_START)) {
             BOOTLOADER_PRINTLN("valid loader signature");
             BOOTLOADER_PRINTLN("JUMP!");
-            jump_to(LOADER_START + 256);
+            jump_to(LOADER_START + HEADER_SIZE);
         } else {
             BOOTLOADER_PRINTLN("invalid loader signature");
         }

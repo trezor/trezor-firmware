@@ -29,6 +29,7 @@ SECTIONS
     .flash :
     {
         . = ALIGN(4);
+	KEEP(*(.header))
         KEEP(*(.isr_vector)) /* Startup code */
         . = ALIGN(4);
         *(.text*)          /* .text* sections (code) */
@@ -52,6 +53,7 @@ SECTIONS
 
         . = ALIGN(4);
         _edata = .;        /* define a global symbol at data end; used by startup code in order to initialise the .data section in RAM */
+	_datalen = . - _sdata;
     } >RAM AT> FLASH
 
     /* Uninitialized data section */
@@ -86,6 +88,7 @@ SECTIONS
 }
 
 /* RAM extents for the garbage collector */
+_codelen = SIZEOF(.flash) + SIZEOF(.data);
 _ram_start = ORIGIN(RAM);
 _ram_end = ORIGIN(RAM) + LENGTH(RAM);
 _heap_start = _ebss; /* heap starts just after statically allocated memory */

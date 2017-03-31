@@ -56,6 +56,7 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 
 # OBJ micropython/
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
+	loader/header.o \
 	loader/main.o \
 	extmod/modtrezorui/display.o \
 	extmod/modtrezorui/font_bitmap.o \

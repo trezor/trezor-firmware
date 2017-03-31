@@ -15,7 +15,7 @@ void pendsv_isr_handler(void) {
 
 int main(void)
 {
-    SCB->VTOR = LOADER_START;
+    SCB->VTOR = LOADER_START + HEADER_SIZE;
     periph_init();
 
     display_init();
@@ -27,7 +27,7 @@ int main(void)
     HAL_Delay(1000);
     LOADER_PRINTLN("jumping to firmware");
 
-    jump_to(FIRMWARE_START);
+    jump_to(FIRMWARE_START + HEADER_SIZE);
 
     return 0;
 }

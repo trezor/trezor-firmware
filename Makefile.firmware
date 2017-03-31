@@ -311,6 +311,7 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 
 # OBJ micropython/
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
+	firmware/header.o \
 	firmware/main.o \
 	firmware/mphalport.o \
 	trezorhal/common.o \
