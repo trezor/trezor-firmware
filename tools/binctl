@@ -22,7 +22,7 @@ def get_sig(data):
 class LoaderImage:
 
     def __init__(self, data):
-        header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
+        header = struct.unpack('<4sIIIBBBB427sB64s', data[:512])
         self.magic, \
         self.hdrlen, \
         self.expiry, \
@@ -35,11 +35,11 @@ class LoaderImage:
         self.sigidx, \
         self.sig = header
         assert self.magic == b'TRZL'
-        assert self.hdrlen == 256
+        assert self.hdrlen == 512
         assert self.codelen + self.hdrlen >= 4 * 1024
         assert self.codelen + self.hdrlen <= 64 * 1024 + 7 * 128 * 1024
         assert (self.codelen + self.hdrlen) % 512 == 0
-        assert self.reserved == 171 * b'\x00'
+        assert self.reserved == 427 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
@@ -54,7 +54,7 @@ class LoaderImage:
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB171s', \
+        header = struct.pack('<4sIIIBBBB427s', \
             self.magic, self.hdrlen, self.expiry, self.codelen, \
             self.vmajor, self.vminor, self.vpatch, self.vbuild, \
             self.reserved)
@@ -155,7 +155,7 @@ class VendorHeader:
 class FirmwareImage:
 
     def __init__(self, data):
-        header = struct.unpack('<4sIIIBBBB171sB64s', data[:256])
+        header = struct.unpack('<4sIIIBBBB427sB64s', data[:512])
         self.magic, \
         self.hdrlen, \
         self.expiry, \
@@ -168,9 +168,9 @@ class FirmwareImage:
         self.sigidx, \
         self.sig = header
         assert self.magic == b'TRZF'
-        assert self.hdrlen == 256
+        assert self.hdrlen == 512
         assert self.codelen % 4 == 0
-        assert self.reserved == 171 * b'\x00'
+        assert self.reserved == 427 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
@@ -185,7 +185,7 @@ class FirmwareImage:
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB171s', \
+        header = struct.pack('<4sIIIBBBB427s', \
             self.magic, self.hdrlen, self.expiry, self.codelen, \
             self.vmajor, self.vminor, self.vpatch, self.vbuild, \
             self.reserved)
@@ -225,7 +225,7 @@ def binopen(filename):
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage: firmwarectl file.bin [-s]')
+        print('Usage: binctl file.bin [-s]')
         return 1
     fn = sys.argv[1]
     sign = len(sys.argv) > 2 and sys.argv[2] == '-s'
