@@ -24,6 +24,9 @@ vendor: ## update git submodules
 res: ## update resources
 	./tools/res_collect
 
+vendorheader: ## contruct default vendor header
+	./tools/build_vendorheader '0000000000000000000000000000000000000000000000000000000000000000,0000000000000000000000000000000000000000000000000000000000000000,0000000000000000000000000000000000000000000000000000000000000000' 2 1.1 SatoshiLabs assets/satoshilabs_120.png micropython/firmware/vendorheader.bin
+
 ## emulator commands:
 
 run: ## run unix port
