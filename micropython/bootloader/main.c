@@ -112,6 +112,27 @@ bool copy_sdcard(void)
     return true;
 }
 
+void check_and_jump(void)
+{
+    BOOTLOADER_PRINTLN("checking loader");
+    if (parse_header((const uint8_t *)LOADER_START, NULL, NULL, NULL)) {
+        BOOTLOADER_PRINTLN("valid loader header");
+        if (check_signature((const uint8_t *)LOADER_START)) {
+            BOOTLOADER_PRINTLN("valid loader signature");
+            // TODO: remove debug wait
+            BOOTLOADER_PRINTLN("waiting 1 second");
+            HAL_Delay(1000);
+            // end
+            BOOTLOADER_PRINTLN("JUMP!");
+            jump_to(LOADER_START + HEADER_SIZE);
+        } else {
+            BOOTLOADER_PRINTLN("invalid loader signature");
+        }
+    } else {
+        BOOTLOADER_PRINTLN("invalid loader header");
+    }
+}
+
 int main(void)
 {
     SCB->VTOR = BOOTLOADER_START;
@@ -127,32 +148,13 @@ int main(void)
     BOOTLOADER_PRINTLN("=================");
     BOOTLOADER_PRINTLN("starting bootloader");
 
-    // TODO: remove debug
-    BOOTLOADER_PRINTLN("waiting 1 second");
-    HAL_Delay(1000);
-    BOOTLOADER_PRINTLN("jumping to loader");
-    jump_to(LOADER_START + HEADER_SIZE);
-    // end
-
     if (check_sdcard()) {
         if (!copy_sdcard()) {
             __fatal_error("halt");
         }
     }
 
-    BOOTLOADER_PRINTLN("checking loader");
-    if (parse_header((const uint8_t *)LOADER_START, NULL, NULL, NULL)) {
-        BOOTLOADER_PRINTLN("valid loader header");
-        if (check_signature((const uint8_t *)LOADER_START)) {
-            BOOTLOADER_PRINTLN("valid loader signature");
-            BOOTLOADER_PRINTLN("JUMP!");
-            jump_to(LOADER_START + HEADER_SIZE);
-        } else {
-            BOOTLOADER_PRINTLN("invalid loader signature");
-        }
-    } else {
-        BOOTLOADER_PRINTLN("invalid loader header");
-    }
+    check_and_jump();
 
     __fatal_error("halt");
 

@@ -6,22 +6,22 @@ import ed25519
 import pyblake2
 
 
-# loader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
-
-
 def get_sig(data):
     print('Enter privkey: ', end='')
     seckey = binascii.unhexlify(input())
     signkey = ed25519.SigningKey(seckey)
     digest = pyblake2.blake2s(data).digest()
-    sigidx = 0x01 # (1 _ _ _ _)
+    sigmask = 0x01 # (1 _ _ _ _)
     sig = signkey.sign(digest)
-    return sigidx, sig
+    return sigmask, sig
 
 
-class LoaderImage:
+# loader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
-    def __init__(self, data):
+
+class BinImage:
+
+    def __init__(self, data, magic, max_size):
         header = struct.unpack('<4sIIIBBBB427sB64s', data[:512])
         self.magic, \
         self.hdrlen, \
@@ -32,25 +32,31 @@ class LoaderImage:
         self.vpatch, \
         self.vbuild, \
         self.reserved, \
-        self.sigidx, \
+        self.sigmask, \
         self.sig = header
-        assert self.magic == b'TRZL'
+        assert self.magic == magic
         assert self.hdrlen == 512
-        assert self.codelen + self.hdrlen >= 4 * 1024
-        assert self.codelen + self.hdrlen <= 64 * 1024 + 7 * 128 * 1024
-        assert (self.codelen + self.hdrlen) % 512 == 0
+        total_len = self.hdrlen + self.codelen
+        assert total_len % 512 == 0
+        assert total_len >= 4 * 1024
+        assert total_len <= max_size
         assert self.reserved == 427 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
     def print(self):
-        print('TREZOR Loader Image')
+        if self.magic == b'TRZF':
+            print('TREZOR Firmware Image')
+        elif self.magic == b'TRZL':
+            print('TREZOR Loader Image')
+        else:
+            print('TREZOR Unknown Image')
         print('  * magic   :', self.magic.decode('ascii'))
         print('  * hdrlen  :', self.hdrlen)
         print('  * expiry  :', self.expiry)
         print('  * codelen :', self.codelen)
         print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
-        print('  * sigidx  :', self.sigidx)
+        print('  * sigmask :', self.sigmask)
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
@@ -59,7 +65,7 @@ class LoaderImage:
             self.vmajor, self.vminor, self.vpatch, self.vbuild, \
             self.reserved)
         if sig:
-            header += struct.pack('<B64s', self.sigidx, self.sig)
+            header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
             header += 65 * b'\x00'
         assert len(header) == self.hdrlen
@@ -69,7 +75,7 @@ class LoaderImage:
         header = self.serialize_header(sig=False)
         data = header + self.code
         assert len(data) == self.hdrlen + self.codelen
-        self.sigidx, self.sig = get_sig(data)
+        self.sigmask, self.sig = get_sig(data)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
@@ -77,6 +83,19 @@ class LoaderImage:
             f.write(self.code)
 
 
+class FirmwareImage(BinImage):
+
+    def __init__(self, data):
+        super().__init__(data, magic=b'TRZF', max_size=7*128*1024)
+
+
+class LoaderImage(BinImage):
+
+    def __init__(self, data):
+        super().__init__(data, magic=b'TRZL', max_size=64*1024 + 7*128*1024)
+
+
+"""
 class VendorHeader:
 
     def __init__(self, data):
@@ -104,7 +123,7 @@ class VendorHeader:
         p += 2
         self.vimg = data[p:p + self.vimg_len]
         p += self.vimg_len
-        self.sigidx = data[p]
+        self.sigmask = data[p]
         p += 1
         self.sig = data[p:p+64]
         assert len(data) == 4 + 4 + 4 + 1 + 1 + 1 + 1 + \
@@ -124,8 +143,8 @@ class VendorHeader:
             print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode('ascii'))
         print('  * vstr     :', self.vstr.decode('ascii'))
         print('  * vimg     : (%d bytes)', len(self.vimg))
-        print('  * sigidx  :', self.sigidx)
-        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+        print('  * sigmask  :', self.sigmask)
+        print('  * sig      :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
         header = struct.pack('<4sIIBBBB', \
@@ -137,7 +156,7 @@ class VendorHeader:
         header += struct.pack('<B', self.vstr_len) + self.vstr
         header += struct.pack('<H', self.vimg_len) + self.vimg
         if sig:
-            header += struct.pack('<B64s', self.sigidx, self.sig)
+            header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
             header += 65 * b'\x00'
         assert len(header) == self.hdrlen
@@ -145,67 +164,12 @@ class VendorHeader:
 
     def sign(self):
         header = self.serialize_header(sig=False)
-        self.sigidx, self.sig = get_sig(header)
+        self.sigmask, self.sig = get_sig(header)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
             f.write(self.serialize_header())
-
-
-class FirmwareImage:
-
-    def __init__(self, data):
-        header = struct.unpack('<4sIIIBBBB427sB64s', data[:512])
-        self.magic, \
-        self.hdrlen, \
-        self.expiry, \
-        self.codelen, \
-        self.vmajor, \
-        self.vminor, \
-        self.vpatch, \
-        self.vbuild, \
-        self.reserved, \
-        self.sigidx, \
-        self.sig = header
-        assert self.magic == b'TRZF'
-        assert self.hdrlen == 512
-        assert self.codelen % 4 == 0
-        assert self.reserved == 427 * b'\x00'
-        self.code = data[self.hdrlen:]
-        assert len(self.code) == self.codelen
-
-    def print(self):
-        print('TREZOR Firmware Image')
-        print('  * magic   :', self.magic.decode('ascii'))
-        print('  * hdrlen  :', self.hdrlen)
-        print('  * expiry  :', self.expiry)
-        print('  * codelen :', self.codelen)
-        print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
-        print('  * sigidx  :', self.sigidx)
-        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
-
-    def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB427s', \
-            self.magic, self.hdrlen, self.expiry, self.codelen, \
-            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
-            self.reserved)
-        if sig:
-            header += struct.pack('<B64s', self.sigidx, self.sig)
-        else:
-            header += 65 * b'\x00'
-        assert len(header) == self.hdrlen
-        return header
-
-    def sign(self):
-        header = self.serialize_header(sig=False)
-        data = header + self.code
-        assert len(data) == self.hdrlen + self.codelen
-        self.sigidx, self.sig = get_sig(data)
-
-    def write(self, filename):
-        with open(filename, 'wb') as f:
-            f.write(self.serialize_header())
-            f.write(self.code)
+"""
 
 
 def binopen(filename):
@@ -216,10 +180,10 @@ def binopen(filename):
     magic = data[:4]
     if magic == b'TRZL':
         return LoaderImage(data)
-    if magic == b'TRZV':
-        return VendorHeader(data)
     if magic == b'TRZF':
         return FirmwareImage(data)
+    # if magic == b'TRZV':
+    #     return VendorHeader(data)
     raise Exception('Unknown file format')
 
 

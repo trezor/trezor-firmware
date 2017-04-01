@@ -1,20 +1,20 @@
 #include "version.h"
 
-	.section  .header,"a",%progbits
+    .section  .header,"a",%progbits
 
-	.type g_header, %object
-	.size g_header, .-g_header
+    .type g_header, %object
+    .size g_header, .-g_header
 
 g_header:
-	.byte 'T','R','Z','F'
-	.word g_header_end - g_header
-	.word 0   /* valid until */
-	.word _codelen
-	.byte VERSION_MAJOR
-	.byte VERSION_MINOR
-	.byte VERSION_PATCH
-	.byte VERSION_BUILD
-	. = . + 427 /* reserved */
-	.byte 0    /* sigindex */
-	. = . + 64 /* signatures */
+    .byte 'T','R','Z','F'            // magic
+    .word g_header_end - g_header    // hdrlen
+    .word 0                          // expiry
+    .word _codelen                   // codelen
+    .byte VERSION_MAJOR              // vmajor
+    .byte VERSION_MINOR              // vminor
+    .byte VERSION_PATCH              // vpatch
+    .byte VERSION_BUILD              // vbuild
+    . = . + 427                      // reserved
+    .byte 0                          // sigmask
+    . = . + 64                       // sig
 g_header_end:

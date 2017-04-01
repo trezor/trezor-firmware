@@ -48,8 +48,8 @@ Total length of loader header is always 512 bytes.
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
 | 0x0014 | 427    | reserved | not used yet (zeroed) |
-| 0x01BF | 1      | sigidx | SatoshiLabs signature indexes (bitmap) |
-| 0x01C0 | 64     | sig | SatoshiLabs signature |
+| 0x01BF | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
+| 0x01C0 | 64     | sig | SatoshiLabs aggregated signature |
 
 ## Firmware Format
 
@@ -79,8 +79,8 @@ Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vend
 | ?      | ?      | vstr | vendor string |
 | ?      | 2      | vimg_len | vendor image length |
 | ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
-| ?      | 1      | sigidx | SatoshiLabs signature indexes (bitmap) |
-| ?      | 64     | sig | SatoshiLabs signature |
+| ?      | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
+| ?      | 64     | sig | SatoshiLabs aggregated signature |
 
 ### Firmware Header
 
@@ -97,8 +97,8 @@ Total length of firmware header is always 512 bytes.
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
 | 0x0014 | 427    | reserved | not used yet (zeroed) |
-| 0x01BF | 1      | sigidx | vendor signature indexes (bitmap) |
-| 0x01C0 | 64     | sig | vendor signature |
+| 0x01BF | 1      | sigmask | vendor signature indexes (bitmap) |
+| 0x01C0 | 64     | sig | vendor aggregated signature |
 
 ## Various ideas
 
