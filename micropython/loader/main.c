@@ -1,5 +1,7 @@
 #include STM32_HAL_H
 
+#include <string.h>
+
 #include "common.h"
 #include "display.h"
 #include "image.h"
@@ -12,6 +14,17 @@
 
 void pendsv_isr_handler(void) {
     __fatal_error("pendsv");
+}
+
+void display_vendor(const uint8_t *vimg)
+{
+    if (memcmp(vimg, "TOIf", 4) != 0) {
+        return;
+    }
+    uint16_t w = *(uint16_t *)(vimg + 4);
+    uint16_t h = *(uint16_t *)(vimg + 6);
+    uint32_t datalen = *(uint32_t *)(vimg + 8);
+    display_image(0, 0, w, h, vimg + 12, datalen);
 }
 
 void check_and_jump(void)
@@ -32,7 +45,7 @@ void check_and_jump(void)
     if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen))) {
         LOADER_PRINTLN("valid firmware image");
         // TODO: remove debug wait
-        LOADER_PRINTLN("waiting 1 second");
+        display_vendor(vhdr.vimg);
         HAL_Delay(1000);
         // end
         LOADER_PRINTLN("JUMP!");

@@ -94,7 +94,7 @@ STATIC mp_obj_t mod_TrezorUi_Display_image(size_t n_args, const mp_obj_t *args) 
     if (datalen != image.len - 12) {
         mp_raise_ValueError("Invalid size of data");
     }
-    display_image(x, y, w, h, data + 12, image.len - 12);
+    display_image(x, y, w, h, data + 12, datalen);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_image_obj, 4, 4, mod_TrezorUi_Display_image);
