@@ -16,15 +16,21 @@ void pendsv_isr_handler(void) {
     __fatal_error("pendsv");
 }
 
-void display_vendor(const uint8_t *vimg)
+void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len)
 {
+    display_clear();
     if (memcmp(vimg, "TOIf", 4) != 0) {
         return;
     }
     uint16_t w = *(uint16_t *)(vimg + 4);
     uint16_t h = *(uint16_t *)(vimg + 6);
+    if (w != 120 || h != 120) {
+        return;
+    }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_image(0, 0, w, h, vimg + 12, datalen);
+    display_image((DISPLAY_RESX - w) / 2, (DISPLAY_RESY - h) / 2, w, h, vimg + 12, datalen);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY * 3 / 4 + 20, vstr, vstr_len, FONT_BOLD, 0xFFFF, 0x0000);
+    display_refresh();
 }
 
 void check_and_jump(void)
@@ -45,7 +51,7 @@ void check_and_jump(void)
     if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen))) {
         LOADER_PRINTLN("valid firmware image");
         // TODO: remove debug wait
-        display_vendor(vhdr.vimg);
+        display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len);
         HAL_Delay(1000);
         // end
         LOADER_PRINTLN("JUMP!");

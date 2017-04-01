@@ -61,6 +61,9 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	extmod/modtrezorui/display.o \
 	extmod/modtrezorui/inflate.o \
 	extmod/modtrezorui/font_bitmap.o \
+	extmod/modtrezorui/font_roboto_bold_20.o \
+	extmod/modtrezorui/font_roboto_regular_20.o \
+	extmod/modtrezorui/font_robotomono_regular_20.o \
 	trezorhal/common.o \
 	trezorhal/image.o \
 	trezorhal/stm32_it.o \
