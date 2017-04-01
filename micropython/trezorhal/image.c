@@ -93,3 +93,72 @@ bool image_check_signature(const uint8_t *data)
 
     return pub && (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, *(const ed25519_public_key *)pub, *(const ed25519_signature *)hdr.sig));
 }
+
+bool vendor_parse_header(const uint8_t *data, vendor_header *header)
+{
+    if (!header) {
+        vendor_header h;
+        header = &h;
+    }
+
+    memcpy(&header->magic, data, 4);
+    if (header->magic != 0x565A5254) return false; // TRZV
+
+    memcpy(&header->hdrlen, data + 4, 4);
+
+    memcpy(&header->expiry, data + 8, 4);
+    if (header->expiry != 0) return false;
+
+    memcpy(&header->version, data + 12, 2);
+
+    memcpy(&header->vsig_m, data + 14, 1);
+    memcpy(&header->vsig_n, data + 15, 1);
+
+    for (int i = 0; i < header->vsig_n; i++) {
+        header->vpub[i] = data + 16 + i * 32;
+    }
+    for (int i = header->vsig_n; i < 8; i++) {
+        header->vpub[i] = 0;
+    }
+
+    memcpy(&header->vstr_len, data + 16 + header->vsig_n * 32, 1);
+
+    header->vstr = data + 16 + header->vsig_n * 32 + 1;
+
+    header->vimg = data + 16 + header->vsig_n * 32 + 1 + header->vstr_len;
+    // align to 4 bytes
+    header->vimg += (-(uintptr_t)header->vimg) & 3;
+
+    // uint8_t reserved[427];
+
+    memcpy(&header->sigmask, data + header->hdrlen - 65, 1);
+
+    memcpy(header->sig, data + header->hdrlen - 64, 64);
+
+    return true;
+}
+
+bool vendor_check_signature(const uint8_t *data)
+{
+    vendor_header hdr;
+    if (!vendor_parse_header(data, &hdr)) {
+        return false;
+    }
+
+    uint8_t hash[BLAKE2S_DIGEST_LENGTH];
+    BLAKE2S_CTX ctx;
+    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+    blake2s_Update(&ctx, data, hdr.hdrlen - 65);
+    for (int i = 0; i < 65; i++) {
+        blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
+    }
+    blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+
+    const uint8_t *pub = get_pubkey(hdr.sigmask);
+
+    // TODO: remove debug skip of unsigned
+    if (!pub) return true;
+    // end
+
+    return pub && (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, *(const ed25519_public_key *)pub, *(const ed25519_signature *)hdr.sig));
+}
