@@ -47,13 +47,10 @@ void check_and_jump(void)
         return;
     }
 
-    // TODO: use keys from vendor header in image_check_signature
-    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen))) {
+    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &vhdr)) {
         LOADER_PRINTLN("valid firmware image");
-        // TODO: remove debug wait
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len);
-        HAL_Delay(1000);
-        // end
+        HAL_Delay(1000); // TODO: remove?
         LOADER_PRINTLN("JUMP!");
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
     } else {

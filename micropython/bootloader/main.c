@@ -116,7 +116,7 @@ bool copy_sdcard(void)
 void check_and_jump(void)
 {
     BOOTLOADER_PRINTLN("checking loader");
-    if (image_check_signature((const uint8_t *)LOADER_START)) {
+    if (image_check_signature((const uint8_t *)LOADER_START, NULL)) {
         BOOTLOADER_PRINTLN("valid loader image");
         // TODO: remove debug wait
         BOOTLOADER_PRINTLN("waiting 1 second");

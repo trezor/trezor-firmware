@@ -38,37 +38,47 @@ bool image_parse_header(const uint8_t *data, image_header *header)
     return true;
 }
 
-#define KEYMASK(A, B, C) ((1 << (A - 1)) | (1 << (B - 1)) | (1 << (C - 1)))
+static const uint8_t * const SATOSHILABS_PUBKEYS[] = {
+    (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+};
 
-static const uint8_t *get_pubkey(uint8_t index)
+static const uint8_t *compute_pubkey(const vendor_header *vhdr, uint8_t sigmask)
 {
-    switch (index) {
-        case KEYMASK(1, 2, 3):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(1, 2, 4):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(1, 2, 5):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(1, 3, 4):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(1, 3, 5):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(1, 4, 5):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(2, 3, 4):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(2, 3, 5):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(2, 4, 5):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        case KEYMASK(3, 4, 5):
-            return (const uint8_t *)"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-        default:
-            return NULL;
+    uint8_t vsig_m;
+    uint8_t vsig_n;
+    const uint8_t * const *vpub;
+
+    if (vhdr) {
+        vsig_m = vhdr->vsig_n;
+        vsig_n = vhdr->vsig_n;
+        vpub = vhdr->vpub;
+    } else {
+        vsig_m = 3;
+        vsig_n = 5;
+        vpub = SATOSHILABS_PUBKEYS;
     }
+
+    if (!vsig_m || !vsig_n) return NULL;
+    if (vsig_m > vsig_n) return NULL;
+
+    // discard bits higher than vsig_n
+    sigmask &= ((1 << vsig_n) - 1);
+
+    // remove if number of set bits in sigmask is not equal to vsig_m
+    if (__builtin_popcount(sigmask) != vsig_m) return NULL;
+
+    // TODO: add keys from vpub according to sigmask
+    (void)vpub;
+    (void)sigmask;
+
+    return NULL;
 }
 
-bool image_check_signature(const uint8_t *data)
+bool image_check_signature(const uint8_t *data, const vendor_header *vhdr)
 {
     image_header hdr;
     if (!image_parse_header(data, &hdr)) {
@@ -85,7 +95,7 @@ bool image_check_signature(const uint8_t *data)
     blake2s_Update(&ctx, data + HEADER_SIZE, hdr.codelen);
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
-    const uint8_t *pub = get_pubkey(hdr.sigmask);
+    const uint8_t *pub = compute_pubkey(vhdr, hdr.sigmask);
 
     // TODO: remove debug skip of unsigned
     if (!pub) return true;
@@ -154,7 +164,7 @@ bool vendor_check_signature(const uint8_t *data)
     }
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
-    const uint8_t *pub = get_pubkey(hdr.sigmask);
+    const uint8_t *pub = compute_pubkey(NULL, hdr.sigmask);
 
     // TODO: remove debug skip of unsigned
     if (!pub) return true;
