@@ -1,6 +1,6 @@
-CC        = gcc
+CC       ?= gcc
 
-OPTFLAGS  = -O3 -g
+OPTFLAGS ?= -O3 -g
 
 CFLAGS   += $(OPTFLAGS) \
             -std=gnu99 \

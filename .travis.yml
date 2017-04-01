@@ -4,7 +4,10 @@ language: c
 
 addons:
   apt:
+    sources:
+    - ubuntu-toolchain-r-test
     packages:
+    - gcc-5
     - check
     - cmake
     - cmake-data
@@ -15,6 +18,7 @@ install:
   - pip install --user pytest ecdsa curve25519-donna
 
 script:
+  - export CC='gcc-5'
   - make
   - ./tests
   - ./test-openssl 1000
