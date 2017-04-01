@@ -25,11 +25,16 @@ ENTRY(Reset_Handler)
 /* define output sections */
 SECTIONS
 {
+    /* Firmware Header */
+    .header :
+    {
+        KEEP(*(.header))
+    } > FLASH
+
     /* The startup code goes first into FLASH */
     .flash :
     {
         . = ALIGN(4);
-        KEEP(*(.header))     /* Firmware Header */
         KEEP(*(.isr_vector)) /* Startup code */
         . = ALIGN(4);
         *(.text*)          /* .text* sections (code) */
@@ -87,7 +92,7 @@ SECTIONS
 }
 
 /* RAM extents for the garbage collector */
-_codelen = SIZEOF(.flash) + SIZEOF(.data) - 512;
+_codelen = SIZEOF(.flash) + SIZEOF(.data);
 _ram_start = ORIGIN(RAM);
 _ram_end = ORIGIN(RAM) + LENGTH(RAM);
 _heap_start = _ebss; /* heap starts just after statically allocated memory */

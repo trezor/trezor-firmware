@@ -405,7 +405,7 @@ $(BUILD)/$(TARGET).elf: $(OBJ)
 	$(Q)$(SIZE) $@
 
 $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
-	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
+	$(Q)$(OBJCOPY) -O binary -j .header -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
 
 $(BUILD)/%.o: %.S
 	$(ECHO) "CC $<"
