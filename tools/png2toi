@@ -25,7 +25,7 @@ def process_grayscale(w, h, pix):
     return data
 
 
-def process_image(ifn):
+def process_image(ifn, savefiles=False):
     im = Image.open(ifn)
     w, h = im.size
     print('Opened %s ... %d x %d @ %s' % (ifn, w, h, im.mode))
@@ -53,28 +53,34 @@ def process_image(ifn):
     zdata = z.compress(pixeldata) + z.flush()
     zdata = zdata[2:-4] # strip header and checksum
 
-    with open(ofn, 'wb') as f:
-        if im.mode == 'RGB':
-            f.write(b'TOIf')
-        else:
-            f.write(b'TOIg')
-        f.write(struct.pack('<HH', w, h))
-        f.write(struct.pack('<I', len(zdata)))
-        f.write(zdata)
-        print('Written %s ... %d bytes' % (ofn, 4 + 4 + len(zdata)))
-    with open(ofn + '.h', 'wt') as f:
-        f.write('static const uint8_t toi_%s[] = {\n' % ifn[:-4])
-        if im.mode == 'RGB':
-            f.write("    'T', 'O', 'I', 'f',\n")
-        else:
-            f.write("    'T', 'O', 'I', 'g',\n")
-        f.write('    (uint16_t)%d, (uint16_t)%d,\n' % (w, h))
-        f.write('    (uint32_t)%d,\n' % len(zdata))
-        f.write('   ')
-        for b in zdata:
-            f.write(' 0x%02x,' % b)
-        f.write('\n};\n')
-        print('Written %s ...' % (ofn + '.h'))
+    data = b''
+    if im.mode == 'RGB':
+        data += b'TOIf'
+    else:
+        data += b'TOIg'
+    data += struct.pack('<HH', w, h)
+    data += struct.pack('<I', len(zdata))
+    data += zdata
+
+    if savefiles:
+        with open(ofn, 'wb') as f:
+            f.write(data)
+            print('Written %s ... %d bytes' % (ofn, len(data)))
+        with open(ofn + '.h', 'wt') as f:
+            f.write('static const uint8_t toi_%s[] = {\n' % ifn[:-4])
+            if im.mode == 'RGB':
+                f.write("    'T', 'O', 'I', 'f',\n")
+            else:
+                f.write("    'T', 'O', 'I', 'g',\n")
+                f.write('    (uint16_t)%d, (uint16_t)%d,\n' % (w, h))
+                f.write('    (uint32_t)%d,\n' % len(zdata))
+                f.write('   ')
+            for b in zdata:
+                f.write(' 0x%02x,' % b)
+            f.write('\n};\n')
+            print('Written %s ... done' % (ofn + '.h'))
+
+    return data
 
 
 def main():
@@ -87,7 +93,7 @@ def main():
         print('Must provide PNG file')
         return 2
 
-    process_image(ifn)
+    process_image(ifn, savefiles=True)
 
 
 main()

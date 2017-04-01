@@ -400,6 +400,9 @@ QSTR_GEN_EXTRA_CFLAGS += -DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB -DN_ARM -DN_XTENSA
 
 all: $(BUILD)/$(TARGET).bin
 
+$(SRCDIR_FW)/firmware/vendorheader.bin: assets/satoshilabs.png
+	./tools/build_vendorheader '0000000000000000000000000000000000000000000000000000000000000000,0000000000000000000000000000000000000000000000000000000000000000,0000000000000000000000000000000000000000000000000000000000000000' 2 1.1 SatoshiLabs assets/satoshilabs.png micropython/firmware/vendorheader.bin
+
 $(BUILD_FW)/firmware/vendorheader.o: $(SRCDIR_FW)/firmware/vendorheader.bin
 	$(Q)$(OBJCOPY) -I binary -O elf32-littlearm -B arm \
 	  --rename-section .data=.vendorheader,alloc,load,readonly,contents \
