@@ -22,9 +22,12 @@ def display_homescreen():
     image = res.load('apps/homescreen/res/trezor_logo.toig')
     ui.display.icon(0, 0, image, ui.WHITE, ui.BLACK)
 
-    label = storage.get_label()
-    if not label:
-        label = 'My TREZOR'
+    if not storage.is_initialized():
+        label = 'Go to trezor.io/start'
+    else:
+        label = storage.get_label()
+        if not label:
+            label = 'My TREZOR'
     ui.display.text_center(120, 210, label, ui.BOLD, ui.WHITE, ui.BLACK)
 
 
