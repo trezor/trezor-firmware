@@ -55,16 +55,19 @@ ed25519_cosi_combine_publickeys(ed25519_public_key res, const ed25519_public_key
 		memcpy(res, pks, sizeof(ed25519_public_key));
 		return 0;
 	}
-	if (!ge25519_unpack_negative_vartime(&P, pks[i++]))
+	if (!ge25519_unpack_negative_vartime(&P, pks[i++])) {
 		return -1;
+	}
 	ge25519_full_to_pniels(&sump, &P);
-	while (i < n-1) {
-		if (!ge25519_unpack_negative_vartime(&P, pks[i++]))
+	while (i < n - 1) {
+		if (!ge25519_unpack_negative_vartime(&P, pks[i++])) {
 			return -1;
+		}
 		ge25519_pnielsadd(&sump, &P, &sump);
 	}
-	if (!ge25519_unpack_negative_vartime(&P, pks[i++]))
+	if (!ge25519_unpack_negative_vartime(&P, pks[i++])) {
 		return -1;
+	}
 	ge25519_pnielsadd_p1p1(&sump1, &P, &sump, 0);
 	ge25519_p1p1_to_partial(&P, &sump1);
 	curve25519_neg(P.x, P.x);
@@ -75,9 +78,8 @@ ed25519_cosi_combine_publickeys(ed25519_public_key res, const ed25519_public_key
 void
 ed25519_cosi_combine_signatures(ed25519_signature res, const ed25519_public_key R, const ed25519_cosi_signature *sigs, size_t n) {
 	bignum256modm s, t;
-	size_t i;
+	size_t i = 0;
 
-	i = 0;
 	expand256_modm(s, sigs[i++], 32);
 	while (i < n) {
 		expand256_modm(t, sigs[i++], 32);

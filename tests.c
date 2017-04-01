@@ -2651,13 +2651,13 @@ START_TEST(test_ed25519) {
 END_TEST
 
 START_TEST(test_ed25519_cosi) {
-	int MAXN=10;
+	const int MAXN = 10;
 	ed25519_secret_key keys[MAXN];
 	ed25519_public_key pubkeys[MAXN];
 	ed25519_secret_key nonces[MAXN];
 	ed25519_public_key Rs[MAXN];
 	ed25519_cosi_signature sigs[MAXN];
-	unsigned char msg[32];
+	uint8_t msg[32];
 	rfc6979_state rng;
 	int res;
 
