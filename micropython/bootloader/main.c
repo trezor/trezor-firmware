@@ -87,7 +87,9 @@ bool copy_sdcard(void)
 
     image_header hdr;
     if (!image_parse_header((const uint8_t *)buf, &hdr)) {
-        BOOTLOADER_PRINTLN("wrong header");
+        BOOTLOADER_PRINTLN("invalid header");
+        sdcard_power_off();
+        HAL_FLASH_Lock();
         return false;
     }
 
