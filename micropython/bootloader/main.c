@@ -2,10 +2,9 @@
 
 #include <string.h>
 
-#include "crypto.h"
-
 #include "common.h"
 #include "display.h"
+#include "image.h"
 #include "sdcard.h"
 
 #define BOOTLOADER_FGCOLOR 0xFFFF
@@ -38,13 +37,13 @@ bool check_sdcard(void)
         return false;
     }
 
-    uint8_t buf[SDCARD_BLOCK_SIZE] __attribute__((aligned(4)));
+    uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
 
     sdcard_read_blocks(buf, 0, 1);
 
     sdcard_power_off();
 
-    if (parse_header(buf, NULL, NULL, NULL)) {
+    if (image_parse_header((const uint8_t *)buf, NULL)) {
         BOOTLOADER_PRINTLN("SD card header is valid");
         return true;
     } else {
@@ -86,13 +85,13 @@ bool copy_sdcard(void)
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
     sdcard_read_blocks((uint8_t *)buf, 0, 1);
 
-    uint32_t codelen;
-    if (!parse_header((uint8_t *)buf, &codelen, NULL, NULL)) {
+    image_header hdr;
+    if (!image_parse_header((const uint8_t *)buf, &hdr)) {
         BOOTLOADER_PRINTLN("wrong header");
         return false;
     }
 
-    for (int i = 0; i < codelen / SDCARD_BLOCK_SIZE; i++) {
+    for (int i = 0; i < (HEADER_SIZE + hdr.codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (HAL_FLASH_Program(TYPEPROGRAM_WORD, LOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
@@ -115,21 +114,16 @@ bool copy_sdcard(void)
 void check_and_jump(void)
 {
     BOOTLOADER_PRINTLN("checking loader");
-    if (parse_header((const uint8_t *)LOADER_START, NULL, NULL, NULL)) {
-        BOOTLOADER_PRINTLN("valid loader header");
-        if (check_signature((const uint8_t *)LOADER_START)) {
-            BOOTLOADER_PRINTLN("valid loader signature");
-            // TODO: remove debug wait
-            BOOTLOADER_PRINTLN("waiting 1 second");
-            HAL_Delay(1000);
-            // end
-            BOOTLOADER_PRINTLN("JUMP!");
-            jump_to(LOADER_START + HEADER_SIZE);
-        } else {
-            BOOTLOADER_PRINTLN("invalid loader signature");
-        }
+    if (image_check_signature((const uint8_t *)LOADER_START)) {
+        BOOTLOADER_PRINTLN("valid loader image");
+        // TODO: remove debug wait
+        BOOTLOADER_PRINTLN("waiting 1 second");
+        HAL_Delay(1000);
+        // end
+        BOOTLOADER_PRINTLN("JUMP!");
+        jump_to(LOADER_START + HEADER_SIZE);
     } else {
-        BOOTLOADER_PRINTLN("invalid loader header");
+        BOOTLOADER_PRINTLN("invalid loader image");
     }
 }
 

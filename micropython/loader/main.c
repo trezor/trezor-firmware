@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "display.h"
-#include "crypto.h"
+#include "image.h"
 
 #define LOADER_FGCOLOR 0xFFFF
 #define LOADER_BGCOLOR 0x0000
@@ -17,21 +17,16 @@ void pendsv_isr_handler(void) {
 void check_and_jump(void)
 {
     LOADER_PRINTLN("checking firmware");
-    if (parse_header((const uint8_t *)FIRMWARE_START, NULL, NULL, NULL)) {
-        LOADER_PRINTLN("valid firmware header");
-        if (check_signature((const uint8_t *)FIRMWARE_START)) {
-            LOADER_PRINTLN("valid firmware signature");
-            LOADER_PRINTLN("JUMP!");
-            // TODO: remove debug wait
-            LOADER_PRINTLN("waiting 1 second");
-            HAL_Delay(1000);
-            // end
-            jump_to(FIRMWARE_START + HEADER_SIZE);
-        } else {
-            LOADER_PRINTLN("invalid firmware signature");
-        }
+    if (image_check_signature((const uint8_t *)FIRMWARE_START)) {
+        LOADER_PRINTLN("valid firmware image");
+        // TODO: remove debug wait
+        LOADER_PRINTLN("waiting 1 second");
+        HAL_Delay(1000);
+        // end
+        LOADER_PRINTLN("JUMP!");
+        jump_to(FIRMWARE_START + HEADER_SIZE);
     } else {
-        LOADER_PRINTLN("invalid firmware header");
+        LOADER_PRINTLN("invalid firmware image");
     }
 }
 
