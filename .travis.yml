@@ -1,9 +1,14 @@
+sudo: false
+dist: trusty
 language: c
 
-install:
-  - sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
-  - sudo apt-get update
-  - sudo apt-get install -y build-essential git gcc-arm-embedded
+addons:
+  apt:
+    packages:
+    - build-essential
+    - git
+    - gcc-arm-none-eabi
+    - libnewlib-arm-none-eabi
 
 script:
   - make -C vendor/libopencm3
