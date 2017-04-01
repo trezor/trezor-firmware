@@ -85,9 +85,15 @@ class BinImage:
 
 class FirmwareImage(BinImage):
 
-    def __init__(self, data):
-        super().__init__(data, magic=b'TRZF', max_size=7*128*1024)
+    def __init__(self, data, vhdrlen):
+        super().__init__(data[vhdrlen:], magic=b'TRZF', max_size=7*128*1024)
+        self.vheader = data[0:vhdrlen]
 
+    def write(self, filename):
+        with open(filename, 'wb') as f:
+            f.write(self.vheader)
+            f.write(self.serialize_header())
+            f.write(self.code)
 
 class LoaderImage(BinImage):
 
@@ -95,7 +101,6 @@ class LoaderImage(BinImage):
         super().__init__(data, magic=b'TRZL', max_size=64*1024 + 7*128*1024)
 
 
-"""
 class VendorHeader:
 
     def __init__(self, data):
@@ -107,7 +112,7 @@ class VendorHeader:
         self.vminor, \
         self.vsig_m, \
         self.vsig_n = header
-        assert self.magic == b'TRZF'
+        assert self.magic == b'TRZV'
         assert self.vsig_m > 0 and self.vsig_m <= self.vsig_n
         assert self.vsig_n > 0 and self.vsig_n <= 8
         p = 16
@@ -119,8 +124,9 @@ class VendorHeader:
         p += 1
         self.vstr = data[p:p + self.vstr_len]
         p += self.vstr_len
-        self.vimg_len, _ = struct.unpack('<H', data[p: p + 2])
-        p += 2
+        vstr_pad = -p & 3
+        p += vstr_pad
+        self.vimg_len = len(data) - 65 - p
         self.vimg = data[p:p + self.vimg_len]
         p += self.vimg_len
         self.sigmask = data[p]
@@ -128,8 +134,8 @@ class VendorHeader:
         self.sig = data[p:p+64]
         assert len(data) == 4 + 4 + 4 + 1 + 1 + 1 + 1 + \
                             32 * len(self.vpub) + \
-                            1 + self.vstr_len + \
-                            2 + self.vimg_len + \
+                            1 + self.vstr_len + vstr_pad + \
+                            self.vimg_len + \
                             1 + 64
 
     def print(self):
@@ -169,7 +175,6 @@ class VendorHeader:
     def write(self, filename):
         with open(filename, 'wb') as f:
             f.write(self.serialize_header())
-"""
 
 
 def binopen(filename):
@@ -180,12 +185,16 @@ def binopen(filename):
     magic = data[:4]
     if magic == b'TRZL':
         return LoaderImage(data)
+    if magic == b'TRZV':
+        vheader = VendorHeader(data)
+        if len(data) == vheader.hdrlen:
+            return vheader
+        subdata = data[vheader.hdrlen:]
+        if subdata[:4] == b'TRZF':
+            return FirmwareImage(data, vheader.hdrlen)
     if magic == b'TRZF':
-        return FirmwareImage(data)
-    # if magic == b'TRZV':
-    #     return VendorHeader(data)
+        return FirmwareImage(data, 0)
     raise Exception('Unknown file format')
-
 
 def main():
     if len(sys.argv) < 2:

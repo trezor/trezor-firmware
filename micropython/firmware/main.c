@@ -24,7 +24,6 @@
 
 int main(void) {
 
-    SCB->VTOR = FIRMWARE_START + HEADER_SIZE;
     periph_init();
 
     pendsv_init();

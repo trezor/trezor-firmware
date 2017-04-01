@@ -28,6 +28,7 @@ SECTIONS
     /* Firmware Header */
     .header :
     {
+        KEEP(*(.vendorheader))
         KEEP(*(.header))
     } > FLASH
 

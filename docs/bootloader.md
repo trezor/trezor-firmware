@@ -61,12 +61,12 @@ TREZOR Core firmware consists of 3 parts:
 
 ### Vendor Header
 
-Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vendor string) + (length of vendor image) bytes rounded up to the closest multiply of 512 bytes.
+Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vendor string rounded up to multiple of 4) + (length of vendor image) bytes rounded up to the closest multiple of 512 bytes.
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
 | 0x0000 | 4      | magic | firmware magic `TRZV` |
-| 0x0004 | 4      | hdrlen | length of the vendor header |
+| 0x0004 | 4      | hdrlen | length of the vendor header (multiple of 512) |
 | 0x0008 | 4      | expiry | valid until timestamp (0=infinity) |
 | 0x000C | 1      | vmajor | version (major) |
 | 0x000D | 1      | vminor | version (minor) |
@@ -77,8 +77,9 @@ Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vend
 | ?      | 32     | vpubn | vendor pubkey n |
 | ?      | 1      | vstr_len | vendor string length |
 | ?      | ?      | vstr | vendor string |
-| ?      | 2      | vimg_len | vendor image length |
+| ?      | ?      | vstrpad | padding to a multiple of 4 bytes |
 | ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
+| ?      | ?      | reserved | padding to an address that is -65 modulo 512 |
 | ?      | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
 | ?      | 64     | sig | SatoshiLabs aggregated signature |
 

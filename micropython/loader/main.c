@@ -17,14 +17,16 @@ void pendsv_isr_handler(void) {
 void check_and_jump(void)
 {
     LOADER_PRINTLN("checking firmware");
-    if (image_check_signature((const uint8_t *)FIRMWARE_START)) {
+	// TODO: check vendor header and its signature
+	uint32_t vhdrlen = *((const uint32_t *) (FIRMWARE_START + 4));
+    if (image_check_signature((const uint8_t *) (FIRMWARE_START + vhdrlen))) {
         LOADER_PRINTLN("valid firmware image");
         // TODO: remove debug wait
         LOADER_PRINTLN("waiting 1 second");
         HAL_Delay(1000);
         // end
         LOADER_PRINTLN("JUMP!");
-        jump_to(FIRMWARE_START + HEADER_SIZE);
+        jump_to(FIRMWARE_START + vhdrlen + HEADER_SIZE);
     } else {
         LOADER_PRINTLN("invalid firmware image");
     }
