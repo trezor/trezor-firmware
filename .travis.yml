@@ -1,13 +1,12 @@
 sudo: false
+dist: trusty
 language: c
 
 addons:
   apt:
-    sources:
-    - george-edison55-precise-backports # CMake 3.x
     packages:
     - check
-    - cmake # Travis CI comes with CMake 2.8.7, we need CMake 2.8.11
+    - cmake
     - cmake-data
     - libssl-dev
     - python-pip
