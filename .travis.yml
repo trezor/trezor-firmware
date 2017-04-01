@@ -10,6 +10,8 @@ install:
   - sudo apt-get install -y build-essential gcc-multilib gcc-arm-embedded
 
 script:
+  - make vendorheader
+
   - make build_cross
 
   - make build_bootloader
