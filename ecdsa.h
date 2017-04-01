@@ -91,7 +91,8 @@ int ecdsa_verify_digest_recover(const ecdsa_curve *curve, uint8_t *pub_key, cons
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 
 // Private
-void init_k_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *rng);
+void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *rng);
+void generate_rfc6979(uint8_t rand[32], rfc6979_state *rng);
 void generate_k_rfc6979(bignum256 *k, rfc6979_state *rng);
 void generate_k_random(bignum256 *k, const bignum256 *prime);
 

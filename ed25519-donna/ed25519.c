@@ -44,6 +44,75 @@ ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk) {
 	ge25519_pack(pk, &A);
 }
 
+int
+ed25519_cosi_combine_publickeys(ed25519_public_key res, const ed25519_public_key *pks, size_t n) {
+	size_t i = 0;
+	ge25519 P;
+	ge25519_pniels sump;
+	ge25519_p1p1 sump1;
+
+	if (n == 1) {
+		memcpy(res, pks, sizeof(ed25519_public_key));
+		return 0;
+	}
+	if (!ge25519_unpack_negative_vartime(&P, pks[i++]))
+		return -1;
+	ge25519_full_to_pniels(&sump, &P);
+	while (i < n-1) {
+		if (!ge25519_unpack_negative_vartime(&P, pks[i++]))
+			return -1;
+		ge25519_pnielsadd(&sump, &P, &sump);
+	}
+	if (!ge25519_unpack_negative_vartime(&P, pks[i++]))
+		return -1;
+	ge25519_pnielsadd_p1p1(&sump1, &P, &sump, 0);
+	ge25519_p1p1_to_partial(&P, &sump1);
+	curve25519_neg(P.x, P.x);
+	ge25519_pack(res, &P);
+	return 0;
+}
+
+void
+ed25519_cosi_combine_signatures(ed25519_signature res, const ed25519_public_key R, const ed25519_cosi_signature *sigs, size_t n) {
+	bignum256modm s, t;
+	size_t i;
+
+	i = 0;
+	expand256_modm(s, sigs[i++], 32);
+	while (i < n) {
+		expand256_modm(t, sigs[i++], 32);
+		add256_modm(s, s, t);
+	}
+	memcpy(res, R, 32);
+	contract256_modm(res + 32, s);
+}
+
+void
+ed25519_cosi_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_secret_key nonce, const ed25519_public_key R, const ed25519_public_key pk, ed25519_cosi_signature sig) {
+	bignum256modm r, S, a;
+	hash_512bits extsk, extnonce, hram;
+
+	ed25519_extsk(extsk, sk);
+	ed25519_extsk(extnonce, nonce);
+
+	/* r = nonce */
+	expand256_modm(r, extnonce, 32);
+
+	/* S = H(R,A,m).. */
+	ed25519_hram(hram, R, pk, m, mlen);
+	expand256_modm(S, hram, 64);
+
+	/* S = H(R,A,m)a */
+	expand256_modm(a, extsk, 32);
+	mul256_modm(S, S, a);
+
+	/* S = (r + H(R,A,m)a) */
+	add256_modm(S, S, r);
+
+	/* S = (r + H(R,A,m)a) mod L */
+	contract256_modm(sig, S);
+}
+
 void
 ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS) {
 	ed25519_hash_context ctx;
@@ -75,7 +144,7 @@ ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, c
 	/* S = (r + H(R,A,m)a) */
 	add256_modm(S, S, r);
 
-	/* S = (r + H(R,A,m)a) mod L */	
+	/* S = (r + H(R,A,m)a) mod L */
 	contract256_modm(RS + 32, S);
 }
 

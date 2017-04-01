@@ -658,7 +658,7 @@ int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8
 	return 0;
 }
 
-void init_k_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *state) {
+void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *state) {
 	uint8_t bx[2*32];
 	uint8_t buf[32 + 1 + 2*32];
 
@@ -684,18 +684,27 @@ void init_k_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state 
 	MEMSET_BZERO(buf, sizeof(buf));
 }
 
-// generate K in a deterministic way, according to RFC6979
-// http://tools.ietf.org/html/rfc6979
-void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
+// generate next number from deterministic random number generator
+void generate_rfc6979(uint8_t rand[32], rfc6979_state *state)
 {
 	uint8_t buf[32 + 1];
 
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
-	bn_read_be(state->v, k);
 	memcpy(buf, state->v, sizeof(state->v));
 	buf[sizeof(state->v)] = 0x00;
 	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+	memcpy(rand, buf, 32);
+	MEMSET_BZERO(buf, sizeof(buf));
+}
+
+// generate K in a deterministic way, according to RFC6979
+// http://tools.ietf.org/html/rfc6979
+void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
+{
+	uint8_t buf[32];
+	generate_rfc6979(buf, state);
+	bn_read_be(buf, k);
 	MEMSET_BZERO(buf, sizeof(buf));
 }
 
@@ -739,7 +748,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 
 #if USE_RFC6979
 	rfc6979_state rng;
-	init_k_rfc6979(priv_key, digest, &rng);
+	init_rfc6979(priv_key, digest, &rng);
 #endif
 
 	bn_read_be(digest, &z);
