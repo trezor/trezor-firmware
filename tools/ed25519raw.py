@@ -1,3 +1,6 @@
+# orignal version downloaded from https://ed25519.cr.yp.to/python/ed25519.py
+# modified for Python 3 by Jochen Hoenicke <hoenicke@gmail.com>
+
 import hashlib
 
 b = 256
@@ -9,9 +12,9 @@ def H(m):
 
 def expmod(b,e,m):
   if e < 0:
-    raise Exception('negative exponent')
+    raise Exception("negative exponent")
   if e == 0: return 1
-  t = expmod(b,e >> 1,m)**2 % m
+  t = expmod(b,e>>1,m)**2 % m
   if e & 1: t = (t*b) % m
   return t
 

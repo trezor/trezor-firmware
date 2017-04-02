@@ -190,7 +190,7 @@ def test():
     data = sys.argv[1].encode('utf-8')
     N = 5
     keyset = [1,3,4]
-    
+
     digest = pyblake2.blake2s(data).digest()
     print('Digest: %s' % hex(digest))
     sks = []
@@ -212,7 +212,7 @@ def test():
         print('Local commit: %s' % hex(R))
         nonces.append(r)
         commits.append(R)
-        
+
     globalPk = combine_keys([pks[i] for i in keyset])
     globalR = combine_keys([commits[i] for i in keyset])
     print('-----------------')
@@ -232,15 +232,12 @@ def test():
         print('Local sig %d: %s' % (i+1, hex(ed25519raw.encodeint(S))))
         commits.append(R)
         sigs.append(ed25519raw.encodeint(S))
-        
 
     print('-----------------')
     sig = combine_sig(globalR, [sigs[i] for i in [1,3,4]])
     print('Global sig: %s' %hex(sig))
     ed25519raw.checkvalid(sig, digest, globalPk)
     print('Valid Signature!')
-        
-        
 
 if __name__ == '__main__':
     test()
