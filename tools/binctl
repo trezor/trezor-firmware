@@ -7,11 +7,13 @@ import pyblake2
 
 
 def get_sig(data):
-    print('Enter privkey: ', end='')
+    print('Enter index   : ', end='')
+    idx = int(input())
+    print('Enter privkey : ', end='')
     seckey = binascii.unhexlify(input())
     signkey = ed25519.SigningKey(seckey)
     digest = pyblake2.blake2s(data).digest()
-    sigmask = 0x01 # (1 _ _ _ _)
+    sigmask = 1 << (idx - 1)
     sig = signkey.sign(digest)
     return sigmask, sig
 
@@ -147,10 +149,10 @@ class VendorHeader:
         print('  * scheme  : %d out of %d' % (self.vsig_m, self.vsig_n))
         for i in range(self.vsig_n):
             print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode('ascii'))
-        print('  * vstr     :', self.vstr.decode('ascii'))
-        print('  * vimg     : (%d bytes)', len(self.vimg))
-        print('  * sigmask  :', self.sigmask)
-        print('  * sig      :', binascii.hexlify(self.sig).decode('ascii'))
+        print('  * vstr    :', self.vstr.decode('ascii'))
+        print('  * vimg    : (%d bytes)' % len(self.vimg))
+        print('  * sigmask :', self.sigmask)
+        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
         header = struct.pack('<4sIIBBBB', \
@@ -160,7 +162,8 @@ class VendorHeader:
         for i in range(self.vsig_n):
             header += self.vpub[i]
         header += struct.pack('<B', self.vstr_len) + self.vstr
-        header += struct.pack('<H', self.vimg_len) + self.vimg
+        header += (-len(header) & 3) * b'\x00' # vstr_pad
+        header += self.vimg
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
