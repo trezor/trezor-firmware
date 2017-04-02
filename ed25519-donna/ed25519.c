@@ -45,7 +45,7 @@ ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk) {
 }
 
 int
-ed25519_cosi_combine_publickeys(ed25519_public_key res, const ed25519_public_key *pks, size_t n) {
+ed25519_cosi_combine_publickeys(ed25519_public_key res, CONST ed25519_public_key *pks, size_t n) {
 	size_t i = 0;
 	ge25519 P;
 	ge25519_pniels sump;
@@ -76,7 +76,7 @@ ed25519_cosi_combine_publickeys(ed25519_public_key res, const ed25519_public_key
 }
 
 void
-ed25519_cosi_combine_signatures(ed25519_signature res, const ed25519_public_key R, const ed25519_cosi_signature *sigs, size_t n) {
+ed25519_cosi_combine_signatures(ed25519_signature res, const ed25519_public_key R, CONST ed25519_cosi_signature *sigs, size_t n) {
 	bignum256modm s, t;
 	size_t i = 0;
 
