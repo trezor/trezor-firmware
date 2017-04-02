@@ -21,7 +21,7 @@ void ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key 
 void curve25519_scalarmult(curve25519_key mypublic, const curve25519_key secret, const curve25519_key basepoint);
 void curve25519_scalarmult_basepoint(curve25519_key mypublic, const curve25519_key secret);
 
-#if __GNUC__ > 4
+#if !defined(__GNUC__) || __GNUC__ > 4
 #define CONST const
 #else
 #define CONST
