@@ -685,7 +685,7 @@ void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *s
 }
 
 // generate next number from deterministic random number generator
-void generate_rfc6979(uint8_t rand[32], rfc6979_state *state)
+void generate_rfc6979(uint8_t rnd[32], rfc6979_state *state)
 {
 	uint8_t buf[32 + 1];
 
@@ -694,7 +694,7 @@ void generate_rfc6979(uint8_t rand[32], rfc6979_state *state)
 	buf[sizeof(state->v)] = 0x00;
 	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
-	memcpy(rand, buf, 32);
+	memcpy(rnd, buf, 32);
 	MEMSET_BZERO(buf, sizeof(buf));
 }
 
