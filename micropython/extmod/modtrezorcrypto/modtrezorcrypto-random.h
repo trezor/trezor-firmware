@@ -78,6 +78,3 @@ STATIC const mp_obj_type_t mod_TrezorCrypto_Random_type = {
     .make_new = mod_TrezorCrypto_Random_make_new,
     .locals_dict = (void*)&mod_TrezorCrypto_Random_locals_dict,
 };
-
-
-
