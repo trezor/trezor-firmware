@@ -1286,7 +1286,7 @@ START_TEST(test_ecdsa_signature)
 }
 END_TEST
 
-#define test_deterministic(KEY, MSG, K) do {	  \
+#define test_deterministic(KEY, MSG, K) do { \
 	sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
 	init_rfc6979(fromhex(KEY), buf, &rng); \
 	generate_k_rfc6979(&k, &rng); \
@@ -1300,6 +1300,7 @@ START_TEST(test_rfc6979)
 	uint8_t buf[32];
 	rfc6979_state rng;
 
+	test_deterministic("c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721", "sample", "a6e3c57dd01abe90086538398355dd4c3b17aa873382b0f24d6129493d8aad60");
 	test_deterministic("cca9fbcc1b41e5a95d369eaa6ddcff73b61a4efaa279cfc6567e8daa39cbaf50", "sample", "2df40ca70e639d89528a6b670d9d48d9165fdc0febc0974056bdce192b8e16a3");
 	test_deterministic("0000000000000000000000000000000000000000000000000000000000000001", "Satoshi Nakamoto", "8f8a276c19f4149656b280621e358cce24f5f52542772691ee69063b74f15d15");
 	test_deterministic("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140", "Satoshi Nakamoto", "33a19b60e25fb6f4435af53a3d42d493644827367e6453928554f43e49aa6f90");
