@@ -39,8 +39,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "py/mpconfig.h"
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Common Config */

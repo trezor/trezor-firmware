@@ -32,9 +32,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include STM32_HAL_H
 #include "usbd_core.h"
-#include "py/obj.h"
-#include "irq.h"
 #include "usb.h"
+
+#define IRQ_PRI_OTG_FS          6
+#define IRQ_SUBPRI_OTG_FS       0
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
