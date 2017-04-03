@@ -35,7 +35,7 @@ int usb_init(const usb_dev_info_t *dev_info) {
     // Device descriptor
     usb_dev_desc.bLength            = USB_LEN_DEV_DESC;
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
-    usb_dev_desc.bcdUSB             = 0x00ef;
+    usb_dev_desc.bcdUSB             = 0x0200;
     usb_dev_desc.bDeviceClass       = 0xef;                  // Composite Device Class
     usb_dev_desc.bDeviceSubClass    = 0x02;                  // Common Class
     usb_dev_desc.bDeviceProtocol    = 0x01;                  // Interface Association Descriptor
