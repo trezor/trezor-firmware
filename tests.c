@@ -49,6 +49,7 @@
 #include "nist256p1.h"
 #include "ed25519.h"
 #include "script.h"
+#include "rfc6979.h"
 
 #define FROMHEX_MAXLEN 256
 

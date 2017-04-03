@@ -53,11 +53,6 @@ typedef struct {
 #define MAX_ADDR_SIZE (54)
 #define MAX_WIF_SIZE (58)
 
-// rfc6979 pseudo random number generator state
-typedef struct {
-	uint8_t v[32], k[32];
-} rfc6979_state;
-
 void point_copy(const curve_point *cp1, curve_point *cp2);
 void point_add(const ecdsa_curve *curve, const curve_point *cp1, curve_point *cp2);
 void point_double(const ecdsa_curve *curve, curve_point *cp);
@@ -89,11 +84,5 @@ int ecdsa_verify_double(const ecdsa_curve *curve, const uint8_t *pub_key, const 
 int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest);
 int ecdsa_verify_digest_recover(const ecdsa_curve *curve, uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest, int recid);
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
-
-// Private
-void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *rng);
-void generate_rfc6979(uint8_t rnd[32], rfc6979_state *rng);
-void generate_k_rfc6979(bignum256 *k, rfc6979_state *rng);
-void generate_k_random(bignum256 *k, const bignum256 *prime);
 
 #endif

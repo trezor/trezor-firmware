@@ -37,6 +37,7 @@
 #include "base58.h"
 #include "macros.h"
 #include "secp256k1.h"
+#include "rfc6979.h"
 
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2)
@@ -193,7 +194,7 @@ typedef struct jacobian_curve_point {
 } jacobian_curve_point;
 
 // generate random K for signing/side-channel noise
-void generate_k_random(bignum256 *k, const bignum256 *prime) {
+static void generate_k_random(bignum256 *k, const bignum256 *prime) {
 	do {
 		int i;
 		for (i = 0; i < 8; i++) {
