@@ -62,8 +62,8 @@ bool copy_sdcard(void)
     FLASH_EraseInitTypeDef EraseInitStruct;
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
                            FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
-    EraseInitStruct.TypeErase = TYPEERASE_SECTORS;
-    EraseInitStruct.VoltageRange = VOLTAGE_RANGE_3; // voltage range needs to be 2.7V to 3.6V
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
     EraseInitStruct.NbSectors = 1;
     uint32_t SectorError = 0;
     for (int i = 2; i < 12; i++) {
@@ -96,7 +96,7 @@ bool copy_sdcard(void)
     for (int i = 0; i < (HEADER_SIZE + hdr.codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            if (HAL_FLASH_Program(TYPEPROGRAM_WORD, LOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
+            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, LOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
                 BOOTLOADER_PRINTLN("copy failed");
                 sdcard_power_off();
                 HAL_FLASH_Lock();
@@ -116,8 +116,15 @@ bool copy_sdcard(void)
 void check_and_jump(void)
 {
     BOOTLOADER_PRINTLN("checking loader");
-    if (image_check_signature((const uint8_t *)LOADER_START, NULL)) {
-        BOOTLOADER_PRINTLN("valid loader image");
+
+    image_header hdr;
+    if (!image_parse_header((const uint8_t *)LOADER_START, &hdr)) {
+        BOOTLOADER_PRINTLN("invalid loader header");
+        return;
+    }
+
+    if (image_check_signature((const uint8_t *)LOADER_START, &hdr, NULL)) {
+        BOOTLOADER_PRINTLN("valid loader signature");
         // TODO: remove debug wait
         BOOTLOADER_PRINTLN("waiting 1 second");
         HAL_Delay(1000);
@@ -125,7 +132,7 @@ void check_and_jump(void)
         BOOTLOADER_PRINTLN("JUMP!");
         jump_to(LOADER_START + HEADER_SIZE);
     } else {
-        BOOTLOADER_PRINTLN("invalid loader image");
+        BOOTLOADER_PRINTLN("invalid loader signature");
     }
 }
 

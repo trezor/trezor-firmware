@@ -32,12 +32,12 @@ typedef struct {
     uint8_t sig[64];
 } vendor_header;
 
-bool image_parse_header(const uint8_t *data, image_header *header);
+bool image_parse_header(const uint8_t *data, image_header *hdr);
 
-bool image_check_signature(const uint8_t *data, const vendor_header *vhdr);
+bool image_check_signature(const uint8_t *data, const image_header *hdr, const vendor_header *vhdr);
 
-bool vendor_parse_header(const uint8_t *data, vendor_header *header);
+bool vendor_parse_header(const uint8_t *data, vendor_header *vhdr);
 
-bool vendor_check_signature(const uint8_t *data);
+bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr);
 
 #endif

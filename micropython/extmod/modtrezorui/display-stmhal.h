@@ -115,14 +115,14 @@ void display_set_orientation(int degrees)
 
 void display_set_backlight(int val)
 {
-    __HAL_TIM_SetCompare(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * val / 255);
+    __HAL_TIM_SET_COMPARE(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * val / 255);
 }
 
 int display_init(void) {
     // init peripherials
-    __GPIOE_CLK_ENABLE();
-    __TIM1_CLK_ENABLE();
-    __FSMC_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_TIM1_CLK_ENABLE();
+    __HAL_RCC_FSMC_CLK_ENABLE();
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -130,7 +130,7 @@ int display_init(void) {
     GPIO_InitStructure.Pin = GPIO_PIN_14;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
@@ -138,13 +138,13 @@ int display_init(void) {
     GPIO_InitStructure.Pin = GPIO_PIN_12;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
     // LCD_PWM/PB13
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull      = GPIO_NOPULL;
-    GPIO_InitStructure.Speed     = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
     GPIO_InitStructure.Pin       = GPIO_PIN_13;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);

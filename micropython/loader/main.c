@@ -16,8 +16,9 @@ void pendsv_isr_handler(void) {
     __fatal_error("pendsv");
 }
 
-void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len)
+void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
 {
+    (void)fw_version;
     display_clear();
     if (memcmp(vimg, "TOIf", 4) != 0) {
         return;
@@ -42,19 +43,24 @@ void check_and_jump(void)
         LOADER_PRINTLN("invalid vendor header");
         return;
     }
-    if (!vendor_check_signature((const uint8_t *)(FIRMWARE_START))) {
+    if (!vendor_check_signature((const uint8_t *)(FIRMWARE_START), &vhdr)) {
         LOADER_PRINTLN("unsigned vendor header");
         return;
     }
 
-    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &vhdr)) {
-        LOADER_PRINTLN("valid firmware image");
-        display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len);
+    image_header hdr;
+    if (!image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr)) {
+        LOADER_PRINTLN("invalid firmware header");
+        return;
+    }
+    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, &vhdr)) {
+        LOADER_PRINTLN("valid firmware signature");
+        display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
         HAL_Delay(1000); // TODO: remove?
         LOADER_PRINTLN("JUMP!");
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
     } else {
-        LOADER_PRINTLN("invalid firmware image");
+        LOADER_PRINTLN("invalid firmware signature");
     }
 }
 

@@ -313,7 +313,7 @@ void SystemClock_Config(void)
 
     #if defined(MCU_SERIES_F4) || defined(MCU_SERIES_F7)
   /* Enable Power Control clock */
-  __PWR_CLK_ENABLE();
+  __HAL_RCC_PWR_CLK_ENABLE();
 
   /* The voltage scaling allows optimizing the power consumption when the device is
      clocked below the maximum system frequency, to update the voltage scaling value
@@ -466,7 +466,7 @@ void SystemClock_Config(void)
         __fatal_error("HAL_RCCEx_PeriphCLKConfig");
     }
 
-    __PWR_CLK_ENABLE();
+    __HAL_RCC_PWR_CLK_ENABLE();
 
     HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
