@@ -118,19 +118,24 @@ void check_and_jump(void)
     BOOTLOADER_PRINTLN("checking loader");
 
     image_header hdr;
-    if (!image_parse_header((const uint8_t *)LOADER_START, &hdr)) {
+
+    if (image_parse_header((const uint8_t *)LOADER_START, &hdr)) {
+        BOOTLOADER_PRINTLN("valid loader header");
+    } else {
         BOOTLOADER_PRINTLN("invalid loader header");
         return;
     }
 
     if (image_check_signature((const uint8_t *)LOADER_START, &hdr, NULL)) {
         BOOTLOADER_PRINTLN("valid loader signature");
+
         // TODO: remove debug wait
         BOOTLOADER_PRINTLN("waiting 1 second");
         HAL_Delay(1000);
         // end
         BOOTLOADER_PRINTLN("JUMP!");
         jump_to(LOADER_START + HEADER_SIZE);
+
     } else {
         BOOTLOADER_PRINTLN("invalid loader signature");
     }
