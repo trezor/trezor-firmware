@@ -95,7 +95,8 @@ function processMessage(event) {
             data['node'],
             data['firstIndex'],
             data['lastIndex'],
-            data['version']
+            data['version'],
+            !!data['segwit']
         );
         postMessage({
             'addresses': addresses,
