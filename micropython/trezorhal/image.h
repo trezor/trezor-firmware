@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "image_options.h"
-
 typedef struct {
     uint32_t magic;
     uint32_t hdrlen;
@@ -17,6 +15,8 @@ typedef struct {
     uint8_t sig[64];
 } image_header;
 
+#define MAX_VENDOR_PUBLIC_KEYS 8
+
 typedef struct {
     uint32_t magic;
     uint32_t hdrlen;
@@ -24,7 +24,7 @@ typedef struct {
     uint16_t version;
     uint8_t vsig_m;
     uint8_t vsig_n;
-    const uint8_t *vpub[8];
+    const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
     uint8_t vstr_len;
     const uint8_t *vstr;
     const uint8_t *vimg;
@@ -32,7 +32,7 @@ typedef struct {
     uint8_t sig[64];
 } vendor_header;
 
-bool image_parse_header(const uint8_t *data, image_header *hdr);
+bool image_parse_header(const uint8_t *data, uint32_t magic, uint32_t maxsize, image_header *hdr);
 
 bool image_check_signature(const uint8_t *data, const image_header *hdr, const vendor_header *vhdr);
 

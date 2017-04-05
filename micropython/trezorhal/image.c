@@ -51,7 +51,7 @@ static bool compute_pubkey(const vendor_header *vhdr, uint8_t sigmask, ed25519_p
     return 0 == ed25519_cosi_combine_publickeys(res, keys, vsig_m);
 }
 
-bool image_parse_header(const uint8_t *data, image_header *hdr)
+bool image_parse_header(const uint8_t *data, uint32_t magic, uint32_t maxsize, image_header *hdr)
 {
     if (!hdr) {
         image_header h;
@@ -59,7 +59,7 @@ bool image_parse_header(const uint8_t *data, image_header *hdr)
     }
 
     memcpy(&hdr->magic, data, 4);
-    if (hdr->magic != IMAGE_MAGIC) return false;
+    if (hdr->magic != magic) return false;
 
     memcpy(&hdr->hdrlen, data + 4, 4);
     if (hdr->hdrlen != HEADER_SIZE) return false;
@@ -69,7 +69,7 @@ bool image_parse_header(const uint8_t *data, image_header *hdr)
 
     memcpy(&hdr->codelen, data + 12, 4);
     if (hdr->hdrlen + hdr->codelen < 4 * 1024) return false;
-    if (hdr->hdrlen + hdr->codelen > IMAGE_MAXSIZE) return false;
+    if (hdr->hdrlen + hdr->codelen > maxsize) return false;
     if ((hdr->hdrlen + hdr->codelen) % 512 != 0) return false;
 
     memcpy(&hdr->version, data + 16, 4);
@@ -121,10 +121,14 @@ bool vendor_parse_header(const uint8_t *data, vendor_header *vhdr)
     memcpy(&vhdr->vsig_m, data + 14, 1);
     memcpy(&vhdr->vsig_n, data + 15, 1);
 
+    if (vhdr->vsig_n > MAX_VENDOR_PUBLIC_KEYS) {
+        return false;
+    }
+
     for (int i = 0; i < vhdr->vsig_n; i++) {
         vhdr->vpub[i] = data + 16 + i * 32;
     }
-    for (int i = vhdr->vsig_n; i < 8; i++) {
+    for (int i = vhdr->vsig_n; i < MAX_VENDOR_PUBLIC_KEYS; i++) {
         vhdr->vpub[i] = 0;
     }
 

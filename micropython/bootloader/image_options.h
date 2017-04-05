@@ -1,2 +1,0 @@
-#define IMAGE_MAGIC   0x4C5A5254 // TRZL
-#define IMAGE_MAXSIZE (1 * 64 * 1024 + 7 * 128 * 1024)

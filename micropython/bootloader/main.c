@@ -13,6 +13,9 @@
 #define BOOTLOADER_PRINT(X)   do { display_print(X, -1);      display_print_out(BOOTLOADER_FGCOLOR, BOOTLOADER_BGCOLOR); } while(0)
 #define BOOTLOADER_PRINTLN(X) do { display_print(X "\n", -1); display_print_out(BOOTLOADER_FGCOLOR, BOOTLOADER_BGCOLOR); } while(0)
 
+#define IMAGE_MAGIC   0x4C5A5254 // TRZL
+#define IMAGE_MAXSIZE (1 * 64 * 1024 + 7 * 128 * 1024)
+
 void pendsv_isr_handler(void) {
     __fatal_error("pendsv");
 }
@@ -43,7 +46,7 @@ bool check_sdcard(void)
 
     sdcard_power_off();
 
-    if (image_parse_header((const uint8_t *)buf, NULL)) {
+    if (image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, NULL)) {
         BOOTLOADER_PRINTLN("SD card header is valid");
         return true;
     } else {
@@ -86,7 +89,7 @@ bool copy_sdcard(void)
     sdcard_read_blocks((uint8_t *)buf, 0, 1);
 
     image_header hdr;
-    if (!image_parse_header((const uint8_t *)buf, &hdr)) {
+    if (!image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
         BOOTLOADER_PRINTLN("invalid header");
         sdcard_power_off();
         HAL_FLASH_Lock();
@@ -119,7 +122,7 @@ void check_and_jump(void)
 
     image_header hdr;
 
-    if (image_parse_header((const uint8_t *)LOADER_START, &hdr)) {
+    if (image_parse_header((const uint8_t *)LOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
         BOOTLOADER_PRINTLN("valid loader header");
     } else {
         BOOTLOADER_PRINTLN("invalid loader header");
