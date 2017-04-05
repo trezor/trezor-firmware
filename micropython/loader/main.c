@@ -5,6 +5,7 @@
 #include "common.h"
 #include "display.h"
 #include "image.h"
+#include "touch.h"
 
 #define LOADER_FGCOLOR 0xFFFF
 #define LOADER_BGCOLOR 0x0000
@@ -85,10 +86,17 @@ void check_and_jump(void)
     }
 }
 
+void mainloop(void)
+{
+    __fatal_error("touch detected - launch aborted");
+}
+
 int main(void)
 {
     SCB->VTOR = LOADER_START + HEADER_SIZE;
     periph_init();
+
+    touch_init();
 
     display_init();
     display_clear();
@@ -98,7 +106,11 @@ int main(void)
     LOADER_PRINTLN("=============");
     LOADER_PRINTLN("starting loader");
 
-    check_and_jump();
+    if (touch_read() != 0) {
+        mainloop();
+    } else {
+        check_and_jump();
+    }
 
     __fatal_error("halt");
 

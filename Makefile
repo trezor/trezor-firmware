@@ -32,6 +32,10 @@ binctl:
 	./tools/binctl micropython/firmware/vendorheader.bin
 	./tools/binctl micropython/firmware/build/firmware.bin
 
+sign:
+	./tools/binctl micropython/loader/build/loader.bin -s
+	./tools/binctl micropython/firmware/build/firmware.bin -s
+
 ## emulator commands:
 
 run: ## run unix port

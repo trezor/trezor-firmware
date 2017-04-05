@@ -66,6 +66,7 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	extmod/modtrezorui/font_robotomono_regular_20.o \
 	trezorhal/common.o \
 	trezorhal/image.o \
+	trezorhal/touch.o \
 	trezorhal/stm32_it.o \
 	trezorhal/stm32_system.o \
 	trezorhal/hal/stm32f4xx_hal_sram.o \

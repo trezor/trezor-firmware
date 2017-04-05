@@ -7,10 +7,14 @@ import pyblake2
 
 
 def get_sig(data):
-    print('Enter index   : ', end='')
-    idx = int(input())
-    print('Enter privkey : ', end='')
-    seckey = binascii.unhexlify(input())
+    if False:
+        print('Enter index   : ', end='')
+        idx = int(input())
+        print('Enter privkey : ', end='')
+        seckey = binascii.unhexlify(input())
+    else:
+        idx = 1
+        seckey = binascii.unhexlify('4141414141414141414141414141414141414141414141414141414141414141')
     signkey = ed25519.SigningKey(seckey)
     digest = pyblake2.blake2s(data).digest()
     sigmask = 1 << (idx - 1)
@@ -206,13 +210,13 @@ def main():
     fn = sys.argv[1]
     sign = len(sys.argv) > 2 and sys.argv[2] == '-s'
     b = binopen(fn)
-    b.print()
     if sign:
-        print()
         b.sign()
         print()
         b.print()
         b.write(fn)
+    else:
+        b.print()
 
 
 if __name__ == '__main__':
