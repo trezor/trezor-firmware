@@ -174,6 +174,8 @@ int main(void)
     if (touch_read() != 0) {
         mainloop();
     } else {
+        usb_stop();
+        usb_deinit();
         check_and_jump();
     }
 
