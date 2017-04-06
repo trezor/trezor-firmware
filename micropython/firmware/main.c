@@ -34,17 +34,35 @@ int usb_init_all(void) {
         .interface_str     = (const uint8_t *)"interface_str",
     };
     static uint8_t hid_rx_buffer[64];
+    static const uint8_t hid_report_desc[] = {
+        0x06, 0x00, 0xff,  // USAGE_PAGE (Vendor Defined)
+        0x09, 0x01,        // USAGE (1)
+        0xa1, 0x01,        // COLLECTION (Application)
+        0x09, 0x20,        // USAGE (Input Report Data)
+        0x15, 0x00,        // LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
+        0x75, 0x08,        // REPORT_SIZE (8)
+        0x95, 0x40,        // REPORT_COUNT (64)
+        0x81, 0x02,        // INPUT (Data,Var,Abs)
+        0x09, 0x21,        // USAGE (Output Report Data)
+        0x15, 0x00,        // LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
+        0x75, 0x08,        // REPORT_SIZE (8)
+        0x95, 0x40,        // REPORT_COUNT (64)
+        0x91, 0x02,        // OUTPUT (Data,Var,Abs)
+        0xc0               // END_COLLECTION
+    };
     static const usb_hid_info_t hid_info = {
         .iface_num        = 0x00,
         .ep_in            = USB_EP_DIR_IN | 0x01,
         .ep_out           = USB_EP_DIR_OUT | 0x01,
         .subclass         = 0,
         .protocol         = 0,
-        .rx_buffer        = hid_rx_buffer,
         .max_packet_len   = sizeof(hid_rx_buffer),
+        .rx_buffer        = hid_rx_buffer,
         .polling_interval = 1,
-        .report_desc_len  = 34,
-        .report_desc      = (const uint8_t *)"\x06\x00\xff\x09\x01\xa1\x01\x09\x20\x15\x00\x26\xff\x00\x75\x08\x95\x40\x81\x02\x09\x21\x15\x00\x26\xff\x00\x75\x08\x95\x40\x91\x02\xc0",
+        .report_desc_len  = sizeof(hid_report_desc),
+        .report_desc      = hid_report_desc,
     };
     static const usb_vcp_info_t vcp_info = {
         .iface_num           = 0x01,
