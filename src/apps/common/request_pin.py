@@ -67,13 +67,14 @@ request_pin = request_pin_on_client
 
 @unimport
 async def request_pin_twice(session_id: int) -> str:
-    from trezor.messages.FailureType import PinInvalid
+    from trezor.messages.FailureType import ActionCancelled
     from trezor.messages import PinMatrixRequestType
 
     pin_first = await request_pin(session_id, PinMatrixRequestType.NewFirst)
     pin_again = await request_pin(session_id, PinMatrixRequestType.NewSecond)
     if pin_first != pin_again:
-        raise wire.FailureError(PinInvalid, 'PIN invalid')
+        # changed message due to consistency with T1 msgs
+        raise wire.FailureError(ActionCancelled, 'PIN change failed')
 
     return pin_first
 
