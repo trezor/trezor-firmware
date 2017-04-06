@@ -16,4 +16,9 @@ void __attribute__((noreturn)) __fatal_error(const char *msg);
 
 void jump_to(uint32_t address);
 
+// common helper macros
+
+#define DPRINT(X)   do { display_print(X, -1);      display_print_out(0xFFFF, 0x0000); } while(0)
+#define DPRINTLN(X) do { display_print(X "\n", -1); display_print_out(0xFFFF, 0x0000); } while(0)
+
 #endif

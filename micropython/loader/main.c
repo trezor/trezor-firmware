@@ -8,12 +8,6 @@
 #include "touch.h"
 #include "version.h"
 
-#define LOADER_FGCOLOR 0xFFFF
-#define LOADER_BGCOLOR 0x0000
-
-#define LOADER_PRINT(X)   do { display_print(X, -1);      display_print_out(LOADER_FGCOLOR, LOADER_BGCOLOR); } while(0)
-#define LOADER_PRINTLN(X) do { display_print(X "\n", -1); display_print_out(LOADER_FGCOLOR, LOADER_BGCOLOR); } while(0)
-
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
 
@@ -47,43 +41,43 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
 
 void check_and_jump(void)
 {
-    LOADER_PRINTLN("checking vendor header");
+    DPRINTLN("checking vendor header");
 
     vendor_header vhdr;
     if (vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        LOADER_PRINTLN("valid vendor header");
+        DPRINTLN("valid vendor header");
     } else {
-        LOADER_PRINTLN("invalid vendor header");
+        DPRINTLN("invalid vendor header");
         return;
     }
 
     if (vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        LOADER_PRINTLN("valid vendor header signature");
+        DPRINTLN("valid vendor header signature");
     } else {
-        LOADER_PRINTLN("invalid vendor header signature");
+        DPRINTLN("invalid vendor header signature");
         return;
     }
 
-    LOADER_PRINTLN("checking firmware header");
+    DPRINTLN("checking firmware header");
 
     image_header hdr;
     if (image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        LOADER_PRINTLN("valid firmware header");
+        DPRINTLN("valid firmware header");
     } else {
-        LOADER_PRINTLN("invalid firmware header");
+        DPRINTLN("invalid firmware header");
         return;
     }
 
     if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, &vhdr)) {
-        LOADER_PRINTLN("valid firmware signature");
+        DPRINTLN("valid firmware signature");
 
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
         HAL_Delay(1000); // TODO: remove?
-        LOADER_PRINTLN("JUMP!");
+        DPRINTLN("JUMP!");
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
     } else {
-        LOADER_PRINTLN("invalid firmware signature");
+        DPRINTLN("invalid firmware signature");
     }
 }
 
@@ -103,9 +97,9 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    LOADER_PRINTLN("TREZOR Loader " VERSION_STR);
-    LOADER_PRINTLN("=============");
-    LOADER_PRINTLN("starting loader");
+    DPRINTLN("TREZOR Loader " VERSION_STR);
+    DPRINTLN("=============");
+    DPRINTLN("starting loader");
 
     if (touch_read() != 0) {
         mainloop();
