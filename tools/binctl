@@ -53,8 +53,10 @@ class BinImage:
     def print(self):
         if self.magic == b'TRZF':
             print('TREZOR Firmware Image')
+            total_len = self.vhdrlen + self.hdrlen + self.codelen
         elif self.magic == b'TRZL':
             print('TREZOR Loader Image')
+            total_len = self.hdrlen + self.codelen
         else:
             print('TREZOR Unknown Image')
         print('  * magic   :', self.magic.decode('ascii'))
@@ -64,6 +66,8 @@ class BinImage:
         print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
         print('  * sigmask :', self.sigmask)
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+        print('  * total   : %d bytes' % total_len)
+        print()
 
     def serialize_header(self, sig=True):
         header = struct.pack('<4sIIIBBBB427s', \
@@ -93,7 +97,8 @@ class FirmwareImage(BinImage):
 
     def __init__(self, data, vhdrlen):
         super().__init__(data[vhdrlen:], magic=b'TRZF', max_size=7*128*1024)
-        self.vheader = data[0:vhdrlen]
+        self.vhdrlen = vhdrlen
+        self.vheader = data[:vhdrlen]
 
     def write(self, filename):
         with open(filename, 'wb') as f:
@@ -185,9 +190,6 @@ class VendorHeader:
 
 
 def binopen(filename):
-    print()
-    print('Opening file', filename)
-    print()
     data = open(filename, 'rb').read()
     magic = data[:4]
     if magic == b'TRZL':
