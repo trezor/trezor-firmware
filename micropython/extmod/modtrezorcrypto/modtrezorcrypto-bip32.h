@@ -47,7 +47,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
     // get path objects and length
-    mp_uint_t plen;
+    size_t plen;
     mp_obj_t *pitems;
     mp_obj_get_array(path, &plen, &pitems);
     if (plen > 32) {

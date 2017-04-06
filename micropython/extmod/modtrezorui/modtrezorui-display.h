@@ -331,7 +331,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUi_Display_backlight_obj, 1
 STATIC mp_obj_t mod_TrezorUi_Display_offset(size_t n_args, const mp_obj_t *args) {
     int xy[2], *ret;
     if (n_args > 1) {
-        mp_uint_t xy_cnt;
+        size_t xy_cnt;
         mp_obj_t *xy_obj;
         if (MP_OBJ_IS_TYPE(args[1], &mp_type_tuple)) {
             mp_obj_tuple_get(args[1], &xy_cnt, &xy_obj);

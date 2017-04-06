@@ -45,14 +45,14 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 ///     Configures USB interfaces with a list/tuple of (usage_page, ...)
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_set_interfaces(mp_obj_t self, mp_obj_t ifaces) {
-    mp_uint_t iface_cnt;
+    size_t iface_cnt;
     mp_obj_t *usage_pages;
     mp_obj_get_array(ifaces, &iface_cnt, &usage_pages);
     if (iface_cnt > MAX_INTERFACES) {
         mp_raise_ValueError("Maximum number of interfaces exceeded");
     }
     mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
-    for (mp_uint_t i = 0; i < iface_cnt; i++) {
+    for (size_t i = 0; i < iface_cnt; i++) {
        uint16_t usage_page = mp_obj_get_int(usage_pages[i]);
        o->usage_pages[i] = usage_page;
     }

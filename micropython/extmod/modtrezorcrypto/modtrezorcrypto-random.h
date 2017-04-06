@@ -54,7 +54,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_bytes_obj, mod_TrezorCr
 ///     Shuffles items of given list (in-place)
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_shuffle(mp_obj_t self, mp_obj_t data) {
-    mp_uint_t item_cnt;
+    size_t item_cnt;
     mp_obj_t *items;
     mp_obj_get_array(data, &item_cnt, &items);
     if (item_cnt > 256) {

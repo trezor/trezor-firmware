@@ -58,14 +58,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_SSSS_split_obj, 4, 4
 ///     Combine M shares of Shamir's Secret Sharing Scheme into secret
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_SSSS_combine(mp_obj_t self, mp_obj_t shares) {
-    mp_uint_t n;
+    size_t n;
     mp_obj_t *share;
     mp_obj_get_array(shares, &n, &share);
     if (n < 1 || n > 15) {
         mp_raise_ValueError("Invalid number of shares");
     }
     bignum256 bnshares[n];
-    for (mp_uint_t i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         if (MP_OBJ_IS_TYPE(share[i], &mp_type_bytes)) {
             mp_buffer_info_t s;
             mp_get_buffer_raise(share[i], &s, MP_BUFFER_READ);

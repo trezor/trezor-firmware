@@ -106,7 +106,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Ed25519_verify_obj, 
 ///     Combines a list of public keys used in COSI cosigning scheme
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_combine_publickeys(mp_obj_t self, mp_obj_t public_keys) {
-    mp_uint_t pklen;
+    size_t pklen;
     mp_obj_t *pkitems;
     mp_obj_get_array(public_keys, &pklen, &pkitems);
     if (pklen > 15) {
@@ -140,7 +140,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_combine_signatures(mp_obj_t self, 
     if (sigR.len != 32) {
         mp_raise_ValueError("Invalid length of R");
     }
-    mp_uint_t siglen;
+    size_t siglen;
     mp_obj_t *sigitems;
     mp_obj_get_array(signatures, &siglen, &sigitems);
     if (siglen > 15) {
