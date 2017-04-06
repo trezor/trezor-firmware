@@ -23,6 +23,7 @@ enum MessageType {
 	MessageType_WipeDevice = 5 [(wire_in) = true];
 	MessageType_FirmwareErase = 6 [(wire_in) = true];
 	MessageType_FirmwareUpload = 7 [(wire_in) = true];
+	MessageType_FirmwareRequest = 8 [(wire_out) = true];
 	MessageType_GetEntropy = 9 [(wire_in) = true];
 	MessageType_Entropy = 10 [(wire_out) = true];
 	MessageType_GetPublicKey = 11 [(wire_in) = true];
@@ -714,11 +715,21 @@ message SetU2FCounter {
 /////////////////////////
 
 /**
- * Request: Ask device to erase its firmware
+ * Request: Ask device to erase its firmware (so it can be replaced via FirmwareUpload)
  * @next Success
+ * @next FirmwareRequest
  * @next Failure
  */
 message FirmwareErase {
+}
+
+/**
+ * Response: Ask for firmware chunk
+ * @next FirmwareUpload
+ */
+message FirmwareRequest {
+	optional uint32 offset = 1;			// offset of requested firmware chunk
+	optional uint32 length = 2;			// length of requested firmware chunk
 }
 
 /**
@@ -728,6 +739,7 @@ message FirmwareErase {
  */
 message FirmwareUpload {
 	required bytes payload = 1;			// firmware to be loaded into device
+	optional bytes hash = 2;			// hash of the payload
 }
 
 /////////////////////////////////////////////////////////////
