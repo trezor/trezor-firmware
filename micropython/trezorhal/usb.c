@@ -71,10 +71,18 @@ int usb_init(const usb_dev_info_t *dev_info) {
     // Reset the iface state map
     memset(&usb_ifaces, 0, sizeof(usb_ifaces));
 
-    USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_FS_ID);
-    USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class);
+    if (0 != USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_FS_ID)) {
+        return 1;
+    }
+    if (0 != USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class)) {
+        return 1;
+    }
 
     return 0;
+}
+
+int usb_deinit(void) {
+    return USBD_DeInit(&usb_dev_handle);
 }
 
 int usb_start(void) {
