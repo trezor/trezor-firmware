@@ -528,7 +528,7 @@ message CipheredKeyValue {
 //////////////////////////////////
 
 /**
- * Request:  Estimated size of the transaction
+ * Request: Estimated size of the transaction
  * This behaves exactly like SignTx, which means that it can ask using TxRequest
  * This call is non-blocking (except possible PassphraseRequest to unlock the seed)
  * @next TxSize
@@ -694,7 +694,7 @@ message GetECDHSessionKey {
  * @prev GetECDHSessionKey
  */
 message ECDHSessionKey {
-	optional bytes session_key = 1;     		// ECDH session key
+	optional bytes session_key = 1;			// ECDH session key
 }
 
 ///////////////////
@@ -799,8 +799,8 @@ message DebugLinkMemory {
 }
 
 /**
- * Request: Write memory to device.  WARNING: Writing to the wrong
- * location can irreparably break the device.
+ * Request: Write memory to device.
+ * WARNING: Writing to the wrong location can irreparably break the device.
  */
 message DebugLinkMemoryWrite {
 	optional uint32 address = 1;
@@ -809,8 +809,8 @@ message DebugLinkMemoryWrite {
 }
 
 /**
- * Request: Erase block of flash on device.  WARNING: Writing to the wrong
- * location can irreparably break the device.
+ * Request: Erase block of flash on device
+ * WARNING: Writing to the wrong location can irreparably break the device.
  */
 message DebugLinkFlashErase {
 	optional uint32 sector = 1;
