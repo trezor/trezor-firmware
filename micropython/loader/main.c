@@ -121,6 +121,11 @@ int usb_init_all(void) {
     return 0;
 }
 
+void mainloop(void)
+{
+    __fatal_error("touch detected - launch aborted");
+}
+
 int main(void)
 {
     SCB->VTOR = LOADER_START + HEADER_SIZE;
