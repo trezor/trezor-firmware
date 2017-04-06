@@ -10,6 +10,9 @@ addons:
     - gcc-arm-none-eabi
     - libnewlib-arm-none-eabi
 
+install:
+    - pip3 install ed25519 pyblake2
+
 script:
   - make vendorheader
 
