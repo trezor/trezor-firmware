@@ -6,6 +6,7 @@
 #include "display.h"
 #include "image.h"
 #include "touch.h"
+#include "version.h"
 
 #define LOADER_FGCOLOR 0xFFFF
 #define LOADER_BGCOLOR 0x0000
@@ -102,7 +103,7 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    LOADER_PRINTLN("TREZOR Loader");
+    LOADER_PRINTLN("TREZOR Loader " VERSION_STR);
     LOADER_PRINTLN("=============");
     LOADER_PRINTLN("starting loader");
 

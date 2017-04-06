@@ -6,6 +6,7 @@
 #include "display.h"
 #include "image.h"
 #include "sdcard.h"
+#include "version.h"
 
 #define BOOTLOADER_FGCOLOR 0xFFFF
 #define BOOTLOADER_BGCOLOR 0x0000
@@ -155,7 +156,7 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    BOOTLOADER_PRINTLN("TREZOR Bootloader");
+    BOOTLOADER_PRINTLN("TREZOR Bootloader " VERSION_STR);
     BOOTLOADER_PRINTLN("=================");
     BOOTLOADER_PRINTLN("starting bootloader");
 
