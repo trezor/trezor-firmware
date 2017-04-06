@@ -22,6 +22,11 @@ def get_sig(data):
     return sigmask, sig
 
 
+def format_sigmask(sigmask):
+    bits = [ str(b + 1) if sigmask & (1<<b) else '.' for b in range(8) ]
+    return '0x%02x = [%s]' % (sigmask, ' '.join(bits))
+
+
 # loader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
 
@@ -64,7 +69,7 @@ class BinImage:
         print('  * expiry  :', self.expiry)
         print('  * codelen :', self.codelen)
         print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
-        print('  * sigmask :', self.sigmask)
+        print('  * sigmask :', format_sigmask(self.sigmask))
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
         print('  * total   : %d bytes' % total_len)
         print()
@@ -160,7 +165,7 @@ class VendorHeader:
             print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode('ascii'))
         print('  * vstr    :', self.vstr.decode('ascii'))
         print('  * vimg    : (%d bytes)' % len(self.vimg))
-        print('  * sigmask :', self.sigmask)
+        print('  * sigmask :', format_sigmask(self.sigmask))
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
