@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 typedef struct __attribute__((packed)) {
     uint8_t bFunctionLength;
     uint8_t bDescriptorType;
@@ -41,6 +48,27 @@ typedef struct __attribute__((packed)) {
     usb_endpoint_descriptor_t ep_out;
 } usb_vcp_descriptor_block_t;
 
+typedef struct __attribute__((packed)) {
+    uint32_t dwDTERate;
+    uint8_t bCharFormat; // usb_cdc_line_coding_bCharFormat_t
+    uint8_t bParityType; // usb_cdc_line_coding_bParityType_t
+    uint8_t bDataBits;
+} usb_cdc_line_coding_t;
+
+typedef enum {
+    USB_CDC_1_STOP_BITS   = 0,
+    USB_CDC_1_5_STOP_BITS = 1,
+    USB_CDC_2_STOP_BITS   = 2,
+} usb_cdc_line_coding_bCharFormat_t;
+
+typedef enum {
+    USB_CDC_NO_PARITY    = 0,
+    USB_CDC_ODD_PARITY   = 1,
+    USB_CDC_EVEN_PARITY  = 2,
+    USB_CDC_MARK_PARITY  = 3,
+    USB_CDC_SPACE_PARITY = 4,
+} usb_cdc_line_coding_bParityType_t;
+
 typedef struct {
     uint8_t iface_num;           // Address of this VCP interface
     uint8_t data_iface_num;      // Address of data interface of the VCP interface association
@@ -48,16 +76,8 @@ typedef struct {
     uint8_t ep_in;               // Address of IN endpoint (with the highest bit set)
     uint8_t ep_out;              // Address of OUT endpoint
     uint8_t polling_interval;    // In units of 1ms
-    uint8_t max_cmd_packet_len;
     uint8_t max_data_packet_len;
 } usb_vcp_info_t;
-
-// typedef struct {
-//     uint32_t cap;
-//     uint32_t read;
-//     uint32_t write;
-//     uint8_t *buf;
-// } ring_buffer_t;
 
 typedef struct {
     uint8_t is_connected;
@@ -71,7 +91,6 @@ typedef struct {
     uint8_t ep_in;
     uint8_t ep_out;
     uint8_t polling_interval;
-    uint8_t max_cmd_packet_len;
     uint8_t max_data_packet_len;
 
     const usb_vcp_descriptor_block_t *desc_block;

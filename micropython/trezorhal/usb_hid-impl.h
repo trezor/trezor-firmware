@@ -1,10 +1,17 @@
-#define USB_DESC_TYPE_HID    0x21
-#define USB_DESC_TYPE_REPORT 0x22
+/*
+ * Copyright (c) Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
 
-#define HID_REQ_SET_PROTOCOL 0x0b
-#define HID_REQ_GET_PROTOCOL 0x03
-#define HID_REQ_SET_IDLE     0x0a
-#define HID_REQ_GET_IDLE     0x02
+#define USB_DESC_TYPE_HID        0x21
+#define USB_DESC_TYPE_REPORT     0x22
+
+#define USB_HID_REQ_SET_PROTOCOL 0x0b
+#define USB_HID_REQ_GET_PROTOCOL 0x03
+#define USB_HID_REQ_SET_IDLE     0x0a
+#define USB_HID_REQ_GET_IDLE     0x02
 
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
@@ -39,7 +46,7 @@ int usb_hid_add(const usb_hid_info_t *info) {
     }
 
     // Interface descriptor
-    d->iface.bLength            = USB_LEN_IF_DESC;
+    d->iface.bLength            = sizeof(usb_interface_descriptor_t);
     d->iface.bDescriptorType    = USB_DESC_TYPE_INTERFACE;
     d->iface.bInterfaceNumber   = info->iface_num;
     d->iface.bAlternateSetting  = 0x00;
@@ -59,7 +66,7 @@ int usb_hid_add(const usb_hid_info_t *info) {
     d->hid.wReportDescriptorLength = info->report_desc_len;
 
     // IN endpoint (sending)
-    d->ep_in.bLength          = USB_LEN_EP_DESC;
+    d->ep_in.bLength          = sizeof(usb_endpoint_descriptor_t);
     d->ep_in.bDescriptorType  = USB_DESC_TYPE_ENDPOINT;
     d->ep_in.bEndpointAddress = info->ep_in;
     d->ep_in.bmAttributes     = USBD_EP_TYPE_INTR;
@@ -67,7 +74,7 @@ int usb_hid_add(const usb_hid_info_t *info) {
     d->ep_in.bInterval        = info->polling_interval;
 
     // OUT endpoint (receiving)
-    d->ep_out.bLength          = USB_LEN_EP_DESC;
+    d->ep_out.bLength          = sizeof(usb_endpoint_descriptor_t);
     d->ep_out.bDescriptorType  = USB_DESC_TYPE_ENDPOINT;
     d->ep_out.bEndpointAddress = info->ep_out;
     d->ep_out.bmAttributes     = USBD_EP_TYPE_INTR;
@@ -234,19 +241,19 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
     case USB_REQ_TYPE_CLASS:
         switch (req->bRequest) {
 
-        case HID_REQ_SET_PROTOCOL:
+        case USB_HID_REQ_SET_PROTOCOL:
             state->protocol = req->wValue;
             break;
 
-        case HID_REQ_GET_PROTOCOL:
+        case USB_HID_REQ_GET_PROTOCOL:
             USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
             break;
 
-        case HID_REQ_SET_IDLE:
+        case USB_HID_REQ_SET_IDLE:
             state->idle_rate = req->wValue >> 8;
             break;
 
-        case HID_REQ_GET_IDLE:
+        case USB_HID_REQ_GET_IDLE:
             USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
             break;
 

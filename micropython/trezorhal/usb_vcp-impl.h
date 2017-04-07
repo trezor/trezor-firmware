@@ -1,56 +1,38 @@
-#define USB_LEN_ASSOC_DESC            0x08
+/*
+ * Copyright (c) Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
 
-#define USB_DESC_TYPE_ASSOCIATION     0x0b
-#define USB_DESC_TYPE_HEADER          0x00
-#define USB_DESC_TYPE_CALL_MANAGEMENT 0x01
-#define USB_DESC_TYPE_ACM             0x02
-#define USB_DESC_TYPE_UNION           0x06
+// Communications Device Class Code (bFunctionClass, bInterfaceClass)
+#define USB_CLASS_CDC 0x02
 
-#define CDC_GET_LINE_CODING           0x21
-#define CDC_SET_CONTROL_LINE_STATE    0x22
+// Data Interface Class Code (bInterfaceClass)
+#define USB_CLASS_DATA 0x0A
 
-// static int ring_init(ring_buffer_t *b, uint8_t *buf, size_t cap) {
-//     if (cap == 0 || (cap & (cap - 1)) != 0) {
-//         return 1; // Capacity needs to be a power of 2
-//     }
-//     b->buf = buf;
-//     b->cap = cap;
-//     b->read = 0;
-//     b->write = 0;
-//     return 0;
-// }
+// Class Subclass Code (bFunctionSubClass, bInterfaceSubClass)
+#define USB_CDC_SUBCLASS_ACM 0x02
 
-// static inline size_t ring_length(ring_buffer_t *b) {
-//     return (b->write - b->read);
-// }
+// Communications Interface Class Control Protocol Codes (bFunctionProtocol, bInterfaceProtocol)
+#define USB_CDC_PROTOCOL_AT 0x01
 
-// static inline int ring_empty(ring_buffer_t *b) {
-//     return ring_length(b) == 0;
-// }
+// Descriptor Types (bDescriptorType)
+#define USB_DESC_TYPE_ASSOCIATION 0x0b
+#define USB_DESC_TYPE_CS_INTERACE 0x24
 
-// static inline int ring_full(ring_buffer_t *b) {
-//     return ring_length(b) == b->cap;
-// }
+// Descriptor SubTypes (bDescriptorSubtype)
+#define USB_DESC_TYPE_HEADER 0x00
+#define USB_DESC_TYPE_CM     0x01
+#define USB_DESC_TYPE_ACM    0x02
+#define USB_DESC_TYPE_UNION  0x06
 
-// uint32_t ring_read(ring_buffer_t *b, uint8_t *buf, uint32_t len) {
-//     const uint32_t mask = b->cap - 1;
-//     uint32_t i;
-//     for (i = 0; (i < len) && !ring_empty(b); i++) {
-//         buf[i] = b->buf[b->read & mask];
-//         b->read++;
-//     }
-//     return i;
-// }
+// Class-Specific Request Codes for PSTN subclasses
+#define USB_CDC_GET_LINE_CODING        0x21
+#define USB_CDC_SET_CONTROL_LINE_STATE 0x22
 
-// uint32_t ring_write(ring_buffer_t *b, const uint8_t *buf, uint32_t len) {
-//     const uint32_t mask = b->cap - 1;
-//     uint32_t i;
-//     for (i = 0; (i < len) && !ring_full(b); i++) {
-//         b->buf[b->write & mask] = buf[i];
-//         b->write++;
-//     }
-//     return i;
-// }
+// Maximal length of packets on IN CMD EP
+#define USB_CDC_MAX_CMD_PACKET_LEN 0x08
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
@@ -72,7 +54,7 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     }
 
     if ((info->ep_cmd & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
-        return 1; // CMD EP is invalid
+        return 1; // IN CMD EP is invalid
     }
     if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
         return 1; // IN EP is invalid
@@ -82,73 +64,73 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     }
 
     // Interface association descriptor
-    d->assoc.bLength           = USB_LEN_ASSOC_DESC;
+    d->assoc.bLength           = sizeof(usb_interface_assoc_descriptor_t);
     d->assoc.bDescriptorType   = USB_DESC_TYPE_ASSOCIATION;
     d->assoc.bFirstInterface   = info->iface_num;
     d->assoc.bInterfaceCount   = 2;
-    d->assoc.bFunctionClass    = 0x02; // Communication Interface Class
-    d->assoc.bFunctionSubClass = 0x02; // Abstract Control Model
-    d->assoc.bFunctionProtocol = 0x01; // Common AT commands
+    d->assoc.bFunctionClass    = USB_CLASS_CDC;
+    d->assoc.bFunctionSubClass = USB_CDC_SUBCLASS_ACM;
+    d->assoc.bFunctionProtocol = USB_CDC_PROTOCOL_AT;
     d->assoc.iFunction         = 0x00; // Index of string descriptor describing the function
 
     // Interface descriptor
-    d->iface_cdc.bLength            = USB_LEN_IF_DESC;
+    d->iface_cdc.bLength            = sizeof(usb_interface_descriptor_t);
     d->iface_cdc.bDescriptorType    = USB_DESC_TYPE_INTERFACE;
     d->iface_cdc.bInterfaceNumber   = info->iface_num;
     d->iface_cdc.bAlternateSetting  = 0x00;
     d->iface_cdc.bNumEndpoints      = 1;
-    d->iface_cdc.bInterfaceClass    = 0x02; // Communication Interface Class
-    d->iface_cdc.bInterfaceSubClass = 0x02; // Abstract Control Model
-    d->iface_cdc.bInterfaceProtocol = 0x01; // Common AT commands
+    d->iface_cdc.bInterfaceClass    = USB_CLASS_CDC;
+    d->iface_cdc.bInterfaceSubClass = USB_CDC_SUBCLASS_ACM;
+    d->iface_cdc.bInterfaceProtocol = USB_CDC_PROTOCOL_AT;
     d->iface_cdc.iInterface         = 0x00; // Index of string descriptor describing the interface
 
     // Header Functional Descriptor
     d->fheader.bFunctionLength    = sizeof(usb_vcp_header_descriptor_t);
-    d->fheader.bDescriptorType    = 0x24;   // CS_INTERFACE
-    d->fheader.bDescriptorSubtype = 0x00;   // Header Func desc
+    d->fheader.bDescriptorType    = USB_DESC_TYPE_CS_INTERACE;
+    d->fheader.bDescriptorSubtype = USB_DESC_TYPE_HEADER;
     d->fheader.bcdCDC             = 0x1001; // Spec release number
 
     // Call Management Functional Descriptor
     d->fcm.bFunctionLength    = sizeof(usb_vcp_cm_descriptor_t);
-    d->fcm.bDescriptorType    = 0x24; // CS_INTERFACE
-    d->fcm.bDescriptorSubtype = 0x01; // Call Management Func desc
+    d->fcm.bDescriptorType    = USB_DESC_TYPE_CS_INTERACE;
+    d->fcm.bDescriptorSubtype = USB_DESC_TYPE_CM;
     d->fcm.bmCapabilities     = 0x00; // D0+D1
     d->fcm.bDataInterface     = info->data_iface_num;
 
     // ACM Functional Descriptor
     d->facm.bFunctionLength    = sizeof(usb_vcp_acm_descriptor_t);
-    d->facm.bDescriptorType    = 0x24; // CS_INTERFACE
-    d->facm.bDescriptorSubtype = 0x02; // Abstract Control Management desc
+    d->facm.bDescriptorType    = USB_DESC_TYPE_CS_INTERACE;
+    d->facm.bDescriptorSubtype = USB_DESC_TYPE_ACM;
     d->facm.bmCapabilities     = 0x02;
 
     // Union Functional Descriptor
     d->funion.bFunctionLength        = sizeof(usb_vcp_union_descriptor_t);
-    d->funion.bDescriptorType        = 0x24; // CS_INTERFACE
-    d->funion.bDescriptorSubtype     = 0x06; // Union Func desc
+    d->funion.bDescriptorType        = USB_DESC_TYPE_CS_INTERACE;
+    d->funion.bDescriptorSubtype     = USB_DESC_TYPE_UNION;
     d->funion.bControlInterface      = info->iface_num;
     d->funion.bSubordinateInterface0 = info->data_iface_num;
 
     // IN CMD endpoint (control)
-    d->ep_cmd.bLength          = USB_LEN_EP_DESC;
+    d->ep_cmd.bLength          = sizeof(usb_endpoint_descriptor_t);
     d->ep_cmd.bDescriptorType  = USB_DESC_TYPE_ENDPOINT;
     d->ep_cmd.bEndpointAddress = info->ep_cmd;
     d->ep_cmd.bmAttributes     = USBD_EP_TYPE_INTR;
-    d->ep_cmd.wMaxPacketSize   = info->max_cmd_packet_len;
+    d->ep_cmd.wMaxPacketSize   = USB_CDC_MAX_CMD_PACKET_LEN;
     d->ep_cmd.bInterval        = info->polling_interval;
 
     // Interface descriptor
-    d->iface_data.bLength            = USB_LEN_IF_DESC;
+    d->iface_data.bLength            = sizeof(usb_interface_descriptor_t);
     d->iface_data.bDescriptorType    = USB_DESC_TYPE_INTERFACE;
     d->iface_data.bInterfaceNumber   = info->data_iface_num;
     d->iface_data.bAlternateSetting  = 0x00;
     d->iface_data.bNumEndpoints      = 2;
-    d->iface_data.bInterfaceClass    = 0x0A; // CDC
+    d->iface_data.bInterfaceClass    = USB_CLASS_DATA;
     d->iface_data.bInterfaceSubClass = 0x00;
     d->iface_data.bInterfaceProtocol = 0x00;
     d->iface_data.iInterface         = 0x00; // Index of string descriptor describing the interface
 
     // OUT endpoint (receiving)
-    d->ep_out.bLength          = USB_LEN_EP_DESC;
+    d->ep_out.bLength          = sizeof(usb_endpoint_descriptor_t);
     d->ep_out.bDescriptorType  = USB_DESC_TYPE_ENDPOINT;
     d->ep_out.bEndpointAddress = info->ep_out;
     d->ep_out.bmAttributes     = USBD_EP_TYPE_BULK;
@@ -156,7 +138,7 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     d->ep_out.bInterval        = 0x00; // Ignored for bulk endpoints
 
     // IN endpoint (sending)
-    d->ep_in.bLength          = USB_LEN_EP_DESC;
+    d->ep_in.bLength          = sizeof(usb_endpoint_descriptor_t);
     d->ep_in.bDescriptorType  = USB_DESC_TYPE_ENDPOINT;
     d->ep_in.bEndpointAddress = info->ep_in;
     d->ep_in.bmAttributes     = USBD_EP_TYPE_BULK;
@@ -164,9 +146,8 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     d->ep_in.bInterval        = 0x00; // Ignored for bulk endpoints
 
     // Config descriptor
-    // TODO: do this in a clean way
     usb_desc_add_iface(sizeof(usb_vcp_descriptor_block_t));
-    usb_config_desc->bNumInterfaces++;
+    usb_config_desc->bNumInterfaces++; // usb_vcp_descriptor_block_t contains 2 interfaces
 
     // Interface state
     iface->type = USB_IFACE_TYPE_VCP;
@@ -174,7 +155,6 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     iface->vcp.ep_cmd = info->ep_cmd;
     iface->vcp.ep_in = info->ep_in;
     iface->vcp.ep_out = info->ep_out;
-    iface->vcp.max_cmd_packet_len = info->max_cmd_packet_len;
     iface->vcp.max_data_packet_len = info->max_data_packet_len;
     iface->vcp.desc_block = d;
 
@@ -262,7 +242,7 @@ static int usb_vcp_class_init(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, u
     // Open endpoints
     USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_BULK, state->max_data_packet_len);
     USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_BULK, state->max_data_packet_len);
-    USBD_LL_OpenEP(dev, state->ep_cmd, USBD_EP_TYPE_INTR, state->max_cmd_packet_len);
+    USBD_LL_OpenEP(dev, state->ep_cmd, USBD_EP_TYPE_INTR, USB_CDC_MAX_CMD_PACKET_LEN);
 
     // Reset the state
     state->in_idle = 1;
@@ -284,14 +264,11 @@ static int usb_vcp_class_deinit(USBD_HandleTypeDef *dev, usb_vcp_state_t *state,
 }
 
 static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, USBD_SetupReqTypedef *req) {
-    static const uint8_t line_coding[] = {
-        (uint8_t)(115200 >> 0),
-        (uint8_t)(115200 >> 8),
-        (uint8_t)(115200 >> 16),
-        (uint8_t)(115200 >> 24),
-        0, // Stop bits
-        0, // Parity
-        8, // Number of bits
+    static const usb_cdc_line_coding_t line_coding = {
+        .dwDTERate   = 115200,
+        .bCharFormat = USB_CDC_1_STOP_BITS,
+        .bParityType = USB_CDC_NO_PARITY,
+        .bDataBits   = 8,
     };
 
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
@@ -301,7 +278,7 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
         switch (req->bRequest) {
 
         case USB_CDC_GET_LINE_CODING:
-            USBD_CtlSendData(dev, UNCONST(line_coding), sizeof(line_coding));
+            USBD_CtlSendData(dev, (uint8_t *)(&line_coding), sizeof(line_coding));
             break;
 
         case USB_CDC_SET_CONTROL_LINE_STATE:

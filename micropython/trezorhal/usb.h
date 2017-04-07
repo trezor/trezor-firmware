@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #ifndef __TREZORHAL_USB_H__
 #define __TREZORHAL_USB_H__
 
@@ -26,7 +33,7 @@ typedef struct __attribute__((packed)) {
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint16_t wData;
-} usb_string_descriptor_t;
+} usb_langid_descriptor_t;
 
 typedef struct __attribute__((packed)) {
     uint8_t bLength;
@@ -81,7 +88,7 @@ typedef struct {
     const uint8_t *serial_str;
     const uint8_t *config_str;
     const uint8_t *interface_str;
-} usb_string_table_t;
+} usb_dev_string_table_t;
 
 typedef struct {
     uint16_t vendor_id;
@@ -97,8 +104,7 @@ typedef struct {
 typedef enum {
     USB_IFACE_TYPE_DISABLED = 0,
     USB_IFACE_TYPE_VCP      = 1,
-    // USB_IFACE_TYPE_MSC      = 2,
-    USB_IFACE_TYPE_HID      = 3,
+    USB_IFACE_TYPE_HID      = 2,
 } usb_iface_type_t;
 
 #include "usb_hid-defs.h"

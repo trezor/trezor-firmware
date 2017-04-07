@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 typedef struct __attribute__((packed)) {
     uint8_t bLength;
     uint8_t bDescriptorType;

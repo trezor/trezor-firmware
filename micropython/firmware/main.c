@@ -71,7 +71,6 @@ int usb_init_all(void) {
         .ep_in               = USB_EP_DIR_IN | 0x03,
         .ep_out              = USB_EP_DIR_OUT | 0x03,
         .polling_interval    = 1,
-        .max_cmd_packet_len  = 8,
         .max_data_packet_len = 64,
     };
 

@@ -1,4 +1,9 @@
-// TODO: max size of user strings from dev_info
+/*
+ * Copyright (c) Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
 
 #include STM32_HAL_H
 
@@ -7,33 +12,39 @@
 
 #define UNCONST(X) ((uint8_t *)(X))
 
-#define USB_MAX_CONFIG_DESC_SIZE     128
-#define USB_MAX_STR_DESC_SIZE        256
-
-extern PCD_HandleTypeDef pcd_fs_handle;
-
-static USBD_HandleTypeDef usb_dev_handle;
+#define USB_MAX_CONFIG_DESC_SIZE 128
+#define USB_MAX_STR_SIZE         62
+#define USB_MAX_STR_DESC_SIZE    (USB_MAX_STR_SIZE * 2 + 2)
 
 static usb_device_descriptor_t usb_dev_desc;
+
+// Config descriptor
 static uint8_t usb_config_buf[USB_MAX_CONFIG_DESC_SIZE];
-static uint8_t usb_str_buf[USB_MAX_STR_DESC_SIZE];
-static const usb_string_descriptor_t usb_langid_str_desc = {
-    .bLength         = USB_LEN_LANGID_STR_DESC,
-    .bDescriptorType = USB_DESC_TYPE_STRING,
-    .wData           = USB_LANGID_ENGLISH_US,
-};
 static usb_config_descriptor_t *usb_config_desc = (usb_config_descriptor_t *)(usb_config_buf);
 static usb_interface_descriptor_t *usb_next_iface_desc;
-static usb_string_table_t usb_str_table;
+
+// String descriptor
+static uint8_t usb_str_buf[USB_MAX_STR_DESC_SIZE];
+static usb_dev_string_table_t usb_str_table;
+
 static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
 
+static USBD_HandleTypeDef usb_dev_handle;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
+
+static int check_desc_str(const uint8_t *s) {
+    if (!s || strlen((const char *)s) > USB_MAX_STR_SIZE) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 int usb_init(const usb_dev_info_t *dev_info) {
 
     // Device descriptor
-    usb_dev_desc.bLength            = USB_LEN_DEV_DESC;
+    usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
     usb_dev_desc.bcdUSB             = 0x0200;
     usb_dev_desc.bDeviceClass       = 0xef;                  // Composite Device Class
@@ -46,9 +57,14 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.iManufacturer      = USBD_IDX_MFC_STR;      // Index of manufacturer string
     usb_dev_desc.iProduct           = USBD_IDX_PRODUCT_STR;  // Index of product string
     usb_dev_desc.iSerialNumber      = USBD_IDX_SERIAL_STR;   // Index of serial number string
-    usb_dev_desc.bNumConfigurations = 0x01;
+    usb_dev_desc.bNumConfigurations = 1;
 
     // String table
+    if (0 != check_desc_str(dev_info->manufacturer_str)) return 1;
+    if (0 != check_desc_str(dev_info->product_str)) return 1;
+    if (0 != check_desc_str(dev_info->serial_number_str)) return 1;
+    if (0 != check_desc_str(dev_info->configuration_str)) return 1;
+    if (0 != check_desc_str(dev_info->interface_str)) return 1;
     usb_str_table.manufacturer_str = dev_info->manufacturer_str;
     usb_str_table.product_str      = dev_info->product_str;
     usb_str_table.serial_str       = dev_info->serial_number_str;
@@ -56,16 +72,16 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_str_table.interface_str    = dev_info->interface_str;
 
     // Configuration descriptor
-    usb_config_desc->bLength             = USB_LEN_CFG_DESC;
+    usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
     usb_config_desc->bDescriptorType     = USB_DESC_TYPE_CONFIGURATION;
-    usb_config_desc->wTotalLength        = USB_LEN_CFG_DESC;
+    usb_config_desc->wTotalLength        = sizeof(usb_config_descriptor_t);
     usb_config_desc->bNumInterfaces      = 0x00;
     usb_config_desc->bConfigurationValue = 0x01; // Configuration value
     usb_config_desc->iConfiguration      = 0x00; // Index of string descriptor describing the configuration
     usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xc0 = self powered
     usb_config_desc->bMaxPower           = 0xfa; // In units of 2mA
 
-    // Pointer to interface descriptor data, see: usb_desc_alloc_iface, usb_desc_add_iface
+    // Reset pointer to interface descriptor data
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
 
     // Reset the iface state map
@@ -93,50 +109,9 @@ int usb_stop(void) {
     return USBD_Stop(&usb_dev_handle);
 }
 
-static uint8_t *usb_get_dev_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    *length = sizeof(usb_dev_desc);
-    return (uint8_t *)&usb_dev_desc;
-}
-
-static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    *length = sizeof(usb_langid_str_desc);
-    return (uint8_t *)&usb_langid_str_desc;
-}
-
-static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.manufacturer_str), usb_str_buf, length);
-    return usb_str_buf;
-}
-
-static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.product_str), usb_str_buf, length);
-    return usb_str_buf;
-}
-
-static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.serial_str), usb_str_buf, length);
-    return usb_str_buf;
-}
-
-static uint8_t *usb_get_config_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.config_str), usb_str_buf, length);
-    return usb_str_buf;
-}
-
-static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.interface_str), usb_str_buf, length);
-    return usb_str_buf;
-}
-
-static const USBD_DescriptorsTypeDef usb_descriptors = {
-    .GetDeviceDescriptor           = usb_get_dev_descriptor,
-    .GetLangIDStrDescriptor        = usb_get_langid_str_descriptor,
-    .GetManufacturerStrDescriptor  = usb_get_manufacturer_str_descriptor,
-    .GetProductStrDescriptor       = usb_get_product_str_descriptor,
-    .GetSerialStrDescriptor        = usb_get_serial_str_descriptor,
-    .GetConfigurationStrDescriptor = usb_get_config_str_descriptor,
-    .GetInterfaceStrDescriptor     = usb_get_interface_str_descriptor,
-};
+/*
+ * Utility functions for USB interfaces
+ */
 
 static usb_iface_t *usb_get_iface(uint8_t iface_num) {
     if (iface_num < USBD_MAX_NUM_INTERFACES) {
@@ -174,8 +149,70 @@ static uint8_t usb_ep_clear_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     return USBD_OK;
 }
 
+/*
+ * USB interface implementations
+ */
+
 #include "usb_hid-impl.h"
 #include "usb_vcp-impl.h"
+
+/*
+ * USB configuration (device & string descriptors)
+ */
+
+static uint8_t *usb_get_dev_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    *length = sizeof(usb_dev_desc);
+    return (uint8_t *)(&usb_dev_desc);
+}
+
+static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    static const usb_langid_descriptor_t usb_langid_str_desc = {
+        .bLength         = USB_LEN_LANGID_STR_DESC,
+        .bDescriptorType = USB_DESC_TYPE_STRING,
+        .wData           = USB_LANGID_ENGLISH_US,
+    };
+    *length = sizeof(usb_langid_str_desc);
+    return (uint8_t *)(&usb_langid_str_desc);
+}
+
+static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    USBD_GetString(UNCONST(usb_str_table.manufacturer_str), usb_str_buf, length);
+    return usb_str_buf;
+}
+
+static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    USBD_GetString(UNCONST(usb_str_table.product_str), usb_str_buf, length);
+    return usb_str_buf;
+}
+
+static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    USBD_GetString(UNCONST(usb_str_table.serial_str), usb_str_buf, length);
+    return usb_str_buf;
+}
+
+static uint8_t *usb_get_config_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    USBD_GetString(UNCONST(usb_str_table.config_str), usb_str_buf, length);
+    return usb_str_buf;
+}
+
+static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    USBD_GetString(UNCONST(usb_str_table.interface_str), usb_str_buf, length);
+    return usb_str_buf;
+}
+
+static const USBD_DescriptorsTypeDef usb_descriptors = {
+    .GetDeviceDescriptor           = usb_get_dev_descriptor,
+    .GetLangIDStrDescriptor        = usb_get_langid_str_descriptor,
+    .GetManufacturerStrDescriptor  = usb_get_manufacturer_str_descriptor,
+    .GetProductStrDescriptor       = usb_get_product_str_descriptor,
+    .GetSerialStrDescriptor        = usb_get_serial_str_descriptor,
+    .GetConfigurationStrDescriptor = usb_get_config_str_descriptor,
+    .GetInterfaceStrDescriptor     = usb_get_interface_str_descriptor,
+};
+
+/*
+ * USB class (interface dispatch, configuration descriptor)
+ */
 
 static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
@@ -284,60 +321,3 @@ static const USBD_ClassTypeDef usb_class = {
     .GetOtherSpeedConfigDescriptor = usb_class_get_cfg_desc,
     .GetDeviceQualifierDescriptor  = NULL,
 };
-
-/**
-  * @brief  This function handles USB-On-The-Go FS global interrupt request.
-  * @param  None
-  * @retval None
-  */
-void OTG_FS_IRQHandler(void) {
-    HAL_PCD_IRQHandler(&pcd_fs_handle);
-}
-
-/**
-  * @brief  This function handles USB OTG Common FS/HS Wakeup functions.
-  * @param  *pcd_handle for FS or HS
-  * @retval None
-  */
-static void OTG_CMD_WKUP_Handler(PCD_HandleTypeDef *pcd_handle) {
-    if (!(pcd_handle->Init.low_power_enable)) {
-        return;
-    }
-
-    /* Reset SLEEPDEEP bit of Cortex System Control Register */
-    SCB->SCR &= (uint32_t) ~((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
-
-    /* Configures system clock after wake-up from STOP: enable HSE, PLL and select
-    PLL as system clock source (HSE and PLL are disabled in STOP mode) */
-
-    __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
-
-    /* Wait till HSE is ready */
-    while (__HAL_RCC_GET_FLAG(RCC_FLAG_HSERDY) == RESET) {}
-
-    /* Enable the main PLL. */
-    __HAL_RCC_PLL_ENABLE();
-
-    /* Wait till PLL is ready */
-    while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLLRDY) == RESET) {}
-
-    /* Select PLL as SYSCLK */
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, RCC_SYSCLKSOURCE_PLLCLK);
-
-    while (__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_CFGR_SWS_PLL) {}
-
-    /* ungate PHY clock */
-    __HAL_PCD_UNGATE_PHYCLOCK(pcd_handle);
-}
-
-/**
-  * @brief  This function handles USB OTG FS Wakeup IRQ Handler.
-  * @param  None
-  * @retval None
-  */
-void OTG_FS_WKUP_IRQHandler(void) {
-    OTG_CMD_WKUP_Handler(&pcd_fs_handle);
-
-    /* Clear EXTI pending Bit*/
-    __HAL_USB_FS_EXTI_CLEAR_FLAG();
-}
