@@ -1,6 +1,7 @@
 #include STM32_HAL_H
 
 #include <string.h>
+#include "touch.h"
 
 I2C_HandleTypeDef i2c_handle = {
     .Instance = I2C1,
@@ -55,13 +56,13 @@ uint32_t touch_read(void) {
     }
     uint32_t r = 0;
     if (old_data[2] == 0 && data[2] == 1) {
-        r = 0x00010000 + (data[4] << 8) + data[6]; // touch start
+        r = TOUCH_START | (data[4] << 8) | data[6]; // touch start
     } else
     if (old_data[2] == 1 && data[2] == 1) {
-        r = 0x00020000 + (data[4] << 8) + data[6]; // touch move
+        r = TOUCH_MOVE  | (data[4] << 8) | data[6]; // touch move
     }
     if (old_data[2] == 1 && data[2] == 0) {
-        r = 0x00040000 + (data[4] << 8) + data[6]; // touch end
+        r = TOUCH_END   | (data[4] << 8) | data[6]; // touch end
     }
     memcpy(old_data, data, 16);
     return r;

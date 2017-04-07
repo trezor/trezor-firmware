@@ -141,7 +141,26 @@ int usb_init_all(void) {
 
 void mainloop(void)
 {
-    __fatal_error("touch detected - launch aborted");
+    if (0 != flash_init()) {
+        __fatal_error("flash_init failed");
+    }
+
+    if (0 != usb_init_all()) {
+        __fatal_error("usb_init_all failed");
+    }
+
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0x001F);
+    display_refresh();
+
+    for(;;) {
+        uint32_t e = touch_read();
+        if (e & TOUCH_START || e & TOUCH_MOVE) {
+            int x = (e >> 8) & 0xFF, y = e & 0xFF;
+            display_bar(x - 1, y - 1, 3, 3, 0xFFFF);
+            display_refresh();
+        }
+        HAL_Delay(1);
+    }
 }
 
 int main(void)
@@ -152,16 +171,8 @@ int main(void)
         __fatal_error("display_init failed");
     }
 
-    if (0 != flash_init()) {
-        __fatal_error("flash_init failed");
-    }
-
     if (0 != touch_init()) {
         __fatal_error("touch_init failed");
-    }
-
-    if (0 != usb_init_all()) {
-        __fatal_error("usb_init_all failed");
     }
 
     display_clear();
@@ -174,8 +185,6 @@ int main(void)
     if (touch_read() != 0) {
         mainloop();
     } else {
-        usb_stop();
-        usb_deinit();
         check_and_jump();
     }
 
