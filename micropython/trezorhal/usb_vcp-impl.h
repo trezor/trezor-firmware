@@ -1,13 +1,13 @@
-#define USB_LEN_ASSOC_DESC              (0x08)
+#define USB_LEN_ASSOC_DESC            0x08
 
-#define USB_DESC_TYPE_ASSOCIATION       (0x0b)
-#define USB_DESC_TYPE_HEADER            (0x00)
-#define USB_DESC_TYPE_CALL_MANAGEMENT   (0x01)
-#define USB_DESC_TYPE_ACM               (0x02)
-#define USB_DESC_TYPE_UNION             (0x06)
+#define USB_DESC_TYPE_ASSOCIATION     0x0b
+#define USB_DESC_TYPE_HEADER          0x00
+#define USB_DESC_TYPE_CALL_MANAGEMENT 0x01
+#define USB_DESC_TYPE_ACM             0x02
+#define USB_DESC_TYPE_UNION           0x06
 
-#define USB_CDC_GET_LINE_CODING         (0x21)
-#define USB_CDC_SET_CONTROL_LINE_STATE  (0x22)
+#define CDC_GET_LINE_CODING           0x21
+#define CDC_SET_CONTROL_LINE_STATE    0x22
 
 // static int ring_init(ring_buffer_t *b, uint8_t *buf, size_t cap) {
 //     if (cap == 0 || (cap & (cap - 1)) != 0) {

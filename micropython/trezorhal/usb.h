@@ -1,9 +1,9 @@
 #ifndef __TREZORHAL_USB_H__
 #define __TREZORHAL_USB_H__
 
-#define USB_EP_DIR_OUT              0x00
-#define USB_EP_DIR_IN               0x80
-#define USB_EP_DIR_MSK              0x80
+#define USB_EP_DIR_OUT 0x00
+#define USB_EP_DIR_IN  0x80
+#define USB_EP_DIR_MSK 0x80
 
 typedef struct __attribute__((packed)) {
     uint8_t bLength;
