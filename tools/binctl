@@ -6,21 +6,10 @@ import ed25519
 import pyblake2
 
 
-def get_sig(data):
-    if False:
-        print('Enter index   : ', end='')
-        idx = int(input())
-        print('Enter privkey : ', end='')
-        seckey = binascii.unhexlify(input())
-    else:
-        idx = 1
-        seckey = binascii.unhexlify('4141414141414141414141414141414141414141414141414141414141414141')
+def sign_data(seckey, data):
     signkey = ed25519.SigningKey(seckey)
     digest = pyblake2.blake2s(data).digest()
-    sigmask = 1 << (idx - 1)
-    sig = signkey.sign(digest)
-    return sigmask, sig
-
+    return signkey.sign(digest)
 
 def format_sigmask(sigmask):
     bits = [ str(b + 1) if sigmask & (1<<b) else '.' for b in range(8) ]
@@ -86,11 +75,12 @@ class BinImage:
         assert len(header) == self.hdrlen
         return header
 
-    def sign(self):
+    def sign(self, sigmask, seckey):
         header = self.serialize_header(sig=False)
         data = header + self.code
         assert len(data) == self.hdrlen + self.codelen
-        self.sigmask, self.sig = get_sig(data)
+        self.sigmask = sigmask
+        self.sig = sign_data(seckey, data)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
@@ -185,9 +175,10 @@ class VendorHeader:
         assert len(header) == self.hdrlen
         return header
 
-    def sign(self):
+    def sign(self, sigmask, seckey):
         header = self.serialize_header(sig=False)
-        self.sigmask, self.sig = get_sig(header)
+        self.sigmask = sigmask
+        self.sig = sign_data(seckey, header)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
@@ -212,18 +203,18 @@ def binopen(filename):
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage: binctl file.bin [-s]')
+        print('Usage: binctl file.bin [-s index seckey]')
         return 1
     fn = sys.argv[1]
     sign = len(sys.argv) > 2 and sys.argv[2] == '-s'
     b = binopen(fn)
     if sign:
-        b.sign()
+        sigmask = 1 << (int(sys.argv[3]) - 1)
+        seckey = binascii.unhexlify(sys.argv[4])
+        b.sign(sigmask, seckey)
         print()
-        b.print()
         b.write(fn)
-    else:
-        b.print()
+    b.print()
 
 
 if __name__ == '__main__':
