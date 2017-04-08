@@ -444,6 +444,8 @@ void signing_txack(TransactionType *tx)
 			} else { // single signature
 				multisig_fp_mismatch = true;
 			}
+			// remember the input bip32 path
+			// change addresses must use the same bip32 path as all inputs
 			set_input_bip32_path(&tx->inputs[0]);
 			// compute segwit hashPrevouts & hashSequence
 			tx_prevout_hash(&hashers[0], &tx->inputs[0]);
@@ -457,9 +459,12 @@ void signing_txack(TransactionType *tx)
 					next_nonsegwit_input = idx1;
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
 				send_req_2_prev_meta();
-			} else if  (tx->inputs[0].has_amount
-						&& (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
-							|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS)) {
+			} else if  (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
+						|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
+				if (!tx->inputs[0].has_amount) {
+					fsm_sendFailure(FailureType_Failure_Other, "Segwit input without amount");
+					signing_abort();
+				}
 				if (to_spend + tx->inputs[0].amount < to_spend) {
 					fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 					signing_abort();
