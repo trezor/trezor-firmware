@@ -464,10 +464,12 @@ void signing_txack(TransactionType *tx)
 				if (!tx->inputs[0].has_amount) {
 					fsm_sendFailure(FailureType_Failure_Other, "Segwit input without amount");
 					signing_abort();
+					return;
 				}
 				if (to_spend + tx->inputs[0].amount < to_spend) {
 					fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 					signing_abort();
+					return;
 				}
 				to_spend += tx->inputs[0].amount;
 				segwit_to_spend += tx->inputs[0].amount;
@@ -476,6 +478,7 @@ void signing_txack(TransactionType *tx)
 			} else {
 				fsm_sendFailure(FailureType_Failure_Other, "Wrong input script type");
 				signing_abort();
+				return;
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_META:
@@ -515,6 +518,7 @@ void signing_txack(TransactionType *tx)
 				if (to_spend + tx->bin_outputs[0].amount < to_spend) {
 					fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 					signing_abort();
+					return;
 				}
 				to_spend += tx->bin_outputs[0].amount;
 			}
@@ -601,6 +605,7 @@ void signing_txack(TransactionType *tx)
 			if (spending + tx->outputs[0].amount < spending) {
 				fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 				signing_abort();
+				return;
 			}
 			spending += tx->outputs[0].amount;
 			co = compile_output(coin, root, tx->outputs, &bin_output, !is_change);
