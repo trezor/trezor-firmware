@@ -66,7 +66,7 @@ static uint32_t in_address_n[8];
 static size_t in_address_n_count;
 
 
-/* progress_step/meta_step are fixed point numbers, giving the 
+/* progress_step/meta_step are fixed point numbers, giving the
  * progress per input in permille with these many additional bits.
  */
 #define PROGRESS_PRECISION 16
@@ -86,8 +86,9 @@ Phase1 - check inputs, previous transactions, and outputs
 
 foreach I (idx1):
     Request I                                                         STAGE_REQUEST_1_INPUT
-    Add I to TransactionChecksum
-    Calculate amount of I:
+    Add I to segwit hash_prevouts, hash_sequence
+    Add I to TransactionChecksum (prevout and type)
+    If not segwit, Calculate amount of I:
         Request prevhash I, META                                      STAGE_REQUEST_2_PREV_META
         foreach prevhash I (idx2):
             Request prevhash I                                        STAGE_REQUEST_2_PREV_INPUT
@@ -109,27 +110,43 @@ Phase2: sign inputs, check that nothing changed
 ===============================================
 
 foreach I (idx1):  // input to sign
-    foreach I (idx2):
-        Request I                                                     STAGE_REQUEST_4_INPUT
-        If idx1 == idx2
-        Remember key for signing
-            Fill scriptsig
-        Add I to StreamTransactionSign
-        Add I to TransactionChecksum
-    foreach O (idx2):
-        Request O                                                     STAGE_REQUEST_4_OUTPUT
-        Add O to StreamTransactionSign
-        Add O to TransactionChecksum
+    if (idx1 is segwit)
+        Request I                                                     STAGE_REQUEST_SEGWIT_INPUT
+		Return serialized input chunk
 
-    Compare TransactionChecksum with checksum computed in Phase 1
-    If different:
-        Failure
-    Sign StreamTransactionSign
-    Return signed chunk
+	else
+        foreach I (idx2):
+            Request I                                                 STAGE_REQUEST_4_INPUT
+            If idx1 == idx2
+            Remember key for signing
+                Fill scriptsig
+            Add I to StreamTransactionSign
+            Add I to TransactionChecksum
+        foreach O (idx2):
+            Request O                                                 STAGE_REQUEST_4_OUTPUT
+            Add O to StreamTransactionSign
+            Add O to TransactionChecksum
+
+        Compare TransactionChecksum with checksum computed in Phase 1
+        If different:
+            Failure
+        Sign StreamTransactionSign
+        Return signed chunk
+
 foreach O (idx1):
     Request O                                                         STAGE_REQUEST_5_OUTPUT
     Rewrite change address
     Return O
+
+
+Phase3: sign segwit inputs, check that nothing changed
+===============================================
+
+foreach I (idx1):  // input to sign
+    Request I                                                         STAGE_REQUEST_SEGWIT_WITNESS
+    Check amount
+    Sign  segwit prevhash, sequence, amount, outputs
+    Return witness
 */
 
 void send_req_1_input(void)
@@ -404,6 +421,309 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinTyp
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
+static bool signing_check_input(TxInputType *txinput) {
+	/* compute multisig fingerprint */
+	/* (if all input share the same fingerprint, outputs having the same fingerprint will be considered as change outputs) */
+	if (txinput->has_multisig && !multisig_fp_mismatch
+		&& txinput->script_type == InputScriptType_SPENDMULTISIG) {
+		uint8_t h[32];
+		if (cryptoMultisigFingerprint(&txinput->multisig, h) == 0) {
+			fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingerprint");
+			signing_abort();
+			return false;
+		}
+		if (multisig_fp_set) {
+			if (memcmp(multisig_fp, h, 32) != 0) {
+				multisig_fp_mismatch = true;
+			}
+		} else {
+			memcpy(multisig_fp, h, 32);
+			multisig_fp_set = true;
+		}
+	} else { // single signature
+		multisig_fp_mismatch = true;
+	}
+	// remember the input bip32 path
+	// change addresses must use the same bip32 path as all inputs
+	set_input_bip32_path(txinput);
+	// compute segwit hashPrevouts & hashSequence
+	tx_prevout_hash(&hashers[0], txinput);
+	tx_sequence_hash(&hashers[1], txinput);
+	// hash prevout and script type to check it later (relevant for fee computation)
+	tx_prevout_hash(&hashers[2], txinput);
+	sha256_Update(&hashers[2], &txinput->script_type, sizeof(&txinput->script_type));
+	return true;
+}
+
+// check if the hash of the prevtx matches
+static bool signing_check_prevtx_hash(void) {
+	uint8_t hash[32];
+	tx_hash_final(&tp, hash, true);
+	if (memcmp(hash, input.prev_hash.bytes, 32) != 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Encountered invalid prevhash");
+		signing_abort();
+		return false;
+	}
+	phase1_request_next_input();
+	return true;
+}
+
+static bool signing_check_output(TxOutputType *txoutput) {
+	// Phase1: Check outputs
+	//   add it to hash_outputs
+	//   ask user for permission
+
+	// check for change address
+	bool is_change = false;
+	if (txoutput->address_n_count > 0) {
+		if (txoutput->has_address) {
+			fsm_sendFailure(FailureType_Failure_Other, "Address in change output");
+			signing_abort();
+			return false;
+		}
+		if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG) {
+			uint8_t h[32];
+			if (!multisig_fp_set || multisig_fp_mismatch
+						|| cryptoMultisigFingerprint(&(txoutput->multisig), h) == 0
+				|| memcmp(multisig_fp, h, 32) != 0) {
+				fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig change address");
+				signing_abort();
+				return false;
+			}
+			is_change = check_change_bip32_path(txoutput);
+		} else if (txoutput->script_type == OutputScriptType_PAYTOADDRESS
+				   || ((txoutput->script_type == OutputScriptType_PAYTOWITNESS
+								|| txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS)
+					   && txoutput->amount < segwit_to_spend)) {
+			is_change = check_change_bip32_path(txoutput);
+		}
+	}
+
+	if (is_change) {
+		if (change_spend == 0) { // not set
+			change_spend = txoutput->amount;
+		} else {
+			fsm_sendFailure(FailureType_Failure_Other, "Only one change output allowed");
+			signing_abort();
+			return false;
+		}
+	}
+
+	if (spending + txoutput->amount < spending) {
+		fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
+		signing_abort();
+				return false;
+	}
+	spending += txoutput->amount;
+	int co = compile_output(coin, root, txoutput, &bin_output, !is_change);
+	if (!is_change) {
+		layoutProgress("Signing transaction", progress);
+	}
+	if (co < 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
+		signing_abort();
+		return false;
+	} else if (co == 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Failed to compile output");
+		signing_abort();
+		return false;
+	}
+	//  compute segwit hashOuts
+	tx_output_hash(&hashers[0], &bin_output);
+	return true;
+}
+
+static bool signing_check_fee(void) {
+	// check fees
+	if (spending > to_spend) {
+		fsm_sendFailure(FailureType_Failure_NotEnoughFunds, "Not enough funds");
+		layoutHome();
+		return false;
+	}
+	uint64_t fee = to_spend - spending;
+	uint32_t tx_est_size = transactionEstimateSizeKb(inputs_count, outputs_count);
+	if (fee > (uint64_t)tx_est_size * coin->maxfee_kb) {
+		layoutFeeOverThreshold(coin, fee, tx_est_size);
+		if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Fee over threshold. Signing cancelled.");
+			layoutHome();
+			return false;
+		}
+		layoutProgress("Signing transaction", progress);
+	}
+	// last confirmation
+	layoutConfirmTx(coin, to_spend - change_spend, fee);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
+		signing_abort();
+		return false;
+	}
+	return true;
+}
+
+static void phase1_request_next_output(void) {
+	if (idx1 < outputs_count - 1) {
+		idx1++;
+		send_req_3_output();
+	} else {
+		sha256_Final(&hashers[0], hash_outputs);
+		sha256_Raw(hash_outputs, 32, hash_outputs);
+		if (!signing_check_fee()) {
+			return;
+		}
+		// Everything was checked, now phase 2 begins and the transaction is signed.
+		progress_meta_step = progress_step / (inputs_count + outputs_count);
+		layoutProgress("Signing transaction", progress);
+		idx1 = 0;
+		phase2_request_next_input();
+	}
+}
+
+static bool signing_sign_input(void) {
+	uint8_t hash[32];
+	sha256_Final(&hashers[0], hash);
+	sha256_Raw(hash, 32, hash);
+	if (memcmp(hash, hash_outputs, 32) != 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Transaction has changed during signing");
+		signing_abort();
+		return false;
+	}
+	tx_hash_final(&ti, hash, false);
+	resp.has_serialized = true;
+	resp.serialized.has_signature_index = true;
+	resp.serialized.signature_index = idx1;
+	resp.serialized.has_signature = true;
+	resp.serialized.has_serialized_tx = true;
+	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL) != 0) {
+		fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+		signing_abort();
+		return false;
+	}
+	resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
+
+	if (input.has_multisig) {
+		// fill in the signature
+		int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey);
+		if (pubkey_idx < 0) {
+			fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
+			signing_abort();
+			return false;
+		}
+		memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
+		input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
+		input.script_sig.size = serialize_script_multisig(&(input.multisig), input.script_sig.bytes);
+		if (input.script_sig.size == 0) {
+			fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize multisig script");
+			signing_abort();
+			return false;
+		}
+	} else { // SPENDADDRESS
+		input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, input.script_sig.bytes);
+	}
+	resp.serialized.serialized_tx.size = tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
+	return true;
+}
+
+static bool signing_sign_segwit_input(TxInputType *txinput) {
+	// idx1: index to sign
+	uint8_t hash[32];
+	uint32_t sighash = 1;
+
+	if (txinput->script_type == InputScriptType_SPENDWITNESS
+		|| txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+		if (!compile_input_script_sig(txinput)) {
+			fsm_sendFailure(FailureType_Failure_Other, "Failed to compile input");
+			signing_abort();
+			return false;
+		}
+		if (txinput->amount > segwit_to_spend) {
+			fsm_sendFailure(FailureType_Failure_Other, "Transaction has changed during signing");
+			signing_abort();
+			return false;
+		}
+		segwit_to_spend -= txinput->amount;
+
+		sha256_Init(&hashers[0]);
+		sha256_Update(&hashers[0], (const uint8_t *)&version, 4);
+		sha256_Update(&hashers[0], hash_prevouts, 32);
+		sha256_Update(&hashers[0], hash_sequence, 32);
+		tx_prevout_hash(&hashers[0], txinput);
+		tx_script_hash(&hashers[0], txinput->script_sig.size, txinput->script_sig.bytes);
+		sha256_Update(&hashers[0], (const uint8_t*) &txinput->amount, 8);
+		tx_sequence_hash(&hashers[0], txinput);
+		sha256_Update(&hashers[0], hash_outputs, 32);
+		sha256_Update(&hashers[0], (const uint8_t*) &lock_time, 4);
+		sha256_Update(&hashers[0], (const uint8_t*) &sighash, 4);
+		sha256_Final(&hashers[0], hash);
+		sha256_Raw(hash, 32, hash);
+
+		resp.has_serialized = true;
+		resp.serialized.has_signature_index = true;
+		resp.serialized.signature_index = idx1;
+		resp.serialized.has_signature = true;
+		resp.serialized.has_serialized_tx = true;
+		if (ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, NULL, NULL) != 0) {
+			fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+			signing_abort();
+			return false;
+		}
+
+		resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
+		if (txinput->has_multisig) {
+			uint32_t r, i, script_len;
+			int nwitnesses;
+			// fill in the signature
+			int pubkey_idx = cryptoMultisigPubkeyIndex(&(txinput->multisig), node.public_key);
+			if (pubkey_idx < 0) {
+				fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
+				signing_abort();
+				return false;
+			}
+			memcpy(txinput->multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
+			txinput->multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
+
+			r = 1; // skip number of items (filled in later)
+			resp.serialized.serialized_tx.bytes[r] = 0; r++;
+			nwitnesses = 2;
+			for (i = 0; i < txinput->multisig.signatures_count; i++) {
+				if (txinput->multisig.signatures[i].size == 0) {
+					continue;
+				}
+				nwitnesses++;
+				txinput->multisig.signatures[i].bytes[txinput->multisig.signatures[i].size] = 1;
+				r += tx_serialize_script(txinput->multisig.signatures[i].size + 1, txinput->multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
+			}
+			script_len = compile_script_multisig(&txinput->multisig, 0);
+			r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
+			r += compile_script_multisig(&txinput->multisig, resp.serialized.serialized_tx.bytes + r);
+			resp.serialized.serialized_tx.bytes[0] = nwitnesses;
+			resp.serialized.serialized_tx.size = r;
+		} else { // single signature
+			uint32_t r = 0;
+			r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
+			resp.serialized.signature.bytes[resp.serialized.signature.size] = 1;
+			r += tx_serialize_script(resp.serialized.signature.size + 1, resp.serialized.signature.bytes, resp.serialized.serialized_tx.bytes + r);
+			r += tx_serialize_script(33, node.public_key, resp.serialized.serialized_tx.bytes + r);
+			resp.serialized.serialized_tx.size = r;
+		}
+	} else {
+		// empty witness
+		resp.has_serialized = true;
+		resp.serialized.has_signature_index = false;
+		resp.serialized.has_signature = false;
+		resp.serialized.has_serialized_tx = true;
+		resp.serialized.serialized_tx.bytes[0] = 0;
+		resp.serialized.serialized_tx.size = 1;
+	}
+	//  if last witness add tx footer
+	if (idx1 == inputs_count - 1) {
+		uint32_t r = resp.serialized.serialized_tx.size;
+		r += tx_serialize_footer(&to, resp.serialized.serialized_tx.bytes + r);
+		resp.serialized.serialized_tx.size = r;
+	}
+	return true;
+}
+
 void signing_txack(TransactionType *tx)
 {
 	if (!signing) {
@@ -423,38 +743,11 @@ void signing_txack(TransactionType *tx)
 
 	switch (signing_stage) {
 		case STAGE_REQUEST_1_INPUT:
-			/* compute multisig fingerprint */
-			/* (if all input share the same fingerprint, outputs having the same fingerprint will be considered as change outputs) */
-			if (tx->inputs[0].has_multisig && !multisig_fp_mismatch
-				&& tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG) {
-				uint8_t h[32];
-				if (cryptoMultisigFingerprint(&(tx->inputs[0].multisig), h) == 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Error computing multisig fingerprint");
-					signing_abort();
-					return;
-				}
-				if (multisig_fp_set) {
-					if (memcmp(multisig_fp, h, 32) != 0) {
-						multisig_fp_mismatch = true;
-					}
-				} else {
-					memcpy(multisig_fp, h, 32);
-					multisig_fp_set = true;
-				}
-			} else { // single signature
-				multisig_fp_mismatch = true;
-			}
-			// remember the input bip32 path
-			// change addresses must use the same bip32 path as all inputs
-			set_input_bip32_path(&tx->inputs[0]);
-			// compute segwit hashPrevouts & hashSequence
-			tx_prevout_hash(&hashers[0], &tx->inputs[0]);
-			tx_sequence_hash(&hashers[1], &tx->inputs[0]);
-			// hash prevout and script type to check it later (relevant for fee computation)
-			tx_prevout_hash(&hashers[2], &tx->inputs[0]);
-			sha256_Update(&hashers[2], &tx->inputs[0].script_type, sizeof(&tx->inputs[0].script_type));
+			signing_check_input(&tx->inputs[0]);
 			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
 				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
+				// remember the first non-segwit input -- this is the first input
+				// we need to sign during phase2
 				if (next_nonsegwit_input == 0xffffffff)
 					next_nonsegwit_input = idx1;
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
@@ -526,19 +819,12 @@ void signing_txack(TransactionType *tx)
 				/* Check prevtx of next input */
 				idx2++;
 				send_req_2_prev_output();
-			} else { // last output
-				uint8_t hash[32];
-				if (tp.extra_data_len > 0) { // has extra data
-					send_req_2_prev_extradata(0, MIN(1024, tp.extra_data_len));
-					return;
-				}
-				tx_hash_final(&tp, hash, true);
-				if (memcmp(hash, input.prev_hash.bytes, 32) != 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Encountered invalid prevhash");
-					signing_abort();
-					return;
-				}
-				phase1_request_next_input();
+			} else if (tp.extra_data_len > 0) { // has extra data
+				send_req_2_prev_extradata(0, MIN(1024, tp.extra_data_len));
+				return;
+			} else {
+				/* prevtx is done */
+				signing_check_prevtx_hash();
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_EXTRADATA:
@@ -550,117 +836,15 @@ void signing_txack(TransactionType *tx)
 			if (tp.extra_data_received < tp.extra_data_len) { // still some data remanining
 				send_req_2_prev_extradata(tp.extra_data_received, MIN(1024, tp.extra_data_len - tp.extra_data_received));
 			} else {
-				/* Check next output */
-				uint8_t hash[32];
-				tx_hash_final(&tp, hash, true);
-				if (memcmp(hash, input.prev_hash.bytes, 32) != 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Encountered invalid prevhash");
-					signing_abort();
-					return;
-				}
-				phase1_request_next_input();
+				signing_check_prevtx_hash();
 			}
 			return;
 		case STAGE_REQUEST_3_OUTPUT:
-		{
-			/* Downloaded output idx1 the first time.
-			 *  Add it to transaction check
-			 *  Ask for permission.
-			 */
-			bool is_change = false;
-			if (tx->outputs[0].address_n_count > 0) {
-				if (tx->outputs[0].has_address) {
-					fsm_sendFailure(FailureType_Failure_Other, "Address in change output");
-					signing_abort();
-					return;
-				}
-				if (tx->outputs[0].script_type == OutputScriptType_PAYTOMULTISIG) {
-					uint8_t h[32];
-					if (!multisig_fp_set || multisig_fp_mismatch
-						|| cryptoMultisigFingerprint(&(tx->outputs[0].multisig), h) == 0
-						|| memcmp(multisig_fp, h, 32) != 0) {
-						fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig change address");
-						signing_abort();
-						return;
-					}
-					is_change = check_change_bip32_path(&tx->outputs[0]);
-				} else if (tx->outputs[0].script_type == OutputScriptType_PAYTOADDRESS
-						   || ((tx->outputs[0].script_type == OutputScriptType_PAYTOWITNESS
-								|| tx->outputs[0].script_type == OutputScriptType_PAYTOP2SHWITNESS)
-							   && tx->outputs[0].amount < segwit_to_spend)) {
-					is_change = check_change_bip32_path(&tx->outputs[0]);
-				}
-			}
-			
-			if (is_change) {
-				if (change_spend == 0) { // not set
-					change_spend = tx->outputs[0].amount;
-				} else {
-					fsm_sendFailure(FailureType_Failure_Other, "Only one change output allowed");
-					signing_abort();
-					return;
-				}
-			}
-
-			if (spending + tx->outputs[0].amount < spending) {
-				fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
-				signing_abort();
+			if (!signing_check_output(&tx->outputs[0])) {
 				return;
 			}
-			spending += tx->outputs[0].amount;
-			co = compile_output(coin, root, tx->outputs, &bin_output, !is_change);
-			if (!is_change) {
-				layoutProgress("Signing transaction", progress);
-			}
-			if (co < 0) {
-				fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
-				signing_abort();
-				return;
-			} else if (co == 0) {
-				fsm_sendFailure(FailureType_Failure_Other, "Failed to compile output");
-				signing_abort();
-				return;
-			}
-			//  compute segwit hashOuts
-			tx_output_hash(&hashers[0], &bin_output);
-			if (idx1 < outputs_count - 1) {
-				idx1++;
-				send_req_3_output();
-			} else {
-				sha256_Final(&hashers[0], hash_outputs);
-				sha256_Raw(hash_outputs, 32, hash_outputs);
-				// check fees
-				if (spending > to_spend) {
-					fsm_sendFailure(FailureType_Failure_NotEnoughFunds, "Not enough funds");
-					layoutHome();
-					return;
-				}
-				uint64_t fee = to_spend - spending;
-				uint32_t tx_est_size = transactionEstimateSizeKb(inputs_count, outputs_count);
-				if (fee > (uint64_t)tx_est_size * coin->maxfee_kb) {
-					layoutFeeOverThreshold(coin, fee, tx_est_size);
-					if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold, false)) {
-						fsm_sendFailure(FailureType_Failure_ActionCancelled, "Fee over threshold. Signing cancelled.");
-						layoutHome();
-						return;
-					}
-					layoutProgress("Signing transaction", progress);
-				}
-				// last confirmation
-				layoutConfirmTx(coin, to_spend - change_spend, fee);
-				if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-					fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
-					signing_abort();
-					return;
-				}
-				// Everything was checked, now phase 2 begins and the transaction is signed.
-				progress_meta_step = progress_step / (inputs_count + outputs_count);
-				layoutProgress("Signing transaction", progress);
-				idx1 = 0;
-				phase2_request_next_input();
-			}
+			phase1_request_next_output();
 			return;
-		}
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((idx1 * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
@@ -731,47 +915,9 @@ void signing_txack(TransactionType *tx)
 				idx2++;
 				send_req_4_output();
 			} else {
-				uint8_t hash[32];
-				sha256_Final(&hashers[0], hash);
-				sha256_Raw(hash, 32, hash);
-				if (memcmp(hash, hash_outputs, 32) != 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Transaction has changed during signing");
-					signing_abort();
+				if (!signing_sign_input()) {
 					return;
 				}
-				tx_hash_final(&ti, hash, false);
-				resp.has_serialized = true;
-				resp.serialized.has_signature_index = true;
-				resp.serialized.signature_index = idx1;
-				resp.serialized.has_signature = true;
-				resp.serialized.has_serialized_tx = true;
-				if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL) != 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
-					signing_abort();
-					return;
-				}
-				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
-				
-				if (input.has_multisig) {
-					// fill in the signature
-					int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey);
-					if (pubkey_idx < 0) {
-						fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
-						signing_abort();
-						return;
-					}
-					memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
-					input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
-					input.script_sig.size = serialize_script_multisig(&(input.multisig), input.script_sig.bytes);
-					if (input.script_sig.size == 0) {
-						fsm_sendFailure(FailureType_Failure_Other, "Failed to serialize multisig script");
-						signing_abort();
-						return;
-					}
-				} else { // SPENDADDRESS
-					input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, input.script_sig.bytes);
-				}
-				resp.serialized.serialized_tx.size = tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
 				// since this took a longer time, update progress
 				layoutProgress("Signing transaction", progress);
 				update_ctr = 0;
@@ -855,104 +1001,10 @@ void signing_txack(TransactionType *tx)
 			return;
 
 		case STAGE_REQUEST_SEGWIT_WITNESS:
-		{
-			uint8_t hash[32];
-			uint32_t sighash = 1;
+			if (!signing_sign_segwit_input(&tx->inputs[0])) {
+				return;
+			}
 			progress = 500 + ((idx1 * progress_step) >> PROGRESS_PRECISION);
-
-			if (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
-				|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
-				if (!compile_input_script_sig(&tx->inputs[0])) {
-					fsm_sendFailure(FailureType_Failure_Other, "Failed to compile input");
-					signing_abort();
-					return;
-				}
-				if (tx->inputs[0].amount > segwit_to_spend) {
-					fsm_sendFailure(FailureType_Failure_Other, "Transaction has changed during signing");
-					signing_abort();
-					return;
-				}
-				segwit_to_spend -= tx->inputs[0].amount;
-			
-				sha256_Init(&hashers[0]);
-				sha256_Update(&hashers[0], (const uint8_t *)&version, 4);
-				sha256_Update(&hashers[0], hash_prevouts, 32);
-				sha256_Update(&hashers[0], hash_sequence, 32);
-				tx_prevout_hash(&hashers[0], &tx->inputs[0]);
-				tx_script_hash(&hashers[0], tx->inputs[0].script_sig.size, tx->inputs[0].script_sig.bytes);
-				sha256_Update(&hashers[0], (const uint8_t*) &tx->inputs[0].amount, 8);
-				tx_sequence_hash(&hashers[0], &tx->inputs[0]);
-				sha256_Update(&hashers[0], hash_outputs, 32);
-				sha256_Update(&hashers[0], (const uint8_t*) &lock_time, 4);
-				sha256_Update(&hashers[0], (const uint8_t*) &sighash, 4);
-				sha256_Final(&hashers[0], hash);
-				sha256_Raw(hash, 32, hash);
-
-				resp.has_serialized = true;
-				resp.serialized.has_signature_index = true;
-				resp.serialized.signature_index = idx1;
-				resp.serialized.has_signature = true;
-				resp.serialized.has_serialized_tx = true;
-				if (ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, NULL, NULL) != 0) {
-					fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
-					signing_abort();
-					return;
-				}
-
-				resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
-				if (tx->inputs[0].has_multisig) {
-					uint32_t r, i, script_len;
-					int nwitnesses;
-					// fill in the signature
-					int pubkey_idx = cryptoMultisigPubkeyIndex(&(tx->inputs[0].multisig), node.public_key);
-					if (pubkey_idx < 0) {
-						fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
-						signing_abort();
-						return;
-					}
-					memcpy(tx->inputs[0].multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
-					tx->inputs[0].multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
-
-
-					r = 1; // skip number of items (filled in later)
-					resp.serialized.serialized_tx.bytes[r] = 0; r++;
-					nwitnesses = 2;
-					for (i = 0; i < tx->inputs[0].multisig.signatures_count; i++) {
-						if (tx->inputs[0].multisig.signatures[i].size == 0) {
-							continue;
-						}
-						nwitnesses++;
-						tx->inputs[0].multisig.signatures[i].bytes[tx->inputs[0].multisig.signatures[i].size] = 1;
-						r += tx_serialize_script(tx->inputs[0].multisig.signatures[i].size + 1, tx->inputs[0].multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
-					}
-					script_len = compile_script_multisig(&tx->inputs[0].multisig, 0);
-					r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
-					r += compile_script_multisig(&tx->inputs[0].multisig, resp.serialized.serialized_tx.bytes + r);
-					resp.serialized.serialized_tx.bytes[0] = nwitnesses;
-					resp.serialized.serialized_tx.size = r;
-				} else { // single signature
-					uint32_t r = 0;
-					r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
-					resp.serialized.signature.bytes[resp.serialized.signature.size] = 1;
-					r += tx_serialize_script(resp.serialized.signature.size + 1, resp.serialized.signature.bytes, resp.serialized.serialized_tx.bytes + r);
-					r += tx_serialize_script(33, node.public_key, resp.serialized.serialized_tx.bytes + r);
-					resp.serialized.serialized_tx.size = r;
-				}
-			} else {
-				// empty witness
-				resp.has_serialized = true;
-				resp.serialized.has_signature_index = false;
-				resp.serialized.has_signature = false;
-				resp.serialized.has_serialized_tx = true;
-				resp.serialized.serialized_tx.bytes[0] = 0;
-				resp.serialized.serialized_tx.size = 1;
-			}
-			if (idx1 == inputs_count - 1) {
-				uint32_t r = resp.serialized.serialized_tx.size;
-				r += tx_serialize_footer(&to, resp.serialized.serialized_tx.bytes + r);
-				resp.serialized.serialized_tx.size = r;
-			}
-			// since this took a longer time, update progress
 			layoutProgress("Signing transaction", progress);
 			update_ctr = 0;
 			if (idx1 < inputs_count - 1) {
@@ -963,9 +1015,8 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 			}
 			return;
-		}
 	}
-
+	
 	fsm_sendFailure(FailureType_Failure_Other, "Signing error");
 	signing_abort();
 }
