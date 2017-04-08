@@ -47,6 +47,7 @@ enum {
 	STAGE_REQUEST_SEGWIT_WITNESS
 } signing_stage;
 static uint32_t idx1, idx2;
+static uint32_t signatures;
 static TxRequest resp;
 static TxInputType input;
 static TxOutputBinType bin_output;
@@ -389,6 +390,7 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinTyp
 	version = _version;
 	lock_time = _lock_time;
 
+	signatures = 0;
 	idx1 = 0;
 	to_spend = 0;
 	spending = 0;
@@ -512,7 +514,7 @@ static bool signing_check_output(TxOutputType *txoutput) {
 	if (spending + txoutput->amount < spending) {
 		fsm_sendFailure(FailureType_Failure_Other, "Value overflow");
 		signing_abort();
-				return false;
+		return false;
 	}
 	spending += txoutput->amount;
 	int co = compile_output(coin, root, txoutput, &bin_output, !is_change);
@@ -537,7 +539,7 @@ static bool signing_check_fee(void) {
 	// check fees
 	if (spending > to_spend) {
 		fsm_sendFailure(FailureType_Failure_NotEnoughFunds, "Not enough funds");
-		layoutHome();
+		signing_abort();
 		return false;
 	}
 	uint64_t fee = to_spend - spending;
@@ -546,7 +548,7 @@ static bool signing_check_fee(void) {
 		layoutFeeOverThreshold(coin, fee, tx_est_size);
 		if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Fee over threshold. Signing cancelled.");
-			layoutHome();
+			signing_abort();
 			return false;
 		}
 		layoutProgress("Signing transaction", progress);
@@ -738,7 +740,6 @@ void signing_txack(TransactionType *tx)
 		update_ctr = 0;
 	}
 
-	int co;
 	memset(&resp, 0, sizeof(TxRequest));
 
 	switch (signing_stage) {
@@ -846,7 +847,7 @@ void signing_txack(TransactionType *tx)
 			phase1_request_next_output();
 			return;
 		case STAGE_REQUEST_4_INPUT:
-			progress = 500 + ((idx1 * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
+			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
 				tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, true);
 				sha256_Init(&hashers[0]);
@@ -893,13 +894,8 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_4_OUTPUT:
-			progress = 500 + ((idx1 * progress_step + (inputs_count + idx2) * progress_meta_step) >> PROGRESS_PRECISION);
-			co = compile_output(coin, root, tx->outputs, &bin_output, false);
-			if (co < 0) {
-				fsm_sendFailure(FailureType_Failure_Other, "Signing cancelled by user");
-				signing_abort();
-				return;
-			} else if (co == 0) {
+			progress = 500 + ((signatures * progress_step + (inputs_count + idx2) * progress_meta_step) >> PROGRESS_PRECISION);
+			if (compile_output(coin, root, tx->outputs, &bin_output, false) <= 0) {
 				fsm_sendFailure(FailureType_Failure_Other, "Failed to compile output");
 				signing_abort();
 				return;
@@ -919,6 +915,8 @@ void signing_txack(TransactionType *tx)
 					return;
 				}
 				// since this took a longer time, update progress
+				signatures++;
+				progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
 				layoutProgress("Signing transaction", progress);
 				update_ctr = 0;
 				if (idx1 < inputs_count - 1) {
@@ -932,8 +930,6 @@ void signing_txack(TransactionType *tx)
 			return;
 
 		case STAGE_REQUEST_SEGWIT_INPUT:
-			progress = 500 + ((idx1 * progress_step) >> PROGRESS_PRECISION);
-
 			resp.has_serialized = true;
 			resp.serialized.has_signature_index = false;
 			resp.serialized.has_signature = false;
@@ -1004,7 +1000,8 @@ void signing_txack(TransactionType *tx)
 			if (!signing_sign_segwit_input(&tx->inputs[0])) {
 				return;
 			}
-			progress = 500 + ((idx1 * progress_step) >> PROGRESS_PRECISION);
+			signatures++;
+			progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
 			layoutProgress("Signing transaction", progress);
 			update_ctr = 0;
 			if (idx1 < inputs_count - 1) {
