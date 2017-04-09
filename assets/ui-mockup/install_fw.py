@@ -7,31 +7,6 @@ from trezor import ui, res
 from trezor.ui import button
 from bl_common import bl_header
 
-CONFIRM_BUTTON = {
-    'bg-color': ui.GREEN,
-    'fg-color': ui.LIGHT_GREEN,
-    'text-style': ui.BOLD,
-    'border-color': ui.GREEN,
-}
-CONFIRM_BUTTON_ACTIVE = {
-    'bg-color': ui.GREEN,
-    'fg-color': ui.WHITE,
-    'text-style': ui.BOLD,
-    'border-color': ui.GREEN,
-}
-CANCEL_BUTTON = {
-    'bg-color': ui.RED,
-    'fg-color': ui.LIGHT_RED,
-    'text-style': ui.BOLD,
-    'border-color': ui.RED,
-}
-CANCEL_BUTTON_ACTIVE = {
-    'bg-color': ui.RED,
-    'fg-color': ui.WHITE,
-    'text-style': ui.BOLD,
-    'border-color': ui.RED,
-}
-
 ui.display.clear()
 ui.display.backlight(255)
 
@@ -56,9 +31,9 @@ def logo():
     image = res.load('./res/sl_logo.toif')
     ui.display.image(60, 64, image)
 
-confirm = button.Button((121, 240 - 48, 119, 48), 'Confirm', normal_style=CONFIRM_BUTTON, active_style=CONFIRM_BUTTON_ACTIVE)
+confirm = button.Button((121, 240 - 48, 119, 48), 'Confirm', normal_style=button.CONFIRM_BUTTON, active_style=button.CONFIRM_BUTTON_ACTIVE)
 confirm.render()
-cancel = button.Button((0, 240 - 48, 119, 48), 'Cancel', normal_style=CANCEL_BUTTON, active_style=CANCEL_BUTTON_ACTIVE)
+cancel = button.Button((0, 240 - 48, 119, 48), 'Cancel', normal_style=button.CANCEL_BUTTON, active_style=button.CANCEL_BUTTON_ACTIVE)
 cancel.render()
 
 while True:
