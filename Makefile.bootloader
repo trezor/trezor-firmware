@@ -103,8 +103,6 @@ INC += -I$(SRCDIR_MP)
 INC += -I$(SRCDIR_MP)/stmhal
 INC += -I$(SRCDIR_MP)/stmhal/cmsis
 INC += -I$(SRCDIR_MP)/stmhal/hal/f4/inc
-INC += -I$(SRCDIR_MP)/stmhal/usbdev/core/inc
-INC += -I$(SRCDIR_MP)/stmhal/usbdev/class/inc
 INC += -I$(SRCDIR_MP)/lib/cmsis/inc
 INC += -I$(BUILD)
 
