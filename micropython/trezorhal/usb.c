@@ -60,11 +60,13 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.bNumConfigurations = 1;
 
     // String table
-    if (0 != check_desc_str(dev_info->manufacturer_str)) return 1;
-    if (0 != check_desc_str(dev_info->product_str)) return 1;
-    if (0 != check_desc_str(dev_info->serial_number_str)) return 1;
-    if (0 != check_desc_str(dev_info->configuration_str)) return 1;
-    if (0 != check_desc_str(dev_info->interface_str)) return 1;
+    if ((0 != check_desc_str(dev_info->manufacturer_str)) ||
+        (0 != check_desc_str(dev_info->product_str)) ||
+        (0 != check_desc_str(dev_info->serial_number_str)) ||
+        (0 != check_desc_str(dev_info->configuration_str)) ||
+        (0 != check_desc_str(dev_info->interface_str))) {
+        return 1; // Invalid descriptor string
+    }
     usb_str_table.manufacturer_str = dev_info->manufacturer_str;
     usb_str_table.product_str      = dev_info->product_str;
     usb_str_table.serial_str       = dev_info->serial_number_str;
@@ -265,6 +267,15 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
 }
 
 static uint8_t usb_class_ep0_rx_ready(USBD_HandleTypeDef *dev) {
+    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+        switch (usb_ifaces[i].type) {
+        case USB_IFACE_TYPE_VCP:
+            usb_vcp_class_ep0_rx_ready(dev, &usb_ifaces[i].vcp);
+            break;
+        default:
+            break;
+        }
+    }
     return USBD_OK;
 }
 

@@ -39,11 +39,11 @@ typedef struct {
     uint8_t ep_out;             // Address of OUT endpoint
     uint8_t subclass;           // usb_iface_subclass_t
     uint8_t protocol;           // usb_iface_protocol_t
-    uint8_t max_packet_len;     // rx_buffer should be big enough
     uint8_t polling_interval;   // In units of 1ms
-    uint8_t report_desc_len;
-    const uint8_t *report_desc;
-    uint8_t *rx_buffer;         // Big enough for max_packet_len
+    uint8_t max_packet_len;     // Length of the biggest report and of rx_buffer
+    uint8_t report_desc_len;    // Length of report_desc
+    uint8_t *rx_buffer;         // With length of max_packet_len bytes
+    const uint8_t *report_desc; // With length of report_desc_len bytes
 } usb_hid_info_t;
 
 typedef struct {
@@ -51,9 +51,8 @@ typedef struct {
     uint8_t protocol;      // For SET_PROTOCOL/GET_PROTOCOL setup reqs
     uint8_t idle_rate;     // For SET_IDLE/GET_IDLE setup reqs
     uint8_t alt_setting;   // For SET_INTERFACE/GET_INTERFACE setup reqs
-    uint8_t rx_buffer_len; // Length of data read into rx_buffer
+    uint8_t last_read_len; // Length of data read into rx_buffer
 
-    // Configuration (copied from usb_hid_info_t on init)
     uint8_t ep_in;
     uint8_t ep_out;
     uint8_t max_packet_len;
