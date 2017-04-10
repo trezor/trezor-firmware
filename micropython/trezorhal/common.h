@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
-#define BOOTLOADER_START  0x08000000
-#define LOADER_START      0x08010000
-#define FIRMWARE_START    0x08020000
-#define HEADER_SIZE       0x200
+#define BOARDLOADER_START  0x08000000
+#define LOADER_START       0x08010000
+#define FIRMWARE_START     0x08020000
+#define HEADER_SIZE        0x200
 
 void periph_init(void);
 

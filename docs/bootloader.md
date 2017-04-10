@@ -2,14 +2,14 @@
 
 TREZOR initialization in split into two stages. See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
 
-First stage (bootloader) is stored in write-protected area, which means it is non-upgradable.
+First stage (boardloader) is stored in write-protected area, which means it is non-upgradable.
 Only second stage (loader) update is allowed.
 
-## First Stage - Bootloader
+## First Stage - Boardloader
 
 First stage checks the integrity and signatures of the second stage and runs it if everything is OK.
 
-If first stage bootloader finds a valid second stage loader image on the SD card (in raw format, no filesystem),
+If first stage boardloader finds a valid second stage loader image on the SD card (in raw format, no filesystem),
 it will replace the internal second stage, allowing a second stage update via SD card.
 
 ## Second Stage - Loader

@@ -56,7 +56,7 @@ bool copy_sdcard(void)
 
     DPRINT("erasing flash ");
 
-    // erase flash (except bootloader)
+    // erase flash (except boardloader)
     HAL_FLASH_Unlock();
     FLASH_EraseInitTypeDef EraseInitStruct;
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
@@ -142,7 +142,7 @@ void check_and_jump(void)
 
 int main(void)
 {
-    SCB->VTOR = BOOTLOADER_START;
+    SCB->VTOR = BOARDLOADER_START;
     periph_init();
 
     if (0 != display_init()) {
@@ -160,9 +160,9 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    DPRINTLN("TREZOR Bootloader " VERSION_STR);
-    DPRINTLN("=================");
-    DPRINTLN("starting bootloader");
+    DPRINTLN("TREZOR Boardloader " VERSION_STR);
+    DPRINTLN("==================");
+    DPRINTLN("starting boardloader");
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {

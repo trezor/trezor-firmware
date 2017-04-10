@@ -3,7 +3,7 @@
 JOBS=4
 MAKE=make -j $(JOBS)
 
-BOOTLOADER_BUILD_DIR=micropython/bootloader/build
+BOARDLOADER_BUILD_DIR=micropython/boardloader/build
 LOADER_BUILD_DIR=micropython/loader/build
 FIRMWARE_BUILD_DIR=micropython/firmware/build
 
@@ -42,10 +42,10 @@ testpy: ## run selected unit tests from python-trezor
 
 ## build commands:
 
-build: build_bootloader build_loader build_firmware build_unix build_cross ## build all
+build: build_boardloader build_loader build_firmware build_unix build_cross ## build all
 
-build_bootloader: ## build bootloader
-	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
+build_boardloader: ## build boardloader
+	$(MAKE) -f Makefile.boardloader $(TREZORHAL_PORT_OPTS)
 
 build_loader: ## build loader
 	$(MAKE) -f Makefile.loader $(TREZORHAL_PORT_OPTS)
@@ -63,10 +63,10 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_bootloader clean_loader clean_firmware clean_unix clean_cross ## clean all
+clean: clean_boardloader clean_loader clean_firmware clean_unix clean_cross ## clean all
 
-clean_bootloader: ## clean bootloader build
-	$(MAKE) -f Makefile.bootloader clean $(TREZORHAL_PORT_OPTS)
+clean_boardloader: ## clean boardloader build
+	$(MAKE) -f Makefile.boardloader clean $(TREZORHAL_PORT_OPTS)
 
 clean_loader: ## clean loader build
 	$(MAKE) -f Makefile.loader clean $(TREZORHAL_PORT_OPTS)
@@ -84,10 +84,10 @@ clean_cross: ## clean mpy-cross build
 
 ## flash commands:
 
-flash: flash_bootloader flash_loader flash_firmware ## flash everything using st-flash
+flash: flash_boardloader flash_loader flash_firmware ## flash everything using st-flash
 
-flash_bootloader: ## flash bootloader using st-flash
-	st-flash write $(BOOTLOADER_BUILD_DIR)/bootloader.bin 0x08000000
+flash_boardloader: ## flash boardloader using st-flash
+	st-flash write $(BOARDLOADER_BUILD_DIR)/boardloader.bin 0x08000000
 
 flash_loader: ## flash loader using st-flash
 	st-flash write $(LOADER_BUILD_DIR)/loader.bin 0x08010000
