@@ -7,8 +7,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
+
+#if defined STM32_HAL_H
+#include "common.h"
+#elif defined UNIX
 #include <stdlib.h>
+#endif
 
 #include "py/runtime.h"
 
@@ -66,8 +70,7 @@ STATIC mp_obj_t mod_TrezorUtils_halt(size_t n_args, const mp_obj_t *args) {
     }
     // TODO: is this the best we can do?
 #if defined STM32_HAL_H
-    // loop forever
-    for (;;) {}
+    __fatal_error("HALT");
 #elif defined UNIX
     exit(1);
 #else
