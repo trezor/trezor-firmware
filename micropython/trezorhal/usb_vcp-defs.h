@@ -5,6 +5,8 @@
  * see LICENSE file for details
  */
 
+#include <stddef.h>
+
 typedef struct __attribute__((packed)) {
     uint8_t bFunctionLength;
     uint8_t bDescriptorType;
@@ -69,6 +71,8 @@ typedef enum {
     USB_CDC_SPACE_PARITY = 4,
 } usb_cdc_line_coding_bParityType_t;
 
+typedef void (*usb_vcp_intr_fn_t)(void);
+
 typedef struct {
     uint8_t iface_num;           // Address of this VCP interface
     uint8_t data_iface_num;      // Address of data interface of the VCP interface association
@@ -77,21 +81,39 @@ typedef struct {
     uint8_t ep_out;              // Address of OUT endpoint
     uint8_t polling_interval;    // In units of 1ms
     uint8_t max_data_packet_len;
+
+    size_t rx_buffer_len;        // Length of rx_buffer, power of 2
+    uint8_t *rx_buffer;          // With length of rx_buffer_len bytes
+    uint8_t *rx_packet;          // With length of at least max_data_packet_len
+
+    uint8_t rx_intr_val;          // Value matched against every received byte
+    usb_vcp_intr_fn_t rx_intr_fn; // Callback called if rx_intr_val matches
+
 } usb_vcp_info_t;
+
+typedef struct {
+    size_t cap;
+    volatile size_t read;
+    volatile size_t write;
+    uint8_t *buf;
+} ring_buffer_t;
 
 typedef struct {
     uint8_t is_connected;
     uint8_t in_idle;
-    // uint8_t cmd_op_code;
-    // uint8_t cmd_length;
 
-    // Configuration (copied from usb_vcp_info_t on init)
     uint8_t data_iface_num;
     uint8_t ep_cmd;
     uint8_t ep_in;
     uint8_t ep_out;
     uint8_t polling_interval;
     uint8_t max_data_packet_len;
+
+    uint8_t *rx_packet;
+    ring_buffer_t rx_ring;
+
+    uint8_t rx_intr_val;
+    usb_vcp_intr_fn_t rx_intr_fn;
 
     const usb_vcp_descriptor_block_t *desc_block;
 } usb_vcp_state_t;

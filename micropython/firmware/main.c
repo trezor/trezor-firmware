@@ -64,14 +64,21 @@ int usb_init_all(void) {
         .report_desc_len  = sizeof(hid_report_desc),
         .report_desc      = hid_report_desc,
     };
+    static uint8_t vcp_rx_buffer[1024];
+    static uint8_t vcp_rx_packet[64];
     static const usb_vcp_info_t vcp_info = {
         .iface_num           = 0x01,
         .data_iface_num      = 0x02,
         .ep_cmd              = USB_EP_DIR_IN | 0x02,
         .ep_in               = USB_EP_DIR_IN | 0x03,
         .ep_out              = USB_EP_DIR_OUT | 0x03,
-        .polling_interval    = 1,
-        .max_data_packet_len = 64,
+        .polling_interval    = 10,
+        .max_data_packet_len = sizeof(vcp_rx_packet),
+        .rx_packet           = vcp_rx_packet,
+        .rx_buffer_len       = sizeof(vcp_rx_buffer),
+        .rx_buffer           = vcp_rx_buffer,
+        .rx_intr_val         = 3, // Ctrl-C
+        .rx_intr_fn          = pendsv_kbd_intr,
     };
 
     if (0 != usb_init(&dev_info)) {

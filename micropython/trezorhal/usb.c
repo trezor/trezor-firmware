@@ -266,19 +266,6 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
     }
 }
 
-static uint8_t usb_class_ep0_rx_ready(USBD_HandleTypeDef *dev) {
-    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-        switch (usb_ifaces[i].type) {
-        case USB_IFACE_TYPE_VCP:
-            usb_vcp_class_ep0_rx_ready(dev, &usb_ifaces[i].vcp);
-            break;
-        default:
-            break;
-        }
-    }
-    return USBD_OK;
-}
-
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
@@ -321,7 +308,7 @@ static const USBD_ClassTypeDef usb_class = {
     .DeInit                        = usb_class_deinit,
     .Setup                         = usb_class_setup,
     .EP0_TxSent                    = NULL,
-    .EP0_RxReady                   = usb_class_ep0_rx_ready,
+    .EP0_RxReady                   = NULL,
     .DataIn                        = usb_class_data_in,
     .DataOut                       = usb_class_data_out,
     .SOF                           = NULL,

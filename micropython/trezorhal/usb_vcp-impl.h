@@ -27,12 +27,29 @@
 #define USB_DESC_TYPE_ACM    0x02
 #define USB_DESC_TYPE_UNION  0x06
 
+// Data Phase Transfer Direction (bmRequest)
+#define USB_REQ_DIR_MASK     0x80
+#define USB_H2D              0x00
+#define USB_D2H              0x80
+
 // Class-Specific Request Codes for PSTN subclasses
 #define USB_CDC_GET_LINE_CODING        0x21
 #define USB_CDC_SET_CONTROL_LINE_STATE 0x22
 
 // Maximal length of packets on IN CMD EP
 #define USB_CDC_MAX_CMD_PACKET_LEN 0x08
+
+static inline size_t ring_length(ring_buffer_t *b) {
+    return (b->write - b->read);
+}
+
+static inline int ring_empty(ring_buffer_t *b) {
+    return ring_length(b) == 0;
+}
+
+static inline int ring_full(ring_buffer_t *b) {
+    return ring_length(b) == b->cap;
+}
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
@@ -61,6 +78,15 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     }
     if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
         return 1; // OUT EP is invalid
+    }
+    if ((info->rx_buffer_len == 0) || (info->rx_buffer_len & (info->rx_buffer_len - 1)) != 0) {
+        return 1; // Capacity needs to be a power of 2
+    }
+    if (info->rx_buffer == NULL) {
+        return 1;
+    }
+    if (info->rx_packet == NULL) {
+        return 1;
     }
 
     // Interface association descriptor
@@ -151,18 +177,38 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
 
     // Interface state
     iface->type = USB_IFACE_TYPE_VCP;
+    iface->vcp.is_connected = 0;
+    iface->vcp.in_idle = 1;
     iface->vcp.data_iface_num = info->data_iface_num;
     iface->vcp.ep_cmd = info->ep_cmd;
     iface->vcp.ep_in = info->ep_in;
     iface->vcp.ep_out = info->ep_out;
+    iface->vcp.polling_interval = info->polling_interval;
     iface->vcp.max_data_packet_len = info->max_data_packet_len;
+    iface->vcp.rx_packet = info->rx_packet;
+    iface->vcp.rx_ring.cap = info->rx_buffer_len;
+    iface->vcp.rx_ring.buf = info->rx_buffer;
+    iface->vcp.rx_ring.read = 0;
+    iface->vcp.rx_ring.write = 0;
+    iface->vcp.rx_intr_val = info->rx_intr_val;
+    iface->vcp.rx_intr_fn = info->rx_intr_fn;
     iface->vcp.desc_block = d;
 
     return 0;
 }
 
 int usb_vcp_can_read(uint8_t iface_num) {
-    return 0;
+    usb_iface_t *iface = usb_get_iface(iface_num);
+    if (iface == NULL) {
+        return 0; // Invalid interface number
+    }
+    if (iface->type != USB_IFACE_TYPE_VCP) {
+        return 0; // Invalid interface type
+    }
+    if (ring_empty(&iface->vcp.rx_ring)) {
+        return 0; // Nothing in the rx buffer
+    }
+    return 1;
 }
 
 int usb_vcp_can_write(uint8_t iface_num) {
@@ -176,6 +222,9 @@ int usb_vcp_can_write(uint8_t iface_num) {
     if (iface->vcp.in_idle == 0) {
         return 0; // Last transmission is not over yet
     }
+    // if (iface->vcp.is_connected == 0) {
+    //     return 0; // Receiving end is not connected
+    // }
     if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
         return 0; // Device is not configured
     }
@@ -190,10 +239,17 @@ int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
     if (iface->type != USB_IFACE_TYPE_VCP) {
         return -2; // Interface interface type
     }
-    // usb_vcp_state_t *state = &iface->vcp;
-    // TODO
+    usb_vcp_state_t *state = &iface->vcp;
 
-    return 0;
+    // Read from the rx ring buffer
+    ring_buffer_t *b = &state->rx_ring;
+    size_t mask = b->cap - 1;
+    size_t i;
+    for (i = 0; (i < len) && !ring_empty(b); i++) {
+        buf[i] = b->buf[b->read & mask];
+        b->read++;
+    }
+    return i;
 }
 
 int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
@@ -206,9 +262,9 @@ int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     }
     usb_vcp_state_t *state = &iface->vcp;
 
-    if (!state->is_connected) {
-        return 0;
-    }
+    // if (!state->is_connected) {
+    //     return 0;
+    // }
 
     state->in_idle = 0;
     USBD_LL_Transmit(&usb_dev_handle, state->ep_in, UNCONST(buf), (uint16_t)len);
@@ -245,11 +301,13 @@ static int usb_vcp_class_init(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, u
     USBD_LL_OpenEP(dev, state->ep_cmd, USBD_EP_TYPE_INTR, USB_CDC_MAX_CMD_PACKET_LEN);
 
     // Reset the state
+    state->rx_ring.read = 0;
+    state->rx_ring.write = 0;
+    state->is_connected = 0;
     state->in_idle = 1;
 
-    // TODO
     // Prepare the OUT EP to receive next packet
-    // USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer, state->max_data_packet_len);
+    USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet, state->max_data_packet_len);
 
     return USBD_OK;
 }
@@ -273,16 +331,20 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
 
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
 
-    // Class request
-    case USB_REQ_TYPE_CLASS :
-        switch (req->bRequest) {
+    case USB_REQ_TYPE_CLASS:
+        switch (req->bmRequest & USB_REQ_DIR_MASK) {
 
-        case USB_CDC_GET_LINE_CODING:
-            USBD_CtlSendData(dev, (uint8_t *)(&line_coding), sizeof(line_coding));
-            break;
+        case USB_D2H:
+            switch (req->bRequest) {
 
-        case USB_CDC_SET_CONTROL_LINE_STATE:
-            state->is_connected = req->wLength & 1;
+            case USB_CDC_GET_LINE_CODING:
+                USBD_CtlSendData(dev, (uint8_t *)(&line_coding), MIN(req->wLength, sizeof(line_coding)));
+                break;
+
+            case USB_CDC_SET_CONTROL_LINE_STATE:
+                state->is_connected = req->wLength & 1;
+                break;
+            }
             break;
         }
         break;
@@ -299,6 +361,25 @@ static uint8_t usb_vcp_class_data_in(USBD_HandleTypeDef *dev, usb_vcp_state_t *s
 }
 
 static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, uint8_t ep_num) {
-    // TODO: process received data
+    if (ep_num == state->ep_out) {
+        uint32_t len = USBD_LL_GetRxDataSize(dev, ep_num);
+
+        // Write into the rx ring buffer
+        ring_buffer_t *b = &state->rx_ring;
+        size_t mask = b->cap - 1;
+        size_t i;
+        for (i = 0; i < len; i++) {
+            if ((state->rx_intr_fn != NULL) && (state->rx_packet[i] == state->rx_intr_val)) {
+                state->rx_intr_fn();
+            }
+            if (!ring_full(b)) {
+                b->buf[b->write & mask] = state->rx_packet[i];
+                b->write++;
+            }
+        }
+
+        // Prepare the OUT EP to receive next packet
+        USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet, state->max_data_packet_len);
+    }
     return USBD_OK;
 }
