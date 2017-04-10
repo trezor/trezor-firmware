@@ -12,8 +12,6 @@ int touch_init(void) {
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();
 
-    __I2C1_CLK_ENABLE();
-
     // Init SCL and SDA GPIO lines (PB6 & PB7)
     GPIO_InitTypeDef GPIO_InitStructure = {
         .Pin = GPIO_PIN_6 | GPIO_PIN_7,
@@ -29,9 +27,9 @@ int touch_init(void) {
     init->ClockSpeed = 400000;
     init->DutyCycle = I2C_DUTYCYCLE_16_9;
     init->AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
-    init->DualAddressMode = I2C_DUALADDRESS_DISABLED;
-    init->GeneralCallMode = I2C_GENERALCALL_DISABLED;
-    init->NoStretchMode   = I2C_NOSTRETCH_DISABLED;
+    init->DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    init->GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    init->NoStretchMode   = I2C_NOSTRETCH_DISABLE;
     init->OwnAddress2     = 0;
 
     // Init I2C handle

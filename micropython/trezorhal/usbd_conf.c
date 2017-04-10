@@ -90,7 +90,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Pin = (GPIO_PIN_11 | GPIO_PIN_12);
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -134,7 +134,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Pin = (GPIO_PIN_14 | GPIO_PIN_15);
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF12_OTG_HS_FS;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -143,7 +143,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Pin = GPIO_PIN_13;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF12_OTG_HS_FS;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 #endif
@@ -153,7 +153,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Pin = GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF12_OTG_HS_FS;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 #endif
@@ -179,7 +179,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Pin = GPIO_PIN_5;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG_HS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -187,7 +187,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Pin = GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG_HS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -433,11 +433,11 @@ if (pdev->id ==  USB_PHY_FS_ID)
   /*Initialize LL Driver */
   HAL_PCD_Init(&pcd_fs_handle);
 
-  HAL_PCD_SetRxFiFo(&pcd_fs_handle, 0x80);
-  HAL_PCD_SetTxFiFo(&pcd_fs_handle, 0, 0x20);
-  HAL_PCD_SetTxFiFo(&pcd_fs_handle, 1, 0x40);
-  HAL_PCD_SetTxFiFo(&pcd_fs_handle, 2, 0x20);
-  HAL_PCD_SetTxFiFo(&pcd_fs_handle, 3, 0x40);
+  HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, 0x80);
+  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 0, 0x20);
+  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 1, 0x40);
+  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 2, 0x20);
+  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 3, 0x40);
 }
 #endif
 #if defined(USE_USB_HS)
@@ -465,11 +465,11 @@ if (pdev->id == USB_PHY_HS_ID)
   /*Initialize LL Driver */
   HAL_PCD_Init(&pcd_hs_handle);
 
-  HAL_PCD_SetRxFiFo(&pcd_hs_handle, 0x80);
-  HAL_PCD_SetTxFiFo(&pcd_hs_handle, 0, 0x20);
-  HAL_PCD_SetTxFiFo(&pcd_hs_handle, 1, 0x40);
-  HAL_PCD_SetTxFiFo(&pcd_hs_handle, 2, 0x20);
-  HAL_PCD_SetTxFiFo(&pcd_hs_handle, 3, 0x40);
+  HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 0x80);
+  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 0x20);
+  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 0x40);
+  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 0x20);
+  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 0x40);
 #else // !defined(USE_USB_HS_IN_FS)
   /*Set LL Driver parameters */
   pcd_hs_handle.Instance = USB_OTG_HS;
@@ -495,9 +495,9 @@ if (pdev->id == USB_PHY_HS_ID)
   /*Initialize LL Driver */
   HAL_PCD_Init(&pcd_hs_handle);
 
-  HAL_PCD_SetRxFiFo(&pcd_hs_handle, 0x200);
-  HAL_PCD_SetTxFiFo(&pcd_hs_handle, 0, 0x80);
-  HAL_PCD_SetTxFiFo(&pcd_hs_handle, 1, 0x174);
+  HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 0x200);
+  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 0x80);
+  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 0x174);
 
 #endif  // !USE_USB_HS_IN_FS
 }
@@ -748,7 +748,7 @@ void OTG_FS_WKUP_IRQHandler(void) {
     OTG_CMD_WKUP_Handler(&pcd_fs_handle);
 
     /* Clear EXTI pending Bit*/
-    __HAL_USB_FS_EXTI_CLEAR_FLAG();
+    __HAL_USB_OTG_FS_WAKEUP_EXTI_CLEAR_FLAG();
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
