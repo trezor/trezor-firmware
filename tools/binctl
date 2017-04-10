@@ -16,7 +16,7 @@ def format_sigmask(sigmask):
     return '0x%02x = [%s]' % (sigmask, ' '.join(bits))
 
 
-# loader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
+# bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
 
 class BinImage:
@@ -48,8 +48,8 @@ class BinImage:
         if self.magic == b'TRZF':
             print('TREZOR Firmware Image')
             total_len = self.vhdrlen + self.hdrlen + self.codelen
-        elif self.magic == b'TRZL':
-            print('TREZOR Loader Image')
+        elif self.magic == b'TRZB':
+            print('TREZOR Bootloader Image')
             total_len = self.hdrlen + self.codelen
         else:
             print('TREZOR Unknown Image')
@@ -101,10 +101,10 @@ class FirmwareImage(BinImage):
             f.write(self.serialize_header())
             f.write(self.code)
 
-class LoaderImage(BinImage):
+class BootloaderImage(BinImage):
 
     def __init__(self, data):
-        super().__init__(data, magic=b'TRZL', max_size=64*1024 + 7*128*1024)
+        super().__init__(data, magic=b'TRZB', max_size=64*1024 + 7*128*1024)
 
 
 class VendorHeader:
@@ -188,8 +188,8 @@ class VendorHeader:
 def binopen(filename):
     data = open(filename, 'rb').read()
     magic = data[:4]
-    if magic == b'TRZL':
-        return LoaderImage(data)
+    if magic == b'TRZB':
+        return BootloaderImage(data)
     if magic == b'TRZV':
         vheader = VendorHeader(data)
         if len(data) == vheader.hdrlen:

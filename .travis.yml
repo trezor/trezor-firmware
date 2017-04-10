@@ -20,7 +20,7 @@ script:
 
   - make build_boardloader
 
-  - make build_loader
+  - make build_bootloader
 
   - make build_firmware
 

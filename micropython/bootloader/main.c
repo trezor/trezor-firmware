@@ -178,9 +178,9 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    DPRINTLN("TREZOR Loader " VERSION_STR);
-    DPRINTLN("=============");
-    DPRINTLN("starting loader");
+    DPRINTLN("TREZOR Bootloader " VERSION_STR);
+    DPRINTLN("=================");
+    DPRINTLN("starting bootloader");
 
     if (touch_read() != 0) {
         mainloop();

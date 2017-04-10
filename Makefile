@@ -4,7 +4,7 @@ JOBS=4
 MAKE=make -j $(JOBS)
 
 BOARDLOADER_BUILD_DIR=micropython/boardloader/build
-LOADER_BUILD_DIR=micropython/loader/build
+BOOTLOADER_BUILD_DIR=micropython/bootloader/build
 FIRMWARE_BUILD_DIR=micropython/firmware/build
 
 TREZORHAL_PORT_OPTS=FROZEN_MPY_DIR=src DEBUG=1
@@ -42,14 +42,14 @@ testpy: ## run selected unit tests from python-trezor
 
 ## build commands:
 
-build: build_boardloader build_loader build_firmware build_unix build_cross ## build all
+build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all
 
 build_boardloader: ## build boardloader
 	$(MAKE) -f Makefile.boardloader $(TREZORHAL_PORT_OPTS)
 
-build_loader: ## build loader
-	$(MAKE) -f Makefile.loader $(TREZORHAL_PORT_OPTS)
-	./tools/binctl micropython/loader/build/loader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
+build_bootloader: ## build bootloader
+	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
+	./tools/binctl micropython/bootloader/build/bootloader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
@@ -63,13 +63,13 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_boardloader clean_loader clean_firmware clean_unix clean_cross ## clean all
+clean: clean_boardloader clean_bootloader clean_firmware clean_unix clean_cross ## clean all
 
 clean_boardloader: ## clean boardloader build
 	$(MAKE) -f Makefile.boardloader clean $(TREZORHAL_PORT_OPTS)
 
-clean_loader: ## clean loader build
-	$(MAKE) -f Makefile.loader clean $(TREZORHAL_PORT_OPTS)
+clean_bootloader: ## clean bootloader build
+	$(MAKE) -f Makefile.bootloader clean $(TREZORHAL_PORT_OPTS)
 
 clean_firmware: ## clean firmware build
 	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
@@ -84,13 +84,13 @@ clean_cross: ## clean mpy-cross build
 
 ## flash commands:
 
-flash: flash_boardloader flash_loader flash_firmware ## flash everything using st-flash
+flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using st-flash
 
 flash_boardloader: ## flash boardloader using st-flash
 	st-flash write $(BOARDLOADER_BUILD_DIR)/boardloader.bin 0x08000000
 
-flash_loader: ## flash loader using st-flash
-	st-flash write $(LOADER_BUILD_DIR)/loader.bin 0x08010000
+flash_bootloader: ## flash bootloader using st-flash
+	st-flash write $(BOOTLOADER_BUILD_DIR)/bootloader.bin 0x08010000
 
 flash_firmware: ## flash firmware using st-flash
 	st-flash write $(FIRMWARE_BUILD_DIR)/firmware.bin 0x08020000
@@ -110,7 +110,7 @@ vendorheader: ## construct default vendor header
 	./tools/binctl micropython/firmware/vendorheader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 binctl: ## print info about binary files
-	./tools/binctl micropython/loader/build/loader.bin
+	./tools/binctl micropython/bootloader/build/bootloader.bin
 	./tools/binctl micropython/firmware/vendorheader.bin
 	./tools/binctl micropython/firmware/build/firmware.bin
 

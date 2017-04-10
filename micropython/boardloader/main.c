@@ -9,7 +9,7 @@
 #include "sdcard.h"
 #include "version.h"
 
-#define IMAGE_MAGIC   0x4C5A5254 // TRZL
+#define IMAGE_MAGIC   0x425A5254 // TRZB
 #define IMAGE_MAXSIZE (1 * 64 * 1024 + 7 * 128 * 1024)
 
 void pendsv_isr_handler(void) {
@@ -76,11 +76,11 @@ bool copy_sdcard(void)
     }
     DPRINTLN(" done");
 
-    DPRINTLN("copying new loader from SD card");
+    DPRINTLN("copying new bootloader from SD card");
 
     sdcard_power_on();
 
-    // copy loader from SD card to Flash
+    // copy bootloader from SD card to Flash
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
     sdcard_read_blocks((uint8_t *)buf, 0, 1);
 
@@ -95,7 +95,7 @@ bool copy_sdcard(void)
     for (int i = 0; i < (HEADER_SIZE + hdr.codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, LOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
+            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
                 DPRINTLN("copy failed");
                 sdcard_power_off();
                 HAL_FLASH_Lock();
@@ -114,29 +114,29 @@ bool copy_sdcard(void)
 
 void check_and_jump(void)
 {
-    DPRINTLN("checking loader");
+    DPRINTLN("checking bootloader");
 
     image_header hdr;
 
-    if (image_parse_header((const uint8_t *)LOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        DPRINTLN("valid loader header");
+    if (image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
+        DPRINTLN("valid bootloader header");
     } else {
-        DPRINTLN("invalid loader header");
+        DPRINTLN("invalid bootloader header");
         return;
     }
 
-    if (image_check_signature((const uint8_t *)LOADER_START, &hdr, NULL)) {
-        DPRINTLN("valid loader signature");
+    if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, NULL)) {
+        DPRINTLN("valid bootloader signature");
 
         // TODO: remove debug wait
         DPRINTLN("waiting 1 second");
         HAL_Delay(1000);
         // end
         DPRINTLN("JUMP!");
-        jump_to(LOADER_START + HEADER_SIZE);
+        jump_to(BOOTLOADER_START + HEADER_SIZE);
 
     } else {
-        DPRINTLN("invalid loader signature");
+        DPRINTLN("invalid bootloader signature");
     }
 }
 

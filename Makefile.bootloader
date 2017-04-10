@@ -3,8 +3,8 @@ SRCDIR_MP = vendor/micropython
 SRCDIR_FW = micropython
 
 # target directory
-BUILD ?= micropython/loader/build
-TARGET ?= loader
+BUILD ?= micropython/bootloader/build
+TARGET ?= bootloader
 
 # include py core make definitions
 include $(SRCDIR_MP)/py/mkenv.mk
@@ -56,8 +56,8 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 
 # OBJ micropython/
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
-	loader/header.o \
-	loader/main.o \
+	bootloader/header.o \
+	bootloader/main.o \
 	extmod/modtrezorui/display.o \
 	extmod/modtrezorui/inflate.o \
 	extmod/modtrezorui/font_bitmap.o \
@@ -105,7 +105,7 @@ SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
-INC += -I$(SRCDIR_FW)/loader
+INC += -I$(SRCDIR_FW)/bootloader
 INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/trezorhal
 INC += -I$(SRCDIR_FW)/trezorhal/hal
@@ -131,7 +131,7 @@ CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T $(SRCDIR_FW)/loader/memory.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T $(SRCDIR_FW)/bootloader/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections
