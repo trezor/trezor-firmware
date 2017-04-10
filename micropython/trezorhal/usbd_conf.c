@@ -56,6 +56,9 @@
 #define IRQ_PRI_OTG_FS          6
 #define IRQ_SUBPRI_OTG_FS       0
 
+#define IRQ_PRI_OTG_HS          6
+#define IRQ_SUBPRI_OTG_HS       0
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -226,7 +229,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 #endif // !USE_USB_HS_IN_FS
 
     /* Set USBHS Interrupt to the lowest priority */
-    HAL_NVIC_SetPriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS, IRQ_SUBPRI_OTG_FS);
+    HAL_NVIC_SetPriority(OTG_HS_IRQn, IRQ_PRI_OTG_HS, IRQ_SUBPRI_OTG_HS);
 
     /* Enable USBHS Interrupt */
     HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
