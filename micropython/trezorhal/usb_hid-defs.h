@@ -33,7 +33,12 @@ typedef enum {
     USB_HID_PROTOCOL_MOUSE = 2,
 } usb_hid_protocol_t;
 
+/* usb_hid_info_t contains all information for setting up a HID interface.  All
+ * passed pointers need to live at least until the interface is disabled
+ * (usb_stop is called). */
 typedef struct {
+    const uint8_t *report_desc; // With length of report_desc_len bytes
+    uint8_t *rx_buffer;         // With length of max_packet_len bytes
     uint8_t iface_num;          // Address of this HID interface
     uint8_t ep_in;              // Address of IN endpoint (with the highest bit set)
     uint8_t ep_out;             // Address of OUT endpoint
@@ -42,25 +47,26 @@ typedef struct {
     uint8_t polling_interval;   // In units of 1ms
     uint8_t max_packet_len;     // Length of the biggest report and of rx_buffer
     uint8_t report_desc_len;    // Length of report_desc
-    uint8_t *rx_buffer;         // With length of max_packet_len bytes
-    const uint8_t *report_desc; // With length of report_desc_len bytes
 } usb_hid_info_t;
 
+/* usb_hid_state_t encapsulates all state used by enabled HID interface.  It
+ * needs to be completely initialized in usb_hid_add and reset in
+ * usb_hid_class_init.  See usb_hid_info_t for details of the configuration
+ * fields. */
 typedef struct {
-    uint8_t in_idle;       // Set to 1 after IN endpoint gets idle
-    uint8_t protocol;      // For SET_PROTOCOL/GET_PROTOCOL setup reqs
-    uint8_t idle_rate;     // For SET_IDLE/GET_IDLE setup reqs
-    uint8_t alt_setting;   // For SET_INTERFACE/GET_INTERFACE setup reqs
-    uint8_t last_read_len; // Length of data read into rx_buffer
-
+    const usb_hid_descriptor_block_t *desc_block;
+    const uint8_t *report_desc;
+    uint8_t *rx_buffer;
     uint8_t ep_in;
     uint8_t ep_out;
     uint8_t max_packet_len;
     uint8_t report_desc_len;
-    uint8_t *rx_buffer;
-    const uint8_t *report_desc;
 
-    const usb_hid_descriptor_block_t *desc_block;
+    uint8_t protocol;      // For SET_PROTOCOL/GET_PROTOCOL setup reqs
+    uint8_t idle_rate;     // For SET_IDLE/GET_IDLE setup reqs
+    uint8_t alt_setting;   // For SET_INTERFACE/GET_INTERFACE setup reqs
+    uint8_t last_read_len; // Length of data read into rx_buffer
+    uint8_t ep_in_is_idle; // Set to 1 after IN endpoint gets idle
 } usb_hid_state_t;
 
 int usb_hid_add(const usb_hid_info_t *hid_info);

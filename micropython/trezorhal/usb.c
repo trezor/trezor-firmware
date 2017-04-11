@@ -77,11 +77,11 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
     usb_config_desc->bDescriptorType     = USB_DESC_TYPE_CONFIGURATION;
     usb_config_desc->wTotalLength        = sizeof(usb_config_descriptor_t);
-    usb_config_desc->bNumInterfaces      = 0x00;
-    usb_config_desc->bConfigurationValue = 0x01; // Configuration value
-    usb_config_desc->iConfiguration      = 0x00; // Index of string descriptor describing the configuration
+    usb_config_desc->bNumInterfaces      = 0;
+    usb_config_desc->bConfigurationValue = 0x01;
+    usb_config_desc->iConfiguration      = 0;
     usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xc0 = self powered
-    usb_config_desc->bMaxPower           = 0xfa; // In units of 2mA
+    usb_config_desc->bMaxPower           = 0xfa; // Maximum Power Consumption in 2mA units
 
     // Reset pointer to interface descriptor data
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
@@ -298,6 +298,19 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     return USBD_OK;
 }
 
+static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
+    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+        switch (usb_ifaces[i].type) {
+        case USB_IFACE_TYPE_VCP:
+            usb_vcp_class_sof(dev, &usb_ifaces[i].vcp);
+            break;
+        default:
+            break;
+        }
+    }
+    return USBD_OK;
+}
+
 static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
     *length = usb_config_desc->wTotalLength;
     return usb_config_buf;
@@ -311,7 +324,7 @@ static const USBD_ClassTypeDef usb_class = {
     .EP0_RxReady                   = NULL,
     .DataIn                        = usb_class_data_in,
     .DataOut                       = usb_class_data_out,
-    .SOF                           = NULL,
+    .SOF                           = usb_class_sof,
     .IsoINIncomplete               = NULL,
     .IsoOUTIncomplete              = NULL,
     .GetHSConfigDescriptor         = usb_class_get_cfg_desc,

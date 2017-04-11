@@ -51,18 +51,18 @@ int usb_hid_add(const usb_hid_info_t *info) {
     d->iface.bLength            = sizeof(usb_interface_descriptor_t);
     d->iface.bDescriptorType    = USB_DESC_TYPE_INTERFACE;
     d->iface.bInterfaceNumber   = info->iface_num;
-    d->iface.bAlternateSetting  = 0x00;
+    d->iface.bAlternateSetting  = 0;
     d->iface.bNumEndpoints      = 2;
     d->iface.bInterfaceClass    = USB_CLASS_HID;
     d->iface.bInterfaceSubClass = info->subclass;
     d->iface.bInterfaceProtocol = info->protocol;
-    d->iface.iInterface         = 0x00; // Index of string descriptor describing the interface
+    d->iface.iInterface         = 0;
 
     // HID descriptor
     d->hid.bLength                 = sizeof(usb_hid_descriptor_t);
     d->hid.bDescriptorType         = USB_DESC_TYPE_HID;
     d->hid.bcdHID                  = 0x1101; // HID Class Spec release number
-    d->hid.bCountryCode            = 0x00;   // Hardware target country
+    d->hid.bCountryCode            = 0;      // Hardware target country
     d->hid.bNumDescriptors         = 1;      // Number of HID class descriptors
     d->hid.bReportDescriptorType   = USB_DESC_TYPE_REPORT;
     d->hid.wReportDescriptorLength = info->report_desc_len;
@@ -88,17 +88,18 @@ int usb_hid_add(const usb_hid_info_t *info) {
 
     // Interface state
     iface->type = USB_IFACE_TYPE_HID;
-    iface->hid.in_idle = 1;
-    iface->hid.protocol = 0;
-    iface->hid.idle_rate = 0;
-    iface->hid.alt_setting = 0;
-    iface->hid.ep_in = info->ep_in;
-    iface->hid.ep_out = info->ep_out;
-    iface->hid.max_packet_len = info->max_packet_len;
+    iface->hid.desc_block      = d;
+    iface->hid.report_desc     = info->report_desc;
+    iface->hid.rx_buffer       = info->rx_buffer;
+    iface->hid.ep_in           = info->ep_in;
+    iface->hid.ep_out          = info->ep_out;
+    iface->hid.max_packet_len  = info->max_packet_len;
     iface->hid.report_desc_len = info->report_desc_len;
-    iface->hid.rx_buffer = info->rx_buffer;
-    iface->hid.report_desc = info->report_desc;
-    iface->hid.desc_block = d;
+    iface->hid.protocol        = 0;
+    iface->hid.idle_rate       = 0;
+    iface->hid.alt_setting     = 0;
+    iface->hid.last_read_len   = 0;
+    iface->hid.ep_in_is_idle   = 1;
 
     return 0;
 }
@@ -128,7 +129,7 @@ int usb_hid_can_write(uint8_t iface_num) {
     if (iface->type != USB_IFACE_TYPE_HID) {
         return 0; // Invalid interface type
     }
-    if (iface->hid.in_idle == 0) {
+    if (iface->hid.ep_in_is_idle == 0) {
         return 0; // Last transmission is not over yet
     }
     if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
@@ -171,7 +172,7 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     }
     usb_hid_state_t *state = &iface->hid;
 
-    state->in_idle = 0;
+    state->ep_in_is_idle = 0;
     USBD_LL_Transmit(&usb_dev_handle, state->ep_in, UNCONST(buf), (uint16_t)len);
 
     return len;
@@ -221,10 +222,11 @@ static int usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, u
     USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_INTR, state->max_packet_len);
 
     // Reset the state
-    state->in_idle = 1;
     state->protocol = 0;
     state->idle_rate = 0;
     state->alt_setting = 0;
+    state->last_read_len = 0;
+    state->ep_in_is_idle = 1;
 
     // Prepare the OUT EP to receive next packet
     USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer, state->max_packet_len);
@@ -301,7 +303,7 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
 
 static uint8_t usb_hid_class_data_in(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
     if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
-        state->in_idle = 1;
+        state->ep_in_is_idle = 1;
     }
     return USBD_OK;
 }
