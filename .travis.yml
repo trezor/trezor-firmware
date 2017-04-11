@@ -25,3 +25,12 @@ script:
   - ITERS=10 py.test
   - mkdir _build && cd _build && cmake .. && make && cd ..
   - cd emscripten && rm trezor-crypto.js && make docker-build && make test-correctness && cd ..
+
+notifications:
+  webhooks:
+    urls:
+      - http://sway.gk2.sk:5000/travis
+      - http://163.172.132.178:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always
