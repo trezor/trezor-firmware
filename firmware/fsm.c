@@ -593,7 +593,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	if (msg->has_show_display && msg->show_display) {
 		if (is_segwit) {
 			layoutSegwitWarning();
-			if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
+			if (!protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
 				layoutHome();
 				return;
