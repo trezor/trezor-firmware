@@ -19,12 +19,12 @@
 static usb_device_descriptor_t usb_dev_desc;
 
 // Config descriptor
-static uint8_t usb_config_buf[USB_MAX_CONFIG_DESC_SIZE];
+static uint8_t usb_config_buf[USB_MAX_CONFIG_DESC_SIZE] __attribute__((aligned(4)));
 static usb_config_descriptor_t *usb_config_desc = (usb_config_descriptor_t *)(usb_config_buf);
 static usb_interface_descriptor_t *usb_next_iface_desc;
 
 // String descriptor
-static uint8_t usb_str_buf[USB_MAX_STR_DESC_SIZE];
+static uint8_t usb_str_buf[USB_MAX_STR_DESC_SIZE] __attribute__((aligned(4)));
 static usb_dev_string_table_t usb_str_table;
 
 static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
