@@ -3,6 +3,10 @@
 #define VERSION_PATCH 0
 #define VERSION_BUILD 0
 
+#define VERSION_MAJOR_CHAR "\x00"
+#define VERSION_MINOR_CHAR "\x01"
+#define VERSION_PATCH_CHAR "\x00"
+
 #define STR_HELPER(X) #X
 #define STRINGIZE(X) STR_HELPER(X)
 

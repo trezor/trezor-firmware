@@ -58,6 +58,7 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	bootloader/header.o \
 	bootloader/main.o \
+	bootloader/messages.o \
 	extmod/modtrezorui/display.o \
 	extmod/modtrezorui/inflate.o \
 	extmod/modtrezorui/font_bitmap.o \

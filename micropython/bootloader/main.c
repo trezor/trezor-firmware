@@ -1,6 +1,7 @@
 #include STM32_HAL_H
 
 #include <string.h>
+#include <sys/types.h>
 
 #include "common.h"
 #include "display.h"
@@ -9,6 +10,8 @@
 #include "touch.h"
 #include "usb.h"
 #include "version.h"
+
+#include "messages.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
@@ -149,17 +152,51 @@ void mainloop(void)
         __fatal_error("usb_init_all failed");
     }
 
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, 0x001F);
-    display_refresh();
+    uint8_t buf[64];
 
-    for(;;) {
-        uint32_t e = touch_read();
-        if (e & TOUCH_START || e & TOUCH_MOVE) {
-            int x = (e >> 8) & 0xFF, y = e & 0xFF;
-            display_bar(x - 1, y - 1, 3, 3, 0xFFFF);
-            display_refresh();
+    for (;;) {
+        int iface = usb_hid_read_select(1); // 1ms timeout
+        if (iface < 0) {
+            continue;
         }
-        HAL_Delay(1);
+        ssize_t r = usb_hid_read(iface, buf, sizeof(buf));
+        // invalid length
+        if (r != sizeof(buf)) {
+            continue;
+        }
+        // invalid header
+        if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
+            continue;
+        }
+        uint16_t msg_id = (buf[3] << 8) + buf[4];
+        uint32_t msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
+        (void)msg_size;
+        switch (msg_id) {
+            case 0: // Initialize
+                DPRINTLN("received Initialize");
+                send_msg_features(iface, false);
+                break;
+            case 1: // Ping
+                DPRINTLN("received Ping");
+                send_msg_success(iface);
+                break;
+            case 6: // FirmwareErase
+                DPRINTLN("received FirmwareErase");
+                send_msg_failure(iface);
+                break;
+            case 7: // FirmwareUpload
+                DPRINTLN("received FirmwareUpload");
+                send_msg_failure(iface);
+                break;
+            case 27: // ButtonAck
+                DPRINTLN("received ButtonAck");
+                send_msg_failure(iface);
+                break;
+            default:
+                DPRINTLN("received garbage");
+                send_msg_failure(iface);
+                break;
+        }
     }
 }
 
