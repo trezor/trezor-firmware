@@ -956,17 +956,34 @@ class ProtocolMixin(object):
             return False
 
         data = fp.read()
-        fingerprint = hashlib.sha256(data[256:]).hexdigest()
-        log("Firmware fingerprint: " + fingerprint)
-        resp = self.call(proto.FirmwareUpload(payload=data))
 
+        # TREZORv1 method
         if isinstance(resp, proto.Success):
-            return True
+            fingerprint = hashlib.sha256(data[256:]).hexdigest()
+            log("Firmware fingerprint: " + fingerprint)
+            resp = self.call(proto.FirmwareUpload(payload=data))
+            if isinstance(resp, proto.Success):
+                return True
+            elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
+                return False
+            raise Exception("Unexpected result %s" % resp)
 
-        elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
-            return False
+        # TREZORv2 method
+        if isinstance(resp, proto.FirmwareRequest):
+            import pyblake2
+            while True:
+                payload = data[resp.offset:resp.offset + resp.length]
+                digest = pyblake2.blake2s(payload).digest()
+                resp = self.call(proto.FirmwareUpload(payload=payload, hash=digest))
+                if isinstance(resp, proto.FirmwareRequest):
+                    continue
+                elif isinstance(resp, proto.Success):
+                    return True
+                elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
+                    return False
+                raise Exception("Unexpected result %s" % resp)
 
-        raise Exception("Unexpected result %s" % resp)
+        raise Exception("Unexpected message %s" % resp)
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
