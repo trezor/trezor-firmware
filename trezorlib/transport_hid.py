@@ -142,14 +142,14 @@ class HidTransportV2(_HidTransport, TransportV2):
 
 DEVICE_IDS = [
     (0x534c, 0x0001),  # TREZOR
-    (0x1209, 0x53C0),  # TREZORv2 Bootloader
-    (0x1209, 0x53C1),  # TREZORv2
+    (0x1209, 0x53c0),  # TREZORv2 Bootloader
+    (0x1209, 0x53c1),  # TREZORv2
 ]
 
 DEVICE_TRANSPORTS = {
     (0x534c, 0x0001): HidTransportV1,  # TREZOR
-    (0x1209, 0x53C0): HidTransportV2,  # TREZORv2 Bootloader
-    (0x1209, 0x53C1): HidTransportV2,  # TREZORv2
+    (0x1209, 0x53c0): HidTransportV1,  # TREZORv2 Bootloader
+    (0x1209, 0x53c1): HidTransportV2,  # TREZORv2
 }
 
 # Backward compatible wrapper, decides for proper transport
