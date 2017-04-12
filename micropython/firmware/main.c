@@ -27,11 +27,11 @@ int usb_init_all(void) {
         .vendor_id         = 0x1209,
         .product_id        = 0x53C1,
         .release_num       = 0x0002,
-        .manufacturer_str  = (const uint8_t *)"manufacturer_str",
-        .product_str       = (const uint8_t *)"product_str",
-        .serial_number_str = (const uint8_t *)"serial_number_str",
-        .configuration_str = (const uint8_t *)"configuration_str",
-        .interface_str     = (const uint8_t *)"interface_str",
+        .manufacturer_str  = (const uint8_t *)"SatoshiLabs",
+        .product_str       = (const uint8_t *)"TREZOR",
+        .serial_number_str = (const uint8_t *)"000000000000000000000000",
+        .configuration_str = (const uint8_t *)"",
+        .interface_str     = (const uint8_t *)"",
     };
     static uint8_t hid_rx_buffer[64];
     static const uint8_t hid_report_desc[] = {
