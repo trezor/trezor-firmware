@@ -1,30 +1,37 @@
 # TREZOR Core Bootloader
 
-TREZOR initialization in split into two stages. See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
+TREZOR initialization in split into two stages.
+See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
 
 First stage (boardloader) is stored in write-protected area, which means it is non-upgradable.
 Only second stage (bootloader) update is allowed.
 
 ## First Stage - Boardloader
 
-First stage checks the integrity and signatures of the second stage and runs it if everything is OK.
+First stage checks the integrity and signatures of the second stage
+and runs it if everything is OK.
 
-If first stage boardloader finds a valid second stage bootloader image on the SD card (in raw format, no filesystem),
-it will replace the internal second stage, allowing a second stage update via SD card.
+If first stage boardloader finds a valid second stage bootloader image
+on the SD card (in raw format, no filesystem), it will replace the internal
+second stage, allowing a second stage update via SD card.
 
 ## Second Stage - Bootloader
 
-Second stage checks the integrity and signatures of the firmware and runs it if everything is OK.
+Second stage checks the integrity and signatures of the firmware and runs
+it if everything is OK.
 
-If second stage bootloader detects a pressed finger on the display or there is no firmware loaded in the device,
-it will start in a firmware update mode, allowing a firmware update via USB.
+If second stage bootloader detects a pressed finger on the display or there
+is no firmware loaded in the device, it will start in a firmware update mode,
+allowing a firmware update via USB.
 
 ## Common notes
 
 * Hash function used for computing data digest for signatures is BLAKE2s.
-* Signature system is Ed25519 (allows combining signatures by multiple keys into one).
+* Signature system is Ed25519 (allows combining signatures by multiple keys
+  into one).
 * All multibyte integer values are little endian.
-* There is a tool called [binctl](../tools/binctl) which checks validity of the bootloader/firmware images including their headers.
+* There is a tool called [binctl](../tools/binctl) which checks validity
+  of the bootloader/firmware images including their headers.
 
 ## Bootloader Format
 
@@ -61,7 +68,10 @@ TREZOR Core firmware consists of 3 parts:
 
 ### Vendor Header
 
-Total length of vendor header is 84 + 32 * (number of pubkeys) + (length of vendor string rounded up to multiple of 4) + (length of vendor image) bytes rounded up to the closest multiple of 512 bytes.
+Total length of vendor header is 84 + 32 * (number of pubkeys) +
+(length of vendor string rounded up to multiple of 4) +
+(length of vendor image) bytes rounded up to the closest multiple
+of 512 bytes.
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
@@ -103,7 +113,10 @@ Total length of firmware header is always 512 bytes.
 
 ## Various ideas
 
-* Bootloader should be able to read vendor + firmware header and send info about FW to client in features message.
+* Bootloader should be able to read vendor + firmware header and send info
+  about FW to client in features message.
 * Bootloader should not try to run firmware if there is not any.
-* Storage wiping rule: Don't erase storage when old FW and new FW are signed using the same key set. Otherwise erase.
-* Bootloader should send error to client when firmware update fails and allow client to try one more time. This prevents storage area erasure by accident.
+* Storage wiping rule: Don't erase storage when old FW and new FW are signed
+  using the same key set. Otherwise erase.
+* Bootloader should send error to client when firmware update fails and allow
+  client to try one more time. This prevents storage area erasure by accident.
