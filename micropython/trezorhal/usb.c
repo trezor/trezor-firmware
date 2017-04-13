@@ -100,15 +100,21 @@ int usb_init(const usb_dev_info_t *dev_info) {
 }
 
 int usb_deinit(void) {
-    return USBD_DeInit(&usb_dev_handle);
+    USBD_DeInit(&usb_dev_handle);
+    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+        usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
+    }
+    return 0;
 }
 
 int usb_start(void) {
-    return USBD_Start(&usb_dev_handle);
+    USBD_Start(&usb_dev_handle);
+    return 0;
 }
 
 int usb_stop(void) {
-    return USBD_Stop(&usb_dev_handle);
+    USBD_Stop(&usb_dev_handle);
+    return 0;
 }
 
 /*
