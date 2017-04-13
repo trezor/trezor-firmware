@@ -3,8 +3,8 @@ SRCDIR_MP = vendor/micropython
 SRCDIR_FW = micropython
 
 # target directory
-BUILD ?= micropython/boardloader/build
 TARGET ?= boardloader
+BUILD ?= micropython/$(TARGET)/build
 
 # include py core make definitions
 include $(SRCDIR_MP)/py/mkenv.mk
@@ -95,7 +95,7 @@ SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
-INC += -I$(SRCDIR_FW)/boardloader
+INC += -I$(SRCDIR_FW)/$(TARGET)
 INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/trezorhal
 INC += -I$(SRCDIR_FW)/trezorhal/hal
@@ -121,7 +121,7 @@ CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T $(SRCDIR_FW)/boardloader/memory.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T $(SRCDIR_FW)/$(TARGET)/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections
@@ -138,7 +138,7 @@ $(BUILD)/$(TARGET).elf: $(OBJ)
 	$(Q)$(SIZE) $@
 
 $(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
-	$(Q)$(OBJCOPY) -O binary -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
+	$(Q)$(OBJCOPY) -O binary -j .header -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
 
 $(BUILD)/%.o: %.S
 	$(ECHO) "CC $<"

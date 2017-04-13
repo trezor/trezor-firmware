@@ -6,8 +6,8 @@ SRCDIR_FW = micropython
 FROZEN_MPY_DIR ?= src
 
 # target directory
-BUILD ?= micropython/firmware/build
 TARGET ?= firmware
+BUILD ?= micropython/$(TARGET)/build
 
 # include py core make definitions
 include $(SRCDIR_MP)/py/mkenv.mk
@@ -333,7 +333,7 @@ SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
-INC += -I$(SRCDIR_FW)/firmware
+INC += -I$(SRCDIR_FW)/$(TARGET)
 INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/trezorhal
 INC += -I$(SRCDIR_FW)/trezorhal/hal
@@ -362,7 +362,7 @@ CFLAGS += -DMICROPY_MODULE_FROZEN_MPY
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T $(SRCDIR_FW)/firmware/memory.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T $(SRCDIR_FW)/$(TARGET)/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections
