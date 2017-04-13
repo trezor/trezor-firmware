@@ -1,4 +1,6 @@
-#trezor-common
+# trezor-common
+
+[![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 Common files shared among TREZOR repositories.
 
