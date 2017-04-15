@@ -1,56 +1,58 @@
+#include <assert.h>
+#include <string.h>
+
 #include "usb.h"
 #include "version.h"
 
+#include "protobuf.h"
 #include "messages.h"
 
-void send_msg_success(int iface)
+void send_msg_Success(int iface)
 {
-	// send response: Success message (id 2), payload len 0
-	usb_hid_write_blocking(iface, (const uint8_t *)
-		"?##"				// header
-		"\x00\x02"			// msg_id
-		"\x00\x00\x00\x00"	// payload_len
-		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-		, 64, 1);
+    // response: Success message (id 2), payload len 0
+    PB_CTX ctx;
+    pb_start(&ctx, 2);
+    usb_hid_write_blocking(iface, pb_build(&ctx), 64, 1);
 }
 
-void send_msg_failure(int iface)
+void send_msg_Failure(int iface)
 {
-	// send response: Failure message (id 3), payload len 2
-		// code = 99 (Failure_FirmwareError)
-	usb_hid_write_blocking(iface, (const uint8_t *)
-		"?##"				// header
-		"\x00\x03"			// msg_id
-		"\x00\x00\x00\x02"	// payload_len
-		"\x08\x63"			// data
-		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-		, 64, 1);
+    // response: Failure message (id 3), payload len 2
+    //           - code = 99 (Failure_FirmwareError)
+    PB_CTX ctx;
+    pb_start(&ctx, 3);
+    pb_add_varint(&ctx, "\x08", 99);
+    usb_hid_write_blocking(iface, pb_build(&ctx), 64, 1);
 }
 
-void send_msg_features(int iface, bool firmware_present)
+void send_msg_Features(int iface, bool firmware_present)
 {
-	// send response: Features message (id 17), payload len 22
-		// vendor = "trezor.io"
-		// major_version = VERSION_MAJOR
-		// minor_version = VERSION_MINOR
-		// patch_version = VERSION_PATCH
-		// bootloader_mode = True
-		// firmware_present = True/False
-	if (firmware_present) {
-		usb_hid_write_blocking(iface, (const uint8_t *)
-			"?##"				// header
-			"\x00\x11"			// msg_id
-			"\x00\x00\x00\x16"	// payload_len
-			"\x0a\x09" "trezor.io\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
-			"\x90\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-			, 64, 1);
-	} else {
-		usb_hid_write_blocking(iface, (const uint8_t *)
-			"?##"				// header
-			"\x00\x11"			// msg_id
-			"\x00\x00\x00\x16"	// payload_len
-			"\x0a\x09" "trezor.io\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
-			"\x90\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-			, 64, 1);
-	}
+    // response: Features message (id 17), payload len 22
+    //           - vendor = "trezor.io"
+    //           - major_version = VERSION_MAJOR
+    //           - minor_version = VERSION_MINOR
+    //           - patch_version = VERSION_PATCH
+    //           - bootloader_mode = True
+    //           - firmware_present = True/False
+    PB_CTX ctx;
+    pb_start(&ctx, 17);
+    pb_add_string(&ctx, "\x0a", "trezor.io");
+    pb_add_varint(&ctx, "\x10", VERSION_MAJOR);
+    pb_add_varint(&ctx, "\x18", VERSION_MINOR);
+    pb_add_varint(&ctx, "\x20", VERSION_PATCH);
+    pb_add_bool(&ctx, "\x28", true);
+    pb_add_bool(&ctx, "\x90\x01", firmware_present);
+    usb_hid_write_blocking(iface, pb_build(&ctx), 64, 1);
+}
+
+void send_msg_FirmwareRequest(int iface, uint32_t offset, uint32_t length)
+{
+    // response: FirmwareRequest message (id 8), payload len X
+    //           - offset = offset
+    //           - length = length
+    PB_CTX ctx;
+    pb_start(&ctx, 8);
+    pb_add_varint(&ctx, "\x08", offset);
+    pb_add_varint(&ctx, "\x10", length);
+    usb_hid_write_blocking(iface, pb_build(&ctx), 64, 1);
 }

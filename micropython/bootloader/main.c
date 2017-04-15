@@ -174,27 +174,23 @@ void mainloop(void)
         switch (msg_id) {
             case 0: // Initialize
                 DPRINTLN("received Initialize");
-                send_msg_features(iface, false);
+                send_msg_Features(iface, false);
                 break;
             case 1: // Ping
                 DPRINTLN("received Ping");
-                send_msg_success(iface);
+                send_msg_Success(iface);
                 break;
             case 6: // FirmwareErase
                 DPRINTLN("received FirmwareErase");
-                send_msg_failure(iface);
+                send_msg_Failure(iface);
                 break;
             case 7: // FirmwareUpload
                 DPRINTLN("received FirmwareUpload");
-                send_msg_failure(iface);
-                break;
-            case 27: // ButtonAck
-                DPRINTLN("received ButtonAck");
-                send_msg_failure(iface);
+                send_msg_Failure(iface);
                 break;
             default:
                 DPRINTLN("received garbage");
-                send_msg_failure(iface);
+                send_msg_Failure(iface);
                 break;
         }
     }
@@ -229,3 +225,10 @@ int main(void)
 
     return 0;
 }
+
+#ifndef NDEBUG
+void __assert_func(const char *file, int line, const char *func, const char *expr) {
+    // printf("Assertion '%s' failed, at file %s:%d\n", expr, file, line);
+    __fatal_error("Assertion failed");
+}
+#endif
