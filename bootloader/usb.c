@@ -322,12 +322,14 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 	if (flash_state == STATE_OPEN) {
 		if (msg_id == 0x0006) {		// FirmwareErase message (id 6)
-			layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
-			do {
-				delay(100000);
-				buttonUpdate();
-			} while (!button.YesUp && !button.NoUp);
-			if (button.YesUp) {
+			if (firmware_present) {
+				layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
+				do {
+					delay(100000);
+					buttonUpdate();
+				} while (!button.YesUp && !button.NoUp);
+			}
+			if (!firmware_present || button.YesUp) {
 				// backup metadata
 				memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
 				flash_unlock();
