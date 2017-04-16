@@ -42,15 +42,44 @@ def get_identity_path(identity: str, index: int) -> List[int]:
 def sign_challenge(seckey: bytes,
                    challenge_hidden: bytes,
                    challenge_visual: str,
-                   coin) -> bytes:
+                   sigtype,
+                   curve: str) -> bytes:
     from trezor.crypto.hashlib import sha256
-    from trezor.crypto.curve import secp256k1
+    if curve == 'secp256k1':
+        from trezor.crypto.curve import secp256k1
+    elif curve == 'nist256p1':
+        from trezor.crypto.curve import nist256p1
+    elif curve == 'ed25519':
+        from trezor.crypto.curve import ed25519
     from ..common.signverify import message_digest
 
-    challenge = sha256(challenge_hidden).digest() + \
-        sha256(challenge_visual).digest()
-    digest = message_digest(coin, challenge)
-    signature = secp256k1.sign(seckey, digest)
+
+    if sigtype == 'gpg':
+        data = challenge_hidden
+    elif sigtype == 'ssh':
+        if curve != 'ed25519':
+            data = sha256(challenge_hidden).digest()
+        else:
+            data = challenge_hidden
+    else:
+        # sigtype is coin
+        challenge = sha256(challenge_hidden).digest() + \
+                    sha256(challenge_visual).digest()
+        data = message_digest(sigtype, challenge)
+
+    if curve == 'secp256k1':
+        signature = secp256k1.sign(seckey, data)
+    elif curve == 'nist256p1':
+        signature = nist256p1.sign(seckey, data)
+    elif curve == 'ed25519':
+        signature = ed25519.sign(seckey, data)
+    else:
+        raise ValueError('Unknown curve')
+
+    if curve == 'ed25519':
+        signature = b'\x00' + signature
+    elif sigtype == 'gpg' or sigtype == 'ssh':
+        signature = b'\x00' + signature[1:]
 
     return signature
 
@@ -69,11 +98,21 @@ async def layout_sign_identity(session_id, msg):
     node.derive_path(address_n)
 
     coin = coins.by_name('Bitcoin')
-    address = node.address(coin.address_type)  # hardcoded bitcoin address type
+    if msg.ecdsa_curve_name == 'secp256k1':
+        address = node.address(coin.address_type)  # hardcoded bitcoin address type
+    else:
+        address = None
     pubkey = node.public_key()
     seckey = node.private_key()
 
-    signature = sign_challenge(
-        seckey, msg.challenge_hidden, msg.challenge_visual, coin)
+    if msg.identity.proto == 'gpg':
+        signature = sign_challenge(
+            seckey, msg.challenge_hidden, msg.challenge_visual, 'gpg', msg.ecdsa_curve_name)
+    elif msg.identity.proto == 'ssh':
+        signature = sign_challenge(
+            seckey, msg.challenge_hidden, msg.challenge_visual, 'ssh', msg.ecdsa_curve_name)
+    else:
+        signature = sign_challenge(
+            seckey, msg.challenge_hidden, msg.challenge_visual, coin, msg.ecdsa_curve_name)
 
     return SignedIdentity(address=address, public_key=pubkey, signature=signature)
