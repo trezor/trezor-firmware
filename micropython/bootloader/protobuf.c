@@ -9,52 +9,65 @@ void pb_start(PB_CTX *ctx, uint16_t msg_id)
     ctx->buf[2] = '#';
     ctx->buf[3] = (msg_id >> 8) & 0xFF;
     ctx->buf[4] = msg_id & 0xFF;
-    ctx->size = 9;
+    ctx->pos = 9;
+    ctx->len = 0;
 }
 
-const uint8_t *pb_build(PB_CTX *ctx)
+void pb_end(PB_CTX *ctx)
 {
-    ctx->buf[5] = (ctx->size >> 24) & 0xFF;
-    ctx->buf[6] = (ctx->size >> 16) & 0xFF;
-    ctx->buf[7] = (ctx->size >> 8) & 0xFF;
-    ctx->buf[8] = ctx->size & 0xFF;
-    return ctx->buf;
+    ctx->buf[5] = (ctx->len >> 24) & 0xFF;
+    ctx->buf[6] = (ctx->len >> 16) & 0xFF;
+    ctx->buf[7] = (ctx->len >> 8) & 0xFF;
+    ctx->buf[8] = ctx->len & 0xFF;
+    // align to 64 bytes
+    ctx->pos += (-ctx->pos) & 63;
 }
 
-static void pb_add_id(PB_CTX *ctx, const char *id)
+inline static void pb_append(PB_CTX *ctx, uint8_t b)
 {
-    size_t len = strlen(id);
-    memcpy(ctx->buf + ctx->size, id, len);
-    ctx->buf[ctx->size] += len;
+    ctx->buf[ctx->pos] = b;
+    ctx->pos++;
+    if (ctx->pos % 64 == 0) {
+        ctx->buf[ctx->pos] = '?';
+        ctx->pos++;
+    }
+    ctx->len++;
 }
 
-void pb_add_bool(PB_CTX *ctx, const char *id, bool val)
+static void pb_varint(PB_CTX *ctx, uint32_t val)
 {
-    pb_add_id(ctx, id);
-    ctx->buf[ctx->size] = val;
-    ctx->size++;
-}
-
-void pb_add_string(PB_CTX *ctx, const char *id, const char *val)
-{
-    pb_add_varint(ctx, id, strlen(val));
-    size_t len = strlen(val);
-    memcpy(ctx->buf + ctx->size, val, len);
-    ctx->buf[ctx->size] += len;
-}
-
-void pb_add_varint(PB_CTX *ctx, const char *id, uint32_t val)
-{
-    pb_add_id(ctx, id);
     for (;;) {
         if (val < 0x80) {
-            ctx->buf[ctx->size] = val;
-            ctx->size++;
+            pb_append(ctx, val & 0x7F);
             break;
         } else {
-            ctx->buf[ctx->size] = (val & 0x7F) | 0x80;
-            ctx->size++;
+            pb_append(ctx, (val & 0x7F) | 0x80);
             val >>= 7;
         }
     }
+}
+
+void pb_add_bool(PB_CTX *ctx, uint32_t field_number, bool val)
+{
+    field_number = (field_number << 3) | 0;
+    pb_varint(ctx, field_number);
+    pb_append(ctx, val);
+}
+
+void pb_add_string(PB_CTX *ctx, uint32_t field_number, const char *val)
+{
+    field_number = (field_number << 3) | 2;
+    pb_varint(ctx, field_number);
+    size_t len = strlen(val);
+    pb_varint(ctx, len);
+    for (size_t i = 0; i < len; i++) {
+        pb_append(ctx, val[i]);
+    }
+}
+
+void pb_add_varint(PB_CTX *ctx, uint32_t field_number, uint32_t val)
+{
+    field_number = (field_number << 3) | 0;
+    pb_varint(ctx, field_number);
+    pb_varint(ctx, val);
 }
