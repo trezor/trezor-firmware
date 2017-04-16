@@ -171,6 +171,7 @@ void mainloop(void)
         uint16_t msg_id = (buf[3] << 8) + buf[4];
         uint32_t msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
         (void)msg_size;
+        static uint32_t chunk = 0;
         switch (msg_id) {
             case 0: // Initialize
                 DPRINTLN("received Initialize");
@@ -182,14 +183,21 @@ void mainloop(void)
                 break;
             case 6: // FirmwareErase
                 DPRINTLN("received FirmwareErase");
-                send_msg_Failure(iface);
+                send_msg_FirmwareRequest(iface, 0, 128 * 1024);
+                chunk = 0;
                 break;
             case 7: // FirmwareUpload
                 DPRINTLN("received FirmwareUpload");
-                send_msg_Failure(iface);
+                // TODO: process chunk
+                chunk++;
+                if (chunk <= 3) {
+                    send_msg_FirmwareRequest(iface, chunk * 128 * 1024, 128 * 1024);
+                } else {
+                    send_msg_Success(iface);
+                }
                 break;
             default:
-                DPRINTLN("received garbage");
+                DPRINTLN("received unknown message");
                 send_msg_Failure(iface);
                 break;
         }
