@@ -11,7 +11,7 @@ addons:
     - libnewlib-arm-none-eabi
 
 script:
-  - make -C vendor/libopencm3
+  - CFLAGS="-std=c99" make -C vendor/libopencm3
   - make
   - make -C firmware
   - make -C bootloader
