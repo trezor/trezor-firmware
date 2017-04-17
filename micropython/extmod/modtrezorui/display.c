@@ -20,10 +20,12 @@ static int DISPLAY_BACKLIGHT = 0;
 static int DISPLAY_ORIENTATION = 0;
 static int DISPLAY_OFFSET[2] = {0, 0};
 
-#if defined STM32_HAL_H
-#include "display-stmhal.h"
-#else
+#if defined TREZOR_STM32
+#include "display-stm32.h"
+#elif defined TREZOR_UNIX
 #include "display-unix.h"
+#else
+#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
 // common display functions

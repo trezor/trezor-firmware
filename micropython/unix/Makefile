@@ -121,6 +121,8 @@ CWARN = -Wall -Werror
 CWARN += -Wpointer-arith -Wuninitialized
 CFLAGS = $(INC) $(CWARN) -std=gnu99 -DUNIX $(CFLAGS_MOD) $(COPT) $(CFLAGS_EXTRA)
 
+CFLAGS += -DTREZOR_UNIX
+
 # Debugging/Optimization
 ifdef DEBUG
 CFLAGS += -g

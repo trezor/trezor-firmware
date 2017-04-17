@@ -118,6 +118,7 @@ CFLAGS += -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi
 
 CFLAGS += -DSTM32F405xx -DMCU_SERIES_F4
 CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
+CFLAGS += -DTREZOR_STM32
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 

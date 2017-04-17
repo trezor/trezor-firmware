@@ -15,12 +15,12 @@
 
 #if MICROPY_PY_TREZORMSG
 
-#if defined STM32_HAL_H
-#include "modtrezormsg-stmhal.h"
-#elif defined UNIX
+#if defined TREZOR_STM32
+#include "modtrezormsg-stm32.h"
+#elif defined TREZOR_UNIX
 #include "modtrezormsg-unix.h"
 #else
-#error Unsupported port. Only STMHAL and UNIX ports are supported.
+#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
 #define MAX_INTERFACES 8
