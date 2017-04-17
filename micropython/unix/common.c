@@ -5,7 +5,6 @@
 
 void __attribute__((noreturn)) __fatal_error(const char *msg) {
     printf("FATAL ERROR:\n");
-    printf(msg);
-    printf("\n");
+    printf("%s\n", msg);
     exit(1);
 }
