@@ -92,6 +92,9 @@ ifeq ($(MICROPY_PY_TREZORUTILS),1)
 	SRC_MOD += $(EXTMOD_DIR)/modtrezorutils/modtrezorutils.c
 endif
 
+CFLAGS_MOD += -I../$(EXTMOD_DIR)/../unix
+SRC_MOD += $(EXTMOD_DIR)/../unix/common.c
+
 #################################################
 
 -include mpconfigport.mk

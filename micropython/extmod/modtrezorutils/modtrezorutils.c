@@ -12,13 +12,7 @@
 
 #if MICROPY_PY_TREZORUTILS
 
-#if defined TREZOR_STM32
 #include "common.h"
-#elif defined TREZOR_UNIX
-#include <stdlib.h>
-#else
-#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
-#endif
 
 /// def trezor.utils.memcpy(dst: bytearray, dst_ofs: int,
 ///                         src: bytearray, src_ofs: int,
@@ -71,13 +65,7 @@ STATIC mp_obj_t mod_TrezorUtils_halt(size_t n_args, const mp_obj_t *args) {
         printf("HALT!\n");
     }
     // TODO: is this the best we can do?
-#if defined TREZOR_STM32
     __fatal_error("HALT");
-#elif defined TREZOR_UNIX
-    exit(1);
-#else
-#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
-#endif
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_halt_obj, 0, 1, mod_TrezorUtils_halt);

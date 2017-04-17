@@ -1,5 +1,6 @@
 #include STM32_HAL_H
 
+#include "common.h"
 #include "display.h"
 
 #define FATAL_FGCOLOR 0xFFFF
