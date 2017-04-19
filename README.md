@@ -39,8 +39,15 @@ make build_unix
 
 ### OS X
 
+Install SDL2 using DMG installer from [SDL download page](https://www.libsdl.org/download-2.0.php) or run the following if you use Homebrew:
+
 ```sh
-brew install --universal sdl2 sdl2_image
+brew install sdl2 sdl2_image
+```
+
+Build the emulator:
+
+```sh
 make build_unix
 ```
 
