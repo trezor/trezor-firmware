@@ -120,7 +120,7 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 endif
 
 # OBJ vendor/micropython
-OBJ_MP += $(addprefix $(BUILD_MP)/,\
+OBJ_MICROPYTHON += $(addprefix $(BUILD_MP)/,\
 	\
 	extmod/modubinascii.o \
 	extmod/moductypes.o \
@@ -275,7 +275,7 @@ OBJ_MP += $(addprefix $(BUILD_MP)/,\
 	)
 
 # OBJ vendor/micropython
-OBJ_HAL += $(addprefix $(BUILD_MP)/,\
+OBJ_STMHAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_adc.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_can.o \
@@ -335,10 +335,11 @@ OBJ_TREZORHAL += $(addprefix $(BUILD_FW)/, \
 FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | $(SED) -e 's=^$(FROZEN_MPY_DIR)/==')
 FROZEN_MPY_MPY_FILES := $(addprefix $(BUILD)/frozen_mpy/,$(FROZEN_MPY_PY_FILES:.py=.mpy))
 
-OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_HAL) $(OBJ_TREZORHAL)
+OBJ = $(OBJ_MICROPYTHON) $(OBJ_STMHAL) $(OBJ_TREZORHAL)
+OBJ += $(OBJ_MOD)
 OBJ += $(OBJ_FIRMWARE)
 OBJ += $(BUILD)/frozen_mpy.o
-SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
+SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MICROPYTHON))
 SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 
 # comp flags
@@ -367,7 +368,6 @@ endif
 CFLAGS += $(INC) $(CFLAGS_MOD) $(CFLAGS_EXTRA)
 CFLAGS += -std=gnu99 -nostdlib -Wall -Werror -Wdouble-promotion -Wpointer-arith
 CFLAGS += -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant
-
 CFLAGS += -DSTM32F405xx -DMCU_SERIES_F4
 CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
 CFLAGS += -DTREZOR_STM32

@@ -16,14 +16,23 @@ BUILD_MP = $(BUILD)/$(SRCDIR_MP)
 BUILD_FW = $(BUILD)/$(SRCDIR_FW)
 BUILD_HDR = $(BUILD)/genhdr
 
+CFLAGS_MOD += \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
+	-DAES_128 \
+	-DAES_192 \
+	-DUSE_KECCAK=1 \
+	-DED25519_NO_PRECOMP=1 \
+	-Wno-sequence-point
+
 # OBJ vendor/micropython
-OBJ_MP += $(addprefix $(BUILD_MP)/,\
-	stmhal/startup_stm32.o \
+OBJ_MICROPYTHON += $(addprefix $(BUILD_MP)/,\
 	lib/libc/string0.o \
+	stmhal/startup_stm32.o \
 	)
 
 # OBJ vendor/micropython
-OBJ_HAL += $(addprefix $(BUILD_MP)/,\
+OBJ_STMHAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_adc.o \
 	stmhal/hal/f4/src/stm32f4xx_hal_can.o \
@@ -60,6 +69,9 @@ OBJ_BOOTLOADER += $(addprefix $(BUILD_FW)/, \
 	bootloader/main.o \
 	bootloader/messages.o \
 	bootloader/protobuf.o \
+	extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
+	extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
+	extmod/modtrezorcrypto/trezor-crypto/sha2.o \
 	extmod/modtrezorui/display.o \
 	extmod/modtrezorui/inflate.o \
 	extmod/modtrezorui/font_bitmap.o \
@@ -84,22 +96,7 @@ OBJ_TREZORHAL += $(addprefix $(BUILD_FW)/, \
 	trezorhal/hal/stm32f4xx_ll_fsmc.o \
 	)
 
-# OBJ micropython/extmod/modtrezorcrypto
-CFLAGS_MOD += \
-	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
-	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
-	-DAES_128 \
-	-DAES_192 \
-	-DUSE_KECCAK=1 \
-	-DED25519_NO_PRECOMP=1 \
-	-Wno-sequence-point
-
-OBJ_MOD += \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
-
-OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_HAL) $(OBJ_TREZORHAL)
+OBJ = $(OBJ_MICROPYTHON) $(OBJ_STMHAL) $(OBJ_TREZORHAL)
 OBJ += $(OBJ_BOOTLOADER)
 
 # comp flags
@@ -128,7 +125,6 @@ endif
 CFLAGS += $(INC) $(CFLAGS_MOD) $(CFLAGS_EXTRA)
 CFLAGS += -std=gnu99 -nostdlib -Wall -Werror -Wdouble-promotion -Wpointer-arith
 CFLAGS += -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant
-
 CFLAGS += -DSTM32F405xx -DMCU_SERIES_F4
 CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
 CFLAGS += -DTREZOR_STM32
