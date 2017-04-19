@@ -3,7 +3,7 @@
 
 #define VCP_IFACE         0x01
 #define VCP_READ_TIMEOUT  25
-#define VCP_WRITE_TIMEOUT 5
+#define VCP_WRITE_TIMEOUT 0
 
 int mp_hal_stdin_rx_chr(void) {
     uint8_t c = 0;

@@ -131,9 +131,9 @@ int main(void) {
         __fatal_error("touch_init failed");
     }
 
-    if (0 != usb_init_all()) {
-        __fatal_error("usb_init_all failed");
-    }
+    // if (0 != usb_init_all()) {
+    //     __fatal_error("usb_init_all failed");
+    // }
 
     for (;;) {
         // Stack limit should be less than real stack size, so we have a chance

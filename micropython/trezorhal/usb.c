@@ -83,11 +83,8 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xc0 = self powered
     usb_config_desc->bMaxPower           = 0xfa; // Maximum Power Consumption in 2mA units
 
-    // Reset pointer to interface descriptor data
+    // Pointer to interface descriptor data
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
-
-    // Reset the iface state map
-    memset(&usb_ifaces, 0, sizeof(usb_ifaces));
 
     if (0 != USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_FS_ID)) {
         return 1;
