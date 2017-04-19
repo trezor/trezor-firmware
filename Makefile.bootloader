@@ -18,8 +18,8 @@ BUILD_HDR = $(BUILD)/genhdr
 
 # OBJ vendor/micropython
 OBJ_MP += $(addprefix $(BUILD_MP)/,\
-	lib/libc/string0.o \
 	stmhal/startup_stm32.o \
+	lib/libc/string0.o \
 	)
 
 # OBJ vendor/micropython
@@ -55,7 +55,7 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 	)
 
 # OBJ micropython/
-OBJ_FW += $(addprefix $(BUILD_FW)/, \
+OBJ_BOOTLOADER += $(addprefix $(BUILD_FW)/, \
 	bootloader/header.o \
 	bootloader/main.o \
 	bootloader/messages.o \
@@ -66,6 +66,9 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 	extmod/modtrezorui/font_roboto_bold_20.o \
 	extmod/modtrezorui/font_roboto_regular_20.o \
 	extmod/modtrezorui/font_robotomono_regular_20.o \
+	)
+
+OBJ_TREZORHAL += $(addprefix $(BUILD_FW)/, \
 	trezorhal/common.o \
 	trezorhal/image.o \
 	trezorhal/flash.o \
@@ -96,10 +99,8 @@ OBJ_MOD += \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
 	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
 
-OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_HAL) $(OBJ_FW)
-SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
-SRC_FW = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_FW))
-SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
+OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_HAL) $(OBJ_TREZORHAL)
+OBJ += $(OBJ_BOOTLOADER)
 
 # comp flags
 # =====================================

@@ -33,9 +33,10 @@ MICROPY_PY_UTIME = 1
 
 # OBJ micropython/extmod/modtrezorconfig
 ifeq ($(MICROPY_PY_TREZORCONFIG),1)
-OBJ_MOD += \
-	$(BUILD_FW)/extmod/modtrezorconfig/modtrezorconfig.o \
-	$(BUILD_FW)/extmod/modtrezorconfig/norcow.o
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	extmod/modtrezorconfig/modtrezorconfig.o \
+	extmod/modtrezorconfig/norcow.o \
+	)
 endif
 
 # OBJ micropython/extmod/modtrezorcrypto
@@ -47,66 +48,75 @@ CFLAGS_MOD += \
 	-DAES_192 \
 	-DUSE_KECCAK=1 \
 	-Wno-sequence-point
-OBJ_MOD += \
-	$(BUILD_FW)/extmod/modtrezorcrypto/modtrezorcrypto.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/rand.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/ssss.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/address.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aescrypt.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aeskey.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aes_modes.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/aestab.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/base58.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bignum.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip32.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/bip39.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2b.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/curves.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ecdsa.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/hmac.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/nist256p1.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/pbkdf2.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/ripemd160.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/secp256k1.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha2.o \
-	$(BUILD_FW)/extmod/modtrezorcrypto/trezor-crypto/sha3.o
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	extmod/modtrezorcrypto/modtrezorcrypto.o \
+	extmod/modtrezorcrypto/rand.o \
+	extmod/modtrezorcrypto/ssss.o \
+	extmod/modtrezorcrypto/trezor-crypto/address.o \
+	extmod/modtrezorcrypto/trezor-crypto/aescrypt.o \
+	extmod/modtrezorcrypto/trezor-crypto/aeskey.o \
+	extmod/modtrezorcrypto/trezor-crypto/aes_modes.o \
+	extmod/modtrezorcrypto/trezor-crypto/aestab.o \
+	extmod/modtrezorcrypto/trezor-crypto/base58.o \
+	extmod/modtrezorcrypto/trezor-crypto/bignum.o \
+	extmod/modtrezorcrypto/trezor-crypto/bip32.o \
+	extmod/modtrezorcrypto/trezor-crypto/bip39.o \
+	extmod/modtrezorcrypto/trezor-crypto/blake2b.o \
+	extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
+	extmod/modtrezorcrypto/trezor-crypto/curves.o \
+	extmod/modtrezorcrypto/trezor-crypto/ecdsa.o \
+	extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
+	extmod/modtrezorcrypto/trezor-crypto/hmac.o \
+	extmod/modtrezorcrypto/trezor-crypto/nist256p1.o \
+	extmod/modtrezorcrypto/trezor-crypto/pbkdf2.o \
+	extmod/modtrezorcrypto/trezor-crypto/ripemd160.o \
+	extmod/modtrezorcrypto/trezor-crypto/secp256k1.o \
+	extmod/modtrezorcrypto/trezor-crypto/sha2.o \
+	extmod/modtrezorcrypto/trezor-crypto/sha3.o \
+	)
 endif
 
 # OBJ micropython/extmod/modtrezordebug
 ifeq ($(MICROPY_PY_TREZORDEBUG),1)
-OBJ_MOD += $(BUILD_FW)/extmod/modtrezordebug/modtrezordebug.o
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	extmod/modtrezordebug/modtrezordebug.o \
+	)
 endif
 
 # OBJ micropython/extmod/modtrezormsg
 ifeq ($(MICROPY_PY_TREZORMSG),1)
-OBJ_MOD += $(BUILD_FW)/extmod/modtrezormsg/modtrezormsg.o
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	extmod/modtrezormsg/modtrezormsg.o \
+	)
 endif
 
 # OBJ micropython/extmod/modtrezorui
 ifeq ($(MICROPY_PY_TREZORUI),1)
 CFLAGS_MOD += -DQR_MAX_VERSION=0
-OBJ_MOD += \
-	$(BUILD_FW)/extmod/modtrezorui/display.o \
-	$(BUILD_FW)/extmod/modtrezorui/inflate.o \
-	$(BUILD_FW)/extmod/modtrezorui/font_bitmap.o \
-	$(BUILD_FW)/extmod/modtrezorui/font_roboto_bold_20.o \
-	$(BUILD_FW)/extmod/modtrezorui/font_roboto_regular_20.o \
-	$(BUILD_FW)/extmod/modtrezorui/font_robotomono_regular_20.o \
-	$(BUILD_FW)/extmod/modtrezorui/modtrezorui.o \
-	$(BUILD_FW)/extmod/modtrezorui/trezor-qrenc/qr_encode.o
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	extmod/modtrezorui/display.o \
+	extmod/modtrezorui/inflate.o \
+	extmod/modtrezorui/font_bitmap.o \
+	extmod/modtrezorui/font_roboto_bold_20.o \
+	extmod/modtrezorui/font_roboto_regular_20.o \
+	extmod/modtrezorui/font_robotomono_regular_20.o \
+	extmod/modtrezorui/modtrezorui.o \
+	extmod/modtrezorui/trezor-qrenc/qr_encode.o \
+	)
 endif
 
 # OBJ micropython/extmod/modtrezorutils
 ifeq ($(MICROPY_PY_TREZORUTILS),1)
-OBJ_MOD += $(BUILD_FW)/extmod/modtrezorutils/modtrezorutils.o
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	extmod/modtrezorutils/modtrezorutils.o \
+	)
 endif
 
 # OBJ micropython/extmod/modutime
 ifeq ($(MICROPY_PY_UTIME),1)
-OBJ_MOD += $(BUILD_FW)/firmware/modutime.o
-SRC_QSTR += $(SRCDIR_FW)/firmware/modutime.c
+OBJ_MOD += $(addprefix $(BUILD_FW)/,\
+	firmware/modutime.o \
+	)
 endif
 
 # OBJ vendor/micropython
@@ -297,11 +307,14 @@ OBJ_HAL += $(addprefix $(BUILD_MP)/,\
 	)
 
 # OBJ micropython/
-OBJ_FW += $(addprefix $(BUILD_FW)/, \
+OBJ_FIRMWARE += $(addprefix $(BUILD_FW)/, \
 	firmware/vendorheader.o \
 	firmware/header.o \
 	firmware/main.o \
 	firmware/mphalport.o \
+	)
+
+OBJ_TREZORHAL += $(addprefix $(BUILD_FW)/, \
 	trezorhal/common.o \
 	trezorhal/flash.o \
 	trezorhal/rng.o \
@@ -322,9 +335,10 @@ OBJ_FW += $(addprefix $(BUILD_FW)/, \
 FROZEN_MPY_PY_FILES := $(shell find -L $(FROZEN_MPY_DIR) -type f -name '*.py' | $(SED) -e 's=^$(FROZEN_MPY_DIR)/==')
 FROZEN_MPY_MPY_FILES := $(addprefix $(BUILD)/frozen_mpy/,$(FROZEN_MPY_PY_FILES:.py=.mpy))
 
-OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_FW) $(OBJ_HAL) $(BUILD)/frozen_mpy.o
+OBJ = $(OBJ_MOD) $(OBJ_MP) $(OBJ_HAL) $(OBJ_TREZORHAL)
+OBJ += $(OBJ_FIRMWARE)
+OBJ += $(BUILD)/frozen_mpy.o
 SRC_MP = $(patsubst $(BUILD_MP)%.o, $(SRCDIR_MP)%.c, $(OBJ_MP))
-SRC_FW = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_FW))
 SRC_MOD = $(patsubst $(BUILD_FW)%.o, $(SRCDIR_FW)%.c, $(OBJ_MOD))
 
 # comp flags
