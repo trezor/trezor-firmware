@@ -722,7 +722,7 @@ class ProtocolMixin(object):
         return txes
 
     @session
-    def sign_tx(self, coin_name, inputs, outputs, debug_processor=None):
+    def sign_tx(self, coin_name, inputs, outputs, version=None, lock_time=None, debug_processor=None):
 
         start = time.time()
         txes = self._prepare_sign_tx(coin_name, inputs, outputs)
@@ -732,6 +732,10 @@ class ProtocolMixin(object):
         tx.inputs_count = len(inputs)
         tx.outputs_count = len(outputs)
         tx.coin_name = coin_name
+        if version is not None:
+            tx.version = version
+        if lock_time is not None:
+            tx.lock_time = lock_time
         res = self.call(tx)
 
         # Prepare structure for signatures
