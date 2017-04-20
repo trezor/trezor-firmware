@@ -21,6 +21,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/f2/rng.h>
+#include "rng.h"
 
 void setup(void)
 {
@@ -42,6 +43,9 @@ void setup(void)
 	// enable RNG
 	rcc_periph_clock_enable(RCC_RNG);
 	RNG_CR |= RNG_CR_IE | RNG_CR_RNGEN;
+	// to be extra careful and heed the STM32F205xx Reference manual, Section 20.3.1
+	// we don't use the first random number generated after setting the RNGEN bit in setup
+	random32();
 
 	// set GPIO for buttons
 	gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO2 | GPIO5);
@@ -69,6 +73,12 @@ void setup(void)
 
 void setupApp(void)
 {
+	// the static variables in random32 are separate between the bootloader and firmware.
+	// therefore, they need to be initialized here so that we can be sure to avoid dupes.
+	// this is to try to comply with STM32F205xx Reference manual - Section 20.3.1:
+	// "Each subsequent generated random number has to be compared with the previously generated
+	// number. The test fails if any two compared numbers are equal (continuous random number generator test)."
+	random32();
 	// hotfix for old bootloader
 	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO9);
 	spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_8, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);

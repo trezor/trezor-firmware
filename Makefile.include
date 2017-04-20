@@ -49,7 +49,6 @@ CFLAGS   += $(OPTFLAGS) \
             -I$(TOP_DIR)gen \
             -I$(TOP_DIR)vendor/trezor-crypto \
             -I$(TOP_DIR)vendor/trezor-crypto/ed25519-donna \
-            -I$(TOP_DIR)vendor/trezor-crypto/curve25519-donna \
             -I$(TOP_DIR)vendor/trezor-qrenc
 
 ifdef APPVER

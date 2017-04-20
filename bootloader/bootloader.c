@@ -38,11 +38,10 @@
 #error Bootloader cannot be used in app mode
 #endif
 
-void layoutFirmwareHash(uint8_t *hash)
+void layoutFirmwareHash(const uint8_t *hash)
 {
 	char str[4][17];
-	int i;
-	for (i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		data2hex(hash + i * 8, 8, str[i]);
 	}
 	layoutDialog(&bmp_icon_question, "Abort", "Continue", "Compare fingerprints", str[0], str[1], str[2], str[3], NULL, NULL);
@@ -54,7 +53,7 @@ void show_halt(void)
 	system_halt();
 }
 
-void show_unofficial_warning(uint8_t *hash)
+void show_unofficial_warning(const uint8_t *hash)
 {
 	layoutDialog(&bmp_icon_warning, "Abort", "I'll take the risk", NULL, "WARNING!", NULL, "Unofficial firmware", "detected.", NULL, NULL);
 
@@ -117,13 +116,13 @@ void bootloader_loop(void)
 
 int check_firmware_sanity(void)
 {
-	if (memcmp((void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
+	if (memcmp((const void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
 		return 0;
 	}
-	if (*((uint32_t *)FLASH_META_CODELEN) < 4096) { // firmware reports smaller size than 4kB
+	if (*((const uint32_t *)FLASH_META_CODELEN) < 4096) { // firmware reports smaller size than 4kB
 		return 0;
 	}
-	if (*((uint32_t *)FLASH_META_CODELEN) > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware reports bigger size than flash size
+	if (*((const uint32_t *)FLASH_META_CODELEN) > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware reports bigger size than flash size
 		return 0;
 	}
 	return 1;
@@ -139,8 +138,8 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 
 int main(void)
 {
-	__stack_chk_guard = random32();
 	setup();
+	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
 	memory_protect();
 	oledInit();
 

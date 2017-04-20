@@ -248,11 +248,15 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 
 int main(void)
 {
-	__stack_chk_guard = random32();
 #ifndef APPVER
 	setup();
+	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
 	oledInit();
+#else
+	setupApp();
+	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
 #endif
+
 	usbInit();
 
 	passlen = strlen((char *)pass);

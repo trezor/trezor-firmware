@@ -189,7 +189,7 @@ def main(args):
         data = sign(data, args.pem)
         check_signatures(data)
 
-    fp = open(args.path, 'w')
+    fp = open(args.path, 'wb')
     fp.write(data)
     fp.close()
 

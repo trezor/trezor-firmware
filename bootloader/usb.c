@@ -183,24 +183,33 @@ static uint8_t meta_backup[FLASH_META_LEN];
 
 static void send_msg_success(usbd_device *dev)
 {
-	// send response: Success message (id 2), payload len 0
+	// response: Success message (id 2), payload len 0
 	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-		"?##"				// header
-		"\x00\x02"			// msg_id
-		"\x00\x00\x00\x00"	// payload_len
+		// header
+		"?##"
+		// msg_id
+		"\x00\x02"
+		// msg_size
+		"\x00\x00\x00\x00"
+		// padding
 		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 		, 64) != 64) {}
 }
 
 static void send_msg_failure(usbd_device *dev)
 {
-	// send response: Failure message (id 3), payload len 2
-		// code = 99 (Failure_FirmwareError)
+	// response: Failure message (id 3), payload len 2
+	//           - code = 99 (Failure_FirmwareError)
 	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-		"?##"				// header
-		"\x00\x03"			// msg_id
-		"\x00\x00\x00\x02"	// payload_len
-		"\x08\x63"			// data
+		// header
+		"?##"
+		// msg_id
+		"\x00\x03"
+		// msg_size
+		"\x00\x00\x00\x02"
+		// data
+		"\x08" "\x63"
+		// padding
 		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 		, 64) != 64) {}
 }
@@ -209,41 +218,66 @@ extern int firmware_present;
 
 static void send_msg_features(usbd_device *dev)
 {
-	// send response: Features message (id 17), payload len 30
-		// vendor = "bitcointrezor.com"
-		// major_version = VERSION_MAJOR
-		// minor_version = VERSION_MINOR
-		// patch_version = VERSION_PATCH
-		// bootloader_mode = True
-		// firmware_present = True/False
+	// response: Features message (id 17), payload len 30
+	//           - vendor = "bitcointrezor.com"
+	//           - major_version = VERSION_MAJOR
+	//           - minor_version = VERSION_MINOR
+	//           - patch_version = VERSION_PATCH
+	//           - bootloader_mode = True
+	//           - firmware_present = True/False
 	if (firmware_present) {
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-			"?##"				// header
-			"\x00\x11"			// msg_id
-			"\x00\x00\x00\x1e"	// payload_len
-			"\x0a\x11" "bitcointrezor.com\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
-			"\x90\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			// header
+			"?##"
+			// msg_id
+			"\x00\x11"
+			// msg_size
+			"\x00\x00\x00\x1e"
+			// data
+			"\x0a" "\x11" "bitcointrezor.com"
+			"\x10" VERSION_MAJOR_CHAR
+			"\x18" VERSION_MINOR_CHAR
+			"\x20" VERSION_PATCH_CHAR
+			"\x28" "\x01"
+			"\x90\x01" "\x01"
+			// padding
+			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
 	} else {
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-			"?##"				// header
-			"\x00\x11"			// msg_id
-			"\x00\x00\x00\x1e"	// payload_len
-			"\x0a\x11" "bitcointrezor.com\x10" VERSION_MAJOR_CHAR "\x18" VERSION_MINOR_CHAR " " VERSION_PATCH_CHAR "(\x01"		// data
-			"\x90\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			// header
+			"?##"
+			// msg_id
+			"\x00\x11"
+			// msg_size
+			"\x00\x00\x00\x1e"
+			// data
+			"\x0a\x11" "bitcointrezor.com"
+			"\x10" VERSION_MAJOR_CHAR
+			"\x18" VERSION_MINOR_CHAR
+			"\x20" VERSION_PATCH_CHAR
+			"\x28" "\x01"
+			"\x90\x01" "\x00"
+			// padding
+			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
 	}
 }
 
 static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev)
 {
-	// send response: ButtonRequest message (id 26), payload len 2
-		// code = ButtonRequest_FirmwareCheck (9)
+	// response: ButtonRequest message (id 26), payload len 2
+	//           - code = ButtonRequest_FirmwareCheck (9)
 	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-		"?##"				// header
-		"\x00\x1a"			// msg_id
-		"\x00\x00\x00\x02"	// payload_len
-		"\x08\x09"			// data
+		// header
+		"?##"
+		// msg_id
+		"\x00\x1a"
+		// msg_size
+		"\x00\x00\x00\x02"
+		// data
+		"\x08" "\x09"
+		// padding
 		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 		, 64) != 64) {}
 }
@@ -288,12 +322,14 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 	if (flash_state == STATE_OPEN) {
 		if (msg_id == 0x0006) {		// FirmwareErase message (id 6)
-			layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
-			do {
-				delay(100000);
-				buttonUpdate();
-			} while (!button.YesUp && !button.NoUp);
-			if (button.YesUp) {
+			if (firmware_present) {
+				layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
+				do {
+					delay(100000);
+					buttonUpdate();
+				} while (!button.YesUp && !button.NoUp);
+			}
+			if (!firmware_present || button.YesUp) {
 				// backup metadata
 				memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
 				flash_unlock();

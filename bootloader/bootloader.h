@@ -33,6 +33,6 @@
 
 #include "memory.h"
 
-void layoutFirmwareHash(uint8_t *hash);
+void layoutFirmwareHash(const uint8_t *hash);
 
 #endif
