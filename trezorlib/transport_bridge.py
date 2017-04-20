@@ -32,6 +32,8 @@ def get_error(resp):
     return ' (error=%d str=%s)' % (resp.status_code, resp.json()['error'])
 
 class BridgeTransport(TransportV1):
+    CONFIGURED = False
+
     def __init__(self, device, *args, **kwargs):
         self.configure()
 
@@ -45,6 +47,7 @@ class BridgeTransport(TransportV1):
 
     @staticmethod
     def configure():
+        if BridgeTransport.CONFIGURED: return
         r = requests.get(CONFIG_URL, verify=False)
         if r.status_code != 200:
             raise Exception('Could not fetch config from %s' % CONFIG_URL)
@@ -54,6 +57,7 @@ class BridgeTransport(TransportV1):
         r = requests.post(TREZORD_HOST + '/configure', data=config)
         if r.status_code != 200:
             raise Exception('trezord: Could not configure' + get_error(r))
+        BridgeTransport.CONFIGURED = True
 
     @classmethod
     def enumerate(cls):
