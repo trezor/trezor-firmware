@@ -1,14 +1,10 @@
-from TrezorMsg import Msg
+from TrezorMsg import Msg, USB, HID, VCP
 
 _msg = Msg()
 
 
-def set_interfaces(ifaces):
-    return _msg.set_interfaces(ifaces)
-
-
-def get_interfaces():
-    return _msg.get_interfaces()
+def init_usb(usb, ifaces):
+    return _msg.init_usb(usb, ifaces)
 
 
 def select(timeout_us):
