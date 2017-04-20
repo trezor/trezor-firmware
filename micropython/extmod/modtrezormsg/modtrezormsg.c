@@ -291,7 +291,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
     if (!MP_OBJ_IS_TYPE(usb_info, &mod_TrezorMsg_USB_type)) {
         mp_raise_TypeError("Expected USB type");
     }
-    mp_obj_USB_t *usb = MP_OBJ_TO_PTR(self);
+    mp_obj_USB_t *usb = MP_OBJ_TO_PTR(usb_info);
     if (0 != usb_init(&usb->info)) {
         mp_raise_msg(&mp_type_RuntimeError, "Failed to initialize USB layer");
     }
