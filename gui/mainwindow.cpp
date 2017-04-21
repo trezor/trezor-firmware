@@ -45,6 +45,9 @@ void MainWindow::on_buttonLoad_clicked()
 void MainWindow::on_spinAccount_valueChanged(int arg1)
 {
     if (!root_set) return;
+    // constants for Bitcoin
+    const uint32_t version_public = 0x0488b21e;
+    const uint32_t version_private = 0x0488ade4;
     const char addr_version = 0x00, wif_version = 0x80;
     const size_t buflen = 128;
     char buf[buflen + 1];
@@ -58,8 +61,8 @@ void MainWindow::on_spinAccount_valueChanged(int arg1)
         hdnode_private_ckd(&node, 0 | 0x80000000); // bitcoin
         hdnode_private_ckd(&node, (arg1 - 1) | 0x80000000);
         fingerprint = hdnode_fingerprint(&node);
-        hdnode_serialize_private(&node, fingerprint, buf, buflen); QString xprv = QString(buf); ui->lineXprv->setText(xprv);
-        hdnode_serialize_public(&node, fingerprint, buf, buflen); QString xpub = QString(buf); ui->lineXpub->setText(xpub);
+        hdnode_serialize_private(&node, fingerprint, version_private, buf, buflen); QString xprv = QString(buf); ui->lineXprv->setText(xprv);
+        hdnode_serialize_public(&node, fingerprint, version_public, buf, buflen); QString xpub = QString(buf); ui->lineXpub->setText(xpub);
         hdnode_private_ckd(&node, chain); // external / internal
         for (int i = 0; i < 100; i++) {
             HDNode node2 = node;
