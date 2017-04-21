@@ -46,8 +46,8 @@ SRCS  += blake2b.c blake2s.c
 
 OBJS   = $(SRCS:.c=.o)
 
-TESTLIBS = -lcheck -lrt -lpthread -lm -lsubunit
-TESTSSLLIBS = -lcrypto 
+TESTLIBS = $(shell pkg-config --libs check) -lrt -lpthread -lm
+TESTSSLLIBS = -lcrypto
 
 all: tests test-openssl libtrezor-crypto.so test_speed tools
 
