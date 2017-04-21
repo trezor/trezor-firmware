@@ -110,19 +110,23 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
     d->fheader.bFunctionLength    = sizeof(usb_vcp_header_descriptor_t);
     d->fheader.bDescriptorType    = USB_DESC_TYPE_CS_INTERACE;
     d->fheader.bDescriptorSubtype = USB_DESC_TYPE_HEADER;
-    d->fheader.bcdCDC             = 0x1001; // Spec release number
+    d->fheader.bcdCDC             = 0x1001; // USB Class Definitions for Communication Devices Specification release number.
 
     // Call Management Functional Descriptor
     d->fcm.bFunctionLength    = sizeof(usb_vcp_cm_descriptor_t);
     d->fcm.bDescriptorType    = USB_DESC_TYPE_CS_INTERACE;
     d->fcm.bDescriptorSubtype = USB_DESC_TYPE_CM;
-    d->fcm.bmCapabilities     = 0x00; // D0+D1
+    // Device sends/receives call management information only over the Communication Class interface.
+    // Device does not handle call management itself.
+    d->fcm.bmCapabilities     = 0x00;
     d->fcm.bDataInterface     = info->data_iface_num;
 
     // ACM Functional Descriptor
     d->facm.bFunctionLength    = sizeof(usb_vcp_acm_descriptor_t);
     d->facm.bDescriptorType    = USB_DESC_TYPE_CS_INTERACE;
     d->facm.bDescriptorSubtype = USB_DESC_TYPE_ACM;
+    // Device supports the request combination of Set_Line_Coding, Set_Control_Line_State,
+    // Get_Line_Coding, and the notification Serial_State.
     d->facm.bmCapabilities     = 0x02;
 
     // Union Functional Descriptor
