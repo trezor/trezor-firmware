@@ -3,8 +3,8 @@ SRCDIR_MP = vendor/micropython
 SRCDIR_FW = micropython
 
 # target directory
-TARGET ?= bootloader
-BUILD ?= micropython/$(TARGET)/build
+PROJECT ?= bootloader
+BUILD ?= micropython/$(PROJECT)/build
 
 # include py core make definitions
 include $(SRCDIR_MP)/py/mkenv.mk
@@ -105,7 +105,7 @@ OBJ += $(OBJ_BOOTLOADER)
 CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
-INC += -I$(SRCDIR_FW)/$(TARGET)
+INC += -I$(SRCDIR_FW)/$(PROJECT)
 INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/trezorhal
 INC += -I$(SRCDIR_FW)/trezorhal/hal
@@ -131,7 +131,7 @@ CFLAGS += -DTREZOR_STM32
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-LDFLAGS = -nostdlib -T $(SRCDIR_FW)/$(TARGET)/memory.ld -Map=$@.map --cref
+LDFLAGS = -nostdlib -T $(SRCDIR_FW)/$(PROJECT)/memory.ld -Map=$@.map --cref
 
 # remove uncalled code from the final image
 CFLAGS += -fdata-sections -ffunction-sections
@@ -140,15 +140,15 @@ LDFLAGS += --gc-sections
 # comp rules
 # =====================================
 
-all: $(BUILD)/$(TARGET).bin
+all: $(BUILD)/$(PROJECT).bin
 
-$(BUILD)/$(TARGET).elf: $(OBJ)
+$(BUILD)/$(PROJECT).elf: $(OBJ)
 	$(ECHO) "LINK $@"
 	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 	$(Q)$(SIZE) $@
 
-$(BUILD)/$(TARGET).bin: $(BUILD)/$(TARGET).elf
-	$(Q)$(OBJCOPY) -O binary -j .header -j .flash -j .data $^ $(BUILD)/$(TARGET).bin
+$(BUILD)/$(PROJECT).bin: $(BUILD)/$(PROJECT).elf
+	$(Q)$(OBJCOPY) -O binary -j .header -j .flash -j .data $^ $(BUILD)/$(PROJECT).bin
 
 $(BUILD)/%.o: %.S
 	$(ECHO) "CC $<"

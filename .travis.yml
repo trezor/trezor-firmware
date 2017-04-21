@@ -6,6 +6,15 @@ compiler:
   - clang
   - gcc
 
+env:
+  - GOAL=stm32
+  - GOAL=unix
+
+matrix:
+  exclude:
+    - compiler: clang
+      env: GOAL=stm32
+
 addons:
   apt:
     packages:
@@ -18,19 +27,14 @@ install:
     - pip3 install ed25519 pyblake2
 
 script:
-  - test "$CC" = "clang" || make vendorheader
+  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make vendorheader
+  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_cross
+  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_boardloader
+  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_bootloader
+  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_firmware
 
-  - test "$CC" = "clang" || make build_cross
-
-  - test "$CC" = "clang" || make build_boardloader
-
-  - test "$CC" = "clang" || make build_bootloader
-
-  - test "$CC" = "clang" || make build_firmware
-
-  - make build_unix TREZOR_NOUI=1
-
-  - test "$CC" = "clang" || make test
+  - test "$GOAL" != "unix" || make build_unix TREZOR_NOUI=1
+  - test "$GOAL" != "unix" || make test
 
 notifications:
   webhooks:
