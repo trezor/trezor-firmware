@@ -288,51 +288,78 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_obj_t usb_ifaces) {
 
-    if (!MP_OBJ_IS_TYPE(usb_info, &mod_TrezorMsg_USB_type)) {
-        mp_raise_TypeError("Expected USB type");
-    }
-    mp_obj_USB_t *usb = MP_OBJ_TO_PTR(usb_info);
-    if (0 != usb_init(&usb->info)) {
-        mp_raise_msg(&mp_type_RuntimeError, "Failed to initialize USB layer");
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
+    if (o->usb_info != mp_const_none || o->usb_ifaces != mp_const_none) {
+        mp_raise_msg(&mp_type_RuntimeError, "already initialized");
     }
 
     size_t iface_cnt;
     mp_obj_t *iface_objs;
     mp_obj_get_array(usb_ifaces, &iface_cnt, &iface_objs);
 
+    // Initialize the USB stack
+    if (MP_OBJ_IS_TYPE(usb_info, &mod_TrezorMsg_USB_type)) {
+        mp_obj_USB_t *usb = MP_OBJ_TO_PTR(usb_info);
+        if (usb_init(&usb->info) != 0) {
+            mp_raise_msg(&mp_type_RuntimeError, "failed to initialize USB");
+        }
+    } else {
+        mp_raise_TypeError("expected USB type");
+    }
+
+    // Add all interfaces
     for (size_t i = 0; i < iface_cnt; i++) {
         mp_obj_t iface = iface_objs[i];
 
         if (MP_OBJ_IS_TYPE(iface, &mod_TrezorMsg_HID_type)) {
             mp_obj_HID_t *hid = MP_OBJ_TO_PTR(iface);
-            if (0 != usb_hid_add(&hid->info)) {
+            if (usb_hid_add(&hid->info) != 0) {
                 usb_deinit();
-                mp_raise_msg(&mp_type_RuntimeError, "Failed to add HID interface");
+                mp_raise_msg(&mp_type_RuntimeError, "failed to add HID interface");
             }
+
         } else if (MP_OBJ_IS_TYPE(iface, &mod_TrezorMsg_VCP_type)) {
             mp_obj_VCP_t *vcp = MP_OBJ_TO_PTR(iface);
-            if (0 != usb_vcp_add(&vcp->info)) {
+            if (usb_vcp_add(&vcp->info) != 0) {
                 usb_deinit();
-                mp_raise_msg(&mp_type_RuntimeError, "Failed to add VCP interface");
+                mp_raise_msg(&mp_type_RuntimeError, "failed to add VCP interface");
             }
+
         } else {
             usb_deinit();
-            mp_raise_TypeError("Unknown interface type");
+            mp_raise_TypeError("expected HID or VCP type");
         }
     }
 
-    if (0 != usb_start()) {
+    // Start the USB stack
+    if (usb_start() != 0) {
         usb_deinit();
-        mp_raise_msg(&mp_type_RuntimeError, "Failed to start USB layer");
+        mp_raise_msg(&mp_type_RuntimeError, "failed to start USB");
     }
 
-    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     o->usb_info = usb_info;
     o->usb_ifaces = usb_ifaces;
 
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_init_usb_obj, mod_TrezorMsg_Msg_init_usb);
+
+/// def trezor.msg.deinit_usb() -> None:
+///     '''
+///     Cleans up the USB stack
+///     '''
+STATIC mp_obj_t mod_TrezorMsg_Msg_deinit_usb(mp_obj_t self) {
+
+    usb_stop();
+    usb_deinit();
+
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
+    o->usb_info = mp_const_none;
+    o->usb_ifaces = mp_const_none;
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg_deinit_usb_obj, mod_TrezorMsg_Msg_deinit_usb);
 
 /// def trezor.msg.send(iface: int, message: bytes) -> int:
 ///     '''
@@ -397,9 +424,20 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_select_obj, mod_TrezorMsg_Msg_select);
 
+STATIC mp_obj_t mod_TrezorMsg_Msg___del__(mp_obj_t self) {
+    mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
+    if (o->usb_info != mp_const_none || o->usb_ifaces != mp_const_none) {
+        usb_stop();
+        usb_deinit();
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg___del___obj, mod_TrezorMsg_Msg___del__);
+
 STATIC const mp_rom_map_elem_t mod_TrezorMsg_Msg_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorMsg_Msg___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_init_usb), MP_ROM_PTR(&mod_TrezorMsg_Msg_init_usb_obj) },
-    // { MP_ROM_QSTR(MP_QSTR_deinit_usb), MP_ROM_PTR(&mod_TrezorMsg_Msg_deinit_usb_obj) },
+    { MP_ROM_QSTR(MP_QSTR_deinit_usb), MP_ROM_PTR(&mod_TrezorMsg_Msg_deinit_usb_obj) },
     { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_TrezorMsg_Msg_send_obj) },
     { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorMsg_Msg_select_obj) },
 };
