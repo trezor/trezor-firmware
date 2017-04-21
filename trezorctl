@@ -235,7 +235,7 @@ class Commands(object):
 
     def get_public_node(self, args):
         address_n = self.client.expand_path(args.n)
-        return self.client.get_public_node(address_n, ecdsa_curve_name=args.curve, show_display=args.show_display)
+        return self.client.get_public_node(address_n, ecdsa_curve_name=args.curve, show_display=args.show_display, coin_name=args.coin_name)
 
     def enable_passphrase(self, args):
         return self.client.apply_settings(use_passphrase=True)
