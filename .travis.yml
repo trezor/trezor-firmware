@@ -2,6 +2,10 @@ sudo: false
 dist: trusty
 language: c
 
+compiler:
+  - clang
+  - gcc
+
 addons:
   apt:
     packages:
@@ -14,19 +18,19 @@ install:
     - pip3 install ed25519 pyblake2
 
 script:
-  - make vendorheader
+  - test "$CC" = "clang" || make vendorheader
 
-  - make build_cross
+  - test "$CC" = "clang" || make build_cross
 
-  - make build_boardloader
+  - test "$CC" = "clang" || make build_boardloader
 
-  - make build_bootloader
+  - test "$CC" = "clang" || make build_bootloader
 
-  - make build_firmware
+  - test "$CC" = "clang" || make build_firmware
 
   - make build_unix TREZOR_NOUI=1
 
-  - make test
+  - test "$CC" = "clang" || make test
 
 notifications:
   webhooks:
