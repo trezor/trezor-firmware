@@ -11,6 +11,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "unix-usb-mock.h"
+
 #define TREZOR_UDP_PORT 21324
 
 static int s;

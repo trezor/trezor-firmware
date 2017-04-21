@@ -57,11 +57,11 @@ STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_a
     const mp_int_t vendor_id      = vals[0].u_int;
     const mp_int_t product_id     = vals[1].u_int;
     const mp_int_t release_num    = vals[2].u_int;
-    const char *manufacturer_str  = get_0str(vals[3].u_obj, 1, 32);
-    const char *product_str       = get_0str(vals[4].u_obj, 1, 32);
-    const char *serial_number_str = get_0str(vals[5].u_obj, 1, 32);
-    const char *configuration_str = get_0str(vals[6].u_obj, 1, 32);
-    const char *interface_str     = get_0str(vals[7].u_obj, 1, 32);
+    const char *manufacturer_str  = get_0str(vals[3].u_obj, 0, 32);
+    const char *product_str       = get_0str(vals[4].u_obj, 0, 32);
+    const char *serial_number_str = get_0str(vals[5].u_obj, 0, 32);
+    const char *configuration_str = get_0str(vals[6].u_obj, 0, 32);
+    const char *interface_str     = get_0str(vals[7].u_obj, 0, 32);
 
     if (vendor_id < 0 || vendor_id > 65535) {
         mp_raise_ValueError("vendor_id is invalid");
@@ -317,14 +317,12 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
                 usb_deinit();
                 mp_raise_msg(&mp_type_RuntimeError, "failed to add HID interface");
             }
-
         } else if (MP_OBJ_IS_TYPE(iface, &mod_TrezorMsg_VCP_type)) {
             mp_obj_VCP_t *vcp = MP_OBJ_TO_PTR(iface);
             if (usb_vcp_add(&vcp->info) != 0) {
                 usb_deinit();
                 mp_raise_msg(&mp_type_RuntimeError, "failed to add VCP interface");
             }
-
         } else {
             usb_deinit();
             mp_raise_TypeError("expected HID or VCP type");
