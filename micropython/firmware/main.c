@@ -20,90 +20,6 @@
 #include "rng.h"
 #include "sdcard.h"
 #include "touch.h"
-#include "usb.h"
-
-int usb_init_all(void) {
-    static const usb_dev_info_t dev_info = {
-        .vendor_id         = 0x1209,
-        .product_id        = 0x53C1,
-        .release_num       = 0x0002,
-        .manufacturer_str  = (const uint8_t *)"SatoshiLabs",
-        .product_str       = (const uint8_t *)"TREZOR",
-        .serial_number_str = (const uint8_t *)"000000000000000000000000",
-        .configuration_str = (const uint8_t *)"",
-        .interface_str     = (const uint8_t *)"",
-    };
-    static uint8_t hid_rx_buffer[64];
-    static const uint8_t hid_report_desc[] = {
-        0x06, 0x00, 0xff,  // USAGE_PAGE (Vendor Defined)
-        0x09, 0x01,        // USAGE (1)
-        0xa1, 0x01,        // COLLECTION (Application)
-        0x09, 0x20,        // USAGE (Input Report Data)
-        0x15, 0x00,        // LOGICAL_MINIMUM (0)
-        0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
-        0x75, 0x08,        // REPORT_SIZE (8)
-        0x95, 0x40,        // REPORT_COUNT (64)
-        0x81, 0x02,        // INPUT (Data,Var,Abs)
-        0x09, 0x21,        // USAGE (Output Report Data)
-        0x15, 0x00,        // LOGICAL_MINIMUM (0)
-        0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
-        0x75, 0x08,        // REPORT_SIZE (8)
-        0x95, 0x40,        // REPORT_COUNT (64)
-        0x91, 0x02,        // OUTPUT (Data,Var,Abs)
-        0xc0               // END_COLLECTION
-    };
-    static const usb_hid_info_t hid_info = {
-        .iface_num        = 0x00,
-        .ep_in            = USB_EP_DIR_IN | 0x01,
-        .ep_out           = USB_EP_DIR_OUT | 0x01,
-        .subclass         = 0,
-        .protocol         = 0,
-        .max_packet_len   = sizeof(hid_rx_buffer),
-        .rx_buffer        = hid_rx_buffer,
-        .polling_interval = 1,
-        .report_desc_len  = sizeof(hid_report_desc),
-        .report_desc      = hid_report_desc,
-    };
-    static uint8_t vcp_rx_buffer[1024];
-    static uint8_t vcp_rx_packet[64];
-    static uint8_t vcp_tx_buffer[1024];
-    static uint8_t vcp_tx_packet[64];  // Needs to be same size as vcp_rx_packet
-    static const usb_vcp_info_t vcp_info = {
-        .iface_num        = 0x01,
-        .data_iface_num   = 0x02,
-        .ep_cmd           = USB_EP_DIR_IN | 0x02,
-        .ep_in            = USB_EP_DIR_IN | 0x03,
-        .ep_out           = USB_EP_DIR_OUT | 0x03,
-        .polling_interval = 10,
-        .max_packet_len   = sizeof(vcp_rx_packet),
-        .rx_packet        = vcp_rx_packet,
-        .tx_packet        = vcp_tx_packet,
-
-        .rx_buffer_len    = sizeof(vcp_rx_buffer),
-        .rx_buffer        = vcp_rx_buffer,
-
-        .tx_buffer_len    = sizeof(vcp_tx_buffer),
-        .tx_buffer        = vcp_tx_buffer,
-
-        .rx_intr_byte     = 3, // Ctrl-C
-        .rx_intr_fn       = pendsv_kbd_intr,
-    };
-
-    if (0 != usb_init(&dev_info)) {
-        __fatal_error("usb_init failed");
-    }
-    if (0 != usb_hid_add(&hid_info)) {
-        __fatal_error("usb_hid_add failed");
-    }
-    if (0 != usb_vcp_add(&vcp_info)) {
-        __fatal_error("usb_vcp_add failed");
-    }
-    if (0 != usb_start()) {
-        __fatal_error("usb_start failed");
-    }
-
-    return 0;
-}
 
 int main(void) {
 
@@ -130,10 +46,6 @@ int main(void) {
     if (0 != touch_init()) {
         __fatal_error("touch_init failed");
     }
-
-    // if (0 != usb_init_all()) {
-    //     __fatal_error("usb_init_all failed");
-    // }
 
     for (;;) {
         // Stack limit should be less than real stack size, so we have a chance
