@@ -28,42 +28,47 @@ from apps.common import storage
 ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
 # Register USB ifaces
-usb = msg.USB(
-    vendor_id=0x1209,
-    product_id=0x53C1,
-    release_num=0x0002,
-    manufacturer_str="manufacturer_str",
-    product_str="product_str",
-    serial_number_str="serial_number_str",
-    configuration_str="configuration_str",
-    interface_str="interface_str",
-)
 hid_wire_iface = const(0x00)
-hid_wire_rdesc = bytes([
-    0x06, 0x00, 0xff,  # USAGE_PAGE (Vendor Defined)
-    0x09, 0x01,        # USAGE (1)
-    0xa1, 0x01,        # COLLECTION (Application)
-    0x09, 0x20,        # USAGE (Input Report Data)
-    0x15, 0x00,        # LOGICAL_MINIMUM (0)
-    0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-    0x75, 0x08,        # REPORT_SIZE (8)
-    0x95, 0x40,        # REPORT_COUNT (64)
-    0x81, 0x02,        # INPUT (Data,Var,Abs)
-    0x09, 0x21,        # USAGE (Output Report Data)
-    0x15, 0x00,        # LOGICAL_MINIMUM (0)
-    0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-    0x75, 0x08,        # REPORT_SIZE (8)
-    0x95, 0x40,        # REPORT_COUNT (64)
-    0x91, 0x02,        # OUTPUT (Data,Var,Abs)
-    0xc0,              # END_COLLECTION
-])
 hid_wire = msg.HID(
     iface_num=hid_wire_iface,
     ep_in=0x81,
     ep_out=0x01,
-    report_desc=hid_wire_rdesc,
+    report_desc=bytes([
+        0x06, 0x00, 0xff,  # USAGE_PAGE (Vendor Defined)
+        0x09, 0x01,        # USAGE (1)
+        0xa1, 0x01,        # COLLECTION (Application)
+        0x09, 0x20,        # USAGE (Input Report Data)
+        0x15, 0x00,        # LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
+        0x75, 0x08,        # REPORT_SIZE (8)
+        0x95, 0x40,        # REPORT_COUNT (64)
+        0x81, 0x02,        # INPUT (Data,Var,Abs)
+        0x09, 0x21,        # USAGE (Output Report Data)
+        0x15, 0x00,        # LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
+        0x75, 0x08,        # REPORT_SIZE (8)
+        0x95, 0x40,        # REPORT_COUNT (64)
+        0x91, 0x02,        # OUTPUT (Data,Var,Abs)
+        0xc0,              # END_COLLECTION
+    ]),
 )
-msg.init_usb(usb, (hid_wire,))
+vcp = msg.VCP(
+    iface_num=0x01,
+    data_iface_num=0x02,
+    ep_in=0x82,
+    ep_out=0x02,
+    ep_cmd=0x83,
+)
+msg.init_usb(msg.USB(
+    vendor_id=0x1209,
+    product_id=0x53C1,
+    release_num=0x0002,
+    manufacturer_str="SatoshiLabs",
+    product_str="TREZOR",
+    serial_number_str="000000000000000000000000",
+    configuration_str="",
+    interface_str="",
+), (hid_wire, vcp))
 
 # Initialize the wire codec pipeline
 wire.setup(hid_wire_iface)
