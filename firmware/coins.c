@@ -26,14 +26,14 @@
 // filled CoinType Protobuf structure defined in https://github.com/trezor/trezor-common/blob/master/protob/types.proto#L133
 // address types > 0xFF represent a two-byte prefix in big-endian order
 const CoinType coins[COINS_COUNT] = {
-	{true, "Bitcoin",       true, "BTC",  true,    0, true,     300000, true,    5, true,  6, true,  10, true, "\x18" "Bitcoin Signed Message:\n",  },
-	{true, "Testnet",       true, "TEST", true,  111, true,   10000000, true,  196, true,  3, true,  40, true, "\x18" "Bitcoin Signed Message:\n",  },
-	{true, "Namecoin",      true, "NMC",  true,   52, true,   10000000, true,    5, false, 0, false,  0, true, "\x19" "Namecoin Signed Message:\n", },
-	{true, "Litecoin",      true, "LTC",  true,   48, true,    1000000, true,    5, false, 0, false,  0, true, "\x19" "Litecoin Signed Message:\n", },
-	{true, "Dogecoin",      true, "DOGE", true,   30, true, 1000000000, true,   22, false, 0, false,  0, true, "\x19" "Dogecoin Signed Message:\n", },
-	{true, "Dash",          true, "DASH", true,   76, true,     100000, true,   16, false, 0, false,  0, true, "\x19" "DarkCoin Signed Message:\n", },
-	{true, "Zcash",         true, "ZEC",  true, 7352, true,    1000000, true, 7357, false, 0, false,  0, true, "\x16" "Zcash Signed Message:\n",    },
-	{true, "Zcash Testnet", true, "TAZ",  true, 7461, true,   10000000, true, 7354, false, 0, false,  0, true, "\x16" "Zcash Signed Message:\n",    },
+	{true, "Bitcoin",       true, "BTC",  true,    0, true,     300000, true,    5, true,  6, true,  10, true, "\x18" "Bitcoin Signed Message:\n",  true, 0x0488b21e, true, 0x0488ade4, },
+	{true, "Testnet",       true, "TEST", true,  111, true,   10000000, true,  196, true,  3, true,  40, true, "\x18" "Bitcoin Signed Message:\n",  true, 0x043587cf, true, 0x04358394, },
+	{true, "Namecoin",      true, "NMC",  true,   52, true,   10000000, true,    5, false, 0, false,  0, true, "\x19" "Namecoin Signed Message:\n", true, 0x019da462, true, 0x019d9cfe, },
+	{true, "Litecoin",      true, "LTC",  true,   48, true,    1000000, true,    5, false, 0, false,  0, true, "\x19" "Litecoin Signed Message:\n", true, 0x019da462, true, 0x019d9cfe, },
+	{true, "Dogecoin",      true, "DOGE", true,   30, true, 1000000000, true,   22, false, 0, false,  0, true, "\x19" "Dogecoin Signed Message:\n", true, 0x02facafd, true, 0x02fac398, },
+	{true, "Dash",          true, "DASH", true,   76, true,     100000, true,   16, false, 0, false,  0, true, "\x19" "DarkCoin Signed Message:\n", true, 0x02fe52cc, true, 0x02fe52f8, },
+	{true, "Zcash",         true, "ZEC",  true, 7352, true,    1000000, true, 7357, false, 0, false,  0, true, "\x16" "Zcash Signed Message:\n",    true, 0x0488b21e, true, 0x0488ade4, },
+	{true, "Zcash Testnet", true, "TAZ",  true, 7461, true,   10000000, true, 7354, false, 0, false,  0, true, "\x16" "Zcash Signed Message:\n",    true, 0x043587cf, true, 0x04358394, },
 };
 
 const CoinType *coinByShortcut(const char *shortcut)

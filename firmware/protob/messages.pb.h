@@ -598,6 +598,8 @@ typedef struct _GetPublicKey {
     char ecdsa_curve_name[32];
     bool has_show_display;
     bool show_display;
+    bool has_coin_name;
+    char coin_name[17];
 } GetPublicKey;
 
 typedef struct _LoadDevice {
@@ -831,6 +833,7 @@ typedef struct _WordRequest {
 } WordRequest;
 
 /* Default values for struct fields */
+extern const char GetPublicKey_coin_name_default[17];
 extern const char GetAddress_coin_name_default[17];
 extern const InputScriptType GetAddress_script_type_default;
 extern const char LoadDevice_language_default[17];
@@ -867,7 +870,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define PassphraseAck_init_default               {""}
 #define GetEntropy_init_default                  {0}
 #define Entropy_init_default                     {{0, {0}}}
-#define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
+#define GetPublicKey_init_default                {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, "Bitcoin"}
 #define PublicKey_init_default                   {HDNodeType_init_default, false, ""}
 #define GetAddress_init_default                  {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin", false, 0, false, MultisigRedeemScriptType_init_default, false, InputScriptType_SPENDADDRESS}
 #define EthereumGetAddress_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, 0}
@@ -933,7 +936,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define PassphraseAck_init_zero                  {""}
 #define GetEntropy_init_zero                     {0}
 #define Entropy_init_zero                        {{0, {0}}}
-#define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0}
+#define GetPublicKey_init_zero                   {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, ""}
 #define PublicKey_init_zero                      {HDNodeType_init_zero, false, ""}
 #define GetAddress_init_zero                     {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, 0, false, MultisigRedeemScriptType_init_zero, false, (InputScriptType)0}
 #define EthereumGetAddress_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, 0}
@@ -1090,6 +1093,7 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define GetPublicKey_address_n_tag               1
 #define GetPublicKey_ecdsa_curve_name_tag        2
 #define GetPublicKey_show_display_tag            3
+#define GetPublicKey_coin_name_tag               4
 #define LoadDevice_mnemonic_tag                  1
 #define LoadDevice_node_tag                      2
 #define LoadDevice_pin_tag                       3
@@ -1178,7 +1182,7 @@ extern const pb_field_t PassphraseRequest_fields[1];
 extern const pb_field_t PassphraseAck_fields[2];
 extern const pb_field_t GetEntropy_fields[2];
 extern const pb_field_t Entropy_fields[2];
-extern const pb_field_t GetPublicKey_fields[4];
+extern const pb_field_t GetPublicKey_fields[5];
 extern const pb_field_t PublicKey_fields[3];
 extern const pb_field_t GetAddress_fields[6];
 extern const pb_field_t EthereumGetAddress_fields[3];
@@ -1246,7 +1250,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define PassphraseAck_size                       53
 #define GetEntropy_size                          6
 #define Entropy_size                             1027
-#define GetPublicKey_size                        84
+#define GetPublicKey_size                        103
 #define PublicKey_size                           (121 + HDNodeType_size)
 #define GetAddress_size                          (81 + MultisigRedeemScriptType_size)
 #define EthereumGetAddress_size                  50

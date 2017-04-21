@@ -3,6 +3,7 @@
 
 #include "messages.pb.h"
 
+const char GetPublicKey_coin_name_default[17] = "Bitcoin";
 const char GetAddress_coin_name_default[17] = "Bitcoin";
 const InputScriptType GetAddress_script_type_default = InputScriptType_SPENDADDRESS;
 const char LoadDevice_language_default[17] = "english";
@@ -130,10 +131,11 @@ const pb_field_t Entropy_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t GetPublicKey_fields[4] = {
+const pb_field_t GetPublicKey_fields[5] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, GetPublicKey, address_n, address_n, 0),
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, GetPublicKey, ecdsa_curve_name, address_n, 0),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, GetPublicKey, show_display, ecdsa_curve_name, 0),
+    PB_FIELD2(  4, STRING  , OPTIONAL, STATIC  , OTHER, GetPublicKey, coin_name, show_display, &GetPublicKey_coin_name_default),
     PB_LAST_FIELD
 };
 

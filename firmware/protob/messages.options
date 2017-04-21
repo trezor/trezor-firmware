@@ -26,6 +26,7 @@ Entropy.entropy				max_size:1024
 
 GetPublicKey.address_n			max_count:8
 GetPublicKey.ecdsa_curve_name		max_size:32
+GetPublicKey.coin_name			max_size:17
 
 PublicKey.xpub				max_size:113
 

@@ -30,6 +30,12 @@ for c in coins:
 
         'true' if c['signed_message_header'] is not None else 'false',
         '"\\x%02x" "%s"' % (len(c['signed_message_header']), c['signed_message_header'].replace('\n', '\\n')) if c['signed_message_header'] is not None else 'NULL',
+
+        'true' if c['xpub_magic'] is not None else 'false',
+        '0x%s' % c['xpub_magic'] if c['xpub_magic'] is not None else '00000000',
+
+        'true' if c['xprv_magic'] is not None else 'false',
+        '0x%s' % c['xprv_magic'] if c['xprv_magic'] is not None else '00000000'
     ])
 
 for j in range(len(fields[0])):

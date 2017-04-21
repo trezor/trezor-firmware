@@ -317,6 +317,9 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 
 	CHECK_PIN
 
+	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	if (!coin) return;
+
 	const char *curve = SECP256K1_NAME;
 	if (msg->has_ecdsa_curve_name) {
 		curve = msg->ecdsa_curve_name;
@@ -360,7 +363,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 		resp->node.public_key.bytes[0] = 0;
 	}
 	resp->has_xpub = true;
-	hdnode_serialize_public(node, fingerprint, resp->xpub, sizeof(resp->xpub));
+	hdnode_serialize_public(node, fingerprint, resp->xpub, sizeof(resp->xpub), coin->xpub_magic);
 	msg_write(MessageType_MessageType_PublicKey, resp);
 	layoutHome();
 }
