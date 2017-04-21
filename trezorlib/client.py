@@ -470,6 +470,7 @@ class ProtocolMixin(object):
             "Ether": 60,
             "EtherClassic": 61,
             "Zcash": 133,
+            "Decred": 42
         }
         if n[0] in coins:
             n = ["44'", "%d'" % coins[n[0]] ] + n[1:]
