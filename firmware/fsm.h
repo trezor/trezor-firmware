@@ -32,8 +32,6 @@ void fsm_msgGetFeatures(GetFeatures *msg);
 void fsm_msgPing(Ping *msg);
 void fsm_msgChangePin(ChangePin *msg);
 void fsm_msgWipeDevice(WipeDevice *msg);
-void fsm_msgFirmwareErase(FirmwareErase *msg);
-void fsm_msgFirmwareUpload(FirmwareUpload *msg);
 void fsm_msgGetEntropy(GetEntropy *msg);
 void fsm_msgGetPublicKey(GetPublicKey *msg);
 void fsm_msgLoadDevice(LoadDevice *msg);

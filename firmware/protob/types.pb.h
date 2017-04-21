@@ -98,6 +98,10 @@ typedef struct _CoinType {
     uint32_t address_type_p2wsh;
     bool has_signed_message_header;
     char signed_message_header[32];
+    bool has_xpub_magic;
+    uint32_t xpub_magic;
+    bool has_xprv_magic;
+    uint32_t xprv_magic;
 } CoinType;
 
 typedef struct {
@@ -288,6 +292,8 @@ extern const uint32_t CoinType_address_type_default;
 extern const uint32_t CoinType_address_type_p2sh_default;
 extern const uint32_t CoinType_address_type_p2wpkh_default;
 extern const uint32_t CoinType_address_type_p2wsh_default;
+extern const uint32_t CoinType_xpub_magic_default;
+extern const uint32_t CoinType_xprv_magic_default;
 extern const uint32_t TxInputType_sequence_default;
 extern const InputScriptType TxInputType_script_type_default;
 extern const uint32_t IdentityType_index_default;
@@ -295,7 +301,7 @@ extern const uint32_t IdentityType_index_default;
 /* Initializer values for message structs */
 #define HDNodeType_init_default                  {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define HDNodePathType_init_default              {HDNodeType_init_default, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
-#define CoinType_init_default                    {false, "", false, "", false, 0u, false, 0, false, 5u, false, 6u, false, 10u, false, ""}
+#define CoinType_init_default                    {false, "", false, "", false, 0u, false, 0, false, 5u, false, 6u, false, 10u, false, "", false, 76067358u, false, 76066276u}
 #define MultisigRedeemScriptType_init_default    {0, {HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default, HDNodePathType_init_default}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 4294967295u, false, InputScriptType_SPENDADDRESS, false, MultisigRedeemScriptType_init_default, false, 0}
 #define TxOutputType_init_default                {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_default, false, {0, {0}}}
@@ -306,7 +312,7 @@ extern const uint32_t IdentityType_index_default;
 #define IdentityType_init_default                {false, "", false, "", false, "", false, "", false, "", false, 0u}
 #define HDNodeType_init_zero                     {0, 0, 0, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
 #define HDNodePathType_init_zero                 {HDNodeType_init_zero, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
-#define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, ""}
+#define CoinType_init_zero                       {false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0}
 #define MultisigRedeemScriptType_init_zero       {0, {HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero, HDNodePathType_init_zero}, 0, {{0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}}, false, 0}
 #define TxInputType_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, 0, false, {0, {0}}, false, 0, false, (InputScriptType)0, false, MultisigRedeemScriptType_init_zero, false, 0}
 #define TxOutputType_init_zero                   {false, "", 0, {0, 0, 0, 0, 0, 0, 0, 0}, 0, (OutputScriptType)0, false, MultisigRedeemScriptType_init_zero, false, {0, {0}}}
@@ -325,6 +331,8 @@ extern const uint32_t IdentityType_index_default;
 #define CoinType_address_type_p2wpkh_tag         6
 #define CoinType_address_type_p2wsh_tag          7
 #define CoinType_signed_message_header_tag       8
+#define CoinType_xpub_magic_tag                  9
+#define CoinType_xprv_magic_tag                  10
 #define HDNodeType_depth_tag                     1
 #define HDNodeType_fingerprint_tag               2
 #define HDNodeType_child_num_tag                 3
@@ -382,7 +390,7 @@ extern const uint32_t IdentityType_index_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t HDNodeType_fields[7];
 extern const pb_field_t HDNodePathType_fields[3];
-extern const pb_field_t CoinType_fields[9];
+extern const pb_field_t CoinType_fields[11];
 extern const pb_field_t MultisigRedeemScriptType_fields[4];
 extern const pb_field_t TxInputType_fields[9];
 extern const pb_field_t TxOutputType_fields[7];
@@ -395,7 +403,7 @@ extern const pb_field_t IdentityType_fields[7];
 /* Maximum encoded size of messages (where known) */
 #define HDNodeType_size                          121
 #define HDNodePathType_size                      171
-#define CoinType_size                            99
+#define CoinType_size                            111
 #define MultisigRedeemScriptType_size            3741
 #define TxInputType_size                         5508
 #define TxOutputType_size                        3934

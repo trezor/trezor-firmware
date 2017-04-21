@@ -120,13 +120,11 @@ GetECDHSessionKey.ecdsa_curve_name	max_size:32
 ECDHSessionKey.session_key		max_size:65
 
 # not used in firmware
-SimpleSignTx.inputs			max_count:0
-SimpleSignTx.outputs			max_count:0
-SimpleSignTx.transactions		max_count:0
-SimpleSignTx.coin_name			max_size:17
+SimpleSignTx				skip_message:true
+FirmwareRequest				skip_message:true
+FirmwareUpload				skip_message:true
 
-# not used in firmware
-FirmwareUpload.payload			max_size:0
+# used in debug firmware
 
 DebugLinkState.layout			max_size:1024
 DebugLinkState.pin			max_size:10
