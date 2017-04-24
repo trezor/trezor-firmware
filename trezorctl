@@ -235,7 +235,7 @@ class Commands(object):
 
     def get_public_node(self, args):
         address_n = self.client.expand_path(args.n)
-        return self.client.get_public_node(address_n, ecdsa_curve_name=args.curve, show_display=args.show_display, coin_name=args.coin_name)
+        return self.client.get_public_node(address_n, ecdsa_curve_name=args.curve, show_display=args.show_display, coin_name=args.coin)
 
     def enable_passphrase(self, args):
         return self.client.apply_settings(use_passphrase=True)
@@ -532,6 +532,7 @@ class Commands(object):
     )
 
     get_public_node.arguments = (
+        (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),
         (('-n', '-address'), {'type': str}),
         (('-e', '--curve'), {'type': str}),
         (('-d', '--show-display'), {'action': 'store_true', 'default': False}),
