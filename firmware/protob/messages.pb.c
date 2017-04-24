@@ -325,7 +325,7 @@ const pb_field_t TxAck_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t EthereumSignTx_fields[10] = {
+const pb_field_t EthereumSignTx_fields[11] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, EthereumSignTx, address_n, address_n, 0),
     PB_FIELD2(  2, BYTES   , OPTIONAL, STATIC  , OTHER, EthereumSignTx, nonce, address_n, 0),
     PB_FIELD2(  3, BYTES   , OPTIONAL, STATIC  , OTHER, EthereumSignTx, gas_price, nonce, 0),
@@ -335,6 +335,7 @@ const pb_field_t EthereumSignTx_fields[10] = {
     PB_FIELD2(  7, BYTES   , OPTIONAL, STATIC  , OTHER, EthereumSignTx, data_initial_chunk, value, 0),
     PB_FIELD2(  8, UINT32  , OPTIONAL, STATIC  , OTHER, EthereumSignTx, data_length, data_initial_chunk, 0),
     PB_FIELD2(  9, UINT32  , OPTIONAL, STATIC  , OTHER, EthereumSignTx, chain_id, data_length, 0),
+    PB_FIELD2( 10, BYTES   , OPTIONAL, STATIC  , OTHER, EthereumSignTx, prefix, chain_id, 0),
     PB_LAST_FIELD
 };
 

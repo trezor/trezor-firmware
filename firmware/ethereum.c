@@ -438,6 +438,8 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		msg->to.size = 0;
 	if (!msg->has_nonce)
 		msg->nonce.size = 0;
+	if (!msg->has_prefix)
+		msg->prefix.size = 0;
 
 	/* eip-155 chain id */
 	if (msg->has_chain_id) {
@@ -512,6 +514,9 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutProgress("Signing", 0);
 
+	if (msg->has_prefix) {
+		rlp_length += rlp_calculate_length(msg->prefix.size, msg->prefix.bytes[0]);
+	}
 	rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
 	rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
 	rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
@@ -529,6 +534,9 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutProgress("Signing", 100);
 
+	if (msg->has_prefix) {
+		hash_rlp_field(msg->prefix.bytes, msg->prefix.size);
+	}
 	hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
 	hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
 	hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
