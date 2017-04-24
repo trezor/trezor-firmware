@@ -10,6 +10,9 @@ fields = [
     'address_type_p2wpkh',
     'address_type_p2wsh',
     'signed_message_header',
+    'xpub_magic',
+    'xprv_magic',
+    'bip44',
 ]
 
 coins = json.load(open('../../trezor-common/coins.json', 'r'))
@@ -18,6 +21,9 @@ print('COINS = [')
 for c in coins:
     print('    CoinType(')
     for n in fields:
-        print('        %s=%s,' % (n, repr(c[n])))
+        if n in ['xpub_magic', 'xprv_magic']:
+            print('        %s=0x%s,' % (n, c[n]))
+        else:
+            print('        %s=%s,' % (n, repr(c[n])))
     print('    ),')
 print(']\n')

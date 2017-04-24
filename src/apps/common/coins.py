@@ -12,6 +12,9 @@ COINS = [
         address_type_p2wpkh=6,
         address_type_p2wsh=10,
         signed_message_header='Bitcoin Signed Message:\n',
+        xpub_magic=0x0488b21e,
+        xprv_magic=0x0488ade4,
+        bip44=0,
     ),
     CoinType(
         coin_name='Testnet',
@@ -22,6 +25,9 @@ COINS = [
         address_type_p2wpkh=3,
         address_type_p2wsh=40,
         signed_message_header='Bitcoin Signed Message:\n',
+        xpub_magic=0x043587cf,
+        xprv_magic=0x04358394,
+        bip44=1,
     ),
     CoinType(
         coin_name='Namecoin',
@@ -32,6 +38,9 @@ COINS = [
         address_type_p2wpkh=None,
         address_type_p2wsh=None,
         signed_message_header='Namecoin Signed Message:\n',
+        xpub_magic=0x019da462,
+        xprv_magic=0x019d9cfe,
+        bip44=7,
     ),
     CoinType(
         coin_name='Litecoin',
@@ -42,6 +51,9 @@ COINS = [
         address_type_p2wpkh=None,
         address_type_p2wsh=None,
         signed_message_header='Litecoin Signed Message:\n',
+        xpub_magic=0x019da462,
+        xprv_magic=0x019d9cfe,
+        bip44=2,
     ),
     CoinType(
         coin_name='Dogecoin',
@@ -52,6 +64,9 @@ COINS = [
         address_type_p2wpkh=None,
         address_type_p2wsh=None,
         signed_message_header='Dogecoin Signed Message:\n',
+        xpub_magic=0x02facafd,
+        xprv_magic=0x02fac398,
+        bip44=3,
     ),
     CoinType(
         coin_name='Dash',
@@ -62,6 +77,9 @@ COINS = [
         address_type_p2wpkh=None,
         address_type_p2wsh=None,
         signed_message_header='DarkCoin Signed Message:\n',
+        xpub_magic=0x02fe52cc,
+        xprv_magic=0x02fe52f8,
+        bip44=5,
     ),
     CoinType(
         coin_name='Zcash',
@@ -72,6 +90,9 @@ COINS = [
         address_type_p2wpkh=None,
         address_type_p2wsh=None,
         signed_message_header='Zcash Signed Message:\n',
+        xpub_magic=0x0488b21e,
+        xprv_magic=0x0488ade4,
+        bip44=133,
     ),
     CoinType(
         coin_name='Zcash Testnet',
@@ -82,6 +103,9 @@ COINS = [
         address_type_p2wpkh=None,
         address_type_p2wsh=None,
         signed_message_header='Zcash Signed Message:\n',
+        xpub_magic=0x043587cf,
+        xprv_magic=0x04358394,
+        bip44=1,
     ),
 ]
 
