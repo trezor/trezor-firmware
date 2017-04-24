@@ -13,6 +13,8 @@
 		"https://[\\w\\.-]+\\.coinprism\\.com(/.*)?",
 		"https://bitex\\.la(/.*)?",
 		"https://[\\w\\.-]+\\.bitex\\.la(/.*)?",
+		"https://dash\\.run(/.*)?",
+		"https://[\\w\\.-]+\\.dash\\.run(/.*)?",
 		"chrome-extension://jcjjhjgimijdkoamemaghajlhegmoclj(/.*)?"
 		],
 	"blacklist_urls": [
