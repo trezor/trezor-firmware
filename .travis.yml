@@ -18,9 +18,7 @@ python:
     - "2.7"
     - "3.4"
     - "3.5"
-
-before_install:
-   - pip install setuptools --upgrade
+    - "3.6"
 
 install:
     # Optimisation: build requirements as wheels, which get cached by Travis
