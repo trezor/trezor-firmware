@@ -21,9 +21,25 @@ from __future__ import print_function
 import sys
 sys.path = ['../../'] + sys.path
 
-from trezorlib.transport_pipe import PipeTransport
-from trezorlib.transport_hid import HidTransport
-from trezorlib.transport_udp import UdpTransport
+
+try:
+    from trezorlib.transport_hid import HidTransport
+    HID_ENABLED = True
+except:
+    HID_ENABLED = False
+
+try:
+    from trezorlib.transport_pipe import PipeTransport
+    PIPE_ENABLED = True
+except:
+    PIPE_ENABLED = False
+
+try:
+    from trezorlib.transport_udp import UdpTransport
+    UDP_ENABLED = True
+except:
+    UDP_ENABLED = False
+
 
 def pipe_exists(path):
     import os
@@ -33,27 +49,31 @@ def pipe_exists(path):
     except:
         return False
 
-devices = HidTransport.enumerate()
+if HID_ENABLED:
 
-if len(devices) > 0:
-    print('Using TREZOR')
-    TRANSPORT = HidTransport
-    TRANSPORT_ARGS = (devices[0],)
-    TRANSPORT_KWARGS = {'debug_link': False}
-    DEBUG_TRANSPORT = HidTransport
-    DEBUG_TRANSPORT_ARGS = (devices[0],)
-    DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
+    devices = HidTransport.enumerate()
+    if len(devices) > 0:
+        print('Using TREZOR')
+        TRANSPORT = HidTransport
+        TRANSPORT_ARGS = (devices[0],)
+        TRANSPORT_KWARGS = {'debug_link': False}
+        DEBUG_TRANSPORT = HidTransport
+        DEBUG_TRANSPORT_ARGS = (devices[0],)
+        DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
 
-elif pipe_exists('/tmp/pipe.trezor.to'):
-    print('Using Emulator (v1=pipe)')
-    TRANSPORT = PipeTransport
-    TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
-    TRANSPORT_KWARGS = {}
-    DEBUG_TRANSPORT = PipeTransport
-    DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
-    DEBUG_TRANSPORT_KWARGS = {}
+elif PIPE_ENABLED:
 
-elif True:
+    if pipe_exists('/tmp/pipe.trezor.to'):
+        print('Using Emulator (v1=pipe)')
+        TRANSPORT = PipeTransport
+        TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
+        TRANSPORT_KWARGS = {}
+        DEBUG_TRANSPORT = PipeTransport
+        DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
+        DEBUG_TRANSPORT_KWARGS = {}
+
+elif UDP_ENABLED:
+
     print('Using Emulator (v2=udp)')
     TRANSPORT = UdpTransport
     TRANSPORT_ARGS = ('', )
