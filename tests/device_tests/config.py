@@ -25,19 +25,22 @@ sys.path = ['../../'] + sys.path
 try:
     from trezorlib.transport_hid import HidTransport
     HID_ENABLED = True
-except:
+except Exception as e:
+    print('HID transport disabled:', e.message, e.args)
     HID_ENABLED = False
 
 try:
     from trezorlib.transport_pipe import PipeTransport
     PIPE_ENABLED = True
-except:
+except Exception as e:
+    print('PIPE transport disabled:', e.message, e.args)
     PIPE_ENABLED = False
 
 try:
     from trezorlib.transport_udp import UdpTransport
     UDP_ENABLED = True
-except:
+except Exception as e:
+    print('UDP transport disabled:', e.message, e.args)
     UDP_ENABLED = False
 
 
