@@ -42,12 +42,12 @@ except:
 
 
 def pipe_exists(path):
-    import os
+    import os, stat
     try:
-        os.stat(path)
-        return True
+        return stat.S_ISFIFO(os.stat(path).st_mode)
     except:
         return False
+
 
 if HID_ENABLED:
 
