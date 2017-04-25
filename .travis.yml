@@ -25,6 +25,7 @@ addons:
 
 install:
     - pip3 install ed25519 pyblake2
+    - pip2 install mnemonic protobuf requests
 
 script:
   - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make vendorheader
@@ -35,6 +36,7 @@ script:
 
   - test "$GOAL" != "unix" || make build_unix TREZOR_NOUI=1
   - test "$GOAL" != "unix" || make test
+  - test "$GOAL" != "unix" || make testpy
 
 notifications:
   webhooks:

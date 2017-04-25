@@ -59,13 +59,20 @@ for i in \
     test_op_return.py \
     test_zerosig.py \
     ; do
-        if ! $PYTHON $i ; then
-            error=1
-            break
+
+        if $PYTHON $i; then
+           results+=("OK   $i")
+        else
+           results+=("FAIL $i")
+           error=1
         fi
+
 done
 
 # kill emulator
 kill $UPY_PID
 
+echo
+echo 'Summary:'
+printf '%s\n' "${results[@]}"
 exit $error
