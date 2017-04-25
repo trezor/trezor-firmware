@@ -64,9 +64,8 @@ if HID_ENABLED:
         DEBUG_TRANSPORT_ARGS = (devices[0],)
         DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
 
-elif PIPE_ENABLED:
+elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
 
-    if pipe_exists('/tmp/pipe.trezor.to'):
         print('Using Emulator (v1=pipe)')
         TRANSPORT = PipeTransport
         TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
