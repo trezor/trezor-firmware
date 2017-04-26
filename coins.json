@@ -11,13 +11,14 @@
 	"xpub_magic": "0488b21e",
 	"xprv_magic": "0488ade4",
 	"bip44": 0,
+	"segwit": false,
 	"default_fee_b": {
 		"Low": 10,
 		"Economy": 20,
 		"Normal": 30,
 		"High": 40
 	},
-  "dust_limit": 546
+	"dust_limit": 546
 }, {
 	"coin_name": "Testnet",
 	"coin_shortcut": "TEST",
@@ -31,10 +32,11 @@
 	"xpub_magic": "043587cf",
 	"xprv_magic": "04358394",
 	"bip44": 1,
+	"segwit": true,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 546
+	"dust_limit": 546
 }, {
 	"coin_name": "Namecoin",
 	"coin_shortcut": "NMC",
@@ -48,10 +50,11 @@
 	"xpub_magic": "019da462",
 	"xprv_magic": "019d9cfe",
 	"bip44": 7,
+	"segwit": false,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 2940
+	"dust_limit": 2940
 }, {
 	"coin_name": "Litecoin",
 	"coin_shortcut": "LTC",
@@ -65,10 +68,11 @@
 	"xpub_magic": "019da462",
 	"xprv_magic": "019d9cfe",
 	"bip44": 2,
+	"segwit": true,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 1
+	"dust_limit": 1
 }, {
 	"coin_name": "Dogecoin",
 	"coin_shortcut": "DOGE",
@@ -82,10 +86,11 @@
 	"xpub_magic": "02facafd",
 	"xprv_magic": "02fac398",
 	"bip44": 3,
+	"segwit": false,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 10000000
+	"dust_limit": 10000000
 }, {
 	"coin_name": "Dash",
 	"coin_shortcut": "DASH",
@@ -99,10 +104,11 @@
 	"xpub_magic": "02fe52cc",
 	"xprv_magic": "02fe52f8",
 	"bip44": 5,
+	"segwit": false,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 5460
+	"dust_limit": 5460
 }, {
 	"coin_name": "Zcash",
 	"coin_shortcut": "ZEC",
@@ -116,10 +122,11 @@
 	"xpub_magic": "0488b21e",
 	"xprv_magic": "0488ade4",
 	"bip44": 133,
+	"segwit": false,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 546
+	"dust_limit": 546
 }, {
 	"coin_name": "Zcash Testnet",
 	"coin_shortcut": "TAZ",
@@ -133,8 +140,9 @@
 	"xpub_magic": "043587cf",
 	"xprv_magic": "04358394",
 	"bip44": 1,
+	"segwit": false,
 	"default_fee_b": {
 		"Normal": 10
 	},
-  "dust_limit": 546
+	"dust_limit": 546
 }]
