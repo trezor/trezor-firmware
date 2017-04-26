@@ -35,7 +35,10 @@ for c in coins:
         '0x%s' % c['xpub_magic'] if c['xpub_magic'] is not None else '00000000',
 
         'true' if c['xprv_magic'] is not None else 'false',
-        '0x%s' % c['xprv_magic'] if c['xprv_magic'] is not None else '00000000'
+        '0x%s' % c['xprv_magic'] if c['xprv_magic'] is not None else '00000000',
+
+        'true' if c['segwit'] is not None else 'false',
+        'true' if c['segwit'] else 'false'
     ])
 
 for j in range(len(fields[0])):
