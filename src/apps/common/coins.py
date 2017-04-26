@@ -15,6 +15,7 @@ COINS = [
         xpub_magic=0x0488b21e,
         xprv_magic=0x0488ade4,
         bip44=0,
+        segwit=False,
     ),
     CoinType(
         coin_name='Testnet',
@@ -28,6 +29,7 @@ COINS = [
         xpub_magic=0x043587cf,
         xprv_magic=0x04358394,
         bip44=1,
+        segwit=True,
     ),
     CoinType(
         coin_name='Namecoin',
@@ -41,6 +43,7 @@ COINS = [
         xpub_magic=0x019da462,
         xprv_magic=0x019d9cfe,
         bip44=7,
+        segwit=False,
     ),
     CoinType(
         coin_name='Litecoin',
@@ -54,6 +57,7 @@ COINS = [
         xpub_magic=0x019da462,
         xprv_magic=0x019d9cfe,
         bip44=2,
+        segwit=True,
     ),
     CoinType(
         coin_name='Dogecoin',
@@ -67,6 +71,7 @@ COINS = [
         xpub_magic=0x02facafd,
         xprv_magic=0x02fac398,
         bip44=3,
+        segwit=False,
     ),
     CoinType(
         coin_name='Dash',
@@ -80,6 +85,7 @@ COINS = [
         xpub_magic=0x02fe52cc,
         xprv_magic=0x02fe52f8,
         bip44=5,
+        segwit=False,
     ),
     CoinType(
         coin_name='Zcash',
@@ -93,6 +99,7 @@ COINS = [
         xpub_magic=0x0488b21e,
         xprv_magic=0x0488ade4,
         bip44=133,
+        segwit=False,
     ),
     CoinType(
         coin_name='Zcash Testnet',
@@ -106,6 +113,7 @@ COINS = [
         xpub_magic=0x043587cf,
         xprv_magic=0x04358394,
         bip44=1,
+        segwit=False,
     ),
 ]
 

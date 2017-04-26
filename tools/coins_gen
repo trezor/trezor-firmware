@@ -13,6 +13,7 @@ fields = [
     'xpub_magic',
     'xprv_magic',
     'bip44',
+    'segwit',
 ]
 
 coins = json.load(open('../../trezor-common/coins.json', 'r'))
