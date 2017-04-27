@@ -71,3 +71,13 @@ void pb_add_varint(PB_CTX *ctx, uint32_t field_number, uint32_t val)
     pb_varint(ctx, field_number);
     pb_varint(ctx, val);
 }
+
+bool pb_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
+{
+        if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
+            return false;
+        }
+        *msg_id = (buf[3] << 8) + buf[4];
+        *msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
+        return true;
+}

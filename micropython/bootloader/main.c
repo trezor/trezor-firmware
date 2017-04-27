@@ -12,6 +12,7 @@
 #include "version.h"
 
 #include "messages.h"
+#include "protobuf.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
@@ -164,13 +165,12 @@ void mainloop(void)
         if (r != sizeof(buf)) {
             continue;
         }
+        uint16_t msg_id;
+        uint32_t msg_size;
         // invalid header
-        if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
+        if (!pb_parse_header(buf, &msg_id, &msg_size)) {
             continue;
         }
-        uint16_t msg_id = (buf[3] << 8) + buf[4];
-        uint32_t msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
-        (void)msg_size;
         static uint32_t chunk = 0;
         switch (msg_id) {
             case 0: // Initialize

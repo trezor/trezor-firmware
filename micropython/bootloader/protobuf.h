@@ -17,4 +17,6 @@ void pb_add_bool(PB_CTX *ctx, uint32_t field_number, bool val);
 void pb_add_string(PB_CTX *ctx, uint32_t field_number, const char *val);
 void pb_add_varint(PB_CTX *ctx, uint32_t field_number, uint32_t val);
 
+bool pb_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size);
+
 #endif
