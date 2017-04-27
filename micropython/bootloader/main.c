@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <sys/types.h>
+#include <assert.h>
 
 #include "common.h"
 #include "display.h"
@@ -118,7 +119,7 @@ int usb_init_all(void) {
         0xc0               // END_COLLECTION
     };
     static const usb_hid_info_t hid_info = {
-        .iface_num        = 0x00,
+        .iface_num        = 0,
         .ep_in            = USB_EP_DIR_IN | 0x01,
         .ep_out           = USB_EP_DIR_OUT | 0x01,
         .subclass         = 0,
@@ -143,6 +144,41 @@ int usb_init_all(void) {
     return 0;
 }
 
+#define UPLOAD_CHUNK_SIZE (128*1024)
+#define USB_PACKET_SIZE   64
+#define USB_IFACE_NUM     0
+
+void process_upload_chunk(const uint8_t *buf, uint32_t len)
+{
+    // TODO: write to flash
+}
+
+uint32_t process_upload_message(uint32_t msg_size, const uint8_t *initbuf, uint32_t initlen)
+{
+    int remains = msg_size - initlen;
+    // TODO: process initbuf
+
+    if (initbuf[0] != 0x0A) {
+        return 0; // ERROR - payload field not found
+    }
+    uint32_t payload_len;
+    uint32_t p = pb_read_varint(initbuf, &payload_len);
+    process_upload_chunk(initbuf + p, initlen - p);
+
+    uint8_t buf[USB_PACKET_SIZE];
+    while (remains > 0) {
+        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
+        if (r <= 0) {
+            continue;
+        }
+        assert(r == USB_PACKET_SIZE);
+        process_upload_chunk(buf, 63);
+        remains -= USB_PACKET_SIZE;
+    }
+    DPRINTLN("done");
+    return 0; // should return >0 if more data required
+}
+
 void mainloop(void)
 {
     if (0 != flash_init()) {
@@ -153,52 +189,45 @@ void mainloop(void)
         __fatal_error("usb_init_all failed");
     }
 
-    uint8_t buf[64];
+    uint8_t buf[USB_PACKET_SIZE];
 
     for (;;) {
-        int iface = usb_hid_read_select(1); // 1ms timeout
-        if (iface < 0) {
+        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
+        if (r <= 0) {
             continue;
         }
-        ssize_t r = usb_hid_read(iface, buf, sizeof(buf));
-        // invalid length
-        if (r != sizeof(buf)) {
-            continue;
-        }
+        assert(r == USB_PACKET_SIZE);
         uint16_t msg_id;
         uint32_t msg_size;
         // invalid header
         if (!pb_parse_header(buf, &msg_id, &msg_size)) {
             continue;
         }
-        static uint32_t chunk = 0;
         switch (msg_id) {
             case 0: // Initialize
                 DPRINTLN("received Initialize");
-                send_msg_Features(iface, false);
+                send_msg_Features(USB_IFACE_NUM, false);
                 break;
             case 1: // Ping
                 DPRINTLN("received Ping");
-                send_msg_Success(iface);
+                send_msg_Success(USB_IFACE_NUM);
                 break;
             case 6: // FirmwareErase
                 DPRINTLN("received FirmwareErase");
-                send_msg_FirmwareRequest(iface, 0, 128 * 1024);
-                chunk = 0;
+                send_msg_FirmwareRequest(USB_IFACE_NUM, 0, UPLOAD_CHUNK_SIZE);
                 break;
             case 7: // FirmwareUpload
                 DPRINTLN("received FirmwareUpload");
-                // TODO: process chunk
-                chunk++;
-                if (chunk <= 3) {
-                    send_msg_FirmwareRequest(iface, chunk * 128 * 1024, 128 * 1024);
+                uint32_t req_offset = process_upload_message(msg_size, buf + PB_HEADER_LEN, USB_PACKET_SIZE - PB_HEADER_LEN);
+                if (req_offset > 0) {
+                    send_msg_FirmwareRequest(USB_IFACE_NUM, req_offset, UPLOAD_CHUNK_SIZE);
                 } else {
-                    send_msg_Success(iface);
+                    send_msg_Success(USB_IFACE_NUM);
                 }
                 break;
             default:
                 DPRINTLN("received unknown message");
-                send_msg_Failure(iface);
+                send_msg_Failure(USB_IFACE_NUM);
                 break;
         }
     }

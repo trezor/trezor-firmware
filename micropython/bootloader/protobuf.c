@@ -81,3 +81,14 @@ bool pb_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
         *msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
         return true;
 }
+
+uint32_t pb_read_varint(const uint8_t *buf, uint32_t *num)
+{
+    uint32_t offset = 0;
+    *num = 0;
+    do {
+        *num += ((*(buf + offset)) & 0x7F) << (7 * offset);
+        offset++;
+    } while ((*(buf + offset)) & 0x80);
+    return offset;
+}

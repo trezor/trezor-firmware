@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define PB_HEADER_LEN 9
+
 typedef struct {
     uint8_t buf[128];
     uint32_t pos;
@@ -18,5 +20,6 @@ void pb_add_string(PB_CTX *ctx, uint32_t field_number, const char *val);
 void pb_add_varint(PB_CTX *ctx, uint32_t field_number, uint32_t val);
 
 bool pb_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size);
+uint32_t pb_read_varint(const uint8_t *buf, uint32_t *num);
 
 #endif
