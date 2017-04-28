@@ -25,6 +25,16 @@
 
 #define LOADER_ICON_SIZE 64
 
+#define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
+
+#define COLOR_WHITE      RGB16(255, 255, 255)
+#define COLOR_GRAY128    RGB16(127, 127, 127)
+#define COLOR_GRAY64     RGB16(63, 63, 63)
+#define COLOR_BLACK      RGB16(0, 0, 0)
+#define COLOR_RED128     RGB16(127, 0, 0)
+#define COLOR_GREEN128   RGB16(0, 127, 0)
+#define COLOR_BLUE128    RGB16(0, 0, 127)
+
 // provided by port
 
 int display_init(void);

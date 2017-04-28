@@ -35,14 +35,14 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image(60, 32, w, h, vimg + 12, datalen);
-    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, 0xFFFF, 0x0000);
-    char ver_str[] = "v0.0.0.0";
+    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    char ver_str[] = "0.0.0.0";
     // TODO: fixme - the following does not work for values >= 10
-    ver_str[1] += fw_version & 0xFF;
-    ver_str[3] += (fw_version >> 8) & 0xFF;
-    ver_str[5] += (fw_version >> 16) & 0xFF;
-    ver_str[7] += (fw_version >> 24) & 0xFF;
-    display_text_center(120, 215, ver_str, -1, FONT_BOLD, 0x7BEF, 0x0000);
+    ver_str[0] += fw_version & 0xFF;
+    ver_str[2] += (fw_version >> 8) & 0xFF;
+    ver_str[4] += (fw_version >> 16) & 0xFF;
+    ver_str[6] += (fw_version >> 24) & 0xFF;
+    display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
     display_refresh();
 }
 

@@ -3,9 +3,6 @@
 #include "common.h"
 #include "display.h"
 
-#define FATAL_FGCOLOR 0xFFFF
-#define FATAL_BGCOLOR 0x7800
-
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {
     }
@@ -18,7 +15,7 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, 
         display_print("\nFunc: ", -1); display_print(func, -1);
     }
     display_print("\n", 1);
-    display_print_out(FATAL_FGCOLOR, FATAL_BGCOLOR);
+    display_print_out(COLOR_WHITE, COLOR_RED128);
     for (;;) {
         display_backlight(255);
         HAL_Delay(950);
