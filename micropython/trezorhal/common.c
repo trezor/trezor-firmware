@@ -6,12 +6,18 @@
 #define FATAL_FGCOLOR 0xFFFF
 #define FATAL_BGCOLOR 0x7800
 
-void __attribute__((noreturn)) __fatal_error(const char *msg) {
+void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {
     }
-    display_print("FATAL ERROR:\n", -1);
+    display_print("\nFATAL ERROR:\n", -1);
     display_print(msg, -1);
-    display_print("\n", -1);
+    if (file) {
+        display_print("\nFile: ", -1); display_print(file, -1); (void)line;
+    }
+    if (func) {
+        display_print("\nFunc: ", -1); display_print(func, -1);
+    }
+    display_print("\n", 1);
     display_print_out(FATAL_FGCOLOR, FATAL_BGCOLOR);
     for (;;) {
         display_backlight(255);
@@ -21,8 +27,17 @@ void __attribute__((noreturn)) __fatal_error(const char *msg) {
     }
 }
 
+#ifndef NDEBUG
+void __assert_func(const char *file, int line, const char *func, const char *expr) {
+    display_print("\nassert(", -1);
+    display_print(expr, -1);
+    display_print(")\n", 2);
+    __fatal_error("Assertion failed", file, line, func);
+}
+#endif
+
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-    __fatal_error("uncaught exception");
+    __fatal_error("uncaught exception", __FILE__, __LINE__, __FUNCTION__);
 }
 
 extern void SystemClock_Config(void);

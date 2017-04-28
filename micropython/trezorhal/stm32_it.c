@@ -71,11 +71,10 @@
 #include "gccollect.h"
 
 #include "display.h"
+#include "common.h"
 
 #define IRQ_ENTER(irq)
 #define IRQ_EXIT(irq)
-
-extern void __fatal_error(const char*);
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
@@ -174,7 +173,7 @@ void HardFault_C_Handler(ExceptionRegisters_t *regs) {
 
     /* Go to infinite loop when Hard Fault exception occurs */
     while (1) {
-        __fatal_error("HardFault");
+        __fatal_error("HardFault", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 
@@ -216,7 +215,7 @@ void NMI_Handler(void) {
 void MemManage_Handler(void) {
     /* Go to infinite loop when Memory Manage exception occurs */
     while (1) {
-        __fatal_error("MemManage");
+        __fatal_error("MemManage", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 
@@ -228,7 +227,7 @@ void MemManage_Handler(void) {
 void BusFault_Handler(void) {
     /* Go to infinite loop when Bus Fault exception occurs */
     while (1) {
-        __fatal_error("BusFault");
+        __fatal_error("BusFault", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 
@@ -240,7 +239,7 @@ void BusFault_Handler(void) {
 void UsageFault_Handler(void) {
     /* Go to infinite loop when Usage Fault exception occurs */
     while (1) {
-        __fatal_error("UsageFault");
+        __fatal_error("UsageFault", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 

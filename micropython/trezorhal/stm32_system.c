@@ -95,7 +95,7 @@
 #define MICROPY_HW_CLK_PLLQ (7)
 #define MICROPY_HW_CLK_LAST_FREQ (1)
 
-void __fatal_error(const char *msg);
+#include "common.h"
 
 /**
   * @}
@@ -324,7 +324,7 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
     RCC_OscInitStruct.LSEState = RCC_LSE_ON;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-        __fatal_error("HAL_RCC_OscConfig");
+        __fatal_error("HAL_RCC_OscConfig", __FILE__, __LINE__, __FUNCTION__);
     }
     #endif
 
@@ -409,14 +409,14 @@ void SystemClock_Config(void)
 #endif
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    __fatal_error("HAL_RCC_OscConfig");
+    __fatal_error("HAL_RCC_OscConfig", __FILE__, __LINE__, __FUNCTION__);
   }
 
 #if defined(MCU_SERIES_F7)
   /* Activate the OverDrive to reach the 200 MHz Frequency */
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
-    __fatal_error("HAL_PWREx_EnableOverDrive");
+    __fatal_error("HAL_PWREx_EnableOverDrive", __FILE__, __LINE__, __FUNCTION__);
   }
 #endif
 
@@ -426,7 +426,7 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, MICROPY_HW_FLASH_LATENCY) != HAL_OK)
   {
-    __fatal_error("HAL_RCC_ClockConfig");
+    __fatal_error("HAL_RCC_ClockConfig", __FILE__, __LINE__, __FUNCTION__);
   }
 
 #if defined(MCU_SERIES_F7)

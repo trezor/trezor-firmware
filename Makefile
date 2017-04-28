@@ -56,11 +56,11 @@ build_boardloader: ## build boardloader
 
 build_bootloader: ## build bootloader
 	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
-	./tools/binctl micropython/bootloader/build/bootloader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
+	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
-	./tools/binctl micropython/firmware/build/firmware.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
+	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 build_unix: ## build unix port
 	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
@@ -117,10 +117,15 @@ vendorheader: ## construct default vendor header
 	./tools/binctl micropython/firmware/vendorheader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 binctl: ## print info about binary files
-	./tools/binctl micropython/bootloader/build/bootloader.bin
+	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 	./tools/binctl micropython/firmware/vendorheader.bin
-	./tools/binctl micropython/firmware/build/firmware.bin
+	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 bloaty: ## run bloaty size profiler
-	bloaty -d symbols -n 0 -s file micropython/firmware/build/firmware.elf | less
-	bloaty -d compileunits -n 0 -s file micropython/firmware/build/firmware.elf | less
+	bloaty -d symbols -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
+	bloaty -d compileunits -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
+
+sizecheck: ## check sizes of binary files
+	test 32768 -ge $(shell stat -c%s $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
+	test 65536 -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
+	test 917504 -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)

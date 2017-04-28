@@ -13,7 +13,7 @@
 #define IMAGE_MAXSIZE (1 * 64 * 1024 + 7 * 128 * 1024)
 
 void pendsv_isr_handler(void) {
-    __fatal_error("pendsv");
+    __fatal_error("pendsv", __FILE__, __LINE__, __FUNCTION__);
 }
 
 bool check_sdcard(void)
@@ -146,15 +146,15 @@ int main(void)
     periph_init();
 
     if (0 != display_init()) {
-        __fatal_error("display_init failed");
+        __fatal_error("display_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != flash_init()) {
-        __fatal_error("flash_init failed");
+        __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != sdcard_init()) {
-        __fatal_error("sdcard_init failed");
+        __fatal_error("sdcard_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     display_clear();
@@ -166,13 +166,13 @@ int main(void)
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
-            __fatal_error("halt");
+            __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
         }
     }
 
     check_and_jump();
 
-    __fatal_error("halt");
+    __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
 
     return 0;
 }

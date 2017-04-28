@@ -19,7 +19,7 @@
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
 
 void pendsv_isr_handler(void) {
-    __fatal_error("pendsv");
+    __fatal_error("pendsv", __FILE__, __LINE__, __FUNCTION__);
 }
 
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
@@ -132,13 +132,13 @@ int usb_init_all(void) {
     };
 
     if (0 != usb_init(&dev_info)) {
-        __fatal_error("usb_init failed");
+        __fatal_error("usb_init", __FILE__, __LINE__, __FUNCTION__);
     }
     if (0 != usb_hid_add(&hid_info)) {
-        __fatal_error("usb_hid_add failed");
+        __fatal_error("usb_hid_add", __FILE__, __LINE__, __FUNCTION__);
     }
     if (0 != usb_start()) {
-        __fatal_error("usb_start failed");
+        __fatal_error("usb_start", __FILE__, __LINE__, __FUNCTION__);
     }
 
     return 0;
@@ -182,11 +182,11 @@ uint32_t process_upload_message(uint32_t msg_size, const uint8_t *initbuf, uint3
 void mainloop(void)
 {
     if (0 != flash_init()) {
-        __fatal_error("flash_init failed");
+        __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != usb_init_all()) {
-        __fatal_error("usb_init_all failed");
+        __fatal_error("usb_init_all", __FILE__, __LINE__, __FUNCTION__);
     }
 
     uint8_t buf[USB_PACKET_SIZE];
@@ -238,11 +238,11 @@ int main(void)
     periph_init();
 
     if (0 != display_init()) {
-        __fatal_error("display_init failed");
+        __fatal_error("display_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != touch_init()) {
-        __fatal_error("touch_init failed");
+        __fatal_error("touch_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     display_clear();
@@ -258,14 +258,7 @@ int main(void)
         check_and_jump();
     }
 
-    __fatal_error("halt");
+    __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
 
     return 0;
 }
-
-#ifndef NDEBUG
-void __assert_func(const char *file, int line, const char *func, const char *expr) {
-    // printf("Assertion '%s' failed, at file %s:%d\n", expr, file, line);
-    __fatal_error("Assertion failed");
-}
-#endif

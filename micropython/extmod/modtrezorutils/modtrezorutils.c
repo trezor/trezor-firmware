@@ -60,12 +60,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_memcpy_obj, 5, 5, mod
 STATIC mp_obj_t mod_TrezorUtils_halt(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t msg;
     if (n_args > 0 && mp_get_buffer(args[0], &msg, MP_BUFFER_READ)) {
-        printf("HALT! %s\n", (const char *)msg.buf);
+        __fatal_error(msg.buf, __FILE__, __LINE__, __FUNCTION__);
     } else {
-        printf("HALT!\n");
+        __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
     }
-    // TODO: is this the best we can do?
-    __fatal_error("HALT");
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_halt_obj, 0, 1, mod_TrezorUtils_halt);

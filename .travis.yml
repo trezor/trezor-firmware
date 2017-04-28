@@ -28,11 +28,12 @@ install:
     - pip2 install ecdsa mnemonic protobuf requests
 
 script:
-  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make vendorheader
-  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_cross
-  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_boardloader
-  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_bootloader
-  - test "$GOAL" != "stm32" || test "$CC" != "gcc" || make build_firmware
+  - test "$GOAL" != "stm32" || make vendorheader
+  - test "$GOAL" != "stm32" || make build_cross
+  - test "$GOAL" != "stm32" || make build_boardloader
+  - test "$GOAL" != "stm32" || make build_bootloader
+  - test "$GOAL" != "stm32" || make build_firmware
+  - test "$GOAL" != "stm32" || make sizecheck
 
   - test "$GOAL" != "unix" || make build_unix TREZOR_NOUI=1
   - test "$GOAL" != "unix" || make test

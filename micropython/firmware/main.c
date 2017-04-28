@@ -28,23 +28,23 @@ int main(void) {
     pendsv_init();
 
     if (0 != display_init()) {
-        __fatal_error("display_init failed");
+        __fatal_error("display_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != flash_init()) {
-        __fatal_error("flash_init failed");
+        __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != rng_init()) {
-        __fatal_error("rng_init failed");
+        __fatal_error("rng_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != sdcard_init()) {
-        __fatal_error("sdcard_init failed");
+        __fatal_error("sdcard_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     if (0 != touch_init()) {
-        __fatal_error("touch_init failed");
+        __fatal_error("touch_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
     for (;;) {
@@ -71,13 +71,6 @@ int main(void) {
 
     return 0;
 }
-
-#ifndef NDEBUG
-void __assert_func(const char *file, int line, const char *func, const char *expr) {
-    printf("Assertion '%s' failed, at file %s:%d\n", expr, file, line);
-    __fatal_error("Assertion failed");
-}
-#endif
 
 // Micropython file I/O stubs
 
