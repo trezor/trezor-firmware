@@ -20,7 +20,9 @@
 #include "trezor-qrenc/qr_encode.h"
 
 #include "display.h"
+
 #include <string.h>
+#include <stdarg.h>
 
 static int DISPLAY_BACKLIGHT = 0;
 static int DISPLAY_ORIENTATION = 0;
@@ -29,6 +31,7 @@ static int DISPLAY_OFFSET[2] = {0, 0};
 #if defined TREZOR_STM32
 #include "display-stm32.h"
 #elif defined TREZOR_UNIX
+#include <stdio.h>
 #include "display-unix.h"
 #else
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
@@ -240,11 +243,21 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
     return 0;
 }
 
+#ifndef TREZOR_PRINT_DISABLE
+
 #define DISPLAY_PRINT_COLS (DISPLAY_RESX / 6)
 #define DISPLAY_PRINT_ROWS (DISPLAY_RESY / 8)
 static char display_print_buf[DISPLAY_PRINT_ROWS][DISPLAY_PRINT_COLS];
+static uint16_t display_print_fgcolor = COLOR_WHITE, display_print_bgcolor = COLOR_BLACK;
 
-// display text using bitmap font - print to internal buffer
+// set colors for display_print function
+void display_print_color(uint16_t fgcolor, uint16_t bgcolor)
+{
+    display_print_fgcolor = fgcolor;
+    display_print_bgcolor = bgcolor;
+}
+
+// display text using bitmap font
 void display_print(const char *text, int textlen)
 {
     static uint8_t row = 0, col = 0;
@@ -254,23 +267,27 @@ void display_print(const char *text, int textlen)
         textlen = strlen(text);
     }
 
+    // print characters to internal buffer (display_print_buf)
     for (int i = 0; i < textlen; i++) {
+
         switch (text[i]) {
-             case '\r':
-                 break;
-             case '\n':
-                 row++;
-                 col = 0;
-                 break;
-             default:
-                 display_print_buf[row][col] = text[i];
-                 col++;
-                 break;
+            case '\r':
+                break;
+            case '\n':
+                row++;
+                col = 0;
+                break;
+            default:
+                display_print_buf[row][col] = text[i];
+                col++;
+                break;
         }
+
         if (col >= DISPLAY_PRINT_COLS) {
             col = 0;
             row++;
         }
+
         if (row >= DISPLAY_PRINT_ROWS) {
             for (int j = 0; j < DISPLAY_PRINT_ROWS - 1; j++) {
                 memcpy(display_print_buf[j], display_print_buf[j + 1], DISPLAY_PRINT_COLS);
@@ -278,11 +295,10 @@ void display_print(const char *text, int textlen)
             memset(display_print_buf[DISPLAY_PRINT_ROWS - 1], 0x00, DISPLAY_PRINT_COLS);
             row = DISPLAY_PRINT_ROWS - 1;
         }
-    }
-}
 
-// display text using bitmap font - send internal buffer to display
-void display_print_out(uint16_t fgcolor, uint16_t bgcolor) {
+    }
+
+    // render buffer to display
     display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
         int x = (i % DISPLAY_RESX);
@@ -294,14 +310,40 @@ void display_print_out(uint16_t fgcolor, uint16_t bgcolor) {
         if (c < ' ') c = ' ';
         const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
         if (k < 5 && (g[k] & (1 << j))) {
-            DATA(fgcolor >> 8);
-            DATA(fgcolor & 0xFF);
+            DATA(display_print_fgcolor >> 8);
+            DATA(display_print_fgcolor & 0xFF);
         } else {
-            DATA(bgcolor >> 8);
-            DATA(bgcolor & 0xFF);
+            DATA(display_print_bgcolor >> 8);
+            DATA(display_print_bgcolor & 0xFF);
         }
     }
+    display_refresh();
 }
+
+#ifndef TREZOR_UNIX
+extern int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va);
+#endif
+
+// variadic display_print
+void display_printf(const char *fmt, ...)
+{
+    if (!strchr(fmt, '%')) {
+        display_print(fmt, strlen(fmt));
+    } else {
+        va_list va;
+        va_start(va, fmt);
+        char buf[256];
+#ifndef TREZOR_UNIX
+        int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
+#else
+        int len = vsnprintf(buf, sizeof(buf), fmt, va);
+#endif
+        display_print(buf, len);
+        va_end(va);
+    }
+}
+
+#endif // TREZOR_PRINT_DISABLE
 
 // first two bytes are width and height of the glyph
 // third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph

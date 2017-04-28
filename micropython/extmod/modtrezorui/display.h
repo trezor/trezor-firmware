@@ -51,8 +51,11 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
 void display_image(int x, int y, int w, int h, const void *data, int datalen);
 void display_icon(int x, int y, int w, int h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor);
 
+#ifndef TREZOR_PRINT_DISABLE
+void display_print_color(uint16_t fgcolor, uint16_t bgcolor);
 void display_print(const char *text, int textlen);
-void display_print_out(uint16_t fgcolor, uint16_t bgcolor);
+void display_printf(const char *fmt, ...);
+#endif
 
 void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
 void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);

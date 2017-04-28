@@ -11,6 +11,7 @@
 #include "touch.h"
 #include "usb.h"
 #include "version.h"
+#include "mini_printf.h"
 
 #include "messages.h"
 #include "protobuf.h"
@@ -36,55 +37,56 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image(60, 32, w, h, vimg + 12, datalen);
     display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
-    char ver_str[] = "0.0.0.0";
-    // TODO: fixme - the following does not work for values >= 10
-    ver_str[0] += fw_version & 0xFF;
-    ver_str[2] += (fw_version >> 8) & 0xFF;
-    ver_str[4] += (fw_version >> 16) & 0xFF;
-    ver_str[6] += (fw_version >> 24) & 0xFF;
+    char ver_str[32];
+    mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
+        fw_version & 0xFF,
+        (fw_version >> 8) & 0xFF,
+        (fw_version >> 16) & 0xFF,
+        (fw_version >> 24) & 0xFF
+    );
     display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
     display_refresh();
 }
 
 void check_and_jump(void)
 {
-    DPRINTLN("checking vendor header");
+    display_printf("checking vendor header\n");
 
     vendor_header vhdr;
     if (vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        DPRINTLN("valid vendor header");
+        display_printf("valid vendor header\n");
     } else {
-        DPRINTLN("invalid vendor header");
+        display_printf("invalid vendor header\n");
         return;
     }
 
     if (vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        DPRINTLN("valid vendor header signature");
+        display_printf("valid vendor header signature\n");
     } else {
-        DPRINTLN("invalid vendor header signature");
+        display_printf("invalid vendor header signature\n");
         return;
     }
 
-    DPRINTLN("checking firmware header");
+    display_printf("checking firmware header\n");
 
     image_header hdr;
     if (image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        DPRINTLN("valid firmware header");
+        display_printf("valid firmware header\n");
     } else {
-        DPRINTLN("invalid firmware header");
+        display_printf("invalid firmware header\n");
         return;
     }
 
     if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, &vhdr)) {
-        DPRINTLN("valid firmware signature");
+        display_printf("valid firmware signature\n");
 
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
         HAL_Delay(1000); // TODO: remove?
-        DPRINTLN("JUMP!");
+        display_printf("JUMP!\n");
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
     } else {
-        DPRINTLN("invalid firmware signature");
+        display_printf("invalid firmware signature\n");
     }
 }
 
@@ -175,7 +177,7 @@ uint32_t process_upload_message(uint32_t msg_size, const uint8_t *initbuf, uint3
         process_upload_chunk(buf, 63);
         remains -= USB_PACKET_SIZE;
     }
-    DPRINTLN("done");
+    display_printf("done\n");
     return 0; // should return >0 if more data required
 }
 
@@ -205,19 +207,19 @@ void mainloop(void)
         }
         switch (msg_id) {
             case 0: // Initialize
-                DPRINTLN("received Initialize");
+                display_printf("received Initialize\n");
                 send_msg_Features(USB_IFACE_NUM, false);
                 break;
             case 1: // Ping
-                DPRINTLN("received Ping");
+                display_printf("received Ping\n");
                 send_msg_Success(USB_IFACE_NUM);
                 break;
             case 6: // FirmwareErase
-                DPRINTLN("received FirmwareErase");
+                display_printf("received FirmwareErase\n");
                 send_msg_FirmwareRequest(USB_IFACE_NUM, 0, UPLOAD_CHUNK_SIZE);
                 break;
             case 7: // FirmwareUpload
-                DPRINTLN("received FirmwareUpload");
+                display_printf("received FirmwareUpload\n");
                 uint32_t req_offset = process_upload_message(msg_size, buf + PB_HEADER_LEN, USB_PACKET_SIZE - PB_HEADER_LEN);
                 if (req_offset > 0) {
                     send_msg_FirmwareRequest(USB_IFACE_NUM, req_offset, UPLOAD_CHUNK_SIZE);
@@ -226,7 +228,7 @@ void mainloop(void)
                 }
                 break;
             default:
-                DPRINTLN("received unknown message");
+                display_printf("received unknown message\n");
                 send_msg_Failure(USB_IFACE_NUM);
                 break;
         }
@@ -248,9 +250,9 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    DPRINTLN("TREZOR Bootloader " VERSION_STR);
-    DPRINTLN("=================");
-    DPRINTLN("starting bootloader");
+    display_printf("TREZOR Bootloader %d.%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
+    display_printf("=================\n");
+    display_printf("starting bootloader\n");
 
     if (touch_read() != 0) {
         mainloop();

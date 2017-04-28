@@ -4,18 +4,15 @@
 #include "display.h"
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
-    for (volatile uint32_t delay = 0; delay < 10000000; delay++) {
-    }
-    display_print("\nFATAL ERROR:\n", -1);
-    display_print(msg, -1);
+    for (volatile uint32_t delay = 0; delay < 10000000; delay++) {}
+    display_print_color(COLOR_WHITE, COLOR_RED128);
+    display_printf("\nFATAL ERROR:\n%s\n", msg);
     if (file) {
-        display_print("\nFile: ", -1); display_print(file, -1); (void)line;
+        display_printf("File: %s:%d\n", file, line);
     }
     if (func) {
-        display_print("\nFunc: ", -1); display_print(func, -1);
+        display_printf("Func: %s\n", func);
     }
-    display_print("\n", 1);
-    display_print_out(COLOR_WHITE, COLOR_RED128);
     for (;;) {
         display_backlight(255);
         HAL_Delay(950);
@@ -26,9 +23,7 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, 
 
 #ifndef NDEBUG
 void __assert_func(const char *file, int line, const char *func, const char *expr) {
-    display_print("\nassert(", -1);
-    display_print(expr, -1);
-    display_print(")\n", 2);
+    display_printf("\nassert(%s)\n", expr);
     __fatal_error("Assertion failed", file, line, func);
 }
 #endif

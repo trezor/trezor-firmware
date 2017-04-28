@@ -317,6 +317,7 @@ OBJ_FIRMWARE += $(addprefix $(BUILD_FW)/, \
 OBJ_TREZORHAL += $(addprefix $(BUILD_FW)/, \
 	trezorhal/common.o \
 	trezorhal/flash.o \
+	trezorhal/mini_printf.o \
 	trezorhal/rng.o \
 	trezorhal/sdcard.o \
 	trezorhal/stm32_it.o \

@@ -16,9 +16,4 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val);
 
 void jump_to(uint32_t address);
 
-// common helper macros
-
-#define DPRINT(X)   do { display_print(X, -1);      display_print_out(COLOR_WHITE, COLOR_BLACK); } while(0)
-#define DPRINTLN(X) do { display_print(X "\n", -1); display_print_out(COLOR_WHITE, COLOR_BLACK); } while(0)
-
 #endif

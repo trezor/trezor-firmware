@@ -18,20 +18,20 @@ void pendsv_isr_handler(void) {
 
 bool check_sdcard(void)
 {
-    DPRINTLN("checking for SD card");
+    display_printf("checking for SD card\n");
 
     if (!sdcard_is_present()) {
-        DPRINTLN("no SD card found");
+        display_printf("no SD card found\n");
         return false;
     }
 
-    DPRINTLN("SD card found");
+    display_printf("SD card found\n");
 
     sdcard_power_on();
 
     uint64_t cap = sdcard_get_capacity_in_bytes();
     if (cap < 1024 * 1024) {
-        DPRINTLN("SD card too small");
+        display_printf("SD card too small\n");
         sdcard_power_off();
         return false;
     }
@@ -43,18 +43,17 @@ bool check_sdcard(void)
     sdcard_power_off();
 
     if (image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, NULL)) {
-        DPRINTLN("SD card header is valid");
+        display_printf("SD card header is valid\n");
         return true;
     } else {
-        DPRINTLN("SD card header is invalid");
+        display_printf("SD card header is invalid\n");
         return false;
     }
 }
 
 bool copy_sdcard(void)
 {
-
-    DPRINT("erasing flash ");
+    display_printf("erasing flash ");
 
     // erase flash (except boardloader)
     HAL_FLASH_Unlock();
@@ -69,14 +68,14 @@ bool copy_sdcard(void)
         EraseInitStruct.Sector = i;
         if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
             HAL_FLASH_Lock();
-            DPRINTLN(" failed");
+            display_printf(" failed\n");
             return false;
         }
-        DPRINT(".");
+        display_printf(".");
     }
-    DPRINTLN(" done");
+    display_printf(" done\n");
 
-    DPRINTLN("copying new bootloader from SD card");
+    display_printf("copying new bootloader from SD card\n");
 
     sdcard_power_on();
 
@@ -86,7 +85,7 @@ bool copy_sdcard(void)
 
     image_header hdr;
     if (!image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        DPRINTLN("invalid header");
+        display_printf("invalid header\n");
         sdcard_power_off();
         HAL_FLASH_Lock();
         return false;
@@ -96,7 +95,7 @@ bool copy_sdcard(void)
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
-                DPRINTLN("copy failed");
+                display_printf("copy failed\n");
                 sdcard_power_off();
                 HAL_FLASH_Lock();
                 return false;
@@ -107,36 +106,36 @@ bool copy_sdcard(void)
     sdcard_power_off();
     HAL_FLASH_Lock();
 
-    DPRINTLN("done");
+    display_printf("done\n");
 
     return true;
 }
 
 void check_and_jump(void)
 {
-    DPRINTLN("checking bootloader");
+    display_printf("checking bootloader\n");
 
     image_header hdr;
 
     if (image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        DPRINTLN("valid bootloader header");
+        display_printf("valid bootloader header\n");
     } else {
-        DPRINTLN("invalid bootloader header");
+        display_printf("invalid bootloader header\n");
         return;
     }
 
     if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, NULL)) {
-        DPRINTLN("valid bootloader signature");
+        display_printf("valid bootloader signature\n");
 
         // TODO: remove debug wait
-        DPRINTLN("waiting 1 second");
+        display_printf("waiting 1 second\n");
         HAL_Delay(1000);
         // end
-        DPRINTLN("JUMP!");
+        display_printf("JUMP!\n");
         jump_to(BOOTLOADER_START + HEADER_SIZE);
 
     } else {
-        DPRINTLN("invalid bootloader signature");
+        display_printf("invalid bootloader signature\n");
     }
 }
 
@@ -160,9 +159,9 @@ int main(void)
     display_clear();
     display_backlight(255);
 
-    DPRINTLN("TREZOR Boardloader " VERSION_STR);
-    DPRINTLN("==================");
-    DPRINTLN("starting boardloader");
+    display_printf("TREZOR Boardloader %d.%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
+    display_printf("==================\n");
+    display_printf("starting boardloader\n");
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
