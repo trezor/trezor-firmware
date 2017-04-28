@@ -13,9 +13,15 @@
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 
+#ifndef TREZOR_FONT_MONO_DISABLE
 #define FONT_MONO   0
+#endif
+#ifndef TREZOR_FONT_NORMAL_DISABLE
 #define FONT_NORMAL 1
+#endif
+#ifndef TREZOR_FONT_BOLD_DISABLE
 #define FONT_BOLD   2
+#endif
 
 #define LOADER_ICON_SIZE 64
 

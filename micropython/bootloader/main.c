@@ -42,7 +42,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     ver_str[3] += (fw_version >> 8) & 0xFF;
     ver_str[5] += (fw_version >> 16) & 0xFF;
     ver_str[7] += (fw_version >> 24) & 0xFF;
-    display_text_center(120, 215, ver_str, -1, FONT_NORMAL, 0x7BEF, 0x0000);
+    display_text_center(120, 215, ver_str, -1, FONT_BOLD, 0x7BEF, 0x0000);
     display_refresh();
 }
 

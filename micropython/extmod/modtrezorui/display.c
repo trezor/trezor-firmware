@@ -7,9 +7,15 @@
 
 #include "inflate.h"
 #include "font_bitmap.h"
+#ifndef TREZOR_FONT_MONO_DISABLE
 #include "font_robotomono_regular_20.h"
+#endif
+#ifndef TREZOR_FONT_NORMAL_DISABLE
 #include "font_roboto_regular_20.h"
+#endif
+#ifndef TREZOR_FONT_BOLD_DISABLE
 #include "font_roboto_bold_20.h"
+#endif
 
 #include "trezor-qrenc/qr_encode.h"
 
@@ -218,12 +224,18 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
         return 0;
     }
     switch (font) {
+#ifndef TREZOR_FONT_MONO_DISABLE
         case FONT_MONO:
             return Font_RobotoMono_Regular_20[c - ' '];
+#endif
+#ifndef TREZOR_FONT_NORMAL_DISABLE
         case FONT_NORMAL:
             return Font_Roboto_Regular_20[c - ' '];
+#endif
+#ifndef TREZOR_FONT_BOLD_DISABLE
         case FONT_BOLD:
             return Font_Roboto_Bold_20[c - ' '];
+#endif
     }
     return 0;
 }

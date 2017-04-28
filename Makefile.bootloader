@@ -76,9 +76,11 @@ OBJ_BOOTLOADER += $(addprefix $(BUILD_FW)/, \
 	extmod/modtrezorui/inflate.o \
 	extmod/modtrezorui/font_bitmap.o \
 	extmod/modtrezorui/font_roboto_bold_20.o \
-	extmod/modtrezorui/font_roboto_regular_20.o \
-	extmod/modtrezorui/font_robotomono_regular_20.o \
 	)
+
+CFLAGS_MOD += \
+	-DTREZOR_FONT_MONO_DISABLE=1 \
+	-DTREZOR_FONT_NORMAL_DISABLE=1 \
 
 OBJ_TREZORHAL += $(addprefix $(BUILD_FW)/, \
 	trezorhal/common.o \
