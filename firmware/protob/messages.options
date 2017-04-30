@@ -100,7 +100,6 @@ EthereumSignTx.gas_limit		max_size:32
 EthereumSignTx.to			max_size:20
 EthereumSignTx.value			max_size:32
 EthereumSignTx.data_initial_chunk	max_size:1024
-EthereumSignTx.prefix			max_size:32
 
 EthereumTxRequest.signature_r		max_size:32
 EthereumTxRequest.signature_s		max_size:32
