@@ -105,25 +105,25 @@ void HardFault_C_Handler(ExceptionRegisters_t *regs) {
 
     display_printf("HardFault\n");
 
-    display_printf("R0    %08x\n", regs->r0);
-    display_printf("R1    %08x\n", regs->r1);
-    display_printf("R2    %08x\n", regs->r2);
-    display_printf("R3    %08x\n", regs->r3);
-    display_printf("R12   %08x\n", regs->r12);
-    display_printf("SP    %08x\n", (uint32_t)regs);
-    display_printf("LR    %08x\n", regs->lr);
-    display_printf("PC    %08x\n", regs->pc);
-    display_printf("XPSR  %08x\n", regs->xpsr);
+    display_printf("R0    %08x\n", (unsigned int)regs->r0);
+    display_printf("R1    %08x\n", (unsigned int)regs->r1);
+    display_printf("R2    %08x\n", (unsigned int)regs->r2);
+    display_printf("R3    %08x\n", (unsigned int)regs->r3);
+    display_printf("R12   %08x\n", (unsigned int)regs->r12);
+    display_printf("SP    %08x\n", (unsigned int)regs);
+    display_printf("LR    %08x\n", (unsigned int)regs->lr);
+    display_printf("PC    %08x\n", (unsigned int)regs->pc);
+    display_printf("XPSR  %08x\n", (unsigned int)regs->xpsr);
 
     uint32_t cfsr = SCB->CFSR;
 
-    display_printf("HFSR  %08x\n", SCB->HFSR);
-    display_printf("CFSR  %08x\n", cfsr);
+    display_printf("HFSR  %08x\n", (unsigned int)SCB->HFSR);
+    display_printf("CFSR  %08x\n", (unsigned int)cfsr);
     if (cfsr & 0x80) {
-        display_printf("MMFAR %08x\n", SCB->MMFAR);
+        display_printf("MMFAR %08x\n", (unsigned int)SCB->MMFAR);
     }
     if (cfsr & 0x8000) {
-        display_printf("BFAR  %08x\n", SCB->BFAR);
+        display_printf("BFAR  %08x\n", (unsigned int)SCB->BFAR);
     }
 
     if ((void*)&_ram_start <= (void*)regs && (void*)regs < (void*)&_ram_end) {
@@ -134,7 +134,7 @@ void HardFault_C_Handler(ExceptionRegisters_t *regs) {
             stack_top = (uint32_t*)regs + 32;
         }
         for (uint32_t *sp = (uint32_t*)regs; sp < stack_top; ++sp) {
-            display_printf("  %08x  %08x\n", (uint32_t)sp, *sp);
+            display_printf("  %08x  %08x\n", (unsigned int)sp, (unsigned int)*sp);
         }
     }
 

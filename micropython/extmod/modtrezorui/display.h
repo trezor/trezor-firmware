@@ -54,7 +54,7 @@ void display_icon(int x, int y, int w, int h, const void *data, int datalen, uin
 #ifndef TREZOR_PRINT_DISABLE
 void display_print_color(uint16_t fgcolor, uint16_t bgcolor);
 void display_print(const char *text, int textlen);
-void display_printf(const char *fmt, ...);
+void display_printf(const char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 #endif
 
 void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);

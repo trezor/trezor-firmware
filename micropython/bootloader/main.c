@@ -39,10 +39,10 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
-        fw_version & 0xFF,
-        (fw_version >> 8) & 0xFF,
-        (fw_version >> 16) & 0xFF,
-        (fw_version >> 24) & 0xFF
+        (int)(fw_version & 0xFF),
+        (int)((fw_version >> 8) & 0xFF),
+        (int)((fw_version >> 16) & 0xFF),
+        (int)((fw_version >> 24) & 0xFF)
     );
     display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
     display_refresh();

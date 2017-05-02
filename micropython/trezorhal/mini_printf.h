@@ -37,8 +37,8 @@ extern "C" {
 
 #include <stdarg.h>
 
-int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va);
-int mini_snprintf(char* buffer, unsigned int buffer_len, const char *fmt, ...);
+int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va) __attribute__ ((__format__ (__printf__, 3, 0)));
+int mini_snprintf(char* buffer, unsigned int buffer_len, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 
 #ifdef __cplusplus
 }
