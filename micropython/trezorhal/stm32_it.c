@@ -84,39 +84,6 @@
 // More information about decoding the fault registers can be found here:
 // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646a/Cihdjcfc.html
 
-static char *fmt_hex(uint32_t val, char *buf) {
-    const char *hexDig = "0123456789abcdef";
-
-    buf[0] = hexDig[(val >> 28) & 0x0f];
-    buf[1] = hexDig[(val >> 24) & 0x0f];
-    buf[2] = hexDig[(val >> 20) & 0x0f];
-    buf[3] = hexDig[(val >> 16) & 0x0f];
-    buf[4] = hexDig[(val >> 12) & 0x0f];
-    buf[5] = hexDig[(val >>  8) & 0x0f];
-    buf[6] = hexDig[(val >>  4) & 0x0f];
-    buf[7] = hexDig[(val >>  0) & 0x0f];
-    buf[8] = '\0';
-
-    return buf;
-}
-
-static void print_reg(const char *label, uint32_t val) {
-    char hexStr[9];
-
-    display_print(label, -1);
-    display_print(fmt_hex(val, hexStr), -1);
-    display_print("\n", 1);
-}
-
-static void print_hex_hex(const char *label, uint32_t val1, uint32_t val2) {
-    char hex_str[9];
-    display_print(label, -1 );
-    display_print(fmt_hex(val1, hex_str), -1);
-    display_print("  ", 2);
-    display_print(fmt_hex(val2, hex_str), -1);
-    display_print("\n", 1);
-}
-
 // The ARMv7M Architecture manual (section B.1.5.6) says that upon entry
 // to an exception, that the registers will be in the following order on the
 // stack: R0, R1, R2, R3, R12, LR, PC, XPSR
@@ -136,38 +103,38 @@ void HardFault_C_Handler(ExceptionRegisters_t *regs) {
     // the VCP and then block indefinitely waiting for the buffer to drain.
     // pyb_usb_flags = 0;
 
-    display_print("HardFault\n", -1);
+    display_printf("HardFault\n");
 
-    print_reg("R0    ", regs->r0);
-    print_reg("R1    ", regs->r1);
-    print_reg("R2    ", regs->r2);
-    print_reg("R3    ", regs->r3);
-    print_reg("R12   ", regs->r12);
-    print_reg("SP    ", (uint32_t)regs);
-    print_reg("LR    ", regs->lr);
-    print_reg("PC    ", regs->pc);
-    print_reg("XPSR  ", regs->xpsr);
+    display_printf("R0    %08x\n", regs->r0);
+    display_printf("R1    %08x\n", regs->r1);
+    display_printf("R2    %08x\n", regs->r2);
+    display_printf("R3    %08x\n", regs->r3);
+    display_printf("R12   %08x\n", regs->r12);
+    display_printf("SP    %08x\n", (uint32_t)regs);
+    display_printf("LR    %08x\n", regs->lr);
+    display_printf("PC    %08x\n", regs->pc);
+    display_printf("XPSR  %08x\n", regs->xpsr);
 
     uint32_t cfsr = SCB->CFSR;
 
-    print_reg("HFSR  ", SCB->HFSR);
-    print_reg("CFSR  ", cfsr);
+    display_printf("HFSR  %08x\n", SCB->HFSR);
+    display_printf("CFSR  %08x\n", cfsr);
     if (cfsr & 0x80) {
-        print_reg("MMFAR ", SCB->MMFAR);
+        display_printf("MMFAR %08x\n", SCB->MMFAR);
     }
     if (cfsr & 0x8000) {
-        print_reg("BFAR  ", SCB->BFAR);
+        display_printf("BFAR  %08x\n", SCB->BFAR);
     }
 
     if ((void*)&_ram_start <= (void*)regs && (void*)regs < (void*)&_ram_end) {
-        display_print("Stack:\n", -1);
+        display_printf("Stack:\n");
         uint32_t *stack_top = &_estack;
         if ((void*)regs < (void*)&_heap_end) {
             // stack not in static stack area so limit the amount we print
             stack_top = (uint32_t*)regs + 32;
         }
         for (uint32_t *sp = (uint32_t*)regs; sp < stack_top; ++sp) {
-            print_hex_hex("  ", (uint32_t)sp, *sp);
+            display_printf("  %08x  %08x\n", (uint32_t)sp, *sp);
         }
     }
 
