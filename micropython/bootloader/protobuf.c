@@ -49,20 +49,22 @@ static void pb_varint(PB_CTX *ctx, uint32_t val)
 
 void pb_add_bool(PB_CTX *ctx, uint32_t field_number, bool val)
 {
-    field_number = (field_number << 3) | 0;
+    pb_add_varint(ctx, field_number, val);
+}
+
+void pb_add_bytes(PB_CTX *ctx, uint32_t field_number, const uint8_t *val, uint32_t len)
+{
+    field_number = (field_number << 3) | 2;
     pb_varint(ctx, field_number);
-    pb_append(ctx, val);
+    pb_varint(ctx, len);
+    for (uint32_t i = 0; i < len; i++) {
+        pb_append(ctx, val[i]);
+    }
 }
 
 void pb_add_string(PB_CTX *ctx, uint32_t field_number, const char *val)
 {
-    field_number = (field_number << 3) | 2;
-    pb_varint(ctx, field_number);
-    size_t len = strlen(val);
-    pb_varint(ctx, len);
-    for (size_t i = 0; i < len; i++) {
-        pb_append(ctx, val[i]);
-    }
+    pb_add_bytes(ctx, field_number, (const uint8_t *)val, strlen(val));
 }
 
 void pb_add_varint(PB_CTX *ctx, uint32_t field_number, uint32_t val)
