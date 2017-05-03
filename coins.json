@@ -70,9 +70,9 @@
 	"bip44": 2,
 	"segwit": true,
 	"default_fee_b": {
-		"Normal": 10
+		"Normal": 1000
 	},
-	"dust_limit": 1
+	"dust_limit": 54600
 }, {
 	"coin_name": "Dogecoin",
 	"coin_shortcut": "DOGE",
