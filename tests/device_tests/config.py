@@ -52,27 +52,26 @@ def pipe_exists(path):
         return False
 
 
-if HID_ENABLED:
+if HID_ENABLED and len(HidTransport.enumerate()) > 0:
 
     devices = HidTransport.enumerate()
-    if len(devices) > 0:
-        print('Using TREZOR')
-        TRANSPORT = HidTransport
-        TRANSPORT_ARGS = (devices[0],)
-        TRANSPORT_KWARGS = {'debug_link': False}
-        DEBUG_TRANSPORT = HidTransport
-        DEBUG_TRANSPORT_ARGS = (devices[0],)
-        DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
+    print('Using TREZOR')
+    TRANSPORT = HidTransport
+    TRANSPORT_ARGS = (devices[0],)
+    TRANSPORT_KWARGS = {'debug_link': False}
+    DEBUG_TRANSPORT = HidTransport
+    DEBUG_TRANSPORT_ARGS = (devices[0],)
+    DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
 
 elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
 
-        print('Using Emulator (v1=pipe)')
-        TRANSPORT = PipeTransport
-        TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
-        TRANSPORT_KWARGS = {}
-        DEBUG_TRANSPORT = PipeTransport
-        DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
-        DEBUG_TRANSPORT_KWARGS = {}
+    print('Using Emulator (v1=pipe)')
+    TRANSPORT = PipeTransport
+    TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
+    TRANSPORT_KWARGS = {}
+    DEBUG_TRANSPORT = PipeTransport
+    DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
+    DEBUG_TRANSPORT_KWARGS = {}
 
 elif UDP_ENABLED:
 
