@@ -103,6 +103,8 @@ async def layout_sign_identity(session_id, msg):
     else:
         address = None
     pubkey = node.public_key()
+    if pubkey[0] == 0x01:
+        pubkey = b'\x00' + pubkey[1:]
     seckey = node.private_key()
 
     if msg.identity.proto == 'gpg':
