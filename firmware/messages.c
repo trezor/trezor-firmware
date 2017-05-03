@@ -44,8 +44,6 @@ static const struct MessagesMap_t MessagesMap[] = {
 	{'n', 'i', MessageType_MessageType_Ping,				Ping_fields,				(void (*)(void *))fsm_msgPing},
 	{'n', 'i', MessageType_MessageType_ChangePin,			ChangePin_fields,			(void (*)(void *))fsm_msgChangePin},
 	{'n', 'i', MessageType_MessageType_WipeDevice,			WipeDevice_fields,			(void (*)(void *))fsm_msgWipeDevice},
-	{'n', 'i', MessageType_MessageType_FirmwareErase,		FirmwareErase_fields,		(void (*)(void *))fsm_msgFirmwareErase},
-	{'n', 'i', MessageType_MessageType_FirmwareUpload,		FirmwareUpload_fields,		(void (*)(void *))fsm_msgFirmwareUpload},
 	{'n', 'i', MessageType_MessageType_GetEntropy,			GetEntropy_fields,			(void (*)(void *))fsm_msgGetEntropy},
 	{'n', 'i', MessageType_MessageType_GetPublicKey,		GetPublicKey_fields,		(void (*)(void *))fsm_msgGetPublicKey},
 	{'n', 'i', MessageType_MessageType_LoadDevice,			LoadDevice_fields,			(void (*)(void *))fsm_msgLoadDevice},

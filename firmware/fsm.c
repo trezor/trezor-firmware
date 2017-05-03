@@ -118,9 +118,14 @@ void fsm_sendFailure(FailureType code, const char *text)
 	msg_write(MessageType_MessageType_Failure, resp);
 }
 
-const CoinType *fsm_getCoin(const char *name)
+const CoinType *fsm_getCoin(bool has_name, const char *name)
 {
-	const CoinType *coin = coinByName(name);
+	const CoinType *coin;
+	if (has_name) {
+		coin = coinByName(name);
+	} else {
+		coin = coinByName("Bitcoin");
+	}
 	if (!coin) {
 		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
 		layoutHome();
@@ -280,18 +285,6 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 	layoutHome();
 }
 
-void fsm_msgFirmwareErase(FirmwareErase *msg)
-{
-	(void)msg;
-	fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in bootloader mode");
-}
-
-void fsm_msgFirmwareUpload(FirmwareUpload *msg)
-{
-	(void)msg;
-	fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in bootloader mode");
-}
-
 void fsm_msgGetEntropy(GetEntropy *msg)
 {
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "send entropy?", NULL, NULL, NULL, NULL);
@@ -318,6 +311,9 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	CHECK_INITIALIZED
 
 	CHECK_PIN
+
+	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+	if (!coin) return;
 
 	const char *curve = SECP256K1_NAME;
 	if (msg->has_ecdsa_curve_name) {
@@ -362,7 +358,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 		resp->node.public_key.bytes[0] = 0;
 	}
 	resp->has_xpub = true;
-	hdnode_serialize_public(node, fingerprint, resp->xpub, sizeof(resp->xpub));
+	hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub, sizeof(resp->xpub));
 	msg_write(MessageType_MessageType_PublicKey, resp);
 	layoutHome();
 }
@@ -418,7 +414,7 @@ void fsm_msgSignTx(SignTx *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, 0, 0);
 	if (!node) return;
@@ -579,7 +575,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
@@ -682,7 +678,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
@@ -705,7 +701,7 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	CHECK_PARAM(msg->has_address, "No address provided");
 	CHECK_PARAM(msg->has_message, "No message provided");
 
-	const CoinType *coin = fsm_getCoin(msg->coin_name);
+	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 	uint32_t address_type;
@@ -875,7 +871,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	const HDNode *node = 0;
 	uint8_t address_raw[MAX_ADDR_RAW_SIZE];
 	if (signing) {
-		const CoinType *coin = fsm_getCoin(msg->coin_name);
+		const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 		if (!coin) return;
 
 		CHECK_PIN
