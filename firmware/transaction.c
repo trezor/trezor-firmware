@@ -161,38 +161,38 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 	size_t addr_raw_len;
 	bool is_segwit;
 
+	if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
+		// only 0 satoshi allowed for OP_RETURN
+		if (in->amount != 0) {
+			return 0; // failed to compile output
+		}
+		uint32_t r = 0;
+		out->script_pubkey.bytes[0] = 0x6A; r++; // OP_RETURN
+		r += op_push(in->op_return_data.size, out->script_pubkey.bytes + r);
+		memcpy(out->script_pubkey.bytes + r, in->op_return_data.bytes, in->op_return_data.size); r += in->op_return_data.size;
+		out->script_pubkey.size = r;
+		return r;
+	}
+
 	if (in->address_n_count > 0) {
 		HDNode node;
 		InputScriptType input_script_type;
 
 		switch (in->script_type) {
-
-		case OutputScriptType_PAYTOOPRETURN:
-			// only 0 satoshi allowed for OP_RETURN
-			if (in->amount != 0)
+			case OutputScriptType_PAYTOADDRESS:
+				input_script_type = InputScriptType_SPENDADDRESS;
+				break;
+			case OutputScriptType_PAYTOMULTISIG:
+				input_script_type = InputScriptType_SPENDMULTISIG;
+				break;
+			case OutputScriptType_PAYTOWITNESS:
+				input_script_type = InputScriptType_SPENDWITNESS;
+				break;
+			case OutputScriptType_PAYTOP2SHWITNESS:
+				input_script_type = InputScriptType_SPENDP2SHWITNESS;
+				break;
+			default:
 				return 0; // failed to compile output
-			uint32_t r = 0;
-			out->script_pubkey.bytes[0] = 0x6A; r++; // OP_RETURN
-			r += op_push(in->op_return_data.size, out->script_pubkey.bytes + r);
-			memcpy(out->script_pubkey.bytes + r, in->op_return_data.bytes, in->op_return_data.size); r += in->op_return_data.size;
-			out->script_pubkey.size = r;
-			return r;
-
-		case OutputScriptType_PAYTOADDRESS:
-			input_script_type = InputScriptType_SPENDADDRESS;
-			break;
-		case OutputScriptType_PAYTOMULTISIG:
-			input_script_type = InputScriptType_SPENDMULTISIG;
-			break;
-		case OutputScriptType_PAYTOWITNESS:
-			input_script_type = InputScriptType_SPENDWITNESS;
-			break;
-		case OutputScriptType_PAYTOP2SHWITNESS:
-			input_script_type = InputScriptType_SPENDP2SHWITNESS;
-			break;
-
-		default:
-			return 0; // failed to compile output
 		}
 		memcpy(&node, root, sizeof(HDNode));
 		if (hdnode_private_ckd_cached(&node, in->address_n, in->address_n_count, NULL) == 0) {
