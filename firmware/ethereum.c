@@ -242,10 +242,31 @@ static void ethereumFormatAmount(bignum256 *val, char buffer[25])
 		// remove trailing dot.
 		if (value_ptr[-1] == '.')
 			value_ptr--;
-		if (chain_id == 61 || chain_id == 62) {
-			strcpy(value_ptr, " ETC");
-		} else {
-			strcpy(value_ptr, " ETH");
+		switch (chain_id) {
+			case 61:
+				strcpy(value_ptr, " ETC");		// Ethereum Classic Mainnet
+				break;
+			case 62:
+				strcpy(value_ptr, " tETC");		// Ethereum Classic Testnet
+				break;
+			case 30:
+				strcpy(value_ptr, " RSK");		// Rootstock Mainnet
+				break;
+			case 31:
+				strcpy(value_ptr, " tRSK");		// Rootstock Testnet
+				break;
+			case 3:
+				strcpy(value_ptr, " tETH");		// Ethereum Testnet: Ropsten
+				break;
+			case 4:
+				strcpy(value_ptr, " tETH");		// Ethereum Testnet: Rinkeby
+				break;
+			case 42:
+				strcpy(value_ptr, " tETH");		// Ethereum Testnet: Kovan
+				break;
+			default:
+				strcpy(value_ptr, " ETH");		// Ethereum Mainnet
+				break;
 		}
 		// value is at most 16 + 4 + 1 characters long
 	} else {
