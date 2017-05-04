@@ -1,13 +1,10 @@
-sudo: required
+sudo: false
 dist: trusty
 language: c
 
 compiler:
   - clang
   - gcc
-
-services:
-  - docker
 
 addons:
   apt:
@@ -17,7 +14,6 @@ addons:
     - cmake-data
     - libssl-dev
     - python-pip
-    - nodejs
 
 install:
   - pip install --user pytest ecdsa curve25519-donna
@@ -28,7 +24,21 @@ script:
   - ./test-openssl 1000
   - ITERS=10 py.test
   - mkdir _build && cd _build && cmake .. && make && cd ..
-  - cd emscripten && rm trezor-crypto.js && make docker-build && make test-correctness && cd ..
+
+matrix:
+  include:
+    - env: BUILD=emscripten
+      script:
+        - cd emscripten && rm trezor-crypto.js && make docker-build && make test-correctness && cd ..
+      services:
+        - docker
+      sudo: required
+      install: true
+      compiler: true
+      addons:
+        apt:
+          packages:
+            - nodejs
 
 notifications:
   webhooks:
