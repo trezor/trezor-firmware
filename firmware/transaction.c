@@ -62,8 +62,7 @@ bool compute_address(const CoinType *coin,
 					 InputScriptType script_type,
 					 const HDNode *node,
 					 bool has_multisig, const MultisigRedeemScriptType *multisig,
-					 char address[MAX_ADDR_SIZE],
-					 bool *is_segwit) {
+					 char address[MAX_ADDR_SIZE]) {
 
 	uint8_t raw[32];
 	uint8_t digest[MAX_ADDR_RAW_SIZE];
@@ -78,7 +77,9 @@ bool compute_address(const CoinType *coin,
 		}
 		if (script_type == InputScriptType_SPENDWITNESS) {
 			// segwit p2wsh:  script hash is single sha256
-			*is_segwit = 1;
+			if (!coin->has_segwit || !coin->segwit) {
+				return 0;
+			}
 			if (!coin->has_address_type_p2wsh) {
 				return 0;
 			}
@@ -92,7 +93,9 @@ bool compute_address(const CoinType *coin,
 			}
 		} else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
 			// segwit p2wsh encapsuled in p2sh address
-			*is_segwit = 1;
+			if (!coin->has_segwit || !coin->segwit) {
+				return 0;
+			}
 			if (!coin->has_address_type_p2sh) {
 				return 0;
 			}
@@ -108,7 +111,6 @@ bool compute_address(const CoinType *coin,
 			}
 		} else {
 			// non-segwit p2sh multisig
-			*is_segwit = 0;
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
 			address_write_prefix_bytes(coin->address_type_p2sh, raw);
 			ripemd160(digest, 32, raw + prelen);
@@ -118,7 +120,9 @@ bool compute_address(const CoinType *coin,
 		}
 	} else if (script_type == InputScriptType_SPENDWITNESS) {
 		// segwit p2wpkh:  pubkey hash is ripemd160 of sha256
-		*is_segwit = 1;
+		if (!coin->has_segwit || !coin->segwit) {
+			return 0;
+		}
 		if (!coin->has_address_type_p2wpkh) {
 			return 0;
 		}
@@ -132,7 +136,9 @@ bool compute_address(const CoinType *coin,
 		}
 	} else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
 		// segwit p2wpkh embedded in p2sh
-		*is_segwit = 1;
+		if (!coin->has_segwit || !coin->segwit) {
+			return 0;
+		}
 		if (!coin->has_address_type_p2sh) {
 			return 0;
 		}
@@ -147,7 +153,6 @@ bool compute_address(const CoinType *coin,
 			return 0;
 		}
 	} else {
-		*is_segwit = 0;
 		ecdsa_get_address(node->public_key, coin->address_type, address, MAX_ADDR_SIZE);
 	}
 	return 1;
@@ -159,7 +164,6 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 	out->amount = in->amount;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 	size_t addr_raw_len;
-	bool is_segwit;
 
 	if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
 		// only 0 satoshi allowed for OP_RETURN
@@ -201,7 +205,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 		hdnode_fill_public_key(&node);
 		if (!compute_address(coin, input_script_type, &node,
 							 in->has_multisig, &in->multisig,
-							 in->address, &is_segwit)) {
+							 in->address)) {
 			return 0; // failed to compile output
 		}
 	} else if (!in->has_address) {

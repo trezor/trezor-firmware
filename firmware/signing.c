@@ -113,9 +113,9 @@ Phase2: sign inputs, check that nothing changed
 foreach I (idx1):  // input to sign
     if (idx1 is segwit)
         Request I                                                     STAGE_REQUEST_SEGWIT_INPUT
-		Return serialized input chunk
+        Return serialized input chunk
 
-	else
+    else
         foreach I (idx2):
             Request I                                                 STAGE_REQUEST_4_INPUT
             If idx1 == idx2
@@ -771,6 +771,11 @@ void signing_txack(TransactionType *tx)
 				send_req_2_prev_meta();
 			} else if  (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
 						|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
+				if (!coin->has_segwit || !coin->segwit) {
+					fsm_sendFailure(FailureType_Failure_Other, "Segwit not enabled on this coin");
+					signing_abort();
+					return;
+				}
 				if (!tx->inputs[0].has_amount) {
 					fsm_sendFailure(FailureType_Failure_Other, "Segwit input without amount");
 					signing_abort();

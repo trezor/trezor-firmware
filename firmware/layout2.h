@@ -45,6 +45,5 @@ void layoutPublicKey(const uint8_t *pubkey);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
 void layoutDecryptIdentity(const IdentityType *identity);
 void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon);
-void layoutSegwitWarning(void);
 
 #endif

@@ -580,21 +580,12 @@ void fsm_msgGetAddress(GetAddress *msg)
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
 	hdnode_fill_public_key(node);
-	bool is_segwit = 0;
 
-	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address, &is_segwit)) {
+	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
 	}
 
 	if (msg->has_show_display && msg->show_display) {
-		if (is_segwit) {
-			layoutSegwitWarning();
-			if (!protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
-				fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
-				layoutHome();
-				return;
-			}
-		}
 		char desc[16];
 		if (msg->has_multisig) {
 			strlcpy(desc, "Msig __ of __:", sizeof(desc));

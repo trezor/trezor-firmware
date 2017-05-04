@@ -45,7 +45,7 @@ typedef struct {
 	SHA256_CTX ctx;
 } TxStruct;
 
-bool compute_address(const CoinType *coin, InputScriptType script_type, const HDNode *node, bool has_multisig, const MultisigRedeemScriptType *multisig, char address[MAX_ADDR_SIZE], bool *is_segwit);
+bool compute_address(const CoinType *coin, InputScriptType script_type, const HDNode *node, bool has_multisig, const MultisigRedeemScriptType *multisig, char address[MAX_ADDR_SIZE]);
 uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash, uint8_t *out);
 uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out);
 uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, uint8_t *hash);
