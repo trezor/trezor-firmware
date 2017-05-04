@@ -98,7 +98,7 @@ function processMessage(event) {
             data['version'],
             !!data['segwit']
         );
-        postMessage({
+        self.postMessage({
             'addresses': addresses,
             'firstIndex': data['firstIndex'],
             'lastIndex': data['lastIndex']
@@ -111,5 +111,5 @@ function processMessage(event) {
 }
 
 if (ENVIRONMENT_IS_WORKER) {
-    this['onmessage'] = processMessage;
+    self.onmessage = processMessage;
 }
