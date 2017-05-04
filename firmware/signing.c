@@ -322,35 +322,51 @@ void phase2_request_next_input(void)
 void set_input_bip32_path(const TxInputType *tinput)
 {
 	size_t count = tinput->address_n_count;
-	if (count < 2) {
+	if (count < 1) {
 		// no change address allowed
 		in_address_n_count = (size_t) -1;
-	} else if (in_address_n_count == 0) {
+		return;
+	}
+	if (in_address_n_count == 0) {
 		// initialize in_address_n on first input seen
 		in_address_n_count = count;
-		memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
-	} else if (in_address_n_count != count
-			   || memcmp(in_address_n, tinput->address_n, (count-2) * sizeof(uint32_t)) != 0) {
-		// mismatch -> no change address allowed
-		in_address_n_count = (size_t) -1;
+		if (count > 2) { // if longer than 2 elements, store first N - 2
+			memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
+		}
+	} else {
+		// check whether they are same length
+		if (in_address_n_count != count) {
+			in_address_n_count = (size_t) -1;
+			return;
+		}
+		if (count > 2 && memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t)) != 0) {
+			// mismatch -> no change address allowed
+			in_address_n_count = (size_t) -1;
+			return;
+		}
 	}
 }
 
 bool check_change_bip32_path(const TxOutputType *toutput)
 {
 	size_t count = toutput->address_n_count;
-	// check that the last two components specify a sane address on the change chain
-	if (count < 2
-		|| toutput->address_n[count-2] != 1
-		|| toutput->address_n[count-1] > 1000000)
-		return 0;
 
-	// check that the other components exactly match input.
-	if (in_address_n_count != count
-		|| memcmp(in_address_n, toutput->address_n, (count-2) * sizeof(uint32_t)) != 0)
+	if (count < 1) {
 		return 0;
+	}
 
-	return 1;
+	if (count == 1) {
+		return in_address_n_count == 1 && toutput->address_n[0] < 1000000;
+	}
+
+	if (count >= 2) {
+		return in_address_n_count == count &&
+		       0 == memcmp(in_address_n, toutput->address_n, (count - 2) * sizeof(uint32_t)) &&
+		       toutput->address_n[count - 2] == 1 &&
+		       toutput->address_n[count - 1] < 1000000;
+	}
+
+	return 0;
 }
 
 bool compile_input_script_sig(TxInputType *tinput)
