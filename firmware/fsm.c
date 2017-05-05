@@ -581,6 +581,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	if (!node) return;
 	hdnode_fill_public_key(node);
 
+	layoutProgress("Computing address", 0);
 	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
 	}
