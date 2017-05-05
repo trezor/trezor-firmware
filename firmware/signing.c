@@ -319,8 +319,11 @@ void phase2_request_next_input(void)
 	}
 }
 
-void set_input_bip32_path(const TxInputType *tinput)
+void extract_input_bip32_path(const TxInputType *tinput)
 {
+	if (in_address_n_count == (size_t) -1) {
+		return;
+	}
 	size_t count = tinput->address_n_count;
 	if (count < 1) {
 		// no change address allowed
@@ -333,40 +336,46 @@ void set_input_bip32_path(const TxInputType *tinput)
 		if (count > 2) { // if longer than 2 elements, store first N - 2
 			memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
 		}
-	} else {
-		// check whether they are same length
-		if (in_address_n_count != count) {
-			in_address_n_count = (size_t) -1;
-			return;
-		}
-		if (count > 2 && memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t)) != 0) {
-			// mismatch -> no change address allowed
-			in_address_n_count = (size_t) -1;
-			return;
-		}
+		return;
+	}
+	// check whether they are same length
+	if (in_address_n_count != count) {
+		in_address_n_count = (size_t) -1;
+		return;
+	}
+	if (count > 2 && memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t)) != 0) {
+		// mismatch -> no change address allowed
+		in_address_n_count = (size_t) -1;
+		return;
 	}
 }
+
+#define MAX_BIP32_LAST_ELEMENT 1000000
 
 bool check_change_bip32_path(const TxOutputType *toutput)
 {
 	size_t count = toutput->address_n_count;
 
-	if (count < 1) {
+	if (count < 1 || in_address_n_count < 1) {
 		return 0;
 	}
 
-	if (count == 1) {
-		return in_address_n_count == 1 && toutput->address_n[0] < 1000000;
+	if (count != in_address_n_count) {
+		return 0;
+	}
+
+	if (toutput->address_n[count - 1] > MAX_BIP32_LAST_ELEMENT) {
+		return 0;
 	}
 
 	if (count >= 2) {
-		return in_address_n_count == count &&
-		       0 == memcmp(in_address_n, toutput->address_n, (count - 2) * sizeof(uint32_t)) &&
-		       toutput->address_n[count - 2] == 1 &&
-		       toutput->address_n[count - 1] < 1000000;
+		if (0 != memcmp(in_address_n, toutput->address_n, (count - 2) * sizeof(uint32_t)) ||
+		       toutput->address_n[count - 2] != 1) {
+			return 0;
+		}
 	}
 
-	return 0;
+	return 1;
 }
 
 bool compile_input_script_sig(TxInputType *tinput)
@@ -463,7 +472,7 @@ static bool signing_check_input(TxInputType *txinput) {
 	}
 	// remember the input bip32 path
 	// change addresses must use the same bip32 path as all inputs
-	set_input_bip32_path(txinput);
+	extract_input_bip32_path(txinput);
 	// compute segwit hashPrevouts & hashSequence
 	tx_prevout_hash(&hashers[0], txinput);
 	tx_sequence_hash(&hashers[1], txinput);
