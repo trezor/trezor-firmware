@@ -510,14 +510,11 @@ static bool signing_check_output(TxOutputType *txoutput) {
 		}
 		if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG) {
 			uint8_t h[32];
-			if (!multisig_fp_set || multisig_fp_mismatch
-						|| cryptoMultisigFingerprint(&(txoutput->multisig), h) == 0
-				|| memcmp(multisig_fp, h, 32) != 0) {
-				fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig change address");
-				signing_abort();
-				return false;
+			if (multisig_fp_set && !multisig_fp_mismatch
+						&& cryptoMultisigFingerprint(&(txoutput->multisig), h)
+						&& memcmp(multisig_fp, h, 32) == 0) {
+				is_change = check_change_bip32_path(txoutput);
 			}
-			is_change = check_change_bip32_path(txoutput);
 		} else if (txoutput->script_type == OutputScriptType_PAYTOADDRESS
 				   || ((txoutput->script_type == OutputScriptType_PAYTOWITNESS
 								|| txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS)
