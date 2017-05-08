@@ -9,7 +9,7 @@ fi
 # run emulator
 
 cd ../src
-../vendor/micropython/unix/micropython -O0 main.py &
+../vendor/micropython/unix/micropython -O0 main.py >/dev/null &
 UPY_PID=$!
 
 sleep 1
@@ -21,7 +21,7 @@ error=0
 
 PYTHON="${PYTHON:-python2}"
 
-'''
+: '
 not passing:
 
     test_bip32_speed.py
@@ -42,7 +42,7 @@ not passing:
     test_multisig.py
     test_protect_call.py
     test_protection_levels.py
-'''
+'
 
 for i in \
     test_basic.py \
@@ -60,7 +60,7 @@ for i in \
     test_zerosig.py \
     ; do
 
-        if $PYTHON $i; then
+        if $PYTHON $i >/dev/null 2>/dev/null ; then
            results+=("OK   $i")
         else
            results+=("FAIL $i")
