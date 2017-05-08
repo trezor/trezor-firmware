@@ -4,8 +4,6 @@ from trezor.crypto import bip39
 
 _DEFAULT_CURVE = 'secp256k1'
 
-_cached_seed = None
-
 
 async def get_root(session_id: int, curve_name=_DEFAULT_CURVE):
     seed = await get_seed(session_id)
@@ -14,10 +12,10 @@ async def get_root(session_id: int, curve_name=_DEFAULT_CURVE):
 
 
 async def get_seed(session_id: int) -> bytes:
-    global _cached_seed
-    if _cached_seed is None:
-        _cached_seed = await compute_seed(session_id)
-    return _cached_seed
+    from . import cache
+    if cache.seed is None:
+        cache.seed = await compute_seed(session_id)
+    return cache.seed
 
 
 async def compute_seed(session_id: int) -> bytes:

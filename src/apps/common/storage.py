@@ -144,8 +144,10 @@ def load_settings(language: str=None,
 
 
 def wipe():
+    from . import cache
     lock()
     config.wipe()
+    cache.clear()
 
 
 def new_device_id() -> str:

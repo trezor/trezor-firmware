@@ -31,7 +31,7 @@ not passing:
     test_msg_changepin.py \
     test_msg_ethereum_signtx.py
     test_msg_getaddress_show.py
-    test_msg_loaddevice.py
+    test_msg_loaddevice_xprv.py
     test_msg_ping.py
     test_msg_resetdevice.py
     test_msg_recoverydevice.py
@@ -51,6 +51,7 @@ for i in \
     test_msg_getaddress.py \
     test_msg_getentropy.py
     test_msg_getpublickey.py \
+    test_msg_loaddevice.py
     test_msg_signidentity.py \
     test_msg_signmessage.py \
     test_msg_signtx.py \
