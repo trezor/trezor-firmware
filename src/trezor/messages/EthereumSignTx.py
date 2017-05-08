@@ -11,5 +11,6 @@ class EthereumSignTx(p.MessageType):
         6: ('value', p.BytesType, 0),
         7: ('data_initial_chunk', p.BytesType, 0),
         8: ('data_length', p.UVarintType, 0),
+        9: ('chain_id', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 58

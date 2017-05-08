@@ -11,4 +11,7 @@ class CoinType(p.MessageType):
         6: ('address_type_p2wpkh', p.UVarintType, 0), # default=6
         7: ('address_type_p2wsh', p.UVarintType, 0), # default=10
         8: ('signed_message_header', p.UnicodeType, 0),
+        9: ('xpub_magic', p.UVarintType, 0), # default=76067358
+        10: ('xprv_magic', p.UVarintType, 0), # default=76066276
+        11: ('segwit', p.BoolType, 0),
     }
