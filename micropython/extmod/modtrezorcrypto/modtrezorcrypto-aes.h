@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/aes.h"
+#include "trezor-crypto/aes/aes.h"
 
 typedef struct _mp_obj_AES_t {
     mp_obj_base_t base;

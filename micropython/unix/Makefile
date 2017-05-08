@@ -25,6 +25,7 @@ endif
 # OBJ micropython/extmod/modtrezorcrypto
 ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
 	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto
+	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes
 	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/ed25519-donna
 	CFLAGS_MOD += -DAES_128
 	CFLAGS_MOD += -DAES_192
@@ -35,10 +36,10 @@ SRC_MOD += \
 	$(EXTMOD_DIR)/modtrezorcrypto/rand.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/ssss.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/address.c \
-	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aescrypt.c \
-	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aeskey.c \
-	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes_modes.c \
-	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aestab.c \
+	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes/aescrypt.c \
+	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes/aeskey.c \
+	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes/aes_modes.c \
+	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes/aestab.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/base58.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/bignum.c \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/bip32.c \

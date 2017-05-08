@@ -75,7 +75,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_derive_path_obj, mod_TrezorCrypto_HDNode_derive_path);
 
-STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public) {
+STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public, uint32_t version) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
     vstr_t vstr;
@@ -84,9 +84,9 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public) {
     int written;
     if (use_public) {
         hdnode_fill_public_key(&o->hdnode);
-        written = hdnode_serialize_public(&o->hdnode, o->fingerprint, vstr.buf, vstr.alloc);
+        written = hdnode_serialize_public(&o->hdnode, o->fingerprint, version, vstr.buf, vstr.alloc);
     } else {
-        written = hdnode_serialize_private(&o->hdnode, o->fingerprint, vstr.buf, vstr.alloc);
+        written = hdnode_serialize_private(&o->hdnode, o->fingerprint, version, vstr.buf, vstr.alloc);
     }
     if (written <= 0) {
         mp_raise_ValueError("Failed to serialize");
@@ -96,23 +96,25 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public) {
     return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
 
-/// def trezor.crypto.HDNode.serialize_public() -> str:
+/// def trezor.crypto.HDNode.serialize_public(version: int) -> str:
 ///     '''
 ///     Serialize the public info from HD node to base58 string.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_public(mp_obj_t self) {
-    return serialize_public_private(self, true);
+STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_public(mp_obj_t self, mp_obj_t version) {
+    uint32_t ver = mp_obj_get_int_truncated(version);
+    return serialize_public_private(self, true, ver);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_serialize_public_obj, mod_TrezorCrypto_HDNode_serialize_public);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_serialize_public_obj, mod_TrezorCrypto_HDNode_serialize_public);
 
-/// def trezor.crypto.HDNode.serialize_private() -> str:
+/// def trezor.crypto.HDNode.serialize_private(version: int) -> str:
 ///     '''
 ///     Serialize the private info HD node to base58 string.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_private(mp_obj_t self) {
-    return serialize_public_private(self, false);
+STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_private(mp_obj_t self, mp_obj_t version) {
+    uint32_t ver = mp_obj_get_int_truncated(version);
+    return serialize_public_private(self, false, ver);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_serialize_private_obj, mod_TrezorCrypto_HDNode_serialize_private);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_serialize_private_obj, mod_TrezorCrypto_HDNode_serialize_private);
 
 /// def trezor.crypto.HDNode.clone() -> HDNode:
 ///     '''
@@ -240,24 +242,21 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip32_make_new(const mp_obj_type_t *type, size_
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.bip32.deserialize(value: str) -> HDNode:
+/// def trezor.crypto.bip32.deserialize(value:str, version_public: int, version_private: int) -> HDNode:
 ///     '''
 ///     Construct a BIP0032 HD node from a base58-serialized value.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Bip32_deserialize(mp_obj_t self, mp_obj_t value) {
-    mp_buffer_info_t valueb;
-    mp_get_buffer_raise(value, &valueb, MP_BUFFER_READ);
-    if (valueb.len == 0) {
+STATIC mp_obj_t mod_TrezorCrypto_Bip32_deserialize(size_t n_args, const mp_obj_t *args) {
+    mp_buffer_info_t value;
+    mp_get_buffer_raise(args[1], &value, MP_BUFFER_READ);
+    if (value.len == 0) {
         mp_raise_ValueError("Invalid value");
     }
-    vstr_t vstr;
-    vstr_init_len(&vstr, valueb.len);
-    memcpy(vstr.buf, valueb.buf, valueb.len);
-    char *str = vstr_null_terminated_str(&vstr);
-
+    uint32_t version_public = mp_obj_get_int_truncated(args[2]);
+    uint32_t version_private = mp_obj_get_int_truncated(args[3]);
     HDNode hdnode;
     uint32_t fingerprint;
-    if (hdnode_deserialize(str, &hdnode, &fingerprint) < 0) {
+    if (hdnode_deserialize(value.buf, version_public, version_private, &hdnode, &fingerprint) < 0) {
         mp_raise_ValueError("Failed to deserialize");
     }
 
@@ -267,7 +266,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip32_deserialize(mp_obj_t self, mp_obj_t value
     o->fingerprint = fingerprint;
     return MP_OBJ_FROM_PTR(o);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip32_deserialize_obj, mod_TrezorCrypto_Bip32_deserialize);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Bip32_deserialize_obj, 4, 4, mod_TrezorCrypto_Bip32_deserialize);
 
 /// def trezor.crypto.bip32.from_seed(seed: bytes, curve_name: str) -> HDNode:
 ///     '''

@@ -43,6 +43,7 @@ endif
 ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
 CFLAGS_MOD += \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
+	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/aes \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna \
 	-DAES_128 \
 	-DAES_192 \
@@ -53,10 +54,10 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	extmod/modtrezorcrypto/rand.o \
 	extmod/modtrezorcrypto/ssss.o \
 	extmod/modtrezorcrypto/trezor-crypto/address.o \
-	extmod/modtrezorcrypto/trezor-crypto/aescrypt.o \
-	extmod/modtrezorcrypto/trezor-crypto/aeskey.o \
-	extmod/modtrezorcrypto/trezor-crypto/aes_modes.o \
-	extmod/modtrezorcrypto/trezor-crypto/aestab.o \
+	extmod/modtrezorcrypto/trezor-crypto/aes/aescrypt.o \
+	extmod/modtrezorcrypto/trezor-crypto/aes/aeskey.o \
+	extmod/modtrezorcrypto/trezor-crypto/aes/aes_modes.o \
+	extmod/modtrezorcrypto/trezor-crypto/aes/aestab.o \
 	extmod/modtrezorcrypto/trezor-crypto/base58.o \
 	extmod/modtrezorcrypto/trezor-crypto/bignum.o \
 	extmod/modtrezorcrypto/trezor-crypto/bip32.o \
