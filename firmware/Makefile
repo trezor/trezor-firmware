@@ -38,10 +38,10 @@ OBJS += ../vendor/trezor-crypto/ripemd160.o
 OBJS += ../vendor/trezor-crypto/sha2.o
 OBJS += ../vendor/trezor-crypto/sha3.o
 
-OBJS += ../vendor/trezor-crypto/aescrypt.o
-OBJS += ../vendor/trezor-crypto/aeskey.o
-OBJS += ../vendor/trezor-crypto/aestab.o
-OBJS += ../vendor/trezor-crypto/aes_modes.o
+OBJS += ../vendor/trezor-crypto/aes/aescrypt.o
+OBJS += ../vendor/trezor-crypto/aes/aeskey.o
+OBJS += ../vendor/trezor-crypto/aes/aestab.o
+OBJS += ../vendor/trezor-crypto/aes/aes_modes.o
 
 OBJS += ../vendor/trezor-qrenc/qr_encode.o
 
