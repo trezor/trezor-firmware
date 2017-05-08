@@ -45,7 +45,7 @@ class TestMsgGetentropy(common.TrezorTest):
             with self.client:
                 self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.Entropy()])
                 ent = self.client.get_entropy(l)
-                self.assertTrue(len(ent) >= l)
+                self.assertTrue(len(ent) == l)
                 print('entropy = ', entropy(ent))
 
 if __name__ == '__main__':
