@@ -87,7 +87,11 @@ Issue Date: 20/12/2007
 #if !defined( _AESOPT_H )
 #define _AESOPT_H
 
+#if defined( __cplusplus )
+#include "aescpp.h"
+#else
 #include "aes.h"
+#endif
 
 /*  PLATFORM SPECIFIC INCLUDES */
 
@@ -162,30 +166,31 @@ Issue Date: 20/12/2007
 /*  2. Intel AES AND VIA ACE SUPPORT */
 
 #if defined( __GNUC__ ) && defined( __i386__ ) \
-	|| defined(_WIN32) && defined(_M_IX86) \
-	&& !(defined(_WIN64) || defined(_WIN32_WCE) || defined(_MSC_VER) && (_MSC_VER <= 800))
+ || defined( _WIN32 ) && defined( _M_IX86 ) && !(defined( _WIN64 ) \
+ || defined( _WIN32_WCE ) || defined( _MSC_VER ) && ( _MSC_VER <= 800 ))
 #  define VIA_ACE_POSSIBLE
 #endif
 
-/*  Define this option if support for the Intel AESNI is required (not
-    currently available with GCC). If AESNI is known to be present, then 
-	defining ASSUME_INTEL_AES_VIA_PRESENT will replace the ordinary 
-	encryption/decryption.  If USE_INTEL_AES_IF_PRESENT is defined then
-	AESNI will be used if it is detected (both present and enabled).
+#if (defined( _WIN64 ) && defined( _MSC_VER )) \
+ || (defined( __GNUC__ ) && defined( __x86_64__ )) \
+ && !(defined( INTEL_AES_POSSIBLE ))
+#  define INTEL_AES_POSSIBLE
+#endif
+
+/*  Define this option if support for the Intel AESNI is required
+    If USE_INTEL_AES_IF_PRESENT is defined then AESNI will be used
+    if it is detected (both present and enabled).
 
 	AESNI uses a decryption key schedule with the first decryption
 	round key at the high end of the key scedule with the following
 	round keys at lower positions in memory.  So AES_REV_DKS must NOT
 	be defined when AESNI will be used.  ALthough it is unlikely that
 	assembler code will be used with an AESNI build, if it is then
-	AES_REV_DKS must NOT be defined when such assembler files are
+	AES_REV_DKS must NOT be defined when the assembler files are
 	built
 */
-#if 0 && defined( _WIN64 ) && defined( _MSC_VER )
-#  define INTEL_AES_POSSIBLE
-#endif
 
-#if defined( INTEL_AES_POSSIBLE ) && !defined( USE_INTEL_AES_IF_PRESENT )
+#if 0 && defined( INTEL_AES_POSSIBLE ) && !defined( USE_INTEL_AES_IF_PRESENT )
 #  define USE_INTEL_AES_IF_PRESENT
 #endif
 
@@ -243,8 +248,14 @@ Issue Date: 20/12/2007
 #  define ASM_AMD64_C
 #endif
 
+#if defined( __i386 ) || defined( _M_IX86 )
+#  define A32_
+#elif defined( __x86_64__ ) || defined( _M_X64 )
+#  define A64_
+#endif
+
 #if (defined ( ASM_X86_V1C ) || defined( ASM_X86_V2 ) || defined( ASM_X86_V2C )) \
-      && !defined( _M_IX86 ) || defined( ASM_AMD64_C ) && !defined( _M_X64 )
+       && !defined( A32_ )  || defined( ASM_AMD64_C ) && !defined( A64_ )
 #  error Assembler code is only available for x86 and AMD64 systems
 #endif
 
@@ -306,7 +317,7 @@ Issue Date: 20/12/2007
 /*  6. FAST FINITE FIELD OPERATIONS
 
     If this section is included, tables are used to provide faster finite
-    field arithmetic (this has no effect if FIXED_TABLES is defined).
+    field arithmetic (this has no effect if STATIC_TABLES is defined).
 */
 #if 1
 #  define FF_TABLES
@@ -330,12 +341,12 @@ Issue Date: 20/12/2007
     must be called to compute them before the code is first used.
 */
 #if 1 && !(defined( _MSC_VER ) && ( _MSC_VER <= 800 ))
-#  define FIXED_TABLES
+#  define STATIC_TABLES
 #endif
 
 /*  9. MASKING OR CASTING FROM LONGER VALUES TO BYTES
 
-    In some systems it is better to mask longer values to extract bytes 
+    In some systems it is better to mask longer values to extract bytes
     rather than using a cast. This option allows this choice.
 */
 #if 0
@@ -676,7 +687,7 @@ Issue Date: 20/12/2007
 #if !(defined( REDUCE_CODE_SIZE ) && (defined( ASM_X86_V2 ) || defined( ASM_X86_V2C )))
 #  if ((FUNCS_IN_C & ENC_KEYING_IN_C) || (FUNCS_IN_C & DEC_KEYING_IN_C))
 #    if KEY_SCHED == ONE_TABLE
-#      if !defined( FL1_SET )  && !defined( FL4_SET ) 
+#      if !defined( FL1_SET )  && !defined( FL4_SET )
 #        define LS1_SET
 #      endif
 #    elif KEY_SCHED == FOUR_TABLES
@@ -725,7 +736,7 @@ Issue Date: 20/12/2007
 /* perform forward and inverse column mix operation on four bytes in long word x in */
 /* parallel. NOTE: x must be a simple variable, NOT an expression in these macros.  */
 
-#if !(defined( REDUCE_CODE_SIZE ) && (defined( ASM_X86_V2 ) || defined( ASM_X86_V2C ))) 
+#if !(defined( REDUCE_CODE_SIZE ) && (defined( ASM_X86_V2 ) || defined( ASM_X86_V2C )))
 
 #if defined( FM4_SET )      /* not currently used */
 #  define fwd_mcol(x)       four_tables(x,t_use(f,m),vf1,rf1,0)

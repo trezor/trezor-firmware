@@ -23,7 +23,7 @@ Issue Date: 20/12/2007
 #include "aes.h"
 #include "aesopt.h"
 
-#if defined(FIXED_TABLES)
+#if defined(STATIC_TABLES)
 
 #define sb_data(w) {\
     w(0x63), w(0x7c), w(0x77), w(0x7b), w(0xf2), w(0x6b), w(0x6f), w(0xc5),\
@@ -150,7 +150,7 @@ Issue Date: 20/12/2007
 
 #endif
 
-#if defined(FIXED_TABLES) || !defined(FF_TABLES)
+#if defined(STATIC_TABLES) || !defined(FF_TABLES)
 
 #define f2(x)   ((x<<1) ^ (((x>>7) & 1) * WPOLY))
 #define f4(x)   ((x<<2) ^ (((x>>6) & 1) * WPOLY) ^ (((x>>6) & 2) * WPOLY))
@@ -180,7 +180,7 @@ extern "C"
 {
 #endif
 
-#if defined(FIXED_TABLES)
+#if defined(STATIC_TABLES)
 
 /* implemented in case of wrong call for fixed tables */
 
@@ -195,7 +195,7 @@ AES_RETURN aes_init(void)
 
 #define gf_inv(x)   ((x) ? pow[ 255 - log[x]] : 0)
 
-#else 
+#else
 
 /*  It will generally be sensible to use tables to compute finite
     field multiplies and inverses but where memory is scarse this
@@ -221,7 +221,7 @@ static uint8_t hibit(const uint32_t x)
 static uint8_t gf_inv(const uint8_t x)
 {   uint8_t p1 = x, p2 = BPOLY, n1 = hibit(x), n2 = 0x80, v1 = 1, v2 = 0;
 
-    if(x < 2) 
+    if(x < 2)
         return x;
 
     for( ; ; )
@@ -229,20 +229,20 @@ static uint8_t gf_inv(const uint8_t x)
         if(n1)
             while(n2 >= n1)             /* divide polynomial p2 by p1    */
             {
-                n2 /= n1;               /* shift smaller polynomial left */ 
+                n2 /= n1;               /* shift smaller polynomial left */
                 p2 ^= (p1 * n2) & 0xff; /* and remove from larger one    */
-                v2 ^= v1 * n2;          /* shift accumulated value and   */ 
+                v2 ^= v1 * n2;          /* shift accumulated value and   */
                 n2 = hibit(p2);         /* add into result               */
             }
         else
             return v1;
 
-        if(n2)                          /* repeat with values swapped    */ 
+        if(n2)                          /* repeat with values swapped    */
             while(n1 >= n2)
             {
-                n1 /= n2; 
-                p1 ^= p2 * n1; 
-                v1 ^= v2 * n1; 
+                n1 /= n2;
+                p1 ^= p2 * n1;
+                v1 ^= v2 * n1;
                 n1 = hibit(p1);
             }
         else
@@ -382,6 +382,33 @@ AES_RETURN aes_init(void)
     init = 1;
     return EXIT_SUCCESS;
 }
+
+/* 
+   Automatic code initialisation (suggested by by Henrik S. Gaßmann)
+   based on code provided by Joe Lowe and placed in the public domain at:
+   http://stackoverflow.com/questions/1113409/attribute-constructor-equivalent-in-vc
+*/
+
+#ifdef _MSC_VER
+
+#pragma section(".CRT$XCU", read)
+
+__declspec(allocate(".CRT$XCU")) void (__cdecl *aes_startup)(void) = aes_init;
+
+#elif defined(__GNUC__)
+
+static void aes_startup(void) __attribute__((constructor));
+
+static void aes_startup(void)
+{
+    aes_init();
+}
+
+#else
+
+#pragma message( "dynamic tables must be initialised manually on your system" )
+
+#endif
 
 #endif
 

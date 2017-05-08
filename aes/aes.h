@@ -25,16 +25,14 @@ Issue Date: 20/12/2007
 #define _AES_H
 
 #include <stdlib.h>
-#include <stdint.h>
+
+/*  This include is used to find 8 & 32 bit unsigned integer types  */
+#include "brg_types.h"
 
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
-
-#define ALIGN_OFFSET(x,n)	(((intptr_t)(x)) & ((n) - 1))
-#define ALIGN_FLOOR(x,n)	((uint8_t*)(x) - ( ((intptr_t)(x)) & ((n) - 1)))
-#define ALIGN_CEIL(x,n)		((uint8_t*)(x) + (-((intptr_t)(x)) & ((n) - 1)))
 
 // #define AES_128     /* if a fast 128 bit key scheduler is needed    */
 // #define AES_192     /* if a fast 192 bit key scheduler is needed    */
@@ -62,7 +60,7 @@ extern "C"
 #define KS_LENGTH       44
 #endif
 
-#define AES_RETURN int
+#define AES_RETURN INT_RETURN
 
 /* the character array 'inf' in the following structures is used    */
 /* to hold AES context information. This AES code uses cx->inf.b[0] */
@@ -74,21 +72,31 @@ typedef union
     uint8_t b[4];
 } aes_inf;
 
-#ifdef _WIN64
-__declspec(align(16))
-#endif 
-typedef struct
+#ifdef _MSC_VER
+#  pragma warning( disable : 4324 )
+#endif
+
+#if defined(_MSC_VER) && defined(_WIN64)
+#define ALIGNED_(x) __declspec(align(x))
+#elif defined(__GNUC__) && defined(__x86_64__)
+#define ALIGNED_(x) __attribute__ ((aligned(x)))
+#else
+#define ALIGNED_(x)
+#endif
+
+typedef struct ALIGNED_(16)
 {   uint32_t ks[KS_LENGTH];
     aes_inf inf;
 } aes_encrypt_ctx;
 
-#ifdef _WIN64
-__declspec(align(16))
-#endif 
-typedef struct
+typedef struct ALIGNED_(16)
 {   uint32_t ks[KS_LENGTH];
     aes_inf inf;
 } aes_decrypt_ctx;
+
+#ifdef _MSC_VER
+#  pragma warning( default : 4324 )
+#endif
 
 /* This routine must be called before first use if non-static       */
 /* tables are being used                                            */
@@ -151,9 +159,9 @@ AES_RETURN aes_decrypt(const unsigned char *in, unsigned char *out, const aes_de
 /* each individual call within a series of incremental calls must   */
 /* process only full blocks (i.e. len must be a multiple of 16) but */
 /* the CFB, OFB and CTR mode calls can handle multiple incremental  */
-/* calls of any length. Each mode is reset when a new AES key is    */
-/* set but ECB and CBC operations can be reset without setting a    */
-/* new key by setting a new IV value.  To reset CFB, OFB and CTR    */
+/* calls of any length.  Each mode is reset when a new AES key is   */
+/* set but ECB needs no reset and CBC can be reset without setting  */
+/* a new key by setting a new IV value.  To reset CFB, OFB and CTR  */
 /* without setting the key, aes_mode_reset() must be called and the */
 /* IV must be set.  NOTE: All these calls update the IV on exit so  */
 /* this has to be reset if a new operation with the same IV as the  */

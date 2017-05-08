@@ -29,7 +29,7 @@ Issue Date: 20/12/2007
  that control the calls to aes_init() and the aes_init() routine itself will
  have to be changed for a specific implementation. If global variables are
  available it will generally be preferable to use them with the precomputed
- FIXED_TABLES option that uses static global tables.
+ STATIC_TABLES option that uses static global tables.
 
  The following defines can be used to control the way the tables
  are defined, initialised and used in embedded environments that
@@ -69,7 +69,7 @@ extern "C" {
 #define t_set(m,n) t_##m##n
 #define t_use(m,n) t_##m##n
 
-#if defined(FIXED_TABLES)
+#if defined(STATIC_TABLES)
 #  if !defined( __GNUC__ ) && (defined( __MSDOS__ ) || defined( __WIN16__ ))
 /*   make tables far data to avoid using too much DGROUP space (PG) */
 #    define CONST const far
@@ -98,7 +98,7 @@ extern "C" {
 #  define XP_DIR
 #endif
 
-#if defined(DO_TABLES) && defined(FIXED_TABLES)
+#if defined(DO_TABLES) && defined(STATIC_TABLES)
 #define d_1(t,n,b,e)       EXTERN ALIGN CONST XP_DIR t n[256]    =   b(e)
 #define d_4(t,n,b,e,f,g,h) EXTERN ALIGN CONST XP_DIR t n[4][256] = { b(e), b(f), b(g), b(h) }
 EXTERN ALIGN CONST uint32_t t_dec(r,c)[RC_LENGTH] = rc_data(w0);
