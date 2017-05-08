@@ -61,9 +61,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i);
 int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize, bool segwit);
 
 #if USE_BIP32_CACHE
-
 int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count, uint32_t *fingerprint);
-
 #endif
 
 uint32_t hdnode_fingerprint(HDNode *node);
