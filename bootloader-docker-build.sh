@@ -10,7 +10,7 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	cd trezor-mcu && \
 	git checkout $FIRMWARETAG && \
 	git submodule update --init && \
-	make -C vendor/libopencm3 && \
+	CFLAGS='-std=c99' make -C vendor/libopencm3 && \
 	export OPTFLAGS=-Os
 	make && \
 	make -C bootloader && \
