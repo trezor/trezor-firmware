@@ -1,7 +1,9 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
 from trezor.messages.wire_types import \
-    GetPublicKey, GetAddress, SignTx, EstimateTxSize, \
+    GetPublicKey, GetAddress, \
+    GetEntropy, \
+    SignTx, EstimateTxSize, \
     SignMessage, VerifyMessage, \
     SignIdentity, \
     CipherKeyValue
@@ -17,6 +19,12 @@ def dispatch_GetPublicKey(*args, **kwargs):
 def dispatch_GetAddress(*args, **kwargs):
     from .get_address import layout_get_address
     return layout_get_address(*args, **kwargs)
+
+
+@unimport
+def dispatch_GetEntropy(*args, **kwargs):
+    from .get_entropy import layout_get_entropy
+    return layout_get_entropy(*args, **kwargs)
 
 
 @unimport
@@ -61,6 +69,7 @@ def dispatch_CipherKeyValue(*args, **kwargs):
 def boot():
     register(GetPublicKey, protobuf_workflow, dispatch_GetPublicKey)
     register(GetAddress, protobuf_workflow, dispatch_GetAddress)
+    register(GetEntropy, protobuf_workflow, dispatch_GetEntropy)
     register(SignTx, protobuf_workflow, dispatch_SignTx)
     register(EstimateTxSize, protobuf_workflow, dispatch_EstimateTxSize)
     register(SignMessage, protobuf_workflow, dispatch_SignMessage)
