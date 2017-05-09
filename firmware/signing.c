@@ -748,6 +748,8 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 	return true;
 }
 
+#define ENABLE_SEGWIT_NONSEGWIT_MIXING  0
+
 void signing_txack(TransactionType *tx)
 {
 	if (!signing) {
@@ -774,6 +776,14 @@ void signing_txack(TransactionType *tx)
 				if (next_nonsegwit_input == 0xffffffff)
 					next_nonsegwit_input = idx1;
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
+#if !ENABLE_SEGWIT_NONSEGWIT_MIXING
+				// don't mix segwit and non-segwit inputs
+				if (idx1 > 0 && to.is_segwit == true) {
+					fsm_sendFailure(FailureType_Failure_Other, "Mixing segwit and non-segwit inputs is not allowed");
+					signing_abort();
+					return;
+				}
+#endif
 				send_req_2_prev_meta();
 			} else if  (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
 						|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
@@ -792,9 +802,20 @@ void signing_txack(TransactionType *tx)
 					signing_abort();
 					return;
 				}
+#if !ENABLE_SEGWIT_NONSEGWIT_MIXING
+				// don't mix segwit and non-segwit inputs
+				if (idx1 == 0) {
+					to.is_segwit = true;
+				} else if (to.is_segwit == false) {
+					fsm_sendFailure(FailureType_Failure_Other, "Mixing segwit and non-segwit inputs is not allowed");
+					signing_abort();
+					return;
+				}
+#else
+				to.is_segwit = true;
+#endif
 				to_spend += tx->inputs[0].amount;
 				segwit_to_spend += tx->inputs[0].amount;
-				to.is_segwit = true;
 				phase1_request_next_input();
 			} else {
 				fsm_sendFailure(FailureType_Failure_Other, "Wrong input script type");
