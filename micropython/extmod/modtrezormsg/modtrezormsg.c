@@ -24,91 +24,9 @@
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
-typedef struct _mp_obj_USB_t {
-    mp_obj_base_t base;
-    usb_dev_info_t info;
-} mp_obj_USB_t;
-
-static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
-    size_t len;
-    const char *s = mp_obj_str_get_data(o, &len);
-    if ((s != NULL) && (len >= min_len) && (len <= max_len)) {
-        return s;
-    } else {
-        return NULL;
-    }
-}
-
-STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-
-    STATIC const mp_arg_t allowed_args[] = {
-        { MP_QSTR_vendor_id,         MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_product_id,        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_release_num,       MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_manufacturer_str,  MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_product_str,       MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_serial_number_str, MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_configuration_str, MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_interface_str,     MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-    };
-    mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
-    mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
-
-    const mp_int_t vendor_id      = vals[0].u_int;
-    const mp_int_t product_id     = vals[1].u_int;
-    const mp_int_t release_num    = vals[2].u_int;
-    const char *manufacturer_str  = get_0str(vals[3].u_obj, 0, 32);
-    const char *product_str       = get_0str(vals[4].u_obj, 0, 32);
-    const char *serial_number_str = get_0str(vals[5].u_obj, 0, 32);
-    const char *configuration_str = get_0str(vals[6].u_obj, 0, 32);
-    const char *interface_str     = get_0str(vals[7].u_obj, 0, 32);
-
-    if (vendor_id < 0 || vendor_id > 65535) {
-        mp_raise_ValueError("vendor_id is invalid");
-    }
-    if (product_id < 0 || product_id > 65535) {
-        mp_raise_ValueError("product_id is invalid");
-    }
-    if (manufacturer_str == NULL) {
-        mp_raise_ValueError("manufacturer_str is invalid");
-    }
-    if (product_str == NULL) {
-        mp_raise_ValueError("product_str is invalid");
-    }
-    if (serial_number_str == NULL) {
-        mp_raise_ValueError("serial_number_str is invalid");
-    }
-    if (configuration_str == NULL) {
-        mp_raise_ValueError("configuration_str is invalid");
-    }
-    if (interface_str == NULL) {
-        mp_raise_ValueError("interface_str is invalid");
-    }
-
-    mp_obj_USB_t *o = m_new_obj(mp_obj_USB_t);
-    o->base.type = type;
-
-    o->info.vendor_id         = (uint16_t)(vendor_id);
-    o->info.product_id        = (uint16_t)(product_id);
-    o->info.release_num       = (uint16_t)(release_num);
-    o->info.manufacturer_str  = (const uint8_t *)(manufacturer_str);
-    o->info.product_str       = (const uint8_t *)(product_str);
-    o->info.serial_number_str = (const uint8_t *)(serial_number_str);
-    o->info.configuration_str = (const uint8_t *)(configuration_str);
-    o->info.interface_str     = (const uint8_t *)(interface_str);
-
-    return MP_OBJ_FROM_PTR(o);
-}
-
-STATIC const mp_rom_map_elem_t mod_TrezorMsg_USB_locals_dict_table[] = {};
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_USB_locals_dict, mod_TrezorMsg_USB_locals_dict_table);
-
-STATIC const mp_obj_type_t mod_TrezorMsg_USB_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_USB,
-    .make_new = mod_TrezorMsg_USB_make_new,
-    .locals_dict = (void*)&mod_TrezorMsg_USB_locals_dict,
-};
+/*
+ * USB HID interface configuration
+ */
 
 typedef struct _mp_obj_HID_t {
     mp_obj_base_t base;
@@ -192,6 +110,10 @@ STATIC const mp_obj_type_t mod_TrezorMsg_HID_type = {
     .locals_dict = (void*)&mod_TrezorMsg_HID_locals_dict,
 };
 
+/*
+ * USB VCP interface configuration
+ */
+
 typedef struct _mp_obj_VCP_t {
     mp_obj_base_t base;
     usb_vcp_info_t info;
@@ -266,6 +188,104 @@ STATIC const mp_obj_type_t mod_TrezorMsg_VCP_type = {
     .locals_dict = (void*)&mod_TrezorMsg_VCP_locals_dict,
 };
 
+/*
+ * USB device configuration
+ */
+
+typedef struct _mp_obj_USB_t {
+    mp_obj_base_t base;
+    usb_dev_info_t info;
+} mp_obj_USB_t;
+
+static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
+    size_t len;
+    const char *s = mp_obj_str_get_data(o, &len);
+    if ((len >= min_len) && (len <= max_len)) {
+        if (len == 0 && s == NULL) {
+            return "";
+        } else {
+            return s;
+        }
+    } else {
+        return NULL;
+    }
+}
+
+STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+
+    STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_vendor_id,         MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_product_id,        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_release_num,       MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_manufacturer_str,  MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_product_str,       MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_serial_number_str, MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_configuration_str,                   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_interface_str,                       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+    };
+    mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
+
+    const mp_int_t vendor_id      = vals[0].u_int;
+    const mp_int_t product_id     = vals[1].u_int;
+    const mp_int_t release_num    = vals[2].u_int;
+    const char *manufacturer_str  = get_0str(vals[3].u_obj, 0, 32);
+    const char *product_str       = get_0str(vals[4].u_obj, 0, 32);
+    const char *serial_number_str = get_0str(vals[5].u_obj, 0, 32);
+    const char *configuration_str = get_0str(vals[6].u_obj, 0, 32);
+    const char *interface_str     = get_0str(vals[7].u_obj, 0, 32);
+
+    if (vendor_id < 0 || vendor_id > 65535) {
+        mp_raise_ValueError("vendor_id is invalid");
+    }
+    if (product_id < 0 || product_id > 65535) {
+        mp_raise_ValueError("product_id is invalid");
+    }
+    if (manufacturer_str == NULL) {
+        mp_raise_ValueError("manufacturer_str is invalid");
+    }
+    if (product_str == NULL) {
+        mp_raise_ValueError("product_str is invalid");
+    }
+    if (serial_number_str == NULL) {
+        mp_raise_ValueError("serial_number_str is invalid");
+    }
+    if (configuration_str == NULL) {
+        mp_raise_ValueError("configuration_str is invalid");
+    }
+    if (interface_str == NULL) {
+        mp_raise_ValueError("interface_str is invalid");
+    }
+
+    mp_obj_USB_t *o = m_new_obj(mp_obj_USB_t);
+    o->base.type = type;
+
+    o->info.vendor_id         = (uint16_t)(vendor_id);
+    o->info.product_id        = (uint16_t)(product_id);
+    o->info.release_num       = (uint16_t)(release_num);
+    o->info.manufacturer_str  = (const uint8_t *)(manufacturer_str);
+    o->info.product_str       = (const uint8_t *)(product_str);
+    o->info.serial_number_str = (const uint8_t *)(serial_number_str);
+    o->info.configuration_str = (const uint8_t *)(configuration_str);
+    o->info.interface_str     = (const uint8_t *)(interface_str);
+
+    return MP_OBJ_FROM_PTR(o);
+}
+
+STATIC const mp_rom_map_elem_t mod_TrezorMsg_USB_locals_dict_table[] = {};
+STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_USB_locals_dict, mod_TrezorMsg_USB_locals_dict_table);
+
+STATIC const mp_obj_type_t mod_TrezorMsg_USB_type = {
+    { &mp_type_type },
+    .name = MP_QSTR_USB,
+    .make_new = mod_TrezorMsg_USB_make_new,
+    .locals_dict = (void*)&mod_TrezorMsg_USB_locals_dict,
+};
+
+/*
+ * Msg class
+ */
+
 typedef struct _mp_obj_Msg_t {
     mp_obj_base_t base;
     mp_obj_t usb_info;
@@ -307,6 +327,8 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
         mp_raise_TypeError("expected USB type");
     }
 
+    int vcp_iface_num = -1;
+
     // Add all interfaces
     for (size_t i = 0; i < iface_cnt; i++) {
         mp_obj_t iface = iface_objs[i];
@@ -323,6 +345,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
                 usb_deinit();
                 mp_raise_msg(&mp_type_RuntimeError, "failed to add VCP interface");
             }
+            vcp_iface_num = vcp->info.iface_num;
         } else {
             usb_deinit();
             mp_raise_TypeError("expected HID or VCP type");
@@ -334,6 +357,10 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
         usb_deinit();
         mp_raise_msg(&mp_type_RuntimeError, "failed to start USB");
     }
+
+    // If we found any VCP interfaces, use the last one for stdio,
+    // otherwise disable the stdio support
+    mp_hal_set_vcp_iface(vcp_iface_num);
 
     o->usb_info = usb_info;
     o->usb_ifaces = usb_ifaces;
