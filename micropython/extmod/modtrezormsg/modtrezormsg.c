@@ -401,7 +401,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t m
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
 
 #define TICK_RESOLUTION 1000
-#define TOUCH_IFACE 0
+#define TOUCH_IFACE 255
 extern uint32_t touch_read(void); // defined in HAL
 
 /// def trezor.msg.select(timeout_us: int) -> tuple:

@@ -14,11 +14,7 @@ from micropython import const
 from trezor import msg
 from trezor import log
 
-# message interfaces:
-# 0x0000           - touch event interface
-# 0x0001 - 0xFFFF  - USB HID
-
-TOUCH = const(0)  # interface
+TOUCH = const(255)  # interface
 TOUCH_START = const(1)  # event
 TOUCH_MOVE = const(2)  # event
 TOUCH_END = const(4)  # event
