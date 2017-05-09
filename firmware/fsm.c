@@ -31,6 +31,8 @@
 #include "protect.h"
 #include "pinmatrix.h"
 #include "layout2.h"
+#include "address.h"
+#include "base58.h"
 #include "ecdsa.h"
 #include "reset.h"
 #include "recovery.h"
@@ -579,24 +581,9 @@ void fsm_msgGetAddress(GetAddress *msg)
 	if (!node) return;
 	hdnode_fill_public_key(node);
 
-	if (msg->has_multisig) {
-		layoutProgressSwipe("Preparing", 0);
-		if (cryptoMultisigPubkeyIndex(&(msg->multisig), node->public_key) < 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Pubkey not found in multisig script");
-			layoutHome();
-			return;
-		}
-		uint8_t buf[32];
-		if (compile_script_multisig_hash(&(msg->multisig), buf) == 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Invalid multisig script");
-			layoutHome();
-			return;
-		}
-		ripemd160(buf, 32, buf + 1);
-		buf[0] = coin->address_type_p2sh; // multisig cointype
-		base58_encode_check(buf, 21, resp->address, sizeof(resp->address));
-	} else {
-		ecdsa_get_address(node->public_key, coin->address_type, resp->address, sizeof(resp->address));
+	layoutProgress("Computing address", 0);
+	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
 	}
 
 	if (msg->has_show_display && msg->show_display) {

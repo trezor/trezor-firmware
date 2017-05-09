@@ -249,6 +249,7 @@ void layoutAddress(const char *address, const char *desc)
 	static unsigned char bitdata[QR_MAX_BITDATA];
 	int a, i, j;
 	int side = qr_encode(QR_LEVEL_M, 0, address, 0, bitdata);
+	int startx;
 
 	if (side > 0 && side <= 29) {
 		oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
@@ -263,6 +264,20 @@ void layoutAddress(const char *address, const char *desc)
 				}
 			}
 		}
+		startx = 68;
+	} else if (side > 0 && side <= 60) {
+		oledInvert(0, 0, (side + 3), (side + 3));
+		for (i = 0; i < side; i++) {
+			for (j = 0; j< side; j++) {
+				a = j * side + i;
+				if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+					oledClearPixel(2 + i, 2 + j);
+				}
+			}
+		}
+		startx = side + 6;
+	} else {
+		startx = 0;
 	}
 
 	uint32_t addrlen = strlen(address);
@@ -273,12 +288,11 @@ void layoutAddress(const char *address, const char *desc)
 	const char **str = split_message((const uint8_t *)address, addrlen, rowlen);
 
 	if (desc) {
-		oledDrawString(68, 0 * 9, desc);
+		oledDrawString(startx, 0 * 9, desc);
 	}
-	oledDrawString(68, 1 * 9 + 4, str[0]);
-	oledDrawString(68, 2 * 9 + 4, str[1]);
-	oledDrawString(68, 3 * 9 + 4, str[2]);
-	oledDrawString(68, 4 * 9 + 4, str[3]);
+	for (i = 0; i < 4; i++) {
+		oledDrawString(startx, (i+1) * 9 + 4, str[i]);
+	}
 
 	static const char *btnYes = "Continue";
 	oledDrawString(OLED_WIDTH - fontCharWidth('\x06') - 1, OLED_HEIGHT - 8, "\x06");
