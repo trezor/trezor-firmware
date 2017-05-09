@@ -24,23 +24,23 @@ PYTHON="${PYTHON:-python2}"
 : '
 not passing:
 
-    test_bip32_speed.py
-    test_debuglink.py
-    test_msg_applysettings.py
-    test_msg_clearsession.py
+    test_bip32_speed.py \
+    test_debuglink.py \
+    test_msg_applysettings.py \
+    test_msg_clearsession.py \
     test_msg_changepin.py \
-    test_msg_ethereum_signtx.py
-    test_msg_getaddress_show.py
-    test_msg_loaddevice_xprv.py
-    test_msg_ping.py
-    test_msg_resetdevice.py
-    test_msg_recoverydevice.py
-    test_msg_signtx_segwit.py
-    test_msg_signtx_zcash.py
-    test_multisig_change.py
-    test_multisig.py
-    test_protect_call.py
-    test_protection_levels.py
+    test_msg_ethereum_signtx.py \
+    test_msg_getaddress_show.py \
+    test_msg_loaddevice_xprv.py \
+    test_msg_ping.py \
+    test_msg_resetdevice.py \
+    test_msg_recoverydevice.py \
+    test_msg_signtx_segwit.py \
+    test_msg_signtx_zcash.py \
+    test_multisig_change.py \
+    test_multisig.py \
+    test_protect_call.py \
+    test_protection_levels.py \
 '
 
 for i in \
@@ -49,9 +49,9 @@ for i in \
     test_msg_estimatetxsize.py \
     test_msg_ethereum_getaddress.py \
     test_msg_getaddress.py \
-    test_msg_getentropy.py
+    test_msg_getentropy.py \
     test_msg_getpublickey.py \
-    test_msg_loaddevice.py
+    test_msg_loaddevice.py \
     test_msg_signidentity.py \
     test_msg_signmessage.py \
     test_msg_signtx.py \
