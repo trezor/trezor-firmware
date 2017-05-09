@@ -26,3 +26,6 @@ int usb_vcp_add(const usb_vcp_info_t *info) {
 
 void pendsv_kbd_intr(void) {
 }
+
+void mp_hal_set_vcp_iface(int iface_num) {
+}
