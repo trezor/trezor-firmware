@@ -25,7 +25,10 @@ CFLAGS   += $(OPTFLAGS) \
 
 # disable sequence point warning because of AES code
 CFLAGS += -Wno-sequence-point
-CFLAGS += -I. -Iaes -Ied25519-donna
+CFLAGS += -I.
+CFLAGS += -Iaes
+CFLAGS += -Ichacha20poly1305
+CFLAGS += -Ied25519-donna
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_GRAPHENE=1
 
@@ -43,6 +46,7 @@ SRCS  += sha3.c
 SRCS  += aes/aescrypt.c aes/aeskey.c aes/aestab.c aes/aes_modes.c
 SRCS  += ed25519-donna/ed25519.c
 SRCS  += blake2b.c blake2s.c
+SRCS  += chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
 
 OBJS   = $(SRCS:.c=.o)
 
@@ -78,5 +82,6 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
 
 clean:
-	rm -f *.o aes/*.o ed25519-donna/*.o tests test_speed test-openssl libtrezor-crypto.so
+	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o
+	rm -f tests test_speed test-openssl libtrezor-crypto.so
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce

@@ -22,6 +22,7 @@ These include:
 - SHA2-256/SHA2-512
 - SHA3/Keccak
 - BLAKE2s/BLAKE2b
+- Chacha20-Poly1305
 - unit tests (using Check - check.sf.net; in tests.c)
 - tests against OpenSSL (in test-openssl.c)
 
@@ -37,3 +38,5 @@ Distibuted under MIT License.
 - SHA3: https://github.com/rhash/RHash
 - Curve25519: https://github.com/agl/curve25519-donna
 - Ed25519: https://github.com/floodyberry/ed25519-donna
+- Chacha20: https://github.com/wg/c20p1305
+- Poly1305: https://github.com/floodyberry/poly1305-donna
