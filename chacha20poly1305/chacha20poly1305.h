@@ -1,6 +1,7 @@
 #ifndef CHACHA20POLY1305_H
 #define CHACHA20POLY1305_H
 
+#include <stdint.h>
 #include "ecrypt-sync.h"
 #include "poly1305-donna.h"
 

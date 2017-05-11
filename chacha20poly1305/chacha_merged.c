@@ -27,6 +27,7 @@ static const char tau[16] = "expand 16-byte k";
 
 void ECRYPT_keysetup(ECRYPT_ctx *x,const u8 *k,u32 kbits,u32 ivbits)
 {
+  (void)ivbits;
   const char *constants;
 
   x->input[4] = U8TO32_LITTLE(k + 0);
@@ -61,7 +62,7 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
 {
   u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
   u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
-  u8 *ctarget;
+  u8 *ctarget = 0;
   u8 tmp[64];
   int i;
 
@@ -86,7 +87,7 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
 
   for (;;) {
     if (bytes < 64) {
-      for (i = 0;i < bytes;++i) tmp[i] = m[i];
+      for (i = 0;i < (int)bytes;++i) tmp[i] = m[i];
       m = tmp;
       ctarget = c;
       c = tmp;
@@ -176,7 +177,7 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
 
     if (bytes <= 64) {
       if (bytes < 64) {
-        for (i = 0;i < bytes;++i) ctarget[i] = c[i];
+        for (i = 0;i < (int)bytes;++i) ctarget[i] = c[i];
       }
       x->input[12] = j12;
       x->input[13] = j13;

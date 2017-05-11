@@ -1,6 +1,7 @@
 // Implementation of the ChaCha20 + Poly1305 AEAD construction
 // as described in RFC 7539.
 
+#include <string.h>
 #include "rfc7539.h"
 
 // Initialize the ChaCha20 + Poly1305 context for encryption or decryption
@@ -33,8 +34,8 @@ void rfc7539_finish(chacha20poly1305_ctx *ctx, int64_t alen, int64_t plen, uint8
     uint8_t padding[16] = {0};
     uint8_t lengths[16] = {0};
 
-    U64TO8_LITTLE(lengths + 0, alen);
-    U64TO8_LITTLE(lengths + 8, plen);
+    memcpy(lengths, &alen, sizeof(int64_t));
+    memcpy(lengths + 8, &plen, sizeof(int64_t));
 
     poly1305_update(&ctx->poly1305, padding, 16 - plen%16);
     poly1305_update(&ctx->poly1305, lengths, 16);

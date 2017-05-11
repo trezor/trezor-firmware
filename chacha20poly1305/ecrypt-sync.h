@@ -73,7 +73,7 @@ typedef struct
  * called once when the program starts (e.g., to build expanded S-box
  * tables).
  */
-void ECRYPT_init();
+void ECRYPT_init(void);
 
 /*
  * Key setup. It is the user's responsibility to select the values of
