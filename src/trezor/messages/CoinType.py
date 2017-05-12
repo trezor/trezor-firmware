@@ -8,8 +8,6 @@ class CoinType(p.MessageType):
         3: ('address_type', p.UVarintType, 0), # default=0
         4: ('maxfee_kb', p.UVarintType, 0),
         5: ('address_type_p2sh', p.UVarintType, 0), # default=5
-        6: ('address_type_p2wpkh', p.UVarintType, 0), # default=6
-        7: ('address_type_p2wsh', p.UVarintType, 0), # default=10
         8: ('signed_message_header', p.UnicodeType, 0),
         9: ('xpub_magic', p.UVarintType, 0), # default=76067358
         10: ('xprv_magic', p.UVarintType, 0), # default=76066276
