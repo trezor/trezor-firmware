@@ -92,14 +92,6 @@ bool coinExtractAddressTypeRaw(const CoinType *coin, const uint8_t *addr_raw, ui
 		*address_type = coin->address_type_p2sh;
 		return true;
 	}
-	if (coin->has_address_type_p2wpkh && address_check_prefix(addr_raw, coin->address_type_p2wpkh)) {
-		*address_type = coin->address_type_p2wpkh;
-		return true;
-	}
-	if (coin->has_address_type_p2wsh && address_check_prefix(addr_raw, coin->address_type_p2wsh)) {
-		*address_type = coin->address_type_p2wsh;
-		return true;
-	}
 	*address_type = 0;
 	return false;
 }

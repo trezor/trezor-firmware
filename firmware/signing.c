@@ -656,6 +656,12 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 
 	if (txinput->script_type == InputScriptType_SPENDWITNESS
 		|| txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+		// disable native segwit for now
+		if (txinput->script_type == InputScriptType_SPENDWITNESS) {
+			fsm_sendFailure(FailureType_Failure_Other, "Native segwit is disabled");
+			signing_abort();
+			return false;
+		}
 		if (!compile_input_script_sig(txinput)) {
 			fsm_sendFailure(FailureType_Failure_Other, "Failed to compile input");
 			signing_abort();
@@ -790,6 +796,12 @@ void signing_txack(TransactionType *tx)
 						|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
 				if (!coin->has_segwit || !coin->segwit) {
 					fsm_sendFailure(FailureType_Failure_Other, "Segwit not enabled on this coin");
+					signing_abort();
+					return;
+				}
+				// disable native segwit for now
+				if (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS) {
+					fsm_sendFailure(FailureType_Failure_Other, "Native segwit is disabled");
 					signing_abort();
 					return;
 				}
