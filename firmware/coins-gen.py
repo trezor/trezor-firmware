@@ -22,12 +22,6 @@ for c in coins:
         'true' if c['address_type_p2sh'] is not None else 'false',
         '%d' % c['address_type_p2sh'] if c['address_type_p2sh'] is not None else '0',
 
-        'true' if c['address_type_p2wpkh'] is not None else 'false',
-        '%d' % c['address_type_p2wpkh'] if c['address_type_p2wpkh'] is not None else '0',
-
-        'true' if c['address_type_p2wsh'] is not None else 'false',
-        '%d' % c['address_type_p2wsh'] if c['address_type_p2wsh'] is not None else '0',
-
         'true' if c['signed_message_header'] is not None else 'false',
         '"\\x%02x" "%s"' % (len(c['signed_message_header']), c['signed_message_header'].replace('\n', '\\n')) if c['signed_message_header'] is not None else 'NULL',
 
