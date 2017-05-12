@@ -515,10 +515,11 @@ static bool signing_check_output(TxOutputType *txoutput) {
 						&& memcmp(multisig_fp, h, 32) == 0) {
 				is_change = check_change_bip32_path(txoutput);
 			}
-		} else if (txoutput->script_type == OutputScriptType_PAYTOADDRESS
-				   || ((txoutput->script_type == OutputScriptType_PAYTOWITNESS
-								|| txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS)
-					   && txoutput->amount < segwit_to_spend)) {
+		} else if (txoutput->script_type == OutputScriptType_PAYTOADDRESS) {
+			is_change = check_change_bip32_path(txoutput);
+		} else if (txoutput->script_type == OutputScriptType_PAYTOWITNESS && txoutput->amount < segwit_to_spend) {
+			is_change = check_change_bip32_path(txoutput);
+		} else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS && txoutput->amount < segwit_to_spend) {
 			is_change = check_change_bip32_path(txoutput);
 		}
 	}
