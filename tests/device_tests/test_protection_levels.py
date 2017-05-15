@@ -23,6 +23,10 @@ import binascii
 from trezorlib import messages_pb2 as proto
 from trezorlib import types_pb2 as proto_types
 
+
+TXHASH_d5f65e = binascii.unhexlify(b'd5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+
+
 class TestProtectionLevels(common.TrezorTest):
 
     def test_initialize(self):
@@ -140,7 +144,7 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.verify_message(
                 'Bitcoin',
                 '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-                binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
+                binascii.unhexlify(b'209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
                 'This is an example of a signed message.')
 
     def test_estimate_txsize(self):
@@ -154,7 +158,7 @@ class TestProtectionLevels(common.TrezorTest):
         self.setup_mnemonic_pin_passphrase()
 
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_hash=TXHASH_d5f65e,
                              prev_index=0,
                              )
 
@@ -176,7 +180,7 @@ class TestProtectionLevels(common.TrezorTest):
         self.setup_mnemonic_pin_passphrase()
 
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_hash=TXHASH_d5f65e,
                              prev_index=0,
                              )
 
@@ -191,10 +195,10 @@ class TestProtectionLevels(common.TrezorTest):
                 proto.PinMatrixRequest(),
                 proto.PassphraseRequest(),
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
                 proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),

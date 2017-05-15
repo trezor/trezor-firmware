@@ -32,6 +32,10 @@ if sys.version_info < (3,):
 else:
     byteindex = lambda data, index: data[index]
 
+
+TXHASH_d5f65e = binascii.unhexlify(b'd5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+
+
 # address_n = [177] < 68
 # address_n = [16518] < 66
 class TestZeroSig(common.TrezorTest):
@@ -43,7 +47,7 @@ class TestZeroSig(common.TrezorTest):
 
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
-                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_hash=TXHASH_d5f65e,
                              prev_index=0,
                              )
 
@@ -72,7 +76,7 @@ class TestZeroSig(common.TrezorTest):
 
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
-                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_hash=TXHASH_d5f65e,
                              prev_index=0,
                              )
 
@@ -93,7 +97,7 @@ class TestZeroSig(common.TrezorTest):
 
         inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
-                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+                             prev_hash=TXHASH_d5f65e,
                              prev_index=0,
                              )
 
