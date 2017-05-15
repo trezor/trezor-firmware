@@ -41,13 +41,18 @@ async def dispatch_DebugLinkStop(session_id, msg):
 
 
 async def dispatch_DebugLinkMemoryRead(session_id, msg):
-    # TODO: return memaccess(msg.address, msg.length)
-    pass
+    from trezor.messages.DebugLinkMemory import DebugLinkMemory
+    from uctypes import bytes_at
+    m = DebugLinkMemory()
+    m.memory = bytes_at(msg.address, msg.length)
+    return m
 
 
 async def dispatch_DebugLinkMemoryWrite(session_id, msg):
-    # TODO: memcpy((void *)msg.address, msg.memory, len(msg.memory))
-    pass
+    from uctypes import bytearray_at
+    l = len(msg.memory)
+    data = bytearray_at(msg.address, l)
+    data[0:l] = msg.memory
 
 
 async def dispatch_DebugLinkFlashErase(session_id, msg):
