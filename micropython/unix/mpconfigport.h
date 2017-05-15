@@ -45,6 +45,7 @@
 #endif
 #define MICROPY_COMP_MODULE_CONST   (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
+#define MICROPY_COMP_RETURN_IF_EXPR (1)
 #define MICROPY_ENABLE_GC           (1)
 #define MICROPY_ENABLE_FINALISER    (1)
 #define MICROPY_STACK_CHECK         (1)
@@ -100,6 +101,7 @@
 #endif
 #define MICROPY_PY_CMATH            (1)
 #define MICROPY_PY_IO_FILEIO        (1)
+#define MICROPY_PY_IO_RESOURCE_STREAM (1)
 #define MICROPY_PY_GC_COLLECT_RETVAL (1)
 #define MICROPY_MODULE_FROZEN_STR   (1)
 
@@ -163,6 +165,7 @@
 
 #define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF   (1)
 #define MICROPY_EMERGENCY_EXCEPTION_BUF_SIZE  (256)
+#define MICROPY_KBD_EXCEPTION       (1)
 #define MICROPY_ASYNC_KBD_INTR      (1)
 
 extern const struct _mp_obj_module_t mp_module_machine;
@@ -177,7 +180,7 @@ extern const struct _mp_obj_module_t mp_module_jni;
 
 extern const struct _mp_obj_module_t mp_module_TrezorConfig;
 extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
-extern const struct _mp_obj_module_t mp_module_TrezorDebug;
+extern const struct _mp_obj_module_t mp_module_TrezorIO;
 extern const struct _mp_obj_module_t mp_module_TrezorMsg;
 extern const struct _mp_obj_module_t mp_module_TrezorUi;
 extern const struct _mp_obj_module_t mp_module_TrezorUtils;
@@ -284,8 +287,6 @@ typedef unsigned int mp_uint_t; // must be pointer size
 #endif
 #endif
 
-#define BYTES_PER_WORD sizeof(mp_int_t)
-
 // Cannot include <sys/types.h>, as it may lead to symbol name clashes
 #if _FILE_OFFSET_BITS == 64 && !defined(__LP64__)
 typedef long long mp_off_t;
@@ -336,7 +337,6 @@ void mp_unix_mark_exec(void);
 
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[50]; \
-    mp_obj_t keyboard_interrupt_obj; \
     void *mmap_region_head; \
 
 // We need to provide a declaration/definition of alloca()

@@ -65,6 +65,13 @@ int main(void) {
         // Run the main script
         pyexec_frozen_module("main.py");
 
+        // Run REPL
+        for (;;) {
+            if (pyexec_friendly_repl() != 0) {
+                break;
+            }
+        }
+
         // Clean up
         mp_deinit();
     }

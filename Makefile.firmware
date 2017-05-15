@@ -159,6 +159,7 @@ OBJ_MICROPYTHON += $(addprefix $(BUILD_MP)/,\
 	lib/libm/thumb_vfp_sqrtf.o \
 	lib/libm/wf_lgamma.o \
 	lib/libm/wf_tgamma.o \
+	lib/mp-readline/readline.o \
 	lib/utils/interrupt_char.o \
 	lib/utils/printf.o \
 	lib/utils/pyexec.o \

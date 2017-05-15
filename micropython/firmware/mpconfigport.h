@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Damien P. George
+ * Copyright (c) 2013-2017 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,27 @@
  * THE SOFTWARE.
  */
 
-#include <stdbool.h> // bool
-#include <alloca.h>  // alloca
+// Options to control how MicroPython is built for this port,
+// overriding defaults in py/mpconfig.h.
 
-// Memory allocation policies
+#pragma once
+#ifndef __INCLUDED_MPCONFIGPORT_H
+#define __INCLUDED_MPCONFIGPORT_H
+
+// memory allocation policies
 #define MICROPY_ALLOC_PATH_MAX      (128)
 
-// Emitters
+// emitters
 #define MICROPY_PERSISTENT_CODE_LOAD (0)
 #define MICROPY_EMIT_THUMB          (0)
 #define MICROPY_EMIT_INLINE_THUMB   (0)
 
-// Compiler configuration
+// compiler configuration
 #define MICROPY_COMP_MODULE_CONST   (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
+#define MICROPY_COMP_RETURN_IF_EXPR (1)
 
-// Optimisations
+// optimisations
 #define MICROPY_OPT_COMPUTED_GOTO   (1)
 #define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (0)
 #define MICROPY_OPT_MPZ_BITWISE     (1)
@@ -62,10 +67,12 @@
 #define MICROPY_MODULE_WEAK_LINKS   (1)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (1)
 #define MICROPY_USE_INTERNAL_ERRNO  (1)
+#define MICROPY_ENABLE_SCHEDULER    (0)
+#define MICROPY_SCHEDULER_DEPTH     (0)
 #define MICROPY_VFS                 (0)
 #define MICROPY_VFS_FAT             (0)
 
-// Control over Python builtins
+// control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (1)
 #define MICROPY_PY_BUILTINS_STR_CENTER (1)
@@ -79,6 +86,7 @@
 #define MICROPY_PY_BUILTINS_EXECFILE (1)
 #define MICROPY_PY_BUILTINS_POW3    (0)
 #define MICROPY_PY_BUILTINS_HELP    (0)
+#define MICROPY_PY_BUILTINS_HELP_TEXT stmhal_help_text
 #define MICROPY_PY_BUILTINS_HELP_MODULES (0)
 #define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
 #define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
@@ -95,13 +103,13 @@
 #define MICROPY_PY_THREAD           (0)
 #define MICROPY_PY_THREAD_GIL       (0)
 
-// Extended modules
-#define MICROPY_PY_UBINASCII        (1)
-#define MICROPY_PY_UBINASCII_CRC32  (1)
+// extended modules
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (1)
-#define MICROPY_PY_UTIME_MP_HAL     (1)
+#define MICROPY_PY_UBINASCII        (1)
+#define MICROPY_PY_UBINASCII_CRC32  (1)
 #define MICROPY_PY_UTIMEQ           (1)
+#define MICROPY_PY_UTIME_MP_HAL     (1)
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
 #define MICROPY_PY_TREZORIO         (1)
@@ -109,21 +117,57 @@
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 
-// Type definitions for the specific machine
+// extra built in names to add to the global namespace
+#define MICROPY_PORT_BUILTINS \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj },
 
-#include STM32_HAL_H
+// extra built in modules to add to the list of known ones
+extern const struct _mp_obj_module_t mp_module_utime;
+extern const struct _mp_obj_module_t mp_module_TrezorConfig;
+extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
+extern const struct _mp_obj_module_t mp_module_TrezorIO;
+extern const struct _mp_obj_module_t mp_module_TrezorMsg;
+extern const struct _mp_obj_module_t mp_module_TrezorUi;
+extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 
-#define BYTES_PER_WORD (4)
+#define MICROPY_PORT_BUILTIN_MODULES \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorConfig), (mp_obj_t)&mp_module_TrezorConfig }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorCrypto), (mp_obj_t)&mp_module_TrezorCrypto }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorIO), (mp_obj_t)&mp_module_TrezorIO }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorMsg), (mp_obj_t)&mp_module_TrezorMsg }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUi), (mp_obj_t)&mp_module_TrezorUi }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUtils), (mp_obj_t)&mp_module_TrezorUtils },
+
+#define MP_STATE_PORT MP_STATE_VM
+
+#define MICROPY_PORT_ROOT_POINTERS \
+    const char *readline_hist[8]; \
+
+// type definitions for the specific machine
 
 #define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p) | 1))
 
-#define INT_FMT  "%d"
-#define UINT_FMT "%u"
 #define MP_SSIZE_MAX (0x0fffffff)
 
+#define UINT_FMT "%u"
+#define INT_FMT "%d"
+
+typedef int mp_int_t; // must be pointer size
+typedef unsigned int mp_uint_t; // must be pointer size
 typedef long mp_off_t;
-typedef int mp_int_t;
-typedef unsigned mp_uint_t;
+
+#define MP_PLAT_PRINT_STRN(str, len) mp_hal_stdout_tx_strn_cooked(str, len)
+
+// We have inlined IRQ functions for efficiency (they are generally
+// 1 machine instruction).
+//
+// Note on IRQ state: you should not need to know the specific
+// value of the state variable, but rather just pass the return
+// value from disable_irq back to enable_irq.  If you really need
+// to know the machine-specific values, see irq.h.
+
+#include STM32_HAL_H
 
 static inline void enable_irq(mp_uint_t state) {
     __set_PRIMASK(state);
@@ -143,32 +187,15 @@ static inline mp_uint_t disable_irq(void) {
 #define MICROPY_HW_MCU_NAME "STM32F405VG"
 #define MICROPY_PY_SYS_PLATFORM "trezor"
 
-#define MICROPY_PORT_ROOT_POINTERS
-
-#define MP_STATE_PORT MP_STATE_VM
-
-// Extra built in modules to add to the list of known ones
-extern const struct _mp_obj_module_t mp_module_utime;
-extern const struct _mp_obj_module_t mp_module_TrezorConfig;
-extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
-extern const struct _mp_obj_module_t mp_module_TrezorIO;
-extern const struct _mp_obj_module_t mp_module_TrezorMsg;
-extern const struct _mp_obj_module_t mp_module_TrezorUi;
-extern const struct _mp_obj_module_t mp_module_TrezorUtils;
-#define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorConfig), (mp_obj_t)&mp_module_TrezorConfig }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorCrypto), (mp_obj_t)&mp_module_TrezorCrypto }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorIO), (mp_obj_t)&mp_module_TrezorIO }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorMsg), (mp_obj_t)&mp_module_TrezorMsg }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUi), (mp_obj_t)&mp_module_TrezorUi }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUtils), (mp_obj_t)&mp_module_TrezorUtils },
-
-// Extra built in names to add to the global namespace
-#define MICROPY_PORT_BUILTINS \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_open), (mp_obj_t)&mp_builtin_open_obj },
-
-// Make sure all allocations are done through GC
+// There is no classical C heap in bare-metal ports, only Python
+// garbage-collected heap. For completeness, emulate C heap via
+// GC heap. Note that MicroPython core never uses malloc() and friends,
+// so these defines are mostly to help extension module writers.
 #define malloc(n) m_malloc(n)
 #define free(p) m_free(p)
 #define realloc(p, n) m_realloc(p, n)
+
+// We need to provide a declaration/definition of alloca()
+#include <alloca.h>
+
+#endif // __INCLUDED_MPCONFIGPORT_H
