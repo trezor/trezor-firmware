@@ -182,7 +182,7 @@ extern const struct _mp_obj_module_t mp_module_TrezorConfig;
 extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
 extern const struct _mp_obj_module_t mp_module_TrezorIO;
 extern const struct _mp_obj_module_t mp_module_TrezorMsg;
-extern const struct _mp_obj_module_t mp_module_TrezorUi;
+extern const struct _mp_obj_module_t mp_module_TrezorUI;
 extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 
 #if MICROPY_PY_UOS_VFS
@@ -242,7 +242,7 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 #define MICROPY_PY_TREZORMSG_DEF
 #endif
 #if MICROPY_PY_TREZORUI
-#define MICROPY_PY_TREZORUI_DEF { MP_ROM_QSTR(MP_QSTR_TrezorUi), MP_ROM_PTR(&mp_module_TrezorUi) },
+#define MICROPY_PY_TREZORUI_DEF { MP_ROM_QSTR(MP_QSTR_TrezorUI), MP_ROM_PTR(&mp_module_TrezorUI) },
 #else
 #define MICROPY_PY_TREZORUI_DEF
 #endif

@@ -127,7 +127,7 @@ extern const struct _mp_obj_module_t mp_module_TrezorConfig;
 extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
 extern const struct _mp_obj_module_t mp_module_TrezorIO;
 extern const struct _mp_obj_module_t mp_module_TrezorMsg;
-extern const struct _mp_obj_module_t mp_module_TrezorUi;
+extern const struct _mp_obj_module_t mp_module_TrezorUI;
 extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
@@ -136,7 +136,7 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
     { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorCrypto), (mp_obj_t)&mp_module_TrezorCrypto }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorIO), (mp_obj_t)&mp_module_TrezorIO }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorMsg), (mp_obj_t)&mp_module_TrezorMsg }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUi), (mp_obj_t)&mp_module_TrezorUi }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUI), (mp_obj_t)&mp_module_TrezorUI }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUtils), (mp_obj_t)&mp_module_TrezorUtils },
 
 #define MP_STATE_PORT MP_STATE_VM
