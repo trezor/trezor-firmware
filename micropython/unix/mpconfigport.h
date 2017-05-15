@@ -134,7 +134,7 @@
 
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
-#define MICROPY_PY_TREZORDEBUG      (1)
+#define MICROPY_PY_TREZORIO         (0)
 #define MICROPY_PY_TREZORMSG        (1)
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
@@ -228,10 +228,10 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 #else
 #define MICROPY_PY_TREZORCRYPTO_DEF
 #endif
-#if MICROPY_PY_TREZORDEBUG
-#define MICROPY_PY_TREZORDEBUG_DEF { MP_ROM_QSTR(MP_QSTR_TrezorDebug), MP_ROM_PTR(&mp_module_TrezorDebug) },
+#if MICROPY_PY_TREZORIO
+#define MICROPY_PY_TREZORIO_DEF { MP_ROM_QSTR(MP_QSTR_TrezorIO), MP_ROM_PTR(&mp_module_TrezorIO) },
 #else
-#define MICROPY_PY_TREZORDEBUGI_DEF
+#define MICROPY_PY_TREZORIO_DEF
 #endif
 #if MICROPY_PY_TREZORMSG
 #define MICROPY_PY_TREZORMSG_DEF { MP_ROM_QSTR(MP_QSTR_TrezorMsg), MP_ROM_PTR(&mp_module_TrezorMsg) },
@@ -261,7 +261,7 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
     MICROPY_PY_TERMIOS_DEF \
     MICROPY_PY_TREZORCONFIG_DEF \
     MICROPY_PY_TREZORCRYPTO_DEF \
-    MICROPY_PY_TREZORDEBUG_DEF \
+    MICROPY_PY_TREZORIO_DEF \
     MICROPY_PY_TREZORMSG_DEF \
     MICROPY_PY_TREZORUI_DEF \
     MICROPY_PY_TREZORUTILS_DEF \

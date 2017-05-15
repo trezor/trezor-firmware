@@ -35,7 +35,7 @@
 int sdcard_init(void);
 bool sdcard_is_present(void);
 bool sdcard_power_on(void);
-void sdcard_power_off(void);
+bool sdcard_power_off(void);
 uint64_t sdcard_get_capacity_in_bytes(void);
 
 // these return 0 on success, non-zero on error

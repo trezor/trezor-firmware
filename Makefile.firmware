@@ -25,7 +25,7 @@ BUILD_HDR = $(BUILD)/genhdr
 
 MICROPY_PY_TREZORCONFIG = 1
 MICROPY_PY_TREZORCRYPTO = 1
-MICROPY_PY_TREZORDEBUG = 1
+MICROPY_PY_TREZORIO = 1
 MICROPY_PY_TREZORMSG = 1
 MICROPY_PY_TREZORUI = 1
 MICROPY_PY_TREZORUTILS = 1
@@ -77,10 +77,10 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	)
 endif
 
-# OBJ micropython/extmod/modtrezordebug
-ifeq ($(MICROPY_PY_TREZORDEBUG),1)
+# OBJ micropython/extmod/modtrezorio
+ifeq ($(MICROPY_PY_TREZORIO),1)
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
-	extmod/modtrezordebug/modtrezordebug.o \
+	extmod/modtrezorio/modtrezorio.o \
 	)
 endif
 

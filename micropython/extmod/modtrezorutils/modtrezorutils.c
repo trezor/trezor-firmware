@@ -5,13 +5,11 @@
  * see LICENSE file for details
  */
 
-#include <stdio.h>
-#include <string.h>
-
 #include "py/runtime.h"
 
 #if MICROPY_PY_TREZORUTILS
 
+#include <string.h>
 #include "common.h"
 
 /// def trezor.utils.memcpy(dst: bytearray, dst_ofs: int,

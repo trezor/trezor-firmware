@@ -2,7 +2,7 @@ MICROPY_PY_TREZORCONFIG = 1
 
 MICROPY_PY_TREZORCRYPTO = 1
 
-MICROPY_PY_TREZORDEBUG = 1
+MICROPY_PY_TREZORIO = 0
 
 MICROPY_PY_TREZORMSG = 1
 
@@ -58,9 +58,9 @@ SRC_MOD += \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/sha3.c
 endif
 
-# OBJ micropython/extmod/modtrezordebug
-ifeq ($(MICROPY_PY_TREZORDEBUG),1)
-	SRC_MOD += $(EXTMOD_DIR)/modtrezordebug/modtrezordebug.c
+# OBJ micropython/extmod/modtrezorio
+ifeq ($(MICROPY_PY_TREZORIO),1)
+	SRC_MOD += $(EXTMOD_DIR)/modtrezorio/modtrezorio.c
 endif
 
 # OBJ micropython/extmod/modtrezormsg

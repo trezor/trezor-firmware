@@ -120,12 +120,13 @@ error:
     return false;
 }
 
-void sdcard_power_off(void) {
+bool sdcard_power_off(void) {
     if (!sd_handle.Instance) {
-        return;
+        return true;
     }
     HAL_SD_DeInit(&sd_handle);
     sd_handle.Instance = NULL;
+    return true;
 }
 
 uint64_t sdcard_get_capacity_in_bytes(void) {
