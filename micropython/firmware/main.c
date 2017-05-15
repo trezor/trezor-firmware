@@ -48,6 +48,7 @@ int main(void) {
     }
 
     for (;;) {
+        printf("CORE: Starting main loop\n");
         // Stack limit should be less than real stack size, so we have a chance
         // to recover from limit hit.
         mp_stack_set_top(&_estack);
@@ -63,9 +64,11 @@ int main(void) {
         mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
 
         // Run the main script
+        printf("CORE: Executing main script\n");
         pyexec_frozen_module("main.py");
 
         // Run REPL
+        printf("CORE: Executing REPL\n");
         for (;;) {
             if (pyexec_friendly_repl() != 0) {
                 break;
