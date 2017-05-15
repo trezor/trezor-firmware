@@ -408,27 +408,27 @@ class TestMsgSigntx(common.TrezorTest):
     def test_fee_too_high(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-        # input 0: 0.0039 BTC
+        # tx: 1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6
+        # input 0: 1.0 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=390000,
-                             prev_hash=binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
+        inp1 = proto_types.TxInputType(address_n=[0],  # 1HWDaLTpTCTtRWyWqZkzWx1wex5NKyncLW
+                             # amount=100000000,
+                             prev_hash=binascii.unhexlify('1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6'),
                              prev_index=0,
                              )
 
         out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 350000,
+                              amount=100000000 - 510000,
                               script_type=proto_types.PAYTOADDRESS,
                               )
 
         with self.client:
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify(b"d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify(b"d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify(b"d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify(b"d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"))),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify(b"1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"))),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify(b"1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"))),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify(b"1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"))),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify(b"1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"))),
                 proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_FeeOverThreshold),
@@ -440,7 +440,7 @@ class TestMsgSigntx(common.TrezorTest):
             ])
             (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
 
-        self.assertEqual(binascii.hexlify(serialized_tx), b'010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006a473044022049dec47a2997c99e7abfbcbae7d63da167def0a546a45b778743db26d3a3a5de02200e0a3655c0510c425dfa6a5bf4a803684b97626679e18f0c21d674d6ab4ecc500121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff01409c0000000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
+        self.assertEqual(binascii.hexlify(serialized_tx), b'0100000001a6cab19c507e547ec87c1f3074d8fdd8379e90e6d5af7929f52c30b46e417015000000006b483045022100dc3531da7feb261575f03b5b9bbb35edc7f73bb081c92538827105de4102737002200161e34395f6a8ee93979200cb974fa75ccef6d7c14021511cf468eece90d6450121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff01d018ee05000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000')
 
     def test_not_enough_funds(self):
         self.setup_mnemonic_nopin_nopassphrase()
