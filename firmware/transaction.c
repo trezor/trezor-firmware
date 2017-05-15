@@ -570,8 +570,3 @@ uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs)
 {
 	return 10 + inputs * 149 + outputs * 35;
 }
-
-uint32_t transactionEstimateSizeKb(uint32_t inputs, uint32_t outputs)
-{
-	return (transactionEstimateSize(inputs, outputs) + 999) / 1000;
-}

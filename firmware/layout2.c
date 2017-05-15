@@ -153,9 +153,8 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 	);
 }
 
-void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee, uint32_t kb)
+void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee)
 {
-	(void)kb;
 	const char *str_out = str_amount(fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
 	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
