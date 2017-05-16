@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(SOURCES address.c aes/aescrypt.c aes/aeskey.c aes/aes_modes.c aes/aestab.c base32.c base58.c bignum.c bip32.c bip39.c ecdsa.c hmac.c nist256p1.c pbkdf2.c rand.c ripemd160.c secp256k1.c sha2.c ed25519-donna/ed25519.c sha3.c)
+set(SOURCES address.c aes/aescrypt.c aes/aeskey.c aes/aes_modes.c aes/aestab.c base32.c base58.c bignum.c bip32.c bip39.c ecdsa.c hmac.c nist256p1.c pbkdf2.c rand.c ripemd160.c secp256k1.c sha2.c ed25519-donna/ed25519.c sha3.c ed25519-donna/ed25519-sha3.c)
 
 add_library(TrezorCrypto STATIC ${SOURCES})
 

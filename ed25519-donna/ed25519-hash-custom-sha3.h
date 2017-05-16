@@ -12,12 +12,12 @@
 #ifndef ED25519_HASH_CUSTOM
 #define ED25519_HASH_CUSTOM
 
-#include "sha2.h"
+#include "sha3.h"
 
-#define ed25519_hash_context SHA512_CTX
-#define ed25519_hash_init(ctx) sha512_Init(ctx)
-#define ed25519_hash_update(ctx, in, inlen) sha512_Update((ctx), (in), (inlen))
-#define ed25519_hash_final(ctx, hash) sha512_Final((ctx), (hash))
-#define ed25519_hash(hash, in, inlen) sha512_Raw((in), (inlen), (hash))
+#define ed25519_hash_context SHA3_CTX
+#define ed25519_hash_init(ctx) sha3_512_Init(ctx)
+#define ed25519_hash_update(ctx, in, inlen) sha3_Update((ctx), (in), (inlen))
+#define ed25519_hash_final(ctx, hash) sha3_Final((ctx), (hash))
+#define ed25519_hash(hash, in, inlen) sha3_512((in), (inlen), (hash))
 
 #endif // ED25519_HASH_CUSTOM
