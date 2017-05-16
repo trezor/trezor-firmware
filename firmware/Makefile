@@ -18,6 +18,7 @@ OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
 OBJS += ethereum.o
+OBJS += ethereum_tokens.o
 
 OBJS += debug.o
 

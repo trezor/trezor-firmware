@@ -30,6 +30,7 @@
 #include "secp256k1.h"
 #include "sha3.h"
 #include "util.h"
+#include "ethereum_tokens.h"
 
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
@@ -196,8 +197,9 @@ static void send_signature(void)
  * using standard ethereum units.
  * The buffer must be at least 25 bytes.
  */
-static void ethereumFormatAmount(bignum256 *val, char buffer[25])
+static void ethereumFormatAmount(bignum256 *val, char buffer[25], const TokenType *token)
 {
+	// TODO: use token->decimals to properly format amount
 	char value[25] = {0};
 	char *value_ptr = value;
 
@@ -242,36 +244,40 @@ static void ethereumFormatAmount(bignum256 *val, char buffer[25])
 		// remove trailing dot.
 		if (value_ptr[-1] == '.')
 			value_ptr--;
-		switch (chain_id) {
-			case 61:
-				strcpy(value_ptr, " ETC");		// Ethereum Classic Mainnet
-				break;
-			case 62:
-				strcpy(value_ptr, " tETC");		// Ethereum Classic Testnet
-				break;
-			case 30:
-				strcpy(value_ptr, " RSK");		// Rootstock Mainnet
-				break;
-			case 31:
-				strcpy(value_ptr, " tRSK");		// Rootstock Testnet
-				break;
-			case 3:
-				strcpy(value_ptr, " tETH");		// Ethereum Testnet: Ropsten
-				break;
-			case 4:
-				strcpy(value_ptr, " tETH");		// Ethereum Testnet: Rinkeby
-				break;
-			case 42:
-				strcpy(value_ptr, " tETH");		// Ethereum Testnet: Kovan
-				break;
-			default:
-				strcpy(value_ptr, " ETH");		// Ethereum Mainnet
-				break;
+		if (token) {
+			strcpy(value_ptr, token->ticker); // ERC-20 Token
+		} else {
+			switch (chain_id) {
+				case 61:
+					strcpy(value_ptr, " ETC");		// Ethereum Classic Mainnet
+					break;
+				case 62:
+					strcpy(value_ptr, " tETC");		// Ethereum Classic Testnet
+					break;
+				case 30:
+					strcpy(value_ptr, " RSK");		// Rootstock Mainnet
+					break;
+				case 31:
+					strcpy(value_ptr, " tRSK");		// Rootstock Testnet
+					break;
+				case 3:
+					strcpy(value_ptr, " tETH");		// Ethereum Testnet: Ropsten
+					break;
+				case 4:
+					strcpy(value_ptr, " tETH");		// Ethereum Testnet: Rinkeby
+					break;
+				case 42:
+					strcpy(value_ptr, " tETH");		// Ethereum Testnet: Kovan
+					break;
+				default:
+					strcpy(value_ptr, " ETH");		// Ethereum Mainnet
+					break;
+			}
 		}
 		// value is at most 16 + 4 + 1 characters long
 	} else {
 		// value is bigger than 1e9 ETH => won't fit on display (probably won't happen unless you are Vitalik)
-		strlcpy(value, "trillions of ETH", sizeof(value));
+		strlcpy(value, "gazillions of money", sizeof(value));
 	}
 
 	// skip leading zeroes
@@ -284,7 +290,7 @@ static void ethereumFormatAmount(bignum256 *val, char buffer[25])
 	strcpy(buffer, value_ptr);
 }
 
-static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len)
+static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len, const TokenType *token)
 {
 	bignum256 val;
 	uint8_t pad_val[32];
@@ -293,10 +299,14 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const ui
 	bn_read_be(pad_val, &val);
 
 	char amount[25];
-	if (bn_is_zero(&val)) {
-		strcpy(amount, "message");
+	if (token == NULL) {
+		if (bn_is_zero(&val)) {
+			strcpy(amount, "message");
+		} else {
+			ethereumFormatAmount(&val, amount, NULL);
+		}
 	} else {
-		ethereumFormatAmount(&val, amount);
+		ethereumFormatAmount(&val, amount, token);
 	}
 
 	static char _to1[17] = {0};
@@ -369,7 +379,8 @@ static void layoutEthereumData(const uint8_t *data, uint32_t len, uint32_t total
 
 static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 							  const uint8_t *gas_price, uint32_t gas_price_len,
-							  const uint8_t *gas_limit, uint32_t gas_limit_len)
+							  const uint8_t *gas_limit, uint32_t gas_limit_len,
+							  bool is_token)
 {
 	bignum256 val, gas;
 	uint8_t pad_val[32];
@@ -385,16 +396,16 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 	bn_read_be(pad_val, &gas);
 	bn_multiply(&val, &gas, &secp256k1.prime);
 
-	ethereumFormatAmount(&gas, gas_value);
+	ethereumFormatAmount(&gas, gas_value, NULL);
 
 	memset(pad_val, 0, sizeof(pad_val));
 	memcpy(pad_val + (32 - value_len), value, value_len);
 	bn_read_be(pad_val, &val);
 
 	if (bn_is_zero(&val)) {
-		strcpy(tx_value, "message");
+		strcpy(tx_value, is_token ? "token" : "message");
 	} else {
-		ethereumFormatAmount(&val, tx_value);
+		ethereumFormatAmount(&val, tx_value, NULL);
 	}
 
 	layoutDialogSwipe(&bmp_icon_question,
@@ -503,14 +514,27 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		return;
 	}
 
-	layoutEthereumConfirmTx(msg->to.bytes, msg->to.size, msg->value.bytes, msg->value.size);
+	const TokenType *token = NULL;
+
+	// detect ERC-20 token
+	if (msg->to.size == 20 && msg->value.size == 0 && data_total == 68 && msg->data_initial_chunk.size == 68
+	    && memcmp(msg->data_initial_chunk.bytes, "\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16) == 0) {
+		token = tokenByAddress(msg->to.bytes);
+	}
+
+	if (token != NULL) {
+		layoutEthereumConfirmTx(msg->data_initial_chunk.bytes + 16, 20, msg->data_initial_chunk.bytes + 36, 32, token);
+	} else {
+		layoutEthereumConfirmTx(msg->to.bytes, msg->to.size, msg->value.bytes, msg->value.size, NULL);
+	}
+
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
 		ethereum_signing_abort();
 		return;
 	}
 
-	if (data_total > 0) {
+	if (token == NULL && data_total > 0) {
 		layoutEthereumData(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size, data_total);
 		if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
@@ -521,7 +545,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	layoutEthereumFee(msg->value.bytes, msg->value.size,
 					  msg->gas_price.bytes, msg->gas_price.size,
-					  msg->gas_limit.bytes, msg->gas_limit.size);
+					  msg->gas_limit.bytes, msg->gas_limit.size, token != NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
 		ethereum_signing_abort();
