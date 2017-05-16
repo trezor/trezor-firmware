@@ -4,11 +4,20 @@
 	Ed25519 reference implementation using Ed25519-donna
 */
 
+
+/* define ED25519_SUFFIX to have it appended to the end of each public function */
+#ifdef ED25519_SUFFIX
+#define ED25519_FN3(fn,suffix) fn##suffix
+#define ED25519_FN2(fn,suffix) ED25519_FN3(fn,suffix)
+#define ED25519_FN(fn) ED25519_FN2(fn,ED25519_SUFFIX)
+#else
+#define ED25519_FN(fn) fn
+#endif
+
 #include "ed25519-donna.h"
 #include "ed25519.h"
-#include "ed25519-hash-custom.h"
 
-#include "curve25519-donna-scalarmult-base.h"
+#include "ed25519-hash-custom.h"
 
 /*
 	Generates a (extsk[0..31]) and aExt (extsk[32..63])
@@ -32,7 +41,7 @@ ed25519_hram(hash_512bits hram, const ed25519_signature RS, const ed25519_public
 }
 
 void
-ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk) {
+ED25519_FN(ed25519_publickey) (const ed25519_secret_key sk, ed25519_public_key pk) {
 	bignum256modm a;
 	ge25519 ALIGN(16) A;
 	hash_512bits extsk;
@@ -43,6 +52,96 @@ ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk) {
 	ge25519_scalarmult_base_niels(&A, ge25519_niels_base_multiples, a);
 	ge25519_pack(pk, &A);
 }
+
+void
+ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_secret_key nonce, const ed25519_public_key R, const ed25519_public_key pk, ed25519_cosi_signature sig) {
+	bignum256modm r, S, a;
+	hash_512bits extsk, extnonce, hram;
+
+	ed25519_extsk(extsk, sk);
+	ed25519_extsk(extnonce, nonce);
+
+	/* r = nonce */
+	expand256_modm(r, extnonce, 32);
+
+	/* S = H(R,A,m).. */
+	ed25519_hram(hram, R, pk, m, mlen);
+	expand256_modm(S, hram, 64);
+
+	/* S = H(R,A,m)a */
+	expand256_modm(a, extsk, 32);
+	mul256_modm(S, S, a);
+
+	/* S = (r + H(R,A,m)a) */
+	add256_modm(S, S, r);
+
+	/* S = (r + H(R,A,m)a) mod L */
+	contract256_modm(sig, S);
+}
+
+void
+ED25519_FN(ed25519_sign) (const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS) {
+	ed25519_hash_context ctx;
+	bignum256modm r, S, a;
+	ge25519 ALIGN(16) R;
+	hash_512bits extsk, hashr, hram;
+
+	ed25519_extsk(extsk, sk);
+
+	/* r = H(aExt[32..64], m) */
+	ed25519_hash_init(&ctx);
+	ed25519_hash_update(&ctx, extsk + 32, 32);
+	ed25519_hash_update(&ctx, m, mlen);
+	ed25519_hash_final(&ctx, hashr);
+	expand256_modm(r, hashr, 64);
+
+	/* R = rB */
+	ge25519_scalarmult_base_niels(&R, ge25519_niels_base_multiples, r);
+	ge25519_pack(RS, &R);
+
+	/* S = H(R,A,m).. */
+	ed25519_hram(hram, RS, pk, m, mlen);
+	expand256_modm(S, hram, 64);
+
+	/* S = H(R,A,m)a */
+	expand256_modm(a, extsk, 32);
+	mul256_modm(S, S, a);
+
+	/* S = (r + H(R,A,m)a) */
+	add256_modm(S, S, r);
+
+	/* S = (r + H(R,A,m)a) mod L */
+	contract256_modm(RS + 32, S);
+}
+
+int
+ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS) {
+	ge25519 ALIGN(16) R, A;
+	hash_512bits hash;
+	bignum256modm hram, S;
+	unsigned char checkR[32];
+
+	if ((RS[63] & 224) || !ge25519_unpack_negative_vartime(&A, pk))
+		return -1;
+
+	/* hram = H(R,A,m) */
+	ed25519_hram(hash, RS, pk, m, mlen);
+	expand256_modm(hram, hash, 64);
+
+	/* S */
+	expand256_modm(S, RS + 32, 32);
+
+	/* SB - H(R,A,m)A */
+	ge25519_double_scalarmult_vartime(&R, &A, hram, S);
+	ge25519_pack(checkR, &R);
+
+	/* check that R = SB - H(R,A,m)A */
+	return ed25519_verify(RS, checkR, 32) ? 0 : -1;
+}
+
+#ifndef ED25519_SUFFIX
+
+#include "curve25519-donna-scalarmult-base.h"
 
 int
 ed25519_cosi_combine_publickeys(ed25519_public_key res, CONST ed25519_public_key *pks, size_t n) {
@@ -89,92 +188,6 @@ ed25519_cosi_combine_signatures(ed25519_signature res, const ed25519_public_key 
 	contract256_modm(res + 32, s);
 }
 
-void
-ed25519_cosi_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_secret_key nonce, const ed25519_public_key R, const ed25519_public_key pk, ed25519_cosi_signature sig) {
-	bignum256modm r, S, a;
-	hash_512bits extsk, extnonce, hram;
-
-	ed25519_extsk(extsk, sk);
-	ed25519_extsk(extnonce, nonce);
-
-	/* r = nonce */
-	expand256_modm(r, extnonce, 32);
-
-	/* S = H(R,A,m).. */
-	ed25519_hram(hram, R, pk, m, mlen);
-	expand256_modm(S, hram, 64);
-
-	/* S = H(R,A,m)a */
-	expand256_modm(a, extsk, 32);
-	mul256_modm(S, S, a);
-
-	/* S = (r + H(R,A,m)a) */
-	add256_modm(S, S, r);
-
-	/* S = (r + H(R,A,m)a) mod L */
-	contract256_modm(sig, S);
-}
-
-void
-ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS) {
-	ed25519_hash_context ctx;
-	bignum256modm r, S, a;
-	ge25519 ALIGN(16) R;
-	hash_512bits extsk, hashr, hram;
-
-	ed25519_extsk(extsk, sk);
-
-	/* r = H(aExt[32..64], m) */
-	ed25519_hash_init(&ctx);
-	ed25519_hash_update(&ctx, extsk + 32, 32);
-	ed25519_hash_update(&ctx, m, mlen);
-	ed25519_hash_final(&ctx, hashr);
-	expand256_modm(r, hashr, 64);
-
-	/* R = rB */
-	ge25519_scalarmult_base_niels(&R, ge25519_niels_base_multiples, r);
-	ge25519_pack(RS, &R);
-
-	/* S = H(R,A,m).. */
-	ed25519_hram(hram, RS, pk, m, mlen);
-	expand256_modm(S, hram, 64);
-
-	/* S = H(R,A,m)a */
-	expand256_modm(a, extsk, 32);
-	mul256_modm(S, S, a);
-
-	/* S = (r + H(R,A,m)a) */
-	add256_modm(S, S, r);
-
-	/* S = (r + H(R,A,m)a) mod L */
-	contract256_modm(RS + 32, S);
-}
-
-int
-ed25519_sign_open(const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS) {
-	ge25519 ALIGN(16) R, A;
-	hash_512bits hash;
-	bignum256modm hram, S;
-	unsigned char checkR[32];
-
-	if ((RS[63] & 224) || !ge25519_unpack_negative_vartime(&A, pk))
-		return -1;
-
-	/* hram = H(R,A,m) */
-	ed25519_hram(hash, RS, pk, m, mlen);
-	expand256_modm(hram, hash, 64);
-
-	/* S */
-	expand256_modm(S, RS + 32, 32);
-
-	/* SB - H(R,A,m)A */
-	ge25519_double_scalarmult_vartime(&R, &A, hram, S);
-	ge25519_pack(checkR, &R);
-
-	/* check that R = SB - H(R,A,m)A */
-	return ed25519_verify(RS, checkR, 32) ? 0 : -1;
-}
-
 /*
 	Fast Curve25519 basepoint scalar multiplication
 */
@@ -216,3 +229,5 @@ curve25519_scalarmult(curve25519_key mypublic, const curve25519_key secret, cons
 	e[31] |= 0x40;
 	curve25519_scalarmult_donna(mypublic, e, basepoint);
 }
+
+#endif // ED25519_SUFFIX

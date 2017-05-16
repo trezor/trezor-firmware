@@ -96,9 +96,11 @@ curve25519_sub(bignum25519 out, const bignum25519 a, const bignum25519 b) {
 	out[9] = twoP13579 + a[9] - b[9]    ;
 }
 
+DONNA_INLINE DONNA_UNUSED static void
+curve25519_scalar_product(bignum25519 out, const bignum25519 in, const uint32_t scalar);
+
 /* out = in * scalar */
-DONNA_INLINE static void
-curve25519_scalar_product(bignum25519 out, const bignum25519 in, const uint32_t scalar) {
+void curve25519_scalar_product(bignum25519 out, const bignum25519 in, const uint32_t scalar) {
 	uint64_t a;
 	uint32_t c;
 	a = mul32x32_64(in[0], scalar);     out[0] = (uint32_t)a & reduce_mask_26; c = (uint32_t)(a >> 26);

@@ -254,7 +254,10 @@ static void expand256_modm(bignum256modm out, const unsigned char *in, size_t le
 	barrett_reduce256_modm(out, q1, out);
 }
 
-static void expand_raw256_modm(bignum256modm out, const unsigned char in[32]) {
+DONNA_UNUSED static void
+expand_raw256_modm(bignum256modm out, const unsigned char in[32]);
+
+void expand_raw256_modm(bignum256modm out, const unsigned char in[32]) {
 	bignum256modm_element_t x[8];
 
 	x[0] = U8TO32_LE(in +  0);
