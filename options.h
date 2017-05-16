@@ -68,7 +68,7 @@
 
 // support Keccak hashing
 #ifndef USE_KECCAK
-#define USE_KECCAK USE_ETHEREUM
+#define USE_KECCAK 1
 #endif
 
 #endif

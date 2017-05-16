@@ -44,7 +44,7 @@ SRCS  += ripemd160.c
 SRCS  += sha2.c
 SRCS  += sha3.c
 SRCS  += aes/aescrypt.c aes/aeskey.c aes/aestab.c aes/aes_modes.c
-SRCS  += ed25519-donna/ed25519.c ed25519-donna/ed25519-sha3.c
+SRCS  += ed25519-donna/ed25519.c ed25519-donna/ed25519-sha3.c ed25519-donna/ed25519-keccak.c
 SRCS  += blake2b.c blake2s.c
 SRCS  += chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
 
