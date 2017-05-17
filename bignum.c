@@ -960,6 +960,58 @@ void bn_divmod1000(bignum256 *a, uint32_t *r)
 	*r = rem;
 }
 
+// 2^256 has 78 digits in decimal (+ 1 for decimal point, + 1 for leading zero, + 1 for trailing zero)
+#define DIGITLEN (78 + 1 + 1 + 1)
+
+int bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, int decimals, char *out, int outlen)
+{
+	// convert bignum to characters
+	bignum256 val;
+	memcpy(&val, amnt, sizeof(bignum256));
+	char digits[DIGITLEN];
+	memset(digits, '0', DIGITLEN);
+	int pos = 1; // keep one trailing zero
+	for (int i = 0; i < 78 / 3; i++) {
+		uint32_t limb;
+		bn_divmod1000(&val, &limb);
+		if (pos == decimals + 1) { digits[DIGITLEN - 1 - pos] = '.'; pos++; }
+		digits[DIGITLEN - 1 - pos] = '0' + (limb % 10); pos++;
+		if (pos == decimals + 1) { digits[DIGITLEN - 1 - pos] = '.'; pos++; }
+		digits[DIGITLEN - 1 - pos] = '0' + ((limb / 10) % 10); pos++;
+		if (pos == decimals + 1) { digits[DIGITLEN - 1 - pos] = '.'; pos++; }
+		digits[DIGITLEN - 1 - pos] = '0' + ((limb / 100) % 10); pos++;
+	}
+
+	// drop leading zeroes
+	int digitstart = 0;
+	while (digitstart < DIGITLEN - 1 && digits[digitstart] == '0' && digits[digitstart + 1] >= '0' && digits[digitstart + 1] <= '9') {
+		digitstart++;
+	}
+
+	// drop trailing zeroes
+	int digitend = DIGITLEN - 1;
+	while (digitend > 0 && digits[digitend] == '0' && digits[digitend - 1] >= '0' && digits[digitend - 1] <= '9') {
+		digitend--;
+	}
+
+	int digitslen = digitend - digitstart + 1;
+	int prefixlen = prefix != NULL ? strlen(prefix) : 0;
+	int suffixlen = suffix != NULL ? strlen(suffix) : 0;
+
+	// output buffer is too small
+	if (prefixlen + digitslen + suffixlen + 1 > outlen) {
+		return 0;
+	}
+
+	// copy result to output buffer
+	memcpy(out, prefix, prefixlen);
+	memcpy(out + prefixlen, digits + digitstart, digitslen);
+	memcpy(out + prefixlen + digitslen, suffix, suffixlen);
+	out[prefixlen + digitslen + suffixlen] = 0;
+
+	return prefixlen + digitslen + suffixlen;
+}
+
 #if USE_BN_PRINT
 void bn_print(const bignum256 *a)
 {

@@ -145,6 +145,8 @@ void bn_divmod58(bignum256 *a, uint32_t *r);
 
 void bn_divmod1000(bignum256 *a, uint32_t *r);
 
+int bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, int decimals, char *out, int outlen);
+
 #if USE_BN_PRINT
 void bn_print(const bignum256 *a);
 void bn_print_raw(const bignum256 *a);

@@ -53,7 +53,7 @@ OBJS   = $(SRCS:.c=.o)
 TESTLIBS = $(shell pkg-config --libs check) -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
 
-all: tests test-openssl libtrezor-crypto.so test_speed tools
+all: tests test-openssl test_speed tools libtrezor-crypto.so
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
