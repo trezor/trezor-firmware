@@ -29,6 +29,7 @@ CFLAGS += -Ichacha20poly1305
 CFLAGS += -Ied25519-donna
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_GRAPHENE=1
+CFLAGS += -DUSE_NEM=1
 
 # disable certain optimizations and features when small footprint is required
 ifdef SMALL

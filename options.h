@@ -66,6 +66,11 @@
 #define USE_GRAPHENE 0
 #endif
 
+// support NEM operations
+#ifndef USE_NEM
+#define USE_NEM 0
+#endif
+
 // support Keccak hashing
 #ifndef USE_KECCAK
 #define USE_KECCAK 1
