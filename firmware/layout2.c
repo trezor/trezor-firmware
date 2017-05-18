@@ -29,6 +29,7 @@
 #include "util.h"
 #include "qr_encode.h"
 #include "timer.h"
+#include "bignum.h"
 
 void *layoutLast = layoutHome;
 
@@ -87,42 +88,14 @@ void layoutHome(void)
 	system_millis_lock_start = system_millis;
 }
 
-const char *str_amount(uint64_t amnt, const char *abbr, char *buf, int len)
-{
-	memset(buf, 0, len);
-	uint64_t a = amnt, b = 1;
-	int i;
-	for (i = 0; i < 8; i++) {
-		buf[16 - i] = '0' + (a / b) % 10;
-		b *= 10;
-	}
-	buf[8] = '.';
-	for (i = 0; i < 8; i++) {
-		buf[7 - i] = '0' + (a / b) % 10;
-		b *= 10;
-	}
-	i = 17;
-	while (i > 10 && buf[i - 1] == '0') { // drop trailing zeroes
-		i--;
-	}
-	if (abbr) {
-		buf[i] = ' ';
-		strlcpy(buf + i + 1, abbr, len - i - 1);
-	} else {
-		buf[i] = 0;
-	}
-	const char *r = buf;
-	while (*r == '0' && *(r + 1) != '.') r++; // drop leading zeroes
-	return r;
-}
-
-static char buf_out[32], buf_fee[32];
-
 void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 {
+	char str_out[32];
+	bignum256 amnt;
+	bn_read_uint64(out->amount, &amnt);
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_out, sizeof(str_out));
 	static char first_half[17 + 1];
 	strlcpy(first_half, out->address, sizeof(first_half));
-	const char *str_out = str_amount(out->amount, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
 	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
@@ -138,8 +111,12 @@ void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 
 void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_fee)
 {
-	const char *str_out = str_amount(amount_out, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
-	const char *str_fee = str_amount(amount_fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_fee, sizeof(buf_fee));
+	char str_out[32], str_fee[32];
+	bignum256 amnt;
+	bn_read_uint64(amount_out, &amnt);
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_out, sizeof(str_out));
+	bn_read_uint64(amount_fee, &amnt);
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
@@ -155,13 +132,16 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 
 void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee)
 {
-	const char *str_out = str_amount(fee, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, buf_out, sizeof(buf_out));
+	char str_fee[32];
+	bignum256 amnt;
+	bn_read_uint64(fee, &amnt);
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		"Cancel",
 		"Confirm",
 		NULL,
 		"Fee",
-		str_out,
+		str_fee,
 		"is unexpectedly high.",
 		NULL,
 		"Send anyway?",

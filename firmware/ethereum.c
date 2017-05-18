@@ -192,102 +192,36 @@ static void send_signature(void)
 
 	ethereum_signing_abort();
 }
-
 /* Format a 256 bit number (amount in wei) into a human readable format
  * using standard ethereum units.
  * The buffer must be at least 25 bytes.
  */
-static void ethereumFormatAmount(bignum256 *val, char buffer[25], const TokenType *token)
+static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, char *buf, int buflen)
 {
-	// TODO: use token->decimals to properly format amount
-	char value[25] = {0};
-	char *value_ptr = value;
-
-	// convert val into base 1000 for easy printing.
-	uint16_t num[26];
-	uint8_t last_used = 0;
-	for (int i = 0; i < 26; i++) {
-		uint32_t limb;
-		bn_divmod1000(val, &limb);
-		// limb is < 1000.
-		num[i] = (uint16_t) limb;
-		if (limb > 0) {
-			last_used = i;
-		}
-	}
-	
-	if (last_used < 3) {
-		// value is smaller than 1e9 wei => show value in wei
-		for (int i = last_used; i >= 0; i--) {
-			*value_ptr++ = '0' + (num[i] / 100) % 10;
-			*value_ptr++ = '0' + (num[i] / 10) % 10;
-			*value_ptr++ = '0' + (num[i]) % 10;
-		}
-		strcpy(value_ptr, " Wei");
-		// value is at most 9 + 4 + 1 characters long
-	} else if (last_used < 10) {
-		// value is bigger than 1e9 wei and smaller than 1e12 ETH => show value in ETH
-		int i = last_used;
-		if (i < 6)
-			i = 6;
-		int end = i - 4;
-		while (i >= end) {
-			*value_ptr++ = '0' + (num[i] / 100) % 10;
-			*value_ptr++ = '0' + (num[i] / 10) % 10;
-			*value_ptr++ = '0' + (num[i]) % 10;
-			if (i == 6)
-				*value_ptr++ = '.';
-			i--;
-		}
-		while (value_ptr[-1] == '0') // remove trailing zeros
-			value_ptr--;
-		// remove trailing dot.
-		if (value_ptr[-1] == '.')
-			value_ptr--;
-		if (token) {
-			strcpy(value_ptr, token->ticker); // ERC-20 Token
-		} else {
-			switch (chain_id) {
-				case 61:
-					strcpy(value_ptr, " ETC");		// Ethereum Classic Mainnet
-					break;
-				case 62:
-					strcpy(value_ptr, " tETC");		// Ethereum Classic Testnet
-					break;
-				case 30:
-					strcpy(value_ptr, " RSK");		// Rootstock Mainnet
-					break;
-				case 31:
-					strcpy(value_ptr, " tRSK");		// Rootstock Testnet
-					break;
-				case 3:
-					strcpy(value_ptr, " tETH");		// Ethereum Testnet: Ropsten
-					break;
-				case 4:
-					strcpy(value_ptr, " tETH");		// Ethereum Testnet: Rinkeby
-					break;
-				case 42:
-					strcpy(value_ptr, " tETH");		// Ethereum Testnet: Kovan
-					break;
-				default:
-					strcpy(value_ptr, " ETH");		// Ethereum Mainnet
-					break;
-			}
-		}
-		// value is at most 16 + 4 + 1 characters long
+	bignum256 bn1e9;
+	bn_read_uint32(1000000000, &bn1e9);
+	const char *suffix = NULL;
+	int decimals = 18;
+	if (token != NULL) {
+		suffix = token->ticker;
+		decimals = token->decimals;
+	} else
+	if (bn_is_less(amnt, &bn1e9)) {
+		suffix = " Wei";
+		decimals = 0;
 	} else {
-		// value is bigger than 1e9 ETH => won't fit on display (probably won't happen unless you are Vitalik)
-		strlcpy(value, "gazillions of money", sizeof(value));
+		switch (chain_id) {
+			case 61: suffix = " ETC";  break;  // Ethereum Classic Mainnet
+			case 62: suffix = " tETC"; break;  // Ethereum Classic Testnet
+			case 30: suffix = " RSK";  break;  // Rootstock Mainnet
+			case 31: suffix = " tRSK"; break;  // Rootstock Testnet
+			case  3: suffix = " tETH"; break;  // Ethereum Testnet: Ropsten
+			case  4: suffix = " tETH"; break;  // Ethereum Testnet: Rinkeby
+			case 42: suffix = " tETH"; break;  // Ethereum Testnet: Kovan
+			default: suffix = " ETH";  break;  // Ethereum Mainnet
+		}
 	}
-
-	// skip leading zeroes
-	value_ptr = value;
-	while (*value_ptr == '0' && *(value_ptr + 1) >= '0' && *(value_ptr + 1) <= '9') {
-		value_ptr++;
-	}
-
-	// copy to destination buffer
-	strcpy(buffer, value_ptr);
+	bn_format(amnt, NULL, suffix, decimals, buf, buflen);
 }
 
 static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len, const TokenType *token)
@@ -298,15 +232,15 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const ui
 	memcpy(pad_val + (32 - value_len), value, value_len);
 	bn_read_be(pad_val, &val);
 
-	char amount[25];
+	char amount[32];
 	if (token == NULL) {
 		if (bn_is_zero(&val)) {
 			strcpy(amount, "message");
 		} else {
-			ethereumFormatAmount(&val, amount, NULL);
+			ethereumFormatAmount(&val, NULL, amount, sizeof(amount));
 		}
 	} else {
-		ethereumFormatAmount(&val, amount, token);
+		ethereumFormatAmount(&val, token, amount, sizeof(amount));
 	}
 
 	static char _to1[17] = {0};
@@ -384,8 +318,8 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 {
 	bignum256 val, gas;
 	uint8_t pad_val[32];
-	char tx_value[25];
-	char gas_value[25];
+	char tx_value[32];
+	char gas_value[32];
 
 	memset(pad_val, 0, sizeof(pad_val));
 	memcpy(pad_val + (32 - gas_price_len), gas_price, gas_price_len);
@@ -396,7 +330,7 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 	bn_read_be(pad_val, &gas);
 	bn_multiply(&val, &gas, &secp256k1.prime);
 
-	ethereumFormatAmount(&gas, gas_value, NULL);
+	ethereumFormatAmount(&gas, NULL, gas_value, sizeof(gas_value));
 
 	memset(pad_val, 0, sizeof(pad_val));
 	memcpy(pad_val + (32 - value_len), value, value_len);
@@ -405,7 +339,7 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 	if (bn_is_zero(&val)) {
 		strcpy(tx_value, is_token ? "token" : "message");
 	} else {
-		ethereumFormatAmount(&val, tx_value, NULL);
+		ethereumFormatAmount(&val, NULL, tx_value, sizeof(tx_value));
 	}
 
 	layoutDialogSwipe(&bmp_icon_question,

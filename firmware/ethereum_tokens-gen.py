@@ -21,4 +21,4 @@ for t in tokens:
     if symbol in subst:
         symbol = subst[symbol]
     address = '\\x'.join([address[i:i + 2] for i in range(0, len(address), 2)])[2:].lower()
-    print('\t{"%s", " %s", %d},' % (address, symbol, decimal))
+    print('\t{"%s", "%s", %d},' % (address, symbol, decimal))
