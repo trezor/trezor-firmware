@@ -26,7 +26,6 @@
 
 extern const CoinType coins[COINS_COUNT];
 
-const CoinType *coinByShortcut(const char *shortcut);
 const CoinType *coinByName(const char *name);
 const CoinType *coinByAddressType(uint32_t address_type);
 bool coinExtractAddressType(const CoinType *coin, const char *addr, uint32_t *address_type);

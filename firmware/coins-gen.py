@@ -11,7 +11,7 @@ for c in coins:
         '"%s"' % c['coin_name'] if c['coin_name'] is not None else 'NULL',
 
         'true' if c['coin_shortcut'] is not None else 'false',
-        '"%s"' % c['coin_shortcut'] if c['coin_shortcut'] is not None else 'NULL',
+        '" %s"' % c['coin_shortcut'] if c['coin_shortcut'] is not None else 'NULL',
 
         'true' if c['address_type'] is not None else 'false',
         '%d' % c['address_type'] if c['address_type'] is not None else '0',
