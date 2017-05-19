@@ -48,6 +48,20 @@ const curve_info ed25519_info = {
 	0
 };
 
+const curve_info ed25519_sha3_info = {
+	/* bip32_name */
+	"ed25519-sha3 seed",
+	0
+};
+
+#if USE_KECCAK
+const curve_info ed25519_keccak_info = {
+	/* bip32_name */
+	"ed25519-keccak seed",
+	0
+};
+#endif
+
 const curve_info curve25519_info = {
 	/* bip32_name */
 	"curve25519 seed",
@@ -548,6 +562,14 @@ const curve_info *get_curve_by_name(const char *curve_name) {
 	if (strcmp(curve_name, ED25519_NAME) == 0) {
 		return &ed25519_info;
 	}
+	if (strcmp(curve_name, ED25519_SHA3_NAME) == 0) {
+		return &ed25519_sha3_info;
+	}
+#if USE_KECCAK
+	if (strcmp(curve_name, ED25519_KECCAK_NAME) == 0) {
+		return &ed25519_keccak_info;
+	}
+#endif
 	if (strcmp(curve_name, CURVE25519_NAME) == 0) {
 		return &curve25519_info;
 	}

@@ -20,7 +20,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "curves.h"
+
 const char SECP256K1_NAME[] = "secp256k1";
 const char NIST256P1_NAME[] = "nist256p1";
 const char ED25519_NAME[] = "ed25519";
+const char ED25519_SHA3_NAME[] = "ed25519-sha3";
+#if USE_KECCAK
+const char ED25519_KECCAK_NAME[] = "ed25519-keccak";
+#endif
 const char CURVE25519_NAME[] = "curve25519";
