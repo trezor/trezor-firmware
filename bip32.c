@@ -31,6 +31,7 @@
 #include "ecdsa.h"
 #include "bip32.h"
 #include "sha2.h"
+#include "sha3.h"
 #include "ripemd160.h"
 #include "base58.h"
 #include "macros.h"
@@ -38,8 +39,9 @@
 #include "secp256k1.h"
 #include "nist256p1.h"
 #include "ed25519.h"
-#if USE_ETHEREUM
-#include "sha3.h"
+#include "ed25519-sha3.h"
+#if USE_KECCAK
+#include "ed25519-keccak.h"
 #endif
 
 const curve_info ed25519_info = {
@@ -406,14 +408,21 @@ void hdnode_fill_public_key(HDNode *node)
 {
 	if (node->public_key[0] != 0)
 		return;
-	if (node->curve == &ed25519_info) {
-		node->public_key[0] = 1;
-		ed25519_publickey(node->private_key, node->public_key + 1);
-	} else if (node->curve == &curve25519_info) {
-		node->public_key[0] = 1;
-		curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
-	} else {
+	if (node->curve->params) {
 		ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
+	} else {
+		node->public_key[0] = 1;
+		if (node->curve == &ed25519_info) {
+			ed25519_publickey(node->private_key, node->public_key + 1);
+		} else if (node->curve == &ed25519_sha3_info) {
+			ed25519_publickey_sha3(node->private_key, node->public_key + 1);
+#if USE_KECCAK
+		} else if (node->curve == &ed25519_keccak_info) {
+			ed25519_publickey_keccak(node->private_key, node->public_key + 1);
+#endif
+		} else if (node->curve == &curve25519_info) {
+			curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
+		}
 	}
 }
 
@@ -442,36 +451,45 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash)
 // msg_len is the message length
 int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
-	if (node->curve == &ed25519_info) {
-		hdnode_fill_public_key(node);
-		ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
-		return 0;
+	if (node->curve->params) {
+		return ecdsa_sign(node->curve->params, node->private_key, msg, msg_len, sig, pby, is_canonical);
 	} else if (node->curve == &curve25519_info) {
 		return 1;  // signatures are not supported
 	} else {
-		return ecdsa_sign(node->curve->params, node->private_key, msg, msg_len, sig, pby, is_canonical);
+		hdnode_fill_public_key(node);
+		if (node->curve == &ed25519_info) {
+			ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
+		} else if (node->curve == &ed25519_sha3_info) {
+			ed25519_sign_sha3(msg, msg_len, node->private_key, node->public_key + 1, sig);
+#if USE_KECCAK
+		} else if (node->curve == &ed25519_keccak_info) {
+			ed25519_sign_keccak(msg, msg_len, node->private_key, node->public_key + 1, sig);
+#endif
+		}
+		return 0;
 	}
 }
 
 int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
-	if (node->curve == &ed25519_info) {
-		hdnode_fill_public_key(node);
-		ed25519_sign(digest, 32, node->private_key, node->public_key + 1, sig);
-		return 0;
+	if (node->curve->params) {
+		return ecdsa_sign_digest(node->curve->params, node->private_key, digest, sig, pby, is_canonical);
 	} else if (node->curve == &curve25519_info) {
 		return 1;  // signatures are not supported
 	} else {
-		return ecdsa_sign_digest(node->curve->params, node->private_key, digest, sig, pby, is_canonical);
+		return hdnode_sign(node, digest, 32, sig, pby, is_canonical);
 	}
 }
 
 int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key, int *result_size)
 {
 	// Use elliptic curve Diffie-Helman to compute shared session key
-	if (node->curve == &ed25519_info) {
-		*result_size = 0;
-		return 1;  // ECDH is not supported
+	if (node->curve->params) {
+		if (ecdh_multiply(node->curve->params, node->private_key, peer_public_key, session_key) != 0) {
+			return 1;
+		}
+		*result_size = 65;
+		return 0;
 	} else if (node->curve == &curve25519_info) {
 		session_key[0] = 0x04;
 		if (peer_public_key[0] != 0x40) {
@@ -481,11 +499,8 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, ui
 		*result_size = 33;
 		return 0;
 	} else {
-		if (ecdh_multiply(node->curve->params, node->private_key, peer_public_key, session_key) != 0) {
-			return 1;
-		}
-		*result_size = 65;
-		return 0;
+		*result_size = 0;
+		return 1;  // ECDH is not supported
 	}
 }
 
