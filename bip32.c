@@ -43,6 +43,9 @@
 #if USE_KECCAK
 #include "ed25519-keccak.h"
 #endif
+#if USE_NEM
+#include "nem.h"
+#endif
 
 const curve_info ed25519_info = {
 	/* bip32_name */
@@ -441,6 +444,17 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash)
 	memcpy(pubkeyhash, buf + 12, 20);
 
 	return 1;
+}
+#endif
+
+#if USE_NEM
+int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address) {
+	if (node->curve != &ed25519_keccak_info) {
+		return 0;
+	}
+
+	hdnode_fill_public_key(node);
+	return nem_get_address(&node->public_key[1], version, address);
 }
 #endif
 

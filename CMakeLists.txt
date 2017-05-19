@@ -14,6 +14,7 @@ set(SOURCES
     blake2b.c blake2s.c
     chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
     rc4.c
+    nem.c
 )
 
 add_library(TrezorCrypto STATIC ${SOURCES})

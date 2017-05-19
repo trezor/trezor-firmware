@@ -72,6 +72,10 @@ void hdnode_fill_public_key(HDNode *node);
 int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash);
 #endif
 
+#if USE_NEM
+int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address);
+#endif
+
 int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 
