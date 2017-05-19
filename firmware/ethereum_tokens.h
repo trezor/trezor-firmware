@@ -22,9 +22,10 @@
 
 #include <stdint.h>
 
-#define TOKENS_COUNT 43
+#define TOKENS_COUNT 44
 
 typedef struct {
+    uint8_t chain_id;
     const char * const address;
     const char * const ticker;
     int decimals;
@@ -32,6 +33,6 @@ typedef struct {
 
 extern const TokenType tokens[TOKENS_COUNT];
 
-const TokenType *tokenByAddress(const uint8_t *address);
+const TokenType *tokenByChainAddress(uint8_t chain_id, const uint8_t *address);
 
 #endif

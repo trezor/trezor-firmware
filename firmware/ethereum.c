@@ -211,6 +211,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 		decimals = 0;
 	} else {
 		switch (chain_id) {
+			case  1: suffix = " ETH";  break;  // Ethereum Mainnet
 			case 61: suffix = " ETC";  break;  // Ethereum Classic Mainnet
 			case 62: suffix = " tETC"; break;  // Ethereum Classic Testnet
 			case 30: suffix = " RSK";  break;  // Rootstock Mainnet
@@ -218,7 +219,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 			case  3: suffix = " tETH"; break;  // Ethereum Testnet: Ropsten
 			case  4: suffix = " tETH"; break;  // Ethereum Testnet: Rinkeby
 			case 42: suffix = " tETH"; break;  // Ethereum Testnet: Kovan
-			default: suffix = " ETH";  break;  // Ethereum Mainnet
+			default: suffix = " UNKN"; break;  // unknown chain
 		}
 	}
 	bn_format(amnt, NULL, suffix, decimals, buf, buflen);
@@ -453,7 +454,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	// detect ERC-20 token
 	if (msg->to.size == 20 && msg->value.size == 0 && data_total == 68 && msg->data_initial_chunk.size == 68
 	    && memcmp(msg->data_initial_chunk.bytes, "\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16) == 0) {
-		token = tokenByAddress(msg->to.bytes);
+		token = tokenByChainAddress(chain_id, msg->to.bytes);
 	}
 
 	if (token != NULL) {
