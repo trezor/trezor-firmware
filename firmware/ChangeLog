@@ -1,3 +1,8 @@
+Version 1.5.0
+* Stable release, optional update
+* Enable Segwit for Testnet and Litecoin
+* Enable ERC-20 tokens for Ethereum chains
+
 Version 1.4.2
 * Stable release, optional update
 * New Matrix-based recovery method
