@@ -755,7 +755,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 	return true;
 }
 
-#define ENABLE_SEGWIT_NONSEGWIT_MIXING  0
+#define ENABLE_SEGWIT_NONSEGWIT_MIXING  1
 
 void signing_txack(TransactionType *tx)
 {
