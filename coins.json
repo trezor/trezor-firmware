@@ -16,7 +16,8 @@
 		"Normal": 140,
 		"High": 200
 	},
-	"dust_limit": 546
+	"dust_limit": 546,
+	"blocktime_minutes": 10
 }, {
 	"coin_name": "Testnet",
 	"coin_shortcut": "TEST",
@@ -32,7 +33,8 @@
 	"default_fee_b": {
 		"Normal": 10
 	},
-	"dust_limit": 546
+	"dust_limit": 546,
+	"blocktime_minutes": 10
 }, {
 	"coin_name": "Namecoin",
 	"coin_shortcut": "NMC",
@@ -48,7 +50,8 @@
 	"default_fee_b": {
 		"Normal": 10
 	},
-	"dust_limit": 2940
+	"dust_limit": 2940,
+	"blocktime_minutes": 10
 }, {
 	"coin_name": "Litecoin",
 	"coin_shortcut": "LTC",
@@ -64,7 +67,8 @@
 	"default_fee_b": {
 		"Normal": 1000
 	},
-	"dust_limit": 54600
+	"dust_limit": 54600,
+	"blocktime_minutes": 2.5
 }, {
 	"coin_name": "Dogecoin",
 	"coin_shortcut": "DOGE",
@@ -80,7 +84,8 @@
 	"default_fee_b": {
 		"Normal": 10
 	},
-	"dust_limit": 10000000
+	"dust_limit": 10000000,
+	"blocktime_minutes": 1
 }, {
 	"coin_name": "Dash",
 	"coin_shortcut": "DASH",
@@ -96,7 +101,8 @@
 	"default_fee_b": {
 		"Normal": 10
 	},
-	"dust_limit": 5460
+	"dust_limit": 5460,
+	"blocktime_minutes": 2.5
 }, {
 	"coin_name": "Zcash",
 	"coin_shortcut": "ZEC",
@@ -112,7 +118,8 @@
 	"default_fee_b": {
 		"Normal": 10
 	},
-	"dust_limit": 546
+	"dust_limit": 546,
+	"blocktime_minutes": 2.5
 }, {
 	"coin_name": "Zcash Testnet",
 	"coin_shortcut": "TAZ",
@@ -128,5 +135,6 @@
 	"default_fee_b": {
 		"Normal": 10
 	},
-	"dust_limit": 546
+	"dust_limit": 546,
+	"blocktime_minutes": 2.5
 }]
