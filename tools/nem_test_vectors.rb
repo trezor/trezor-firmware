@@ -32,7 +32,10 @@ def load_header(line)
   line = line.dup
   abort 'Header is not a comment' unless line.slice!(0) == '#'
 
-  line.split(':').each(&:strip!)
+  header = line.split(':').each(&:strip!)
+  header.shift if header.first.empty?
+
+  header
 end
 
 def parse_field_answer(answer)
