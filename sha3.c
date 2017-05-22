@@ -359,6 +359,14 @@ void keccak_Final(SHA3_CTX *ctx, unsigned char* result)
 	if (result) me64_to_le_str(result, ctx->hash, digest_length);
 }
 
+void keccak_256(const unsigned char* data, size_t len, unsigned char* digest)
+{
+	SHA3_CTX ctx;
+	keccak_256_Init(&ctx);
+	keccak_Update(&ctx, data, len);
+	keccak_Final(&ctx, digest);
+}
+
 void keccak_512(const unsigned char* data, size_t len, unsigned char* digest)
 {
 	SHA3_CTX ctx;
