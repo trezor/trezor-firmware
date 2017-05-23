@@ -97,10 +97,10 @@ msg.init_usb(msg.USB(
     manufacturer_str="SatoshiLabs",
     product_str="TREZOR",
     serial_number_str="000000000000000000000000"
-), (hid_wire, vcp))
+), (hid_u2f, vcp))
 
 # Initialize the wire codec pipeline
-wire.setup(_IFACE_WIRE)
+# wire.setup(_IFACE_WIRE)
 
 # Load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
