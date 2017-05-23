@@ -5,7 +5,13 @@
  * see LICENSE file for details
  */
 
+#if defined TREZOR_STM32
 #include "sdcard.h"
+#elif defined TREZOR_UNIX
+#include "unix-sdcard-mock.h"
+#else
+#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
+#endif
 
 typedef struct _mp_obj_SDCard_t {
     mp_obj_base_t base;
