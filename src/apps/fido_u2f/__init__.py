@@ -191,12 +191,19 @@ def read_cmd(iface: int) -> Cmd:
         databuf = bytearray(bcnt)
         utils.memcpy(databuf, 0, data, 0, bcnt)
         data = databuf
+    else:
+        data = data[:bcnt]
 
     while datalen < bcnt:
         buf, = yield loop.select(iface)
         log.debug(__name__, 'read cont %s', buf)
 
         cfrm = overlay_struct(buf, desc_cont)
+
+        if cfrm.seq == _CMD_INIT:
+            ifrm = overlay_struct(buf, desc_init)
+            data = ifrm.data[:ifrm.bcnt]
+            break
 
         if cfrm.cid != cid:
             send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
