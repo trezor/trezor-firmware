@@ -31,3 +31,14 @@ async def compute_seed(session_id: int) -> bytes:
 
     passphrase = await protect_by_passphrase(session_id)
     return bip39.seed(storage.get_mnemonic(), passphrase)
+
+
+def get_root_without_passphrase(curve_name=_DEFAULT_CURVE):
+    from . import storage
+    if not storage.is_initialized():
+        raise Exception('Device is not initialized')
+    if storage.is_locked():
+        raise Exception('Unlock first')
+    seed = bip39.seed(storage.get_mnemonic(), '')
+    root = bip32.from_seed(seed, curve_name)
+    return root
