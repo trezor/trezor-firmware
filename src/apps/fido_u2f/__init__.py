@@ -74,16 +74,6 @@ _APDU_LC3 = const(6)  # uint8_t lc3;        // Length field, LSB
 _APDU_DATA = const(7) # uint8_t data[1];    // Data field
 
 
-class HidError(Exception):
-    '''Raised on U2F HID error with a HID error code.'''
-    pass
-
-
-class StatusError(Exception):
-    '''Raised on U2F protocol error with a command status.'''
-    pass
-
-
 def frame_init() -> dict:
     # uint32_t cid;	    // Channel identifier
     # uint8_t cmd;	    // Command - b7 set
@@ -208,12 +198,13 @@ def read_cmd(iface: int) -> Cmd:
 
         cfrm = overlay_struct(buf, desc_cont)
 
-        if cfrm.seq != seq:
-            raise HidError(_ERR_INVALID_SEQ)
-
         if cfrm.cid != cid:
-            # TODO: send a reply and continue
-            raise HidError(_ERR_CHANNEL_BUSY)
+            send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+            continue
+
+        if cfrm.seq != seq:
+            send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
+            raise Exception(_ERR_INVALID_SEQ)
 
         datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
         seq += 1
@@ -294,12 +285,12 @@ async def dispatch_cmd(req: Cmd) -> Cmd:
         return req
     else:
         log.warning(__name__, '_ERR_INVALID_CMD: %d', req.cmd)
-        raise HidError(_ERR_INVALID_CMD)
+        return cmd_error(req.cid, _ERR_INVALID_CMD)
 
 
 def cmd_init(req: Cmd) -> Cmd:
     if req.cid == 0:
-        raise HidError(_ERR_INVALID_CID)
+        return cmd_error(req.cid, _ERR_INVALID_CID)
     elif req.cid == _CID_BROADCAST:
         resp_cid = random.uniform(0xfffffffe) + 1  # uint32_t except 0 and 0xffffffff
     else:
@@ -321,7 +312,7 @@ async def msg_register(req: Msg) -> Cmd:
     from apps.common import storage
 
     if not storage.is_initialized():
-        raise StatusError(_SW_CONDITIONS_NOT_SATISFIED)
+        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
 
     chal = req.data[:32]
     app_id = req.data[32:]
@@ -389,3 +380,7 @@ def msg_version(req: Msg) -> Cmd:
 
 def msg_error(req: Msg, code: int) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, ustruct.pack('>H', code))
+
+
+def cmd_error(cid: int, code: int) -> Cmd:
+    return Cmd(cid, _CMD_ERROR, ustruct.pack('>B', code))
