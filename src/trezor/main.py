@@ -34,9 +34,9 @@ def perf_info():
 
 
 def run(default_workflow):
-    if __debug__:
-        loop.schedule_task(perf_info_debug())
-    else:
-        loop.schedule_task(perf_info())
+    # if __debug__:
+    #     loop.schedule_task(perf_info_debug())
+    # else:
+    #     loop.schedule_task(perf_info())
     workflow.start_default(default_workflow)
     loop.run_forever()
