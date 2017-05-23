@@ -98,7 +98,7 @@ def run_forever():
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
         msg_entry = msg.select(delay)
-        if msg_entry:
+        if msg_entry is not None:
             # message received, run tasks paused on the interface
             msg_iface, *msg_value = msg_entry
             msg_tasks = _paused_tasks.pop(msg_iface, ())
@@ -286,3 +286,8 @@ class Wait(Syscall):
             # close() or throw(), kill the children tasks and re-raise
             self.exit()
             raise
+
+select = Select
+sleep = Sleep
+wait = Wait
+signal = Signal
