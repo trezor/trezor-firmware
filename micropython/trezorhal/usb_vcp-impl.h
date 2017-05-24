@@ -33,7 +33,9 @@
 #define USB_D2H              0x80
 
 // Class-Specific Request Codes for PSTN subclasses
+#define USB_CDC_SET_LINE_CODING        0x20
 #define USB_CDC_GET_LINE_CODING        0x21
+#define USB_CDC_SET_CONTROL_LINE_STATE 0x22
 
 // Maximal length of packets on IN CMD EP
 #define USB_CDC_MAX_CMD_PACKET_LEN 0x08
@@ -347,19 +349,27 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
         .bDataBits   = 8,
     };
 
-    switch (req->bmRequest & USB_REQ_TYPE_MASK) {
+    // TODO: make cmd buffer part of interface state
+    static uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
 
-    case USB_REQ_TYPE_CLASS:
-        switch (req->bmRequest & USB_REQ_DIR_MASK) {
+    if ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) {
+        return USBD_OK;
+    }
 
-        case USB_D2H:
-            switch (req->bRequest) {
-
-            case USB_CDC_GET_LINE_CODING:
-                USBD_CtlSendData(dev, (uint8_t *)(&line_coding), MIN(req->wLength, sizeof(line_coding)));
-                break;
-            }
+    switch (req->bmRequest & USB_REQ_DIR_MASK) {
+    case USB_D2H:
+        switch (req->bRequest) {
+        case USB_CDC_GET_LINE_CODING:
+            USBD_CtlSendData(dev, (uint8_t *)(&line_coding), MIN(req->wLength, sizeof(line_coding)));
             break;
+        default:
+            USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+            break;
+        }
+        break;
+    case USB_H2D:
+        if (req->wLength > 0) {
+            USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
         }
         break;
     }
@@ -411,6 +421,7 @@ static uint8_t usb_vcp_class_sof(USBD_HandleTypeDef *dev, usb_vcp_state_t *state
     // We avoid sending full packets as they stall the hosts pipeline, see:
     // <http://www.cypress.com/?id=4&rID=92719>
     size_t len = state->max_packet_len - 1;
+    size_t mask = b->cap - 1;
     size_t i;
     for (i = 0; (i < len) && !ring_empty(b); i++) {
         buf[i] = b->buf[b->read & mask];
