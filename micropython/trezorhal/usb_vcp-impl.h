@@ -408,8 +408,9 @@ static uint8_t usb_vcp_class_sof(USBD_HandleTypeDef *dev, usb_vcp_state_t *state
     // Read from the tx ring buffer
     usb_rbuf_t *b = &state->tx_ring;
     uint8_t *buf = state->tx_packet;
-    size_t len = state->max_packet_len;
-    size_t mask = b->cap - 1;
+    // We avoid sending full packets as they stall the hosts pipeline, see:
+    // <http://www.cypress.com/?id=4&rID=92719>
+    size_t len = state->max_packet_len - 1;
     size_t i;
     for (i = 0; (i < len) && !ring_empty(b); i++) {
         buf[i] = b->buf[b->read & mask];
