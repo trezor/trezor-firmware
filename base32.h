@@ -23,6 +23,9 @@
 #ifndef __BASE32_H__
 #define __BASE32_H__
 
+#include <stddef.h>
 #include <stdint.h>
+
+void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out);
 
 #endif

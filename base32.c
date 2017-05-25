@@ -24,6 +24,18 @@
 
 static inline void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out);
 
+void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out) {
+	uint8_t remainder = inlen % 5;
+	size_t limit = inlen - remainder;
+
+	size_t i, j;
+	for (i = 0, j = 0; i < limit; i += 5, j += 8) {
+		base32_5to8(&in[i], 5, &out[j]);
+	}
+
+	if (remainder) base32_5to8(&in[i], remainder, &out[j]);
+}
+
 void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out) {
 	if (length >= 1) {
 		out[0]  = (in[0] >> 3);
