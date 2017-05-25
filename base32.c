@@ -22,7 +22,28 @@
 
 #include "base32.h"
 
+const char *BASE32_ALPHABET_RFC4648 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ23456789";
+
 static inline void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out);
+static inline char base32_encode_character(uint8_t base32, const char *alphabet);
+
+bool base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, const char *alphabet) {
+	size_t length = base32_encoded_length(inlen);
+	if (outlen <= length) {
+		return false;
+	}
+
+	base32_encode_unsafe(in, inlen, (uint8_t *) out);
+
+	for (size_t i = 0; i < length; i++) {
+		if (!(out[i] = base32_encode_character(out[i], alphabet))) {
+			return false;
+		}
+	}
+
+	out[length] = '\0';
+	return true;
+}
 
 void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out) {
 	uint8_t remainder = inlen % 5;
@@ -34,6 +55,12 @@ void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out) {
 	}
 
 	if (remainder) base32_5to8(&in[i], remainder, &out[j]);
+}
+
+size_t base32_encoded_length(size_t inlen) {
+	uint8_t remainder = inlen % 5;
+
+	return (inlen / 5) * 8 + (remainder * 8 + 4) / 5;
 }
 
 void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out) {
@@ -63,4 +90,12 @@ void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out) {
 		out[6] |= (in[4] >> 5);
 		out[7]  = (in[4] & 31);
 	}
+}
+
+char base32_encode_character(uint8_t base32, const char *alphabet) {
+	if (base32 >> 5) {
+		return '\0';
+	}
+
+	return alphabet[base32];
 }

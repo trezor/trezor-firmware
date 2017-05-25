@@ -23,9 +23,15 @@
 #ifndef __BASE32_H__
 #define __BASE32_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
+extern const char *BASE32_ALPHABET_RFC4648;
+
+bool base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, const char *alphabet);
 void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out);
+
+size_t base32_encoded_length(size_t inlen);
 
 #endif
