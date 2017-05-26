@@ -33,5 +33,6 @@ bool base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, co
 void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out);
 
 size_t base32_encoded_length(size_t inlen);
+size_t base32_decoded_length(size_t inlen);
 
 #endif

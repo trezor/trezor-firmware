@@ -518,15 +518,17 @@ START_TEST(test_base32_rfc4648)
 	char buffer[64];
 
 	for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-		const char *input  = tests[i].input;
-		const char *output = tests[i].output;
+		const char *in  = tests[i].input;
+		const char *out = tests[i].output;
 
-		size_t inlen = strlen(input);
-		size_t outlen = base32_encoded_length(inlen);
-		ck_assert_int_eq(outlen, strlen(output));
+		size_t inlen = strlen(in);
+		size_t outlen = strlen(out);
 
-		base32_encode((uint8_t *) input, inlen, buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648);
-		ck_assert_str_eq(buffer, output);
+		ck_assert_int_eq(outlen, base32_encoded_length(inlen));
+		ck_assert_int_eq(inlen, base32_decoded_length(outlen));
+
+		base32_encode((uint8_t *) in, inlen, buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648);
+		ck_assert_str_eq(buffer, out);
 	}
 }
 END_TEST

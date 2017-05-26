@@ -63,6 +63,12 @@ size_t base32_encoded_length(size_t inlen) {
 	return (inlen / 5) * 8 + (remainder * 8 + 4) / 5;
 }
 
+size_t base32_decoded_length(size_t inlen) {
+	uint8_t remainder = inlen % 8;
+
+	return (inlen / 8) * 5 + (remainder * 5) / 8;
+}
+
 void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out) {
 	if (length >= 1) {
 		out[0]  = (in[0] >> 3);
