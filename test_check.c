@@ -37,6 +37,7 @@
 
 #include "aes.h"
 #include "bignum.h"
+#include "base32.h"
 #include "base58.h"
 #include "bip32.h"
 #include "bip39.h"
@@ -495,6 +496,38 @@ START_TEST(test_bignum_format) {
 	r = bn_format(&a, "quite a long prefix", "even longer suffix", 60, buf, sizeof(buf));
 	ck_assert_int_eq(r, 116);
 	ck_assert_str_eq(buf, "quite a long prefix115792089237316195.423570985008687907853269984665640564039457584007913129639935even longer suffix");
+}
+END_TEST
+
+// https://tools.ietf.org/html/rfc4648#section-10
+START_TEST(test_base32_rfc4648)
+{
+	static const struct {
+		const char *input;
+		const char *output;
+	} tests[] = {
+		{ "",       "" },
+		{ "f",      "MY" },
+		{ "fo",     "MZXQ" },
+		{ "foo",    "MZXW6" },
+		{ "foob",   "MZXW6YQ" },
+		{ "fooba",  "MZXW6YTB" },
+		{ "foobar", "MZXW6YTBOI" },
+	};
+
+	char buffer[64];
+
+	for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+		const char *input  = tests[i].input;
+		const char *output = tests[i].output;
+
+		size_t inlen = strlen(input);
+		size_t outlen = base32_encoded_length(inlen);
+		ck_assert_int_eq(outlen, strlen(output));
+
+		base32_encode((uint8_t *) input, inlen, buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648);
+		ck_assert_str_eq(buffer, output);
+	}
 }
 END_TEST
 
@@ -3017,6 +3050,10 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_bitcount);
 	tcase_add_test(tc, test_bignum_is_less);
 	tcase_add_test(tc, test_bignum_format);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("base32");
+	tcase_add_test(tc, test_base32_rfc4648);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base58");
