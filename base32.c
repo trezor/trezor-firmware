@@ -25,7 +25,7 @@
 const char *BASE32_ALPHABET_RFC4648 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ23456789";
 
 static inline void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out);
-static inline char base32_encode_character(uint8_t base32, const char *alphabet);
+static inline int base32_encode_character(uint8_t decoded, const char *alphabet);
 
 bool base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, const char *alphabet) {
 	size_t length = base32_encoded_length(inlen);
@@ -36,7 +36,7 @@ bool base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, co
 	base32_encode_unsafe(in, inlen, (uint8_t *) out);
 
 	for (size_t i = 0; i < length; i++) {
-		if (!(out[i] = base32_encode_character(out[i], alphabet))) {
+		if ((out[i] = base32_encode_character(out[i], alphabet)) == -1) {
 			return false;
 		}
 	}
@@ -92,10 +92,18 @@ void base32_5to8(const uint8_t *in, uint8_t length, uint8_t *out) {
 	}
 }
 
-char base32_encode_character(uint8_t base32, const char *alphabet) {
-	if (base32 >> 5) {
-		return '\0';
+int base32_encode_character(uint8_t decoded, const char *alphabet) {
+	if (decoded >> 5) {
+		return -1;
 	}
 
-	return alphabet[base32];
+	if (alphabet == BASE32_ALPHABET_RFC4648) {
+		if (decoded < 26) {
+			return 'A' + decoded;
+		} else {
+			return '2' - 26 + decoded;
+		}
+	}
+
+	return alphabet[decoded];
 }
