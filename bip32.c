@@ -94,7 +94,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num, const uint8_t *chain_co
 	const curve_info *info = get_curve_by_name(curve);
 	if (info == 0) {
 		failed = true;
-	} else {
+	} else if (info->params) {
 		bignum256 a;
 		bn_read_be(private_key, &a);
 		if (bn_is_zero(&a)) { // == 0
