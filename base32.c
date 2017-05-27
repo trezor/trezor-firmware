@@ -33,22 +33,22 @@ static inline void base32_8to5_raw(const uint8_t *in, uint8_t length, uint8_t *o
 static inline int base32_encode_character(uint8_t decoded, const char *alphabet);
 static inline int base32_decode_character(char encoded, const char *alphabet);
 
-bool base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, const char *alphabet) {
+char *base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, const char *alphabet) {
 	size_t length = base32_encoded_length(inlen);
 	if (outlen <= length) {
-		return false;
+		return NULL;
 	}
 
 	base32_encode_unsafe(in, inlen, (uint8_t *) out);
 
 	for (size_t i = 0; i < length; i++) {
 		if ((out[i] = base32_encode_character(out[i], alphabet)) == -1) {
-			return false;
+			return NULL;
 		}
 	}
 
 	out[length] = '\0';
-	return true;
+	return &out[length];
 }
 
 uint8_t *base32_decode(const char *in, size_t inlen, uint8_t *out, size_t outlen, const char *alphabet) {

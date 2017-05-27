@@ -527,11 +527,11 @@ START_TEST(test_base32_rfc4648)
 		ck_assert_int_eq(outlen, base32_encoded_length(inlen));
 		ck_assert_int_eq(inlen, base32_decoded_length(outlen));
 
-		ck_assert(base32_encode((uint8_t *) in, inlen, buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648));
+		ck_assert(base32_encode((uint8_t *) in, inlen, buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648) != NULL);
 		ck_assert_str_eq(buffer, out);
 
 		char *ret = (char *) base32_decode(out, outlen, (uint8_t *) buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648);
-		ck_assert(ret);
+		ck_assert(ret != NULL);
 
 		*ret = '\0';
 		ck_assert_str_eq(buffer, in);
