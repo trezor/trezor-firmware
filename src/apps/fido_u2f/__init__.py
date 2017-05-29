@@ -401,7 +401,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes, cert: bytes) -> bytes:
     dig = dig.digest()
 
     # sign the digest and convert to der
-    sig = nist256p1.sign(node.private_key(), dig, False)
+    sig = nist256p1.sign(_U2F_ATT_PRIV_KEY, dig, False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # pack to a response
