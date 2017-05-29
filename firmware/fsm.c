@@ -50,6 +50,7 @@
 #include "secp256k1.h"
 #include <libopencm3/stm32/flash.h>
 #include "ethereum.h"
+#include "nem.h"
 #include "gettext.h"
 
 // message methods
@@ -1101,6 +1102,45 @@ void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 	}
 	storage_setU2FCounter(msg->u2f_counter);
 	fsm_sendSuccess(_("U2F counter set"));
+	layoutHome();
+}
+
+void fsm_msgNEMGetAddress(NEMGetAddress *msg)
+{
+	if (!msg->has_network) {
+		msg->network = NEM_NETWORK_MAINNET;
+	}
+
+	const char *network;
+	CHECK_PARAM((network = nem_network_name(msg->network)), _("Invalid NEM network"));
+
+	CHECK_INITIALIZED
+	CHECK_PIN
+
+	RESP_INIT(NEMAddress);
+
+	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	if (!hdnode_get_nem_address(node, msg->network, resp->address))
+		return;
+
+	if (msg->has_show_display && msg->show_display) {
+		char desc[16];
+		strlcpy(desc, network, sizeof(desc));
+		strlcat(desc, ":", sizeof(desc));
+
+		bool qrcode = false;
+		for (;;) {
+			layoutAddress(resp->address, desc, qrcode);
+			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+				break;
+			}
+			qrcode = !qrcode;
+		}
+	}
+
+	msg_write(MessageType_MessageType_NEMAddress, resp);
 	layoutHome();
 }
 

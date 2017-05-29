@@ -66,6 +66,8 @@ void fsm_msgEthereumTxAck(EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(EthereumSignMessage *msg);
 void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg);
 
+void fsm_msgNEMGetAddress(NEMGetAddress *msg);
+
 // debug message functions
 #if DEBUG_LINK
 //void fsm_msgDebugLinkDecision(DebugLinkDecision *msg);
