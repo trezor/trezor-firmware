@@ -181,7 +181,6 @@ def read_cmd(iface: int) -> Cmd:
     log.debug(__name__, 'read init %s', buf)
 
     ifrm = overlay_struct(buf, desc_init)
-    cid = ifrm.cid
     bcnt = ifrm.bcnt
     data = ifrm.data
     datalen = len(data)
@@ -206,22 +205,28 @@ def read_cmd(iface: int) -> Cmd:
         cfrm = overlay_struct(buf, desc_cont)
 
         if cfrm.seq == _CMD_INIT:
+            # _CMD_INIT frame, cancels current channel
             ifrm = overlay_struct(buf, desc_init)
             data = ifrm.data[:ifrm.bcnt]
             break
 
-        if cfrm.cid != cid:
+        if cfrm.cid != ifrm.cid:
+            # cont frame for a different channel, reply with BUSY and skip
+            log.warning(__name__, '_ERR_CHANNEL_BUSY')
             send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
             continue
 
         if cfrm.seq != seq:
+            # cont frame for this channel, but incorrect seq number, abort
+            # current msg
+            log.warning(__name__, '_ERR_INVALID_SEQ')
             send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
-            raise Exception(_ERR_INVALID_SEQ)
+            return None
 
         datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
         seq += 1
 
-    return Cmd(cid, ifrm.cmd, data)
+    return Cmd(ifrm.cid, ifrm.cmd, data)
 
 
 def send_cmd(cmd: Cmd, iface: int):
