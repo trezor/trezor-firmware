@@ -42,8 +42,12 @@ char *base32_encode(const uint8_t *in, size_t inlen, char *out, size_t outlen, c
 	base32_encode_unsafe(in, inlen, (uint8_t *) out);
 
 	for (size_t i = 0; i < length; i++) {
-		if ((out[i] = base32_encode_character(out[i], alphabet)) == -1) {
-			return NULL;
+		int ret = base32_encode_character(out[i], alphabet);
+
+		if (ret == -1) {
+			return false;
+		} else {
+			out[i] = ret;
 		}
 	}
 
