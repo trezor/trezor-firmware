@@ -160,16 +160,20 @@ class Cmd:
     def to_msg(self):
         cla = self.data[_APDU_CLA]
         ins = self.data[_APDU_INS]
-        data = self.data[_APDU_DATA:]
-        return Msg(self.cid, cla, ins, data)
+        lc = (self.data[_APDU_LC1] << 16) + \
+            (self.data[_APDU_LC2] << 8) + \
+            (self.data[_APDU_LC3])
+        data = self.data[_APDU_DATA:_APDU_DATA + lc]
+        return Msg(self.cid, cla, ins, lc, data)
 
 
 class Msg:
 
-    def __init__(self, cid: int, cla: int, ins: int, data: bytes):
+    def __init__(self, cid: int, cla: int, ins: int, lc: int, data: bytes):
         self.cid = cid
         self.cla = cla
         self.ins = ins
+        self.lc = lc
         self.data = data
 
 
@@ -278,7 +282,12 @@ async def dispatch_cmd(req: Cmd) -> Cmd:
         m = req.to_msg()
 
         if m.cla != 0:
+            log.warning(__name__, '_SW_CLA_NOT_SUPPORTED')
             return msg_error(req, _SW_CLA_NOT_SUPPORTED)
+
+        if m.lc + _APDU_DATA > len(req.data):
+            log.warning(__name__, '_SW_WRONG_LENGTH')
+            return msg_error(req, _SW_WRONG_LENGTH)
 
         if m.ins == _MSG_REGISTER:
             log.debug(__name__, '_MSG_REGISTER')
@@ -328,6 +337,8 @@ def cmd_init(req: Cmd) -> Cmd:
 
 
 async def msg_register(req: Msg) -> Cmd:
+    if len(req.data) != 64:
+        return msg_error(req, _SW_WRONG_LENGTH)
     from apps.common import storage
 
     if not storage.is_initialized():
@@ -394,6 +405,8 @@ async def msg_authenticate(req: Msg) -> Cmd:
 
 
 def msg_version(req: Msg) -> Cmd:
+    if req.data:
+        return msg_error(req, _SW_WRONG_LENGTH)
     return Cmd(req.cid, _CMD_MSG, b'U2F_V2\x90\x00')  # includes _SW_NO_ERROR
 
 
