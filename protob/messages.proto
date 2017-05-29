@@ -76,6 +76,8 @@ enum MessageType {
 	MessageType_EthereumSignMessage = 64 [(wire_in) = true];
 	MessageType_EthereumVerifyMessage = 65 [(wire_in) = true];
 	MessageType_EthereumMessageSignature = 66 [(wire_out) = true];
+	MessageType_NEMGetAddress = 67 [(wire_in) = true];
+	MessageType_NEMAddress = 68 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -810,6 +812,30 @@ message FirmwareUpload {
  */
 message SelfTest {
 	optional bytes payload = 1;			// payload to be used in self-test
+}
+
+//////////////////
+// NEM messages //
+//////////////////
+
+/**
+ * Request: Ask device for NEM address corresponding to address_n path
+ * @next PassphraseRequest
+ * @next NEMAddress
+ * @next Failure
+ */
+message NEMGetAddress {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional uint32 network = 2;			// Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
+	optional bool show_display = 3;			// Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains NEM address derived from device private seed
+ * @prev NEMGetAddress
+ */
+message NEMAddress {
+	required string address = 1;		// NEM address in Base32 encoding
 }
 
 /////////////////////////////////////////////////////////////
