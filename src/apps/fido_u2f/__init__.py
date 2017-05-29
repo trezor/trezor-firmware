@@ -187,6 +187,11 @@ def read_cmd(iface: int) -> Cmd:
     datalen = len(data)
     seq = 0
 
+    if ifrm.cmd & _TYPE_MASK == _TYPE_CONT:
+        # unexpected cont packet, abort current msg
+        log.warning(__name__, '_TYPE_CONT')
+        return None
+
     if datalen < bcnt:
         databuf = bytearray(bcnt)
         utils.memcpy(databuf, 0, data, 0, bcnt)
@@ -255,6 +260,8 @@ def handle_reports(iface: int):
     while True:
         try:
             req = yield from read_cmd(iface)
+            if req is None:
+                continue
             resp = yield from dispatch_cmd(req)
             send_cmd(resp, iface)
         except Exception as e:
