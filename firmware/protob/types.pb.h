@@ -284,6 +284,8 @@ extern const pb_extension_type_t wire_in;
 extern const pb_extension_type_t wire_out;
 extern const pb_extension_type_t wire_debug_in;
 extern const pb_extension_type_t wire_debug_out;
+extern const pb_extension_type_t wire_tiny;
+extern const pb_extension_type_t wire_bootloader;
 
 /* Default values for struct fields */
 extern const uint32_t CoinType_address_type_default;
@@ -381,6 +383,8 @@ extern const uint32_t IdentityType_index_default;
 #define wire_out_tag                             50003
 #define wire_debug_in_tag                        50004
 #define wire_debug_out_tag                       50005
+#define wire_tiny_tag                            50006
+#define wire_bootloader_tag                      50007
 
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t HDNodeType_fields[7];

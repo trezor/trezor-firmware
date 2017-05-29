@@ -166,6 +166,32 @@ const pb_extension_type_t wire_debug_out = {
     &wire_debug_out_field
 };
 
+typedef struct {
+    bool wire_tiny;
+} wire_tiny_struct;
+
+static const pb_field_t wire_tiny_field = 
+      PB_FIELD2(50006, BOOL    , OPTEXT, STATIC  , FIRST, wire_tiny_struct, wire_tiny, wire_tiny, 0);
+
+const pb_extension_type_t wire_tiny = {
+    NULL,
+    NULL,
+    &wire_tiny_field
+};
+
+typedef struct {
+    bool wire_bootloader;
+} wire_bootloader_struct;
+
+static const pb_field_t wire_bootloader_field = 
+      PB_FIELD2(50007, BOOL    , OPTEXT, STATIC  , FIRST, wire_bootloader_struct, wire_bootloader, wire_bootloader, 0);
+
+const pb_extension_type_t wire_bootloader = {
+    NULL,
+    NULL,
+    &wire_bootloader_field
+};
+
 
 /* Check that field information fits in pb_field_t */
 #if !defined(PB_FIELD_32BIT)

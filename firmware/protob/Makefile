@@ -1,4 +1,4 @@
-all: messages.pb.c storage.pb.c types.pb.c
+all: messages.pb.c storage.pb.c types.pb.c messages_map.h
 
 %.pb.c: %.pb %.options
 	nanopb_generator.py $< -L '#include "%s"' -T
@@ -6,5 +6,11 @@ all: messages.pb.c storage.pb.c types.pb.c
 %.pb: %.proto
 	protoc -I/usr/include -I. $< -o $@
 
+%_pb2.py: %.proto
+	protoc -I/usr/include -I. $< --python_out=.
+
+messages_map.h: messages_map.py messages_pb2.py types_pb2.py
+	./$< > $@
+
 clean:
-	rm -f *.pb *.o *.pb.c *.pb.h
+	rm -f *.pb *.o *.pb.c *.pb.h *_pb2.py messages_map.h
