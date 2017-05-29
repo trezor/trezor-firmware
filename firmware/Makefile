@@ -61,6 +61,8 @@ OBJS += ../vendor/trezor-crypto/aes/aeskey.o
 OBJS += ../vendor/trezor-crypto/aes/aestab.o
 OBJS += ../vendor/trezor-crypto/aes/aes_modes.o
 
+OBJS += ../vendor/trezor-crypto/nem.o
+
 OBJS += ../vendor/trezor-qrenc/qr_encode.o
 
 # OBJS += protob/pb_common.o
@@ -88,6 +90,7 @@ CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
 CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_ETHEREUM=1
+CFLAGS += -DUSE_NEM=1
 
 bootloader.o: ../fastflash/bootloader.bin
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm \
