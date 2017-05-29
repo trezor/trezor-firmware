@@ -1,5 +1,6 @@
 import uctypes
 import ustruct
+import utime
 
 from trezor import log
 from trezor import loop
@@ -320,7 +321,8 @@ def cmd_init(req: Cmd) -> Cmd:
     if req.cid == 0:
         return cmd_error(req.cid, _ERR_INVALID_CID)
     elif req.cid == _CID_BROADCAST:
-        resp_cid = random.uniform(0xfffffffe) + 1  # uint32_t except 0 and 0xffffffff
+        # uint32_t except 0 and 0xffffffff
+        resp_cid = random.uniform(0xfffffffe) + 1
     else:
         resp_cid = req.cid
 
@@ -336,22 +338,35 @@ def cmd_init(req: Cmd) -> Cmd:
     return Cmd(req.cid, req.cmd, buf)
 
 
+_register_state = 0
+
+
 async def msg_register(req: Msg) -> Cmd:
+    global _register_state
+
     if len(req.data) != 64:
         return msg_error(req, _SW_WRONG_LENGTH)
+
+    chal = req.data[:32]
+    app_id = req.data[32:]
+
     from apps.common import storage
 
     if not storage.is_initialized():
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
 
-    chal = req.data[:32]
-    app_id = req.data[32:]
-    buf = msg_register_sign(chal, app_id)
+    if _register_state == 0:
+        _register_state = utime.ticks_ms()
+    if utime.ticks_ms() - _register_state < 2000:
+        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
+
+    _register_state = 0
+    buf = msg_register_sign(chal, app_id, _U2F_ATT_CERT)
 
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
+def msg_register_sign(challenge: bytes, app_id: bytes, cert: bytes) -> bytes:
 
     from apps.common import seed
 
@@ -391,7 +406,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     resp.registerId = _U2F_REGISTER_ID
     resp.status = _SW_NO_ERROR
     resp.keyHandleLen = len(keybuf) + len(keybase)
-    utils.memcpy(resp.cert, 0, _U2F_ATT_CERT, 0, len(_U2F_ATT_CERT))
+    utils.memcpy(resp.cert, 0, cert, 0, len(cert))
     utils.memcpy(resp.pubKey, 0, pubkey, 0, len(pubkey))
     utils.memcpy(resp.keyHandle, 0, keybuf, 0, len(keybuf))
     utils.memcpy(resp.keyHandle, len(keybuf), keybase, 0, len(keybase))
