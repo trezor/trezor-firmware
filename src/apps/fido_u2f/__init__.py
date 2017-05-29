@@ -119,22 +119,25 @@ def resp_cmd_init() -> dict:
     }
 
 
-def resp_cmd_register() -> dict:
+def resp_cmd_register(khlen: int, certlen: int, siglen: int) -> dict:
+    cert_ofs = 67 + khlen
+    sig_ofs = cert_ofs + certlen
+    status_ofs = sig_ofs + siglen
     # uint8_t registerId;       // Registration identifier (U2F_REGISTER_ID)
     # uint8_t pubKey[65];       // Generated public key
     # uint8_t keyHandleLen;     // Length of key handle
     # uint8_t keyHandle[128];   // Key handle
     # uint8_t cert[1024];       // Attestation certificate
-    # uint8_t sig[72];          // Registration signature
+    # uint8_t sig[siglen];          // Registration signature
     # uint16_t status;
     return {
-        'registerId':       0 | uctypes.UINT8,
-        'pubKey':          (1 | uctypes.ARRAY, 65 | uctypes.UINT8),
-        'keyHandleLen':    66 | uctypes.UINT8,
-        'keyHandle':      (67 | uctypes.ARRAY, 128 | uctypes.UINT8),
-        'cert':          (195 | uctypes.ARRAY, 1024 | uctypes.UINT8),
-        'sig':          (1219 | uctypes.ARRAY, 72 | uctypes.UINT8),
-        'status':        1291 | uctypes.UINT16,
+        'registerId':      0 | uctypes.UINT8,
+        'pubKey':         (1 | uctypes.ARRAY, 65 | uctypes.UINT8),
+        'keyHandleLen':   66 | uctypes.UINT8,
+        'keyHandle':     (67 | uctypes.ARRAY, khlen | uctypes.UINT8),
+        'cert':    (cert_ofs | uctypes.ARRAY, certlen | uctypes.UINT8),
+        'sig':      (sig_ofs | uctypes.ARRAY, siglen | uctypes.UINT8),
+        'status': status_ofs | uctypes.UINT16,
     }
 
 
@@ -402,7 +405,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes, cert: bytes) -> bytes:
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # pack to a response
-    buf, resp = make_struct(resp_cmd_register())
+    buf, resp = make_struct(resp_cmd_register(len(keybuf) + len(keybase), len(cert), len(sig)))
     resp.registerId = _U2F_REGISTER_ID
     resp.status = _SW_NO_ERROR
     resp.keyHandleLen = len(keybuf) + len(keybase)
