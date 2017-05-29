@@ -126,9 +126,9 @@ def resp_cmd_register(khlen: int, certlen: int, siglen: int) -> dict:
     # uint8_t registerId;       // Registration identifier (U2F_REGISTER_ID)
     # uint8_t pubKey[65];       // Generated public key
     # uint8_t keyHandleLen;     // Length of key handle
-    # uint8_t keyHandle[128];   // Key handle
-    # uint8_t cert[1024];       // Attestation certificate
-    # uint8_t sig[siglen];          // Registration signature
+    # uint8_t keyHandle[khlen]; // Key handle
+    # uint8_t cert[certlen];    // Attestation certificate
+    # uint8_t sig[siglen];      // Registration signature
     # uint16_t status;
     return {
         'registerId':      0 | uctypes.UINT8,
