@@ -78,6 +78,8 @@ enum MessageType {
 	MessageType_EthereumMessageSignature = 66 [(wire_out) = true];
 	MessageType_NEMGetAddress = 67 [(wire_in) = true];
 	MessageType_NEMAddress = 68 [(wire_out) = true];
+	MessageType_NEMTransaction = 69 [(wire_in) = true];
+	MessageType_NEMRequestAnnounce = 70 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -836,6 +838,31 @@ message NEMGetAddress {
  */
 message NEMAddress {
 	required string address = 1;		// NEM address in Base32 encoding
+}
+
+/**
+ * Request: Ask device to sign transaction
+ * @next NEMRequestAnnounce
+ * @next Failure
+ */
+message NEMTransaction {
+	optional NEMTransactionCommon transaction = 1;			// Common part of transaction
+	optional NEMTransactionCommon multisig = 2;			// Common part of inner transaction for multisig transactions
+	optional NEMTransfer transfer = 3;				// Transfer transaction part
+	optional bool cosigning = 4;					// Whether cosigning or initiating the multisig transaction
+	optional NEMProvisionNamespace provision_namespace = 5;		// Provision namespace part
+	optional NEMMosaicCreation mosaic_creation = 6;			// Mosaic definition creation part
+	optional NEMMosaicSupplyChange supply_change = 7;		// Mosaic supply change part
+	optional NEMAggregateModification aggregate_modification = 8;	// Aggregate modification part
+}
+
+/**
+ * Response: Contains NEM transaction data and signature
+ * @prev NEMTransaction
+ */
+message NEMRequestAnnounce {
+	optional bytes data = 1;	// Transaction data
+	optional bytes signature = 2;	// Signature for the transaction
 }
 
 /////////////////////////////////////////////////////////////
