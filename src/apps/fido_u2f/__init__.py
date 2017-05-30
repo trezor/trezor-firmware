@@ -347,45 +347,46 @@ _register_state = 0
 async def msg_register(req: Msg) -> Cmd:
     global _register_state
 
-    if len(req.data) != 64:
-        return msg_error(req, _SW_WRONG_LENGTH)
-
-    chal = req.data[:32]
-    app_id = req.data[32:]
-
     from apps.common import storage
 
     if not storage.is_initialized():
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
 
+    # check input data
+    if len(req.data) != 64:
+        return msg_error(req, _SW_WRONG_LENGTH)
+
+    # TODO: wait for a button press
     if _register_state == 0:
         _register_state = utime.ticks_ms()
-    if utime.ticks_ms() - _register_state < 2000:
+    if utime.ticks_ms() - _register_state < 500:
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
-
     _register_state = 0
-    buf = msg_register_sign(chal, app_id, _U2F_ATT_CERT)
+
+    chal = req.data[:32]
+    app_id = req.data[32:]
+    buf = msg_register_sign(chal, app_id)
 
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_register_sign(challenge: bytes, app_id: bytes, cert: bytes) -> bytes:
+def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
 
     from apps.common import seed
 
     # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-    key_path = [0x80000000 | random.uniform(0xf0000000) for _ in range(0, 8)]
-    node_path = [_U2F_KEY_PATH] + key_path
+    keypath = [0x80000000 | random.uniform(0xf0000000) for _ in range(0, 8)]
+    nodepath = [_U2F_KEY_PATH] + keypath
 
     # prepare signing key from random path, compute decompressed public key
     node = seed.get_root_without_passphrase('nist256p1')
-    node.derive_path(node_path)
+    node.derive_path(nodepath)
     pubkey = nist256p1.publickey(node.private_key(), False)
 
-    # first half of keyhandle is key_path
-    keybuf = ustruct.pack('>8L', *key_path)
+    # first half of keyhandle is keypath
+    keybuf = ustruct.pack('>8L', *keypath)
 
-    # second half of keyhandle is a hmac of app_id and key_path
+    # second half of keyhandle is a hmac of app_id and keypath
     keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
     keybase.update(keybuf)
     keybase = keybase.digest()
@@ -393,11 +394,11 @@ def msg_register_sign(challenge: bytes, app_id: bytes, cert: bytes) -> bytes:
     # hash the request data together with keyhandle and pubkey
     dig = hashlib.sha256()
     dig.update(b'\x00')    # uint8_t reserved;
-    dig.update(app_id)     # uint8_t appId[U2F_APPID_SIZE];
-    dig.update(challenge)  # uint8_t chal[U2F_CHAL_SIZE];
-    dig.update(keybuf)     # uint8_t keyHandle[KEY_HANDLE_LEN];
+    dig.update(app_id)     # uint8_t appId[32];
+    dig.update(challenge)  # uint8_t chal[32];
+    dig.update(keybuf)     # uint8_t keyHandle[64];
     dig.update(keybase)
-    dig.update(pubkey)     # uint8_t pubKey[U2F_PUBKEY_LEN];
+    dig.update(pubkey)     # uint8_t pubKey[65];
     dig = dig.digest()
 
     # sign the digest and convert to der
@@ -405,15 +406,16 @@ def msg_register_sign(challenge: bytes, app_id: bytes, cert: bytes) -> bytes:
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # pack to a response
-    buf, resp = make_struct(resp_cmd_register(len(keybuf) + len(keybase), len(cert), len(sig)))
+    buf, resp = make_struct(resp_cmd_register(
+        len(keybuf) + len(keybase), len(_U2F_ATT_CERT), len(sig)))
     resp.registerId = _U2F_REGISTER_ID
-    resp.status = _SW_NO_ERROR
-    resp.keyHandleLen = len(keybuf) + len(keybase)
-    utils.memcpy(resp.cert, 0, cert, 0, len(cert))
     utils.memcpy(resp.pubKey, 0, pubkey, 0, len(pubkey))
+    resp.keyHandleLen = len(keybuf) + len(keybase)
     utils.memcpy(resp.keyHandle, 0, keybuf, 0, len(keybuf))
     utils.memcpy(resp.keyHandle, len(keybuf), keybase, 0, len(keybase))
+    utils.memcpy(resp.cert, 0, _U2F_ATT_CERT, 0, len(_U2F_ATT_CERT))
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
+    resp.status = _SW_NO_ERROR
 
     return buf
 
