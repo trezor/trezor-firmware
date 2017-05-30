@@ -24,6 +24,7 @@ OBJS += signing.o
 OBJS += crypto.o
 OBJS += ethereum.o
 OBJS += ethereum_tokens.o
+OBJS += nem2.o
 
 OBJS += debug.o
 

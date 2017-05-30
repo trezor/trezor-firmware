@@ -67,6 +67,7 @@ void fsm_msgEthereumSignMessage(EthereumSignMessage *msg);
 void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg);
 
 void fsm_msgNEMGetAddress(NEMGetAddress *msg);
+void fsm_msgNEMSignTx(NEMSignTx *msg);
 
 // debug message functions
 #if DEBUG_LINK

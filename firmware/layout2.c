@@ -30,6 +30,8 @@
 #include "qr_encode.h"
 #include "timer.h"
 #include "bignum.h"
+#include "nem.h"
+#include "secp256k1.h"
 #include "gettext.h"
 
 #define BITCOIN_DIVISIBILITY (8)
@@ -464,4 +466,100 @@ void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appico
 		appicon = &bmp_icon_question;
 	}
 	layoutDialog(appicon, NULL, verb, NULL, verb, _("U2F security key?"), NULL, appname, NULL, NULL);
+}
+
+static inline void nemFormatAmount(bignum256 *amnt, uint64_t quantity, int divisibility, const bignum256 *mul, const char *ticker, char *str_out, size_t size) {
+	bn_read_uint64(quantity, amnt);
+
+	if (mul) {
+		bn_multiply(mul, amnt, &secp256k1.prime);
+		bn_format(amnt, NULL, ticker, divisibility + NEM_XEM_DIVISIBILITY, str_out, size);
+	} else {
+		bn_format(amnt, NULL, ticker, divisibility, str_out, size);
+	}
+}
+
+void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *mul, uint64_t fee) {
+	char str_out[32], str_fee[32];
+	bignum256 amnt;
+
+	nemFormatAmount(&amnt, quantity, NEM_XEM_DIVISIBILITY, mul, " " NEM_XEM_TICKER, str_out, sizeof(str_out));
+
+	bn_read_uint64(fee, &amnt);
+	bn_format(&amnt, NULL, " " NEM_XEM_TICKER, NEM_XEM_DIVISIBILITY, str_fee, sizeof(str_fee));
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		_("Confirm transfer of"),
+		str_out,
+		_("and network fee of"),
+		str_fee,
+		NULL,
+		NULL);
+}
+
+void layoutNEMTransferMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *mul) {
+	char mosaic_name[256];
+	strlcpy(mosaic_name, namespace, sizeof(mosaic_name));
+	strlcat(mosaic_name, ".", sizeof(mosaic_name));
+	strlcat(mosaic_name, mosaic, sizeof(mosaic_name));
+
+	char str_out[32];
+	bignum256 amnt;
+	nemFormatAmount(&amnt, quantity, 0, mul, NULL, str_out, sizeof(str_out));
+
+	char *decimal = strchr(str_out, '.');
+	if (decimal != NULL) {
+		*decimal = '\0';
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("I take the risk"),
+		_("Unknown Mosaic"),
+		_("Confirm transfer of"),
+		str_out,
+		_("raw units of"),
+		mosaic_name,
+		NULL,
+		NULL);
+}
+
+void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted) {
+	if (payload[0] == 0xFE) {
+		char encoded[(length - 1) * 2 + 1];
+		data2hex(&payload[1], length - 1, encoded);
+
+		const char **str = split_message((uint8_t *) encoded, sizeof(encoded) - 1, 16);
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
+			encrypted ? _("Encrypted hex data") : _("Unencrypted hex data"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	} else {
+		const char **str = split_message(payload, length, 16);
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
+			encrypted ? _("Encrypted message") : _("Unencrypted message"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	}
+}
+
+void layoutNEMTransferTo(const char *desc, const char *address) {
+	static char first_third[NEM_ADDRESS_SIZE / 3 + 1];
+	strlcpy(first_third, address, sizeof(first_third));
+
+	static char second_third[NEM_ADDRESS_SIZE / 3 + 1];
+	strlcpy(second_third, &address[NEM_ADDRESS_SIZE / 3], sizeof(second_third));
+
+	const char *third_third = &address[NEM_ADDRESS_SIZE * 2 / 3];
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Confirm"),
+		desc,
+		_("Confirm transfer to"),
+		first_third,
+		second_third,
+		third_third,
+		NULL,
+		NULL);
 }

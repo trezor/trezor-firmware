@@ -51,6 +51,7 @@
 #include <libopencm3/stm32/flash.h>
 #include "ethereum.h"
 #include "nem.h"
+#include "nem2.h"
 #include "gettext.h"
 
 // message methods
@@ -1141,6 +1142,46 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 	}
 
 	msg_write(MessageType_MessageType_NEMAddress, resp);
+	layoutHome();
+}
+
+void fsm_msgNEMSignTx(NEMSignTx *msg) {
+	CHECK_PARAM(msg->has_transaction, _("No common provided"));
+	CHECK_PARAM(msg->has_transfer, _("No transaction provided"));
+
+	const char *reason;
+	CHECK_PARAM(!(reason = nem_validate_common(&msg->transaction)), reason);
+	CHECK_PARAM(!(reason = nem_validate_transfer(&msg->transfer, msg->transaction.network)), reason);
+
+	CHECK_INITIALIZED
+	CHECK_PIN
+
+	if (!nem_askTransfer(&msg->transaction, &msg->transfer)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
+	RESP_INIT(NEMSignedTx);
+
+	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n, msg->transaction.address_n_count);
+	if (!node) return;
+
+	nem_transaction_ctx context;
+	nem_transaction_start(&context, &node->public_key[1], resp->data.bytes, sizeof(resp->data.bytes));
+
+	if (!nem_fsmTransfer(&context, node, &msg->transaction, &msg->transfer)) {
+		layoutHome();
+		return;
+	}
+
+	resp->has_data = true;
+	resp->data.size = nem_transaction_end(&context, node->private_key, resp->signature.bytes);
+
+	resp->has_signature = true;
+	resp->signature.size = sizeof(ed25519_signature);
+
+	msg_write(MessageType_MessageType_NEMSignedTx, resp);
 	layoutHome();
 }
 
