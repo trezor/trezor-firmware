@@ -64,15 +64,20 @@ _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
 _U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
 
+# authentication control byte
+_AUTH_ENFORCE = const(0x03)     # enforce user presence and sign
+_AUTH_CHECK_ONLY = const(0x07)  # check only
+_AUTH_FLAG_TUP = const(0x01)    # test of user presence set
+
 # common raw message format (ISO7816-4:2005 mapping)
-_APDU_CLA = const(0)  # uint8_t cla;        // Class - reserved
-_APDU_INS = const(1)  # uint8_t ins;        // U2F instruction
-_APDU_P1 = const(2)   # uint8_t p1;         // U2F parameter 1
-_APDU_P2 = const(3)   # uint8_t p2;         // U2F parameter 2
-_APDU_LC1 = const(4)  # uint8_t lc1;        // Length field, set to zero
-_APDU_LC2 = const(5)  # uint8_t lc2;        // Length field, MSB
-_APDU_LC3 = const(6)  # uint8_t lc3;        // Length field, LSB
-_APDU_DATA = const(7) # uint8_t data[1];    // Data field
+_APDU_CLA = const(0)   # uint8_t cla;        // Class - reserved
+_APDU_INS = const(1)   # uint8_t ins;        // U2F instruction
+_APDU_P1 = const(2)    # uint8_t p1;         // U2F parameter 1
+_APDU_P2 = const(3)    # uint8_t p2;         // U2F parameter 2
+_APDU_LC1 = const(4)   # uint8_t lc1;        // Length field, set to zero
+_APDU_LC2 = const(5)   # uint8_t lc2;        // Length field, MSB
+_APDU_LC3 = const(6)   # uint8_t lc3;        // Length field, LSB
+_APDU_DATA = const(7)  # uint8_t data[1];    // Data field
 
 
 def frame_init() -> dict:
@@ -141,6 +146,37 @@ def resp_cmd_register(khlen: int, certlen: int, siglen: int) -> dict:
     }
 
 
+# index of keyHandleLen in req_cmd_authenticate struct
+_REQ_CMD_AUTHENTICATE_KHLEN = const(64)
+
+
+def req_cmd_authenticate(khlen: int) -> dict:
+    # uint8_t chal[32];         // Challenge
+    # uint8_t appId[32];        // Application id
+    # uint8_t keyHandleLen;     // Length of key handle
+    # uint8_t keyHandle[khlen]; // Key handle
+    return {
+        'chal':         (0 | uctypes.ARRAY, 32 | uctypes.UINT8),
+        'appId':       (32 | uctypes.ARRAY, 32 | uctypes.UINT8),
+        'keyHandleLen': 64 | uctypes.UINT8,
+        'keyHandle':   (65 | uctypes.ARRAY, khlen | uctypes.UINT8),
+    }
+
+
+def resp_cmd_authenticate(siglen: int) -> dict:
+    status_ofs = 5 + siglen
+    # uint8_t flags;        // U2F_AUTH_FLAG_ values
+    # uint32_t ctr;         // Counter field (big-endian)
+    # uint8_t sig[siglen];  // Signature
+    # uint16_t status;
+    return {
+        'flags':           0 | uctypes.UINT8,
+        'ctr':             1 | uctypes.UINT32,
+        'sig':            (5 | uctypes.ARRAY, siglen | uctypes.UINT8),
+        'status': status_ofs | uctypes.UINT16,
+    }
+
+
 def overlay_struct(buf, desc):
     desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
     if desc_size > len(buf):
@@ -164,19 +200,23 @@ class Cmd:
     def to_msg(self):
         cla = self.data[_APDU_CLA]
         ins = self.data[_APDU_INS]
+        p1 = self.data[_APDU_P1]
+        p2 = self.data[_APDU_P2]
         lc = (self.data[_APDU_LC1] << 16) + \
             (self.data[_APDU_LC2] << 8) + \
             (self.data[_APDU_LC3])
         data = self.data[_APDU_DATA:_APDU_DATA + lc]
-        return Msg(self.cid, cla, ins, lc, data)
+        return Msg(self.cid, cla, ins, p1, p2, lc, data)
 
 
 class Msg:
 
-    def __init__(self, cid: int, cla: int, ins: int, lc: int, data: bytes):
+    def __init__(self, cid: int, cla: int, ins: int, p1: int, p2: int, lc: int, data: bytes):
         self.cid = cid
         self.cla = cla
         self.ins = ins
+        self.p1 = p1
+        self.p2 = p2
         self.lc = lc
         self.data = data
 
@@ -420,8 +460,128 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     return buf
 
 
+_authenticate_state = 0
+
+
 async def msg_authenticate(req: Msg) -> Cmd:
-    pass
+
+    global _authenticate_state
+
+    from apps.common import storage
+
+    if not storage.is_initialized():
+        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
+
+    # we need at least keyHandleLen
+    if len(req.data) <= _REQ_CMD_AUTHENTICATE_KHLEN:
+        log.warning(__name__, '_SW_WRONG_LENGTH req.data')
+        return msg_error(req, _SW_WRONG_LENGTH)
+
+    # check keyHandleLen
+    khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
+    if khlen != 64:
+        log.warning(__name__, '_SW_WRONG_LENGTH khlen')
+        return msg_error(req, _SW_WRONG_LENGTH)
+
+    auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
+
+    # check the keyHandle and generate the signing key
+    node = msg_authenticate_genkey(auth.appId, auth.keyHandle)
+    if node is None:
+        return msg_error(req, _SW_WRONG_DATA)
+
+    # if _AUTH_CHECK_ONLY is requested, return, because keyhandle has been checked already
+    if req.p1 == _AUTH_CHECK_ONLY:
+        log.warning(__name__, '_SW_CONDITIONS_NOT_SATISFIED')
+        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
+
+    # from now on, only _AUTH_ENFORCE is supported
+    if req.p1 != _AUTH_ENFORCE:
+        log.warning(__name__, '_SW_WRONG_DATA')
+        return msg_error(req, _SW_WRONG_DATA)
+
+    # TODO: check equality with last request
+
+    # TODO: wait for a button press
+    if _authenticate_state == 0:
+        _authenticate_state = utime.ticks_ms()
+    if utime.ticks_ms() - _authenticate_state < 500:
+        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
+    _authenticate_state = 0
+
+    buf = msg_authenticate_sign(auth.chal, auth.appId, auth.keyHandle)
+
+    return Cmd(req.cid, _CMD_MSG, buf)
+
+
+
+def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes):
+
+    from apps.common import seed
+
+    # unpack the keypath from the first half of keyhandle
+    keybuf = keyhandle[:32]
+    keypath = ustruct.unpack('>8L', keybuf)
+
+    # check high bit for hardened keys
+    for i in keypath:
+        if not i & 0x80000000:
+            log.warning(__name__, 'invalid key path')
+            return None
+
+    # derive the signing key
+    nodepath = [_U2F_KEY_PATH] + list(keypath)
+    node = seed.get_root_without_passphrase('nist256p1')
+    node.derive_path(nodepath)
+
+    # second half of keyhandle is a hmac of app_id and keypath
+    keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
+    keybase.update(keybuf)
+    keybase = keybase.digest()
+
+    # verify the hmac
+    if keybase != keyhandle[32:]:
+        log.warning(__name__, 'invalid key handle')
+        return None
+
+    return node
+
+
+# TODO: persistent counter
+_authenticate_ctr = 0
+
+
+def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> bytes:
+
+    global _authenticate_ctr
+
+    flags = _AUTH_FLAG_TUP
+
+    # get next counter
+    ctr = _authenticate_ctr
+    ctrbuf = ustruct.pack('>L', ctr)
+    _authenticate_ctr += 1
+
+    # hash input data together with counter
+    dig = hashlib.sha256()
+    dig.update(app_id)     # uint8_t appId[32];
+    dig.update(flags)      # uint8_t flags;
+    dig.update(ctrbuf)     # uint8_t ctr[4];
+    dig.update(challenge)  # uint8_t chal[32];
+    dig = dig.digest()
+
+    # sign the digest and convert to der
+    sig = nist256p1.sign(privkey, dig, False)
+    sig = der.encode_seq((sig[1:33], sig[33:]))
+
+    # pack to a response
+    buf, resp = make_struct(resp_cmd_authenticate(len(sig)))
+    resp.flags = flags
+    resp.ctr = ctr
+    utils.memcpy(resp.sig, 0, sig, 0, len(sig))
+    resp.status = _SW_NO_ERROR
+
+    return buf
 
 
 def msg_version(req: Msg) -> Cmd:
