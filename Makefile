@@ -102,6 +102,9 @@ flash_bootloader: ## flash bootloader using st-flash
 flash_firmware: ## flash firmware using st-flash
 	st-flash write $(FIRMWARE_BUILD_DIR)/firmware.bin 0x08020000
 
+flash_combine: ## flash combined image using st-flash
+	st-flash write $(FIRMWARE_BUILD_DIR)/combined.bin 0x08000000
+
 ## openocd debug commands:
 
 openocd: ## start openocd which connects to the device
@@ -129,3 +132,10 @@ sizecheck: ## check sizes of binary files
 	test 32768 -ge $(shell stat -c%s $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
 	test 65536 -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
 	test 917504 -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)
+
+combine: ## combine boardloader + bootloader + firmware into one combined image
+	./tools/combine_firmware \
+		0x08000000 $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
+		0x08010000 $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
+		0x08020000 $(FIRMWARE_BUILD_DIR)/firmware.bin \
+		> $(FIRMWARE_BUILD_DIR)/combined.bin \

@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+import sys
+
+def pairwise(iterable):
+    a = iter(iterable)
+    return zip(a, a)
+
+files = sys.argv[1:]
+files = list(pairwise(files))
+
+offset = int(files[0][0], 16)
+
+out = bytearray()
+
+for addr, fn in files:
+    addr = int(addr, 16) - offset
+    data = open(fn, 'rb').read()
+    if len(out) < addr:
+        out += b'\x00' * (addr - len(out))
+    if len(out) != addr:
+        raise Exception('Alignment failed')
+    out += data
+
+sys.stdout.buffer.write(out)
