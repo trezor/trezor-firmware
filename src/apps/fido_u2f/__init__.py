@@ -301,6 +301,7 @@ def send_cmd(cmd: Cmd, iface: int):
     while offset < datalen:
         frm.seq = seq
         offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
+        utime.sleep_ms(1)  # FIXME: do async send
         msg.send(iface, buf)
         # log.debug(__name__, 'send cont %s', buf)
         seq += 1
