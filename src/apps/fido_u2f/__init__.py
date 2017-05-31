@@ -226,7 +226,7 @@ def read_cmd(iface: int) -> Cmd:
     desc_cont = frame_cont()
 
     buf, = yield loop.select(iface)
-    log.debug(__name__, 'read init %s', buf)
+    # log.debug(__name__, 'read init %s', buf)
 
     ifrm = overlay_struct(buf, desc_init)
     bcnt = ifrm.bcnt
@@ -248,7 +248,7 @@ def read_cmd(iface: int) -> Cmd:
 
     while datalen < bcnt:
         buf, = yield loop.select(iface)
-        log.debug(__name__, 'read cont %s', buf)
+        # log.debug(__name__, 'read cont %s', buf)
 
         cfrm = overlay_struct(buf, desc_cont)
 
@@ -291,7 +291,7 @@ def send_cmd(cmd: Cmd, iface: int):
 
     offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
     msg.send(iface, buf)
-    log.debug(__name__, 'send init %s', buf)
+    # log.debug(__name__, 'send init %s', buf)
 
     if offset < datalen:
         frm = overlay_struct(buf, cont_desc)
@@ -300,7 +300,7 @@ def send_cmd(cmd: Cmd, iface: int):
         frm.seq = seq
         offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
         msg.send(iface, buf)
-        log.debug(__name__, 'send cont %s', buf)
+        # log.debug(__name__, 'send cont %s', buf)
         seq += 1
 
 
