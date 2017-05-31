@@ -30,6 +30,19 @@
 #include "ripemd160.h"
 #include "sha3.h"
 
+const char *nem_network_name(uint8_t network) {
+	switch (network) {
+	case NEM_NETWORK_MAINNET:
+		return "NEM Mainnet";
+	case NEM_NETWORK_TESTNET:
+		return "NEM Testnet";
+	case NEM_NETWORK_MIJIN:
+		return "Mijin";
+	default:
+		return NULL;
+	}
+}
+
 void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version, uint8_t *address) {
 	uint8_t hash[SHA3_256_DIGEST_LENGTH];
 

@@ -33,6 +33,8 @@
 #define NEM_ADDRESS_SIZE 40
 #define NEM_ADDRESS_SIZE_RAW 25
 
+const char *nem_network_name(uint8_t network);
+
 void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version, uint8_t *address);
 bool nem_get_address(const ed25519_public_key public_key, uint8_t version, char *address);
 
