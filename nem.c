@@ -72,6 +72,33 @@ bool nem_get_address(const ed25519_public_key public_key, uint8_t version, char 
 	char *ret = base32_encode(pubkeyhash, sizeof(pubkeyhash), address, NEM_ADDRESS_SIZE + 1, BASE32_ALPHABET_RFC4648);
 
 	MEMSET_BZERO(pubkeyhash, sizeof(pubkeyhash));
-
 	return (ret != NULL);
+}
+
+bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
+	if (!nem_network_name(network) || address[0] != network) {
+		return false;
+	}
+
+	uint8_t hash[SHA3_256_DIGEST_LENGTH];
+
+	keccak_256(address, 1 + RIPEMD160_DIGEST_LENGTH, hash);
+	bool valid = (memcmp(&address[1 + RIPEMD160_DIGEST_LENGTH], hash, 4) == 0);
+
+	MEMSET_BZERO(hash, sizeof(hash));
+	return valid;
+}
+
+bool nem_validate_address(const char *address, uint8_t network) {
+	uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW];
+
+	if (strlen(address) != NEM_ADDRESS_SIZE) {
+		return false;
+	}
+
+	uint8_t *ret = base32_decode(address, NEM_ADDRESS_SIZE, pubkeyhash, sizeof(pubkeyhash), BASE32_ALPHABET_RFC4648);
+	bool valid = (ret != NULL) && nem_validate_address_raw(pubkeyhash, network);
+
+	MEMSET_BZERO(pubkeyhash, sizeof(pubkeyhash));
+	return valid;
 }
