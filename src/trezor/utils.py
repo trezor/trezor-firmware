@@ -16,7 +16,6 @@ def _unimport_func(func):
         finally:
             for mod in sys.modules:
                 if mod not in mods:
-                    log.debug(__name__, 'unimport %s', mod)
                     del sys.modules[mod]
             gc.collect()
         return ret
@@ -31,7 +30,6 @@ def _unimport_genfunc(genfunc):
         finally:
             for mod in sys.modules:
                 if mod not in mods:
-                    log.debug(__name__, 'unimport %s', mod)
                     del sys.modules[mod]
             gc.collect()
         return ret

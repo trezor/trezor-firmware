@@ -48,5 +48,6 @@ def render_scrollbar(page, page_count):
     for i in range(0, page_count):
         if i != page:
             ui.display.bar_radius(x, y + i * padding, size,
-                           size, ui.DARK_GREY, ui.BLACK, 4)
-    ui.display.bar_radius(x, y + page * padding, size, size, ui.WHITE, ui.BLACK, 4)
+                                  size, ui.DARK_GREY, ui.BLACK, 4)
+    ui.display.bar_radius(x, y + page * padding, size,
+                          size, ui.WHITE, ui.BLACK, 4)

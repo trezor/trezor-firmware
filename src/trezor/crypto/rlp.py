@@ -1,3 +1,4 @@
+
 def int_to_bytes(x: int) -> bytes:
     if x == 0:
         return b''
@@ -7,15 +8,17 @@ def int_to_bytes(x: int) -> bytes:
         x //= 256
     return bytes(reversed(r))
 
+
 def encode_length(l: int, is_list: bool) -> bytes:
     offset = 0xC0 if is_list else 0x80
     if l < 56:
-         return bytes([l + offset])
+        return bytes([l + offset])
     elif l < 256 ** 8:
-         bl = int_to_bytes(l)
-         return bytes([len(bl) + offset + 55]) + bl
+        bl = int_to_bytes(l)
+        return bytes([len(bl) + offset + 55]) + bl
     else:
-         raise ValueError('Input too long')
+        raise ValueError('Input too long')
+
 
 def encode(data) -> bytes:
     if isinstance(data, int):

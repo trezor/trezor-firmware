@@ -1,8 +1,3 @@
-def new(key, msg, digestmod) -> Hmac:
-    '''
-    Creates a HMAC context object.
-    '''
-    return Hmac(key, msg, digestmod)
 
 class Hmac:
     def __init__(self, key, msg, digestmod):
@@ -33,3 +28,8 @@ class Hmac:
         return outer.digest()
 
 
+def new(key, msg, digestmod) -> Hmac:
+    '''
+    Creates a HMAC context object.
+    '''
+    return Hmac(key, msg, digestmod)
