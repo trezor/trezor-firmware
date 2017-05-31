@@ -5,7 +5,9 @@ import utime
 from trezor import log
 from trezor import loop
 from trezor import msg
+from trezor import ui
 from trezor import utils
+from trezor import workflow
 from trezor.crypto import der
 from trezor.crypto import hashlib
 from trezor.crypto import hmac
@@ -381,7 +383,70 @@ def cmd_init(req: Cmd) -> Cmd:
     return Cmd(req.cid, req.cmd, buf)
 
 
-_register_state = 0
+_register_state = None
+
+
+_CONFIRM_REGISTER = const(0)
+_CONFIRM_AUTHENTICATE = const(1)
+
+
+class ConfirmContent(ui.Widget):
+
+    def __init__(self, action: int, app_id: bytes):
+        self.action = action
+        self.app_id = app_id
+        self.app_name = None
+        self.app_icon = None
+        self.boot()
+
+    def boot(self):
+        import ubinascii
+        from trezor import res
+        from . import knownapps
+
+        app_id = bytes(self.app_id)
+        if app_id in knownapps.knownapps:
+            name = knownapps.knownapps[app_id]
+            icon = res.load('apps/fido_u2f/res/u2f_%s.toif' % name.lower().replace(' ', '_'))
+        else:
+            name = ubinascii.hexlify(app_id[:4]) + '...' + \
+                   ubinascii.hexlify(app_id[-4:])
+            icon = res.load('apps/fido_u2f/res/u2f_unknown.toif')
+        self.app_name = name
+        self.app_icon = icon
+
+    def render(self):
+        if self.action == _CONFIRM_REGISTER:
+            header = 'U2F Register'
+        else:
+            header = 'U2F Authenticate'
+        ui.header(header, ui.ICON_RESET, ui.GREEN, ui.BLACK)
+        ui.display.image((240 - 64) // 2, 90, self.app_icon)
+        ui.display.text_center(120, 185, self.app_name, ui.MONO, ui.WHITE, ui.BLACK)
+
+
+class ConfirmState:
+
+    def __init__(self, action: int, app_id: bytes):
+        self.action = action
+        self.app_id = app_id
+        self.confirmed = None
+        self.task = None
+
+    def fork(self):
+        self.task = self.confirm()
+        workflow.start(self.task)
+
+    def kill(self):
+        if self.task is not None:
+            self.task.close()
+
+    async def confirm(self):
+        from trezor.ui.confirm import HoldToConfirmDialog
+        content = ConfirmContent(self.action, self.app_id)
+        dialog = HoldToConfirmDialog(content)
+        ui.display.clear()
+        self.confirmed = await dialog
 
 
 async def msg_register(req: Msg) -> Cmd:
@@ -390,21 +455,25 @@ async def msg_register(req: Msg) -> Cmd:
     from apps.common import storage
 
     if not storage.is_initialized():
+        log.warning(__name__, 'not initialized')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
 
     # check input data
     if len(req.data) != 64:
+        log.warning(__name__, '_SW_WRONG_LENGTH req.data')
         return msg_error(req, _SW_WRONG_LENGTH)
-
-    # TODO: wait for a button press
-    if _register_state == 0:
-        _register_state = utime.ticks_ms()
-    if utime.ticks_ms() - _register_state < 500:
-        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
-    _register_state = 0
 
     chal = req.data[:32]
     app_id = req.data[32:]
+
+    if _register_state is None:
+        _register_state = ConfirmState(_CONFIRM_REGISTER, app_id)
+        _register_state.fork()
+    if _register_state.confirmed is None:
+        log.info(__name__, 'waiting for button')
+        return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
+    _register_state = None
+
     buf = msg_register_sign(chal, app_id)
 
     return Cmd(req.cid, _CMD_MSG, buf)
@@ -460,7 +529,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     return buf
 
 
-_authenticate_state = 0
+_authenticate_state = None
 _authenticate_lastreq = None
 
 
@@ -506,21 +575,22 @@ async def msg_authenticate(req: Msg) -> Cmd:
 
     # check equality with last request
     if _authenticate_lastreq is None or _authenticate_lastreq.__dict__ != req.__dict__:
+        if _authenticate_state is not None:
+            _authenticate_state.kill()
+        _authenticate_state = None
         _authenticate_lastreq = req
-        _authenticate_state = 0
 
-    # TODO: wait for a button press
-    if _authenticate_state == 0:
-        _authenticate_state = utime.ticks_ms()
-    if utime.ticks_ms() - _authenticate_state < 500:
+    if _authenticate_state is None:
+        _authenticate_state = ConfirmState(_CONFIRM_AUTHENTICATE, auth.appId)
+        _authenticate_state.fork()
+    if _authenticate_state.confirmed is None:
         log.info(__name__, 'waiting for button')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
-    _authenticate_state = 0
+    _authenticate_state = None
 
     buf = msg_authenticate_sign(auth.chal, auth.appId, node.private_key())
 
     return Cmd(req.cid, _CMD_MSG, buf)
-
 
 
 def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes):
