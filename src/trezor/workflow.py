@@ -1,4 +1,4 @@
-from trezor import log, loop
+from trezor import log, loop, ui
 
 _started = []
 _default = None
@@ -12,6 +12,7 @@ def start_default(genfunc):
     _default = _default_genfunc()
     log.info(__name__, 'start default %s', _default)
     loop.schedule_task(_default)
+    ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
 
 def close_default():
@@ -27,6 +28,7 @@ def start(workflow):
     _started.append(workflow)
     log.info(__name__, 'start %s', workflow)
     loop.schedule_task(_watch(workflow))
+    ui.display.backlight(ui.BACKLIGHT_NORMAL)
 
 
 async def _watch(workflow):

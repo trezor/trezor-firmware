@@ -33,8 +33,6 @@ def display_homescreen():
 
 @unimport
 async def layout_homescreen():
-    ui.display.backlight(ui.BACKLIGHT_NORMAL)
-
     while True:
         display_homescreen()
         await loop.Wait([swipe_to_rotate(), dim_screen()])
