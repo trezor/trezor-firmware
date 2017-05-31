@@ -13,7 +13,7 @@ void msg_init(void)
 
 ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 {
-    int i = usb_hid_read_select(1); // 1ms timeout
+    int i = usb_hid_read_select(0);
     if (i < 0) {
         return 0;
     }
