@@ -18,8 +18,8 @@ class ConfirmDialog(Widget):
                                   normal_style=CONFIRM_BUTTON,
                                   active_style=CONFIRM_BUTTON_ACTIVE)
             self.cancel = Button((0, 240 - 48, 119, 48), cancel,
-                                normal_style=CANCEL_BUTTON,
-                                active_style=CANCEL_BUTTON_ACTIVE)
+                                 normal_style=CANCEL_BUTTON,
+                                 active_style=CANCEL_BUTTON_ACTIVE)
         else:
             self.cancel = None
             self.confirm = Button((0, 240 - 48, 240, 48), confirm,
@@ -58,7 +58,7 @@ class HoldToConfirmDialog(Widget):
             self.content.render()
         self.button.render()
 
-    def send(self, event, pos):
+    def touch(self, event, pos):
         button = self.button
         was_started = button.state & BTN_STARTED
         button.touch(event, pos)
@@ -71,7 +71,7 @@ class HoldToConfirmDialog(Widget):
                 if self.loader.stop():
                     return CONFIRMED
         if self.content is not None:
-            return self.content.send(event, pos)
+            return self.content.touch(event, pos)
 
     async def __iter__(self):
         return await loop.Wait((self._render_loop(), self._event_loop()))
@@ -85,6 +85,6 @@ class HoldToConfirmDialog(Widget):
     def _event_loop(self):
         while True:
             event, *pos = yield loop.Select(loop.TOUCH)
-            result = self.send(event, pos)
+            result = self.touch(event, pos)
             if result is not None:
                 return result

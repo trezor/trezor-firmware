@@ -29,6 +29,3 @@ class Text(ui.Widget):
                 style = item
             else:
                 fg = item
-
-    def send(self, event, pos):
-        pass
