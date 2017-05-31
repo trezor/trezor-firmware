@@ -461,15 +461,18 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
 
 
 _authenticate_state = 0
+_authenticate_lastreq = None
 
 
 async def msg_authenticate(req: Msg) -> Cmd:
 
     global _authenticate_state
+    global _authenticate_lastreq
 
     from apps.common import storage
 
     if not storage.is_initialized():
+        log.warning(__name__, 'not initialized')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
 
     # we need at least keyHandleLen
@@ -488,28 +491,33 @@ async def msg_authenticate(req: Msg) -> Cmd:
     # check the keyHandle and generate the signing key
     node = msg_authenticate_genkey(auth.appId, auth.keyHandle)
     if node is None:
+        # specific error logged in msg_authenticate_genkey
         return msg_error(req, _SW_WRONG_DATA)
 
     # if _AUTH_CHECK_ONLY is requested, return, because keyhandle has been checked already
     if req.p1 == _AUTH_CHECK_ONLY:
-        log.warning(__name__, '_SW_CONDITIONS_NOT_SATISFIED')
+        log.info(__name__, '_AUTH_CHECK_ONLY')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
 
     # from now on, only _AUTH_ENFORCE is supported
     if req.p1 != _AUTH_ENFORCE:
-        log.warning(__name__, '_SW_WRONG_DATA')
+        log.info(__name__, '_AUTH_ENFORCE')
         return msg_error(req, _SW_WRONG_DATA)
 
-    # TODO: check equality with last request
+    # check equality with last request
+    if _authenticate_lastreq is None or _authenticate_lastreq.__dict__ != req.__dict__:
+        _authenticate_lastreq = req
+        _authenticate_state = 0
 
     # TODO: wait for a button press
     if _authenticate_state == 0:
         _authenticate_state = utime.ticks_ms()
     if utime.ticks_ms() - _authenticate_state < 500:
+        log.info(__name__, 'waiting for button')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
     _authenticate_state = 0
 
-    buf = msg_authenticate_sign(auth.chal, auth.appId, auth.keyHandle)
+    buf = msg_authenticate_sign(auth.chal, auth.appId, node.private_key())
 
     return Cmd(req.cid, _CMD_MSG, buf)
 
@@ -555,7 +563,7 @@ def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> by
 
     global _authenticate_ctr
 
-    flags = _AUTH_FLAG_TUP
+    flags = bytes([_AUTH_FLAG_TUP])
 
     # get next counter
     ctr = _authenticate_ctr
@@ -576,7 +584,7 @@ def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> by
 
     # pack to a response
     buf, resp = make_struct(resp_cmd_authenticate(len(sig)))
-    resp.flags = flags
+    resp.flags = flags[0]
     resp.ctr = ctr
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
     resp.status = _SW_NO_ERROR
