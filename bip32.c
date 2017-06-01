@@ -456,6 +456,26 @@ int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address) {
 	hdnode_fill_public_key(node);
 	return nem_get_address(&node->public_key[1], version, address);
 }
+
+int hdnode_get_nem_shared_key(const HDNode *node, const ed25519_public_key peer_public_key, const uint8_t *salt, ed25519_public_key mul, uint8_t *shared_key) {
+	if (node->curve != &ed25519_keccak_info) {
+		return 0;
+	}
+
+	// sizeof(ed25519_public_key) == SHA3_256_DIGEST_LENGTH
+	if (mul == NULL) mul = shared_key;
+
+	if (ed25519_scalarmult_keccak(mul, node->private_key, peer_public_key)) {
+		return 0;
+	}
+
+	for (size_t i = 0; i < 32; i++) {
+		shared_key[i] = mul[i] ^ salt[i];
+	}
+
+	keccak_256(shared_key, 32, shared_key);
+	return 1;
+}
 #endif
 
 // msg is a data to be signed

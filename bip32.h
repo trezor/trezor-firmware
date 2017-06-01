@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "ecdsa.h"
+#include "ed25519.h"
 #include "options.h"
 
 typedef struct {
@@ -74,6 +75,7 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash);
 
 #if USE_NEM
 int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address);
+int hdnode_get_nem_shared_key(const HDNode *node, const ed25519_public_key peer_public_key, const uint8_t *salt, ed25519_public_key mul, uint8_t *shared_key);
 #endif
 
 int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
