@@ -384,9 +384,6 @@ def cmd_init(req: Cmd) -> Cmd:
     return Cmd(req.cid, req.cmd, buf)
 
 
-_register_state = None
-
-
 _CONFIRM_REGISTER = const(0)
 _CONFIRM_AUTHENTICATE = const(1)
 
@@ -450,8 +447,11 @@ class ConfirmState:
         self.confirmed = await dialog
 
 
+_reg_state = None
+
+
 async def msg_register(req: Msg) -> Cmd:
-    global _register_state
+    global _reg_state
 
     from apps.common import storage
 
@@ -467,13 +467,13 @@ async def msg_register(req: Msg) -> Cmd:
     chal = req.data[:32]
     app_id = req.data[32:]
 
-    if _register_state is None:
-        _register_state = ConfirmState(_CONFIRM_REGISTER, app_id)
-        _register_state.fork()
-    if _register_state.confirmed is None:
+    if _reg_state is None:
+        _reg_state = ConfirmState(_CONFIRM_REGISTER, app_id)
+        _reg_state.fork()
+    if _reg_state.confirmed is None:
         log.info(__name__, 'waiting for button')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
-    _register_state = None
+    _reg_state = None
 
     buf = msg_register_sign(chal, app_id)
 
@@ -530,14 +530,14 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     return buf
 
 
-_authenticate_state = None
-_authenticate_lastreq = None
+_auth_state = None
+_auth_lastreq = None
 
 
 async def msg_authenticate(req: Msg) -> Cmd:
 
-    global _authenticate_state
-    global _authenticate_lastreq
+    global _auth_state
+    global _auth_lastreq
 
     from apps.common import storage
 
@@ -575,19 +575,19 @@ async def msg_authenticate(req: Msg) -> Cmd:
         return msg_error(req, _SW_WRONG_DATA)
 
     # check equality with last request
-    if _authenticate_lastreq is None or _authenticate_lastreq.__dict__ != req.__dict__:
-        if _authenticate_state is not None:
-            _authenticate_state.kill()
-        _authenticate_state = None
-        _authenticate_lastreq = req
+    if _auth_lastreq is None or _auth_lastreq.__dict__ != req.__dict__:
+        if _auth_state is not None:
+            _auth_state.kill()
+        _auth_state = None
+        _auth_lastreq = req
 
-    if _authenticate_state is None:
-        _authenticate_state = ConfirmState(_CONFIRM_AUTHENTICATE, auth.appId)
-        _authenticate_state.fork()
-    if _authenticate_state.confirmed is None:
+    if _auth_state is None:
+        _auth_state = ConfirmState(_CONFIRM_AUTHENTICATE, auth.appId)
+        _auth_state.fork()
+    if _auth_state.confirmed is None:
         log.info(__name__, 'waiting for button')
         return msg_error(req, _SW_CONDITIONS_NOT_SATISFIED)
-    _authenticate_state = None
+    _auth_state = None
 
     buf = msg_authenticate_sign(auth.chal, auth.appId, node.private_key())
 
