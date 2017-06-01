@@ -313,6 +313,44 @@ DONNA_INLINE static void ge25519_cmove_stride4(long * r, long * p, long * pos, l
 }
 #define HAS_CMOVE_STRIDE4
 
+DONNA_INLINE static void ge25519_cmove_stride4b(long * r, long * p, long * pos, long * n, int stride) {
+  long x0=p[0], x1=p[1], x2=p[2], x3=p[3], y0, y1, y2, y3;
+  for(p+=stride; p<n; p+=stride) {
+    int flag=(p==pos);
+    y0 = p[0];
+    y1 = p[1];
+    y2 = p[2];
+    y3 = p[3];
+    x0 = flag ? y0 : x0;
+    x1 = flag ? y1 : x1;
+    x2 = flag ? y2 : x2;
+    x3 = flag ? y3 : x3;
+  }
+  r[0] = x0;
+  r[1] = x1;
+  r[2] = x2;
+  r[3] = x3;
+}
+#define HAS_CMOVE_STRIDE4B
+
+static void ge25519_move_conditional_pniels_array(ge25519_pniels * r, const ge25519_pniels * p, int pos, int n) {
+#ifdef HAS_CMOVE_STRIDE4B
+  size_t i;
+  for(i=0; i<sizeof(ge25519_pniels)/sizeof(long); i+=4) {
+    ge25519_cmove_stride4b(((long*)r)+i,
+			   ((long*)p)+i,
+			   ((long*)(p+pos))+i,
+			   ((long*)(p+n))+i,
+			   sizeof(ge25519_pniels)/sizeof(long));
+  }
+#else
+  size_t i;
+  for(i=0; i<n; i++) {
+    ge25519_move_conditional_pniels(r, p+i, pos==i);
+  }
+#endif
+}
+
 static void ge25519_move_conditional_niels_array(ge25519_niels * r, const uint8_t p[8][96], int pos, int n) {
   size_t i;
   for(i=0; i<96/sizeof(long); i+=4) {
@@ -322,6 +360,41 @@ static void ge25519_move_conditional_niels_array(ge25519_niels * r, const uint8_
 			  ((long*)(p+n))+i,
 			  96/sizeof(long));
   }
+}
+
+/* computes [s1]p1, constant time */
+static void ge25519_scalarmult(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
+	signed char slide1[64];
+	ge25519_pniels pre1[9];
+	ge25519_pniels pre;
+	ge25519 d1;
+	ge25519_p1p1 t;
+	int32_t i;
+
+	contract256_window4_modm(slide1, s1);
+
+	/* set neutral */
+	ge25519_set_neutral(r);
+
+	ge25519_full_to_pniels(pre1, r);
+	ge25519_full_to_pniels(pre1+1, p1);
+	ge25519_double(&d1, p1);
+	ge25519_full_to_pniels(pre1+2, &d1);
+	for (i = 1; i < 7; i++) {
+		ge25519_pnielsadd(&pre1[i+2], &d1, &pre1[i]);
+	}
+
+	for (i = 63; i >= 0; i--) {
+		int k=abs(slide1[i]);
+		ge25519_double_partial(r, r);
+		ge25519_double_partial(r, r);
+		ge25519_double_partial(r, r);
+		ge25519_double_p1p1(&t, r);
+		ge25519_move_conditional_pniels_array(&pre, pre1, k, 9);
+		ge25519_p1p1_to_full(r, &t);
+		ge25519_pnielsadd_p1p1(&t, r, &pre, (unsigned char)slide1[i] >> 7);
+		ge25519_p1p1_to_partial(r, &t);
+	}
 }
 
 static void
