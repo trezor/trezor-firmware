@@ -18,6 +18,8 @@ void ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk);
 int ed25519_sign_open(const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS);
 void ed25519_sign(const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_public_key pk, ed25519_signature RS);
 
+int ed25519_scalarmult(ed25519_public_key res, const ed25519_secret_key sk, const ed25519_public_key pk);
+
 void curve25519_scalarmult(curve25519_key mypublic, const curve25519_key secret, const curve25519_key basepoint);
 void curve25519_scalarmult_basepoint(curve25519_key mypublic, const curve25519_key secret);
 

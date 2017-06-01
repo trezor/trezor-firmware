@@ -139,6 +139,26 @@ ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed2551
 	return ed25519_verify(RS, checkR, 32) ? 0 : -1;
 }
 
+int
+ED25519_FN(ed25519_scalarmult) (ed25519_public_key res, const ed25519_secret_key sk, const ed25519_public_key pk) {
+	bignum256modm a;
+	ge25519 ALIGN(16) A, P;
+	hash_512bits extsk;
+
+	ed25519_extsk(extsk, sk);
+	expand256_modm(a, extsk, 32);
+
+	if (!ge25519_unpack_negative_vartime(&P, pk)) {
+		return -1;
+	}
+
+	ge25519_scalarmult(&A, &P, a);
+	curve25519_neg(A.x, A.x);
+	ge25519_pack(res, &A);
+	return 0;
+}
+
+
 #ifndef ED25519_SUFFIX
 
 #include "curve25519-donna-scalarmult-base.h"
