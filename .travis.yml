@@ -14,6 +14,7 @@ addons:
     - cmake-data
     - libssl-dev
     - python-pip
+    - valgrind
 
 install:
   - pip install --user pytest ecdsa curve25519-donna
@@ -21,6 +22,7 @@ install:
 script:
   - make
   - ./tests
+  - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests
   - ./test-openssl 1000
   - ITERS=10 py.test
   - mkdir _build && cd _build && cmake .. && make && cd ..
