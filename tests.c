@@ -30,6 +30,9 @@
 #include <check.h>
 #include "check_mem.h"
 
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+
 #include "options.h"
 
 #include "aes.h"
@@ -50,6 +53,16 @@
 #include "ed25519.h"
 #include "script.h"
 #include "rfc6979.h"
+
+/*
+ * This is a clever trick to make Valgrind's Memcheck verify code
+ * is constant-time with respect to secret data.
+ */
+
+/* Call after secret data is written, before first use */
+#define   MARK_SECRET_DATA(addr, len) VALGRIND_MAKE_MEM_UNDEFINED(addr, len)
+/* Call before secret data is freed */
+#define UNMARK_SECRET_DATA(addr, len) VALGRIND_MAKE_MEM_DEFINED  (addr, len)
 
 #define FROMHEX_MAXLEN 256
 
