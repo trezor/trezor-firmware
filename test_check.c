@@ -2688,13 +2688,21 @@ START_TEST(test_ed25519) {
 	ed25519_signature sig;
 	while (*ssk && *spk && *ssig) {
 		memcpy(sk, fromhex(*ssk), 32);
+		MARK_SECRET_DATA(sk, sizeof(sk));
+
 		ed25519_publickey(sk, pk);
+		UNMARK_SECRET_DATA(pk, sizeof(pk));
 		ck_assert_mem_eq(pk, fromhex(*spk), 32);
+
 		ed25519_sign(pk, 32, sk, pk, sig);
+		UNMARK_SECRET_DATA(sig, sizeof(sig));
 		ck_assert_mem_eq(sig, fromhex(*ssig), 64);
+
 		ssk += 3;
 		spk += 3;
 		ssig += 3;
+
+		UNMARK_SECRET_DATA(sk, sizeof(sk));
 	}
 }
 END_TEST
@@ -2735,10 +2743,13 @@ START_TEST(test_ed25519_cosi) {
 		res = ed25519_cosi_combine_publickeys(R, Rs, N);
 		ck_assert_int_eq(res, 0);
 
+		MARK_SECRET_DATA(keys, sizeof(keys));
 		/* phase 2: sign and combine signatures */
 		for (int j = 0; j < N; j++) {
 			ed25519_cosi_sign(msg, sizeof(msg), keys[j], nonces[j], R, pk, sigs[j]);
 		}
+		UNMARK_SECRET_DATA(keys, sizeof(keys));
+		UNMARK_SECRET_DATA(sigs, sizeof(sigs));
 
 		ed25519_cosi_combine_signatures(sig, R, sigs, N);
 
