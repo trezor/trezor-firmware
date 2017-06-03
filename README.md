@@ -23,8 +23,8 @@ These include:
 - SHA3/Keccak
 - BLAKE2s/BLAKE2b
 - Chacha20-Poly1305
-- unit tests (using Check - check.sf.net; in tests.c)
-- tests against OpenSSL (in test-openssl.c)
+- unit tests (using Check - check.sf.net; in test_check.c)
+- tests against OpenSSL (in test_openssl.c)
 
 Distibuted under MIT License.
 

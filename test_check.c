@@ -953,6 +953,32 @@ START_TEST(test_bip32_compare)
 }
 END_TEST
 
+START_TEST(test_bip32_optimized)
+{
+	HDNode root;
+	hdnode_from_seed((uint8_t *)"NothingToSeeHere", 16, SECP256K1_NAME, &root);
+	hdnode_fill_public_key(&root);
+
+	curve_point pub;
+	ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
+
+	HDNode node;
+	char addr1[MAX_ADDR_SIZE], addr2[MAX_ADDR_SIZE];
+
+	for (int i = 0; i < 40; i++) {
+		// unoptimized
+		memcpy(&node, &root, sizeof(HDNode));
+		hdnode_public_ckd(&node, i);
+		hdnode_fill_public_key(&node);
+		ecdsa_get_address(node.public_key, 0, addr1, sizeof(addr1));
+		// optimized
+		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, addr2, sizeof(addr2), false);
+		// check
+		ck_assert_str_eq(addr1, addr2);
+	}
+}
+END_TEST
+
 START_TEST(test_bip32_cache_1)
 {
 	HDNode node1, node2;
@@ -1455,118 +1481,6 @@ START_TEST(test_rfc6979)
 	test_deterministic("f8b8af8ce3c7cca5e300d33939540c10d45ce001b8f252bfbc57ba0342904181", "Alan Turing", "525a82b70e67874398067543fd84c83d30c175fdc45fdeee082fe13b1d7cfdf1");
 	test_deterministic("0000000000000000000000000000000000000000000000000000000000000001", "All those moments will be lost in time, like tears in rain. Time to die...", "38aa22d72376b4dbc472e06c3ba403ee0a394da63fc58d88686c611aba98d6b3");
 	test_deterministic("e91671c46231f833a6406ccbea0e3e392c76c167bac1cb013f6f1013980455c2", "There is a computer disease that anybody who works with computers knows about. It's a very serious disease and it interferes completely with the work. The trouble with computers is that you 'play' with them!", "1f4b84c23a86a221d233f2521be018d9318639d5b8bbd6374a8a59232d16ad3d");
-}
-END_TEST
-
-START_TEST(test_sign_speed)
-{
-	uint8_t sig[64], priv_key[32], msg[256];
-	size_t i;
-	int res;
-
-	for (i = 0; i < sizeof(msg); i++) {
-		msg[i] = i * 1103515245;
-	}
-
-	const ecdsa_curve *curve = &secp256k1;
-	clock_t t = clock();
-
-	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
-	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
-		ck_assert_int_eq(res, 0);
-	}
-
-	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
-	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
-		ck_assert_int_eq(res, 0);
-	}
-
-	printf("SECP256k1 signing speed: %0.2f sig/s\n", 500.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
-
-	curve = &nist256p1;
-	t = clock();
-
-	memcpy(priv_key, fromhex("c55ece858b0ddd5263f96810fe14437cd3b5e1fbd7c6a2ec1e031f05e86d8bd5"), 32);
-	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
-		ck_assert_int_eq(res, 0);
-	}
-
-	memcpy(priv_key, fromhex("509a0382ff5da48e402967a671bdcde70046d07f0df52cff12e8e3883b426a0a"), 32);
-	for (i = 0 ; i < 250; i++) {
-		res = ecdsa_sign(curve, priv_key, msg, sizeof(msg), sig, NULL, NULL);
-		ck_assert_int_eq(res, 0);
-	}
-
-	printf("NIST256p1 signing speed: %0.2f sig/s\n", 500.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
-}
-END_TEST
-
-START_TEST(test_verify_speed)
-{
-	uint8_t sig[64], pub_key33[33], pub_key65[65], msg[256];
-	size_t i;
-	int res;
-
-	for (i = 0; i < sizeof(msg); i++) {
-		msg[i] = i * 1103515245;
-	}
-
-	const ecdsa_curve *curve = &secp256k1;
-	clock_t t = clock();
-
-	memcpy(sig, fromhex("88dc0db6bc5efa762e75fbcc802af69b9f1fcdbdffce748d403f687f855556e610ee8035414099ac7d89cff88a3fa246d332dfa3c78d82c801394112dda039c2"), 64);
-	memcpy(pub_key33, fromhex("024054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a0974"), 33);
-	memcpy(pub_key65, fromhex("044054fd18aeb277aeedea01d3f3986ff4e5be18092a04339dcf4e524e2c0a09746c7083ed2097011b1223a17a644e81f59aa3de22dac119fd980b36a8ff29a244"), 65);
-
-	for (i = 0 ; i < 25; i++) {
-		res = ecdsa_verify(curve, pub_key65, sig, msg, sizeof(msg));
-		ck_assert_int_eq(res, 0);
-		res = ecdsa_verify(curve, pub_key33, sig, msg, sizeof(msg));
-		ck_assert_int_eq(res, 0);
-	}
-
-	memcpy(sig, fromhex("067040a2adb3d9deefeef95dae86f69671968a0b90ee72c2eab54369612fd524eb6756c5a1bb662f1175a5fa888763cddc3a07b8a045ef6ab358d8d5d1a9a745"), 64);
-	memcpy(pub_key33, fromhex("03ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d45719"), 33);
-	memcpy(pub_key65, fromhex("04ff45a5561a76be930358457d113f25fac790794ec70317eff3b97d7080d457196235193a15778062ddaa44aef7e6901b781763e52147f2504e268b2d572bf197"), 65);
-
-	for (i = 0 ; i < 25; i++) {
-		res = ecdsa_verify(curve, pub_key65, sig, msg, sizeof(msg));
-		ck_assert_int_eq(res, 0);
-		res = ecdsa_verify(curve, pub_key33, sig, msg, sizeof(msg));
-		ck_assert_int_eq(res, 0);
-	}
-
-	printf("SECP256k1 verifying speed: %0.2f sig/s\n", 100.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
-
-	curve = &nist256p1;
-	t = clock();
-
-	memcpy(sig, fromhex("7ed26b02c7e9664baaaa1e6ab64b3350c65ff685a7502863f357029c21c92a0dd7f2ae56d229262a8c7e97a0bfe1e7f9fd80c29df97355afa52ca07b507cecb9"), 64);
-	memcpy(pub_key33, fromhex("035662d692de519699000c7f5f04b2714e6a7f358c567fbcc001107ab86e4a7dea"), 33);
-	memcpy(pub_key65, fromhex("045662d692de519699000c7f5f04b2714e6a7f358c567fbcc001107ab86e4a7dea40523030e793724473d3cd60e436cbfc0a6e4ac5a5d0b340c5d637c6c870c00f"), 65);
-
-	for (i = 0 ; i < 25; i++) {
-		res = ecdsa_verify(curve, pub_key65, sig, msg, sizeof(msg));
-		//ck_assert_int_eq(res, 0);
-		res = ecdsa_verify(curve, pub_key33, sig, msg, sizeof(msg));
-		//ck_assert_int_eq(res, 0);
-	}
-
-	memcpy(sig, fromhex("6e13956f4227e66264dfcd92cf40b3b253622e96b1e1030392c0b06d9570f725dd1542164a481c0342ceb0b575f3516df536b7b90da57c381dfbd1aac6138c0b"), 64);
-	memcpy(pub_key33, fromhex("034b17f6b5c42b1be32c09f49056ee793e67f3ff42058123ce72fffc61d7236bc2"), 33);
-	memcpy(pub_key65, fromhex("044b17f6b5c42b1be32c09f49056ee793e67f3ff42058123ce72fffc61d7236bc29b6c29cbbbb2681d2b2e9c699cde8e591650d02bf4bb577ec53fd229442882e5"), 65);
-
-	for (i = 0 ; i < 25; i++) {
-		res = ecdsa_verify(curve, pub_key65, sig, msg, sizeof(msg));
-		//ck_assert_int_eq(res, 0);
-		res = ecdsa_verify(curve, pub_key33, sig, msg, sizeof(msg));
-		//ck_assert_int_eq(res, 0);
-	}
-
-	printf("NIST256p1 verifying speed: %0.2f sig/s\n", 100.0f / ((float)(clock() - t) / CLOCKS_PER_SEC));
 }
 END_TEST
 
@@ -3111,6 +3025,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_vector_1);
 	tcase_add_test(tc, test_bip32_vector_2);
 	tcase_add_test(tc, test_bip32_compare);
+	tcase_add_test(tc, test_bip32_optimized);
 	tcase_add_test(tc, test_bip32_cache_1);
 	tcase_add_test(tc, test_bip32_cache_2);
 	suite_add_tcase(s, tc);
@@ -3141,13 +3056,6 @@ Suite *test_suite(void)
 	tc = tcase_create("rfc6979");
 	tcase_add_test(tc, test_rfc6979);
 	suite_add_tcase(s, tc);
-
-	if (!RUNNING_ON_VALGRIND) {
-		tc = tcase_create("speed");
-		tcase_add_test(tc, test_sign_speed);
-		tcase_add_test(tc, test_verify_speed);
-		suite_add_tcase(s, tc);
-	}
 
 	tc = tcase_create("address");
 	tcase_add_test(tc, test_address);

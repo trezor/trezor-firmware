@@ -53,19 +53,19 @@ OBJS   = $(SRCS:.c=.o)
 TESTLIBS = $(shell pkg-config --libs check) -lrt -lpthread -lm
 TESTSSLLIBS = -lcrypto
 
-all: tests test-openssl test_speed tools libtrezor-crypto.so
+all: test_check test_openssl test_speed tools libtrezor-crypto.so
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-tests: tests.o $(OBJS)
-	$(CC) tests.o $(OBJS) $(TESTLIBS) -o tests
+test_check: test_check.o $(OBJS)
+	$(CC) test_check.o $(OBJS) $(TESTLIBS) -o test_check
 
 test_speed: test_speed.o $(OBJS)
 	$(CC) test_speed.o $(OBJS) -o test_speed
 
-test-openssl: test-openssl.o $(OBJS)
-	$(CC) test-openssl.o $(OBJS) $(TESTSSLLIBS) -o test-openssl
+test_openssl: test_openssl.o $(OBJS)
+	$(CC) test_openssl.o $(OBJS) $(TESTSSLLIBS) -o test_openssl
 
 libtrezor-crypto.so: $(SRCS)
 	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o libtrezor-crypto.so
@@ -83,5 +83,5 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 
 clean:
 	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o
-	rm -f tests test_speed test-openssl libtrezor-crypto.so
+	rm -f test_check test_speed test_openssl libtrezor-crypto.so
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce

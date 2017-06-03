@@ -2,9 +2,9 @@
 *.d
 *.exe
 *~
-test-openssl
+test_openssl
 test_speed
-tests
+test_check
 *.os
 *.so
 *.pyc
