@@ -3157,10 +3157,12 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_rfc6979);
 	suite_add_tcase(s, tc);
 
-	tc = tcase_create("speed");
-	tcase_add_test(tc, test_sign_speed);
-	tcase_add_test(tc, test_verify_speed);
-	suite_add_tcase(s, tc);
+	if (!RUNNING_ON_VALGRIND) {
+		tc = tcase_create("speed");
+		tcase_add_test(tc, test_sign_speed);
+		tcase_add_test(tc, test_verify_speed);
+		suite_add_tcase(s, tc);
+	}
 
 	tc = tcase_create("address");
 	tcase_add_test(tc, test_address);
