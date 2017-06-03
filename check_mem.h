@@ -1,6 +1,8 @@
 #ifndef CHECK_MEM_H
 #define CHECK_MEM_H
 
+#if CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION < 11
+
 #define _ck_assert_mem(X, Y, L, OP) do { \
   const char* _ck_x = (const char*)(void*)(X); \
   const char* _ck_y = (const char*)(void*)(Y); \
@@ -22,5 +24,7 @@
 } while (0)
 #define ck_assert_mem_eq(X, Y, L) _ck_assert_mem(X, Y, L, ==)
 #define ck_assert_mem_ne(X, Y, L) _ck_assert_mem(X, Y, L, !=)
+
+#endif
 
 #endif
