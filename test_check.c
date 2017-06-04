@@ -61,7 +61,7 @@
 
 /* Call after secret data is written, before first use */
 #define   MARK_SECRET_DATA(addr, len) VALGRIND_MAKE_MEM_UNDEFINED(addr, len)
-/* Call before secret data is freed */
+/* Call before secret data is freed or to mark non-secret data (public keys or signatures) */
 #define UNMARK_SECRET_DATA(addr, len) VALGRIND_MAKE_MEM_DEFINED  (addr, len)
 
 #define FROMHEX_MAXLEN 256
