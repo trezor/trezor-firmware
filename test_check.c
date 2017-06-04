@@ -2830,12 +2830,17 @@ START_TEST(test_ed25519_keccak)
 		for (size_t j = 0; j < 32; j++) {
 			private_key[j] = reversed_key[32 - j - 1];
 		}
+		MARK_SECRET_DATA(private_key, sizeof(private_key));
 
 		ed25519_publickey_keccak(private_key, public_key);
+		UNMARK_SECRET_DATA(public_key, sizeof(public_key));
 		ck_assert_mem_eq(public_key, fromhex(tests[i].public_key), 32);
 
 		ed25519_sign_keccak(fromhex(tests[i].data), tests[i].length, private_key, public_key, signature);
+		UNMARK_SECRET_DATA(signature, sizeof(signature));
 		ck_assert_mem_eq(signature, fromhex(tests[i].signature), 64);
+
+		UNMARK_SECRET_DATA(private_key, sizeof(private_key));
 	}
 }
 END_TEST
