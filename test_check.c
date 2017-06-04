@@ -2748,7 +2748,6 @@ START_TEST(test_ed25519_cosi) {
 		for (int j = 0; j < N; j++) {
 			ed25519_cosi_sign(msg, sizeof(msg), keys[j], nonces[j], R, pk, sigs[j]);
 		}
-		UNMARK_SECRET_DATA(keys, sizeof(keys));
 		UNMARK_SECRET_DATA(sigs, sizeof(sigs));
 
 		ed25519_cosi_combine_signatures(sig, R, sigs, N);
@@ -2756,6 +2755,8 @@ START_TEST(test_ed25519_cosi) {
 		/* check signature */
 		res = ed25519_sign_open(msg, sizeof(msg), pk, sig);
 		ck_assert_int_eq(res, 0);
+
+		UNMARK_SECRET_DATA(keys, sizeof(keys));
 	}
 }
 END_TEST
