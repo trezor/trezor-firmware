@@ -504,23 +504,25 @@ END_TEST
 START_TEST(test_base32_rfc4648)
 {
 	static const struct {
-		const char *input;
-		const char *output;
+		const char *decoded;
+		const char *encoded;
+		const char *encoded_lowercase;
 	} tests[] = {
-		{ "",       "" },
-		{ "f",      "MY" },
-		{ "fo",     "MZXQ" },
-		{ "foo",    "MZXW6" },
-		{ "foob",   "MZXW6YQ" },
-		{ "fooba",  "MZXW6YTB" },
-		{ "foobar", "MZXW6YTBOI" },
+		{ "",       "",           ""},
+		{ "f",      "MY",         "my" },
+		{ "fo",     "MZXQ",       "mzxq" },
+		{ "foo",    "MZXW6",      "mzxw6" },
+		{ "foob",   "MZXW6YQ",    "mzxw6yq" },
+		{ "fooba",  "MZXW6YTB",   "mzxw6ytb" },
+		{ "foobar", "MZXW6YTBOI", "mzxw6ytboi" },
 	};
 
 	char buffer[64];
 
 	for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-		const char *in  = tests[i].input;
-		const char *out = tests[i].output;
+		const char *in  = tests[i].decoded;
+		const char *out = tests[i].encoded;
+		const char *out_lowercase = tests[i].encoded_lowercase;
 
 		size_t inlen = strlen(in);
 		size_t outlen = strlen(out);
@@ -533,7 +535,11 @@ START_TEST(test_base32_rfc4648)
 
 		char *ret = (char *) base32_decode(out, outlen, (uint8_t *) buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648);
 		ck_assert(ret != NULL);
+		*ret = '\0';
+		ck_assert_str_eq(buffer, in);
 
+		ret = (char *) base32_decode(out_lowercase, outlen, (uint8_t *) buffer, sizeof(buffer), BASE32_ALPHABET_RFC4648);
+		ck_assert(ret != NULL);
 		*ret = '\0';
 		ck_assert_str_eq(buffer, in);
 	}
