@@ -14,7 +14,7 @@ These include:
 - ECDSA public key derivation
 - Base32 (RFC4648)
 - Base58 address representation
-- Ed25519 signing/verifying
+- Ed25519 signing/verifying (also SHA3 and Keccak variants)
 - ECDH using secp256k1, nist256p1 and Curve25519
 - HMAC-SHA256 and HMAC-SHA512
 - PBKDF2
