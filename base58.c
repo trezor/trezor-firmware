@@ -90,11 +90,14 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58)
 	switch (bytesleft) {
 		case 3:
 			*(binu++) = (outi[0] &   0xff0000) >> 16;
+			//-fallthrough
 		case 2:
 			*(binu++) = (outi[0] &     0xff00) >>  8;
+			//-fallthrough
 		case 1:
 			*(binu++) = (outi[0] &       0xff);
 			++j;
+			//-fallthrough
 		default:
 			break;
 	}

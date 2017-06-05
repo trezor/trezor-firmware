@@ -115,10 +115,12 @@ AES_RETURN aes_xi(encrypt)(const unsigned char *in, unsigned char *out, const ae
         round(fwd_rnd,  b1, b0, kp + 1 * N_COLS);
         round(fwd_rnd,  b0, b1, kp + 2 * N_COLS);
         kp += 2 * N_COLS;
+        //-fallthrough
     case 12 * 16:
         round(fwd_rnd,  b1, b0, kp + 1 * N_COLS);
         round(fwd_rnd,  b0, b1, kp + 2 * N_COLS);
         kp += 2 * N_COLS;
+        //-fallthrough
     case 10 * 16:
         round(fwd_rnd,  b1, b0, kp + 1 * N_COLS);
         round(fwd_rnd,  b0, b1, kp + 2 * N_COLS);
@@ -130,6 +132,7 @@ AES_RETURN aes_xi(encrypt)(const unsigned char *in, unsigned char *out, const ae
         round(fwd_rnd,  b0, b1, kp + 8 * N_COLS);
         round(fwd_rnd,  b1, b0, kp + 9 * N_COLS);
         round(fwd_lrnd, b0, b1, kp +10 * N_COLS);
+        //-fallthrough
     }
 
 #else
@@ -247,9 +250,11 @@ AES_RETURN aes_xi(decrypt)(const unsigned char *in, unsigned char *out, const ae
     case 14 * 16:
         round(inv_rnd,  b1, b0, rnd_key(-13));
         round(inv_rnd,  b0, b1, rnd_key(-12));
+        //-fallthrough
     case 12 * 16:
         round(inv_rnd,  b1, b0, rnd_key(-11));
         round(inv_rnd,  b0, b1, rnd_key(-10));
+        //-fallthrough
     case 10 * 16:
         round(inv_rnd,  b1, b0, rnd_key(-9));
         round(inv_rnd,  b0, b1, rnd_key(-8));
@@ -261,6 +266,7 @@ AES_RETURN aes_xi(decrypt)(const unsigned char *in, unsigned char *out, const ae
         round(inv_rnd,  b0, b1, rnd_key(-2));
         round(inv_rnd,  b1, b0, rnd_key(-1));
         round(inv_lrnd, b0, b1, rnd_key( 0));
+        //-fallthrough
     }
 
 #else
