@@ -12,6 +12,7 @@ These include:
 - ECDSA signing/verifying (supports secp256k1 and nist256p1 curves,
   uses RFC6979 for deterministic signatures)
 - ECDSA public key derivation
+- Base32 (RFC4648)
 - Base58 address representation
 - Ed25519 signing/verifying
 - ECDH using secp256k1, nist256p1 and Curve25519
