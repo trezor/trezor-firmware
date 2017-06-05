@@ -29,32 +29,25 @@
 
 #include "ecdsa.h"
 #include "rand.h"
+
+#include "nist256p1.h"
 #include "secp256k1.h"
 
-int main(int argc, char *argv[])
+void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 {
 	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
-	uint32_t i, j, msg_len;
 	SHA256_CTX sha256;
 	EC_GROUP *ecgroup;
-	int cnt = 0;
 
-	ecgroup = EC_GROUP_new_by_curve_name(NID_secp256k1);
+	ecgroup = EC_GROUP_new_by_curve_name(nid);
 
-	unsigned long max_iterations = -1;
-	if (argc == 2) {
-		sscanf(argv[1], "%lu", &max_iterations);
-	} else if (argc > 2) {
-		puts("Zero or one command-line arguments only, exiting....");
-	}
-	unsigned long iterations = 0;
-	while (argc == 1 || iterations < max_iterations) {
+	for (unsigned int iter = 0; iter < iterations; iter++) {
+
 		// random message len between 1 and 256
-		msg_len = (random32() & 0xFF) + 1;
+		int msg_len = (random32() & 0xFF) + 1;
 		// create random message
-		for (i = 0; i < msg_len; i++) {
-			msg[i] = random32() & 0xFF;
-		}
+		random_buffer(msg, msg_len);
+
 		// new ECDSA key
 		EC_KEY *eckey = EC_KEY_new();
 		EC_KEY_set_group(eckey, ecgroup);
@@ -66,39 +59,39 @@ int main(int argc, char *argv[])
 		i2d_ECPrivateKey(eckey, &p);
 
 		// size of the key is in buffer[8] and the key begins right after that
-		i = buffer[8];
+		int s = buffer[8];
 		// extract key data
-		if (i > 32) {
-			for (j = 0; j < 32; j++) {
-				priv_key[j] = buffer[j + i - 23];
+		if (s > 32) {
+			for (int j = 0; j < 32; j++) {
+				priv_key[j] = buffer[j + s - 23];
 			}
 		} else {
-			for (j = 0; j < 32 - i; j++) {
+			for (int j = 0; j < 32 - s; j++) {
 				priv_key[j] = 0;
 			}
-			for (j = 0; j < i; j++) {
-				priv_key[j + 32 - i] = buffer[j + 9];
+			for (int j = 0; j < s; j++) {
+				priv_key[j + 32 - s] = buffer[j + 9];
 			}
 		}
 
 		// use our ECDSA signer to sign the message with the key
-		if (ecdsa_sign(&secp256k1, priv_key, msg, msg_len, sig, NULL, NULL) != 0) {
+		if (ecdsa_sign(curve, priv_key, msg, msg_len, sig, NULL, NULL) != 0) {
 			printf("trezor-crypto signing failed\n");
-			break;
+			return;
 		}
 
 		// generate public key from private key
-		ecdsa_get_public_key33(&secp256k1, priv_key, pub_key33);
-		ecdsa_get_public_key65(&secp256k1, priv_key, pub_key65);
+		ecdsa_get_public_key33(curve, priv_key, pub_key33);
+		ecdsa_get_public_key65(curve, priv_key, pub_key65);
 
 		// use our ECDSA verifier to verify the message signature
-		if (ecdsa_verify(&secp256k1, pub_key65, sig, msg, msg_len) != 0) {
+		if (ecdsa_verify(curve, pub_key65, sig, msg, msg_len) != 0) {
 			printf("trezor-crypto verification failed (pub_key_len = 65)\n");
-			break;
+			return;
 		}
-		if (ecdsa_verify(&secp256k1, pub_key33, sig, msg, msg_len) != 0) {
+		if (ecdsa_verify(curve, pub_key33, sig, msg, msg_len) != 0) {
 			printf("trezor-crypto verification failed (pub_key_len = 33)\n");
-			break;
+			return;
 		}
 
 		// copy signature to the OpenSSL struct
@@ -114,14 +107,32 @@ int main(int argc, char *argv[])
 		// verify all went well, i.e. we can decrypt our signature with OpenSSL
 		if (ECDSA_do_verify(hash, 32, signature, eckey) != 1) {
 			printf("OpenSSL verification failed\n");
-			break;
+			return;
 		}
+
 		ECDSA_SIG_free(signature);
 		EC_KEY_free(eckey);
-		cnt++;
-		if ((cnt % 100) == 0) printf("Passed ... %d\n", cnt);
-            ++iterations;
+		if (((iter + 1) % 100) == 0) printf("Passed ... %d\n", iter + 1);
 	}
 	EC_GROUP_free(ecgroup);
+	printf("All OK\n");
+}
+
+int main(int argc, char *argv[])
+{
+	if (argc != 2) {
+		printf("Usage: test_openssl iterations\n");
+		return 1;
+	}
+
+	unsigned int iterations;
+	sscanf(argv[1], "%u", &iterations);
+
+	printf("Testing secp256k1:\n");
+	openssl_check(iterations, NID_secp256k1, &secp256k1);
+
+	printf("Testing nist256p1:\n");
+	openssl_check(iterations, NID_X9_62_prime256v1, &nist256p1);
+
 	return 0;
 }
