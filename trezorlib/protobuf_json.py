@@ -113,13 +113,13 @@ def pb2json(pb, useFieldNumber=False):
 _ftype2js = {
     FD.TYPE_DOUBLE: float,
     FD.TYPE_FLOAT: float,
-    FD.TYPE_INT64: long,
-    FD.TYPE_UINT64: long,
+    FD.TYPE_INT64: int,
+    FD.TYPE_UINT64: int,
     FD.TYPE_INT32: int,
     FD.TYPE_FIXED64: float,
     FD.TYPE_FIXED32: float,
     FD.TYPE_BOOL: bool,
-    FD.TYPE_STRING: unicode,
+    FD.TYPE_STRING: str,
     #FD.TYPE_MESSAGE: pb2json,              #handled specially
     FD.TYPE_BYTES: lambda x: x.encode('string_escape'),
     FD.TYPE_UINT32: int,
@@ -127,19 +127,19 @@ _ftype2js = {
     FD.TYPE_SFIXED32: float,
     FD.TYPE_SFIXED64: float,
     FD.TYPE_SINT32: int,
-    FD.TYPE_SINT64: long,
+    FD.TYPE_SINT64: int,
 }
 
 _js2ftype = {
     FD.TYPE_DOUBLE: float,
     FD.TYPE_FLOAT: float,
-    FD.TYPE_INT64: long,
-    FD.TYPE_UINT64: long,
+    FD.TYPE_INT64: int,
+    FD.TYPE_UINT64: int,
     FD.TYPE_INT32: int,
     FD.TYPE_FIXED64: float,
     FD.TYPE_FIXED32: float,
     FD.TYPE_BOOL: bool,
-    FD.TYPE_STRING: unicode,
+    FD.TYPE_STRING: str,
     # FD.TYPE_MESSAGE: json2pb,     #handled specially
     FD.TYPE_BYTES: lambda x: x.decode('string_escape'),
     FD.TYPE_UINT32: int,
@@ -147,7 +147,7 @@ _js2ftype = {
     FD.TYPE_SFIXED32: float,
     FD.TYPE_SFIXED64: float,
     FD.TYPE_SINT32: int,
-    FD.TYPE_SINT64: long,
+    FD.TYPE_SINT64: int,
 }
 
 # more monkey patching
