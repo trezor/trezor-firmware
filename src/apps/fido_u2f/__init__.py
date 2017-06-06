@@ -65,6 +65,7 @@ _U2F_KEY_PATH = const(0x80553246)
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
 _U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
+_BOGUS_APPID = b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
 # authentication control byte
 _AUTH_ENFORCE = const(0x03)     # enforce user presence and sign
@@ -402,8 +403,13 @@ class ConfirmContent(ui.Widget):
         from trezor import res
         from . import knownapps
 
-        app_id = bytes(self.app_id)
-        if app_id in knownapps.knownapps:
+        app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
+
+        if app_id == _BOGUS_APPID:
+            # TODO: display a warning dialog for bogus app ids
+            name = 'Another U2F device'
+            icon = ui.ICON_RESET  # TODO: warning icon
+        elif app_id in knownapps.knownapps:
             name = knownapps.knownapps[app_id]
             icon = res.load('apps/fido_u2f/res/u2f_%s.toif' % name.lower().replace(' ', '_'))
         else:
@@ -432,6 +438,7 @@ class ConfirmState:
         self.task = None
 
     def fork(self):
+        # TODO: kill task after timeout
         self.task = self.confirm()
         workflow.start(self.task)
 
