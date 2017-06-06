@@ -12,6 +12,13 @@ This is the core of the upcoming TREZOR v2.
 
 ## Build instructions for emulator
 
+Run the following to checkout the project:
+
+```sh
+git clone --recursive https://github.com/trezor/trezor-core.git
+cd trezor-core
+```
+
 ### Linux
 
 #### Debian/Ubuntu
