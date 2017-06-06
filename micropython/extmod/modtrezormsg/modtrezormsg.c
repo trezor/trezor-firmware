@@ -429,15 +429,10 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
         uint8_t recvbuf[64];
         ssize_t l = msg_recv(&iface, recvbuf, 64);
         if (l > 0) {
-            if (l == 8 && memcmp("PINGPING", recvbuf, 8) == 0) {
-                msg_send(iface, (const uint8_t *)"PONGPONG", 8);
-                return mp_const_none;
-            } else {
-                mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-                tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface);
-                tuple->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, recvbuf, l);
-                return MP_OBJ_FROM_PTR(tuple);
-            }
+            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(iface);
+            tuple->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, recvbuf, l);
+            return MP_OBJ_FROM_PTR(tuple);
         }
         if (timeout <= 0) {
             break;

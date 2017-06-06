@@ -57,6 +57,10 @@ ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
     }
     si_other = si;
     slen = sl;
+    if (r == 8 && memcmp("PINGPING", buf, 8) == 0) {
+        msg_send(0, (const uint8_t *)"PONGPONG", 8);
+        return 0;
+    }
     return r;
 }
 
