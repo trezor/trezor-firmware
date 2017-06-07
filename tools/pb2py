@@ -12,7 +12,12 @@ from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 def process_type(t, cls, msg_id, indexfile, is_upy):
     print("  * type %s" % t)
 
-    imports = ["import protobuf as p", ]
+    if is_upy:
+        imports = ["from micropython import const", ""]
+    else:
+        imports = []
+
+    imports.append("import protobuf as p")
 
     out = ["", "class %s(p.MessageType):" % t, ]
 
@@ -98,6 +103,9 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
 
 def process_enum(t, cls, is_upy):
     out = []
+
+    if is_upy:
+        out += ("from micropython import const", "")
 
     print("  * enum %s" % t)
 
