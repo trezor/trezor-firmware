@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import io
 
 resources = {}
 resources_size = 0
@@ -39,11 +40,21 @@ for name in os.listdir('apps/'):
         process_dir_rec(path)
 
 resfile = 'trezor/res/resources.py'
-with open(resfile, 'wt') as f:
-    f.write('resdata = {\n')
-    for k in sorted(resources.keys()):
-        f.write("    '%s': %s,\n" % (k, resources[k]))
-    f.write('}\n')
 
-print('written %s with %d entries (total %d bytes)' %
-      (resfile, len(resources), resources_size))
+bio = io.StringIO()
+bio.write('resdata = {\n')
+for k in sorted(resources.keys()):
+    bio.write("    '%s': %s,\n" % (k, resources[k]))
+bio.write('}\n')
+
+with open(resfile, 'r') as f:
+    stale = f.read()
+    fresh = bio.getvalue()
+
+if stale != fresh:
+    with open(resfile, 'wt') as f:
+        f.write(fresh)
+    print('written %s with %d entries (total %d bytes)' %
+          (resfile, len(resources), resources_size))
+else:
+    print('continuing with %s, no changes detected' % (resfile))
