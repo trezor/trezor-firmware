@@ -44,26 +44,32 @@ int touch_init(void) {
     return 0;
 }
 
+#define TOUCH_ADDRESS 56
+#define TOUCH_PACKET_SIZE 16
+
 uint32_t touch_read(void) {
-    static uint8_t data[16], old_data[16];
-    if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, 56 << 1, data, 16, 1)) {
+    static uint8_t data[TOUCH_PACKET_SIZE], old_data[TOUCH_PACKET_SIZE];
+    if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS << 1, data, TOUCH_PACKET_SIZE, 1)) {
         return 0; // read failure
     }
-    if (0 == memcmp(data, old_data, 16)) {
+    if (0 == memcmp(data, old_data, TOUCH_PACKET_SIZE)) {
         return 0; // no new event
     }
-    uint32_t r = 0;
-    if (old_data[2] == 0 && data[2] == 1) {
-        r = TOUCH_START | (data[4] << 8) | data[6]; // touch start
-    } else
-    if (old_data[2] == 1 && data[2] == 1) {
-        r = TOUCH_MOVE  | (data[4] << 8) | data[6]; // touch move
+    memcpy(old_data, data, TOUCH_PACKET_SIZE);
+
+    if (data[0] == 0xff && data[1] == 0x00) {
+        if (data[2] == 0x01 && data[3] == 0x00) {
+            return TOUCH_START | (data[4] << 8) | data[6]; // touch start
+        } else
+        if (data[2] == 0x01 && data[3] == 0x80) {
+            return TOUCH_MOVE  | (data[4] << 8) | data[6]; // touch move
+        } else
+        if (data[2] == 0x00 && data[3] == 0x40) {
+            return TOUCH_END   | (data[4] << 8) | data[6]; // touch end
+        }
     }
-    if (old_data[2] == 1 && data[2] == 0) {
-        r = TOUCH_END   | (data[4] << 8) | data[6]; // touch end
-    }
-    memcpy(old_data, data, 16);
-    return r;
+
+    return 0;
 }
 
 void I2C1_EV_IRQHandler(void) {
