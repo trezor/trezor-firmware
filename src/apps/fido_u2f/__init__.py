@@ -319,13 +319,13 @@ def handle_reports(iface: int):
             req = yield from read_cmd(iface)
             if req is None:
                 continue
-            resp = yield from dispatch_cmd(req)
+            resp = dispatch_cmd(req)
             send_cmd(resp, iface)
         except Exception as e:
             log.exception(__name__, e)
 
 
-async def dispatch_cmd(req: Cmd) -> Cmd:
+def dispatch_cmd(req: Cmd) -> Cmd:
     if req.cmd == _CMD_MSG:
         m = req.to_msg()
 
@@ -339,10 +339,10 @@ async def dispatch_cmd(req: Cmd) -> Cmd:
 
         if m.ins == _MSG_REGISTER:
             log.debug(__name__, '_MSG_REGISTER')
-            return await msg_register(m)
+            return msg_register(m)
         elif m.ins == _MSG_AUTHENTICATE:
             log.debug(__name__, '_MSG_AUTHENTICATE')
-            return await msg_authenticate(m)
+            return msg_authenticate(m)
         elif m.ins == _MSG_VERSION:
             log.debug(__name__, '_MSG_VERSION')
             return msg_version(m)
@@ -458,7 +458,7 @@ _state = None  # state for msg_register and msg_authenticate, None or ConfirmSta
 _lastreq = None  # last received register/authenticate request, None or Req
 
 
-async def msg_register(req: Msg) -> Cmd:
+def msg_register(req: Msg) -> Cmd:
     global _state
     global _lastreq
 
@@ -548,7 +548,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     return buf
 
 
-async def msg_authenticate(req: Msg) -> Cmd:
+def msg_authenticate(req: Msg) -> Cmd:
 
     global _state
     global _lastreq
