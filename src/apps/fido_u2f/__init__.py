@@ -429,16 +429,20 @@ class ConfirmContent(ui.Widget):
         ui.display.text_center(120, 185, self.app_name, ui.MONO, ui.WHITE, ui.BLACK)
 
 
+_CONFIRM_STATE_TIMEOUT_MS = const(10 * 1000)
+
+
 class ConfirmState:
 
     def __init__(self, action: int, app_id: bytes):
         self.action = action
         self.app_id = app_id
+        self.deadline_ms = None
         self.confirmed = None
         self.task = None
 
     def fork(self):
-        # TODO: kill task after timeout
+        self.deadline_ms = utime.ticks_ms() + _CONFIRM_STATE_TIMEOUT_MS
         self.task = self.confirm()
         workflow.start(self.task)
 
@@ -485,6 +489,9 @@ def msg_register(req: Msg) -> Cmd:
         _lastreq = req
 
     # wait for a button or continue
+    if _state is not None and utime.ticks_ms() > _state.deadline_ms:
+        _state.kill()
+        _state = None
     if _state is None:
         _state = ConfirmState(_CONFIRM_REGISTER, app_id)
         _state.fork()
@@ -596,6 +603,9 @@ def msg_authenticate(req: Msg) -> Cmd:
         _lastreq = req
 
     # wait for a button or continue
+    if _state is not None and utime.ticks_ms() > _state.deadline_ms:
+        _state.kill()
+        _state = None
     if _state is None:
         _state = ConfirmState(_CONFIRM_AUTHENTICATE, auth.appId)
         _state.fork()
