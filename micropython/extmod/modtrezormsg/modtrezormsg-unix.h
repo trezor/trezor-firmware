@@ -45,6 +45,8 @@ void msg_init(void)
     assert(b != -1);
 }
 
+ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len);
+
 ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 {
     struct sockaddr_in si;
