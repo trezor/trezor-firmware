@@ -1,3 +1,5 @@
+from micropython import const
+
 import trezor.main
 from trezor import msg
 from trezor import ui

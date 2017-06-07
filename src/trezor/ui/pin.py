@@ -2,7 +2,7 @@ from micropython import const
 from trezor import ui, res
 from trezor.crypto import random
 from trezor.ui import display
-from treozr.ui.button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
+from trezor.ui.button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
 
 
 def digit_area(i):

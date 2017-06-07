@@ -1,11 +1,11 @@
 def localtime(secs=None):
-    pass
+    return 0
 
 def ticks_ms():
-    pass
+    return 0
 
 def mktime():
-    pass
+    return 0
 
 def sleep(seconds):
     pass
@@ -17,16 +17,19 @@ def sleep_us(us):
     pass
 
 def ticks_ms():
-    pass
+    return 0
 
 def ticks_us():
-    pass
+    return 0
 
 def ticks_cpu():
-    pass
+    return 0
+
+def ticks_add(ticks_in, delta_in):
+    return 0
 
 def ticks_diff(old, new):
-    pass
+    return 0
 
 def time():
-    pass
+    return 0

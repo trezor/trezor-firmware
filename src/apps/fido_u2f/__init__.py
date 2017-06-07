@@ -1,3 +1,5 @@
+from micropython import const
+
 import uctypes
 import ustruct
 import utime

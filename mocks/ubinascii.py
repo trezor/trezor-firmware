@@ -1,11 +1,14 @@
 def hexlify(data, sep=None):
-    pass
+    return 0
 
 def unhexlify(data):
-    pass
+    return 0
 
 def a2b_base64(data):
-    pass
+    return 0
 
 def b2a_base64(data):
-    pass
+    return 0
+
+def crc32(data, crc=None):
+    return 0

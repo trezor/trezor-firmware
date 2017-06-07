@@ -1,5 +1,5 @@
 def const(c):
-    pass
+    return c
 
 def mem_info(verbose=None):
     pass

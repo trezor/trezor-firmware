@@ -47,6 +47,9 @@ test: ## run unit tests
 testpy: ## run selected unit tests from python-trezor
 	cd tests ; ./run_tests_python_trezor.sh
 
+pylint: ## run pylint on application sources
+	pylint --rcfile=pylint.rc -E $(shell find src -name *.py)
+
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all

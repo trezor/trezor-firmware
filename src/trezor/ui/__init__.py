@@ -1,3 +1,5 @@
+from micropython import const
+
 import sys
 import math
 import utime

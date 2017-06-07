@@ -1,0 +1,2 @@
+[MASTER]
+init-hook='sys.path.insert(0, "mocks")'
