@@ -66,3 +66,9 @@ CFLAGS += -DDEBUG_LINK=0
 CFLAGS += -DDEBUG_LOG=0
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_ETHEREUM=1
+
+bootloader.o: ../fastflash/bootloader.bin
+	$(OBJCOPY) -I binary -O elf32-littlearm -B arm \
+		--redefine-sym _binary_$(shell echo -n "$<" | tr -c "[:alnum:]" "_")_size=__bootloader_size__ \
+		--rename-section .data=.bootloader \
+		$< $@
