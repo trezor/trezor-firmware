@@ -34,10 +34,6 @@
 #include "serialno.h"
 #include "rng.h"
 
-#ifdef APPVER
-#error Bootloader cannot be used in app mode
-#endif
-
 void layoutFirmwareHash(const uint8_t *hash)
 {
 	char str[4][17];
@@ -116,6 +112,7 @@ void bootloader_loop(void)
 
 int check_firmware_sanity(void)
 {
+#ifndef APPVER
 	if (memcmp((const void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
 		return 0;
 	}
@@ -125,6 +122,7 @@ int check_firmware_sanity(void)
 	if (*((const uint32_t *)FLASH_META_CODELEN) > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware reports bigger size than flash size
 		return 0;
 	}
+#endif
 	return 1;
 }
 
@@ -138,13 +136,18 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 
 int main(void)
 {
+#ifndef APPVER
 	setup();
+#endif
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
+#ifndef APPVER
 	memory_protect();
 	oledInit();
+#endif
 
 	firmware_present = check_firmware_sanity();
 
+#ifndef APPVER
 	// at least one button is unpressed
 	uint16_t state = gpio_port_read(BTN_PORT);
 	int unpressed = ((state & BTN_PIN_YES) == BTN_PIN_YES || (state & BTN_PIN_NO) == BTN_PIN_NO);
@@ -164,6 +167,7 @@ int main(void)
 
 		load_app();
 	}
+#endif
 
 	bootloader_loop();
 
