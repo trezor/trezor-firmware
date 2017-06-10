@@ -15,7 +15,9 @@ script:
   - make
   - make -C firmware
   - make -C bootloader
+  - make -C fastflash
   - make -C demo
+  - make -C firmware clean && make -C firmware FASTFLASH=1
 
 notifications:
   webhooks:
