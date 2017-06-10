@@ -29,6 +29,7 @@
 #include "rng.h"
 #include "timer.h"
 #include "buttons.h"
+#include "fastflash.h"
 
 uint32_t __stack_chk_guard;
 
@@ -96,6 +97,14 @@ int main(void)
 #else
 	setupApp();
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
+#endif
+
+#if FASTFLASH
+	uint16_t state = gpio_port_read(BTN_PORT);
+	if ((state & BTN_PIN_NO) == 0) {
+		load_bootloader();
+		run_bootloader();
+	}
 #endif
 
 	timer_init();

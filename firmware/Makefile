@@ -1,4 +1,11 @@
+ifeq ($(FASTFLASH),1)
+APPVER = 2.0.0
+
+OBJS += fastflash.o
+OBJS += bootloader.o
+else
 APPVER = 1.0.0
+endif
 
 NAME  = trezor
 
@@ -58,6 +65,10 @@ OBJS += protob/storage.pb.o
 OBJS += protob/types.pb.o
 
 include ../Makefile.include
+
+ifeq ($(FASTFLASH),1)
+CFLAGS += -DFASTFLASH
+endif
 
 CFLAGS += -Wno-sequence-point
 CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
