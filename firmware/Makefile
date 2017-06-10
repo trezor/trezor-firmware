@@ -67,7 +67,9 @@ OBJS += protob/types.pb.o
 include ../Makefile.include
 
 ifeq ($(FASTFLASH),1)
-CFLAGS += -DFASTFLASH
+CFLAGS += -DFASTFLASH=1
+else
+CFLAGS += -DFASTFLASH=0
 endif
 
 CFLAGS += -Wno-sequence-point
