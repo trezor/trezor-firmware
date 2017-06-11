@@ -59,6 +59,9 @@ end
 def load_data_line(line)
   abort 'Line does not begin with colon' unless line.slice!(0) == ':'
 
+  line.strip!
+  line.chomp!(',')
+
   values = line.split(':').each(&:strip!)
   values.pop if values.last.empty?
 

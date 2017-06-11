@@ -49,6 +49,14 @@
 #define NEM_TRANSACTION_TYPE_MOSAIC_CREATION         0x4001
 #define NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE    0x4002
 
+#define NEM_SALT_SIZE sizeof(ed25519_public_key)
+
+#define NEM_ENCRYPTED_SIZE(size)         (((size) + AES_BLOCK_SIZE - 1) / AES_BLOCK_SIZE * AES_BLOCK_SIZE)
+#define NEM_ENCRYPTED_PAYLOAD_SIZE(size) (AES_BLOCK_SIZE + NEM_SALT_SIZE + NEM_ENCRYPTED_SIZE(size))
+
+#define NEM_DECRYPTED_SIZE(buffer, size)         ((size) - ((buffer)[(size) - 1]))
+#define NEM_DECRYPTED_PAYLOAD_SIZE(buffer, size) NEM_DECRYPTED_SIZE((buffer), (size) - AES_BLOCK_SIZE - NEM_SALT_SIZE)
+
 typedef struct {
 	ed25519_public_key public_key;
 	uint8_t *buffer;

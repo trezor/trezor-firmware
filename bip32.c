@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "aes.h"
 #include "address.h"
 #include "bignum.h"
 #include "hmac.h"
@@ -474,6 +475,65 @@ int hdnode_get_nem_shared_key(const HDNode *node, const ed25519_public_key peer_
 	}
 
 	keccak_256(shared_key, 32, shared_key);
+	return 1;
+}
+
+int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer) {
+	uint8_t last_block[AES_BLOCK_SIZE];
+	uint8_t remainder = size % AES_BLOCK_SIZE;
+
+	// Round down to last whole block
+	size -= remainder;
+	// Copy old last block
+	memcpy(last_block, &payload[size], remainder);
+	// Pad new last block with number of missing bytes
+	memset(&last_block[remainder], AES_BLOCK_SIZE - remainder, AES_BLOCK_SIZE - remainder);
+
+	uint8_t shared_key[SHA3_256_DIGEST_LENGTH];
+	if (!hdnode_get_nem_shared_key(node, public_key, salt, NULL, shared_key)) {
+		return 0;
+	}
+
+	aes_encrypt_ctx ctx;
+
+	int ret = aes_encrypt_key256(shared_key, &ctx);
+	MEMSET_BZERO(shared_key, sizeof(shared_key));
+
+	if (ret != EXIT_SUCCESS) {
+		return 0;
+	}
+
+	if (aes_cbc_encrypt(payload, buffer, size, iv, &ctx) != EXIT_SUCCESS) {
+		return 0;
+	}
+
+	if (aes_cbc_encrypt(last_block, &buffer[size], sizeof(last_block), iv, &ctx) != EXIT_SUCCESS) {
+		return 0;
+	}
+
+	return 1;
+}
+
+int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key, uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer) {
+	uint8_t shared_key[SHA3_256_DIGEST_LENGTH];
+
+	if (!hdnode_get_nem_shared_key(node, public_key, salt, NULL, shared_key)) {
+		return 0;
+	}
+
+	aes_decrypt_ctx ctx;
+
+	int ret = aes_decrypt_key256(shared_key, &ctx);
+	MEMSET_BZERO(shared_key, sizeof(shared_key));
+
+	if (ret != EXIT_SUCCESS) {
+		return 0;
+	}
+
+	if (aes_cbc_decrypt(payload, buffer, size, iv, &ctx) != EXIT_SUCCESS) {
+		return 0;
+	}
+
 	return 1;
 }
 #endif
