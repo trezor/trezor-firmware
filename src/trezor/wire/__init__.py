@@ -154,8 +154,8 @@ def _handle_unexpected(session_id, msg_type, data_len):
 
 
 def _write_report(report):
-    if __debug__:
-        log.info(__name__, 'write report %s', ubinascii.hexlify(report))
+    # if __debug__:
+    #     log.debug(__name__, 'write report %s', ubinascii.hexlify(report))
     msg.send(_interface, report)
 
 
@@ -163,8 +163,8 @@ def _dispatch_reports():
     while True:
         report, = yield loop.Select(_interface)
         report = memoryview(report)
-        if __debug__:
-            log.debug(__name__, 'read report %s', ubinascii.hexlify(report))
+        # if __debug__:
+        #     log.debug(__name__, 'read report %s', ubinascii.hexlify(report))
         sessions.dispatch(
             report, _session_open, _session_close, _session_unknown)
 
@@ -183,4 +183,4 @@ def _session_close(session_id):
 
 
 def _session_unknown(session_id, report_data):
-    pass
+    log.warning(__name__, 'report on unknown session %x', session_id)
