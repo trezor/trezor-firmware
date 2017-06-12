@@ -12,7 +12,7 @@ from apps import homescreen
 from apps import management
 from apps import wallet
 from apps import ethereum
-from apps import fido_u2f
+# from apps import fido_u2f
 
 # Initialize all applications
 if __debug__:
@@ -21,7 +21,7 @@ homescreen.boot()
 management.boot()
 wallet.boot()
 ethereum.boot()
-fido_u2f.boot()
+# fido_u2f.boot()
 
 # HACK: keep storage loaded at all times
 from apps.common import storage
@@ -99,10 +99,10 @@ msg.init_usb(msg.USB(
     manufacturer_str="SatoshiLabs",
     product_str="TREZOR",
     serial_number_str="000000000000000000000000"
-), (hid_u2f, vcp))
+), (hid_wire, vcp))
 
 # Initialize the wire codec pipeline
-# wire.setup(_IFACE_WIRE)
+wire.setup(_IFACE_WIRE)
 
 # Load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
