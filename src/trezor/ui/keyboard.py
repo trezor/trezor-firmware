@@ -53,6 +53,7 @@ class KeyboardMultiTap:
         self.pending_index = 0
 
         self.key_buttons = key_buttons()
+        self.sugg_button = Button((5, 5, 240 - 35, 30), '')
         self.bs_button = Button((240 - 35, 5, 30, 30),
                                 res.load('trezor/res/pin_close.toig'),
                                 normal_style=CLEAR_BUTTON,
@@ -97,6 +98,13 @@ class KeyboardMultiTap:
             self._update_suggestion()
             self._update_buttons()
             return
+        if self.sugg_button.touch(event, pos) == BTN_CLICKED and self.sugg_word is not None:
+            self.content = self.sugg_word
+            self.pending_button = None
+            self.pending_index = 0
+            self._update_suggestion()
+            self._update_buttons()
+            return
         for btn in self.key_buttons:
             if btn.touch(event, pos) == BTN_CLICKED:
                 if self.pending_button is btn:
@@ -108,8 +116,6 @@ class KeyboardMultiTap:
                 else:
                     self.content += btn.content[0]
                     self._update_suggestion()
-                    if self.pending_button:
-                        self._update_buttons()
                     self.pending_button = btn
                     self.pending_index = 0
                 return
@@ -130,14 +136,14 @@ class KeyboardMultiTap:
                 btn.disable()
 
     def __iter__(self):
+        timeout = loop.Sleep(1000 * 1000 * 1)
+        touch = loop.Select(loop.TOUCH)
+        wait = loop.Wait((touch, timeout))
         while True:
             self.render()
-            timeout = loop.Sleep(1000 * 1000 * 1)
-            touch = loop.Select(loop.TOUCH)
-            wait = loop.Wait((touch, timeout))
-            event = yield wait
+            result = yield wait
             if touch in wait.finished:
-                event, *pos = event
+                event, *pos = result
                 self.touch(event, pos)
             else:
                 self.pending_button = None
@@ -217,14 +223,14 @@ class KeyboardZooming:
                 break
 
     def __iter__(self):
+        timeout = loop.Sleep(1000 * 1000 * 1)
+        touch = loop.Select(loop.TOUCH)
+        wait = loop.Wait((touch, timeout))
         while True:
             self.render()
-            timeout = loop.Sleep(1000 * 1000 * 1)
-            touch = loop.Select(loop.TOUCH)
-            wait = loop.Wait((touch, timeout))
-            event = yield wait
+            result = yield wait
             if touch in wait.finished:
-                event, *pos = event
+                event, *pos = result
                 self.touch(event, pos)
             elif self.zoom_buttons:
                 self.zoom_buttons = None
