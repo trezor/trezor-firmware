@@ -106,7 +106,7 @@ INC += -I$(SRCDIR_MP)/lib/cmsis/inc
 INC += -I$(BUILD)
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -Os -ggdb
+CFLAGS += -Os -g3
 else
 CFLAGS += -Os -DNDEBUG
 endif
