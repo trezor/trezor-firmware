@@ -27,3 +27,11 @@ install:
 
 script:
     - python setup.py install
+
+notifications:
+  webhooks:
+    urls:
+      - http://ci-bot.satoshilabs.com:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always
