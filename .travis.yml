@@ -42,8 +42,7 @@ script:
 notifications:
   webhooks:
     urls:
-      - http://sway.gk2.sk:5000/travis
-      - http://163.172.132.178:5000/travis
+      - http://ci-bot.satoshilabs.com:5000/travis
     on_success: always
     on_failure: always
     on_start: always
