@@ -39,7 +39,7 @@ def icon(x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
     '''
 
 # extmod/modtrezorui/modtrezorui-display.h
-def print(text: str, fgcolor: int, bgcolor: int) -> None:
+def print(text: str) -> None:
     '''
     Renders text using 5x8 bitmap font (using special text mode)
     '''

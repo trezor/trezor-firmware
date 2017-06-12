@@ -1,6 +1,6 @@
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def deserialize(value: str) -> HDNode:
+def deserialize(value:str, version_public: int, version_private: int) -> HDNode:
     '''
     Construct a BIP0032 HD node from a base58-serialized value.
     '''

@@ -1,18 +1,18 @@
 
 # extmod/modtrezormsg/modtrezormsg.c
-def set_interfaces(ifaces: list/tuple) -> None:
+def init_usb(usb_info, usb_ifaces) -> None:
     '''
-    Configures USB interfaces with a list/tuple of (usage_page, ...)
-    '''
-
-# extmod/modtrezormsg/modtrezormsg.c
-def get_interfaces() -> tuple:
-    '''
-    Reads a tuple (of usage pages) of configured USB interfaces
+    Registers passed interfaces and initializes the USB stack
     '''
 
 # extmod/modtrezormsg/modtrezormsg.c
-def send(usage_page: int, message: bytes) -> int:
+def deinit_usb() -> None:
+    '''
+    Cleans up the USB stack
+    '''
+
+# extmod/modtrezormsg/modtrezormsg.c
+def send(iface: int, message: bytes) -> int:
     '''
     Sends message using USB HID (device) or UDP (emulator).
     '''
