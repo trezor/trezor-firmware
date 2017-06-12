@@ -16,6 +16,14 @@
 #define USB_MAX_STR_SIZE         62
 #define USB_MAX_STR_DESC_SIZE    (USB_MAX_STR_SIZE * 2 + 2)
 
+#if defined(USE_USB_FS)
+#define USB_PHY_ID  USB_PHY_FS_ID
+#elif defined(USE_USB_HS) && defined(USE_USB_HS_IN_FS)
+#define USB_PHY_ID  USB_PHY_HS_ID
+#else
+#error Unable to determine proper USB_PHY_ID to use
+#endif
+
 static usb_device_descriptor_t usb_dev_desc;
 
 // Config descriptor
@@ -86,7 +94,7 @@ int usb_init(const usb_dev_info_t *dev_info) {
     // Pointer to interface descriptor data
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
 
-    if (0 != USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_FS_ID)) {
+    if (0 != USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_ID)) {
         return 1;
     }
     if (0 != USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class)) {

@@ -698,19 +698,27 @@ void  USBD_LL_Delay(uint32_t Delay)
 *******************************************************************************/
 
 /**
-  * @brief  This function handles USB-On-The-Go FS global interrupt request.
+  * @brief  This function handles USB-On-The-Go FS/HS global interrupt request.
   * @param  None
   * @retval None
   */
+#if defined(USE_USB_FS)
 void OTG_FS_IRQHandler(void) {
     HAL_PCD_IRQHandler(&pcd_fs_handle);
 }
+#endif
+#if defined(USE_USB_HS)
+void OTG_HS_IRQHandler(void) {
+    HAL_PCD_IRQHandler(&pcd_hs_handle);
+}
+#endif
 
 /**
   * @brief  This function handles USB OTG Common FS/HS Wakeup functions.
   * @param  *pcd_handle for FS or HS
   * @retval None
   */
+#if defined(USE_USB_FS) || defined(USE_USB_HS)
 static void OTG_CMD_WKUP_Handler(PCD_HandleTypeDef *pcd_handle) {
     if (!(pcd_handle->Init.low_power_enable)) {
         return;
@@ -741,17 +749,28 @@ static void OTG_CMD_WKUP_Handler(PCD_HandleTypeDef *pcd_handle) {
     /* ungate PHY clock */
     __HAL_PCD_UNGATE_PHYCLOCK(pcd_handle);
 }
+#endif
 
 /**
-  * @brief  This function handles USB OTG FS Wakeup IRQ Handler.
+  * @brief  This function handles USB OTG FS/HS Wakeup IRQ Handler.
   * @param  None
   * @retval None
   */
+#if defined(USE_USB_FS)
 void OTG_FS_WKUP_IRQHandler(void) {
     OTG_CMD_WKUP_Handler(&pcd_fs_handle);
 
     /* Clear EXTI pending Bit*/
     __HAL_USB_OTG_FS_WAKEUP_EXTI_CLEAR_FLAG();
 }
+#endif
+#if defined(USE_USB_HS)
+void OTG_HS_WKUP_IRQHandler(void) {
+    OTG_CMD_WKUP_Handler(&pcd_hs_handle);
+
+    /* Clear EXTI pending Bit*/
+    __HAL_USB_HS_EXTI_CLEAR_FLAG();
+}
+#endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
