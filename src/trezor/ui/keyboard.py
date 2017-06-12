@@ -43,7 +43,7 @@ def compute_mask(text):
     return mask
 
 
-class KeyboardMultiTap:
+class KeyboardMultiTap(ui.Widget):
 
     def __init__(self, content=''):
         self.content = content
@@ -162,7 +162,7 @@ def zoom_buttons(keys, upper=False):
     return [Button(cell_area(i, n_x, n_y), key) for i, key in enumerate(keys)]
 
 
-class KeyboardZooming:
+class KeyboardZooming(ui.Widget):
 
     def __init__(self, content='', uppercase=True):
         self.content = content

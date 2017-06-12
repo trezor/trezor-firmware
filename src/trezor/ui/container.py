@@ -10,8 +10,8 @@ class Container(Widget):
         for child in self.children:
             child.render()
 
-    def send(self, event, pos):
+    def touch(self, event, pos):
         for child in self.children:
-            result = child.send(event, pos)
+            result = child.touch(event, pos)
             if result is not None:
                 return result

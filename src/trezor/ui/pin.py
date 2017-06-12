@@ -21,7 +21,7 @@ def generate_digits():
     return digits
 
 
-class PinMatrix():
+class PinMatrix(ui.Widget):
 
     def __init__(self, label, pin=''):
         self.label = label
@@ -67,10 +67,10 @@ class PinMatrix():
         # display.bar(0, 95, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
         # display.bar(0, 142, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
 
-    def send(self, event, pos):
-        if self.clear_button.send(event, pos) == BTN_CLICKED:
+    def touch(self, event, pos):
+        if self.clear_button.touch(event, pos) == BTN_CLICKED:
             self.pin = ''
         for btn in self.pin_buttons:
-            if btn.send(event, pos) == BTN_CLICKED:
+            if btn.touch(event, pos) == BTN_CLICKED:
                 if len(self.pin) < 9:
                     self.pin += btn.content

@@ -3,6 +3,7 @@ try:
 except ImportError:
     resdata = None
 
+
 def load(name):
     '''
     Loads resource of a given name as bytes.
@@ -11,6 +12,7 @@ def load(name):
         return resdata[name]
     with open(name, 'rb') as f:
         return f.read()
+
 
 def gettext(message):
     '''

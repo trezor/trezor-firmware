@@ -1,5 +1,6 @@
 
 class Hmac:
+
     def __init__(self, key, msg, digestmod):
         self.__digestmod = digestmod
         self.__inner = digestmod()

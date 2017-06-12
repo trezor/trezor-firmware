@@ -116,8 +116,14 @@ class Button(Widget):
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
-        display.bar_radius(ax, ay, aw, ah, style['border-color'], ui.BLACK, style['radius'])
-        display.bar_radius(ax + 1, ay + 1, aw - 2, ah - 2, style['bg-color'], style['border-color'], style['radius'])
+        display.bar_radius(ax, ay, aw, ah,
+                           style['border-color'],
+                           ui.BLACK,
+                           style['radius'])
+        display.bar_radius(ax + 1, ay + 1, aw - 2, ah - 2,
+                           style['bg-color'],
+                           style['border-color'],
+                           style['radius'])
 
         if isinstance(self.content, str):
             display.text_center(tx, ty, self.content,

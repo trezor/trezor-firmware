@@ -19,7 +19,7 @@ DEFAULT_LOADER_ACTIVE = {
 _LOADER_MSEC = const(1000)
 
 
-class Loader:
+class Loader(ui.Widget):
 
     def __init__(self, normal_style=None, active_style=None):
         self.start_ticks_ms = None

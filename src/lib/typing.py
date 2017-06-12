@@ -42,7 +42,9 @@ __names_obj = [
     'Text',
 ]
 
+
 class __dummy:
+
     def __getitem__(self, *args):
         return object
 
@@ -54,8 +56,10 @@ for __n in __names_get:
 for __n in __names_obj:
     globals()[__n] = object
 
+
 def TypeVar(*args):
     return object
+
 
 def NewType(*args):
     return lambda x: x

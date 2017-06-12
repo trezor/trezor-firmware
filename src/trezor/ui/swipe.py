@@ -13,7 +13,8 @@ SWIPE_LEFT = const(90)
 SWIPE_RIGHT = const(270)
 
 
-class Swipe():
+class Swipe(ui.Widget):
+
     def __init__(self, area=None, absolute=False):
         self.area = area or (0, 0, ui.SCREEN, ui.SCREEN)
         self.absolute = absolute
@@ -22,7 +23,7 @@ class Swipe():
         self.light_origin = None
         self.light_target = ui.BACKLIGHT_NONE
 
-    def send(self, event, pos):
+    def touch(self, event, pos):
 
         if not self.absolute:
             pos = rotate_coords(pos)
@@ -42,8 +43,8 @@ class Swipe():
                 velya = abs(pdy / td) if td > 0 else 1
                 ratio = int(pdxa / pdya * 100) if pdya > 0 else 100
                 if (velya >= _SWIPE_VELOCITY_THRESHOLD
-                    and pdya >= _SWIPE_DISTANCE_THRESHOLD
-                    and ratio <= _SWIPE_RATIO_THRESHOLD):
+                        and pdya >= _SWIPE_DISTANCE_THRESHOLD
+                        and ratio <= _SWIPE_RATIO_THRESHOLD):
                     light = ui.display.backlight()
                     if light > self.light_target:
                         light -= 5
@@ -68,16 +69,16 @@ class Swipe():
                 velxa = abs(pdx / td)
                 ratio = int(pdya / pdxa * 100) if pdxa > 0 else 100
                 if (velxa >= _SWIPE_VELOCITY_THRESHOLD
-                    and pdxa >= _SWIPE_DISTANCE_THRESHOLD
-                    and ratio <= _SWIPE_RATIO_THRESHOLD):
+                        and pdxa >= _SWIPE_DISTANCE_THRESHOLD
+                        and ratio <= _SWIPE_RATIO_THRESHOLD):
                     return SWIPE_RIGHT if pdx > 0 else SWIPE_LEFT
             else:
                 # Vertical direction
                 velya = abs(pdy / td)
                 ratio = int(pdxa / pdya * 100) if pdya > 0 else 100
                 if (velya >= _SWIPE_VELOCITY_THRESHOLD
-                    and pdya >= _SWIPE_DISTANCE_THRESHOLD
-                    and ratio <= _SWIPE_RATIO_THRESHOLD):
+                        and pdya >= _SWIPE_DISTANCE_THRESHOLD
+                        and ratio <= _SWIPE_RATIO_THRESHOLD):
                     if pdy < 0:
                         ui.display.backlight(self.light_origin)
                     return SWIPE_DOWN if pdy > 0 else SWIPE_UP
@@ -85,10 +86,3 @@ class Swipe():
             self.start_pos = None
             self.start_time = 0
             ui.display.backlight(self.light_origin)
-
-    def __iter__(self):
-        while True:
-            event, *pos = yield loop.Select(loop.TOUCH)
-            result = self.send(event, pos)
-            if result is not None:
-                return result

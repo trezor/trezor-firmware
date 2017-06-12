@@ -16,6 +16,7 @@
 # 58 character alphabet used
 _alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
+
 def encode(data: bytes) -> str:
     '''
     Convert bytes to base58 encoded string.
@@ -55,7 +56,7 @@ def decode(string: str) -> bytes:
         acc, mod = divmod(acc, 256)
         result.append(mod)
 
-    return bytes((b for b in reversed(result +[0] * (origlen - newlen))))
+    return bytes((b for b in reversed(result + [0] * (origlen - newlen))))
 
 
 def encode_check(data: bytes, digestfunc=None) -> str:
@@ -66,6 +67,7 @@ def encode_check(data: bytes, digestfunc=None) -> str:
         from .hashlib import sha256
         digestfunc = lambda x: sha256(sha256(x).digest()).digest()[:4]
     return encode(data + digestfunc(data))
+
 
 def decode_check(string: str, digestfunc=None) -> bytes:
     '''

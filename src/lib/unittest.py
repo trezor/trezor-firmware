@@ -47,7 +47,7 @@ class TestCase:
         else:
             if places is None:
                 places = 7
-            if round(abs(y-x), places) == 0:
+            if round(abs(y - x), places) == 0:
                 return
             if not msg:
                 msg = '%r != %r within %r places' % (x, y, places)
@@ -66,7 +66,7 @@ class TestCase:
         else:
             if places is None:
                 places = 7
-            if not (x == y) and round(abs(y-x), places) != 0:
+            if not (x == y) and round(abs(y - x), places) != 0:
                 return
             if not msg:
                 msg = '%r == %r within %r places' % (x, y, places)
