@@ -9,11 +9,14 @@ compiler:
 env:
   - GOAL=stm32
   - GOAL=unix
+  - GOAL=src
 
 matrix:
   exclude:
     - compiler: clang
       env: GOAL=stm32
+    - compiler: clang
+      env: GOAL=src
 
 addons:
   apt:
@@ -24,7 +27,7 @@ addons:
     - libnewlib-arm-none-eabi
 
 install:
-    - pip3 install ed25519 pyblake2
+    - pip3 install ed25519 pyblake2 flake8
     - pip2 install ecdsa mnemonic protobuf requests
 
 script:
@@ -38,7 +41,8 @@ script:
   - test "$GOAL" != "unix" || make build_unix TREZOR_NOUI=1
   - test "$GOAL" != "unix" || make test
   - test "$GOAL" != "unix" || make testpy
-  - test "$GOAL" != "unix" || make style
+
+  - test "$GOAL" != "src" || make style
 
 notifications:
   webhooks:
