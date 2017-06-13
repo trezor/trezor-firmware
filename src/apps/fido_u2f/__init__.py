@@ -86,8 +86,8 @@ _APDU_DATA = const(7)  # uint8_t data[1];    // Data field
 
 
 def frame_init() -> dict:
-    # uint32_t cid;	    // Channel identifier
-    # uint8_t cmd;	    // Command - b7 set
+    # uint32_t cid;     // Channel identifier
+    # uint8_t cmd;      // Command - b7 set
     # uint8_t bcnth;    // Message byte count - high part
     # uint8_t bcntl;    // Message byte count - low part
     # uint8_t data[HID_RPT_SIZE - 7];   // Data payload
@@ -100,8 +100,8 @@ def frame_init() -> dict:
 
 
 def frame_cont() -> dict:
-    # uint32_t cid;		// Channel identifier
-    # uint8_t seq;		// Sequence number - b7 cleared
+    # uint32_t cid;                     // Channel identifier
+    # uint8_t seq;                      // Sequence number - b7 cleared
     # uint8_t data[HID_RPT_SIZE - 5];   // Data payload
     return {
         'cid':   0 | uctypes.UINT32,
@@ -114,7 +114,7 @@ def resp_cmd_init() -> dict:
     # uint8_t nonce[8];         // Client application nonce
     # uint32_t cid;             // Channel identifier
     # uint8_t versionInterface; // Interface version
-    # uint8_t versionMajor;	    // Major version number
+    # uint8_t versionMajor;     // Major version number
     # uint8_t versionMinor;     // Minor version number
     # uint8_t versionBuild;     // Build version number
     # uint8_t capFlags;         // Capabilities flags
@@ -415,8 +415,7 @@ class ConfirmContent(ui.Widget):
             name = knownapps.knownapps[app_id]
             icon = res.load('apps/fido_u2f/res/u2f_%s.toif' % name.lower().replace(' ', '_'))
         else:
-            name = ubinascii.hexlify(app_id[:4]) + '...' + \
-                   ubinascii.hexlify(app_id[-4:])
+            name = '%s...%s' % (ubinascii.hexlify(app_id[:4]), ubinascii.hexlify(app_id[-4:]))
             icon = res.load('apps/fido_u2f/res/u2f_unknown.toif')
         self.app_name = name
         self.app_icon = icon

@@ -13,8 +13,8 @@ async def layout_ethereum_get_address(session_id, msg):
     node.derive_path(msg.address_n or ())
 
     seckey = node.private_key()
-    public_key = secp256k1.publickey(seckey, False) # uncompressed
-    address = sha3_256(public_key[1:]).digest(True)[12:] # Keccak
+    public_key = secp256k1.publickey(seckey, False)  # uncompressed
+    address = sha3_256(public_key[1:]).digest(True)[12:]  # Keccak
 
     if msg.show_display:
         await _show_address(session_id, address)

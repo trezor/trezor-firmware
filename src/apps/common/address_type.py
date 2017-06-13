@@ -26,6 +26,7 @@ def strip(address_type, raw_address):
     l = length(address_type)
     return raw_address[l:]
 
+
 def split(coin, raw_address):
     l = None
     for f in ['', '_p2sh', '_p2wpkh', '_p2wsh']:

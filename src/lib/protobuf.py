@@ -162,7 +162,7 @@ class MessageType(Type):
     @classmethod
     async def load(cls, source=None, target=None):
         if target is None:
-            target = build_protobuf_message(cls)
+            target = build_message(cls)
         if source is None:
             source = StreamReader()
         try:

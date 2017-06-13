@@ -59,25 +59,23 @@ def decode(string: str) -> bytes:
     return bytes((b for b in reversed(result + [0] * (origlen - newlen))))
 
 
-def encode_check(data: bytes, digestfunc=None) -> str:
+def _dsha256_32(data: bytes) -> bytes:
+    from .hashlib import sha256
+    return sha256(sha256(data).digest()).digest()[:4]
+
+
+def encode_check(data: bytes, digestfunc=_dsha256_32) -> str:
     '''
     Convert bytes to base58 encoded string, append checksum.
     '''
-    if digestfunc is None:
-        from .hashlib import sha256
-        digestfunc = lambda x: sha256(sha256(x).digest()).digest()[:4]
     return encode(data + digestfunc(data))
 
 
-def decode_check(string: str, digestfunc=None) -> bytes:
+def decode_check(string: str, digestfunc=_dsha256_32) -> bytes:
     '''
     Convert base58 encoded string to bytes and verify checksum.
     '''
     result = decode(string)
-
-    if digestfunc is None:
-        from .hashlib import sha256
-        digestfunc = lambda x: sha256(sha256(x).digest()).digest()[:4]
     digestlen = len(digestfunc(b''))
     result, check = result[:-digestlen], result[-digestlen:]
 

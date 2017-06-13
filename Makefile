@@ -50,6 +50,9 @@ testpy: ## run selected unit tests from python-trezor
 pylint: ## run pylint on application sources
 	pylint --rcfile=pylint.rc -E $(shell find src -name *.py)
 
+style: ## run code style check on application sources
+	flake8 --ignore=E221,E241,E402,E501,F401 $(shell find src -name *.py)
+
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all

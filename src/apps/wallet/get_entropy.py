@@ -7,7 +7,6 @@ async def layout_get_entropy(session_id, msg):
     from trezor.messages.Entropy import Entropy
     from trezor.crypto import random
 
-
     l = min(msg.size, 1024)
 
     await _show_entropy(session_id)

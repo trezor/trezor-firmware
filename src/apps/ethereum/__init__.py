@@ -9,5 +9,6 @@ def dispatch_EthereumGetAddress(*args, **kwargs):
     from .ethereum_get_address import layout_ethereum_get_address
     return layout_ethereum_get_address(*args, **kwargs)
 
+
 def boot():
     register(EthereumGetAddress, protobuf_workflow, dispatch_EthereumGetAddress)

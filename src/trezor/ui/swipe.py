@@ -42,9 +42,9 @@ class Swipe(ui.Widget):
                 # check if its vertical scroll up
                 velya = abs(pdy / td) if td > 0 else 1
                 ratio = int(pdxa / pdya * 100) if pdya > 0 else 100
-                if (velya >= _SWIPE_VELOCITY_THRESHOLD
-                        and pdya >= _SWIPE_DISTANCE_THRESHOLD
-                        and ratio <= _SWIPE_RATIO_THRESHOLD):
+                if (velya >= _SWIPE_VELOCITY_THRESHOLD and
+                        pdya >= _SWIPE_DISTANCE_THRESHOLD and
+                        ratio <= _SWIPE_RATIO_THRESHOLD):
                     light = ui.display.backlight()
                     if light > self.light_target:
                         light -= 5
@@ -68,17 +68,17 @@ class Swipe(ui.Widget):
                 # Horizontal direction
                 velxa = abs(pdx / td)
                 ratio = int(pdya / pdxa * 100) if pdxa > 0 else 100
-                if (velxa >= _SWIPE_VELOCITY_THRESHOLD
-                        and pdxa >= _SWIPE_DISTANCE_THRESHOLD
-                        and ratio <= _SWIPE_RATIO_THRESHOLD):
+                if (velxa >= _SWIPE_VELOCITY_THRESHOLD and
+                        pdxa >= _SWIPE_DISTANCE_THRESHOLD and
+                        ratio <= _SWIPE_RATIO_THRESHOLD):
                     return SWIPE_RIGHT if pdx > 0 else SWIPE_LEFT
             else:
                 # Vertical direction
                 velya = abs(pdy / td)
                 ratio = int(pdxa / pdya * 100) if pdya > 0 else 100
-                if (velya >= _SWIPE_VELOCITY_THRESHOLD
-                        and pdya >= _SWIPE_DISTANCE_THRESHOLD
-                        and ratio <= _SWIPE_RATIO_THRESHOLD):
+                if (velya >= _SWIPE_VELOCITY_THRESHOLD and
+                        pdya >= _SWIPE_DISTANCE_THRESHOLD and
+                        ratio <= _SWIPE_RATIO_THRESHOLD):
                     if pdy < 0:
                         ui.display.backlight(self.light_origin)
                     return SWIPE_DOWN if pdy > 0 else SWIPE_UP

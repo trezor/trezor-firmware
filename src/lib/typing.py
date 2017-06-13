@@ -48,6 +48,7 @@ class __dummy:
     def __getitem__(self, *args):
         return object
 
+
 __t = __dummy()
 
 for __n in __names_get:
@@ -63,5 +64,6 @@ def TypeVar(*args):
 
 def NewType(*args):
     return lambda x: x
+
 
 TYPE_CHECKING = False

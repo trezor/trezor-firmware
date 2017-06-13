@@ -2,6 +2,7 @@ from trezor.crypto.hashlib import sha256
 
 from apps.wallet.sign_tx.signing import HashWriter, write_varint
 
+
 def message_digest(coin, message):
 
     h = HashWriter(sha256)

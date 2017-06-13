@@ -53,7 +53,6 @@ def sign_challenge(seckey: bytes,
         from trezor.crypto.curve import ed25519
     from ..common.signverify import message_digest
 
-
     if sigtype == 'gpg':
         data = challenge_hidden
     elif sigtype == 'ssh':
@@ -63,8 +62,7 @@ def sign_challenge(seckey: bytes,
             data = challenge_hidden
     else:
         # sigtype is coin
-        challenge = sha256(challenge_hidden).digest() + \
-                    sha256(challenge_visual).digest()
+        challenge = sha256(challenge_hidden).digest() + sha256(challenge_visual).digest()
         data = message_digest(sigtype, challenge)
 
     if curve == 'secp256k1':

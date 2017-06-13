@@ -18,9 +18,9 @@ def rgbcolor(r: int, g: int, b: int) -> int:
 
 
 LIGHT_RED   = rgbcolor(0xFF, 0x00, 0x00)
-#RED E4572E
+# RED E4572E
 RED         = rgbcolor(0xE4, 0x57, 0x2E)
-#ACTIVE DARK RED A64022
+# ACTIVE DARK RED A64022
 ACTIVE_RED  = rgbcolor(0xA6, 0x40, 0x22)
 PINK        = rgbcolor(0xE9, 0x1E, 0x63)
 PURPLE      = rgbcolor(0x9C, 0x27, 0xB0)
@@ -31,9 +31,9 @@ LIGHT_BLUE  = rgbcolor(0x03, 0xA9, 0xF4)
 CYAN        = rgbcolor(0x00, 0xBC, 0xD4)
 TEAL        = rgbcolor(0x00, 0x96, 0x88)
 
-#GREEN 4CC148
+# GREEN 4CC148
 GREEN       = rgbcolor(0x4C, 0xC1, 0x48)
-#ACTIVE DARK GREEN 1A8C14
+# ACTIVE DARK GREEN 1A8C14
 ACTIVE_GREEN = rgbcolor(0x1A, 0x8C, 0x14)
 
 LIGHT_GREEN = rgbcolor(0x87, 0xCE, 0x26)
