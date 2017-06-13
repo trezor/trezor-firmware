@@ -47,9 +47,13 @@ for k in sorted(resources.keys()):
     bio.write("    '%s': %s,\n" % (k, resources[k]))
 bio.write('}\n')
 
-with open(resfile, 'r') as f:
-    stale = f.read()
-    fresh = bio.getvalue()
+try:
+    with open(resfile, 'r') as f:
+        stale = f.read()
+except:
+    stale = None
+
+fresh = bio.getvalue()
 
 if stale != fresh:
     with open(resfile, 'wt') as f:
