@@ -9,7 +9,7 @@ def process_rgb(w, h, data):
     pix = bytearray(w * h * 3)
     for i in range(w * h):
         c = (data[i * 2] << 8) + data[i * 2 + 1]
-        pix[i * 3    ] = (c & 0xF800) >> 8
+        pix[i * 3 + 0] = (c & 0xF800) >> 8
         pix[i * 3 + 1] = (c & 0x07C0) >> 3
         pix[i * 3 + 2] = (c & 0x001F) << 3
     return bytes(pix)
@@ -18,7 +18,7 @@ def process_rgb(w, h, data):
 def process_grayscale(w, h, data):
     pix = bytearray(w * h)
     for i in range(w * h // 2):
-        pix[i * 2    ] = data[i] & 0xF0
+        pix[i * 2 + 0] = data[i] & 0xF0
         pix[i * 2 + 1] = (data[i] & 0x0F) << 4
     return bytes(pix)
 
@@ -51,10 +51,10 @@ def process_image(ifn):
         return 4
     data = zlib.decompress(data, -10)
 
-
     if ifn.endswith('.toif'):
         if len(data) != w * h * 2:
-            print('Uncompressed data length mismatch (%d vs %d)' % (len(data), w * h * 2))
+            print('Uncompressed data length mismatch (%d vs %d)' %
+                  (len(data), w * h * 2))
             return 5
         pix = process_rgb(w, h, data)
         img = Image.frombuffer('RGB', (w, h), pix, 'raw', 'RGB', 0, 1)
@@ -63,7 +63,8 @@ def process_image(ifn):
 
     if ifn.endswith('.toig'):
         if len(data) != w * h // 2:
-            print('Uncompressed data length mismatch (%d vs %d)' % (len(data), w * h // 2))
+            print('Uncompressed data length mismatch (%d vs %d)' %
+                  (len(data), w * h // 2))
             return 6
         pix = process_grayscale(w, h, data)
         img = Image.frombuffer('L', (w, h), pix, 'raw', 'L', 0, 1)

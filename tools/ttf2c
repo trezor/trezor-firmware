@@ -6,6 +6,7 @@ MAX_GLYPH = ord('~')
 
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
+
 def process_face(name, style, size):
     print('Processing ... %s %s %s' % (name, style, size))
     face = freetype.Face('/usr/share/fonts/truetype/%s-%s.ttf' % (name, style))
@@ -24,20 +25,20 @@ def process_face(name, style, size):
             face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
             bitmap = face.glyph.bitmap
             metrics = face.glyph.metrics
-            assert(metrics.width // 64 == bitmap.width)
-            assert(metrics.height // 64 == bitmap.rows)
-            assert(metrics.horiAdvance % 64 == 0)
-            assert(metrics.horiBearingX % 64 == 0)
-            assert(metrics.horiBearingY % 64 == 0)
-            assert(bitmap.width == bitmap.pitch)
-            assert(len(bitmap.buffer) == bitmap.pitch * bitmap.rows)
+            assert metrics.width // 64 == bitmap.width
+            assert metrics.height // 64 == bitmap.rows
+            assert metrics.horiAdvance % 64 == 0
+            assert metrics.horiBearingX % 64 == 0
+            assert metrics.horiBearingY % 64 == 0
+            assert bitmap.width == bitmap.pitch
+            assert len(bitmap.buffer) == bitmap.pitch * bitmap.rows
             print('Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes)' % (c, bitmap.width, bitmap.rows, bitmap.num_grays, len(bitmap.buffer)))
             f.write('/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d' % (c, name, style, size, i, bitmap.width, bitmap.rows, metrics.horiAdvance // 64, metrics.horiBearingX // 64, metrics.horiBearingY // 64))
             buf = list(bitmap.buffer)
             if len(buf) > 0:
                 if len(buf) % 2 > 0:
                     buf.append(0)
-                buf = [ ( (a & 0xF0) | (b >> 4) ) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)] ]
+                buf = [((a & 0xF0) | (b >> 4)) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)]]
                 f.write(', ' + ', '.join(['%d' % x for x in buf]))
             f.write(' };\n')
         f.write('\nconst uint8_t * const Font_%s_%s_%d[%d + 1 - %d] = {\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))

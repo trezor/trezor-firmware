@@ -4,16 +4,20 @@ import struct
 import binascii
 
 # encode vendor name, add length byte and padding to multiple of 4
+
+
 def encode_vendor(vname):
     vbin = vname.encode('utf-8')
     vbin = struct.pack('<B', len(vbin)) + vbin
     vbin += b'\0' * (-len(vbin) & 3)
     return vbin
 
+
 def encode_pubkey(pubkey):
     if len(pubkey) != 64:
         raise Exception('Wrong public key length')
     return binascii.unhexlify(pubkey)
+
 
 def main():
     if len(sys.argv) < 7:
@@ -31,7 +35,8 @@ def main():
         return 2
 
     expiry = 0
-    vheader = b'TRZV' + struct.pack('<IIBBBB', 0, expiry, vmajor, vminor, m, len(keys))
+    vheader = b'TRZV' + \
+        struct.pack('<IIBBBB', 0, expiry, vmajor, vminor, m, len(keys))
     for k in keys:
         vheader += k
     vheader += encode_vendor(vname) + open(ifn, 'rb').read()

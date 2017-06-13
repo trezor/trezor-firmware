@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
+
 def pairwise(iterable):
     a = iter(iterable)
     return zip(a, a)
