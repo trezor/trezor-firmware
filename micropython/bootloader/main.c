@@ -14,7 +14,6 @@
 #include "mini_printf.h"
 
 #include "messages.h"
-#include "protobuf.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
@@ -90,6 +89,9 @@ void check_and_jump(void)
     }
 }
 
+#define USB_PACKET_SIZE   64
+#define USB_IFACE_NUM     0
+
 int usb_init_all(void) {
     static const usb_dev_info_t dev_info = {
         .vendor_id         = 0x1209,
@@ -101,7 +103,7 @@ int usb_init_all(void) {
         .configuration_str = (const uint8_t *)"",
         .interface_str     = (const uint8_t *)"",
     };
-    static uint8_t hid_rx_buffer[64];
+    static uint8_t hid_rx_buffer[USB_PACKET_SIZE];
     static const uint8_t hid_report_desc[] = {
         0x06, 0x00, 0xff,  // USAGE_PAGE (Vendor Defined)
         0x09, 0x01,        // USAGE (1)
@@ -121,7 +123,7 @@ int usb_init_all(void) {
         0xc0               // END_COLLECTION
     };
     static const usb_hid_info_t hid_info = {
-        .iface_num        = 0,
+        .iface_num        = USB_IFACE_NUM,
         .ep_in            = USB_EP_DIR_IN | 0x01,
         .ep_out           = USB_EP_DIR_OUT | 0x01,
         .subclass         = 0,
@@ -146,41 +148,6 @@ int usb_init_all(void) {
     return 0;
 }
 
-#define UPLOAD_CHUNK_SIZE (128*1024)
-#define USB_PACKET_SIZE   64
-#define USB_IFACE_NUM     0
-
-void process_upload_chunk(const uint8_t *buf, uint32_t len)
-{
-    // TODO: write to flash
-}
-
-uint32_t process_upload_message(uint32_t msg_size, const uint8_t *initbuf, uint32_t initlen)
-{
-    int remains = msg_size - initlen;
-    // TODO: process initbuf
-
-    if (initbuf[0] != 0x0A) {
-        return 0; // ERROR - payload field not found
-    }
-    uint32_t payload_len;
-    uint32_t p = pb_read_varint(initbuf, &payload_len);
-    process_upload_chunk(initbuf + p, initlen - p);
-
-    uint8_t buf[USB_PACKET_SIZE];
-    while (remains > 0) {
-        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
-        if (r <= 0) {
-            continue;
-        }
-        assert(r == USB_PACKET_SIZE);
-        process_upload_chunk(buf, 63);
-        remains -= USB_PACKET_SIZE;
-    }
-    display_printf("done\n");
-    return 0; // should return >0 if more data required
-}
-
 void mainloop(void)
 {
     if (0 != flash_init()) {
@@ -194,6 +161,7 @@ void mainloop(void)
     uint8_t buf[USB_PACKET_SIZE];
 
     for (;;) {
+        display_printf("Waiting for message ...\n");
         int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
         if (r <= 0) {
             continue;
@@ -201,35 +169,30 @@ void mainloop(void)
         assert(r == USB_PACKET_SIZE);
         uint16_t msg_id;
         uint32_t msg_size;
-        // invalid header
-        if (!pb_parse_header(buf, &msg_id, &msg_size)) {
+        if (!msg_parse_header(buf, &msg_id, &msg_size)) {
+            // invalid header -> discard
             continue;
         }
         switch (msg_id) {
             case 0: // Initialize
                 display_printf("received Initialize\n");
-                send_msg_Features(USB_IFACE_NUM, false);
+                process_msg_Initialize(USB_IFACE_NUM);
                 break;
             case 1: // Ping
                 display_printf("received Ping\n");
-                send_msg_Success(USB_IFACE_NUM);
+                process_msg_Ping(USB_IFACE_NUM);
                 break;
             case 6: // FirmwareErase
                 display_printf("received FirmwareErase\n");
-                send_msg_FirmwareRequest(USB_IFACE_NUM, 0, UPLOAD_CHUNK_SIZE);
+                process_msg_FirmwareErase(USB_IFACE_NUM);
                 break;
             case 7: // FirmwareUpload
                 display_printf("received FirmwareUpload\n");
-                uint32_t req_offset = process_upload_message(msg_size, buf + PB_HEADER_LEN, USB_PACKET_SIZE - PB_HEADER_LEN);
-                if (req_offset > 0) {
-                    send_msg_FirmwareRequest(USB_IFACE_NUM, req_offset, UPLOAD_CHUNK_SIZE);
-                } else {
-                    send_msg_Success(USB_IFACE_NUM);
-                }
+                process_msg_FirmwareUpload(USB_IFACE_NUM);
                 break;
             default:
                 display_printf("received unknown message\n");
-                send_msg_Failure(USB_IFACE_NUM);
+                process_msg_unknown(USB_IFACE_NUM);
                 break;
         }
     }
@@ -254,7 +217,12 @@ int main(void)
     display_printf("=================\n");
     display_printf("starting bootloader\n");
 
-    if (touch_read() != 0) {
+    uint32_t touched = 0;
+    for (int i = 0; i < 10; i++) {
+        touched |= touch_read();
+    }
+
+    if (touched != 0) {
         mainloop();
     } else {
         check_and_jump();

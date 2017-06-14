@@ -68,7 +68,11 @@ OBJ_BOOTLOADER += $(addprefix $(BUILD_FW)/, \
 	bootloader/header.o \
 	bootloader/main.o \
 	bootloader/messages.o \
-	bootloader/protobuf.o \
+	bootloader/nanopb/pb_common.o \
+	bootloader/nanopb/pb_decode.o \
+	bootloader/nanopb/pb_encode.o \
+	bootloader/protob/messages.pb.o \
+	bootloader/protob/types.pb.o \
 	extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.o \
 	extmod/modtrezorcrypto/trezor-crypto/blake2s.o \
 	extmod/modtrezorcrypto/trezor-crypto/sha2.o \
@@ -109,6 +113,8 @@ CROSS_COMPILE = arm-none-eabi-
 
 INC += -I.
 INC += -I$(SRCDIR_FW)/$(PROJECT)
+INC += -I$(SRCDIR_FW)/$(PROJECT)/nanopb
+INC += -I$(SRCDIR_FW)/$(PROJECT)/protob
 INC += -I$(SRCDIR_FW)/extmod/modtrezorui
 INC += -I$(SRCDIR_FW)/trezorhal
 INC += -I$(SRCDIR_FW)/trezorhal/hal
@@ -131,6 +137,7 @@ CFLAGS += -mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi
 CFLAGS += -DSTM32F405xx -DMCU_SERIES_F4
 CFLAGS += -DSTM32_HAL_H='<stm32f4xx_hal.h>'
 CFLAGS += -DTREZOR_STM32
+CFLAGS += -DPB_FIELD_16BIT=1
 
 LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
