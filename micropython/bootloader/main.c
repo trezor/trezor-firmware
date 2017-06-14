@@ -13,6 +13,7 @@
 #include "version.h"
 #include "mini_printf.h"
 
+#include "bootloader.h"
 #include "messages.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
@@ -89,9 +90,6 @@ void check_and_jump(void)
     }
 }
 
-#define USB_PACKET_SIZE   64
-#define USB_IFACE_NUM     0
-
 int usb_init_all(void) {
     static const usb_dev_info_t dev_info = {
         .vendor_id         = 0x1209,
@@ -161,7 +159,6 @@ void mainloop(void)
     uint8_t buf[USB_PACKET_SIZE];
 
     for (;;) {
-        display_printf("Waiting for message ...\n");
         int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
         if (r <= 0) {
             continue;

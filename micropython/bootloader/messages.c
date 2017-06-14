@@ -3,10 +3,9 @@
 
 #include "usb.h"
 #include "version.h"
+#include "bootloader.h"
 
 #include "messages.h"
-
-#define UPLOAD_CHUNK_SIZE (128*1024)
 
 // DECODE
 
@@ -22,44 +21,105 @@ bool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
 
 // ENCODE
 
-bool _encode_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
+typedef struct {
+    uint8_t iface_num;
+    uint8_t packet_index;
+    uint8_t packet_pos;
+    uint8_t buf[USB_PACKET_SIZE];
+} usb_write_state;
+
+static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
+{
+    usb_write_state *state = (usb_write_state *)(stream->state);
+
+    size_t written = 0;
+    // while we have data left
+    while (written < count) {
+        size_t remaining = count - written;
+        // if all remaining data fit into our packet
+        if (state->packet_pos + remaining <= USB_PACKET_SIZE) {
+            // append data from buf to state->buf
+            memcpy(state->buf + state->packet_pos, buf + written, remaining);
+            // advance position
+            state->packet_pos += remaining;
+            // and return
+            return true;
+        } else {
+            // append data that fits
+            memcpy(state->buf + state->packet_pos, buf + written, USB_PACKET_SIZE - state->packet_pos);
+            written += USB_PACKET_SIZE - state->packet_pos;
+            // send packet
+            usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 1);
+            // prepare new packet
+            state->packet_index++;
+            memset(state->buf, 0, USB_PACKET_SIZE);
+            state->buf[0] = '?';
+            state->packet_pos = 1;
+        }
+    }
+
+    return true;
+}
+
+static void _usb_flush(usb_write_state *state)
+{
+    // if packet is not filled up completely
+    if (state->packet_pos < USB_PACKET_SIZE) {
+        // pad it with zeroes
+        memset(state->buf + state->packet_pos, 0, USB_PACKET_SIZE - state->packet_pos);
+    }
+    // send packet
+    usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 1);
+}
+
+static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fields[], const void *msg)
+{
+    // determine message size by serializing it into a dummy stream
+    pb_ostream_t sizestream = {
+        .callback = NULL,
+        .state = NULL,
+        .max_size = SIZE_MAX,
+        .bytes_written = 0,
+        .errmsg = NULL};
+    if (!pb_encode(&sizestream, fields, msg)) {
+        return false;
+    }
+    const uint32_t msg_size = sizestream.bytes_written;
+
+    usb_write_state state = {
+        .iface_num = iface_num,
+        .packet_index = 0,
+        .packet_pos = MSG_HEADER_LEN,
+        .buf = {
+            '?', '#', '#',
+            (msg_id >> 8) & 0xFF, msg_id & 0xFF,
+            (msg_size >> 24) & 0xFF, (msg_size >> 16) & 0xFF, (msg_size >> 8) & 0xFF, msg_size & 0xFF,
+        },
+    };
+
+    pb_ostream_t stream = {
+        .callback = &_usb_write,
+        .state = &state,
+        .max_size = SIZE_MAX,
+        .bytes_written = 0,
+        .errmsg = NULL
+    };
+
+    if (!pb_encode(&stream, fields, msg)) {
+        return false;
+    }
+
+    _usb_flush(&state);
+
+    return true;
+}
+
+static bool _encode_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
 {
     if (!pb_encode_tag_for_field(stream, field)) {
         return false;
     }
     return pb_encode_string(stream, *arg, strlen(*arg));
-}
-
-bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fields[], const void *msg)
-{
-    // determine message size by serializing it into dummy stream
-    pb_ostream_t sizestream = {0, 0, SIZE_MAX, 0, 0};
-    if (!pb_encode(&sizestream, fields, msg)) {
-        return false;
-    }
-
-    // TODO: properly send
-
-    uint8_t buf[64];
-
-    buf[0] = '?';
-    buf[1] = '#';
-    buf[2] = '#';
-    buf[3] = (msg_id >> 8) & 0xFF;
-    buf[4] = msg_id & 0xFF;
-    buf[5] = (sizestream.bytes_written >> 24) & 0xFF;
-    buf[6] = (sizestream.bytes_written >> 16) & 0xFF;
-    buf[7] = (sizestream.bytes_written >> 8) & 0xFF;
-    buf[8] = sizestream.bytes_written & 0xFF;
-
-    pb_ostream_t stream = pb_ostream_from_buffer(buf + MSG_HEADER_LEN, sizeof(buf) - MSG_HEADER_LEN);
-    if (!pb_encode(&stream, fields, msg)) {
-        return false;
-    }
-
-    usb_hid_write_blocking(iface_num, buf, 64, 1);
-
-    return true;
 }
 
 #define MSG_INIT(TYPE) TYPE msg = TYPE##_init_default
