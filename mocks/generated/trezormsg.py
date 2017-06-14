@@ -14,7 +14,8 @@ class HID:
                  protocol: int = 0,
                  polling_interval: int = 1,
                  max_packet_len: int = 64) -> None:
-        pass
+        '''
+        '''
 
 # extmod/modtrezormsg/modtrezormsg.c
 class VCP:
@@ -28,7 +29,8 @@ class VCP:
                  ep_in: int,
                  ep_out: int,
                  ep_cmd: int) -> None:
-        pass
+        '''
+        '''
 
 # extmod/modtrezormsg/modtrezormsg.c
 class USB:
@@ -45,7 +47,8 @@ class USB:
                  serial_number_str: str,
                  configuration_str: str = '',
                  interface_str: str = '') -> None:
-        pass
+        '''
+        '''
 
 # extmod/modtrezormsg/modtrezormsg.c
 class Msg:
@@ -54,7 +57,8 @@ class Msg:
     '''
 
     def __init__(self) -> None:
-        pass
+        '''
+        '''
 
     def init_usb(self, usb_info: USB, usb_ifaces: List[Union[HID, VCP]]) -> None:
         '''

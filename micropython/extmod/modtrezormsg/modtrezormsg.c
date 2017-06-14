@@ -42,7 +42,8 @@ typedef struct _mp_obj_HID_t {
 ///              protocol: int = 0,
 ///              polling_interval: int = 1,
 ///              max_packet_len: int = 64) -> None:
-///     pass
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorMsg_HID_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
@@ -135,7 +136,8 @@ typedef struct _mp_obj_VCP_t {
 ///              ep_in: int,
 ///              ep_out: int,
 ///              ep_cmd: int) -> None:
-///     pass
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorMsg_VCP_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
@@ -237,7 +239,8 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 ///              serial_number_str: str,
 ///              configuration_str: str = '',
 ///              interface_str: str = '') -> None:
-///     pass
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
@@ -320,7 +323,8 @@ typedef struct _mp_obj_Msg_t {
 } mp_obj_Msg_t;
 
 /// def __init__(self) -> None:
-///     pass
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     msg_init();
