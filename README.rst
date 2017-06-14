@@ -27,6 +27,23 @@ On Linux you might need to run these commands first:
   sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
   sudo pip install setuptools
 
+Usage
+-----
+
+There is a command line tool called ``trezorctl`` which can perform various tasks. Use the following to learn about its commands:
+
+.. code::
+
+  trezorctl --help
+
+or to learn options of a particular command:
+
+.. code::
+
+  trezorctl commands --help
+
+To use the library in your application look at the following example.
+
 Example
 -------
 
