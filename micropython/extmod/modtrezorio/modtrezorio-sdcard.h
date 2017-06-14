@@ -13,10 +13,16 @@
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
+/// class SDCard:
+///     '''
+///     '''
 typedef struct _mp_obj_SDCard_t {
     mp_obj_base_t base;
 } mp_obj_SDCard_t;
 
+/// def __init__(self) -> None:
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorIO_SDCard_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_SDCard_t *o = m_new_obj(mp_obj_SDCard_t);
@@ -24,11 +30,20 @@ STATIC mp_obj_t mod_TrezorIO_SDCard_make_new(const mp_obj_type_t *type, size_t n
     return MP_OBJ_FROM_PTR(o);
 }
 
+/// def present(self) -> bool:
+///     '''
+///     Returns True if SD card is detected, False otherwise.
+///     '''
 STATIC mp_obj_t mod_TrezorIO_SDCard_present(mp_obj_t self) {
     return mp_obj_new_bool(sdcard_is_present());
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorIO_SDCard_present_obj, mod_TrezorIO_SDCard_present);
 
+/// def power(self, state: bool) -> bool:
+///     '''
+///     Power on or power off the SD card interface.
+///     Returns True if in case of success, False otherwise.
+///     '''
 STATIC mp_obj_t mod_TrezorIO_SDCard_power(mp_obj_t self, mp_obj_t state) {
     if (mp_obj_is_true(state)) {
         return mp_obj_new_bool(sdcard_power_on());
@@ -38,11 +53,20 @@ STATIC mp_obj_t mod_TrezorIO_SDCard_power(mp_obj_t self, mp_obj_t state) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorIO_SDCard_power_obj, mod_TrezorIO_SDCard_power);
 
+/// def capacity(self) -> int:
+///     '''
+///     Returns capacity of the SD card in bytes, or zero if not present.
+///     '''
 STATIC mp_obj_t mod_TrezorIO_SDCard_capacity(mp_obj_t self) {
     return mp_obj_new_int_from_ull(sdcard_get_capacity_in_bytes());
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorIO_SDCard_capacity_obj, mod_TrezorIO_SDCard_capacity);
 
+/// def read(self, block_num: int, buf: bytearray) -> bool:
+///     '''
+///     Reads block_num block from the SD card into buf.
+///     Returns True if in case of success, False otherwise.
+///     '''
 STATIC mp_obj_t mod_TrezorIO_SDCard_read(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
@@ -51,6 +75,11 @@ STATIC mp_obj_t mod_TrezorIO_SDCard_read(mp_obj_t self, mp_obj_t block_num, mp_o
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorIO_SDCard_read_obj, mod_TrezorIO_SDCard_read);
 
+/// def write(self, block_num: int, buf: bytes) -> bool:
+///     '''
+///     Writes block_num block from buf to the SD card.
+///     Returns True if in case of success, False otherwise.
+///     '''
 STATIC mp_obj_t mod_TrezorIO_SDCard_write(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
