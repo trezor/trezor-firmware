@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 from setuptools import setup
 
-install_requires = ['ecdsa>=0.9', 'protobuf>=2.6.1', 'mnemonic>=0.17', 'setuptools>=19.0']
+install_requires = [
+    'ecdsa>=0.9',
+    'protobuf>=2.6.1',
+    'mnemonic>=0.17',
+    'setuptools>=19.0',
+    'requests>=2.4.0',
+]
 
 import sys
 if '--disable-hidapi' in sys.argv:
