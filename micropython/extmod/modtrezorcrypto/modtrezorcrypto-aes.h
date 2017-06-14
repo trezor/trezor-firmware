@@ -37,7 +37,7 @@ enum {
 #define AESModeMask 0x3F
 #define AESDirMask  0xC0
 
-/// def __init__(self, mode: int, key: bytes, iv: bytes = ...) -> None:
+/// def __init__(self, mode: int, key: bytes, iv: bytes = None) -> None:
 ///     '''
 ///     Initialize AES context.
 ///     '''
