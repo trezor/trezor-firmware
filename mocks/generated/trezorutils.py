@@ -1,3 +1,4 @@
+from typing import *
 
 # extmod/modtrezorutils/modtrezorutils.c
 def memcpy(dst: bytearray, dst_ofs: int,

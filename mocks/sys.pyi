@@ -1,3 +1,5 @@
+from typing import *
+
 def exit(retval: Any = ...) -> None:
     raise SystemExit()
 

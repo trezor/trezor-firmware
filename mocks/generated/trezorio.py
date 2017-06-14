@@ -1,3 +1,4 @@
+from typing import *
 
 # extmod/modtrezorio/modtrezorio-sdcard.h
 class SDCard:

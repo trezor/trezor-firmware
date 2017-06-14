@@ -1,3 +1,4 @@
+from typing import *
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 class Config:

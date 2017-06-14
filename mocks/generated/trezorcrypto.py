@@ -1,3 +1,4 @@
+from typing import *
 
 # extmod/modtrezorcrypto/modtrezorcrypto-aes.h
 class AES:
@@ -5,7 +6,7 @@ class AES:
     AES context.
     '''
 
-    def __init__(self, mode: int, key: bytes, iv: bytes = ...) -> None:
+    def __init__(self, mode: int, key: bytes, iv: bytes = None) -> None:
         '''
         Initialize AES context.
         '''

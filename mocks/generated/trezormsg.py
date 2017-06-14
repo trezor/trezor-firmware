@@ -1,3 +1,4 @@
+from typing import *
 
 # extmod/modtrezormsg/modtrezormsg.c
 class HID:
