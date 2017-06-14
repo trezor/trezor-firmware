@@ -1,2 +1,5 @@
 [MASTER]
 init-hook='sys.path.insert(0, "mocks")'
+
+[MESSAGES CONTROL]
+disable=C0111,C0103,W0603
