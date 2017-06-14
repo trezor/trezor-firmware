@@ -1,1 +1,1 @@
-from TrezorIO import SDCard
+from trezorio import SDCard

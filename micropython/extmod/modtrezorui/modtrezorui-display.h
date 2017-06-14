@@ -21,7 +21,7 @@ typedef struct _mp_obj_Display_t {
 ///     '''
 ///     Initialize the display.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     display_init();
     mp_obj_Display_t *o = m_new_obj(mp_obj_Display_t);
@@ -33,27 +33,27 @@ STATIC mp_obj_t mod_TrezorUI_Display_make_new(const mp_obj_type_t *type, size_t 
 ///     '''
 ///     Clear display with black color.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_clear(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorui_Display_clear(mp_obj_t self) {
     display_clear();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorUI_Display_clear_obj, mod_TrezorUI_Display_clear);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_obj, mod_trezorui_Display_clear);
 
 /// def refresh(self) -> None:
 ///     '''
 ///     Refresh display (update screen).
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_refresh(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorui_Display_refresh(mp_obj_t self) {
     display_refresh();
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorUI_Display_refresh_obj, mod_TrezorUI_Display_refresh);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_refresh_obj, mod_trezorui_Display_refresh);
 
 /// def bar(self, x: int, y: int, w: int, h: int, color: int) -> None:
 ///     '''
 ///     Renders a bar at position (x,y = upper left corner) with width w and height h of color color.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_bar(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_bar(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_int_t w = mp_obj_get_int(args[3]);
@@ -62,14 +62,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_bar(size_t n_args, const mp_obj_t *args) {
     display_bar(x, y, w, h, c);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_bar_obj, 6, 6, mod_TrezorUI_Display_bar);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_obj, 6, 6, mod_trezorui_Display_bar);
 
 /// def bar_radius(self, x: int, y: int, w: int, h: int, fgcolor: int, bgcolor: int = None, radius: int = None) -> None:
 ///     '''
 ///     Renders a rounded bar at position (x,y = upper left corner) with width w and height h of color fgcolor.
 ///     Background is set to bgcolor and corners are drawn with radius radius.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_bar_radius(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_bar_radius(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_int_t w = mp_obj_get_int(args[3]);
@@ -80,14 +80,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_bar_radius(size_t n_args, const mp_obj_t *a
     display_bar_radius(x, y, w, h, c, b, r);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_bar_radius_obj, 8, 8, mod_TrezorUI_Display_bar_radius);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj, 8, 8, mod_trezorui_Display_bar_radius);
 
 /// def image(self, x: int, y: int, image: bytes) -> None:
 ///     '''
 ///     Renders an image at position (x,y).
 ///     The image needs to be in TREZOR Optimized Image Format (TOIF) - full-color mode.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_image(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t image;
@@ -105,14 +105,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_image(size_t n_args, const mp_obj_t *args) 
     display_image(x, y, w, h, data + 12, datalen);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_image_obj, 4, 4, mod_TrezorUI_Display_image);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_image_obj, 4, 4, mod_trezorui_Display_image);
 
 /// def icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders an icon at position (x,y), fgcolor is used as foreground color, bgcolor as background.
 ///     The image needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_icon(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t icon;
@@ -132,13 +132,13 @@ STATIC mp_obj_t mod_TrezorUI_Display_icon(size_t n_args, const mp_obj_t *args) {
     display_icon(x, y, w, h, data + 12, icon.len - 12, fgcolor, bgcolor);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_icon_obj, 6, 6, mod_TrezorUI_Display_icon);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_icon_obj, 6, 6, mod_trezorui_Display_icon);
 
 /// def print(self, text: str) -> None:
 ///     '''
 ///     Renders text using 5x8 bitmap font (using special text mode).
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_print(mp_obj_t self, mp_obj_t text) {
+STATIC mp_obj_t mod_trezorui_Display_print(mp_obj_t self, mp_obj_t text) {
     mp_buffer_info_t buf;
     mp_get_buffer_raise(text, &buf, MP_BUFFER_READ);
     if (buf.len > 0) {
@@ -146,14 +146,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_print(mp_obj_t self, mp_obj_t text) {
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUI_Display_print_obj, mod_TrezorUI_Display_print);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_print_obj, mod_trezorui_Display_print);
 
 /// def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders left-aligned text at position (x,y) where x is left position and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_text(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t text;
@@ -166,14 +166,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_text(size_t n_args, const mp_obj_t *args) {
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_text_obj, 7, 7, mod_TrezorUI_Display_text);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 7, mod_trezorui_Display_text);
 
 /// def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders text centered at position (x,y) where x is text center and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_text_center(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t text;
@@ -186,14 +186,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_text_center(size_t n_args, const mp_obj_t *
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_text_center_obj, 7, 7, mod_TrezorUI_Display_text_center);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj, 7, 7, mod_trezorui_Display_text_center);
 
 /// def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders right-aligned text at position (x,y) where x is right position and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_text_right(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t text;
@@ -206,13 +206,13 @@ STATIC mp_obj_t mod_TrezorUI_Display_text_right(size_t n_args, const mp_obj_t *a
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_text_right_obj, 7, 7, mod_TrezorUI_Display_text_right);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj, 7, 7, mod_trezorui_Display_text_right);
 
 /// def text_width(self, text: str, font: int) -> int:
 ///     '''
 ///     Returns a width of text in pixels. Font font is used for rendering.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
+STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
     mp_buffer_info_t txt;
     mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
     mp_int_t f = mp_obj_get_int(font);
@@ -222,14 +222,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_text_width(mp_obj_t self, mp_obj_t text, mp
     }
     return MP_OBJ_NEW_SMALL_INT(w);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorUI_Display_text_width_obj, mod_TrezorUI_Display_text_width);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_text_width_obj, mod_trezorui_Display_text_width);
 
 /// def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
 ///     '''
 ///     Renders data encoded as a QR code centered at position (x,y).
 ///     Scale determines a zoom factor.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_qrcode(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_qrcode(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_int_t scale = mp_obj_get_int(args[4]);
@@ -243,7 +243,7 @@ STATIC mp_obj_t mod_TrezorUI_Display_qrcode(size_t n_args, const mp_obj_t *args)
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_qrcode_obj, 5, 5, mod_TrezorUI_Display_qrcode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_qrcode_obj, 5, 5, mod_trezorui_Display_qrcode);
 
 /// def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
 ///     '''
@@ -252,7 +252,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_qrcode_obj, 5, 5
 ///     When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
 ///     Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_loader(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args, const mp_obj_t *args) {
     mp_int_t progress = mp_obj_get_int(args[1]);
     mp_int_t yoffset = mp_obj_get_int(args[2]);
     mp_int_t fgcolor = mp_obj_get_int(args[3]);
@@ -285,7 +285,7 @@ STATIC mp_obj_t mod_TrezorUI_Display_loader(size_t n_args, const mp_obj_t *args)
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_loader_obj, 5, 7, mod_TrezorUI_Display_loader);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_loader_obj, 5, 7, mod_trezorui_Display_loader);
 
 /// def orientation(self, degrees: int = None) -> int:
 ///     '''
@@ -293,7 +293,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_loader_obj, 5, 7
 ///     Everything needs to be redrawn again when this function is used.
 ///     Call without the degrees parameter to just perform the read of the value.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_orientation(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args, const mp_obj_t *args) {
     mp_int_t deg;
     if (n_args > 1) {
         deg = mp_obj_get_int(args[1]);
@@ -306,14 +306,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_orientation(size_t n_args, const mp_obj_t *
     }
     return MP_OBJ_NEW_SMALL_INT(deg);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_orientation_obj, 1, 2, mod_TrezorUI_Display_orientation);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj, 1, 2, mod_trezorui_Display_orientation);
 
 /// def backlight(self, val: int = None) -> int:
 ///     '''
 ///     Sets backlight intensity to the value specified in val.
 ///     Call without the val parameter to just perform the read of the value.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_backlight(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_backlight(size_t n_args, const mp_obj_t *args) {
     mp_int_t val;
     if (n_args > 1) {
         val = mp_obj_get_int(args[1]);
@@ -326,14 +326,14 @@ STATIC mp_obj_t mod_TrezorUI_Display_backlight(size_t n_args, const mp_obj_t *ar
     }
     return MP_OBJ_NEW_SMALL_INT(val);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_backlight_obj, 1, 2, mod_TrezorUI_Display_backlight);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj, 1, 2, mod_trezorui_Display_backlight);
 
 /// def offset(self, xy: Tuple[int, int] = None) -> Tuple[int, int]:
 ///     '''
 ///     Sets offset (x, y) for all subsequent drawing calls.
 ///     Call without the xy parameter to just perform the read of the value.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_offset(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorui_Display_offset(size_t n_args, const mp_obj_t *args) {
     int xy[2], *ret;
     if (n_args > 1) {
         size_t xy_cnt;
@@ -358,13 +358,13 @@ STATIC mp_obj_t mod_TrezorUI_Display_offset(size_t n_args, const mp_obj_t *args)
     return MP_OBJ_FROM_PTR(tuple);
 
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUI_Display_offset_obj, 1, 2, mod_TrezorUI_Display_offset);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_offset_obj, 1, 2, mod_trezorui_Display_offset);
 
 /// def save(self, filename: str) -> None:
 ///     '''
 ///     Saves current display contents to file filename.
 ///     '''
-STATIC mp_obj_t mod_TrezorUI_Display_save(mp_obj_t self, mp_obj_t filename) {
+STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t filename) {
     mp_buffer_info_t fn;
     mp_get_buffer_raise(filename, &fn, MP_BUFFER_READ);
     if (fn.len > 0) {
@@ -372,35 +372,35 @@ STATIC mp_obj_t mod_TrezorUI_Display_save(mp_obj_t self, mp_obj_t filename) {
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorUI_Display_save_obj, mod_TrezorUI_Display_save);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj, mod_trezorui_Display_save);
 
-STATIC const mp_rom_map_elem_t mod_TrezorUI_Display_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_TrezorUI_Display_clear_obj) },
-    { MP_ROM_QSTR(MP_QSTR_refresh), MP_ROM_PTR(&mod_TrezorUI_Display_refresh_obj) },
-    { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_TrezorUI_Display_bar_obj) },
-    { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_TrezorUI_Display_bar_radius_obj) },
-    { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_TrezorUI_Display_image_obj) },
-    { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_TrezorUI_Display_icon_obj) },
-    { MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&mod_TrezorUI_Display_print_obj) },
-    { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_TrezorUI_Display_text_obj) },
-    { MP_ROM_QSTR(MP_QSTR_text_center), MP_ROM_PTR(&mod_TrezorUI_Display_text_center_obj) },
-    { MP_ROM_QSTR(MP_QSTR_text_right), MP_ROM_PTR(&mod_TrezorUI_Display_text_right_obj) },
-    { MP_ROM_QSTR(MP_QSTR_text_width), MP_ROM_PTR(&mod_TrezorUI_Display_text_width_obj) },
-    { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_TrezorUI_Display_qrcode_obj) },
-    { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_TrezorUI_Display_loader_obj) },
-    { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_TrezorUI_Display_orientation_obj) },
-    { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_TrezorUI_Display_backlight_obj) },
-    { MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_TrezorUI_Display_offset_obj) },
-    { MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_TrezorUI_Display_save_obj) },
+STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_trezorui_Display_clear_obj) },
+    { MP_ROM_QSTR(MP_QSTR_refresh), MP_ROM_PTR(&mod_trezorui_Display_refresh_obj) },
+    { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_trezorui_Display_bar_obj) },
+    { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_trezorui_Display_bar_radius_obj) },
+    { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_trezorui_Display_image_obj) },
+    { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_trezorui_Display_icon_obj) },
+    { MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&mod_trezorui_Display_print_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_trezorui_Display_text_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text_center), MP_ROM_PTR(&mod_trezorui_Display_text_center_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text_right), MP_ROM_PTR(&mod_trezorui_Display_text_right_obj) },
+    { MP_ROM_QSTR(MP_QSTR_text_width), MP_ROM_PTR(&mod_trezorui_Display_text_width_obj) },
+    { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_trezorui_Display_qrcode_obj) },
+    { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_trezorui_Display_loader_obj) },
+    { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_trezorui_Display_orientation_obj) },
+    { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_trezorui_Display_backlight_obj) },
+    { MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_trezorui_Display_offset_obj) },
+    { MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj) },
     { MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_OBJ_NEW_SMALL_INT(FONT_MONO) },
     { MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_OBJ_NEW_SMALL_INT(FONT_NORMAL) },
     { MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_OBJ_NEW_SMALL_INT(FONT_BOLD) },
 };
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorUI_Display_locals_dict, mod_TrezorUI_Display_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict, mod_trezorui_Display_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorUI_Display_type = {
+STATIC const mp_obj_type_t mod_trezorui_Display_type = {
     { &mp_type_type },
     .name = MP_QSTR_Display,
-    .make_new = mod_TrezorUI_Display_make_new,
-    .locals_dict = (void*)&mod_TrezorUI_Display_locals_dict,
+    .make_new = mod_trezorui_Display_make_new,
+    .locals_dict = (void*)&mod_trezorui_Display_locals_dict,
 };

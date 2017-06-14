@@ -178,12 +178,12 @@ extern const struct _mp_obj_module_t mp_module_socket;
 extern const struct _mp_obj_module_t mp_module_ffi;
 extern const struct _mp_obj_module_t mp_module_jni;
 
-extern const struct _mp_obj_module_t mp_module_TrezorConfig;
-extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
-extern const struct _mp_obj_module_t mp_module_TrezorIO;
-extern const struct _mp_obj_module_t mp_module_TrezorMsg;
-extern const struct _mp_obj_module_t mp_module_TrezorUI;
-extern const struct _mp_obj_module_t mp_module_TrezorUtils;
+extern const struct _mp_obj_module_t mp_module_trezorconfig;
+extern const struct _mp_obj_module_t mp_module_trezorcrypto;
+extern const struct _mp_obj_module_t mp_module_trezorio;
+extern const struct _mp_obj_module_t mp_module_trezormsg;
+extern const struct _mp_obj_module_t mp_module_trezorui;
+extern const struct _mp_obj_module_t mp_module_trezorutils;
 
 #if MICROPY_PY_UOS_VFS
 #define MICROPY_PY_UOS_VFS_DEF { MP_ROM_QSTR(MP_QSTR_uos_vfs), MP_ROM_PTR(&mp_module_uos_vfs) },
@@ -222,32 +222,32 @@ extern const struct _mp_obj_module_t mp_module_TrezorUtils;
 #endif
 
 #if MICROPY_PY_TREZORCONFIG
-#define MICROPY_PY_TREZORCONFIG_DEF { MP_ROM_QSTR(MP_QSTR_TrezorConfig), MP_ROM_PTR(&mp_module_TrezorConfig) },
+#define MICROPY_PY_TREZORCONFIG_DEF { MP_ROM_QSTR(MP_QSTR_trezorconfig), MP_ROM_PTR(&mp_module_trezorconfig) },
 #else
 #define MICROPY_PY_TREZORCONFIG_DEF
 #endif
 #if MICROPY_PY_TREZORCRYPTO
-#define MICROPY_PY_TREZORCRYPTO_DEF { MP_ROM_QSTR(MP_QSTR_TrezorCrypto), MP_ROM_PTR(&mp_module_TrezorCrypto) },
+#define MICROPY_PY_TREZORCRYPTO_DEF { MP_ROM_QSTR(MP_QSTR_trezorcrypto), MP_ROM_PTR(&mp_module_trezorcrypto) },
 #else
 #define MICROPY_PY_TREZORCRYPTO_DEF
 #endif
 #if MICROPY_PY_TREZORIO
-#define MICROPY_PY_TREZORIO_DEF { MP_ROM_QSTR(MP_QSTR_TrezorIO), MP_ROM_PTR(&mp_module_TrezorIO) },
+#define MICROPY_PY_TREZORIO_DEF { MP_ROM_QSTR(MP_QSTR_trezorio), MP_ROM_PTR(&mp_module_trezorio) },
 #else
 #define MICROPY_PY_TREZORIO_DEF
 #endif
 #if MICROPY_PY_TREZORMSG
-#define MICROPY_PY_TREZORMSG_DEF { MP_ROM_QSTR(MP_QSTR_TrezorMsg), MP_ROM_PTR(&mp_module_TrezorMsg) },
+#define MICROPY_PY_TREZORMSG_DEF { MP_ROM_QSTR(MP_QSTR_trezormsg), MP_ROM_PTR(&mp_module_trezormsg) },
 #else
 #define MICROPY_PY_TREZORMSG_DEF
 #endif
 #if MICROPY_PY_TREZORUI
-#define MICROPY_PY_TREZORUI_DEF { MP_ROM_QSTR(MP_QSTR_TrezorUI), MP_ROM_PTR(&mp_module_TrezorUI) },
+#define MICROPY_PY_TREZORUI_DEF { MP_ROM_QSTR(MP_QSTR_trezorui), MP_ROM_PTR(&mp_module_trezorui) },
 #else
 #define MICROPY_PY_TREZORUI_DEF
 #endif
 #if MICROPY_PY_TREZORUTILS
-#define MICROPY_PY_TREZORUTILS_DEF { MP_ROM_QSTR(MP_QSTR_TrezorUtils), MP_ROM_PTR(&mp_module_TrezorUtils) },
+#define MICROPY_PY_TREZORUTILS_DEF { MP_ROM_QSTR(MP_QSTR_trezorutils), MP_ROM_PTR(&mp_module_trezorutils) },
 #else
 #define MICROPY_PY_TREZORUTILS_DEF
 #endif

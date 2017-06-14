@@ -44,7 +44,7 @@ typedef struct _mp_obj_HID_t {
 ///              max_packet_len: int = 64) -> None:
 ///     '''
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_HID_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezormsg_HID_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
         { MP_QSTR_iface_num,        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
@@ -111,14 +111,14 @@ STATIC mp_obj_t mod_TrezorMsg_HID_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC const mp_rom_map_elem_t mod_TrezorMsg_HID_locals_dict_table[] = {};
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_HID_locals_dict, mod_TrezorMsg_HID_locals_dict_table);
+STATIC const mp_rom_map_elem_t mod_trezormsg_HID_locals_dict_table[] = {};
+STATIC MP_DEFINE_CONST_DICT(mod_trezormsg_HID_locals_dict, mod_trezormsg_HID_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorMsg_HID_type = {
+STATIC const mp_obj_type_t mod_trezormsg_HID_type = {
     { &mp_type_type },
     .name = MP_QSTR_HID,
-    .make_new = mod_TrezorMsg_HID_make_new,
-    .locals_dict = (void*)&mod_TrezorMsg_HID_locals_dict,
+    .make_new = mod_trezormsg_HID_make_new,
+    .locals_dict = (void*)&mod_trezormsg_HID_locals_dict,
 };
 
 /// class VCP:
@@ -138,7 +138,7 @@ typedef struct _mp_obj_VCP_t {
 ///              ep_cmd: int) -> None:
 ///     '''
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_VCP_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezormsg_VCP_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
         { MP_QSTR_iface_num,        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
@@ -197,14 +197,14 @@ STATIC mp_obj_t mod_TrezorMsg_VCP_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC const mp_rom_map_elem_t mod_TrezorMsg_VCP_locals_dict_table[] = {};
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_VCP_locals_dict, mod_TrezorMsg_VCP_locals_dict_table);
+STATIC const mp_rom_map_elem_t mod_trezormsg_VCP_locals_dict_table[] = {};
+STATIC MP_DEFINE_CONST_DICT(mod_trezormsg_VCP_locals_dict, mod_trezormsg_VCP_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorMsg_VCP_type = {
+STATIC const mp_obj_type_t mod_trezormsg_VCP_type = {
     { &mp_type_type },
     .name = MP_QSTR_VCP,
-    .make_new = mod_TrezorMsg_VCP_make_new,
-    .locals_dict = (void*)&mod_TrezorMsg_VCP_locals_dict,
+    .make_new = mod_trezormsg_VCP_make_new,
+    .locals_dict = (void*)&mod_trezormsg_VCP_locals_dict,
 };
 
 /// class USB:
@@ -241,7 +241,7 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 ///              interface_str: str = '') -> None:
 ///     '''
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezormsg_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
         { MP_QSTR_vendor_id,         MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
@@ -302,14 +302,14 @@ STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC const mp_rom_map_elem_t mod_TrezorMsg_USB_locals_dict_table[] = {};
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_USB_locals_dict, mod_TrezorMsg_USB_locals_dict_table);
+STATIC const mp_rom_map_elem_t mod_trezormsg_USB_locals_dict_table[] = {};
+STATIC MP_DEFINE_CONST_DICT(mod_trezormsg_USB_locals_dict, mod_trezormsg_USB_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorMsg_USB_type = {
+STATIC const mp_obj_type_t mod_trezormsg_USB_type = {
     { &mp_type_type },
     .name = MP_QSTR_USB,
-    .make_new = mod_TrezorMsg_USB_make_new,
-    .locals_dict = (void*)&mod_TrezorMsg_USB_locals_dict,
+    .make_new = mod_trezormsg_USB_make_new,
+    .locals_dict = (void*)&mod_trezormsg_USB_locals_dict,
 };
 
 /// class Msg:
@@ -325,7 +325,7 @@ typedef struct _mp_obj_Msg_t {
 /// def __init__(self) -> None:
 ///     '''
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezormsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     msg_init();
     mp_obj_Msg_t *o = m_new_obj(mp_obj_Msg_t);
@@ -339,7 +339,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
 ///     '''
 ///     Registers passed interfaces and initializes the USB stack.
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_obj_t usb_ifaces) {
+STATIC mp_obj_t mod_trezormsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_obj_t usb_ifaces) {
 
     mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     if (o->usb_info != mp_const_none || o->usb_ifaces != mp_const_none) {
@@ -351,7 +351,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
     mp_obj_get_array(usb_ifaces, &iface_cnt, &iface_objs);
 
     // Initialize the USB stack
-    if (MP_OBJ_IS_TYPE(usb_info, &mod_TrezorMsg_USB_type)) {
+    if (MP_OBJ_IS_TYPE(usb_info, &mod_trezormsg_USB_type)) {
         mp_obj_USB_t *usb = MP_OBJ_TO_PTR(usb_info);
         if (usb_init(&usb->info) != 0) {
             mp_raise_msg(&mp_type_RuntimeError, "failed to initialize USB");
@@ -366,13 +366,13 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
     for (size_t i = 0; i < iface_cnt; i++) {
         mp_obj_t iface = iface_objs[i];
 
-        if (MP_OBJ_IS_TYPE(iface, &mod_TrezorMsg_HID_type)) {
+        if (MP_OBJ_IS_TYPE(iface, &mod_trezormsg_HID_type)) {
             mp_obj_HID_t *hid = MP_OBJ_TO_PTR(iface);
             if (usb_hid_add(&hid->info) != 0) {
                 usb_deinit();
                 mp_raise_msg(&mp_type_RuntimeError, "failed to add HID interface");
             }
-        } else if (MP_OBJ_IS_TYPE(iface, &mod_TrezorMsg_VCP_type)) {
+        } else if (MP_OBJ_IS_TYPE(iface, &mod_trezormsg_VCP_type)) {
             mp_obj_VCP_t *vcp = MP_OBJ_TO_PTR(iface);
             if (usb_vcp_add(&vcp->info) != 0) {
                 usb_deinit();
@@ -400,13 +400,13 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_init_usb_obj, mod_TrezorMsg_Msg_init_usb);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezormsg_Msg_init_usb_obj, mod_trezormsg_Msg_init_usb);
 
 /// def deinit_usb(self) -> None:
 ///     '''
 ///     Cleans up the USB stack
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_deinit_usb(mp_obj_t self) {
+STATIC mp_obj_t mod_trezormsg_Msg_deinit_usb(mp_obj_t self) {
 
     usb_stop();
     usb_deinit();
@@ -417,13 +417,13 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_deinit_usb(mp_obj_t self) {
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg_deinit_usb_obj, mod_TrezorMsg_Msg_deinit_usb);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezormsg_Msg_deinit_usb_obj, mod_trezormsg_Msg_deinit_usb);
 
 /// def send(self, iface: int, message: bytes) -> int:
 ///     '''
 ///     Sends message using USB HID (device) or UDP (emulator).
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t message) {
+STATIC mp_obj_t mod_trezormsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t message) {
     // mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     uint8_t i = mp_obj_get_int(iface);
     mp_buffer_info_t msg;
@@ -431,7 +431,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_send(mp_obj_t self, mp_obj_t iface, mp_obj_t m
     ssize_t r = msg_send(i, msg.buf, msg.len);
     return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_send);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezormsg_Msg_send_obj, mod_trezormsg_Msg_send);
 
 #define TICK_RESOLUTION 1000
 #define TOUCH_IFACE 255
@@ -442,7 +442,7 @@ extern uint32_t touch_read(void); // defined in HAL
 ///     Polls the event queue and returns the event object.
 ///     Function returns None if timeout specified in microseconds is reached.
 ///     '''
-STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
+STATIC mp_obj_t mod_trezormsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
     // mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     int timeout = mp_obj_get_int(timeout_us);
     if (timeout < 0) {
@@ -475,9 +475,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_select(mp_obj_t self, mp_obj_t timeout_us) {
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorMsg_Msg_select_obj, mod_TrezorMsg_Msg_select);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezormsg_Msg_select_obj, mod_trezormsg_Msg_select);
 
-STATIC mp_obj_t mod_TrezorMsg_Msg___del__(mp_obj_t self) {
+STATIC mp_obj_t mod_trezormsg_Msg___del__(mp_obj_t self) {
     mp_obj_Msg_t *o = MP_OBJ_TO_PTR(self);
     if (o->usb_info != mp_const_none || o->usb_ifaces != mp_const_none) {
         usb_stop();
@@ -485,36 +485,36 @@ STATIC mp_obj_t mod_TrezorMsg_Msg___del__(mp_obj_t self) {
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg___del___obj, mod_TrezorMsg_Msg___del__);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezormsg_Msg___del___obj, mod_trezormsg_Msg___del__);
 
-STATIC const mp_rom_map_elem_t mod_TrezorMsg_Msg_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorMsg_Msg___del___obj) },
-    { MP_ROM_QSTR(MP_QSTR_init_usb), MP_ROM_PTR(&mod_TrezorMsg_Msg_init_usb_obj) },
-    { MP_ROM_QSTR(MP_QSTR_deinit_usb), MP_ROM_PTR(&mod_TrezorMsg_Msg_deinit_usb_obj) },
-    { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_TrezorMsg_Msg_send_obj) },
-    { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_TrezorMsg_Msg_select_obj) },
+STATIC const mp_rom_map_elem_t mod_trezormsg_Msg_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezormsg_Msg___del___obj) },
+    { MP_ROM_QSTR(MP_QSTR_init_usb), MP_ROM_PTR(&mod_trezormsg_Msg_init_usb_obj) },
+    { MP_ROM_QSTR(MP_QSTR_deinit_usb), MP_ROM_PTR(&mod_trezormsg_Msg_deinit_usb_obj) },
+    { MP_ROM_QSTR(MP_QSTR_send), MP_ROM_PTR(&mod_trezormsg_Msg_send_obj) },
+    { MP_ROM_QSTR(MP_QSTR_select), MP_ROM_PTR(&mod_trezormsg_Msg_select_obj) },
 };
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorMsg_Msg_locals_dict, mod_TrezorMsg_Msg_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezormsg_Msg_locals_dict, mod_trezormsg_Msg_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorMsg_Msg_type = {
+STATIC const mp_obj_type_t mod_trezormsg_Msg_type = {
     { &mp_type_type },
     .name = MP_QSTR_Msg,
-    .make_new = mod_TrezorMsg_Msg_make_new,
-    .locals_dict = (void*)&mod_TrezorMsg_Msg_locals_dict,
+    .make_new = mod_trezormsg_Msg_make_new,
+    .locals_dict = (void*)&mod_trezormsg_Msg_locals_dict,
 };
 
-STATIC const mp_rom_map_elem_t mp_module_TrezorMsg_globals_table[] = {
-    { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_TrezorMsg) },
-    { MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_TrezorMsg_USB_type) },
-    { MP_ROM_QSTR(MP_QSTR_HID), MP_ROM_PTR(&mod_TrezorMsg_HID_type) },
-    { MP_ROM_QSTR(MP_QSTR_VCP), MP_ROM_PTR(&mod_TrezorMsg_VCP_type) },
-    { MP_ROM_QSTR(MP_QSTR_Msg), MP_ROM_PTR(&mod_TrezorMsg_Msg_type) },
+STATIC const mp_rom_map_elem_t mp_module_trezormsg_globals_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezormsg) },
+    { MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezormsg_USB_type) },
+    { MP_ROM_QSTR(MP_QSTR_HID), MP_ROM_PTR(&mod_trezormsg_HID_type) },
+    { MP_ROM_QSTR(MP_QSTR_VCP), MP_ROM_PTR(&mod_trezormsg_VCP_type) },
+    { MP_ROM_QSTR(MP_QSTR_Msg), MP_ROM_PTR(&mod_trezormsg_Msg_type) },
 };
-STATIC MP_DEFINE_CONST_DICT(mp_module_TrezorMsg_globals, mp_module_TrezorMsg_globals_table);
+STATIC MP_DEFINE_CONST_DICT(mp_module_trezormsg_globals, mp_module_trezormsg_globals_table);
 
-const mp_obj_module_t mp_module_TrezorMsg = {
+const mp_obj_module_t mp_module_trezormsg = {
     .base = { &mp_type_module },
-    .globals = (mp_obj_dict_t*)&mp_module_TrezorMsg_globals,
+    .globals = (mp_obj_dict_t*)&mp_module_trezormsg_globals,
 };
 
 #endif // MICROPY_PY_TREZORMSG

@@ -1,4 +1,4 @@
-from TrezorCrypto import AES
+from trezorcrypto import AES
 
 
 def AES_ECB_Encrypt(key: bytes) -> AES:

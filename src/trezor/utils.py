@@ -1,8 +1,7 @@
 import sys
 import gc
 
-from TrezorUtils import halt, memcpy
-from trezor import log
+from trezorutils import halt, memcpy
 
 type_gen = type((lambda: (yield))())
 type_genfunc = type((lambda: (yield)))

@@ -22,13 +22,13 @@ typedef struct _mp_obj_Pbkdf2_t {
     int prf;
 } mp_obj_Pbkdf2_t;
 
-STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
+STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(self, prf: str, password: bytes, salt: bytes, iterations: int = None) -> None:
 ///     '''
 ///     Create a PBKDF2 context.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 3, 4, false);
     mp_obj_Pbkdf2_t *o = m_new_obj(mp_obj_Pbkdf2_t);
     o->base.type = type;
@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
     }
     // constructor called with iterations as fourth parameter
     if (n_args > 3) {
-        mod_TrezorCrypto_Pbkdf2_update(MP_OBJ_FROM_PTR(o), args[3]);
+        mod_trezorcrypto_Pbkdf2_update(MP_OBJ_FROM_PTR(o), args[3]);
     }
     return MP_OBJ_FROM_PTR(o);
 }
@@ -70,7 +70,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
 ///     '''
 ///     Update a PBKDF2 context.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iterations) {
+STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iterations) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
     uint32_t iter = mp_obj_get_int(iterations);
     if (o->prf == 256) {
@@ -81,13 +81,13 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iteration
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Pbkdf2_update_obj, mod_TrezorCrypto_Pbkdf2_update);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj, mod_trezorcrypto_Pbkdf2_update);
 
 /// def key(self) -> bytes:
 ///     '''
 ///     Retrieve derived key.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_key(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     if (o->prf == 256) {
@@ -106,26 +106,26 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_key(mp_obj_t self) {
     }
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Pbkdf2_key_obj, mod_TrezorCrypto_Pbkdf2_key);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj, mod_trezorcrypto_Pbkdf2_key);
 
-STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2___del__(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorcrypto_Pbkdf2___del__(mp_obj_t self) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
     memset(&(o->ctx256), 0, sizeof(PBKDF2_HMAC_SHA256_CTX));
     memset(&(o->ctx512), 0, sizeof(PBKDF2_HMAC_SHA512_CTX));
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Pbkdf2___del___obj, mod_TrezorCrypto_Pbkdf2___del__);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2___del___obj, mod_trezorcrypto_Pbkdf2___del__);
 
-STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Pbkdf2_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_TrezorCrypto_Pbkdf2_update_obj) },
-    { MP_ROM_QSTR(MP_QSTR_key), MP_ROM_PTR(&mod_TrezorCrypto_Pbkdf2_key_obj) },
-    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_TrezorCrypto_Pbkdf2___del___obj) },
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_update_obj) },
+    { MP_ROM_QSTR(MP_QSTR_key), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_key_obj) },
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2___del___obj) },
 };
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Pbkdf2_locals_dict, mod_TrezorCrypto_Pbkdf2_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Pbkdf2_locals_dict, mod_trezorcrypto_Pbkdf2_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorCrypto_Pbkdf2_type = {
+STATIC const mp_obj_type_t mod_trezorcrypto_Pbkdf2_type = {
     { &mp_type_type },
     .name = MP_QSTR_Pbkdf2,
-    .make_new = mod_TrezorCrypto_Pbkdf2_make_new,
-    .locals_dict = (void*)&mod_TrezorCrypto_Pbkdf2_locals_dict,
+    .make_new = mod_trezorcrypto_Pbkdf2_make_new,
+    .locals_dict = (void*)&mod_trezorcrypto_Pbkdf2_locals_dict,
 };

@@ -22,7 +22,7 @@ typedef struct _mp_obj_Rfc6979_t {
 ///     '''
 ///     Initialize RFC6979 context from secret key and a hash.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorcrypto_Rfc6979_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 2, 2, false);
     mp_obj_Rfc6979_t *o = m_new_obj(mp_obj_Rfc6979_t);
     o->base.type = type;
@@ -43,23 +43,23 @@ STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_make_new(const mp_obj_type_t *type, siz
 ///     '''
 ///     Compute next 32-bytes of pseudorandom data.
 ///     '''
-STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_next(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorcrypto_Rfc6979_next(mp_obj_t self) {
     mp_obj_Rfc6979_t *o = MP_OBJ_TO_PTR(self);
     vstr_t vstr;
     vstr_init_len(&vstr, 32);
     generate_rfc6979((uint8_t *)vstr.buf, &(o->rng));
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Rfc6979_next_obj, mod_TrezorCrypto_Rfc6979_next);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Rfc6979_next_obj, mod_trezorcrypto_Rfc6979_next);
 
-STATIC const mp_rom_map_elem_t mod_TrezorCrypto_Rfc6979_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_next), MP_ROM_PTR(&mod_TrezorCrypto_Rfc6979_next_obj) },
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_Rfc6979_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_next), MP_ROM_PTR(&mod_trezorcrypto_Rfc6979_next_obj) },
 };
-STATIC MP_DEFINE_CONST_DICT(mod_TrezorCrypto_Rfc6979_locals_dict, mod_TrezorCrypto_Rfc6979_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Rfc6979_locals_dict, mod_trezorcrypto_Rfc6979_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_TrezorCrypto_Rfc6979_type = {
+STATIC const mp_obj_type_t mod_trezorcrypto_Rfc6979_type = {
     { &mp_type_type },
     .name = MP_QSTR_Rfc6979,
-    .make_new = mod_TrezorCrypto_Rfc6979_make_new,
-    .locals_dict = (void*)&mod_TrezorCrypto_Rfc6979_locals_dict,
+    .make_new = mod_trezorcrypto_Rfc6979_make_new,
+    .locals_dict = (void*)&mod_trezorcrypto_Rfc6979_locals_dict,
 };

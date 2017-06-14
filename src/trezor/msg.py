@@ -1,4 +1,4 @@
-from TrezorMsg import Msg, USB, HID, VCP
+from trezormsg import Msg, USB, HID, VCP
 
 _msg = Msg()
 

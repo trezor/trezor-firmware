@@ -1,4 +1,4 @@
-from TrezorConfig import Config
+from trezorconfig import Config
 
 _config = Config()
 

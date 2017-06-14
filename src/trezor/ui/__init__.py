@@ -4,7 +4,7 @@ import sys
 import math
 import utime
 
-from TrezorUI import Display
+from trezorui import Display
 from trezor import loop, res
 
 display = Display()

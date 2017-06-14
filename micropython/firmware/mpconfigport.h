@@ -123,21 +123,21 @@
 
 // extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t mp_module_utime;
-extern const struct _mp_obj_module_t mp_module_TrezorConfig;
-extern const struct _mp_obj_module_t mp_module_TrezorCrypto;
-extern const struct _mp_obj_module_t mp_module_TrezorIO;
-extern const struct _mp_obj_module_t mp_module_TrezorMsg;
-extern const struct _mp_obj_module_t mp_module_TrezorUI;
-extern const struct _mp_obj_module_t mp_module_TrezorUtils;
+extern const struct _mp_obj_module_t mp_module_trezorconfig;
+extern const struct _mp_obj_module_t mp_module_trezorcrypto;
+extern const struct _mp_obj_module_t mp_module_trezorio;
+extern const struct _mp_obj_module_t mp_module_trezormsg;
+extern const struct _mp_obj_module_t mp_module_trezorui;
+extern const struct _mp_obj_module_t mp_module_trezorutils;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&mp_module_utime }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorConfig), (mp_obj_t)&mp_module_TrezorConfig }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorCrypto), (mp_obj_t)&mp_module_TrezorCrypto }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorIO), (mp_obj_t)&mp_module_TrezorIO }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorMsg), (mp_obj_t)&mp_module_TrezorMsg }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUI), (mp_obj_t)&mp_module_TrezorUI }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_TrezorUtils), (mp_obj_t)&mp_module_TrezorUtils },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_trezorconfig), (mp_obj_t)&mp_module_trezorconfig }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_trezorcrypto), (mp_obj_t)&mp_module_trezorcrypto }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_trezorio), (mp_obj_t)&mp_module_trezorio }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_trezormsg), (mp_obj_t)&mp_module_trezormsg }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_trezorui), (mp_obj_t)&mp_module_trezorui }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_trezorutils), (mp_obj_t)&mp_module_trezorutils },
 
 #define MP_STATE_PORT MP_STATE_VM
 
