@@ -1,2 +1,0 @@
-def decompress(data):
-    pass
