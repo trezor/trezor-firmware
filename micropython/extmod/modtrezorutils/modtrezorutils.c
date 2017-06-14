@@ -12,9 +12,9 @@
 #include <string.h>
 #include "common.h"
 
-/// def trezor.utils.memcpy(dst: bytearray, dst_ofs: int,
-///                         src: bytearray, src_ofs: int,
-//                          n: int) -> int:
+/// def memcpy(dst: bytearray, dst_ofs: int,
+///            src: bytearray, src_ofs: int,
+///            n: int) -> int:
 ///     '''
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
 ///     `dst` at offset `dst_ofs`.  Returns the number of actually
@@ -51,9 +51,9 @@ STATIC mp_obj_t mod_TrezorUtils_memcpy(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorUtils_memcpy_obj, 5, 5, mod_TrezorUtils_memcpy);
 
-/// def trezor.utils.halt(msg: str=None) -> None:
+/// def halt(msg: str = None) -> None:
 ///     '''
-///     Halts execution
+///     Halts execution.
 ///     '''
 STATIC mp_obj_t mod_TrezorUtils_halt(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t msg;

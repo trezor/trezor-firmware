@@ -9,6 +9,10 @@
 
 #include "trezor-crypto/pbkdf2.h"
 
+/// class Pbkdf2:
+///     '''
+///     PBKDF2 context.
+///     '''
 typedef struct _mp_obj_Pbkdf2_t {
     mp_obj_base_t base;
     union {
@@ -20,9 +24,9 @@ typedef struct _mp_obj_Pbkdf2_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.pbkdf2(prf: str, password: bytes, salt: bytes, iterations: int=None) -> Pbkdf2:
+/// def __init__(self, prf: str, password: bytes, salt: bytes, iterations: int = None) -> None:
 ///     '''
-///     Create a PBKDF2 context
+///     Create a PBKDF2 context.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 3, 4, false);
@@ -62,9 +66,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.pbkdf2.update(self, iterations: int) -> None:
+/// def update(self, iterations: int) -> None:
 ///     '''
-///     Update a PBKDF2 context
+///     Update a PBKDF2 context.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iterations) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
@@ -79,9 +83,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iteration
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Pbkdf2_update_obj, mod_TrezorCrypto_Pbkdf2_update);
 
-/// def trezor.crypto.pbkdf2.key(self) -> bytes:
+/// def key(self) -> bytes:
 ///     '''
-///     Retreive derived key
+///     Retrieve derived key.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Pbkdf2_key(mp_obj_t self) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);

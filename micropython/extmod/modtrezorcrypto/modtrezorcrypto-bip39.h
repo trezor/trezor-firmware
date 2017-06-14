@@ -9,10 +9,16 @@
 
 #include "trezor-crypto/bip39.h"
 
+/// class Bip39:
+///     '''
+///     '''
 typedef struct _mp_obj_Bip39_t {
     mp_obj_base_t base;
 } mp_obj_Bip39_t;
 
+/// def __init__(self):
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Bip39_t *o = m_new_obj(mp_obj_Bip39_t);
@@ -20,9 +26,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_make_new(const mp_obj_type_t *type, size_
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.bip39.find_word(prefix: str) -> str:
+/// def find_word(self, prefix: str) -> Optional[str]:
 ///     '''
-///     Return the first word from the wordlist starting with prefix
+///     Return the first word from the wordlist starting with prefix.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_find_word(mp_obj_t self, mp_obj_t prefix)
 {
@@ -40,9 +46,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_find_word(mp_obj_t self, mp_obj_t prefix)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_find_word_obj, mod_TrezorCrypto_Bip39_find_word);
 
-/// def trezor.crypto.bip39.complete_word(prefix: str) -> int:
+/// def complete_word(self, prefix: str) -> int:
 ///     '''
-///     Return possible 1-letter suffixes for given word prefix
+///     Return possible 1-letter suffixes for given word prefix.
 ///     Result is a bitmask, with 'a' on the lowest bit, 'b' on the second lowest, etc.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_complete_word(mp_obj_t self, mp_obj_t prefix)
@@ -67,9 +73,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_complete_word(mp_obj_t self, mp_obj_t pre
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_complete_word_obj, mod_TrezorCrypto_Bip39_complete_word);
 
-/// def trezor.crypto.bip39.generate(strength: int) -> str:
+/// def generate(self, strength: int) -> str:
 ///     '''
-///     Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits)
+///     Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits).
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_generate(mp_obj_t self, mp_obj_t strength) {
     int bits = mp_obj_get_int(strength);
@@ -81,9 +87,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_generate(mp_obj_t self, mp_obj_t strength
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_generate_obj, mod_TrezorCrypto_Bip39_generate);
 
-/// def trezor.crypto.bip39.from_data(data: bytes) -> str:
+/// def from_data(self, data: bytes) -> str:
 ///     '''
-///     Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes)
+///     Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes).
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_from_data(mp_obj_t self, mp_obj_t data) {
     mp_buffer_info_t bin;
@@ -96,9 +102,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_from_data(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_from_data_obj, mod_TrezorCrypto_Bip39_from_data);
 
-/// def trezor.crypto.bip39.check(mnemonic: str) -> bool:
+/// def check(self, mnemonic: str) -> bool:
 ///     '''
-///     Check whether given mnemonic is valid
+///     Check whether given mnemonic is valid.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_check(mp_obj_t self, mp_obj_t mnemonic) {
     mp_buffer_info_t text;
@@ -107,9 +113,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip39_check(mp_obj_t self, mp_obj_t mnemonic) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Bip39_check_obj, mod_TrezorCrypto_Bip39_check);
 
-/// def trezor.crypto.bip39.seed(mnemonic: str, passphrase: str) -> bytes:
+/// def seed(self, mnemonic: str, passphrase: str) -> bytes:
 ///     '''
-///     Generate seed from mnemonic and passphrase
+///     Generate seed from mnemonic and passphrase.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip39_seed(mp_obj_t self, mp_obj_t mnemonic, mp_obj_t passphrase) {
     mp_buffer_info_t mnemo;

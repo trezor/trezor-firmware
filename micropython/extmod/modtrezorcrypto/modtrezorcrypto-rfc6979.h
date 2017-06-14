@@ -9,11 +9,19 @@
 
 #include "trezor-crypto/rfc6979.h"
 
+/// class Rfc6979:
+///     '''
+///     RFC6979 context.
+///     '''
 typedef struct _mp_obj_Rfc6979_t {
     mp_obj_base_t base;
     rfc6979_state rng;
 } mp_obj_Rfc6979_t;
 
+/// def __init__(self, secret_key: bytes, hash: bytes) -> None:
+///     '''
+///     Initialize RFC6979 context from secret key and a hash.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 2, 2, false);
     mp_obj_Rfc6979_t *o = m_new_obj(mp_obj_Rfc6979_t);
@@ -22,7 +30,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_make_new(const mp_obj_type_t *type, siz
     mp_get_buffer_raise(args[0], &pkey, MP_BUFFER_READ);
     mp_get_buffer_raise(args[1], &hash, MP_BUFFER_READ);
     if (pkey.len != 32) {
-        mp_raise_ValueError("Private key has to be 32 bytes long");
+        mp_raise_ValueError("Secret key has to be 32 bytes long");
     }
     if (hash.len != 32) {
         mp_raise_ValueError("Hash has to be 32 bytes long");
@@ -31,9 +39,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_make_new(const mp_obj_type_t *type, siz
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.rfc6979.next() -> bytes:
+/// def next(self) -> bytes:
 ///     '''
-///     Compute next 32-bytes of pseudorandom data
+///     Compute next 32-bytes of pseudorandom data.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Rfc6979_next(mp_obj_t self) {
     mp_obj_Rfc6979_t *o = MP_OBJ_TO_PTR(self);

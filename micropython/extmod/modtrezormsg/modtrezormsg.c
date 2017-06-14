@@ -24,15 +24,25 @@
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
-/*
- * USB HID interface configuration
- */
-
+/// class HID:
+///     '''
+///     USB HID interface configuration.
+///     '''
 typedef struct _mp_obj_HID_t {
     mp_obj_base_t base;
     usb_hid_info_t info;
 } mp_obj_HID_t;
 
+/// def __init__(self,
+///              iface_num: int,
+///              ep_in: int,
+///              ep_out: int,
+///              report_desc: bytes,
+///              subclass: int = 0,
+///              protocol: int = 0,
+///              polling_interval: int = 1,
+///              max_packet_len: int = 64) -> None:
+///     pass
 STATIC mp_obj_t mod_TrezorMsg_HID_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
@@ -110,15 +120,22 @@ STATIC const mp_obj_type_t mod_TrezorMsg_HID_type = {
     .locals_dict = (void*)&mod_TrezorMsg_HID_locals_dict,
 };
 
-/*
- * USB VCP interface configuration
- */
-
+/// class VCP:
+///     '''
+///     USB VCP interface configuration.
+///     '''
 typedef struct _mp_obj_VCP_t {
     mp_obj_base_t base;
     usb_vcp_info_t info;
 } mp_obj_VCP_t;
 
+/// def __init__(self,
+///              iface_num: int,
+///              data_iface_num: int,
+///              ep_in: int,
+///              ep_out: int,
+///              ep_cmd: int) -> None:
+///     pass
 STATIC mp_obj_t mod_TrezorMsg_VCP_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
@@ -188,10 +205,10 @@ STATIC const mp_obj_type_t mod_TrezorMsg_VCP_type = {
     .locals_dict = (void*)&mod_TrezorMsg_VCP_locals_dict,
 };
 
-/*
- * USB device configuration
- */
-
+/// class USB:
+///     '''
+///     USB device configuration.
+///     '''
 typedef struct _mp_obj_USB_t {
     mp_obj_base_t base;
     usb_dev_info_t info;
@@ -211,6 +228,16 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
     }
 }
 
+/// def __init__(self,
+///              vendor_id: int,
+///              product_id: int,
+///              release_num: int,
+///              manufacturer_str: str,
+///              product_str: str,
+///              serial_number_str: str,
+///              configuration_str: str = '',
+///              interface_str: str = '') -> None:
+///     pass
 STATIC mp_obj_t mod_TrezorMsg_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
@@ -282,16 +309,18 @@ STATIC const mp_obj_type_t mod_TrezorMsg_USB_type = {
     .locals_dict = (void*)&mod_TrezorMsg_USB_locals_dict,
 };
 
-/*
- * Msg class
- */
-
+/// class Msg:
+///     '''
+///     Interface with USB and touch events.
+///     '''
 typedef struct _mp_obj_Msg_t {
     mp_obj_base_t base;
     mp_obj_t usb_info;
     mp_obj_t usb_ifaces;
 } mp_obj_Msg_t;
 
+/// def __init__(self) -> None:
+///     pass
 STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     msg_init();
@@ -302,9 +331,9 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_make_new(const mp_obj_type_t *type, size_t n_a
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.msg.init_usb(usb_info, usb_ifaces) -> None:
+/// def init_usb(self, usb_info: USB, usb_ifaces: List[Union[HID, VCP]]) -> None:
 ///     '''
-///     Registers passed interfaces and initializes the USB stack
+///     Registers passed interfaces and initializes the USB stack.
 ///     '''
 STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_obj_t usb_ifaces) {
 
@@ -369,7 +398,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_init_usb(mp_obj_t self, mp_obj_t usb_info, mp_
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_init_usb_obj, mod_TrezorMsg_Msg_init_usb);
 
-/// def trezor.msg.deinit_usb() -> None:
+/// def deinit_usb(self) -> None:
 ///     '''
 ///     Cleans up the USB stack
 ///     '''
@@ -386,7 +415,7 @@ STATIC mp_obj_t mod_TrezorMsg_Msg_deinit_usb(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorMsg_Msg_deinit_usb_obj, mod_TrezorMsg_Msg_deinit_usb);
 
-/// def trezor.msg.send(iface: int, message: bytes) -> int:
+/// def send(self, iface: int, message: bytes) -> int:
 ///     '''
 ///     Sends message using USB HID (device) or UDP (emulator).
 ///     '''
@@ -404,7 +433,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorMsg_Msg_send_obj, mod_TrezorMsg_Msg_s
 #define TOUCH_IFACE 255
 extern uint32_t touch_read(void); // defined in HAL
 
-/// def trezor.msg.select(timeout_us: int) -> tuple:
+/// def select(self, timeout_us: int) -> tuple:
 ///     '''
 ///     Polls the event queue and returns the event object.
 ///     Function returns None if timeout specified in microseconds is reached.

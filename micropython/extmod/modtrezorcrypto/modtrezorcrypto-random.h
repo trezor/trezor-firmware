@@ -9,10 +9,16 @@
 
 #include "rand.h"
 
+/// class Random:
+///     '''
+///     '''
 typedef struct _mp_obj_Random_t {
     mp_obj_base_t base;
 } mp_obj_Random_t;
 
+/// def __init__(self) -> None:
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Random_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Random_t *o = m_new_obj(mp_obj_Random_t);
@@ -20,7 +26,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_make_new(const mp_obj_type_t *type, size
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.random.uniform(n: int) -> int:
+/// def uniform(self, n: int) -> int:
 ///     '''
 ///     Compute uniform random number from interval 0 ... n - 1
 ///     '''
@@ -33,7 +39,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_uniform(mp_obj_t self, mp_obj_t n) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_uniform_obj, mod_TrezorCrypto_Random_uniform);
 
-/// def trezor.crypto.random.bytes(len: int) -> bytes:
+/// def bytes(self, len: int) -> bytes:
 ///     '''
 ///     Generate random bytes sequence of length len
 ///     '''
@@ -49,7 +55,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Random_bytes(mp_obj_t self, mp_obj_t len) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Random_bytes_obj, mod_TrezorCrypto_Random_bytes);
 
-/// def trezor.crypto.random.shuffle(data: list) -> None:
+/// def shuffle(self, data: list) -> None:
 ///     '''
 ///     Shuffles items of given list (in-place)
 ///     '''

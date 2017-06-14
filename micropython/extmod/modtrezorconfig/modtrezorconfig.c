@@ -15,10 +15,18 @@
 
 #if MICROPY_PY_TREZORCONFIG
 
+/// class Config:
+///     '''
+///     Persistent key-value storage, with 16-bit keys and bytes values.
+///     '''
 typedef struct _mp_obj_Config_t {
     mp_obj_base_t base;
 } mp_obj_Config_t;
 
+/// def __init__(self):
+///     '''
+///     Initializes the storage.
+///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Config_t *o = m_new_obj(mp_obj_Config_t);
@@ -30,7 +38,7 @@ STATIC mp_obj_t mod_TrezorConfig_Config_make_new(const mp_obj_type_t *type, size
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.config.get(app: int, key: int) -> bytes:
+/// def get(self, app: int, key: int) -> bytes:
 ///     '''
 ///     Gets a value of given key for given app (or empty bytes if not set).
 ///     '''
@@ -50,7 +58,7 @@ STATIC mp_obj_t mod_TrezorConfig_Config_get(mp_obj_t self, mp_obj_t app, mp_obj_
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorConfig_Config_get_obj, mod_TrezorConfig_Config_get);
 
-/// def trezor.config.set(app: int, key: int, value: bytes) -> None:
+/// def set(self, app: int, key: int, value: bytes) -> None:
 ///     '''
 ///     Sets a value of given key for given app.
 ///     Returns True on success.
@@ -69,9 +77,9 @@ STATIC mp_obj_t mod_TrezorConfig_Config_set(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorConfig_Config_set_obj, 4, 4, mod_TrezorConfig_Config_set);
 
-/// def trezor.config.wipe() -> None:
+/// def wipe(self) -> None:
 ///     '''
-///     Erases the whole config (use with caution!)
+///     Erases the whole config. Use with caution!
 ///     '''
 STATIC mp_obj_t mod_TrezorConfig_Config_wipe(mp_obj_t self) {
     bool r = norcow_wipe();

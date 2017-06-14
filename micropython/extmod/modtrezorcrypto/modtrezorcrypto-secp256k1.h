@@ -10,10 +10,16 @@
 #include "trezor-crypto/ecdsa.h"
 #include "trezor-crypto/secp256k1.h"
 
+/// class Secp256k1:
+///     '''
+///     '''
 typedef struct _mp_obj_Secp256k1_t {
     mp_obj_base_t base;
 } mp_obj_Secp256k1_t;
 
+/// def __init__(self) -> None:
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Secp256k1_t *o = m_new_obj(mp_obj_Secp256k1_t);
@@ -21,7 +27,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_make_new(const mp_obj_type_t *type, s
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.curve.secp256k1.generate_secret() -> bytes:
+/// def generate_secret(self, ) -> bytes:
 ///     '''
 ///     Generate secret key.
 ///     '''
@@ -39,7 +45,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_generate_secret(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Secp256k1_generate_secret_obj, mod_TrezorCrypto_Secp256k1_generate_secret);
 
-/// def trezor.crypto.curve.secp256k1.publickey(secret_key: bytes, compressed: bool=True) -> bytes:
+/// def publickey(self, secret_key: bytes, compressed: bool = True) -> bytes:
 ///     '''
 ///     Computes public key from secret key.
 ///     '''
@@ -62,7 +68,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_publickey(size_t n_args, const mp_obj
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Secp256k1_publickey_obj, 2, 3, mod_TrezorCrypto_Secp256k1_publickey);
 
-/// def trezor.crypto.curve.secp256k1.sign(secret_key: bytes, digest: bytes, compressed: bool=True) -> bytes:
+/// def sign(self, secret_key: bytes, digest: bytes, compressed: bool = True) -> bytes:
 ///     '''
 ///     Uses secret key to produce the signature of the digest.
 ///     '''
@@ -88,7 +94,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_sign(size_t n_args, const mp_obj_t *a
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Secp256k1_sign_obj, 3, 4, mod_TrezorCrypto_Secp256k1_sign);
 
-/// def trezor.crypto.curve.secp256k1.verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+/// def verify(self, public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     '''
 ///     Uses public key to verify the signature of the digest.
 ///     Returns True on success.
@@ -112,7 +118,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_verify(size_t n_args, const mp_obj_t 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Secp256k1_verify_obj, 4, 4, mod_TrezorCrypto_Secp256k1_verify);
 
-/// def trezor.crypto.curve.secp256k1.verify_recover(signature: bytes, digest: bytes) -> bytes:
+/// def verify_recover(self, signature: bytes, digest: bytes) -> bytes:
 ///     '''
 ///     Uses signature of the digest to verify the digest and recover the public key.
 ///     Returns public key on success, None on failure.
@@ -147,10 +153,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_verify_recover(mp_obj_t self, mp_obj_
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Secp256k1_verify_recover_obj, mod_TrezorCrypto_Secp256k1_verify_recover);
 
-/// def trezor.crypto.curve.secp256k1.multiply(secret_key: bytes, public_key: bytes) -> bytes:
+/// def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
 ///     '''
-///     Multiplies point defined by public_key with scalar defined by secret_key
-///     Useful for ECDH
+///     Multiplies point defined by public_key with scalar defined by secret_key.
+///     Useful for ECDH.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Secp256k1_multiply(mp_obj_t self, mp_obj_t secret_key, mp_obj_t public_key) {
     mp_buffer_info_t sk, pk;

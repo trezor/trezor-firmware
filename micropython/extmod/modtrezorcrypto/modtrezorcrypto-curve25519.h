@@ -11,10 +11,16 @@
 
 #include "rand.h"
 
+/// class Curve25519:
+///     '''
+///     '''
 typedef struct _mp_obj_Curve25519_t {
     mp_obj_base_t base;
 } mp_obj_Curve25519_t;
 
+/// def __init__(self) -> None:
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Curve25519_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Curve25519_t *o = m_new_obj(mp_obj_Curve25519_t);
@@ -22,7 +28,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_make_new(const mp_obj_type_t *type, 
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.curve.curve25519.generate_secret() -> bytes:
+/// def generate_secret(self) -> bytes:
 ///     '''
 ///     Generate secret key.
 ///     '''
@@ -38,7 +44,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_generate_secret(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Curve25519_generate_secret_obj, mod_TrezorCrypto_Curve25519_generate_secret);
 
-/// def trezor.crypto.curve.curve25519.publickey(secret_key: bytes) -> bytes:
+/// def publickey(self, secret_key: bytes) -> bytes:
 ///     '''
 ///     Computes public key from secret key.
 ///     '''
@@ -55,10 +61,10 @@ STATIC mp_obj_t mod_TrezorCrypto_Curve25519_publickey(mp_obj_t self, mp_obj_t se
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Curve25519_publickey_obj, mod_TrezorCrypto_Curve25519_publickey);
 
-/// def trezor.crypto.curve.curve25519.multiply(secret_key: bytes, public_key: bytes) -> bytes:
+/// def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
 ///     '''
-///     Multiplies point defined by public_key with scalar defined by secret_key
-///     Useful for ECDH
+///     Multiplies point defined by public_key with scalar defined by secret_key.
+///     Useful for ECDH.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Curve25519_multiply(mp_obj_t self, mp_obj_t secret_key, mp_obj_t public_key) {
     mp_buffer_info_t sk, pk;

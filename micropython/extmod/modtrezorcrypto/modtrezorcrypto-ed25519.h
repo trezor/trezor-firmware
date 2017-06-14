@@ -11,10 +11,16 @@
 
 #include "rand.h"
 
+/// class Ed25519:
+///     '''
+///     '''
 typedef struct _mp_obj_Ed25519_t {
     mp_obj_base_t base;
 } mp_obj_Ed25519_t;
 
+/// def __init__(self) -> None:
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Ed25519_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Ed25519_t *o = m_new_obj(mp_obj_Ed25519_t);
@@ -22,7 +28,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_make_new(const mp_obj_type_t *type, siz
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.curve.ed25519.generate_secret() -> bytes:
+/// def generate_secret(self) -> bytes:
 ///     '''
 ///     Generate secret key.
 ///     '''
@@ -38,7 +44,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_generate_secret(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_Ed25519_generate_secret_obj, mod_TrezorCrypto_Ed25519_generate_secret);
 
-/// def trezor.crypto.curve.ed25519.publickey(secret_key: bytes) -> bytes:
+/// def publickey(self, secret_key: bytes) -> bytes:
 ///     '''
 ///     Computes public key from secret key.
 ///     '''
@@ -55,7 +61,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_publickey(mp_obj_t self, mp_obj_t secre
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ed25519_publickey_obj, mod_TrezorCrypto_Ed25519_publickey);
 
-/// def trezor.crypto.curve.ed25519.sign(secret_key: bytes, message: bytes) -> bytes:
+/// def sign(self, secret_key: bytes, message: bytes) -> bytes:
 ///     '''
 ///     Uses secret key to produce the signature of message.
 ///     '''
@@ -78,7 +84,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_sign(mp_obj_t self, mp_obj_t secret_key
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Ed25519_sign_obj, mod_TrezorCrypto_Ed25519_sign);
 
-/// def trezor.crypto.curve.ed25519.verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
+/// def verify(self, public_key: bytes, signature: bytes, message: bytes) -> bool:
 ///     '''
 ///     Uses public key to verify the signature of the message.
 ///     Returns True on success.
@@ -101,9 +107,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_verify(size_t n_args, const mp_obj_t *a
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Ed25519_verify_obj, 4, 4, mod_TrezorCrypto_Ed25519_verify);
 
-/// def trezor.crypto.curve.ed25519.cosi_combine_publickeys(public_keys: list) -> bytes:
+/// def cosi_combine_publickeys(self, public_keys: List[bytes]) -> bytes:
 ///     '''
-///     Combines a list of public keys used in COSI cosigning scheme
+///     Combines a list of public keys used in COSI cosigning scheme.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_combine_publickeys(mp_obj_t self, mp_obj_t public_keys) {
     size_t pklen;
@@ -130,9 +136,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_combine_publickeys(mp_obj_t self, 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Ed25519_cosi_combine_publickeys_obj, mod_TrezorCrypto_Ed25519_cosi_combine_publickeys);
 
-/// def trezor.crypto.curve.ed25519.cosi_combine_signatures(R: bytes, signatures: list) -> bytes:
+/// def cosi_combine_signatures(self, R: bytes, signatures: List[bytes]) -> bytes:
 ///     '''
-///     Combines a list of signatures used in COSI cosigning scheme
+///     Combines a list of signatures used in COSI cosigning scheme.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_combine_signatures(mp_obj_t self, mp_obj_t R, mp_obj_t signatures) {
     mp_buffer_info_t sigR;
@@ -162,9 +168,9 @@ STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_combine_signatures(mp_obj_t self, 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_TrezorCrypto_Ed25519_cosi_combine_signatures_obj, mod_TrezorCrypto_Ed25519_cosi_combine_signatures);
 
-/// def trezor.crypto.curve.ed25519.cosi_sign(secret_key: bytes, message: bytes, nonce: bytes, sigR: bytes, combined_pubkey: bytes) -> bytes:
+/// def cosi_sign(self, secret_key: bytes, message: bytes, nonce: bytes, sigR: bytes, combined_pubkey: bytes) -> bytes:
 ///     '''
-///     Produce signature of message using COSI cosigning scheme
+///     Produce signature of message using COSI cosigning scheme.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Ed25519_cosi_sign(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t sk, msg, nonce, sigR, pk;

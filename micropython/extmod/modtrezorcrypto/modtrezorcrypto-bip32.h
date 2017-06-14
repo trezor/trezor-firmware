@@ -9,6 +9,10 @@
 
 #include "trezor-crypto/bip32.h"
 
+/// class HDNode:
+///     '''
+///     BIP0032 HD node structure.
+///     '''
 typedef struct _mp_obj_HDNode_t {
     mp_obj_base_t base;
     uint32_t fingerprint;
@@ -20,7 +24,7 @@ STATIC const mp_obj_type_t mod_TrezorCrypto_HDNode_type;
 #define XPUB_MAXLEN 128
 #define ADDRESS_MAXLEN 36
 
-/// def trezor.crypto.HDNode.derive(index: int) -> None:
+/// def derive(self, index: int) -> None:
 ///     '''
 ///     Derive a BIP0032 child node in place.
 ///     '''
@@ -39,7 +43,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_derive(mp_obj_t self, mp_obj_t index) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_derive_obj, mod_TrezorCrypto_HDNode_derive);
 
-/// def trezor.crypto.HDNode.derive_path(path: list) -> None:
+/// def derive_path(self, path: List[int]) -> None:
 ///     '''
 ///     Go through a list of indexes and iteratively derive a child node in place.
 ///     '''
@@ -96,7 +100,7 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public, uint32_
     return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
 }
 
-/// def trezor.crypto.HDNode.serialize_public(version: int) -> str:
+/// def serialize_public(self, version: int) -> str:
 ///     '''
 ///     Serialize the public info from HD node to base58 string.
 ///     '''
@@ -106,7 +110,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_public(mp_obj_t self, mp_obj_t
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_serialize_public_obj, mod_TrezorCrypto_HDNode_serialize_public);
 
-/// def trezor.crypto.HDNode.serialize_private(version: int) -> str:
+/// def serialize_private(self, version: int) -> str:
 ///     '''
 ///     Serialize the private info HD node to base58 string.
 ///     '''
@@ -116,7 +120,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_serialize_private(mp_obj_t self, mp_obj_
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_HDNode_serialize_private_obj, mod_TrezorCrypto_HDNode_serialize_private);
 
-/// def trezor.crypto.HDNode.clone() -> HDNode:
+/// def clone(self) -> HDNode:
 ///     '''
 ///     Returns a copy of the HD node.
 ///     '''
@@ -130,7 +134,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_clone(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_clone_obj, mod_TrezorCrypto_HDNode_clone);
 
-/// def trezor.crypto.HDNode.depth() -> int:
+/// def depth(self) -> int:
 ///     '''
 ///     Returns a depth of the HD node.
 ///     '''
@@ -140,7 +144,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_depth(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_depth_obj, mod_TrezorCrypto_HDNode_depth);
 
-/// def trezor.crypto.HDNode.fingerprint() -> int:
+/// def fingerprint(self) -> int:
 ///     '''
 ///     Returns a fingerprint of the HD node (hash of the parent public key).
 ///     '''
@@ -150,7 +154,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_fingerprint(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_fingerprint_obj, mod_TrezorCrypto_HDNode_fingerprint);
 
-/// def trezor.crypto.HDNode.child_num() -> int:
+/// def child_num(self) -> int:
 ///     '''
 ///     Returns a child index of the HD node.
 ///     '''
@@ -160,7 +164,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_child_num(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_child_num_obj, mod_TrezorCrypto_HDNode_child_num);
 
-/// def trezor.crypto.HDNode.chain_code() -> bytes:
+/// def chain_code(self) -> bytes:
 ///     '''
 ///     Returns a chain code of the HD node.
 ///     '''
@@ -170,7 +174,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_chain_code(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_chain_code_obj, mod_TrezorCrypto_HDNode_chain_code);
 
-/// def trezor.crypto.HDNode.private_key() -> bytes:
+/// def private_key(self) -> bytes:
 ///     '''
 ///     Returns a private key of the HD node.
 ///     '''
@@ -180,7 +184,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_private_key(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_private_key_obj, mod_TrezorCrypto_HDNode_private_key);
 
-/// def trezor.crypto.HDNode.public_key() -> bytes:
+/// def public_key(self) -> bytes:
 ///     '''
 ///     Returns a public key of the HD node.
 ///     '''
@@ -191,7 +195,7 @@ STATIC mp_obj_t mod_TrezorCrypto_HDNode_public_key(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_TrezorCrypto_HDNode_public_key_obj, mod_TrezorCrypto_HDNode_public_key);
 
-/// def trezor.crypto.HDNode.address(version: int) -> str:
+/// def address(self, version: int) -> str:
 ///     '''
 ///     Compute a base58-encoded address string from the HD node.
 ///     '''
@@ -231,10 +235,16 @@ STATIC const mp_obj_type_t mod_TrezorCrypto_HDNode_type = {
     .locals_dict = (void*)&mod_TrezorCrypto_HDNode_locals_dict,
 };
 
+/// class Bip32:
+///     '''
+///     '''
 typedef struct _mp_obj_Bip32_t {
     mp_obj_base_t base;
 } mp_obj_Bip32_t;
 
+/// def __init__(self):
+///     '''
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_Bip32_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_Bip32_t *o = m_new_obj(mp_obj_Bip32_t);
@@ -242,7 +252,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip32_make_new(const mp_obj_type_t *type, size_
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.bip32.deserialize(value:str, version_public: int, version_private: int) -> HDNode:
+/// def deserialize(self, value: str, version_public: int, version_private: int) -> HDNode:
 ///     '''
 ///     Construct a BIP0032 HD node from a base58-serialized value.
 ///     '''
@@ -268,7 +278,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Bip32_deserialize(size_t n_args, const mp_obj_t
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_TrezorCrypto_Bip32_deserialize_obj, 4, 4, mod_TrezorCrypto_Bip32_deserialize);
 
-/// def trezor.crypto.bip32.from_seed(seed: bytes, curve_name: str) -> HDNode:
+/// def from_seed(self, seed: bytes, curve_name: str) -> HDNode:
 ///     '''
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     '''

@@ -9,6 +9,10 @@
 
 #include "trezor-crypto/aes/aes.h"
 
+/// class AES:
+///     '''
+///     AES context.
+///     '''
 typedef struct _mp_obj_AES_t {
     mp_obj_base_t base;
     union {
@@ -33,6 +37,10 @@ enum {
 #define AESModeMask 0x3F
 #define AESDirMask  0xC0
 
+/// def __init__(self, mode: int, key: bytes, iv: bytes = ...) -> None:
+///     '''
+///     Initialize AES context.
+///     '''
 STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 2, 3, false);
     mp_obj_AES_t *o = m_new_obj(mp_obj_AES_t);
@@ -83,9 +91,9 @@ STATIC mp_obj_t mod_TrezorCrypto_AES_make_new(const mp_obj_type_t *type, size_t 
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.aes.AES.update(self, data: bytes) -> bytes:
+/// def update(self, data: bytes) -> bytes:
 ///     '''
-///     Update AES context
+///     Update AES context with data.
 ///     '''
 STATIC mp_obj_t mod_TrezorCrypto_AES_update(mp_obj_t self, mp_obj_t data) {
     mp_buffer_info_t buf;

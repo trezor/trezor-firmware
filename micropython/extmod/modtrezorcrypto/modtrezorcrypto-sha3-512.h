@@ -9,6 +9,10 @@
 
 #include "trezor-crypto/sha3.h"
 
+/// class Sha3_512:
+///     '''
+///     SHA3_512 context.
+///     '''
 typedef struct _mp_obj_Sha3_512_t {
     mp_obj_base_t base;
     SHA3_CTX ctx;
@@ -16,7 +20,7 @@ typedef struct _mp_obj_Sha3_512_t {
 
 STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data);
 
-/// def trezor.crypto.hashlib.sha3_512(data: bytes=None) -> Sha3_512:
+/// def __init__(self, data: bytes = None) -> None:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
@@ -32,7 +36,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_make_new(const mp_obj_type_t *type, si
     return MP_OBJ_FROM_PTR(o);
 }
 
-/// def trezor.crypto.hashlib.sha3_512.update(self, data: bytes) -> None:
+/// def update(self, data: bytes) -> None:
 ///     '''
 ///     Update the hash context with hashed data.
 ///     '''
@@ -47,7 +51,7 @@ STATIC mp_obj_t mod_TrezorCrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_TrezorCrypto_Sha3_512_update_obj, mod_TrezorCrypto_Sha3_512_update);
 
-/// def trezor.crypto.hashlib.sha3_512.digest(self, keccak: bool=False) -> bytes:
+/// def digest(self, keccak: bool = False) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''
