@@ -3,8 +3,10 @@ import gc
 
 from trezorutils import halt, memcpy
 
-type_gen = type((lambda: (yield))())
-type_genfunc = type((lambda: (yield)))
+
+def _gf():
+    yield
+type_gen = type(_gf())
 
 
 def _unimport_func(func):
@@ -21,7 +23,7 @@ def _unimport_func(func):
     return inner
 
 
-def _unimport_genfunc(genfunc):
+def _unimport_gen(genfunc):
     async def inner(*args, **kwargs):
         mods = set(sys.modules)
         try:
@@ -36,15 +38,15 @@ def _unimport_genfunc(genfunc):
 
 
 def unimport(func):
-    if isinstance(func, type_genfunc):
-        return _unimport_genfunc(func)
+    if isinstance(func, type_gen):
+        return _unimport_gen(func)
     else:
         return _unimport_func(func)
 
 
-def chunks(l, n):
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]
 
 
 def ensure(cond):
