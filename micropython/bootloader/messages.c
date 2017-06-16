@@ -3,7 +3,6 @@
 
 #include "usb.h"
 #include "version.h"
-#include "bootloader.h"
 
 #include "messages.h"
 
@@ -54,7 +53,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
             state->packet_index++;
             memset(state->buf, 0, USB_PACKET_SIZE);
             state->buf[0] = '?';
-            state->packet_pos = 1;
+            state->packet_pos = MSG_HEADER2_LEN;
         }
     }
 
@@ -89,7 +88,7 @@ static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t field
     usb_write_state state = {
         .iface_num = iface_num,
         .packet_index = 0,
-        .packet_pos = MSG_HEADER_LEN,
+        .packet_pos = MSG_HEADER1_LEN,
         .buf = {
             '?', '#', '#',
             (msg_id >> 8) & 0xFF, msg_id & 0xFF,
@@ -127,8 +126,27 @@ static bool _encode_string(pb_ostream_t *stream, const pb_field_t *field, void *
 #define MSG_ASSIGN_STRING(FIELD, VALUE) do { msg.FIELD.funcs.encode = &_encode_string; msg.FIELD.arg = VALUE; } while (0)
 #define MSG_SEND(TYPE) do { _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg); } while (0)
 
-void process_msg_Initialize(uint8_t iface_num)
+static void consume_message(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, void (* consumer)(const uint8_t *buf, uint8_t len))
 {
+    if (consumer) {
+        consumer(buf + MSG_HEADER1_LEN, USB_PACKET_SIZE - MSG_HEADER1_LEN);
+    }
+    int remaining_chunks = (msg_size - (USB_PACKET_SIZE - MSG_HEADER1_LEN)) / (USB_PACKET_SIZE - MSG_HEADER2_LEN);
+    for (int i = 0; i < remaining_chunks; i++) {
+        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
+        if (r != USB_PACKET_SIZE) {
+            break;
+        }
+        if (consumer) {
+            consumer(buf + MSG_HEADER2_LEN, USB_PACKET_SIZE - MSG_HEADER2_LEN);
+        }
+    }
+}
+
+void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
+{
+    consume_message(iface_num, msg_size, buf, NULL);
+
     MSG_INIT(Features);
     MSG_ASSIGN_STRING(vendor, "trezor.io");
     MSG_ASSIGN_VALUE(major_version, VERSION_MAJOR);
@@ -140,16 +158,20 @@ void process_msg_Initialize(uint8_t iface_num)
     MSG_SEND(Features);
 }
 
-void process_msg_Ping(uint8_t iface_num)
+void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    consume_message(iface_num, msg_size, buf, NULL);
+
     MSG_INIT(Success);
     // TODO: read message from Ping
     MSG_ASSIGN_STRING(message, "PONG!");
     MSG_SEND(Success);
 }
 
-void process_msg_FirmwareErase(uint8_t iface_num)
+void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    consume_message(iface_num, msg_size, buf, NULL);
+
     // TODO: implement
     MSG_INIT(Failure);
     MSG_ASSIGN_VALUE(code, FailureType_Failure_FirmwareError);
@@ -157,8 +179,10 @@ void process_msg_FirmwareErase(uint8_t iface_num)
     MSG_SEND(Failure);
 }
 
-void process_msg_FirmwareUpload(uint8_t iface_num)
+void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    consume_message(iface_num, msg_size, buf, NULL);
+
     // TODO: implement
     MSG_INIT(Failure);
     MSG_ASSIGN_VALUE(code, FailureType_Failure_FirmwareError);
@@ -166,8 +190,10 @@ void process_msg_FirmwareUpload(uint8_t iface_num)
     MSG_SEND(Failure);
 }
 
-void process_msg_unknown(uint8_t iface_num)
+void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    consume_message(iface_num, msg_size, buf, NULL);
+
     MSG_INIT(Failure);
     MSG_ASSIGN_VALUE(code, FailureType_Failure_UnexpectedMessage);
     MSG_ASSIGN_STRING(message, "Unexpected message");

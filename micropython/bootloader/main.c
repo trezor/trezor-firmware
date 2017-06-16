@@ -13,7 +13,6 @@
 #include "version.h"
 #include "mini_printf.h"
 
-#include "bootloader.h"
 #include "messages.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
@@ -160,7 +159,7 @@ void mainloop(void)
 
     for (;;) {
         int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
-        if (r <= 0) {
+        if (r != USB_PACKET_SIZE) {
             continue;
         }
         assert(r == USB_PACKET_SIZE);
@@ -173,23 +172,23 @@ void mainloop(void)
         switch (msg_id) {
             case 0: // Initialize
                 display_printf("received Initialize\n");
-                process_msg_Initialize(USB_IFACE_NUM);
+                process_msg_Initialize(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 1: // Ping
                 display_printf("received Ping\n");
-                process_msg_Ping(USB_IFACE_NUM);
+                process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 6: // FirmwareErase
                 display_printf("received FirmwareErase\n");
-                process_msg_FirmwareErase(USB_IFACE_NUM);
+                process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
                 display_printf("received FirmwareUpload\n");
-                process_msg_FirmwareUpload(USB_IFACE_NUM);
+                process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 break;
             default:
                 display_printf("received unknown message\n");
-                process_msg_unknown(USB_IFACE_NUM);
+                process_msg_unknown(USB_IFACE_NUM, msg_size, buf);
                 break;
         }
     }

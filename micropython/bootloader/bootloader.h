@@ -1,4 +1,0 @@
-#define UPLOAD_CHUNK_SIZE (128*1024)
-
-#define USB_PACKET_SIZE   64
-#define USB_IFACE_NUM     0
