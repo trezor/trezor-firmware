@@ -6,6 +6,8 @@ from trezorutils import halt, memcpy
 
 def _gf():
     yield
+
+
 type_gen = type(_gf())
 
 
