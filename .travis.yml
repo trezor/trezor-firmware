@@ -25,11 +25,14 @@ addons:
     - gcc-multilib
     - gcc-arm-none-eabi
     - libnewlib-arm-none-eabi
+    - libusb-1.0-0-dev
+    - libudev-dev
 
 install:
     - pip3 install ed25519 pyblake2
     - pip3 install flake8
     - pip3 install ecdsa mnemonic protobuf requests
+    - pip3 install trezor
 
 script:
   - test "$GOAL" != "stm32" || make vendorheader

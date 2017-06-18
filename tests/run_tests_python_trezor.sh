@@ -15,7 +15,6 @@ UPY_PID=$!
 sleep 1
 
 cd ../tests/python-trezor/tests/device_tests
-export PYTHONPATH="../.."
 
 error=0
 
