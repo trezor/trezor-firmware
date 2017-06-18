@@ -380,17 +380,17 @@ class DebugLinkMixin(object):
             try:
                 expected = self.expected_responses.pop(0)
             except IndexError:
-                raise CallException(types.Failure_Other,
+                raise CallException(types.Failure_UnexpectedMessage,
                         "Got %s, but no message has been expected" % pprint(msg))
 
             if msg.__class__ != expected.__class__:
-                raise CallException(types.Failure_Other,
+                raise CallException(types.Failure_UnexpectedMessage,
                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
             fields = expected.ListFields()  # only filled (including extensions)
             for field, value in fields:
                 if not msg.HasField(field.name) or getattr(msg, field.name) != value:
-                    raise CallException(types.Failure_Other,
+                    raise CallException(types.Failure_UnexpectedMessage,
                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
     def callback_ButtonRequest(self, msg):

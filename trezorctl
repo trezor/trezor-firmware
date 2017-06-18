@@ -89,7 +89,7 @@ def get_transport(transport_string, path, **kwargs):
             if path == '' or path in d:
                 return HidTransport(d, **kwargs)
 
-        raise CallException(types.Failure_Other, "Device not found")
+        raise CallException(types.Failure_NotInitialized, "Device not found")
 
     if transport_string == 'udp':
         from trezorlib.transport_udp import UdpTransport
@@ -109,7 +109,7 @@ def get_transport(transport_string, path, **kwargs):
             if path == '' or d['path'] == binascii.hexlify(path):
                 return BridgeTransport(d, **kwargs)
 
-        raise CallException(types.Failure_Other, "Device not found")
+        raise CallException(types.Failure_NotInitialized, "Device not found")
 
     raise NotImplementedError("Unknown transport")
 
@@ -147,7 +147,7 @@ class Commands(object):
         if ' ' in value:
             value, unit = value.split(' ', 1)
             if unit.lower() not in ether_units:
-                raise CallException(types.Failure_Other, "Unrecognized ether unit %r" % unit)
+                raise CallException(types.Failure_DataError, "Unrecognized ether unit %r" % unit)
             value = int(value) * ether_units[unit.lower()]
         else:
             value = int(value)
@@ -157,7 +157,7 @@ class Commands(object):
             if ' ' in gas_price:
                 gas_price, unit = gas_price.split(' ', 1)
                 if unit.lower() not in ether_units:
-                    raise CallException(types.Failure_Other, "Unrecognized gas price unit %r" % unit)
+                    raise CallException(types.Failure_DataError, "Unrecognized gas price unit %r" % unit)
                 gas_price = int(gas_price) * ether_units[unit.lower()]
             else:
                 gas_price = int(gas_price)
@@ -251,7 +251,7 @@ class Commands(object):
             from PIL import Image
             im = Image.open(args.filename)
             if im.size != (128, 64):
-                raise CallException(types.Failure_Other, 'Wrong size of the image')
+                raise CallException(types.Failure_DataError, 'Wrong size of the image')
             im = im.convert('1')
             pix = im.load()
             img = ''
@@ -281,7 +281,7 @@ class Commands(object):
 
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
-            raise CallException(types.Failure_Other, "Please provide mnemonic or xprv")
+            raise CallException(types.Failure_DataError, "Please provide mnemonic or xprv")
 
         if args.mnemonic:
             mnemonic = ' '.join(args.mnemonic)
