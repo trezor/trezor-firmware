@@ -31,7 +31,7 @@ class TxApi(object):
         self.network = network
         self.url = url
 
-    def fetch_json(self, url, resource, resourceid):
+    def fetch_json(self, resource, resourceid):
         global cache_dir
         if cache_dir:
             cache_file = '%s/%s_%s_%s.json' % (cache_dir, self.network, resource, resourceid)
@@ -41,7 +41,8 @@ class TxApi(object):
             except:
                 pass
         try:
-            r = requests.get('%s%s/%s' % (self.url, resource, resourceid), headers={'User-agent': 'Mozilla/5.0'})
+            url = '%s%s/%s' % (self.url, resource, resourceid)
+            r = requests.get(url, headers={'User-agent': 'Mozilla/5.0'})
             j = r.json()
         except:
             raise Exception('URL error: %s' % url)
@@ -64,7 +65,7 @@ class TxApiInsight(TxApi):
 
     def get_tx(self, txhash):
 
-        data = self.fetch_json(self.url, 'tx', txhash)
+        data = self.fetch_json('tx', txhash)
 
         t = proto_types.TransactionType()
         t.version = data['version']
@@ -99,7 +100,7 @@ class TxApiInsight(TxApi):
                         # we assume cnt < 253, so we can treat varIntLen(cnt) as 1
                         raise ValueError('Too many joinsplits')
                     extra_data_len = 1 + joinsplit_cnt * 1802 + 32 + 64
-                    raw = fetch_json(self.url, 'rawtx', txhash)
+                    raw = self.fetch_json('rawtx', txhash)
                     raw = binascii.unhexlify(raw['rawtx'])
                     t.extra_data = raw[-extra_data_len:]
 
@@ -110,7 +111,7 @@ class TxApiSmartbit(TxApi):
 
     def get_tx(self, txhash):
 
-        data = self.fetch_json(self.url, 'tx', txhash)
+        data = self.fetch_json('tx', txhash)
 
         data = data['transaction']
 
@@ -144,7 +145,7 @@ class TxApiBlockCypher(TxApi):
 
     def get_tx(self, txhash):
 
-        data = self.fetch_json(self.url, 'txs', txhash)
+        data = self.fetch_json('txs', txhash)
 
         t = proto_types.TransactionType()
         t.version = data['ver']
