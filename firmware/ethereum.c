@@ -163,7 +163,7 @@ static void send_signature(void)
 
 	keccak_Final(&keccak_ctx, hash);
 	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v, ethereum_is_canonic) != 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Signing failed");
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Signing failed");
 		ethereum_signing_abort();
 		return;
 	}
@@ -409,7 +409,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	/* eip-155 chain id */
 	if (msg->has_chain_id) {
 		if (msg->chain_id < 1 || msg->chain_id > 109) {
-			fsm_sendFailure(FailureType_Failure_Other, "Chain Id out of bounds");
+			fsm_sendFailure(FailureType_Failure_DataError, "Chain Id out of bounds");
 			ethereum_signing_abort();
 			return;
 		}
@@ -420,7 +420,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	if (msg->has_data_length && msg->data_length > 0) {
 		if (!msg->has_data_initial_chunk || msg->data_initial_chunk.size == 0) {
-			fsm_sendFailure(FailureType_Failure_Other, "Data length provided, but no initial chunk");
+			fsm_sendFailure(FailureType_Failure_DataError, "Data length provided, but no initial chunk");
 			ethereum_signing_abort();
 			return;
 		}
@@ -428,7 +428,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		 * prevent exceeding the limit we use a stricter limit on data length.
 		 */
 		if (msg->data_length > 16000000)  {
-			fsm_sendFailure(FailureType_Failure_Other, "Data length exceeds limit");
+			fsm_sendFailure(FailureType_Failure_DataError, "Data length exceeds limit");
 			ethereum_signing_abort();
 			return;
 		}
@@ -437,14 +437,14 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		data_total = 0;
 	}
 	if (msg->data_initial_chunk.size > data_total) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid size of initial chunk");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid size of initial chunk");
 		ethereum_signing_abort();
 		return;
 	}
 
 	// safety checks
 	if (!ethereum_signing_check(msg)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing aborted (safety check failed)");
+		fsm_sendFailure(FailureType_Failure_DataError, "Safety check failed");
 		ethereum_signing_abort();
 		return;
 	}
@@ -464,7 +464,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	}
 
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		ethereum_signing_abort();
 		return;
 	}
@@ -472,7 +472,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	if (token == NULL && data_total > 0) {
 		layoutEthereumData(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size, data_total);
 		if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			ethereum_signing_abort();
 			return;
 		}
@@ -482,7 +482,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 					  msg->gas_price.bytes, msg->gas_price.size,
 					  msg->gas_limit.bytes, msg->gas_limit.size, token != NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled by user");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		ethereum_signing_abort();
 		return;
 	}
@@ -530,19 +530,19 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 void ethereum_signing_txack(EthereumTxAck *tx)
 {
 	if (!ethereum_signing) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in Signing mode");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in Ethereum signing mode");
 		layoutHome();
 		return;
 	}
 
 	if (tx->data_chunk.size > data_left) {
-		fsm_sendFailure(FailureType_Failure_Other, "Too much data");
+		fsm_sendFailure(FailureType_Failure_DataError, "Too much data");
 		ethereum_signing_abort();
 		return;
 	}
 
 	if (data_left > 0 && (!tx->has_data_chunk || tx->data_chunk.size == 0)) {
-		fsm_sendFailure(FailureType_Failure_Other, "Empty data chunk received");
+		fsm_sendFailure(FailureType_Failure_DataError, "Empty data chunk received");
 		ethereum_signing_abort();
 		return;
 	}

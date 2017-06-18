@@ -50,14 +50,14 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	if (display_random) {
 		layoutDialogSwipe(&bmp_icon_info, "Cancel", "Continue", NULL, "Internal entropy:", ent_str[0], ent_str[1], ent_str[2], ent_str[3], NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ResetDevice, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Reset cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
 	}
 
 	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "PIN change failed");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -140,7 +140,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				storage_reset();
 				layoutHome();
-				fsm_sendFailure(FailureType_Failure_Other, "Reset device aborted");
+				fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 				return;
 			}
 		}

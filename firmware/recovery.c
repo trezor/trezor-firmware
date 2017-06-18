@@ -141,7 +141,7 @@ static void recovery_done(void) {
 		fsm_sendSuccess("Device recovered");
 	} else {
 		storage_reset();
-		fsm_sendFailure(FailureType_Failure_SyntaxError, "Invalid mnemonic, are words in correct order?");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid mnemonic, are words in correct order?");
 	}
 	awaiting_word = 0;
 	layoutHome();
@@ -376,7 +376,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	enforce_wordlist = _enforce_wordlist;
 
 	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "PIN change failed");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -411,7 +411,7 @@ static void recovery_scrambledword(const char *word)
 	if (word_pos == 0) { // fake word
 		if (strcmp(word, fake_word) != 0) {
 			storage_reset();
-			fsm_sendFailure(FailureType_Failure_SyntaxError, "Wrong word retyped");
+			fsm_sendFailure(FailureType_Failure_ProcessError, "Wrong word retyped");
 			layoutHome();
 			return;
 		}
@@ -428,7 +428,7 @@ static void recovery_scrambledword(const char *word)
 			}
 			if (!found) {
 				storage_reset();
-				fsm_sendFailure(FailureType_Failure_SyntaxError, "Word not found in a wordlist");
+				fsm_sendFailure(FailureType_Failure_DataError, "Word not found in a wordlist");
 				layoutHome();
 				return;
 			}

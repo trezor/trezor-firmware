@@ -86,7 +86,7 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 
 #define CHECK_PARAM(cond, errormsg) \
 	if (!(cond)) { \
-		fsm_sendFailure(FailureType_Failure_SyntaxError, (errormsg)); \
+		fsm_sendFailure(FailureType_Failure_DataError, (errormsg)); \
 		layoutHome(); \
 		return; \
 	}
@@ -127,7 +127,7 @@ const CoinType *fsm_getCoin(bool has_name, const char *name)
 		coin = coinByName("Bitcoin");
 	}
 	if (!coin) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid coin name");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid coin name");
 		layoutHome();
 		return 0;
 	}
@@ -146,7 +146,7 @@ HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t addres
 		return &node;
 	}
 	if (hdnode_private_ckd_cached(&node, address_n, address_n_count, NULL) == 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Failed to derive private key");
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Failed to derive private key");
 		layoutHome();
 		return 0;
 	}
@@ -203,7 +203,7 @@ void fsm_msgPing(Ping *msg)
 	if (msg->has_button_protection && msg->button_protection) {
 		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "answer to ping?", NULL, NULL, NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Ping cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -215,7 +215,7 @@ void fsm_msgPing(Ping *msg)
 
 	if (msg->has_passphrase_protection && msg->passphrase_protection) {
 		if (!protectPassphrase()) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Ping cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			return;
 		}
 	}
@@ -246,7 +246,7 @@ void fsm_msgChangePin(ChangePin *msg)
 		}
 	}
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, removal ? "PIN removal cancelled" : "PIN change cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -260,7 +260,7 @@ void fsm_msgChangePin(ChangePin *msg)
 		if (protectChangePin()) {
 			fsm_sendSuccess("PIN changed");
 		} else {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "PIN change failed");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		}
 	}
 	layoutHome();
@@ -271,7 +271,7 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 	(void)msg;
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_WipeDevice, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Wipe cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -289,7 +289,7 @@ void fsm_msgGetEntropy(GetEntropy *msg)
 {
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "send entropy?", NULL, NULL, NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Entropy cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -338,7 +338,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(node->public_key);
 		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show public key cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -369,14 +369,14 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "I take the risk", NULL, "Loading private seed", "is not recommended.", "Continue only if you", "know what you are", "doing!", NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Load cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
 
 	if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum) ) {
 		if (!mnemonic_check(msg->mnemonic)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Mnemonic with wrong checksum provided");
+			fsm_sendFailure(FailureType_Failure_DataError, "Mnemonic with wrong checksum provided");
 			layoutHome();
 			return;
 		}
@@ -435,7 +435,7 @@ void fsm_msgCancel(Cancel *msg)
 	recovery_abort();
 	signing_abort();
 	ethereum_signing_abort();
-	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Aborted");
+	fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 }
 
 void fsm_msgEthereumSignTx(EthereumSignTx *msg)
@@ -474,7 +474,7 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 	if ((encrypt && ask_on_encrypt) || (!encrypt && ask_on_decrypt)) {
 		layoutCipherKeyValue(encrypt, msg->key);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "CipherKeyValue cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -520,7 +520,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	if (msg->has_label) {
 		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change label to", msg->label, "?", NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -528,7 +528,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	if (msg->has_language) {
 		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change language to", msg->language, "?", NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -536,7 +536,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	if (msg->has_use_passphrase) {
 		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", msg->use_passphrase ? "enable passphrase" : "disable passphrase", "encryption?", NULL, NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -544,7 +544,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	if (msg->has_homescreen) {
 		layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "change the home", "screen ?", NULL, NULL, NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Apply settings cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -583,7 +583,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	layoutProgress("Computing address", 0);
 	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Can't encode address");
+		fsm_sendFailure(FailureType_Failure_DataError, "Can't encode address");
 	}
 
 	if (msg->has_show_display && msg->show_display) {
@@ -601,7 +601,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 		}
 		layoutAddress(resp->address, desc);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -636,7 +636,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 
 		layoutAddress(address, desc);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Show address cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
@@ -663,7 +663,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	layoutSignMessage(msg->message.bytes, msg->message.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign message cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -683,7 +683,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);
 	} else {
-		fsm_sendFailure(FailureType_Failure_Other, "Error signing message");
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Error signing message");
 	}
 	layoutHome();
 }
@@ -698,26 +698,26 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 	uint32_t address_type;
 	if (!coinExtractAddressType(coin, msg->address, &address_type) || !ecdsa_address_decode(msg->address, address_type, addr_raw)) {
-		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid address");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid address");
 		return;
 	}
 	layoutProgressSwipe("Verifying", 0);
 	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, address_type, addr_raw, msg->signature.bytes) == 0) {
 		layoutVerifyAddress(msg->address);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
 		layoutVerifyMessage(msg->message.bytes, msg->message.size);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Message verification cancelled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 			layoutHome();
 			return;
 		}
 		fsm_sendSuccess("Message verified");
 	} else {
-		fsm_sendFailure(FailureType_Failure_InvalidSignature, "Invalid signature");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid signature");
 	}
 	layoutHome();
 }
@@ -730,7 +730,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 
 	layoutSignIdentity(&(msg->identity), msg->has_challenge_visual ? msg->challenge_visual : 0);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Sign identity cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -739,7 +739,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 
 	uint8_t hash[32];
 	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid identity");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid identity");
 		layoutHome();
 		return;
 	}
@@ -793,7 +793,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_SignedIdentity, resp);
 	} else {
-		fsm_sendFailure(FailureType_Failure_Other, "Error signing identity");
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Error signing identity");
 	}
 	layoutHome();
 }
@@ -806,7 +806,7 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 
 	layoutDecryptIdentity(&msg->identity);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "ECDH Session cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -815,7 +815,7 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 
 	uint8_t hash[32];
 	if (!msg->has_identity || cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
-		fsm_sendFailure(FailureType_Failure_Other, "Invalid identity");
+		fsm_sendFailure(FailureType_Failure_DataError, "Invalid identity");
 		layoutHome();
 		return;
 	}
@@ -841,7 +841,7 @@ void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg)
 		resp->session_key.size = result_size;
 		msg_write(MessageType_MessageType_ECDHSessionKey, resp);
 	} else {
-		fsm_sendFailure(FailureType_Failure_Other, "Error getting ECDH session key");
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Error getting ECDH session key");
 	}
 	layoutHome();
 }
@@ -874,13 +874,13 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	}
 	layoutEncryptMessage(msg->message.bytes, msg->message.size, signing);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Encrypt message cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
 	layoutProgressSwipe("Encrypting", 0);
 	if (cryptoMessageEncrypt(&pubkey, msg->message.bytes, msg->message.size, display_only, resp->nonce.bytes, &(resp->nonce.size), resp->message.bytes, &(resp->message.size), resp->hmac.bytes, &(resp->hmac.size), signing ? node->private_key : 0, signing ? address_raw : 0) != 0) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error encrypting message");
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Error encrypting message");
 		layoutHome();
 		return;
 	}
@@ -914,7 +914,7 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 	bool signing = false;
 	uint8_t address_raw[MAX_ADDR_RAW_SIZE];
 	if (cryptoMessageDecrypt(&nonce_pubkey, msg->message.bytes, msg->message.size, msg->hmac.bytes, msg->hmac.size, node->private_key, resp->message.bytes, &(resp->message.size), &display_only, &signing, address_raw) != 0) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Error decrypting message");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}
@@ -972,7 +972,7 @@ void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 {
 	layoutDialogSwipe(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you want to set", "the U2F counter?", NULL, NULL, NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "SetU2FCounter cancelled");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
 		layoutHome();
 		return;
 	}

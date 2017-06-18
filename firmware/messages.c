@@ -230,7 +230,7 @@ void msg_process(char type, uint16_t msg_id, const pb_field_t *fields, uint8_t *
 	if (status) {
 		MessageProcessFunc(type, 'i', msg_id, msg_data);
 	} else {
-		fsm_sendFailure(FailureType_Failure_SyntaxError, stream.errmsg);
+		fsm_sendFailure(FailureType_Failure_DataError, stream.errmsg);
 	}
 }
 
@@ -258,7 +258,7 @@ void msg_read_common(char type, const uint8_t *buf, int len)
 			return;
 		}
 		if (msg_size > MSG_IN_SIZE) { // message is too big :(
-			fsm_sendFailure(FailureType_Failure_SyntaxError, "Message too big");
+			fsm_sendFailure(FailureType_Failure_DataError, "Message too big");
 			return;
 		}
 
@@ -353,7 +353,7 @@ void msg_read_tiny(const uint8_t *buf, int len)
 		if (status) {
 			msg_tiny_id = msg_id;
 		} else {
-			fsm_sendFailure(FailureType_Failure_SyntaxError, stream.errmsg);
+			fsm_sendFailure(FailureType_Failure_DataError, stream.errmsg);
 			msg_tiny_id = 0xFFFF;
 		}
 	} else {
