@@ -30,6 +30,7 @@
 #include "bip39.h"
 #include "oled.h"
 #include "usb.h"
+#include "gettext.h"
 #include "types.pb.h"
 #include "recovery-table.h"
 
@@ -138,10 +139,10 @@ static void recovery_done(void) {
 			storage.imported = true;
 		}
 		storage_commit();
-		fsm_sendSuccess("Device recovered");
+		fsm_sendSuccess(_("Device recovered"));
 	} else {
 		storage_reset();
-		fsm_sendFailure(FailureType_Failure_DataError, "Invalid mnemonic, are words in correct order?");
+		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid mnemonic, are words in correct order?"));
 	}
 	awaiting_word = 0;
 	layoutHome();
@@ -212,7 +213,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 		char desc[] = "##th word";
 		int nr = (word_index / 4) + 1;
 		format_number(desc, nr);
-		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter the", (nr < 10 ? desc + 1 : desc), "of your mnemonic", NULL, NULL, NULL);
+		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, _("Please enter the"), (nr < 10 ? desc + 1 : desc), _("of your mnemonic"), NULL, NULL, NULL);
 	} else {
 		oledBox(0, 27, 127, 63, false);
 	}
@@ -358,12 +359,12 @@ void next_word(void) {
 	if (word_pos == 0) {
 		const char * const *wl = mnemonic_wordlist();
 		strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
-		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter the word", NULL, fake_word, NULL, "on your computer", NULL);
+		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, _("Please enter the word"), NULL, fake_word, NULL, _("on your computer"), NULL);
 	} else {
 		fake_word[0] = 0;
 		char desc[] = "##th word";
 		format_number(desc, word_pos);
-		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter the", NULL, (word_pos < 10 ? desc + 1 : desc), NULL, "of your mnemonic", NULL);
+		layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, _("Please enter the"), NULL, (word_pos < 10 ? desc + 1 : desc), NULL, _("of your mnemonic"), NULL);
 	}
 	recovery_request();
 }
@@ -376,7 +377,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	enforce_wordlist = _enforce_wordlist;
 
 	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -411,7 +412,7 @@ static void recovery_scrambledword(const char *word)
 	if (word_pos == 0) { // fake word
 		if (strcmp(word, fake_word) != 0) {
 			storage_reset();
-			fsm_sendFailure(FailureType_Failure_ProcessError, "Wrong word retyped");
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Wrong word retyped"));
 			layoutHome();
 			return;
 		}
@@ -428,7 +429,7 @@ static void recovery_scrambledword(const char *word)
 			}
 			if (!found) {
 				storage_reset();
-				fsm_sendFailure(FailureType_Failure_DataError, "Word not found in a wordlist");
+				fsm_sendFailure(FailureType_Failure_DataError, _("Word not found in a wordlist"));
 				layoutHome();
 				return;
 			}
@@ -457,7 +458,7 @@ void recovery_word(const char *word)
 		recovery_scrambledword(word);
 		break;
 	default:
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in Recovery mode");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not in Recovery mode"));
 		break;
 	}
 }

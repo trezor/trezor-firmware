@@ -28,6 +28,7 @@
 #include "protect.h"
 #include "bip39.h"
 #include "util.h"
+#include "gettext.h"
 
 static uint32_t strength;
 static uint8_t  int_entropy[32];
@@ -48,16 +49,16 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	data2hex(int_entropy + 24, 8, ent_str[3]);
 
 	if (display_random) {
-		layoutDialogSwipe(&bmp_icon_info, "Cancel", "Continue", NULL, "Internal entropy:", ent_str[0], ent_str[1], ent_str[2], ent_str[3], NULL);
+		layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Continue"), NULL, _("Internal entropy:"), ent_str[0], ent_str[1], ent_str[2], ent_str[3], NULL);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ResetDevice, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 	}
 
 	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -79,7 +80,7 @@ static char current_word[10], current_word_display[11];
 void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 {
 	if (!awaiting_entropy) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Not in Reset mode");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not in Reset mode"));
 		return;
 	}
 	SHA256_CTX ctx;
@@ -126,21 +127,21 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 			current_word_display[j + 1] = 0;
 			if (word_pos == (int)strength/32*3) { // last word
 				if (pass == 1) {
-					layoutDialogSwipe(&bmp_icon_info, NULL, "Finish", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, _("Finish"), NULL, _("Please check the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
-					layoutDialogSwipe(&bmp_icon_info, NULL, "Again", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, _("Again"), NULL, _("Write down the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				}
 			} else {
 				if (pass == 1) {
-					layoutDialogSwipe(&bmp_icon_info, NULL, "Next", NULL, "Please check the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, _("Next"), NULL, _("Please check the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
-					layoutDialogSwipe(&bmp_icon_info, NULL, "Next", NULL, "Write down the seed", NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
+					layoutDialogSwipe(&bmp_icon_info, NULL, _("Next"), NULL, _("Write down the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				}
 			}
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				storage_reset();
 				layoutHome();
-				fsm_sendFailure(FailureType_Failure_ActionCancelled, "Action cancelled by user");
+				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 				return;
 			}
 		}
@@ -148,7 +149,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 
 	storage.has_mnemonic = true;
 	storage_commit();
-	fsm_sendSuccess("Device reset");
+	fsm_sendSuccess(_("Device reset"));
 	layoutHome();
 }
 

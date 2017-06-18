@@ -28,6 +28,7 @@
 #include "layout2.h"
 #include "util.h"
 #include "debug.h"
+#include "gettext.h"
 
 bool protectAbortedByInitialize = false;
 
@@ -152,7 +153,7 @@ bool protectPin(bool use_cached)
 	while (wait > 0) {
 		// convert wait to secstr string
 		char secstrbuf[20];
-		strlcpy(secstrbuf, "________0 seconds", sizeof(secstrbuf));
+		strlcpy(secstrbuf, _("________0 seconds"), sizeof(secstrbuf));
 		char *secstr = secstrbuf + 9;
 		uint32_t secs = wait;
 		while (secs > 0 && secstr >= secstrbuf) {
@@ -163,23 +164,23 @@ bool protectPin(bool use_cached)
 		if (wait == 1) {
 			secstrbuf[16] = 0;
 		}
-		layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Wrong PIN entered", NULL, "Please wait", secstr, "to continue ...", NULL);
+		layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Wrong PIN entered"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
 		// wait one second
 		usbSleep(1000);
 		if (msg_tiny_id == MessageType_MessageType_Initialize) {
 			protectAbortedByInitialize = true;
 			msg_tiny_id = 0xFFFF;
 			usbTiny(0);
-			fsm_sendFailure(FailureType_Failure_PinCancelled, "PIN cancelled");
+			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 			return false;
 		}
 		wait--;
 	}
 	usbTiny(0);
 	const char *pin;
-	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, "Please enter current PIN:");
+	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
 	if (!pin) {
-		fsm_sendFailure(FailureType_Failure_PinCancelled, "PIN cancelled");
+		fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 		return false;
 	}
 	if (storage_increasePinFails(fails) && storage_isPinCorrect(pin)) {
@@ -187,7 +188,7 @@ bool protectPin(bool use_cached)
 		storage_resetPinFails(fails);
 		return true;
 	} else {
-		fsm_sendFailure(FailureType_Failure_PinInvalid, "PIN invalid");
+		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
 		return false;
 	}
 }
@@ -196,12 +197,12 @@ bool protectChangePin(void)
 {
 	const char *pin;
 	char pin1[17], pin2[17];
-	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, "Please enter new PIN:");
+	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
 	if (!pin) {
 		return false;
 	}
 	strlcpy(pin1, pin, sizeof(pin1));
-	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond, "Please re-enter new PIN:");
+	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond, _("Please re-enter new PIN:"));
 	if (!pin) {
 		return false;
 	}
@@ -225,7 +226,7 @@ bool protectPassphrase(void)
 	usbTiny(1);
 	msg_write(MessageType_MessageType_PassphraseRequest, &resp);
 
-	layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, "Please enter your", "passphrase using", "the computer's", "keyboard.", NULL, NULL);
+	layoutDialogSwipe(&bmp_icon_info, NULL, NULL, NULL, _("Please enter your"), _("passphrase using"), _("the computer's"), _("keyboard."), NULL, NULL);
 
 	bool result;
 	for (;;) {

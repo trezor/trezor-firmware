@@ -40,6 +40,7 @@
 #include "protect.h"
 #include "layout2.h"
 #include "usb.h"
+#include "gettext.h"
 
 Storage storage;
 
@@ -105,7 +106,7 @@ static char sessionPassphrase[51];
 
 void storage_show_error(void)
 {
-	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Storage failure", "detected.", NULL, "Please unplug", "the device.", NULL);
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Storage failure"), _("detected."), NULL, _("Please unplug"), _("the device."), NULL);
 	system_halt();
 }
 
@@ -339,7 +340,7 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size)
 void get_root_node_callback(uint32_t iter, uint32_t total)
 {
 	usbSleep(1);
-	layoutProgress("Waking up", 1000 * iter / total);
+	layoutProgress(_("Waking up"), 1000 * iter / total);
 }
 
 const uint8_t *storage_getSeed(bool usePassphrase)

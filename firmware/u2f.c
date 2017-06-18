@@ -17,7 +17,6 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <string.h>
 #include <ecdsa.h>
 
@@ -34,6 +33,7 @@
 #include "hmac.h"
 #include "util.h"
 #include "macros.h"
+#include "gettext.h"
 
 #include "u2f/u2f.h"
 #include "u2f/u2f_hid.h"
@@ -564,12 +564,12 @@ void u2f_register(const APDU *a)
 		// error: testof-user-presence is required
 		buttonUpdate(); // Clear button state
 		if (0 == memcmp(req->appId, BOGUS_APPID, U2F_APPID_SIZE)) {
-			layoutDialog(&bmp_icon_warning, NULL, "OK", NULL, "Another U2F device", "was used to register", "in this application.", NULL, NULL, NULL);
+			layoutDialog(&bmp_icon_warning, NULL, _("OK"), NULL, _("Another U2F device"), _("was used to register"), _("in this application."), NULL, NULL, NULL);
 		} else {
 			const char *appname;
 			const BITMAP *appicon;
 			getReadableAppId(req->appId, &appname, &appicon);
-			layoutU2FDialog("Register", appname, appicon);
+			layoutU2FDialog(_("Register"), appname, appicon);
 		}
 		last_req_state = REG;
 	}
@@ -704,7 +704,7 @@ void u2f_authenticate(const APDU *a)
 		const char *appname;
 		const BITMAP *appicon;
 		getReadableAppId(req->appId, &appname, &appicon);
-		layoutU2FDialog("Authenticate", appname, appicon);
+		layoutU2FDialog(_("Authenticate"), appname, appicon);
 		last_req_state = AUTH;
 	}
 

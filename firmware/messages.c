@@ -24,6 +24,7 @@
 #include "debug.h"
 #include "fsm.h"
 #include "util.h"
+#include "gettext.h"
 
 #include "pb_decode.h"
 #include "pb_encode.h"
@@ -254,11 +255,11 @@ void msg_read_common(char type, const uint8_t *buf, int len)
 
 		fields = MessageFields(type, 'i', msg_id);
 		if (!fields) { // unknown message
-			fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Unknown message");
+			fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Unknown message"));
 			return;
 		}
 		if (msg_size > MSG_IN_SIZE) { // message is too big :(
-			fsm_sendFailure(FailureType_Failure_DataError, "Message too big");
+			fsm_sendFailure(FailureType_Failure_DataError, _("Message too big"));
 			return;
 		}
 
@@ -357,7 +358,7 @@ void msg_read_tiny(const uint8_t *buf, int len)
 			msg_tiny_id = 0xFFFF;
 		}
 	} else {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, "Unknown message");
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Unknown message"));
 		msg_tiny_id = 0xFFFF;
 	}
 }
