@@ -27,8 +27,9 @@ addons:
     - libnewlib-arm-none-eabi
 
 install:
-    - pip3 install ed25519 pyblake2 flake8
-    - pip2 install ecdsa mnemonic protobuf requests
+    - pip3 install ed25519 pyblake2
+    - pip3 install flake8
+    - pip3 install ecdsa mnemonic protobuf requests
 
 script:
   - test "$GOAL" != "stm32" || make vendorheader

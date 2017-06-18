@@ -19,7 +19,7 @@ export PYTHONPATH="../.."
 
 error=0
 
-PYTHON="${PYTHON:-python2}"
+PYTHON="${PYTHON:-python3}"
 
 : '
 not passing:
