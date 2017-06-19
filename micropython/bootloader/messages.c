@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "messages.pb.h"
@@ -110,17 +112,10 @@ static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t field
     return true;
 }
 
-static bool _encode_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
-{
-    if (!pb_encode_tag_for_field(stream, field)) {
-        return false;
-    }
-    return pb_encode_string(stream, *arg, strlen(*arg));
-}
-
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) do { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; } while (0)
-#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) do { msg_send.FIELD.funcs.encode = &_encode_string; msg_send.FIELD.arg = VALUE; } while (0)
+// FIXME: strcpy -> strncpy
+#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) do { msg_send.has_##FIELD = true; strcpy(msg_send.FIELD, VALUE); } while (0)
 #define MSG_SEND(TYPE) do { _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send); } while (0)
 
 typedef struct {
@@ -191,7 +186,8 @@ static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const 
     return true;
 }
 
-static bool _decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg)
+/*
+static bool _decode(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     pb_byte_t *buf = *arg;
     memset(buf, 0, 1024);
@@ -203,9 +199,9 @@ static bool _decode_string(pb_istream_t *stream, const pb_field_t *field, void *
     }
     return true;
 }
+*/
 
 #define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
-#define MSG_RECV_ASSIGN_STRING(FIELD, VALUE) do { msg_recv.FIELD.funcs.decode = &_decode_string; msg_recv.FIELD.arg = VALUE; } while (0)
 #define MSG_RECV(TYPE) do { _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv); } while(0)
 
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -226,14 +222,11 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 
 void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
-    char m[1024];
-
     MSG_RECV_INIT(Ping);
-    MSG_RECV_ASSIGN_STRING(message, m);
     MSG_RECV(Ping);
 
     MSG_SEND_INIT(Success);
-    MSG_SEND_ASSIGN_STRING(message, m);
+    MSG_SEND_ASSIGN_STRING(message, msg_recv.message);
     MSG_SEND(Success);
 }
 

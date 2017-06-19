@@ -22,176 +22,28 @@ typedef enum _MessageType {
     MessageType_MessageType_Ping = 1,
     MessageType_MessageType_Success = 2,
     MessageType_MessageType_Failure = 3,
-    MessageType_MessageType_ChangePin = 4,
-    MessageType_MessageType_WipeDevice = 5,
     MessageType_MessageType_FirmwareErase = 6,
     MessageType_MessageType_FirmwareUpload = 7,
     MessageType_MessageType_FirmwareRequest = 8,
-    MessageType_MessageType_GetEntropy = 9,
-    MessageType_MessageType_Entropy = 10,
-    MessageType_MessageType_GetPublicKey = 11,
-    MessageType_MessageType_PublicKey = 12,
-    MessageType_MessageType_LoadDevice = 13,
-    MessageType_MessageType_ResetDevice = 14,
-    MessageType_MessageType_SignTx = 15,
-    MessageType_MessageType_SimpleSignTx = 16,
     MessageType_MessageType_Features = 17,
-    MessageType_MessageType_PinMatrixRequest = 18,
-    MessageType_MessageType_PinMatrixAck = 19,
-    MessageType_MessageType_Cancel = 20,
-    MessageType_MessageType_TxRequest = 21,
-    MessageType_MessageType_TxAck = 22,
-    MessageType_MessageType_CipherKeyValue = 23,
-    MessageType_MessageType_ClearSession = 24,
-    MessageType_MessageType_ApplySettings = 25,
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
-    MessageType_MessageType_GetAddress = 29,
-    MessageType_MessageType_Address = 30,
-    MessageType_MessageType_EntropyRequest = 35,
-    MessageType_MessageType_EntropyAck = 36,
-    MessageType_MessageType_SignMessage = 38,
-    MessageType_MessageType_VerifyMessage = 39,
-    MessageType_MessageType_MessageSignature = 40,
-    MessageType_MessageType_PassphraseRequest = 41,
-    MessageType_MessageType_PassphraseAck = 42,
-    MessageType_MessageType_EstimateTxSize = 43,
-    MessageType_MessageType_TxSize = 44,
-    MessageType_MessageType_RecoveryDevice = 45,
-    MessageType_MessageType_WordRequest = 46,
-    MessageType_MessageType_WordAck = 47,
-    MessageType_MessageType_CipheredKeyValue = 48,
-    MessageType_MessageType_EncryptMessage = 49,
-    MessageType_MessageType_EncryptedMessage = 50,
-    MessageType_MessageType_DecryptMessage = 51,
-    MessageType_MessageType_DecryptedMessage = 52,
-    MessageType_MessageType_SignIdentity = 53,
-    MessageType_MessageType_SignedIdentity = 54,
-    MessageType_MessageType_GetFeatures = 55,
-    MessageType_MessageType_EthereumGetAddress = 56,
-    MessageType_MessageType_EthereumAddress = 57,
-    MessageType_MessageType_EthereumSignTx = 58,
-    MessageType_MessageType_EthereumTxRequest = 59,
-    MessageType_MessageType_EthereumTxAck = 60,
-    MessageType_MessageType_GetECDHSessionKey = 61,
-    MessageType_MessageType_ECDHSessionKey = 62,
-    MessageType_MessageType_SetU2FCounter = 63,
-    MessageType_MessageType_DebugLinkDecision = 100,
-    MessageType_MessageType_DebugLinkGetState = 101,
-    MessageType_MessageType_DebugLinkState = 102,
-    MessageType_MessageType_DebugLinkStop = 103,
-    MessageType_MessageType_DebugLinkLog = 104,
-    MessageType_MessageType_DebugLinkMemoryRead = 110,
-    MessageType_MessageType_DebugLinkMemory = 111,
-    MessageType_MessageType_DebugLinkMemoryWrite = 112,
-    MessageType_MessageType_DebugLinkFlashErase = 113
+    MessageType_MessageType_GetFeatures = 55
 } MessageType;
 #define _MessageType_MIN MessageType_MessageType_Initialize
-#define _MessageType_MAX MessageType_MessageType_DebugLinkFlashErase
-#define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_DebugLinkFlashErase+1))
+#define _MessageType_MAX MessageType_MessageType_GetFeatures
+#define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_GetFeatures+1))
 
 /* Struct definitions */
-typedef struct _Address {
-    pb_callback_t address;
-/* @@protoc_insertion_point(struct:Address) */
-} Address;
-
 typedef struct _ButtonAck {
     char dummy_field;
 /* @@protoc_insertion_point(struct:ButtonAck) */
 } ButtonAck;
 
-typedef struct _Cancel {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:Cancel) */
-} Cancel;
-
-typedef struct _CipheredKeyValue {
-    pb_callback_t value;
-/* @@protoc_insertion_point(struct:CipheredKeyValue) */
-} CipheredKeyValue;
-
-typedef struct _ClearSession {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:ClearSession) */
-} ClearSession;
-
-typedef struct _DebugLinkGetState {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:DebugLinkGetState) */
-} DebugLinkGetState;
-
-typedef struct _DebugLinkMemory {
-    pb_callback_t memory;
-/* @@protoc_insertion_point(struct:DebugLinkMemory) */
-} DebugLinkMemory;
-
-typedef struct _DebugLinkStop {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:DebugLinkStop) */
-} DebugLinkStop;
-
-typedef struct _DecryptMessage {
-    pb_callback_t address_n;
-    pb_callback_t nonce;
-    pb_callback_t message;
-    pb_callback_t hmac;
-/* @@protoc_insertion_point(struct:DecryptMessage) */
-} DecryptMessage;
-
-typedef struct _DecryptedMessage {
-    pb_callback_t message;
-    pb_callback_t address;
-/* @@protoc_insertion_point(struct:DecryptedMessage) */
-} DecryptedMessage;
-
-typedef struct _ECDHSessionKey {
-    pb_callback_t session_key;
-/* @@protoc_insertion_point(struct:ECDHSessionKey) */
-} ECDHSessionKey;
-
-typedef struct _EncryptedMessage {
-    pb_callback_t nonce;
-    pb_callback_t message;
-    pb_callback_t hmac;
-/* @@protoc_insertion_point(struct:EncryptedMessage) */
-} EncryptedMessage;
-
-typedef struct _Entropy {
-    pb_callback_t entropy;
-/* @@protoc_insertion_point(struct:Entropy) */
-} Entropy;
-
-typedef struct _EntropyAck {
-    pb_callback_t entropy;
-/* @@protoc_insertion_point(struct:EntropyAck) */
-} EntropyAck;
-
-typedef struct _EntropyRequest {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:EntropyRequest) */
-} EntropyRequest;
-
-typedef struct _EthereumAddress {
-    pb_callback_t address;
-/* @@protoc_insertion_point(struct:EthereumAddress) */
-} EthereumAddress;
-
-typedef struct _EthereumTxAck {
-    pb_callback_t data_chunk;
-/* @@protoc_insertion_point(struct:EthereumTxAck) */
-} EthereumTxAck;
-
 typedef struct _FirmwareErase {
     char dummy_field;
 /* @@protoc_insertion_point(struct:FirmwareErase) */
 } FirmwareErase;
-
-typedef struct _FirmwareUpload {
-    pb_callback_t payload;
-    pb_callback_t hash;
-/* @@protoc_insertion_point(struct:FirmwareUpload) */
-} FirmwareUpload;
 
 typedef struct _GetFeatures {
     char dummy_field;
@@ -203,211 +55,27 @@ typedef struct _Initialize {
 /* @@protoc_insertion_point(struct:Initialize) */
 } Initialize;
 
-typedef struct _MessageSignature {
-    pb_callback_t address;
-    pb_callback_t signature;
-/* @@protoc_insertion_point(struct:MessageSignature) */
-} MessageSignature;
-
-typedef struct _PassphraseAck {
-    pb_callback_t passphrase;
-/* @@protoc_insertion_point(struct:PassphraseAck) */
-} PassphraseAck;
-
-typedef struct _PassphraseRequest {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:PassphraseRequest) */
-} PassphraseRequest;
-
-typedef struct _PinMatrixAck {
-    pb_callback_t pin;
-/* @@protoc_insertion_point(struct:PinMatrixAck) */
-} PinMatrixAck;
-
-typedef struct _SignMessage {
-    pb_callback_t address_n;
-    pb_callback_t message;
-    pb_callback_t coin_name;
-/* @@protoc_insertion_point(struct:SignMessage) */
-} SignMessage;
-
-typedef struct _SignedIdentity {
-    pb_callback_t address;
-    pb_callback_t public_key;
-    pb_callback_t signature;
-/* @@protoc_insertion_point(struct:SignedIdentity) */
-} SignedIdentity;
-
-typedef struct _Success {
-    pb_callback_t message;
-/* @@protoc_insertion_point(struct:Success) */
-} Success;
-
-typedef struct _VerifyMessage {
-    pb_callback_t address;
-    pb_callback_t signature;
-    pb_callback_t message;
-    pb_callback_t coin_name;
-/* @@protoc_insertion_point(struct:VerifyMessage) */
-} VerifyMessage;
-
-typedef struct _WipeDevice {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:WipeDevice) */
-} WipeDevice;
-
-typedef struct _WordAck {
-    pb_callback_t word;
-/* @@protoc_insertion_point(struct:WordAck) */
-} WordAck;
-
-typedef struct _ApplySettings {
-    pb_callback_t language;
-    pb_callback_t label;
-    bool has_use_passphrase;
-    bool use_passphrase;
-    pb_callback_t homescreen;
-/* @@protoc_insertion_point(struct:ApplySettings) */
-} ApplySettings;
-
 typedef struct _ButtonRequest {
     bool has_code;
     ButtonRequestType code;
-    pb_callback_t data;
+    bool has_data;
+    char data[256];
 /* @@protoc_insertion_point(struct:ButtonRequest) */
 } ButtonRequest;
-
-typedef struct _ChangePin {
-    bool has_remove;
-    bool remove;
-/* @@protoc_insertion_point(struct:ChangePin) */
-} ChangePin;
-
-typedef struct _CipherKeyValue {
-    pb_callback_t address_n;
-    pb_callback_t key;
-    pb_callback_t value;
-    bool has_encrypt;
-    bool encrypt;
-    bool has_ask_on_encrypt;
-    bool ask_on_encrypt;
-    bool has_ask_on_decrypt;
-    bool ask_on_decrypt;
-    pb_callback_t iv;
-/* @@protoc_insertion_point(struct:CipherKeyValue) */
-} CipherKeyValue;
-
-typedef struct _DebugLinkDecision {
-    bool yes_no;
-/* @@protoc_insertion_point(struct:DebugLinkDecision) */
-} DebugLinkDecision;
-
-typedef struct _DebugLinkFlashErase {
-    bool has_sector;
-    uint32_t sector;
-/* @@protoc_insertion_point(struct:DebugLinkFlashErase) */
-} DebugLinkFlashErase;
-
-typedef struct _DebugLinkLog {
-    bool has_level;
-    uint32_t level;
-    pb_callback_t bucket;
-    pb_callback_t text;
-/* @@protoc_insertion_point(struct:DebugLinkLog) */
-} DebugLinkLog;
-
-typedef struct _DebugLinkMemoryRead {
-    bool has_address;
-    uint32_t address;
-    bool has_length;
-    uint32_t length;
-/* @@protoc_insertion_point(struct:DebugLinkMemoryRead) */
-} DebugLinkMemoryRead;
-
-typedef struct _DebugLinkMemoryWrite {
-    bool has_address;
-    uint32_t address;
-    pb_callback_t memory;
-    bool has_flash;
-    bool flash;
-/* @@protoc_insertion_point(struct:DebugLinkMemoryWrite) */
-} DebugLinkMemoryWrite;
-
-typedef struct _DebugLinkState {
-    pb_callback_t layout;
-    pb_callback_t pin;
-    pb_callback_t matrix;
-    pb_callback_t mnemonic;
-    bool has_node;
-    HDNodeType node;
-    bool has_passphrase_protection;
-    bool passphrase_protection;
-    pb_callback_t reset_word;
-    pb_callback_t reset_entropy;
-    pb_callback_t recovery_fake_word;
-    bool has_recovery_word_pos;
-    uint32_t recovery_word_pos;
-/* @@protoc_insertion_point(struct:DebugLinkState) */
-} DebugLinkState;
-
-typedef struct _EncryptMessage {
-    pb_callback_t pubkey;
-    pb_callback_t message;
-    bool has_display_only;
-    bool display_only;
-    pb_callback_t address_n;
-    pb_callback_t coin_name;
-/* @@protoc_insertion_point(struct:EncryptMessage) */
-} EncryptMessage;
-
-typedef struct _EstimateTxSize {
-    uint32_t outputs_count;
-    uint32_t inputs_count;
-    pb_callback_t coin_name;
-/* @@protoc_insertion_point(struct:EstimateTxSize) */
-} EstimateTxSize;
-
-typedef struct _EthereumGetAddress {
-    pb_callback_t address_n;
-    bool has_show_display;
-    bool show_display;
-/* @@protoc_insertion_point(struct:EthereumGetAddress) */
-} EthereumGetAddress;
-
-typedef struct _EthereumSignTx {
-    pb_callback_t address_n;
-    pb_callback_t nonce;
-    pb_callback_t gas_price;
-    pb_callback_t gas_limit;
-    pb_callback_t to;
-    pb_callback_t value;
-    pb_callback_t data_initial_chunk;
-    bool has_data_length;
-    uint32_t data_length;
-    bool has_chain_id;
-    uint32_t chain_id;
-/* @@protoc_insertion_point(struct:EthereumSignTx) */
-} EthereumSignTx;
-
-typedef struct _EthereumTxRequest {
-    bool has_data_length;
-    uint32_t data_length;
-    bool has_signature_v;
-    uint32_t signature_v;
-    pb_callback_t signature_r;
-    pb_callback_t signature_s;
-/* @@protoc_insertion_point(struct:EthereumTxRequest) */
-} EthereumTxRequest;
 
 typedef struct _Failure {
     bool has_code;
     FailureType code;
-    pb_callback_t message;
+    bool has_message;
+    char message[256];
 /* @@protoc_insertion_point(struct:Failure) */
 } Failure;
 
+typedef PB_BYTES_ARRAY_T(20) Features_revision_t;
+typedef PB_BYTES_ARRAY_T(32) Features_bootloader_hash_t;
 typedef struct _Features {
-    pb_callback_t vendor;
+    bool has_vendor;
+    char vendor[33];
     bool has_major_version;
     uint32_t major_version;
     bool has_minor_version;
@@ -416,18 +84,22 @@ typedef struct _Features {
     uint32_t patch_version;
     bool has_bootloader_mode;
     bool bootloader_mode;
-    pb_callback_t device_id;
+    bool has_device_id;
+    char device_id[25];
     bool has_pin_protection;
     bool pin_protection;
     bool has_passphrase_protection;
     bool passphrase_protection;
-    pb_callback_t language;
-    pb_callback_t label;
-    pb_callback_t coins;
+    bool has_language;
+    char language[17];
+    bool has_label;
+    char label[33];
     bool has_initialized;
     bool initialized;
-    pb_callback_t revision;
-    pb_callback_t bootloader_hash;
+    bool has_revision;
+    Features_revision_t revision;
+    bool has_bootloader_hash;
+    Features_bootloader_hash_t bootloader_hash;
     bool has_imported;
     bool imported;
     bool has_pin_cached;
@@ -447,64 +119,17 @@ typedef struct _FirmwareRequest {
 /* @@protoc_insertion_point(struct:FirmwareRequest) */
 } FirmwareRequest;
 
-typedef struct _GetAddress {
-    pb_callback_t address_n;
-    pb_callback_t coin_name;
-    bool has_show_display;
-    bool show_display;
-    bool has_multisig;
-    MultisigRedeemScriptType multisig;
-    bool has_script_type;
-    InputScriptType script_type;
-/* @@protoc_insertion_point(struct:GetAddress) */
-} GetAddress;
-
-typedef struct _GetECDHSessionKey {
-    bool has_identity;
-    IdentityType identity;
-    pb_callback_t peer_public_key;
-    pb_callback_t ecdsa_curve_name;
-/* @@protoc_insertion_point(struct:GetECDHSessionKey) */
-} GetECDHSessionKey;
-
-typedef struct _GetEntropy {
-    uint32_t size;
-/* @@protoc_insertion_point(struct:GetEntropy) */
-} GetEntropy;
-
-typedef struct _GetPublicKey {
-    pb_callback_t address_n;
-    pb_callback_t ecdsa_curve_name;
-    bool has_show_display;
-    bool show_display;
-    pb_callback_t coin_name;
-/* @@protoc_insertion_point(struct:GetPublicKey) */
-} GetPublicKey;
-
-typedef struct _LoadDevice {
-    pb_callback_t mnemonic;
-    bool has_node;
-    HDNodeType node;
-    pb_callback_t pin;
-    bool has_passphrase_protection;
-    bool passphrase_protection;
-    pb_callback_t language;
-    pb_callback_t label;
-    bool has_skip_checksum;
-    bool skip_checksum;
-    bool has_u2f_counter;
-    uint32_t u2f_counter;
-/* @@protoc_insertion_point(struct:LoadDevice) */
-} LoadDevice;
-
-typedef struct _PinMatrixRequest {
-    bool has_type;
-    PinMatrixRequestType type;
-/* @@protoc_insertion_point(struct:PinMatrixRequest) */
-} PinMatrixRequest;
+typedef PB_BYTES_ARRAY_T(32) FirmwareUpload_hash_t;
+typedef struct _FirmwareUpload {
+    pb_callback_t payload;
+    bool has_hash;
+    FirmwareUpload_hash_t hash;
+/* @@protoc_insertion_point(struct:FirmwareUpload) */
+} FirmwareUpload;
 
 typedef struct _Ping {
-    pb_callback_t message;
+    bool has_message;
+    char message[256];
     bool has_button_protection;
     bool button_protection;
     bool has_pin_protection;
@@ -514,349 +139,41 @@ typedef struct _Ping {
 /* @@protoc_insertion_point(struct:Ping) */
 } Ping;
 
-typedef struct _PublicKey {
-    HDNodeType node;
-    pb_callback_t xpub;
-/* @@protoc_insertion_point(struct:PublicKey) */
-} PublicKey;
-
-typedef struct _RecoveryDevice {
-    bool has_word_count;
-    uint32_t word_count;
-    bool has_passphrase_protection;
-    bool passphrase_protection;
-    bool has_pin_protection;
-    bool pin_protection;
-    pb_callback_t language;
-    pb_callback_t label;
-    bool has_enforce_wordlist;
-    bool enforce_wordlist;
-    bool has_type;
-    uint32_t type;
-    bool has_u2f_counter;
-    uint32_t u2f_counter;
-/* @@protoc_insertion_point(struct:RecoveryDevice) */
-} RecoveryDevice;
-
-typedef struct _ResetDevice {
-    bool has_display_random;
-    bool display_random;
-    bool has_strength;
-    uint32_t strength;
-    bool has_passphrase_protection;
-    bool passphrase_protection;
-    bool has_pin_protection;
-    bool pin_protection;
-    pb_callback_t language;
-    pb_callback_t label;
-    bool has_u2f_counter;
-    uint32_t u2f_counter;
-/* @@protoc_insertion_point(struct:ResetDevice) */
-} ResetDevice;
-
-typedef struct _SetU2FCounter {
-    bool has_u2f_counter;
-    uint32_t u2f_counter;
-/* @@protoc_insertion_point(struct:SetU2FCounter) */
-} SetU2FCounter;
-
-typedef struct _SignIdentity {
-    bool has_identity;
-    IdentityType identity;
-    pb_callback_t challenge_hidden;
-    pb_callback_t challenge_visual;
-    pb_callback_t ecdsa_curve_name;
-/* @@protoc_insertion_point(struct:SignIdentity) */
-} SignIdentity;
-
-typedef struct _SignTx {
-    uint32_t outputs_count;
-    uint32_t inputs_count;
-    pb_callback_t coin_name;
-    bool has_version;
-    uint32_t version;
-    bool has_lock_time;
-    uint32_t lock_time;
-/* @@protoc_insertion_point(struct:SignTx) */
-} SignTx;
-
-typedef struct _SimpleSignTx {
-    pb_callback_t inputs;
-    pb_callback_t outputs;
-    pb_callback_t transactions;
-    pb_callback_t coin_name;
-    bool has_version;
-    uint32_t version;
-    bool has_lock_time;
-    uint32_t lock_time;
-/* @@protoc_insertion_point(struct:SimpleSignTx) */
-} SimpleSignTx;
-
-typedef struct _TxAck {
-    bool has_tx;
-    TransactionType tx;
-/* @@protoc_insertion_point(struct:TxAck) */
-} TxAck;
-
-typedef struct _TxRequest {
-    bool has_request_type;
-    RequestType request_type;
-    bool has_details;
-    TxRequestDetailsType details;
-    bool has_serialized;
-    TxRequestSerializedType serialized;
-/* @@protoc_insertion_point(struct:TxRequest) */
-} TxRequest;
-
-typedef struct _TxSize {
-    bool has_tx_size;
-    uint32_t tx_size;
-/* @@protoc_insertion_point(struct:TxSize) */
-} TxSize;
-
-typedef struct _WordRequest {
-    bool has_type;
-    WordRequestType type;
-/* @@protoc_insertion_point(struct:WordRequest) */
-} WordRequest;
+typedef struct _Success {
+    bool has_message;
+    char message[256];
+/* @@protoc_insertion_point(struct:Success) */
+} Success;
 
 /* Default values for struct fields */
-extern const InputScriptType GetAddress_script_type_default;
-extern const uint32_t ResetDevice_strength_default;
-extern const uint32_t SignTx_version_default;
-extern const uint32_t SignTx_lock_time_default;
-extern const uint32_t SimpleSignTx_version_default;
-extern const uint32_t SimpleSignTx_lock_time_default;
 
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {{{NULL}, NULL}, false, 0, false, 0, false, 0, false, 0, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, false, 0, false, 0}
-#define ClearSession_init_default                {0}
-#define ApplySettings_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}}
-#define ChangePin_init_default                   {false, 0}
-#define Ping_init_default                        {{{NULL}, NULL}, false, 0, false, 0, false, 0}
-#define Success_init_default                     {{{NULL}, NULL}}
-#define Failure_init_default                     {false, (FailureType)0, {{NULL}, NULL}}
-#define ButtonRequest_init_default               {false, (ButtonRequestType)0, {{NULL}, NULL}}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
+#define Ping_init_default                        {false, "", false, 0, false, 0, false, 0}
+#define Success_init_default                     {false, ""}
+#define Failure_init_default                     {false, (FailureType)0, false, ""}
+#define ButtonRequest_init_default               {false, (ButtonRequestType)0, false, ""}
 #define ButtonAck_init_default                   {0}
-#define PinMatrixRequest_init_default            {false, (PinMatrixRequestType)0}
-#define PinMatrixAck_init_default                {{{NULL}, NULL}}
-#define Cancel_init_default                      {0}
-#define PassphraseRequest_init_default           {0}
-#define PassphraseAck_init_default               {{{NULL}, NULL}}
-#define GetEntropy_init_default                  {0}
-#define Entropy_init_default                     {{{NULL}, NULL}}
-#define GetPublicKey_init_default                {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}}
-#define PublicKey_init_default                   {HDNodeType_init_default, {{NULL}, NULL}}
-#define GetAddress_init_default                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, MultisigRedeemScriptType_init_default, false, InputScriptType_SPENDADDRESS}
-#define EthereumGetAddress_init_default          {{{NULL}, NULL}, false, 0}
-#define Address_init_default                     {{{NULL}, NULL}}
-#define EthereumAddress_init_default             {{{NULL}, NULL}}
-#define WipeDevice_init_default                  {0}
-#define LoadDevice_init_default                  {{{NULL}, NULL}, false, HDNodeType_init_default, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
-#define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0}
-#define EntropyRequest_init_default              {0}
-#define EntropyAck_init_default                  {{{NULL}, NULL}}
-#define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, false, 0}
-#define WordRequest_init_default                 {false, (WordRequestType)0}
-#define WordAck_init_default                     {{{NULL}, NULL}}
-#define SignMessage_init_default                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define VerifyMessage_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define MessageSignature_init_default            {{{NULL}, NULL}, {{NULL}, NULL}}
-#define EncryptMessage_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define EncryptedMessage_init_default            {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define DecryptMessage_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define DecryptedMessage_init_default            {{{NULL}, NULL}, {{NULL}, NULL}}
-#define CipherKeyValue_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, false, 0, {{NULL}, NULL}}
-#define CipheredKeyValue_init_default            {{{NULL}, NULL}}
-#define EstimateTxSize_init_default              {0, 0, {{NULL}, NULL}}
-#define TxSize_init_default                      {false, 0}
-#define SignTx_init_default                      {0, 0, {{NULL}, NULL}, false, 1u, false, 0u}
-#define SimpleSignTx_init_default                {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 1u, false, 0u}
-#define TxRequest_init_default                   {false, (RequestType)0, false, TxRequestDetailsType_init_default, false, TxRequestSerializedType_init_default}
-#define TxAck_init_default                       {false, TransactionType_init_default}
-#define EthereumSignTx_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
-#define EthereumTxRequest_init_default           {false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define EthereumTxAck_init_default               {{{NULL}, NULL}}
-#define SignIdentity_init_default                {false, IdentityType_init_default, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define SignedIdentity_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define GetECDHSessionKey_init_default           {false, IdentityType_init_default, {{NULL}, NULL}, {{NULL}, NULL}}
-#define ECDHSessionKey_init_default              {{{NULL}, NULL}}
-#define SetU2FCounter_init_default               {false, 0}
 #define FirmwareErase_init_default               {0}
 #define FirmwareRequest_init_default             {false, 0, false, 0}
-#define FirmwareUpload_init_default              {{{NULL}, NULL}, {{NULL}, NULL}}
-#define DebugLinkDecision_init_default           {0}
-#define DebugLinkGetState_init_default           {0}
-#define DebugLinkState_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, HDNodeType_init_default, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0}
-#define DebugLinkStop_init_default               {0}
-#define DebugLinkLog_init_default                {false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define DebugLinkMemoryRead_init_default         {false, 0, false, 0}
-#define DebugLinkMemory_init_default             {{{NULL}, NULL}}
-#define DebugLinkMemoryWrite_init_default        {false, 0, {{NULL}, NULL}, false, 0}
-#define DebugLinkFlashErase_init_default         {false, 0}
+#define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {{{NULL}, NULL}, false, 0, false, 0, false, 0, false, 0, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, false, 0, false, 0}
-#define ClearSession_init_zero                   {0}
-#define ApplySettings_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}}
-#define ChangePin_init_zero                      {false, 0}
-#define Ping_init_zero                           {{{NULL}, NULL}, false, 0, false, 0, false, 0}
-#define Success_init_zero                        {{{NULL}, NULL}}
-#define Failure_init_zero                        {false, (FailureType)0, {{NULL}, NULL}}
-#define ButtonRequest_init_zero                  {false, (ButtonRequestType)0, {{NULL}, NULL}}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
+#define Ping_init_zero                           {false, "", false, 0, false, 0, false, 0}
+#define Success_init_zero                        {false, ""}
+#define Failure_init_zero                        {false, (FailureType)0, false, ""}
+#define ButtonRequest_init_zero                  {false, (ButtonRequestType)0, false, ""}
 #define ButtonAck_init_zero                      {0}
-#define PinMatrixRequest_init_zero               {false, (PinMatrixRequestType)0}
-#define PinMatrixAck_init_zero                   {{{NULL}, NULL}}
-#define Cancel_init_zero                         {0}
-#define PassphraseRequest_init_zero              {0}
-#define PassphraseAck_init_zero                  {{{NULL}, NULL}}
-#define GetEntropy_init_zero                     {0}
-#define Entropy_init_zero                        {{{NULL}, NULL}}
-#define GetPublicKey_init_zero                   {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}}
-#define PublicKey_init_zero                      {HDNodeType_init_zero, {{NULL}, NULL}}
-#define GetAddress_init_zero                     {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, MultisigRedeemScriptType_init_zero, false, (InputScriptType)0}
-#define EthereumGetAddress_init_zero             {{{NULL}, NULL}, false, 0}
-#define Address_init_zero                        {{{NULL}, NULL}}
-#define EthereumAddress_init_zero                {{{NULL}, NULL}}
-#define WipeDevice_init_zero                     {0}
-#define LoadDevice_init_zero                     {{{NULL}, NULL}, false, HDNodeType_init_zero, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
-#define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0}
-#define EntropyRequest_init_zero                 {0}
-#define EntropyAck_init_zero                     {{{NULL}, NULL}}
-#define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, false, 0}
-#define WordRequest_init_zero                    {false, (WordRequestType)0}
-#define WordAck_init_zero                        {{{NULL}, NULL}}
-#define SignMessage_init_zero                    {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define VerifyMessage_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define MessageSignature_init_zero               {{{NULL}, NULL}, {{NULL}, NULL}}
-#define EncryptMessage_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define EncryptedMessage_init_zero               {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define DecryptMessage_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define DecryptedMessage_init_zero               {{{NULL}, NULL}, {{NULL}, NULL}}
-#define CipherKeyValue_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, false, 0, {{NULL}, NULL}}
-#define CipheredKeyValue_init_zero               {{{NULL}, NULL}}
-#define EstimateTxSize_init_zero                 {0, 0, {{NULL}, NULL}}
-#define TxSize_init_zero                         {false, 0}
-#define SignTx_init_zero                         {0, 0, {{NULL}, NULL}, false, 0, false, 0}
-#define SimpleSignTx_init_zero                   {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
-#define TxRequest_init_zero                      {false, (RequestType)0, false, TxRequestDetailsType_init_zero, false, TxRequestSerializedType_init_zero}
-#define TxAck_init_zero                          {false, TransactionType_init_zero}
-#define EthereumSignTx_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0}
-#define EthereumTxRequest_init_zero              {false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define EthereumTxAck_init_zero                  {{{NULL}, NULL}}
-#define SignIdentity_init_zero                   {false, IdentityType_init_zero, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define SignedIdentity_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define GetECDHSessionKey_init_zero              {false, IdentityType_init_zero, {{NULL}, NULL}, {{NULL}, NULL}}
-#define ECDHSessionKey_init_zero                 {{{NULL}, NULL}}
-#define SetU2FCounter_init_zero                  {false, 0}
 #define FirmwareErase_init_zero                  {0}
 #define FirmwareRequest_init_zero                {false, 0, false, 0}
-#define FirmwareUpload_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}}
-#define DebugLinkDecision_init_zero              {0}
-#define DebugLinkGetState_init_zero              {0}
-#define DebugLinkState_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, HDNodeType_init_zero, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0}
-#define DebugLinkStop_init_zero                  {0}
-#define DebugLinkLog_init_zero                   {false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
-#define DebugLinkMemoryRead_init_zero            {false, 0, false, 0}
-#define DebugLinkMemory_init_zero                {{{NULL}, NULL}}
-#define DebugLinkMemoryWrite_init_zero           {false, 0, {{NULL}, NULL}, false, 0}
-#define DebugLinkFlashErase_init_zero            {false, 0}
+#define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define Address_address_tag                      1
-#define CipheredKeyValue_value_tag               1
-#define DebugLinkMemory_memory_tag               1
-#define DecryptMessage_address_n_tag             1
-#define DecryptMessage_nonce_tag                 2
-#define DecryptMessage_message_tag               3
-#define DecryptMessage_hmac_tag                  4
-#define DecryptedMessage_message_tag             1
-#define DecryptedMessage_address_tag             2
-#define ECDHSessionKey_session_key_tag           1
-#define EncryptedMessage_nonce_tag               1
-#define EncryptedMessage_message_tag             2
-#define EncryptedMessage_hmac_tag                3
-#define Entropy_entropy_tag                      1
-#define EntropyAck_entropy_tag                   1
-#define EthereumAddress_address_tag              1
-#define EthereumTxAck_data_chunk_tag             1
-#define FirmwareUpload_payload_tag               1
-#define FirmwareUpload_hash_tag                  2
-#define MessageSignature_address_tag             1
-#define MessageSignature_signature_tag           2
-#define PassphraseAck_passphrase_tag             1
-#define PinMatrixAck_pin_tag                     1
-#define SignMessage_address_n_tag                1
-#define SignMessage_message_tag                  2
-#define SignMessage_coin_name_tag                3
-#define SignedIdentity_address_tag               1
-#define SignedIdentity_public_key_tag            2
-#define SignedIdentity_signature_tag             3
-#define Success_message_tag                      1
-#define VerifyMessage_address_tag                1
-#define VerifyMessage_signature_tag              2
-#define VerifyMessage_message_tag                3
-#define VerifyMessage_coin_name_tag              4
-#define WordAck_word_tag                         1
-#define ApplySettings_language_tag               1
-#define ApplySettings_label_tag                  2
-#define ApplySettings_use_passphrase_tag         3
-#define ApplySettings_homescreen_tag             4
 #define ButtonRequest_code_tag                   1
 #define ButtonRequest_data_tag                   2
-#define ChangePin_remove_tag                     1
-#define CipherKeyValue_address_n_tag             1
-#define CipherKeyValue_key_tag                   2
-#define CipherKeyValue_value_tag                 3
-#define CipherKeyValue_encrypt_tag               4
-#define CipherKeyValue_ask_on_encrypt_tag        5
-#define CipherKeyValue_ask_on_decrypt_tag        6
-#define CipherKeyValue_iv_tag                    7
-#define DebugLinkDecision_yes_no_tag             1
-#define DebugLinkFlashErase_sector_tag           1
-#define DebugLinkLog_level_tag                   1
-#define DebugLinkLog_bucket_tag                  2
-#define DebugLinkLog_text_tag                    3
-#define DebugLinkMemoryRead_address_tag          1
-#define DebugLinkMemoryRead_length_tag           2
-#define DebugLinkMemoryWrite_address_tag         1
-#define DebugLinkMemoryWrite_memory_tag          2
-#define DebugLinkMemoryWrite_flash_tag           3
-#define DebugLinkState_layout_tag                1
-#define DebugLinkState_pin_tag                   2
-#define DebugLinkState_matrix_tag                3
-#define DebugLinkState_mnemonic_tag              4
-#define DebugLinkState_node_tag                  5
-#define DebugLinkState_passphrase_protection_tag 6
-#define DebugLinkState_reset_word_tag            7
-#define DebugLinkState_reset_entropy_tag         8
-#define DebugLinkState_recovery_fake_word_tag    9
-#define DebugLinkState_recovery_word_pos_tag     10
-#define EncryptMessage_pubkey_tag                1
-#define EncryptMessage_message_tag               2
-#define EncryptMessage_display_only_tag          3
-#define EncryptMessage_address_n_tag             4
-#define EncryptMessage_coin_name_tag             5
-#define EstimateTxSize_outputs_count_tag         1
-#define EstimateTxSize_inputs_count_tag          2
-#define EstimateTxSize_coin_name_tag             3
-#define EthereumGetAddress_address_n_tag         1
-#define EthereumGetAddress_show_display_tag      2
-#define EthereumSignTx_address_n_tag             1
-#define EthereumSignTx_nonce_tag                 2
-#define EthereumSignTx_gas_price_tag             3
-#define EthereumSignTx_gas_limit_tag             4
-#define EthereumSignTx_to_tag                    5
-#define EthereumSignTx_value_tag                 6
-#define EthereumSignTx_data_initial_chunk_tag    7
-#define EthereumSignTx_data_length_tag           8
-#define EthereumSignTx_chain_id_tag              9
-#define EthereumTxRequest_data_length_tag        1
-#define EthereumTxRequest_signature_v_tag        2
-#define EthereumTxRequest_signature_r_tag        3
-#define EthereumTxRequest_signature_s_tag        4
 #define Failure_code_tag                         1
 #define Failure_message_tag                      2
 #define Features_vendor_tag                      1
@@ -869,7 +186,6 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Features_passphrase_protection_tag       8
 #define Features_language_tag                    9
 #define Features_label_tag                       10
-#define Features_coins_tag                       11
 #define Features_initialized_tag                 12
 #define Features_revision_tag                    13
 #define Features_bootloader_hash_tag             14
@@ -879,209 +195,39 @@ extern const uint32_t SimpleSignTx_lock_time_default;
 #define Features_firmware_present_tag            18
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
-#define GetAddress_address_n_tag                 1
-#define GetAddress_coin_name_tag                 2
-#define GetAddress_show_display_tag              3
-#define GetAddress_multisig_tag                  4
-#define GetAddress_script_type_tag               5
-#define GetECDHSessionKey_identity_tag           1
-#define GetECDHSessionKey_peer_public_key_tag    2
-#define GetECDHSessionKey_ecdsa_curve_name_tag   3
-#define GetEntropy_size_tag                      1
-#define GetPublicKey_address_n_tag               1
-#define GetPublicKey_ecdsa_curve_name_tag        2
-#define GetPublicKey_show_display_tag            3
-#define GetPublicKey_coin_name_tag               4
-#define LoadDevice_mnemonic_tag                  1
-#define LoadDevice_node_tag                      2
-#define LoadDevice_pin_tag                       3
-#define LoadDevice_passphrase_protection_tag     4
-#define LoadDevice_language_tag                  5
-#define LoadDevice_label_tag                     6
-#define LoadDevice_skip_checksum_tag             7
-#define LoadDevice_u2f_counter_tag               8
-#define PinMatrixRequest_type_tag                1
+#define FirmwareUpload_payload_tag               1
+#define FirmwareUpload_hash_tag                  2
 #define Ping_message_tag                         1
 #define Ping_button_protection_tag               2
 #define Ping_pin_protection_tag                  3
 #define Ping_passphrase_protection_tag           4
-#define PublicKey_node_tag                       1
-#define PublicKey_xpub_tag                       2
-#define RecoveryDevice_word_count_tag            1
-#define RecoveryDevice_passphrase_protection_tag 2
-#define RecoveryDevice_pin_protection_tag        3
-#define RecoveryDevice_language_tag              4
-#define RecoveryDevice_label_tag                 5
-#define RecoveryDevice_enforce_wordlist_tag      6
-#define RecoveryDevice_type_tag                  8
-#define RecoveryDevice_u2f_counter_tag           9
-#define ResetDevice_display_random_tag           1
-#define ResetDevice_strength_tag                 2
-#define ResetDevice_passphrase_protection_tag    3
-#define ResetDevice_pin_protection_tag           4
-#define ResetDevice_language_tag                 5
-#define ResetDevice_label_tag                    6
-#define ResetDevice_u2f_counter_tag              7
-#define SetU2FCounter_u2f_counter_tag            1
-#define SignIdentity_identity_tag                1
-#define SignIdentity_challenge_hidden_tag        2
-#define SignIdentity_challenge_visual_tag        3
-#define SignIdentity_ecdsa_curve_name_tag        4
-#define SignTx_outputs_count_tag                 1
-#define SignTx_inputs_count_tag                  2
-#define SignTx_coin_name_tag                     3
-#define SignTx_version_tag                       4
-#define SignTx_lock_time_tag                     5
-#define SimpleSignTx_inputs_tag                  1
-#define SimpleSignTx_outputs_tag                 2
-#define SimpleSignTx_transactions_tag            3
-#define SimpleSignTx_coin_name_tag               4
-#define SimpleSignTx_version_tag                 5
-#define SimpleSignTx_lock_time_tag               6
-#define TxAck_tx_tag                             1
-#define TxRequest_request_type_tag               1
-#define TxRequest_details_tag                    2
-#define TxRequest_serialized_tag                 3
-#define TxSize_tx_size_tag                       1
-#define WordRequest_type_tag                     1
+#define Success_message_tag                      1
 
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t GetFeatures_fields[1];
-extern const pb_field_t Features_fields[19];
-extern const pb_field_t ClearSession_fields[1];
-extern const pb_field_t ApplySettings_fields[5];
-extern const pb_field_t ChangePin_fields[2];
+extern const pb_field_t Features_fields[18];
 extern const pb_field_t Ping_fields[5];
 extern const pb_field_t Success_fields[2];
 extern const pb_field_t Failure_fields[3];
 extern const pb_field_t ButtonRequest_fields[3];
 extern const pb_field_t ButtonAck_fields[1];
-extern const pb_field_t PinMatrixRequest_fields[2];
-extern const pb_field_t PinMatrixAck_fields[2];
-extern const pb_field_t Cancel_fields[1];
-extern const pb_field_t PassphraseRequest_fields[1];
-extern const pb_field_t PassphraseAck_fields[2];
-extern const pb_field_t GetEntropy_fields[2];
-extern const pb_field_t Entropy_fields[2];
-extern const pb_field_t GetPublicKey_fields[5];
-extern const pb_field_t PublicKey_fields[3];
-extern const pb_field_t GetAddress_fields[6];
-extern const pb_field_t EthereumGetAddress_fields[3];
-extern const pb_field_t Address_fields[2];
-extern const pb_field_t EthereumAddress_fields[2];
-extern const pb_field_t WipeDevice_fields[1];
-extern const pb_field_t LoadDevice_fields[9];
-extern const pb_field_t ResetDevice_fields[8];
-extern const pb_field_t EntropyRequest_fields[1];
-extern const pb_field_t EntropyAck_fields[2];
-extern const pb_field_t RecoveryDevice_fields[9];
-extern const pb_field_t WordRequest_fields[2];
-extern const pb_field_t WordAck_fields[2];
-extern const pb_field_t SignMessage_fields[4];
-extern const pb_field_t VerifyMessage_fields[5];
-extern const pb_field_t MessageSignature_fields[3];
-extern const pb_field_t EncryptMessage_fields[6];
-extern const pb_field_t EncryptedMessage_fields[4];
-extern const pb_field_t DecryptMessage_fields[5];
-extern const pb_field_t DecryptedMessage_fields[3];
-extern const pb_field_t CipherKeyValue_fields[8];
-extern const pb_field_t CipheredKeyValue_fields[2];
-extern const pb_field_t EstimateTxSize_fields[4];
-extern const pb_field_t TxSize_fields[2];
-extern const pb_field_t SignTx_fields[6];
-extern const pb_field_t SimpleSignTx_fields[7];
-extern const pb_field_t TxRequest_fields[4];
-extern const pb_field_t TxAck_fields[2];
-extern const pb_field_t EthereumSignTx_fields[10];
-extern const pb_field_t EthereumTxRequest_fields[5];
-extern const pb_field_t EthereumTxAck_fields[2];
-extern const pb_field_t SignIdentity_fields[5];
-extern const pb_field_t SignedIdentity_fields[4];
-extern const pb_field_t GetECDHSessionKey_fields[4];
-extern const pb_field_t ECDHSessionKey_fields[2];
-extern const pb_field_t SetU2FCounter_fields[2];
 extern const pb_field_t FirmwareErase_fields[1];
 extern const pb_field_t FirmwareRequest_fields[3];
 extern const pb_field_t FirmwareUpload_fields[3];
-extern const pb_field_t DebugLinkDecision_fields[2];
-extern const pb_field_t DebugLinkGetState_fields[1];
-extern const pb_field_t DebugLinkState_fields[11];
-extern const pb_field_t DebugLinkStop_fields[1];
-extern const pb_field_t DebugLinkLog_fields[4];
-extern const pb_field_t DebugLinkMemoryRead_fields[3];
-extern const pb_field_t DebugLinkMemory_fields[2];
-extern const pb_field_t DebugLinkMemoryWrite_fields[4];
-extern const pb_field_t DebugLinkFlashErase_fields[2];
 
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-/* Features_size depends on runtime parameters */
-#define ClearSession_size                        0
-/* ApplySettings_size depends on runtime parameters */
-#define ChangePin_size                           2
-/* Ping_size depends on runtime parameters */
-/* Success_size depends on runtime parameters */
-/* Failure_size depends on runtime parameters */
-/* ButtonRequest_size depends on runtime parameters */
+#define Features_size                            209
+#define Ping_size                                265
+#define Success_size                             259
+#define Failure_size                             270
+#define ButtonRequest_size                       270
 #define ButtonAck_size                           0
-#define PinMatrixRequest_size                    11
-/* PinMatrixAck_size depends on runtime parameters */
-#define Cancel_size                              0
-#define PassphraseRequest_size                   0
-/* PassphraseAck_size depends on runtime parameters */
-#define GetEntropy_size                          6
-/* Entropy_size depends on runtime parameters */
-/* GetPublicKey_size depends on runtime parameters */
-/* PublicKey_size depends on runtime parameters */
-/* GetAddress_size depends on runtime parameters */
-/* EthereumGetAddress_size depends on runtime parameters */
-/* Address_size depends on runtime parameters */
-/* EthereumAddress_size depends on runtime parameters */
-#define WipeDevice_size                          0
-/* LoadDevice_size depends on runtime parameters */
-/* ResetDevice_size depends on runtime parameters */
-#define EntropyRequest_size                      0
-/* EntropyAck_size depends on runtime parameters */
-/* RecoveryDevice_size depends on runtime parameters */
-#define WordRequest_size                         11
-/* WordAck_size depends on runtime parameters */
-/* SignMessage_size depends on runtime parameters */
-/* VerifyMessage_size depends on runtime parameters */
-/* MessageSignature_size depends on runtime parameters */
-/* EncryptMessage_size depends on runtime parameters */
-/* EncryptedMessage_size depends on runtime parameters */
-/* DecryptMessage_size depends on runtime parameters */
-/* DecryptedMessage_size depends on runtime parameters */
-/* CipherKeyValue_size depends on runtime parameters */
-/* CipheredKeyValue_size depends on runtime parameters */
-/* EstimateTxSize_size depends on runtime parameters */
-#define TxSize_size                              6
-/* SignTx_size depends on runtime parameters */
-/* SimpleSignTx_size depends on runtime parameters */
-#define TxRequest_size                           (23 + TxRequestDetailsType_size + TxRequestSerializedType_size)
-#define TxAck_size                               (6 + TransactionType_size)
-/* EthereumSignTx_size depends on runtime parameters */
-/* EthereumTxRequest_size depends on runtime parameters */
-/* EthereumTxAck_size depends on runtime parameters */
-/* SignIdentity_size depends on runtime parameters */
-/* SignedIdentity_size depends on runtime parameters */
-/* GetECDHSessionKey_size depends on runtime parameters */
-/* ECDHSessionKey_size depends on runtime parameters */
-#define SetU2FCounter_size                       6
 #define FirmwareErase_size                       0
 #define FirmwareRequest_size                     12
 /* FirmwareUpload_size depends on runtime parameters */
-#define DebugLinkDecision_size                   2
-#define DebugLinkGetState_size                   0
-/* DebugLinkState_size depends on runtime parameters */
-#define DebugLinkStop_size                       0
-/* DebugLinkLog_size depends on runtime parameters */
-#define DebugLinkMemoryRead_size                 12
-/* DebugLinkMemory_size depends on runtime parameters */
-/* DebugLinkMemoryWrite_size depends on runtime parameters */
-#define DebugLinkFlashErase_size                 6
 
 /* Message IDs (where set with "msgid" option) */
 #ifdef PB_MSGID
