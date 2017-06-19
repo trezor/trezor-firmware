@@ -126,11 +126,6 @@ void check_and_jump(void)
 
     if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, NULL)) {
         display_printf("valid bootloader signature\n");
-
-        // TODO: remove debug wait
-        display_printf("waiting 1 second\n");
-        HAL_Delay(1000);
-        // end
         display_printf("JUMP!\n");
         jump_to(BOOTLOADER_START + HEADER_SIZE);
 

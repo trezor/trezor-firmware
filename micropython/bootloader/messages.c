@@ -182,7 +182,7 @@ static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const 
         .errmsg = NULL
     };
 
-    if (!pb_decode(&stream, fields, msg)) {
+    if (!pb_decode_noinit(&stream, fields, msg)) {
         return false;
     }
 
@@ -191,7 +191,21 @@ static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const 
     return true;
 }
 
-#define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_zero
+static bool _decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    pb_byte_t *buf = *arg;
+    memset(buf, 0, 1024);
+    if (stream->bytes_left > 1024 - 1) {
+        return false;
+    }
+    if (!pb_read(stream, buf, stream->bytes_left)) {
+        return false;
+    }
+    return true;
+}
+
+#define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
+#define MSG_RECV_ASSIGN_STRING(FIELD, VALUE) do { msg_recv.FIELD.funcs.decode = &_decode_string; msg_recv.FIELD.arg = VALUE; } while (0)
 #define MSG_RECV(TYPE) do { _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv); } while(0)
 
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -210,15 +224,16 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND(Features);
 }
 
-
 void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    char m[1024];
+
     MSG_RECV_INIT(Ping);
+    MSG_RECV_ASSIGN_STRING(message, m);
     MSG_RECV(Ping);
 
     MSG_SEND_INIT(Success);
-    // TODO: read message from Ping
-    MSG_SEND_ASSIGN_STRING(message, "PONG!");
+    MSG_SEND_ASSIGN_STRING(message, m);
     MSG_SEND(Success);
 }
 
@@ -227,23 +242,24 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     MSG_RECV_INIT(FirmwareErase);
     MSG_RECV(FirmwareErase);
 
-    // TODO: implement
-    MSG_SEND_INIT(Failure);
-    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_FirmwareError);
-    MSG_SEND_ASSIGN_STRING(message, "Unsupported message");
-    MSG_SEND(Failure);
+    MSG_SEND_INIT(FirmwareRequest);
+    MSG_SEND_ASSIGN_VALUE(offset, 0);
+    MSG_SEND_ASSIGN_VALUE(length, FIRMWARE_CHUNK_SIZE);
+    MSG_SEND(FirmwareRequest);
 }
 
 void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     MSG_RECV_INIT(FirmwareUpload);
     MSG_RECV(FirmwareUpload);
-
-    // TODO: implement
-    MSG_SEND_INIT(Failure);
-    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_FirmwareError);
-    MSG_SEND_ASSIGN_STRING(message, "Unsupported message");
-    MSG_SEND(Failure);
+/*
+    MSG_SEND_INIT(FirmwareRequest);
+    MSG_SEND_ASSIGN_VALUE(offset, FIRMWARE_CHUNK_SIZE);
+    MSG_SEND_ASSIGN_VALUE(length, FIRMWARE_CHUNK_SIZE);
+    MSG_SEND(FirmwareRequest);
+*/
+    MSG_SEND_INIT(Success);
+    MSG_SEND(Success);
 }
 
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)

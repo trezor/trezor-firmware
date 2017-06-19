@@ -12,7 +12,7 @@
 #define USB_PACKET_SIZE   64
 #define USB_IFACE_NUM     0
 
-#define UPLOAD_CHUNK_SIZE (128*1024)
+#define FIRMWARE_CHUNK_SIZE (128*1024)
 
 bool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size);
 
