@@ -68,7 +68,8 @@ const pb_field_t ButtonAck_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t FirmwareErase_fields[1] = {
+const pb_field_t FirmwareErase_fields[2] = {
+    PB_FIELD(  1, UINT32  , OPTIONAL, STATIC  , FIRST, FirmwareErase, length, length, 0),
     PB_LAST_FIELD
 };
 

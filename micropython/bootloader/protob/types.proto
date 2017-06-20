@@ -5,13 +5,13 @@
 enum FailureType {
 	Failure_UnexpectedMessage = 1;
 	Failure_ButtonExpected = 2;
-	Failure_SyntaxError = 3;
+	Failure_DataError = 3;
 	Failure_ActionCancelled = 4;
 	Failure_PinExpected = 5;
 	Failure_PinCancelled = 6;
 	Failure_PinInvalid = 7;
 	Failure_InvalidSignature = 8;
-	Failure_Other = 9;
+	Failure_ProcessError = 9;
 	Failure_NotEnoughFunds = 10;
 	Failure_NotInitialized = 11;
 	Failure_FirmwareError = 99;

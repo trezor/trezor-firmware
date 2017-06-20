@@ -40,11 +40,6 @@ typedef struct _ButtonAck {
 /* @@protoc_insertion_point(struct:ButtonAck) */
 } ButtonAck;
 
-typedef struct _FirmwareErase {
-    char dummy_field;
-/* @@protoc_insertion_point(struct:FirmwareErase) */
-} FirmwareErase;
-
 typedef struct _GetFeatures {
     char dummy_field;
 /* @@protoc_insertion_point(struct:GetFeatures) */
@@ -111,6 +106,12 @@ typedef struct _Features {
 /* @@protoc_insertion_point(struct:Features) */
 } Features;
 
+typedef struct _FirmwareErase {
+    bool has_length;
+    uint32_t length;
+/* @@protoc_insertion_point(struct:FirmwareErase) */
+} FirmwareErase;
+
 typedef struct _FirmwareRequest {
     bool has_offset;
     uint32_t offset;
@@ -156,7 +157,7 @@ typedef struct _Success {
 #define Failure_init_default                     {false, (FailureType)0, false, ""}
 #define ButtonRequest_init_default               {false, (ButtonRequestType)0, false, ""}
 #define ButtonAck_init_default                   {0}
-#define FirmwareErase_init_default               {0}
+#define FirmwareErase_init_default               {false, 0}
 #define FirmwareRequest_init_default             {false, 0, false, 0}
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
@@ -167,7 +168,7 @@ typedef struct _Success {
 #define Failure_init_zero                        {false, (FailureType)0, false, ""}
 #define ButtonRequest_init_zero                  {false, (ButtonRequestType)0, false, ""}
 #define ButtonAck_init_zero                      {0}
-#define FirmwareErase_init_zero                  {0}
+#define FirmwareErase_init_zero                  {false, 0}
 #define FirmwareRequest_init_zero                {false, 0, false, 0}
 #define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}}
 
@@ -193,6 +194,7 @@ typedef struct _Success {
 #define Features_pin_cached_tag                  16
 #define Features_passphrase_cached_tag           17
 #define Features_firmware_present_tag            18
+#define FirmwareErase_length_tag                 1
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
 #define FirmwareUpload_payload_tag               1
@@ -212,7 +214,7 @@ extern const pb_field_t Success_fields[2];
 extern const pb_field_t Failure_fields[3];
 extern const pb_field_t ButtonRequest_fields[3];
 extern const pb_field_t ButtonAck_fields[1];
-extern const pb_field_t FirmwareErase_fields[1];
+extern const pb_field_t FirmwareErase_fields[2];
 extern const pb_field_t FirmwareRequest_fields[3];
 extern const pb_field_t FirmwareUpload_fields[3];
 
@@ -225,7 +227,7 @@ extern const pb_field_t FirmwareUpload_fields[3];
 #define Failure_size                             270
 #define ButtonRequest_size                       270
 #define ButtonAck_size                           0
-#define FirmwareErase_size                       0
+#define FirmwareErase_size                       6
 #define FirmwareRequest_size                     12
 /* FirmwareUpload_size depends on runtime parameters */
 

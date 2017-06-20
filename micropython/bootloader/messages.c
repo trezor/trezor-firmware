@@ -186,22 +186,8 @@ static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const 
     return true;
 }
 
-/*
-static bool _decode(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    pb_byte_t *buf = *arg;
-    memset(buf, 0, 1024);
-    if (stream->bytes_left > 1024 - 1) {
-        return false;
-    }
-    if (!pb_read(stream, buf, stream->bytes_left)) {
-        return false;
-    }
-    return true;
-}
-*/
-
 #define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
+#define MSG_RECV_CALLBACK(FIELD, CALLBACK) do { msg_recv.FIELD.funcs.decode = &CALLBACK; } while (0)
 #define MSG_RECV(TYPE) do { _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv); } while(0)
 
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -230,29 +216,73 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND(Success);
 }
 
+static uint32_t firmware_size, firmware_flashed, chunk_requested;
+
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    firmware_size = 0;
+    firmware_flashed = 0;
+    chunk_requested = 0;
+
     MSG_RECV_INIT(FirmwareErase);
     MSG_RECV(FirmwareErase);
 
-    MSG_SEND_INIT(FirmwareRequest);
-    MSG_SEND_ASSIGN_VALUE(offset, 0);
-    MSG_SEND_ASSIGN_VALUE(length, FIRMWARE_CHUNK_SIZE);
-    MSG_SEND(FirmwareRequest);
+    firmware_size = msg_recv.has_length ? msg_recv.length : 0;
+    if (firmware_size > 0 && firmware_size % 4 == 0) {
+        chunk_requested = (firmware_size > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_size;
+        MSG_SEND_INIT(FirmwareRequest);
+        MSG_SEND_ASSIGN_VALUE(offset, 0);
+        MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+        MSG_SEND(FirmwareRequest);
+    } else {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
+        MSG_SEND_ASSIGN_STRING(message, "Wrong firmware size");
+        MSG_SEND(Failure);
+    }
+}
+
+static uint32_t chunk_size = 0;
+
+static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+#define BUFSIZE 1024
+    pb_byte_t buf[BUFSIZE];
+    chunk_size = stream->bytes_left;
+    while (stream->bytes_left) {
+        if (!pb_read(stream, buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     MSG_RECV_INIT(FirmwareUpload);
+    MSG_RECV_CALLBACK(payload, _read_payload);
     MSG_RECV(FirmwareUpload);
-/*
-    MSG_SEND_INIT(FirmwareRequest);
-    MSG_SEND_ASSIGN_VALUE(offset, FIRMWARE_CHUNK_SIZE);
-    MSG_SEND_ASSIGN_VALUE(length, FIRMWARE_CHUNK_SIZE);
-    MSG_SEND(FirmwareRequest);
-*/
-    MSG_SEND_INIT(Success);
-    MSG_SEND(Success);
+
+    if (chunk_size != chunk_requested) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
+        MSG_SEND_ASSIGN_STRING(message, "Invalid chunk size");
+        MSG_SEND(Failure);
+    }
+
+    firmware_size -= chunk_requested;
+    firmware_flashed += chunk_requested;
+
+    if (firmware_size > 0) {
+        chunk_requested = (firmware_size > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_size;
+        MSG_SEND_INIT(FirmwareRequest);
+        MSG_SEND_ASSIGN_VALUE(offset, firmware_flashed);
+        MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+        MSG_SEND(FirmwareRequest);
+    } else {
+        MSG_SEND_INIT(Success);
+        MSG_SEND(Success);
+    }
 }
 
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)

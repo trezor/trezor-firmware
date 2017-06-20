@@ -107,6 +107,7 @@ message ButtonAck {
  * @next Failure
  */
 message FirmwareErase {
+	optional uint32 length = 1;			// length of new firmware
 }
 
 /**

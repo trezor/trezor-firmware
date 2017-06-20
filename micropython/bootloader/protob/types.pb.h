@@ -18,13 +18,13 @@ extern "C" {
 typedef enum _FailureType {
     FailureType_Failure_UnexpectedMessage = 1,
     FailureType_Failure_ButtonExpected = 2,
-    FailureType_Failure_SyntaxError = 3,
+    FailureType_Failure_DataError = 3,
     FailureType_Failure_ActionCancelled = 4,
     FailureType_Failure_PinExpected = 5,
     FailureType_Failure_PinCancelled = 6,
     FailureType_Failure_PinInvalid = 7,
     FailureType_Failure_InvalidSignature = 8,
-    FailureType_Failure_Other = 9,
+    FailureType_Failure_ProcessError = 9,
     FailureType_Failure_NotEnoughFunds = 10,
     FailureType_Failure_NotInitialized = 11,
     FailureType_Failure_FirmwareError = 99
