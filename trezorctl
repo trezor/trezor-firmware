@@ -370,9 +370,9 @@ class Commands(object):
             return self.firmware_update(args)
 
         if not args.skip_check:
-            if fp[:8] == b'54525a52':
+            if fp[:8] == b'54525a52' or fp[:8] == b'54525a56':
                 fp = binascii.unhexlify(fp)
-            if fp[:4] != b'TRZR':
+            if fp[:4] != b'TRZR' and fp[:4] != b'TRZV':
                 raise CallException(types.Failure_FirmwareError, "TREZOR firmware header expected")
 
         print("Please confirm action on device...")
