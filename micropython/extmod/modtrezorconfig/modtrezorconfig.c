@@ -15,7 +15,7 @@
 
 static bool initialized = false;
 
-/// def init(self) -> None:
+/// def init() -> None:
 ///     '''
 ///     Initializes the storage. Must be called before any other method is called from this module!
 ///     '''
@@ -73,7 +73,7 @@ STATIC mp_obj_t mod_trezorconfig_set(mp_obj_t app, mp_obj_t key, mp_obj_t value)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_set_obj, mod_trezorconfig_set);
 
-/// def wipe(self) -> None:
+/// def wipe() -> None:
 ///     '''
 ///     Erases the whole config. Use with caution!
 ///     '''
@@ -96,7 +96,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mod_trezorconfig_set_obj) },
     { MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_trezorconfig_wipe_obj) },
 };
-
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals, mp_module_trezorconfig_globals_table);
 
 const mp_obj_module_t mp_module_trezorconfig = {
