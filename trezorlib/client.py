@@ -957,11 +957,11 @@ class ProtocolMixin(object):
         if self.features.bootloader_mode == False:
             raise Exception("Device must be in bootloader mode")
 
-        resp = self.call(proto.FirmwareErase())
+        data = fp.read()
+
+        resp = self.call(proto.FirmwareErase(length=len(data)))
         if isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
             return False
-
-        data = fp.read()
 
         # TREZORv1 method
         if isinstance(resp, proto.Success):
