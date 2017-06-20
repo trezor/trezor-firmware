@@ -146,7 +146,7 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count)
             memcpy(buf + read, state->buf + state->packet_pos, USB_PACKET_SIZE - state->packet_pos);
             read += USB_PACKET_SIZE - state->packet_pos;
             // read next packet
-            usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 1);
+            usb_hid_read_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
             // prepare next packet
             state->packet_index++;
             state->packet_pos = MSG_HEADER2_LEN;
