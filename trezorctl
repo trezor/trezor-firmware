@@ -591,7 +591,8 @@ def main():
             print(res)
     except CallException as e:
         status, message = e.args
-        sys.stderr.write(b'failure: {message}\n'.format(message=message))
+        sys.stderr.write('failure:')
+        sys.stderr.write(str(message))
         exit(status)
 
 

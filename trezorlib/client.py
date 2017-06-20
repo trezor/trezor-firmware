@@ -90,7 +90,7 @@ def pprint(msg):
         return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
 
 def log(msg):
-    sys.stderr.write(msg)
+    sys.stderr.write(str(msg))
     sys.stderr.write('\n')
     sys.stderr.flush()
 
