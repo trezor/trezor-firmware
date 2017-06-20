@@ -235,38 +235,21 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
     .locals_dict = (void*)&mod_trezorcrypto_HDNode_locals_dict,
 };
 
-/// class Bip32:
-///     '''
-///     '''
-typedef struct _mp_obj_Bip32_t {
-    mp_obj_base_t base;
-} mp_obj_Bip32_t;
-
-/// def __init__(self):
-///     '''
-///     '''
-STATIC mp_obj_t mod_trezorcrypto_Bip32_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 0, 0, false);
-    mp_obj_Bip32_t *o = m_new_obj(mp_obj_Bip32_t);
-    o->base.type = type;
-    return MP_OBJ_FROM_PTR(o);
-}
-
 /// def deserialize(self, value: str, version_public: int, version_private: int) -> HDNode:
 ///     '''
 ///     Construct a BIP0032 HD node from a base58-serialized value.
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_Bip32_deserialize(size_t n_args, const mp_obj_t *args) {
-    mp_buffer_info_t value;
-    mp_get_buffer_raise(args[1], &value, MP_BUFFER_READ);
-    if (value.len == 0) {
+STATIC mp_obj_t mod_trezorcrypto_bip32_deserialize(mp_obj_t value, mp_obj_t version_public, mp_obj_t version_private) {
+    mp_buffer_info_t valueb;
+    mp_get_buffer_raise(value, &valueb, MP_BUFFER_READ);
+    if (valueb.len == 0) {
         mp_raise_ValueError("Invalid value");
     }
-    uint32_t version_public = mp_obj_get_int_truncated(args[2]);
-    uint32_t version_private = mp_obj_get_int_truncated(args[3]);
+    uint32_t vpub = mp_obj_get_int_truncated(version_public);
+    uint32_t vpriv = mp_obj_get_int_truncated(version_private);
     HDNode hdnode;
     uint32_t fingerprint;
-    if (hdnode_deserialize(value.buf, version_public, version_private, &hdnode, &fingerprint) < 0) {
+    if (hdnode_deserialize(valueb.buf, vpub, vpriv, &hdnode, &fingerprint) < 0) {
         mp_raise_ValueError("Failed to deserialize");
     }
 
@@ -276,13 +259,13 @@ STATIC mp_obj_t mod_trezorcrypto_Bip32_deserialize(size_t n_args, const mp_obj_t
     o->fingerprint = fingerprint;
     return MP_OBJ_FROM_PTR(o);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Bip32_deserialize_obj, 4, 4, mod_trezorcrypto_Bip32_deserialize);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_bip32_deserialize_obj, mod_trezorcrypto_bip32_deserialize);
 
-/// def from_seed(self, seed: bytes, curve_name: str) -> HDNode:
+/// def from_seed(seed: bytes, curve_name: str) -> HDNode:
 ///     '''
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_Bip32_from_seed(mp_obj_t self, mp_obj_t seed, mp_obj_t curve_name) {
+STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed, mp_obj_t curve_name) {
     mp_buffer_info_t seedb;
     mp_get_buffer_raise(seed, &seedb, MP_BUFFER_READ);
     if (seedb.len == 0) {
@@ -302,17 +285,17 @@ STATIC mp_obj_t mod_trezorcrypto_Bip32_from_seed(mp_obj_t self, mp_obj_t seed, m
     o->hdnode = hdnode;
     return MP_OBJ_FROM_PTR(o);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_Bip32_from_seed_obj, mod_trezorcrypto_Bip32_from_seed);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj, mod_trezorcrypto_bip32_from_seed);
 
-STATIC const mp_rom_map_elem_t mod_trezorcrypto_Bip32_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_deserialize), MP_ROM_PTR(&mod_trezorcrypto_Bip32_deserialize_obj) },
-    { MP_ROM_QSTR(MP_QSTR_from_seed), MP_ROM_PTR(&mod_trezorcrypto_Bip32_from_seed_obj) },
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32) },
+    { MP_ROM_QSTR(MP_QSTR_HDNode), MP_ROM_PTR(&mod_trezorcrypto_HDNode_type) },
+    { MP_ROM_QSTR(MP_QSTR_deserialize), MP_ROM_PTR(&mod_trezorcrypto_bip32_deserialize_obj) },
+    { MP_ROM_QSTR(MP_QSTR_from_seed), MP_ROM_PTR(&mod_trezorcrypto_bip32_from_seed_obj) },
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Bip32_locals_dict, mod_trezorcrypto_Bip32_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_bip32_globals, mod_trezorcrypto_bip32_globals_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_Bip32_type = {
-    { &mp_type_type },
-    .name = MP_QSTR_Bip32,
-    .make_new = mod_trezorcrypto_Bip32_make_new,
-    .locals_dict = (void*)&mod_trezorcrypto_Bip32_locals_dict,
+STATIC const mp_obj_module_t mod_trezorcrypto_bip32_module = {
+    .base = { &mp_type_module },
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_bip32_globals,
 };
