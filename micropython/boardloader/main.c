@@ -51,7 +51,7 @@ bool check_sdcard(void)
     }
 }
 
-static void progress_callback(void) {
+static void progress_callback(uint16_t val) {
     display_printf(".");
 }
 

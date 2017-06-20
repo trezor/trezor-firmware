@@ -39,7 +39,7 @@ void flash_set_option_bytes(void)
     }
 }
 
-int flash_erase_sectors(int start, int end, void (*progress)(void))
+int flash_erase_sectors(int start, int end, void (*progress)(uint16_t val))
 {
     HAL_FLASH_Unlock();
     FLASH_EraseInitTypeDef EraseInitStruct;
@@ -56,7 +56,7 @@ int flash_erase_sectors(int start, int end, void (*progress)(void))
             return 0;
         }
         if (progress) {
-            progress();
+            progress(1000 * (i - start + 1) / (end - start + 1));
         }
     }
     HAL_FLASH_Lock();

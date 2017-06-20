@@ -7,6 +7,7 @@
 #include "messages.pb.h"
 
 #include "common.h"
+#include "display.h"
 #include "flash.h"
 #include "usb.h"
 #include "version.h"
@@ -15,12 +16,12 @@
 
 bool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
 {
-        if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
-            return false;
-        }
-        *msg_id = (buf[3] << 8) + buf[4];
-        *msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
-        return true;
+    if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
+        return false;
+    }
+    *msg_id = (buf[3] << 8) + buf[4];
+    *msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
+    return true;
 }
 
 typedef struct {
@@ -220,23 +221,28 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND(Success);
 }
 
-static uint32_t firmware_size, firmware_flashed, chunk_requested;
+static uint32_t firmware_remaining, firmware_flashed, chunk_requested;
+
+static void progress_erase(uint16_t val)
+{
+    display_loader(val, 0, 0xFFFF, 0, 0, 0, 0);
+}
 
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
-    firmware_size = 0;
+    firmware_remaining = 0;
     firmware_flashed = 0;
     chunk_requested = 0;
 
     MSG_RECV_INIT(FirmwareErase);
     MSG_RECV(FirmwareErase);
 
-    firmware_size = msg_recv.has_length ? msg_recv.length : 0;
-    if (firmware_size > 0 && firmware_size % 4 == 0) {
+    firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
+    if (firmware_remaining > 0 && firmware_remaining % 4 == 0) {
         // erase flash
-        flash_erase_sectors(FLASH_SECTOR_FIRMWARE_START, FLASH_SECTOR_FIRMWARE_END, NULL);
+        flash_erase_sectors(FLASH_SECTOR_FIRMWARE_START, FLASH_SECTOR_FIRMWARE_END, progress_erase);
         // request new firmware
-        chunk_requested = (firmware_size > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_size;
+        chunk_requested = (firmware_remaining > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
         MSG_SEND_ASSIGN_VALUE(offset, 0);
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
@@ -253,11 +259,13 @@ static uint32_t chunk_size = 0;
 
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-#define BUFSIZE 1024
+#define BUFSIZE 4096
     uint32_t buf[BUFSIZE / sizeof(uint32_t)];
     uint32_t chunk_written = 0;
     chunk_size = stream->bytes_left;
     while (stream->bytes_left) {
+        // print loader
+        display_loader(1000 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, 0xFFFF, 0, 0, 0, 0);
         memset(buf, 0xFF, sizeof(buf));
         // read data
         if (!pb_read(stream, (pb_byte_t *)buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
@@ -289,16 +297,17 @@ void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *b
         MSG_SEND(Failure);
     }
 
-    firmware_size -= chunk_requested;
+    firmware_remaining -= chunk_requested;
     firmware_flashed += chunk_requested;
 
-    if (firmware_size > 0) {
-        chunk_requested = (firmware_size > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_size;
+    if (firmware_remaining > 0) {
+        chunk_requested = (firmware_remaining > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
         MSG_SEND_ASSIGN_VALUE(offset, firmware_flashed);
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
         MSG_SEND(FirmwareRequest);
     } else {
+        display_clear();
         MSG_SEND_INIT(Success);
         MSG_SEND(Success);
     }

@@ -1,6 +1,8 @@
 #ifndef __TREZORHAL_FLASH_H__
 #define __TREZORHAL_FLASH_H__
 
+#include <stdint.h>
+
 int flash_init(void);
 
 void flash_set_option_bytes(void);
@@ -17,6 +19,6 @@ void flash_set_option_bytes(void);
 #define FLASH_SECTOR_FIRMWARE_START    5
 #define FLASH_SECTOR_FIRMWARE_END      11
 
-int flash_erase_sectors(int start, int end, void (*progress)(void));
+int flash_erase_sectors(int start, int end, void (*progress)(uint16_t val));
 
 #endif

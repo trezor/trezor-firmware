@@ -35,7 +35,8 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image(60, 32, w, h, vimg + 12, datalen);
-    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+// FIXME: uncomment next line
+//    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
         (int)(fw_version & 0xFF),
@@ -43,7 +44,8 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
         (int)((fw_version >> 16) & 0xFF),
         (int)((fw_version >> 24) & 0xFF)
     );
-    display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
+// FIXME: uncomment next line
+//    display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
     display_refresh();
 }
 
@@ -155,6 +157,9 @@ void mainloop(void)
         __fatal_error("usb_init_all", __FILE__, __LINE__, __FUNCTION__);
     }
 
+    display_clear();
+    display_loader(0, 0, 0xFFFF, 0, 0, 0, 0);
+
     uint8_t buf[USB_PACKET_SIZE];
 
     for (;;) {
@@ -171,23 +176,18 @@ void mainloop(void)
         }
         switch (msg_id) {
             case 0: // Initialize
-                display_printf("received Initialize\n");
                 process_msg_Initialize(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 1: // Ping
-                display_printf("received Ping\n");
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 6: // FirmwareErase
-                display_printf("received FirmwareErase\n");
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
-                display_printf("received FirmwareUpload\n");
                 process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 break;
             default:
-                display_printf("received unknown message\n");
                 process_msg_unknown(USB_IFACE_NUM, msg_size, buf);
                 break;
         }
