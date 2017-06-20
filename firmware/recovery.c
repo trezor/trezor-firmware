@@ -44,6 +44,11 @@ static uint32_t word_count;
  */
 static int awaiting_word = 0;
 
+/* True if we should not write anything back to storage
+ * (can be used for testing seed for correctness).
+ */
+static bool dry_run;
+
 /* True if we should check that seed corresponds to bip39.
  */
 static bool enforce_wordlist;
@@ -121,27 +126,73 @@ static void recovery_request(void) {
 	msg_write(MessageType_MessageType_WordRequest, &resp);
 }
 
+static bool is_same_mnemonic(const char *new_mnemonic) {
+	/* The execution time of the following code only depends on the
+	 * (public) input.  This avoids timing attacks.
+	 */
+	char diff = 0;
+	uint32_t i = 0;
+	for (; new_mnemonic[i]; i++) {
+		diff |= (storage.mnemonic[i] - new_mnemonic[i]);
+	}
+	diff |= storage.mnemonic[i];
+	return diff == 0;
+}
+
 /* Called when the last word was entered.
  * Check mnemonic and send success/failure.
  */
 static void recovery_done(void) {
 	uint32_t i;
-	strlcpy(storage.mnemonic, words[0], sizeof(storage.mnemonic));
+	char new_mnemonic[sizeof(storage.mnemonic)] = {0};
+
+	strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
 	for (i = 1; i < word_count; i++) {
-		strlcat(storage.mnemonic, " ", sizeof(storage.mnemonic));
-		strlcat(storage.mnemonic, words[i], sizeof(storage.mnemonic));
+		strlcat(new_mnemonic, " ", sizeof(new_mnemonic));
+		strlcat(new_mnemonic, words[i], sizeof(new_mnemonic));
 	}
-	if (!enforce_wordlist || mnemonic_check(storage.mnemonic)) {
-		storage.has_mnemonic = true;
-		if (!enforce_wordlist) {
-			// not enforcing => mark storage as imported
-			storage.has_imported = true;
-			storage.imported = true;
+	if (!enforce_wordlist || mnemonic_check(new_mnemonic)) {
+		// New mnemonic is valid.
+		if (!dry_run) {
+			// Update mnemonic on storage.
+			storage.has_mnemonic = true;
+			strlcpy(storage.mnemonic, new_mnemonic, sizeof(new_mnemonic));
+			if (!enforce_wordlist) {
+				// not enforcing => mark storage as imported
+				storage.has_imported = true;
+				storage.imported = true;
+			}
+			storage_commit();
+			fsm_sendSuccess(_("Device recovered"));
+		} else {
+			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
+			const bool same_mnemonic = is_same_mnemonic(new_mnemonic);
+			if (same_mnemonic) {
+				layoutDialog(&bmp_icon_ok, NULL, _("Confirm"), NULL,
+					_("The mnemonic is"),
+					_("valid and matches"),
+					_("existing one."), NULL, NULL, NULL);
+				protectButton(ButtonRequestType_ButtonRequest_Other, true);
+				fsm_sendSuccess(_("Mnemonic is valid and matches existing one"));
+			} else {
+				layoutDialog(&bmp_icon_error, NULL, _("Confirm"), NULL,
+					_("The mnemonic is"),
+					_("valid but doesn't"),
+					_("match existing one."), NULL, NULL, NULL);
+				protectButton(ButtonRequestType_ButtonRequest_Other, true);
+				fsm_sendFailure(FailureType_Failure_DataError,
+					_("Mnemonic is valid but doesn't match existing one"));
+			}
 		}
-		storage_commit();
-		fsm_sendSuccess(_("Device recovered"));
 	} else {
-		storage_reset();
+		// New mnemonic is invalid.
+		if (!dry_run) {
+			storage_reset();
+		} else {
+			layoutDialog(&bmp_icon_error, NULL, _("Confirm"), NULL,
+				_("The mnemonic is"), _("invalid!"), NULL, NULL, NULL, NULL);
+			protectButton(ButtonRequestType_ButtonRequest_Other, true);
+		}
 		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid mnemonic, are words in correct order?"));
 	}
 	awaiting_word = 0;
@@ -369,24 +420,27 @@ void next_word(void) {
 	recovery_request();
 }
 
-void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_protection, const char *language, const char *label, bool _enforce_wordlist, uint32_t type, uint32_t u2f_counter)
+void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_protection, const char *language, const char *label, bool _enforce_wordlist, uint32_t type, uint32_t u2f_counter, bool _dry_run)
 {
 	if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
 
 	word_count = _word_count;
 	enforce_wordlist = _enforce_wordlist;
+	dry_run = _dry_run;
 
-	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-		layoutHome();
-		return;
+	if (!dry_run) {
+		if (pin_protection && !protectChangePin()) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			layoutHome();
+			return;
+		}
+
+		storage.has_passphrase_protection = true;
+		storage.passphrase_protection = passphrase_protection;
+		storage_setLanguage(language);
+		storage_setLabel(label);
+		storage_setU2FCounter(u2f_counter);
 	}
-
-	storage.has_passphrase_protection = true;
-	storage.passphrase_protection = passphrase_protection;
-	storage_setLanguage(language);
-	storage_setLabel(label);
-	storage_setU2FCounter(u2f_counter);
 
 	if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
 		awaiting_word = 2;

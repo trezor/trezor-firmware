@@ -988,7 +988,12 @@ void fsm_msgEstimateTxSize(EstimateTxSize *msg)
 
 void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 {
-	CHECK_NOT_INITIALIZED
+	const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
+	if (dry_run) {
+		CHECK_PIN
+	} else {
+		CHECK_NOT_INITIALIZED
+	}
 
 	CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 || msg->word_count == 18 || msg->word_count == 24, _("Invalid word count"));
 
@@ -1000,7 +1005,8 @@ void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 		msg->has_label ? msg->label : 0,
 		msg->has_enforce_wordlist && msg->enforce_wordlist,
 		msg->has_type ? msg->type : 0,
-		msg->has_u2f_counter ? msg->u2f_counter : 0
+		msg->has_u2f_counter ? msg->u2f_counter : 0,
+		dry_run
 	);
 }
 
