@@ -51,27 +51,18 @@ bool check_sdcard(void)
     }
 }
 
+static void progress_callback(void) {
+    display_printf(".");
+}
+
 bool copy_sdcard(void)
 {
     display_printf("erasing flash ");
 
     // erase flash (except boardloader)
-    HAL_FLASH_Unlock();
-    FLASH_EraseInitTypeDef EraseInitStruct;
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
-                           FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    EraseInitStruct.NbSectors = 1;
-    uint32_t SectorError = 0;
-    for (int i = 2; i < 12; i++) {
-        EraseInitStruct.Sector = i;
-        if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
-            HAL_FLASH_Lock();
-            display_printf(" failed\n");
-            return false;
-        }
-        display_printf(".");
+    if (0 != flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_FIRMWARE_END, progress_callback)) {
+        display_printf(" failed\n");
+        return false;
     }
     display_printf(" done\n");
 
@@ -87,10 +78,10 @@ bool copy_sdcard(void)
     if (!image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
         display_printf("invalid header\n");
         sdcard_power_off();
-        HAL_FLASH_Lock();
         return false;
     }
 
+    HAL_FLASH_Unlock();
     for (int i = 0; i < (HEADER_SIZE + hdr.codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {

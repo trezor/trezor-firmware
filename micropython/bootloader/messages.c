@@ -1,9 +1,13 @@
+#include STM32_HAL_H
+
 #include <string.h>
 
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "messages.pb.h"
 
+#include "common.h"
+#include "flash.h"
 #include "usb.h"
 #include "version.h"
 
@@ -229,6 +233,9 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
     firmware_size = msg_recv.has_length ? msg_recv.length : 0;
     if (firmware_size > 0 && firmware_size % 4 == 0) {
+        // erase flash
+        flash_erase_sectors(FLASH_SECTOR_FIRMWARE_START, FLASH_SECTOR_FIRMWARE_END, NULL);
+        // request new firmware
         chunk_requested = (firmware_size > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_size;
         MSG_SEND_INIT(FirmwareRequest);
         MSG_SEND_ASSIGN_VALUE(offset, 0);
@@ -247,21 +254,33 @@ static uint32_t chunk_size = 0;
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
 #define BUFSIZE 1024
-    pb_byte_t buf[BUFSIZE];
+    uint32_t buf[BUFSIZE / sizeof(uint32_t)];
+    uint32_t chunk_written = 0;
     chunk_size = stream->bytes_left;
     while (stream->bytes_left) {
-        if (!pb_read(stream, buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
+        memset(buf, 0xFF, sizeof(buf));
+        // read data
+        if (!pb_read(stream, (pb_byte_t *)buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
             return false;
         }
+        // write data
+        for (int i = 0; i < BUFSIZE / sizeof(uint32_t); i++) {
+            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FIRMWARE_START + firmware_flashed + chunk_written + i * sizeof(uint32_t), buf[i]) != HAL_OK) {
+                return false;
+            }
+        }
+        chunk_written += BUFSIZE;
     }
     return true;
 }
 
 void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
+    HAL_FLASH_Unlock();
     MSG_RECV_INIT(FirmwareUpload);
     MSG_RECV_CALLBACK(payload, _read_payload);
     MSG_RECV(FirmwareUpload);
+    HAL_FLASH_Lock();
 
     if (chunk_size != chunk_requested) {
         MSG_SEND_INIT(Failure);

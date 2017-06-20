@@ -38,3 +38,27 @@ void flash_set_option_bytes(void)
         HAL_FLASHEx_OBProgram(&opts);
     }
 }
+
+int flash_erase_sectors(int start, int end, void (*progress)(void))
+{
+    HAL_FLASH_Unlock();
+    FLASH_EraseInitTypeDef EraseInitStruct;
+    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
+                           FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+    EraseInitStruct.NbSectors = 1;
+    uint32_t SectorError = 0;
+    for (int i = start; i <= end; i++) {
+        EraseInitStruct.Sector = i;
+        if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
+            HAL_FLASH_Lock();
+            return 0;
+        }
+        if (progress) {
+            progress();
+        }
+    }
+    HAL_FLASH_Lock();
+    return 1;
+}
