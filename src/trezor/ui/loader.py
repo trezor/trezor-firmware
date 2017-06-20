@@ -1,5 +1,6 @@
 import utime
 from micropython import const
+from trezor import loop
 from trezor import ui
 
 
@@ -54,3 +55,9 @@ class Loader(ui.Widget):
         else:
             ui.display.loader(
                 progress, -8, style['fg-color'], style['bg-color'], style['icon'], style['icon-fg-color'])
+
+    def __iter__(self):
+        sleep = loop.sleep(1000000 // 60)  # 60 fps
+        while self.is_active():
+            self.render()
+            yield sleep

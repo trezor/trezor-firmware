@@ -44,20 +44,20 @@ class ConfirmDialog(Widget):
         return await loop.Wait((super().__iter__(), self.content))
 
 
+_STARTED = const(-1)
+_STOPPED = const(-2)
+
+
 class HoldToConfirmDialog(Widget):
 
-    def __init__(self, content=None, hold='Hold to confirm', *args, **kwargs):
+    def __init__(self, content, hold='Hold to confirm', *args, **kwargs):
+        self.content = content
         self.button = Button((0, 240 - 48, 240, 48), hold,
                              normal_style=CONFIRM_BUTTON,
                              active_style=CONFIRM_BUTTON_ACTIVE)
-        self.content = content
         self.loader = Loader(*args, **kwargs)
 
     def render(self):
-        if self.loader.is_active():
-            self.loader.render()
-        elif self.content is not None:
-            self.content.render()
         self.button.render()
 
     def touch(self, event, pos):
@@ -65,28 +65,22 @@ class HoldToConfirmDialog(Widget):
         was_started = button.state & BTN_STARTED
         button.touch(event, pos)
         is_started = button.state & BTN_STARTED
-        if is_started:
-            if not was_started:
-                self.loader.start()
-        else:
-            if was_started:
-                if self.loader.stop():
-                    return CONFIRMED
-        if self.content is not None:
-            return self.content.touch(event, pos)
+        if is_started and not was_started:
+            self.loader.start()
+            return _STARTED
+        if was_started and not is_started:
+            if self.loader.stop():
+                return CONFIRMED
+            else:
+                return _STOPPED
 
     async def __iter__(self):
-        return await loop.Wait((self._render_loop(), self._event_loop()))
-
-    def _render_loop(self):
-        RENDER_DELAY = const(1000000 // 60)
-        while True:
-            self.render()
-            yield loop.Sleep(RENDER_DELAY)
-
-    def _event_loop(self):
-        while True:
-            event, *pos = yield loop.Select(loop.TOUCH)
-            result = self.touch(event, pos)
-            if result is not None:
-                return result
+        result = None
+        while result is None or result < 0:  # _STARTED or _STOPPED
+            if self.loader.is_active():
+                content_loop = self.loader
+            else:
+                content_loop = self.content
+            confirm_loop = super().__iter__()  # default loop (render on touch)
+            result = await loop.wait((content_loop, confirm_loop))
+        return result
