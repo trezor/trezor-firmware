@@ -1,1 +1,0 @@
-from trezorio import SDCard
