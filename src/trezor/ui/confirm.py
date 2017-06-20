@@ -12,7 +12,7 @@ CANCELLED = const(2)
 
 class ConfirmDialog(Widget):
 
-    def __init__(self, content=None, confirm='Confirm', cancel='Cancel'):
+    def __init__(self, content, confirm='Confirm', cancel='Cancel'):
         self.content = content
         if cancel is not None:
             self.confirm = Button((121, 240 - 48, 119, 48), confirm,

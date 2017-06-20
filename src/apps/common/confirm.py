@@ -7,7 +7,7 @@ signal = loop.Signal()
 
 
 @unimport
-async def confirm(session_id, content=None, code=None, *args, **kwargs):
+async def confirm(session_id, content, code=None, *args, **kwargs):
     from trezor.ui.confirm import ConfirmDialog, CONFIRMED
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.messages.ButtonRequestType import Other
@@ -24,7 +24,7 @@ async def confirm(session_id, content=None, code=None, *args, **kwargs):
 
 
 @unimport
-async def hold_to_confirm(session_id, content=None, code=None, *args, **kwargs):
+async def hold_to_confirm(session_id, content, code=None, *args, **kwargs):
     from trezor.ui.confirm import HoldToConfirmDialog, CONFIRMED
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.messages.ButtonRequestType import Other
