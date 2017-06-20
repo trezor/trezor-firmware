@@ -1,9 +1,12 @@
 from micropython import const
 
 import trezor.main
+from trezor import config
 from trezor import msg
 from trezor import ui
 from trezor import wire
+
+config.init()
 
 # Load all applications
 if __debug__:

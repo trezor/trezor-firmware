@@ -6,7 +6,13 @@ from trezor import config
 
 class TestConfig(unittest.TestCase):
 
+    def test_init(self):
+        config.init()
+        config.init()
+        config.init()
+
     def test_wipe(self):
+        config.init()
         config.wipe()
         config.set(0, 0, b'hello')
         config.set(1, 1, b'world')
@@ -21,6 +27,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(v1, bytes())
 
     def test_set_get(self):
+        config.init()
         config.wipe()
         for _ in range(64):
             appid, key = random.uniform(256), random.uniform(256)
@@ -30,6 +37,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(value, value2)
 
     def test_get_default(self):
+        config.init()
         config.wipe()
         for _ in range(64):
             appid, key = random.uniform(256), random.uniform(256)

@@ -1,0 +1,1 @@
+import trezorconfig as config

@@ -1,28 +1,25 @@
 from typing import *
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-class Config:
+def init(self) -> None:
     '''
-    Persistent key-value storage, with 16-bit keys and bytes values.
+    Initializes the storage. Must be called before any other method is called from this module!
     '''
 
-    def __init__(self):
-        '''
-        Initializes the storage.
-        '''
+# extmod/modtrezorconfig/modtrezorconfig.c
+def get(app: int, key: int) -> bytes:
+    '''
+    Gets a value of given key for given app (or empty bytes if not set).
+    '''
 
-    def get(self, app: int, key: int) -> bytes:
-        '''
-        Gets a value of given key for given app (or empty bytes if not set).
-        '''
+# extmod/modtrezorconfig/modtrezorconfig.c
+def set(app: int, key: int, value: bytes) -> None:
+    '''
+    Sets a value of given key for given app.
+    '''
 
-    def set(self, app: int, key: int, value: bytes) -> None:
-        '''
-        Sets a value of given key for given app.
-        Returns True on success.
-        '''
-
-    def wipe(self) -> None:
-        '''
-        Erases the whole config. Use with caution!
-        '''
+# extmod/modtrezorconfig/modtrezorconfig.c
+def wipe(self) -> None:
+    '''
+    Erases the whole config. Use with caution!
+    '''
