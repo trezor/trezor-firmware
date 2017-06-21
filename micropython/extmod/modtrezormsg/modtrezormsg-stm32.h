@@ -23,5 +23,5 @@ ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
 
 ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
 {
-    return usb_hid_write_blocking(iface, buf, len, 1); // 1ms timeout
+    return usb_hid_write_blocking(iface, buf, len, 1000); // 1s timeout
 }
