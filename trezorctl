@@ -277,7 +277,7 @@ class Commands(object):
                     'matrix':    types.RecoveryDeviceType_Matrix }
         return self.client.recovery_device(args.words, args.passphrase_protection,
                                            args.pin_protection, args.label, 'english',
-                                           typemap[args.type], args.expand)
+                                           typemap[args.type], args.expand, args.dry_run)
 
     def load_device(self, args):
         if not args.mnemonic and not args.xprv:
@@ -474,6 +474,7 @@ class Commands(object):
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
         (('-t', '--type'), {'type': str, 'choices': ['scrambled', 'matrix'], 'default': 'scrambled'}),
+        (('-d', '--dry-run'), {'action': 'store_true', 'default': False}),
     )
 
     load_device.arguments = (

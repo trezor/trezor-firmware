@@ -830,8 +830,8 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language, type=types.RecoveryDeviceType_ScrambledWords, expand=False):
-        if self.features.initialized:
+    def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language, type=types.RecoveryDeviceType_ScrambledWords, expand=False, dry_run=False):
+        if self.features.initialized and not dry_run:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
         if word_count not in (12, 18, 24):
@@ -850,7 +850,8 @@ class ProtocolMixin(object):
                                    label=label,
                                    language=language,
                                    enforce_wordlist=True,
-                                   type=type))
+                                   type=type,
+                                   dry_run=dry_run))
 
         self.init_device()
         return res
