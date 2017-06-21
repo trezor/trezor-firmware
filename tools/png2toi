@@ -68,13 +68,18 @@ def process_image(ifn, savefiles=False):
             print('Written %s ... %d bytes' % (ofn, len(data)))
         with open(ofn + '.h', 'wt') as f:
             f.write('static const uint8_t toi_%s[] = {\n' % ifn[:-4])
+            f.write('    // magic\n')
             if im.mode == 'RGB':
                 f.write("    'T', 'O', 'I', 'f',\n")
             else:
                 f.write("    'T', 'O', 'I', 'g',\n")
-                f.write('    (uint16_t)%d, (uint16_t)%d,\n' % (w, h))
-                f.write('    (uint32_t)%d,\n' % len(zdata))
-                f.write('   ')
+            f.write('    // width (16-bit), height (16-bit)\n')
+            f.write('    0x%02x, 0x%02x, 0x%02x, 0x%02x,\n' % (w & 0xFF, w >> 8, h & 0xFF, h >> 8))
+            l = len(zdata)
+            f.write('    // compressed data length (32-bit)\n')
+            f.write('    0x%02x, 0x%02x, 0x%02x, 0x%02x,\n' % (l & 0xFF, (l >> 8) & 0xFF, (l >> 16) & 0xFF, l >> 24))
+            f.write('    // compressed data\n')
+            f.write('   ')
             for b in zdata:
                 f.write(' 0x%02x,' % b)
             f.write('\n};\n')
