@@ -158,7 +158,6 @@ void mainloop(void)
     }
 
     display_clear();
-    display_loader(0, 0, 0xFFFF, 0, 0, 0, 0);
 
     uint8_t buf[USB_PACKET_SIZE];
 

@@ -225,7 +225,7 @@ static uint32_t firmware_remaining, firmware_flashed, chunk_requested;
 
 static void progress_erase(uint16_t val)
 {
-    display_loader(val, 0, 0xFFFF, 0, 0, 0, 0);
+    display_loader(val / 4, 0, 0xFFFF, 0, 0, 0, 0);
 }
 
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -265,7 +265,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
     chunk_size = stream->bytes_left;
     while (stream->bytes_left) {
         // print loader
-        display_loader(1000 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, 0xFFFF, 0, 0, 0, 0);
+        display_loader(250 + 750 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, 0xFFFF, 0, 0, 0, 0);
         memset(buf, 0xFF, sizeof(buf));
         // read data
         if (!pb_read(stream, (pb_byte_t *)buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
