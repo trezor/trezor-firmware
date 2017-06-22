@@ -71,9 +71,8 @@ LDFLAGS  += --static \
             -T$(LDSCRIPT) \
             -nostartfiles \
             -Wl,--gc-sections \
+            -mcpu=cortex-m3 \
             -mthumb \
-            -march=armv7 \
-            -mfix-cortex-m3-ldrd \
             -msoft-float
 
 all: $(NAME).bin
