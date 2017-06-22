@@ -106,10 +106,6 @@ typedef struct _EntropyRequest {
     uint8_t dummy_field;
 } EntropyRequest;
 
-typedef struct _FirmwareErase {
-    uint8_t dummy_field;
-} FirmwareErase;
-
 typedef struct _GetFeatures {
     uint8_t dummy_field;
 } GetFeatures;
@@ -279,44 +275,6 @@ typedef struct _DebugLinkState {
 
 typedef struct {
     size_t size;
-    uint8_t bytes[33];
-} DecryptMessage_nonce_t;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[1120];
-} DecryptMessage_message_t;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[8];
-} DecryptMessage_hmac_t;
-
-typedef struct _DecryptMessage {
-    size_t address_n_count;
-    uint32_t address_n[8];
-    bool has_nonce;
-    DecryptMessage_nonce_t nonce;
-    bool has_message;
-    DecryptMessage_message_t message;
-    bool has_hmac;
-    DecryptMessage_hmac_t hmac;
-} DecryptMessage;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[1024];
-} DecryptedMessage_message_t;
-
-typedef struct _DecryptedMessage {
-    bool has_message;
-    DecryptedMessage_message_t message;
-    bool has_address;
-    char address[41];
-} DecryptedMessage;
-
-typedef struct {
-    size_t size;
     uint8_t bytes[65];
 } ECDHSessionKey_session_key_t;
 
@@ -324,53 +282,6 @@ typedef struct _ECDHSessionKey {
     bool has_session_key;
     ECDHSessionKey_session_key_t session_key;
 } ECDHSessionKey;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[33];
-} EncryptMessage_pubkey_t;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[1024];
-} EncryptMessage_message_t;
-
-typedef struct _EncryptMessage {
-    bool has_pubkey;
-    EncryptMessage_pubkey_t pubkey;
-    bool has_message;
-    EncryptMessage_message_t message;
-    bool has_display_only;
-    bool display_only;
-    size_t address_n_count;
-    uint32_t address_n[8];
-    bool has_coin_name;
-    char coin_name[17];
-} EncryptMessage;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[33];
-} EncryptedMessage_nonce_t;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[1120];
-} EncryptedMessage_message_t;
-
-typedef struct {
-    size_t size;
-    uint8_t bytes[8];
-} EncryptedMessage_hmac_t;
-
-typedef struct _EncryptedMessage {
-    bool has_nonce;
-    EncryptedMessage_nonce_t nonce;
-    bool has_message;
-    EncryptedMessage_message_t message;
-    bool has_hmac;
-    EncryptedMessage_hmac_t hmac;
-} EncryptedMessage;
 
 typedef struct {
     size_t size;
@@ -672,6 +583,8 @@ typedef struct _RecoveryDevice {
     uint32_t type;
     bool has_u2f_counter;
     uint32_t u2f_counter;
+    bool has_dry_run;
+    bool dry_run;
 } RecoveryDevice;
 
 typedef struct _ResetDevice {
@@ -819,7 +732,6 @@ extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
 extern const char SignMessage_coin_name_default[17];
 extern const char VerifyMessage_coin_name_default[17];
-extern const char EncryptMessage_coin_name_default[17];
 extern const char EstimateTxSize_coin_name_default[17];
 extern const char SignTx_coin_name_default[17];
 extern const uint32_t SignTx_version_default;
@@ -855,16 +767,12 @@ extern const uint32_t SignTx_lock_time_default;
 #define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, "", false, 0}
 #define EntropyRequest_init_default              {0}
 #define EntropyAck_init_default                  {false, {0, {0}}}
-#define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0, false, 0, false, 0}
+#define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0, false, 0, false, 0, false, 0}
 #define WordRequest_init_default                 {false, (WordRequestType)0}
 #define WordAck_init_default                     {""}
 #define SignMessage_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin"}
 #define VerifyMessage_init_default               {false, "", false, {0, {0}}, false, {0, {0}}, false, "Bitcoin"}
 #define MessageSignature_init_default            {false, "", false, {0, {0}}}
-#define EncryptMessage_init_default              {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "Bitcoin"}
-#define EncryptedMessage_init_default            {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
-#define DecryptMessage_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
-#define DecryptedMessage_init_default            {false, {0, {0}}, false, ""}
 #define CipherKeyValue_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
 #define CipheredKeyValue_init_default            {false, {0, {0}}}
 #define EstimateTxSize_init_default              {0, 0, false, "Bitcoin"}
@@ -880,7 +788,6 @@ extern const uint32_t SignTx_lock_time_default;
 #define GetECDHSessionKey_init_default           {false, IdentityType_init_default, false, {0, {0}}, false, ""}
 #define ECDHSessionKey_init_default              {false, {0, {0}}}
 #define SetU2FCounter_init_default               {false, 0}
-#define FirmwareErase_init_default               {0}
 #define DebugLinkDecision_init_default           {0}
 #define DebugLinkGetState_init_default           {0}
 #define DebugLinkState_init_default              {false, {0, {0}}, false, "", false, "", false, "", false, HDNodeType_init_default, false, 0, false, "", false, {0, {0}}, false, "", false, 0}
@@ -919,16 +826,12 @@ extern const uint32_t SignTx_lock_time_default;
 #define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, 0}
 #define EntropyRequest_init_zero                 {0}
 #define EntropyAck_init_zero                     {false, {0, {0}}}
-#define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0}
+#define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0}
 #define WordRequest_init_zero                    {false, (WordRequestType)0}
 #define WordAck_init_zero                        {""}
 #define SignMessage_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, ""}
 #define VerifyMessage_init_zero                  {false, "", false, {0, {0}}, false, {0, {0}}, false, ""}
 #define MessageSignature_init_zero               {false, "", false, {0, {0}}}
-#define EncryptMessage_init_zero                 {false, {0, {0}}, false, {0, {0}}, false, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}, false, ""}
-#define EncryptedMessage_init_zero               {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
-#define DecryptMessage_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
-#define DecryptedMessage_init_zero               {false, {0, {0}}, false, ""}
 #define CipherKeyValue_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
 #define CipheredKeyValue_init_zero               {false, {0, {0}}}
 #define EstimateTxSize_init_zero                 {0, 0, false, ""}
@@ -944,7 +847,6 @@ extern const uint32_t SignTx_lock_time_default;
 #define GetECDHSessionKey_init_zero              {false, IdentityType_init_zero, false, {0, {0}}, false, ""}
 #define ECDHSessionKey_init_zero                 {false, {0, {0}}}
 #define SetU2FCounter_init_zero                  {false, 0}
-#define FirmwareErase_init_zero                  {0}
 #define DebugLinkDecision_init_zero              {0}
 #define DebugLinkGetState_init_zero              {0}
 #define DebugLinkState_init_zero                 {false, {0, {0}}, false, "", false, "", false, "", false, HDNodeType_init_zero, false, 0, false, "", false, {0, {0}}, false, "", false, 0}
@@ -993,21 +895,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define DebugLinkState_reset_entropy_tag         8
 #define DebugLinkState_recovery_fake_word_tag    9
 #define DebugLinkState_recovery_word_pos_tag     10
-#define DecryptMessage_address_n_tag             1
-#define DecryptMessage_nonce_tag                 2
-#define DecryptMessage_message_tag               3
-#define DecryptMessage_hmac_tag                  4
-#define DecryptedMessage_message_tag             1
-#define DecryptedMessage_address_tag             2
 #define ECDHSessionKey_session_key_tag           1
-#define EncryptMessage_pubkey_tag                1
-#define EncryptMessage_message_tag               2
-#define EncryptMessage_display_only_tag          3
-#define EncryptMessage_address_n_tag             4
-#define EncryptMessage_coin_name_tag             5
-#define EncryptedMessage_nonce_tag               1
-#define EncryptedMessage_message_tag             2
-#define EncryptedMessage_hmac_tag                3
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
 #define EstimateTxSize_outputs_count_tag         1
@@ -1090,6 +978,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define RecoveryDevice_enforce_wordlist_tag      6
 #define RecoveryDevice_type_tag                  8
 #define RecoveryDevice_u2f_counter_tag           9
+#define RecoveryDevice_dry_run_tag               10
 #define ResetDevice_display_random_tag           1
 #define ResetDevice_strength_tag                 2
 #define ResetDevice_passphrase_protection_tag    3
@@ -1156,16 +1045,12 @@ extern const pb_field_t LoadDevice_fields[9];
 extern const pb_field_t ResetDevice_fields[8];
 extern const pb_field_t EntropyRequest_fields[1];
 extern const pb_field_t EntropyAck_fields[2];
-extern const pb_field_t RecoveryDevice_fields[9];
+extern const pb_field_t RecoveryDevice_fields[10];
 extern const pb_field_t WordRequest_fields[2];
 extern const pb_field_t WordAck_fields[2];
 extern const pb_field_t SignMessage_fields[4];
 extern const pb_field_t VerifyMessage_fields[5];
 extern const pb_field_t MessageSignature_fields[3];
-extern const pb_field_t EncryptMessage_fields[6];
-extern const pb_field_t EncryptedMessage_fields[4];
-extern const pb_field_t DecryptMessage_fields[5];
-extern const pb_field_t DecryptedMessage_fields[3];
 extern const pb_field_t CipherKeyValue_fields[8];
 extern const pb_field_t CipheredKeyValue_fields[2];
 extern const pb_field_t EstimateTxSize_fields[4];
@@ -1181,7 +1066,6 @@ extern const pb_field_t SignedIdentity_fields[4];
 extern const pb_field_t GetECDHSessionKey_fields[4];
 extern const pb_field_t ECDHSessionKey_fields[2];
 extern const pb_field_t SetU2FCounter_fields[2];
-extern const pb_field_t FirmwareErase_fields[1];
 extern const pb_field_t DebugLinkDecision_fields[2];
 extern const pb_field_t DebugLinkGetState_fields[1];
 extern const pb_field_t DebugLinkState_fields[11];
@@ -1222,16 +1106,12 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define ResetDevice_size                         72
 #define EntropyRequest_size                      0
 #define EntropyAck_size                          131
-#define RecoveryDevice_size                      78
+#define RecoveryDevice_size                      80
 #define WordRequest_size                         6
 #define WordAck_size                             14
 #define SignMessage_size                         1094
 #define VerifyMessage_size                       1156
 #define MessageSignature_size                    110
-#define EncryptMessage_size                      1131
-#define EncryptedMessage_size                    1168
-#define DecryptMessage_size                      1216
-#define DecryptedMessage_size                    1070
 #define CipherKeyValue_size                      1358
 #define CipheredKeyValue_size                    1027
 #define EstimateTxSize_size                      31
@@ -1247,7 +1127,6 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define GetECDHSessionKey_size                   (107 + IdentityType_size)
 #define ECDHSessionKey_size                      67
 #define SetU2FCounter_size                       6
-#define FirmwareErase_size                       0
 #define DebugLinkDecision_size                   2
 #define DebugLinkGetState_size                   0
 #define DebugLinkState_size                      (1468 + HDNodeType_size)
