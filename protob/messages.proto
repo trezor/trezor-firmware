@@ -1,8 +1,5 @@
 /**
  * Messages for TREZOR communication
- *
- * @author	Marek Palatinus <slush@satoshilabs.com>
- * @version	1.2
  */
 
 // Sugar for easier handling in Java
@@ -45,6 +42,7 @@ enum MessageType {
 	MessageType_ButtonAck = 27 [(wire_in) = true, (wire_tiny) = true];
 	MessageType_GetAddress = 29 [(wire_in) = true];
 	MessageType_Address = 30 [(wire_out) = true];
+	MessageType_BackupDevice = 34 [(wire_in) = true];
 	MessageType_EntropyRequest = 35 [(wire_out) = true];
 	MessageType_EntropyAck = 36 [(wire_in) = true];
 	MessageType_SignMessage = 38 [(wire_in) = true];
@@ -361,6 +359,14 @@ message ResetDevice {
 	optional string language = 5 [default='english'];	// device language
 	optional string label = 6;				// device label
 	optional uint32 u2f_counter = 7;			// U2F counter
+	optional bool skip_backup = 8;				// postpone seed backup to BackupDevice workflow
+}
+
+/**
+ * Request: Perform backup of the device seed if not backed up using ResetDevice
+ * @next ButtonRequest
+ */
+message BackupDevice {
 }
 
 /**

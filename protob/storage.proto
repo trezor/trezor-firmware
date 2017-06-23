@@ -1,8 +1,5 @@
 /**
  * Storage area of TREZOR
- *
- * @author	Marek Palatinus <slush@satoshilabs.com>
- * @version	1
  */
 
 // Sugar for easier handling in Java
@@ -26,4 +23,5 @@ message Storage {
 	optional bool imported = 9;			// was storage imported from an external source?
 	optional bytes homescreen = 10;			// image used as homescreen (logo + label is used when not set)
 	optional uint32 u2f_counter = 11;		// sequence number for u2f authentications
+	optional bool needs_backup = 12;		// seed is not backed up yet
 }

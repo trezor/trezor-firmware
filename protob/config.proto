@@ -1,8 +1,5 @@
 /**
  * Configuration format for TREZOR plugin
- *
- * @author	Marek Palatinus <slush@satoshilabs.com>
- * @version	1.0
  */
 
 // Sugar for easier handling in Java
