@@ -21,7 +21,6 @@ from __future__ import print_function
 import unittest
 import common
 import binascii
-import itertools
 
 import trezorlib.messages_pb2 as proto
 import trezorlib.ckd_public as bip32
@@ -33,14 +32,15 @@ from trezorlib.client import CallException
 # https://sx.dyne.org/multisig.html
 #
 
+
 class TestMultisig(common.TrezorTest):
 
     def test_2_of_3(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        #key1 = self.client.get_public_node([1])
-        #key2 = self.client.get_public_node([2])
-        #key3 = self.client.get_public_node([3])
+        # key1 = self.client.get_public_node([1])
+        # key2 = self.client.get_public_node([2])
+        # key3 = self.client.get_public_node([3])
 
         # xpub:
         # print(bip32.serialize(self.client.get_public_node([]).node))
@@ -62,24 +62,29 @@ class TestMultisig(common.TrezorTest):
         node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
 
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
-                                     proto_types.HDNodePathType(node=node, address_n=[2]),
-                                     proto_types.HDNodePathType(node=node, address_n=[3])],
-                            signatures=[b'', b'', b''],
-                            m=2,
-                            )
+            pubkeys=[
+                proto_types.HDNodePathType(node=node, address_n=[1]),
+                proto_types.HDNodePathType(node=node, address_n=[2]),
+                proto_types.HDNodePathType(node=node, address_n=[3])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
         # Let's go to sign with key 1
-        inp1 = proto_types.TxInputType(address_n=[1],
-                             prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
-                             prev_index=1,
-                             script_type=proto_types.SPENDMULTISIG,
-                             multisig=multisig,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[1],
+            prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
+            prev_index=1,
+            script_type=proto_types.SPENDMULTISIG,
+            multisig=multisig,
+        )
 
-        out1 = proto_types.TxOutputType(address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -106,20 +111,23 @@ class TestMultisig(common.TrezorTest):
         # Let's do second signature using 3rd key
 
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
-                                     proto_types.HDNodePathType(node=node, address_n=[2]),
-                                     proto_types.HDNodePathType(node=node, address_n=[3])],
-                            signatures=[signatures1[0], b'', b''], # Fill signature from previous signing process
-                            m=2,
-                            )
+            pubkeys=[
+                proto_types.HDNodePathType(node=node, address_n=[1]),
+                proto_types.HDNodePathType(node=node, address_n=[2]),
+                proto_types.HDNodePathType(node=node, address_n=[3])
+            ],
+            signatures=[signatures1[0], b'', b''],  # Fill signature from previous signing process
+            m=2,
+        )
 
         # Let's do a second signature with key 3
-        inp3 = proto_types.TxInputType(address_n=[3],
-                 prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
-                 prev_index=1,
-                 script_type=proto_types.SPENDMULTISIG,
-                 multisig=multisig,
-                 )
+        inp3 = proto_types.TxInputType(
+            address_n=[3],
+            prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
+            prev_index=1,
+            script_type=proto_types.SPENDMULTISIG,
+            multisig=multisig,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -169,23 +177,26 @@ class TestMultisig(common.TrezorTest):
 
         signatures = [b''] * 15
 
-        out1 = proto_types.TxOutputType(address='17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1',
-                              amount=10000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1',
+            amount=10000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         for x in range(15):
             multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=pubs,
-                            signatures=signatures,
-                            m=15,
-                            )
+                pubkeys=pubs,
+                signatures=signatures,
+                m=15,
+            )
 
-            inp1 = proto_types.TxInputType(address_n=[x],
-                                 prev_hash=binascii.unhexlify('6189e3febb5a21cee8b725aa1ef04ffce7e609448446d3a8d6f483c634ef5315'),
-                                 prev_index=1,
-                                 script_type=proto_types.SPENDMULTISIG,
-                                 multisig=multisig,
-                                 )
+            inp1 = proto_types.TxInputType(
+                address_n=[x],
+                prev_hash=binascii.unhexlify('6189e3febb5a21cee8b725aa1ef04ffce7e609448446d3a8d6f483c634ef5315'),
+                prev_index=1,
+                script_type=proto_types.SPENDMULTISIG,
+                multisig=multisig,
+            )
 
             with self.client:
                 (sig, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
@@ -197,9 +208,9 @@ class TestMultisig(common.TrezorTest):
     def test_missing_pubkey(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        #key1 = self.client.get_public_node([1])
-        #key2 = self.client.get_public_node([2])
-        #key3 = self.client.get_public_node([3])
+        # key1 = self.client.get_public_node([1])
+        # key2 = self.client.get_public_node([2])
+        # key3 = self.client.get_public_node([3])
 
         # pubkeys:
         #    0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6
@@ -214,24 +225,29 @@ class TestMultisig(common.TrezorTest):
         node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
 
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
-                                     proto_types.HDNodePathType(node=node, address_n=[2]),
-                                     proto_types.HDNodePathType(node=node, address_n=[3])],
-                            signatures=[b'', b'', b''],
-                            m=2,
-                            )
+            pubkeys=[
+                proto_types.HDNodePathType(node=node, address_n=[1]),
+                proto_types.HDNodePathType(node=node, address_n=[2]),
+                proto_types.HDNodePathType(node=node, address_n=[3])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
         # Let's go to sign with key 10, which is NOT in pubkeys
-        inp1 = proto_types.TxInputType(address_n=[10],
-                             prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
-                             prev_index=1,
-                             script_type=proto_types.SPENDMULTISIG,
-                             multisig=multisig,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[10],
+            prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
+            prev_index=1,
+            script_type=proto_types.SPENDMULTISIG,
+            multisig=multisig,
+        )
 
-        out1 = proto_types.TxOutputType(address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             # It should throw Failure 'Pubkey not found in multisig script'

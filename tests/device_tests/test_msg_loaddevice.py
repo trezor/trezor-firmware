@@ -19,7 +19,6 @@
 import unittest
 import common
 
-from trezorlib import messages_pb2 as messages
 
 class TestDeviceLoad(common.TrezorTest):
 
@@ -88,6 +87,7 @@ class TestDeviceLoad(common.TrezorTest):
         self.assertEqual(address_nfkd, address_nfc)
         self.assertEqual(address_nfkd, address_nfkc)
         self.assertEqual(address_nfkd, address_nfd)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -19,7 +19,6 @@
 import unittest
 import common
 
-from trezorlib import messages_pb2 as messages
 
 class TestDeviceLoadXprv(common.TrezorTest):
 
@@ -42,6 +41,7 @@ class TestDeviceLoadXprv(common.TrezorTest):
 
         address = self.client.get_address('Bitcoin', [])
         self.assertEqual(address, '1CHUbFa4wTTPYgkYaw2LHSd5D4qJjMU8ri')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,7 +15,7 @@ import json
 import hashlib
 import binascii
 
-from trezorlib.client import TrezorClient, TrezorClientDebug
+from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
 
 # Python2 vs Python3
@@ -23,6 +23,7 @@ try:
     input = raw_input
 except NameError:
     pass
+
 
 def wait_for_devices():
     devices = HidTransport.enumerate()
@@ -32,6 +33,7 @@ def wait_for_devices():
         devices = HidTransport.enumerate()
 
     return devices
+
 
 def choose_device(devices):
     if not len(devices):
@@ -71,9 +73,10 @@ def choose_device(devices):
     except:
         raise Exception("Invalid choice, exiting...")
 
+
 def main():
 
-    if not 'encfs_root' in os.environ:
+    if 'encfs_root' not in os.environ:
         sys.stderr.write('\nThis is not a standalone script and is not meant to be run independently.\n')
         sys.stderr.write('\nUsage: encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt\n')
         sys.exit(1)
@@ -121,6 +124,7 @@ def main():
                                     False, True)
 
     print(passw)
+
 
 if __name__ == '__main__':
     main()

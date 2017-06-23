@@ -16,12 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import unittest
 import common
 
 from trezorlib import messages_pb2 as proto
-from trezorlib import types_pb2 as proto_types
+
 
 class TestMsgChangepin(common.TrezorTest):
 
@@ -217,6 +216,7 @@ class TestMsgChangepin(common.TrezorTest):
         features = self.client.call_raw(proto.Initialize())
         self.assertTrue(features.pin_protection)
         self.assertEqual(self.client.debug.read_pin()[0], self.pin4)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,20 +20,26 @@ from __future__ import print_function
 import binascii
 from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
-from trezorlib.tx_api import *
+from trezorlib.tx_api import TxApiBitcoin, TxApiTestnet, TxApiLitecoin
 from trezorlib import types_pb2 as types
+
+# Python2 vs Python3
+try:
+    input = raw_input
+except NameError:
+    pass
 
 
 def get_client():
-    devices = HidTransport.enumerate()   # List all connected TREZORs on USB
-    if len(devices) == 0:                # Check whether we found any
+    devices = HidTransport.enumerate()    # list all connected TREZORs on USB
+    if len(devices) == 0:                 # check whether we found any
         return None
-    transport = HidTransport(devices[0]) # Use first connected device
-    return TrezorClient(transport)       # Creates object for communicating with TREZOR
+    transport = HidTransport(devices[0])  # use first connected device
+    return TrezorClient(transport)        # creates object for communicating with TREZOR
 
 
 def get_txapi():
-    coin = raw_input('Which coin {Bitcoin, Testnet, Litecoin}? ').strip()
+    coin = input('Which coin {Bitcoin, Testnet, Litecoin}? ').strip()
     if coin not in {'Bitcoin', 'Testnet', 'Litecoin'}:
         return None, None
     txapi_lookup = {
@@ -66,29 +72,29 @@ def main():
 
     while True:
         print()
-        prev_in_hash = raw_input('Previous input hash (empty to move on): ').strip()
+        prev_in_hash = input('Previous input hash (empty to move on): ').strip()
         if prev_in_hash == '':
             break
-        prev_in_vout = raw_input('Previous input index: ').strip()
-        addrn = raw_input("Node path to sign with (e.g.- %s/0'/0/0): " % coin).strip()
+        prev_in_vout = input('Previous input index: ').strip()
+        addrn = input("Node path to sign with (e.g.- %s/0'/0/0): " % coin).strip()
         inputs.append(types.TxInputType(
-            prev_hash = binascii.unhexlify(prev_in_hash),
-            prev_index = int(prev_in_vout, 10),
-            address_n = client.expand_path(addrn)
+            prev_hash=binascii.unhexlify(prev_in_hash),
+            prev_index=int(prev_in_vout, 10),
+            address_n=client.expand_path(addrn)
         ))
 
     outputs = []
 
     while True:
         print()
-        out_addr = raw_input('Pay to address (empty to move on): ').strip()
+        out_addr = input('Pay to address (empty to move on): ').strip()
         if out_addr == '':
             break
-        out_amount = raw_input('Amount (in satoshis): ').strip()
+        out_amount = input('Amount (in satoshis): ').strip()
         outputs.append(types.TxOutputType(
-            amount = int(out_amount, 10),
-            script_type = types.PAYTOADDRESS,
-            address = out_addr
+            amount=int(out_amount, 10),
+            script_type=types.PAYTOADDRESS,
+            address=out_addr
         ))
 
     (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs)

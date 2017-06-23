@@ -16,14 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import unittest
 import common
-import binascii
 
 from trezorlib import messages_pb2 as proto
-from trezorlib import types_pb2 as types
-from trezorlib.client import PinException
+
 
 class TestDebugLink(common.TrezorTest):
 
@@ -55,6 +52,7 @@ class TestDebugLink(common.TrezorTest):
         pin_encoded = self.client.debug.read_pin_encoded()
         resp = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         self.assertIsInstance(resp, proto.Success)
+
 
 if __name__ == '__main__':
     unittest.main()

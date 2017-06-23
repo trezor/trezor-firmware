@@ -4,6 +4,7 @@ from __future__ import print_function
 from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
 
+
 def main():
     # List all connected TREZORs on USB
     devices = HidTransport.enumerate()
@@ -29,6 +30,7 @@ def main():
     print('Bitcoin address:', address)
 
     client.close()
+
 
 if __name__ == '__main__':
     main()

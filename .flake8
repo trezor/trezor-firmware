@@ -1,0 +1,16 @@
+[flake8]
+exclude =
+    .tox/,
+    build/,
+    dist/,
+    tools/signtest.py,
+    trezorlib/*_pb2.py
+ignore =
+    # F821 undefined name 'unicode',
+    F821,
+    # F401: module imported but unused
+    F401,
+    # E402: module level import not at top of file
+    E402,
+    # E501: line too long
+    E501

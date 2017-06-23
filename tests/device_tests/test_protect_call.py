@@ -23,19 +23,21 @@ import unittest
 import common
 
 from trezorlib import messages_pb2 as proto
-from trezorlib import types_pb2 as types
-from trezorlib.client import PinException, CallException
+from trezorlib.client import PinException
 
 # FIXME TODO Add passphrase tests
+
 
 class TestProtectCall(common.TrezorTest):
 
     def _some_protected_call(self, button, pin, passphrase):
         # This method perform any call which have protection in the device
-        res = self.client.ping('random data',
-                                button_protection=button,
-                                pin_protection=pin,
-                                passphrase_protection=passphrase)
+        res = self.client.ping(
+            'random data',
+            button_protection=button,
+            pin_protection=pin,
+            passphrase_protection=passphrase
+        )
         self.assertEqual(res, 'random data')
 
     """
@@ -130,6 +132,7 @@ class TestProtectCall(common.TrezorTest):
             start = time.time()
             self.assertRaises(PinException, self._some_protected_call, False, True, False)
             test_backoff(attempt, start)
+
 
 if __name__ == '__main__':
     unittest.main()

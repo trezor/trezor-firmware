@@ -18,9 +18,10 @@
 
 '''USB HID implementation of Transport.'''
 
-import hid
 import time
+import hid
 from .transport import TransportV1, TransportV2, ConnectionError
+
 
 def enumerate():
     """
@@ -46,9 +47,10 @@ def enumerate():
     # List of two-tuples (path_normal, path_debuglink)
     return sorted(devices.values())
 
+
 def path_to_transport(path):
     try:
-        device = [ d for d in hid.enumerate(0, 0) if d['path'] == path ][0]
+        device = [d for d in hid.enumerate(0, 0) if d['path'] == path][0]
     except IndexError:
         raise ConnectionError("Connection failed")
 
@@ -56,9 +58,10 @@ def path_to_transport(path):
     try:
         transport = DEVICE_TRANSPORTS[(device['vendor_id'], device['product_id'])]
     except IndexError:
-        raise Exception("Unknown transport for VID:PID %04x:%04x" % (vid, pid))
+        raise Exception("Unknown transport for VID:PID %04x:%04x" % (device['vendor_id'], device['product_id']))
 
     return transport
+
 
 class _HidTransport(object):
     def __init__(self, device, *args, **kwargs):
@@ -134,11 +137,14 @@ class _HidTransport(object):
 
         return bytearray(data)
 
+
 class HidTransportV1(_HidTransport, TransportV1):
     pass
 
+
 class HidTransportV2(_HidTransport, TransportV2):
     pass
+
 
 DEVICE_IDS = [
     (0x534c, 0x0001),  # TREZOR
@@ -152,11 +158,13 @@ DEVICE_TRANSPORTS = {
     (0x1209, 0x53c1): HidTransportV2,  # TREZORv2
 }
 
+
 # Backward compatible wrapper, decides for proper transport
 # based on VID/PID of given path
 def HidTransport(device, *args, **kwargs):
     transport = path_to_transport(device[0])
     return transport(device, *args, **kwargs)
+
 
 # Backward compatibility hack; HidTransport is a function, not a class like before
 HidTransport.enumerate = enumerate

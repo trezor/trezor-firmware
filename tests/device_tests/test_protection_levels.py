@@ -38,61 +38,75 @@ class TestProtectionLevels(common.TrezorTest):
     def test_apply_settings(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.PinMatrixRequest(),
-                                      proto.ButtonRequest(),
-                                      proto.Success(),
-                                      proto.Features()])  # TrezorClient reinitializes device
+            self.client.set_expected_responses([
+                proto.PinMatrixRequest(),
+                proto.ButtonRequest(),
+                proto.Success(),
+                proto.Features()
+            ])  # TrezorClient reinitializes device
             self.client.apply_settings(label='nazdar')
 
     def test_change_pin(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.PinMatrixRequest(),
-                                      proto.PinMatrixRequest(),
-                                      proto.PinMatrixRequest(),
-                                      proto.Success(),
-                                      proto.Features()])
+            self.client.set_expected_responses([
+                proto.ButtonRequest(),
+                proto.PinMatrixRequest(),
+                proto.PinMatrixRequest(),
+                proto.PinMatrixRequest(),
+                proto.Success(),
+                proto.Features()
+            ])
             self.client.change_pin()
 
     def test_ping(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.PinMatrixRequest(),
-                                      proto.PassphraseRequest(),
-                                      proto.Success()])
+            self.client.set_expected_responses([
+                proto.ButtonRequest(),
+                proto.PinMatrixRequest(),
+                proto.PassphraseRequest(),
+                proto.Success()
+            ])
             self.client.ping('msg', True, True, True)
 
     def test_get_entropy(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.Entropy()])
+            self.client.set_expected_responses([
+                proto.ButtonRequest(),
+                proto.Entropy()
+            ])
             self.client.get_entropy(10)
 
     def test_get_public_key(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.PinMatrixRequest(),
-                                      proto.PassphraseRequest(),
-                                      proto.PublicKey()])
+            self.client.set_expected_responses([
+                proto.PinMatrixRequest(),
+                proto.PassphraseRequest(),
+                proto.PublicKey()
+            ])
             self.client.get_public_node([])
 
     def test_get_address(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.PinMatrixRequest(),
-                                      proto.PassphraseRequest(),
-                                      proto.Address()])
+            self.client.set_expected_responses([
+                proto.PinMatrixRequest(),
+                proto.PassphraseRequest(),
+                proto.Address()
+            ])
             self.client.get_address('Bitcoin', [])
 
     def test_wipe_device(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.Success(),
-                                      proto.Features()])
+            self.client.set_expected_responses([
+                proto.ButtonRequest(),
+                proto.Success(),
+                proto.Features()
+            ])
             self.client.wipe_device()
 
     def test_load_device(self):
@@ -108,10 +122,7 @@ class TestProtectionLevels(common.TrezorTest):
 
     def test_reset_device(self):
         with self.client:
-            self.client.set_expected_responses([proto.EntropyRequest()] + \
-                                     [proto.ButtonRequest()] * 24 + \
-                                     [proto.Success(),
-                                      proto.Features()])
+            self.client.set_expected_responses([proto.EntropyRequest()] + [proto.ButtonRequest()] * 24 + [proto.Success(), proto.Features()])
             self.client.reset_device(False, 128, True, False, 'label', 'english')
 
         # This must fail, because device is already initialized
@@ -120,9 +131,7 @@ class TestProtectionLevels(common.TrezorTest):
     def test_recovery_device(self):
         with self.client:
             self.client.set_mnemonic(self.mnemonic12)
-            self.client.set_expected_responses([proto.WordRequest()] * 24 + \
-                                     [proto.Success(),
-                                      proto.Features()])
+            self.client.set_expected_responses([proto.WordRequest()] * 24 + [proto.Success(), proto.Features()])
             self.client.recovery_device(12, False, False, 'label', 'english')
 
         # This must fail, because device is already initialized
@@ -131,16 +140,18 @@ class TestProtectionLevels(common.TrezorTest):
     def test_sign_message(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                      proto.PinMatrixRequest(),
-                                      proto.PassphraseRequest(),
-                                      proto.MessageSignature()])
+            self.client.set_expected_responses([
+                proto.ButtonRequest(),
+                proto.PinMatrixRequest(),
+                proto.PassphraseRequest(),
+                proto.MessageSignature()
+            ])
             self.client.sign_message('Bitcoin', [], 'testing message')
 
     def test_verify_message(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(),proto.Success()])
+            self.client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
             self.client.verify_message(
                 'Bitcoin',
                 '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
@@ -179,15 +190,17 @@ class TestProtectionLevels(common.TrezorTest):
     def test_signtx(self):
         self.setup_mnemonic_pin_passphrase()
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            amount=390000 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
 
@@ -214,6 +227,7 @@ class TestProtectionLevels(common.TrezorTest):
 
     # def test_firmware_upload(self):
     #    pass
+
 
 if __name__ == '__main__':
     unittest.main()

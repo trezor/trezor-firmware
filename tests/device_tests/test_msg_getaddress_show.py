@@ -20,7 +20,7 @@ import unittest
 import common
 import trezorlib.ckd_public as bip32
 import trezorlib.types_pb2 as proto_types
-import binascii
+
 
 class TestMsgGetaddress(common.TrezorTest):
 
@@ -35,12 +35,14 @@ class TestMsgGetaddress(common.TrezorTest):
 
         node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
         multisig = proto_types.MultisigRedeemScriptType(
-                            pubkeys=[proto_types.HDNodePathType(node=node, address_n=[1]),
-                                     proto_types.HDNodePathType(node=node, address_n=[2]),
-                                     proto_types.HDNodePathType(node=node, address_n=[3])],
-                            signatures=[b'', b'', b''],
-                            m=2,
-                            )
+            pubkeys=[
+                proto_types.HDNodePathType(node=node, address_n=[1]),
+                proto_types.HDNodePathType(node=node, address_n=[2]),
+                proto_types.HDNodePathType(node=node, address_n=[3])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
         for i in [1, 2, 3]:
             self.assertEqual(self.client.get_address('Bitcoin', [i], show_display=True, multisig=multisig), '3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz')
@@ -55,13 +57,14 @@ class TestMsgGetaddress(common.TrezorTest):
             pubs.append(proto_types.HDNodePathType(node=node, address_n=[x]))
 
         multisig = proto_types.MultisigRedeemScriptType(
-                        pubkeys=pubs,
-                        signatures=[b''] * 15,
-                        m=15,
-                        )
+            pubkeys=pubs,
+            signatures=[b''] * 15,
+            m=15,
+        )
 
         for i in range(15):
             self.assertEqual(self.client.get_address('Bitcoin', [i], show_display=True, multisig=multisig), '3QaKF8zobqcqY8aS6nxCD5ZYdiRfL3RCmU')
+
 
 if __name__ == '__main__':
     unittest.main()

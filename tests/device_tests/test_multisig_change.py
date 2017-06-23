@@ -19,12 +19,11 @@
 import unittest
 import common
 import binascii
-import itertools
 
 import trezorlib.messages_pb2 as proto
 import trezorlib.ckd_public as bip32
 import trezorlib.types_pb2 as proto_types
-from trezorlib.client import CallException
+
 
 class TestMultisigChange(common.TrezorTest):
 
@@ -45,67 +44,76 @@ class TestMultisigChange(common.TrezorTest):
     # m/2 => 038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3
 
     # ext1 + ext2 + int
-        # redeemscript (2 of 3): 522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e210388460dc439f4c8f5bcfc268c36e11b4375cad5c3535c336cfdf8c32c3afad5c1210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a653ae
-        # multisig address: 3Gj7y1FdTppx2JEDqYqAEZFnKCA4GRysKF
-        # tx: d1d08ea63255af4ad16b098e9885a252632086fa6be53301521d05253ce8a73d
-        # input 0: 0.001 BTC
+    #   redeemscript (2 of 3): 522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e210388460dc439f4c8f5bcfc268c36e11b4375cad5c3535c336cfdf8c32c3afad5c1210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a653ae
+    #   multisig address: 3Gj7y1FdTppx2JEDqYqAEZFnKCA4GRysKF
+    #   tx: d1d08ea63255af4ad16b098e9885a252632086fa6be53301521d05253ce8a73d
+    #   input 0: 0.001 BTC
 
     # ext1 + int + ext2
-        # redeemscript (2 of 3): 522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6210388460dc439f4c8f5bcfc268c36e11b4375cad5c3535c336cfdf8c32c3afad5c153ae
-        # multisig address: 3QsvfB6d1LzYcpm8xyhS1N1HBRrzHTgLHB
-        # tx: a6e2829d089cee47e481b1a753a53081b40738cc87e38f1d9b23ab57d9ad4396
-        # input 0: 0.001 BTC
+    #   redeemscript (2 of 3): 522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6210388460dc439f4c8f5bcfc268c36e11b4375cad5c3535c336cfdf8c32c3afad5c153ae
+    #   multisig address: 3QsvfB6d1LzYcpm8xyhS1N1HBRrzHTgLHB
+    #   tx: a6e2829d089cee47e481b1a753a53081b40738cc87e38f1d9b23ab57d9ad4396
+    #   input 0: 0.001 BTC
 
     # ext1 + ext3 + int
-        # redeemscript (2 of 3): 522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e2102e0c21e2a7cf00b94c5421725acff97f9826598b91f2340c5ddda730caca7d648210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a653ae
-        # multisig address: 37LvC1Q5CyKbMbKMncEJdXxqGhHxrBEgPE
-        # tx: e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3
-        # input 1: 0.001 BTC
+    #   redeemscript (2 of 3): 522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e2102e0c21e2a7cf00b94c5421725acff97f9826598b91f2340c5ddda730caca7d648210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a653ae
+    #   multisig address: 37LvC1Q5CyKbMbKMncEJdXxqGhHxrBEgPE
+    #   tx: e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3
+    #   input 1: 0.001 BTC
 
     multisig_in1 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=node_ext1, address_n=[1]),
-                                 proto_types.HDNodePathType(node=node_ext2, address_n=[1]),
-                                 proto_types.HDNodePathType(node=node_int, address_n=[1])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+        pubkeys=[
+            proto_types.HDNodePathType(node=node_ext1, address_n=[1]),
+            proto_types.HDNodePathType(node=node_ext2, address_n=[1]),
+            proto_types.HDNodePathType(node=node_int, address_n=[1])
+        ],
+        signatures=[b'', b'', b''],
+        m=2,
+    )
 
     multisig_in2 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=node_ext1, address_n=[1]),
-                                 proto_types.HDNodePathType(node=node_int, address_n=[1]),
-                                 proto_types.HDNodePathType(node=node_ext2, address_n=[1])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+        pubkeys=[
+            proto_types.HDNodePathType(node=node_ext1, address_n=[1]),
+            proto_types.HDNodePathType(node=node_int, address_n=[1]),
+            proto_types.HDNodePathType(node=node_ext2, address_n=[1])
+        ],
+        signatures=[b'', b'', b''],
+        m=2,
+    )
 
     multisig_in3 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=node_ext1, address_n=[1]),
-                                 proto_types.HDNodePathType(node=node_ext3, address_n=[1]),
-                                 proto_types.HDNodePathType(node=node_int, address_n=[1])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+        pubkeys=[
+            proto_types.HDNodePathType(node=node_ext1, address_n=[1]),
+            proto_types.HDNodePathType(node=node_ext3, address_n=[1]),
+            proto_types.HDNodePathType(node=node_int, address_n=[1])
+        ],
+        signatures=[b'', b'', b''],
+        m=2,
+    )
 
-    inp1 = proto_types.TxInputType(address_n=[1],
-                         prev_hash=binascii.unhexlify('d1d08ea63255af4ad16b098e9885a252632086fa6be53301521d05253ce8a73d'),
-                         prev_index=0,
-                         script_type=proto_types.SPENDMULTISIG,
-                         multisig=multisig_in1,
-                         )
+    inp1 = proto_types.TxInputType(
+        address_n=[1],
+        prev_hash=binascii.unhexlify('d1d08ea63255af4ad16b098e9885a252632086fa6be53301521d05253ce8a73d'),
+        prev_index=0,
+        script_type=proto_types.SPENDMULTISIG,
+        multisig=multisig_in1,
+    )
 
-    inp2 = proto_types.TxInputType(address_n=[1],
-                         prev_hash=binascii.unhexlify('a6e2829d089cee47e481b1a753a53081b40738cc87e38f1d9b23ab57d9ad4396'),
-                         prev_index=0,
-                         script_type=proto_types.SPENDMULTISIG,
-                         multisig=multisig_in2,
-                         )
+    inp2 = proto_types.TxInputType(
+        address_n=[1],
+        prev_hash=binascii.unhexlify('a6e2829d089cee47e481b1a753a53081b40738cc87e38f1d9b23ab57d9ad4396'),
+        prev_index=0,
+        script_type=proto_types.SPENDMULTISIG,
+        multisig=multisig_in2,
+    )
 
-    inp3 = proto_types.TxInputType(address_n=[1],
-                         prev_hash=binascii.unhexlify('e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3'),
-                         prev_index=1,
-                         script_type=proto_types.SPENDMULTISIG,
-                         multisig=multisig_in3,
-                         )
+    inp3 = proto_types.TxInputType(
+        address_n=[1],
+        prev_hash=binascii.unhexlify('e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3'),
+        prev_index=1,
+        script_type=proto_types.SPENDMULTISIG,
+        multisig=multisig_in3,
+    )
 
     def _responses(self, inp1, inp2, change=0):
         resp = [
@@ -152,13 +160,17 @@ class TestMultisigChange(common.TrezorTest):
     def test_external_external(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
-        out2 = proto_types.TxOutputType(address='17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out2 = proto_types.TxOutputType(
+            address='17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
@@ -170,13 +182,17 @@ class TestMultisigChange(common.TrezorTest):
     def test_external_internal(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[4],
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out2 = proto_types.TxOutputType(
+            address_n=[4],
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2, change=2))
@@ -188,13 +204,17 @@ class TestMultisigChange(common.TrezorTest):
     def test_internal_external(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(address_n=[4],
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address_n=[4],
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
-        out2 = proto_types.TxOutputType(address='17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out2 = proto_types.TxOutputType(
+            address='17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2, change=1))
@@ -206,13 +226,17 @@ class TestMultisigChange(common.TrezorTest):
     def test_multisig_external_external(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(address='3796Q9jVirg2KY1WQRqtmHKXCoSk8MB7Td',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='3796Q9jVirg2KY1WQRqtmHKXCoSk8MB7Td',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
-        out2 = proto_types.TxOutputType(address='3CTPCg3ksh59jWt9zQpTPHCSQDCdJoQQ9d',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out2 = proto_types.TxOutputType(
+            address='3CTPCg3ksh59jWt9zQpTPHCSQDCdJoQQ9d',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
@@ -225,21 +249,27 @@ class TestMultisigChange(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out1 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=self.node_int, address_n=[1]),
-                                 proto_types.HDNodePathType(node=self.node_ext1, address_n=[1]),
-                                 proto_types.HDNodePathType(node=self.node_ext2, address_n=[1])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+            pubkeys=[
+                proto_types.HDNodePathType(node=self.node_int, address_n=[1]),
+                proto_types.HDNodePathType(node=self.node_ext1, address_n=[1]),
+                proto_types.HDNodePathType(node=self.node_ext2, address_n=[1])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
-        out1 = proto_types.TxOutputType(address_n=[1],
-                              multisig=multisig_out1,
-                              amount=100000,
-                              script_type=proto_types.PAYTOMULTISIG)
+        out1 = proto_types.TxOutputType(
+            address_n=[1],
+            multisig=multisig_out1,
+            amount=100000,
+            script_type=proto_types.PAYTOMULTISIG
+        )
 
-        out2 = proto_types.TxOutputType(address='3CTPCg3ksh59jWt9zQpTPHCSQDCdJoQQ9d',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out2 = proto_types.TxOutputType(
+            address='3CTPCg3ksh59jWt9zQpTPHCSQDCdJoQQ9d',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2, change=1))
@@ -252,21 +282,27 @@ class TestMultisigChange(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out2 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=self.node_int, address_n=[2]),
-                                 proto_types.HDNodePathType(node=self.node_ext1, address_n=[2]),
-                                 proto_types.HDNodePathType(node=self.node_ext2, address_n=[2])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+            pubkeys=[
+                proto_types.HDNodePathType(node=self.node_int, address_n=[2]),
+                proto_types.HDNodePathType(node=self.node_ext1, address_n=[2]),
+                proto_types.HDNodePathType(node=self.node_ext2, address_n=[2])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
-        out1 = proto_types.TxOutputType(address='37Wf955dcCaFSJmiNaGpacczMwj7iC8JMx',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='37Wf955dcCaFSJmiNaGpacczMwj7iC8JMx',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[2],
-                              multisig=multisig_out2,
-                              amount=100000,
-                              script_type=proto_types.PAYTOMULTISIG)
+        out2 = proto_types.TxOutputType(
+            address_n=[2],
+            multisig=multisig_out2,
+            amount=100000,
+            script_type=proto_types.PAYTOMULTISIG
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2, change=2))
@@ -279,21 +315,27 @@ class TestMultisigChange(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out2 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=self.node_int, address_n=[2]),
-                                 proto_types.HDNodePathType(node=self.node_ext1, address_n=[2]),
-                                 proto_types.HDNodePathType(node=self.node_ext3, address_n=[2])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+            pubkeys=[
+                proto_types.HDNodePathType(node=self.node_int, address_n=[2]),
+                proto_types.HDNodePathType(node=self.node_ext1, address_n=[2]),
+                proto_types.HDNodePathType(node=self.node_ext3, address_n=[2])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
-        out1 = proto_types.TxOutputType(address='3796Q9jVirg2KY1WQRqtmHKXCoSk8MB7Td',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out1 = proto_types.TxOutputType(
+            address='3796Q9jVirg2KY1WQRqtmHKXCoSk8MB7Td',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[2],
-                              multisig=multisig_out2,
-                              amount=100000,
-                              script_type=proto_types.PAYTOMULTISIG)
+        out2 = proto_types.TxOutputType(
+            address_n=[2],
+            multisig=multisig_out2,
+            amount=100000,
+            script_type=proto_types.PAYTOMULTISIG
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
@@ -306,27 +348,34 @@ class TestMultisigChange(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out1 = proto_types.MultisigRedeemScriptType(
-                        pubkeys=[proto_types.HDNodePathType(node=self.node_ext1, address_n=[1]),
-                                 proto_types.HDNodePathType(node=self.node_ext2, address_n=[1]),
-                                 proto_types.HDNodePathType(node=self.node_int, address_n=[1])],
-                        signatures=[b'', b'', b''],
-                        m=2,
-                        )
+            pubkeys=[
+                proto_types.HDNodePathType(node=self.node_ext1, address_n=[1]),
+                proto_types.HDNodePathType(node=self.node_ext2, address_n=[1]),
+                proto_types.HDNodePathType(node=self.node_int, address_n=[1])
+            ],
+            signatures=[b'', b'', b''],
+            m=2,
+        )
 
-        out1 = proto_types.TxOutputType(address_n=[1],
-                              multisig=multisig_out1,
-                              amount=100000,
-                              script_type=proto_types.PAYTOMULTISIG)
+        out1 = proto_types.TxOutputType(
+            address_n=[1],
+            multisig=multisig_out1,
+            amount=100000,
+            script_type=proto_types.PAYTOMULTISIG
+        )
 
-        out2 = proto_types.TxOutputType(address='3CTPCg3ksh59jWt9zQpTPHCSQDCdJoQQ9d',
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS)
+        out2 = proto_types.TxOutputType(
+            address='3CTPCg3ksh59jWt9zQpTPHCSQDCdJoQQ9d',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS
+        )
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp3))
             (_, serialized_tx) = self.client.sign_tx('Bitcoin', [self.inp1, self.inp3, ], [out1, out2, ])
 
         self.assertEqual(binascii.hexlify(serialized_tx), b'01000000023da7e83c25051d520133e56bfa86206352a285988e096bd14aaf5532a68ed0d100000000b40047304402204b7d6c7e9feef91209cbdf4deaf855696dc22a40e57bd3eafd5e00b0ee41d9de0220262c5a05d0b46ef98fddfef3831b3ebb6841ffbeb10666f8fb6f8d2e3023e30d014c69522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e210388460dc439f4c8f5bcfc268c36e11b4375cad5c3535c336cfdf8c32c3afad5c1210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a653aeffffffffe39b254db8137202c7690cb0c6738f2e61661ce16f92b3f2087a00e5e51abce401000000b500483045022100bb2118da21c8a84f115b655f640f269a40be77ae2c0af9c5ffd8260a85dbfc7702202e7b5b6c05b8f50bd879dbee88828e80e85448d686b63a1a50e99d921923f6f5014c69522102c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e2102e0c21e2a7cf00b94c5421725acff97f9826598b91f2340c5ddda730caca7d648210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a653aeffffffff02a08601000000000017a914a4efc33d43d7a8a0040182c76ab624ff862f50d287a08601000000000017a9147615527d78854293edadf83682ea26937f8a51bb8700000000')
+
 
 if __name__ == '__main__':
     unittest.main()

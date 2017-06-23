@@ -5,18 +5,19 @@
 # push confirmation
 
 from __future__ import print_function
-import binascii
 import io
 import sys
 from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
 
+
 def get_client():
-    devices = HidTransport.enumerate()   # List all connected TREZORs on USB
-    if len(devices) == 0:                # Check whether we found any
+    devices = HidTransport.enumerate()    # list all connected TREZORs on USB
+    if len(devices) == 0:                 # check whether we found any
         return None
-    transport = HidTransport(devices[0]) # Use first connected device
-    return TrezorClient(transport)       # Creates object for communicating with TREZOR
+    transport = HidTransport(devices[0])  # use first connected device
+    return TrezorClient(transport)        # creates object for communicating with TREZOR
+
 
 def main():
     client = get_client()
@@ -24,9 +25,9 @@ def main():
         print('No TREZOR connected')
         return
 
-    arg1 = sys.argv[1] # output file
-    arg2 = int(sys.argv[2], 10) # total number of how many bytes of entropy to read
-    step = 1024 if arg2 >= 1024 else arg2 # trezor will only return 1KB at a time
+    arg1 = sys.argv[1]                     # output file
+    arg2 = int(sys.argv[2], 10)            # total number of how many bytes of entropy to read
+    step = 1024 if arg2 >= 1024 else arg2  # trezor will only return 1KB at a time
 
     with io.open(arg1, 'wb') as f:
         for i in xrange(0, arg2, step):
@@ -34,6 +35,7 @@ def main():
             f.write(entropy)
 
     client.close()
+
 
 if __name__ == '__main__':
     main()

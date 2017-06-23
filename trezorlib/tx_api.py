@@ -25,6 +25,7 @@ from . import types_pb2 as proto_types
 
 cache_dir = None
 
+
 class TxApi(object):
 
     def __init__(self, network, url):
@@ -35,7 +36,7 @@ class TxApi(object):
         global cache_dir
         if cache_dir:
             cache_file = '%s/%s_%s_%s.json' % (cache_dir, self.network, resource, resourceid)
-            try: # looking into cache first
+            try:  # looking into cache first
                 j = json.load(open(cache_file))
                 return j
             except:
@@ -47,7 +48,7 @@ class TxApi(object):
         except:
             raise Exception('URL error: %s' % url)
         if cache_dir and cache_file:
-            try: # saving into cache
+            try:  # saving into cache
                 json.dump(j, open(cache_file, 'w'))
             except:
                 pass
@@ -74,8 +75,8 @@ class TxApiInsight(TxApi):
         for vin in data['vin']:
             i = t.inputs.add()
             if 'coinbase' in vin.keys():
-                i.prev_hash = b"\0"*32
-                i.prev_index = 0xffffffff # signed int -1
+                i.prev_hash = b"\0" * 32
+                i.prev_index = 0xffffffff  # signed int -1
                 i.script_sig = binascii.unhexlify(vin['coinbase'])
                 i.sequence = vin['sequence']
 
@@ -94,7 +95,7 @@ class TxApiInsight(TxApi):
             if t.version == 2:
                 joinsplit_cnt = len(data['vjoinsplit'])
                 if joinsplit_cnt == 0:
-                    t.extra_data =b'\x00'
+                    t.extra_data = b'\x00'
                 else:
                     if joinsplit_cnt >= 253:
                         # we assume cnt < 253, so we can treat varIntLen(cnt) as 1
@@ -122,8 +123,8 @@ class TxApiSmartbit(TxApi):
         for vin in data['inputs']:
             i = t.inputs.add()
             if 'coinbase' in vin.keys():
-                i.prev_hash = b"\0"*32
-                i.prev_index = 0xffffffff # signed int -1
+                i.prev_hash = b"\0" * 32
+                i.prev_index = 0xffffffff  # signed int -1
                 i.script_sig = binascii.unhexlify(vin['coinbase'])
                 i.sequence = vin['sequence']
 
@@ -154,8 +155,8 @@ class TxApiBlockCypher(TxApi):
         for vin in data['inputs']:
             i = t.inputs.add()
             if 'prev_hash' not in vin:
-                i.prev_hash = b"\0"*32
-                i.prev_index = 0xffffffff # signed int -1
+                i.prev_hash = b"\0" * 32
+                i.prev_index = 0xffffffff  # signed int -1
                 i.script_sig = binascii.unhexlify(vin['script'])
                 i.sequence = vin['sequence']
             else:
@@ -177,4 +178,3 @@ TxApiTestnet = TxApiInsight(network='insight_testnet', url='https://test-insight
 TxApiLitecoin = TxApiBlockCypher(network='blockcypher_litecoin', url='https://api.blockcypher.com/v1/ltc/main/')
 TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
 TxApiZcashTestnet = TxApiInsight(network='insight_zcashtestnet', url='https://explorer.testnet.z.cash/api/', zcash=True)
-

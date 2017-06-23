@@ -2,9 +2,8 @@
 from __future__ import print_function
 
 from trezorlib.debuglink import DebugLink
-from trezorlib.client import TrezorClient, TrezorDebugClient
+from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
-import binascii
 import sys
 
 # usage examples
@@ -14,6 +13,7 @@ import sys
 # arm-none-eabi-objdump -D -b binary -m arm -M force-thumb memory.dat
 # note that in order for this to work, your trezor device must
 # be running a firmware that was built with debug link enabled
+
 
 def main():
     # List all connected TREZORs on USB
@@ -39,12 +39,13 @@ def main():
     f = open('memory.dat', 'w')
 
     for addr in range(arg1, arg1 + arg2, step):
-      mem = debug.memory_read(addr, step)
-      f.write(mem)
+        mem = debug.memory_read(addr, step)
+        f.write(mem)
 
     f.close()
 
     client.close()
+
 
 if __name__ == '__main__':
     main()

@@ -2,10 +2,11 @@
 from __future__ import print_function
 
 from trezorlib.debuglink import DebugLink
-from trezorlib.client import TrezorClient, TrezorDebugClient
+from trezorlib.client import TrezorClient
 from trezorlib.transport_hid import HidTransport
 import binascii
 import sys
+
 
 def main():
     # List all connected TREZORs on USB
@@ -24,8 +25,9 @@ def main():
     client = TrezorClient(transport)
     debug = DebugLink(debug_transport)
 
-    mem = debug.memory_write(int(sys.argv[1],16), binascii.unhexlify(sys.argv[2]), flash=True)
+    debug.memory_write(int(sys.argv[1], 16), binascii.unhexlify(sys.argv[2]), flash=True)
     client.close()
+
 
 if __name__ == '__main__':
     main()

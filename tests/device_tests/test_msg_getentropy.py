@@ -19,11 +19,12 @@
 from __future__ import print_function
 
 import unittest
-import common
 import math
+import common
 
 import trezorlib.messages_pb2 as proto
 import trezorlib.types_pb2 as proto_types
+
 
 def entropy(data):
     counts = {}
@@ -38,6 +39,7 @@ def entropy(data):
         e -= p * math.log(p, 256)
     return e
 
+
 class TestMsgGetentropy(common.TrezorTest):
 
     def test_entropy(self):
@@ -47,6 +49,7 @@ class TestMsgGetentropy(common.TrezorTest):
                 ent = self.client.get_entropy(l)
                 self.assertTrue(len(ent) == l)
                 print('entropy = ', entropy(ent))
+
 
 if __name__ == '__main__':
     unittest.main()

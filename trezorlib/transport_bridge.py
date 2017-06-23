@@ -28,8 +28,10 @@ from .transport import TransportV1
 TREZORD_HOST = 'https://localback.net:21324'
 CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
 
+
 def get_error(resp):
     return ' (error=%d str=%s)' % (resp.status_code, resp.json()['error'])
+
 
 class BridgeTransport(TransportV1):
     CONFIGURED = False
@@ -47,7 +49,8 @@ class BridgeTransport(TransportV1):
 
     @staticmethod
     def configure():
-        if BridgeTransport.CONFIGURED: return
+        if BridgeTransport.CONFIGURED:
+            return
         r = requests.get(CONFIG_URL, verify=False)
         if r.status_code != 200:
             raise Exception('Could not fetch config from %s' % CONFIG_URL)
@@ -88,7 +91,7 @@ class BridgeTransport(TransportV1):
             self.session = None
 
     def _ready_to_read(self):
-        return self.response != None
+        return self.response is not None
 
     def write(self, protobuf_msg):
         # Override main 'write' method, HTTP transport cannot be

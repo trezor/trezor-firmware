@@ -39,7 +39,7 @@ setup(
         'trezorlib.tx_api',
         'trezorlib.types_pb2',
     ],
-    scripts = ['trezorctl'],
+    scripts=['trezorctl'],
     install_requires=install_requires,
     include_package_data=True,
     zip_safe=False,

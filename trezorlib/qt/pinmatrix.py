@@ -13,6 +13,7 @@ except:
     from PyQt5.QtCore import QRegExp, Qt
     from PyQt5.Qt import QT_VERSION_STR
 
+
 class PinButton(QPushButton):
     def __init__(self, password, encoded_value):
         super(PinButton, self).__init__('?')
@@ -29,6 +30,7 @@ class PinButton(QPushButton):
     def _pressed(self):
         self.password.setText(self.password.text() + str(self.encoded_value))
         self.password.setFocus()
+
 
 class PinMatrixWidget(QWidget):
     '''
@@ -100,6 +102,7 @@ class PinMatrixWidget(QWidget):
 
     def get_value(self):
         return self.password.text()
+
 
 if __name__ == '__main__':
     '''

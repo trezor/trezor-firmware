@@ -21,7 +21,7 @@ from __future__ import print_function
 import unittest
 import common
 import time
-from trezorlib import tools
+
 
 class TestBip32Speed(common.TrezorTest):
 
@@ -69,6 +69,7 @@ class TestBip32Speed(common.TrezorTest):
 
         # Cached time expected to be at least 2x faster
         self.assertLessEqual(cache_time, nocache_time / 2.)
+
 
 if __name__ == '__main__':
     unittest.main()

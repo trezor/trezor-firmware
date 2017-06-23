@@ -21,6 +21,7 @@ import common
 
 from trezorlib import messages_pb2 as proto
 
+
 class TestDeviceWipe(common.TrezorTest):
     def test_wipe_device(self):
         self.setup_mnemonic_pin_passphrase()
@@ -38,6 +39,7 @@ class TestDeviceWipe(common.TrezorTest):
         self.assertEqual(features.pin_protection, False)
         self.assertEqual(features.passphrase_protection, False)
         self.assertNotEqual(features.device_id, device_id)
+
 
 if __name__ == '__main__':
     unittest.main()

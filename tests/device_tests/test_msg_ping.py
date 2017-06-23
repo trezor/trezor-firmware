@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import unittest
 import common
 
 from trezorlib import messages_pb2 as proto
 from trezorlib import types_pb2 as proto_types
+
 
 class TestPing(common.TrezorTest):
 
@@ -61,6 +61,7 @@ class TestPing(common.TrezorTest):
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
             self.assertEqual(res, 'random data')
+
 
 if __name__ == '__main__':
     unittest.main()

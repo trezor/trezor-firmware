@@ -25,13 +25,18 @@ import sys
 if sys.version_info < (3,):
     def byteindex(data, index):
         return ord(data[index])
+
     def iterbytes(data):
-        return (ord (char) for char in data)
+        return (ord(char) for char in data)
 else:
-    byteindex = lambda data, index: data[index]
+    def byteindex(data, index):
+        return data[index]
     iterbytes = iter
 
-Hash = lambda x: hashlib.sha256(hashlib.sha256(x).digest()).digest()
+
+def Hash(data):
+    return hashlib.sha256(hashlib.sha256(data).digest()).digest()
+
 
 def hash_160(public_key):
     md = hashlib.new('ripemd160')
@@ -45,10 +50,12 @@ def hash_160_to_bc_address(h160, address_type):
     addr = vh160 + h[0:4]
     return b58encode(addr)
 
+
 def compress_pubkey(public_key):
     if byteindex(public_key, 0) == 4:
         return bytes((byteindex(public_key, 64) & 1) + 2) + public_key[1:33]
     raise Exception("Pubkey is already compressed")
+
 
 def public_key_to_bc_address(public_key, address_type, compress=True):
     if public_key[0] == '\x04' and compress:
@@ -57,8 +64,10 @@ def public_key_to_bc_address(public_key, address_type, compress=True):
     h160 = hash_160(public_key)
     return hash_160_to_bc_address(h160, address_type)
 
+
 __b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 __b58base = len(__b58chars)
+
 
 def b58encode(v):
     """ encode v, which is a string of bytes, to base58."""
@@ -84,6 +93,7 @@ def b58encode(v):
             break
 
     return (__b58chars[0] * nPad) + result
+
 
 def b58decode(v, length):
     """ decode v into a string of len bytes."""
@@ -111,6 +121,7 @@ def b58decode(v, length):
 
     return result
 
+
 def monkeypatch_google_protobuf_text_format():
     # monkeypatching: text formatting of protobuf messages
     import google.protobuf.text_format
@@ -125,4 +136,3 @@ def monkeypatch_google_protobuf_text_format():
             _oldPrintFieldValue(field, value, out, indent, as_utf8, as_one_line)
 
     google.protobuf.text_format.PrintFieldValue = _customPrintFieldValue
-

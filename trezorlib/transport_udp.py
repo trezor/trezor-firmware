@@ -20,7 +20,8 @@
 
 import socket
 from select import select
-from .transport import TransportV2, ConnectionError
+from .transport import TransportV2
+
 
 class UdpTransport(TransportV2):
     def __init__(self, device, *args, **kwargs):

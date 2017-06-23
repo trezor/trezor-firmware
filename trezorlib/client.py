@@ -25,16 +25,23 @@ import time
 import binascii
 import hashlib
 import unicodedata
-import json
+# import json
 import getpass
 
 from mnemonic import Mnemonic
 
 from . import tools
-from . import mapping
+# from . import mapping
 from . import messages_pb2 as proto
 from . import types_pb2 as types
 from .debuglink import DebugLink
+
+# Python2 vs Python3
+try:
+    input = raw_input
+except NameError:
+    pass
+
 
 # try:
 #     from PIL import Image
@@ -59,7 +66,9 @@ def getch():
         return msvcrt.getch()
 
     # POSIX system. Create and return a getch that manipulates the tty.
-    import sys, tty
+    import sys
+    import tty
+
     def _getch():
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -72,9 +81,11 @@ def getch():
 
     return _getch()
 
+
 def get_buttonrequest_value(code):
     # Converts integer code to its string representation of ButtonRequestType
-    return [ k for k, v in types.ButtonRequestType.items() if v == code][0]
+    return [k for k, v in types.ButtonRequestType.items() if v == code][0]
+
 
 def pprint(msg):
     msg_class = msg.__class__.__name__
@@ -89,18 +100,22 @@ def pprint(msg):
     else:
         return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
 
+
 def log(msg):
     sys.stderr.write(str(msg))
     sys.stderr.write('\n')
     sys.stderr.flush()
+
 
 class CallException(Exception):
     def __init__(self, code, message):
         super(CallException, self).__init__()
         self.args = [code, message]
 
+
 class PinException(CallException):
     pass
+
 
 class field(object):
     # Decorator extracts single value from
@@ -115,6 +130,7 @@ class field(object):
             ret.HasField(self.field)
             return getattr(ret, self.field)
         return wrapped_f
+
 
 class expect(object):
     # Decorator checks if the method
@@ -131,6 +147,7 @@ class expect(object):
             return ret
         return wrapped_f
 
+
 def session(f):
     # Decorator wraps a BaseClient method
     # with session activation / deactivation
@@ -142,6 +159,7 @@ def session(f):
         finally:
             client.transport.session_end()
     return wrapped_f
+
 
 def normalize_nfc(txt):
     if sys.version_info[0] < 3:
@@ -156,6 +174,7 @@ def normalize_nfc(txt):
             return unicodedata.normalize('NFC', txt)
 
     raise Exception('unicode/str or bytes/str expected')
+
 
 class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
@@ -178,9 +197,9 @@ class BaseClient(object):
         handler_name = "callback_%s" % resp.__class__.__name__
         handler = getattr(self, handler_name, None)
 
-        if handler != None:
+        if handler is not None:
             msg = handler(resp)
-            if msg == None:
+            if msg is None:
                 raise Exception("Callback %s must return protobuf message, not None" % handler)
             resp = self.call(msg)
 
@@ -188,7 +207,7 @@ class BaseClient(object):
 
     def callback_Failure(self, msg):
         if msg.code in (types.Failure_PinInvalid,
-            types.Failure_PinCancelled, types.Failure_PinExpected):
+                        types.Failure_PinCancelled, types.Failure_PinExpected):
             raise PinException(msg.code, msg.message)
 
         raise CallException(msg.code, msg.message)
@@ -196,12 +215,14 @@ class BaseClient(object):
     def close(self):
         self.transport.close()
 
+
 class DebugWireMixin(object):
     def call_raw(self, msg):
         log("SENDING " + pprint(msg))
         resp = super(DebugWireMixin, self).call_raw(msg)
         log("RECEIVED " + pprint(resp))
         return resp
+
 
 class TextUIMixin(object):
     # This class demonstrates easy test-based UI
@@ -233,8 +254,7 @@ class TextUIMixin(object):
                 return proto.WordAck(word='\x08')
 
             # ignore middle column if only 6 keys requested.
-            if (msg.type == types.WordRequestType_Matrix6 and
-                character in ('2', '5', '8')):
+            if (isinstance(msg.type, types.WordRequestType_Matrix6) and character in ('2', '5', '8')):
                 continue
 
             if (ord(character) >= ord('1') and ord(character) <= ord('9')):
@@ -274,13 +294,11 @@ class TextUIMixin(object):
                         types.WordRequestType_Matrix6):
             return self.callback_RecoveryMatrix(msg)
         log("Enter one word of mnemonic: ")
-        try:
-            word = raw_input()
-        except NameError:
-            word = input() # Python 3
+        word = input()
         if self.expand:
             word = self.mnemonic_wordlist.expand_word(word)
         return proto.WordAck(word=word)
+
 
 class DebugLinkMixin(object):
     # This class implements automatic responses
@@ -328,15 +346,15 @@ class DebugLinkMixin(object):
     def __exit__(self, _type, value, traceback):
         self.in_with_statement -= 1
 
-        if _type != None:
+        if _type is not None:
             # Another exception raised
             return False
 
         # return isinstance(value, TypeError)
         # Evaluate missed responses in 'with' statement
-        if self.expected_responses != None and len(self.expected_responses):
-            raise Exception("Some of expected responses didn't come from device: %s" % \
-                    [ pprint(x) for x in self.expected_responses ])
+        if self.expected_responses is not None and len(self.expected_responses):
+            raise Exception("Some of expected responses didn't come from device: %s" %
+                            [pprint(x) for x in self.expected_responses])
 
         # Cleanup
         self.expected_responses = None
@@ -376,22 +394,22 @@ class DebugLinkMixin(object):
         return resp
 
     def _check_request(self, msg):
-        if self.expected_responses != None:
+        if self.expected_responses is not None:
             try:
                 expected = self.expected_responses.pop(0)
             except IndexError:
                 raise CallException(types.Failure_UnexpectedMessage,
-                        "Got %s, but no message has been expected" % pprint(msg))
+                                    "Got %s, but no message has been expected" % pprint(msg))
 
             if msg.__class__ != expected.__class__:
                 raise CallException(types.Failure_UnexpectedMessage,
-                            "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                                    "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
             fields = expected.ListFields()  # only filled (including extensions)
             for field, value in fields:
                 if not msg.HasField(field.name) or getattr(msg, field.name) != value:
                     raise CallException(types.Failure_UnexpectedMessage,
-                            "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                                        "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
     def callback_ButtonRequest(self, msg):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
@@ -423,6 +441,7 @@ class DebugLinkMixin(object):
 
         raise Exception("Unexpected call")
 
+
 class ProtocolMixin(object):
     PRIME_DERIVATION_FLAG = 0x80000000
     VENDORS = ('bitcointrezor.com', 'trezor.io')
@@ -445,7 +464,7 @@ class ProtocolMixin(object):
 
     def _convert_prime(self, n):
         # Convert minus signs to uint32 with flag
-        return [ int(abs(x) | self.PRIME_DERIVATION_FLAG) if x < 0 else x for x in n ]
+        return [int(abs(x) | self.PRIME_DERIVATION_FLAG) if x < 0 else x for x in n]
 
     @staticmethod
     def expand_path(n):
@@ -474,7 +493,7 @@ class ProtocolMixin(object):
             "Decred": 42
         }
         if n[0] in coins:
-            n = ["44'", "%d'" % coins[n[0]] ] + n[1:]
+            n = ["44'", "%d'" % coins[n[0]]] + n[1:]
 
         path = []
         for x in n:
@@ -498,7 +517,7 @@ class ProtocolMixin(object):
     def get_public_node(self, n, ecdsa_curve_name=DEFAULT_CURVE, show_display=False, coin_name=None):
         n = self._convert_prime(n)
         if not ecdsa_curve_name:
-            ecdsa_curve_name=DEFAULT_CURVE
+            ecdsa_curve_name = DEFAULT_CURVE
         return self.call(proto.GetPublicKey(address_n=n, ecdsa_curve_name=ecdsa_curve_name, show_display=show_display, coin_name=coin_name))
 
     @field('address')
@@ -553,7 +572,6 @@ class ProtocolMixin(object):
 
         return response.signature_v, response.signature_r, response.signature_s
 
-
     @field('entropy')
     @expect(proto.Entropy)
     def get_entropy(self, size):
@@ -575,13 +593,13 @@ class ProtocolMixin(object):
     @expect(proto.Success)
     def apply_settings(self, label=None, language=None, use_passphrase=None, homescreen=None):
         settings = proto.ApplySettings()
-        if label != None:
+        if label is not None:
             settings.label = label
         if language:
             settings.language = language
-        if use_passphrase != None:
+        if use_passphrase is not None:
             settings.use_passphrase = use_passphrase
-        if homescreen != None:
+        if homescreen is not None:
             settings.homescreen = homescreen
 
         out = self.call(settings)
@@ -618,7 +636,7 @@ class ProtocolMixin(object):
     @field('message')
     @expect(proto.Success)
     def set_u2f_counter(self, u2f_counter):
-        ret = self.call(proto.SetU2FCounter(u2f_counter = u2f_counter))
+        ret = self.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
         return ret
 
     def verify_message(self, coin_name, address, signature, message):
@@ -760,7 +778,7 @@ class ProtocolMixin(object):
                 serialized_tx += res.serialized.serialized_tx
 
             if res.HasField('serialized') and res.serialized.HasField('signature_index'):
-                if signatures[res.serialized.signature_index] != None:
+                if signatures[res.serialized.signature_index] is not None:
                     raise Exception("Signature for index %d already filled" % res.serialized.signature_index)
                 signatures[res.serialized.signature_index] = res.serialized.signature
 
@@ -797,7 +815,7 @@ class ProtocolMixin(object):
                 else:
                     msg.outputs.extend([current_tx.outputs[res.details.request_index], ])
 
-                if debug_processor != None:
+                if debug_processor is not None:
                     # If debug_processor function is provided,
                     # pass thru it the request and prepared response.
                     # This is useful for unit tests, see test_msg_signtx
@@ -816,8 +834,8 @@ class ProtocolMixin(object):
         if None in signatures:
             raise Exception("Some signatures are missing!")
 
-        log("SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" % \
-                (time.time() - start, counter, len(serialized_tx)))
+        log("SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" %
+            (time.time() - start, counter, len(serialized_tx)))
 
         return (signatures, serialized_tx)
 
@@ -844,14 +862,15 @@ class ProtocolMixin(object):
             # optimization to load the wordlist once, instead of for each recovery word
             self.mnemonic_wordlist = Mnemonic('english')
 
-        res = self.call(proto.RecoveryDevice(word_count=int(word_count),
-                                   passphrase_protection=bool(passphrase_protection),
-                                   pin_protection=bool(pin_protection),
-                                   label=label,
-                                   language=language,
-                                   enforce_wordlist=True,
-                                   type=type,
-                                   dry_run=dry_run))
+        res = self.call(proto.RecoveryDevice(
+            word_count=int(word_count),
+            passphrase_protection=bool(passphrase_protection),
+            pin_protection=bool(pin_protection),
+            label=label,
+            language=language,
+            enforce_wordlist=True,
+            type=type,
+            dry_run=dry_run))
 
         self.init_device()
         return res
@@ -963,7 +982,7 @@ class ProtocolMixin(object):
 
     @session
     def firmware_update(self, fp):
-        if self.features.bootloader_mode == False:
+        if self.features.bootloader_mode is False:
             raise Exception("Device must be in bootloader mode")
 
         data = fp.read()
@@ -1000,11 +1019,14 @@ class ProtocolMixin(object):
 
         raise Exception("Unexpected message %s" % resp)
 
+
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
 
+
 class TrezorClientDebug(ProtocolMixin, TextUIMixin, DebugWireMixin, BaseClient):
     pass
+
 
 class TrezorDebugClient(ProtocolMixin, DebugLinkMixin, DebugWireMixin, BaseClient):
     pass

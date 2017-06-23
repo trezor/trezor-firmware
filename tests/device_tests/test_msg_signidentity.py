@@ -19,28 +19,34 @@
 from __future__ import print_function
 
 import unittest
-import common
 import binascii
 import hashlib
 import struct
+import common
 
-from trezorlib.client import CallException
 import trezorlib.types_pb2 as proto_types
+
 
 def check_path(identity):
     m = hashlib.sha256()
     m.update(struct.pack("<I", identity.index))
     uri = ''
-    if identity.proto: uri += identity.proto + '://'
-    if identity.user: uri += identity.user + '@'
-    if identity.host: uri += identity.host
-    if identity.port: uri += ':' + identity.port
-    if identity.path: uri += identity.path
+    if identity.proto:
+        uri += identity.proto + '://'
+    if identity.user:
+        uri += identity.user + '@'
+    if identity.host:
+        uri += identity.host
+    if identity.port:
+        uri += ':' + identity.port
+    if identity.path:
+        uri += identity.path
     m.update(uri)
     print('hash:', m.hexdigest())
     (a, b, c, d, _, _, _, _) = struct.unpack('<8I', m.digest())
     address_n = [0x80000000 | 13, 0x80000000 | a, 0x80000000 | b, 0x80000000 | c, 0x80000000 | d]
     print('path:', 'm/' + '/'.join([str(x) for x in address_n]))
+
 
 class TestMsgSignidentity(common.TrezorTest):
 

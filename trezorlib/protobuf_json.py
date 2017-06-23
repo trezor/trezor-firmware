@@ -37,15 +37,16 @@ Provide serialization and de-serialization of Google's protobuf Messages into/fr
 # Note that preservation of unknown fields is currently not available for Python (c) google docs
 # extensions is not supported from 0.0.5 (due to gpb2.3 changes)
 
-__version__='0.0.6'
-__author__='Paul Dovbush <dpp@dpp.su>'
+__version__ = '0.0.6'
+__author__ = 'Paul Dovbush <dpp@dpp.su>'
 
 
-import json     # py2.6+ TODO: add support for other JSON serialization modules
 from google.protobuf.descriptor import FieldDescriptor as FD
 from functools import partial
 
-class ParseError(Exception): pass
+
+class ParseError(Exception):
+    pass
 
 
 def json2pb(pb, js, useFieldNumber=False):
@@ -79,13 +80,12 @@ def json2pb(pb, js, useFieldNumber=False):
     return pb
 
 
-
 def pb2json(pb, useFieldNumber=False):
     ''' convert google.protobuf.descriptor instance to JSON string '''
     js = {}
-    # fields = pb.DESCRIPTOR.fields #all fields
-    fields = pb.ListFields()        #only filled (including extensions)
-    for field,value in fields:
+    # fields = pb.DESCRIPTOR.fields # all fields
+    fields = pb.ListFields()        # only filled (including extensions)
+    for field, value in fields:
         if useFieldNumber:
             key = field.number
         else:
@@ -94,7 +94,8 @@ def pb2json(pb, useFieldNumber=False):
             ftype = partial(pb2json, useFieldNumber=useFieldNumber)
         # ---- monkey patching ----
         elif field.type == FD.TYPE_ENUM:
-            ftype = lambda x: field.enum_type.values[x].name
+            def ftype(x):
+                return field.enum_type.values[x].name
         # ---- end of monkey patching ----
         elif field.type in _ftype2js:
             ftype = _ftype2js[field.type]
@@ -120,7 +121,7 @@ _ftype2js = {
     FD.TYPE_FIXED32: float,
     FD.TYPE_BOOL: bool,
     FD.TYPE_STRING: str,
-    #FD.TYPE_MESSAGE: pb2json,              #handled specially
+    # FD.TYPE_MESSAGE: pb2json,  #handled specially
     FD.TYPE_BYTES: lambda x: x.encode('string_escape'),
     FD.TYPE_UINT32: int,
     FD.TYPE_ENUM: int,
@@ -140,7 +141,7 @@ _js2ftype = {
     FD.TYPE_FIXED32: float,
     FD.TYPE_BOOL: bool,
     FD.TYPE_STRING: str,
-    # FD.TYPE_MESSAGE: json2pb,     #handled specially
+    # FD.TYPE_MESSAGE: json2pb,  # handled specially
     FD.TYPE_BYTES: lambda x: x.decode('string_escape'),
     FD.TYPE_UINT32: int,
     FD.TYPE_ENUM: int,
@@ -156,7 +157,7 @@ import binascii
 from . import types_pb2 as types
 
 _ftype2js[FD.TYPE_BYTES] = lambda x: binascii.hexlify(x)
-del _ftype2js[FD.TYPE_ENUM] # handled specially
+del _ftype2js[FD.TYPE_ENUM]  # handled specially
 
 _js2ftype[FD.TYPE_BYTES] = lambda x: binascii.unhexlify(x)
 _js2ftype[FD.TYPE_ENUM] = lambda x: getattr(types, x)

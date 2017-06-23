@@ -36,7 +36,8 @@ if sys.version_info < (3,):
     def byteindex(data, index):
         return ord(data[index])
 else:
-    byteindex = lambda data, index: data[index]
+    def byteindex(data, index):
+        return data[index]
 
 
 def point_to_pubkey(point):
@@ -45,6 +46,7 @@ def point_to_pubkey(point):
     y_str = number_to_string(point.y(), order)
     vk = x_str + y_str
     return struct.pack('B', (byteindex(vk, 63) & 1) + 2) + vk[0:32]  # To compressed key
+
 
 def sec_to_public_pair(pubkey):
     """Convert a public key in sec binary format to a public pair."""
@@ -64,14 +66,18 @@ def sec_to_public_pair(pubkey):
 
     return public_pair_for_x(ecdsa.ecdsa.generator_secp256k1, x, is_even=(sec0 == b'\2'))
 
+
 def is_prime(n):
     return (bool)(n & PRIME_DERIVATION_FLAG)
+
 
 def fingerprint(pubkey):
     return string_to_number(tools.hash_160(pubkey)[:4])
 
+
 def get_address(public_node, address_type):
     return tools.public_key_to_bc_address(public_node.public_key, address_type)
+
 
 def public_ckd(public_node, n):
     if not isinstance(n, list):
@@ -84,6 +90,7 @@ def public_ckd(public_node, n):
         node.CopyFrom(get_subnode(node, i))
 
     return node
+
 
 def get_subnode(node, i):
     # Public Child key derivation (CKD) algorithm of BIP32
@@ -106,8 +113,7 @@ def get_subnode(node, i):
 
     # BIP32 magic converts old public key to new public point
     x, y = sec_to_public_pair(node.public_key)
-    point = I_left_as_exponent * SECP256k1.generator + \
-            Point(SECP256k1.curve, x, y, SECP256k1.order)
+    point = I_left_as_exponent * SECP256k1.generator + Point(SECP256k1.curve, x, y, SECP256k1.order)
 
     if point == INFINITY:
         raise Exception("Point cannot be INFINITY")
@@ -116,6 +122,7 @@ def get_subnode(node, i):
     node_out.public_key = point_to_pubkey(point)
 
     return node_out
+
 
 def serialize(node, version=0x0488B21E):
     s = b''
@@ -130,6 +137,7 @@ def serialize(node, version=0x0488B21E):
         s += node.public_key
     s += tools.Hash(s)[:4]
     return tools.b58encode(s)
+
 
 def deserialize(xpub):
     data = tools.b58decode(xpub, None)

@@ -21,7 +21,6 @@ import common
 import binascii
 import base64
 
-from trezorlib.client import CallException
 
 class TestMsgVerifymessage(common.TrezorTest):
 
@@ -163,6 +162,7 @@ class TestMsgVerifymessage(common.TrezorTest):
         self.assertTrue(res_nfkd)
         self.assertTrue(res_nfc)
     """
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,6 +20,7 @@ import unittest
 import common
 import trezorlib.ckd_public as bip32
 
+
 class TestMsgGetpublic_key(common.TrezorTest):
 
     def test_btc(self):
@@ -41,6 +42,7 @@ class TestMsgGetpublic_key(common.TrezorTest):
     def test_tbtc(self):
         self.setup_mnemonic_nopin_nopassphrase()
         self.assertEqual(bip32.serialize(self.client.get_public_node([111, 42]).node, 0x043587CF), 'tpubDAgixSyai5PWbc8N1mBkHDR5nLgAnHFtY7r4y5EzxqAxrt9YUDpZL3kaRoHVvCfrcwNo31c2isBP2uTHcZxEosuKbyJhCAbrvGoPuLUZ7Mz')
+
 
 if __name__ == '__main__':
     unittest.main()

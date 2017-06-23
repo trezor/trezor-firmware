@@ -45,16 +45,18 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=390000,
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+            # amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            amount=390000 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -82,21 +84,24 @@ class TestMsgSigntx(common.TrezorTest):
 
         # tx: 6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54
         # input 1: 10.00000000 BTC
-        inp1 = proto_types.TxInputType(address_n=[0],  # mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL
-                             # amount=1000000000,
-                             prev_hash=TXHASH_6f90f3,
-                             prev_index=1,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL
+            # amount=1000000000,
+            prev_hash=TXHASH_6f90f3,
+            prev_index=1,
+        )
 
-        out1 = proto_types.TxOutputType(address='mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV',
-                              amount=1000000000 - 500000000 - 10000000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV',
+            amount=1000000000 - 500000000 - 10000000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[2],
-                              amount=500000000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out2 = proto_types.TxOutputType(
+            address_n=[2],
+            amount=500000000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_tx_api(TxApiTestnet)
@@ -127,21 +132,24 @@ class TestMsgSigntx(common.TrezorTest):
 
         # tx: 6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54
         # input 1: 10.00000000 BTC
-        inp1 = proto_types.TxInputType(address_n=[0],  # mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL
-                             # amount=1000000000,
-                             prev_hash=TXHASH_6f90f3,
-                             prev_index=1,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL
+            # amount=1000000000,
+            prev_hash=TXHASH_6f90f3,
+            prev_index=1,
+        )
 
-        out1 = proto_types.TxOutputType(address='mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV',
-                              amount=1000000000 - 500000000 - 100000000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV',
+            amount=1000000000 - 500000000 - 100000000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[2],
-                              amount=500000000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out2 = proto_types.TxOutputType(
+            address_n=[2],
+            amount=500000000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_tx_api(TxApiTestnet)
@@ -174,21 +182,24 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=390000,
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+            # amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 80000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            amount=390000 - 80000 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[1],
-                              amount=80000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out2 = proto_types.TxOutputType(
+            address_n=[1],
+            amount=80000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -218,26 +229,30 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=390000,
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+            # amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 80000 - 12000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            amount=390000 - 80000 - 12000 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out2 = proto_types.TxOutputType(address='13uaUYn6XAooo88QvAqAVsiVvr2mAXutqP',
-                              amount=12000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out2 = proto_types.TxOutputType(
+            address='13uaUYn6XAooo88QvAqAVsiVvr2mAXutqP',
+            amount=12000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out3 = proto_types.TxOutputType(address_n=[1],
-                              amount=80000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out3 = proto_types.TxOutputType(
+            address_n=[1],
+            amount=80000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -273,27 +288,31 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: 58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e
         # input 1: 0.0011 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
-                             # amount=100000,
-                             prev_hash=TXHASH_c6be22,
-                             prev_index=1,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
+            # amount=100000,
+            prev_hash=TXHASH_c6be22,
+            prev_index=1,
+        )
 
-        inp2 = proto_types.TxInputType(address_n=[2],  # 15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG
-                             # amount=110000,
-                             prev_hash=TXHASH_58497a,
-                             prev_index=1,
-                             )
+        inp2 = proto_types.TxInputType(
+            address_n=[2],  # 15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG
+            # amount=110000,
+            prev_hash=TXHASH_58497a,
+            prev_index=1,
+        )
 
-        out1 = proto_types.TxOutputType(address='15Jvu3nZNP7u2ipw2533Q9VVgEu2Lu9F2B',
-                              amount=210000 - 100000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='15Jvu3nZNP7u2ipw2533Q9VVgEu2Lu9F2B',
+            amount=210000 - 100000 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out2 = proto_types.TxOutputType(
+            address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -358,25 +377,28 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: 39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5
         # index 1: 0.0254 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
-                             # amount=100000,
-                             prev_hash=TXHASH_c63e24,
-                             prev_index=1,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
+            # amount=100000,
+            prev_hash=TXHASH_c63e24,
+            prev_index=1,
+        )
 
-        inp2 = proto_types.TxInputType(address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
-                             # amount=2540000,
-                             prev_hash=TXHASH_39a29e,
-                             prev_index=1,
-                             )
+        inp2 = proto_types.TxInputType(
+            address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
+            # amount=2540000,
+            prev_hash=TXHASH_39a29e,
+            prev_index=1,
+        )
 
         outputs = []
         cnt = 255
         for _ in range(cnt):
-            out = proto_types.TxOutputType(address='1NwN6UduuVkJi6sw3gSiKZaCY5rHgVXC2h',
-                              amount=(100000 + 2540000 - 39000) // cnt,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+            out = proto_types.TxOutputType(
+                address='1NwN6UduuVkJi6sw3gSiKZaCY5rHgVXC2h',
+                amount=(100000 + 2540000 - 39000) // cnt,
+                script_type=proto_types.PAYTOADDRESS,
+            )
             outputs.append(out)
 
         with self.client:
@@ -424,16 +446,18 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: 1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6
         # input 0: 1.0 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 1HWDaLTpTCTtRWyWqZkzWx1wex5NKyncLW
-                             # amount=100000000,
-                             prev_hash=TXHASH_157041,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 1HWDaLTpTCTtRWyWqZkzWx1wex5NKyncLW
+            # amount=100000000,
+            prev_hash=TXHASH_157041,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=100000000 - 510000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            amount=100000000 - 510000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -461,16 +485,18 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=390000,
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+            # amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=400000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            amount=400000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -494,16 +520,18 @@ class TestMsgSigntx(common.TrezorTest):
     def test_p2sh(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=400000,
-                             prev_hash=TXHASH_54aa56,
-                             prev_index=1,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+            # amount=400000,
+            prev_hash=TXHASH_54aa56,
+            prev_index=1,
+        )
 
-        out1 = proto_types.TxOutputType(address='3DKGE1pvPpBAgZj94MbCinwmksewUNNYVR',  # p2sh
-                              amount=400000 - 10000,
-                              script_type=proto_types.PAYTOSCRIPTHASH,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='3DKGE1pvPpBAgZj94MbCinwmksewUNNYVR',  # p2sh
+            amount=400000 - 10000,
+            script_type=proto_types.PAYTOSCRIPTHASH,
+        )
 
         with self.client:
             self.client.set_expected_responses([
@@ -536,27 +564,31 @@ class TestMsgSigntx(common.TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        inp1 = proto_types.TxInputType(address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
-                             # amount=100000,
-                             prev_hash=TXHASH_c6be22,
-                             prev_index=1,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[1],  # 1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb
+            # amount=100000,
+            prev_hash=TXHASH_c6be22,
+            prev_index=1,
+        )
 
-        inp2 = proto_types.TxInputType(address_n=[2],  # 15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG
-                             # amount=110000,
-                             prev_hash=TXHASH_58497a,
-                             prev_index=1,
-                             )
+        inp2 = proto_types.TxInputType(
+            address_n=[2],  # 15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG
+            # amount=110000,
+            prev_hash=TXHASH_58497a,
+            prev_index=1,
+        )
 
-        out1 = proto_types.TxOutputType(address='15Jvu3nZNP7u2ipw2533Q9VVgEu2Lu9F2B',
-                              amount=210000 - 100000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='15Jvu3nZNP7u2ipw2533Q9VVgEu2Lu9F2B',
+            amount=210000 - 100000 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
-        out2 = proto_types.TxOutputType(address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
-                              amount=100000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out2 = proto_types.TxOutputType(
+            address_n=[3],  # 1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         global run_attack
         run_attack = False
@@ -593,16 +625,18 @@ class TestMsgSigntx(common.TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        inp1 = proto_types.TxInputType(address_n=[1],  # mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV
-                             # amount=390000,
-                             prev_hash=TXHASH_d6da21,
-                             prev_index=0,
-                             )
+        inp1 = proto_types.TxInputType(
+            address_n=[1],  # mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV
+            # amount=390000,
+            prev_hash=TXHASH_d6da21,
+            prev_index=0,
+        )
 
-        out1 = proto_types.TxOutputType(address='mm6FM31rM5Vc3sw5D7kztiBg3jHUzyqF1g',
-                              amount=2500278230 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
+        out1 = proto_types.TxOutputType(
+            address='mm6FM31rM5Vc3sw5D7kztiBg3jHUzyqF1g',
+            amount=2500278230 - 10000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
 
         with self.client:
             self.client.set_tx_api(TxApiTestnet)
@@ -623,6 +657,7 @@ class TestMsgSigntx(common.TrezorTest):
 
         # Accepted by network: tx
         self.assertEqual(binascii.hexlify(serialized_tx), b'010000000136825bfdb78c8ede226c7c4f25a018e99a2c061d63c7fb425fca7c7d6721dad6000000006a473044022047845c366eb24f40be315c7815a154513c444c7989eb80f7ce7ff6aeb703d26a022007c1f5efadf67c5889634fd7ac39a7ce78bffac291673e8772ecd8389c901d9f01210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6ffffffff01c6100795000000001976a9143d2496e67f5f57a924353da42d4725b318e7a8ea88ac00000000')
+
 
 if __name__ == '__main__':
     unittest.main()

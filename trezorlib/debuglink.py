@@ -19,16 +19,19 @@
 from __future__ import print_function
 
 from . import messages_pb2 as proto
-from .transport import NotImplementedException
+
 
 def pin_info(pin):
     print("Device asks for PIN %s" % pin)
 
+
 def button_press(yes_no):
     print("User pressed", '"y"' if yes_no else '"n"')
 
+
 def pprint(msg):
     return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
+
 
 class DebugLink(object):
     def __init__(self, transport, pin_func=pin_info, button_func=button_press):
@@ -126,4 +129,4 @@ class DebugLink(object):
         self._call(proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash), nowait=True)
 
     def flash_erase(self, sector):
-        obj = self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
+        self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)

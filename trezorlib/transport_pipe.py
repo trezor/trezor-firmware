@@ -18,36 +18,39 @@
 
 from __future__ import print_function
 import os
+import time
 from select import select
+
 from .transport import TransportV1
 
 """PipeTransport implements fake wire transport over local named pipe.
 Use this transport for talking with trezor simulator."""
 
+
 class PipeTransport(TransportV1):
     def __init__(self, device, is_device, *args, **kwargs):
-        self.is_device = is_device # Set True if act as device
+        self.is_device = is_device  # set True if act as device
 
         super(PipeTransport, self).__init__(device, *args, **kwargs)
 
     def _open(self):
         if self.is_device:
-            self.filename_read = self.device+'.to'
-            self.filename_write = self.device+'.from'
+            self.filename_read = self.device + '.to'
+            self.filename_write = self.device + '.from'
 
             os.mkfifo(self.filename_read, 0o600)
             os.mkfifo(self.filename_write, 0o600)
         else:
-            self.filename_read = self.device+'.from'
-            self.filename_write = self.device+'.to'
+            self.filename_read = self.device + '.from'
+            self.filename_write = self.device + '.to'
 
             if not os.path.exists(self.filename_write):
                 raise Exception("Not connected")
 
-        self.write_fd = os.open(self.filename_write, os.O_RDWR)#|os.O_NONBLOCK)
+        self.write_fd = os.open(self.filename_write, os.O_RDWR)  # |os.O_NONBLOCK)
         self.write_f = os.fdopen(self.write_fd, 'w+b', 0)
 
-        self.read_fd = os.open(self.filename_read, os.O_RDWR)#|os.O_NONBLOCK)
+        self.read_fd = os.open(self.filename_read, os.O_RDWR)  # |os.O_NONBLOCK)
         self.read_f = os.fdopen(self.read_fd, 'rb', 0)
 
     def _close(self):

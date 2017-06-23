@@ -20,7 +20,6 @@ import unittest
 import common
 import binascii
 
-from trezorlib.client import CallException
 
 class TestMsgCipherkeyvalue(common.TrezorTest):
 
@@ -87,6 +86,7 @@ class TestMsgCipherkeyvalue(common.TrezorTest):
     def test_decrypt_badlen(self):
         self.setup_mnemonic_nopin_nopassphrase()
         self.assertRaises(Exception, self.client.decrypt_keyvalue, [0, 1, 2], b"test", b"testing")
+
 
 if __name__ == '__main__':
     unittest.main()

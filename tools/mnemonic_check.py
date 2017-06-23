@@ -22,6 +22,7 @@ try:
 except NameError:
     pass
 
+
 def generate_entropy(strength, internal_entropy, external_entropy):
     '''
     strength - length of produced seed. One of 128, 192, 256
@@ -50,6 +51,7 @@ def generate_entropy(strength, internal_entropy, external_entropy):
 
     return entropy_stripped
 
+
 def main():
     print(__doc__)
 
@@ -71,6 +73,7 @@ def main():
         return
 
     print("Generated mnemonic is:", words)
+
 
 if __name__ == '__main__':
     main()

@@ -19,14 +19,17 @@
 from __future__ import absolute_import
 
 import struct
-from . import mapping
 import binascii
+from . import mapping
+
 
 class NotImplementedException(Exception):
     pass
 
+
 class ConnectionError(Exception):
     pass
+
 
 class Transport(object):
     def __init__(self, device, *args, **kwargs):
@@ -84,7 +87,7 @@ class Transport(object):
         """
         while True:
             data = self._read()
-            if data != None:
+            if data is not None:
                 break
 
         return self._parse_message(data)
@@ -129,6 +132,7 @@ class Transport(object):
     def _session_end(self):
         pass
 
+
 class TransportV1(Transport):
     def write(self, msg):
         ser = msg.SerializeToString()
@@ -171,6 +175,7 @@ class TransportV1(Transport):
             raise Exception("Unexpected magic characters")
 
         return chunk[1:]
+
 
 class TransportV2(Transport):
     def write(self, msg):

@@ -20,10 +20,6 @@ import unittest
 import common
 import binascii
 
-import trezorlib.messages_pb2 as proto
-import trezorlib.types_pb2 as proto_types
-
-from rlp.utils import int_to_big_endian
 
 class TestMsgEthereumSigntx(common.TrezorTest):
 
@@ -94,18 +90,20 @@ class TestMsgEthereumSigntx(common.TrezorTest):
         self.assertEqual(binascii.hexlify(sig_r), '070e9dafda4d9e733fa7b6747a75f8a4916459560efb85e3e73cd39f31aa160d')
         self.assertEqual(binascii.hexlify(sig_s), '7842db33ef15c27049ed52741db41fe3238a6fa3a6a0888fcfb74d6917600e41')
 
-
     def test_ethereum_signtx_newcontract(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         # contract creation without data should fail.
-        self.assertRaises(Exception, self.client.ethereum_sign_tx,
+        self.assertRaises(
+            Exception,
+            self.client.ethereum_sign_tx,
             n=[0, 0],
             nonce=123456,
             gas_price=20000,
             gas_limit=20000,
             to='',
-            value=12345678901234567890)
+            value=12345678901234567890
+        )
 
         sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
             n=[0, 0],
@@ -121,37 +119,49 @@ class TestMsgEthereumSigntx(common.TrezorTest):
 
     def test_ethereum_sanity_checks(self):
         # gas overflow
-        self.assertRaises(Exception, self.client.ethereum_sign_tx,
+        self.assertRaises(
+            Exception,
+            self.client.ethereum_sign_tx,
             n=[0, 0],
             nonce=123456,
             gas_price=0xffffffffffffffffffffffffffffffff,
             gas_limit=0xffffffffffffffffffffffffffffff,
             to=binascii.unhexlify('1d1c328764a41bda0492b66baa30c4a339ff85ef'),
-            value=12345678901234567890)
+            value=12345678901234567890
+        )
 
         # no gas price
-        self.assertRaises(Exception, self.client.ethereum_sign_tx,
+        self.assertRaises(
+            Exception,
+            self.client.ethereum_sign_tx,
             n=[0, 0],
             nonce=123456,
             gas_limit=10000,
             to=binascii.unhexlify('1d1c328764a41bda0492b66baa30c4a339ff85ef'),
-            value=12345678901234567890)
+            value=12345678901234567890
+        )
 
         # no gas limit
-        self.assertRaises(Exception, self.client.ethereum_sign_tx,
+        self.assertRaises(
+            Exception,
+            self.client.ethereum_sign_tx,
             n=[0, 0],
             nonce=123456,
             gas_price=10000,
             to=binascii.unhexlify('1d1c328764a41bda0492b66baa30c4a339ff85ef'),
-            value=12345678901234567890)
+            value=12345678901234567890
+        )
 
         # no nonce
-        self.assertRaises(Exception, self.client.ethereum_sign_tx,
+        self.assertRaises(
+            Exception,
+            self.client.ethereum_sign_tx,
             n=[0, 0],
             gas_price=10000,
             gas_limit=123456,
             to=binascii.unhexlify('1d1c328764a41bda0492b66baa30c4a339ff85ef'),
-            value=12345678901234567890)
+            value=12345678901234567890
+        )
 
     def test_ethereum_signtx_nodata_eip155(self):
         self.setup_mnemonic_allallall()
@@ -234,6 +244,7 @@ class TestMsgEthereumSigntx(common.TrezorTest):
         self.assertEqual(sig_v, 42)
         self.assertEqual(binascii.hexlify(sig_r), 'f7505f709d5999343aea3c384034c62d0514336ff6c6af65582006f708f81503')
         self.assertEqual(binascii.hexlify(sig_s), '44e09e29a4b6247000b46ddc94fe391e94deb2b39ad6ac6398e6db5bec095ba9')
+
 
 if __name__ == '__main__':
     unittest.main()

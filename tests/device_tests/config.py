@@ -45,7 +45,8 @@ except Exception as e:
 
 
 def pipe_exists(path):
-    import os, stat
+    import os
+    import stat
     try:
         return stat.S_ISFIFO(os.stat(path).st_mode)
     except:
