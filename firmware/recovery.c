@@ -166,22 +166,21 @@ static void recovery_done(void) {
 			fsm_sendSuccess(_("Device recovered"));
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
-			const bool same_mnemonic = is_same_mnemonic(new_mnemonic);
-			if (same_mnemonic) {
+			if (is_same_mnemonic(new_mnemonic)) {
 				layoutDialog(&bmp_icon_ok, NULL, _("Confirm"), NULL,
-					_("The mnemonic is"),
-					_("valid and matches"),
-					_("existing one."), NULL, NULL, NULL);
+					_("The seed is valid"),
+					_("and MATCHES"),
+					_("the one in the device."), NULL, NULL, NULL);
 				protectButton(ButtonRequestType_ButtonRequest_Other, true);
-				fsm_sendSuccess(_("Mnemonic is valid and matches existing one"));
+				fsm_sendSuccess(_("The seed is valid and matches the one in the device"));
 			} else {
 				layoutDialog(&bmp_icon_error, NULL, _("Confirm"), NULL,
-					_("The mnemonic is"),
-					_("valid but doesn't"),
-					_("match existing one."), NULL, NULL, NULL);
+					_("The seed is valid"),
+					_("but does NOT MATCH"),
+					_("the one in the device."), NULL, NULL, NULL);
 				protectButton(ButtonRequestType_ButtonRequest_Other, true);
 				fsm_sendFailure(FailureType_Failure_DataError,
-					_("Mnemonic is valid but doesn't match existing one"));
+					_("The seed is valid but does not match the one in the device"));
 			}
 		}
 	} else {
@@ -190,7 +189,7 @@ static void recovery_done(void) {
 			storage_reset();
 		} else {
 			layoutDialog(&bmp_icon_error, NULL, _("Confirm"), NULL,
-				_("The mnemonic is"), _("invalid!"), NULL, NULL, NULL, NULL);
+				_("The seed is"), _("INVALID!"), NULL, NULL, NULL, NULL);
 			protectButton(ButtonRequestType_ButtonRequest_Other, true);
 		}
 		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid mnemonic, are words in correct order?"));
