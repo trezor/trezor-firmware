@@ -297,7 +297,11 @@ class Commands(object):
 
     def reset_device(self, args):
         return self.client.reset_device(True, args.strength, args.passphrase_protection,
-                                        args.pin_protection, args.label, 'english')
+                                        args.pin_protection, args.label, 'english',
+                                        args.u2f_counter, args.skip_backup)
+
+    def backup_device(self, args):
+        return self.client.backup_device()
 
     def sign_message(self, args):
         address_n = self.client.expand_path(args.n)
@@ -398,6 +402,7 @@ class Commands(object):
     recovery_device.help = 'Start safe recovery workflow'
     load_device.help = 'Load custom configuration to the device'
     reset_device.help = 'Perform device setup and generate new seed'
+    backup_device.help = 'Perform device seed backup'
     sign_message.help = 'Sign message using address of given path'
     verify_message.help = 'Verify message'
     encrypt_message.help = 'Encrypt message'
@@ -492,7 +497,11 @@ class Commands(object):
         (('-p', '--pin-protection'), {'action': 'store_true', 'default': False}),
         (('-r', '--passphrase-protection'), {'action': 'store_true', 'default': False}),
         (('-l', '--label'), {'type': str, 'default': ''}),
+        (('-u', '--u2f-counter'), {'type': int, 'default': 0}),
+        (('-s', '--skip-backup'), {'action': 'store_true', 'default': False}),
     )
+
+    backup_device.arguments = ()
 
     sign_message.arguments = (
         (('-c', '--coin'), {'type': str, 'default': 'Bitcoin'}),

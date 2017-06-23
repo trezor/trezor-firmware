@@ -859,17 +859,19 @@ class ProtocolMixin(object):
     @field('message')
     @expect(proto.Success)
     @session
-    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language):
+    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter, skip_backup):
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 
         # Begin with device reset workflow
         msg = proto.ResetDevice(display_random=display_random,
                                 strength=strength,
-                                language=language,
                                 passphrase_protection=bool(passphrase_protection),
                                 pin_protection=bool(pin_protection),
-                                label=label)
+                                language=language,
+                                label=label,
+                                u2f_counter=u2f_counter,
+                                skip_backup=bool(skip_backup))
 
         resp = self.call(msg)
         if not isinstance(resp, proto.EntropyRequest):
@@ -879,6 +881,12 @@ class ProtocolMixin(object):
         log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode('ascii'))
         ret = self.call(proto.EntropyAck(entropy=external_entropy))
         self.init_device()
+        return ret
+
+    @field('message')
+    @expect(proto.Success)
+    def backup_device(self):
+        ret = self.call(proto.BackupDevice())
         return ret
 
     @field('message')
