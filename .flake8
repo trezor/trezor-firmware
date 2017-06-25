@@ -3,11 +3,12 @@ exclude =
     .tox/,
     build/,
     dist/,
-    tools/signtest.py,
     trezorlib/*_pb2.py
 ignore =
     # F821 undefined name 'unicode',
     F821,
+    # F841 local variable is assigned to but never used
+    F841,
     # F401: module imported but unused
     F401,
     # E402: module level import not at top of file
