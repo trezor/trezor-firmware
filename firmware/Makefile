@@ -29,6 +29,7 @@ OBJS += ../vendor/trezor-crypto/curves.o
 OBJS += ../vendor/trezor-crypto/secp256k1.o
 OBJS += ../vendor/trezor-crypto/nist256p1.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-donna-basepoint-table.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-sha3.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-keccak.o
 OBJS += ../vendor/trezor-crypto/hmac.o
