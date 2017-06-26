@@ -110,7 +110,7 @@ static char current_word[10], current_word_display[11];
 
 void reset_backup(void)
 {
-	if (!storage.has_needs_backup || !storage.needs_backup) {
+	if (!storage_needsBackup()) {
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
 		return;
 	} else {

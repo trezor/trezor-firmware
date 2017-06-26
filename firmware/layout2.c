@@ -83,6 +83,10 @@ void layoutHome(void)
 			oledDrawBitmap(40, 0, &bmp_logo64);
 		}
 	}
+	if (storage_needsBackup()) {
+		oledBox(0, 0, 127, 8, false);
+		oledDrawStringCenter(0, "NEEDS BACKUP!");
+	}
 	oledRefresh();
 
 	// Reset lock screen timeout

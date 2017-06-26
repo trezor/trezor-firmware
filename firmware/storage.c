@@ -580,6 +580,12 @@ bool storage_isInitialized(void)
 	return storage.has_node || storage.has_mnemonic;
 }
 
+bool storage_needsBackup(void)
+{
+	return storage.has_needs_backup && storage.needs_backup;
+}
+
+
 uint32_t storage_nextU2FCounter(void)
 {
 	uint32_t *ptr = ((uint32_t *) FLASH_STORAGE_U2FAREA) + (storage_u2f_offset / 32);
