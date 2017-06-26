@@ -7,24 +7,29 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/poll.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <stdlib.h>
 
-#include "unix-usb-mock.h"
+#include "../../trezorhal/usb.h"
+#include "../../trezorhal/touch.h"
 
 #define TREZOR_UDP_PORT 21324
 
-static int s;
+static int sock;
 static struct sockaddr_in si_me, si_other;
 static socklen_t slen = 0;
 
-void msg_init(void)
-{
-    s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    assert(s != -1);
+int usb_init(const usb_dev_info_t *dev_info) {
+    (void)dev_info;
 
-    fcntl(s, F_SETFL, O_NONBLOCK);
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock < 0) {
+        return -1;
+    }
+
+    fcntl(sock, F_SETFL, O_NONBLOCK);
 
     si_me.sin_family = AF_INET;
     const char *ip = getenv("TREZOR_UDP_IP");
@@ -40,38 +45,86 @@ void msg_init(void)
         si_me.sin_port = htons(TREZOR_UDP_PORT);
     }
 
-    int b;
-    b = bind(s, (struct sockaddr*)&si_me, sizeof(si_me));
-    assert(b != -1);
+    int b = bind(sock, (struct sockaddr*)&si_me, sizeof(si_me));
+    if (b < 0) {
+        return -1;
+    }
+
+    return 0;
 }
 
-ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len);
+int usb_deinit(void) {
+    return 0;
+}
 
-ssize_t msg_recv(uint8_t *iface, uint8_t *buf, size_t len)
-{
+int usb_start(void) {
+    return 0;
+}
+
+int usb_stop(void) {
+    return 0;
+}
+
+int usb_hid_add(const usb_hid_info_t *info) {
+    return 0;
+}
+
+int usb_vcp_add(const usb_vcp_info_t *info) {
+    return 0;
+}
+
+int usb_hid_can_read(uint8_t iface_num) {
+    struct pollfd fds[] = {
+        { sock, POLLIN, 0 },
+    };
+    int r = poll(fds, 1, 0);
+    if (r > 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+int usb_hid_can_write(uint8_t iface_num) {
+    struct pollfd fds[] = {
+        { sock, POLLOUT, 0 },
+    };
+    int r = poll(fds, 1, 0);
+    if (r > 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
     struct sockaddr_in si;
     socklen_t sl = sizeof(si);
-    memset(buf, 0, len);
-    *iface = 0; // TODO: return proper interface
-    ssize_t r = recvfrom(s, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
+    ssize_t r = recvfrom(sock, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
     if (r < 0) {
         return r;
     }
     si_other = si;
     slen = sl;
-    if (r == 8 && memcmp("PINGPING", buf, 8) == 0) {
-        msg_send(0, (const uint8_t *)"PONGPONG", 8);
+    static const char *ping_req = "PINGPING";
+    static const char *ping_resp = "PONGPONG";
+    if (r == strlen(ping_req) && memcmp(ping_req, buf, strlen(ping_req)) == 0) {
+        usb_hid_write(0, (const uint8_t *)ping_resp, strlen(ping_resp));
         return 0;
     }
     return r;
 }
 
-ssize_t msg_send(uint8_t iface, const uint8_t *buf, size_t len)
-{
-    (void)iface; // TODO: ignore interface for now
+int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     ssize_t r = len;
     if (slen > 0) {
-        r = sendto(s, buf, len, MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);
+        r = sendto(sock, buf, len, MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);
     }
     return r;
+}
+
+void pendsv_kbd_intr(void) {
+}
+
+void mp_hal_set_vcp_iface(int iface_num) {
 }

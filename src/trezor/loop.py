@@ -14,10 +14,15 @@ from micropython import const
 from trezor import msg
 from trezor import log
 
-TOUCH = const(255)  # interface
-TOUCH_START = const(1)  # event
-TOUCH_MOVE = const(2)  # event
-TOUCH_END = const(4)  # event
+import trezormsg
+
+TOUCH = trezormsg.TOUCH
+TOUCH_START = trezormsg.TOUCH_START
+TOUCH_MOVE = trezormsg.TOUCH_MOVE
+TOUCH_END = trezormsg.TOUCH_END
+
+READ = trezormsg.POLL_READ
+WRITE = trezormsg.POLL_WRITE
 
 after_step_hook = None  # function, called after each task step
 
@@ -84,6 +89,7 @@ def run_forever():
         global log_delay_pos
 
     task_entry = [0, 0, 0]  # deadline, task, value
+    msg_entry = [0, 0]  # iface | flags, value
     while True:
         # compute the maximum amount of time we can wait for a message
         if _scheduled_tasks:
@@ -97,13 +103,11 @@ def run_forever():
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
-        msg_entry = msg.select(delay)
-        if msg_entry is not None:
+        if trezormsg.poll(_paused_tasks, msg_entry, delay):
             # message received, run tasks paused on the interface
-            msg_iface, *msg_value = msg_entry
-            msg_tasks = _paused_tasks.pop(msg_iface, ())
+            msg_tasks = _paused_tasks.pop(msg_entry[0], ())
             for task in msg_tasks:
-                _step_task(task, msg_value)
+                _step_task(task, msg_entry[1])
         else:
             # timeout occurred, run the first scheduled task
             if _scheduled_tasks:

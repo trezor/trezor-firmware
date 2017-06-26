@@ -160,13 +160,13 @@ def _write_report(report):
 
 
 def _dispatch_reports():
+    read = loop.select(_interface)
     while True:
-        report, = yield loop.Select(_interface)
-        report = memoryview(report)
+        report = yield read
         # if __debug__:
         #     log.debug(__name__, 'read report %s', ubinascii.hexlify(report))
         sessions.dispatch(
-            report, _session_open, _session_close, _session_unknown)
+            memoryview(report), _session_open, _session_close, _session_unknown)
 
 
 def _session_open(session_id=None):

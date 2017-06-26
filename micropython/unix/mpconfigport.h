@@ -288,6 +288,8 @@ typedef unsigned int mp_uint_t; // must be pointer size
 #endif
 #endif
 
+#define MICROPY_EVENT_POLL_HOOK  mp_hal_delay_ms(1);
+
 // Cannot include <sys/types.h>, as it may lead to symbol name clashes
 #if _FILE_OFFSET_BITS == 64 && !defined(__LP64__)
 typedef long long mp_off_t;
