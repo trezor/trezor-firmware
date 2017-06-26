@@ -124,6 +124,7 @@ message Features {
 	optional bool pin_cached = 16;			// is PIN already cached in session?
 	optional bool passphrase_cached = 17;		// is passphrase already cached in session?
 	optional bool firmware_present = 18;		// is valid firmware loaded?
+	optional bool needs_backup = 19;		// does storage need backup? (equals to Storage.needs_backup)
 }
 
 /**
