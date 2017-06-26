@@ -114,7 +114,7 @@ void reset_backup(void)
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
 		return;
 	} else {
-		storage.has_needs_backup = false;
+		storage.has_needs_backup = true;
 		storage.needs_backup = false;
 		storage_commit();
 	}
