@@ -126,19 +126,6 @@ static void recovery_request(void) {
 	msg_write(MessageType_MessageType_WordRequest, &resp);
 }
 
-static bool is_same_mnemonic(const char *new_mnemonic) {
-	/* The execution time of the following code only depends on the
-	 * (public) input.  This avoids timing attacks.
-	 */
-	char diff = 0;
-	uint32_t i = 0;
-	for (; new_mnemonic[i]; i++) {
-		diff |= (storage.mnemonic[i] - new_mnemonic[i]);
-	}
-	diff |= storage.mnemonic[i];
-	return diff == 0;
-}
-
 /* Called when the last word was entered.
  * Check mnemonic and send success/failure.
  */
@@ -166,7 +153,7 @@ static void recovery_done(void) {
 			fsm_sendSuccess(_("Device recovered"));
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
-			if (is_same_mnemonic(new_mnemonic)) {
+			if (storage_isInitialized() && storage_containsMnemonic(new_mnemonic)) {
 				layoutDialog(&bmp_icon_ok, NULL, _("Confirm"), NULL,
 					_("The seed is valid"),
 					_("and MATCHES"),

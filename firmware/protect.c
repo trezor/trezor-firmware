@@ -183,7 +183,7 @@ bool protectPin(bool use_cached)
 		fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 		return false;
 	}
-	if (storage_increasePinFails(fails) && storage_isPinCorrect(pin)) {
+	if (storage_increasePinFails(fails) && storage_containsPin(pin)) {
 		session_cachePin();
 		storage_resetPinFails(fails);
 		return true;

@@ -427,10 +427,26 @@ const uint8_t *storage_getHomescreen(void)
 	return (storage.has_homescreen && storage.homescreen.size == 1024) ? storage.homescreen.bytes : 0;
 }
 
-/* Check whether pin matches storage.  The pin must be a null-terminated
- * string with at most 9 characters.
+/* Check whether mnemonic matches storage. The mnemonic must be
+ * a null-terminated string.
  */
-bool storage_isPinCorrect(const char *pin)
+bool storage_containsMnemonic(const char *mnemonic) {
+	/* The execution time of the following code only depends on the
+	 * (public) input.  This avoids timing attacks.
+	 */
+	char diff = 0;
+	uint32_t i = 0;
+	for (; mnemonic[i]; i++) {
+		diff |= (storage.mnemonic[i] - mnemonic[i]);
+	}
+	diff |= storage.mnemonic[i];
+	return diff == 0;
+}
+
+/* Check whether pin matches storage.  The pin must be
+ * a null-terminated string with at most 9 characters.
+ */
+bool storage_containsPin(const char *pin)
 {
 	/* The execution time of the following code only depends on the
 	 * (public) input.  This avoids timing attacks.
