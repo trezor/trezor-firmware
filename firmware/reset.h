@@ -23,8 +23,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label, uint32_t u2f_counter);
+void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label, uint32_t u2f_counter, bool skip_backup);
 void reset_entropy(const uint8_t *ext_entropy, uint32_t len);
+void reset_backup(void);
 uint32_t reset_get_int_entropy(uint8_t *entropy);
 const char *reset_get_word(void);
 

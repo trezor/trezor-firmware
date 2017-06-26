@@ -179,7 +179,7 @@ static void recovery_done(void) {
 				_("The seed is"), _("INVALID!"), NULL, NULL, NULL, NULL);
 			protectButton(ButtonRequestType_ButtonRequest_Other, true);
 		}
-		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid mnemonic, are words in correct order?"));
+		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid seed, are words in correct order?"));
 	}
 	awaiting_word = 0;
 	layoutHome();

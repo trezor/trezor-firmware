@@ -442,8 +442,17 @@ void fsm_msgResetDevice(ResetDevice *msg)
 		msg->has_pin_protection && msg->pin_protection,
 		msg->has_language ? msg->language : 0,
 		msg->has_label ? msg->label : 0,
-		msg->has_u2f_counter ? msg->u2f_counter : 0
+		msg->has_u2f_counter ? msg->u2f_counter : 0,
+		msg->has_skip_backup ? msg->skip_backup : false
 	);
+}
+
+void fsm_msgBackupDevice(BackupDevice *msg)
+{
+	CHECK_INITIALIZED
+
+	(void)msg;
+	reset_backup();
 }
 
 void fsm_msgSignTx(SignTx *msg)

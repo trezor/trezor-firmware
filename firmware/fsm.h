@@ -36,6 +36,7 @@ void fsm_msgGetEntropy(GetEntropy *msg);
 void fsm_msgGetPublicKey(GetPublicKey *msg);
 void fsm_msgLoadDevice(LoadDevice *msg);
 void fsm_msgResetDevice(ResetDevice *msg);
+void fsm_msgBackupDevice(BackupDevice *msg);
 void fsm_msgSignTx(SignTx *msg);
 //void fsm_msgPinMatrixAck(PinMatrixAck *msg);
 void fsm_msgCancel(Cancel *msg);
