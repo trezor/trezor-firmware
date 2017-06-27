@@ -25,5 +25,11 @@ def print_tokens(chain, chain_id):
         address = '\\x'.join([address[i:i + 2] for i in range(0, len(address), 2)])[2:].lower()
         print('\t{%2d, "%s", " %s", %d},' % (chain_id, address, symbol, decimal))
 
-print_tokens('eth', 1)
-print_tokens('etc', 61)
+    return len(tokens)
+
+count = 0
+
+count += print_tokens('eth', 1)
+count += print_tokens('etc', 61)
+
+print('#define TOKENS_COUNT %d' % count)
