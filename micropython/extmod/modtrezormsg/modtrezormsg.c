@@ -458,16 +458,6 @@ STATIC const mp_obj_type_t mod_trezormsg_Msg_type = {
     .locals_dict = (void*)&mod_trezormsg_Msg_locals_dict,
 };
 
-STATIC mp_obj_t read_bytes_from_hid(uint8_t iface) {
-    uint8_t buf[64];
-    int l = usb_hid_read(iface, buf, sizeof(buf));
-    if (l > 0) {
-        return mp_obj_new_str_of_type(&mp_type_bytes, buf, l);
-    } else {
-        return mp_const_empty_bytes;
-    }
-}
-
 #define TOUCH_IFACE (255)
 #define POLL_READ  (0x0000)
 #define POLL_WRITE (0x0100)
@@ -507,9 +497,13 @@ STATIC mp_obj_t mod_trezormsg_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t 
             } else
             if (mode == POLL_READ) {
                 if (usb_hid_can_read(iface)) {
-                    ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-                    ret->items[1] = read_bytes_from_hid(iface);
-                    return mp_const_true;
+                    uint8_t buf[64];
+                    int l = usb_hid_read(iface, buf, sizeof(buf));
+                    if (l > 0) {
+                        ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+                        ret->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, buf, l);
+                        return mp_const_true;
+                    }
                 }
             } else
             if (mode == POLL_WRITE) {
