@@ -19,6 +19,8 @@
 from __future__ import print_function
 
 import unittest
+import hashlib
+
 from trezorlib.client import TrezorClient, TrezorDebugClient
 from trezorlib import tx_api
 import config
@@ -28,6 +30,7 @@ tx_api.cache_dir = '../txcache'
 
 
 class TrezorTest(unittest.TestCase):
+
     def setUp(self):
         transport = config.TRANSPORT(*config.TRANSPORT_ARGS, **config.TRANSPORT_KWARGS)
         if hasattr(config, 'DEBUG_TRANSPORT'):
@@ -68,3 +71,32 @@ class TrezorTest(unittest.TestCase):
 
     def tearDown(self):
         self.client.close()
+
+
+def generate_entropy(strength, internal_entropy, external_entropy):
+    '''
+    strength - length of produced seed. One of 128, 192, 256
+    random - binary stream of random data from external HRNG
+    '''
+    if strength not in (128, 192, 256):
+        raise Exception("Invalid strength")
+
+    if not internal_entropy:
+        raise Exception("Internal entropy is not provided")
+
+    if len(internal_entropy) < 32:
+        raise Exception("Internal entropy too short")
+
+    if not external_entropy:
+        raise Exception("External entropy is not provided")
+
+    if len(external_entropy) < 32:
+        raise Exception("External entropy too short")
+
+    entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
+    entropy_stripped = entropy[:strength // 8]
+
+    if len(entropy_stripped) * 8 != strength:
+        raise Exception("Entropy length mismatch")
+
+    return entropy_stripped

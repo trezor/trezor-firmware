@@ -17,45 +17,16 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import hashlib
 import common
 
 from trezorlib import messages_pb2 as proto
 from mnemonic import Mnemonic
 
 
-def generate_entropy(strength, internal_entropy, external_entropy):
-    '''
-    strength - length of produced seed. One of 128, 192, 256
-    random - binary stream of random data from external HRNG
-    '''
-    if strength not in (128, 192, 256):
-        raise Exception("Invalid strength")
-
-    if not internal_entropy:
-        raise Exception("Internal entropy is not provided")
-
-    if len(internal_entropy) < 32:
-        raise Exception("Internal entropy too short")
-
-    if not external_entropy:
-        raise Exception("External entropy is not provided")
-
-    if len(external_entropy) < 32:
-        raise Exception("External entropy too short")
-
-    entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
-    entropy_stripped = entropy[:strength // 8]
-
-    if len(entropy_stripped) * 8 != strength:
-        raise Exception("Entropy length mismatch")
-
-    return entropy_stripped
-
-
 class TestDeviceReset(common.TrezorTest):
 
     def test_reset_device(self):
+
         # No PIN, no passphrase
         external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128
@@ -75,7 +46,7 @@ class TestDeviceReset(common.TrezorTest):
         ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
 
         # Generate mnemonic locally
-        entropy = generate_entropy(strength, internal_entropy, external_entropy)
+        entropy = common.generate_entropy(strength, internal_entropy, external_entropy)
         expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
 
         mnemonic = []
@@ -106,6 +77,8 @@ class TestDeviceReset(common.TrezorTest):
 
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
+        self.assertTrue(resp.initialized)
+        self.assertFalse(resp.needs_backup)
         self.assertFalse(resp.pin_protection)
         self.assertFalse(resp.passphrase_protection)
 
@@ -151,7 +124,7 @@ class TestDeviceReset(common.TrezorTest):
         ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
 
         # Generate mnemonic locally
-        entropy = generate_entropy(strength, internal_entropy, external_entropy)
+        entropy = common.generate_entropy(strength, internal_entropy, external_entropy)
         expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
 
         mnemonic = []
@@ -182,6 +155,8 @@ class TestDeviceReset(common.TrezorTest):
 
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
+        self.assertTrue(resp.initialized)
+        self.assertFalse(resp.needs_backup)
         self.assertTrue(resp.pin_protection)
         self.assertTrue(resp.passphrase_protection)
 
