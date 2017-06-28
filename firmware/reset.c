@@ -101,22 +101,19 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 		fsm_sendSuccess(_("Device successfully initialized"));
 		layoutHome();
 	} else {
-		reset_backup();
+		reset_backup(false);
 	}
 
 }
 
 static char current_word[10], current_word_display[11];
 
-void reset_backup(void)
+// separated == true if called as a separate workflow via BackupMessage
+void reset_backup(bool separated)
 {
 	if (!storage_needsBackup()) {
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
 		return;
-	} else {
-		storage.has_needs_backup = true;
-		storage.needs_backup = false;
-		storage_commit();
 	}
 
 	int pass, word_pos, i = 0, j;
@@ -166,14 +163,25 @@ void reset_backup(void)
 				}
 			}
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
-				storage_reset();
+				if (!separated) {
+					storage_reset();
+				}
 				layoutHome();
 				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 				return;
 			}
 		}
 	}
-	fsm_sendSuccess(_("Seed successfully backed up"));
+
+	storage.has_needs_backup = true;
+	storage.needs_backup = false;
+	storage_commit();
+
+	if (separated) {
+		fsm_sendSuccess(_("Seed successfully backed up"));
+	} else {
+		fsm_sendSuccess(_("Device successfully initialized"));
+	}
 	layoutHome();
 }
 

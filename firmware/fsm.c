@@ -453,7 +453,7 @@ void fsm_msgBackupDevice(BackupDevice *msg)
 	CHECK_INITIALIZED
 
 	(void)msg;
-	reset_backup();
+	reset_backup(true);
 }
 
 void fsm_msgSignTx(SignTx *msg)
