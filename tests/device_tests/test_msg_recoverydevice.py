@@ -25,6 +25,7 @@ from trezorlib import messages_pb2 as proto
 
 
 class TestDeviceRecovery(common.TrezorTest):
+
     def test_pin_passphrase(self):
         mnemonic = self.mnemonic12.split(' ')
         ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,

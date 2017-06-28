@@ -26,6 +26,7 @@ from trezorlib.ckd_public import deserialize
 
 
 class TestMsgSigntxSegwit(common.TrezorTest):
+
     def test_send_p2sh(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)

@@ -42,6 +42,8 @@ or to learn options of a particular command:
 
   trezorctl commands --help
 
+or visit `usage <USAGE.rst>`_ page for more info.
+
 To use the library in your application look at the following example.
 
 Example

@@ -39,6 +39,7 @@ TXHASH_d6da21 = binascii.unhexlify(b'd6da21677d7cca5f42fbc7631d062c9ae918a0254f7
 
 
 class TestMsgSigntx(common.TrezorTest):
+
     def test_one_one_fee(self):
         self.setup_mnemonic_nopin_nopassphrase()
 

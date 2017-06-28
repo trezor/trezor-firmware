@@ -54,6 +54,7 @@ def generate_entropy(strength, internal_entropy, external_entropy):
 
 
 class TestDeviceReset(common.TrezorTest):
+
     def test_reset_device(self):
         # No PIN, no passphrase
         external_entropy = b'zlutoucky kun upel divoke ody' * 2

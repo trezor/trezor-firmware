@@ -24,6 +24,7 @@ import trezorlib.types_pb2 as proto_types
 
 
 class TestMsgEstimatetxsize(common.TrezorTest):
+
     def test_estimate_size(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
