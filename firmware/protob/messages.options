@@ -97,7 +97,12 @@ CipherKeyValue.iv			max_size:16
 
 CipheredKeyValue.value			max_size:1024
 
-EstimateTxSize.coin_name		max_size:17
+# deprecated
+EstimateTxSize				skip_message:true
+# EstimateTxSize.coin_name		max_size:17
+
+# deprecated
+TxSize					skip_message:true
 
 SignTx.coin_name			max_size:17
 

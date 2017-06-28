@@ -26,7 +26,7 @@
 	{ 'n', 'i', MessageType_MessageType_SignMessage,           SignMessage_fields,           (void (*)(void *)) fsm_msgSignMessage },
 	{ 'n', 'i', MessageType_MessageType_VerifyMessage,         VerifyMessage_fields,         (void (*)(void *)) fsm_msgVerifyMessage },
 	// Message PassphraseAck is used in tiny mode
-	{ 'n', 'i', MessageType_MessageType_EstimateTxSize,        EstimateTxSize_fields,        (void (*)(void *)) fsm_msgEstimateTxSize },
+	// Message EstimateTxSize is deprecated
 	{ 'n', 'i', MessageType_MessageType_RecoveryDevice,        RecoveryDevice_fields,        (void (*)(void *)) fsm_msgRecoveryDevice },
 	{ 'n', 'i', MessageType_MessageType_WordAck,               WordAck_fields,               (void (*)(void *)) fsm_msgWordAck },
 	// Message EncryptMessage is deprecated
@@ -54,7 +54,7 @@
 	{ 'n', 'o', MessageType_MessageType_EntropyRequest,        EntropyRequest_fields,        0 },
 	{ 'n', 'o', MessageType_MessageType_MessageSignature,      MessageSignature_fields,      0 },
 	{ 'n', 'o', MessageType_MessageType_PassphraseRequest,     PassphraseRequest_fields,     0 },
-	{ 'n', 'o', MessageType_MessageType_TxSize,                TxSize_fields,                0 },
+	// Message TxSize is deprecated
 	{ 'n', 'o', MessageType_MessageType_WordRequest,           WordRequest_fields,           0 },
 	{ 'n', 'o', MessageType_MessageType_CipheredKeyValue,      CipheredKeyValue_fields,      0 },
 	// Message EncryptedMessage is deprecated

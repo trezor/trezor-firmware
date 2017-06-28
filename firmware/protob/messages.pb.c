@@ -12,7 +12,6 @@ const char ResetDevice_language_default[17] = "english";
 const char RecoveryDevice_language_default[17] = "english";
 const char SignMessage_coin_name_default[17] = "Bitcoin";
 const char VerifyMessage_coin_name_default[17] = "Bitcoin";
-const char EstimateTxSize_coin_name_default[17] = "Bitcoin";
 const char SignTx_coin_name_default[17] = "Bitcoin";
 const uint32_t SignTx_version_default = 1u;
 const uint32_t SignTx_lock_time_default = 0u;
@@ -26,7 +25,7 @@ const pb_field_t GetFeatures_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t Features_fields[19] = {
+const pb_field_t Features_fields[20] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, Features, vendor, vendor, 0),
     PB_FIELD2(  2, UINT32  , OPTIONAL, STATIC  , OTHER, Features, major_version, vendor, 0),
     PB_FIELD2(  3, UINT32  , OPTIONAL, STATIC  , OTHER, Features, minor_version, major_version, 0),
@@ -45,6 +44,7 @@ const pb_field_t Features_fields[19] = {
     PB_FIELD2( 16, BOOL    , OPTIONAL, STATIC  , OTHER, Features, pin_cached, imported, 0),
     PB_FIELD2( 17, BOOL    , OPTIONAL, STATIC  , OTHER, Features, passphrase_cached, pin_cached, 0),
     PB_FIELD2( 18, BOOL    , OPTIONAL, STATIC  , OTHER, Features, firmware_present, passphrase_cached, 0),
+    PB_FIELD2( 19, BOOL    , OPTIONAL, STATIC  , OTHER, Features, needs_backup, firmware_present, 0),
     PB_LAST_FIELD
 };
 
@@ -182,7 +182,7 @@ const pb_field_t LoadDevice_fields[9] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t ResetDevice_fields[8] = {
+const pb_field_t ResetDevice_fields[9] = {
     PB_FIELD2(  1, BOOL    , OPTIONAL, STATIC  , FIRST, ResetDevice, display_random, display_random, 0),
     PB_FIELD2(  2, UINT32  , OPTIONAL, STATIC  , OTHER, ResetDevice, strength, display_random, &ResetDevice_strength_default),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, ResetDevice, passphrase_protection, strength, 0),
@@ -190,6 +190,11 @@ const pb_field_t ResetDevice_fields[8] = {
     PB_FIELD2(  5, STRING  , OPTIONAL, STATIC  , OTHER, ResetDevice, language, pin_protection, &ResetDevice_language_default),
     PB_FIELD2(  6, STRING  , OPTIONAL, STATIC  , OTHER, ResetDevice, label, language, 0),
     PB_FIELD2(  7, UINT32  , OPTIONAL, STATIC  , OTHER, ResetDevice, u2f_counter, label, 0),
+    PB_FIELD2(  8, BOOL    , OPTIONAL, STATIC  , OTHER, ResetDevice, skip_backup, u2f_counter, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t BackupDevice_fields[1] = {
     PB_LAST_FIELD
 };
 
@@ -259,18 +264,6 @@ const pb_field_t CipherKeyValue_fields[8] = {
 
 const pb_field_t CipheredKeyValue_fields[2] = {
     PB_FIELD2(  1, BYTES   , OPTIONAL, STATIC  , FIRST, CipheredKeyValue, value, value, 0),
-    PB_LAST_FIELD
-};
-
-const pb_field_t EstimateTxSize_fields[4] = {
-    PB_FIELD2(  1, UINT32  , REQUIRED, STATIC  , FIRST, EstimateTxSize, outputs_count, outputs_count, 0),
-    PB_FIELD2(  2, UINT32  , REQUIRED, STATIC  , OTHER, EstimateTxSize, inputs_count, outputs_count, 0),
-    PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, EstimateTxSize, coin_name, inputs_count, &EstimateTxSize_coin_name_default),
-    PB_LAST_FIELD
-};
-
-const pb_field_t TxSize_fields[2] = {
-    PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, TxSize, tx_size, tx_size, 0),
     PB_LAST_FIELD
 };
 
@@ -420,7 +413,7 @@ const pb_field_t DebugLinkFlashErase_fields[2] = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_CipherKeyValue_CipheredKeyValue_EstimateTxSize_TxSize_SignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_SetU2FCounter_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog_DebugLinkMemoryRead_DebugLinkMemory_DebugLinkMemoryWrite_DebugLinkFlashErase)
+STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_BackupDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_CipherKeyValue_CipheredKeyValue_SignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_SetU2FCounter_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog_DebugLinkMemoryRead_DebugLinkMemory_DebugLinkMemoryWrite_DebugLinkFlashErase)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)

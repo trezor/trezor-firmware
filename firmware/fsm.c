@@ -978,14 +978,6 @@ void fsm_msgDecryptMessage(DecryptMessage *msg)
 }
 */
 
-void fsm_msgEstimateTxSize(EstimateTxSize *msg)
-{
-	RESP_INIT(TxSize);
-	resp->has_tx_size = true;
-	resp->tx_size = transactionEstimateSize(msg->inputs_count, msg->outputs_count);
-	msg_write(MessageType_MessageType_TxSize, resp);
-}
-
 void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 {
 	const bool dry_run = msg->has_dry_run ? msg->dry_run : false;

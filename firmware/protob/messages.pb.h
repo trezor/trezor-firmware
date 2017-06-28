@@ -42,6 +42,7 @@ typedef enum _MessageType {
     MessageType_MessageType_ButtonAck = 27,
     MessageType_MessageType_GetAddress = 29,
     MessageType_MessageType_Address = 30,
+    MessageType_MessageType_BackupDevice = 34,
     MessageType_MessageType_EntropyRequest = 35,
     MessageType_MessageType_EntropyAck = 36,
     MessageType_MessageType_SignMessage = 38,
@@ -82,6 +83,10 @@ typedef enum _MessageType {
 } MessageType;
 
 /* Struct definitions */
+typedef struct _BackupDevice {
+    uint8_t dummy_field;
+} BackupDevice;
+
 typedef struct _ButtonAck {
     uint8_t dummy_field;
 } ButtonAck;
@@ -302,13 +307,6 @@ typedef struct _EntropyAck {
     EntropyAck_entropy_t entropy;
 } EntropyAck;
 
-typedef struct _EstimateTxSize {
-    uint32_t outputs_count;
-    uint32_t inputs_count;
-    bool has_coin_name;
-    char coin_name[17];
-} EstimateTxSize;
-
 typedef struct {
     size_t size;
     uint8_t bytes[20];
@@ -461,6 +459,8 @@ typedef struct _Features {
     bool passphrase_cached;
     bool has_firmware_present;
     bool firmware_present;
+    bool has_needs_backup;
+    bool needs_backup;
 } Features;
 
 typedef struct _GetAddress {
@@ -602,6 +602,8 @@ typedef struct _ResetDevice {
     char label[33];
     bool has_u2f_counter;
     uint32_t u2f_counter;
+    bool has_skip_backup;
+    bool skip_backup;
 } ResetDevice;
 
 typedef struct _SetU2FCounter {
@@ -687,11 +689,6 @@ typedef struct _TxRequest {
     TxRequestSerializedType serialized;
 } TxRequest;
 
-typedef struct _TxSize {
-    bool has_tx_size;
-    uint32_t tx_size;
-} TxSize;
-
 typedef struct {
     size_t size;
     uint8_t bytes[65];
@@ -732,7 +729,6 @@ extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
 extern const char SignMessage_coin_name_default[17];
 extern const char VerifyMessage_coin_name_default[17];
-extern const char EstimateTxSize_coin_name_default[17];
 extern const char SignTx_coin_name_default[17];
 extern const uint32_t SignTx_version_default;
 extern const uint32_t SignTx_lock_time_default;
@@ -740,7 +736,7 @@ extern const uint32_t SignTx_lock_time_default;
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_default                {0}
 #define ApplySettings_init_default               {false, "", false, "", false, 0, false, {0, {0}}}
 #define ChangePin_init_default                   {false, 0}
@@ -764,7 +760,8 @@ extern const uint32_t SignTx_lock_time_default;
 #define EthereumAddress_init_default             {{0, {0}}}
 #define WipeDevice_init_default                  {0}
 #define LoadDevice_init_default                  {false, "", false, HDNodeType_init_default, false, "", false, 0, false, "english", false, "", false, 0, false, 0}
-#define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, "", false, 0}
+#define ResetDevice_init_default                 {false, 0, false, 256u, false, 0, false, 0, false, "english", false, "", false, 0, false, 0}
+#define BackupDevice_init_default                {0}
 #define EntropyRequest_init_default              {0}
 #define EntropyAck_init_default                  {false, {0, {0}}}
 #define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0, false, 0, false, 0, false, 0}
@@ -775,8 +772,6 @@ extern const uint32_t SignTx_lock_time_default;
 #define MessageSignature_init_default            {false, "", false, {0, {0}}}
 #define CipherKeyValue_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
 #define CipheredKeyValue_init_default            {false, {0, {0}}}
-#define EstimateTxSize_init_default              {0, 0, false, "Bitcoin"}
-#define TxSize_init_default                      {false, 0}
 #define SignTx_init_default                      {0, 0, false, "Bitcoin", false, 1u, false, 0u}
 #define TxRequest_init_default                   {false, (RequestType)0, false, TxRequestDetailsType_init_default, false, TxRequestSerializedType_init_default}
 #define TxAck_init_default                       {false, TransactionType_init_default}
@@ -799,7 +794,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define DebugLinkFlashErase_init_default         {false, 0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_zero                   {0}
 #define ApplySettings_init_zero                  {false, "", false, "", false, 0, false, {0, {0}}}
 #define ChangePin_init_zero                      {false, 0}
@@ -823,7 +818,8 @@ extern const uint32_t SignTx_lock_time_default;
 #define EthereumAddress_init_zero                {{0, {0}}}
 #define WipeDevice_init_zero                     {0}
 #define LoadDevice_init_zero                     {false, "", false, HDNodeType_init_zero, false, "", false, 0, false, "", false, "", false, 0, false, 0}
-#define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, 0}
+#define ResetDevice_init_zero                    {false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0}
+#define BackupDevice_init_zero                   {0}
 #define EntropyRequest_init_zero                 {0}
 #define EntropyAck_init_zero                     {false, {0, {0}}}
 #define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0}
@@ -834,8 +830,6 @@ extern const uint32_t SignTx_lock_time_default;
 #define MessageSignature_init_zero               {false, "", false, {0, {0}}}
 #define CipherKeyValue_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
 #define CipheredKeyValue_init_zero               {false, {0, {0}}}
-#define EstimateTxSize_init_zero                 {0, 0, false, ""}
-#define TxSize_init_zero                         {false, 0}
 #define SignTx_init_zero                         {0, 0, false, "", false, 0, false, 0}
 #define TxRequest_init_zero                      {false, (RequestType)0, false, TxRequestDetailsType_init_zero, false, TxRequestSerializedType_init_zero}
 #define TxAck_init_zero                          {false, TransactionType_init_zero}
@@ -898,9 +892,6 @@ extern const uint32_t SignTx_lock_time_default;
 #define ECDHSessionKey_session_key_tag           1
 #define Entropy_entropy_tag                      1
 #define EntropyAck_entropy_tag                   1
-#define EstimateTxSize_outputs_count_tag         1
-#define EstimateTxSize_inputs_count_tag          2
-#define EstimateTxSize_coin_name_tag             3
 #define EthereumAddress_address_tag              1
 #define EthereumGetAddress_address_n_tag         1
 #define EthereumGetAddress_show_display_tag      2
@@ -938,6 +929,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define Features_pin_cached_tag                  16
 #define Features_passphrase_cached_tag           17
 #define Features_firmware_present_tag            18
+#define Features_needs_backup_tag                19
 #define GetAddress_address_n_tag                 1
 #define GetAddress_coin_name_tag                 2
 #define GetAddress_show_display_tag              3
@@ -986,6 +978,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define ResetDevice_language_tag                 5
 #define ResetDevice_label_tag                    6
 #define ResetDevice_u2f_counter_tag              7
+#define ResetDevice_skip_backup_tag              8
 #define SetU2FCounter_u2f_counter_tag            1
 #define SignIdentity_identity_tag                1
 #define SignIdentity_challenge_hidden_tag        2
@@ -1007,7 +1000,6 @@ extern const uint32_t SignTx_lock_time_default;
 #define TxRequest_request_type_tag               1
 #define TxRequest_details_tag                    2
 #define TxRequest_serialized_tag                 3
-#define TxSize_tx_size_tag                       1
 #define VerifyMessage_address_tag                1
 #define VerifyMessage_signature_tag              2
 #define VerifyMessage_message_tag                3
@@ -1018,7 +1010,7 @@ extern const uint32_t SignTx_lock_time_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t GetFeatures_fields[1];
-extern const pb_field_t Features_fields[19];
+extern const pb_field_t Features_fields[20];
 extern const pb_field_t ClearSession_fields[1];
 extern const pb_field_t ApplySettings_fields[5];
 extern const pb_field_t ChangePin_fields[2];
@@ -1042,7 +1034,8 @@ extern const pb_field_t Address_fields[2];
 extern const pb_field_t EthereumAddress_fields[2];
 extern const pb_field_t WipeDevice_fields[1];
 extern const pb_field_t LoadDevice_fields[9];
-extern const pb_field_t ResetDevice_fields[8];
+extern const pb_field_t ResetDevice_fields[9];
+extern const pb_field_t BackupDevice_fields[1];
 extern const pb_field_t EntropyRequest_fields[1];
 extern const pb_field_t EntropyAck_fields[2];
 extern const pb_field_t RecoveryDevice_fields[10];
@@ -1053,8 +1046,6 @@ extern const pb_field_t VerifyMessage_fields[5];
 extern const pb_field_t MessageSignature_fields[3];
 extern const pb_field_t CipherKeyValue_fields[8];
 extern const pb_field_t CipheredKeyValue_fields[2];
-extern const pb_field_t EstimateTxSize_fields[4];
-extern const pb_field_t TxSize_fields[2];
 extern const pb_field_t SignTx_fields[6];
 extern const pb_field_t TxRequest_fields[4];
 extern const pb_field_t TxAck_fields[2];
@@ -1079,7 +1070,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-#define Features_size                            (257 + 8*CoinType_size)
+#define Features_size                            (260 + 8*CoinType_size)
 #define ClearSession_size                        0
 #define ApplySettings_size                       1083
 #define ChangePin_size                           2
@@ -1103,7 +1094,8 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define EthereumAddress_size                     22
 #define WipeDevice_size                          0
 #define LoadDevice_size                          (326 + HDNodeType_size)
-#define ResetDevice_size                         72
+#define ResetDevice_size                         74
+#define BackupDevice_size                        0
 #define EntropyRequest_size                      0
 #define EntropyAck_size                          131
 #define RecoveryDevice_size                      80
@@ -1114,8 +1106,6 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define MessageSignature_size                    110
 #define CipherKeyValue_size                      1358
 #define CipheredKeyValue_size                    1027
-#define EstimateTxSize_size                      31
-#define TxSize_size                              6
 #define SignTx_size                              43
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)

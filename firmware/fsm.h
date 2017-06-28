@@ -55,7 +55,6 @@ void fsm_msgEncryptMessage(EncryptMessage *msg);
 void fsm_msgDecryptMessage(DecryptMessage *msg);
 */
 //void fsm_msgPassphraseAck(PassphraseAck *msg);
-void fsm_msgEstimateTxSize(EstimateTxSize *msg);
 void fsm_msgRecoveryDevice(RecoveryDevice *msg);
 void fsm_msgWordAck(WordAck *msg);
 void fsm_msgSetU2FCounter(SetU2FCounter *msg);

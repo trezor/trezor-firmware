@@ -72,6 +72,4 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
 
 uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs);
 
-uint32_t transactionEstimateSizeKb(uint32_t inputs, uint32_t outputs);
-
 #endif
