@@ -282,15 +282,36 @@ static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev)
 		, 64) != 64) {}
 }
 
+static void erase_metadata_sectors(void)
+{
+	flash_unlock();
+	for (int i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
+		flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+	}
+	flash_lock();
+}
+
+static void backup_metadata(uint8_t *backup)
+{
+	memcpy(backup, (void *)FLASH_META_START, FLASH_META_LEN);
+}
+
+static void restore_metadata(const uint8_t *backup)
+{
+	flash_unlock();
+	for (int i = 0; i < FLASH_META_LEN / 4; i++) {
+		const uint32_t *w = (const uint32_t *)(backup + i * 4);
+		flash_program_word(FLASH_META_START + i * 4, *w);
+	}
+	flash_lock();
+}
+
 static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 {
 	(void)ep;
 	static uint8_t buf[64] __attribute__((aligned(4)));
-	uint8_t *p;
 	static uint8_t towrite[4] __attribute__((aligned(4)));
 	static int wi;
-	int i;
-	uint32_t *w;
 	static SHA256_CTX ctx;
 
 	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
@@ -319,6 +340,12 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		if (msg_id == 0x0020) {		// SelfTest message (id 32)
+			// backup metadata
+			backup_metadata(meta_backup);
+			// erase metadata area
+			erase_metadata_sectors();
+			// copy metadata back
+			restore_metadata(meta_backup);
 			send_msg_success(dev);
 			return;
 		}
@@ -335,16 +362,16 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			}
 			if (!firmware_present || button.YesUp) {
 				// backup metadata
-				memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_LEN);
+				backup_metadata(meta_backup);
 				flash_unlock();
 				// erase metadata area
-				for (i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
-					layoutProgress("ERASING ... Please wait", 1000*(i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
+				for (int i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
+					layoutProgress("ERASING ... Please wait", 1000 * (i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
 					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
 				}
 				// erase code area
-				for (i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
-					layoutProgress("ERASING ... Please wait", 1000*(i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
+				for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
+					layoutProgress("ERASING ... Please wait", 1000 * (i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
 					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
 				}
 				layoutProgress("INSTALLING ... Please wait", 0);
@@ -370,7 +397,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				return;
 			}
 			// read payload length
-			p = buf + 10;
+			uint8_t *p = buf + 10;
 			flash_len = readprotobufint(&p);
 			if (flash_len > FLASH_TOTAL_SIZE + FLASH_META_DESC_LEN - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware is too big
 				send_msg_failure(dev);
@@ -387,7 +414,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				towrite[wi] = *p;
 				wi++;
 				if (wi == 4) {
-					w = (uint32_t *)towrite;
+					const uint32_t *w = (uint32_t *)towrite;
 					flash_program_word(FLASH_META_START + flash_pos, *w);
 					flash_pos += 4;
 					wi = 0;
@@ -407,7 +434,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
 			return;
 		}
-		p = buf + 1;
+		const uint8_t *p = buf + 1;
 		if (flash_anim % 32 == 4) {
 			layoutProgress("INSTALLING ... Please wait", 1000 * flash_pos / flash_len);
 		}
@@ -417,7 +444,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			towrite[wi] = *p;
 			wi++;
 			if (wi == 4) {
-				w = (uint32_t *)towrite;
+				const uint32_t *w = (const uint32_t *)towrite;
 				if (flash_pos < FLASH_META_DESC_LEN) {
 					flash_program_word(FLASH_META_START + flash_pos, *w);			// the first 256 bytes of firmware is metadata descriptor
 				} else {
@@ -466,17 +493,10 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				meta_backup[2] = 0;
 				meta_backup[3] = 0;
 			}
-			flash_unlock();
 			// erase storage
-			for (i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
-				flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
-			}
-			// copy it back
-			for (i = 0; i < FLASH_META_LEN / 4; i++) {
-				w = (uint32_t *)(meta_backup + i * 4);
-				flash_program_word(FLASH_META_START + i * 4, *w);
-			}
-			flash_lock();
+			erase_metadata_sectors();
+			// copy storage from backup
+			restore_metadata(meta_backup);
 		} else {
 			// replace "TRZR" in header with 0000 when hash not confirmed
 			if (!hash_check_ok) {
