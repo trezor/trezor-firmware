@@ -340,13 +340,40 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		if (msg_id == 0x0020) {		// SelfTest message (id 32)
+			const uint32_t patterns[] = { 0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA, 0x66666666, 0x99999999, 0x33333333, 0xCCCCCCCC };
+
 			// backup metadata
 			backup_metadata(meta_backup);
-			// erase metadata area
-			erase_metadata_sectors();
+
+			// write/read test patterns
+			sha256_Init(&ctx);
+
+			for (int p = 0; p < 8; p++) {
+				erase_metadata_sectors();
+				flash_unlock();
+				for (int i = 0; i < FLASH_META_LEN / 4; i++) {
+					flash_program_word(FLASH_META_START + i * 4, patterns[p]);
+				}
+				flash_lock();
+				sha256_Update(&ctx, (unsigned char *)FLASH_META_START, FLASH_META_LEN);
+			}
+
 			// copy metadata back
+			erase_metadata_sectors();
 			restore_metadata(meta_backup);
-			send_msg_success(dev);
+
+			// compare against known hash
+			uint8_t hash[32];
+			sha256_Final(&ctx, hash);
+
+			// hash computed via the following Python3 script:
+			// hashlib.sha256(b''.join([binascii.unhexlify(c * 2 * 32768) for c in '0F5A693C'])).hexdigest()
+
+			if (0 == memcmp(hash, "\x49\x46\xe9\xa5\xf4\xc2\x57\xe9\xcf\xd1\x88\x78\xe9\x66\x9b\x0d\xcd\x4e\x82\x41\xb3\x9c\xee\xb7\x2c\x1d\x14\x4a\xe1\xe4\xcb\xd7", 32)) {
+				send_msg_success(dev);
+			} else {
+				send_msg_failure(dev);
+			}
 			return;
 		}
 	}
@@ -458,8 +485,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		flash_lock();
 		// flashing done
 		if (flash_pos == flash_len) {
-			sha256_Update(&ctx, (unsigned char*) FLASH_APP_START,
-						  flash_len - FLASH_META_DESC_LEN);
+			sha256_Update(&ctx, (unsigned char *)FLASH_APP_START, flash_len - FLASH_META_DESC_LEN);
 			flash_state = STATE_CHECK;
 			send_msg_buttonrequest_firmwarecheck(dev);
 		}
