@@ -42,6 +42,7 @@ enum MessageType {
 	MessageType_ButtonAck = 27 [(wire_in) = true, (wire_tiny) = true];
 	MessageType_GetAddress = 29 [(wire_in) = true];
 	MessageType_Address = 30 [(wire_out) = true];
+	MessageType_SelfTest = 32 [(wire_in) = true, (wire_bootloader) = true];
 	MessageType_BackupDevice = 34 [(wire_in) = true];
 	MessageType_EntropyRequest = 35 [(wire_out) = true];
 	MessageType_EntropyAck = 36 [(wire_in) = true];
@@ -750,6 +751,15 @@ message FirmwareRequest {
 message FirmwareUpload {
 	required bytes payload = 1;			// firmware to be loaded into device
 	optional bytes hash = 2;			// hash of the payload
+}
+
+
+/**
+ * Request: Perform a device self-test
+ * @next Success
+ * @next Failure
+ */
+message SelfTest {
 }
 
 /////////////////////////////////////////////////////////////
