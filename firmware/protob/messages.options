@@ -140,6 +140,7 @@ SimpleSignTx				skip_message:true
 FirmwareErase				skip_message:true
 FirmwareRequest				skip_message:true
 FirmwareUpload				skip_message:true
+SelfTest				skip_message:true
 
 # used only in debug firmware
 

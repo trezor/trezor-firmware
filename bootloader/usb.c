@@ -318,6 +318,10 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			send_msg_success(dev);
 			return;
 		}
+		if (msg_id == 0x0020) {		// SelfTest message (id 32)
+			send_msg_success(dev);
+			return;
+		}
 	}
 
 	if (flash_state == STATE_OPEN) {

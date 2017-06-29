@@ -42,6 +42,7 @@ typedef enum _MessageType {
     MessageType_MessageType_ButtonAck = 27,
     MessageType_MessageType_GetAddress = 29,
     MessageType_MessageType_Address = 30,
+    MessageType_MessageType_SelfTest = 32,
     MessageType_MessageType_BackupDevice = 34,
     MessageType_MessageType_EntropyRequest = 35,
     MessageType_MessageType_EntropyAck = 36,
