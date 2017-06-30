@@ -76,12 +76,15 @@ void show_unofficial_warning(const uint8_t *hash)
 	// everything is OK, user pressed 2x Continue -> continue program
 }
 
-void load_app(void)
+void __attribute__((noreturn)) load_app(void)
 {
 	// jump to app
 	SCB_VTOR = FLASH_APP_START; // & 0xFFFF;
 	__asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)FLASH_APP_START));
 	(*(void (**)())(FLASH_APP_START + 4))();
+	// forever loop to indicate to the compiler that this function does not return.
+	// this avoids the stack protector injecting code that faults with the new stack.
+	for (;;);
 }
 
 bool firmware_present(void)
