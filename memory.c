@@ -27,6 +27,7 @@
 
 void memory_protect(void)
 {
+#if MEMORY_PROTECT
 	// Reference STM32F205 Flash programming manual revision 5 http://www.st.com/resource/en/programming_manual/cd00233952.pdf
 	// Section 2.6 Option bytes
 	//                     set RDP level 2                   WRP for sectors 0 and 1
@@ -45,6 +46,7 @@ void memory_protect(void)
 	//   Bit 0 OPTLOCK: Option lock: ignored by flash_program_option_bytes
 	flash_program_option_bytes(0x0FFCCCEC);
 	flash_lock_option_bytes();
+#endif
 }
 
 int memory_bootloader_hash(uint8_t *hash)
