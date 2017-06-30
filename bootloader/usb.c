@@ -37,6 +37,8 @@
 #define ENDPOINT_ADDRESS_IN         (0x81)
 #define ENDPOINT_ADDRESS_OUT        (0x01)
 
+static bool brand_new_firmware;
+
 static const struct usb_device_descriptor dev_descr = {
 	.bLength = USB_DT_DEVICE_SIZE,
 	.bDescriptorType = USB_DT_DEVICE,
@@ -214,8 +216,6 @@ static void send_msg_failure(usbd_device *dev)
 		, 64) != 64) {}
 }
 
-extern int firmware_present;
-
 static void send_msg_features(usbd_device *dev)
 {
 	// response: Features message (id 17), payload len 30
@@ -225,7 +225,7 @@ static void send_msg_features(usbd_device *dev)
 	//           - patch_version = VERSION_PATCH
 	//           - bootloader_mode = True
 	//           - firmware_present = True/False
-	if (firmware_present) {
+	if (brand_new_firmware) {
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
 			// header
 			"?##"
@@ -239,7 +239,7 @@ static void send_msg_features(usbd_device *dev)
 			"\x18" VERSION_MINOR_CHAR
 			"\x20" VERSION_PATCH_CHAR
 			"\x28" "\x01"
-			"\x90\x01" "\x01"
+			"\x90\x01" "\x00"
 			// padding
 			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
@@ -257,7 +257,7 @@ static void send_msg_features(usbd_device *dev)
 			"\x18" VERSION_MINOR_CHAR
 			"\x20" VERSION_PATCH_CHAR
 			"\x28" "\x01"
-			"\x90\x01" "\x00"
+			"\x90\x01" "\x01"
 			// padding
 			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
@@ -380,14 +380,14 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 	if (flash_state == STATE_OPEN) {
 		if (msg_id == 0x0006) {		// FirmwareErase message (id 6)
-			if (firmware_present) {
+			if (!brand_new_firmware) {
 				layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
 				do {
 					delay(100000);
 					buttonUpdate();
 				} while (!button.YesUp && !button.NoUp);
 			}
-			if (!firmware_present || button.YesUp) {
+			if (brand_new_firmware || button.YesUp) {
 				// backup metadata
 				backup_metadata(meta_backup);
 				flash_unlock();
@@ -498,13 +498,16 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		}
 		uint8_t hash[32];
 		sha256_Final(&ctx, hash);
-		layoutFirmwareHash(hash);
-		do {
-			delay(100000);
-			buttonUpdate();
-		} while (!button.YesUp && !button.NoUp);
 
-		bool hash_check_ok = button.YesUp;
+		if (!brand_new_firmware) {
+			layoutFirmwareHash(hash);
+			do {
+				delay(100000);
+				buttonUpdate();
+			} while (!button.YesUp && !button.NoUp);
+		}
+
+		bool hash_check_ok = brand_new_firmware || button.YesUp;
 
 		layoutProgress("INSTALLING ... Please wait", 1000);
 		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
@@ -563,12 +566,6 @@ static void hid_set_config(usbd_device *dev, uint16_t wValue)
 static usbd_device *usbd_dev;
 static uint8_t usbd_control_buffer[128];
 
-void usbInit(void)
-{
-	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
-	usbd_register_set_config_callback(usbd_dev, hid_set_config);
-}
-
 void checkButtons(void)
 {
 	static bool btn_left = false, btn_right = false, btn_final = false;
@@ -598,11 +595,14 @@ void checkButtons(void)
 	}
 }
 
-void usbLoop(void)
+void usbLoop(bool firmware_present)
 {
+	brand_new_firmware = !firmware_present;
+	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
+	usbd_register_set_config_callback(usbd_dev, hid_set_config);
 	for (;;) {
 		usbd_poll(usbd_dev);
-		if (!firmware_present && (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
+		if (brand_new_firmware && (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
 			checkButtons();
 		}
 	}

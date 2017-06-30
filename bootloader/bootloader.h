@@ -31,8 +31,10 @@
 #define VERSION_MINOR_CHAR "\x03"
 #define VERSION_PATCH_CHAR "\x01"
 
+#include <stdbool.h>
 #include "memory.h"
 
 void layoutFirmwareHash(const uint8_t *hash);
+bool firmware_present(void);
 
 #endif

@@ -20,7 +20,6 @@
 #ifndef __USB_H__
 #define __USB_H__
 
-void usbInit(void);
-void usbLoop(void);
+void usbLoop(bool firmware_present);
 
 #endif

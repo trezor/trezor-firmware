@@ -84,13 +84,27 @@ void load_app(void)
 	(*(void (**)())(FLASH_APP_START + 4))();
 }
 
-int firmware_present;
+bool firmware_present(void)
+{
+#ifndef APPVER
+	if (memcmp((const void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
+		return false;
+	}
+	if (*((const uint32_t *)FLASH_META_CODELEN) < 4096) { // firmware reports smaller size than 4kB
+		return false;
+	}
+	if (*((const uint32_t *)FLASH_META_CODELEN) > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware reports bigger size than flash size
+		return false;
+	}
+#endif
+	return true;
+}
 
 void bootloader_loop(void)
 {
 	oledClear();
 	oledDrawBitmap(0, 0, &bmp_logo64);
-	if (firmware_present) {
+	if (firmware_present()) {
 		oledDrawString(52, 0, "TREZOR");
 		static char serial[25];
 		fill_serialno_fixed(serial);
@@ -106,24 +120,7 @@ void bootloader_loop(void)
 	}
 	oledRefresh();
 
-	usbInit();
-	usbLoop();
-}
-
-int check_firmware_sanity(void)
-{
-#ifndef APPVER
-	if (memcmp((const void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
-		return 0;
-	}
-	if (*((const uint32_t *)FLASH_META_CODELEN) < 4096) { // firmware reports smaller size than 4kB
-		return 0;
-	}
-	if (*((const uint32_t *)FLASH_META_CODELEN) > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware reports bigger size than flash size
-		return 0;
-	}
-#endif
-	return 1;
+	usbLoop(firmware_present());
 }
 
 uint32_t __stack_chk_guard;
@@ -145,14 +142,12 @@ int main(void)
 	oledInit();
 #endif
 
-	firmware_present = check_firmware_sanity();
-
 #ifndef APPVER
 	// at least one button is unpressed
 	uint16_t state = gpio_port_read(BTN_PORT);
 	int unpressed = ((state & BTN_PIN_YES) == BTN_PIN_YES || (state & BTN_PIN_NO) == BTN_PIN_NO);
 
-	if (firmware_present && unpressed) {
+	if (firmware_present() && unpressed) {
 
 		oledClear();
 		oledDrawBitmap(40, 0, &bmp_logo64_empty);
