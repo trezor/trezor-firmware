@@ -144,6 +144,7 @@ static void recovery_done(void) {
 			// Update mnemonic on storage.
 			storage.has_mnemonic = true;
 			strlcpy(storage.mnemonic, new_mnemonic, sizeof(new_mnemonic));
+			memset(new_mnemonic, 0, sizeof(new_mnemonic));
 			if (!enforce_wordlist) {
 				// not enforcing => mark storage as imported
 				storage.has_imported = true;
@@ -153,7 +154,9 @@ static void recovery_done(void) {
 			fsm_sendSuccess(_("Device recovered"));
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
-			if (storage_isInitialized() && storage_containsMnemonic(new_mnemonic)) {
+			bool match = (storage_isInitialized() && storage_containsMnemonic(new_mnemonic));
+			memset(new_mnemonic, 0, sizeof(new_mnemonic));
+			if (match) {
 				layoutDialog(&bmp_icon_ok, NULL, _("Confirm"), NULL,
 					_("The seed is valid"),
 					_("and MATCHES"),
@@ -172,6 +175,7 @@ static void recovery_done(void) {
 		}
 	} else {
 		// New mnemonic is invalid.
+		memset(new_mnemonic, 0, sizeof(new_mnemonic));
 		if (!dry_run) {
 			storage_reset();
 		} else {
