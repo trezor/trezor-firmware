@@ -479,6 +479,27 @@ static inline void nemFormatAmount(bignum256 *amnt, uint64_t quantity, int divis
 	}
 }
 
+void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address, const char *line5, const char *line6) {
+	static char first_third[NEM_ADDRESS_SIZE / 3 + 1];
+	strlcpy(first_third, address, sizeof(first_third));
+
+	static char second_third[NEM_ADDRESS_SIZE / 3 + 1];
+	strlcpy(second_third, &address[NEM_ADDRESS_SIZE / 3], sizeof(second_third));
+
+	const char *third_third = &address[NEM_ADDRESS_SIZE * 2 / 3];
+
+	layoutDialogSwipe(icon,
+		btnNo,
+		btnYes,
+		desc,
+		line1,
+		first_third,
+		second_third,
+		third_third,
+		line5,
+		line6);
+}
+
 void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *mul, uint64_t fee) {
 	char str_out[32], str_fee[32];
 	bignum256 amnt;
@@ -495,6 +516,30 @@ void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *
 		str_out,
 		_("and network fee of"),
 		str_fee,
+		NULL,
+		NULL);
+}
+
+void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, uint64_t fee1, const char *fee2_desc, uint64_t fee2) {
+	char str_fee1[32], str_fee2[32];
+	bignum256 amnt;
+
+	bn_read_uint64(fee1, &amnt);
+	bn_format(&amnt, NULL, " " NEM_XEM_TICKER, NEM_XEM_DIVISIBILITY, str_fee1, sizeof(str_fee1));
+
+	if (fee2_desc) {
+		bn_read_uint64(fee2, &amnt);
+		bn_format(&amnt, NULL, " " NEM_XEM_TICKER, NEM_XEM_DIVISIBILITY, str_fee2, sizeof(str_fee2));
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		confirm ? _("Confirm") : _("Next"),
+		desc,
+		fee1_desc,
+		str_fee1,
+		fee2_desc,
+		fee2_desc ? str_fee2 : NULL,
 		NULL,
 		NULL);
 }

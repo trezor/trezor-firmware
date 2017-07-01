@@ -26,16 +26,35 @@
 #include "protect.h"
 #include "rng.h"
 
-const char *nem_validate_common(NEMTransactionCommon *common) {
+const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
 	if (!common->has_network) {
 		common->has_network = true;
 		common->network = NEM_NETWORK_MAINNET;
 	}
 
-	if (nem_network_name(common->network) == NULL) return _("Invalid NEM network");
-	if (!common->has_timestamp) return _("No timestamp provided");
-	if (!common->has_fee) return _("No fee provided");
-	if (!common->has_deadline) return _("No deadline provided");
+	if (nem_network_name(common->network) == NULL) {
+		return inner ? _("Invalid NEM network in inner transaction") : _("Invalid NEM network");
+	}
+
+	if (!common->has_timestamp) {
+		return inner ? _("No timestamp provided in inner transaction") : _("No timestamp provided");
+	}
+
+	if (!common->has_fee) {
+		return inner ? _("No fee provided in inner transaction") : _("No fee provided");
+	}
+
+	if (!common->has_deadline) {
+		return inner ? _("No deadline provided in inner transaction") : _("No deadline provided");
+	}
+
+	if (inner != common->has_signer) {
+		return inner ? _("No signer provided in inner transaction") : _("Signer not allowed in outer transaction");
+	}
+
+	if (common->has_signer && common->signer.size != sizeof(ed25519_public_key)) {
+		return _("Invalid signer public key in inner transaction");
+	}
 
 	return NULL;
 }
@@ -43,29 +62,26 @@ const char *nem_validate_common(NEMTransactionCommon *common) {
 const char *nem_validate_transfer(const NEMTransfer *transfer, uint8_t network) {
 	if (!transfer->has_recipient) return _("No recipient provided");
 	if (!transfer->has_amount) return _("No amount provided");
-	if (transfer->has_public_key && transfer->public_key.size != 32) return _("Invalid recipient public key");
+
+	if (transfer->has_public_key && transfer->public_key.size != sizeof(ed25519_public_key)) {
+		return _("Invalid recipient public key");
+	}
 
 	if (!nem_validate_address(transfer->recipient, network)) return _("Invalid recipient address");
 
 	for (size_t i = 0; i < transfer->mosaics_count; i++) {
 		const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-		if (!mosaic->has_namespace) return "No mosaic namespace provided";
-		if (!mosaic->has_mosaic) return "No mosaic name provided";
-		if (!mosaic->has_quantity) return "No mosaic quantity provided";
+		if (!mosaic->has_namespace) return _("No mosaic namespace provided");
+		if (!mosaic->has_mosaic) return _("No mosaic name provided");
+		if (!mosaic->has_quantity) return _("No mosaic quantity provided");
 	}
 
 	return NULL;
 }
 
 
-bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer) {
-	const char *network = nem_network_name(common->network);
-	if (network == NULL) {
-		return false;
-	}
-
-
+bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
 		bool done[transfer->mosaics_count];
 		memset(done, 0, sizeof(done));
@@ -100,7 +116,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 			}
 		}
 
-		layoutNEMTransferXEM(network, xemQuantity == NULL ? 0 : *xemQuantity, &mul, common->fee);
+		layoutNEMTransferXEM(desc, xemQuantity == NULL ? 0 : *xemQuantity, &mul, common->fee);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 			return false;
 		}
@@ -117,7 +133,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 			}
 		}
 	} else {
-		layoutNEMTransferXEM(network, transfer->amount, NULL, common->fee);
+		layoutNEMTransferXEM(desc, transfer->amount, NULL, common->fee);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 			return false;
 		}
@@ -130,7 +146,14 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 		}
 	}
 
-	layoutNEMTransferTo(network, transfer->recipient);
+	layoutNEMDialog(&bmp_icon_question,
+		_("Cancel"),
+		_("Confirm"),
+		desc,
+		_("Confirm transfer to"),
+		transfer->recipient,
+		NULL,
+		NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		return false;
 	}
@@ -203,9 +226,60 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node, const NEM
 			mosaic->quantity);
 
 		if (!ret) {
-			fsm_sendFailure(FailureType_Failure_ProcessError, "Failed to attach mosaics");
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to attach mosaics"));
 			return false;
 		}
+	}
+
+	return true;
+}
+
+bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee) {
+	layoutNEMDialog(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		cosigning ? _("Cosign transaction for") : _("Initiate transaction for"),
+		address,
+		NULL,
+		NULL);
+
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	layoutNEMNetworkFee(desc, false, _("Confirm multisig fee"), fee, NULL, 0);
+
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *common, const nem_transaction_ctx *inner, bool cosigning) {
+	bool ret;
+	if (cosigning) {
+		ret = nem_transaction_create_multisig_signature(context,
+			common->network,
+			common->timestamp,
+			NULL,
+			common->fee,
+			common->deadline,
+			inner);
+	} else {
+		ret = nem_transaction_create_multisig(context,
+			common->network,
+			common->timestamp,
+			NULL,
+			common->fee,
+			common->deadline,
+			inner);
+	}
+
+	if (!ret) {
+		fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to create multisig transaction"));
+		return false;
 	}
 
 	return true;

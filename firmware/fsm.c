@@ -1149,14 +1149,39 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	CHECK_PARAM(msg->has_transaction, _("No common provided"));
 	CHECK_PARAM(msg->has_transfer, _("No transaction provided"));
 
+	bool cosigning = msg->has_cosigning && msg->cosigning;
+
 	const char *reason;
-	CHECK_PARAM(!(reason = nem_validate_common(&msg->transaction)), reason);
+	CHECK_PARAM(!(reason = nem_validate_common(&msg->transaction, false)), reason);
 	CHECK_PARAM(!(reason = nem_validate_transfer(&msg->transfer, msg->transaction.network)), reason);
+
+	if (msg->has_multisig) {
+		CHECK_PARAM(!(reason = nem_validate_common(&msg->multisig, true)), reason);
+
+		CHECK_PARAM(msg->transaction.network == msg->multisig.network, _("Inner transaction network is different"));
+	} else {
+		CHECK_PARAM(!cosigning, _("No multisig transaction to cosign"));
+	}
 
 	CHECK_INITIALIZED
 	CHECK_PIN
 
-	if (!nem_askTransfer(&msg->transaction, &msg->transfer)) {
+	const char *network = nem_network_name(msg->transaction.network);
+
+	if (msg->has_multisig) {
+		char address[NEM_ADDRESS_SIZE + 1];
+		nem_get_address(msg->multisig.signer.bytes, msg->multisig.network, address);
+
+		if (!nem_askMultisig(address, network, cosigning, msg->transaction.fee)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+			layoutHome();
+			return;
+		}
+	}
+
+	const NEMTransactionCommon *common = msg->has_multisig ? &msg->multisig : &msg->transaction;
+
+	if (msg->has_transfer && !nem_askTransfer(common, &msg->transfer, network)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
 		layoutHome();
 		return;
@@ -1167,12 +1192,31 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n, msg->transaction.address_n_count);
 	if (!node) return;
 
+	hdnode_fill_public_key(node);
+
 	nem_transaction_ctx context;
 	nem_transaction_start(&context, &node->public_key[1], resp->data.bytes, sizeof(resp->data.bytes));
 
-	if (!nem_fsmTransfer(&context, node, &msg->transaction, &msg->transfer)) {
-		layoutHome();
-		return;
+	if (msg->has_multisig) {
+		uint8_t buffer[sizeof(resp->data.bytes)];
+
+		nem_transaction_ctx inner;
+		nem_transaction_start(&inner, msg->multisig.signer.bytes, buffer, sizeof(buffer));
+
+		if (msg->has_transfer && !nem_fsmTransfer(&inner, NULL, &msg->multisig, &msg->transfer)) {
+			layoutHome();
+			return;
+		}
+
+		if (!nem_fsmMultisig(&context, &msg->transaction, &inner, cosigning)) {
+			layoutHome();
+			return;
+		}
+	} else {
+		if (msg->has_transfer && !nem_fsmTransfer(&context, node, &msg->transaction, &msg->transfer)) {
+			layoutHome();
+			return;
+		}
 	}
 
 	resp->has_data = true;
