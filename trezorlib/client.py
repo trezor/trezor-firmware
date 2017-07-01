@@ -216,10 +216,10 @@ class BaseClient(object):
         self.transport.close()
 
 
-class DebugWireMixin(object):
+class VerboseWireMixin(object):
     def call_raw(self, msg):
         log("SENDING " + pprint(msg))
-        resp = super(DebugWireMixin, self).call_raw(msg)
+        resp = super(VerboseWireMixin, self).call_raw(msg)
         log("RECEIVED " + pprint(resp))
         return resp
 
@@ -1032,9 +1032,9 @@ class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
 
 
-class TrezorClientDebug(ProtocolMixin, TextUIMixin, DebugWireMixin, BaseClient):
+class TrezorClientVerbose(ProtocolMixin, TextUIMixin, VerboseWireMixin, BaseClient):
     pass
 
 
-class TrezorDebugClient(ProtocolMixin, DebugLinkMixin, DebugWireMixin, BaseClient):
+class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, VerboseWireMixin, BaseClient):
     pass

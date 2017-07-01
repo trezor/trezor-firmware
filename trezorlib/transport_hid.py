@@ -48,6 +48,18 @@ def enumerate():
     return sorted(devices.values())
 
 
+def find_by_path(path=None):
+    """
+    Finds a device by transport-specific path.
+    If path is not set, return first device.
+    """
+    devices = enumerate()
+    for dev in devices:
+        if not path or path in dev:
+            return HidTransport(dev)
+    raise Exception('Device not found')
+
+
 def path_to_transport(path):
     try:
         device = [d for d in hid.enumerate(0, 0) if d['path'] == path][0]
@@ -168,3 +180,4 @@ def HidTransport(device, *args, **kwargs):
 
 # Backward compatibility hack; HidTransport is a function, not a class like before
 HidTransport.enumerate = enumerate
+HidTransport.find_by_path = find_by_path

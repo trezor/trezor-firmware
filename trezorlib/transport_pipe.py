@@ -28,10 +28,21 @@ Use this transport for talking with trezor simulator."""
 
 
 class PipeTransport(TransportV1):
-    def __init__(self, device, is_device, *args, **kwargs):
+
+    def __init__(self, device='/tmp/pipe.trezor', is_device=False, *args, **kwargs):
+        if not device:
+            device = '/tmp/pipe.trezor'
         self.is_device = is_device  # set True if act as device
 
         super(PipeTransport, self).__init__(device, *args, **kwargs)
+
+    @classmethod
+    def enumerate(cls):
+        raise Exception('This transport cannot enumerate devices')
+
+    @classmethod
+    def find_by_path(cls, path=None):
+        return cls(path)
 
     def _open(self):
         if self.is_device:

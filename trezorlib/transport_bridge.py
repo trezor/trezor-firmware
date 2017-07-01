@@ -19,6 +19,7 @@
 
 '''BridgeTransport implements transport TREZOR Bridge (aka trezord).'''
 
+import binascii
 import json
 import requests
 from . import protobuf_json
@@ -34,6 +35,7 @@ def get_error(resp):
 
 
 class BridgeTransport(TransportV1):
+
     CONFIGURED = False
 
     def __init__(self, device, *args, **kwargs):
@@ -71,10 +73,20 @@ class BridgeTransport(TransportV1):
         r = requests.get(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
             raise Exception('trezord: Could not enumerate devices' + get_error(r))
-
         enum = r.json()
-
         return enum
+
+    @classmethod
+    def find_by_path(cls, path=None):
+        """
+        Finds a device by transport-specific path.
+        If path is not set, return first device.
+        """
+        devices = cls.enumerate()
+        for dev in devices:
+            if not path or dev['path'] == binascii.hexlify(path):
+                return cls(dev)
+        raise Exception('Device not found')
 
     def _open(self):
         r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.path)

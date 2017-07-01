@@ -10,7 +10,6 @@ import trezorlib.ckd_public as bip32
 
 import hashlib
 from trezorlib.client import TrezorClient
-from trezorlib.client import TrezorClientDebug
 from trezorlib.tx_api import TxApiTestnet
 from trezorlib.tx_api import TxApiBitcoin
 from trezorlib.transport_hid import HidTransport

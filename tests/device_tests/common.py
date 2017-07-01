@@ -21,7 +21,7 @@ from __future__ import print_function
 import unittest
 import hashlib
 
-from trezorlib.client import TrezorClient, TrezorDebugClient
+from trezorlib.client import TrezorClient, TrezorClientDebugLink
 from trezorlib import tx_api
 import config
 
@@ -35,7 +35,7 @@ class TrezorTest(unittest.TestCase):
         transport = config.TRANSPORT(*config.TRANSPORT_ARGS, **config.TRANSPORT_KWARGS)
         if hasattr(config, 'DEBUG_TRANSPORT'):
             debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS, **config.DEBUG_TRANSPORT_KWARGS)
-            self.client = TrezorDebugClient(transport)
+            self.client = TrezorClientDebugLink(transport)
             self.client.set_debuglink(debug_transport)
         else:
             self.client = TrezorClient(transport)

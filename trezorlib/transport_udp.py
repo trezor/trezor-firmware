@@ -24,6 +24,7 @@ from .transport import TransportV2
 
 
 class UdpTransport(TransportV2):
+
     def __init__(self, device, *args, **kwargs):
         device = device.split(':')
         if len(device) < 2:
@@ -37,6 +38,14 @@ class UdpTransport(TransportV2):
 
         self.socket = None
         super(UdpTransport, self).__init__(device, *args, **kwargs)
+
+    @classmethod
+    def enumerate(cls):
+        raise Exception('This transport cannot enumerate devices')
+
+    @classmethod
+    def find_by_path(cls, path=None):
+        return cls(path)
 
     def _open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
