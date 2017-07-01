@@ -78,18 +78,7 @@ void show_unofficial_warning(const uint8_t *hash)
 
 void __attribute__((noreturn)) load_app(void)
 {
-	// Relocate vector tables
-	SCB_VTOR = FLASH_APP_START; // & 0xFFFF;
-
-	// Set stack pointer
-	__asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)FLASH_APP_START));
-
-	// Jump to address
-	(*(void (**)())(FLASH_APP_START + 4))();
-
-	// forever loop to indicate to the compiler that this function does not return.
-	// this avoids the stack protector injecting code that faults with the new stack.
-	for (;;);
+	load_vector_table((const vector_table_t *) FLASH_APP_START);
 }
 
 bool firmware_present(void)

@@ -22,6 +22,9 @@
 
 #include <stdint.h>
 
+#include <libopencm3/cm3/scb.h>
+#include <libopencm3/cm3/vector.h>
+
 void delay(uint32_t wait);
 
 // converts uint32 to hexa (8 digits)
@@ -37,5 +40,19 @@ uint32_t readprotobufint(uint8_t **ptr);
 void __attribute__((noreturn)) system_halt(void);
 // reset system
 void __attribute__((noreturn)) system_reset(void);
+
+static inline void __attribute__((noreturn)) load_vector_table(const vector_table_t *vector_table) {
+    // Relocate vector table
+    SCB_VTOR = (uint32_t) vector_table;
+
+    // Set stack pointer
+    __asm__ volatile("msr msp, %0" :: "r" (vector_table->initial_sp_value));
+
+    // Jump to address
+    vector_table->reset();
+
+    // Prevent compiler from generating stack protector code (which causes CPU fault because the stack is moved)
+    for (;;);
+}
 
 #endif

@@ -22,6 +22,7 @@
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/systick.h>
+#include <libopencm3/cm3/vector.h>
 
 /* 1 tick = 1 ms */
 volatile uint32_t system_millis;

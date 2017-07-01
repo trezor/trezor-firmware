@@ -17,6 +17,8 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __TIMER_H__
+#define __TIMER_H__
 
 #include <stdint.h>
 
@@ -28,4 +30,4 @@ extern uint32_t system_millis_lock_start;
 
 void timer_init(void);
 
-void sys_tick_handler(void);
+#endif

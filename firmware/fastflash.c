@@ -18,15 +18,14 @@
  */
 
 #include "fastflash.h"
+#include "util.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <libopencm3/cm3/scb.h>
-
-extern uint32_t __bootloader_loadaddr__[];
-extern uint32_t __bootloader_runaddr__[];
+extern uint8_t __bootloader_loadaddr__[];
+extern uint8_t __bootloader_runaddr__[];
 extern uint8_t __bootloader_size__[];
 
 void load_bootloader(void)
@@ -34,19 +33,7 @@ void load_bootloader(void)
 	memcpy(__bootloader_runaddr__, __bootloader_loadaddr__, (size_t) __bootloader_size__);
 }
 
-// adapted from load_app() in bootloader.c
 void __attribute__((noreturn)) run_bootloader(void)
 {
-	// Relocate vector tables
-	SCB_VTOR = (uint32_t) __bootloader_runaddr__;
-
-	// Set stack pointer
-	__asm__ volatile("msr msp, %0":: "r" (__bootloader_runaddr__[0]));
-
-	// Jump to address
-	((void (*)(void))(__bootloader_runaddr__[1]))();
-
-	// forever loop to indicate to the compiler that this function does not return.
-	// this avoids the stack protector injecting code that faults with the new stack.
-	for (;;);
+	load_vector_table((const vector_table_t *) __bootloader_runaddr__);
 }
