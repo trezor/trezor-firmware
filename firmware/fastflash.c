@@ -29,11 +29,14 @@ extern uint32_t __bootloader_loadaddr__[];
 extern uint32_t __bootloader_runaddr__[];
 extern uint8_t __bootloader_size__[];
 
-void load_bootloader() {
+void load_bootloader(void)
+{
 	memcpy(__bootloader_runaddr__, __bootloader_loadaddr__, (size_t) __bootloader_size__);
 }
 
-void run_bootloader() {
+// adapted from load_app() in bootloader.c
+void __attribute__((noreturn)) run_bootloader(void)
+{
 	// Relocate vector tables
 	SCB_VTOR = (uint32_t) __bootloader_runaddr__;
 
@@ -43,5 +46,7 @@ void run_bootloader() {
 	// Jump to address
 	((void (*)(void))(__bootloader_runaddr__[1]))();
 
-	while (true);
+	// forever loop to indicate to the compiler that this function does not return.
+	// this avoids the stack protector injecting code that faults with the new stack.
+	for (;;);
 }
