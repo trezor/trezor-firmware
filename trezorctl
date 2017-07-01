@@ -671,6 +671,27 @@ def ethereum_sign_tx(client, host, chain_id, address, value, gas_limit, gas_pric
         return 'Signed raw transaction: %s' % tx_hex
 
 
+@cli.command(help='Sign (and optionally broadcast) NEM transaction')
+@click.option('-n', '--address', help='BIP-32 path to signing key')
+@click.option('-f', '--file', type=click.File('r'), default='-', help='Transaction in NIS (RequestPrepareAnnounce) format')
+@click.option('-b', '--broadcast', help='NIS to announce transaction to')
+@click.pass_obj
+def nem_sign_tx(client, address, file, broadcast):
+    address_n = client.expand_path(address)
+    transaction = client.nem_sign_tx(address_n, json.load(file))
+
+    payload = {
+        "data": binascii.hexlify(transaction.data).decode(),
+        "signature": binascii.hexlify(transaction.signature).decode()
+    }
+
+    if broadcast:
+        import requests
+        return requests.post("{}/transaction/announce".format(broadcast), json=payload).json()
+    else:
+        return payload
+
+
 #
 # Main
 #

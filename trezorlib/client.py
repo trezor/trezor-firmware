@@ -25,7 +25,7 @@ import time
 import binascii
 import hashlib
 import unicodedata
-# import json
+import json
 import getpass
 
 from mnemonic import Mnemonic
@@ -666,6 +666,117 @@ class ProtocolMixin(object):
     def set_u2f_counter(self, u2f_counter):
         ret = self.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
         return ret
+
+    @expect(proto.NEMSignedTx)
+    def nem_sign_tx(self, n, transaction):
+        n = self._convert_prime(n)
+
+        def common_to_proto(common, msg):
+            msg.network = (common["version"] >> 24) & 0xFF
+            msg.timestamp = common["timeStamp"]
+            msg.fee = common["fee"]
+            msg.deadline = common["deadline"]
+
+            if "signer" in common:
+                msg.signer = binascii.unhexlify(common["signer"])
+
+        def transfer_to_proto(transfer, msg):
+            msg.recipient = transfer["recipient"]
+            msg.amount = transfer["amount"]
+
+            if "payload" in transfer["message"]:
+                msg.payload = binascii.unhexlify(transfer["message"]["payload"])
+
+                if transfer["message"]["type"] == 0x02:
+                    msg.public_key = binascii.unhexlify(transfer["message"]["publicKey"])
+
+            if "mosaics" in transfer:
+                msg.mosaics.extend(types.NEMMosaic(
+                    namespace=mosaic["mosaicId"]["namespaceId"],
+                    mosaic=mosaic["mosaicId"]["name"],
+                    quantity=mosaic["quantity"],
+                ) for mosaic in transfer["mosaics"])
+
+        def aggregate_modification_to_proto(aggregate_modification, msg):
+            msg.modifications.extend(types.NEMCosignatoryModification(
+                type=modification["modificationType"],
+                public_key=binascii.unhexlify(modification["cosignatoryAccount"]),
+            ) for modification in aggregate_modification["modifications"])
+
+            if "minCosignatories" in aggregate_modification:
+                msg.relative_change = aggregate_modification["minCosignatories"]["relativeChange"]
+
+        def provision_namespace_to_proto(provision_namespace, msg):
+            msg.namespace = provision_namespace["newPart"]
+
+            if provision_namespace["parent"]:
+                msg.parent = provision_namespace["parent"]
+
+            msg.sink = provision_namespace["rentalFeeSink"]
+            msg.fee = provision_namespace["rentalFee"]
+
+        def mosaic_creation_to_proto(mosaic_creation, msg):
+            msg.definition.namespace = mosaic_creation["mosaicDefinition"]["id"]["namespaceId"]
+            msg.definition.mosaic = mosaic_creation["mosaicDefinition"]["id"]["name"]
+
+            if mosaic_creation["mosaicDefinition"]["levy"]:
+                msg.definition.levy = mosaic_creation["mosaicDefinition"]["levy"]["type"]
+                msg.definition.fee = mosaic_creation["mosaicDefinition"]["levy"]["fee"]
+                msg.definition.levy_address = mosaic_creation["mosaicDefinition"]["levy"]["recipient"]
+                msg.definition.levy_namespace = mosaic_creation["mosaicDefinition"]["levy"]["mosaicId"]["namespaceId"]
+                msg.definition.levy_mosaic = mosaic_creation["mosaicDefinition"]["levy"]["mosaicId"]["name"]
+
+            msg.definition.description = mosaic_creation["mosaicDefinition"]["description"]
+
+            for property in mosaic_creation["mosaicDefinition"]["properties"]:
+                name = property["name"]
+                value = json.loads(property["value"])
+
+                if name == "divisibility":
+                    msg.definition.divisibility = value
+                elif name == "initialSupply":
+                    msg.definition.supply = value
+                elif name == "supplyMutable":
+                    msg.definition.mutable_supply = value
+                elif name == "transferable":
+                    msg.definition.transferable = value
+
+            msg.sink = mosaic_creation["creationFeeSink"]
+            msg.fee = mosaic_creation["creationFee"]
+
+        def mosaic_supply_change_to_proto(mosaic_supply_change, msg):
+            msg.namespace = mosaic_supply_change["mosaicId"]["namespaceId"]
+            msg.mosaic = mosaic_supply_change["mosaicId"]["name"]
+            msg.type = mosaic_supply_change["supplyType"]
+            msg.delta = mosaic_supply_change["delta"]
+
+        msg = proto.NEMSignTx()
+
+        common_to_proto(transaction, msg.transaction)
+        msg.transaction.address_n.extend(n)
+
+        msg.cosigning = (transaction["type"] == 0x1002)
+
+        if msg.cosigning or transaction["type"] == 0x1004:
+            transaction = transaction["otherTrans"]
+            common_to_proto(transaction, msg.multisig)
+        elif "otherTrans" in transaction:
+            raise CallException("Transaction does not support inner transaction")
+
+        if transaction["type"] == 0x0101:
+            transfer_to_proto(transaction, msg.transfer)
+        elif transaction["type"] == 0x1001:
+            aggregate_modification_to_proto(transaction, msg.aggregate_modification)
+        elif transaction["type"] == 0x2001:
+            provision_namespace_to_proto(transaction, msg.provision_namespace)
+        elif transaction["type"] == 0x4001:
+            mosaic_creation_to_proto(transaction, msg.mosaic_creation)
+        elif transaction["type"] == 0x4002:
+            mosaic_supply_change_to_proto(transaction, msg.mosaic_supply_change)
+        else:
+            raise CallException("Unknown transaction type")
+
+        return self.call(msg)
 
     def verify_message(self, coin_name, address, signature, message):
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
