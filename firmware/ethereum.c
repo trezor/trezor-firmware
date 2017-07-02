@@ -36,7 +36,7 @@
 
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
-static EthereumTxRequest resp;
+static EthereumTxRequest msg_tx_request;
 static uint8_t privkey[32];
 static uint8_t chain_id;
 struct SHA3_CTX keccak_ctx;
@@ -138,9 +138,9 @@ static void send_request_chunk(void)
 						   ? data_left / (data_total/800)
 						   : data_left * 800 / data_total);
 	layoutProgress(_("Signing"), progress);
-	resp.has_data_length = true;
-	resp.data_length = data_left <= 1024 ? data_left : 1024;
-	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
+	msg_tx_request.has_data_length = true;
+	msg_tx_request.data_length = data_left <= 1024 ? data_left : 1024;
+	msg_write(MessageType_MessageType_EthereumTxRequest, &msg_tx_request);
 }
 
 static int ethereum_is_canonic(uint8_t v, uint8_t signature[64])
@@ -173,24 +173,24 @@ static void send_signature(void)
 	memset(privkey, 0, sizeof(privkey));
 
 	/* Send back the result */
-	resp.has_data_length = false;
+	msg_tx_request.has_data_length = false;
 
-	resp.has_signature_v = true;
+	msg_tx_request.has_signature_v = true;
 	if (chain_id) {
-		resp.signature_v = v + 2 * chain_id + 35;
+		msg_tx_request.signature_v = v + 2 * chain_id + 35;
 	} else {
-		resp.signature_v = v + 27;
+		msg_tx_request.signature_v = v + 27;
 	}
 
-	resp.has_signature_r = true;
-	resp.signature_r.size = 32;
-	memcpy(resp.signature_r.bytes, sig, 32);
+	msg_tx_request.has_signature_r = true;
+	msg_tx_request.signature_r.size = 32;
+	memcpy(msg_tx_request.signature_r.bytes, sig, 32);
 
-	resp.has_signature_s = true;
-	resp.signature_s.size = 32;
-	memcpy(resp.signature_s.bytes, sig + 32, 32);
+	msg_tx_request.has_signature_s = true;
+	msg_tx_request.signature_s.size = 32;
+	memcpy(msg_tx_request.signature_s.bytes, sig + 32, 32);
 
-	msg_write(MessageType_MessageType_EthereumTxRequest, &resp);
+	msg_write(MessageType_MessageType_EthereumTxRequest, &msg_tx_request);
 
 	ethereum_signing_abort();
 }
@@ -401,7 +401,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	ethereum_signing = true;
 	sha3_256_Init(&keccak_ctx);
 
-	memset(&resp, 0, sizeof(EthereumTxRequest));
+	memset(&msg_tx_request, 0, sizeof(EthereumTxRequest));
 	/* set fields to 0, to avoid conditions later */
 	if (!msg->has_value)
 		msg->value.size = 0;
@@ -571,4 +571,73 @@ void ethereum_signing_abort(void)
 		layoutHome();
 		ethereum_signing = false;
 	}
+}
+
+static void ethereum_message_hash(const uint8_t *message, size_t message_len, uint8_t hash[32])
+{
+	struct SHA3_CTX ctx;
+
+	sha3_256_Init(&ctx);
+	sha3_Update(&ctx, message, message_len);
+	keccak_Final(&ctx, hash);
+}
+
+void ethereum_message_sign(EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp)
+{
+	uint8_t hash[32];
+
+	if (!hdnode_get_ethereum_pubkeyhash(node, resp->address.bytes)) {
+		return;
+	}
+	resp->has_address = true;
+	resp->address.size = 20;
+	ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
+
+	uint8_t v;
+	if (ecdsa_sign_digest(&secp256k1, node->private_key, hash, resp->signature.bytes, &v, ethereum_is_canonic) != 0) {
+		fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
+		return;
+	}
+
+	resp->has_signature = true;
+	resp->signature.bytes[64] = 27 + v;
+	resp->signature.size = 65;
+	msg_write(MessageType_MessageType_EthereumMessageSignature, resp);
+}
+
+int ethereum_message_verify(EthereumVerifyMessage *msg)
+{
+	if (msg->signature.size != 65
+		|| msg->address.size != 20) {
+		fsm_sendFailure(FailureType_Failure_DataError, _("Malformed data"));
+		return 1;
+	}
+
+	uint8_t pubkey[65];
+	uint8_t hash[32];
+
+	ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
+
+	/* v should be 27, 28 but some implementations use 0,1.  We are
+	 * compatible with both.
+	 */
+	uint8_t v = msg->signature.bytes[64];
+	if (v >= 27)
+		v -= 27;
+			 
+	if (v >= 2 ||
+		ecdsa_verify_digest_recover(&secp256k1, pubkey, msg->signature.bytes, hash, v) != 0) {
+		return 2;
+	}
+
+	struct SHA3_CTX ctx;
+	sha3_256_Init(&ctx);
+	sha3_Update(&ctx, pubkey + 1, 64);
+	keccak_Final(&ctx, hash);
+
+	/* result are the least significant 160 bits */
+	if (memcmp(msg->address.bytes, hash + 12, 20) != 0) {
+		return 2;
+	}
+	return 0;
 }

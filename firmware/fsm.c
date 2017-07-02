@@ -703,6 +703,57 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 	layoutHome();
 }
 
+void fsm_msgEthereumSignMessage(EthereumSignMessage *msg)
+{
+	RESP_INIT(EthereumMessageSignature);
+
+	CHECK_INITIALIZED
+
+	layoutSignMessage(msg->message.bytes, msg->message.size);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
+	CHECK_PIN
+
+	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	ethereum_message_sign(msg, node, resp);
+	layoutHome();
+}
+
+void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg)
+{
+	CHECK_PARAM(msg->has_address, _("No address provided"));
+	CHECK_PARAM(msg->has_message, _("No message provided"));
+
+	if (ethereum_message_verify(msg) != 0) {
+		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
+		return;
+	}
+
+	char address[41];
+	data2hex(msg->address.bytes, 20, address);
+	layoutVerifyAddress(address);
+	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+	layoutVerifyMessage(msg->message.bytes, msg->message.size);
+	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+	fsm_sendSuccess(_("Message verified"));
+
+	layoutHome();
+}
+
 void fsm_msgEntropyAck(EntropyAck *msg)
 {
 	if (msg->has_entropy) {

@@ -62,6 +62,8 @@ void fsm_msgSetU2FCounter(SetU2FCounter *msg);
 void fsm_msgEthereumGetAddress(EthereumGetAddress *msg);
 void fsm_msgEthereumSignTx(EthereumSignTx *msg);
 void fsm_msgEthereumTxAck(EthereumTxAck *msg);
+void fsm_msgEthereumSignMessage(EthereumSignMessage *msg);
+void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg);
 
 // debug message functions
 #if DEBUG_LINK
