@@ -17,7 +17,7 @@ def get_tokens(chain):
 def print_tokens(chain, chain_id):
     tokens = get_tokens(chain)
 
-    for t in tokens:
+    for t in sorted(tokens, key=lambda x: x['symbol'].upper()):
         address, symbol, decimal = t['address'], t['symbol'], t['decimal']
         s = (chain_id, symbol)
         if s in subst:
