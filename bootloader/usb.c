@@ -342,6 +342,8 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		if (msg_id == 0x0020) {		// SelfTest message (id 32)
 			const uint32_t patterns[] = { 0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA, 0x66666666, 0x99999999, 0x33333333, 0xCCCCCCCC };
 
+			layoutProgress("TESTING ... Please wait", 0);
+
 			// backup metadata
 			backup_metadata(meta_backup);
 
@@ -356,6 +358,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				}
 				flash_lock();
 				sha256_Update(&ctx, (unsigned char *)FLASH_META_START, FLASH_META_LEN);
+				layoutProgress("TESTING ... Please wait", (p * 100) + 100);
 			}
 
 			// copy metadata back
@@ -366,13 +369,17 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			uint8_t hash[32];
 			sha256_Final(&ctx, hash);
 
+			layoutProgress("TESTING ... Please wait", 1000);
+
 			// hash computed via the following Python3 script:
 			// hashlib.sha256(b''.join([binascii.unhexlify(c * 2 * 32768) for c in '0F5A693C'])).hexdigest()
 
 			if (0 == memcmp(hash, "\x49\x46\xe9\xa5\xf4\xc2\x57\xe9\xcf\xd1\x88\x78\xe9\x66\x9b\x0d\xcd\x4e\x82\x41\xb3\x9c\xee\xb7\x2c\x1d\x14\x4a\xe1\xe4\xcb\xd7", 32)) {
 				send_msg_success(dev);
+				layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Test OK", NULL, NULL, NULL, NULL, NULL);
 			} else {
 				send_msg_failure(dev);
+				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Test FAILED", NULL, NULL, NULL, NULL, NULL);
 			}
 			return;
 		}
