@@ -1,4 +1,7 @@
 [flake8]
+filename =
+    *.py,
+    trezorctl
 exclude =
     .tox/,
     build/,
@@ -11,6 +14,8 @@ ignore =
     F841,
     # F401: module imported but unused
     F401,
+    # E241: multiple spaces after ':'
+    E241,
     # E402: module level import not at top of file
     E402,
     # E501: line too long

@@ -26,6 +26,8 @@ from .transport import TransportV2
 class UdpTransport(TransportV2):
 
     def __init__(self, device, *args, **kwargs):
+        if device is None:
+            device = ''
         device = device.split(':')
         if len(device) < 2:
             if not device[0]:

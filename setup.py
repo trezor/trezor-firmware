@@ -7,6 +7,7 @@ install_requires = [
     'mnemonic>=0.17',
     'setuptools>=19.0',
     'requests>=2.4.0',
+    'click>=6.2'
 ]
 
 import sys

@@ -3,3 +3,4 @@ protobuf>=3.1.0
 mnemonic>=0.17
 hidapi>=0.7.99.post20
 requests>=2.4.0
+click>=6.2
