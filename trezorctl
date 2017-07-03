@@ -350,6 +350,10 @@ class Commands(object):
         ret = self.client.set_u2f_counter(args.counter)
         return ret
 
+    def self_test(self, args):
+        ret = self.client.self_test()
+        return ret
+
     def firmware_update(self, args):
         if args.file:
             fp = open(args.file, 'rb').read()
@@ -410,6 +414,7 @@ class Commands(object):
     encrypt_keyvalue.help = 'Encrypt value by given key and path'
     decrypt_keyvalue.help = 'Decrypt value by given key and path'
     set_u2f_counter.help = 'Set U2F counter'
+    self_test.help = 'Perform a self-test'
     firmware_update.help = 'Upload new firmware to device (must be in bootloader mode)'
 
     clear_session.arguments= ()
@@ -551,6 +556,8 @@ class Commands(object):
     set_u2f_counter.arguments = (
         (('counter',), {'type': int}),
     )
+
+    self_test.arguments = ()
 
     firmware_update.arguments = (
         (('-f', '--file'), {'type': str}),

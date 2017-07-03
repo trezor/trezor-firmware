@@ -1019,6 +1019,14 @@ class ProtocolMixin(object):
 
         raise Exception("Unexpected message %s" % resp)
 
+    @field('message')
+    @expect(proto.Success)
+    def self_test(self):
+        if self.features.bootloader_mode is False:
+            raise Exception("Device must be in bootloader mode")
+
+        return self.call(proto.SelfTest())
+
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
     pass
