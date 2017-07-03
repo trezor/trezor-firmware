@@ -635,6 +635,8 @@ void fsm_msgGetAddress(GetAddress *msg)
 	layoutProgress(_("Computing address"), 0);
 	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address)) {
 		fsm_sendFailure(FailureType_Failure_DataError, _("Can't encode address"));
+		layoutHome();
+		return;
 	}
 
 	if (msg->has_show_display && msg->show_display) {
