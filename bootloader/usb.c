@@ -33,6 +33,8 @@
 #include "util.h"
 #include "signatures.h"
 #include "sha2.h"
+#include "ecdsa.h"
+#include "secp256k1.h"
 
 #define ENDPOINT_ADDRESS_IN         (0x81)
 #define ENDPOINT_ADDRESS_OUT        (0x01)
@@ -340,9 +342,32 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		if (msg_id == 0x0020) {		// SelfTest message (id 32)
+
+			// CPU TEST
+
+			layoutProgress("TESTING CPU ...", 0);
+
+			bool status_cpu = true;
+
+			for (int i = 0; i < 10; i++) {
+				// privkey :   e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+				// pubkey  : 04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
+				//             5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235
+				// digest  :   c84a4cc264100070c8be2acf4072efaadaedfef3d6209c0fe26387e6b1262bbf
+				// sig:    :   f7869c679bbed1817052affd0264ccc6486795f6d06d0c187651b8f3863670c8
+				//             2ccf89be32a53eb65ea7c007859783d46717986fead0833ec60c5729cdc4a9ee
+				status_cpu &= (0 == ecdsa_verify_digest(&secp256k1,
+					(const uint8_t *)"\x04\xa3\x4b\x99\xf2\x2c\x79\x0c\x4e\x36\xb2\xb3\xc2\xc3\x5a\x36\xdb\x06\x22\x6e\x41\xc6\x92\xfc\x82\xb8\xb5\x6a\xc1\xc5\x40\xc5\xbd\x5b\x8d\xec\x52\x35\xa0\xfa\x87\x22\x47\x6c\x77\x09\xc0\x25\x59\xe3\xaa\x73\xaa\x03\x91\x8b\xa2\xd4\x92\xee\xa7\x5a\xbe\xa2\x35",
+					(const uint8_t *)"\xf7\x86\x9c\x67\x9b\xbe\xd1\x81\x70\x52\xaf\xfd\x02\x64\xcc\xc6\x48\x67\x95\xf6\xd0\x6d\x0c\x18\x76\x51\xb8\xf3\x86\x36\x70\xc8\x2c\xcf\x89\xbe\x32\xa5\x3e\xb6\x5e\xa7\xc0\x07\x85\x97\x83\xd4\x67\x17\x98\x6f\xea\xd0\x83\x3e\xc6\x0c\x57\x29\xcd\xc4\xa9\xee",
+					(const uint8_t *)"\xc8\x4a\x4c\xc2\x64\x10\x00\x70\xc8\xbe\x2a\xcf\x40\x72\xef\xaa\xda\xed\xfe\xf3\xd6\x20\x9c\x0f\xe2\x63\x87\xe6\xb1\x26\x2b\xbf"));
+				layoutProgress("TESTING CPU ...", 100 + (i * 100));
+			}
+
+			// FLASH TEST
+
 			const uint32_t patterns[] = { 0x00000000, 0xFFFFFFFF, 0x55555555, 0xAAAAAAAA, 0x66666666, 0x99999999, 0x33333333, 0xCCCCCCCC };
 
-			layoutProgress("TESTING ... Please wait", 0);
+			layoutProgress("TESTING FLASH ...", 0);
 
 			// backup metadata
 			backup_metadata(meta_backup);
@@ -358,7 +383,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				}
 				flash_lock();
 				sha256_Update(&ctx, (unsigned char *)FLASH_META_START, FLASH_META_LEN);
-				layoutProgress("TESTING ... Please wait", (p * 100) + 100);
+				layoutProgress("TESTING FLASH ...", 100 + (p * 100));
 			}
 
 			// copy metadata back
@@ -369,18 +394,29 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			uint8_t hash[32];
 			sha256_Final(&ctx, hash);
 
-			layoutProgress("TESTING ... Please wait", 1000);
+			layoutProgress("TESTING FLASH ...", 1000);
 
 			// hash computed via the following Python3 script:
 			// hashlib.sha256(b''.join([binascii.unhexlify(c * 2 * 32768) for c in '0F5A693C'])).hexdigest()
 
-			if (0 == memcmp(hash, "\x49\x46\xe9\xa5\xf4\xc2\x57\xe9\xcf\xd1\x88\x78\xe9\x66\x9b\x0d\xcd\x4e\x82\x41\xb3\x9c\xee\xb7\x2c\x1d\x14\x4a\xe1\xe4\xcb\xd7", 32)) {
+			bool status_flash = (0 == memcmp(hash, "\x49\x46\xe9\xa5\xf4\xc2\x57\xe9\xcf\xd1\x88\x78\xe9\x66\x9b\x0d\xcd\x4e\x82\x41\xb3\x9c\xee\xb7\x2c\x1d\x14\x4a\xe1\xe4\xcb\xd7", 32));
+
+			bool status_all = status_cpu && status_flash;
+
+			if (status_all) {
 				send_msg_success(dev);
-				layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Test OK", NULL, NULL, NULL, NULL, NULL);
 			} else {
 				send_msg_failure(dev);
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Test FAILED", NULL, NULL, NULL, NULL, NULL);
 			}
+			layoutDialog(status_all ? &bmp_icon_info : &bmp_icon_error,
+				NULL, NULL, NULL,
+				status_cpu   ? "Test CPU ... OK"   : "Test CPU ... Failed",
+				status_flash ? "Test FLASH ... OK" : "Test FLASH ... Failed",
+				NULL,
+				NULL,
+				NULL,
+				NULL
+			);
 			return;
 		}
 	}

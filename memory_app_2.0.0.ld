@@ -3,7 +3,7 @@
 MEMORY
 {
 	rom (rx)        : ORIGIN = 0x08010000, LENGTH = 512K - 64K
-	bootloader (rx) : ORIGIN = 0x20000000, LENGTH = 20K
+	bootloader (rx) : ORIGIN = 0x20000000, LENGTH = 32K
 	ram (rwx)       : ORIGIN = 0x20000000 + LENGTH(bootloader),
 			  LENGTH = 128K - LENGTH(bootloader)
 }
