@@ -13,8 +13,8 @@ addons:
 script:
   - CFLAGS="-std=c99" make -C vendor/libopencm3
   - make
-  - OPTFLAGS="-Os" make -C bootloader
-  - OPTFLAGS="-Os" make -C fastflash
+  - make -C bootloader
+  - make -C fastflash
   - make -C firmware
   - make -C demo
   - make -C firmware clean && make -C firmware FASTFLASH=1
