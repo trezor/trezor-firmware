@@ -17,14 +17,14 @@ def start_default(genfunc):
 
 def close_default():
     global _default
-    log.info(__name__, 'close default %s', _default)
-    _default.close()
-    _default = None
+    if _default is not None:
+        log.info(__name__, 'close default %s', _default)
+        _default.close()
+        _default = None
 
 
 def start(workflow):
-    if _default is not None:
-        close_default()
+    close_default()
     _started.append(workflow)
     log.info(__name__, 'start %s', workflow)
     loop.schedule_task(_watch(workflow))

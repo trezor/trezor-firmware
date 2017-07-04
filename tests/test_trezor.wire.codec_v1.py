@@ -1,178 +1,164 @@
-from common import *
+import sys
 
-import ustruct
+sys.path.append('../src')
+sys.path.append('../src/lib')
 
+from utest import *
+from ustruct import pack, unpack
+from ubinascii import hexlify, unhexlify
+
+from trezor import msg
+from trezor.loop import Select, Syscall, READ, WRITE
 from trezor.crypto import random
 from trezor.utils import chunks
-
 from trezor.wire import codec_v1
 
-class TestWireCodecV1(unittest.TestCase):
-    # pylint: disable=C0301
 
-    def test_detect(self):
-        for i in range(0, 256):
-            if i == ord(b'?'):
-                self.assertTrue(codec_v1.detect(bytes([i]) + b'\x00' * 63))
-            else:
-                self.assertFalse(codec_v1.detect(bytes([i]) + b'\x00' * 63))
+def test_reader():
+    rep_len = 64
+    interface = 0xdeadbeef
+    message_type = 0x4321
+    message_len = 250
+    reader = codec_v1.Reader(interface, codec_v1.SESSION_ID)
 
-    def test_parse(self):
-        d = bytes(range(0, 55))
-        m = b'##\x00\x00\x00\x00\x00\x37' + d
-        r = b'?' + m
+    message = bytearray(range(message_len))
+    report_header = bytearray(unhexlify('3f23234321000000fa'))
 
-        rm, rs, rd = codec_v1.parse_report(r)
-        self.assertEqual(rm, None)
-        self.assertEqual(rs, 0)
-        self.assertEqual(rd, m)
+    # open, expected one read
+    first_report = report_header + message[:rep_len - len(report_header)]
+    assert_async(reader.open(), [(None, Select(READ | interface)), (first_report, StopIteration()),])
+    assert_eq(reader.type, message_type)
+    assert_eq(reader.size, message_len)
 
-        mt, ml, md = codec_v1.parse_message(m)
-        self.assertEqual(mt, 0)
-        self.assertEqual(ml, len(d))
-        self.assertEqual(md, d)
+    # empty read
+    empty_buffer = bytearray()
+    assert_async(reader.readinto(empty_buffer), [(None, StopIteration()),])
+    assert_eq(len(empty_buffer), 0)
+    assert_eq(reader.size, message_len)
 
-        for i in range(0, 1024):
-            if i != 64:
-                with self.assertRaises(ValueError):
-                    codec_v1.parse_report(bytes(range(0, i)))
+    # short read, expected no read
+    short_buffer = bytearray(32)
+    assert_async(reader.readinto(short_buffer), [(None, StopIteration()),])
+    assert_eq(len(short_buffer), 32)
+    assert_eq(short_buffer, message[:len(short_buffer)])
+    assert_eq(reader.size, message_len - len(short_buffer))
 
-        for hx in range(0, 256):
-            for hy in range(0, 256):
-                if hx != ord(b'#') and hy != ord(b'#'):
-                    with self.assertRaises(ValueError):
-                        codec_v1.parse_message(bytes([hx, hy]) + m[2:])
+    # aligned read, expected no read
+    aligned_buffer = bytearray(rep_len - len(report_header) - len(short_buffer))
+    assert_async(reader.readinto(aligned_buffer), [(None, StopIteration()),])
+    assert_eq(aligned_buffer, message[len(short_buffer):][:len(aligned_buffer)])
+    assert_eq(reader.size, message_len - len(short_buffer) - len(aligned_buffer))
 
-    def test_serialize(self):
-        data = bytearray(range(0, 10))
-        codec_v1.serialize_message_header(data, 0x1234, 0x56789abc)
-        self.assertEqual(data, b'\x00##\x12\x34\x56\x78\x9a\xbc\x09')
+    # one byte read, expected one read
+    next_report_header = bytearray(unhexlify('3f'))
+    next_report = next_report_header + message[rep_len - len(report_header):][:rep_len - len(next_report_header)]
+    onebyte_buffer = bytearray(1)
+    assert_async(reader.readinto(onebyte_buffer), [(None, Select(READ | interface)), (next_report, StopIteration()),])
+    assert_eq(onebyte_buffer, message[len(short_buffer):][len(aligned_buffer):][:len(onebyte_buffer)])
+    assert_eq(reader.size, message_len - len(short_buffer) - len(aligned_buffer) - len(onebyte_buffer))
 
-        data = bytearray(9)
-        with self.assertRaises(ValueError):
-            codec_v1.serialize_message_header(data, 65536, 0)
+    # too long read, raises eof
+    assert_async(reader.readinto(bytearray(reader.size + 1)), [(None, EOFError()),])
 
-        for i in range(0, 8):
-            data = bytearray(i)
-            with self.assertRaises(ValueError):
-                codec_v1.serialize_message_header(data, 0x1234, 0x56789abc)
+    # long read, expect multiple reads
+    start_size = reader.size
+    long_buffer = bytearray(start_size)
+    report_payload = message[rep_len - len(report_header) + rep_len - len(next_report_header):]
+    report_payload_head = report_payload[:rep_len - len(next_report_header) - len(onebyte_buffer)]
+    report_payload_rest = report_payload[len(report_payload_head):]
+    report_payload_rest = list(chunks(report_payload_rest, rep_len - len(next_report_header)))
+    report_payloads = [report_payload_head] + report_payload_rest
+    next_reports = [next_report_header + r for r in report_payloads]
+    expected_syscalls = []
+    for i, _ in enumerate(next_reports):
+        prev_report = next_reports[i - 1] if i > 0 else None
+        expected_syscalls.append((prev_report, Select(READ | interface)))
+    expected_syscalls.append((next_reports[-1], StopIteration()))
+    assert_async(reader.readinto(long_buffer), expected_syscalls)
+    assert_eq(long_buffer, message[-start_size:])
+    assert_eq(reader.size, 0)
 
-    def test_decode_empty(self):
-        message = b'##' + b'\xab\xcd' + b'\x00\x00\x00\x00' + b'\x00' * 55
+    # one byte read, raises eof
+    assert_async(reader.readinto(onebyte_buffer), [(None, EOFError()),])
 
-        record = []
-        genfunc = self._record(record, 0xdeadbeef, 0xabcd, 0, 'dummy')
-        decoder = codec_v1.decode_stream(0xdeadbeef, genfunc, 'dummy')
-        decoder.send(None)
 
-        try:
-            decoder.send(message)
-        except StopIteration as e:
-            res = e.value
-        self.assertEqual(res, None)
-        self.assertEqual(len(record), 1)
-        self.assertIsInstance(record[0], EOFError)
+def test_writer():
+    rep_len = 64
+    interface = 0xdeadbeef
+    message_type = 0x87654321
+    message_len = 1024
+    writer = codec_v1.Writer(interface, codec_v1.SESSION_ID, message_type, message_len)
 
-    def test_decode_one_report_aligned(self):
-        data = bytes(range(0, 55))
-        message = b'##' + b'\xab\xcd' + b'\x00\x00\x00\x37' + data
+    # init header corresponding to the data above
+    report_header = bytearray(unhexlify('3f2323432100000400'))
 
-        record = []
-        genfunc = self._record(record, 0xdeadbeef, 0xabcd, 55, 'dummy')
-        decoder = codec_v1.decode_stream(0xdeadbeef, genfunc, 'dummy')
-        decoder.send(None)
+    assert_eq(writer.data, report_header + bytearray(rep_len - len(report_header)))
 
-        try:
-            decoder.send(message)
-        except StopIteration as e:
-            res = e.value
-        self.assertEqual(res, None)
-        self.assertEqual(len(record), 2)
-        self.assertEqual(record[0], data)
-        self.assertIsInstance(record[1], EOFError)
+    # empty write
+    start_size = writer.size
+    assert_async(writer.write(bytearray()), [(None, StopIteration()),])
+    assert_eq(writer.data, report_header + bytearray(rep_len - len(report_header)))
+    assert_eq(writer.size, start_size)
 
-    def test_decode_generated_range(self):
-        for data_len in range(1, 512):
-            data = random.bytes(data_len)
-            data_chunks = [data[:55]] + list(chunks(data[55:], 63))
+    # short write, expected no report
+    start_size = writer.size
+    short_payload = bytearray(range(4))
+    assert_async(writer.write(short_payload), [(None, StopIteration()),])
+    assert_eq(writer.size, start_size - len(short_payload))
+    assert_eq(writer.data,
+              report_header
+              + short_payload
+              + bytearray(rep_len - len(report_header) - len(short_payload)))
 
-            msg_type = 0xabcd
-            header = b'##' + ustruct.pack('>H', msg_type) + ustruct.pack('>L', data_len)
+    # aligned write, expected one report
+    start_size = writer.size
+    aligned_payload = bytearray(range(rep_len - len(report_header) - len(short_payload)))
+    msg.send = mock_call(msg.send, [
+        (interface, report_header
+         + short_payload
+         + aligned_payload
+         + bytearray(rep_len - len(report_header) - len(short_payload) - len(aligned_payload))), ])
+    assert_async(writer.write(aligned_payload), [(None, Select(WRITE | interface)), (None, StopIteration()),])
+    assert_eq(writer.size, start_size - len(aligned_payload))
+    msg.send.assert_called_n_times(1)
+    msg.send = msg.send.original
 
-            message = header + data
-            message_chunks = [c + '\x00' * (63 - len(c)) for c in list(chunks(message, 63))]
+    # short write, expected no report, but data starts with correct seq and cont marker
+    report_header = bytearray(unhexlify('3f'))
+    start_size = writer.size
+    assert_async(writer.write(short_payload), [(None, StopIteration()),])
+    assert_eq(writer.size, start_size - len(short_payload))
+    assert_eq(writer.data[:len(report_header) + len(short_payload)],
+              report_header + short_payload)
 
-            record = []
-            genfunc = self._record(record, 0xdeadbeef, msg_type, data_len, 'dummy')
-            decoder = codec_v1.decode_stream(0xdeadbeef, genfunc, 'dummy')
-            decoder.send(None)
-
-            res = 1
-            try:
-                for c in message_chunks:
-                    decoder.send(c)
-            except StopIteration as e:
-                res = e.value
-            self.assertEqual(res, None)
-            self.assertEqual(len(record), len(data_chunks) + 1)
-            for i in range(0, len(data_chunks)):
-                self.assertEqual(record[i], data_chunks[i])
-            self.assertIsInstance(record[-1], EOFError)
-
-    def test_encode_empty(self):
-        record = []
-        target = self._record(record)()
-        target.send(None)
-
-        codec_v1.encode(codec_v1.SESSION, 0xabcd, b'', target.send)
-        self.assertEqual(len(record), 1)
-        self.assertEqual(record[0], b'?##\xab\xcd\x00\x00\x00\x00' + '\0' * 55)
-
-    def test_encode_one_report_aligned(self):
-        data = bytes(range(0, 55))
-
-        record = []
-        target = self._record(record)()
-        target.send(None)
-
-        codec_v1.encode(codec_v1.SESSION, 0xabcd, data, target.send)
-        self.assertEqual(record, [b'?##\xab\xcd\x00\x00\x00\x37' + data])
-
-    def test_encode_generated_range(self):
-        for data_len in range(1, 1024):
-            data = random.bytes(data_len)
-
-            msg_type = 0xabcd
-            header = b'##' + ustruct.pack('>H', msg_type) + ustruct.pack('>L', data_len)
-
-            message = header + data
-            reports = [b'?' + c for c in chunks(message, 63)]
-            reports[-1] = reports[-1] + b'\x00' * (64 - len(reports[-1]))
-
-            received = 0
-            def genfunc():
-                nonlocal received
-                while True:
-                    self.assertEqual((yield), reports[received])
-                    received += 1
-            target = genfunc()
-            target.send(None)
-
-            codec_v1.encode(codec_v1.SESSION, msg_type, data, target.send)
-            self.assertEqual(received, len(reports))
-
-    def _record(self, record, *_args):
-        def genfunc(*args):
-            self.assertEqual(args, _args)
-            while True:
-                try:
-                    v = yield
-                except Exception as e:
-                    record.append(e)
-                else:
-                    record.append(v)
-        return genfunc
+    # long write, expected multiple reports
+    start_size = writer.size
+    long_payload_head = bytearray(range(rep_len - len(report_header) - len(short_payload)))
+    long_payload_rest = bytearray(range(start_size - len(long_payload_head)))
+    long_payload = long_payload_head + long_payload_rest
+    expected_payloads = [short_payload + long_payload_head] + list(chunks(long_payload_rest, rep_len - len(report_header)))
+    expected_reports = [report_header + r for r in expected_payloads]
+    expected_reports[-1] += bytearray(bytes(1) * (rep_len - len(expected_reports[-1])))
+    # test write
+    expected_write_reports = expected_reports[:-1]
+    msg.send = mock_call(msg.send, [(interface, rep) for rep in expected_write_reports])
+    assert_async(writer.write(long_payload), len(expected_write_reports) * [(None, Select(WRITE | interface))] + [(None, StopIteration())])
+    assert_eq(writer.size, start_size - len(long_payload))
+    msg.send.assert_called_n_times(len(expected_write_reports))
+    msg.send = msg.send.original
+    # test write raises eof
+    msg.send = mock_call(msg.send, [])
+    assert_async(writer.write(bytearray(1)), [(None, EOFError())])
+    msg.send.assert_called_n_times(0)
+    msg.send = msg.send.original
+    # test close
+    expected_close_reports = expected_reports[-1:]
+    msg.send = mock_call(msg.send, [(interface, rep) for rep in expected_close_reports])
+    assert_async(writer.close(), len(expected_close_reports) * [(None, Select(WRITE | interface))] + [(None, StopIteration())])
+    assert_eq(writer.size, 0)
+    msg.send.assert_called_n_times(len(expected_close_reports))
+    msg.send = msg.send.original
 
 
 if __name__ == '__main__':
-    unittest.main()
+    run_tests()

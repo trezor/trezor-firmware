@@ -1,114 +1,145 @@
 from micropython import const
-
 import ustruct
 
-SESSION = const(0)
-REP_MARKER = const(63)  # ord('?')
-REP_MARKER_LEN = const(1)  # len('?')
+from trezor import io
+from trezor import loop
+from trezor import utils
 
 _REP_LEN = const(64)
-_MSG_HEADER_MAGIC = const(35)  # org('#')
-_MSG_HEADER = '>BBHL'  # magic, magic, wire type, data length
-_MSG_HEADER_LEN = ustruct.calcsize(_MSG_HEADER)
+
+_REP_MARKER = const(63)  # ord('?')
+_REP_MAGIC = const(35)  # org('#')
+_REP_INIT = '>BBBHL'  # marker, magic, magic, wire type, data length
+_REP_INIT_DATA = const(9)  # offset of data in the initial report
+_REP_CONT_DATA = const(1)  # offset of data in the continuation report
+
+SESSION_ID = const(0)
 
 
-def detect(data):
-    return data[0] == REP_MARKER
+class Reader:
+    '''
+    Decoder for legacy codec over the HID layer.  Provides readable
+    async-file-like interface.
+    '''
+
+    def __init__(self, iface):
+        self.iface = iface
+        self.type = None
+        self.size = None
+        self.data = None
+        self.ofs = 0
+
+    def __repr__(self):
+        return '<ReaderV1: type=%d size=%dB>' % (self.type, self.size)
+
+    async def open(self):
+        '''
+        Begin the message transmission by waiting for initial V2 message report
+        on this session.  `self.type` and `self.size` are initialized and
+        available after `open()` returns.
+        '''
+        read = loop.select(self.iface | loop.READ)
+        while True:
+            # wait for initial report
+            report = await read
+            marker = report[0]
+            if marker == _REP_MARKER:
+                _, m1, m2, mtype, msize = ustruct.unpack(_REP_INIT, report)
+                if m1 != _REP_MAGIC or m2 != _REP_MAGIC:
+                    raise ValueError
+                break
+
+        # load received message header
+        self.type = mtype
+        self.size = msize
+        self.data = report[_REP_INIT_DATA:_REP_INIT_DATA + msize]
+        self.ofs = 0
+
+    async def readinto(self, buf):
+        '''
+        Read exactly `len(buf)` bytes into `buf`, waiting for additional
+        reports, if needed.  Raises `EOFError` if end-of-message is encountered
+        before the full read can be completed.
+        '''
+        if self.size < len(buf):
+            raise EOFError
+
+        read = loop.select(self.iface | loop.READ)
+        nread = 0
+        while nread < len(buf):
+            if self.ofs == len(self.data):
+                # we are at the end of received data
+                # wait for continuation report
+                while True:
+                    report = await read
+                    marker = report[0]
+                    if marker == _REP_MARKER:
+                        break
+                self.data = report[_REP_CONT_DATA:_REP_CONT_DATA + self.size]
+                self.ofs = 0
+
+            # copy as much as possible to target buffer
+            nbytes = utils.memcpy(buf, nread, self.data, self.ofs, len(buf))
+            nread += nbytes
+            self.ofs += nbytes
+            self.size -= nbytes
+
+        return nread
 
 
-def parse_report(data):
-    if len(data) != _REP_LEN:
-        raise ValueError('Invalid buffer size')
-    return None, SESSION, data[1:]
+class Writer:
+    '''
+    Encoder for legacy codec over the HID layer.  Provides writable
+    async-file-like interface.
+    '''
 
+    def __init__(self, iface, mtype, msize):
+        self.iface = iface
+        self.type = mtype
+        self.size = msize
+        self.data = bytearray(_REP_LEN)
+        self.ofs = _REP_INIT_DATA
 
-def parse_message(data):
-    magic1, magic2, msg_type, data_len = ustruct.unpack(_MSG_HEADER, data)
-    if magic1 != _MSG_HEADER_MAGIC or magic2 != _MSG_HEADER_MAGIC:
-        raise ValueError('Corrupted magic bytes')
-    return msg_type, data_len, data[_MSG_HEADER_LEN:]
+        # load the report with initial header
+        ustruct.pack_into(_REP_INIT, self.data, 0, _REP_MARKER, _REP_MAGIC, _REP_MAGIC, mtype, msize)
 
+    def __repr__(self):
+        return '<WriterV2: type=%d size=%dB>' % (self.type, self.size)
 
-def serialize_message_header(data, msg_type, msg_len):
-    if len(data) < REP_MARKER_LEN + _MSG_HEADER_LEN:
-        raise ValueError('Invalid buffer size')
-    if msg_type < 0 or msg_type > 65535:
-        raise ValueError('Value is out of range')
-    ustruct.pack_into(
-        _MSG_HEADER, data, REP_MARKER_LEN,
-        _MSG_HEADER_MAGIC, _MSG_HEADER_MAGIC, msg_type, msg_len)
+    async def write(self, buf):
+        '''
+        Encode and write every byte from `buf`.  Does not need to be called in
+        case message has zero length.  Raises `EOFError` if the length of `buf`
+        exceeds the remaining message length.
+        '''
+        if self.size < len(buf):
+            raise EOFError
 
+        write = loop.select(self.iface | loop.WRITE)
+        nwritten = 0
+        while nwritten < len(buf):
+            # copy as much as possible to report buffer
+            nbytes = utils.memcpy(self.data, self.ofs, buf, nwritten, len(buf))
+            nwritten += nbytes
+            self.ofs += nbytes
+            self.size -= nbytes
 
-def decode_stream(session_id, callback, *args):
-    '''Decode a v1 wire message from the report data and stream it to target.
+            if self.ofs == _REP_LEN:
+                # we are at the end of the report, flush it
+                await write
+                io.send(self.iface, self.data)
+                self.ofs = _REP_CONT_DATA
 
-Receives report payloads.  After first report, creates target by calling
-`callback(session_id, msg_type, data_len, *args)` and sends chunks of message
-data.  Throws `EOFError` to target after last data chunk.
+        return nwritten
 
-Pass report payloads as `memoryview` for cheaper slicing.
-'''
+    async def close(self):
+        '''Flush and close the message transmission.'''
+        if self.ofs != _REP_CONT_DATA:
+            # we didn't write anything or last write() wasn't report-aligned,
+            # pad the final report and flush it
+            while self.ofs < _REP_LEN:
+                self.data[self.ofs] = 0x00
+                self.ofs += 1
 
-    message = yield  # read first report
-    msg_type, data_len, data = parse_message(message)
-
-    target = callback(session_id, msg_type, data_len, *args)
-    target.send(None)
-
-    while data_len > 0:
-
-        data_chunk = data[:data_len]  # slice off the garbage at the end
-        data = data[len(data_chunk):]  # slice off what we have read
-        data_len -= len(data_chunk)
-        target.send(data_chunk)
-
-        if data_len > 0:
-            data = yield  # read next report
-
-    target.throw(EOFError())
-
-
-def encode(session_id, msg_type, msg_data, callback):
-    '''Encode a full v1 wire message directly to reports and stream it to callback.
-
-Callback receives `memoryview`s of HID reports which are valid until the
-callback returns.
-'''
-    report = memoryview(bytearray(_REP_LEN))
-    report[0] = REP_MARKER
-    serialize_message_header(report, msg_type, len(msg_data))
-
-    source_data = memoryview(msg_data)
-    target_data = report[REP_MARKER_LEN + _MSG_HEADER_LEN:]
-
-    while True:
-        # move as much as possible from source to target
-        n = min(len(target_data), len(source_data))
-        target_data[:n] = source_data[:n]
-        source_data = source_data[n:]
-        target_data = target_data[n:]
-
-        # fill the rest of the report with 0x00
-        x = 0
-        to_fill = len(target_data)
-        while x < to_fill:
-            target_data[x] = 0
-            x += 1
-
-        callback(report)
-
-        if not source_data:
-            break
-
-        # reset to skip the magic, not the whole header anymore
-        target_data = report[REP_MARKER_LEN:]
-
-
-def encode_session_open(session_id, callback):
-    # v1 codec does not have explicit session support
-    pass
-
-
-def encode_session_close(session_id, callback):
-    # v1 codec does not have explicit session support
-    pass
+            await loop.select(self.iface | loop.WRITE)
+            io.send(self.iface, self.data)

@@ -103,11 +103,11 @@ def run_forever():
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
-        if trezormsg.poll(_paused_tasks, msg_entry, delay):
+        if io.poll(_paused_tasks, msg_entry, delay):
             # message received, run tasks paused on the interface
             msg_tasks = _paused_tasks.pop(msg_entry[0], ())
             for task in msg_tasks:
-                _step_task(task, msg_entry[1])
+                    _step_task(task, msg_entry[1])
         else:
             # timeout occurred, run the first scheduled task
             if _scheduled_tasks:
@@ -290,6 +290,72 @@ class Wait(Syscall):
             # close() or throw(), kill the children tasks and re-raise
             self.exit()
             raise
+
+
+class Put(Syscall):
+
+    def __init__(self, chan, value=None):
+        self.chan = chan
+        self.value = value
+
+    def __call__(self, value):
+        self.value = value
+        return self
+
+    def handle(self, task):
+        self.chan.schedule_put(schedule_task, task, self.value)
+
+
+class Take(Syscall):
+
+    def __init__(self, chan):
+        self.chan = chan
+
+    def __call__(self):
+        return self
+
+    def handle(self, task):
+        if self.chan.schedule_take(schedule_task, task) and self.chan.id is not None:
+            _pause_task(self.chan, self.chan.id)
+
+
+class Chan:
+
+    def __init__(self, id=None):
+        self.id = id
+        self.putters = []
+        self.takers = []
+        self.put = Put(self)
+        self.take = Take(self)
+
+    def schedule_publish(self, schedule, value):
+        if self.takers:
+            for taker in self.takers:
+                schedule(taker, value)
+            self.takers.clear()
+            return True
+        else:
+            return False
+
+    def schedule_put(self, schedule, putter, value):
+        if self.takers:
+            taker = self.takers.pop(0)
+            schedule(taker, value)
+            schedule(putter, value)
+            return True
+        else:
+            self.putters.append((putter, value))
+            return False
+
+    def schedule_take(self, schedule, taker):
+        if self.putters:
+            putter, value = self.putters.pop(0)
+            schedule(taker, value)
+            schedule(putter, value)
+            return True
+        else:
+            self.takers.append(taker)
+            return False
 
 
 select = Select

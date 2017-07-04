@@ -1,150 +1,53 @@
 '''
-Streaming protobuf codec.
-
-Handles asynchronous encoding and decoding of protobuf value streams.
-
-Value format: ((field_name, field_type, field_flags), field_value)
-    field_name (str):  Field name string.
-    field_type (Type): Subclass of Type.
-    field_flags (int): Field bit flags: `FLAG_REPEATED`.
-    field_value (Any): Depends on field_type.
-                       MessageTypes have `field_value == None`.
-
-Type classes are either scalar or message-like.  `load()` generators of
-scalar types return the value, message types stream it to a target
-generator as described above.  All types can be loaded and dumped
-synchronously with `loads()` and `dumps()`.
+Extremely minimal streaming codec for a subset of protobuf.  Supports uint32,
+bytes, string, embedded message and repeated fields.
 '''
 
 from micropython import const
-from streams import StreamReader, BufferWriter
+
+_UVARINT_BUFFER = bytearray(1)
 
 
-def build_message(msg_type, callback=None, *args):
-    msg = msg_type()
-    try:
-        while True:
-            field, fvalue = yield
-            fname, ftype, fflags = field
-            if issubclass(ftype, MessageType):
-                fvalue = yield from build_message(ftype)
-            if fflags & FLAG_REPEATED:
-                prev_value = getattr(msg, fname, [])
-                prev_value.append(fvalue)
-                fvalue = prev_value
-            setattr(msg, fname, fvalue)
-    except EOFError:
-        fill_missing_fields(msg)
-        if callback is not None:
-            callback(msg, *args)
-        return msg
+async def load_uvarint(reader):
+    buffer = _UVARINT_BUFFER
+    result = 0
+    shift = 0
+    byte = 0x80
+    while byte & 0x80:
+        await reader.readinto(buffer)
+        byte = buffer[0]
+        result += (byte & 0x7F) << shift
+        shift += 7
+    return result
 
 
-def fill_missing_fields(msg):
-    for tag in msg.FIELDS:
-        field = msg.FIELDS[tag]
-        if not hasattr(msg, field[0]):
-            setattr(msg, field[0], None)
+async def dump_uvarint(writer, n):
+    buffer = _UVARINT_BUFFER
+    shifted = True
+    while shifted:
+        shifted = n >> 7
+        buffer[0] = (n & 0x7F) | (0x80 if shifted else 0x00)
+        await writer.write(buffer)
+        n = shifted
 
 
-class Type:
-
-    @classmethod
-    def loads(cls, value):
-        source = StreamReader(value, len(value))
-        loader = cls.load(source)
-        try:
-            while True:
-                loader.send(None)
-        except StopIteration as e:
-            return e.value
-
-    @classmethod
-    def dumps(cls, value):
-        target = BufferWriter()
-        dumper = cls.dump(value, target)
-        try:
-            while True:
-                dumper.send(None)
-        except StopIteration:
-            return target.buffer
-
-
-_uvarint_buffer = bytearray(1)
-
-
-class UVarintType(Type):
+class UVarintType:
     WIRE_TYPE = 0
 
-    @staticmethod
-    async def load(source):
-        value, shift, quantum = 0, 0, 0x80
-        while quantum & 0x80:
-            await source.read_into(_uvarint_buffer)
-            quantum = _uvarint_buffer[0]
-            value = value + ((quantum & 0x7F) << shift)
-            shift += 7
-        return value
 
-    @staticmethod
-    async def dump(value, target):
-        shifted = True
-        while shifted:
-            shifted = value >> 7
-            _uvarint_buffer[0] = (value & 0x7F) | (0x80 if shifted else 0x00)
-            await target.write(_uvarint_buffer)
-            value = shifted
-
-
-class BoolType(Type):
+class BoolType:
     WIRE_TYPE = 0
 
-    @staticmethod
-    async def load(source):
-        return await UVarintType.load(source) != 0
 
-    @staticmethod
-    async def dump(value, target):
-        await target.write(b'\x01' if value else b'\x00')
-
-
-class BytesType(Type):
+class BytesType:
     WIRE_TYPE = 2
 
-    @staticmethod
-    async def load(source):
-        size = await UVarintType.load(source)
-        data = bytearray(size)
-        await source.read_into(data)
-        return data
 
-    @staticmethod
-    async def dump(value, target):
-        await UVarintType.dump(len(value), target)
-        await target.write(value)
-
-
-class UnicodeType(Type):
+class UnicodeType:
     WIRE_TYPE = 2
 
-    @staticmethod
-    async def load(source):
-        size = await UVarintType.load(source)
-        data = bytearray(size)
-        await source.read_into(data)
-        return str(data, 'utf-8')
 
-    @staticmethod
-    async def dump(value, target):
-        data = bytes(value, 'utf-8')
-        await UVarintType.dump(len(data), target)
-        await target.write(data)
-
-
-FLAG_REPEATED = const(1)
-
-
-class MessageType(Type):
+class MessageType:
     WIRE_TYPE = 2
     FIELDS = {}
 
@@ -159,61 +62,141 @@ class MessageType(Type):
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.__dict__)
 
-    @classmethod
-    async def load(cls, source=None, target=None):
-        if target is None:
-            target = build_message(cls)
-        if source is None:
-            source = StreamReader()
-        try:
-            while True:
-                fkey = await UVarintType.load(source)
-                ftag = fkey >> 3
-                wtype = fkey & 7
-                if ftag in cls.FIELDS:
-                    field = cls.FIELDS[ftag]
-                    ftype = field[1]
-                    if wtype != ftype.WIRE_TYPE:
-                        raise TypeError(
-                            'Value of tag %s has incorrect wiretype %s, %s expected.' %
-                            (ftag, wtype, ftype.WIRE_TYPE))
-                else:
-                    ftype = {0: UVarintType, 2: BytesType}[wtype]
-                    await ftype.load(source)
-                    continue
-                if issubclass(ftype, MessageType):
-                    flen = await UVarintType.load(source)
-                    slen = source.set_limit(flen)
-                    target.send((field, None))
-                    await ftype.load(source, target)
-                    source.set_limit(slen)
-                else:
-                    fvalue = await ftype.load(source)
-                    target.send((field, fvalue))
-        except EOFError as e:
-            try:
-                target.throw(e)
-            except StopIteration as e:
-                return e.value
 
-    @classmethod
-    async def dump(cls, msg, target):
-        for ftag in cls.FIELDS:
-            fname, ftype, fflags = cls.FIELDS[ftag]
-            fvalue = getattr(msg, fname, None)
-            if fvalue is None:
-                continue
-            key = (ftag << 3) | ftype.WIRE_TYPE
-            if fflags & FLAG_REPEATED:
-                for svalue in fvalue:
-                    await UVarintType.dump(key, target)
-                    if issubclass(ftype, MessageType):
-                        await BytesType.dump(ftype.dumps(svalue), target)
-                    else:
-                        await ftype.dump(svalue, target)
+class LimitedReader:
+
+    def __init__(self, reader, limit):
+        self.reader = reader
+        self.limit = limit
+
+    async def readinto(self, buf):
+        if self.limit < len(buf):
+            raise EOFError
+        else:
+            nread = await self.reader.readinto(buf)
+            self.limit -= nread
+            return nread
+
+
+class CountingWriter:
+
+    def __init__(self):
+        self.size = 0
+
+    async def write(self, buf):
+        nwritten = len(buf)
+        self.size += nwritten
+        return nwritten
+
+
+FLAG_REPEATED = const(1)
+
+
+async def load_message(reader, msg_type):
+    fields = msg_type.FIELDS
+    msg = msg_type()
+
+    while True:
+        try:
+            fkey = await load_uvarint(reader)
+        except EOFError:
+            break  # no more fields to load
+
+        ftag = fkey >> 3
+        wtype = fkey & 7
+
+        field = fields.get(ftag, None)
+
+        if field is None:  # unknown field, skip it
+            if wtype == 0:
+                await load_uvarint(reader)
+            elif wtype == 2:
+                ivalue = await load_uvarint(reader)
+                await reader.readinto(bytearray(ivalue))
             else:
-                await UVarintType.dump(key, target)
-                if issubclass(ftype, MessageType):
-                    await BytesType.dump(ftype.dumps(fvalue), target)
-                else:
-                    await ftype.dump(fvalue, target)
+                raise ValueError
+            continue
+
+        fname, ftype, fflags = field
+        if wtype != ftype.WIRE_TYPE:
+            raise TypeError  # parsed wire type differs from the schema
+
+        ivalue = await load_uvarint(reader)
+
+        if ftype is UVarintType:
+            fvalue = ivalue
+        elif ftype is BoolType:
+            fvalue = bool(ivalue)
+        elif ftype is BytesType:
+            fvalue = bytearray(ivalue)
+            await reader.readinto(fvalue)
+        elif ftype is UnicodeType:
+            fvalue = bytearray(ivalue)
+            await reader.readinto(fvalue)
+            fvalue = str(fvalue, 'utf8')
+        elif issubclass(ftype, MessageType):
+            fvalue = await load_message(LimitedReader(reader, ivalue), ftype)
+        else:
+            raise TypeError  # field type is unknown
+
+        if fflags & FLAG_REPEATED:
+            pvalue = getattr(msg, fname, [])
+            pvalue.append(fvalue)
+            fvalue = pvalue
+        setattr(msg, fname, fvalue)
+
+    # fill missing fields
+    for tag in msg.FIELDS:
+        field = msg.FIELDS[tag]
+        if not hasattr(msg, field[0]):
+            setattr(msg, field[0], None)
+
+    return msg
+
+
+async def dump_message(writer, msg):
+    repvalue = [0]
+    mtype = msg.__class__
+    fields = mtype.FIELDS
+
+    for ftag in fields:
+        field = fields[ftag]
+        fname = field[0]
+        ftype = field[1]
+        fflags = field[2]
+
+        fvalue = getattr(msg, fname, None)
+        if fvalue is None:
+            continue
+
+        fkey = (ftag << 3) | ftype.WIRE_TYPE
+
+        if not fflags & FLAG_REPEATED:
+            repvalue[0] = fvalue
+            fvalue = repvalue
+
+        for svalue in fvalue:
+            await dump_uvarint(writer, fkey)
+
+            if ftype is UVarintType:
+                await dump_uvarint(writer, svalue)
+
+            elif ftype is BoolType:
+                await dump_uvarint(writer, int(svalue))
+
+            elif ftype is BytesType:
+                await dump_uvarint(writer, len(svalue))
+                await writer.write(svalue)
+
+            elif ftype is UnicodeType:
+                await dump_uvarint(writer, len(svalue))
+                await writer.write(bytes(svalue, 'utf8'))
+
+            elif issubclass(ftype, MessageType):
+                counter = CountingWriter()
+                await dump_message(counter, svalue)
+                await dump_uvarint(writer, counter.size)
+                await dump_message(writer, svalue)
+
+            else:
+                raise TypeError

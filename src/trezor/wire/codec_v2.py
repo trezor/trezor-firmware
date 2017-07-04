@@ -1,190 +1,232 @@
 from micropython import const
 import ustruct
-import ubinascii
 
-# trezor wire protocol #2:
-#
-# # hid report (64B)
-# - report marker (1B)
-# - session id (4B, BE)
-# - payload (59B)
-#
-# # message
-# - streamed as payloads of hid reports
-# - message type (4B, BE)
-# - data length (4B, BE)
-# - data (var-length)
-# - data crc32 checksum (4B, BE)
-#
-# # sessions
-# - reports are interleaved, need to be dispatched by session id
+from trezor import io
+from trezor import loop
+from trezor import utils
+from trezor.crypto import random
 
-REP_MARKER_HEADER = const(72)  # ord('H')
-REP_MARKER_DATA = const(68)  # ord('D')
-REP_MARKER_OPEN = const(79)  # ord('O')
-REP_MARKER_CLOSE = const(67)  # ord('C')
-
-_REP_HEADER = '>BL'  # marker, session id
-_MSG_HEADER = '>LL'  # msg type, data length
-_MSG_FOOTER = '>L'  # data checksum
+# TREZOR wire protocol #2:
+#
+# # Initial message report
+# uint8_t  marker;        // REP_MARKER_INIT
+# uint32_t session_id;    // Big-endian
+# uint32_t message_type;  // Big-endian
+# uint32_t message_size;  // Big-endian
+# uint8_t  data[];
+#
+# # Continuation message report
+# uint8_t  marker;      // REP_MARKER_CONT
+# uint32_t session_id;  // Big-endian
+# uint32_t sequence;    // Big-endian, 0 for 1st continuation report
+# uint8_t  data[];
 
 _REP_LEN = const(64)
-_REP_HEADER_LEN = ustruct.calcsize(_REP_HEADER)
-_MSG_HEADER_LEN = ustruct.calcsize(_MSG_HEADER)
-_MSG_FOOTER_LEN = ustruct.calcsize(_MSG_FOOTER)
+
+_REP_MARKER_INIT = const(0x01)
+_REP_MARKER_CONT = const(0x02)
+_REP_MARKER_OPEN = const(0x03)
+_REP_MARKER_CLOSE = const(0x04)
+
+_REP = '>BL'         # marker, session_id
+_REP_INIT = '>BLLL'  # marker, session_id, message_type, message_size
+_REP_CONT = '>BLL'   # marker, session_id, sequence
+_REP_INIT_DATA = const(13)  # offset of data in init report
+_REP_CONT_DATA = const(9)   # offset of data in cont report
 
 
-def parse_report(data):
-    if len(data) != _REP_LEN:
-        raise ValueError('Invalid buffer size')
-    marker, session_id = ustruct.unpack(_REP_HEADER, data)
-    return marker, session_id, data[_REP_HEADER_LEN:]
-
-
-def parse_message(data):
-    if len(data) != _REP_LEN - _REP_HEADER_LEN:
-        raise ValueError('Invalid buffer size')
-    msg_type, data_len = ustruct.unpack(_MSG_HEADER, data)
-    return msg_type, data_len, data[_MSG_HEADER_LEN:]
-
-
-def parse_message_footer(data):
-    if len(data) != _MSG_FOOTER_LEN:
-        raise ValueError('Invalid buffer size')
-    data_checksum, = ustruct.unpack(_MSG_FOOTER, data)
-    return data_checksum,
-
-
-def serialize_report_header(data, marker, session_id):
-    if len(data) < _REP_HEADER_LEN:
-        raise ValueError('Invalid buffer size')
-    ustruct.pack_into(_REP_HEADER, data, 0, marker, session_id)
-
-
-def serialize_message_header(data, msg_type, msg_len):
-    if len(data) < _REP_HEADER_LEN + _MSG_HEADER_LEN:
-        raise ValueError('Invalid buffer size')
-    ustruct.pack_into(_MSG_HEADER, data, _REP_HEADER_LEN, msg_type, msg_len)
-
-
-def serialize_message_footer(data, checksum):
-    if len(data) < _MSG_FOOTER_LEN:
-        raise ValueError('Invalid buffer size')
-    ustruct.pack_into(_MSG_FOOTER, data, 0, checksum)
-
-
-def serialize_opened_session(data, session_id):
-    serialize_report_header(data, REP_MARKER_OPEN, session_id)
-
-
-class MessageChecksumError(Exception):
-    pass
-
-
-def decode_stream(session_id, callback, *args):
-    '''Decode a wire message from the report data and stream it to target.
-
-Receives report payloads.  After first report, creates target by calling
-`callback(session_id, msg_type, data_len, *args)` and sends chunks of message
-data.
-Throws `EOFError` to target after last data chunk, in case of valid checksum.
-Throws `MessageChecksumError` to target if data doesn't match the checksum.
-
-Pass report payloads as `memoryview` for cheaper slicing.
-'''
-    message = yield  # read first report
-    msg_type, data_len, data_tail = parse_message(message)
-
-    target = callback(session_id, msg_type, data_len, *args)
-    target.send(None)
-
-    checksum = 0  # crc32
-
-    while data_len > 0:
-
-        data_chunk = data_tail[:data_len]  # slice off the garbage at the end
-        data_tail = data_tail[len(data_chunk):]  # slice off what we have read
-        data_len -= len(data_chunk)
-        target.send(data_chunk)
-
-        checksum = ubinascii.crc32(data_chunk, checksum)
-
-        if data_len > 0:
-            data_tail = yield  # read next report
-
-    msg_footer = data_tail[:_MSG_FOOTER_LEN]
-    if len(msg_footer) < _MSG_FOOTER_LEN:
-        data_tail = yield  # read report with the rest of checksum
-        footer_tail = data_tail[:_MSG_FOOTER_LEN - len(msg_footer)]
-        msg_footer = bytearray(msg_footer)
-        msg_footer.extend(footer_tail)
-
-    data_checksum, = parse_message_footer(msg_footer)
-    if data_checksum != checksum:
-        target.throw(MessageChecksumError((checksum, data_checksum)))
-    else:
-        target.throw(EOFError())
-
-
-def encode(session_id, msg_type, msg_data, callback):
-    '''Encode a full wire message directly to reports and stream it to callback.
-
-Callback receives `memoryview`s of HID reports which are valid until the
-callback returns.
+class Reader:
     '''
-    report = memoryview(bytearray(_REP_LEN))
-    serialize_report_header(report, REP_MARKER_HEADER, session_id)
-    serialize_message_header(report, msg_type, len(msg_data))
+    Decoder for v2 codec over the HID layer.  Provides readable async-file-like
+    interface.
+    '''
 
-    source_data = memoryview(msg_data)
-    target_data = report[_REP_HEADER_LEN + _MSG_HEADER_LEN:]
+    def __init__(self, iface, sid):
+        self.iface = iface
+        self.sid = sid
+        self.type = None
+        self.size = None
+        self.data = None
+        self.ofs = 0
+        self.seq = 0
 
-    checksum = ubinascii.crc32(msg_data)
+    def __repr__(self):
+        return '<Reader: sid=%x type=%d size=%dB>' % (self.sid, self.type, self.size)
 
-    msg_footer = bytearray(_MSG_FOOTER_LEN)
-    serialize_message_footer(msg_footer, checksum)
+    async def open(self):
+        '''
+        Begin the message transmission by waiting for initial V2 message report
+        on this session. `self.type` and `self.size` are initialized and
+        available after `open()` returns.
+        '''
+        read = loop.select(self.iface | loop.READ)
+        while True:
+            # wait for initial report
+            report = await read
+            marker, sid, mtype, msize = ustruct.unpack(_REP_INIT, report)
+            if sid == self.sid and marker == _REP_MARKER_INIT:
+                break
 
-    first = True
+        # load received message header
+        self.type = mtype
+        self.size = msize
+        self.data = report[_REP_INIT_DATA:_REP_INIT_DATA + msize]
+        self.ofs = 0
+        self.seq = 0
 
-    while True:
-        # move as much as possible from source to target
-        n = min(len(target_data), len(source_data))
-        target_data[:n] = source_data[:n]
-        source_data = source_data[n:]
-        target_data = target_data[n:]
+    async def readinto(self, buf):
+        '''
+        Read exactly `len(buf)` bytes into `buf`, waiting for additional
+        reports, if needed.  Raises `EOFError` if end-of-message is encountered
+        before the full read can be completed.
+        '''
+        if self.size < len(buf):
+            raise EOFError
 
-        # continue with the footer if source is empty and we have space
-        if not source_data and target_data and msg_footer:
-            source_data = msg_footer
-            msg_footer = None
-            continue
+        read = loop.select(self.iface | loop.READ)
+        nread = 0
+        while nread < len(buf):
+            if self.ofs == len(self.data):
+                # we are at the end of received data
+                # wait for continuation report
+                while True:
+                    report = await read
+                    marker, sid, seq = ustruct.unpack(_REP_CONT, report)
+                    if sid == self.sid and marker == _REP_MARKER_CONT:
+                        if seq != self.seq:
+                            raise ValueError
+                        break
+                self.data = report[_REP_CONT_DATA:_REP_CONT_DATA + self.size]
+                self.seq += 1
+                self.ofs = 0
 
-        # fill the rest of the report with 0x00
-        x = 0
-        to_fill = len(target_data)
-        while x < to_fill:
-            target_data[x] = 0
-            x += 1
+            # copy as much as possible to target buffer
+            nbytes = utils.memcpy(buf, nread, self.data, self.ofs, len(buf))
+            nread += nbytes
+            self.ofs += nbytes
+            self.size -= nbytes
 
-        callback(report)
-
-        if not source_data and not msg_footer:
-            break
-
-        # reset to skip the magic and session ID
-        if first:
-            serialize_report_header(report, REP_MARKER_DATA, session_id)
-            first = False
-        target_data = report[_REP_HEADER_LEN:]
-
-
-def encode_session_open(session_id, callback):
-    report = bytearray(_REP_LEN)
-    serialize_report_header(report, REP_MARKER_OPEN, session_id)
-    callback(report)
+        return nread
 
 
-def encode_session_close(session_id, callback):
-    report = bytearray(_REP_LEN)
-    serialize_report_header(report, REP_MARKER_CLOSE, session_id)
-    callback(report)
+class Writer:
+    '''
+    Encoder for v2 codec over the HID layer.  Provides writable async-file-like
+    interface.
+    '''
+
+    def __init__(self, iface, sid, mtype, msize):
+        self.iface = iface
+        self.sid = sid
+        self.type = mtype
+        self.size = msize
+        self.data = bytearray(_REP_LEN)
+        self.ofs = _REP_INIT_DATA
+        self.seq = 0
+
+        # load the report with initial header
+        ustruct.pack_into(_REP_INIT, self.data, 0,
+                          _REP_MARKER_INIT, sid, mtype, msize)
+
+    async def write(self, buf):
+        '''
+        Encode and write every byte from `buf`.  Does not need to be called in
+        case message has zero length.  Raises `EOFError` if the length of `buf`
+        exceeds the remaining message length.
+        '''
+        if self.size < len(buf):
+            raise EOFError
+
+        write = loop.select(self.iface | loop.WRITE)
+        nwritten = 0
+        while nwritten < len(buf):
+            # copy as much as possible to report buffer
+            nbytes = utils.memcpy(self.data, self.ofs, buf, nwritten, len(buf))
+            nwritten += nbytes
+            self.ofs += nbytes
+            self.size -= nbytes
+
+            if self.ofs == _REP_LEN:
+                # we are at the end of the report, flush it, and prepare header
+                await write
+                io.send(self.iface, self.data)
+                ustruct.pack_into(_REP_CONT, self.data, 0,
+                                  _REP_MARKER_CONT, self.sid, self.seq)
+                self.ofs = _REP_CONT_DATA
+                self.seq += 1
+
+        return nwritten
+
+    async def close(self):
+        '''Flush and close the message transmission.'''
+        if self.ofs != _REP_CONT_DATA:
+            # we didn't write anything or last write() wasn't report-aligned,
+            # pad the final report and flush it
+            while self.ofs < _REP_LEN:
+                self.data[self.ofs] = 0x00
+                self.ofs += 1
+
+            await loop.select(self.iface | loop.WRITE)
+            io.send(self.iface, self.data)
+
+
+class SesssionSupervisor:
+    '''Handles session open/close requests on v2 protocol layer.'''
+
+    def __init__(self, iface, handler):
+        self.iface = iface
+        self.handler = handler
+        self.handling_tasks = {}
+        self.session_report = bytearray(_REP_LEN)
+
+    async def listen(self):
+        '''
+        Listen for open/close requests on configured interface.  After open
+        request, session is started and a new task is scheduled to handle it.
+        After close request, the handling task is closed and session terminated.
+        Both requests receive responses confirming the operation.
+        '''
+        read = loop.select(self.iface | loop.READ)
+        write = loop.select(self.iface | loop.WRITE)
+        while True:
+            report = await read
+            repmarker, repsid = ustruct.unpack(_REP, report)
+            # because tasks paused on I/O have a priority over time-scheduled
+            # tasks, we need to `yield` explicitly before sending a response to
+            # open/close request.  Otherwise the handler would have no chance to
+            # run and schedule communication.
+            if repmarker == _REP_MARKER_OPEN:
+                newsid = self.newsid()
+                self.open(newsid)
+                yield
+                await write
+                self.sendopen(newsid)
+            elif repmarker == _REP_MARKER_CLOSE:
+                self.close(repsid)
+                yield
+                await write
+                self.sendclose(repsid)
+
+    def open(self, sid):
+        if sid not in self.handling_tasks:
+            task = self.handling_tasks[sid] = self.handler(self.iface, sid)
+            loop.schedule_task(task)
+
+    def close(self, sid):
+        if sid in self.handling_tasks:
+            task = self.handling_tasks.pop(sid)
+            task.close()
+
+    def newsid(self):
+        while True:
+            sid = random.uniform(0xffffffff) + 1
+            if sid not in self.handling_tasks:
+                return sid
+
+    def sendopen(self, sid):
+        ustruct.pack_into(_REP, self.session_report, 0, _REP_MARKER_OPEN, sid)
+        io.send(self.iface, self.session_report)
+
+    def sendclose(self, sid):
+        ustruct.pack_into(_REP, self.session_report, 0, _REP_MARKER_CLOSE, sid)
+        io.send(self.iface, self.session_report)

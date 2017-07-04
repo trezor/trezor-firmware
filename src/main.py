@@ -5,6 +5,8 @@ from trezor import config
 from trezor import msg
 from trezor import ui
 from trezor import wire
+from trezor import loop
+from trezor.wire import codec_v2
 
 config.init()
 
