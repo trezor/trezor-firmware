@@ -84,6 +84,8 @@ const TokenType tokens[TOKENS_COUNT] = {
 	{61, "\x08\x5f\xb4\xf2\x40\x31\xea\xed\xbc\x2b\x61\x1a\xa5\x28\xf2\x23\x43\xeb\x52\xdb", " BEC", 8},
 };
 
+const TokenType *UnknownToken = (const TokenType *)1;
+
 const TokenType *tokenByChainAddress(uint8_t chain_id, const uint8_t *address)
 {
 	if (!address) return 0;
@@ -92,5 +94,5 @@ const TokenType *tokenByChainAddress(uint8_t chain_id, const uint8_t *address)
 			return &(tokens[i]);
 		}
 	}
-	return 0;
+	return UnknownToken;
 }

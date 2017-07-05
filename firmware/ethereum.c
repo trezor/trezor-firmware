@@ -203,6 +203,10 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 	bn_read_uint32(1000000000, &bn1e9);
 	const char *suffix = NULL;
 	int decimals = 18;
+	if (token == UnknownToken) {
+		strlcpy(buf, "Unrecognized Token", buflen);
+		return;
+	} else
 	if (token != NULL) {
 		suffix = token->ticker;
 		decimals = token->decimals;
