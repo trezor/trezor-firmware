@@ -17,7 +17,7 @@ else:
 
 setup(
     name='trezor',
-    version='0.7.16',
+    version='0.8.0a0',
     author='TREZOR',
     author_email='info@trezor.io',
     description='Python library for communicating with TREZOR Hardware Wallet',
