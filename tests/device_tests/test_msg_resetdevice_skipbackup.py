@@ -88,6 +88,42 @@ class TestDeviceResetSkipBackup(common.TrezorTest):
         ret = self.client.call_raw(proto.BackupDevice())
         self.assertIsInstance(ret, proto.Failure)
 
+    def test_reset_device_skip_backup_break(self):
+
+        external_entropy = b'zlutoucky kun upel divoke ody' * 2
+        strength = 128
+
+        ret = self.client.call_raw(proto.ResetDevice(
+            display_random=False,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            language='english',
+            label='test',
+            skip_backup=True
+        ))
+
+        # Provide entropy
+        self.assertIsInstance(ret, proto.EntropyRequest)
+        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
+        self.assertIsInstance(ret, proto.Success)
+
+        # Check if device is properly initialized
+        resp = self.client.call_raw(proto.Initialize())
+        self.assertTrue(resp.initialized)
+        self.assertTrue(resp.needs_backup)
+
+        # start Backup workflow
+        ret = self.client.call_raw(proto.BackupDevice())
+
+        # send Initialize -> break workflow
+        ret = self.client.call_raw(proto.Initialize())
+        self.assertIsInstance(resp, proto.Features)
+
+        # start backup again - should fail
+        ret = self.client.call_raw(proto.BackupDevice())
+        self.assertIsInstance(ret, proto.Failure)
+
     def test_initialized_device_backup_fail(self):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.call_raw(proto.BackupDevice())
