@@ -116,6 +116,10 @@ void reset_backup(bool separated)
 		return;
 	}
 
+	storage.has_needs_backup = true;
+	storage.needs_backup = false;
+	storage_commit();
+
 	int pass, word_pos, i = 0, j;
 
 	for (pass = 0; pass < 2; pass++) {
@@ -172,10 +176,6 @@ void reset_backup(bool separated)
 			}
 		}
 	}
-
-	storage.has_needs_backup = true;
-	storage.needs_backup = false;
-	storage_commit();
 
 	if (separated) {
 		fsm_sendSuccess(_("Seed successfully backed up"));
