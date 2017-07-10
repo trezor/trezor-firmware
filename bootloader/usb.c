@@ -328,7 +328,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		}
 		// struct.unpack(">HL") => msg, size
 		msg_id = (buf[3] << 8) + buf[4];
-		msg_size = (buf[5] << 24)+ (buf[6] << 16) + (buf[7] << 8) + buf[8];
+		msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
 	}
 
 	if (flash_state == STATE_READY || flash_state == STATE_OPEN) {
@@ -342,6 +342,10 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			return;
 		}
 		if (msg_id == 0x0020) {		// SelfTest message (id 32)
+
+			// USB TEST
+
+			bool status_usb = (buf[9] == 0x0a) && (buf[10] == 53) && (0 == memcmp(buf + 11, "\x00\xFF\x55\xAA\x66\x99\x33\xCC" "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!" "\x00\xFF\x55\xAA\x66\x99\x33\xCC", 53));
 
 			// CPU TEST
 
@@ -401,7 +405,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 			bool status_flash = (0 == memcmp(hash, "\x49\x46\xe9\xa5\xf4\xc2\x57\xe9\xcf\xd1\x88\x78\xe9\x66\x9b\x0d\xcd\x4e\x82\x41\xb3\x9c\xee\xb7\x2c\x1d\x14\x4a\xe1\xe4\xcb\xd7", 32));
 
-			bool status_all = status_cpu && status_flash;
+			bool status_all = status_usb && status_cpu && status_flash;
 
 			if (status_all) {
 				send_msg_success(dev);
@@ -410,9 +414,9 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			}
 			layoutDialog(status_all ? &bmp_icon_info : &bmp_icon_error,
 				NULL, NULL, NULL,
+				status_usb   ? "Test USB ... OK"   : "Test USB ... Failed",
 				status_cpu   ? "Test CPU ... OK"   : "Test CPU ... Failed",
 				status_flash ? "Test FLASH ... OK" : "Test FLASH ... Failed",
-				NULL,
 				NULL,
 				NULL,
 				NULL
