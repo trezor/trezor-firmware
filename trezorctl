@@ -75,8 +75,8 @@ def cli(ctx, transport, path, verbose, is_json):
 @cli.resultcallback()
 def print_result(res, transport, path, verbose, is_json):
     if is_json:
-        if hasattr(res, '__module__') and res.__module__ == 'messages_pb2':
-            from google.protobuf import json_format
+        from google.protobuf import json_format, message
+        if isinstance(res, message.Message):
             click.echo(json_format.MessageToJson(res, preserving_proto_field_name=True))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
