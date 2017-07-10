@@ -95,7 +95,7 @@ def pprint(msg):
     msg_id = mapping.get_type(msg)
     msg_json = json_format.MessageToDict(msg, preserving_proto_field_name=True)
     """
-    if isinstance(msg, proto.FirmwareUpload):
+    if isinstance(msg, proto.FirmwareUpload) or isinstance(msg, proto.SelfTest):
         return "<%s> (%d bytes):\n" % (msg_class, msg_size)
     else:
         return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
@@ -1025,7 +1025,11 @@ class ProtocolMixin(object):
         if self.features.bootloader_mode is False:
             raise Exception("Device must be in bootloader mode")
 
-        return self.call(proto.SelfTest())
+        # 1 megabyte of data
+        # sha256(data)  == fbbab289f7f94b25736c58be46a994c441fd02552cc6022352e3d86d2fab7c83
+        # blake2s(data) == c32f38661f7ec6436e8f1f42b43f32daa0b011a2c0ce140324bda5d66e99b72f
+        payload = bytes(bytearray(4096 * list(range(256))))
+        return self.call(proto.SelfTest(payload=payload))
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
