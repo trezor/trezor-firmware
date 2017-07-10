@@ -22,7 +22,7 @@
 import binascii
 import json
 import requests
-from . import protobuf_json
+from google.protobuf import json_format
 from . import messages_pb2 as proto
 from .transport import TransportV1
 
@@ -109,8 +109,8 @@ class BridgeTransport(TransportV1):
         # Override main 'write' method, HTTP transport cannot be
         # splitted to chunks
         cls = protobuf_msg.__class__.__name__
-        msg = protobuf_json.pb2json(protobuf_msg)
-        payload = '{"type": "%s", "message": %s}' % (cls, json.dumps(msg))
+        msg = json_format.MessageToJson(protobuf_msg, preserving_proto_field_name=True)
+        payload = '{"type": "%s", "message": %s}' % (cls, msg)
         r = self.conn.post(TREZORD_HOST + '/call/%s' % self.session, data=payload)
         if r.status_code != 200:
             raise Exception('trezord: Could not write message' + get_error(r))
@@ -122,5 +122,5 @@ class BridgeTransport(TransportV1):
             raise Exception('No response stored')
         cls = getattr(proto, self.response['type'])
         inst = cls()
-        pb = protobuf_json.json2pb(inst, self.response['message'])
+        pb = json_format.ParseDict(self.response['message'], inst)
         return (0, 'protobuf', pb)

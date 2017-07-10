@@ -24,7 +24,6 @@ import json
 import base64
 import click
 
-from trezorlib import protobuf_json
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
 import trezorlib.types_pb2 as types
 
@@ -77,7 +76,8 @@ def cli(ctx, transport, path, verbose, is_json):
 def print_result(res, transport, path, verbose, is_json):
     if is_json:
         if hasattr(res, '__module__') and res.__module__ == 'messages_pb2':
-            click.echo(protobuf_json.pb2json(res))
+            from google.protobuf import json_format
+            click.echo(json_format.MessageToJson(res, preserving_proto_field_name=True))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
     else:
@@ -101,7 +101,11 @@ def print_result(res, transport, path, verbose, is_json):
 def ls(transport_name):
     transport_class = get_transport_class_by_name(transport_name)
     devices = transport_class.enumerate()
-    return [d[0] for d in devices]
+    if transport_name == 'usb':
+        return [dev[0] for dev in devices]
+    if transport_name == 'bridge':
+        return devices
+    return []
 
 
 #

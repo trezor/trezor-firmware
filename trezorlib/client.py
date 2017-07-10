@@ -93,7 +93,7 @@ def pprint(msg):
     """
     msg_ser = msg.SerializeToString()
     msg_id = mapping.get_type(msg)
-    msg_json = json.dumps(protobuf_json.pb2json(msg))
+    msg_json = json_format.MessageToDict(msg, preserving_proto_field_name=True)
     """
     if isinstance(msg, proto.FirmwareUpload):
         return "<%s> (%d bytes):\n" % (msg_class, msg_size)

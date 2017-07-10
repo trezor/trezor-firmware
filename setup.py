@@ -29,7 +29,6 @@ setup(
         'trezorlib.debuglink',
         'trezorlib.mapping',
         'trezorlib.messages_pb2',
-        'trezorlib.protobuf_json',
         'trezorlib.qt.pinmatrix',
         'trezorlib.tools',
         'trezorlib.transport',
