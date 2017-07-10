@@ -760,6 +760,7 @@ message FirmwareUpload {
  * @next Failure
  */
 message SelfTest {
+	optional bytes payload = 1;			// payload to be used in self-test
 }
 
 /////////////////////////////////////////////////////////////
