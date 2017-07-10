@@ -1025,11 +1025,7 @@ class ProtocolMixin(object):
         if self.features.bootloader_mode is False:
             raise Exception("Device must be in bootloader mode")
 
-        # 1 megabyte of data
-        # sha256(data)  == fbbab289f7f94b25736c58be46a994c441fd02552cc6022352e3d86d2fab7c83
-        # blake2s(data) == c32f38661f7ec6436e8f1f42b43f32daa0b011a2c0ce140324bda5d66e99b72f
-        payload = bytes(bytearray(4096 * list(range(256))))
-        return self.call(proto.SelfTest(payload=payload))
+        return self.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
