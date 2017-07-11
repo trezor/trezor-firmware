@@ -3080,20 +3080,31 @@ END_TEST
 
 START_TEST(test_ethereum_address)
 {
+	static const char *vectors[] = {
+		"52908400098527886E0F7030069857D2E4169EE7",
+		"8617E340B3D01FA5F11F306F4090FD50E238070D",
+		"de709f2102306220921060314715629080e2fb77",
+		"27b1fdb04752bbc536007a920d24acb045561c26",
+		"5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
+		"fB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
+		"dbF03B407c01E7cD3CBea99509d93f8DDDC8C6FB",
+		"D1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
+		"5A4EAB120fB44eb6684E5e32785702FF45ea344D",
+		"5be4BDC48CeF65dbCbCaD5218B1A7D37F58A0741",
+		"a7dD84573f5ffF821baf2205745f768F8edCDD58",
+		"027a49d11d118c0060746F1990273FcB8c2fC196",
+		"CD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+		0
+	};
 	uint8_t addr[20];
 	char address[41];
-
-	memcpy(addr, fromhex("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), 20);
-	ethereum_address_checksum(addr, address);
-	ck_assert_str_eq(address, "Cd2a3d9f938e13Cd947eC05ABC7fe734df8DD826");
-
-	memcpy(addr, fromhex("9ca0e998df92c5351cecbbb6dba82ac2266f7e0c"), 20);
-	ethereum_address_checksum(addr, address);
-	ck_assert_str_eq(address, "9Ca0e998dF92c5351cEcbBb6Dba82Ac2266f7e0C");
-
-	memcpy(addr, fromhex("cb16d0e54450cdd2368476e762b09d147972b637"), 20);
-	ethereum_address_checksum(addr, address);
-	ck_assert_str_eq(address, "cB16D0E54450Cdd2368476E762B09D147972b637");
+	const char **vec = vectors;
+	while (*vec) {
+		memcpy(addr, fromhex(*vec), 20);
+		ethereum_address_checksum(addr, address);
+		ck_assert_str_eq(address, *vec);
+		vec++;
+	}
 }
 END_TEST
 
