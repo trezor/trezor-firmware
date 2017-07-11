@@ -225,57 +225,62 @@ void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
-void layoutAddress(const char *address, const char *desc)
+void layoutAddress(const char *address, const char *desc, bool qrcode)
 {
-	oledSwipeLeft();
+	if (layoutLast != layoutAddress) {
+		oledSwipeLeft();
+	} else {
+		oledClear();
+	}
 	layoutLast = layoutAddress;
 
-	static unsigned char bitdata[QR_MAX_BITDATA];
-	int a, i, j;
-	int side = qr_encode(QR_LEVEL_M, 0, address, 0, bitdata);
-	int startx;
+	if (qrcode) {
+		static unsigned char bitdata[QR_MAX_BITDATA];
+		int side = qr_encode(QR_LEVEL_M, 0, address, 0, bitdata);
 
-	if (side > 0 && side <= 29) {
-		oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
-		for (i = 0; i < side; i++) {
-			for (j = 0; j< side; j++) {
-				a = j * side + i;
-				if (bitdata[a / 8] & (1 << (7 - a % 8))) {
-					oledClearPixel(2 + i * 2, 2 + j * 2);
-					oledClearPixel(3 + i * 2, 2 + j * 2);
-					oledClearPixel(2 + i * 2, 3 + j * 2);
-					oledClearPixel(3 + i * 2, 3 + j * 2);
+		if (side > 0 && side <= 29) {
+			oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
+			for (int i = 0; i < side; i++) {
+				for (int j = 0; j< side; j++) {
+					int a = j * side + i;
+					if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+						oledClearPixel(2 + i * 2, 2 + j * 2);
+						oledClearPixel(3 + i * 2, 2 + j * 2);
+						oledClearPixel(2 + i * 2, 3 + j * 2);
+						oledClearPixel(3 + i * 2, 3 + j * 2);
+					}
+				}
+			}
+		} else if (side > 0 && side <= 60) {
+			oledInvert(0, 0, (side + 3), (side + 3));
+			for (int i = 0; i < side; i++) {
+				for (int j = 0; j< side; j++) {
+					int a = j * side + i;
+					if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+						oledClearPixel(2 + i, 2 + j);
+					}
 				}
 			}
 		}
-		startx = 68;
-	} else if (side > 0 && side <= 60) {
-		oledInvert(0, 0, (side + 3), (side + 3));
-		for (i = 0; i < side; i++) {
-			for (j = 0; j< side; j++) {
-				a = j * side + i;
-				if (bitdata[a / 8] & (1 << (7 - a % 8))) {
-					oledClearPixel(2 + i, 2 + j);
-				}
-			}
-		}
-		startx = side + 6;
 	} else {
-		startx = 0;
+		uint32_t addrlen = strlen(address);
+		uint32_t rowlen = addrlen / 2;
+		if (addrlen % 2) {
+			rowlen++;
+		}
+		const char **str = split_message((const uint8_t *)address, addrlen, rowlen);
+		if (desc) {
+			oledDrawString(0, 0 * 9, desc);
+		}
+		for (int i = 0; i < 4; i++) {
+			oledDrawString(0, (i + 1) * 9 + 4, str[i]);
+		}
 	}
 
-	uint32_t addrlen = strlen(address);
-	uint32_t rowlen = addrlen / 4;
-	if (addrlen % 4) {
-		rowlen++;
-	}
-	const char **str = split_message((const uint8_t *)address, addrlen, rowlen);
-
-	if (desc) {
-		oledDrawString(startx, 0 * 9, desc);
-	}
-	for (i = 0; i < 4; i++) {
-		oledDrawString(startx, (i+1) * 9 + 4, str[i]);
+	if (!qrcode) {
+		static const char *btnNo = _("QR Code");
+		oledDrawString(2, OLED_HEIGHT - 8, btnNo);
+		oledInvert(0, OLED_HEIGHT - 9, oledStringWidth(btnNo) + 3, OLED_HEIGHT - 1);
 	}
 
 	static const char *btnYes = _("Continue");

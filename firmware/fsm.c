@@ -652,11 +652,13 @@ void fsm_msgGetAddress(GetAddress *msg)
 		} else {
 			strlcpy(desc, _("Address:"), sizeof(desc));
 		}
-		layoutAddress(resp->address, desc);
-		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-			layoutHome();
-			return;
+		bool qrcode = false;
+		for (;;) {
+			layoutAddress(resp->address, desc, qrcode);
+			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+				break;
+			}
+			qrcode = !qrcode;
 		}
 	}
 
@@ -684,14 +686,16 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 		char desc[16];
 		strlcpy(desc, "Address:", sizeof(desc));
 
-		char address[41];
-		data2hex(resp->address.bytes, 20, address);
+		char address[43] = { '0', 'x' };
+		ethereum_address_checksum(resp->address.bytes, address + 2);
 
-		layoutAddress(address, desc);
-		if (!protectButton(ButtonRequestType_ButtonRequest_Address, true)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-			layoutHome();
-			return;
+		bool qrcode = false;
+		for (;;) {
+			layoutAddress(address, desc, qrcode);
+			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+				break;
+			}
+			qrcode = !qrcode;
 		}
 	}
 

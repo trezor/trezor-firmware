@@ -29,6 +29,7 @@
 #include "crypto.h"
 #include "secp256k1.h"
 #include "sha3.h"
+#include "address.h"
 #include "util.h"
 #include "gettext.h"
 #include "ethereum_tokens.h"
@@ -249,16 +250,16 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const ui
 		ethereumFormatAmount(&val, token, amount, sizeof(amount));
 	}
 
-	static char _to1[17] = {0};
-	static char _to2[17] = {0};
-	static char _to3[17] = {0};
+	char _to1[] = "to 0x__________";
+	char _to2[] = "_______________";
+	char _to3[] = "_______________?";
 
 	if (to_len) {
-		strcpy(_to1, _("to "));
-		data2hex(to, 6, _to1 + 3);
-		data2hex(to + 6, 7, _to2);
-		data2hex(to + 13, 7, _to3);
-		_to3[14] = '?'; _to3[15] = 0;
+		char to_str[41];
+		ethereum_address_checksum(to, to_str);
+		memcpy(_to1 + 5, to_str, 10);
+		memcpy(_to2, to_str + 10, 15);
+		memcpy(_to3, to_str + 25, 15);
 	} else {
 		strlcpy(_to1, _("to new contract?"), sizeof(_to1));
 		strlcpy(_to2, "", sizeof(_to2));
