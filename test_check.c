@@ -55,6 +55,7 @@
 #include "ed25519-keccak.h"
 #include "script.h"
 #include "rfc6979.h"
+#include "address.h"
 
 /*
  * This is a clever trick to make Valgrind's Memcheck verify code
@@ -3077,6 +3078,25 @@ START_TEST(test_ethereum_pubkeyhash)
 }
 END_TEST
 
+START_TEST(test_ethereum_address)
+{
+	uint8_t addr[20];
+	char address[41];
+
+	memcpy(addr, fromhex("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), 20);
+	ethereum_address_checksum(addr, address);
+	ck_assert_str_eq(address, "Cd2a3d9f938e13Cd947eC05ABC7fe734df8DD826");
+
+	memcpy(addr, fromhex("9ca0e998df92c5351cecbbb6dba82ac2266f7e0c"), 20);
+	ethereum_address_checksum(addr, address);
+	ck_assert_str_eq(address, "9Ca0e998dF92c5351cEcbBb6Dba82Ac2266f7e0C");
+
+	memcpy(addr, fromhex("cb16d0e54450cdd2368476e762b09d147972b637"), 20);
+	ethereum_address_checksum(addr, address);
+	ck_assert_str_eq(address, "cB16D0E54450Cdd2368476E762B09D147972b637");
+}
+END_TEST
+
 START_TEST(test_multibyte_address)
 {
 	uint8_t priv_key[32];
@@ -3223,6 +3243,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("address_decode");
 	tcase_add_test(tc, test_address_decode);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("ethereum_address");
+	tcase_add_test(tc, test_ethereum_address);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("wif");
