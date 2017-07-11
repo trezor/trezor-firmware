@@ -485,7 +485,7 @@ def decrypt_message(client, address, payload):
 def ethereum_get_address(client, address, show_display):
     address_n = client.expand_path(address)
     address = client.ethereum_get_address(address_n, show_display)
-    return '0x%s' % binascii.hexlify(address)
+    return '0x%s' % binascii.hexlify(str(address))
 
 
 @cli.command(help='Sign (and optionally publish) Ethereum transaction. Use TO as destination address or set TO to "" for contract creation.')
