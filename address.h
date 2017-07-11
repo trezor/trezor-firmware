@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "options.h"
 
 size_t address_prefix_bytes_len(uint32_t address_type);
 void address_write_prefix_bytes(uint32_t address_type, uint8_t *out);
