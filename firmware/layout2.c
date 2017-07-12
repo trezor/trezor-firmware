@@ -190,7 +190,7 @@ void layoutVerifyAddress(const char *address)
 	layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
 		_("Confirm address?"),
 		_("Message signed by:"),
-		NULL, str[0], str[1], str[2], NULL);
+		str[0], str[1], str[2], NULL, NULL);
 }
 
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
