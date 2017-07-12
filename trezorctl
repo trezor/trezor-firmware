@@ -86,7 +86,11 @@ def print_result(res, transport, path, verbose, is_json):
                 click.echo(line)
         elif isinstance(res, dict):
             for k, v in res.items():
-                click.echo('%s: %s' % (k, v))
+                if isinstance(v, dict):
+                    for kk, vv in v.items():
+                        click.echo('%s.%s: %s' % (k, kk, vv))
+                else:
+                    click.echo('%s: %s' % (k, v))
         else:
             click.echo(res)
 
@@ -388,7 +392,17 @@ def get_address(client, coin, address, script_type, show_display):
 @click.pass_obj
 def get_public_node(client, coin, address, curve, show_display):
     address_n = client.expand_path(address)
-    return client.get_public_node(address_n, ecdsa_curve_name=curve, show_display=show_display, coin_name=coin)
+    result = client.get_public_node(address_n, ecdsa_curve_name=curve, show_display=show_display, coin_name=coin)
+    return {
+        'node': {
+            'depth': result.node.depth,
+            'fingerprint': "%08x" % result.node.fingerprint,
+            'child_num': result.node.child_num,
+            'chain_code': binascii.hexlify(result.node.chain_code),
+            'public_key': binascii.hexlify(result.node.public_key),
+        },
+        'xpub': result.xpub
+    }
 
 
 #
@@ -420,6 +434,39 @@ def sign_message(client, coin, address, message):
 def verify_message(client, coin, address, signature, message):
     signature = base64.b64decode(signature)
     return client.verify_message(coin, address, signature, message)
+
+
+@cli.command(help='Sign message with Ethereum address.')
+@click.option('-n', '-address')
+@click.argument('message')
+@click.pass_obj
+def ethereum_sign_message(client, address, message):
+    address_n = client.expand_path(address)
+    ret = client.ethereum_sign_message(address_n, message)
+    output = {
+        'message': message,
+        'address': '0x' + binascii.hexlify(ret.address).decode('ascii'),
+        'signature': '0x' + binascii.hexlify(ret.signature).decode('ascii')
+    }
+    return output
+
+
+def ethereum_decode_hex(value):
+    if value.startswith('0x') or value.startswith('0X'):
+        return value[2:].decode('hex')
+    else:
+        return value.decode('hex')
+
+
+@cli.command(help='Verify message signed with Ethereum address.')
+@click.argument('address')
+@click.argument('signature')
+@click.argument('message')
+@click.pass_obj
+def ethereum_verify_message(client, address, signature, message):
+    address = ethereum_decode_hex(address)
+    signature = ethereum_decode_hex(signature)
+    return client.ethereum_verify_message(address, signature, message)
 
 
 @cli.command(help='Encrypt value by given key and path.')
@@ -546,10 +593,7 @@ def ethereum_sign_tx(client, host, chain_id, address, value, gas_limit, gas_pric
     if gas_limit is not None:
         gas_limit = int(gas_limit)
 
-    if to.startswith('0x') or to.startswith('0X'):
-        to_address = to[2:].decode('hex')
-    else:
-        to_address = to.decode('hex')
+    to_address = ethereum_decode_hex(to)
 
     address_n = client.expand_path(address)
     address = '0x%s' % (binascii.hexlify(client.ethereum_get_address(address_n)),)
@@ -560,9 +604,7 @@ def ethereum_sign_tx(client, host, chain_id, address, value, gas_limit, gas_pric
 
     if not data:
         data = ''
-    elif data.startswith('0x'):
-        data = data[2:]
-    data = binascii.unhexlify(data)
+    data = ethereum_decode_hex(data)
 
     if gas_price is None:
         gas_price = eth.eth_gasPrice()

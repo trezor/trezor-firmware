@@ -572,6 +572,24 @@ class ProtocolMixin(object):
 
         return response.signature_v, response.signature_r, response.signature_s
 
+    @expect(proto.EthereumMessageSignature)
+    def ethereum_sign_message(self, n, message):
+        n = self._convert_prime(n)
+        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
+        message = normalize_nfc(message).encode('utf-8')
+        return self.call(proto.EthereumSignMessage(address_n=n, message=message))
+
+    def ethereum_verify_message(self, address, signature, message):
+        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
+        message = normalize_nfc(message).encode('utf-8')
+        try:
+            resp = self.call(proto.EthereumVerifyMessage(address=address, signature=signature, message=message))
+        except CallException as e:
+            resp = e
+        if isinstance(resp, proto.Success):
+            return True
+        return False
+
     @field('entropy')
     @expect(proto.Entropy)
     def get_entropy(self, size):
