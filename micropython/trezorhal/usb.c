@@ -12,7 +12,7 @@
 
 #define UNCONST(X) ((uint8_t *)(X))
 
-#define USB_MAX_CONFIG_DESC_SIZE 128
+#define USB_MAX_CONFIG_DESC_SIZE 256
 #define USB_MAX_STR_SIZE         62
 #define USB_MAX_STR_DESC_SIZE    (USB_MAX_STR_SIZE * 2 + 2)
 

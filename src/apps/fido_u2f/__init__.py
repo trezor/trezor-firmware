@@ -311,7 +311,7 @@ def send_cmd(cmd: Cmd, iface: int) -> None:
 
 
 def boot():
-    iface = 0x00
+    iface = 0x03
     loop.schedule_task(handle_reports(iface))
 
 

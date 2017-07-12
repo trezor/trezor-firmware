@@ -62,7 +62,8 @@
 /* Exported constants --------------------------------------------------------*/
 /* Common Config */
 #define USB_PHY_FS_ID                         0
-#define USBD_MAX_NUM_INTERFACES               3
+#define USB_PHY_HS_ID                         1
+#define USBD_MAX_NUM_INTERFACES               8
 #define USBD_MAX_NUM_CONFIGURATION            1
 #define USBD_SUPPORT_USER_STRING              0
 #define USBD_SELF_POWERED                     0
