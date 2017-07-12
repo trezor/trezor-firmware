@@ -735,8 +735,8 @@ void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg)
 		return;
 	}
 
-	char address[41];
-	data2hex(msg->address.bytes, 20, address);
+	char address[43] = { '0', 'x' };
+	ethereum_address_checksum(msg->address.bytes, address + 2);
 	layoutVerifyAddress(address);
 	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);

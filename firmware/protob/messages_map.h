@@ -40,6 +40,8 @@
 	{ 'n', 'i', MessageType_MessageType_EthereumTxAck,         EthereumTxAck_fields,         (void (*)(void *)) fsm_msgEthereumTxAck },
 	{ 'n', 'i', MessageType_MessageType_GetECDHSessionKey,     GetECDHSessionKey_fields,     (void (*)(void *)) fsm_msgGetECDHSessionKey },
 	{ 'n', 'i', MessageType_MessageType_SetU2FCounter,         SetU2FCounter_fields,         (void (*)(void *)) fsm_msgSetU2FCounter },
+	{ 'n', 'i', MessageType_MessageType_EthereumSignMessage,   EthereumSignMessage_fields,   (void (*)(void *)) fsm_msgEthereumSignMessage },
+	{ 'n', 'i', MessageType_MessageType_EthereumVerifyMessage, EthereumVerifyMessage_fields, (void (*)(void *)) fsm_msgEthereumVerifyMessage },
 
 	// out messages
 
@@ -65,6 +67,7 @@
 	{ 'n', 'o', MessageType_MessageType_EthereumAddress,       EthereumAddress_fields,       0 },
 	{ 'n', 'o', MessageType_MessageType_EthereumTxRequest,     EthereumTxRequest_fields,     0 },
 	{ 'n', 'o', MessageType_MessageType_ECDHSessionKey,        ECDHSessionKey_fields,        0 },
+	{ 'n', 'o', MessageType_MessageType_EthereumMessageSignature, EthereumMessageSignature_fields, 0 },
 
 #if DEBUG_LINK
 

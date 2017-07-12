@@ -576,8 +576,11 @@ void ethereum_signing_abort(void)
 static void ethereum_message_hash(const uint8_t *message, size_t message_len, uint8_t hash[32])
 {
 	struct SHA3_CTX ctx;
-
 	sha3_256_Init(&ctx);
+	sha3_Update(&ctx, (const uint8_t *)"\x19" "Ethereum Signed Message:\n", 26);
+	uint8_t varint[5];
+	uint32_t l = ser_length(message_len, varint);
+	sha3_Update(&ctx, varint, l);
 	sha3_Update(&ctx, message, message_len);
 	keccak_Final(&ctx, hash);
 }
@@ -607,8 +610,7 @@ void ethereum_message_sign(EthereumSignMessage *msg, const HDNode *node, Ethereu
 
 int ethereum_message_verify(EthereumVerifyMessage *msg)
 {
-	if (msg->signature.size != 65
-		|| msg->address.size != 20) {
+	if (msg->signature.size != 65 || msg->address.size != 20) {
 		fsm_sendFailure(FailureType_Failure_DataError, _("Malformed data"));
 		return 1;
 	}
@@ -622,9 +624,9 @@ int ethereum_message_verify(EthereumVerifyMessage *msg)
 	 * compatible with both.
 	 */
 	uint8_t v = msg->signature.bytes[64];
-	if (v >= 27)
+	if (v >= 27) {
 		v -= 27;
-			 
+	}
 	if (v >= 2 ||
 		ecdsa_verify_digest_recover(&secp256k1, pubkey, msg->signature.bytes, hash, v) != 0) {
 		return 2;

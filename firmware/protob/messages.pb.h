@@ -72,6 +72,9 @@ typedef enum _MessageType {
     MessageType_MessageType_GetECDHSessionKey = 61,
     MessageType_MessageType_ECDHSessionKey = 62,
     MessageType_MessageType_SetU2FCounter = 63,
+    MessageType_MessageType_EthereumSignMessage = 64,
+    MessageType_MessageType_EthereumVerifyMessage = 65,
+    MessageType_MessageType_EthereumMessageSignature = 66,
     MessageType_MessageType_DebugLinkDecision = 100,
     MessageType_MessageType_DebugLinkGetState = 101,
     MessageType_MessageType_DebugLinkState = 102,
@@ -326,6 +329,34 @@ typedef struct _EthereumGetAddress {
 
 typedef struct {
     size_t size;
+    uint8_t bytes[20];
+} EthereumMessageSignature_address_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[65];
+} EthereumMessageSignature_signature_t;
+
+typedef struct _EthereumMessageSignature {
+    bool has_address;
+    EthereumMessageSignature_address_t address;
+    bool has_signature;
+    EthereumMessageSignature_signature_t signature;
+} EthereumMessageSignature;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} EthereumSignMessage_message_t;
+
+typedef struct _EthereumSignMessage {
+    size_t address_n_count;
+    uint32_t address_n[8];
+    EthereumSignMessage_message_t message;
+} EthereumSignMessage;
+
+typedef struct {
+    size_t size;
     uint8_t bytes[32];
 } EthereumSignTx_nonce_t;
 
@@ -405,6 +436,30 @@ typedef struct _EthereumTxRequest {
     bool has_signature_s;
     EthereumTxRequest_signature_s_t signature_s;
 } EthereumTxRequest;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[20];
+} EthereumVerifyMessage_address_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[65];
+} EthereumVerifyMessage_signature_t;
+
+typedef struct {
+    size_t size;
+    uint8_t bytes[1024];
+} EthereumVerifyMessage_message_t;
+
+typedef struct _EthereumVerifyMessage {
+    bool has_address;
+    EthereumVerifyMessage_address_t address;
+    bool has_signature;
+    EthereumVerifyMessage_signature_t signature;
+    bool has_message;
+    EthereumVerifyMessage_message_t message;
+} EthereumVerifyMessage;
 
 typedef struct _Failure {
     bool has_code;
@@ -779,6 +834,9 @@ extern const uint32_t SignTx_lock_time_default;
 #define EthereumSignTx_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0}
 #define EthereumTxRequest_init_default           {false, 0, false, 0, false, {0, {0}}, false, {0, {0}}}
 #define EthereumTxAck_init_default               {false, {0, {0}}}
+#define EthereumSignMessage_init_default         {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}}
+#define EthereumVerifyMessage_init_default       {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
+#define EthereumMessageSignature_init_default    {false, {0, {0}}, false, {0, {0}}}
 #define SignIdentity_init_default                {false, IdentityType_init_default, false, {0, {0}}, false, "", false, ""}
 #define SignedIdentity_init_default              {false, "", false, {0, {0}}, false, {0, {0}}}
 #define GetECDHSessionKey_init_default           {false, IdentityType_init_default, false, {0, {0}}, false, ""}
@@ -837,6 +895,9 @@ extern const uint32_t SignTx_lock_time_default;
 #define EthereumSignTx_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0}
 #define EthereumTxRequest_init_zero              {false, 0, false, 0, false, {0, {0}}, false, {0, {0}}}
 #define EthereumTxAck_init_zero                  {false, {0, {0}}}
+#define EthereumSignMessage_init_zero            {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}}
+#define EthereumVerifyMessage_init_zero          {false, {0, {0}}, false, {0, {0}}, false, {0, {0}}}
+#define EthereumMessageSignature_init_zero       {false, {0, {0}}, false, {0, {0}}}
 #define SignIdentity_init_zero                   {false, IdentityType_init_zero, false, {0, {0}}, false, "", false, ""}
 #define SignedIdentity_init_zero                 {false, "", false, {0, {0}}, false, {0, {0}}}
 #define GetECDHSessionKey_init_zero              {false, IdentityType_init_zero, false, {0, {0}}, false, ""}
@@ -896,6 +957,10 @@ extern const uint32_t SignTx_lock_time_default;
 #define EthereumAddress_address_tag              1
 #define EthereumGetAddress_address_n_tag         1
 #define EthereumGetAddress_show_display_tag      2
+#define EthereumMessageSignature_address_tag     1
+#define EthereumMessageSignature_signature_tag   2
+#define EthereumSignMessage_address_n_tag        1
+#define EthereumSignMessage_message_tag          2
 #define EthereumSignTx_address_n_tag             1
 #define EthereumSignTx_nonce_tag                 2
 #define EthereumSignTx_gas_price_tag             3
@@ -910,6 +975,9 @@ extern const uint32_t SignTx_lock_time_default;
 #define EthereumTxRequest_signature_v_tag        2
 #define EthereumTxRequest_signature_r_tag        3
 #define EthereumTxRequest_signature_s_tag        4
+#define EthereumVerifyMessage_address_tag        1
+#define EthereumVerifyMessage_signature_tag      2
+#define EthereumVerifyMessage_message_tag        3
 #define Failure_code_tag                         1
 #define Failure_message_tag                      2
 #define Features_vendor_tag                      1
@@ -1053,6 +1121,9 @@ extern const pb_field_t TxAck_fields[2];
 extern const pb_field_t EthereumSignTx_fields[10];
 extern const pb_field_t EthereumTxRequest_fields[5];
 extern const pb_field_t EthereumTxAck_fields[2];
+extern const pb_field_t EthereumSignMessage_fields[3];
+extern const pb_field_t EthereumVerifyMessage_fields[4];
+extern const pb_field_t EthereumMessageSignature_fields[3];
 extern const pb_field_t SignIdentity_fields[5];
 extern const pb_field_t SignedIdentity_fields[4];
 extern const pb_field_t GetECDHSessionKey_fields[4];
@@ -1113,6 +1184,9 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define EthereumSignTx_size                      1245
 #define EthereumTxRequest_size                   80
 #define EthereumTxAck_size                       1027
+#define EthereumSignMessage_size                 1075
+#define EthereumVerifyMessage_size               1116
+#define EthereumMessageSignature_size            89
 #define SignIdentity_size                        (558 + IdentityType_size)
 #define SignedIdentity_size                      145
 #define GetECDHSessionKey_size                   (107 + IdentityType_size)

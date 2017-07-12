@@ -65,6 +65,16 @@ VerifyMessage.coin_name			max_size:17
 MessageSignature.address		max_size:41
 MessageSignature.signature		max_size:65
 
+EthereumSignMessage.address_n		max_count:8
+EthereumSignMessage.message		max_size:1024
+
+EthereumVerifyMessage.address		max_size:20
+EthereumVerifyMessage.signature		max_size:65
+EthereumVerifyMessage.message		max_size:1024
+
+EthereumMessageSignature.address	max_size:20
+EthereumMessageSignature.signature	max_size:65
+
 # deprecated
 EncryptMessage				skip_message:true
 # EncryptMessage.pubkey			max_size:33
