@@ -247,7 +247,7 @@ def load_device(client, mnemonic, expand, xprv, pin, passphrase_protection, labe
 
 
 @cli.command(help='Start safe recovery workflow.')
-@click.option('-w', '--words', type=click.Choice([12, 18, 24]), default=24)
+@click.option('-w', '--words', type=click.Choice(['12', '18', '24']), default='24')
 @click.option('-e', '--expand', is_flag=True)
 @click.option('-p', '--pin-protection', is_flag=True)
 @click.option('-r', '--passphrase-protection', is_flag=True)
@@ -261,7 +261,7 @@ def recovery_device(client, words, expand, pin_protection, passphrase_protection
         'matrix':    types.RecoveryDeviceType_Matrix
     }
     return client.recovery_device(
-        words,
+        int(words),
         passphrase_protection,
         pin_protection,
         label,
@@ -273,7 +273,7 @@ def recovery_device(client, words, expand, pin_protection, passphrase_protection
 
 
 @cli.command(help='Perform device setup and generate new seed.')
-@click.option('-t', '--strength', type=click.Choice([128, 192, 256]), default=256)
+@click.option('-t', '--strength', type=click.Choice(['128', '192', '256']), default='256')
 @click.option('-p', '--pin-protection', is_flag=True)
 @click.option('-r', '--passphrase-protection', is_flag=True)
 @click.option('-l', '--label')
@@ -283,7 +283,7 @@ def recovery_device(client, words, expand, pin_protection, passphrase_protection
 def reset_device(client, strength, pin_protection, passphrase_protection, label, u2f_counter, skip_backup):
     return client.reset_device(
         True,
-        strength,
+        int(strength),
         passphrase_protection,
         pin_protection,
         label,
