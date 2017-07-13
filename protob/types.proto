@@ -166,8 +166,8 @@ message CoinType {
 	optional uint64 maxfee_kb = 4;
 	optional uint32 address_type_p2sh = 5 [default=5];
 	optional string signed_message_header = 8;
-	optional uint32 xpub_magic = 9 [default=0x0488b21e];
-	optional uint32 xprv_magic = 10 [default=0x0488ade4];
+	optional uint32 xpub_magic = 9 [default=76067358];	// default=0x0488b21e
+	optional uint32 xprv_magic = 10 [default=76066276];	// default=0x0488ade4
 	optional bool segwit = 11;
 }
 
@@ -191,7 +191,7 @@ message TxInputType {
 	required bytes prev_hash = 2;						// hash of previous transaction output to spend by this input
 	required uint32 prev_index = 3;						// index of previous output to spend
 	optional bytes script_sig = 4;						// script signature, unset for tx to sign
-	optional uint32 sequence = 5 [default=0xffffffff];			// sequence
+	optional uint32 sequence = 5 [default=4294967295];			// sequence (default=0xffffffff)
 	optional InputScriptType script_type = 6 [default=SPENDADDRESS];	// defines template of input script
 	optional MultisigRedeemScriptType multisig = 7;				// Filled if input is going to spend multisig tx
 	optional uint64 amount = 8;						// amount of previous transaction output (for segwit only)
