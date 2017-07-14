@@ -205,7 +205,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 	const char *suffix = NULL;
 	int decimals = 18;
 	if (token == UnknownToken) {
-		strlcpy(buf, "Unrecognized Token", buflen);
+		strlcpy(buf, "Unknown token value", buflen);
 		return;
 	} else
 	if (token != NULL) {
