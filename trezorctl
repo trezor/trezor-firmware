@@ -224,10 +224,11 @@ def wipe_device(client):
 @click.option('-p', '--pin', default='')
 @click.option('-r', '--passphrase-protection', is_flag=True)
 @click.option('-l', '--label', default='')
-@click.option('-s', '--skip-checksum', is_flag=True)
+@click.option('-i', '--ignore-checksum', is_flag=True)
+@click.option('-s', '--slip0014', is_flag=True)
 @click.pass_obj
-def load_device(client, mnemonic, expand, xprv, pin, passphrase_protection, label, skip_checksum):
-    if not mnemonic and not xprv:
+def load_device(client, mnemonic, expand, xprv, pin, passphrase_protection, label, ignore_checksum, slip0014):
+    if not mnemonic and not xprv and not slip0014:
         raise CallException(types.Failure_DataError, 'Please provide mnemonic or xprv')
 
     if mnemonic:
@@ -237,7 +238,7 @@ def load_device(client, mnemonic, expand, xprv, pin, passphrase_protection, labe
             passphrase_protection,
             label,
             'english',
-            skip_checksum,
+            ignore_checksum,
             expand
         )
     if xprv:
@@ -247,6 +248,13 @@ def load_device(client, mnemonic, expand, xprv, pin, passphrase_protection, labe
             passphrase_protection,
             label,
             'english'
+        )
+    if slip0014:
+        return client.load_device_by_mnemonic(
+            ' '.join(['all'] * 12),
+            pin,
+            passphrase_protection,
+            'SLIP-0014'
         )
 
 

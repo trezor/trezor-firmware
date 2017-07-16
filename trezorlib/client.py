@@ -928,7 +928,7 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language, skip_checksum=False, expand=False):
+    def load_device_by_mnemonic(self, mnemonic, pin, passphrase_protection, label, language='english', skip_checksum=False, expand=False):
         # Convert mnemonic to UTF8 NKFD
         mnemonic = Mnemonic.normalize_string(mnemonic)
 
