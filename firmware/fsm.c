@@ -1146,17 +1146,24 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 }
 
 void fsm_msgNEMSignTx(NEMSignTx *msg) {
+	const char *reason;
+
+#define NEM_CHECK_PARAM(s)         CHECK_PARAM(        (reason = (s)) == NULL, reason)
+#define NEM_CHECK_PARAM_WHEN(b, s) CHECK_PARAM(!(b) || (reason = (s)) == NULL, reason)
+
 	CHECK_PARAM(msg->has_transaction, _("No common provided"));
-	CHECK_PARAM(msg->has_transfer, _("No transaction provided"));
+
+	// Ensure exactly one transaction is provided
+	unsigned int provided = msg->has_transfer;
+	CHECK_PARAM(provided != 0, _("No transaction provided"));
+	CHECK_PARAM(provided == 1, _("More than one transaction provided"));
+
+	NEM_CHECK_PARAM(nem_validate_common(&msg->transaction, false));
+	NEM_CHECK_PARAM_WHEN(msg->has_transfer, nem_validate_transfer(&msg->transfer, msg->transaction.network));
 
 	bool cosigning = msg->has_cosigning && msg->cosigning;
-
-	const char *reason;
-	CHECK_PARAM(!(reason = nem_validate_common(&msg->transaction, false)), reason);
-	CHECK_PARAM(!(reason = nem_validate_transfer(&msg->transfer, msg->transaction.network)), reason);
-
 	if (msg->has_multisig) {
-		CHECK_PARAM(!(reason = nem_validate_common(&msg->multisig, true)), reason);
+		NEM_CHECK_PARAM(nem_validate_common(&msg->multisig, true));
 
 		CHECK_PARAM(msg->transaction.network == msg->multisig.network, _("Inner transaction network is different"));
 	} else {
