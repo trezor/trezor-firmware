@@ -194,13 +194,15 @@ def set_homescreen(client, filename):
             raise CallException(types.Failure_DataError, 'Wrong size of the image')
         im = im.convert('1')
         pix = im.load()
-        img = ''
+        img = bytearray(1024)
         for j in range(64):
             for i in range(128):
-                img += '1' if pix[i, j] else '0'
-        img = ''.join(chr(int(img[i:i + 8], 2)) for i in range(0, len(img), 8))
+                if pix[i, j]:
+                    o = (i + j * 128)
+                    img[o // 8] |= (1 << (7 - o % 8))
+        img = bytes(img)
     else:
-        img = '\x00'
+        img = b'\x00'
     return client.apply_settings(homescreen=img)
 
 
