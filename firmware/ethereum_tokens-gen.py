@@ -4,7 +4,6 @@ import requests
 subst = {
     ( 1, 'BeerCoin \U0001F37A '): 'BEER',
     ( 1, 'CryptoCarbon'): 'CCRB',
-    ( 1, 'DAO_extraBalance'): 'DAOe',
     ( 1, 'DGX 1.0'): 'DGX1',
     ( 1, 'JetCoins'): 'JTC',
     ( 1, 'Unicorn \U0001F984 '): 'UNCRN',
