@@ -183,6 +183,20 @@ def set_label(client, label):
     return client.apply_settings(label=label)
 
 
+@cli.command(help='Set device flags.')
+@click.argument('flags')
+@click.pass_obj
+def set_flags(client, flags):
+    flags = flags.lower()
+    if flags.startswith('0b'):
+        flags = int(flags, 2)
+    elif flags.startswith('0x'):
+        flags = int(flags, 16)
+    else:
+        flags = int(flags)
+    return client.apply_flags(flags=flags)
+
+
 @cli.command(help='Set new homescreen.')
 @click.option('-f', '--filename', default=None)
 @click.pass_obj

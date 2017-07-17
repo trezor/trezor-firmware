@@ -626,6 +626,13 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
+    def apply_flags(self, flags):
+        out = self.call(proto.ApplyFlags(flags=flags))
+        self.init_device()  # Reload Features
+        return out
+
+    @field('message')
+    @expect(proto.Success)
     def clear_session(self):
         return self.call(proto.ClearSession())
 
