@@ -25,7 +25,7 @@ const pb_field_t GetFeatures_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t Features_fields[20] = {
+const pb_field_t Features_fields[21] = {
     PB_FIELD2(  1, STRING  , OPTIONAL, STATIC  , FIRST, Features, vendor, vendor, 0),
     PB_FIELD2(  2, UINT32  , OPTIONAL, STATIC  , OTHER, Features, major_version, vendor, 0),
     PB_FIELD2(  3, UINT32  , OPTIONAL, STATIC  , OTHER, Features, minor_version, major_version, 0),
@@ -45,6 +45,7 @@ const pb_field_t Features_fields[20] = {
     PB_FIELD2( 17, BOOL    , OPTIONAL, STATIC  , OTHER, Features, passphrase_cached, pin_cached, 0),
     PB_FIELD2( 18, BOOL    , OPTIONAL, STATIC  , OTHER, Features, firmware_present, passphrase_cached, 0),
     PB_FIELD2( 19, BOOL    , OPTIONAL, STATIC  , OTHER, Features, needs_backup, firmware_present, 0),
+    PB_FIELD2( 20, UINT32  , OPTIONAL, STATIC  , OTHER, Features, flags, needs_backup, 0),
     PB_LAST_FIELD
 };
 
@@ -57,6 +58,11 @@ const pb_field_t ApplySettings_fields[5] = {
     PB_FIELD2(  2, STRING  , OPTIONAL, STATIC  , OTHER, ApplySettings, label, language, 0),
     PB_FIELD2(  3, BOOL    , OPTIONAL, STATIC  , OTHER, ApplySettings, use_passphrase, label, 0),
     PB_FIELD2(  4, BYTES   , OPTIONAL, STATIC  , OTHER, ApplySettings, homescreen, use_passphrase, 0),
+    PB_LAST_FIELD
+};
+
+const pb_field_t ApplyFlags_fields[2] = {
+    PB_FIELD2(  1, UINT32  , OPTIONAL, STATIC  , FIRST, ApplyFlags, flags, flags, 0),
     PB_LAST_FIELD
 };
 
@@ -432,7 +438,7 @@ const pb_field_t DebugLinkFlashErase_fields[2] = {
  * numbers or field sizes that are larger than what can fit in 8 or 16 bit
  * field descriptors.
  */
-STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_BackupDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_CipherKeyValue_CipheredKeyValue_SignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_EthereumSignMessage_EthereumVerifyMessage_EthereumMessageSignature_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_SetU2FCounter_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog_DebugLinkMemoryRead_DebugLinkMemory_DebugLinkMemoryWrite_DebugLinkFlashErase)
+STATIC_ASSERT((pb_membersize(Features, coins[0]) < 65536 && pb_membersize(PublicKey, node) < 65536 && pb_membersize(GetAddress, multisig) < 65536 && pb_membersize(LoadDevice, node) < 65536 && pb_membersize(TxRequest, details) < 65536 && pb_membersize(TxRequest, serialized) < 65536 && pb_membersize(TxAck, tx) < 65536 && pb_membersize(SignIdentity, identity) < 65536 && pb_membersize(GetECDHSessionKey, identity) < 65536 && pb_membersize(DebugLinkState, node) < 65536), YOU_MUST_DEFINE_PB_FIELD_32BIT_FOR_MESSAGES_Initialize_GetFeatures_Features_ClearSession_ApplySettings_ApplyFlags_ChangePin_Ping_Success_Failure_ButtonRequest_ButtonAck_PinMatrixRequest_PinMatrixAck_Cancel_PassphraseRequest_PassphraseAck_GetEntropy_Entropy_GetPublicKey_PublicKey_GetAddress_EthereumGetAddress_Address_EthereumAddress_WipeDevice_LoadDevice_ResetDevice_BackupDevice_EntropyRequest_EntropyAck_RecoveryDevice_WordRequest_WordAck_SignMessage_VerifyMessage_MessageSignature_CipherKeyValue_CipheredKeyValue_SignTx_TxRequest_TxAck_EthereumSignTx_EthereumTxRequest_EthereumTxAck_EthereumSignMessage_EthereumVerifyMessage_EthereumMessageSignature_SignIdentity_SignedIdentity_GetECDHSessionKey_ECDHSessionKey_SetU2FCounter_DebugLinkDecision_DebugLinkGetState_DebugLinkState_DebugLinkStop_DebugLinkLog_DebugLinkMemoryRead_DebugLinkMemory_DebugLinkMemoryWrite_DebugLinkFlashErase)
 #endif
 
 #if !defined(PB_FIELD_16BIT) && !defined(PB_FIELD_32BIT)

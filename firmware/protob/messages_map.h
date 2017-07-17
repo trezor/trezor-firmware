@@ -21,6 +21,7 @@
 	{ 'n', 'i', MessageType_MessageType_ClearSession,          ClearSession_fields,          (void (*)(void *)) fsm_msgClearSession },
 	{ 'n', 'i', MessageType_MessageType_ApplySettings,         ApplySettings_fields,         (void (*)(void *)) fsm_msgApplySettings },
 	// Message ButtonAck is used in tiny mode
+	{ 'n', 'i', MessageType_MessageType_ApplyFlags,            ApplyFlags_fields,            (void (*)(void *)) fsm_msgApplyFlags },
 	{ 'n', 'i', MessageType_MessageType_GetAddress,            GetAddress_fields,            (void (*)(void *)) fsm_msgGetAddress },
 	// Message SelfTest is used in bootloader mode only
 	{ 'n', 'i', MessageType_MessageType_BackupDevice,          BackupDevice_fields,          (void (*)(void *)) fsm_msgBackupDevice },

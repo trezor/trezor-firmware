@@ -40,6 +40,7 @@ typedef enum _MessageType {
     MessageType_MessageType_ApplySettings = 25,
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
+    MessageType_MessageType_ApplyFlags = 28,
     MessageType_MessageType_GetAddress = 29,
     MessageType_MessageType_Address = 30,
     MessageType_MessageType_SelfTest = 32,
@@ -134,6 +135,11 @@ typedef struct _WipeDevice {
 typedef struct _Address {
     char address[60];
 } Address;
+
+typedef struct _ApplyFlags {
+    bool has_flags;
+    uint32_t flags;
+} ApplyFlags;
 
 typedef struct {
     size_t size;
@@ -517,6 +523,8 @@ typedef struct _Features {
     bool firmware_present;
     bool has_needs_backup;
     bool needs_backup;
+    bool has_flags;
+    uint32_t flags;
 } Features;
 
 typedef struct _GetAddress {
@@ -792,9 +800,10 @@ extern const uint32_t SignTx_lock_time_default;
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_default                {0}
 #define ApplySettings_init_default               {false, "", false, "", false, 0, false, {0, {0}}}
+#define ApplyFlags_init_default                  {false, 0}
 #define ChangePin_init_default                   {false, 0}
 #define Ping_init_default                        {false, "", false, 0, false, 0, false, 0}
 #define Success_init_default                     {false, ""}
@@ -853,9 +862,10 @@ extern const uint32_t SignTx_lock_time_default;
 #define DebugLinkFlashErase_init_default         {false, 0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_zero                   {0}
 #define ApplySettings_init_zero                  {false, "", false, "", false, 0, false, {0, {0}}}
+#define ApplyFlags_init_zero                     {false, 0}
 #define ChangePin_init_zero                      {false, 0}
 #define Ping_init_zero                           {false, "", false, 0, false, 0, false, 0}
 #define Success_init_zero                        {false, ""}
@@ -915,6 +925,7 @@ extern const uint32_t SignTx_lock_time_default;
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Address_address_tag                      1
+#define ApplyFlags_flags_tag                     1
 #define ApplySettings_language_tag               1
 #define ApplySettings_label_tag                  2
 #define ApplySettings_use_passphrase_tag         3
@@ -999,6 +1010,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define Features_passphrase_cached_tag           17
 #define Features_firmware_present_tag            18
 #define Features_needs_backup_tag                19
+#define Features_flags_tag                       20
 #define GetAddress_address_n_tag                 1
 #define GetAddress_coin_name_tag                 2
 #define GetAddress_show_display_tag              3
@@ -1079,9 +1091,10 @@ extern const uint32_t SignTx_lock_time_default;
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t GetFeatures_fields[1];
-extern const pb_field_t Features_fields[20];
+extern const pb_field_t Features_fields[21];
 extern const pb_field_t ClearSession_fields[1];
 extern const pb_field_t ApplySettings_fields[5];
+extern const pb_field_t ApplyFlags_fields[2];
 extern const pb_field_t ChangePin_fields[2];
 extern const pb_field_t Ping_fields[5];
 extern const pb_field_t Success_fields[2];
@@ -1142,9 +1155,10 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-#define Features_size                            (260 + 8*CoinType_size)
+#define Features_size                            (267 + 8*CoinType_size)
 #define ClearSession_size                        0
 #define ApplySettings_size                       1083
+#define ApplyFlags_size                          6
 #define ChangePin_size                           2
 #define Ping_size                                265
 #define Success_size                             259

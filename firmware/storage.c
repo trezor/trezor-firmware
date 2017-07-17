@@ -585,6 +585,21 @@ bool storage_needsBackup(void)
 	return storage.has_needs_backup && storage.needs_backup;
 }
 
+void storage_applyFlags(uint32_t flags)
+{
+	if ((storage.flags | flags) == storage.flags) {
+		return; // no new flags
+	}
+	storage.has_flags = true;
+	storage.flags |= flags;
+	storage_commit();
+}
+
+uint32_t storage_getFlags(void)
+{
+	return storage.has_flags ? storage.flags : 0;
+}
+
 uint32_t storage_nextU2FCounter(void)
 {
 	uint32_t *ptr = ((uint32_t *) FLASH_STORAGE_U2FAREA) + (storage_u2f_offset / 32);

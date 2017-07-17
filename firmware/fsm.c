@@ -235,6 +235,7 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
 	resp->has_needs_backup = true; resp->needs_backup = storage_needsBackup();
+	resp->has_flags = true; resp->flags = storage_getFlags();
 	msg_write(MessageType_MessageType_Features, resp);
 }
 
@@ -616,6 +617,14 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	storage_commit();
 	fsm_sendSuccess(_("Settings applied"));
 	layoutHome();
+}
+
+void fsm_msgApplyFlags(ApplyFlags *msg)
+{
+	if (msg->has_flags) {
+		storage_applyFlags(msg->flags);
+	}
+	fsm_sendSuccess(_("Flags applied"));
 }
 
 void fsm_msgGetAddress(GetAddress *msg)
