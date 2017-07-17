@@ -29,12 +29,16 @@
 
 const char *nem_validate_common(NEMTransactionCommon *common, bool inner);
 const char *nem_validate_transfer(const NEMTransfer *transfer, uint8_t network);
+const char *nem_validate_provision_namespace(const NEMProvisionNamespace *provision_namespace, uint8_t network);
 
 bool nem_askTransaction(const char *desc, const NEMTransactionCommon *common, const NEMSignTx *msg);
 bool nem_fsmTransaction(nem_transaction_ctx *context, const HDNode *node, const NEMTransactionCommon *common, const NEMSignTx *msg);
 
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc);
 bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node, const NEMTransactionCommon *common, const NEMTransfer *transfer);
+
+bool nem_askProvisionNamespace(const NEMTransactionCommon *common, const NEMProvisionNamespace *provision_namespace, const char *desc);
+bool nem_fsmProvisionNamespace(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMProvisionNamespace *provision_namespace);
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee);
 bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *common, const nem_transaction_ctx *inner, bool cosigning);

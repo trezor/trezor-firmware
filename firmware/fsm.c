@@ -1154,12 +1154,13 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	CHECK_PARAM(msg->has_transaction, _("No common provided"));
 
 	// Ensure exactly one transaction is provided
-	unsigned int provided = msg->has_transfer;
+	unsigned int provided = msg->has_transfer + msg->has_provision_namespace;
 	CHECK_PARAM(provided != 0, _("No transaction provided"));
 	CHECK_PARAM(provided == 1, _("More than one transaction provided"));
 
 	NEM_CHECK_PARAM(nem_validate_common(&msg->transaction, false));
 	NEM_CHECK_PARAM_WHEN(msg->has_transfer, nem_validate_transfer(&msg->transfer, msg->transaction.network));
+	NEM_CHECK_PARAM_WHEN(msg->has_provision_namespace, nem_validate_provision_namespace(&msg->provision_namespace, msg->transaction.network));
 
 	bool cosigning = msg->has_cosigning && msg->cosigning;
 	if (msg->has_multisig) {
@@ -1194,6 +1195,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		return;
 	}
 
+	if (msg->has_provision_namespace && !nem_askProvisionNamespace(common, &msg->provision_namespace, network)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
 	RESP_INIT(NEMSignedTx);
 
 	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n, msg->transaction.address_n_count);
@@ -1215,12 +1222,22 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 			return;
 		}
 
+		if (msg->has_provision_namespace && !nem_fsmProvisionNamespace(&inner, &msg->multisig, &msg->provision_namespace)) {
+			layoutHome();
+			return;
+		}
+
 		if (!nem_fsmMultisig(&context, &msg->transaction, &inner, cosigning)) {
 			layoutHome();
 			return;
 		}
 	} else {
 		if (msg->has_transfer && !nem_fsmTransfer(&context, node, &msg->transaction, &msg->transfer)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_provision_namespace && !nem_fsmProvisionNamespace(&context, &msg->transaction, &msg->provision_namespace)) {
 			layoutHome();
 			return;
 		}

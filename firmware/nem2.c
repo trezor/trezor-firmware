@@ -80,6 +80,15 @@ const char *nem_validate_transfer(const NEMTransfer *transfer, uint8_t network) 
 	return NULL;
 }
 
+const char *nem_validate_provision_namespace(const NEMProvisionNamespace *provision_namespace, uint8_t network) {
+	if (!provision_namespace->has_namespace) return _("No namespace provided");
+	if (!provision_namespace->has_sink) return _("No rental sink provided");
+	if (!provision_namespace->has_fee) return _("No rental sink fee provided");
+
+	if (!nem_validate_address(provision_namespace->sink, network)) return _("Invalid rental sink address");
+
+	return NULL;
+}
 
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
@@ -232,6 +241,42 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node, const NEM
 	}
 
 	return true;
+}
+
+bool nem_askProvisionNamespace(const NEMTransactionCommon *common, const NEMProvisionNamespace *provision_namespace, const char *desc) {
+	layoutDialog(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		_("Create namespace"),
+		provision_namespace->namespace,
+		provision_namespace->has_parent ? _("under namespace") : NULL,
+		provision_namespace->has_parent ? provision_namespace->parent : NULL,
+		NULL,
+		NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	layoutNEMNetworkFee(desc, true, _("Confirm rental fee of"), provision_namespace->fee, _("and network fee of"), common->fee);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool nem_fsmProvisionNamespace(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMProvisionNamespace *provision_namespace) {
+	return nem_transaction_create_provision_namespace(context,
+		common->network,
+		common->timestamp,
+		NULL,
+		common->fee,
+		common->deadline,
+		provision_namespace->namespace,
+		provision_namespace->has_parent ? provision_namespace->parent : NULL,
+		provision_namespace->sink,
+		provision_namespace->fee);
 }
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee) {
