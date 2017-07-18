@@ -64,8 +64,8 @@ bool compute_address(const CoinType *coin,
 					 bool has_multisig, const MultisigRedeemScriptType *multisig,
 					 char address[MAX_ADDR_SIZE]) {
 
-	uint8_t raw[34];
-	uint8_t digest[MAX_ADDR_RAW_SIZE];
+	uint8_t raw[MAX_ADDR_RAW_SIZE];
+	uint8_t digest[32];
 	size_t prelen;
 
 	if (has_multisig) {
