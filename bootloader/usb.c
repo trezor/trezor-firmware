@@ -356,9 +356,9 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				for (int j = 0; j < 256000; j++) {
 					uint32_t r = random32();
 					cnt[r & 0xFF]++;
-					cnt[(r >> 8)& 0xFF]++;
-					cnt[(r >> 16)& 0xFF]++;
-					cnt[(r >> 24)& 0xFF]++;
+					cnt[(r >> 8) & 0xFF]++;
+					cnt[(r >> 16) & 0xFF]++;
+					cnt[(r >> 24) & 0xFF]++;
 				}
 				layoutProgress("TESTING RNG ...", 100 + (i * 100));
 			}
