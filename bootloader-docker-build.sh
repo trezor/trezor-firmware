@@ -18,6 +18,6 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 echo "---------------------"
 echo "Bootloader fingerprint:"
 FILENAME=output/bootloader-$FIRMWARETAG.bin
-sha256sum "$FILENAME"
+/usr/bin/env python -c "import hashlib ; print(hashlib.sha256(hashlib.sha256(open('$FILENAME', 'rb').read()).digest()).hexdigest())"
 FILESIZE=$(stat -c%s "$FILENAME")
 echo "Bootloader size: $FILESIZE bytes (out of 32768 maximum)"
