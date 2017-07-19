@@ -42,7 +42,7 @@ void setup(void)
 
 	// enable RNG
 	rcc_periph_clock_enable(RCC_RNG);
-	RNG_CR |= RNG_CR_IE | RNG_CR_RNGEN;
+	RNG_CR |= RNG_CR_RNGEN;
 	// to be extra careful and heed the STM32F205xx Reference manual, Section 20.3.1
 	// we don't use the first random number generated after setting the RNGEN bit in setup
 	random32();
@@ -73,6 +73,9 @@ void setup(void)
 
 void setupApp(void)
 {
+	// for completeness, disable RNG peripheral interrupts for old bootloaders that had
+	// enabled them in RNG control register (the RNG interrupt was never enabled in the NVIC)
+	RNG_CR &= ~RNG_CR_IE;
 	// the static variables in random32 are separate between the bootloader and firmware.
 	// therefore, they need to be initialized here so that we can be sure to avoid dupes.
 	// this is to try to comply with STM32F205xx Reference manual - Section 20.3.1:

@@ -330,12 +330,14 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 
 void fsm_msgGetEntropy(GetEntropy *msg)
 {
+#if !DEBUG_RNG
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("send entropy?"), NULL, NULL, NULL, NULL);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
+#endif
 	RESP_INIT(Entropy);
 	uint32_t len = msg->size;
 	if (len > 1024) {

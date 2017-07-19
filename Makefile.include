@@ -65,6 +65,12 @@ else
 CFLAGS += -DMEMORY_PROTECT=1
 endif
 
+ifeq ($(DEBUG_RNG), 1)
+CFLAGS += -DDEBUG_RNG=1
+else
+CFLAGS += -DDEBUG_RNG=0
+endif
+
 LDFLAGS  += --static \
             -Wl,--start-group \
             -lc \
