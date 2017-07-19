@@ -12,7 +12,7 @@ docker run -t -v $(pwd)/output:/output $IMAGETAG /bin/sh -c "\
 	git submodule update --init && \
 	CFLAGS='-std=c99' make -C vendor/libopencm3 && \
 	make && \
-	make -C bootloader && \
+	make -C bootloader align && \
 	cp bootloader/bootloader.bin /output/bootloader-$FIRMWARETAG.bin"
 
 echo "---------------------"
