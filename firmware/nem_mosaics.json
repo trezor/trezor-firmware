@@ -1,0 +1,8 @@
+[
+    {
+        "ticker": " XEM",
+        "namespace": "nem",
+        "mosaic": "xem",
+        "divisibility": 6
+    }
+]

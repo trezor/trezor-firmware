@@ -25,6 +25,7 @@ OBJS += crypto.o
 OBJS += ethereum.o
 OBJS += ethereum_tokens.o
 OBJS += nem2.o
+OBJS += nem_mosaics.o
 
 OBJS += debug.o
 

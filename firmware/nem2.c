@@ -25,6 +25,9 @@
 #include "layout2.h"
 #include "protect.h"
 #include "rng.h"
+#include "secp256k1.h"
+
+static void format_amount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, const bignum256 *multiplier2, int divisor, char *str_out, size_t size);
 
 const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
 	if (!common->has_network) {
@@ -92,51 +95,61 @@ const char *nem_validate_provision_namespace(const NEMProvisionNamespace *provis
 
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
-		bool done[transfer->mosaics_count];
-		memset(done, 0, sizeof(done));
+		struct {
+			bool skip;
+			uint64_t quantity;
+			const NEMMosaicDefinition *definition;
+		} mosaics[transfer->mosaics_count], *xem = NULL;
 
-		uint64_t quantity[transfer->mosaics_count];
-		uint64_t *xemQuantity = NULL;
-
-		bignum256 mul;
-		bn_read_uint64(transfer->amount, &mul);
+		memset(mosaics, 0, sizeof(mosaics));
 
 		for (size_t i = 0; i < transfer->mosaics_count; i++) {
 			// Skip duplicate mosaics
-			if (done[i]) continue;
+			if (mosaics[i].skip) continue;
 
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-			// XEM is treated specially
-			if (strcmp(mosaic->namespace, "nem") == 0 && strcmp(mosaic->mosaic, "xem") == 0) {
-				done[i] = true;
-				xemQuantity = &quantity[i];
+			// XEM is displayed separately
+			if ((mosaics[i].definition = nem_mosaicByName(mosaic->namespace, mosaic->mosaic))) {
+				if (mosaics[i].definition == NEM_MOSAIC_DEFINITION_XEM) {
+					// Do not display as a mosaic
+					mosaics[i].skip = true;
+					xem = &mosaics[i];
+				}
 			}
 
-			quantity[i] = mosaic->quantity;
+			mosaics[i].quantity = mosaic->quantity;
 			for (size_t j = i + 1; j < transfer->mosaics_count; j++) {
 				const NEMMosaic *new_mosaic = &transfer->mosaics[j];
 
-				if (strcmp(mosaic->namespace, new_mosaic->namespace) == 0 && strcmp(mosaic->mosaic, new_mosaic->mosaic) == 0) {
-					// Duplicate mosaics are merged into one
-					done[i] = true;
-					quantity[i] += transfer->mosaics[j].quantity;
+				if (nem_mosaicMatches(mosaics[i].definition, new_mosaic->namespace, new_mosaic->mosaic)) {
+					// Merge duplicate mosaics
+					mosaics[j].skip = true;
+					mosaics[i].quantity += new_mosaic->quantity;
 				}
 			}
 		}
 
-		layoutNEMTransferXEM(desc, xemQuantity == NULL ? 0 : *xemQuantity, &mul, common->fee);
+		bignum256 multiplier;
+		bn_read_uint64(transfer->amount, &multiplier);
+
+		layoutNEMTransferXEM(desc, xem ? xem->quantity : 0, &multiplier, common->fee);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 			return false;
 		}
 
 		for (size_t i = 0; i < transfer->mosaics_count; i++) {
-			// Skip special or duplicate mosaics
-			if (done[i]) continue;
+			// Skip duplicate mosaics or XEM
+			if (mosaics[i].skip) continue;
 
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-			layoutNEMTransferMosaic(mosaic->namespace, mosaic->mosaic, quantity[i], &mul);
+			if (mosaics[i].definition) {
+				layoutNEMTransferMosaic(mosaics[i].definition, mosaics[i].quantity, &multiplier);
+			} else {
+				layoutNEMTransferUnknownMosaic(mosaic->namespace, mosaic->mosaic, mosaics[i].quantity, &multiplier);
+			}
+
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 				return false;
 			}
@@ -160,9 +173,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 		_("Confirm"),
 		desc,
 		_("Confirm transfer to"),
-		transfer->recipient,
-		NULL,
-		NULL);
+		transfer->recipient);
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		return false;
 	}
@@ -285,16 +296,12 @@ bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint
 		_("Next"),
 		desc,
 		cosigning ? _("Cosign transaction for") : _("Initiate transaction for"),
-		address,
-		NULL,
-		NULL);
-
+		address);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 		return false;
 	}
 
 	layoutNEMNetworkFee(desc, false, _("Confirm multisig fee"), fee, NULL, 0);
-
 	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 		return false;
 	}
@@ -324,6 +331,88 @@ bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *c
 
 	if (!ret) {
 		fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to create multisig transaction"));
+		return false;
+	}
+
+	return true;
+}
+
+const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic) {
+	for (size_t i = 0; i < NEM_MOSAIC_DEFINITIONS_COUNT; i++) {
+		const NEMMosaicDefinition *definition = &NEM_MOSAIC_DEFINITIONS[i];
+
+		if (nem_mosaicMatches(definition, namespace, mosaic)) {
+			return definition;
+		}
+	}
+
+	return NULL;
+}
+
+void format_amount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, const bignum256 *multiplier2, int divisor, char *str_out, size_t size) {
+	uint32_t divisibility = definition && definition->has_divisibility ? definition->divisibility : 0;
+	const char *ticker = definition && definition->has_ticker ? definition->ticker : NULL;
+
+	bignum256 amnt;
+	bn_read_uint64(quantity, &amnt);
+
+	if (multiplier2) {
+		bn_multiply(multiplier2, &amnt, &secp256k1.prime);
+	}
+
+	// Do not use prefix/suffix with bn_format, it messes with the truncation code
+	if (multiplier) {
+		bn_multiply(multiplier, &amnt, &secp256k1.prime);
+		divisor += NEM_MOSAIC_DEFINITION_XEM->divisibility;
+	}
+
+	// bn_format(amnt / (10 ^ divisor), divisibility)
+	bn_format(&amnt, NULL, NULL, divisibility + divisor, str_out, size);
+
+	// Truncate as if we called bn_format with (divisibility) instead of (divisibility + divisor)
+	char *decimal = strchr(str_out, '.');
+	if (decimal != NULL) {
+		const char *terminator = strchr(str_out, '\0');
+
+		if (divisibility == 0) {
+			// Truncate as an integer
+			*decimal = '\0';
+		} else {
+			char *end = decimal + divisibility + 1;
+			if (end < terminator) {
+				*end = '\0';
+			}
+		}
+	}
+
+	if (ticker) {
+		strlcat(str_out, " ", size);
+		strlcat(str_out, ticker, size);
+	}
+}
+
+void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size) {
+	format_amount(definition, quantity, multiplier, NULL, 0, str_out, size);
+}
+
+bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size) {
+	bignum256 multiplier2;
+
+	if (!definition->has_levy || !definition->has_fee) {
+		return false;
+	}
+
+	switch (definition->levy) {
+	case NEMMosaicLevy_MosaicLevy_Absolute:
+		format_amount(definition, definition->fee, NULL, NULL, 0, str_out, size);
+		break;
+
+	case NEMMosaicLevy_MosaicLevy_Percentile:
+		bn_read_uint64(definition->fee, &multiplier2);
+		format_amount(definition, quantity, multiplier, &multiplier2, NEM_LEVY_PERCENTILE_DIVISOR, str_out, size);
+		break;
+
+	default:
 		return false;
 	}
 

@@ -47,10 +47,12 @@ void layoutPublicKey(const uint8_t *pubkey);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
 void layoutDecryptIdentity(const IdentityType *identity);
 void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon);
-void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address, const char *line5, const char *line6);
-void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *mul, uint64_t fee);
+
+void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address);
+void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *multiplier, uint64_t fee);
 void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, uint64_t fee1, const char *fee2_desc, uint64_t fee2);
-void layoutNEMTransferMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *mul);
+void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier);
+void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *multiplier);
 void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted);
 
 #endif

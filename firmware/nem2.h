@@ -21,6 +21,7 @@
 #define __NEM2_H__
 
 #include "nem.h"
+#include "nem_mosaics.h"
 
 #include "messages.pb.h"
 #include "types.pb.h"
@@ -42,5 +43,13 @@ bool nem_fsmProvisionNamespace(nem_transaction_ctx *context, const NEMTransactio
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee);
 bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *common, const nem_transaction_ctx *inner, bool cosigning);
+
+const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic);
+void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size);
+bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size);
+
+static inline bool nem_mosaicMatches(const NEMMosaicDefinition *definition, const char *namespace, const char *mosaic) {
+    return strcmp(namespace, definition->namespace) == 0 && strcmp(mosaic, definition->mosaic) == 0;
+}
 
 #endif
