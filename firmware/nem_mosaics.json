@@ -4,5 +4,14 @@
         "namespace": "nem",
         "mosaic": "xem",
         "divisibility": 6
+    },
+    {
+        "name": "DIMCOIN",
+        "ticker": " DIM",
+        "namespace": "dim",
+        "mosaic": "coin",
+        "divisibility": 6,
+        "levy": "MosaicLevy_Percentile",
+        "fee": 10
     }
 ]

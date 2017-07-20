@@ -11,6 +11,22 @@ const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] =
 	.mosaic = "xem",
 	.has_divisibility = true,
 	.divisibility = 6,
+},
+{
+	.has_name = true,
+	.name = "DIMCOIN",
+	.has_ticker = true,
+	.ticker = " DIM",
+	.has_namespace = true,
+	.namespace = "dim",
+	.has_mosaic = true,
+	.mosaic = "coin",
+	.has_divisibility = true,
+	.divisibility = 6,
+	.has_levy = true,
+	.levy = NEMMosaicLevy_MosaicLevy_Percentile,
+	.has_fee = true,
+	.fee = 10,
 }};
 
 const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;
