@@ -13,5 +13,12 @@
         "divisibility": 6,
         "levy": "MosaicLevy_Percentile",
         "fee": 10
+    },
+    {
+        "name": "DIM TOKEN",
+        "ticker": " DIMTOK",
+        "namespace": "dim",
+        "mosaic": "token",
+        "divisibility": 6
     }
 ]

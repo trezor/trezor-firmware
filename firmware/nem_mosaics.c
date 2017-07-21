@@ -27,6 +27,18 @@ const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] =
 	.levy = NEMMosaicLevy_MosaicLevy_Percentile,
 	.has_fee = true,
 	.fee = 10,
+},
+{
+	.has_name = true,
+	.name = "DIM TOKEN",
+	.has_ticker = true,
+	.ticker = " DIMTOK",
+	.has_namespace = true,
+	.namespace = "dim",
+	.has_mosaic = true,
+	.mosaic = "token",
+	.has_divisibility = true,
+	.divisibility = 6,
 }};
 
 const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;

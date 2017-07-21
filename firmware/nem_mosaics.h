@@ -5,7 +5,7 @@
 
 #include "types.pb.h"
 
-#define NEM_MOSAIC_DEFINITIONS_COUNT (2)
+#define NEM_MOSAIC_DEFINITIONS_COUNT (3)
 
 extern const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT];
 extern const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM;
