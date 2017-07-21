@@ -103,19 +103,23 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 
 		memset(mosaics, 0, sizeof(mosaics));
 
+		bool unknownMosaic = false;
+
 		for (size_t i = 0; i < transfer->mosaics_count; i++) {
 			// Skip duplicate mosaics
 			if (mosaics[i].skip) continue;
 
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-			// XEM is displayed separately
 			if ((mosaics[i].definition = nem_mosaicByName(mosaic->namespace, mosaic->mosaic))) {
+				// XEM is displayed separately
 				if (mosaics[i].definition == NEM_MOSAIC_DEFINITION_XEM) {
 					// Do not display as a mosaic
 					mosaics[i].skip = true;
 					xem = &mosaics[i];
 				}
+			} else {
+				unknownMosaic = true;
 			}
 
 			mosaics[i].quantity = mosaic->quantity;
@@ -132,6 +136,22 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 
 		bignum256 multiplier;
 		bn_read_uint64(transfer->amount, &multiplier);
+
+		if (unknownMosaic) {
+			layoutDialogSwipe(&bmp_icon_question,
+				_("Cancel"),
+				_("I take the risk"),
+				_("Unknown Mosaics"),
+				_("Divisibility and levy"),
+				_("cannot be shown for"),
+				_("unknown mosaics!"),
+				NULL,
+				NULL,
+				NULL);
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+				return false;
+			}
+		}
 
 		layoutNEMTransferXEM(desc, xem ? xem->quantity : 0, &multiplier, common->fee);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
@@ -255,7 +275,7 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node, const NEM
 }
 
 bool nem_askProvisionNamespace(const NEMTransactionCommon *common, const NEMProvisionNamespace *provision_namespace, const char *desc) {
-	layoutDialog(&bmp_icon_question,
+	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Next"),
 		desc,
