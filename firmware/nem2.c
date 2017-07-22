@@ -93,6 +93,40 @@ const char *nem_validate_provision_namespace(const NEMProvisionNamespace *provis
 	return NULL;
 }
 
+const char *nem_validate_mosaic_creation(const NEMMosaicCreation *mosaic_creation, uint8_t network) {
+	if (!mosaic_creation->has_definition) return _("No mosaic definition provided");
+	if (!mosaic_creation->has_sink) return _("No creation sink provided");
+	if (!mosaic_creation->has_fee) return _("No creation sink fee provided");
+
+	if (!nem_validate_address(mosaic_creation->sink, network)) return _("Invalid creation sink address");
+
+	if (mosaic_creation->definition.has_name) return _("Name not allowed in mosaic creation transactions");
+	if (mosaic_creation->definition.has_ticker) return _("Ticker not allowed in mosaic creation transactions");
+
+	if (!mosaic_creation->definition.has_namespace) return _("No mosaic namespace provided");
+	if (!mosaic_creation->definition.has_mosaic) return _("No mosaic name provided");
+
+	if (mosaic_creation->definition.has_levy) {
+		if (!mosaic_creation->definition.has_fee) return _("No levy address provided");
+		if (!mosaic_creation->definition.has_levy_address) return _("No levy address provided");
+		if (!mosaic_creation->definition.has_levy_namespace) return _("No levy namespace provided");
+		if (!mosaic_creation->definition.has_levy_mosaic) return _("No levy mosaic name provided");
+
+		if (!mosaic_creation->definition.has_divisibility) return _("No divisibility provided");
+		if (!mosaic_creation->definition.has_supply) return _("No supply provided");
+		if (!mosaic_creation->definition.has_mutable_supply) return _("No supply mutability provided");
+		if (!mosaic_creation->definition.has_transferable) return _("No mosaic transferability provided");
+		if (!mosaic_creation->definition.has_description) return _("No description provided");
+
+		if (mosaic_creation->definition.divisibility > NEM_MAX_DIVISIBILITY) return _("Invalid divisibility provided");
+		if (mosaic_creation->definition.supply > NEM_MAX_SUPPLY) return _("Invalid supply provided");
+
+		if (!nem_validate_address(mosaic_creation->definition.levy_address, network)) return _("Invalid levy address");
+	}
+
+	return NULL;
+}
+
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
 		struct {
@@ -310,6 +344,118 @@ bool nem_fsmProvisionNamespace(nem_transaction_ctx *context, const NEMTransactio
 		provision_namespace->fee);
 }
 
+bool nem_askMosaicCreation(const NEMTransactionCommon *common, const NEMMosaicCreation *mosaic_creation, const char *desc, const char *address) {
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		_("Create mosaic"),
+		mosaic_creation->definition.mosaic,
+		_("under namespace"),
+		mosaic_creation->definition.namespace,
+		NULL,
+		NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	layoutNEMMosaicDescription(mosaic_creation->definition.description);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	char str_out[32];
+	bignum256 amnt;
+
+	bn_read_uint64(mosaic_creation->definition.supply, &amnt);
+	bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
+
+	char *decimal = strchr(str_out, '.');
+	if (decimal != NULL) {
+		*decimal = '\0';
+	}
+
+	strlcat(str_out, ".", sizeof(str_out));
+	for (size_t i = 0; i < mosaic_creation->definition.divisibility; i++) {
+		strlcat(str_out, "0", sizeof(str_out));
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		_("Properties"),
+		mosaic_creation->definition.mutable_supply ? _("Mutable supply:") : _("Immutable supply:"),
+		str_out,
+		_("Mosaic will be"),
+		mosaic_creation->definition.transferable ? _("transferable") : _("non-transferable"),
+		NULL,
+		NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	if (mosaic_creation->definition.has_levy) {
+		layoutNEMLevy(&mosaic_creation->definition);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			return false;
+		}
+
+		if (strcmp(address, mosaic_creation->definition.levy_address) == 0) {
+			layoutDialogSwipe(&bmp_icon_question,
+				_("Cancel"),
+				_("Next"),
+				_("Levy Recipient"),
+				_("Levy will be paid to"),
+				_("yourself"),
+				NULL,
+				NULL,
+				NULL,
+				NULL);
+		} else {
+			layoutNEMDialog(&bmp_icon_question,
+				_("Cancel"),
+				_("Next"),
+				_("Levy Recipient"),
+				_("Levy will be paid to"),
+				mosaic_creation->definition.levy_address);
+		}
+
+		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			return false;
+		}
+	}
+
+	layoutNEMNetworkFee(desc, true, _("Confirm creation fee"), mosaic_creation->fee, _("and network fee of"), common->fee);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool nem_fsmMosaicCreation(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMMosaicCreation *mosaic_creation) {
+	return nem_transaction_create_mosaic_creation(context,
+		common->network,
+		common->timestamp,
+		NULL,
+		common->fee,
+		common->deadline,
+		mosaic_creation->definition.namespace,
+		mosaic_creation->definition.mosaic,
+		mosaic_creation->definition.description,
+		mosaic_creation->definition.divisibility,
+		mosaic_creation->definition.supply,
+		mosaic_creation->definition.mutable_supply,
+		mosaic_creation->definition.transferable,
+		mosaic_creation->definition.levy,
+		mosaic_creation->definition.fee,
+		mosaic_creation->definition.levy_address,
+		mosaic_creation->definition.levy_namespace,
+		mosaic_creation->definition.levy_mosaic,
+		mosaic_creation->sink,
+		mosaic_creation->fee);
+}
+
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee) {
 	layoutNEMDialog(&bmp_icon_question,
 		_("Cancel"),
@@ -422,14 +568,16 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quanti
 		return false;
 	}
 
+	const NEMMosaicDefinition *levy_mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic);
+
 	switch (definition->levy) {
 	case NEMMosaicLevy_MosaicLevy_Absolute:
-		format_amount(definition, definition->fee, NULL, NULL, 0, str_out, size);
+		format_amount(levy_mosaic, definition->fee, NULL, NULL, 0, str_out, size);
 		break;
 
 	case NEMMosaicLevy_MosaicLevy_Percentile:
 		bn_read_uint64(definition->fee, &multiplier2);
-		format_amount(definition, quantity, multiplier, &multiplier2, NEM_LEVY_PERCENTILE_DIVISOR, str_out, size);
+		format_amount(levy_mosaic, quantity, multiplier, &multiplier2, NEM_LEVY_PERCENTILE_DIVISOR, str_out, size);
 		break;
 
 	default:
@@ -437,4 +585,10 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quanti
 	}
 
 	return true;
+}
+
+void nem_mosaicFormatName(const char *namespace, const char *mosaic, char *str_out, size_t size) {
+	strlcpy(str_out, namespace, size);
+	strlcat(str_out, ".", size);
+	strlcat(str_out, mosaic, size);
 }

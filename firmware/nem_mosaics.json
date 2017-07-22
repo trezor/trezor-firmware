@@ -1,5 +1,6 @@
 [
     {
+        "name": "XEM",
         "ticker": " XEM",
         "namespace": "nem",
         "mosaic": "xem",
@@ -12,7 +13,9 @@
         "mosaic": "coin",
         "divisibility": 6,
         "levy": "MosaicLevy_Percentile",
-        "fee": 10
+        "fee": 10,
+        "levy_namespace": "dim",
+        "levy_mosaic": "coin"
     },
     {
         "name": "DIM TOKEN",

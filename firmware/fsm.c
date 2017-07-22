@@ -1154,13 +1154,14 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	CHECK_PARAM(msg->has_transaction, _("No common provided"));
 
 	// Ensure exactly one transaction is provided
-	unsigned int provided = msg->has_transfer + msg->has_provision_namespace;
+	unsigned int provided = msg->has_transfer + msg->has_provision_namespace + msg->has_mosaic_creation;
 	CHECK_PARAM(provided != 0, _("No transaction provided"));
 	CHECK_PARAM(provided == 1, _("More than one transaction provided"));
 
 	NEM_CHECK_PARAM(nem_validate_common(&msg->transaction, false));
 	NEM_CHECK_PARAM_WHEN(msg->has_transfer, nem_validate_transfer(&msg->transfer, msg->transaction.network));
 	NEM_CHECK_PARAM_WHEN(msg->has_provision_namespace, nem_validate_provision_namespace(&msg->provision_namespace, msg->transaction.network));
+	NEM_CHECK_PARAM_WHEN(msg->has_mosaic_creation, nem_validate_mosaic_creation(&msg->mosaic_creation, msg->transaction.network));
 
 	bool cosigning = msg->has_cosigning && msg->cosigning;
 	if (msg->has_multisig) {
@@ -1187,7 +1188,17 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		}
 	}
 
+	RESP_INIT(NEMSignedTx);
+
+	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n, msg->transaction.address_n_count);
+	if (!node) return;
+
+	hdnode_fill_public_key(node);
+
 	const NEMTransactionCommon *common = msg->has_multisig ? &msg->multisig : &msg->transaction;
+
+	char address[NEM_ADDRESS_SIZE + 1];
+	hdnode_get_nem_address(node, common->network, address);
 
 	if (msg->has_transfer && !nem_askTransfer(common, &msg->transfer, network)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
@@ -1201,12 +1212,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		return;
 	}
 
-	RESP_INIT(NEMSignedTx);
-
-	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n, msg->transaction.address_n_count);
-	if (!node) return;
-
-	hdnode_fill_public_key(node);
+	if (msg->has_mosaic_creation && !nem_askMosaicCreation(common, &msg->mosaic_creation, network, address)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
 
 	nem_transaction_ctx context;
 	nem_transaction_start(&context, &node->public_key[1], resp->data.bytes, sizeof(resp->data.bytes));
@@ -1227,6 +1237,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 			return;
 		}
 
+		if (msg->has_mosaic_creation && !nem_fsmMosaicCreation(&inner, &msg->multisig, &msg->mosaic_creation)) {
+			layoutHome();
+			return;
+		}
+
 		if (!nem_fsmMultisig(&context, &msg->transaction, &inner, cosigning)) {
 			layoutHome();
 			return;
@@ -1238,6 +1253,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		}
 
 		if (msg->has_provision_namespace && !nem_fsmProvisionNamespace(&context, &msg->transaction, &msg->provision_namespace)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_mosaic_creation && !nem_fsmMosaicCreation(&context, &msg->transaction, &msg->mosaic_creation)) {
 			layoutHome();
 			return;
 		}

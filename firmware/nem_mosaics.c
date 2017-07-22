@@ -3,6 +3,8 @@
 #include "nem_mosaics.h"
 
 const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] = {{
+	.has_name = true,
+	.name = "XEM",
 	.has_ticker = true,
 	.ticker = " XEM",
 	.has_namespace = true,
@@ -27,6 +29,10 @@ const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] =
 	.levy = NEMMosaicLevy_MosaicLevy_Percentile,
 	.has_fee = true,
 	.fee = 10,
+	.has_levy_namespace = true,
+	.levy_namespace = "dim",
+	.has_levy_mosaic = true,
+	.levy_mosaic = "coin",
 },
 {
 	.has_name = true,

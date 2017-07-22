@@ -550,10 +550,8 @@ void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t qua
 }
 
 void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *multiplier) {
-	char mosaic_name[256];
-	strlcpy(mosaic_name, namespace, sizeof(mosaic_name));
-	strlcat(mosaic_name, ".", sizeof(mosaic_name));
-	strlcat(mosaic_name, mosaic, sizeof(mosaic_name));
+	char mosaic_name[32];
+	nem_mosaicFormatName(namespace, mosaic, mosaic_name, sizeof(mosaic_name));
 
 	char str_out[32];
 	nem_mosaicFormatAmount(NULL, quantity, multiplier, str_out, sizeof(str_out));
@@ -589,5 +587,67 @@ void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encryp
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
 			encrypted ? _("Encrypted message") : _("Unencrypted message"),
 			str[0], str[1], str[2], str[3], NULL, NULL);
+	}
+}
+
+void layoutNEMMosaicDescription(const char *description) {
+	const char **str = split_message((uint8_t *) description, strlen(description), 16);
+	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
+		_("Mosaic Description"),
+		str[0], str[1], str[2], str[3], NULL, NULL);
+}
+
+void layoutNEMLevy(const NEMMosaicDefinition *definition) {
+	const NEMMosaicDefinition *mosaic;
+	if (nem_mosaicMatches(definition, definition->levy_namespace, definition->levy_mosaic)) {
+		mosaic = definition;
+	} else {
+		mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic);
+	}
+
+	char mosaic_name[32];
+	if (mosaic == NULL) {
+		nem_mosaicFormatName(definition->levy_namespace, definition->levy_mosaic, mosaic_name, sizeof(mosaic_name));
+	}
+
+	char str_out[32];
+	bignum256 amnt;
+
+	switch (definition->levy) {
+	case NEMMosaicLevy_MosaicLevy_Percentile:
+		bn_read_uint64(definition->fee, &amnt);
+		bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
+
+		char *decimal = strchr(str_out, '.');
+		if (decimal != NULL) {
+			*decimal = '\0';
+		}
+
+		layoutDialogSwipe(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			_("Percentile Levy"),
+			_("Raw levy value is"),
+			str_out,
+			_("in"),
+			mosaic ? (mosaic == definition ? _("the same mosaic") : mosaic->name) : mosaic_name,
+			NULL,
+			NULL);
+		break;
+
+	case NEMMosaicLevy_MosaicLevy_Absolute:
+	default:
+		nem_mosaicFormatAmount(mosaic, definition->fee, NULL, str_out, sizeof(str_out));
+		layoutDialogSwipe(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			_("Absolute Levy"),
+			_("Levy is"),
+			str_out,
+			mosaic ? (mosaic == definition ? _("in the same mosaic") : NULL) : _("in raw units of"),
+			mosaic ? NULL : mosaic_name,
+			NULL,
+			NULL);
+		break;
 	}
 }

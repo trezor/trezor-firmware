@@ -54,5 +54,7 @@ void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, 
 void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier);
 void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *multiplier);
 void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted);
+void layoutNEMMosaicDescription(const char *description);
+void layoutNEMLevy(const NEMMosaicDefinition *definition);
 
 #endif
