@@ -51,10 +51,10 @@ void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appico
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address);
 void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *multiplier, uint64_t fee);
 void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, uint64_t fee1, const char *fee2_desc, uint64_t fee2);
-void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier);
+void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network);
 void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *multiplier);
 void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted);
 void layoutNEMMosaicDescription(const char *description);
-void layoutNEMLevy(const NEMMosaicDefinition *definition);
+void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network);
 
 #endif

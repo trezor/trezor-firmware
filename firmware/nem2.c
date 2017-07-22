@@ -102,6 +102,7 @@ const char *nem_validate_mosaic_creation(const NEMMosaicCreation *mosaic_creatio
 
 	if (mosaic_creation->definition.has_name) return _("Name not allowed in mosaic creation transactions");
 	if (mosaic_creation->definition.has_ticker) return _("Ticker not allowed in mosaic creation transactions");
+	if (mosaic_creation->definition.networks_count) return _("Networks not allowed in mosaic creation transactions");
 
 	if (!mosaic_creation->definition.has_namespace) return _("No mosaic namespace provided");
 	if (!mosaic_creation->definition.has_mosaic) return _("No mosaic name provided");
@@ -145,7 +146,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-			if ((mosaics[i].definition = nem_mosaicByName(mosaic->namespace, mosaic->mosaic))) {
+			if ((mosaics[i].definition = nem_mosaicByName(mosaic->namespace, mosaic->mosaic, common->network))) {
 				// XEM is displayed separately
 				if (mosaics[i].definition == NEM_MOSAIC_DEFINITION_XEM) {
 					// Do not display as a mosaic
@@ -160,7 +161,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 			for (size_t j = i + 1; j < transfer->mosaics_count; j++) {
 				const NEMMosaic *new_mosaic = &transfer->mosaics[j];
 
-				if (nem_mosaicMatches(mosaics[i].definition, new_mosaic->namespace, new_mosaic->mosaic)) {
+				if (nem_mosaicMatches(mosaics[i].definition, new_mosaic->namespace, new_mosaic->mosaic, common->network)) {
 					// Merge duplicate mosaics
 					mosaics[j].skip = true;
 					mosaics[i].quantity += new_mosaic->quantity;
@@ -199,7 +200,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
 			if (mosaics[i].definition) {
-				layoutNEMTransferMosaic(mosaics[i].definition, mosaics[i].quantity, &multiplier);
+				layoutNEMTransferMosaic(mosaics[i].definition, mosaics[i].quantity, &multiplier, common->network);
 			} else {
 				layoutNEMTransferUnknownMosaic(mosaic->namespace, mosaic->mosaic, mosaics[i].quantity, &multiplier);
 			}
@@ -395,7 +396,7 @@ bool nem_askMosaicCreation(const NEMTransactionCommon *common, const NEMMosaicCr
 	}
 
 	if (mosaic_creation->definition.has_levy) {
-		layoutNEMLevy(&mosaic_creation->definition);
+		layoutNEMLevy(&mosaic_creation->definition, common->network);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 			return false;
 		}
@@ -503,11 +504,11 @@ bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *c
 	return true;
 }
 
-const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic) {
+const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic, uint8_t network) {
 	for (size_t i = 0; i < NEM_MOSAIC_DEFINITIONS_COUNT; i++) {
 		const NEMMosaicDefinition *definition = &NEM_MOSAIC_DEFINITIONS[i];
 
-		if (nem_mosaicMatches(definition, namespace, mosaic)) {
+		if (nem_mosaicMatches(definition, namespace, mosaic, network)) {
 			return definition;
 		}
 	}
@@ -561,14 +562,14 @@ void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quan
 	format_amount(definition, quantity, multiplier, NULL, 0, str_out, size);
 }
 
-bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size) {
+bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network, char *str_out, size_t size) {
 	bignum256 multiplier2;
 
 	if (!definition->has_levy || !definition->has_fee) {
 		return false;
 	}
 
-	const NEMMosaicDefinition *levy_mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic);
+	const NEMMosaicDefinition *levy_mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic, network);
 
 	switch (definition->levy) {
 	case NEMMosaicLevy_MosaicLevy_Absolute:

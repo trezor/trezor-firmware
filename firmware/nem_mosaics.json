@@ -15,13 +15,15 @@
         "levy": "MosaicLevy_Percentile",
         "fee": 10,
         "levy_namespace": "dim",
-        "levy_mosaic": "coin"
+        "levy_mosaic": "coin",
+        "networks": [ 104 ]
     },
     {
         "name": "DIM TOKEN",
         "ticker": " DIMTOK",
         "namespace": "dim",
         "mosaic": "token",
-        "divisibility": 6
+        "divisibility": 6,
+        "networks": [ 104 ]
     }
 ]

@@ -528,13 +528,13 @@ void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, 
 		NULL);
 }
 
-void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier) {
+void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network) {
 	char str_out[32], str_levy[32];
 
 	nem_mosaicFormatAmount(definition, quantity, multiplier, str_out, sizeof(str_out));
 
 	if (definition->has_levy) {
-		nem_mosaicFormatLevy(definition, quantity, multiplier, str_levy, sizeof(str_levy));
+		nem_mosaicFormatLevy(definition, quantity, multiplier, network, str_levy, sizeof(str_levy));
 	}
 
 	layoutDialogSwipe(&bmp_icon_question,
@@ -597,12 +597,12 @@ void layoutNEMMosaicDescription(const char *description) {
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
-void layoutNEMLevy(const NEMMosaicDefinition *definition) {
+void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 	const NEMMosaicDefinition *mosaic;
-	if (nem_mosaicMatches(definition, definition->levy_namespace, definition->levy_mosaic)) {
+	if (nem_mosaicMatches(definition, definition->levy_namespace, definition->levy_mosaic, network)) {
 		mosaic = definition;
 	} else {
-		mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic);
+		mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic, network);
 	}
 
 	char mosaic_name[32];

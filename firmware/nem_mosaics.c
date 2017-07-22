@@ -33,6 +33,8 @@ const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] =
 	.levy_namespace = "dim",
 	.has_levy_mosaic = true,
 	.levy_mosaic = "coin",
+	.networks_count = 1,
+	.networks = { 104 },
 },
 {
 	.has_name = true,
@@ -45,6 +47,8 @@ const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] =
 	.mosaic = "token",
 	.has_divisibility = true,
 	.divisibility = 6,
+	.networks_count = 1,
+	.networks = { 104 },
 }};
 
 const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;

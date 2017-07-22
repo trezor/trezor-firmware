@@ -45,13 +45,26 @@ bool nem_fsmMosaicCreation(nem_transaction_ctx *context, const NEMTransactionCom
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee);
 bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *common, const nem_transaction_ctx *inner, bool cosigning);
 
-const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic);
+const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic, uint8_t network);
+
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size);
-bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size);
+bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network, char *str_out, size_t size);
 void nem_mosaicFormatName(const char *namespace, const char *mosaic, char *str_out, size_t size);
 
-static inline bool nem_mosaicMatches(const NEMMosaicDefinition *definition, const char *namespace, const char *mosaic) {
-    return strcmp(namespace, definition->namespace) == 0 && strcmp(mosaic, definition->mosaic) == 0;
+static inline bool nem_mosaicMatches(const NEMMosaicDefinition *definition, const char *namespace, const char *mosaic, uint8_t network) {
+	if (strcmp(namespace, definition->namespace) == 0 && strcmp(mosaic, definition->mosaic) == 0) {
+		if (definition->networks_count == 0) {
+			return true;
+		}
+
+		for (size_t i = 0; i < definition->networks_count; i++) {
+			if (definition->networks[i] == network) {
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 #endif
