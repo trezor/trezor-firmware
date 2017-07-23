@@ -137,6 +137,26 @@ const char *nem_validate_supply_change(const NEMMosaicSupplyChange *supply_chang
 	return NULL;
 }
 
+const char *nem_validate_aggregate_modification(const NEMAggregateModification *aggregate_modification, bool creation) {
+	if (creation && aggregate_modification->modifications_count == 0) {
+		return _("No modifications provided");
+	}
+
+	for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
+		const NEMCosignatoryModification *modification = &aggregate_modification->modifications[i];
+
+		if (!modification->has_type) return _("No modification type provided");
+		if (!modification->has_public_key) return _("No cosignatory public key provided");
+		if (modification->public_key.size != 32) return _("Invalid cosignatory public key provided");
+
+		if (creation && modification->type == NEMModificationType_CosignatoryModification_Delete) {
+			return _("Cannot remove cosignatory when converting account");
+		}
+	}
+
+	return NULL;
+}
+
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
 		struct {
@@ -525,6 +545,104 @@ bool nem_fsmSupplyChange(nem_transaction_ctx *context, const NEMTransactionCommo
 		supply_change->mosaic,
 		supply_change->type,
 		supply_change->delta);
+}
+
+bool nem_askAggregateModification(const NEMTransactionCommon *common, const NEMAggregateModification *aggregate_modification, const char *desc, bool creation) {
+	if (creation) {
+		layoutDialogSwipe(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			desc,
+			_("Convert account to"),
+			_("multisig account?"),
+			NULL,
+			NULL,
+			NULL,
+			NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			return false;
+		}
+	}
+
+	char address[NEM_ADDRESS_SIZE + 1];
+
+	for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
+		const NEMCosignatoryModification *modification = &aggregate_modification->modifications[i];
+		nem_get_address(modification->public_key.bytes, common->network, address);
+
+		layoutNEMDialog(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			desc,
+			modification->type == NEMModificationType_CosignatoryModification_Add ? _("Add cosignatory") : _("Remove cosignatory"),
+			address);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			return false;
+		}
+	}
+
+	int32_t relative_change = aggregate_modification->relative_change;
+	if (relative_change) {
+		char str_out[32];
+
+		bignum256 amnt;
+		bn_read_uint64(relative_change < 0 ? -relative_change : relative_change, &amnt);
+		bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
+
+		char *decimal = strchr(str_out, '.');
+		if (decimal != NULL) {
+			*decimal = '\0';
+		}
+
+		layoutDialogSwipe(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			desc,
+			creation ? _("Set minimum") : (relative_change < 0 ? _("Decrease minimum") : _("Increase minimum")),
+			creation ? _("cosignatories to") : _("cosignatories by"),
+			str_out,
+			NULL,
+			NULL,
+			NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			return false;
+		}
+	}
+
+	layoutNEMNetworkFee(desc, true, _("Confirm network fee"), common->fee, NULL, 0);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool nem_fsmAggregateModification(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMAggregateModification *aggregate_modification) {
+	bool ret = nem_transaction_create_aggregate_modification(context,
+		common->network,
+		common->timestamp,
+		NULL,
+		common->fee,
+		common->deadline,
+		aggregate_modification->modifications_count,
+		aggregate_modification->relative_change != 0);
+	if (!ret) return false;
+
+	for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
+		const NEMCosignatoryModification *modification = &aggregate_modification->modifications[i];
+
+		ret = nem_transaction_write_cosignatory_modification(context,
+			modification->type,
+			modification->public_key.bytes);
+		if (!ret) return false;
+	}
+
+	if (aggregate_modification->relative_change) {
+		ret = nem_transaction_write_minimum_cosignatories(context, aggregate_modification->relative_change);
+		if (!ret) return false;
+	}
+
+	return true;
 }
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee) {
