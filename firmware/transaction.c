@@ -249,10 +249,10 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 	const uint32_t n = multisig->pubkeys_count;
 	if (m < 1 || m > 15) return 0;
 	if (n < 1 || n > 15) return 0;
-	uint32_t i, r = 0;
+	uint32_t r = 0;
 	if (out) {
 		out[r] = 0x50 + m; r++;
-		for (i = 0; i < n; i++) {
+		for (uint32_t i = 0; i < n; i++) {
 			out[r] = 33; r++; // OP_PUSH 33
 			const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
 			if (!pubkey) return 0;
@@ -279,8 +279,7 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 
 	uint8_t d[2];
 	d[0] = 0x50 + m; sha256_Update(&ctx, d, 1);
-	uint32_t i;
-	for (i = 0; i < n; i++) {
+	for (uint32_t i = 0; i < n; i++) {
 		d[0] = 33; sha256_Update(&ctx, d, 1); // OP_PUSH 33
 		const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
 		if (!pubkey) return 0;
@@ -308,9 +307,9 @@ uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, 
 
 uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out)
 {
-	uint32_t i, r = 0;
+	uint32_t r = 0;
 	out[r] = 0x00; r++;
-	for (i = 0; i < multisig->signatures_count; i++) {
+	for (uint32_t i = 0; i < multisig->signatures_count; i++) {
 		if (multisig->signatures[i].size == 0) {
 			continue;
 		}
@@ -331,8 +330,7 @@ uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uin
 
 uint32_t tx_prevout_hash(SHA256_CTX *ctx, const TxInputType *input)
 {
-	int i;
-	for (i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; i++) {
 		sha256_Update(ctx, &(input->prev_hash.bytes[31 - i]), 1);
 	}
 	sha256_Update(ctx, (const uint8_t *)&input->prev_index, 4);
@@ -391,7 +389,6 @@ uint32_t tx_serialize_header_hash(TxStruct *tx)
 
 uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out)
 {
-	int i;
 	if (tx->have_inputs >= tx->inputs_len) {
 		// already got all inputs
 		return 0;
@@ -400,7 +397,7 @@ uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out
 	if (tx->have_inputs == 0) {
 		r += tx_serialize_header(tx, out + r);
 	}
-	for (i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; i++) {
 		*(out + r + i) = input->prev_hash.bytes[31 - i];
 	}
 	r += 32;
@@ -558,9 +555,8 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 	sha256_Final(&(t->ctx), hash);
 	sha256_Raw(hash, 32, hash);
 	if (!reverse) return;
-	uint8_t i, k;
-	for (i = 0; i < 16; i++) {
-		k = hash[31 - i];
+	for (uint8_t i = 0; i < 16; i++) {
+		uint8_t k = hash[31 - i];
 		hash[31 - i] = hash[i];
 		hash[i] = k;
 	}

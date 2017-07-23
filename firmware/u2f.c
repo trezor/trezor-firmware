@@ -431,10 +431,9 @@ void u2f_version(const APDU *a)
 }
 
 void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname, const BITMAP **appicon) {
-	unsigned int i;
 	static char buf[8+2+8+1];
 
-	for (i = 0; i < sizeof(u2f_well_known)/sizeof(U2FWellKnown); i++) {
+	for (unsigned int i = 0; i < sizeof(u2f_well_known)/sizeof(U2FWellKnown); i++) {
 		if (memcmp(appid, u2f_well_known[i].appid, U2F_APPID_SIZE) == 0) {
 			*appname = u2f_well_known[i].appname;
 			*appicon = u2f_well_known[i].appicon;
@@ -473,9 +472,9 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 	uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
 
 	// Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-	uint32_t i, key_path[KEY_PATH_ENTRIES];
+	uint32_t key_path[KEY_PATH_ENTRIES];
 	key_path[0] = U2F_KEY_PATH;
-	for (i = 1; i < KEY_PATH_ENTRIES; i++) {
+	for (uint32_t i = 1; i < KEY_PATH_ENTRIES; i++) {
 		// high bit for hardened keys
 		key_path[i]= 0x80000000 | random32();
 	}

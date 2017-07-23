@@ -702,8 +702,6 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 
 		resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 		if (txinput->has_multisig) {
-			uint32_t r, i, script_len;
-			int nwitnesses;
 			// fill in the signature
 			int pubkey_idx = cryptoMultisigPubkeyIndex(&(txinput->multisig), node.public_key);
 			if (pubkey_idx < 0) {
@@ -714,10 +712,10 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 			memcpy(txinput->multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
 			txinput->multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
 
-			r = 1; // skip number of items (filled in later)
+			uint32_t r = 1; // skip number of items (filled in later)
 			resp.serialized.serialized_tx.bytes[r] = 0; r++;
-			nwitnesses = 2;
-			for (i = 0; i < txinput->multisig.signatures_count; i++) {
+			int nwitnesses = 2;
+			for (uint32_t i = 0; i < txinput->multisig.signatures_count; i++) {
 				if (txinput->multisig.signatures[i].size == 0) {
 					continue;
 				}
@@ -725,7 +723,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 				txinput->multisig.signatures[i].bytes[txinput->multisig.signatures[i].size] = 1;
 				r += tx_serialize_script(txinput->multisig.signatures[i].size + 1, txinput->multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
 			}
-			script_len = compile_script_multisig(&txinput->multisig, 0);
+			uint32_t script_len = compile_script_multisig(&txinput->multisig, 0);
 			r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
 			r += compile_script_multisig(&txinput->multisig, resp.serialized.serialized_tx.bytes + r);
 			resp.serialized.serialized_tx.bytes[0] = nwitnesses;

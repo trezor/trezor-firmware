@@ -29,8 +29,7 @@ static const char *hexdigits = "0123456789ABCDEF";
 
 void uint32hex(uint32_t num, char *str)
 {
-	uint32_t i;
-	for (i = 0; i < 8; i++) {
+	for (uint32_t i = 0; i < 8; i++) {
 		str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
 	}
 }
@@ -38,9 +37,8 @@ void uint32hex(uint32_t num, char *str)
 // converts data to hexa
 void data2hex(const void *data, uint32_t len, char *str)
 {
-	uint32_t i;
 	const uint8_t *cdata = (uint8_t *)data;
-	for (i = 0; i < len; i++) {
+	for (uint32_t i = 0; i < len; i++) {
 		str[i * 2    ] = hexdigits[(cdata[i] >> 4) & 0xF];
 		str[i * 2 + 1] = hexdigits[cdata[i] & 0xF];
 	}

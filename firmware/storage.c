@@ -212,8 +212,7 @@ void session_clear(bool clear_pin)
 }
 
 static uint32_t storage_flash_words(uint32_t addr, uint32_t *src, int nwords) {
-	int i;
-	for (i = 0; i < nwords; i++) {
+	for (int i = 0; i < nwords; i++) {
 		flash_program_word(addr, *src++);
 		addr += 4;
 	}

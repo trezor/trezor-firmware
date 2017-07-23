@@ -120,13 +120,11 @@ void reset_backup(bool separated)
 	storage.needs_backup = false;
 	storage_commit();
 
-	int pass, word_pos, i = 0, j;
-
-	for (pass = 0; pass < 2; pass++) {
-		i = 0;
-		for (word_pos = 1; word_pos <= (int)strength/32*3; word_pos++) {
+	for (int pass = 0; pass < 2; pass++) {
+		int i = 0;
+		for (int word_pos = 1; word_pos <= (int)strength/32*3; word_pos++) {
 			// copy current_word
-			j = 0;
+			int j = 0;
 			while (storage.mnemonic[i] != ' ' && storage.mnemonic[i] != 0 && j + 1 < (int)sizeof(current_word)) {
 				current_word[j] = storage.mnemonic[i];
 				i++; j++;

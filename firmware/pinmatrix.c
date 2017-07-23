@@ -33,11 +33,10 @@ void pinmatrix_draw(const char *text)
 	};
 	oledSwipeLeft();
 	const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 2;
-	int i, j, k;
-	for (i = 0; i < 3; i++) {
-		for (j = 0; j < 3; j++) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
 			// use (2 - j) instead of j to achieve 789456123 layout
-			k = pinmatrix_perm[i + (2 - j) * 3] - '0';
+			int k = pinmatrix_perm[i + (2 - j) * 3] - '0';
 			if (text) {
 				oledDrawStringCenter(0, text);
 			}
@@ -49,8 +48,7 @@ void pinmatrix_draw(const char *text)
 
 void pinmatrix_start(const char *text)
 {
-	int i;
-	for (i = 0; i < 9; i++) {
+	for (int i = 0; i < 9; i++) {
 		pinmatrix_perm[i] = '1' + i;
 	}
 	pinmatrix_perm[9] = 0;

@@ -1169,7 +1169,7 @@ void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
 	if (msg->flash) {
 		flash_clear_status_flags();
 		flash_unlock();
-		for (unsigned int i = 0; i < length; i += 4) {
+		for (uint32_t i = 0; i < length; i += 4) {
 			uint32_t word;
 			memcpy(&word, msg->memory.bytes + i, 4);
 			flash_program_word(msg->address + i, word);

@@ -143,8 +143,7 @@ static inline void msg_debug_out_pad(void)
 static bool pb_callback_out(pb_ostream_t *stream, const uint8_t *buf, size_t count)
 {
 	(void)stream;
-	size_t i;
-	for (i = 0; i < count; i++) {
+	for (size_t i = 0; i < count; i++) {
 		msg_out_append(buf[i]);
 	}
 	return true;
@@ -155,8 +154,7 @@ static bool pb_callback_out(pb_ostream_t *stream, const uint8_t *buf, size_t cou
 static bool pb_debug_callback_out(pb_ostream_t *stream, const uint8_t *buf, size_t count)
 {
 	(void)stream;
-	size_t i;
-	for (i = 0; i < count; i++) {
+	for (size_t i = 0; i < count; i++) {
 		msg_debug_out_append(buf[i]);
 	}
 	return true;

@@ -283,12 +283,12 @@ static void layoutEthereumData(const uint8_t *data, uint32_t len, uint32_t total
 {
 	char hexdata[3][17];
 	char summary[20];
-	int i;
 	uint32_t printed = 0;
-	for (i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		uint32_t linelen = len - printed;
-		if (linelen > 8)
+		if (linelen > 8) {
 			linelen = 8;
+		}
 		data2hex(data, linelen, hexdata[i]);
 		data += linelen;
 		printed += linelen;

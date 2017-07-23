@@ -81,9 +81,8 @@ static bool is_debug_link = 0;
  */
 inline void SPISend(uint32_t base, uint8_t *data, int len)
 {
-	int i;
 	delay(1);
-	for (i = 0; i < len; i++) {
+	for (int i = 0; i < len; i++) {
 		spi_send(base, data[i]);
 	}
 	while (!(SPI_SR(base) & SPI_SR_TXE));
@@ -219,17 +218,13 @@ void oledClearPixel(int x, int y)
 
 void oledDrawChar(int x, int y, char c, int zoom)
 {
-	int char_width;
-	const uint8_t *char_data;
-
 	if ((x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
 
-	char_width = fontCharWidth(c);
-	char_data = fontCharData(c);
+	int char_width = fontCharWidth(c);
+	const uint8_t *char_data = fontCharData(c);
 
-	int xo, yo;
-	for (xo = 0; xo < char_width; xo++) {
-		for (yo = 0; yo < FONT_HEIGHT; yo++) {
+	for (int xo = 0; xo < char_width; xo++) {
+		for (int yo = 0; yo < FONT_HEIGHT; yo++) {
 			if (char_data[xo] & (1 << (FONT_HEIGHT - 1 - yo))) {
 				if (zoom <= 1) {
 					oledDrawPixel(x + xo, y + yo);
@@ -254,9 +249,8 @@ char oledConvertChar(const char c) {
 int oledStringWidth(const char *text) {
 	if (!text) return 0;
 	int l = 0;
-	char c;
 	for (; *text; text++) {
-		c = oledConvertChar(*text);
+		char c = oledConvertChar(*text);
 		if (c) {
 			l += fontCharWidth(c) + 1;
 		}
@@ -273,9 +267,8 @@ void oledDrawString(int x, int y, const char* text)
 		size = 2;
 	}
 	int l = 0;
-	char c;
 	for (; *text; text++) {
-		c = oledConvertChar(*text);
+		char c = oledConvertChar(*text);
 		if (c) {
 			oledDrawChar(x + l, y, c, size);
 			l += size * (fontCharWidth(c) + 1);
@@ -299,9 +292,8 @@ void oledDrawStringRight(int x, int y, const char* text)
 
 void oledDrawBitmap(int x, int y, const BITMAP *bmp)
 {
-	int i, j;
-	for (i = 0; i < min(bmp->width, OLED_WIDTH - x); i++) {
-		for (j = 0; j < min(bmp->height, OLED_HEIGHT - y); j++) {
+	for (int i = 0; i < min(bmp->width, OLED_WIDTH - x); i++) {
+		for (int j = 0; j < min(bmp->height, OLED_HEIGHT - y); j++) {
 			if (bmp->data[(i / 8) + j * bmp->width / 8] & (1 << (7 - i % 8))) {
 				OLED_BUFSET(x + i, y + j);
 			} else {
@@ -314,9 +306,8 @@ void oledDrawBitmap(int x, int y, const BITMAP *bmp)
 void oledInvert(int x1, int y1, int x2, int y2)
 {
 	if ((x1 >= OLED_WIDTH) || (y1 >= OLED_HEIGHT) || (x2 >= OLED_WIDTH) || (y2 >= OLED_HEIGHT)) return;
-	int x, y;
-	for (x = x1; x <= x2; x++) {
-		for (y = y1; y <= y2; y++) {
+	for (int x = x1; x <= x2; x++) {
+		for (int y = y1; y <= y2; y++) {
 			OLED_BUFTGL(x,y);
 		}
 	}
@@ -327,17 +318,15 @@ void oledInvert(int x1, int y1, int x2, int y2)
  */
 void oledBox(int x1, int y1, int x2, int y2, bool set)
 {
-	int x, y;
-	for (x = x1; x <= x2; x++) {
-		for (y = y1; y <= y2; y++) {
+	for (int x = x1; x <= x2; x++) {
+		for (int y = y1; y <= y2; y++) {
 			set ? oledDrawPixel(x, y) : oledClearPixel(x, y);
 		}
 	}
 }
 
 void oledHLine(int y) {
-	int x;
-	for (x = 0; x < OLED_WIDTH; x++) {
+	for (int x = 0; x < OLED_WIDTH; x++) {
 		oledDrawPixel(x, y);
 	}
 }
@@ -347,12 +336,11 @@ void oledHLine(int y) {
  */
 void oledFrame(int x1, int y1, int x2, int y2)
 {
-	int x, y;
-	for (x = x1; x <= x2; x++) {
+	for (int x = x1; x <= x2; x++) {
 		oledDrawPixel(x, y1);
 		oledDrawPixel(x, y2);
 	}
-	for (y = y1 + 1; y < y2; y++) {
+	for (int y = y1 + 1; y < y2; y++) {
 		oledDrawPixel(x1, y);
 		oledDrawPixel(x2, y);
 	}
@@ -364,10 +352,9 @@ void oledFrame(int x1, int y1, int x2, int y2)
  */
 void oledSwipeLeft(void)
 {
-	int i, j, k;
-	for (i = 0; i < OLED_WIDTH; i++) {
-		for (j = 0; j < OLED_HEIGHT / 8; j++) {
-			for (k = OLED_WIDTH-1; k > 0; k--) {
+	for (int i = 0; i < OLED_WIDTH; i++) {
+		for (int j = 0; j < OLED_HEIGHT / 8; j++) {
+			for (int k = OLED_WIDTH-1; k > 0; k--) {
 				_oledbuffer[j * OLED_WIDTH + k] = _oledbuffer[j * OLED_WIDTH + k - 1];
 			}
 			_oledbuffer[j * OLED_WIDTH] = 0;
@@ -382,10 +369,9 @@ void oledSwipeLeft(void)
  */
 void oledSwipeRight(void)
 {
-	int i, j, k;
-	for (i = 0; i < OLED_WIDTH / 4; i++) {
-		for (j = 0; j < OLED_HEIGHT / 8; j++) {
-			for (k = 0; k < OLED_WIDTH / 4 - 1; k++) {
+	for (int i = 0; i < OLED_WIDTH / 4; i++) {
+		for (int j = 0; j < OLED_HEIGHT / 8; j++) {
+			for (int k = 0; k < OLED_WIDTH / 4 - 1; k++) {
 				_oledbuffer[k * 4 + 0 + j * OLED_WIDTH] = _oledbuffer[k * 4 + 4 + j * OLED_WIDTH];
 				_oledbuffer[k * 4 + 1 + j * OLED_WIDTH] = _oledbuffer[k * 4 + 5 + j * OLED_WIDTH];
 				_oledbuffer[k * 4 + 2 + j * OLED_WIDTH] = _oledbuffer[k * 4 + 6 + j * OLED_WIDTH];

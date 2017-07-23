@@ -44,9 +44,8 @@ uint32_t random_uniform(uint32_t n)
 
 void random_buffer(uint8_t *buf, size_t len)
 {
-	size_t i;
 	uint32_t r = 0;
-	for (i = 0; i < len; i++) {
+	for (size_t i = 0; i < len; i++) {
 		if (i % 4 == 0) {
 			r = random32();
 		}
@@ -56,11 +55,9 @@ void random_buffer(uint8_t *buf, size_t len)
 
 void random_permute(char *str, size_t len)
 {
-	int i, j;
-	char t;
-	for (i = len - 1; i >= 1; i--) {
-		j = random_uniform(i + 1);
-		t = str[j];
+	for (int i = len - 1; i >= 1; i--) {
+		int j = random_uniform(i + 1);
+		char t = str[j];
 		str[j] = str[i];
 		str[i] = t;
 	}

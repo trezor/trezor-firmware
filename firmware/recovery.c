@@ -130,11 +130,10 @@ static void recovery_request(void) {
  * Check mnemonic and send success/failure.
  */
 static void recovery_done(void) {
-	uint32_t i;
 	char new_mnemonic[sizeof(storage.mnemonic)] = {0};
 
 	strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
-	for (i = 1; i < word_count; i++) {
+	for (uint32_t i = 1; i < word_count; i++) {
 		strlcat(new_mnemonic, " ", sizeof(new_mnemonic));
 		strlcat(new_mnemonic, words[i], sizeof(new_mnemonic));
 	}
@@ -202,9 +201,8 @@ static void recovery_done(void) {
  */
 static void add_choice(char choice[12], int prefixlen, const char *first, const char *last) {
 	// assert prefixlen < 4
-	int i;
 	char *dest = choice;
-	for (i = 0; i < prefixlen; i++) {
+	for (int i = 0; i < prefixlen; i++) {
 		*dest++ = toupper((int) first[i]);
 	}
 	if (first[0] != last[0]) {
@@ -216,7 +214,7 @@ static void add_choice(char choice[12], int prefixlen, const char *first, const 
 	} else if (prefixlen < 3) {
 		/* AB-AC, etc. */
 		*dest++ = '-';
-		for (i = 0; i < prefixlen; i++) {
+		for (int i = 0; i < prefixlen; i++) {
 			*dest++ = toupper((int) last[i]);
 		}
 	} else {
@@ -240,11 +238,9 @@ static void add_choice(char choice[12], int prefixlen, const char *first, const 
  */
 static void display_choices(bool twoColumn, char choices[9][12], int num)
 {
-	int i;
-	int nColumns = twoColumn ? 2 : 3;
-	int displayedChoices = nColumns * 3;
-	int row, col;
-	for (i = 0; i < displayedChoices; i++) {
+	const int nColumns = twoColumn ? 2 : 3;
+	const int displayedChoices = nColumns * 3;
+	for (int i = 0; i < displayedChoices; i++) {
 		word_matrix[i] = i;
 	}
 	/* scramble matrix */
@@ -259,9 +255,9 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 		oledBox(0, 27, 127, 63, false);
 	}
 
-	for (row = 0; row < 3; row ++) {
+	for (int row = 0; row < 3; row ++) {
 		int y = 55 - row * 11;
-		for (col = 0; col < nColumns; col++) {
+		for (int col = 0; col < nColumns; col++) {
 			int x = twoColumn ? 64 * col + 32 : 42 * col + 22;
 			int choice = word_matrix[nColumns*row + col];
 			const char *text = choice < num ? choices[choice] : "-";
@@ -276,14 +272,14 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 	oledRefresh();
 
 	/* avoid picking out of range numbers */
-	for (i = 0; i < displayedChoices; i++) {
+	for (int i = 0; i < displayedChoices; i++) {
 		if (word_matrix[i] > num)
 			word_matrix[i] = 0;
 	}
 	/* two column layout: middle column = right column */
 	if (twoColumn) {
 		static const uint8_t twolayout[9] = { 0, 1, 1, 2, 3, 3, 4, 5, 5 };
-		for (i = 8; i >= 2; i--) {
+		for (int i = 8; i >= 2; i--) {
 			word_matrix[i] = word_matrix[twolayout[i]];
 		}
 	}
@@ -295,15 +291,15 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 static void next_matrix(void) {
 	const char * const *wl = mnemonic_wordlist();
 	char word_choices[9][12];
-	uint32_t i, idx, first, num;
+	uint32_t idx, num;
 	bool last = (word_index % 4) == 3;
 
 	switch (word_index % 4) {
 	case 3:
 		idx = TABLE1(word_pincode / 9) + word_pincode % 9;
-		first = word_table2[idx] & 0xfff;
-		num  = (word_table2[idx+1] & 0xfff) - first;
-		for (i = 0; i < num; i++) {
+		const uint32_t first = word_table2[idx] & 0xfff;
+		num = (word_table2[idx + 1] & 0xfff) - first;
+		for (uint32_t i = 0; i < num; i++) {
 			strlcpy(word_choices[i], wl[first + i], sizeof(word_choices[i]));
 		}
 		break;
@@ -311,7 +307,7 @@ static void next_matrix(void) {
 	case 2:
 		idx = TABLE1(word_pincode);
 		num = TABLE1(word_pincode + 1) - idx;
-		for (i = 0; i < num; i++) {
+		for (uint32_t i = 0; i < num; i++) {
 			add_choice(word_choices[i], (word_table2[idx + i] >> 12),
 					   wl[TABLE2(idx + i)],
 					   wl[TABLE2(idx + i + 1) - 1]);
@@ -321,7 +317,7 @@ static void next_matrix(void) {
 	case 1:
 		idx = word_pincode * 9;
 		num = 9;
-		for (i = 0; i < num; i++) {
+		for (uint32_t i = 0; i < num; i++) {
 			add_choice(word_choices[i], (word_table1[idx + i] >> 12),
 					   wl[TABLE2(TABLE1(idx + i))],
 					   wl[TABLE2(TABLE1(idx + i + 1)) - 1]);
@@ -330,7 +326,7 @@ static void next_matrix(void) {
 
 	case 0:
 		num = 9;
-		for (i = 0; i < num; i++) {
+		for (uint32_t i = 0; i < num; i++) {
 			add_choice(word_choices[i], 1,
 					   wl[TABLE2(TABLE1(9*i))],
 					   wl[TABLE2(TABLE1(9*(i+1)))-1]);
@@ -437,11 +433,10 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 		word_index = 0;
 		next_matrix();
 	} else {
-		uint32_t i;
-		for (i = 0; i < word_count; i++) {
+		for (uint32_t i = 0; i < word_count; i++) {
 			word_order[i] = i + 1;
 		}
-		for (i = word_count; i < 24; i++) {
+		for (uint32_t i = word_count; i < 24; i++) {
 			word_order[i] = 0;
 		}
 		random_permute(word_order, 24);
