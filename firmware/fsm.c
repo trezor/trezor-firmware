@@ -1154,7 +1154,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	CHECK_PARAM(msg->has_transaction, _("No common provided"));
 
 	// Ensure exactly one transaction is provided
-	unsigned int provided = msg->has_transfer + msg->has_provision_namespace + msg->has_mosaic_creation;
+	unsigned int provided = msg->has_transfer + msg->has_provision_namespace + msg->has_mosaic_creation + msg->has_supply_change;
 	CHECK_PARAM(provided != 0, _("No transaction provided"));
 	CHECK_PARAM(provided == 1, _("More than one transaction provided"));
 
@@ -1162,6 +1162,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	NEM_CHECK_PARAM_WHEN(msg->has_transfer, nem_validate_transfer(&msg->transfer, msg->transaction.network));
 	NEM_CHECK_PARAM_WHEN(msg->has_provision_namespace, nem_validate_provision_namespace(&msg->provision_namespace, msg->transaction.network));
 	NEM_CHECK_PARAM_WHEN(msg->has_mosaic_creation, nem_validate_mosaic_creation(&msg->mosaic_creation, msg->transaction.network));
+	NEM_CHECK_PARAM_WHEN(msg->has_supply_change, nem_validate_supply_change(&msg->supply_change));
 
 	bool cosigning = msg->has_cosigning && msg->cosigning;
 	if (msg->has_multisig) {
@@ -1218,6 +1219,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		return;
 	}
 
+	if (msg->has_supply_change && !nem_askSupplyChange(common, &msg->supply_change, network)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
 	nem_transaction_ctx context;
 	nem_transaction_start(&context, &node->public_key[1], resp->data.bytes, sizeof(resp->data.bytes));
 
@@ -1242,6 +1249,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 			return;
 		}
 
+		if (msg->has_supply_change && !nem_fsmSupplyChange(&inner, &msg->multisig, &msg->supply_change)) {
+			layoutHome();
+			return;
+		}
+
 		if (!nem_fsmMultisig(&context, &msg->transaction, &inner, cosigning)) {
 			layoutHome();
 			return;
@@ -1258,6 +1270,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		}
 
 		if (msg->has_mosaic_creation && !nem_fsmMosaicCreation(&context, &msg->transaction, &msg->mosaic_creation)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_supply_change && !nem_fsmSupplyChange(&context, &msg->transaction, &msg->supply_change)) {
 			layoutHome();
 			return;
 		}

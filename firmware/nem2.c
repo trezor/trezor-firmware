@@ -128,6 +128,15 @@ const char *nem_validate_mosaic_creation(const NEMMosaicCreation *mosaic_creatio
 	return NULL;
 }
 
+const char *nem_validate_supply_change(const NEMMosaicSupplyChange *supply_change) {
+	if (!supply_change->has_namespace) return _("No namespace provided");
+	if (!supply_change->has_mosaic) return _("No mosaic provided");
+	if (!supply_change->has_type) return _("No type provided");
+	if (!supply_change->has_delta) return _("No delta provided");
+
+	return NULL;
+}
+
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
 		struct {
@@ -455,6 +464,67 @@ bool nem_fsmMosaicCreation(nem_transaction_ctx *context, const NEMTransactionCom
 		mosaic_creation->definition.levy_mosaic,
 		mosaic_creation->sink,
 		mosaic_creation->fee);
+}
+
+bool nem_askSupplyChange(const NEMTransactionCommon *common, const NEMMosaicSupplyChange *supply_change, const char *desc) {
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		_("Modify supply for"),
+		supply_change->mosaic,
+		_("under namespace"),
+		supply_change->namespace,
+		NULL,
+		NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	char str_out[32];
+
+	bignum256 amnt;
+	bn_read_uint64(supply_change->delta, &amnt);
+	bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
+
+	char *decimal = strchr(str_out, '.');
+	if (decimal != NULL) {
+		*decimal = '\0';
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		supply_change->type == NEMSupplyChangeType_SupplyChange_Increase ? _("Increase supply by") : _("Decrease supply by"),
+		str_out,
+		_("whole units"),
+		NULL,
+		NULL,
+		NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	layoutNEMNetworkFee(desc, true, _("Confirm network fee"), common->fee, NULL, 0);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool nem_fsmSupplyChange(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMMosaicSupplyChange *supply_change) {
+	return nem_transaction_create_mosaic_supply_change(context,
+		common->network,
+		common->timestamp,
+		NULL,
+		common->fee,
+		common->deadline,
+		supply_change->namespace,
+		supply_change->mosaic,
+		supply_change->type,
+		supply_change->delta);
 }
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee) {
