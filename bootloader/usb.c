@@ -394,9 +394,10 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			uint8_t hash[32];
 			sha256_Raw((unsigned char *)FLASH_META_START, FLASH_META_LEN, hash);
 
-			// copy metadata back
+			// restore metadata from backup
 			erase_metadata_sectors();
 			restore_metadata(meta_backup);
+			memset(meta_backup, 0, sizeof(meta_backup));
 
 			// compare against known hash computed via the following Python3 script:
 			// hashlib.sha256(binascii.unhexlify('0F5A693C' * 8192)).hexdigest()
@@ -568,8 +569,9 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			}
 			// erase storage
 			erase_metadata_sectors();
-			// copy storage from backup
+			// restore metadata from backup
 			restore_metadata(meta_backup);
+			memset(meta_backup, 0, sizeof(meta_backup));
 		} else {
 			// replace "TRZR" in header with 0000 when hash not confirmed
 			if (!hash_check_ok) {
