@@ -11,6 +11,7 @@ const uint32_t ResetDevice_strength_default = 256u;
 const char ResetDevice_language_default[17] = "english";
 const char RecoveryDevice_language_default[17] = "english";
 const char SignMessage_coin_name_default[17] = "Bitcoin";
+const InputScriptType SignMessage_script_type_default = InputScriptType_SPENDADDRESS;
 const char VerifyMessage_coin_name_default[17] = "Bitcoin";
 const char SignTx_coin_name_default[17] = "Bitcoin";
 const uint32_t SignTx_version_default = 1u;
@@ -236,10 +237,11 @@ const pb_field_t WordAck_fields[2] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t SignMessage_fields[4] = {
+const pb_field_t SignMessage_fields[5] = {
     PB_FIELD2(  1, UINT32  , REPEATED, STATIC  , FIRST, SignMessage, address_n, address_n, 0),
     PB_FIELD2(  2, BYTES   , REQUIRED, STATIC  , OTHER, SignMessage, message, address_n, 0),
     PB_FIELD2(  3, STRING  , OPTIONAL, STATIC  , OTHER, SignMessage, coin_name, message, &SignMessage_coin_name_default),
+    PB_FIELD2(  4, ENUM    , OPTIONAL, STATIC  , OTHER, SignMessage, script_type, coin_name, &SignMessage_script_type_default),
     PB_LAST_FIELD
 };
 

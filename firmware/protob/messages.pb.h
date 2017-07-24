@@ -702,6 +702,8 @@ typedef struct _SignMessage {
     SignMessage_message_t message;
     bool has_coin_name;
     char coin_name[17];
+    bool has_script_type;
+    InputScriptType script_type;
 } SignMessage;
 
 typedef struct _SignTx {
@@ -792,6 +794,7 @@ extern const uint32_t ResetDevice_strength_default;
 extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
 extern const char SignMessage_coin_name_default[17];
+extern const InputScriptType SignMessage_script_type_default;
 extern const char VerifyMessage_coin_name_default[17];
 extern const char SignTx_coin_name_default[17];
 extern const uint32_t SignTx_version_default;
@@ -832,7 +835,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define RecoveryDevice_init_default              {false, 0, false, 0, false, 0, false, "english", false, "", false, 0, false, 0, false, 0, false, 0}
 #define WordRequest_init_default                 {false, (WordRequestType)0}
 #define WordAck_init_default                     {""}
-#define SignMessage_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin"}
+#define SignMessage_init_default                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "Bitcoin", false, InputScriptType_SPENDADDRESS}
 #define VerifyMessage_init_default               {false, "", false, {0, {0}}, false, {0, {0}}, false, "Bitcoin"}
 #define MessageSignature_init_default            {false, "", false, {0, {0}}}
 #define CipherKeyValue_init_default              {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
@@ -894,7 +897,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define RecoveryDevice_init_zero                 {false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0}
 #define WordRequest_init_zero                    {false, (WordRequestType)0}
 #define WordAck_init_zero                        {""}
-#define SignMessage_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, ""}
+#define SignMessage_init_zero                    {0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, {0}}, false, "", false, (InputScriptType)0}
 #define VerifyMessage_init_zero                  {false, "", false, {0, {0}}, false, {0, {0}}, false, ""}
 #define MessageSignature_init_zero               {false, "", false, {0, {0}}}
 #define CipherKeyValue_init_zero                 {0, {0, 0, 0, 0, 0, 0, 0, 0}, false, "", false, {0, {0}}, false, 0, false, 0, false, 0, false, {0, {0}}}
@@ -1068,6 +1071,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define SignMessage_address_n_tag                1
 #define SignMessage_message_tag                  2
 #define SignMessage_coin_name_tag                3
+#define SignMessage_script_type_tag              4
 #define SignTx_outputs_count_tag                 1
 #define SignTx_inputs_count_tag                  2
 #define SignTx_coin_name_tag                     3
@@ -1123,7 +1127,7 @@ extern const pb_field_t EntropyAck_fields[2];
 extern const pb_field_t RecoveryDevice_fields[10];
 extern const pb_field_t WordRequest_fields[2];
 extern const pb_field_t WordAck_fields[2];
-extern const pb_field_t SignMessage_fields[4];
+extern const pb_field_t SignMessage_fields[5];
 extern const pb_field_t VerifyMessage_fields[5];
 extern const pb_field_t MessageSignature_fields[3];
 extern const pb_field_t CipherKeyValue_fields[8];
@@ -1187,7 +1191,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define RecoveryDevice_size                      80
 #define WordRequest_size                         6
 #define WordAck_size                             14
-#define SignMessage_size                         1094
+#define SignMessage_size                         1100
 #define VerifyMessage_size                       1156
 #define MessageSignature_size                    110
 #define CipherKeyValue_size                      1358
