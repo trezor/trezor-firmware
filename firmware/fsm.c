@@ -795,9 +795,14 @@ void fsm_msgSignMessage(SignMessage *msg)
 	if (!node) return;
 
 	layoutProgressSwipe(_("Signing"), 0);
-	if (cryptoMessageSign(coin, node, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
+	if (cryptoMessageSign(coin, node, msg->script_type, msg->message.bytes, msg->message.size, resp->signature.bytes) == 0) {
 		resp->has_address = true;
-		hdnode_get_address(node, coin->address_type, resp->address, sizeof(resp->address));
+		hdnode_fill_public_key(node);
+		if (!compute_address(coin, msg->script_type, node, false, NULL, resp->address)) {
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Error computing address"));
+			layoutHome();
+			return;
+		}
 		resp->has_signature = true;
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);
@@ -890,7 +895,7 @@ void fsm_msgSignIdentity(SignIdentity *msg)
 		uint8_t digest[64];
 		sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
 		sha256_Raw((const uint8_t *)msg->challenge_visual, strlen(msg->challenge_visual), digest + 32);
-		result = cryptoMessageSign(&(coins[0]), node, digest, 64, resp->signature.bytes);
+		result = cryptoMessageSign(&(coins[0]), node, InputScriptType_SPENDADDRESS, digest, 64, resp->signature.bytes);
 	}
 
 	if (result == 0) {

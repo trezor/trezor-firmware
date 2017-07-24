@@ -20,6 +20,7 @@
 #include <string.h>
 #include "crypto.h"
 #include "sha2.h"
+#include "ripemd160.h"
 #include "pbkdf2.h"
 #include "aes.h"
 #include "hmac.h"
@@ -109,7 +110,7 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 	}
 }
 
-int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature)
+int cryptoMessageSign(const CoinType *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -124,34 +125,48 @@ int cryptoMessageSign(const CoinType *coin, HDNode *node, const uint8_t *message
 	uint8_t pby;
 	int result = hdnode_sign_digest(node, hash, signature + 1, &pby, NULL);
 	if (result == 0) {
-		signature[0] = 27 + pby + 4;
+		switch (script_type) {
+			case InputScriptType_SPENDP2SHWITNESS:
+				// segwit-in-p2sh
+				signature[0] = 35 + pby;
+				break;
+			case InputScriptType_SPENDWITNESS:
+				// segwit
+				signature[0] = 39 + pby;
+				break;
+			default:
+				// p2pkh
+				signature[0] = 31 + pby;
+				break;
+		}
 	}
 	return result;
 }
 
 int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature)
 {
-	SHA256_CTX ctx;
-	uint8_t pubkey[65], addr_raw[MAX_ADDR_RAW_SIZE], hash[32];
+	// check for invalid signature prefix
+	if (signature[0] < 27 || signature[0] > 43) {
+		return 1;
+	}
 
 	// calculate hash
+	SHA256_CTX ctx;
 	sha256_Init(&ctx);
 	sha256_Update(&ctx, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
 	uint8_t varint[5];
 	uint32_t l = ser_length(message_len, varint);
 	sha256_Update(&ctx, varint, l);
 	sha256_Update(&ctx, message, message_len);
+	uint8_t hash[32];
 	sha256_Final(&ctx, hash);
 	sha256_Raw(hash, 32, hash);
 
-	uint8_t recid = signature[0] - 27;
-	if (recid >= 8) {
-		return 1;
-	}
-	bool compressed = (recid >= 4);
-	recid &= 3;
+	uint8_t recid = (signature[0] - 27) % 4;
+	bool compressed = signature[0] >= 31;
 
 	// check if signature verifies the digest and recover the public key
+	uint8_t pubkey[65];
 	if (ecdsa_verify_digest_recover(&secp256k1, pubkey, signature + 1, hash, recid) != 0) {
 		return 3;
 	}
@@ -159,11 +174,35 @@ int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t mes
 	if (compressed) {
 		pubkey[0] = 0x02 | (pubkey[64] & 1);
 	}
+
 	// check if the address is correct
-	ecdsa_get_address_raw(pubkey, address_type, addr_raw);
-	if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
-		return 2;
+	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
+
+	// p2pkh
+	if (signature[0] >= 27 && signature[0] <= 34) {
+		if (address_type != coin->address_type) {
+			return 4;
+		}
+		ecdsa_get_address_raw(pubkey, address_type, addr_raw);
+		if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
+			return 2;
+		}
+	} else
+	// segwit-in-p2sh
+	if (signature[0] >= 35 && signature[0] <= 38) {
+		if (address_type != coin->address_type_p2sh) {
+			return 4;
+		}
+		ecdsa_get_address_segwit_p2sh_raw(pubkey, address_type, addr_raw);
+		if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
+			return 2;
+		}
+	} else
+	// segwit
+	if (signature[0] >= 39 && signature[0] <= 42) {
+		return 2; // not supported yet
 	}
+
 	return 0;
 }
 

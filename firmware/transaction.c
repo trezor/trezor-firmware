@@ -124,16 +124,7 @@ bool compute_address(const CoinType *coin,
 		if (!coin->has_address_type_p2sh) {
 			return 0;
 		}
-		prelen = address_prefix_bytes_len(coin->address_type_p2sh);
-		raw[0] = 0; // version byte
-		raw[1] = 20; // push 20 bytes
-		ecdsa_get_pubkeyhash(node->public_key, raw + 2);
-		sha256_Raw(raw, 22, digest);
-		address_write_prefix_bytes(coin->address_type_p2sh, raw);
-		ripemd160(digest, 32, raw + prelen);
-		if (!base58_encode_check(raw, prelen + 20, address, MAX_ADDR_SIZE)) {
-			return 0;
-		}
+		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, address, MAX_ADDR_SIZE);
 	} else {
 		ecdsa_get_address(node->public_key, coin->address_type, address, MAX_ADDR_SIZE);
 	}

@@ -595,7 +595,7 @@ typedef struct {
 
 typedef struct _MessageSignature {
     bool has_address;
-    char address[41];
+    char address[60];
     bool has_signature;
     MessageSignature_signature_t signature;
 } MessageSignature;
@@ -729,7 +729,7 @@ typedef struct {
 
 typedef struct _SignedIdentity {
     bool has_address;
-    char address[41];
+    char address[60];
     bool has_public_key;
     SignedIdentity_public_key_t public_key;
     bool has_signature;
@@ -767,7 +767,7 @@ typedef struct {
 
 typedef struct _VerifyMessage {
     bool has_address;
-    char address[41];
+    char address[60];
     bool has_signature;
     VerifyMessage_signature_t signature;
     bool has_message;
@@ -1192,8 +1192,8 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define WordRequest_size                         6
 #define WordAck_size                             14
 #define SignMessage_size                         1100
-#define VerifyMessage_size                       1156
-#define MessageSignature_size                    110
+#define VerifyMessage_size                       1175
+#define MessageSignature_size                    129
 #define CipherKeyValue_size                      1358
 #define CipheredKeyValue_size                    1027
 #define SignTx_size                              43
@@ -1206,7 +1206,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define EthereumVerifyMessage_size               1116
 #define EthereumMessageSignature_size            89
 #define SignIdentity_size                        (558 + IdentityType_size)
-#define SignedIdentity_size                      145
+#define SignedIdentity_size                      164
 #define GetECDHSessionKey_size                   (107 + IdentityType_size)
 #define ECDHSessionKey_size                      67
 #define SetU2FCounter_size                       6
