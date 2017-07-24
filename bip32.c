@@ -287,7 +287,7 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize, bool segwit)
+void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize, int addrformat)
 {
 	uint8_t child_pubkey[33];
 	curve_point b;
@@ -296,25 +296,13 @@ int hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *c
 	child_pubkey[0] = 0x02 | (b.y.val[0] & 0x01);
 	bn_write_be(&b.x, child_pubkey + 1);
 
-	if (!segwit) {
-		ecdsa_get_address(child_pubkey, version, addr, addrsize);
-		return 1;
-	} else {
-		uint8_t raw[32];
-		size_t prelen = address_prefix_bytes_len(version);
-		uint8_t digest[MAX_ADDR_RAW_SIZE];
-
-		raw[0] = 0; // version byte
-		raw[1] = 20; // push 20 bytes
-		ecdsa_get_pubkeyhash(child_pubkey, raw + 2);
-		sha256_Raw(raw, 22, digest);
-		address_write_prefix_bytes(version, raw);
-		ripemd160(digest, 32, raw + prelen);
-
-		if (!base58_encode_check(raw, prelen + 20, addr, MAX_ADDR_SIZE)) {
-			return 0;
-		}
-		return 1;
+	switch (addrformat) {
+		case 1: // Segwit-in-P2SH
+			ecdsa_get_address_segwit(child_pubkey, version, addr, addrsize);
+			break;
+		default: // normal address
+			ecdsa_get_address(child_pubkey, version, addr, addrsize);
+			break;
 	}
 }
 

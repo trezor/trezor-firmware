@@ -1021,7 +1021,7 @@ START_TEST(test_bip32_optimized)
 		hdnode_fill_public_key(&node);
 		ecdsa_get_address(node.public_key, 0, addr1, sizeof(addr1));
 		// optimized
-		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, addr2, sizeof(addr2), false);
+		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, addr2, sizeof(addr2), 0);
 		// check
 		ck_assert_str_eq(addr1, addr2);
 	}
