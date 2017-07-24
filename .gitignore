@@ -1,3 +1,5 @@
+.vscode/
+_attic/
 *.o
 *.d
 *.exe
