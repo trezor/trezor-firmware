@@ -3398,6 +3398,392 @@ START_TEST(test_nem_cipher)
 }
 END_TEST
 
+START_TEST(test_nem_transaction_transfer)
+{
+	nem_transaction_ctx ctx;
+
+	uint8_t buffer[1024], hash[SHA3_256_DIGEST_LENGTH];
+
+	// http://bob.nem.ninja:8765/#/transfer/0acbf8df91e6a65dc56c56c43d65f31ff2a6a48d06fc66e78c7f3436faf3e74f
+
+	nem_transaction_start(&ctx, fromhex("e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_transfer(&ctx,
+			NEM_NETWORK_TESTNET, 0, NULL, 0, 0,
+			"TBGIMRE4SBFRUJXMH7DVF2IBY36L2EDWZ37GVSC4", 50000000000000,
+			NULL, 0, false,
+			0));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("0acbf8df91e6a65dc56c56c43d65f31ff2a6a48d06fc66e78c7f3436faf3e74f"), sizeof(hash));
+
+	// http://bob.nem.ninja:8765/#/transfer/3409d9ece28d6296d6d5e220a7e3cb8641a3fb235ffcbd20c95da64f003ace6c
+
+	nem_transaction_start(&ctx, fromhex("994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_transfer(&ctx,
+			NEM_NETWORK_TESTNET, 14072100, NULL, 194000000, 14075700,
+			"TBLOODPLWOWMZ2TARX4RFPOSOWLULHXMROBN2WXI", 3000000,
+			(uint8_t *) "sending you 3 pairs of paddles\n", 31, false,
+			2));
+
+	ck_assert(nem_transaction_write_mosaic(&ctx,
+			"gimre.games.pong", "paddles", 2));
+
+	ck_assert(nem_transaction_write_mosaic(&ctx,
+			"nem", "xem", 44000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("3409d9ece28d6296d6d5e220a7e3cb8641a3fb235ffcbd20c95da64f003ace6c"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/transfer/e90e98614c7598fbfa4db5411db1b331d157c2f86b558fb7c943d013ed9f71cb
+
+	nem_transaction_start(&ctx, fromhex("8d07f90fb4bbe7715fa327c926770166a11be2e494a970605f2e12557f66c9b9"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_transfer(&ctx,
+			NEM_NETWORK_MAINNET, 0, NULL, 0, 0,
+			"NBT3WHA2YXG2IR4PWKFFMO772JWOITTD2V4PECSB", 5175000000000,
+			(uint8_t *) "Good luck!", 10, false,
+			0));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("e90e98614c7598fbfa4db5411db1b331d157c2f86b558fb7c943d013ed9f71cb"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/transfer/40e89160e6f83d37f7c82defc0afe2c1605ae8c919134570a51dd27ea1bb516c
+
+	nem_transaction_start(&ctx, fromhex("f85ab43dad059b9d2331ddacc384ad925d3467f03207182e01296bacfb242d01"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_transfer(&ctx,
+			NEM_NETWORK_MAINNET, 77229, NULL, 30000000, 80829,
+			"NALICEPFLZQRZGPRIJTMJOCPWDNECXTNNG7QLSG3", 30000000,
+			fromhex("4d9dcf9186967d30be93d6d5404ded22812dbbae7c3f0de5"
+				"01bcd7228cba45bded13000eec7b4c6215fc4d3588168c92"
+				"18167cec98e6977359153a4132e050f594548e61e0dc61c1"
+				"53f0f53c5e65c595239c9eb7c4e7d48e0f4bb8b1dd2f5ddc"), 96, true,
+			0));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("40e89160e6f83d37f7c82defc0afe2c1605ae8c919134570a51dd27ea1bb516c"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/transfer/882dca18dcbe075e15e0ec5a1d7e6ccd69cc0f1309ffd3fde227bfbc107b3f6e
+
+	nem_transaction_start(&ctx, fromhex("f85ab43dad059b9d2331ddacc384ad925d3467f03207182e01296bacfb242d01"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_transfer(&ctx,
+			NEM_NETWORK_MAINNET, 26730750, NULL, 179500000, 26734350,
+			"NBE223WPKEBHQPCYUC4U4CDUQCRRFMPZLOQLB5OP", 1000000,
+			(uint8_t *) "enjoy! :)", 9, false,
+			1));
+
+	ck_assert(nem_transaction_write_mosaic(&ctx,
+			"imre.g", "tokens", 1));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("882dca18dcbe075e15e0ec5a1d7e6ccd69cc0f1309ffd3fde227bfbc107b3f6e"), sizeof(hash));
+}
+END_TEST
+
+START_TEST(test_nem_transaction_multisig)
+{
+	nem_transaction_ctx ctx, other_trans;
+
+	uint8_t buffer[1024], inner[1024];
+	const uint8_t *signature;
+
+	// http://bob.nem.ninja:8765/#/multisig/7d3a7087023ee29005262016706818579a2b5499eb9ca76bad98c1e6f4c46642
+
+	nem_transaction_start(&other_trans, fromhex("abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac"), inner, sizeof(inner));
+
+	ck_assert(nem_transaction_create_aggregate_modification(&other_trans,
+			NEM_NETWORK_TESTNET, 3939039, NULL, 16000000, 3960639,
+			1, false));
+
+	ck_assert(nem_transaction_write_cosignatory_modification(&other_trans, 2, fromhex("e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3")));
+
+	nem_transaction_start(&ctx, fromhex("59d89076964742ef2a2089d26a5aa1d2c7a7bb052a46c1de159891e91ad3d76e"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_multisig(&ctx,
+			NEM_NETWORK_TESTNET, 3939039, NULL, 6000000, 3960639,
+			&other_trans));
+
+	signature = fromhex("933930a8828b560168bddb3137df9252048678d829aa5135fa27bb306ff6562efb92755462988b852b0314bde058487d00e47816b6fb7df6bcfd7e1f150d1d00");
+	ck_assert_int_eq(ed25519_sign_open_keccak(ctx.buffer, ctx.offset, ctx.public_key, signature), 0);
+
+	nem_transaction_start(&ctx, fromhex("71cba4f2a28fd19f902ba40e9937994154d9eeaad0631d25d525ec37922567d4"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_multisig_signature(&ctx,
+			NEM_NETWORK_TESTNET, 3939891, NULL, 6000000, 3961491,
+			&other_trans));
+
+	signature = fromhex("a849f13bfeeba808a8a4a79d579febe584d831a3a6ad03da3b9d008530b3d7a79fcf7156121cd7ee847029d94af7ea7a683ca8e643dc5e5f489557c2054b830b");
+	ck_assert_int_eq(ed25519_sign_open_keccak(ctx.buffer, ctx.offset, ctx.public_key, signature), 0);
+
+	// http://chain.nem.ninja/#/multisig/1016cf3bdd61bd57b9b2b07b6ff2dee390279d8d899265bdc23d42360abe2e6c
+
+	nem_transaction_start(&other_trans, fromhex("a1df5306355766bd2f9a64efdc089eb294be265987b3359093ae474c051d7d5a"), inner, sizeof(inner));
+
+	ck_assert(nem_transaction_create_provision_namespace(&other_trans,
+			NEM_NETWORK_MAINNET, 59414272, NULL, 20000000, 59500672,
+			"dim", NULL,
+			"NAMESPACEWH4MKFMBCVFERDPOOP4FK7MTBXDPZZA", 5000000000));
+
+	nem_transaction_start(&ctx, fromhex("cfe58463f0eaebceb5d00717f8aead49171a5d7c08f6b1299bd534f11715acc9"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_multisig(&ctx,
+			NEM_NETWORK_MAINNET, 59414272, NULL, 6000000, 59500672,
+			&other_trans));
+
+	signature = fromhex("52a876a37511068fe214bd710b2284823921ec7318c01e083419a062eae5369c9c11c3abfdb590f65c717fab82873431d52be62e10338cb5656d1833bbdac70c");
+	ck_assert_int_eq(ed25519_sign_open_keccak(ctx.buffer, ctx.offset, ctx.public_key, signature), 0);
+
+	nem_transaction_start(&ctx, fromhex("1b49b80203007117d034e45234ffcdf402c044aeef6dbb06351f346ca892bce2"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_multisig_signature(&ctx,
+			NEM_NETWORK_MAINNET, 59414342, NULL, 6000000, 59500742,
+			&other_trans));
+
+	signature = fromhex("b9a59239e5d06992c28840034ff7a7f13da9c4e6f4a6f72c1b1806c3b602f83a7d727a345371f5d15abf958208a32359c6dd77bde92273ada8ea6fda3dc76b00");
+	ck_assert_int_eq(ed25519_sign_open_keccak(ctx.buffer, ctx.offset, ctx.public_key, signature), 0);
+
+	nem_transaction_start(&ctx, fromhex("7ba4b39209f1b9846b098fe43f74381e43cb2882ccde780f558a63355840aa87"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_multisig_signature(&ctx,
+			NEM_NETWORK_MAINNET, 59414381, NULL, 6000000, 59500781,
+			&other_trans));
+
+	signature = fromhex("e874ae9f069f0538008631d2df9f2e8a59944ff182e8672f743d2700fb99224aafb7a0ab09c4e9ea39ee7c8ca04a8a3d6103ae1122d87772e871761d4f00ca01");
+	ck_assert_int_eq(ed25519_sign_open_keccak(ctx.buffer, ctx.offset, ctx.public_key, signature), 0);
+}
+END_TEST
+
+START_TEST(test_nem_transaction_provision_namespace)
+{
+	nem_transaction_ctx ctx;
+
+	uint8_t buffer[1024], hash[SHA3_256_DIGEST_LENGTH];
+
+	// http://bob.nem.ninja:8765/#/namespace/f7cab28da57204d01a907c697836577a4ae755e6c9bac60dcc318494a22debb3
+
+	nem_transaction_start(&ctx, fromhex("84afa1bbc993b7f5536344914dde86141e61f8cbecaf8c9cefc07391f3287cf5"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_provision_namespace(&ctx,
+			NEM_NETWORK_TESTNET, 56999445, NULL, 20000000, 57003045,
+			"gimre", NULL,
+			"TAMESPACEWH4MKFMBCVFERDPOOP4FK7MTDJEYP35", 5000000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("f7cab28da57204d01a907c697836577a4ae755e6c9bac60dcc318494a22debb3"), sizeof(hash));
+
+	// http://bob.nem.ninja:8765/#/namespace/7ddd5fe607e1bfb5606e0ac576024c318c8300d237273117d4db32a60c49524d
+
+	nem_transaction_start(&ctx, fromhex("244fa194e2509ac0d2fbc18779c2618d8c2ebb61c16a3bcbebcf448c661ba8dc"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_provision_namespace(&ctx,
+			NEM_NETWORK_TESTNET, 21496797, NULL, 108000000, 21500397,
+			"misc", "alice",
+			"TAMESPACEWH4MKFMBCVFERDPOOP4FK7MTDJEYP35", 5000000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("7ddd5fe607e1bfb5606e0ac576024c318c8300d237273117d4db32a60c49524d"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/namespace/57071aad93ca125dc231dc02c07ad8610cd243d35068f9b36a7d231383907569
+
+	nem_transaction_start(&ctx, fromhex("9f3c14f304309c8b72b2821339c4428793b1518bea72d58dd01f19d523518614"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_provision_namespace(&ctx,
+			NEM_NETWORK_MAINNET, 26699717, NULL, 108000000, 26703317,
+			"sex", NULL,
+			"NAMESPACEWH4MKFMBCVFERDPOOP4FK7MTBXDPZZA", 50000000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("57071aad93ca125dc231dc02c07ad8610cd243d35068f9b36a7d231383907569"), sizeof(hash));
+}
+END_TEST
+
+START_TEST(test_nem_transaction_mosaic_creation)
+{
+	nem_transaction_ctx ctx;
+
+	uint8_t buffer[1024], hash[SHA3_256_DIGEST_LENGTH];
+
+	// http://bob.nem.ninja:8765/#/mosaic/68364353c29105e6d361ad1a42abbccbf419cfc7adb8b74c8f35d8f8bdaca3fa/0
+
+	nem_transaction_start(&ctx, fromhex("994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_creation(&ctx,
+			NEM_NETWORK_TESTNET, 14070896, NULL, 108000000, 14074496,
+			"gimre.games.pong", "paddles",
+			"Paddles for the bong game.\n",
+			0, 10000, true, true,
+			0, 0, NULL, NULL, NULL,
+			"TBMOSAICOD4F54EE5CDMR23CCBGOAM2XSJBR5OLC", 50000000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("68364353c29105e6d361ad1a42abbccbf419cfc7adb8b74c8f35d8f8bdaca3fa"), sizeof(hash));
+
+	// http://bob.nem.ninja:8765/#/mosaic/b2f4a98113ff1f3a8f1e9d7197aa982545297fe0aa3fa6094af8031569953a55/0
+
+	nem_transaction_start(&ctx, fromhex("244fa194e2509ac0d2fbc18779c2618d8c2ebb61c16a3bcbebcf448c661ba8dc"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_creation(&ctx,
+			NEM_NETWORK_TESTNET, 21497248, NULL, 108000000, 21500848,
+			"alice.misc", "bar",
+			"Special offer: get one bar extra by bying one foo!",
+			0, 1000, false, true,
+			1, 1, "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J", "nem", "xem",
+			"TBMOSAICOD4F54EE5CDMR23CCBGOAM2XSJBR5OLC", 50000000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("b2f4a98113ff1f3a8f1e9d7197aa982545297fe0aa3fa6094af8031569953a55"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/mosaic/269c6fda657aba3053a0e5b138c075808cc20e244e1182d9b730798b60a1f77b/0
+
+	nem_transaction_start(&ctx, fromhex("58956ac77951622dc5f1c938affbf017c458e30e6b21ddb5783d38b302531f23"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_creation(&ctx,
+			NEM_NETWORK_MAINNET, 26729938, NULL, 108000000, 26733538,
+			"jabo38", "red_token",
+			"This token is to celebrate the release of Namespaces and Mosaics on the NEM system. "
+			"This token was the fist ever mosaic created other than nem.xem. "
+			"There are only 10,000 Red Tokens that will ever be created. "
+			"It has no levy and can be traded freely among third parties.",
+			2, 10000, false, true,
+			0, 0, NULL, NULL, NULL,
+			"NBMOSAICOD4F54EE5CDMR23CCBGOAM2XSIUX6TRS", 50000000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("269c6fda657aba3053a0e5b138c075808cc20e244e1182d9b730798b60a1f77b"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/mosaic/e8dc14821dbea4831d9051f86158ef348001447968fc22c01644fdaf2bda75c6/0
+
+	nem_transaction_start(&ctx, fromhex("a1df5306355766bd2f9a64efdc089eb294be265987b3359093ae474c051d7d5a"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_creation(&ctx,
+			NEM_NETWORK_MAINNET, 69251020, NULL, 20000000, 69337420,
+			"dim", "coin",
+			"DIM COIN",
+			6, 9000000000, false, true,
+			2, 10, "NCGGLVO2G3CUACVI5GNX2KRBJSQCN4RDL2ZWJ4DP", "dim", "coin",
+			"NBMOSAICOD4F54EE5CDMR23CCBGOAM2XSIUX6TRS", 500000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("e8dc14821dbea4831d9051f86158ef348001447968fc22c01644fdaf2bda75c6"), sizeof(hash));
+}
+END_TEST
+
+START_TEST(test_nem_transaction_mosaic_supply_change)
+{
+	nem_transaction_ctx ctx;
+
+	uint8_t buffer[1024], hash[SHA3_256_DIGEST_LENGTH];
+
+	// http://bigalice2.nem.ninja:7890/transaction/get?hash=33a50fdd4a54913643a580b2af08b9a5b51b7cee922bde380e84c573a7969c50
+
+	nem_transaction_start(&ctx, fromhex("994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_supply_change(&ctx,
+			NEM_NETWORK_TESTNET, 14071648, NULL, 108000000, 14075248,
+			"gimre.games.pong", "paddles",
+			1, 1234));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("33a50fdd4a54913643a580b2af08b9a5b51b7cee922bde380e84c573a7969c50"), sizeof(hash));
+
+	// http://bigalice2.nem.ninja:7890/transaction/get?hash=1ce8e8894d077a66ff22294b000825d090a60742ec407efd80eb8b19657704f2
+
+	nem_transaction_start(&ctx, fromhex("84afa1bbc993b7f5536344914dde86141e61f8cbecaf8c9cefc07391f3287cf5"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_supply_change(&ctx,
+			NEM_NETWORK_TESTNET, 14126909, NULL, 108000000, 14130509,
+			"jabo38_ltd.fuzzy_kittens_cafe", "coupons",
+			2, 1));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("1ce8e8894d077a66ff22294b000825d090a60742ec407efd80eb8b19657704f2"), sizeof(hash));
+
+	// http://bigalice3.nem.ninja:7890/transaction/get?hash=694e493e9576d2bcf60d85747e302ac2e1cc27783187947180d4275a713ff1ff
+
+	nem_transaction_start(&ctx, fromhex("b7ccc27b21ba6cf5c699a8dc86ba6ba98950442597ff9fa30e0abe0f5f4dd05d"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_supply_change(&ctx,
+			NEM_NETWORK_MAINNET, 53377685, NULL, 20000000, 53464085,
+			"abvapp", "abv",
+			1, 9000000));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("694e493e9576d2bcf60d85747e302ac2e1cc27783187947180d4275a713ff1ff"), sizeof(hash));
+
+	// http://bigalice3.nem.ninja:7890/transaction/get?hash=09836334e123970e068d5b411e4d1df54a3ead10acf1ad5935a2cdd9f9680185
+
+	nem_transaction_start(&ctx, fromhex("75f001a8641e2ce5c4386883dda561399ed346177411b492a677b73899502f13"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_mosaic_supply_change(&ctx,
+			NEM_NETWORK_MAINNET, 55176304, NULL, 20000000, 55262704,
+			"sushi", "wasabi",
+			2, 20));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("09836334e123970e068d5b411e4d1df54a3ead10acf1ad5935a2cdd9f9680185"), sizeof(hash));
+}
+END_TEST
+
+START_TEST(test_nem_transaction_aggregate_modification)
+{
+	nem_transaction_ctx ctx;
+
+	uint8_t buffer[1024], hash[SHA3_256_DIGEST_LENGTH];
+
+	// http://bob.nem.ninja:8765/#/aggregate/6a55471b17159e5b6cd579c421e95a4e39d92e3f78b0a55ee337e785a601d3a2
+
+	nem_transaction_start(&ctx, fromhex("462ee976890916e54fa825d26bdd0235f5eb5b6a143c199ab0ae5ee9328e08ce"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_aggregate_modification(&ctx,
+			NEM_NETWORK_TESTNET, 0, NULL, 22000000, 0,
+			2, false));
+
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("c54d6e33ed1446eedd7f7a80a588dd01857f723687a09200c1917d5524752f8b")));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("6a55471b17159e5b6cd579c421e95a4e39d92e3f78b0a55ee337e785a601d3a2"), sizeof(hash));
+
+	// http://bob.nem.ninja:8765/#/aggregate/1fbdae5ba753e68af270930413ae90f671eb8ab58988116684bac0abd5726584
+
+	nem_transaction_start(&ctx, fromhex("6bf7849c1eec6a2002995cc457dc00c4e29bad5c88de63f51e42dfdcd7b2131d"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_aggregate_modification(&ctx,
+			NEM_NETWORK_TESTNET, 6542254, NULL, 40000000, 6545854,
+			4, true));
+
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("5f53d076c8c3ec3110b98364bc423092c3ec2be2b1b3c40fd8ab68d54fa39295")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("9eb199c2b4d406f64cb7aa5b2b0815264b56ba8fe44d558a6cb423a31a33c4c2")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("94b2323dab23a3faba24fa6ddda0ece4fbb06acfedd74e76ad9fae38d006882b")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("d88c6ee2a2cd3929d0d76b6b14ecb549d21296ab196a2b3a4cb2536bcce32e87")));
+
+	ck_assert(nem_transaction_write_minimum_cosignatories(&ctx, 2));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("1fbdae5ba753e68af270930413ae90f671eb8ab58988116684bac0abd5726584"), sizeof(hash));
+
+	// http://chain.nem.ninja/#/aggregate/cc64ca69bfa95db2ff7ac1e21fe6d27ece189c603200ebc9778d8bb80ca25c3c
+
+	nem_transaction_start(&ctx, fromhex("f41b99320549741c5cce42d9e4bb836d98c50ed5415d0c3c2912d1bb50e6a0e5"), buffer, sizeof(buffer));
+
+	ck_assert(nem_transaction_create_aggregate_modification(&ctx,
+			NEM_NETWORK_MAINNET, 0, NULL, 40000000, 0,
+			5, false));
+
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("1fbdbdde28daf828245e4533765726f0b7790e0b7146e2ce205df3e86366980b")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("f94e8702eb1943b23570b1b83be1b81536df35538978820e98bfce8f999e2d37")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("826cedee421ff66e708858c17815fcd831a4bb68e3d8956299334e9e24380ba8")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("719862cd7d0f4e875a6a0274c9a1738f38f40ad9944179006a54c34724c1274d")));
+	ck_assert(nem_transaction_write_cosignatory_modification(&ctx, 1, fromhex("43aa69177018fc3e2bdbeb259c81cddf24be50eef9c5386db51d82386c41475a")));
+
+	keccak_256(ctx.buffer, ctx.offset, hash);
+	ck_assert_mem_eq(hash, fromhex("cc64ca69bfa95db2ff7ac1e21fe6d27ece189c603200ebc9778d8bb80ca25c3c"), sizeof(hash));
+}
+END_TEST
+
 START_TEST(test_multibyte_address)
 {
 	uint8_t priv_key[32];
@@ -3861,6 +4247,15 @@ Suite *test_suite(void)
 	tc = tcase_create("nem_encryption");
 	tcase_add_test(tc, test_nem_derive);
 	tcase_add_test(tc, test_nem_cipher);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("nem_transaction");
+	tcase_add_test(tc, test_nem_transaction_transfer);
+	tcase_add_test(tc, test_nem_transaction_multisig);
+	tcase_add_test(tc, test_nem_transaction_provision_namespace);
+	tcase_add_test(tc, test_nem_transaction_mosaic_creation);
+	tcase_add_test(tc, test_nem_transaction_mosaic_supply_change);
+	tcase_add_test(tc, test_nem_transaction_aggregate_modification);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("multibyte_address");
