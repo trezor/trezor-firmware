@@ -184,31 +184,20 @@ class TransportV2(Transport):
 
         data = bytearray(msg.SerializeToString())
 
-        # Convert to unsigned in python2
-        checksum = binascii.crc32(data) & 0xffffffff
+        dataheader = struct.pack(">LL", mapping.get_type(msg), len(data))
+        data = dataheader + data
+        seq = -1
 
-        header1 = struct.pack(">L", self.session_id)
-        header2 = struct.pack(">LL", mapping.get_type(msg), len(data))
-        footer = struct.pack(">L", checksum)
-
-        data = header2 + data + footer
-
-        first = True
         while len(data):
-            if first:
-                # Magic character, header1, header2, data padded to 64 bytes
-                datalen = 63 - len(header1)
-                chunk = b'H' + header1 + \
-                    data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
+            if seq < 0:
+                repheader = struct.pack(">BL", 0x01, self.session_id)
             else:
-                # Magic character, header1, data padded to 64 bytes
-                datalen = 63 - len(header1)
-                chunk = b'D' + header1 + \
-                    data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
-
+                repheader = struct.pack(">BLL", 0x02, self.session_id, seq)
+            datalen = 64 - len(repheader)
+            chunk = repheader + data[:datalen] + b'\0' * (datalen - len(data[:datalen]))
             self._write_chunk(chunk)
             data = data[datalen:]
-            first = False
+            seq += 1
 
     def _read(self):
         if not self.session_id:
@@ -216,9 +205,8 @@ class TransportV2(Transport):
 
         chunk = self._read_chunk()
         (session_id, msg_type, datalen, data) = self.parse_first(chunk)
-        payloadlen = datalen + 4  # For the checksum
 
-        while len(data) < payloadlen:
+        while len(data) < datalen:
             chunk = self._read_chunk()
             (next_session_id, next_data) = self.parse_next(chunk)
 
@@ -227,64 +215,47 @@ class TransportV2(Transport):
 
             data.extend(next_data)
 
-        data = data[:payloadlen]  # Strip padding zeros
-        footer = data[-4:]
-        data = data[:-4]
-
-        csum, = struct.unpack('>L', footer)
-        csum_comp = binascii.crc32(data) & 0xffffffff
-        if csum != csum_comp:
-            raise Exception("Message checksum mismatch. Expected %d, got %d" %
-                            (csum_comp, csum))
-
+        data = data[:datalen]  # Strip padding
         return (session_id, msg_type, data)
 
     def parse_first(self, chunk):
-        if chunk[0:1] != b"H":
-            raise Exception("Unexpected magic character")
-
         try:
-            headerlen = struct.calcsize(">LLL")
-            (session_id, msg_type, datalen) = struct.unpack(">LLL", bytes(chunk[1:1 + headerlen]))
+            headerlen = struct.calcsize(">BLLL")
+            (magic, session_id, msg_type, datalen) = struct.unpack(">BLLL", bytes(chunk[:headerlen]))
         except:
             raise Exception("Cannot parse header")
-
-        data = chunk[1 + headerlen:]
-        return (session_id, msg_type, datalen, data)
+        if magic != 0x01:
+            raise Exception("Unexpected magic character")
+        return (session_id, msg_type, datalen, chunk[headerlen:])
 
     def parse_next(self, chunk):
-        if chunk[0:1] != b"D":
-            raise Exception("Unexpected magic characters")
-
         try:
-            headerlen = struct.calcsize(">L")
-            (session_id,) = struct.unpack(">L", bytes(chunk[1:1 + headerlen]))
+            headerlen = struct.calcsize(">BLL")
+            (magic, session_id, sequence) = struct.unpack(">BLL", bytes(chunk[:headerlen]))
         except:
             raise Exception("Cannot parse header")
-
-        data = chunk[1 + headerlen:]
-        return (session_id, data)
+        if magic != 0x02:
+            raise Exception("Unexpected magic characters")
+        return (session_id, chunk[headerlen:])
 
     def parse_session_open(self, chunk):
-        if chunk[0:1] != b"O":
-            raise Exception("Unexpected magic character")
-
         try:
-            headerlen = struct.calcsize(">L")
-            (session_id,) = struct.unpack(">L", bytes(chunk[1:1 + headerlen]))
+            headerlen = struct.calcsize(">BL")
+            (magic, session_id) = struct.unpack(">BL", bytes(chunk[:headerlen]))
         except:
             raise Exception("Cannot parse header")
-
+        if magic != 0x03:
+            raise Exception("Unexpected magic character")
         return session_id
 
     def _session_begin(self):
-        self._write_chunk(bytearray(b'O' + b'\0' * 63))
+        self._write_chunk(bytearray(b'\x03' + b'\0' * 63))
         self.session_id = self.parse_session_open(self._read_chunk())
 
     def _session_end(self):
         header = struct.pack(">L", self.session_id)
-        self._write_chunk(bytearray(b'C' + header + b'\0' * (63 - len(header))))
-        if self._read_chunk()[0] != ord('C'):
+        self._write_chunk(bytearray(b'\x04' + header + b'\0' * (63 - len(header))))
+        if self._read_chunk()[0] != 0x04:
             raise Exception("Expected session close")
         self.session_id = None
 
