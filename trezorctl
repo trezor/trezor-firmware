@@ -437,11 +437,18 @@ def get_public_node(client, coin, address, curve, show_display):
 @cli.command(help='Sign message using address of given path.')
 @click.option('-c', '--coin', default='Bitcoin')
 @click.option('-n', '-address')
+@click.option('-t', '--script-type', type=click.Choice(['address', 'segwit', 'p2shsegwit']), default='address')
 @click.argument('message')
 @click.pass_obj
-def sign_message(client, coin, address, message):
+def sign_message(client, coin, address, message, script_type):
     address_n = client.expand_path(address)
-    res = client.sign_message(coin, address_n, message)
+    typemap = {
+        'address': types.SPENDADDRESS,
+        'segwit': types.SPENDWITNESS,
+        'p2shsegwit': types.SPENDP2SHWITNESS,
+    }
+    script_type = typemap[script_type]
+    res = client.sign_message(coin, address_n, message, script_type)
     return {
         'message': message,
         'address': res.address,

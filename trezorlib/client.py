@@ -644,11 +644,11 @@ class ProtocolMixin(object):
         return ret
 
     @expect(proto.MessageSignature)
-    def sign_message(self, coin_name, n, message):
+    def sign_message(self, coin_name, n, message, script_type=types.SPENDADDRESS):
         n = self._convert_prime(n)
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
         message = normalize_nfc(message).encode("utf-8")
-        return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message))
+        return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message, script_type=script_type))
 
     @expect(proto.SignedIdentity)
     def sign_identity(self, identity, challenge_hidden, challenge_visual, ecdsa_curve_name=DEFAULT_CURVE):
