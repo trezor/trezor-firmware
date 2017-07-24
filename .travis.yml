@@ -27,21 +27,6 @@ script:
   - ITERS=10 py.test
   - mkdir _build && cd _build && cmake .. && make && cd ..
 
-matrix:
-  include:
-    - env: BUILD=emscripten
-      script:
-        - cd emscripten && rm trezor-crypto.js && make docker-build && make test-correctness && cd ..
-      services:
-        - docker
-      sudo: required
-      install: true
-      compiler: true
-      addons:
-        apt:
-          packages:
-            - nodejs
-
 notifications:
   webhooks:
     urls:
