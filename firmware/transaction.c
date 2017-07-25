@@ -285,18 +285,18 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	return 1;
 }
 
-uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, const uint8_t *pubkey, uint32_t pubkey_len, uint8_t *out)
+uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, const uint8_t *pubkey, uint32_t pubkey_len, uint8_t sighash, uint8_t *out)
 {
 	uint32_t r = 0;
 	r += op_push(signature_len + 1, out + r);
 	memcpy(out + r, signature, signature_len); r += signature_len;
-	out[r] = 0x01; r++;
+	out[r] = sighash; r++;
 	r += op_push(pubkey_len, out + r);
 	memcpy(out + r, pubkey, pubkey_len); r += pubkey_len;
 	return r;
 }
 
-uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out)
+uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t sighash, uint8_t *out)
 {
 	uint32_t r = 0;
 	out[r] = 0x00; r++;
@@ -306,7 +306,7 @@ uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uin
 		}
 		r += op_push(multisig->signatures[i].size + 1, out + r);
 		memcpy(out + r, multisig->signatures[i].bytes, multisig->signatures[i].size); r += multisig->signatures[i].size;
-		out[r] = 0x01; r++;
+		out[r] = sighash; r++;
 	}
 	uint32_t script_len = compile_script_multisig(multisig, 0);
 	if (script_len == 0) {

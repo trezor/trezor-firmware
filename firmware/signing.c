@@ -67,6 +67,11 @@ static uint8_t multisig_fp[32];
 static uint32_t in_address_n[8];
 static size_t in_address_n_count;
 
+enum {
+	SIGHASH_ALL = 1,
+	SIGHASH_FORKID = 0x40,
+};
+
 
 /* progress_step/meta_step are fixed point numbers, giving the
  * progress per input in permille with these many additional bits.
@@ -605,6 +610,23 @@ static void phase1_request_next_output(void) {
 	}
 }
 
+static void signing_hash_bip143(const TxInputType *txinput, uint8_t sighash, uint32_t forkid, uint8_t *hash) {
+	uint32_t hash_type = (forkid << 8) | sighash;
+	sha256_Init(&hashers[0]);
+	sha256_Update(&hashers[0], (const uint8_t *)&version, 4);
+	sha256_Update(&hashers[0], hash_prevouts, 32);
+	sha256_Update(&hashers[0], hash_sequence, 32);
+	tx_prevout_hash(&hashers[0], txinput);
+	tx_script_hash(&hashers[0], txinput->script_sig.size, txinput->script_sig.bytes);
+	sha256_Update(&hashers[0], (const uint8_t*) &txinput->amount, 8);
+	tx_sequence_hash(&hashers[0], txinput);
+	sha256_Update(&hashers[0], hash_outputs, 32);
+	sha256_Update(&hashers[0], (const uint8_t*) &lock_time, 4);
+	sha256_Update(&hashers[0], (const uint8_t*) &hash_type, 4);
+	sha256_Final(&hashers[0], hash);
+	sha256_Raw(hash, 32, hash);
+}
+
 static bool signing_sign_input(void) {
 	uint8_t hash[32];
 	sha256_Final(&hashers[0], hash);
@@ -614,7 +636,33 @@ static bool signing_sign_input(void) {
 		signing_abort();
 		return false;
 	}
-	tx_hash_final(&ti, hash, false);
+
+	uint8_t sighash;
+	if (coin->has_forkid) {
+		if (!compile_input_script_sig(&input)) {
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
+			signing_abort();
+			return false;
+		}
+		if (!input.has_amount) {
+			fsm_sendFailure(FailureType_Failure_DataError, _("SIGHASH_FORKID input without amount"));
+			signing_abort();
+			return false;
+		}
+		if (input.amount > to_spend) {
+			fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
+			signing_abort();
+			return false;
+		}
+		to_spend -= input.amount;
+
+		sighash = SIGHASH_ALL | SIGHASH_FORKID;
+		signing_hash_bip143(&input, sighash, coin->forkid, hash);
+	} else {
+		sighash = SIGHASH_ALL;
+		tx_hash_final(&ti, hash, false);
+	}
+
 	resp.has_serialized = true;
 	resp.serialized.has_signature_index = true;
 	resp.serialized.signature_index = idx1;
@@ -637,14 +685,14 @@ static bool signing_sign_input(void) {
 		}
 		memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
 		input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
-		input.script_sig.size = serialize_script_multisig(&(input.multisig), input.script_sig.bytes);
+		input.script_sig.size = serialize_script_multisig(&(input.multisig), sighash, input.script_sig.bytes);
 		if (input.script_sig.size == 0) {
 			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to serialize multisig script"));
 			signing_abort();
 			return false;
 		}
 	} else { // SPENDADDRESS
-		input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, input.script_sig.bytes);
+		input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, sighash, input.script_sig.bytes);
 	}
 	resp.serialized.serialized_tx.size = tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
 	return true;
@@ -653,7 +701,6 @@ static bool signing_sign_input(void) {
 static bool signing_sign_segwit_input(TxInputType *txinput) {
 	// idx1: index to sign
 	uint8_t hash[32];
-	uint32_t sighash = 1;
 
 	if (txinput->script_type == InputScriptType_SPENDWITNESS
 		|| txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
@@ -675,19 +722,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 		}
 		segwit_to_spend -= txinput->amount;
 
-		sha256_Init(&hashers[0]);
-		sha256_Update(&hashers[0], (const uint8_t *)&version, 4);
-		sha256_Update(&hashers[0], hash_prevouts, 32);
-		sha256_Update(&hashers[0], hash_sequence, 32);
-		tx_prevout_hash(&hashers[0], txinput);
-		tx_script_hash(&hashers[0], txinput->script_sig.size, txinput->script_sig.bytes);
-		sha256_Update(&hashers[0], (const uint8_t*) &txinput->amount, 8);
-		tx_sequence_hash(&hashers[0], txinput);
-		sha256_Update(&hashers[0], hash_outputs, 32);
-		sha256_Update(&hashers[0], (const uint8_t*) &lock_time, 4);
-		sha256_Update(&hashers[0], (const uint8_t*) &sighash, 4);
-		sha256_Final(&hashers[0], hash);
-		sha256_Raw(hash, 32, hash);
+		signing_hash_bip143(txinput, SIGHASH_ALL, 0, hash);
 
 		resp.has_serialized = true;
 		resp.serialized.has_signature_index = true;
