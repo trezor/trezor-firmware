@@ -57,7 +57,7 @@ static SHA256_CTX hashers[3];
 static uint8_t privkey[32], pubkey[33], sig[64];
 static uint8_t hash_prevouts[32], hash_sequence[32],hash_outputs[32];
 static uint8_t hash_check[32];
-static uint64_t to_spend, segwit_to_spend, spending, change_spend;
+static uint64_t to_spend, authorized_amount, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
 static uint32_t next_nonsegwit_input;
@@ -426,7 +426,7 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinTyp
 	to_spend = 0;
 	spending = 0;
 	change_spend = 0;
-	segwit_to_spend = 0;
+	authorized_amount = 0;
 	memset(&input, 0, sizeof(TxInputType));
 	memset(&resp, 0, sizeof(TxRequest));
 
@@ -523,9 +523,9 @@ static bool signing_check_output(TxOutputType *txoutput) {
 			}
 		} else if (txoutput->script_type == OutputScriptType_PAYTOADDRESS) {
 			is_change = check_change_bip32_path(txoutput);
-		} else if (txoutput->script_type == OutputScriptType_PAYTOWITNESS && txoutput->amount < segwit_to_spend) {
+		} else if (txoutput->script_type == OutputScriptType_PAYTOWITNESS && txoutput->amount < authorized_amount) {
 			is_change = check_change_bip32_path(txoutput);
-		} else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS && txoutput->amount < segwit_to_spend) {
+		} else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS && txoutput->amount < authorized_amount) {
 			is_change = check_change_bip32_path(txoutput);
 		}
 	}
@@ -627,6 +627,40 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t sighash, uin
 	sha256_Raw(hash, 32, hash);
 }
 
+static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, const uint8_t *public_key, const uint8_t *hash, uint8_t sighash) {
+	resp.serialized.has_signature_index = true;
+	resp.serialized.signature_index = idx1;
+	resp.serialized.has_signature = true;
+	resp.serialized.has_serialized_tx = true;
+	if (ecdsa_sign_digest(&secp256k1, private_key, hash, sig, NULL, NULL) != 0) {
+		fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
+		signing_abort();
+		return false;
+	}
+	resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
+
+	if (txinput->has_multisig) {
+		// fill in the signature
+		int pubkey_idx = cryptoMultisigPubkeyIndex(&(txinput->multisig), public_key);
+		if (pubkey_idx < 0) {
+			fsm_sendFailure(FailureType_Failure_DataError, _("Pubkey not found in multisig script"));
+			signing_abort();
+			return false;
+		}
+		memcpy(txinput->multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
+		txinput->multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
+		txinput->script_sig.size = serialize_script_multisig(&(txinput->multisig), sighash, txinput->script_sig.bytes);
+		if (txinput->script_sig.size == 0) {
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to serialize multisig script"));
+			signing_abort();
+			return false;
+		}
+	} else { // SPENDADDRESS
+		txinput->script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, public_key, 33, sighash, txinput->script_sig.bytes);
+	}
+	return true;
+}
+
 static bool signing_sign_input(void) {
 	uint8_t hash[32];
 	sha256_Final(&hashers[0], hash);
@@ -637,58 +671,11 @@ static bool signing_sign_input(void) {
 		return false;
 	}
 
-	uint8_t sighash;
-	if (coin->has_forkid) {
-		if (!compile_input_script_sig(&input)) {
-			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
-			signing_abort();
-			return false;
-		}
-		if (input.amount > to_spend) {
-			fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
-			signing_abort();
-			return false;
-		}
-		to_spend -= input.amount;
-
-		sighash = SIGHASH_ALL | SIGHASH_FORKID;
-		signing_hash_bip143(&input, sighash, coin->forkid, hash);
-	} else {
-		sighash = SIGHASH_ALL;
-		tx_hash_final(&ti, hash, false);
-	}
-
+	uint8_t sighash = SIGHASH_ALL;
+	tx_hash_final(&ti, hash, false);
 	resp.has_serialized = true;
-	resp.serialized.has_signature_index = true;
-	resp.serialized.signature_index = idx1;
-	resp.serialized.has_signature = true;
-	resp.serialized.has_serialized_tx = true;
-	if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, NULL, NULL) != 0) {
-		fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
-		signing_abort();
+	if (!signing_sign_hash(&input, privkey, pubkey, hash, sighash))
 		return false;
-	}
-	resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
-
-	if (input.has_multisig) {
-		// fill in the signature
-		int pubkey_idx = cryptoMultisigPubkeyIndex(&(input.multisig), pubkey);
-		if (pubkey_idx < 0) {
-			fsm_sendFailure(FailureType_Failure_DataError, _("Pubkey not found in multisig script"));
-			signing_abort();
-			return false;
-		}
-		memcpy(input.multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
-		input.multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
-		input.script_sig.size = serialize_script_multisig(&(input.multisig), sighash, input.script_sig.bytes);
-		if (input.script_sig.size == 0) {
-			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to serialize multisig script"));
-			signing_abort();
-			return false;
-		}
-	} else { // SPENDADDRESS
-		input.script_sig.size = serialize_script_sig(resp.serialized.signature.bytes, resp.serialized.signature.size, pubkey, 33, sighash, input.script_sig.bytes);
-	}
 	resp.serialized.serialized_tx.size = tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
 	return true;
 }
@@ -710,38 +697,19 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 			signing_abort();
 			return false;
 		}
-		if (txinput->amount > segwit_to_spend) {
+		if (txinput->amount > authorized_amount) {
 			fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
 			signing_abort();
 			return false;
 		}
-		segwit_to_spend -= txinput->amount;
+		authorized_amount -= txinput->amount;
 
 		signing_hash_bip143(txinput, SIGHASH_ALL, 0, hash);
 
 		resp.has_serialized = true;
-		resp.serialized.has_signature_index = true;
-		resp.serialized.signature_index = idx1;
-		resp.serialized.has_signature = true;
-		resp.serialized.has_serialized_tx = true;
-		if (ecdsa_sign_digest(&secp256k1, node.private_key, hash, sig, NULL, NULL) != 0) {
-			fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
-			signing_abort();
+		if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash, SIGHASH_ALL))
 			return false;
-		}
-
-		resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 		if (txinput->has_multisig) {
-			// fill in the signature
-			int pubkey_idx = cryptoMultisigPubkeyIndex(&(txinput->multisig), node.public_key);
-			if (pubkey_idx < 0) {
-				fsm_sendFailure(FailureType_Failure_DataError, _("Pubkey not found in multisig script"));
-				signing_abort();
-				return false;
-			}
-			memcpy(txinput->multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
-			txinput->multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
-
 			uint32_t r = 1; // skip number of items (filled in later)
 			resp.serialized.serialized_tx.bytes[r] = 0; r++;
 			int nwitnesses = 2;
@@ -807,10 +775,6 @@ void signing_txack(TransactionType *tx)
 			signing_check_input(&tx->inputs[0]);
 			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
 				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
-				// remember the first non-segwit input -- this is the first input
-				// we need to sign during phase2
-				if (next_nonsegwit_input == 0xffffffff)
-					next_nonsegwit_input = idx1;
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
 #if !ENABLE_SEGWIT_NONSEGWIT_MIXING
 				// don't mix segwit and non-segwit inputs
@@ -833,8 +797,13 @@ void signing_txack(TransactionType *tx)
 						return;
 					}
 					to_spend += tx->inputs[0].amount;
+					authorized_amount += tx->inputs[0].amount;
 					phase1_request_next_input();
 				} else {
+					// remember the first non-segwit input -- this is the first input
+					// we need to sign during phase2
+					if (next_nonsegwit_input == 0xffffffff)
+						next_nonsegwit_input = idx1;
 					send_req_2_prev_meta();
 				}
 			} else if  (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
@@ -873,7 +842,7 @@ void signing_txack(TransactionType *tx)
 				to.is_segwit = true;
 #endif
 				to_spend += tx->inputs[0].amount;
-				segwit_to_spend += tx->inputs[0].amount;
+				authorized_amount += tx->inputs[0].amount;
 				phase1_request_next_input();
 			} else {
 				fsm_sendFailure(FailureType_Failure_DataError, _("Wrong input script type"));
@@ -1036,12 +1005,40 @@ void signing_txack(TransactionType *tx)
 			return;
 
 		case STAGE_REQUEST_SEGWIT_INPUT:
+			progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
 			resp.has_serialized = true;
 			resp.serialized.has_signature_index = false;
 			resp.serialized.has_signature = false;
 			resp.serialized.has_serialized_tx = true;
-			if (tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS
-				&& !tx->inputs[0].has_multisig) {
+			if (tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
+				if (!coin->has_forkid) {
+					fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
+					signing_abort();
+					return;
+				}
+				if (!compile_input_script_sig(&tx->inputs[0])) {
+					fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
+					signing_abort();
+					return;
+				}
+				if (tx->inputs[0].amount > authorized_amount) {
+					fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
+					signing_abort();
+					return;
+				}
+				authorized_amount -= tx->inputs[0].amount;
+
+				uint8_t hash[32];
+				signing_hash_bip143(&tx->inputs[0], SIGHASH_ALL | SIGHASH_FORKID, coin->forkid, hash);
+				if (!signing_sign_hash(&tx->inputs[0], node.private_key, node.public_key, hash, SIGHASH_ALL | SIGHASH_FORKID))
+					return;
+				// since this took a longer time, update progress
+				signatures++;
+				progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
+				layoutProgress(_("Signing transaction"), progress);
+				update_ctr = 0;
+			} else if (tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS
+					   && !tx->inputs[0].has_multisig) {
 				if (!compile_input_script_sig(&tx->inputs[0])) {
 					fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
 					signing_abort();
@@ -1071,7 +1068,6 @@ void signing_txack(TransactionType *tx)
 				tx->inputs[0].script_sig.size = 0;
 			}
 			resp.serialized.serialized_tx.size = tx_serialize_input(&to, &tx->inputs[0], resp.serialized.serialized_tx.bytes);
-			update_ctr = 0;
 			if (idx1 < inputs_count - 1) {
 				idx1++;
 				phase2_request_next_input();
