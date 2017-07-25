@@ -11,6 +11,7 @@
 	"xprv_magic": "0488ade4",
 	"bip44": 0,
 	"segwit": false,
+	"forkid": null,
 	"default_fee_b": {
 		"Low": 10,
 		"Economy": 70,
@@ -32,6 +33,7 @@
 	"xprv_magic": "04358394",
 	"bip44": 1,
 	"segwit": true,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 10
 	},
@@ -50,6 +52,7 @@
 	"xprv_magic": "019d9cfe",
 	"bip44": 7,
 	"segwit": false,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 10
 	},
@@ -68,6 +71,7 @@
 	"xprv_magic": "019d9cfe",
 	"bip44": 2,
 	"segwit": true,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 1000
 	},
@@ -86,6 +90,7 @@
 	"xprv_magic": "02fac398",
 	"bip44": 3,
 	"segwit": false,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 10
 	},
@@ -104,6 +109,7 @@
 	"xprv_magic": "02fe52f8",
 	"bip44": 5,
 	"segwit": false,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 10
 	},
@@ -122,6 +128,7 @@
 	"xprv_magic": "0488ade4",
 	"bip44": 133,
 	"segwit": false,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 10
 	},
@@ -140,6 +147,7 @@
 	"xprv_magic": "04358394",
 	"bip44": 1,
 	"segwit": false,
+	"forkid": null,
 	"default_fee_b": {
 		"Normal": 10
 	},
