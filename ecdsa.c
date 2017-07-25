@@ -907,21 +907,25 @@ void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, char *addr, int
 	MEMSET_BZERO(raw, sizeof(raw));
 }
 
-void ecdsa_get_address_segwit(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize)
+void ecdsa_get_address_segwit_p2sh_raw(const uint8_t *pub_key, uint32_t version, uint8_t *addr_raw)
+{
+	size_t prefix_len = address_prefix_bytes_len(version);
+	uint8_t digest[32];
+	addr_raw[0] = 0; // version byte
+	addr_raw[1] = 20; // push 20 bytes
+	ecdsa_get_pubkeyhash(pub_key, addr_raw + 2);
+	sha256_Raw(addr_raw, 22, digest);
+	address_write_prefix_bytes(version, addr_raw);
+	ripemd160(digest, 32, addr_raw + prefix_len);
+}
+
+void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize)
 {
 	uint8_t raw[MAX_ADDR_RAW_SIZE];
 	size_t prefix_len = address_prefix_bytes_len(version);
-	uint8_t digest[32];
-	raw[0] = 0; // version byte
-	raw[1] = 20; // push 20 bytes
-	ecdsa_get_pubkeyhash(pub_key, raw + 2);
-	sha256_Raw(raw, 22, digest);
-	address_write_prefix_bytes(version, raw);
-	ripemd160(digest, 32, raw + prefix_len);
+	ecdsa_get_address_segwit_p2sh_raw(pub_key, version, raw);
 	base58_encode_check(raw, prefix_len + 20, addr, addrsize);
-	// not as important to clear these, but we might as well
 	MEMSET_BZERO(raw, sizeof(raw));
-	MEMSET_BZERO(digest, sizeof(digest));
 }
 
 void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, char *wif, int wifsize)

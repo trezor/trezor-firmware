@@ -298,7 +298,7 @@ void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *
 
 	switch (addrformat) {
 		case 1: // Segwit-in-P2SH
-			ecdsa_get_address_segwit(child_pubkey, version, addr, addrsize);
+			ecdsa_get_address_segwit_p2sh(child_pubkey, version, addr, addrsize);
 			break;
 		default: // normal address
 			ecdsa_get_address(child_pubkey, version, addr, addrsize);
