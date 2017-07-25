@@ -314,7 +314,6 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 	static uint8_t buf[64] __attribute__((aligned(4)));
 	static uint8_t towrite[4] __attribute__((aligned(4)));
 	static int wi;
-	static SHA256_CTX ctx;
 
 	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
 
@@ -477,7 +476,6 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware is too big.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
 				return;
 			}
-			sha256_Init(&ctx);
 			flash_state = STATE_FLASHING;
 			flash_pos = 0;
 			wi = 0;
@@ -530,21 +528,24 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		flash_lock();
 		// flashing done
 		if (flash_pos == flash_len) {
-			sha256_Update(&ctx, (unsigned char *)FLASH_APP_START, flash_len - FLASH_META_DESC_LEN);
 			flash_state = STATE_CHECK;
-			send_msg_buttonrequest_firmwarecheck(dev);
+			if (!brand_new_firmware) {
+				send_msg_buttonrequest_firmwarecheck(dev);
+				return;
+			}
+		} else {
+			return;
 		}
-		return;
 	}
 
 	if (flash_state == STATE_CHECK) {
-		if (msg_id != 0x001B) {	// ButtonAck message (id 27)
-			return;
-		}
-		uint8_t hash[32];
-		sha256_Final(&ctx, hash);
 
 		if (!brand_new_firmware) {
+			if (msg_id != 0x001B) {	// ButtonAck message (id 27)
+				return;
+			}
+			uint8_t hash[32];
+			sha256_Raw((unsigned char *)FLASH_APP_START, flash_len - FLASH_META_DESC_LEN, hash);
 			layoutFirmwareHash(hash);
 			do {
 				delay(100000);
