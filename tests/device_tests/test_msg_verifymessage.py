@@ -28,20 +28,20 @@ class TestMsgVerifymessage(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.verify_message(
             'Bitcoin',
-            '1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T',
-            binascii.unhexlify('1bddc0aed9cf4e10dc9f57770934f4fb72a27c4510a0f4a81e09c163552416f799cd3f211ffeed0f411e9af9b927407d67115fb6d0ab1897137048efe33417fcc1'),
+            '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
+            binascii.unhexlify('205ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed'),
             "VeryLongMessage!" * 64
         )
         self.assertTrue(ret)
 
     def test_message_testnet(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        sig = base64.b64decode('IFP/nvQalDo9lWCI7kScOzRkz/fiiScdkw7tFAKPoGbl6S8AY3wEws43s2gR57AfwZP8/8y7+F+wvGK9phQghN4=')
         ret = self.client.verify_message(
             'Testnet',
-            'moRDikgmxcpouFtqnKnVVzLYgkDD2gQ3sk',
-            sig,
-            'Ahoj')
+            'mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL',
+            binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
+            'This is an example of a signed message.'
+        )
         self.assertTrue(ret)
 
     def test_message_verify(self):
@@ -60,7 +60,7 @@ class TestMsgVerifymessage(common.TrezorTest):
         res = self.client.verify_message(
             'Bitcoin',
             '1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T',
-            binascii.unhexlify('1ba77e01a9e17ba158b96200000000dfed676ffc2b4bada24e58f784458b52b97421470d001d53d5880cf5e10e76f02be3e80bf21e18398cbd41e8c3b4af74c8c2'),
+            binascii.unhexlify('1ba77e01a9e17ba158b962cfef5f13dfed676ffc2b4bada24e58f784458b52b97421470d001d53d5880cf5e10e76f02be3e80bf21e18398cbd41e8c3b4af74c800'),
             'This is an example of a signed message.'
         )
         self.assertFalse(res)
@@ -86,7 +86,7 @@ class TestMsgVerifymessage(common.TrezorTest):
         res = self.client.verify_message(
             'Bitcoin',
             '1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8',
-            binascii.unhexlify('1f44e3e461f7ca9f57c472000000004df1de1dadefb6551a32d1907b80c74d5a1fbfd6daaba12dd8cb06699ce3f6941fbe0f3957b5802d13076181046e741eaaaf'),
+            binascii.unhexlify('1f44e3e461f7ca9f57c472ce1a28214df1de1dadefb6551a32d1907b80c74d5a1fbfd6daaba12dd8cb06699ce3f6941fbe0f3957b5802d13076181046e741eaa00'),
             'This is an example of a signed message.'
         )
         self.assertFalse(res)
@@ -112,7 +112,7 @@ class TestMsgVerifymessage(common.TrezorTest):
         res = self.client.verify_message(
             'Bitcoin',
             '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-            binascii.unhexlify('209e23edf0e4e47ff1de000002cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
+            binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be00'),
             'This is an example of a signed message.'
         )
         self.assertFalse(res)
@@ -126,7 +126,6 @@ class TestMsgVerifymessage(common.TrezorTest):
         )
         self.assertFalse(res)
 
-    """
     def test_verify_bitcoind(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -148,20 +147,19 @@ class TestMsgVerifymessage(common.TrezorTest):
         res_nfkd = self.client.verify_message(
             'Bitcoin',
             '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-            binascii.unhexlify('1fd0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda4e39588e4ec2b6a22dda4ec4f562f06e91129eea9a844a7193812de82d47c496b'),
+            binascii.unhexlify('20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6'),
             words_nfkd
         )
 
         res_nfc = self.client.verify_message(
             'Bitcoin',
             '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-            binascii.unhexlify('1fd0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda4e39588e4ec2b6a22dda4ec4f562f06e91129eea9a844a7193812de82d47c496b'),
+            binascii.unhexlify('20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6'),
             words_nfc
         )
 
         self.assertTrue(res_nfkd)
         self.assertTrue(res_nfc)
-    """
 
 
 if __name__ == '__main__':
