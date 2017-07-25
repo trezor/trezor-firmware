@@ -32,7 +32,10 @@ for c in coins:
         '0x%s' % c['xprv_magic'] if c['xprv_magic'] is not None else '00000000',
 
         'true' if c['segwit'] is not None else 'false',
-        'true' if c['segwit'] else 'false'
+        'true' if c['segwit'] else 'false',
+
+        'true' if c['forkid'] is not None else 'false',
+        '%d' % c['forkid'] if c['forkid'] else '0'
     ])
 
 for j in range(len(fields[0])):
