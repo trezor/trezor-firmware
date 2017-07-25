@@ -644,11 +644,6 @@ static bool signing_sign_input(void) {
 			signing_abort();
 			return false;
 		}
-		if (!input.has_amount) {
-			fsm_sendFailure(FailureType_Failure_DataError, _("SIGHASH_FORKID input without amount"));
-			signing_abort();
-			return false;
-		}
 		if (input.amount > to_spend) {
 			fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
 			signing_abort();
@@ -825,7 +820,23 @@ void signing_txack(TransactionType *tx)
 					return;
 				}
 #endif
-				send_req_2_prev_meta();
+
+				if (coin->has_forkid) {
+					if (!tx->inputs[0].has_amount) {
+						fsm_sendFailure(FailureType_Failure_DataError, _("SIGHASH_FORKID input without amount"));
+						signing_abort();
+						return;
+					}
+					if (to_spend + tx->inputs[0].amount < to_spend) {
+						fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+						signing_abort();
+						return;
+					}
+					to_spend += tx->inputs[0].amount;
+					phase1_request_next_input();
+				} else {
+					send_req_2_prev_meta();
+				}
 			} else if  (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
 						|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
 				if (!coin->has_segwit || !coin->segwit) {
