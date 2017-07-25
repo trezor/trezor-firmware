@@ -63,18 +63,47 @@
  * display.
  */
 
-/* Macros to manipulate a single pixel in _oledbuffer:
- * OLED_BUFSET(X,Y) sets pixel X,Y (white)
- * OLED_BUFCLR(X,Y) clears pixel X,Y (black)
- * OLED_BUFTGL(X,Y) toggles pixel X,Y (inverts it)
- */
-
-#define OLED_BUFSET(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] |= (1 << (7 - (Y)%8))
-#define OLED_BUFCLR(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] &= ~(1 << (7 - (Y)%8))
-#define OLED_BUFTGL(X,Y)		_oledbuffer[OLED_BUFSIZE - 1 - (X) - ((Y)/8)*OLED_WIDTH] ^= (1 << (7 - (Y)%8))
-
 static uint8_t _oledbuffer[OLED_BUFSIZE];
 static bool is_debug_link = 0;
+
+/*
+ * macros to convert coordinate to bit position
+ */
+#define OLED_OFFSET(x, y) (OLED_BUFSIZE - 1 - (x) - ((y)/8)*OLED_WIDTH)
+#define OLED_MASK(x, y)   (1 << (7 - (y) % 8))
+
+/*
+ * Draws a white pixel at x, y
+ */
+void oledDrawPixel(int x, int y)
+{
+	if ((x < 0) || (y < 0) || (x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) {
+		return;
+	}
+	_oledbuffer[OLED_OFFSET(x, y)] |= OLED_MASK(x, y);
+}
+
+/*
+ * Clears pixel at x, y
+ */
+void oledClearPixel(int x, int y)
+{
+	if ((x < 0) || (y < 0) || (x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) {
+		return;
+	}
+	_oledbuffer[OLED_OFFSET(x, y)] &= ~OLED_MASK(x, y);
+}
+
+/*
+ * Inverts pixel at x, y
+ */
+void oledInvertPixel(int x, int y)
+{
+	if ((x < 0) || (y < 0) || (x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) {
+		return;
+	}
+	_oledbuffer[OLED_OFFSET(x, y)] ^= OLED_MASK(x, y);
+}
 
 /*
  * Send a block of data via the SPI bus.
@@ -161,11 +190,11 @@ void oledRefresh()
 
 	// draw triangle in upper right corner
 	if (is_debug_link) {
-		OLED_BUFTGL(OLED_WIDTH - 5, 0); OLED_BUFTGL(OLED_WIDTH - 4, 0); OLED_BUFTGL(OLED_WIDTH - 3, 0); OLED_BUFTGL(OLED_WIDTH - 2, 0); OLED_BUFTGL(OLED_WIDTH - 1, 0);
-		OLED_BUFTGL(OLED_WIDTH - 4, 1); OLED_BUFTGL(OLED_WIDTH - 3, 1); OLED_BUFTGL(OLED_WIDTH - 2, 1); OLED_BUFTGL(OLED_WIDTH - 1, 1); 
-		OLED_BUFTGL(OLED_WIDTH - 3, 2); OLED_BUFTGL(OLED_WIDTH - 2, 2); OLED_BUFTGL(OLED_WIDTH - 1, 2);
-		OLED_BUFTGL(OLED_WIDTH - 2, 3); OLED_BUFTGL(OLED_WIDTH - 1, 3);
-		OLED_BUFTGL(OLED_WIDTH - 1, 4);
+		oledInvertPixel(OLED_WIDTH - 5, 0); oledInvertPixel(OLED_WIDTH - 4, 0); oledInvertPixel(OLED_WIDTH - 3, 0); oledInvertPixel(OLED_WIDTH - 2, 0); oledInvertPixel(OLED_WIDTH - 1, 0);
+		oledInvertPixel(OLED_WIDTH - 4, 1); oledInvertPixel(OLED_WIDTH - 3, 1); oledInvertPixel(OLED_WIDTH - 2, 1); oledInvertPixel(OLED_WIDTH - 1, 1); 
+		oledInvertPixel(OLED_WIDTH - 3, 2); oledInvertPixel(OLED_WIDTH - 2, 2); oledInvertPixel(OLED_WIDTH - 1, 2);
+		oledInvertPixel(OLED_WIDTH - 2, 3); oledInvertPixel(OLED_WIDTH - 1, 3);
+		oledInvertPixel(OLED_WIDTH - 1, 4);
 	}
 
 	gpio_clear(OLED_CS_PORT, OLED_CS_PIN);		// SPI select
@@ -180,11 +209,11 @@ void oledRefresh()
 
 	// return it back
 	if (is_debug_link) {
-		OLED_BUFTGL(OLED_WIDTH - 5, 0); OLED_BUFTGL(OLED_WIDTH - 4, 0); OLED_BUFTGL(OLED_WIDTH - 3, 0); OLED_BUFTGL(OLED_WIDTH - 2, 0); OLED_BUFTGL(OLED_WIDTH - 1, 0);
-		OLED_BUFTGL(OLED_WIDTH - 4, 1); OLED_BUFTGL(OLED_WIDTH - 3, 1); OLED_BUFTGL(OLED_WIDTH - 2, 1); OLED_BUFTGL(OLED_WIDTH - 1, 1); 
-		OLED_BUFTGL(OLED_WIDTH - 3, 2); OLED_BUFTGL(OLED_WIDTH - 2, 2); OLED_BUFTGL(OLED_WIDTH - 1, 2);
-		OLED_BUFTGL(OLED_WIDTH - 2, 3); OLED_BUFTGL(OLED_WIDTH - 1, 3);
-		OLED_BUFTGL(OLED_WIDTH - 1, 4);
+		oledInvertPixel(OLED_WIDTH - 5, 0); oledInvertPixel(OLED_WIDTH - 4, 0); oledInvertPixel(OLED_WIDTH - 3, 0); oledInvertPixel(OLED_WIDTH - 2, 0); oledInvertPixel(OLED_WIDTH - 1, 0);
+		oledInvertPixel(OLED_WIDTH - 4, 1); oledInvertPixel(OLED_WIDTH - 3, 1); oledInvertPixel(OLED_WIDTH - 2, 1); oledInvertPixel(OLED_WIDTH - 1, 1); 
+		oledInvertPixel(OLED_WIDTH - 3, 2); oledInvertPixel(OLED_WIDTH - 2, 2); oledInvertPixel(OLED_WIDTH - 1, 2);
+		oledInvertPixel(OLED_WIDTH - 2, 3); oledInvertPixel(OLED_WIDTH - 1, 3);
+		oledInvertPixel(OLED_WIDTH - 1, 4);
 	}
 }
 
@@ -204,24 +233,18 @@ void oledSetBuffer(uint8_t *buf)
 	memcpy(_oledbuffer, buf, sizeof(_oledbuffer));
 }
 
-void oledDrawPixel(int x, int y)
-{
-	if ((x < 0) || (y < 0) || (x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
-	OLED_BUFSET(x,y);
-}
-
-void oledClearPixel(int x, int y)
-{
-	if ((x < 0) || (y < 0) || (x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
-	OLED_BUFCLR(x,y);
-}
-
 void oledDrawChar(int x, int y, char c, int zoom)
 {
-	if ((x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) return;
+	if (x >= OLED_WIDTH || y >= OLED_HEIGHT || y <= -FONT_HEIGHT) {
+		return;
+	}
 
 	int char_width = fontCharWidth(c);
 	const uint8_t *char_data = fontCharData(c);
+
+	if (x <= -char_width) {
+		return;
+	}
 
 	for (int xo = 0; xo < char_width; xo++) {
 		for (int yo = 0; yo < FONT_HEIGHT; yo++) {
@@ -288,27 +311,34 @@ void oledDrawStringRight(int x, int y, const char* text)
 	oledDrawString(x, y, text);
 }
 
+#define max(X,Y) ((X) > (Y) ? (X) : (Y))
 #define min(X,Y) ((X) < (Y) ? (X) : (Y))
 
 void oledDrawBitmap(int x, int y, const BITMAP *bmp)
 {
-	for (int i = 0; i < min(bmp->width, OLED_WIDTH - x); i++) {
-		for (int j = 0; j < min(bmp->height, OLED_HEIGHT - y); j++) {
+	for (int i = 0; i < bmp->width; i++) {
+		for (int j = 0; j < bmp->height; j++) {
 			if (bmp->data[(i / 8) + j * bmp->width / 8] & (1 << (7 - i % 8))) {
-				OLED_BUFSET(x + i, y + j);
+				oledDrawPixel(x + i, y + j);
 			} else {
-				OLED_BUFCLR(x + i, y + j);
+				oledClearPixel(x + i, y + j);
 			}
 		}
 	}
 }
 
+/*
+ * Inverts box between (x1,y1) and (x2,y2) inclusive.
+ */
 void oledInvert(int x1, int y1, int x2, int y2)
 {
-	if ((x1 >= OLED_WIDTH) || (y1 >= OLED_HEIGHT) || (x2 >= OLED_WIDTH) || (y2 >= OLED_HEIGHT)) return;
+	x1 = max(x1, 0);
+	y1 = max(y1, 0);
+	x2 = min(x2, OLED_WIDTH - 1);
+	y2 = min(y2, OLED_HEIGHT - 1);
 	for (int x = x1; x <= x2; x++) {
 		for (int y = y1; y <= y2; y++) {
-			OLED_BUFTGL(x,y);
+			oledInvertPixel(x,y);
 		}
 	}
 }
@@ -318,6 +348,10 @@ void oledInvert(int x1, int y1, int x2, int y2)
  */
 void oledBox(int x1, int y1, int x2, int y2, bool set)
 {
+	x1 = max(x1, 0);
+	y1 = max(y1, 0);
+	x2 = min(x2, OLED_WIDTH - 1);
+	y2 = min(y2, OLED_HEIGHT - 1);
 	for (int x = x1; x <= x2; x++) {
 		for (int y = y1; y <= y2; y++) {
 			set ? oledDrawPixel(x, y) : oledClearPixel(x, y);
@@ -326,6 +360,9 @@ void oledBox(int x1, int y1, int x2, int y2, bool set)
 }
 
 void oledHLine(int y) {
+	if (y < 0 || y >= OLED_HEIGHT) {
+		return;
+	}
 	for (int x = 0; x < OLED_WIDTH; x++) {
 		oledDrawPixel(x, y);
 	}
