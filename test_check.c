@@ -410,6 +410,21 @@ START_TEST(test_bignum_format) {
 	ck_assert_str_eq(buf, "0");
 
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	r = bn_format(&a, NULL, NULL, 20, 0, true, buf, sizeof(buf));
+	ck_assert_int_eq(r, 22);
+	ck_assert_str_eq(buf, "0.00000000000000000000");
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	r = bn_format(&a, NULL, NULL, 0, 5, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 1);
+	ck_assert_str_eq(buf, "0");
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
+	r = bn_format(&a, NULL, NULL, 0, -5, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 1);
+	ck_assert_str_eq(buf, "0");
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000000"), &a);
 	r = bn_format(&a, "", "", 0, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 1);
 	ck_assert_str_eq(buf, "0");
@@ -438,6 +453,11 @@ START_TEST(test_bignum_format) {
 	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 1);
 	ck_assert_str_eq(buf, "1");
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000001"), &a);
+	r = bn_format(&a, NULL, NULL, 6, 6, true, buf, sizeof(buf));
+	ck_assert_int_eq(r, 8);
+	ck_assert_str_eq(buf, "1.000000");
 
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000002"), &a);
 	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
@@ -523,6 +543,16 @@ START_TEST(test_bignum_format) {
 	r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 62);
 	ck_assert_str_eq(buf, "115792089237316195423570985008687907853269984665640564039457.0");
+
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
+	r = bn_format(&a, NULL, NULL, 78, 0, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 80);
+	ck_assert_str_eq(buf, "0.115792089237316195423570985008687907853269984665640564039457584007913129639935");
+
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
+	r = bn_format(&a, NULL, NULL, 0, 10, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 88);
+	ck_assert_str_eq(buf, "1157920892373161954235709850086879078532699846656405640394575840079131296399350000000000");
 
 	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
 	r = bn_format(&a, "quite a long prefix", "even longer suffix", 60, 0, false, buf, sizeof(buf));
