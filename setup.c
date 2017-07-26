@@ -33,6 +33,15 @@ void __attribute__((noreturn)) __stack_chk_fail(void)
 	for (;;) {} // loop forever
 }
 
+void nmi_handler(void)
+{
+	// Clock Security System triggered NMI
+	if ((RCC_CIR & RCC_CIR_CSSF) != 0) {
+		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Clock instability", "detected.", NULL, "Please unplug", "the device.", NULL);
+		for (;;) {} // loop forever
+	}
+}
+
 void setup(void)
 {
 	// setup clock
@@ -56,6 +65,9 @@ void setup(void)
 	// to be extra careful and heed the STM32F205xx Reference manual, Section 20.3.1
 	// we don't use the first random number generated after setting the RNGEN bit in setup
 	random32();
+
+	// enable CSS (Clock Security System)
+	RCC_CR |= RCC_CR_CSSON;
 
 	// set GPIO for buttons
 	gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO2 | GPIO5);
@@ -92,6 +104,10 @@ void setupApp(void)
 	// "Each subsequent generated random number has to be compared with the previously generated
 	// number. The test fails if any two compared numbers are equal (continuous random number generator test)."
 	random32();
+
+	// enable CSS (Clock Security System)
+	RCC_CR |= RCC_CR_CSSON;
+
 	// hotfix for old bootloader
 	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO9);
 	spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_8, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
