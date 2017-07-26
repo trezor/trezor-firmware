@@ -228,7 +228,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 			default: suffix = " UNKN"; break;  // unknown chain
 		}
 	}
-	bn_format(amnt, NULL, suffix, decimals, buf, buflen);
+	bn_format(amnt, NULL, suffix, decimals, 0, false, buf, buflen);
 }
 
 static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const uint8_t *value, uint32_t value_len, const TokenType *token)

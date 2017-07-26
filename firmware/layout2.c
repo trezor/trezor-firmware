@@ -98,9 +98,7 @@ void layoutHome(void)
 void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 {
 	char str_out[32];
-	bignum256 amnt;
-	bn_read_uint64(out->amount, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_out, sizeof(str_out));
+	bn_format_uint64(out->amount, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
 	static char first_half[17 + 1];
 	strlcpy(first_half, out->address, sizeof(first_half));
 	layoutDialogSwipe(&bmp_icon_question,
@@ -119,11 +117,8 @@ void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_fee)
 {
 	char str_out[32], str_fee[32];
-	bignum256 amnt;
-	bn_read_uint64(amount_out, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_out, sizeof(str_out));
-	bn_read_uint64(amount_fee, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_fee, sizeof(str_fee));
+	bn_format_uint64(amount_out, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
+	bn_format_uint64(amount_fee, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),
@@ -140,9 +135,7 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee)
 {
 	char str_fee[32];
-	bignum256 amnt;
-	bn_read_uint64(fee, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_fee, sizeof(str_fee));
+	bn_format_uint64(fee, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),
