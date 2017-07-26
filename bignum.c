@@ -960,56 +960,90 @@ void bn_divmod1000(bignum256 *a, uint32_t *r)
 	*r = rem;
 }
 
-// 2^256 has 78 digits in decimal (+ 1 for decimal point, + 1 for leading zero, + 1 for trailing zero)
-#define DIGITLEN (78 + 1 + 1 + 1)
-
-int bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, int decimals, char *out, int outlen)
+size_t bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, unsigned int decimals, int exponent, bool trailing, char *out, size_t outlen)
 {
-	// convert bignum to characters
+	size_t prefixlen = prefix ? strlen(prefix) : 0;
+	size_t suffixlen = suffix ? strlen(suffix) : 0;
+
+	char *start = &out[prefixlen + suffixlen], *end = &out[outlen];
+	char *str = end;
+
+#define BN_FORMAT_PUSH_CHECKED(c) \
+	do { \
+		if (str == start) return 0; \
+		*--str = (c); \
+	} while (0)
+
+#define BN_FORMAT_PUSH(n) \
+	do { \
+		if (exponent < 0) { \
+			exponent++; \
+		} else { \
+			if ((n) > 0 || trailing || str != end || decimals <= 1) { \
+				BN_FORMAT_PUSH_CHECKED('0' + (n)); \
+			} \
+			if (decimals > 0 && decimals-- == 1) { \
+				BN_FORMAT_PUSH_CHECKED('.'); \
+			} \
+		} \
+	} while (0)
+
 	bignum256 val;
 	memcpy(&val, amnt, sizeof(bignum256));
-	char digits[DIGITLEN];
-	memset(digits, '0', DIGITLEN);
-	int pos = 1; // keep one trailing zero
-	for (int i = 0; i < 78 / 3; i++) {
+
+	if (bn_is_zero(&val)) {
+		exponent = 0;
+	}
+
+	for (; exponent > 0; exponent--) {
+		BN_FORMAT_PUSH(0);
+	}
+
+	unsigned int digits = bn_digitcount(&val);
+	for (unsigned int i = 0; i < digits / 3; i++) {
 		uint32_t limb;
 		bn_divmod1000(&val, &limb);
-		if (pos == decimals + 1) { digits[DIGITLEN - 1 - pos] = '.'; pos++; }
-		digits[DIGITLEN - 1 - pos] = '0' + (limb % 10); pos++;
-		if (pos == decimals + 1) { digits[DIGITLEN - 1 - pos] = '.'; pos++; }
-		digits[DIGITLEN - 1 - pos] = '0' + ((limb / 10) % 10); pos++;
-		if (pos == decimals + 1) { digits[DIGITLEN - 1 - pos] = '.'; pos++; }
-		digits[DIGITLEN - 1 - pos] = '0' + ((limb / 100) % 10); pos++;
+
+		BN_FORMAT_PUSH(limb % 10);
+		limb /= 10;
+		BN_FORMAT_PUSH(limb % 10);
+		limb /= 10;
+		BN_FORMAT_PUSH(limb % 10);
 	}
 
-	// drop leading zeroes
-	int digitstart = 0;
-	while (digitstart < DIGITLEN - 1 && digits[digitstart] == '0' && digits[digitstart + 1] >= '0' && digits[digitstart + 1] <= '9') {
-		digitstart++;
+	if (digits % 3 != 0) {
+		uint32_t limb;
+		bn_divmod1000(&val, &limb);
+
+		switch (digits % 3) {
+		case 2:
+			BN_FORMAT_PUSH(limb % 10);
+			limb /= 10;
+			//-fallthrough
+
+		case 1:
+			BN_FORMAT_PUSH(limb % 10);
+			break;
+		}
 	}
 
-	// drop trailing zeroes
-	int digitend = DIGITLEN - 1;
-	while (digitend > 0 && digits[digitend] == '0' && digits[digitend - 1] >= '0' && digits[digitend - 1] <= '9') {
-		digitend--;
+	while (decimals > 0 || str[0] == '\0' || str[0] == '.') {
+		BN_FORMAT_PUSH(0);
 	}
 
-	int digitslen = digitend - digitstart + 1;
-	int prefixlen = prefix != NULL ? strlen(prefix) : 0;
-	int suffixlen = suffix != NULL ? strlen(suffix) : 0;
+	size_t len = end - str;
+	memmove(&out[prefixlen], str, len);
 
-	// output buffer is too small
-	if (prefixlen + digitslen + suffixlen + 1 > outlen) {
-		return 0;
+	if (prefixlen) {
+		memcpy(out, prefix, prefixlen);
+	}
+	if (suffixlen) {
+		memcpy(&out[prefixlen + len], suffix, suffixlen);
 	}
 
-	// copy result to output buffer
-	memcpy(out, prefix, prefixlen);
-	memcpy(out + prefixlen, digits + digitstart, digitslen);
-	memcpy(out + prefixlen + digitslen, suffix, suffixlen);
-	out[prefixlen + digitslen + suffixlen] = 0;
-
-	return prefixlen + digitslen + suffixlen;
+	size_t length = prefixlen + len + suffixlen;
+	out[length] = '\0';
+	return length;
 }
 
 #if USE_BN_PRINT
