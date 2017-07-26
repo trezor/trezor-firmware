@@ -160,6 +160,14 @@ void bn_divmod1000(bignum256 *a, uint32_t *r);
 
 size_t bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, unsigned int decimals, int exponent, bool trailing, char *out, size_t outlen);
 
+static inline size_t bn_format_uint64(uint64_t amount, const char *prefix, const char *suffix, unsigned int decimals, int exponent, bool trailing, char *out, size_t outlen)
+{
+	bignum256 amnt;
+	bn_read_uint64(amount, &amnt);
+
+	return bn_format(&amnt, prefix, suffix, decimals, exponent, trailing, out, outlen);
+}
+
 #if USE_BN_PRINT
 void bn_print(const bignum256 *a);
 void bn_print_raw(const bignum256 *a);
