@@ -350,6 +350,36 @@ START_TEST(test_bignum_bitcount)
 }
 END_TEST
 
+START_TEST(test_bignum_digitcount)
+{
+	bignum256 a;
+
+	bn_zero(&a);
+	ck_assert_int_eq(bn_digitcount(&a), 1);
+
+	bn_one(&a);
+	ck_assert_int_eq(bn_digitcount(&a), 1);
+
+	bn_read_uint32(10, &a);
+	ck_assert_int_eq(bn_digitcount(&a), 2);
+
+	bn_read_uint32(11, &a);
+	ck_assert_int_eq(bn_digitcount(&a), 2);
+
+	bn_read_uint32(100, &a);
+	ck_assert_int_eq(bn_digitcount(&a), 3);
+
+	bn_read_uint32(0x3fffffff, &a);
+	ck_assert_int_eq(bn_digitcount(&a), 10);
+
+	bn_read_uint32(0xffffffff, &a);
+	ck_assert_int_eq(bn_digitcount(&a), 10);
+
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
+	ck_assert_int_eq(bn_digitcount(&a), 78);
+}
+END_TEST
+
 START_TEST(test_bignum_is_less)
 {
 	bignum256 a;
@@ -3193,6 +3223,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_is_even);
 	tcase_add_test(tc, test_bignum_is_odd);
 	tcase_add_test(tc, test_bignum_bitcount);
+	tcase_add_test(tc, test_bignum_digitcount);
 	tcase_add_test(tc, test_bignum_is_less);
 	tcase_add_test(tc, test_bignum_format);
 	suite_add_tcase(s, tc);

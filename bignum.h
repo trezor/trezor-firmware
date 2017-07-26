@@ -81,6 +81,17 @@ static inline void bn_copy(const bignum256 *a, bignum256 *b) {
 
 int bn_bitcount(const bignum256 *a);
 
+static inline int bn_digitcount(const bignum256 *a)
+{
+	int bitcount = bn_bitcount(a);
+
+	if (bitcount == 256) {
+		return 78;
+	} else {
+		return bitcount * 78 / 256 + 1;
+	}
+}
+
 void bn_zero(bignum256 *a);
 
 int bn_is_zero(const bignum256 *a);
