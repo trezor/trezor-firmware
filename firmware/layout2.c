@@ -32,6 +32,8 @@
 #include "bignum.h"
 #include "gettext.h"
 
+#define BITCOIN_DIVISIBILITY (8)
+
 void *layoutLast = layoutHome;
 
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
@@ -98,7 +100,7 @@ void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 	char str_out[32];
 	bignum256 amnt;
 	bn_read_uint64(out->amount, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_out, sizeof(str_out));
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_out, sizeof(str_out));
 	static char first_half[17 + 1];
 	strlcpy(first_half, out->address, sizeof(first_half));
 	layoutDialogSwipe(&bmp_icon_question,
@@ -119,9 +121,9 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 	char str_out[32], str_fee[32];
 	bignum256 amnt;
 	bn_read_uint64(amount_out, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_out, sizeof(str_out));
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_out, sizeof(str_out));
 	bn_read_uint64(amount_fee, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_fee, sizeof(str_fee));
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),
@@ -140,7 +142,7 @@ void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee)
 	char str_fee[32];
 	bignum256 amnt;
 	bn_read_uint64(fee, &amnt);
-	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, 8, str_fee, sizeof(str_fee));
+	bn_format(&amnt, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),
