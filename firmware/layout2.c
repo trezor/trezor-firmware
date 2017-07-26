@@ -611,17 +611,10 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 	}
 
 	char str_out[32];
-	bignum256 amnt;
 
 	switch (definition->levy) {
 	case NEMMosaicLevy_MosaicLevy_Percentile:
-		bn_read_uint64(definition->fee, &amnt);
-		bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
-
-		char *decimal = strchr(str_out, '.');
-		if (decimal != NULL) {
-			*decimal = '\0';
-		}
+		bn_format_uint64(definition->fee, NULL, NULL, 0, 0, false, str_out, sizeof(str_out));
 
 		layoutDialogSwipe(&bmp_icon_question,
 			_("Cancel"),

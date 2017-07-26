@@ -57,7 +57,12 @@ const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *m
 
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size);
 bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network, char *str_out, size_t size);
-void nem_mosaicFormatName(const char *namespace, const char *mosaic, char *str_out, size_t size);
+
+static inline void nem_mosaicFormatName(const char *namespace, const char *mosaic, char *str_out, size_t size) {
+	strlcpy(str_out, namespace, size);
+	strlcat(str_out, ".", size);
+	strlcat(str_out, mosaic, size);
+}
 
 static inline bool nem_mosaicMatches(const NEMMosaicDefinition *definition, const char *namespace, const char *mosaic, uint8_t network) {
 	if (strcmp(namespace, definition->namespace) == 0 && strcmp(mosaic, definition->mosaic) == 0) {

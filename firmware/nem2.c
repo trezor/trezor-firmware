@@ -27,8 +27,6 @@
 #include "rng.h"
 #include "secp256k1.h"
 
-static void format_amount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, const bignum256 *multiplier2, int divisor, char *str_out, size_t size);
-
 const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
 	if (!common->has_network) {
 		common->has_network = true;
@@ -395,20 +393,15 @@ bool nem_askMosaicCreation(const NEMTransactionCommon *common, const NEMMosaicCr
 	}
 
 	char str_out[32];
-	bignum256 amnt;
 
-	bn_read_uint64(mosaic_creation->definition.supply, &amnt);
-	bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
-
-	char *decimal = strchr(str_out, '.');
-	if (decimal != NULL) {
-		*decimal = '\0';
-	}
-
-	strlcat(str_out, ".", sizeof(str_out));
-	for (size_t i = 0; i < mosaic_creation->definition.divisibility; i++) {
-		strlcat(str_out, "0", sizeof(str_out));
-	}
+	bn_format_uint64(mosaic_creation->definition.supply,
+		NULL,
+		NULL,
+		mosaic_creation->definition.divisibility,
+		mosaic_creation->definition.divisibility,
+		true,
+		str_out,
+		sizeof(str_out));
 
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
@@ -502,15 +495,7 @@ bool nem_askSupplyChange(const NEMTransactionCommon *common, const NEMMosaicSupp
 	}
 
 	char str_out[32];
-
-	bignum256 amnt;
-	bn_read_uint64(supply_change->delta, &amnt);
-	bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
-
-	char *decimal = strchr(str_out, '.');
-	if (decimal != NULL) {
-		*decimal = '\0';
-	}
+	bn_format_uint64(supply_change->delta, NULL, NULL, 0, 0, false, str_out, sizeof(str_out));
 
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
@@ -584,15 +569,14 @@ bool nem_askAggregateModification(const NEMTransactionCommon *common, const NEMA
 	int32_t relative_change = aggregate_modification->relative_change;
 	if (relative_change) {
 		char str_out[32];
-
-		bignum256 amnt;
-		bn_read_uint64(relative_change < 0 ? -relative_change : relative_change, &amnt);
-		bn_format(&amnt, NULL, NULL, 0, str_out, sizeof(str_out));
-
-		char *decimal = strchr(str_out, '.');
-		if (decimal != NULL) {
-			*decimal = '\0';
-		}
+		bn_format_uint64(relative_change < 0 ? -relative_change : relative_change,
+			NULL,
+			NULL,
+			0,
+			0,
+			false,
+			str_out,
+			sizeof(str_out));
 
 		layoutDialogSwipe(&bmp_icon_question,
 			_("Cancel"),
@@ -704,80 +688,52 @@ const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *m
 	return NULL;
 }
 
-void format_amount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, const bignum256 *multiplier2, int divisor, char *str_out, size_t size) {
-	uint32_t divisibility = definition && definition->has_divisibility ? definition->divisibility : 0;
-	const char *ticker = definition && definition->has_ticker ? definition->ticker : NULL;
+static inline size_t format_amount(const NEMMosaicDefinition *definition, const bignum256 *amnt, const bignum256 *multiplier, int divisor, char *str_out, size_t size) {
+	bignum256 val;
+	memcpy(&val, amnt, sizeof(bignum256));
 
-	bignum256 amnt;
-	bn_read_uint64(quantity, &amnt);
-
-	if (multiplier2) {
-		bn_multiply(multiplier2, &amnt, &secp256k1.prime);
-	}
-
-	// Do not use prefix/suffix with bn_format, it messes with the truncation code
 	if (multiplier) {
-		bn_multiply(multiplier, &amnt, &secp256k1.prime);
+		bn_multiply(multiplier, &val, &secp256k1.prime);
 		divisor += NEM_MOSAIC_DEFINITION_XEM->divisibility;
 	}
 
-	// bn_format(amnt / (10 ^ divisor), divisibility)
-	bn_format(&amnt, NULL, NULL, divisibility + divisor, str_out, size);
-
-	// Truncate as if we called bn_format with (divisibility) instead of (divisibility + divisor)
-	char *decimal = strchr(str_out, '.');
-	if (decimal != NULL) {
-		const char *terminator = strchr(str_out, '\0');
-
-		if (divisibility == 0) {
-			// Truncate as an integer
-			*decimal = '\0';
-		} else {
-			char *end = decimal + divisibility + 1;
-			if (end < terminator) {
-				*end = '\0';
-			}
-		}
-	}
-
-	if (ticker) {
-		strlcat(str_out, " ", size);
-		strlcat(str_out, ticker, size);
-	}
+	return bn_format(&val,
+		NULL,
+		definition && definition->has_ticker ? definition->ticker : NULL,
+		definition && definition->has_divisibility ? definition->divisibility : 0,
+		-divisor,
+		false,
+		str_out,
+		size);
 }
 
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size) {
-	format_amount(definition, quantity, multiplier, NULL, 0, str_out, size);
+	bignum256 amnt;
+	bn_read_uint64(quantity, &amnt);
+
+	format_amount(definition, &amnt, multiplier, 0, str_out, size);
 }
 
 bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network, char *str_out, size_t size) {
-	bignum256 multiplier2;
-
 	if (!definition->has_levy || !definition->has_fee) {
 		return false;
 	}
 
-	const NEMMosaicDefinition *levy_mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic, network);
+	bignum256 amnt, fee;
+	bn_read_uint64(quantity, &amnt);
+	bn_read_uint64(definition->fee, &fee);
+
+	const NEMMosaicDefinition *mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic, network);
 
 	switch (definition->levy) {
 	case NEMMosaicLevy_MosaicLevy_Absolute:
-		format_amount(levy_mosaic, definition->fee, NULL, NULL, 0, str_out, size);
-		break;
+		return format_amount(mosaic, &fee, NULL, 0, str_out, size);
 
 	case NEMMosaicLevy_MosaicLevy_Percentile:
-		bn_read_uint64(definition->fee, &multiplier2);
-		format_amount(levy_mosaic, quantity, multiplier, &multiplier2, NEM_LEVY_PERCENTILE_DIVISOR, str_out, size);
-		break;
+		bn_multiply(&fee, &amnt, &secp256k1.prime);
+		return format_amount(mosaic, &amnt, multiplier, NEM_LEVY_PERCENTILE_DIVISOR, str_out, size);
 
 	default:
 		return false;
 	}
-
-	return true;
-}
-
-void nem_mosaicFormatName(const char *namespace, const char *mosaic, char *str_out, size_t size) {
-	strlcpy(str_out, namespace, size);
-	strlcat(str_out, ".", size);
-	strlcat(str_out, mosaic, size);
 }
