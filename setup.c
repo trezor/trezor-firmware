@@ -21,7 +21,17 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/f2/rng.h>
+
 #include "rng.h"
+#include "layout.h"
+
+uint32_t __stack_chk_guard;
+
+void __attribute__((noreturn)) __stack_chk_fail(void)
+{
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
+	for (;;) {} // loop forever
+}
 
 void setup(void)
 {
