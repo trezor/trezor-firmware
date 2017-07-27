@@ -830,6 +830,12 @@ class ProtocolMixin(object):
             elif res.request_type == types.TXINPUT:
                 msg = types.TransactionType()
                 msg.inputs.extend([current_tx.inputs[res.details.request_index], ])
+                if debug_processor is not None:
+                    # If debug_processor function is provided,
+                    # pass thru it the request and prepared response.
+                    # This is useful for unit tests, see test_msg_signtx
+                    msg = debug_processor(res, msg)
+
                 res = self.call(proto.TxAck(tx=msg))
                 continue
 

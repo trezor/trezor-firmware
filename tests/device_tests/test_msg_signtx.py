@@ -36,6 +36,7 @@ TXHASH_c63e24 = binascii.unhexlify(b'c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4
 TXHASH_c6be22 = binascii.unhexlify(b'c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c')
 TXHASH_d5f65e = binascii.unhexlify(b'd5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 TXHASH_d6da21 = binascii.unhexlify(b'd6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236')
+TXHASH_d2dcda = binascii.unhexlify('d2dcdaf547ea7f57a713c607f15e883ddc4a98167ee2c43ed953c53cb5153e24')
 
 
 class TestMsgSigntx(common.TrezorTest):
@@ -618,6 +619,78 @@ class TestMsgSigntx(common.TrezorTest):
 
         # Now run the attack, must trigger the exception
         self.assertRaises(CallException, self.client.sign_tx, 'Bitcoin', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
+
+    def test_attack_change_input_address(self):
+        # This unit test attempts to modify input address after the Trezor checked
+        # that it matches the change output
+
+        self.setup_mnemonic_allallall()
+        self.client.set_tx_api(TxApiTestnet)
+
+        inp1 = proto_types.TxInputType(
+            address_n=self.client.expand_path("44'/1'/4'/0/0"),
+            # moUJnmge8SRXuediK7bW6t4YfrPqbE6hD7
+            prev_hash=TXHASH_d2dcda,
+            prev_index=1,
+            script_type=proto_types.SPENDADDRESS,
+        )
+
+        out1 = proto_types.TxOutputType(
+            address='mwue7mokpBRAsJtHqEMcRPanYBmsSmYKvY',
+            amount=100000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
+
+        out2 = proto_types.TxOutputType(
+            address_n=self.client.expand_path("44'/1'/12345'/1/0"),
+            amount=123400000-5000-100000,
+            script_type=proto_types.PAYTOADDRESS,
+        )
+
+        global run_attack
+        run_attack = True
+
+        def attack_processor(req, msg):
+            import sys
+            global run_attack
+
+            if req.details.tx_hash != b'':
+                return msg
+
+            if req.request_type != proto_types.TXINPUT:
+                return msg
+
+            if req.details.request_index != 0:
+                return msg
+
+            if not run_attack:
+                return msg
+
+            msg.inputs[0].address_n[2] = 12345 + 0x80000000
+            run_attack = False
+            return msg
+
+        # Test if the transaction can be signed normally
+        (_, serialized_tx) = self.client.sign_tx('Testnet', [inp1], [out1, out2])
+
+        self.assertEqual(binascii.hexlify(serialized_tx), b'0100000001243e15b53cc553d93ec4e27e16984adc3d885ef107c613a7577fea47f5dadcd2010000006a47304402207d517dcb6b823bba4d252da096795a7f914d0c477aee26e554ba61653c45608a02202cba1e805c586c830472f399510be5d42c2fcfd67b8a6b0690cbe8a3e6e475e801210364430c9122948e525e2f1c6d88f00f47679274f0810fd8c63754954f310995c1ffffffff02a0860100000000001976a914b3cc67f3349974d0f1b50e9bb5dfdf226f888fa088ac18555907000000001976a91485a3f5b0d23cdd61f5f8e1eb8c9ca0890dd15a9788ac00000000')
+
+        # Now run the attack, must trigger the exception
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_d2dcda)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d2dcda)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d2dcda)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_d2dcda)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
+                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+                proto.Failure(code=proto_types.Failure_ProcessError),
+            ])
+            self.assertRaises(CallException, self.client.sign_tx, 'Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
 
     def test_spend_coinbase(self):
         # 25 TEST generated to m/1 (mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV)
