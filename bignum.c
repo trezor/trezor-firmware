@@ -195,6 +195,31 @@ int bn_bitcount(const bignum256 *a)
 	return 0;
 }
 
+#define DIGITS 78 // log10(2 ^ 256)
+
+unsigned int bn_digitcount(const bignum256 *a)
+{
+	bignum256 val;
+	memcpy(&val, a, sizeof(bignum256));
+
+	unsigned int digits = 1;
+
+	for (unsigned int i = 0; i < DIGITS; i += 3) {
+		uint32_t limb;
+		bn_divmod1000(&val, &limb);
+
+		if (limb >= 100) {
+			digits = i + 3;
+		} else if (limb >= 10) {
+			digits = i + 2;
+		} else if (limb >= 1) {
+			digits = i + 1;
+		}
+	}
+
+	return digits;
+}
+
 // sets a bignum to zero.
 void bn_zero(bignum256 *a)
 {
