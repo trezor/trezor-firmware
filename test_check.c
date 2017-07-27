@@ -334,10 +334,26 @@ END_TEST
 
 START_TEST(test_bignum_bitcount)
 {
-	bignum256 a;
+	bignum256 a, b;
 
 	bn_zero(&a);
 	ck_assert_int_eq(bn_bitcount(&a), 0);
+
+	bn_one(&a);
+	ck_assert_int_eq(bn_bitcount(&a), 1);
+
+	// test for 10000 and 11111 when i=5
+	for (int i = 2; i <= 256; i++) {
+		bn_one(&a);
+		bn_one(&b);
+		for (int j = 2; j <= i; j++) {
+			bn_lshift(&a);
+			bn_lshift(&b);
+			bn_addi(&b, 1);
+		}
+		ck_assert_int_eq(bn_bitcount(&a), i);
+		ck_assert_int_eq(bn_bitcount(&b), i);
+	}
 
 	bn_read_uint32(0x3fffffff, &a);
 	ck_assert_int_eq(bn_bitcount(&a), 30);
@@ -357,17 +373,19 @@ START_TEST(test_bignum_digitcount)
 	bn_zero(&a);
 	ck_assert_int_eq(bn_digitcount(&a), 1);
 
-	bn_one(&a);
-	ck_assert_int_eq(bn_digitcount(&a), 1);
-
-	bn_read_uint32(10, &a);
-	ck_assert_int_eq(bn_digitcount(&a), 2);
-
-	bn_read_uint32(11, &a);
-	ck_assert_int_eq(bn_digitcount(&a), 2);
-
-	bn_read_uint32(100, &a);
-	ck_assert_int_eq(bn_digitcount(&a), 3);
+	// test for 10000 and 99999 when i=5
+	for (int i = 1; i <= 19; i++) {
+		uint64_t m = 1;
+		uint64_t n = 9;
+		for (int j = 2; j <= i; j++) {
+			m = m * 10;
+			n = n * 10 + 9;
+		}
+		bn_read_uint64(m, &a);
+		ck_assert_int_eq(bn_digitcount(&a), i);
+		bn_read_uint64(n, &a);
+		ck_assert_int_eq(bn_digitcount(&a), i);
+	}
 
 	bn_read_uint32(0x3fffffff, &a);
 	ck_assert_int_eq(bn_digitcount(&a), 10);
