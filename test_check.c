@@ -393,18 +393,15 @@ START_TEST(test_bignum_digitcount)
 	bn_zero(&a);
 	ck_assert_int_eq(bn_digitcount(&a), 1);
 
-	// test for 10000 and 99999 when i=5
-	for (int i = 1; i <= 19; i++) {
-		uint64_t m = 1;
-		uint64_t n = 9;
-		for (int j = 2; j <= i; j++) {
-			m = m * 10;
-			n = n * 10 + 9;
-		}
+	// test for (10^i) and (10^i) - 1
+	uint64_t m = 1;
+	for (int i = 0; i <= 19; i++, m *= 10) {
 		bn_read_uint64(m, &a);
-		ck_assert_int_eq(bn_digitcount(&a), i);
+		ck_assert_int_eq(bn_digitcount(&a), i + 1);
+
+		uint64_t n = m - 1;
 		bn_read_uint64(n, &a);
-		ck_assert_int_eq(bn_digitcount(&a), i);
+		ck_assert_int_eq(bn_digitcount(&a), n == 0 ? 1 : i);
 	}
 
 	bn_read_uint32(0x3fffffff, &a);
@@ -421,18 +418,15 @@ END_TEST
 START_TEST(test_bignum_format_uint64) {
 	char buf[128], str[128];
 	int r;
-	// test for 10000 and 99999 when i=5
-	for (int i = 1; i <= 19; i++) {
-		uint64_t m = 1;
-		uint64_t n = 9;
-		for (int j = 2; j <= i; j++) {
-			m = m * 10;
-			n = n * 10 + 9;
-		}
+	// test for (10^i) and (10^i) - 1
+	uint64_t m = 1;
+	for (int i = 0; i <= 19; i++, m *= 10) {
 		sprintf(str, "%" PRIu64, m);
 		r = bn_format_uint64(m, NULL, NULL, 0, 0, false, buf, sizeof(buf));
 		ck_assert_int_eq(r, strlen(str));
 		ck_assert_str_eq(buf, str);
+
+		uint64_t n = m - 1;
 		sprintf(str, "%" PRIu64, n);
 		r = bn_format_uint64(n, NULL, NULL, 0, 0, false, buf, sizeof(buf));
 		ck_assert_int_eq(r, strlen(str));
