@@ -396,6 +396,17 @@ bool compile_input_script_sig(TxInputType *tinput)
 			return false;
 		}
 	}
+	if (in_address_n_count >= 1) {
+		// check that input address didn't change
+		size_t count = tinput->address_n_count;
+		if (count != in_address_n_count) {
+			return false;
+		}
+		if (count >= 2
+			&& 0 != memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t))) {
+			return false;
+		}
+	}
 	memcpy(&node, root, sizeof(HDNode));
 	if (hdnode_private_ckd_cached(&node, tinput->address_n, tinput->address_n_count, NULL) == 0) {
 		// Failed to derive private key
