@@ -332,6 +332,25 @@ START_TEST(test_bignum_is_odd)
 }
 END_TEST
 
+START_TEST(test_bignum_is_less)
+{
+	bignum256 a;
+	bignum256 b;
+
+	bn_read_uint32(0x1234, &a);
+	bn_read_uint32(0x8765, &b);
+
+	ck_assert_int_eq(bn_is_less(&a, &b), 1);
+	ck_assert_int_eq(bn_is_less(&b, &a), 0);
+
+	bn_zero(&a);
+	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &b);
+
+	ck_assert_int_eq(bn_is_less(&a, &b), 1);
+	ck_assert_int_eq(bn_is_less(&b, &a), 0);
+}
+END_TEST
+
 START_TEST(test_bignum_bitcount)
 {
 	bignum256 a, b;
@@ -395,25 +414,6 @@ START_TEST(test_bignum_digitcount)
 
 	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
 	ck_assert_int_eq(bn_maxdigitcount(&a), 78);
-}
-END_TEST
-
-START_TEST(test_bignum_is_less)
-{
-	bignum256 a;
-	bignum256 b;
-
-	bn_read_uint32(0x1234, &a);
-	bn_read_uint32(0x8765, &b);
-
-	ck_assert_int_eq(bn_is_less(&a, &b), 1);
-	ck_assert_int_eq(bn_is_less(&b, &a), 0);
-
-	bn_zero(&a);
-	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &b);
-
-	ck_assert_int_eq(bn_is_less(&a, &b), 1);
-	ck_assert_int_eq(bn_is_less(&b, &a), 0);
 }
 END_TEST
 
