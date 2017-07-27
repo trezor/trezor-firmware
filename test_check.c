@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -417,6 +418,29 @@ START_TEST(test_bignum_digitcount)
 }
 END_TEST
 
+START_TEST(test_bignum_format_uint64) {
+	char buf[128], str[128];
+	int r;
+	// test for 10000 and 99999 when i=5
+	for (int i = 1; i <= 19; i++) {
+		uint64_t m = 1;
+		uint64_t n = 9;
+		for (int j = 2; j <= i; j++) {
+			m = m * 10;
+			n = n * 10 + 9;
+		}
+		sprintf(str, "%" PRIu64, m);
+		r = bn_format_uint64(m, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+		ck_assert_int_eq(r, strlen(str));
+		ck_assert_str_eq(buf, str);
+		sprintf(str, "%" PRIu64, n);
+		r = bn_format_uint64(n, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+		ck_assert_int_eq(r, strlen(str));
+		ck_assert_str_eq(buf, str);
+	}
+}
+END_TEST
+
 START_TEST(test_bignum_format) {
 	bignum256 a;
 	char buf[128];
@@ -487,6 +511,11 @@ START_TEST(test_bignum_format) {
 	ck_assert_int_eq(r, 1);
 	ck_assert_str_eq(buf, "5");
 
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000009"), &a);
+	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 1);
+	ck_assert_str_eq(buf, "9");
+
 	bn_read_be(fromhex("000000000000000000000000000000000000000000000000000000000000000a"), &a);
 	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 2);
@@ -502,6 +531,11 @@ START_TEST(test_bignum_format) {
 	ck_assert_int_eq(r, 2);
 	ck_assert_str_eq(buf, "50");
 
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000063"), &a);
+	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 2);
+	ck_assert_str_eq(buf, "99");
+
 	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000000000000000064"), &a);
 	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 3);
@@ -516,6 +550,11 @@ START_TEST(test_bignum_format) {
 	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 3);
 	ck_assert_str_eq(buf, "500");
+
+	bn_read_be(fromhex("00000000000000000000000000000000000000000000000000000000000003e7"), &a);
+	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+	ck_assert_int_eq(r, 3);
+	ck_assert_str_eq(buf, "999");
 
 	bn_read_be(fromhex("00000000000000000000000000000000000000000000000000000000000003e8"), &a);
 	r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
@@ -3274,6 +3313,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bignum_digitcount);
 	tcase_add_test(tc, test_bignum_is_less);
 	tcase_add_test(tc, test_bignum_format);
+	tcase_add_test(tc, test_bignum_format_uint64);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("base32");
