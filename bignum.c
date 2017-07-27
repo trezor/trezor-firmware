@@ -999,7 +999,7 @@ size_t bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, 
 		BN_FORMAT_PUSH(0);
 	}
 
-	unsigned int digits = bn_digitcount(&val);
+	unsigned int digits = bn_maxdigitcount(&val);
 	for (unsigned int i = 0; i < digits / 3; i++) {
 		uint32_t limb;
 		bn_divmod1000(&val, &limb);
