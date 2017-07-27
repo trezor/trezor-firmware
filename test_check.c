@@ -391,7 +391,7 @@ START_TEST(test_bignum_digitcount)
 	bignum256 a;
 
 	bn_zero(&a);
-	ck_assert_int_eq(bn_maxdigitcount(&a), 1);
+	ck_assert_int_eq(bn_digitcount(&a), 1);
 
 	// test for 10000 and 99999 when i=5
 	for (int i = 1; i <= 19; i++) {
@@ -402,19 +402,19 @@ START_TEST(test_bignum_digitcount)
 			n = n * 10 + 9;
 		}
 		bn_read_uint64(m, &a);
-		ck_assert_int_eq(bn_maxdigitcount(&a), i);
+		ck_assert_int_eq(bn_digitcount(&a), i);
 		bn_read_uint64(n, &a);
-		ck_assert_int_eq(bn_maxdigitcount(&a), i + 1);
+		ck_assert_int_eq(bn_digitcount(&a), i);
 	}
 
 	bn_read_uint32(0x3fffffff, &a);
-	ck_assert_int_eq(bn_maxdigitcount(&a), 10);
+	ck_assert_int_eq(bn_digitcount(&a), 10);
 
 	bn_read_uint32(0xffffffff, &a);
-	ck_assert_int_eq(bn_maxdigitcount(&a), 10);
+	ck_assert_int_eq(bn_digitcount(&a), 10);
 
 	bn_read_be(fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), &a);
-	ck_assert_int_eq(bn_maxdigitcount(&a), 78);
+	ck_assert_int_eq(bn_digitcount(&a), 78);
 }
 END_TEST
 
