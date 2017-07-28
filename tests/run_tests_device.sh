@@ -1,9 +1,7 @@
 #!/bin/bash
 
-if [ -d python-trezor ]; then
-    cd python-trezor ; git pull ; cd ..
-else
-    git clone https://github.com/trezor/python-trezor.git
+if [ \! -d device_tests ]; then
+    curl -s -L https://github.com/trezor/python-trezor/archive/master.tar.gz | tar -xvz --strip-components=2 python-trezor-master/tests/device_tests
 fi
 
 # run emulator
@@ -14,7 +12,7 @@ UPY_PID=$!
 
 sleep 1
 
-cd ../tests/python-trezor/tests/device_tests
+cd ../tests/device_tests
 
 error=0
 

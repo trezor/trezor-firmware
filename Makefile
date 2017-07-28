@@ -45,7 +45,7 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh
 
 testpy: ## run selected unit tests from python-trezor
-	cd tests ; ./run_tests_python_trezor.sh
+	cd tests ; ./run_tests_device.sh
 
 pylint: ## run pylint on application sources
 	pylint -E $(shell find src -name *.py)
