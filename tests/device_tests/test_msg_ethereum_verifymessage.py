@@ -25,8 +25,8 @@ class TestMsgEthereumVerifymessage(common.TrezorTest):
     def test_verify(self):
         self.setup_mnemonic_nopin_nopassphrase()
         res = self.client.ethereum_verify_message(
-            binascii.unhexlify(b'cb3864960e8db1a751212c580af27ee8867d688f'),
-            binascii.unhexlify(b'95b64a7b3aa492f0cc1668a24097004562cc2b4f0e755e3c0d60dd791b9f9e285f95b618258ff97036b8419d0a0dd1af3751c625b4d248ee6deff84eba21b8ee1c'),
+            binascii.unhexlify('cb3864960e8db1a751212c580af27ee8867d688f'),
+            binascii.unhexlify('95b64a7b3aa492f0cc1668a24097004562cc2b4f0e755e3c0d60dd791b9f9e285f95b618258ff97036b8419d0a0dd1af3751c625b4d248ee6deff84eba21b8ee1c'),
             'This is an example of a signed message.'
         )
         self.assertTrue(res)
@@ -34,8 +34,8 @@ class TestMsgEthereumVerifymessage(common.TrezorTest):
     def test_verify_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.ethereum_verify_message(
-            binascii.unhexlify(b'cb3864960e8db1a751212c580af27ee8867d688f'),
-            binascii.unhexlify(b'70d03c8447b64489e80ae44ce4f1a543e8eb5dd9e9a19c4743ce95fbd9b8234b2d2a16db87cee857f5b474107ad2c0c0c86118f8a33d5df3d98b766be92d71331b'),
+            binascii.unhexlify('cb3864960e8db1a751212c580af27ee8867d688f'),
+            binascii.unhexlify('70d03c8447b64489e80ae44ce4f1a543e8eb5dd9e9a19c4743ce95fbd9b8234b2d2a16db87cee857f5b474107ad2c0c0c86118f8a33d5df3d98b766be92d71331b'),
             'VeryLongMessage!' * 64
         )
         self.assertTrue(ret)

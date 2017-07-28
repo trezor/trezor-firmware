@@ -26,16 +26,16 @@ from trezorlib.client import CallException
 from trezorlib.tx_api import TxApiTestnet
 
 
-TXHASH_157041 = binascii.unhexlify(b'1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6')
-TXHASH_39a29e = binascii.unhexlify(b'39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5')
-TXHASH_4a7b7e = binascii.unhexlify(b'4a7b7e0403ae5607e473949cfa03f09f2cd8b0f404bf99ce10b7303d86280bf7')
-TXHASH_54aa56 = binascii.unhexlify(b'54aa5680dea781f45ebb536e53dffc526d68c0eb5c00547e323b2c32382dfba3')
-TXHASH_58497a = binascii.unhexlify(b'58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e')
-TXHASH_6f90f3 = binascii.unhexlify(b'6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54')
-TXHASH_c63e24 = binascii.unhexlify(b'c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb')
-TXHASH_c6be22 = binascii.unhexlify(b'c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c')
-TXHASH_d5f65e = binascii.unhexlify(b'd5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
-TXHASH_d6da21 = binascii.unhexlify(b'd6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236')
+TXHASH_157041 = binascii.unhexlify('1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6')
+TXHASH_39a29e = binascii.unhexlify('39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5')
+TXHASH_4a7b7e = binascii.unhexlify('4a7b7e0403ae5607e473949cfa03f09f2cd8b0f404bf99ce10b7303d86280bf7')
+TXHASH_54aa56 = binascii.unhexlify('54aa5680dea781f45ebb536e53dffc526d68c0eb5c00547e323b2c32382dfba3')
+TXHASH_58497a = binascii.unhexlify('58497a7757224d1ff1941488d23087071103e5bf855f4c1c44e5c8d9d82ca46e')
+TXHASH_6f90f3 = binascii.unhexlify('6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54')
+TXHASH_c63e24 = binascii.unhexlify('c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb')
+TXHASH_c6be22 = binascii.unhexlify('c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c')
+TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d6da21 = binascii.unhexlify('d6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236')
 TXHASH_d2dcda = binascii.unhexlify('d2dcdaf547ea7f57a713c607f15e883ddc4a98167ee2c43ed953c53cb5153e24')
 
 

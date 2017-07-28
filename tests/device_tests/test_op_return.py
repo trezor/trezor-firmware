@@ -25,7 +25,7 @@ import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
 
 
-TXHASH_d5f65e = binascii.unhexlify(b'd5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
 
 class TestOpReturn(common.TrezorTest):

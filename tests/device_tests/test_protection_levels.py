@@ -24,7 +24,7 @@ from trezorlib import messages_pb2 as proto
 from trezorlib import types_pb2 as proto_types
 
 
-TXHASH_d5f65e = binascii.unhexlify(b'd5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
 
 class TestProtectionLevels(common.TrezorTest):
@@ -155,7 +155,7 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.verify_message(
                 'Bitcoin',
                 '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-                binascii.unhexlify(b'209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
+                binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
                 'This is an example of a signed message.')
 
     def test_estimate_txsize(self):
