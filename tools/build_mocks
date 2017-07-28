@@ -72,7 +72,7 @@ def build_module(mod_file, dest):
         .split('.')[0] \
         .split('-')[0] \
         .replace('mod', '')
-    mod_desc = mod_file.replace('../micropython/extmod', 'extmod')
+    mod_desc = mod_file.replace('../embed/extmod', 'extmod')
 
     for l in open(mod_file):
         if not l.startswith(COMMENT_PREFIX):
@@ -109,4 +109,4 @@ def clear_directory(top_dir):
 
 if __name__ == '__main__':
     clear_directory('../mocks/generated')
-    build_directory('../micropython/extmod', '../mocks/generated')
+    build_directory('../embed/extmod', '../mocks/generated')
