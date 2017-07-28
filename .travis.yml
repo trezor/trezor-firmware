@@ -33,7 +33,7 @@ install:
     - pip3 install flake8
     - pip3 install pytest
     - pip3 install ecdsa mnemonic protobuf requests
-    - pip3 install trezor
+    - pip3 install git+https://github.com/trezor/python-trezor@master
 
 script:
   - test "$GOAL" != "stm32" || make vendorheader
