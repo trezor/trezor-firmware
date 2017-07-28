@@ -23,5 +23,7 @@ class Features(p.MessageType):
         16: ('pin_cached', p.BoolType, 0),
         17: ('passphrase_cached', p.BoolType, 0),
         18: ('firmware_present', p.BoolType, 0),
+        19: ('needs_backup', p.BoolType, 0),
+        20: ('flags', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 17

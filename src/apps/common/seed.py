@@ -19,13 +19,13 @@ async def get_seed(session_id: int) -> bytes:
 
 
 async def compute_seed(session_id: int) -> bytes:
-    from trezor.messages.FailureType import Other
+    from trezor.messages.FailureType import ProcessError
     from .request_passphrase import protect_by_passphrase
     from .request_pin import protect_by_pin
     from . import storage
 
     if not storage.is_initialized():
-        raise wire.FailureError(Other, 'Device is not initialized')
+        raise wire.FailureError(ProcessError, 'Device is not initialized')
 
     await protect_by_pin(session_id)
 

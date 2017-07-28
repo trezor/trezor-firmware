@@ -12,5 +12,6 @@ class RecoveryDevice(p.MessageType):
         6: ('enforce_wordlist', p.BoolType, 0),
         8: ('type', p.UVarintType, 0),
         9: ('u2f_counter', p.UVarintType, 0),
+        10: ('dry_run', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 45

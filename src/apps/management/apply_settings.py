@@ -5,7 +5,7 @@ from trezor.utils import unimport
 @unimport
 async def layout_apply_settings(session_id, msg):
     from trezor.messages.Success import Success
-    from trezor.messages.FailureType import Other
+    from trezor.messages.FailureType import ProcessError
     from trezor.ui.text import Text
     from ..common.confirm import require_confirm
     from ..common.request_pin import protect_by_pin
@@ -15,10 +15,10 @@ async def layout_apply_settings(session_id, msg):
 
     if msg.homescreen is not None:
         raise wire.FailureError(
-            Other, 'ApplySettings.homescreen is not supported')
+            ProcessError, 'ApplySettings.homescreen is not supported')
 
     if msg.label is None and msg.language is None and msg.use_passphrase is None:
-        raise wire.FailureError(Other, 'No setting provided')
+        raise wire.FailureError(ProcessError, 'No setting provided')
 
     if msg.label is not None:
         await require_confirm(session_id, Text(

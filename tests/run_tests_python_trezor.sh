@@ -18,8 +18,6 @@ cd ../tests/python-trezor/tests/device_tests
 
 error=0
 
-PYTHON="${PYTHON:-python3}"
-
 : '
 not passing:
 
@@ -45,7 +43,6 @@ not passing:
 for i in \
     test_basic.py \
     test_msg_cipherkeyvalue.py \
-    test_msg_estimatetxsize.py \
     test_msg_ethereum_getaddress.py \
     test_msg_getaddress.py \
     test_msg_getentropy.py \
@@ -60,7 +57,7 @@ for i in \
     test_zerosig.py \
     ; do
 
-        if $PYTHON $i >/dev/null 2>/dev/null ; then
+        if pytest -q $i ; then
            results+=("OK   $i")
         else
            results+=("FAIL $i")

@@ -139,7 +139,7 @@ def process_module(mod, genpath, indexfile, is_upy):
     msg_types = __import__('pb2', globals(), locals(), [
                            'messages_pb2', ]).messages_pb2.MessageType.items()
 
-    for t, cls in types.items():
+    for t, cls in sorted(types.items()):
         # Find message type for given class
         msg_id = find_msg_type(msg_types, t)
 

@@ -3,7 +3,7 @@ from trezor.utils import unimport
 from trezor.messages.wire_types import \
     GetPublicKey, GetAddress, \
     GetEntropy, \
-    SignTx, EstimateTxSize, \
+    SignTx, \
     SignMessage, VerifyMessage, \
     SignIdentity, \
     CipherKeyValue
@@ -31,15 +31,6 @@ def dispatch_GetEntropy(*args, **kwargs):
 def dispatch_SignTx(*args, **kwargs):
     from .sign_tx import sign_tx
     return sign_tx(*args, **kwargs)
-
-
-@unimport
-async def dispatch_EstimateTxSize(session_id, msg):
-    from trezor.messages.TxSize import TxSize
-    from .sign_tx.signing import estimate_tx_size
-    m = TxSize()
-    m.tx_size = estimate_tx_size(msg.inputs_count, msg.outputs_count)
-    return m
 
 
 @unimport
@@ -71,7 +62,6 @@ def boot():
     register(GetAddress, protobuf_workflow, dispatch_GetAddress)
     register(GetEntropy, protobuf_workflow, dispatch_GetEntropy)
     register(SignTx, protobuf_workflow, dispatch_SignTx)
-    register(EstimateTxSize, protobuf_workflow, dispatch_EstimateTxSize)
     register(SignMessage, protobuf_workflow, dispatch_SignMessage)
     register(VerifyMessage, protobuf_workflow, dispatch_VerifyMessage)
     register(SignIdentity, protobuf_workflow, dispatch_SignIdentity)

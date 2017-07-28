@@ -28,7 +28,7 @@ async def layout_reset_device(session_id, msg):
 
     if msg.strength not in (128, 192, 256):
         raise wire.FailureError(
-            FailureType.Other, 'Invalid strength (has to be 128, 192 or 256 bits)')
+            FailureType.ProcessError, 'Invalid strength (has to be 128, 192 or 256 bits)')
 
     if storage.is_initialized():
         raise wire.FailureError(

@@ -173,7 +173,7 @@ async def sign_tx(tx: SignTx, root):
         txo = await request_tx_output(tx_req, o)
         if output_is_change(txo):
             if change_out != 0:
-                raise SigningError(FailureType.Other,
+                raise SigningError(FailureType.ProcessError,
                                    'Only one change output is valid')
             change_out = txo.amount
         elif txo.script_type != OutputScriptType.PAYTOOPRETURN:
@@ -249,7 +249,7 @@ async def sign_tx(tx: SignTx, root):
 
         # check the control digests
         if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
-            raise SigningError(FailureType.Other,
+            raise SigningError(FailureType.ProcessError,
                                'Transaction has changed during signing')
 
         # compute the signature from the tx digest
@@ -321,7 +321,7 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
     write_uint32(txh, tx.lock_time)
 
     if get_tx_hash(txh, True, True) != prev_hash:
-        raise SigningError(FailureType.Other,
+        raise SigningError(FailureType.ProcessError,
                            'Encountered invalid prev_hash')
 
     return total_out

@@ -5,12 +5,12 @@ from trezor.utils import unimport
 @unimport
 async def layout_get_address(session_id, msg):
     from trezor.messages.Address import Address
-    from trezor.messages.FailureType import Other
+    from trezor.messages.FailureType import ProcessError
     from ..common import coins
     from ..common import seed
 
     if msg.multisig:
-        raise wire.FailureError(Other, 'GetAddress.multisig is unsupported')
+        raise wire.FailureError(ProcessError, 'GetAddress.multisig is unsupported')
 
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'

@@ -6,7 +6,7 @@ from trezor.utils import unimport
 async def layout_load_device(session_id, msg):
     from trezor.crypto import bip39
     from trezor.messages.Success import Success
-    from trezor.messages.FailureType import UnexpectedMessage, Other
+    from trezor.messages.FailureType import UnexpectedMessage, ProcessError
     from trezor.ui.text import Text
     from ..common.confirm import require_confirm
     from ..common import storage
@@ -15,10 +15,10 @@ async def layout_load_device(session_id, msg):
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
     if msg.node is not None:
-        raise wire.FailureError(Other, 'LoadDevice.node is not supported')
+        raise wire.FailureError(ProcessError, 'LoadDevice.node is not supported')
 
     if not msg.skip_checksum and not bip39.check(msg.mnemonic):
-        raise wire.FailureError(Other, 'Mnemonic is not valid')
+        raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
 
     await require_confirm(session_id, Text(
         'Loading seed', ui.ICON_RESET,

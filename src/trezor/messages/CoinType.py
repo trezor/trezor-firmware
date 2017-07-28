@@ -13,4 +13,5 @@ class CoinType(p.MessageType):
         9: ('xpub_magic', p.UVarintType, 0),  # default=76067358
         10: ('xprv_magic', p.UVarintType, 0),  # default=76066276
         11: ('segwit', p.BoolType, 0),
+        12: ('forkid', p.UVarintType, 0),
     }

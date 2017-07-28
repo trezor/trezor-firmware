@@ -3,4 +3,7 @@ import protobuf as p
 
 
 class FirmwareErase(p.MessageType):
+    FIELDS = {
+        1: ('length', p.UVarintType, 0),
+    }
     MESSAGE_WIRE_TYPE = 6
