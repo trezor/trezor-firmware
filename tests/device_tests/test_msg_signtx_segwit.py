@@ -238,5 +238,6 @@ class TestMsgSigntxSegwit(common.TrezorTest):
             ])
             self.assertRaises(CallException, self.client.sign_tx, 'Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -643,7 +643,7 @@ class TestMsgSigntx(common.TrezorTest):
 
         out2 = proto_types.TxOutputType(
             address_n=self.client.expand_path("44'/1'/12345'/1/0"),
-            amount=123400000-5000-100000,
+            amount=123400000 - 5000 - 100000,
             script_type=proto_types.PAYTOADDRESS,
         )
 
