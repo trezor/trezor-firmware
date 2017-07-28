@@ -1,4 +1,5 @@
-[{
+[
+{
 	"coin_name": "Bitcoin",
 	"coin_shortcut": "BTC",
 	"address_type": 0,
@@ -20,7 +21,8 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10
-}, {
+},
+{
 	"coin_name": "Testnet",
 	"coin_shortcut": "TEST",
 	"address_type": 111,
@@ -39,7 +41,8 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10
-}, {
+},
+{
 	"coin_name": "Bitcoin Cash",
 	"coin_shortcut": "BCC",
 	"address_type": 0,
@@ -61,7 +64,8 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10
-}, {
+},
+{
 	"coin_name": "Testnet Cash",
 	"coin_shortcut": "TBCC",
 	"address_type": 111,
@@ -80,7 +84,8 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10
-}, {
+},
+{
 	"coin_name": "Namecoin",
 	"coin_shortcut": "NMC",
 	"address_type": 52,
@@ -99,7 +104,8 @@
 	},
 	"dust_limit": 2940,
 	"blocktime_minutes": 10
-}, {
+},
+{
 	"coin_name": "Litecoin",
 	"coin_shortcut": "LTC",
 	"address_type": 48,
@@ -118,7 +124,8 @@
 	},
 	"dust_limit": 54600,
 	"blocktime_minutes": 2.5
-}, {
+},
+{
 	"coin_name": "Dogecoin",
 	"coin_shortcut": "DOGE",
 	"address_type": 30,
@@ -137,7 +144,8 @@
 	},
 	"dust_limit": 10000000,
 	"blocktime_minutes": 1
-}, {
+},
+{
 	"coin_name": "Dash",
 	"coin_shortcut": "DASH",
 	"address_type": 76,
@@ -156,7 +164,8 @@
 	},
 	"dust_limit": 5460,
 	"blocktime_minutes": 2.5
-}, {
+},
+{
 	"coin_name": "Zcash",
 	"coin_shortcut": "ZEC",
 	"address_type": 7352,
@@ -175,7 +184,8 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 2.5
-}, {
+},
+{
 	"coin_name": "Zcash Testnet",
 	"coin_shortcut": "TAZ",
 	"address_type": 7461,
@@ -194,4 +204,5 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 2.5
-}]
+}
+]
