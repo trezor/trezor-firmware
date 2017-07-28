@@ -55,6 +55,7 @@ bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *c
 
 const NEMMosaicDefinition *nem_mosaicByName(const char *namespace, const char *mosaic, uint8_t network);
 
+size_t nem_canonicalizeMosaics(NEMMosaic *mosaics, size_t mosaics_count);
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size);
 bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network, char *str_out, size_t size);
 
@@ -78,6 +79,29 @@ static inline bool nem_mosaicMatches(const NEMMosaicDefinition *definition, cons
 	}
 
 	return false;
+}
+
+static inline int nem_mosaicCompare(const NEMMosaic *a, const NEMMosaic *b) {
+	size_t namespace_length = strlen(a->namespace);
+
+	// Ensure that strlen(a->namespace) <= strlen(b->namespace)
+	if (namespace_length > strlen(b->namespace)) {
+		return -nem_mosaicCompare(b, a);
+	}
+
+	int r = strncmp(a->namespace, b->namespace, namespace_length);
+
+	if (r == 0 && b->namespace[namespace_length] != '\0') {
+		// The next character would be the separator
+		r = (':' - b->namespace[namespace_length]);
+	}
+
+	if (r == 0) {
+		// Finally compare the mosaic
+		r = strcmp(a->mosaic, b->mosaic);
+	}
+
+	return r;
 }
 
 #endif

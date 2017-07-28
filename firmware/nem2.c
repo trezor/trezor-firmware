@@ -157,42 +157,20 @@ const char *nem_validate_aggregate_modification(const NEMAggregateModification *
 
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
-		struct {
-			bool skip;
-			uint64_t quantity;
-			const NEMMosaicDefinition *definition;
-		} mosaics[transfer->mosaics_count], *xem = NULL;
-
-		memset(mosaics, 0, sizeof(mosaics));
-
+		const NEMMosaic *xem = NULL;
 		bool unknownMosaic = false;
 
-		for (size_t i = 0; i < transfer->mosaics_count; i++) {
-			// Skip duplicate mosaics
-			if (mosaics[i].skip) continue;
+		const NEMMosaicDefinition *definitions[transfer->mosaics_count];
 
+		for (size_t i = 0; i < transfer->mosaics_count; i++) {
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-			if ((mosaics[i].definition = nem_mosaicByName(mosaic->namespace, mosaic->mosaic, common->network))) {
-				// XEM is displayed separately
-				if (mosaics[i].definition == NEM_MOSAIC_DEFINITION_XEM) {
-					// Do not display as a mosaic
-					mosaics[i].skip = true;
-					xem = &mosaics[i];
-				}
-			} else {
+			definitions[i] = nem_mosaicByName(mosaic->namespace, mosaic->mosaic, common->network);
+
+			if (definitions[i] == NEM_MOSAIC_DEFINITION_XEM) {
+				xem = mosaic;
+			} else if (definitions[i] == NULL) {
 				unknownMosaic = true;
-			}
-
-			mosaics[i].quantity = mosaic->quantity;
-			for (size_t j = i + 1; j < transfer->mosaics_count; j++) {
-				const NEMMosaic *new_mosaic = &transfer->mosaics[j];
-
-				if (nem_mosaicMatches(mosaics[i].definition, new_mosaic->namespace, new_mosaic->mosaic, common->network)) {
-					// Merge duplicate mosaics
-					mosaics[j].skip = true;
-					mosaics[i].quantity += new_mosaic->quantity;
-				}
 			}
 		}
 
@@ -221,15 +199,16 @@ bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *tran
 		}
 
 		for (size_t i = 0; i < transfer->mosaics_count; i++) {
-			// Skip duplicate mosaics or XEM
-			if (mosaics[i].skip) continue;
-
 			const NEMMosaic *mosaic = &transfer->mosaics[i];
 
-			if (mosaics[i].definition) {
-				layoutNEMTransferMosaic(mosaics[i].definition, mosaics[i].quantity, &multiplier, common->network);
+			if (mosaic == xem) {
+				continue;
+			}
+
+			if (definitions[i]) {
+				layoutNEMTransferMosaic(definitions[i], mosaic->quantity, &multiplier, common->network);
 			} else {
-				layoutNEMTransferUnknownMosaic(mosaic->namespace, mosaic->mosaic, mosaics[i].quantity, &multiplier);
+				layoutNEMTransferUnknownMosaic(mosaic->namespace, mosaic->mosaic, mosaic->quantity, &multiplier);
 			}
 
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
@@ -705,6 +684,58 @@ static inline size_t format_amount(const NEMMosaicDefinition *definition, const 
 		false,
 		str_out,
 		size);
+}
+
+size_t nem_canonicalizeMosaics(NEMMosaic *mosaics, size_t mosaics_count) {
+	if (mosaics_count <= 1) {
+		return mosaics_count;
+	}
+
+	size_t actual_count = 0;
+
+	bool skip[mosaics_count];
+	memset(skip, 0, sizeof(skip));
+
+	// Merge duplicates
+	for (size_t i = 0; i < mosaics_count; i++) {
+		if (skip[i]) continue;
+
+		NEMMosaic *mosaic = &mosaics[actual_count];
+
+		if (actual_count++ != i) {
+			memcpy(mosaic, &mosaics[i], sizeof(NEMMosaic));
+		}
+
+		for (size_t j = i + 1; j < mosaics_count; j++) {
+			if (skip[j]) continue;
+
+			const NEMMosaic *new_mosaic = &mosaics[j];
+
+			if (nem_mosaicCompare(mosaic, new_mosaic) == 0) {
+				skip[j] = true;
+				mosaic->quantity += new_mosaic->quantity;
+			}
+		}
+	}
+
+	NEMMosaic temp;
+
+	// Sort mosaics
+	for (size_t i = 0; i < actual_count - 1; i++) {
+		NEMMosaic *a = &mosaics[i];
+
+		for (size_t j = i + 1; j < actual_count; j++) {
+			NEMMosaic *b = &mosaics[j];
+
+			if (nem_mosaicCompare(a, b) > 0) {
+				memcpy(&temp, a, sizeof(NEMMosaic));
+				memcpy(a, b, sizeof(NEMMosaic));
+				memcpy(b, &temp, sizeof(NEMMosaic));
+			}
+		}
+	}
+
+	return actual_count;
 }
 
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, char *str_out, size_t size) {
