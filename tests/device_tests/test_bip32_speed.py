@@ -69,7 +69,3 @@ class TestBip32Speed(common.TrezorTest):
 
         # Cached time expected to be at least 2x faster
         self.assertLessEqual(cache_time, nocache_time / 2.)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -128,7 +128,3 @@ class TestDeviceResetSkipBackup(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.call_raw(proto.BackupDevice())
         self.assertIsInstance(ret, proto.Failure)
-
-
-if __name__ == '__main__':
-    unittest.main()

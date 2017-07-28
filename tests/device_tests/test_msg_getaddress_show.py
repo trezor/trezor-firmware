@@ -64,7 +64,3 @@ class TestMsgGetaddress(common.TrezorTest):
 
         for i in range(15):
             self.assertEqual(self.client.get_address('Bitcoin', [i], show_display=True, multisig=multisig), '3QaKF8zobqcqY8aS6nxCD5ZYdiRfL3RCmU')
-
-
-if __name__ == '__main__':
-    unittest.main()

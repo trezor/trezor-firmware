@@ -203,7 +203,3 @@ class TestDeviceReset(common.TrezorTest):
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         self.assertRaises(Exception, self.client.reset_device, False, 128, True, True, 'label', 'english')
-
-
-if __name__ == '__main__':
-    unittest.main()

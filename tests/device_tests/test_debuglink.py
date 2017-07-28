@@ -52,7 +52,3 @@ class TestDebugLink(common.TrezorTest):
         pin_encoded = self.client.debug.read_pin_encoded()
         resp = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         self.assertIsInstance(resp, proto.Success)
-
-
-if __name__ == '__main__':
-    unittest.main()

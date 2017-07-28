@@ -69,7 +69,3 @@ class TestDeviceRecoveryDryRun(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         mnemonic = ['stick'] * 12
         self.recovery_loop(mnemonic, proto.Failure)
-
-
-if __name__ == '__main__':
-    unittest.main()

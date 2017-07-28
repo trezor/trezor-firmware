@@ -227,7 +227,3 @@ class TestProtectionLevels(common.TrezorTest):
 
     # def test_firmware_upload(self):
     #    pass
-
-
-if __name__ == '__main__':
-    unittest.main()

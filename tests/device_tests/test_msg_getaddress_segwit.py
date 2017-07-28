@@ -38,7 +38,3 @@ class TestMsgGetaddressSegwit(common.TrezorTest):
             self.assertEqual(self.client.get_address("Testnet", self.client.expand_path("999'/1'/%d'/2/0" % i),
                                                      False, multisig1, script_type=proto_types.SPENDP2SHWITNESS),
                              '2N2MxyAfifVhb3AMagisxaj3uij8bfXqf4Y')
-
-
-if __name__ == '__main__':
-    unittest.main()

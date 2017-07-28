@@ -30,7 +30,3 @@ class TestMsgEthereumGetaddress(common.TrezorTest):
         self.assertEqual(binascii.hexlify(self.client.ethereum_get_address([0, -1])), b'e5d96dfa07bcf1a3ae43677840c31394258861bf')
         self.assertEqual(binascii.hexlify(self.client.ethereum_get_address([-9, 0])), b'f68804ac9eca9483ab4241d3e4751590d2c05102')
         self.assertEqual(binascii.hexlify(self.client.ethereum_get_address([0, 9999999])), b'7a6366ecfcaf0d5dcc1539c171696c6cdd1eb8ed')
-
-
-if __name__ == '__main__':
-    unittest.main()

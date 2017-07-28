@@ -244,7 +244,3 @@ class TestMsgEthereumSigntx(common.TrezorTest):
         self.assertEqual(sig_v, 42)
         self.assertEqual(binascii.hexlify(sig_r), 'f7505f709d5999343aea3c384034c62d0514336ff6c6af65582006f708f81503')
         self.assertEqual(binascii.hexlify(sig_s), '44e09e29a4b6247000b46ddc94fe391e94deb2b39ad6ac6398e6db5bec095ba9')
-
-
-if __name__ == '__main__':
-    unittest.main()

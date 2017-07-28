@@ -909,7 +909,7 @@ class ProtocolMixin(object):
     @field('message')
     @expect(proto.Success)
     @session
-    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter, skip_backup):
+    def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter=0, skip_backup=False):
         if self.features.initialized:
             raise Exception("Device is initialized already. Call wipe_device() and try again.")
 

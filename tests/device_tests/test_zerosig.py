@@ -116,7 +116,3 @@ class TestZeroSig(common.TrezorTest):
 
         # TREZOR must strip leading zero from signature
         self.assertEqual(siglen, 66)
-
-
-if __name__ == '__main__':
-    unittest.main()

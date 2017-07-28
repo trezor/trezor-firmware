@@ -113,7 +113,3 @@ class TestOpReturn(common.TrezorTest):
                 proto.Failure()
             ])
             self.assertRaises(CallException, self.client.sign_tx, 'Bitcoin', [inp1, ], [out1, ])
-
-
-if __name__ == '__main__':
-    unittest.main()

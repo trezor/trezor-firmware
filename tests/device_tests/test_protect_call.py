@@ -132,7 +132,3 @@ class TestProtectCall(common.TrezorTest):
             start = time.time()
             self.assertRaises(PinException, self._some_protected_call, False, True, False)
             test_backoff(attempt, start)
-
-
-if __name__ == '__main__':
-    unittest.main()

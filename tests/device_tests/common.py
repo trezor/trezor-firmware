@@ -23,22 +23,81 @@ import hashlib
 
 from trezorlib.client import TrezorClient, TrezorClientDebugLink
 from trezorlib import tx_api
-import config
 
 
 tx_api.cache_dir = '../txcache'
 
 
+try:
+    from trezorlib.transport_hid import HidTransport
+    HID_ENABLED = True
+except Exception as e:
+    print('HID transport disabled:', e.message, e.args)
+    HID_ENABLED = False
+
+try:
+    from trezorlib.transport_pipe import PipeTransport
+    PIPE_ENABLED = True
+except Exception as e:
+    print('PIPE transport disabled:', e.message, e.args)
+    PIPE_ENABLED = False
+
+try:
+    from trezorlib.transport_udp import UdpTransport
+    UDP_ENABLED = True
+except Exception as e:
+    print('UDP transport disabled:', e.message, e.args)
+    UDP_ENABLED = False
+
+
+def pipe_exists(path):
+    import os
+    import stat
+    try:
+        return stat.S_ISFIFO(os.stat(path).st_mode)
+    except:
+        return False
+
+
+if HID_ENABLED and len(HidTransport.enumerate()) > 0:
+
+    devices = HidTransport.enumerate()
+    print('Using TREZOR')
+    TRANSPORT = HidTransport
+    TRANSPORT_ARGS = (devices[0],)
+    TRANSPORT_KWARGS = {'debug_link': False}
+    DEBUG_TRANSPORT = HidTransport
+    DEBUG_TRANSPORT_ARGS = (devices[0],)
+    DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
+
+elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
+
+    print('Using Emulator (v1=pipe)')
+    TRANSPORT = PipeTransport
+    TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
+    TRANSPORT_KWARGS = {}
+    DEBUG_TRANSPORT = PipeTransport
+    DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
+    DEBUG_TRANSPORT_KWARGS = {}
+
+elif UDP_ENABLED:
+
+    print('Using Emulator (v2=udp)')
+    TRANSPORT = UdpTransport
+    TRANSPORT_ARGS = ('', )
+    TRANSPORT_KWARGS = {}
+    DEBUG_TRANSPORT = UdpTransport
+    DEBUG_TRANSPORT_ARGS = ('', )
+    DEBUG_TRANSPORT_KWARGS = {}
+
+
 class TrezorTest(unittest.TestCase):
 
     def setUp(self):
-        transport = config.TRANSPORT(*config.TRANSPORT_ARGS, **config.TRANSPORT_KWARGS)
-        if hasattr(config, 'DEBUG_TRANSPORT'):
-            debug_transport = config.DEBUG_TRANSPORT(*config.DEBUG_TRANSPORT_ARGS, **config.DEBUG_TRANSPORT_KWARGS)
-            self.client = TrezorClientDebugLink(transport)
-            self.client.set_debuglink(debug_transport)
-        else:
-            self.client = TrezorClient(transport)
+        transport = TRANSPORT(*TRANSPORT_ARGS, **TRANSPORT_KWARGS)
+        debug_transport = DEBUG_TRANSPORT(*DEBUG_TRANSPORT_ARGS, **DEBUG_TRANSPORT_KWARGS)
+        self.client = TrezorClientDebugLink(transport)
+        self.client.set_debuglink(debug_transport)
         self.client.set_tx_api(tx_api.TxApiBitcoin)
         # self.client.set_buttonwait(3)
 

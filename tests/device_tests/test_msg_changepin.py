@@ -216,7 +216,3 @@ class TestMsgChangepin(common.TrezorTest):
         features = self.client.call_raw(proto.Initialize())
         self.assertTrue(features.pin_protection)
         self.assertEqual(self.client.debug.read_pin()[0], self.pin4)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -731,7 +731,3 @@ class TestMsgSigntx(common.TrezorTest):
 
         # Accepted by network: tx
         self.assertEqual(binascii.hexlify(serialized_tx), b'010000000136825bfdb78c8ede226c7c4f25a018e99a2c061d63c7fb425fca7c7d6721dad6000000006a473044022047845c366eb24f40be315c7815a154513c444c7989eb80f7ce7ff6aeb703d26a022007c1f5efadf67c5889634fd7ac39a7ce78bffac291673e8772ecd8389c901d9f01210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6ffffffff01c6100795000000001976a9143d2496e67f5f57a924353da42d4725b318e7a8ea88ac00000000')
-
-
-if __name__ == '__main__':
-    unittest.main()

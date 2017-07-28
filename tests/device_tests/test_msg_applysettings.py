@@ -91,7 +91,3 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.Success(),
                                                 proto.Features()])
             self.client.apply_settings(homescreen=img)
-
-
-if __name__ == '__main__':
-    unittest.main()

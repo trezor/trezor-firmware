@@ -39,7 +39,3 @@ class TestMsgEthereumVerifymessage(common.TrezorTest):
             'VeryLongMessage!' * 64
         )
         self.assertTrue(ret)
-
-
-if __name__ == '__main__':
-    unittest.main()

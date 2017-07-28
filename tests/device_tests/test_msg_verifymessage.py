@@ -160,7 +160,3 @@ class TestMsgVerifymessage(common.TrezorTest):
 
         self.assertTrue(res_nfkd)
         self.assertTrue(res_nfc)
-
-
-if __name__ == '__main__':
-    unittest.main()

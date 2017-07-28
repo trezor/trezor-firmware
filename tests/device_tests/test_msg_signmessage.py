@@ -54,7 +54,3 @@ class TestMsgSignmessage(common.TrezorTest):
         sig_nfc = self.client.sign_message('Bitcoin', [0], words_nfc)
         self.assertEqual(sig_nfc.address, '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e')
         self.assertEqual(binascii.hexlify(sig_nfc.signature), b'20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6')
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -61,7 +61,3 @@ class TestPing(common.TrezorTest):
             self.client.set_expected_responses([proto.ButtonRequest(code=proto_types.ButtonRequest_ProtectCall), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
             self.assertEqual(res, 'random data')
-
-
-if __name__ == '__main__':
-    unittest.main()

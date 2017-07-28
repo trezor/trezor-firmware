@@ -58,7 +58,3 @@ class TestMsgGetaddress(common.TrezorTest):
 
         self.assertEqual(address2, '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb')
         self.assertEqual(address1, address2)
-
-
-if __name__ == '__main__':
-    unittest.main()

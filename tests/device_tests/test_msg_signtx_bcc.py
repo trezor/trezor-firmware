@@ -204,7 +204,3 @@ class TestMsgSigntxSegwit(common.TrezorTest):
                 proto.Failure(code=proto_types.Failure_ProcessError),
             ])
             self.assertRaises(CallException, self.client.sign_tx, 'Testnet Cash', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
-
-
-if __name__ == '__main__':
-    unittest.main()

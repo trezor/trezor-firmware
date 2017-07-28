@@ -91,7 +91,3 @@ class TestMsgSignidentity(common.TrezorTest):
         self.assertEqual(sig.address, '')
         self.assertEqual(binascii.hexlify(sig.public_key), b'000fac2a491e0f5b871dc48288a4cae551bac5cb0ed19df0764d6e721ec5fade18')
         self.assertEqual(binascii.hexlify(sig.signature), b'00f05e5085e666429de397c70a081932654369619c0bd2a6579ea6c1ef2af112ef79998d6c862a16b932d44b1ac1b83c8cbcd0fbda228274fde9e0d0ca6e9cb709')
-
-
-if __name__ == '__main__':
-    unittest.main()

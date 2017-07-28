@@ -50,7 +50,3 @@ class TestBasic(common.TrezorTest):
 
         # Device ID must be fresh after every reset
         self.assertNotEqual(id1, id2)
-
-
-if __name__ == '__main__':
-    unittest.main()

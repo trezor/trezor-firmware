@@ -256,7 +256,3 @@ class TestMultisig(common.TrezorTest):
         with self.client:
             # It should throw Failure 'Pubkey not found in multisig script'
             self.assertRaises(CallException, self.client.sign_tx, 'Bitcoin', [inp1, ], [out1, ])
-
-
-if __name__ == '__main__':
-    unittest.main()

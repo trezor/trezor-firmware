@@ -40,7 +40,3 @@ class TestDeviceWipe(common.TrezorTest):
         self.assertEqual(features.pin_protection, False)
         self.assertEqual(features.passphrase_protection, False)
         self.assertNotEqual(features.device_id, device_id)
-
-
-if __name__ == '__main__':
-    unittest.main()

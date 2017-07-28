@@ -49,7 +49,3 @@ class TestMsgGetentropy(common.TrezorTest):
                 ent = self.client.get_entropy(l)
                 self.assertTrue(len(ent) == l)
                 print('entropy = ', entropy(ent))
-
-
-if __name__ == '__main__':
-    unittest.main()
