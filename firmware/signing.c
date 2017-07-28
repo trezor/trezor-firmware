@@ -1016,7 +1016,6 @@ void signing_txack(TransactionType *tx)
 			return;
 
 		case STAGE_REQUEST_SEGWIT_INPUT:
-			progress = 500 + ((signatures * progress_step) >> PROGRESS_PRECISION);
 			resp.has_serialized = true;
 			resp.serialized.has_signature_index = false;
 			resp.serialized.has_signature = false;
