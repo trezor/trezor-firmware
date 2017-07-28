@@ -129,7 +129,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
             msg.inputs[0].amount = 123400000
             run_attack = False
             return msg
-        
+
         with self.client:
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
@@ -192,7 +192,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
 
             msg.inputs[0].address_n[2] = 1 + 0x80000000
             return msg
-        
+
         with self.client:
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),

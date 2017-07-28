@@ -27,6 +27,10 @@ import trezorlib.ckd_public as bip32
 import trezorlib.types_pb2 as proto_types
 from trezorlib.client import CallException
 
+
+TXHASH_c6091a = binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52')
+
+
 # Multisig howto:
 #
 # https://sx.dyne.org/multisig.html
@@ -74,7 +78,7 @@ class TestMultisig(common.TrezorTest):
         # Let's go to sign with key 1
         inp1 = proto_types.TxInputType(
             address_n=[1],
-            prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
+            prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto_types.SPENDMULTISIG,
             multisig=multisig,
@@ -89,10 +93,10 @@ class TestMultisig(common.TrezorTest):
         with self.client:
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_c6091a)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_c6091a)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_c6091a)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_c6091a)),
                 proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
@@ -123,7 +127,7 @@ class TestMultisig(common.TrezorTest):
         # Let's do a second signature with key 3
         inp3 = proto_types.TxInputType(
             address_n=[3],
-            prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
+            prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto_types.SPENDMULTISIG,
             multisig=multisig,
@@ -132,10 +136,10 @@ class TestMultisig(common.TrezorTest):
         with self.client:
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=binascii.unhexlify("c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"))),
+                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_c6091a)),
+                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_c6091a)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_c6091a)),
+                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_c6091a)),
                 proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
                 proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
@@ -237,7 +241,7 @@ class TestMultisig(common.TrezorTest):
         # Let's go to sign with key 10, which is NOT in pubkeys
         inp1 = proto_types.TxInputType(
             address_n=[10],
-            prev_hash=binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52'),
+            prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto_types.SPENDMULTISIG,
             multisig=multisig,
