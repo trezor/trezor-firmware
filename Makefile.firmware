@@ -1,13 +1,13 @@
 # source directories
 SRCDIR_MP = vendor/micropython
-SRCDIR_FW = micropython
+SRCDIR_FW = embed
 
 # directory containing scripts to be frozen as bytecode
 FROZEN_MPY_DIR ?= src
 
 # target directory
 PROJECT ?= firmware
-BUILD ?= micropython/$(PROJECT)/build
+BUILD ?= embed/$(PROJECT)/build
 
 # include py core make definitions
 include $(SRCDIR_MP)/py/mkenv.mk
@@ -31,7 +31,7 @@ MICROPY_PY_TREZORUI = 1
 MICROPY_PY_TREZORUTILS = 1
 MICROPY_PY_UTIME = 1
 
-# OBJ micropython/extmod/modtrezorconfig
+# OBJ embed/extmod/modtrezorconfig
 ifeq ($(MICROPY_PY_TREZORCONFIG),1)
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	extmod/modtrezorconfig/modtrezorconfig.o \
@@ -39,7 +39,7 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	)
 endif
 
-# OBJ micropython/extmod/modtrezorcrypto
+# OBJ embed/extmod/modtrezorcrypto
 ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
 CFLAGS_MOD += \
 	-I$(SRCDIR_FW)/extmod/modtrezorcrypto/trezor-crypto \
@@ -77,21 +77,21 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	)
 endif
 
-# OBJ micropython/extmod/modtrezorio
+# OBJ embed/extmod/modtrezorio
 ifeq ($(MICROPY_PY_TREZORIO),1)
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	extmod/modtrezorio/modtrezorio.o \
 	)
 endif
 
-# OBJ micropython/extmod/modtrezormsg
+# OBJ embed/extmod/modtrezormsg
 ifeq ($(MICROPY_PY_TREZORMSG),1)
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	extmod/modtrezormsg/modtrezormsg.o \
 	)
 endif
 
-# OBJ micropython/extmod/modtrezorui
+# OBJ embed/extmod/modtrezorui
 ifeq ($(MICROPY_PY_TREZORUI),1)
 CFLAGS_MOD += -DQR_MAX_VERSION=0
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
@@ -106,14 +106,14 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	)
 endif
 
-# OBJ micropython/extmod/modtrezorutils
+# OBJ embed/extmod/modtrezorutils
 ifeq ($(MICROPY_PY_TREZORUTILS),1)
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	extmod/modtrezorutils/modtrezorutils.o \
 	)
 endif
 
-# OBJ micropython/extmod/modutime
+# OBJ embed/extmod/modutime
 ifeq ($(MICROPY_PY_UTIME),1)
 OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	firmware/modutime.o \
@@ -308,7 +308,7 @@ OBJ_STMHAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
 	)
 
-# OBJ micropython/
+# OBJ embed/
 OBJ_FIRMWARE += $(addprefix $(BUILD_FW)/, \
 	firmware/vendorheader.o \
 	firmware/header.o \

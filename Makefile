@@ -3,9 +3,9 @@
 JOBS = 4
 MAKE = make -j $(JOBS)
 
-BOARDLOADER_BUILD_DIR = micropython/boardloader/build
-BOOTLOADER_BUILD_DIR  = micropython/bootloader/build
-FIRMWARE_BUILD_DIR    = micropython/firmware/build
+BOARDLOADER_BUILD_DIR = embed/boardloader/build
+BOOTLOADER_BUILD_DIR  = embed/bootloader/build
+FIRMWARE_BUILD_DIR    = embed/firmware/build
 
 TREZORHAL_PORT_OPTS   = FROZEN_MPY_DIR=src DEBUG=1
 CROSS_PORT_OPTS       = MICROPY_FORCE_32BIT=1
@@ -69,7 +69,7 @@ build_firmware: res build_cross ## build firmware with frozen modules
 	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 build_unix: ## build unix port
-	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
+	$(MAKE) -f ../../../embed/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -88,7 +88,7 @@ clean_firmware: ## clean firmware build
 	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
 
 clean_unix: ## clean unix build
-	$(MAKE) -f ../../../micropython/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
+	$(MAKE) -f ../../../embed/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
 	# workaround for relative paths containing ../.. in unix Makefile
 	rm -rf vendor/micropython/micropython
 
@@ -123,11 +123,11 @@ gdb: ## start remote gdb session which connects to the openocd
 
 vendorheader: ## construct default vendor header
 	./tools/build_vendorheader 'db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d:2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12:22fc297792f0b6ffc0bfcfdb7edb0c0aa14e025a365ec0e342e86e3829cb74b6' 1 0.0 SatoshiLabs assets/satoshilabs_120.toif micropython/firmware/vendorheader.bin
-	./tools/binctl micropython/firmware/vendorheader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
+	./tools/binctl embed/firmware/vendorheader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
 
 binctl: ## print info about binary files
 	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
-	./tools/binctl micropython/firmware/vendorheader.bin
+	./tools/binctl embed/firmware/vendorheader.bin
 	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 bloaty: ## run bloaty size profiler

@@ -12,17 +12,17 @@ MICROPY_PY_TREZORUTILS = 1
 
 TREZOR_NOUI = 0
 
-EXTMOD_DIR = ../../micropython/extmod
+EXTMOD_DIR = ../../embed/extmod
 
-CFLAGS_EXTRA='-DMP_CONFIGFILE="../../../micropython/unix/mpconfigport.h"'
+CFLAGS_EXTRA='-DMP_CONFIGFILE="../../../embed/unix/mpconfigport.h"'
 
-# OBJ micropython/extmod/modtrezorconfig
+# OBJ embed/extmod/modtrezorconfig
 ifeq ($(MICROPY_PY_TREZORCONFIG),1)
 	SRC_MOD += $(EXTMOD_DIR)/modtrezorconfig/modtrezorconfig.c
 	SRC_MOD += $(EXTMOD_DIR)/modtrezorconfig/norcow.c
 endif
 
-# OBJ micropython/extmod/modtrezorcrypto
+# OBJ embed/extmod/modtrezorcrypto
 ifeq ($(MICROPY_PY_TREZORCRYPTO),1)
 	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto
 	CFLAGS_MOD += -I../$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/aes
@@ -58,18 +58,18 @@ SRC_MOD += \
 	$(EXTMOD_DIR)/modtrezorcrypto/trezor-crypto/sha3.c
 endif
 
-# OBJ micropython/extmod/modtrezorio
+# OBJ embed/extmod/modtrezorio
 ifeq ($(MICROPY_PY_TREZORIO),1)
 	SRC_MOD += $(EXTMOD_DIR)/modtrezorio/modtrezorio.c
 endif
 
-# OBJ micropython/extmod/modtrezormsg
+# OBJ embed/extmod/modtrezormsg
 ifeq ($(MICROPY_PY_TREZORMSG),1)
 	SRC_MOD += $(EXTMOD_DIR)/../unix/touch.c
 	SRC_MOD += $(EXTMOD_DIR)/modtrezormsg/modtrezormsg.c
 endif
 
-# OBJ micropython/extmod/modtrezorui
+# OBJ embed/extmod/modtrezorui
 ifeq ($(MICROPY_PY_TREZORUI),1)
 	CFLAGS_MOD += -DQR_MAX_VERSION=0
 	SRC_MOD += \
@@ -88,7 +88,7 @@ else
 endif
 endif
 
-# OBJ micropython/extmod/modtrezorutils
+# OBJ embed/extmod/modtrezorutils
 ifeq ($(MICROPY_PY_TREZORUTILS),1)
 	SRC_MOD += $(EXTMOD_DIR)/modtrezorutils/modtrezorutils.c
 endif

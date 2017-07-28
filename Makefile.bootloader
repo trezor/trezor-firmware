@@ -1,10 +1,10 @@
 # source directories
 SRCDIR_MP = vendor/micropython
-SRCDIR_FW = micropython
+SRCDIR_FW = embed
 
 # target directory
 PROJECT ?= bootloader
-BUILD ?= micropython/$(PROJECT)/build
+BUILD ?= embed/$(PROJECT)/build
 
 # include py core make definitions
 include $(SRCDIR_MP)/py/mkenv.mk
@@ -63,7 +63,7 @@ OBJ_STMHAL += $(addprefix $(BUILD_MP)/,\
 	stmhal/hal/f4/src/stm32f4xx_ll_usb.o \
 	)
 
-# OBJ micropython/
+# OBJ embed/
 OBJ_BOOTLOADER += $(addprefix $(BUILD_FW)/, \
 	bootloader/header.o \
 	bootloader/main.o \
