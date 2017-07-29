@@ -1108,46 +1108,50 @@ void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
 {
 	(void)msg;
-	RESP_INIT(DebugLinkState);
 
-	resp->has_layout = true;
-	resp->layout.size = OLED_BUFSIZE;
-	memcpy(resp->layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
+	// Do not use RESP_INIT because it clears msg_resp, but another message
+	// might be being handled
+	DebugLinkState resp;
+	memset(&resp, 0, sizeof(resp));
+
+	resp.has_layout = true;
+	resp.layout.size = OLED_BUFSIZE;
+	memcpy(resp.layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
 
 	if (storage.has_pin) {
-		resp->has_pin = true;
-		strlcpy(resp->pin, storage.pin, sizeof(resp->pin));
+		resp.has_pin = true;
+		strlcpy(resp.pin, storage.pin, sizeof(resp.pin));
 	}
 
-	resp->has_matrix = true;
-	strlcpy(resp->matrix, pinmatrix_get(), sizeof(resp->matrix));
+	resp.has_matrix = true;
+	strlcpy(resp.matrix, pinmatrix_get(), sizeof(resp.matrix));
 
-	resp->has_reset_entropy = true;
-	resp->reset_entropy.size = reset_get_int_entropy(resp->reset_entropy.bytes);
+	resp.has_reset_entropy = true;
+	resp.reset_entropy.size = reset_get_int_entropy(resp.reset_entropy.bytes);
 
-	resp->has_reset_word = true;
-	strlcpy(resp->reset_word, reset_get_word(), sizeof(resp->reset_word));
+	resp.has_reset_word = true;
+	strlcpy(resp.reset_word, reset_get_word(), sizeof(resp.reset_word));
 
-	resp->has_recovery_fake_word = true;
-	strlcpy(resp->recovery_fake_word, recovery_get_fake_word(), sizeof(resp->recovery_fake_word));
+	resp.has_recovery_fake_word = true;
+	strlcpy(resp.recovery_fake_word, recovery_get_fake_word(), sizeof(resp.recovery_fake_word));
 
-	resp->has_recovery_word_pos = true;
-	resp->recovery_word_pos = recovery_get_word_pos();
+	resp.has_recovery_word_pos = true;
+	resp.recovery_word_pos = recovery_get_word_pos();
 
 	if (storage.has_mnemonic) {
-		resp->has_mnemonic = true;
-		strlcpy(resp->mnemonic, storage.mnemonic, sizeof(resp->mnemonic));
+		resp.has_mnemonic = true;
+		strlcpy(resp.mnemonic, storage.mnemonic, sizeof(resp.mnemonic));
 	}
 
 	if (storage.has_node) {
-		resp->has_node = true;
-		memcpy(&(resp->node), &(storage.node), sizeof(HDNode));
+		resp.has_node = true;
+		memcpy(&(resp.node), &(storage.node), sizeof(HDNode));
 	}
 
-	resp->has_passphrase_protection = true;
-	resp->passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
+	resp.has_passphrase_protection = true;
+	resp.passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
 
-	msg_debug_write(MessageType_MessageType_DebugLinkState, resp);
+	msg_debug_write(MessageType_MessageType_DebugLinkState, &resp);
 }
 
 void fsm_msgDebugLinkStop(DebugLinkStop *msg)
