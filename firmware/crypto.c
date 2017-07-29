@@ -352,7 +352,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t 
 {
 	static const HDNodePathType *ptr[15], *swap;
 	const uint32_t n = multisig->pubkeys_count;
-	if (n > 15) {
+	if (n < 1 || n > 15) {
 		return 0;
 	}
 	// check sanity

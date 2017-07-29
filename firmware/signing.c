@@ -525,19 +525,26 @@ static bool signing_check_output(TxOutputType *txoutput) {
 			signing_abort();
 			return false;
 		}
-		if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG) {
+		/*
+		 * For multisig check that all inputs are multisig
+		 */
+		if (txoutput->has_multisig) {
 			uint8_t h[32];
 			if (multisig_fp_set && !multisig_fp_mismatch
-						&& cryptoMultisigFingerprint(&(txoutput->multisig), h)
-						&& memcmp(multisig_fp, h, 32) == 0) {
+				&& cryptoMultisigFingerprint(&(txoutput->multisig), h)
+				&& memcmp(multisig_fp, h, 32) == 0) {
 				is_change = check_change_bip32_path(txoutput);
 			}
-		} else if (txoutput->script_type == OutputScriptType_PAYTOADDRESS) {
+		} else {
 			is_change = check_change_bip32_path(txoutput);
-		} else if (txoutput->script_type == OutputScriptType_PAYTOWITNESS && txoutput->amount < authorized_amount) {
-			is_change = check_change_bip32_path(txoutput);
-		} else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS && txoutput->amount < authorized_amount) {
-			is_change = check_change_bip32_path(txoutput);
+		}
+		/*
+		 * only allow segwit change if amount is smaller than what segwit inputs paid.
+		 */
+		if ((txoutput->script_type == OutputScriptType_PAYTOWITNESS
+			 || txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS)
+			&& txoutput->amount > authorized_amount) {
+			is_change = false;
 		}
 	}
 
@@ -1020,7 +1027,8 @@ void signing_txack(TransactionType *tx)
 			resp.serialized.has_signature_index = false;
 			resp.serialized.has_signature = false;
 			resp.serialized.has_serialized_tx = true;
-			if (tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
+			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
+				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
 				if (!coin->has_forkid) {
 					fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
 					signing_abort();
