@@ -238,14 +238,6 @@ void usbInit(void)
 	usbd_register_set_config_callback(usbd_dev, hid_set_config);
 }
 
-uint32_t __stack_chk_guard;
-
-void __attribute__((noreturn)) __stack_chk_fail(void)
-{
-	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
-	for (;;) {} // loop forever
-}
-
 int main(void)
 {
 #ifndef APPVER

@@ -31,8 +31,6 @@
 #include "buttons.h"
 #include "fastflash.h"
 
-extern uint32_t __stack_chk_guard;
-
 void check_lock_screen(void)
 {
 	buttonUpdate();

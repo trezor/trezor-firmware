@@ -120,8 +120,6 @@ void bootloader_loop(void)
 	usbLoop(firmware_present());
 }
 
-extern uint32_t __stack_chk_guard;
-
 int main(void)
 {
 #ifndef APPVER
