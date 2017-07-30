@@ -45,7 +45,7 @@
 	"firmware": true
 },
 {
-	"coin_name": "Bitcoin Cash",
+	"coin_name": "Bcash",
 	"coin_shortcut": "BCH",
 	"address_type": 0,
 	"address_type_p2sh": 5,
@@ -69,7 +69,7 @@
 	"firmware": true
 },
 {
-	"coin_name": "Bitcoin Cash Testnet",
+	"coin_name": "Bcash Testnet",
 	"coin_shortcut": "TBCH",
 	"address_type": 111,
 	"address_type_p2sh": 196,
