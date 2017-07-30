@@ -44,7 +44,7 @@
 },
 {
 	"coin_name": "Bitcoin Cash",
-	"coin_shortcut": "BCC",
+	"coin_shortcut": "BCH",
 	"address_type": 0,
 	"address_type_p2sh": 5,
 	"maxfee_kb": 500000,
@@ -67,7 +67,7 @@
 },
 {
 	"coin_name": "Testnet Cash",
-	"coin_shortcut": "TBCC",
+	"coin_shortcut": "TBCH",
 	"address_type": 111,
 	"address_type_p2sh": 196,
 	"maxfee_kb": 10000000,
