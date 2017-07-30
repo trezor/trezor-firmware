@@ -506,7 +506,7 @@ typedef struct _Features {
     bool has_label;
     char label[33];
     size_t coins_count;
-    CoinType coins[10];
+    CoinType coins[9];
     bool has_initialized;
     bool initialized;
     bool has_revision;
@@ -531,7 +531,7 @@ typedef struct _GetAddress {
     size_t address_n_count;
     uint32_t address_n[8];
     bool has_coin_name;
-    char coin_name[17];
+    char coin_name[21];
     bool has_show_display;
     bool show_display;
     bool has_multisig;
@@ -566,7 +566,7 @@ typedef struct _GetPublicKey {
     bool has_show_display;
     bool show_display;
     bool has_coin_name;
-    char coin_name[17];
+    char coin_name[21];
 } GetPublicKey;
 
 typedef struct _LoadDevice {
@@ -701,7 +701,7 @@ typedef struct _SignMessage {
     uint32_t address_n[8];
     SignMessage_message_t message;
     bool has_coin_name;
-    char coin_name[17];
+    char coin_name[21];
     bool has_script_type;
     InputScriptType script_type;
 } SignMessage;
@@ -710,7 +710,7 @@ typedef struct _SignTx {
     uint32_t outputs_count;
     uint32_t inputs_count;
     bool has_coin_name;
-    char coin_name[17];
+    char coin_name[21];
     bool has_version;
     uint32_t version;
     bool has_lock_time;
@@ -773,7 +773,7 @@ typedef struct _VerifyMessage {
     bool has_message;
     VerifyMessage_message_t message;
     bool has_coin_name;
-    char coin_name[17];
+    char coin_name[21];
 } VerifyMessage;
 
 typedef struct _WordAck {
@@ -786,24 +786,24 @@ typedef struct _WordRequest {
 } WordRequest;
 
 /* Default values for struct fields */
-extern const char GetPublicKey_coin_name_default[17];
-extern const char GetAddress_coin_name_default[17];
+extern const char GetPublicKey_coin_name_default[21];
+extern const char GetAddress_coin_name_default[21];
 extern const InputScriptType GetAddress_script_type_default;
 extern const char LoadDevice_language_default[17];
 extern const uint32_t ResetDevice_strength_default;
 extern const char ResetDevice_language_default[17];
 extern const char RecoveryDevice_language_default[17];
-extern const char SignMessage_coin_name_default[17];
+extern const char SignMessage_coin_name_default[21];
 extern const InputScriptType SignMessage_script_type_default;
-extern const char VerifyMessage_coin_name_default[17];
-extern const char SignTx_coin_name_default[17];
+extern const char VerifyMessage_coin_name_default[21];
+extern const char SignTx_coin_name_default[21];
 extern const uint32_t SignTx_version_default;
 extern const uint32_t SignTx_lock_time_default;
 
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default, CoinType_init_default}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_default                {0}
 #define ApplySettings_init_default               {false, "", false, "", false, 0, false, {0, {0}}}
 #define ApplyFlags_init_default                  {false, 0}
@@ -865,7 +865,7 @@ extern const uint32_t SignTx_lock_time_default;
 #define DebugLinkFlashErase_init_default         {false, 0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", 0, {CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero, CoinType_init_zero}, false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define ClearSession_init_zero                   {0}
 #define ApplySettings_init_zero                  {false, "", false, "", false, 0, false, {0, {0}}}
 #define ApplyFlags_init_zero                     {false, 0}
@@ -1159,7 +1159,7 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-#define Features_size                            (279 + 10*CoinType_size)
+#define Features_size                            (273 + 9*CoinType_size)
 #define ClearSession_size                        0
 #define ApplySettings_size                       1083
 #define ApplyFlags_size                          6
@@ -1176,9 +1176,9 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define PassphraseAck_size                       53
 #define GetEntropy_size                          6
 #define Entropy_size                             1027
-#define GetPublicKey_size                        103
+#define GetPublicKey_size                        107
 #define PublicKey_size                           (121 + HDNodeType_size)
-#define GetAddress_size                          (81 + MultisigRedeemScriptType_size)
+#define GetAddress_size                          (85 + MultisigRedeemScriptType_size)
 #define EthereumGetAddress_size                  50
 #define Address_size                             62
 #define EthereumAddress_size                     22
@@ -1191,12 +1191,12 @@ extern const pb_field_t DebugLinkFlashErase_fields[2];
 #define RecoveryDevice_size                      80
 #define WordRequest_size                         6
 #define WordAck_size                             14
-#define SignMessage_size                         1100
-#define VerifyMessage_size                       1175
+#define SignMessage_size                         1104
+#define VerifyMessage_size                       1179
 #define MessageSignature_size                    129
 #define CipherKeyValue_size                      1358
 #define CipheredKeyValue_size                    1027
-#define SignTx_size                              43
+#define SignTx_size                              47
 #define TxRequest_size                           (18 + TxRequestDetailsType_size + TxRequestSerializedType_size)
 #define TxAck_size                               (6 + TransactionType_size)
 #define EthereumSignTx_size                      1245

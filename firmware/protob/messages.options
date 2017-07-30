@@ -2,7 +2,7 @@ Features.vendor				max_size:33
 Features.device_id			max_size:25
 Features.language			max_size:17
 Features.label				max_size:33
-Features.coins				max_count:10
+Features.coins				max_count:9
 Features.revision			max_size:20
 Features.bootloader_hash		max_size:32
 
@@ -26,12 +26,12 @@ Entropy.entropy				max_size:1024
 
 GetPublicKey.address_n			max_count:8
 GetPublicKey.ecdsa_curve_name		max_size:32
-GetPublicKey.coin_name			max_size:17
+GetPublicKey.coin_name			max_size:21
 
 PublicKey.xpub				max_size:113
 
 GetAddress.address_n			max_count:8
-GetAddress.coin_name			max_size:17
+GetAddress.coin_name			max_size:21
 
 Address.address				max_size:60
 
@@ -55,12 +55,12 @@ WordAck.word				max_size:12
 
 SignMessage.address_n			max_count:8
 SignMessage.message			max_size:1024
-SignMessage.coin_name			max_size:17
+SignMessage.coin_name			max_size:21
 
 VerifyMessage.address			max_size:60
 VerifyMessage.signature			max_size:65
 VerifyMessage.message			max_size:1024
-VerifyMessage.coin_name			max_size:17
+VerifyMessage.coin_name			max_size:21
 
 MessageSignature.address		max_size:60
 MessageSignature.signature		max_size:65
@@ -80,7 +80,7 @@ EncryptMessage				skip_message:true
 # EncryptMessage.pubkey			max_size:33
 # EncryptMessage.message		max_size:1024
 # EncryptMessage.address_n		max_count:8
-# EncryptMessage.coin_name		max_size:17
+# EncryptMessage.coin_name		max_size:21
 
 # deprecated
 EncryptedMessage			skip_message:true
@@ -109,12 +109,12 @@ CipheredKeyValue.value			max_size:1024
 
 # deprecated
 EstimateTxSize				skip_message:true
-# EstimateTxSize.coin_name		max_size:17
+# EstimateTxSize.coin_name		max_size:21
 
 # deprecated
 TxSize					skip_message:true
 
-SignTx.coin_name			max_size:17
+SignTx.coin_name			max_size:21
 
 EthereumSignTx.address_n		max_count:8
 EthereumSignTx.nonce			max_size:32

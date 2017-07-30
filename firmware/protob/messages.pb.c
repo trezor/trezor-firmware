@@ -3,17 +3,17 @@
 
 #include "messages.pb.h"
 
-const char GetPublicKey_coin_name_default[17] = "Bitcoin";
-const char GetAddress_coin_name_default[17] = "Bitcoin";
+const char GetPublicKey_coin_name_default[21] = "Bitcoin";
+const char GetAddress_coin_name_default[21] = "Bitcoin";
 const InputScriptType GetAddress_script_type_default = InputScriptType_SPENDADDRESS;
 const char LoadDevice_language_default[17] = "english";
 const uint32_t ResetDevice_strength_default = 256u;
 const char ResetDevice_language_default[17] = "english";
 const char RecoveryDevice_language_default[17] = "english";
-const char SignMessage_coin_name_default[17] = "Bitcoin";
+const char SignMessage_coin_name_default[21] = "Bitcoin";
 const InputScriptType SignMessage_script_type_default = InputScriptType_SPENDADDRESS;
-const char VerifyMessage_coin_name_default[17] = "Bitcoin";
-const char SignTx_coin_name_default[17] = "Bitcoin";
+const char VerifyMessage_coin_name_default[21] = "Bitcoin";
+const char SignTx_coin_name_default[21] = "Bitcoin";
 const uint32_t SignTx_version_default = 1u;
 const uint32_t SignTx_lock_time_default = 0u;
 
