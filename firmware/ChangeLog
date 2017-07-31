@@ -1,5 +1,5 @@
 Version 1.5.1
-* Stable release, optional update
+* Stable release, required update
 * Wipe storage after 16 wrong PIN attempts
 * Enable Segwit for Bitcoin
 * Bcash aka Bitcoin Cash support
