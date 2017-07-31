@@ -195,7 +195,7 @@ bool protectPin(bool use_cached)
 		return true;
 	} else {
 		if (~*fails > MAX_WRONG_PINS) {
-			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Too many wrong PINs"), _("entered. Storage has"), _("been wiped."), NULL, _("Please unplug"), _("the device."));
+			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Too many wrong PIN"), _("attempts. Storage has"), _("been wiped."), NULL, _("Please unplug"), _("the device."));
 			storage_wipe();
 			for (;;) {} // loop forever
 		}
