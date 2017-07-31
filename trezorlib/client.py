@@ -254,18 +254,18 @@ class TextUIMixin(object):
                 return proto.WordAck(word='\x08')
 
             # ignore middle column if only 6 keys requested.
-            if (isinstance(msg.type, types.WordRequestType_Matrix6) and character in ('2', '5', '8')):
+            if msg.type == types.WordRequestType_Matrix6 and character in ('2', '5', '8'):
                 continue
 
-            if (ord(character) >= ord('1') and ord(character) <= ord('9')):
+            if character.isdigit():
                 return proto.WordAck(word=character)
 
     def callback_PinMatrixRequest(self, msg):
-        if msg.type == 1:
+        if msg.type == types.PinMatrixRequestType_Current:
             desc = 'current PIN'
-        elif msg.type == 2:
+        elif msg.type == types.PinMatrixRequestType_NewFirst:
             desc = 'new PIN'
-        elif msg.type == 3:
+        elif msg.type == types.PinMatrixRequestType_NewSecond:
             desc = 'new PIN again'
         else:
             desc = 'PIN'
