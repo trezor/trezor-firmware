@@ -29,6 +29,7 @@
 #include "rng.h"
 #include "timer.h"
 #include "buttons.h"
+#include "gettext.h"
 #include "fastflash.h"
 
 void check_lock_screen(void)
@@ -44,7 +45,7 @@ void check_lock_screen(void)
 	// button held for long enough (2 seconds)
 	if (layoutLast == layoutHome && button.NoDown >= 285000 * 2) {
 
-		layoutDialog(&bmp_icon_question, "Cancel", "Lock Device", NULL, "Do you really want to", "lock your TREZOR?", NULL, NULL, NULL, NULL);
+		layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL, _("Do you really want to"), _("lock your TREZOR?"), NULL, NULL, NULL, NULL);
 
 		// wait until NoButton is released
 		usbTiny(1);
