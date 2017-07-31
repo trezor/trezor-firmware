@@ -1,8 +1,8 @@
 Version 1.5.1
 * Stable release, optional update
-* Wipe storage after 15 wrong attempts
+* Wipe storage after 15 wrong PIN attempts
 * Enable Segwit for Bitcoin
-* Bitcoin Cash aka Bcash support
+* Bcash aka Bitcoin Cash support
 * Message signing/verification for Ethereum and Segwit
 * Make address dialog nicer (switch text/QR via button)
 * Use checksum for Ethereum addresses
