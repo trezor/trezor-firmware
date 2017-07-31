@@ -1,6 +1,6 @@
 # initialize from the image
 
-FROM ubuntu:16.04
+FROM debian:9
 
 # update repositories
 
