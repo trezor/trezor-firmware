@@ -158,12 +158,6 @@ class TestProtectionLevels(common.TrezorTest):
                 binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
                 'This is an example of a signed message.')
 
-    def test_estimate_txsize(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.TxSize()])
-            self.client.estimate_tx_size('Bitcoin', [], [])
-
     """
     def test_simplesigntx(self):
         self.setup_mnemonic_pin_passphrase()

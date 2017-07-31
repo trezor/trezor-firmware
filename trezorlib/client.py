@@ -712,15 +712,6 @@ class ProtocolMixin(object):
                                               ask_on_decrypt=ask_on_decrypt,
                                               iv=iv))
 
-    @field('tx_size')
-    @expect(proto.TxSize)
-    def estimate_tx_size(self, coin_name, inputs, outputs):
-        msg = proto.EstimateTxSize()
-        msg.coin_name = coin_name
-        msg.inputs_count = len(inputs)
-        msg.outputs_count = len(outputs)
-        return self.call(msg)
-
     def _prepare_simple_sign_tx(self, coin_name, inputs, outputs):
         msg = proto.SimpleSignTx()
         msg.coin_name = coin_name
