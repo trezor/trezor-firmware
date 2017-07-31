@@ -102,7 +102,7 @@ static bool sessionPinCached;
 static bool sessionPassphraseCached;
 static char sessionPassphrase[51];
 
-#define STORAGE_VERSION 6
+#define STORAGE_VERSION 7
 
 void storage_show_error(void)
 {
@@ -132,6 +132,7 @@ bool storage_from_flash(void)
 	// version 4: since 1.3.2
 	// version 5: since 1.3.3
 	// version 6: since 1.3.6
+	// version 7: since 1.5.1
 	if (version > STORAGE_VERSION) {
 		// downgrade -> clear storage
 		return false;
