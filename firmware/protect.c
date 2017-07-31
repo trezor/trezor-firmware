@@ -144,6 +144,15 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 	}
 }
 
+static void protectCheckMaxTry(uint32_t wait) {
+	if (wait < (1 << MAX_WRONG_PINS))
+		return;
+
+	storage_wipe();
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Too many wrong PIN"), _("attempts. Storage has"), _("been wiped."), NULL, _("Please unplug"), _("the device."));
+	for (;;) {} // loop forever
+}
+
 bool protectPin(bool use_cached)
 {
 	if (!storage.has_pin || storage.pin[0] == 0 || (use_cached && session_isPinCached())) {
@@ -151,6 +160,7 @@ bool protectPin(bool use_cached)
 	}
 	uint32_t *fails = storage_getPinFailsPtr();
 	uint32_t wait = ~*fails;
+	protectCheckMaxTry(wait);
 	usbTiny(1);
 	while (wait > 0) {
 		// convert wait to secstr string
@@ -194,14 +204,10 @@ bool protectPin(bool use_cached)
 		storage_resetPinFails(fails);
 		return true;
 	} else {
-		if (~*fails > MAX_WRONG_PINS) {
-			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Too many wrong PIN"), _("attempts. Storage has"), _("been wiped."), NULL, _("Please unplug"), _("the device."));
-			storage_wipe();
-			for (;;) {} // loop forever
-		}
+		protectCheckMaxTry(~*fails);
+		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+		return false;
 	}
-	fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-	return false;
 }
 
 bool protectChangePin(void)
