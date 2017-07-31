@@ -622,3 +622,11 @@ void storage_setU2FCounter(uint32_t u2fcounter)
 	storage.u2f_counter = u2fcounter - storage_u2f_offset;
 	storage_commit();
 }
+
+void storage_wipe(void)
+{
+	storage_reset();
+	storage_reset_uuid();
+	storage_commit();
+	storage_clearPinArea();
+}

@@ -318,10 +318,7 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 		layoutHome();
 		return;
 	}
-	storage_reset();
-	storage_reset_uuid();
-	storage_commit();
-	storage_clearPinArea();
+	storage_wipe();
 	// the following does not work on Mac anyway :-/ Linux/Windows are fine, so it is not needed
 	// usbReconnect(); // force re-enumeration because of the serial number change
 	fsm_sendSuccess(_("Device wiped"));

@@ -73,6 +73,8 @@ bool storage_needsBackup(void);
 void storage_applyFlags(uint32_t flags);
 uint32_t storage_getFlags(void);
 
+void storage_wipe(void);
+
 extern Storage storage;
 
 extern char storage_uuid_str[25];

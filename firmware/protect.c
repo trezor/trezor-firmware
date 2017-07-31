@@ -30,6 +30,8 @@
 #include "debug.h"
 #include "gettext.h"
 
+#define MAX_WRONG_PINS 15
+
 bool protectAbortedByInitialize = false;
 
 bool protectButton(ButtonRequestType type, bool confirm_only)
@@ -183,14 +185,23 @@ bool protectPin(bool use_cached)
 		fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 		return false;
 	}
-	if (storage_increasePinFails(fails) && storage_containsPin(pin)) {
+	if (!storage_increasePinFails(fails)) {
+		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+		return false;
+	}
+	if (storage_containsPin(pin)) {
 		session_cachePin();
 		storage_resetPinFails(fails);
 		return true;
 	} else {
-		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-		return false;
+		if (~*fails > MAX_WRONG_PINS) {
+			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Too many wrong PINs"), _("entered. Storage has"), _("been wiped."), NULL, _("Please unplug"), _("the device."));
+			storage_wipe();
+			for (;;) {} // loop forever
+		}
 	}
+	fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+	return false;
 }
 
 bool protectChangePin(void)
