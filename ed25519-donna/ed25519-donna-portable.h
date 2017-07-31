@@ -4,12 +4,6 @@
 #include <string.h>
 #include <stdint.h>
 
-#ifdef __GNUC__
-#define DONNA_UNUSED __attribute__((unused))
-#else
-#define DONNA_UNUSED
-#endif
-
 #define DONNA_INLINE
 #undef ALIGN
 #define ALIGN(x) __attribute__((aligned(x)))
