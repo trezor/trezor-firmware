@@ -450,7 +450,9 @@ static void recovery_scrambledword(const char *word)
 {
 	if (word_pos == 0) { // fake word
 		if (strcmp(word, fake_word) != 0) {
-			storage_reset();
+			if (!dry_run) {
+				storage_reset();
+			}
 			fsm_sendFailure(FailureType_Failure_ProcessError, _("Wrong word retyped"));
 			layoutHome();
 			return;
@@ -467,7 +469,9 @@ static void recovery_scrambledword(const char *word)
 				wl++;
 			}
 			if (!found) {
-				storage_reset();
+				if (!dry_run) {
+					storage_reset();
+				}
 				fsm_sendFailure(FailureType_Failure_DataError, _("Word not found in a wordlist"));
 				layoutHome();
 				return;
