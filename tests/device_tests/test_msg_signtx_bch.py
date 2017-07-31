@@ -71,7 +71,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
                 proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
                 proto.TxRequest(request_type=proto_types.TXFINISHED),
             ])
-            (signatures, serialized_tx) = self.client.sign_tx('Testnet Cash', [inp1, inp2], [out1, out2])
+            (signatures, serialized_tx) = self.client.sign_tx('Bcash Testnet', [inp1, inp2], [out1, out2])
 
         print(binascii.hexlify(serialized_tx))
         self.assertEqual(binascii.hexlify(serialized_tx), b'0100000002243e15b53cc553d93ec4e27e16984adc3d885ef107c613a7577fea47f5dadcd2010000006b483045022100ebcce894cac5d1750f4b1abc7d8c0a5d25944c12a02942b0cc1c89c397acc09602207335077bd698cefc1694d5817abdb3b7aecfcd110ca07729d893577ada71d35441210364430c9122948e525e2f1c6d88f00f47679274f0810fd8c63754954f310995c1ffffffffb02b727cc0c0823f2ac7deb3deb755c8c796e2a777cec5ff727be27d07bc26fe010000006b4830450221008a140434b3f105686c6c4a704c9f2d09b2faf633b81b9ec2304b81f2fd617a9c0220497279b656c4034fd30c41c6f1d0e2ad2aa1b867575aa8f4c13218cb8c114140412103749e3f0a7b01f73427ed67c1cedbb4ecd2315ad6b7c2513355393b95d1ba6137ffffffff0200e1f505000000001976a914b3cc67f3349974d0f1b50e9bb5dfdf226f888fa088acc84ff803000000001976a914f80fb232a1e54b1fa732bc120cae72eabd7fcf6888ac00000000')
@@ -140,7 +140,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.Failure(code=proto_types.Failure_ProcessError),
             ])
-            self.assertRaises(CallException, self.client.sign_tx, 'Testnet Cash', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
+            self.assertRaises(CallException, self.client.sign_tx, 'Bcash Testnet', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
@@ -203,4 +203,4 @@ class TestMsgSigntxSegwit(common.TrezorTest):
                 proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
                 proto.Failure(code=proto_types.Failure_ProcessError),
             ])
-            self.assertRaises(CallException, self.client.sign_tx, 'Testnet Cash', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
+            self.assertRaises(CallException, self.client.sign_tx, 'Bcash Testnet', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
