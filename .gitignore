@@ -1,6 +1,7 @@
+*.pyc
+.sconsign.dblite
 .vscode/
-_attic/
-vendor/src/
-emu.config
-__pycache__/
 .mypy_cache/
+__pycache__/
+build/
+emu.config
