@@ -1,3 +1,3 @@
 # pylint: disable=E0602
 
-SConscript('SConscript', variant_dir='build', src='.', duplicate=False)
+SConscript('SConscript', variant_dir='build/firmware', src='.', duplicate=False)
