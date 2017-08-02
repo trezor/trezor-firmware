@@ -25,5 +25,13 @@
         "mosaic": "token",
         "divisibility": 6,
         "networks": [ 104 ]
+    },
+    {
+        "name": "Breeze Token",
+        "ticker": " BREEZE",
+        "namespace": "breeze",
+        "mosaic": "breeze-token",
+        "divisibility": 0,
+        "networks": [ 104 ]
     }
 ]

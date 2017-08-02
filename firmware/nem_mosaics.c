@@ -49,6 +49,20 @@ const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] =
 	.divisibility = 6,
 	.networks_count = 1,
 	.networks = { 104 },
+},
+{
+	.has_name = true,
+	.name = "Breeze Token",
+	.has_ticker = true,
+	.ticker = " BREEZE",
+	.has_namespace = true,
+	.namespace = "breeze",
+	.has_mosaic = true,
+	.mosaic = "breeze-token",
+	.has_divisibility = true,
+	.divisibility = 0,
+	.networks_count = 1,
+	.networks = { 104 },
 }};
 
 const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;
