@@ -456,7 +456,6 @@ SOURCE_PY = [
 ]
 
 env = Environment(
-    VARIANT_DIR='build',
     SED='sed',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
@@ -518,15 +517,19 @@ hdr_version = env.Command(
 # Qstrings
 #
 
+qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
+
 qstr_collected = env.CollectQstr(
-    target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
+    target='genhdr/qstrdefs.collected.h',
+    source=SOURCE_QSTR)
 
 qstr_preprocessed = env.PreprocessQstr(
     target='genhdr/qstrdefs.preprocessed.h',
-    source=['vendor/micropython/py/qstrdefs.h', qstr_collected])
+    source=[qstr_micropython, qstr_collected])
 
 qstr_generated = env.GenerateQstrDefs(
-    target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
+    target='genhdr/qstrdefs.generated.h',
+    source=qstr_preprocessed)
 
 env.Ignore(qstr_collected, qstr_generated)
 
@@ -534,10 +537,12 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-source_mpy = env.FrozenModule(source=SOURCE_PY, suffix='.mpy')
+source_mpy = env.FrozenModule(source=SOURCE_PY)
 
-source_mpyc = env.FrozenSource(
-    target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
+source_mpyc = env.FrozenCFile(
+    target='frozen_mpy.c',
+    source=source_mpy,
+    qstr_header=qstr_preprocessed)
 
 env.Depends(source_mpyc, qstr_generated)
 

@@ -20,10 +20,12 @@ def generate(env):
         action='$MAKEQSTRDATA $SOURCE > $TARGET', )
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
-        action='$MPY_CROSS -o $TARGET -s $SOURCE $SOURCE', suffix='.mpy')
+        action='$MPY_CROSS -o $TARGET -s $SOURCE $SOURCE',
+        suffix='.mpy',
+        single_source=True, )
 
-    env['BUILDERS']['FrozenSource'] = SCons.Builder.Builder(
-        action='$MPY_TOOL -f -q $qstr_header $SOURCES > $TARGET')
+    env['BUILDERS']['FrozenCFile'] = SCons.Builder.Builder(
+        action='$MPY_TOOL -f -q $qstr_header $SOURCES > $TARGET', )
 
 
 def exists(env):
