@@ -255,7 +255,8 @@ env.Replace(
         'TREZOR_UNIX',
         'UNIX',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
-    ] + CPPDEFINES_MOD, )
+    ] + CPPDEFINES_MOD,
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 env.Replace(
     PYTHON='python',

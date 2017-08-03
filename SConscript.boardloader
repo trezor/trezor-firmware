@@ -1,0 +1,146 @@
+# pylint: disable=E0602
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+
+# modtrezorcrypto
+CCFLAGS_MOD += '-Wno-sequence-point '
+CPPPATH_MOD += [
+    'embed/extmod/modtrezorcrypto/trezor-crypto',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/aes',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna',
+]
+CPPDEFINES_MOD += [
+    'AES_128',
+    'AES_192',
+    'USE_KECCAK',
+    'ED25519_NO_PRECOMP',
+]
+SOURCE_MOD += [
+    'embed/extmod/modtrezorcrypto/trezor-crypto/blake2s.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/sha2.c',
+]
+
+# modtrezorui
+SOURCE_MOD += [
+    'embed/extmod/modtrezorui/display.c',
+    'embed/extmod/modtrezorui/font_bitmap.c',
+]
+
+SOURCE_MICROPYTHON = [
+    'vendor/micropython/lib/libc/string0.c',
+    'vendor/micropython/stmhal/startup_stm32.S',
+]
+
+SOURCE_STMHAL = [
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_adc_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_adc.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_can.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_cortex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_dac_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_dac.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_dma.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_flash_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_flash.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_gpio.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_i2c.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_pcd_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_pcd.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_pwr_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_pwr.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_rcc_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_rcc.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_rng.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_rtc_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_rtc.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_sd.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_spi.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_tim_ex.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_tim.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal_uart.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_hal.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_ll_sdmmc.c',
+    'vendor/micropython/stmhal/hal/f4/src/stm32f4xx_ll_usb.c',
+]
+
+SOURCE_BOARDLOADER = [
+    'embed/boardloader/main.c',
+]
+
+SOURCE_TREZORHAL = [
+    'embed/trezorhal/common.c',
+    'embed/trezorhal/image.c',
+    'embed/trezorhal/flash.c',
+    'embed/trezorhal/mini_printf.c',
+    'embed/trezorhal/sdcard.c',
+    'embed/trezorhal/stm32_it.c',
+    'embed/trezorhal/stm32_system.c',
+    'embed/trezorhal/hal/stm32f4xx_hal_sram.c',
+    'embed/trezorhal/hal/stm32f4xx_ll_fsmc.c',
+]
+
+env = Environment()
+
+env.Replace(
+    AS='arm-none-eabi-as',
+    AR='arm-none-eabi-ar',
+    CC='arm-none-eabi-gcc',
+    LINK='arm-none-eabi-ld',
+    SIZE='arm-none-eabi-size',
+    STRIP='arm-none-eabi-strip',
+    OBJCOPY='arm-none-eabi-objcopy', )
+
+env.Replace(
+    CCFLAGS='-Os '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith '
+    '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
+    '-fsingle-precision-constant -fdata-sections -ffunction-sections ' +
+    CCFLAGS_MOD,
+    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
+    LINKFLAGS='-nostdlib -T embed/boardloader/memory.ld --gc-sections',
+    CPPPATH=[
+        'embed/boardloader',
+        'embed/trezorhal',
+        'embed/trezorhal/hal',
+        'embed/extmod/modtrezorui',
+        'vendor/micropython/stmhal',
+        'vendor/micropython/stmhal/cmsis',
+        'vendor/micropython/stmhal/hal/f4/inc',
+        'vendor/micropython/lib/cmsis/inc',
+    ] + CPPPATH_MOD,
+    CPPDEFINES=[
+        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
+        'STM32F405xx',
+        'TREZOR_STM32',
+        'MCU_SERIES_F4',
+    ] + CPPDEFINES_MOD,
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
+
+#
+# Program objects
+#
+
+obj_program = []
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_BOARDLOADER)
+obj_program += env.Object(source=SOURCE_MICROPYTHON)
+obj_program += env.Object(source=SOURCE_STMHAL)
+obj_program += env.Object(source=SOURCE_TREZORHAL)
+
+program_elf = env.Command(
+    target='boardloader.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
+)
+
+program_bin = env.Command(
+    target='boardloader.bin',
+    source=program_elf,
+    action='$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+)

@@ -266,6 +266,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_FIRMWARE = [
+    'embed/firmware/header.S',
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
 ]
@@ -480,6 +481,7 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections',
     CPPPATH=[
+        '.',
         'embed/firmware',
         'embed/trezorhal',
         'embed/trezorhal/hal',
@@ -497,7 +499,8 @@ env.Replace(
         'STM32F405xx',
         'TREZOR_STM32',
         'MCU_SERIES_F4',
-    ] + CPPDEFINES_MOD, )
+    ] + CPPDEFINES_MOD,
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 env.Replace(
     PYTHON='python',
@@ -558,6 +561,13 @@ obj_program += env.Object(source=SOURCE_MICROPYTHON)
 obj_program += env.Object(source=SOURCE_STMHAL)
 obj_program += env.Object(source=SOURCE_TREZORHAL)
 obj_program += env.Object(source=source_mpyc)
+
+obj_program += env.Command(
+    target='embed/firmware/vendorheader.o',
+    source='embed/firmware/vendorheader.bin',
+    action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+    ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+    ' $SOURCE $TARGET', )
 
 env.Depends(obj_program, qstr_generated)
 
