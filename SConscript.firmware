@@ -455,7 +455,11 @@ SOURCE_PY = [
     'src/trezor/workflow.py',
 ]
 
-env = Environment(
+env = Environment()
+
+env.Tool('micropython')
+
+env.Replace(
     SED='sed',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
@@ -463,7 +467,9 @@ env = Environment(
     LINK='arm-none-eabi-ld',
     SIZE='arm-none-eabi-size',
     STRIP='arm-none-eabi-strip',
-    OBJCOPY='arm-none-eabi-objcopy',
+    OBJCOPY='arm-none-eabi-objcopy', )
+
+env.Replace(
     CCFLAGS='-Os '
     '-g3 '
     '-nostdlib '
@@ -492,7 +498,9 @@ env = Environment(
         'STM32F405xx',
         'TREZOR_STM32',
         'MCU_SERIES_F4',
-    ] + CPPDEFINES_MOD,
+    ] + CPPDEFINES_MOD, )
+
+env.Replace(
     PYTHON='python',
     PYTHONPATH='vendor/micropython/py',
     MAKEQSTRDEFS='$PYTHON vendor/micropython/py/makeqstrdefs.py',
@@ -500,9 +508,7 @@ env = Environment(
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MAKE_FROZEN='$PYTHON vendor/micropython/tools/make-frozen.py')
-
-env.Tool('micropython')
+    MAKE_FROZEN='$PYTHON vendor/micropython/tools/make-frozen.py', )
 
 #
 # Micropython version
@@ -520,16 +526,14 @@ hdr_version = env.Command(
 qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
 
 qstr_collected = env.CollectQstr(
-    target='genhdr/qstrdefs.collected.h',
-    source=SOURCE_QSTR)
+    target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
 
 qstr_preprocessed = env.PreprocessQstr(
     target='genhdr/qstrdefs.preprocessed.h',
     source=[qstr_micropython, qstr_collected])
 
 qstr_generated = env.GenerateQstrDefs(
-    target='genhdr/qstrdefs.generated.h',
-    source=qstr_preprocessed)
+    target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
 
 env.Ignore(qstr_collected, qstr_generated)
 
@@ -540,9 +544,7 @@ env.Ignore(qstr_collected, qstr_generated)
 source_mpy = env.FrozenModule(source=SOURCE_PY)
 
 source_mpyc = env.FrozenCFile(
-    target='frozen_mpy.c',
-    source=source_mpy,
-    qstr_header=qstr_preprocessed)
+    target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
 
 env.Depends(source_mpyc, qstr_generated)
 
@@ -550,25 +552,25 @@ env.Depends(source_mpyc, qstr_generated)
 # Program objects
 #
 
-obj_firmware = []
-obj_firmware += env.Object(source=SOURCE_MOD)
-obj_firmware += env.Object(source=SOURCE_FIRMWARE)
-obj_firmware += env.Object(source=SOURCE_MICROPYTHON)
-obj_firmware += env.Object(source=SOURCE_STMHAL)
-obj_firmware += env.Object(source=SOURCE_TREZORHAL)
-obj_firmware += env.Object(source=source_mpyc)
+obj_program = []
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_FIRMWARE)
+obj_program += env.Object(source=SOURCE_MICROPYTHON)
+obj_program += env.Object(source=SOURCE_STMHAL)
+obj_program += env.Object(source=SOURCE_TREZORHAL)
+obj_program += env.Object(source=source_mpyc)
 
-env.Depends(obj_firmware, qstr_generated)
+env.Depends(obj_program, qstr_generated)
 
-env.Command(
+program_elf = env.Command(
     target='firmware.elf',
-    source=obj_firmware,
+    source=obj_program,
     action=
     '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
 )
 
-env.Command(
+program_bin = env.Command(
     target='firmware.bin',
-    source='firmware.elf',
+    source=program_elf,
     action='$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
 )

@@ -20,7 +20,7 @@ def generate(env):
         action='$MAKEQSTRDATA $SOURCE > $TARGET', )
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
-        action='$MPY_CROSS -o $TARGET -s $SOURCE $SOURCE',
+        action='$MPY_CROSS -o $TARGET $SOURCE',
         suffix='.mpy',
         single_source=True, )
 

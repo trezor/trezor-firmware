@@ -1,0 +1,326 @@
+# pylint: disable=E0602
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+LIBS_MOD = []
+
+# modtrezorconfig
+SOURCE_MOD += [
+    'embed/extmod/modtrezorconfig/modtrezorconfig.c',
+    'embed/extmod/modtrezorconfig/norcow.c',
+]
+
+# modtrezorcrypto
+CCFLAGS_MOD += '-Wno-sequence-point '
+CPPPATH_MOD += [
+    'embed/extmod/modtrezorcrypto/trezor-crypto',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/aes',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna',
+]
+CPPDEFINES_MOD += [
+    'AES_128',
+    'AES_192',
+    'USE_KECCAK',
+]
+SOURCE_MOD += [
+    'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
+    'embed/extmod/modtrezorcrypto/rand.c',
+    'embed/extmod/modtrezorcrypto/ssss.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/address.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/aes/aescrypt.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/aes/aeskey.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/aes/aes_modes.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/aes/aestab.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/base58.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/bignum.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/bip32.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/bip39.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/blake2b.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/blake2s.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/curves.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/ecdsa.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/hmac.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/nist256p1.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/pbkdf2.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/ripemd160.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/secp256k1.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/sha2.c',
+    'embed/extmod/modtrezorcrypto/trezor-crypto/sha3.c',
+]
+
+# modtrezorio
+SOURCE_MOD += [
+    'embed/extmod/modtrezorio/modtrezorio.c',
+]
+
+# modtrezormsg
+SOURCE_MOD += [
+    'embed/unix/touch.c',
+    'embed/extmod/modtrezormsg/modtrezormsg.c',
+]
+
+# modtrezorui
+CPPDEFINES_MOD += [('QR_MAX_VERSION', '0')]
+SOURCE_MOD += [
+    'embed/extmod/modtrezorui/display.c',
+    'embed/extmod/modtrezorui/inflate.c',
+    'embed/extmod/modtrezorui/font_bitmap.c',
+    'embed/extmod/modtrezorui/font_roboto_bold_20.c',
+    'embed/extmod/modtrezorui/font_roboto_regular_20.c',
+    'embed/extmod/modtrezorui/font_robotomono_regular_20.c',
+    'embed/extmod/modtrezorui/modtrezorui.c',
+    'embed/extmod/modtrezorui/trezor-qrenc/qr_encode.c',
+]
+LIBS_MOD += ['SDL2', 'SDL2_image']
+
+# modtrezorutils
+SOURCE_MOD += [
+    'embed/extmod/modtrezorutils/modtrezorutils.c',
+]
+
+# modutime
+# SOURCE_MOD += [
+#     'embed/firmware/modutime.c',
+# ]
+
+SOURCE_MICROPYTHON = [
+    'vendor/micropython/extmod/modubinascii.c',
+    'vendor/micropython/extmod/moductypes.c',
+    'vendor/micropython/extmod/moduheapq.c',
+    'vendor/micropython/extmod/modujson.c',
+    'vendor/micropython/extmod/modure.c',
+    'vendor/micropython/extmod/modutimeq.c',
+    'vendor/micropython/extmod/moduzlib.c',
+    'vendor/micropython/extmod/utime_mphal.c',
+    'vendor/micropython/lib/mp-readline/readline.c',
+    'vendor/micropython/lib/timeutils/timeutils.c',
+    'vendor/micropython/py/argcheck.c',
+    'vendor/micropython/py/asmarm.c',
+    'vendor/micropython/py/asmbase.c',
+    'vendor/micropython/py/asmthumb.c',
+    'vendor/micropython/py/asmx64.c',
+    'vendor/micropython/py/asmx86.c',
+    'vendor/micropython/py/asmxtensa.c',
+    'vendor/micropython/py/bc.c',
+    'vendor/micropython/py/binary.c',
+    'vendor/micropython/py/builtinevex.c',
+    'vendor/micropython/py/builtinhelp.c',
+    'vendor/micropython/py/builtinimport.c',
+    'vendor/micropython/py/compile.c',
+    'vendor/micropython/py/emitbc.c',
+    'vendor/micropython/py/emitcommon.c',
+    'vendor/micropython/py/emitglue.c',
+    'vendor/micropython/py/emitinlinethumb.c',
+    'vendor/micropython/py/emitinlinextensa.c',
+    'vendor/micropython/py/formatfloat.c',
+    'vendor/micropython/py/frozenmod.c',
+    'vendor/micropython/py/gc.c',
+    'vendor/micropython/py/lexer.c',
+    'vendor/micropython/py/malloc.c',
+    'vendor/micropython/py/map.c',
+    'vendor/micropython/py/modarray.c',
+    'vendor/micropython/py/modbuiltins.c',
+    'vendor/micropython/py/modcmath.c',
+    'vendor/micropython/py/modcollections.c',
+    'vendor/micropython/py/modgc.c',
+    'vendor/micropython/py/modio.c',
+    'vendor/micropython/py/modmath.c',
+    'vendor/micropython/py/modmicropython.c',
+    'vendor/micropython/py/modstruct.c',
+    'vendor/micropython/py/modsys.c',
+    'vendor/micropython/py/modthread.c',
+    'vendor/micropython/py/moduerrno.c',
+    'vendor/micropython/py/mpprint.c',
+    'vendor/micropython/py/mpstate.c',
+    'vendor/micropython/py/mpz.c',
+    'vendor/micropython/py/nativeglue.c',
+    'vendor/micropython/py/nlrsetjmp.c',
+    'vendor/micropython/py/nlrthumb.c',
+    'vendor/micropython/py/nlrx64.c',
+    'vendor/micropython/py/nlrx86.c',
+    'vendor/micropython/py/nlrxtensa.c',
+    'vendor/micropython/py/obj.c',
+    'vendor/micropython/py/objarray.c',
+    'vendor/micropython/py/objattrtuple.c',
+    'vendor/micropython/py/objbool.c',
+    'vendor/micropython/py/objboundmeth.c',
+    'vendor/micropython/py/objcell.c',
+    'vendor/micropython/py/objclosure.c',
+    'vendor/micropython/py/objcomplex.c',
+    'vendor/micropython/py/objdict.c',
+    'vendor/micropython/py/objenumerate.c',
+    'vendor/micropython/py/objexcept.c',
+    'vendor/micropython/py/objfilter.c',
+    'vendor/micropython/py/objfloat.c',
+    'vendor/micropython/py/objfun.c',
+    'vendor/micropython/py/objgenerator.c',
+    'vendor/micropython/py/objgetitemiter.c',
+    'vendor/micropython/py/objint_longlong.c',
+    'vendor/micropython/py/objint_mpz.c',
+    'vendor/micropython/py/objint.c',
+    'vendor/micropython/py/objlist.c',
+    'vendor/micropython/py/objmap.c',
+    'vendor/micropython/py/objmodule.c',
+    'vendor/micropython/py/objnamedtuple.c',
+    'vendor/micropython/py/objnone.c',
+    'vendor/micropython/py/objobject.c',
+    'vendor/micropython/py/objpolyiter.c',
+    'vendor/micropython/py/objproperty.c',
+    'vendor/micropython/py/objrange.c',
+    'vendor/micropython/py/objreversed.c',
+    'vendor/micropython/py/objset.c',
+    'vendor/micropython/py/objsingleton.c',
+    'vendor/micropython/py/objslice.c',
+    'vendor/micropython/py/objstr.c',
+    'vendor/micropython/py/objstringio.c',
+    'vendor/micropython/py/objstrunicode.c',
+    'vendor/micropython/py/objtuple.c',
+    'vendor/micropython/py/objtype.c',
+    'vendor/micropython/py/objzip.c',
+    'vendor/micropython/py/opmethods.c',
+    'vendor/micropython/py/parse.c',
+    'vendor/micropython/py/parsenum.c',
+    'vendor/micropython/py/parsenumbase.c',
+    'vendor/micropython/py/persistentcode.c',
+    'vendor/micropython/py/qstr.c',
+    'vendor/micropython/py/reader.c',
+    'vendor/micropython/py/repl.c',
+    'vendor/micropython/py/runtime_utils.c',
+    'vendor/micropython/py/runtime.c',
+    'vendor/micropython/py/scope.c',
+    'vendor/micropython/py/scheduler.c',
+    'vendor/micropython/py/sequence.c',
+    'vendor/micropython/py/showbc.c',
+    'vendor/micropython/py/smallint.c',
+    'vendor/micropython/py/stackctrl.c',
+    'vendor/micropython/py/stream.c',
+    'vendor/micropython/py/unicode.c',
+    'vendor/micropython/py/vm.c',
+    'vendor/micropython/py/vstr.c',
+    'vendor/micropython/py/warning.c',
+]
+
+SOURCE_UNIX = [
+    'vendor/micropython/unix/main.c',
+    'vendor/micropython/unix/gccollect.c',
+    'vendor/micropython/unix/unix_mphal.c',
+    'vendor/micropython/unix/mpthreadport.c',
+    'vendor/micropython/unix/input.c',
+    'vendor/micropython/unix/file.c',
+    'vendor/micropython/unix/modos.c',
+    'vendor/micropython/unix/modtime.c',
+    'vendor/micropython/unix/moduselect.c',
+    'vendor/micropython/unix/alloc.c',
+    'embed/unix/common.c',
+]
+
+SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']
+
+SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX + SOURCE_EMIT_NATIVE
+
+env = Environment()
+
+env.Tool('micropython')
+
+env.Replace(
+    SED='sed',
+    AS='as',
+    AR='ar',
+    CC='gcc',
+    LINK='ld',
+    SIZE='size',
+    STRIP='strip',
+    OBJCOPY='objcopy', )
+
+env.Replace(
+    CCFLAGS='-Os '
+    '-g3 '
+    '-std=gnu99 -Wall -Werror -Wuninitialized '
+    '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
+    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB -DN_ARM -DN_XTENSA',
+    LIBS=LIBS_MOD,
+    CPPPATH=[
+        '.',
+        'embed/unix',
+        'embed/extmod/modtrezorui',
+        'vendor/micropython',
+        'vendor/micropython/unix',
+        'vendor/micropython/lib/mp-readline',
+    ] + CPPPATH_MOD,
+    CPPDEFINES=[
+        'MICROPY_USE_READLINE',
+        'TREZOR_UNIX',
+        'UNIX',
+        ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
+    ] + CPPDEFINES_MOD, )
+
+env.Replace(
+    PYTHON='python',
+    PYTHONPATH='vendor/micropython/py',
+    MAKEQSTRDEFS='$PYTHON vendor/micropython/py/makeqstrdefs.py',
+    MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
+    MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross',
+    MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
+    MAKE_FROZEN='$PYTHON vendor/micropython/tools/make-frozen.py', )
+
+#
+# Micropython version
+#
+
+hdr_version = env.Command(
+    target='genhdr/mpversion.h',
+    source='',
+    action='$MAKEVERSIONHDR $TARGET', )
+
+#
+# Qstrings
+#
+
+qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
+
+qstr_collected = env.CollectQstr(
+    target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
+
+qstr_preprocessed = env.PreprocessQstr(
+    target='genhdr/qstrdefs.preprocessed.h',
+    source=[qstr_micropython, qstr_collected])
+
+qstr_generated = env.GenerateQstrDefs(
+    target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
+
+env.Ignore(qstr_collected, qstr_generated)
+
+#
+# Program objects
+#
+
+obj_program = []
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_MICROPYTHON)
+obj_program += env.Object(source=SOURCE_UNIX)
+
+obj_program += env.Object(
+    source=SOURCE_EMIT_NATIVE,
+    target='vendor/micropython/py/emitnx64.o',
+    CPPDEFINES=[env['CPPDEFINES'], 'N_X64'], )
+
+obj_program += env.Object(
+    source=SOURCE_EMIT_NATIVE,
+    target='vendor/micropython/py/emitnx86.o',
+    CPPDEFINES=[env['CPPDEFINES'], 'N_X86'], )
+
+obj_program += env.Object(
+    source=SOURCE_EMIT_NATIVE,
+    target='vendor/micropython/py/emitnthumb.o',
+    CPPDEFINES=[env['CPPDEFINES'], 'N_THUMB'], )
+
+env.Depends(obj_program, qstr_generated)
+
+program = env.Command(
+    target='micropython',
+    source=obj_program,
+    action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )
