@@ -477,10 +477,9 @@ env.Replace(
     '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections ' +
     CCFLAGS_MOD,
-    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB -DN_ARM -DN_XTENSA',
+    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections',
     CPPPATH=[
-        '.',
         'embed/firmware',
         'embed/trezorhal',
         'embed/trezorhal/hal',

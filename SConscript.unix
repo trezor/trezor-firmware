@@ -240,7 +240,7 @@ env.Replace(
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized '
     '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
-    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB -DN_ARM -DN_XTENSA',
+    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LIBS=LIBS_MOD,
     CPPPATH=[
         '.',
