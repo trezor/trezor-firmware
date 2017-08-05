@@ -455,6 +455,7 @@ SOURCE_PY = [
     'src/trezor/wire/codec_v2.py',
     'src/trezor/workflow.py',
 ]
+SOURCE_PY_DIR = 'src/'
 
 env = Environment()
 
@@ -543,7 +544,7 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-source_mpy = env.FrozenModule(source=SOURCE_PY)
+source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
 
 source_mpyc = env.FrozenCFile(
     target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
@@ -555,19 +556,20 @@ env.Depends(source_mpyc, qstr_generated)
 #
 
 obj_program = []
-obj_program += env.Object(source=SOURCE_MOD)
-obj_program += env.Object(source=SOURCE_FIRMWARE)
-obj_program += env.Object(source=SOURCE_MICROPYTHON)
-obj_program += env.Object(source=SOURCE_STMHAL)
-obj_program += env.Object(source=SOURCE_TREZORHAL)
-obj_program += env.Object(source=source_mpyc)
+obj_program.extend(env.Object(source=SOURCE_MOD))
+obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
+obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
+obj_program.extend(env.Object(source=SOURCE_STMHAL))
+obj_program.extend(env.Object(source=SOURCE_TREZORHAL))
+obj_program.extend(env.Object(source=source_mpyc))
 
-obj_program += env.Command(
-    target='embed/firmware/vendorheader.o',
-    source='embed/firmware/vendorheader.bin',
-    action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
-    ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
-    ' $SOURCE $TARGET', )
+obj_program.extend(
+    env.Command(
+        target='embed/firmware/vendorheader.o',
+        source='embed/firmware/vendorheader.bin',
+        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+        ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
 

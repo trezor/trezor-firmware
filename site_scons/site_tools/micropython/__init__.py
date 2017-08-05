@@ -19,8 +19,15 @@ def generate(env):
     env['BUILDERS']['GenerateQstrDefs'] = SCons.Builder.Builder(
         action='$MAKEQSTRDATA $SOURCE > $TARGET', )
 
+    def generate_frozen_module(source, target, env, for_signature):
+        target = str(target[0])
+        source = str(source[0])
+        source_name = source.replace(env['source_dir'], '')
+        return '$MPY_CROSS -o %s -s %s %s' % (target, source_name, source)
+
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
-        action='$MPY_CROSS -o $TARGET $SOURCE',
+        # action='$MPY_CROSS -o $TARGET -s $SOURCE $SOURCE',
+        generator=generate_frozen_module,
         suffix='.mpy',
         single_source=True, )
 
