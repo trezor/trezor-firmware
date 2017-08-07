@@ -452,6 +452,8 @@ void fsm_msgBackupDevice(BackupDevice *msg)
 {
 	CHECK_INITIALIZED
 
+	CHECK_PIN_UNCACHED
+
 	(void)msg;
 	reset_backup(true);
 }

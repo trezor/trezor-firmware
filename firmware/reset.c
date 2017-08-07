@@ -121,15 +121,18 @@ void reset_backup(bool separated)
 	storage_commit();
 
 	for (int pass = 0; pass < 2; pass++) {
-		int i = 0;
-		for (int word_pos = 1; word_pos <= (int)strength/32*3; word_pos++) {
+		int i = 0, word_pos = 1;
+		while (storage.mnemonic[i] != 0) {
 			// copy current_word
 			int j = 0;
 			while (storage.mnemonic[i] != ' ' && storage.mnemonic[i] != 0 && j + 1 < (int)sizeof(current_word)) {
 				current_word[j] = storage.mnemonic[i];
 				i++; j++;
 			}
-			current_word[j] = 0; if (storage.mnemonic[i] != 0) i++;
+			current_word[j] = 0;
+			if (storage.mnemonic[i] != 0) {
+				i++;
+			}
 			char desc[] = "##th word is:";
 			if (word_pos < 10) {
 				desc[0] = ' ';
@@ -151,7 +154,7 @@ void reset_backup(bool separated)
 				current_word_display[j + 1] = current_word[j] + 'A' - 'a';
 			}
 			current_word_display[j + 1] = 0;
-			if (word_pos == (int)strength/32*3) { // last word
+			if (storage.mnemonic[i] == 0) { // last word
 				if (pass == 1) {
 					layoutDialogSwipe(&bmp_icon_info, NULL, _("Finish"), NULL, _("Please check the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
 				} else {
@@ -172,6 +175,7 @@ void reset_backup(bool separated)
 				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 				return;
 			}
+			word_pos++;
 		}
 	}
 

@@ -102,7 +102,7 @@ static bool sessionPinCached;
 static bool sessionPassphraseCached;
 static char sessionPassphrase[51];
 
-#define STORAGE_VERSION 7
+#define STORAGE_VERSION 8
 
 void storage_show_error(void)
 {
@@ -133,6 +133,7 @@ bool storage_from_flash(void)
 	// version 5: since 1.3.3
 	// version 6: since 1.3.6
 	// version 7: since 1.5.1
+	// version 8: since 1.5.2
 	if (version > STORAGE_VERSION) {
 		// downgrade -> clear storage
 		return false;
@@ -141,8 +142,26 @@ bool storage_from_flash(void)
 	// load uuid
 	memcpy(storage_uuid, (void *)(FLASH_STORAGE_START + 4), sizeof(storage_uuid));
 	data2hex(storage_uuid, sizeof(storage_uuid), storage_uuid_str);
+
 	// copy storage
-	memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), sizeof(Storage));
+	size_t old_storage_size = 0;
+
+	if (version == 1 || version == 2) {
+		old_storage_size = 460;
+	} else
+	if (version == 3 || version == 4 || version == 5) {
+		old_storage_size = 1488;
+	} else
+	if (version == 6 || version == 7) {
+		old_storage_size = 1496;
+	} else
+	if (version == 8) {
+		old_storage_size = 1504;
+	}
+
+	memset(&storage, 0, sizeof(Storage));
+	memcpy(&storage, (void *)(FLASH_STORAGE_START + 4 + sizeof(storage_uuid)), old_storage_size);
+
 	if (version <= 5) {
 		// convert PIN failure counter from version 5 format
 		uint32_t pinctr = storage.has_pin_failed_attempts
