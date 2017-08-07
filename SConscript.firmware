@@ -1,5 +1,7 @@
 # pylint: disable=E0602
 
+import os
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -299,7 +301,7 @@ SOURCE_PY.extend(Glob('src/*/*/*/*.py'))
 SOURCE_PY.extend(Glob('src/*/*/*/*/*.py'))
 SOURCE_PY_DIR = 'src/'
 
-env = Environment()
+env = Environment(ENV=os.environ)
 
 env.Tool('micropython')
 
@@ -336,12 +338,10 @@ env.Replace(
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        'MICROPY_MODULE_FROZEN_MPY',
-        ('MICROPY_QSTR_EXTRA_POOL', 'mp_qstr_frozen_const_pool'),
-        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
-        'STM32F405xx',
         'TREZOR_STM32',
         'MCU_SERIES_F4',
+        'STM32F405xx',
+        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 

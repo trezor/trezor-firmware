@@ -31,6 +31,10 @@
 #ifndef __INCLUDED_MPCONFIGPORT_H
 #define __INCLUDED_MPCONFIGPORT_H
 
+// frozen modules
+#define MICROPY_MODULE_FROZEN_MPY   (1)
+#define MICROPY_QSTR_EXTRA_POOL     (mp_qstr_frozen_const_pool)
+
 // memory allocation policies
 #define MICROPY_ALLOC_PATH_MAX      (128)
 
