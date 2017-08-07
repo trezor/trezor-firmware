@@ -2,7 +2,7 @@
 
 source emu.config 2>/dev/null
 
-EXE=vendor/micropython/unix/micropython
+EXE=build/unix/micropython
 OPTLEVEL="${OPTLEVEL:-0}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"

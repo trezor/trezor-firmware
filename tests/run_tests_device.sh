@@ -7,7 +7,7 @@ fi
 # run emulator
 
 cd ../src
-../vendor/micropython/unix/micropython -O0 main.py >/dev/null &
+../build/unix/micropython -O0 main.py >/dev/null &
 UPY_PID=$!
 
 sleep 1
