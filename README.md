@@ -2,7 +2,8 @@
 
 ![TREZOR Core](docs/trezor_core.png)
 
-[![Build Status](https://travis-ci.org/trezor/trezor-core.svg?branch=master)](https://travis-ci.org/trezor/trezor-core) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
+[![Build Status](https://travis-ci.org/trezor/trezor-core.svg?branch=master)](https://travis-ci.org/trezor/trezor-core)
+[![Gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 This is the core of the upcoming TREZOR v2.
 
@@ -26,35 +27,28 @@ cd trezor-core
 ```sh
 sudo dpkg --add-architecture i386
 sudo apt-get update
-sudo apt-get install libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
+sudo apt-get install scons libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
 make build_unix
 ```
 
 #### Fedora
 
 ```sh
-sudo yum install SDL2-devel.i686 SDL2_image-devel.i686
+sudo yum install scons SDL2-devel.i686 SDL2_image-devel.i686
 make build_unix
 ```
 
 #### openSUSE
 
 ```sh
-sudo zypper install libSDL2-devel-32bit libSDL2_image-devel-32bit
+sudo zypper install scons libSDL2-devel-32bit libSDL2_image-devel-32bit
 make build_unix
 ```
 
 ### OS X
 
-Install SDL2 using DMG installer from [SDL download page](https://www.libsdl.org/download-2.0.php) or run the following if you use Homebrew:
-
 ```sh
-brew install sdl2 sdl2_image
-```
-
-Build the emulator:
-
-```sh
+brew install scons sdl2 sdl2_image
 make build_unix
 ```
 
