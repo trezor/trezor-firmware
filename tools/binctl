@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+
+from __future__ import print_function
+
 import sys
 import struct
 import binascii
@@ -19,7 +22,7 @@ def format_sigmask(sigmask):
 # bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
 
-class BinImage:
+class BinImage(object):
 
     def __init__(self, data, magic, max_size):
         header = struct.unpack('<4sIIIBBBB427sB64s', data[:512])
@@ -91,7 +94,7 @@ class BinImage:
 class FirmwareImage(BinImage):
 
     def __init__(self, data, vhdrlen):
-        super().__init__(data[vhdrlen:], magic=b'TRZF', max_size=7*128*1024)
+        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=7*128*1024)
         self.vhdrlen = vhdrlen
         self.vheader = data[:vhdrlen]
 
@@ -104,10 +107,10 @@ class FirmwareImage(BinImage):
 class BootloaderImage(BinImage):
 
     def __init__(self, data):
-        super().__init__(data, magic=b'TRZB', max_size=64*1024 + 7*128*1024)
+        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=64*1024 + 7*128*1024)
 
 
-class VendorHeader:
+class VendorHeader(object):
 
     def __init__(self, data):
         header = struct.unpack('<4sIIBBBB', data[:16])
@@ -187,6 +190,7 @@ class VendorHeader:
 
 def binopen(filename):
     data = open(filename, 'rb').read()
+    data = bytearray(data)  # python2/3 compatibility
     magic = data[:4]
     if magic == b'TRZB':
         return BootloaderImage(data)
