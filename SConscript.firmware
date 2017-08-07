@@ -347,13 +347,11 @@ env.Replace(
 
 env.Replace(
     PYTHON='python',
-    PYTHONPATH='vendor/micropython/py',
-    MAKEQSTRDEFS='$PYTHON vendor/micropython/py/makeqstrdefs.py',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MAKE_FROZEN='$PYTHON vendor/micropython/tools/make-frozen.py', )
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross',
+    BINCTL='tools/binctl', )
 
 #
 # Micropython version
@@ -425,5 +423,7 @@ program_elf = env.Command(
 program_bin = env.Command(
     target='firmware.bin',
     source=program_elf,
-    action='$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
-)
+    action=[
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$BINCTL $TARGET -s 1 4141414141414141414141414141414141414141414141414141414141414141',
+    ], )

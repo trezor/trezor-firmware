@@ -1,5 +1,7 @@
 # pylint: disable=E0602
 
+import os
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -100,7 +102,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/hal/stm32f4xx_ll_fsmc.c',
 ]
 
-env = Environment()
+env = Environment(ENV=os.environ)
 
 env.Replace(
     AS='arm-none-eabi-as',
@@ -142,6 +144,9 @@ env.Replace(
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
+env.Replace(
+    BINCTL='tools/binctl', )
+
 #
 # Program objects
 #
@@ -163,5 +168,7 @@ program_elf = env.Command(
 program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
-    action='$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
-)
+    action=[
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$BINCTL $TARGET -s 1 4141414141414141414141414141414141414141414141414141414141414141',
+    ], )

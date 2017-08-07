@@ -2,21 +2,11 @@
 
 JOBS = 4
 MAKE = make -j $(JOBS)
+SCONS = scons -Q -j $(JOBS)
 
-BOARDLOADER_BUILD_DIR = embed/boardloader/build
-BOOTLOADER_BUILD_DIR  = embed/bootloader/build
-FIRMWARE_BUILD_DIR    = embed/firmware/build
-
-TREZORHAL_PORT_OPTS   = FROZEN_MPY_DIR=src DEBUG=1
-CROSS_PORT_OPTS       = MICROPY_FORCE_32BIT=1
-UNIX_PORT_OPTS        = MICROPY_PY_BTREE=0 MICROPY_PY_TERMIOS=0 MICROPY_PY_FFI=0 MICROPY_PY_USSL=0 MICROPY_SSL_AXTLS=0 DEBUG=1
-
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-UNIX_PORT_OPTS += MICROPY_FORCE_32BIT=0
-else
-UNIX_PORT_OPTS += MICROPY_FORCE_32BIT=1
-endif
+BOARDLOADER_BUILD_DIR = build/boardloader
+BOOTLOADER_BUILD_DIR  = build/bootloader
+FIRMWARE_BUILD_DIR    = build/firmware
 
 ## help commands:
 
@@ -34,7 +24,7 @@ res: ## update resources
 ## emulator commands:
 
 run: ## run unix port
-	cd src ; ../vendor/micropython/unix/micropython
+	cd src ; ../build/unix/micropython
 
 emu: ## run emulator
 	./emu.sh
@@ -58,18 +48,16 @@ style: ## run code style check on application sources
 build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all
 
 build_boardloader: ## build boardloader
-	$(MAKE) -f Makefile.boardloader $(TREZORHAL_PORT_OPTS)
+	$(SCONS) build/boardloader/boardloader.bin
 
 build_bootloader: ## build bootloader
-	$(MAKE) -f Makefile.bootloader $(TREZORHAL_PORT_OPTS)
-	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
+	$(SCONS) build/bootloader/bootloader.bin
 
 build_firmware: res build_cross ## build firmware with frozen modules
-	$(MAKE) -f Makefile.firmware $(TREZORHAL_PORT_OPTS)
-	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin -s 1 4141414141414141414141414141414141414141414141414141414141414141
+	$(SCONS) build/firmware/firmware.bin
 
 build_unix: ## build unix port
-	$(MAKE) -f ../../../embed/unix/Makefile -C vendor/micropython/unix $(UNIX_PORT_OPTS)
+	$(SCONS) build/unix/micropython
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -79,18 +67,16 @@ build_cross: ## build mpy-cross port
 clean: clean_boardloader clean_bootloader clean_firmware clean_unix clean_cross ## clean all
 
 clean_boardloader: ## clean boardloader build
-	$(MAKE) -f Makefile.boardloader clean $(TREZORHAL_PORT_OPTS)
+	rm -rf build/boardloader
 
 clean_bootloader: ## clean bootloader build
-	$(MAKE) -f Makefile.bootloader clean $(TREZORHAL_PORT_OPTS)
+	rm -rf build/bootloader
 
 clean_firmware: ## clean firmware build
-	$(MAKE) -f Makefile.firmware clean $(TREZORHAL_PORT_OPTS)
+	rm -rf build/firmware
 
 clean_unix: ## clean unix build
-	$(MAKE) -f ../../../embed/unix/Makefile -C vendor/micropython/unix clean $(UNIX_PORT_OPTS)
-	# workaround for relative paths containing ../.. in unix Makefile
-	rm -rf vendor/micropython/micropython
+	rm -rf build/unix
 
 clean_cross: ## clean mpy-cross build
 	$(MAKE) -C vendor/micropython/mpy-cross clean $(CROSS_PORT_OPTS)
