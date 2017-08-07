@@ -1,5 +1,7 @@
 # pylint: disable=E0602
 
+import os
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -74,7 +76,10 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/trezor-qrenc/qr_encode.c',
 ]
-LIBS_MOD += ['SDL2', 'SDL2_image']
+if ARGUMENTS.get('TREZOR_NOUI', 0):
+    CPPDEFINES_MOD += ['TREZOR_NOUI']
+else:
+    LIBS_MOD += ['SDL2', 'SDL2_image']
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -221,7 +226,7 @@ SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX + SOURCE_EMIT_NATIVE
 
-env = Environment()
+env = Environment(ENV=os.environ)
 
 env.Tool('micropython')
 
@@ -241,7 +246,7 @@ env.Replace(
     '-std=gnu99 -Wall -Werror -Wuninitialized '
     '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LIBS=LIBS_MOD,
+    LIBS=['m'] + LIBS_MOD,
     CPPPATH=[
         '.',
         'embed/unix',
@@ -257,10 +262,6 @@ env.Replace(
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
-
-if ARGUMENTS.get('TREZOR_NOUI', 0):
-    env.Append(
-        CPPDEFINES='TREZOR_NOUI', )
 
 env.Replace(
     PYTHON='python',
