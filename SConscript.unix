@@ -258,6 +258,10 @@ env.Replace(
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
+if ARGUMENTS.get('TREZOR_NOUI', 0):
+    env.Append(
+        CPPDEFINES='TREZOR_NOUI', )
+
 env.Replace(
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',

@@ -59,6 +59,9 @@ build_firmware: res build_cross ## build firmware with frozen modules
 build_unix: ## build unix port
 	$(SCONS) build/unix/micropython
 
+build_unix_noui: ## build unix port without UI support
+	$(SCONS) build/unix/micropython TREZOR_NOUI=1
+
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
 
