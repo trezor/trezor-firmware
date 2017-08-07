@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MICROPYTHON=../vendor/micropython/unix/micropython
+MICROPYTHON=../build/unix/micropython
 
 results=()
 error=0
