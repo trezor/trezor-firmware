@@ -81,7 +81,10 @@ def print_result(res, transport, path, verbose, is_json):
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
     else:
-        if isinstance(res, list):
+        from google.protobuf import text_format, message
+        if isinstance(res, message.Message):
+            click.echo('%s {\n%s}' % (res.DESCRIPTOR.name, text_format.MessageToString(res, indent=4)))
+        elif isinstance(res, list):
             for line in res:
                 click.echo(line)
         elif isinstance(res, dict):
