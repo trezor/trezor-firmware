@@ -8,6 +8,15 @@ BOARDLOADER_BUILD_DIR = build/boardloader
 BOOTLOADER_BUILD_DIR  = build/bootloader
 FIRMWARE_BUILD_DIR    = build/firmware
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+UNIX_PORT_OPTS ?= TREZOR_X86=0
+else
+UNIX_PORT_OPTS ?= TREZOR_X86=1
+endif
+CROSS_PORT_OPTS ?= MICROPY_FORCE_32BIT=1
+
+
 ## help commands:
 
 help: ## show this help
@@ -57,10 +66,10 @@ build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) build/firmware/firmware.bin
 
 build_unix: ## build unix port
-	$(SCONS) build/unix/micropython
+	$(SCONS) build/unix/micropython $(UNIX_PORT_OPTS)
 
 build_unix_noui: ## build unix port without UI support
-	$(SCONS) build/unix/micropython TREZOR_NOUI=1
+	$(SCONS) build/unix/micropython $(UNIX_PORT_OPTS) TREZOR_NOUI=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
