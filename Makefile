@@ -1,3 +1,4 @@
+OBJS += startup.o
 OBJS += buttons.o
 OBJS += layout.o
 OBJS += oled.o

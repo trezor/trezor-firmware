@@ -17,6 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libopencm3/cm3/scb.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
@@ -44,6 +45,14 @@ void nmi_handler(void)
 
 void setup(void)
 {
+	// set SCB_CCR STKALIGN bit to make sure 8-byte stack alignment on exception entry is in effect.
+	// This is not strictly necessary for the current TREZOR system.
+	// This is here to comply with guidance from section 3.3.3 "Binary compatibility with other Cortex processors"
+	// of the ARM Cortex-M3 Processor Technical Reference Manual.
+	// According to section 4.4.2 and 4.4.7 of the "STM32F10xxx/20xxx/21xxx/L1xxxx Cortex-M3 programming manual",
+	// STM32F2 series MCUs are r2p0 and always have this bit set on reset already.
+	SCB_CCR |= SCB_CCR_STKALIGN;
+
 	// setup clock
 	struct rcc_clock_scale clock = rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_120MHZ];
 	rcc_clock_setup_hse_3v3(&clock);

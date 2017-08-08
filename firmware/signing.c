@@ -32,7 +32,7 @@ static uint32_t inputs_count;
 static uint32_t outputs_count;
 static const CoinType *coin;
 static const HDNode *root;
-static HDNode node;
+static CONFIDENTIAL HDNode node;
 static bool signing = false;
 enum {
 	STAGE_REQUEST_1_INPUT,
@@ -54,7 +54,8 @@ static TxInputType input;
 static TxOutputBinType bin_output;
 static TxStruct to, tp, ti;
 static SHA256_CTX hashers[3];
-static uint8_t privkey[32], pubkey[33], sig[64];
+static uint8_t CONFIDENTIAL privkey[32];
+static uint8_t pubkey[33], sig[64];
 static uint8_t hash_prevouts[32], hash_sequence[32],hash_outputs[32];
 static uint8_t hash_check[32];
 static uint64_t to_spend, authorized_amount, spending, change_spend;

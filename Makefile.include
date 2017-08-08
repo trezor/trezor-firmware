@@ -7,11 +7,14 @@ LD      = $(PREFIX)gcc
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 AR      = $(PREFIX)ar
+AS      = $(PREFIX)as
 FLASH   = st-flash
 OPENOCD = openocd
 
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
+CPUFLAGS ?= -mcpu=cortex-m3 -mthumb
+FPUFLAGS ?= -msoft-float
 
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
@@ -40,10 +43,10 @@ CFLAGS   += $(OPTFLAGS) \
             -ffunction-sections \
             -fdata-sections \
             -fstack-protector-all \
-            -mcpu=cortex-m3 \
-            -mthumb \
-            -msoft-float \
+            $(CPUFLAGS) \
+            $(FPUFLAGS) \
             -DSTM32F2 \
+            -DCONFIDENTIAL='__attribute__((section("confidential")))' \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \
@@ -83,9 +86,8 @@ LDFLAGS  += --static \
             -T$(LDSCRIPT) \
             -nostartfiles \
             -Wl,--gc-sections \
-            -mcpu=cortex-m3 \
-            -mthumb \
-            -msoft-float
+            $(CPUFLAGS) \
+            $(FPUFLAGS)
 
 all: $(NAME).bin
 
@@ -127,6 +129,9 @@ $(NAME).list: $(NAME).elf
 
 $(NAME).elf: $(OBJS) $(LDSCRIPT) $(TOOLCHAIN_DIR)/lib/libopencm3_stm32f2.a $(TOP_DIR)/libtrezor.a
 	$(LD) -o $(NAME).elf $(OBJS) -ltrezor -lopencm3_stm32f2 $(LDFLAGS)
+
+%.o: %.s Makefile
+	$(AS) $(CPUFLAGS) -o $@ $<
 
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) -MMD -o $@ -c $<

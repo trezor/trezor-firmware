@@ -78,6 +78,9 @@ void show_unofficial_warning(const uint8_t *hash)
 
 void __attribute__((noreturn)) load_app(void)
 {
+	// zero out SRAM
+	memset_reg(_ram_start, _ram_end, 0);
+
 	load_vector_table((const vector_table_t *) FLASH_APP_START);
 }
 

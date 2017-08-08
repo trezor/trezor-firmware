@@ -450,7 +450,7 @@ void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname,
 
 const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 {
-	static HDNode node;
+	static CONFIDENTIAL HDNode node;
 	if (!storage_getRootNode(&node, NIST256P1_NAME, false)) {
 		layoutHome();
 		debugLog(0, "", "ERR: Device not init");

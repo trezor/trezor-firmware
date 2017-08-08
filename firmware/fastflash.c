@@ -24,16 +24,18 @@
 #include <stdint.h>
 #include <string.h>
 
-extern uint8_t __bootloader_loadaddr__[];
-extern uint8_t __bootloader_runaddr__[];
-extern uint8_t __bootloader_size__[];
-
-void load_bootloader(void)
-{
-	memcpy(__bootloader_runaddr__, __bootloader_loadaddr__, (size_t) __bootloader_size__);
-}
+#define bootloader_vec ((vector_table_t *) 0x20000000)
 
 void __attribute__((noreturn)) run_bootloader(void)
 {
-	load_vector_table((const vector_table_t *) __bootloader_runaddr__);
+	extern uint8_t __bootloader_start__[];
+	extern uint8_t __bootloader_size__[];
+
+	// zero out SRAM
+	memset_reg(_ram_start, _ram_end, 0);
+
+	// copy bootloader
+	memcpy(bootloader_vec, __bootloader_start__, (size_t) __bootloader_size__);
+
+	load_vector_table(bootloader_vec);
 }

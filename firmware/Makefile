@@ -1,10 +1,8 @@
-ifeq ($(FASTFLASH),1)
-APPVER = 2.0.0
+APPVER = 1.0.0
 
+ifeq ($(FASTFLASH),1)
 OBJS += fastflash.o
 OBJS += bootloader.o
-else
-APPVER = 1.0.0
 endif
 
 NAME  = trezor
@@ -93,6 +91,7 @@ CFLAGS += -DUSE_ETHEREUM=1
 
 bootloader.o: ../fastflash/bootloader.bin
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm \
+		--redefine-sym _binary_$(shell echo -n "$<" | tr -c "[:alnum:]" "_")_start=__bootloader_start__ \
 		--redefine-sym _binary_$(shell echo -n "$<" | tr -c "[:alnum:]" "_")_size=__bootloader_size__ \
-		--rename-section .data=.bootloader \
+		--rename-section .data=.rodata \
 		$< $@

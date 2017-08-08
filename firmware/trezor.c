@@ -95,7 +95,6 @@ int main(void)
 #if FASTFLASH
 	uint16_t state = gpio_port_read(BTN_PORT);
 	if ((state & BTN_PIN_NO) == 0) {
-		load_bootloader();
 		run_bootloader();
 	}
 #endif

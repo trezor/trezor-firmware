@@ -22,14 +22,14 @@
 
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 3
-#define VERSION_PATCH 2
+#define VERSION_PATCH 3
 
 #define STR(X) #X
 #define VERSTR(X) STR(X)
 
 #define VERSION_MAJOR_CHAR "\x01"
 #define VERSION_MINOR_CHAR "\x03"
-#define VERSION_PATCH_CHAR "\x02"
+#define VERSION_PATCH_CHAR "\x03"
 
 #include <stdbool.h>
 #include "memory.h"

@@ -152,7 +152,7 @@ int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, T
 	}
 
 	if (in->address_n_count > 0) {
-		HDNode node;
+		static CONFIDENTIAL HDNode node;
 		InputScriptType input_script_type;
 
 		switch (in->script_type) {

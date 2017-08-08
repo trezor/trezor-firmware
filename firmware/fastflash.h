@@ -20,7 +20,6 @@
 #ifndef __FASTFLASH_H__
 #define __FASTFLASH_H__
 
-void load_bootloader(void);
 void __attribute__((noreturn)) run_bootloader(void);
 
 #endif

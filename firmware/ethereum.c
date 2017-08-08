@@ -37,7 +37,7 @@
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest msg_tx_request;
-static uint8_t privkey[32];
+static CONFIDENTIAL uint8_t privkey[32];
 static uint8_t chain_id;
 struct SHA3_CTX keccak_ctx;
 

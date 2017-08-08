@@ -42,7 +42,7 @@
 #include "usb.h"
 #include "gettext.h"
 
-Storage storage;
+Storage CONFIDENTIAL storage;
 
 uint32_t storage_uuid[12/sizeof(uint32_t)];
 char    storage_uuid_str[25];
@@ -95,12 +95,12 @@ static const uint32_t storage_magic = 0x726f7473;   // 'stor' as uint32_t
 
 static bool sessionSeedCached, sessionSeedUsesPassphrase;
 
-static uint8_t sessionSeed[64];
+static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static bool sessionPinCached;
 
 static bool sessionPassphraseCached;
-static char sessionPassphrase[51];
+static char CONFIDENTIAL sessionPassphrase[51];
 
 #define STORAGE_VERSION 8
 
