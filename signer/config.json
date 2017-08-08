@@ -15,6 +15,7 @@
 		"https://[\\w\\.-]+\\.bitex\\.la(/.*)?",
 		"https://dash\\.run(/.*)?",
 		"https://[\\w\\.-]+\\.dash\\.run(/.*)?",
+		"https://0xproject\\.com(/.*)?",
 		"chrome-extension://jcjjhjgimijdkoamemaghajlhegmoclj(/.*)?"
 		],
 	"blacklist_urls": [
