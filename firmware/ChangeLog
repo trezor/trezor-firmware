@@ -1,5 +1,5 @@
 Version 1.5.1
-* Stable release, required update
+* Stable release, optional update
 * Wipe storage after 16 wrong PIN attempts
 * Enable Segwit for Bitcoin
 * Bcash aka Bitcoin Cash support
@@ -59,7 +59,7 @@ Version 1.3.4
 * Updated maxfee per kb for coins
 
 Version 1.3.3
-* Stable release, required update
+* Stable release, mandatory update
 * Ask for PIN on GetAddress and GetPublicKey
 * Signing speed improved
 
