@@ -434,13 +434,13 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 	assert (bn_is_less(k, &curve->order));
 
 	int i, j;
-	bignum256 a;
+	static CONFIDENTIAL bignum256 a;
 	uint32_t *aptr;
 	uint32_t abits;
 	int ashift;
 	uint32_t is_even = (k->val[0] & 1) - 1;
 	uint32_t bits, sign, nsign;
-	jacobian_curve_point jres;
+	static CONFIDENTIAL jacobian_curve_point jres;
 	curve_point pmult[8];
 	const bignum256 *prime = &curve->prime;
 
@@ -542,6 +542,8 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 	}
 	conditional_negate(sign, &jres.z, prime);
 	jacobian_to_curve(&jres, res, prime);
+	MEMSET_BZERO(&a, sizeof(a));
+	MEMSET_BZERO(&jres, sizeof(jres));
 }
 
 #if USE_PRECOMPUTED_CP
@@ -553,10 +555,10 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k, curve_point *
 	assert (bn_is_less(k, &curve->order));
 
 	int i, j;
-	bignum256 a;
+	static CONFIDENTIAL bignum256 a;
 	uint32_t is_even = (k->val[0] & 1) - 1;
 	uint32_t lowbits;
-	jacobian_curve_point jres;
+	static CONFIDENTIAL jacobian_curve_point jres;
 	const bignum256 *prime = &curve->prime;
 
 	// is_even = 0xffffffff if k is even, 0 otherwise.
@@ -628,6 +630,8 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k, curve_point *
 	}
 	conditional_negate(((a.val[0] >> 4) & 1) - 1, &jres.y, prime);
 	jacobian_to_curve(&jres, res, prime);
+	MEMSET_BZERO(&a, sizeof(a));
+	MEMSET_BZERO(&jres, sizeof(jres));
 }
 
 #else

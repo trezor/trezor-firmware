@@ -122,7 +122,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num, const uint8_t *chain_co
 
 int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNode *out)
 {
-	uint8_t I[32 + 32];
+	static CONFIDENTIAL uint8_t I[32 + 32];
 	memset(out, 0, sizeof(HDNode));
 	out->depth = 0;
 	out->child_num = 0;
@@ -130,8 +130,10 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 	if (out->curve == 0) {
 		return 0;
 	}
-	hmac_sha512((const uint8_t*) out->curve->bip32_name,
-				strlen(out->curve->bip32_name), seed, seed_len, I);
+	static CONFIDENTIAL HMAC_SHA512_CTX ctx;
+	hmac_sha512_Init(&ctx, (const uint8_t*) out->curve->bip32_name, strlen(out->curve->bip32_name));
+	hmac_sha512_Update(&ctx, seed, seed_len);
+	hmac_sha512_Final(&ctx, I);
 
 	if (out->curve->params) {
 		bignum256 a;
@@ -141,8 +143,9 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 				&& bn_is_less(&a, &out->curve->params->order)) { // < order
 				break;
 			}
-			hmac_sha512((const uint8_t*) out->curve->bip32_name,
-						strlen(out->curve->bip32_name), I, sizeof(I), I);
+			hmac_sha512_Init(&ctx, (const uint8_t*) out->curve->bip32_name, strlen(out->curve->bip32_name));
+			hmac_sha512_Update(&ctx, I, sizeof(I));
+			hmac_sha512_Final(&ctx, I);
 		}
 		MEMSET_BZERO(&a, sizeof(a));
 	}
@@ -168,9 +171,9 @@ uint32_t hdnode_fingerprint(HDNode *node)
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i)
 {
-	uint8_t data[1 + 32 + 4];
-	uint8_t I[32 + 32];
-	bignum256 a, b;
+	static CONFIDENTIAL uint8_t data[1 + 32 + 4];
+	static CONFIDENTIAL uint8_t I[32 + 32];
+	static CONFIDENTIAL bignum256 a, b;
 
 	if (i & 0x80000000) { // private derivation
 		data[0] = 0;
@@ -186,7 +189,11 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
 	bn_read_be(inout->private_key, &a);
 
-	hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
+	static CONFIDENTIAL HMAC_SHA512_CTX ctx;
+	hmac_sha512_Init(&ctx, inout->chain_code, 32);
+	hmac_sha512_Update(&ctx, data, sizeof(data));
+	hmac_sha512_Final(&ctx, I);
+
 	if (inout->curve->params) {
 		while (true) {
 			bool failed = false;
@@ -208,7 +215,9 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 
 			data[0] = 1;
 			memcpy(data + 1, I + 32, 32);
-			hmac_sha512(inout->chain_code, 32, data, sizeof(data), I);
+			hmac_sha512_Init(&ctx, inout->chain_code, 32);
+			hmac_sha512_Update(&ctx, data, sizeof(data));
+			hmac_sha512_Final(&ctx, I);
 		}
 	} else {
 		memcpy(inout->private_key, I, 32);
@@ -308,10 +317,10 @@ void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *
 
 #if USE_BIP32_CACHE
 static bool private_ckd_cache_root_set = false;
-static HDNode private_ckd_cache_root;
+static CONFIDENTIAL HDNode private_ckd_cache_root;
 static int private_ckd_cache_index = 0;
 
-static struct {
+static CONFIDENTIAL struct {
 	bool set;
 	size_t depth;
 	uint32_t i[BIP32_CACHE_MAXDEPTH];

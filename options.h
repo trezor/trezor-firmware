@@ -71,4 +71,9 @@
 #define USE_KECCAK 1
 #endif
 
+// add way how to mark confidential data
+#ifndef CONFIDENTIAL
+#define CONFIDENTIAL
+#endif
+
 #endif
