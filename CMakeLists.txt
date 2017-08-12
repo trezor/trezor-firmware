@@ -13,6 +13,7 @@ set(SOURCES
     ed25519-donna/ed25519.c ed25519-donna/curve25519-donna-scalarmult-base.c ed25519-donna/ed25519-sha3.c ed25519-donna/ed25519-keccak.c
     blake2b.c blake2s.c
     chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
+    rc4.c
 )
 
 add_library(TrezorCrypto STATIC ${SOURCES})
