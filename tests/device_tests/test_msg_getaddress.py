@@ -18,6 +18,7 @@
 
 import unittest
 import common
+import trezorlib.types_pb2 as proto_types
 import trezorlib.ckd_public as bip32
 
 
@@ -42,6 +43,28 @@ class TestMsgGetaddress(common.TrezorTest):
     def test_tbtc(self):
         self.setup_mnemonic_nopin_nopassphrase()
         self.assertEqual(self.client.get_address('Testnet', [111, 42]), 'moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa')
+
+    def test_bch(self):
+        self.setup_mnemonic_allallall()
+        self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/0")), '1MH9KKcvdCTY44xVDC2k3fjBbX5Cz29N1q')
+        self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/1")), '1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3')
+        self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/1/0")), '1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE')
+
+    def test_bch_multisig(self):
+        self.setup_mnemonic_allallall()
+        xpubs = [];
+        for n in map(lambda index : self.client.get_public_node(self.client.expand_path("44'/145'/"+str(index)+"'")), range(1,4)):
+            xpubs.append(n.xpub)
+
+        def getmultisig(chain, nr, signatures=[b'',b'',b''], xpubs=xpubs):
+            return proto_types.MultisigRedeemScriptType(
+                pubkeys=map(lambda xpub : proto_types.HDNodePathType(node=bip32.deserialize(xpub), address_n=[chain,nr]), xpubs),
+                signatures=signatures,
+                m=2,
+            )
+        for nr in range(1,4):
+            self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/"+str(nr)+"'/0/0"), show_display=(nr==1), multisig=getmultisig(0,0)), '33Ju286QvonBz5N1V754ZekQv4GLJqcc5R')
+            self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/"+str(nr)+"'/1/0"), show_display=(nr==1), multisig=getmultisig(1,0)), '3CPtPpL5mGAPdxUeUDfm2RNdWoSN9dKpXE')
 
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()
