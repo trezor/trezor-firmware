@@ -1,51 +1,78 @@
 #!/usr/bin/env python3
 import json
 
-coins = json.load(open('../vendor/trezor-common/coins.json', 'r'))
+coins_json = json.load(open('../vendor/trezor-common/coins.json', 'r'))
 
-fields = []
+coins_stable, coins_debug = [], []
 
-for c in coins:
-    if c['firmware']:
-        fields.append([
-            'true' if c['coin_name'] is not None else 'false',
-            '"%s"' % c['coin_name'] if c['coin_name'] is not None else 'NULL',
 
-            'true' if c['coin_shortcut'] is not None else 'false',
-            '" %s"' % c['coin_shortcut'] if c['coin_shortcut'] is not None else 'NULL',
+def get_fields(coin):
+    return [
+        'true' if coin['coin_name'] is not None else 'false',
+        '"%s"' % coin['coin_name'] if coin['coin_name'] is not None else 'NULL',
 
-            'true' if c['address_type'] is not None else 'false',
-            '%d' % c['address_type'] if c['address_type'] is not None else '0',
+        'true' if coin['coin_shortcut'] is not None else 'false',
+        '" %s"' % coin['coin_shortcut'] if coin['coin_shortcut'] is not None else 'NULL',
 
-            'true' if c['maxfee_kb'] is not None else 'false',
-            '%d' % c['maxfee_kb'] if c['maxfee_kb'] is not None else '0',
+        'true' if coin['address_type'] is not None else 'false',
+        '%d' % coin['address_type'] if coin['address_type'] is not None else '0',
 
-            'true' if c['address_type_p2sh'] is not None else 'false',
-            '%d' % c['address_type_p2sh'] if c['address_type_p2sh'] is not None else '0',
+        'true' if coin['maxfee_kb'] is not None else 'false',
+        '%d' % coin['maxfee_kb'] if coin['maxfee_kb'] is not None else '0',
 
-            'true' if c['signed_message_header'] is not None else 'false',
-            '"\\x%02x" "%s"' % (len(c['signed_message_header']), c['signed_message_header'].replace('\n', '\\n')) if c['signed_message_header'] is not None else 'NULL',
+        'true' if coin['address_type_p2sh'] is not None else 'false',
+        '%d' % coin['address_type_p2sh'] if coin['address_type_p2sh'] is not None else '0',
 
-            'true' if c['xpub_magic'] is not None else 'false',
-            '0x%s' % c['xpub_magic'] if c['xpub_magic'] is not None else '00000000',
+        'true' if coin['signed_message_header'] is not None else 'false',
+        '"\\x%02x" "%s"' % (len(coin['signed_message_header']), coin['signed_message_header'].replace('\n', '\\n')) if coin['signed_message_header'] is not None else 'NULL',
 
-            'true' if c['xprv_magic'] is not None else 'false',
-            '0x%s' % c['xprv_magic'] if c['xprv_magic'] is not None else '00000000',
+        'true' if coin['xpub_magic'] is not None else 'false',
+        '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '00000000',
 
-            'true' if c['segwit'] is not None else 'false',
-            'true' if c['segwit'] else 'false',
+        'true' if coin['xprv_magic'] is not None else 'false',
+        '0x%s' % coin['xprv_magic'] if coin['xprv_magic'] is not None else '00000000',
 
-            'true' if c['forkid'] is not None else 'false',
-            '%d' % c['forkid'] if c['forkid'] else '0'
-        ])
+        'true' if coin['segwit'] is not None else 'false',
+        'true' if coin['segwit'] else 'false',
 
-for j in range(len(fields[0])):
-    l = max([len(x[j]) for x in fields]) + 1
-    for i in range(len(fields)):
-        if fields[i][j][0] in '0123456789':
-            fields[i][j] = (fields[i][j] + ',').rjust(l)
-        else:
-            fields[i][j] = (fields[i][j] + ',').ljust(l)
+        'true' if coin['forkid'] is not None else 'false',
+        '%d' % coin['forkid'] if coin['forkid'] else '0'
+    ]
 
-for row in fields:
+
+def justify_width(coins):
+    for j in range(len(coins[0])):
+        l = max([len(x[j]) for x in coins]) + 1
+        for i in range(len(coins)):
+            if coins[i][j][0] in '0123456789':
+                coins[i][j] = (coins[i][j] + ',').rjust(l)
+            else:
+                coins[i][j] = (coins[i][j] + ',').ljust(l)
+
+
+for coin in coins_json:
+    if coin['firmware'] == 'stable':
+        coins_stable.append(get_fields(coin))
+    if coin['firmware'] == 'debug':
+        coins_debug.append(get_fields(coin))
+
+justify_width(coins_stable)
+justify_width(coins_debug)
+
+for row in coins_stable:
     print('\t{' + ' '.join(row) + ' },')
+
+print('#if DEBUG_LINK')
+
+for row in coins_debug:
+    print('\t{' + ' '.join(row) + ' },')
+
+print('#endif')
+
+print('-' * 32)
+
+print('#if DEBUG_LINK')
+print('#define COINS_COUNT %d' % (len(coins_stable) + len(coins_debug)))
+print('#else')
+print('#define COINS_COUNT %d' % (len(coins_stable)))
+print('#endif')
