@@ -27,6 +27,7 @@ from trezorlib.client import CallException
 
 TxApiBitcoinCash = TxApiInsight(network='insight_bch', url='https://bch-bitcore2.trezor.io/api/')
 
+
 class TestMsgSigntxSegwit(common.TrezorTest):
 
     def test_send_bch_change(self):
@@ -223,24 +224,24 @@ class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_bch_multisig_wrongchange(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinCash)
-        xpubs = [];
-        for n in map(lambda index : self.client.get_public_node(self.client.expand_path("44'/145'/"+str(index)+"'")), range(1,4)):
+        xpubs = []
+        for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
 
-        def getmultisig(chain, nr, signatures=[b'',b'',b''], xpubs=xpubs):
+        def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
             return proto_types.MultisigRedeemScriptType(
-                pubkeys=map(lambda xpub : proto_types.HDNodePathType(node=deserialize(xpub), address_n=[chain,nr]), xpubs),
+                pubkeys=map(lambda xpub: proto_types.HDNodePathType(node=deserialize(xpub), address_n=[chain, nr]), xpubs),
                 signatures=signatures,
                 m=2,
             )
         correcthorse = proto_types.HDNodeType(
-            depth=1,fingerprint=0,child_num=0,
+            depth=1, fingerprint=0, child_num=0,
             chain_code=binascii.unhexlify('0000000000000000000000000000000000000000000000000000000000000000'),
             public_key=binascii.unhexlify('0378d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c71'))
         sig = binascii.unhexlify(b'304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae')
         inp1 = proto_types.TxInputType(
             address_n=self.client.expand_path("44'/145'/1'/1/0"),
-            multisig=getmultisig(1,0,[b'',sig, b'']),
+            multisig=getmultisig(1, 0, [b'', sig, b'']),
             # 3CPtPpL5mGAPdxUeUDfm2RNdWoSN9dKpXE
             amount=24000,
             prev_hash=binascii.unhexlify('f68caf10df12d5b07a34601d88fa6856c6edcbf4d05ebef3486510ae1c293d5f'),
@@ -250,10 +251,10 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         out1 = proto_types.TxOutputType(
             address_n=self.client.expand_path("44'/145'/1'/1/1"),
             multisig=proto_types.MultisigRedeemScriptType(
-                pubkeys=[proto_types.HDNodePathType(node=deserialize(xpubs[0]), address_n=[1,1]),
+                pubkeys=[proto_types.HDNodePathType(node=deserialize(xpubs[0]), address_n=[1, 1]),
                          proto_types.HDNodePathType(node=correcthorse, address_n=[]),
                          proto_types.HDNodePathType(node=correcthorse, address_n=[])],
-                signatures=[b'',b'',b''],
+                signatures=[b'', b'', b''],
                 m=2,
             ),
             script_type=proto_types.PAYTOMULTISIG,
@@ -276,19 +277,19 @@ class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_bch_multisig_change(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinCash)
-        xpubs = [];
-        for n in map(lambda index : self.client.get_public_node(self.client.expand_path("44'/145'/"+str(index)+"'")), range(1,4)):
+        xpubs = []
+        for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
 
-        def getmultisig(chain, nr, signatures=[b'',b'',b''], xpubs=xpubs):
+        def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
             return proto_types.MultisigRedeemScriptType(
-                pubkeys=map(lambda xpub : proto_types.HDNodePathType(node=deserialize(xpub), address_n=[chain,nr]), xpubs),
+                pubkeys=map(lambda xpub: proto_types.HDNodePathType(node=deserialize(xpub), address_n=[chain, nr]), xpubs),
                 signatures=signatures,
                 m=2,
             )
         inp1 = proto_types.TxInputType(
             address_n=self.client.expand_path("44'/145'/3'/0/0"),
-            multisig=getmultisig(0,0),
+            multisig=getmultisig(0, 0),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=48490,
             prev_hash=binascii.unhexlify('8b6db9b8ba24235d86b053ea2ccb484fc32b96f89c3c39f98d86f90db16076a0'),
@@ -302,7 +303,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         )
         out2 = proto_types.TxOutputType(
             address_n=self.client.expand_path("44'/145'/3'/1/0"),
-            multisig=getmultisig(1,0),
+            multisig=getmultisig(1, 0),
             script_type=proto_types.PAYTOMULTISIG,
             amount=24000
         )
@@ -324,7 +325,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
 
         inp1 = proto_types.TxInputType(
             address_n=self.client.expand_path("44'/145'/1'/0/0"),
-            multisig=getmultisig(0,0,[b'', b'', signatures1[0]]),
+            multisig=getmultisig(0, 0, [b'', b'', signatures1[0]]),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=48490,
             prev_hash=binascii.unhexlify('8b6db9b8ba24235d86b053ea2ccb484fc32b96f89c3c39f98d86f90db16076a0'),
@@ -349,5 +350,3 @@ class TestMsgSigntxSegwit(common.TrezorTest):
 
         self.assertEqual(binascii.hexlify(signatures1[0]), b'3045022100f1153636371ba1f84389460e1265a8fa296569bc18e117c31f4e8f0fc0650c01022022932cc84766ff0c0f65ed9633ad311ae90d4c8fe71f5e1890b1e8f74dd516fa')
         self.assertEqual(binascii.hexlify(serialized_tx), b'0100000001a07660b10df9868df9393c9cf8962bc34f48cb2cea53b0865d2324bab8b96d8b00000000fdfe0000483045022100f1153636371ba1f84389460e1265a8fa296569bc18e117c31f4e8f0fc0650c01022022932cc84766ff0c0f65ed9633ad311ae90d4c8fe71f5e1890b1e8f74dd516fa41483045022100bcb1a7134a13025a06052546ee1c6ac3640a0abd2d130190ed13ed7fcb43e9cd02207c381478e2ee123c850425bfbf6d3c691230eb37e333832cb32a1ed3f2cd9e85414c69522102fcf63419c319ce1a42d69120a3599d6da8c5dd4caf2888220eccde5a1ff7c5d021036d7d5ef79370b7fabe2c058698a20219e97fc70868e65ecdd6b37cc18e8a88bd2103505dc649dab8cd1655a4c0daf0ec5f955881c9d7011478ea881fac11cab1e49953aeffffffff02c05d0000000000001976a91400741952f6a6eab5394f366db5cc5a54b0c2429f88acc05d00000000000017a914756c06d7e77de3950a6124f026d8e1a2464b3ecf8700000000')
-
-
