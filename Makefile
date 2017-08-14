@@ -23,7 +23,6 @@ CFLAGS   += $(OPTFLAGS) \
             -Wformat-security \
             -Werror
 
-# disable sequence point warning because of AES code
 CFLAGS += -I.
 CFLAGS += -Iaes
 CFLAGS += -Ichacha20poly1305
