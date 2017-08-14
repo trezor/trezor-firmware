@@ -117,9 +117,7 @@ int main(void)
     f_ectx          alge[1];
     f_dctx          algd[1];
 
-#if defined(STATIC_TABLES)
     aes_init();
-#endif
 
     message("\nRun tests for the AES algorithm");
 
