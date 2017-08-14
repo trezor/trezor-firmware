@@ -60,6 +60,9 @@ all: test_check test_openssl test_speed tools libtrezor-crypto.so
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
+aes/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
+	$(CC) $^ -o $@
+
 test_check: test_check.o $(OBJS)
 	$(CC) test_check.o $(OBJS) $(TESTLIBS) -o test_check
 

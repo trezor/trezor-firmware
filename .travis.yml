@@ -21,6 +21,7 @@ install:
 
 script:
   - make
+  - ./aes/aestst
   - ./test_check
   - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./test_check
   - ./test_openssl 1000
