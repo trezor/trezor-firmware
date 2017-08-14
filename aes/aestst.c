@@ -53,7 +53,7 @@
 
 void out_state(long s0, long s1, long s2, long s3)
 {
-    printf("\n%08x%08x508x%08x", s0, s1, s2, s3);
+    printf("\n%08lx%08lx%08lx%08lx", s0, s1, s2, s3);
 }
 
 void oblk(char m[], unsigned char v[], unsigned long n)
@@ -65,7 +65,7 @@ void oblk(char m[], unsigned char v[], unsigned long n)
         printf("%02x", v[i]);
 }
 
-void message(const char *s)   { printf(s); }
+void message(const char *s)   { printf("%s", s); }
 
 unsigned char pih[32] = // hex digits of pi
 {
