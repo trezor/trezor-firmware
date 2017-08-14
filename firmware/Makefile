@@ -72,11 +72,14 @@ else
 CFLAGS += -DFASTFLASH=0
 endif
 
+DEBUG_LINK ?= 0
+DEBUG_LOG  ?= 0
+
 CFLAGS += -Wno-sequence-point
 CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
 CFLAGS += -DQR_MAX_VERSION=0
-CFLAGS += -DDEBUG_LINK=0
-CFLAGS += -DDEBUG_LOG=0
+CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
+CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_ETHEREUM=1
 

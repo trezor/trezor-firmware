@@ -5,19 +5,26 @@ language: c
 addons:
   apt:
     packages:
-    - build-essential
-    - git
-    - gcc-arm-none-eabi
-    - libnewlib-arm-none-eabi
+      - build-essential
+      - gcc-arm-none-eabi
+      - libnewlib-arm-none-eabi
+
+env:
+  global:
+    - MAKEFLAGS=-j2
+  matrix:
+    - DEBUG_LINK=0 FASTFLASH=0
+    - DEBUG_LINK=1 FASTFLASH=0
+    - DEBUG_LINK=0 FASTFLASH=1
+    - DEBUG_LINK=1 FASTFLASH=1
 
 script:
-  - CFLAGS="-std=c99" make -C vendor/libopencm3
+  - CFLAGS="-std=c99" make -C vendor/libopencm3 lib/stm32/f2
   - make
   - make -C bootloader
   - make -C fastflash
   - make -C firmware
   - make -C demo
-  - make -C firmware clean && make -C firmware FASTFLASH=1
 
 notifications:
   webhooks:
