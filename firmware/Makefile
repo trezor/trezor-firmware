@@ -35,10 +35,18 @@ OBJS += ../vendor/trezor-crypto/ecdsa.o
 OBJS += ../vendor/trezor-crypto/curves.o
 OBJS += ../vendor/trezor-crypto/secp256k1.o
 OBJS += ../vendor/trezor-crypto/nist256p1.o
-OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519.o
+
+OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-donna-basepoint-table.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519-donna-scalarmult-base.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-sha3.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-keccak.o
+
 OBJS += ../vendor/trezor-crypto/hmac.o
 OBJS += ../vendor/trezor-crypto/bip32.o
 OBJS += ../vendor/trezor-crypto/bip39.o
