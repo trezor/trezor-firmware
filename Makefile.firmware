@@ -84,13 +84,6 @@ OBJ_MOD += $(addprefix $(BUILD_FW)/,\
 	)
 endif
 
-# OBJ embed/extmod/modtrezormsg
-ifeq ($(MICROPY_PY_TREZORMSG),1)
-OBJ_MOD += $(addprefix $(BUILD_FW)/,\
-	extmod/modtrezormsg/modtrezormsg.o \
-	)
-endif
-
 # OBJ embed/extmod/modtrezorui
 ifeq ($(MICROPY_PY_TREZORUI),1)
 CFLAGS_MOD += -DQR_MAX_VERSION=0

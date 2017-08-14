@@ -117,7 +117,6 @@
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
 #define MICROPY_PY_TREZORIO         (1)
-#define MICROPY_PY_TREZORMSG        (1)
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 
@@ -130,7 +129,6 @@ extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_trezorconfig;
 extern const struct _mp_obj_module_t mp_module_trezorcrypto;
 extern const struct _mp_obj_module_t mp_module_trezorio;
-extern const struct _mp_obj_module_t mp_module_trezormsg;
 extern const struct _mp_obj_module_t mp_module_trezorui;
 extern const struct _mp_obj_module_t mp_module_trezorutils;
 
@@ -139,7 +137,6 @@ extern const struct _mp_obj_module_t mp_module_trezorutils;
     { MP_OBJ_NEW_QSTR(MP_QSTR_trezorconfig), (mp_obj_t)&mp_module_trezorconfig }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_trezorcrypto), (mp_obj_t)&mp_module_trezorcrypto }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_trezorio), (mp_obj_t)&mp_module_trezorio }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_trezormsg), (mp_obj_t)&mp_module_trezormsg }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_trezorui), (mp_obj_t)&mp_module_trezorui }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_trezorutils), (mp_obj_t)&mp_module_trezorutils },
 

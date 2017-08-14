@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #ifndef __TREZORHAL_TOUCH_H__
 #define __TREZORHAL_TOUCH_H__
 

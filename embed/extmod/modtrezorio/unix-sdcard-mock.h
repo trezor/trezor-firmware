@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include "../../trezorhal/sdcard.h"
 
 #define SD_ERROR 41U

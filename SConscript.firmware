@@ -57,11 +57,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
 
-# modtrezormsg
-SOURCE_MOD += [
-    'embed/extmod/modtrezormsg/modtrezormsg.c',
-]
-
 # modtrezorui
 CPPDEFINES_MOD += [('QR_MAX_VERSION', '0')]
 SOURCE_MOD += [

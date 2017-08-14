@@ -58,12 +58,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
 
-# modtrezormsg
-SOURCE_MOD += [
-    'embed/unix/touch.c',
-    'embed/extmod/modtrezormsg/modtrezormsg.c',
-]
-
 # modtrezorui
 CPPDEFINES_MOD += [('QR_MAX_VERSION', '0')]
 SOURCE_MOD += [
@@ -220,6 +214,7 @@ SOURCE_UNIX = [
     'vendor/micropython/unix/moduselect.c',
     'vendor/micropython/unix/alloc.c',
     'embed/unix/common.c',
+    'embed/unix/touch.c',
 ]
 
 SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']
@@ -270,7 +265,7 @@ env.Replace(
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross', )
 
-if ARGUMENTS.get('TREZOR_X86', 0):
+if int(ARGUMENTS.get('TREZOR_X86', '0')):
     env.Append(
         CCFLAGS='-m32',
         LINKFLAGS='-m32', )

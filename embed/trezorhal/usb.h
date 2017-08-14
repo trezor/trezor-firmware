@@ -88,8 +88,6 @@ typedef struct {
     const uint8_t *manufacturer_str;
     const uint8_t *product_str;
     const uint8_t *serial_str;
-    const uint8_t *config_str;
-    const uint8_t *interface_str;
 } usb_dev_string_table_t;
 
 typedef struct {
@@ -99,8 +97,6 @@ typedef struct {
     const uint8_t *manufacturer_str;
     const uint8_t *product_str;
     const uint8_t *serial_number_str;
-    const uint8_t *configuration_str;
-    const uint8_t *interface_str;
 } usb_dev_info_t;
 
 typedef enum {
