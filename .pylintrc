@@ -2,4 +2,4 @@
 init-hook='sys.path.append("mocks"); sys.path.append("src/lib")'
 
 [MESSAGES CONTROL]
-disable=C0111,C0103,W0603,W0703
+disable=C0111,C0103,C0413,W0603,W0703
