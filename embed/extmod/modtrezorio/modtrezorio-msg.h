@@ -175,7 +175,7 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type, size_t n_ar
 ///     Returns the configured number of this interface.
 ///     '''
 STATIC mp_obj_t mod_trezorio_HID_iface_num(mp_obj_t self) {
-    mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
+    mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
     return MP_OBJ_NEW_SMALL_INT(o->info.iface_num);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_HID_iface_num_obj, mod_trezorio_HID_iface_num);
@@ -273,7 +273,7 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type, size_t n_ar
 ///     Returns the configured number of this interface.
 ///     '''
 STATIC mp_obj_t mod_trezorio_VCP_iface_num(mp_obj_t self) {
-    mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
+    mp_obj_VCP_t *o = MP_OBJ_TO_PTR(self);
     return MP_OBJ_NEW_SMALL_INT(o->info.iface_num);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_VCP_iface_num_obj, mod_trezorio_VCP_iface_num);
@@ -391,11 +391,11 @@ STATIC mp_obj_t mod_trezorio_USB_add(mp_obj_t self, mp_obj_t iface) {
     if (o->state != USB_CLOSED) {
         mp_raise_msg(&mp_type_RuntimeError, "already initialized");
     }
-    mp_obj_list_append(o->ifaces, iface);
+    mp_obj_list_append(MP_OBJ_FROM_PTR(&o->ifaces), iface);
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USB_add_obj, mod_trezorio_USB_add);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_add_obj, mod_trezorio_USB_add);
 
 /// def start(self) -> None:
 ///     '''
@@ -410,7 +410,7 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
 
     size_t iface_cnt;
     mp_obj_t *iface_objs;
-    mp_obj_get_array(o->ifaces, &iface_cnt, &iface_objs);
+    mp_obj_get_array(MP_OBJ_FROM_PTR(&o->ifaces), &iface_cnt, &iface_objs);
 
     // Initialize the USB stack
     if (usb_init(&o->info) != 0) {
@@ -443,7 +443,7 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
     }
 
     // Start the USB stack
-    if (USB_open() != 0) {
+    if (usb_start() != 0) {
         usb_deinit();
         mp_raise_msg(&mp_type_RuntimeError, "failed to start USB");
     }
@@ -455,21 +455,21 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USB_open_obj, mod_trezorio_USB_open);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_open_obj, mod_trezorio_USB_open);
 
 /// def stop(self) -> None:
 ///     '''
 ///     Cleans up the USB stack.
 ///     '''
-STATIC mp_obj_t mod_trezorio_USB_close_usb(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
     mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
     if (o->state != USB_OPENED) {
         mp_raise_msg(&mp_type_RuntimeError, "not initialized");
     }
-    USB_close();
+    usb_stop();
     usb_deinit();
-    mp_obj_list_set_len(o->ifaces, 0);
+    mp_obj_list_set_len(MP_OBJ_FROM_PTR(&o->ifaces), 0);
     mp_seq_clear(o->ifaces.items, 0, o->ifaces.alloc, sizeof(*o->ifaces.items));
     o->info.vendor_id     = 0;
     o->info.product_id    = 0;
@@ -481,7 +481,7 @@ STATIC mp_obj_t mod_trezorio_USB_close_usb(mp_obj_t self) {
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_close_usb_obj, mod_trezorio_USB_close_usb);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_close_obj, mod_trezorio_USB_close);
 
 /// def write(self, iface: int, msg: bytes) -> int:
 ///     '''
@@ -503,7 +503,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USB_write_obj, mod_trezorio_USB_wr
 STATIC mp_obj_t mod_trezorio_USB___del__(mp_obj_t self) {
     mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
     if (o->state != USB_CLOSED) {
-        usb_close();
+        usb_stop();
         usb_deinit();
         o->state = USB_CLOSED;
     }

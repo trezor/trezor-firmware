@@ -200,12 +200,12 @@ class SesssionSupervisor:
                 self.open(newsid)
                 yield
                 await write
-                self.sendopen(newsid)
+                self.writeopen(newsid)
             elif repmarker == _REP_MARKER_CLOSE:
                 self.close(repsid)
                 yield
                 await write
-                self.sendclose(repsid)
+                self.writeclose(repsid)
 
     def open(self, sid):
         if sid not in self.handling_tasks:
@@ -223,10 +223,10 @@ class SesssionSupervisor:
             if sid not in self.handling_tasks:
                 return sid
 
-    def sendopen(self, sid):
+    def writeopen(self, sid):
         ustruct.pack_into(_REP, self.session_report, 0, _REP_MARKER_OPEN, sid)
-        io.send(self.iface, self.session_report)
+        io.write(self.iface, self.session_report)
 
-    def sendclose(self, sid):
+    def writeclose(self, sid):
         ustruct.pack_into(_REP, self.session_report, 0, _REP_MARKER_CLOSE, sid)
-        io.send(self.iface, self.session_report)
+        io.write(self.iface, self.session_report)

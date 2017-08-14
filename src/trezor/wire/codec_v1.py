@@ -127,7 +127,7 @@ class Writer:
             if self.ofs == _REP_LEN:
                 # we are at the end of the report, flush it
                 await write
-                io.send(self.iface, self.data)
+                io.write(self.iface, self.data)
                 self.ofs = _REP_CONT_DATA
 
         return nwritten

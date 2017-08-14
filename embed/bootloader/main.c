@@ -93,14 +93,12 @@ void check_and_jump(void)
 
 int usb_init_all(void) {
     static const usb_dev_info_t dev_info = {
-        .vendor_id         = 0x1209,
-        .product_id        = 0x53C0,
-        .release_num       = 0x0002,
-        .manufacturer_str  = (const uint8_t *)"SatoshiLabs",
-        .product_str       = (const uint8_t *)"TREZOR Bootloader",
-        .serial_number_str = (const uint8_t *)"",
-        .configuration_str = (const uint8_t *)"",
-        .interface_str     = (const uint8_t *)"",
+        .vendor_id     = 0x1209,
+        .product_id    = 0x53C0,
+        .release_num   = 0x0002,
+        .manufacturer  = (const uint8_t *)"SatoshiLabs",
+        .product       = (const uint8_t *)"TREZOR Bootloader",
+        .serial_number = (const uint8_t *)"",
     };
     static uint8_t hid_rx_buffer[USB_PACKET_SIZE];
     static const uint8_t hid_report_desc[] = {

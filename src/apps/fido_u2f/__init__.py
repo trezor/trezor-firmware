@@ -6,7 +6,7 @@ import utime
 
 from trezor import log
 from trezor import loop
-from trezor import msg
+from trezor import io
 from trezor import ui
 from trezor import utils
 from trezor import workflow
@@ -295,7 +295,7 @@ def send_cmd(cmd: Cmd, iface: int) -> None:
     frm.bcnt = datalen
 
     offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
-    msg.send(iface, buf)
+    io.send(iface, buf)
     # log.debug(__name__, 'send init %s', buf)
 
     if offset < datalen:
@@ -305,7 +305,7 @@ def send_cmd(cmd: Cmd, iface: int) -> None:
         frm.seq = seq
         offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
         utime.sleep_ms(1)  # FIXME: do async send
-        msg.send(iface, buf)
+        io.send(iface, buf)
         # log.debug(__name__, 'send cont %s', buf)
         seq += 1
 

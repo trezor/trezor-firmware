@@ -121,7 +121,6 @@ async def handle_unexp_msg(ctx, reader):
     await ctx.write(
         Failure(code=UnexpectedMessage, message='Unexpected message'))
 
-
 def make_failure_msg(exc):
     from trezor.messages.Failure import Failure
     from trezor.messages.FailureType import FirmwareError

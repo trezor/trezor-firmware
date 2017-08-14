@@ -68,14 +68,14 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.bNumConfigurations = 1;
 
     // String table
-    if ((0 != check_desc_str(dev_info->manufacturer_str)) ||
-        (0 != check_desc_str(dev_info->product_str)) ||
-        (0 != check_desc_str(dev_info->serial_number_str))) {
+    if ((0 != check_desc_str(dev_info->manufacturer)) ||
+        (0 != check_desc_str(dev_info->product)) ||
+        (0 != check_desc_str(dev_info->serial_number))) {
         return 1; // Invalid descriptor string
     }
-    usb_str_table.manufacturer_str = dev_info->manufacturer_str;
-    usb_str_table.product_str      = dev_info->product_str;
-    usb_str_table.serial_str       = dev_info->serial_number_str;
+    usb_str_table.manufacturer  = dev_info->manufacturer;
+    usb_str_table.product       = dev_info->product;
+    usb_str_table.serial_number = dev_info->serial_number;
 
     // Configuration descriptor
     usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
@@ -185,17 +185,17 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
 }
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.manufacturer_str), usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.manufacturer), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.product_str), usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.product), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.serial_str), usb_str_buf, length);
+    USBD_GetString(UNCONST(usb_str_table.serial_number), usb_str_buf, length);
     return usb_str_buf;
 }
 

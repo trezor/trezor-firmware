@@ -11,18 +11,16 @@ and `Wait`.
 import utime
 import utimeq
 from micropython import const
-from trezor import msg
 from trezor import log
+from trezor import io
 
-import trezormsg
+TOUCH = io.TOUCH
+TOUCH_START = io.TOUCH_START
+TOUCH_MOVE = io.TOUCH_MOVE
+TOUCH_END = io.TOUCH_END
 
-TOUCH = trezormsg.TOUCH
-TOUCH_START = trezormsg.TOUCH_START
-TOUCH_MOVE = trezormsg.TOUCH_MOVE
-TOUCH_END = trezormsg.TOUCH_END
-
-READ = trezormsg.POLL_READ
-WRITE = trezormsg.POLL_WRITE
+READ = io.POLL_READ
+WRITE = io.POLL_WRITE
 
 after_step_hook = None  # function, called after each task step
 

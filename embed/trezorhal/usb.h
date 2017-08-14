@@ -85,18 +85,18 @@ typedef enum {
 } usb_language_id_t;
 
 typedef struct {
-    const uint8_t *manufacturer_str;
-    const uint8_t *product_str;
-    const uint8_t *serial_str;
+    const uint8_t *manufacturer;
+    const uint8_t *product;
+    const uint8_t *serial_number;
 } usb_dev_string_table_t;
 
 typedef struct {
     uint16_t vendor_id;
     uint16_t product_id;
     uint16_t release_num;
-    const uint8_t *manufacturer_str;
-    const uint8_t *product_str;
-    const uint8_t *serial_number_str;
+    const uint8_t *manufacturer;
+    const uint8_t *product;
+    const uint8_t *serial_number;
 } usb_dev_info_t;
 
 typedef enum {

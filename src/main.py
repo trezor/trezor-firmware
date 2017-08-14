@@ -1,16 +1,11 @@
 from micropython import const
 
-import trezor.main
-from trezor import config
-from trezor import msg
-from trezor import ui
+from trezor import io
 from trezor import wire
-from trezor import loop
-from trezor.wire import codec_v2
+from trezor import main
 
-config.init()
-
-# Load all applications
+# Load applications
+from apps.common import storage
 if __debug__:
     from apps import debug
 from apps import homescreen
@@ -19,7 +14,7 @@ from apps import wallet
 from apps import ethereum
 from apps import fido_u2f
 
-# Initialize all applications
+# Boot applications
 if __debug__:
     debug.boot()
 homescreen.boot()
@@ -28,21 +23,9 @@ wallet.boot()
 ethereum.boot()
 fido_u2f.boot()
 
-# HACK: keep storage loaded at all times
-from apps.common import storage
-
-# Change backlight to white for better visibility
-ui.display.backlight(ui.BACKLIGHT_NORMAL)
-
-# Register USB ifaces
-
-_IFACE_WIRE = const(0x00)
-_IFACE_VCP = const(0x01)
-_IFACE_VCP_DATA = const(0x02)
-_IFACE_U2F = const(0x03)
-
-hid_wire = msg.HID(
-    iface_num=_IFACE_WIRE,
+# Intialize the USB stack
+usb_wire = io.HID(
+    iface_num=0x00,
     ep_in=0x81,
     ep_out=0x01,
     report_desc=bytes([
@@ -64,17 +47,15 @@ hid_wire = msg.HID(
         0xc0,              # END_COLLECTION
     ]),
 )
-
-vcp = msg.VCP(
-    iface_num=_IFACE_VCP,
-    data_iface_num=_IFACE_VCP_DATA,
+usb_vcp = io.VCP(
+    iface_num=0x01,
+    data_iface_num=0x02,
     ep_in=0x82,
     ep_out=0x02,
     ep_cmd=0x83,
 )
-
-hid_u2f = msg.HID(
-    iface_num=_IFACE_U2F,
+usb_u2f = io.HID(
+    iface_num=0x03,
     ep_in=0x84,
     ep_out=0x03,
     report_desc=bytes([
@@ -96,21 +77,24 @@ hid_u2f = msg.HID(
         0xc0,              # END_COLLECTION
     ]),
 )
-
-msg.init_usb(msg.USB(
+usb = io.USB(
     vendor_id=0x1209,
     product_id=0x53C1,
     release_num=0x0002,
-    manufacturer_str="SatoshiLabs",
-    product_str="TREZOR",
-    serial_number_str="000000000000000000000000"
-), (hid_wire, vcp, hid_u2f))
+    manufacturer="SatoshiLabs",
+    product="TREZOR",
+    serial_number="000000000000000000000000",
+)
+usb.add(usb_wire)
+usb.add(usb_vcp)
+usb.add(usb_u2f)
+usb.open()
 
 # Initialize the wire codec pipeline
-wire.setup(_IFACE_WIRE)
+wire.setup(usb_wire.iface_num())
 
 # Load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
 
 # Run main even loop and specify which screen is default
-trezor.main.run(default_workflow=layout_homescreen)
+main.run(default_workflow=layout_homescreen)
