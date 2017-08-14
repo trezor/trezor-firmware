@@ -20,6 +20,7 @@
 #ifndef __COINS_H__
 #define __COINS_H__
 
+#include "messages.pb.h"
 #include "types.pb.h"
 
 #if DEBUG_LINK
@@ -27,6 +28,8 @@
 #else
 #define COINS_COUNT 8
 #endif
+
+_Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
 
 extern const CoinType coins[COINS_COUNT];
 
