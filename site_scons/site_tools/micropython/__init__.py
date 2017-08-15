@@ -26,7 +26,6 @@ def generate(env):
         return '$MPY_CROSS -o %s -s %s %s' % (target, source_name, source)
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
-        # action='$MPY_CROSS -o $TARGET -s $SOURCE $SOURCE',
         generator=generate_frozen_module,
         suffix='.mpy',
         single_source=True, )

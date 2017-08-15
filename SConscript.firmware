@@ -141,7 +141,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/emitinlinextensa.c',
     'vendor/micropython/py/formatfloat.c',
     'vendor/micropython/py/frozenmod.c',
-    'vendor/micropython/py/gc.c',
     'vendor/micropython/py/lexer.c',
     'vendor/micropython/py/malloc.c',
     'vendor/micropython/py/map.c',
@@ -221,7 +220,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/stackctrl.c',
     'vendor/micropython/py/stream.c',
     'vendor/micropython/py/unicode.c',
-    'vendor/micropython/py/vm.c',
     'vendor/micropython/py/vstr.c',
     'vendor/micropython/py/warning.c',
     'vendor/micropython/stmhal/gccollect.c',
@@ -229,6 +227,11 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/stmhal/pendsv.c',
     'vendor/micropython/stmhal/startup_stm32.S',
     'vendor/micropython/stmhal/systick.c',
+]
+
+SOURCE_MICROPYTHON_SPEED = [
+    'vendor/micropython/py/gc.c',
+    'vendor/micropython/py/vm.c',
 ]
 
 SOURCE_STMHAL = [
@@ -286,7 +289,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/hal/stm32f4xx_ll_fsmc.c',
 ]
 
-SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON
+SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
 # TODO: recursive Glob
 SOURCE_PY = Glob('src/*.py')
@@ -311,7 +314,8 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    CCFLAGS='-Os '
+    COPT='-Os',
+    CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
     '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith '
@@ -319,6 +323,7 @@ env.Replace(
     '-fsingle-precision-constant -fdata-sections -ffunction-sections ' +
     CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
+    CCFLAGS_OPT='-O3',
     LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections',
     CPPPATH=[
         '.',
@@ -394,6 +399,7 @@ obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
+obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
 obj_program.extend(env.Object(source=SOURCE_STMHAL))
 obj_program.extend(env.Object(source=SOURCE_TREZORHAL))
 obj_program.extend(env.Object(source=source_mpyc))
