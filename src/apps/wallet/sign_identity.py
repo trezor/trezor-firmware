@@ -1,5 +1,3 @@
-from typing import List
-
 from trezor import ui
 from trezor.utils import unimport
 
@@ -27,7 +25,7 @@ def display_identity(identity: str, challenge_visual: str):
     ui.display.text(10, 80, identity, ui.MONO, ui.WHITE, ui.BLACK)
 
 
-def get_identity_path(identity: str, index: int) -> List[int]:
+def get_identity_path(identity: str, index: int):
     from ustruct import pack, unpack
     from trezor.crypto.hashlib import sha256
 
