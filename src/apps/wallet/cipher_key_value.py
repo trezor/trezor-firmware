@@ -26,7 +26,7 @@ def cipher_key_value(msg, seckey: bytes) -> bytes:
 
 
 @unimport
-async def layout_cipher_key_value(session_id, msg):
+async def layout_cipher_key_value(ctx, msg):
     from trezor.messages.CipheredKeyValue import CipheredKeyValue
     from ..common import seed
 
@@ -38,7 +38,7 @@ async def layout_cipher_key_value(session_id, msg):
                     ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
     ui.display.text(10, 60, msg.key, ui.MONO, ui.WHITE, ui.BLACK)
 
-    node = await seed.get_root(session_id)
+    node = await seed.get_root(ctx)
     node.derive_path(msg.address_n)
 
     value = cipher_key_value(msg, node.private_key())

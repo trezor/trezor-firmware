@@ -4,13 +4,13 @@ from trezor.messages.wire_types import \
     DebugLinkMemoryRead, DebugLinkMemoryWrite, DebugLinkFlashErase
 
 
-async def dispatch_DebugLinkDecision(session_id, msg):
+async def dispatch_DebugLinkDecision(ctx, msg):
     from trezor.ui.confirm import CONFIRMED, CANCELLED
     from apps.common.confirm import signal
     signal.send(CONFIRMED if msg.yes_no else CANCELLED)
 
 
-async def dispatch_DebugLinkGetState(session_id, msg):
+async def dispatch_DebugLinkGetState(ctx, msg):
     from trezor.messages.DebugLinkState import DebugLinkState
     from apps.common import storage, request_pin
     from apps.management import reset_device
@@ -36,11 +36,11 @@ async def dispatch_DebugLinkGetState(session_id, msg):
     return m
 
 
-async def dispatch_DebugLinkStop(session_id, msg):
+async def dispatch_DebugLinkStop(ctx, msg):
     pass
 
 
-async def dispatch_DebugLinkMemoryRead(session_id, msg):
+async def dispatch_DebugLinkMemoryRead(ctx, msg):
     from trezor.messages.DebugLinkMemory import DebugLinkMemory
     from uctypes import bytes_at
     m = DebugLinkMemory()
@@ -48,14 +48,14 @@ async def dispatch_DebugLinkMemoryRead(session_id, msg):
     return m
 
 
-async def dispatch_DebugLinkMemoryWrite(session_id, msg):
+async def dispatch_DebugLinkMemoryWrite(ctx, msg):
     from uctypes import bytearray_at
     l = len(msg.memory)
     data = bytearray_at(msg.address, l)
     data[0:l] = msg.memory
 
 
-async def dispatch_DebugLinkFlashErase(session_id, msg):
+async def dispatch_DebugLinkFlashErase(ctx, msg):
     # TODO: erase(msg.sector)
     pass
 

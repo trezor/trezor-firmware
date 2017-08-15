@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_get_address(session_id, msg):
+async def layout_get_address(ctx, msg):
     from trezor.messages.Address import Address
     from trezor.messages.FailureType import ProcessError
     from ..common import coins
@@ -15,18 +15,18 @@ async def layout_get_address(session_id, msg):
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
 
-    node = await seed.get_root(session_id)
+    node = await seed.get_root(ctx)
     node.derive_path(address_n)
     coin = coins.by_name(coin_name)
     address = node.address(coin.address_type)
 
     if msg.show_display:
-        await _show_address(session_id, address)
+        await _show_address(ctx, address)
 
     return Address(address=address)
 
 
-async def _show_address(session_id, address):
+async def _show_address(ctx, address):
     from trezor.messages.ButtonRequestType import Address
     from trezor.ui.text import Text
     from trezor.ui.qr import Qr
@@ -37,7 +37,7 @@ async def _show_address(session_id, address):
     content = Container(
         Qr(address, (120, 135), 3),
         Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines))
-    await require_confirm(session_id, content, code=Address)
+    await require_confirm(ctx, content, code=Address)
 
 
 def _split_address(address):

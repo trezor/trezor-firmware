@@ -83,7 +83,7 @@ def sign_challenge(seckey: bytes,
 
 
 @unimport
-async def layout_sign_identity(session_id, msg):
+async def layout_sign_identity(ctx, msg):
     from trezor.messages.SignedIdentity import SignedIdentity
     from ..common import coins
     from ..common import seed
@@ -92,7 +92,7 @@ async def layout_sign_identity(session_id, msg):
     display_identity(identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
-    node = await seed.get_root(session_id, msg.ecdsa_curve_name)
+    node = await seed.get_root(ctx, msg.ecdsa_curve_name)
     node.derive_path(address_n)
 
     coin = coins.by_name('Bitcoin')

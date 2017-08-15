@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_sign_message(session_id, msg):
+async def layout_sign_message(ctx, msg):
     from trezor.messages.MessageSignature import MessageSignature
     from trezor.crypto.curve import secp256k1
     from ..common import coins
@@ -18,7 +18,7 @@ async def layout_sign_message(session_id, msg):
     coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
-    node = await seed.get_root(session_id)
+    node = await seed.get_root(ctx)
     node.derive_path(msg.address_n)
 
     seckey = node.private_key()

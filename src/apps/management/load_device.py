@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_load_device(session_id, msg):
+async def layout_load_device(ctx, msg):
     from trezor.crypto import bip39
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import UnexpectedMessage, ProcessError
@@ -20,7 +20,7 @@ async def layout_load_device(session_id, msg):
     if not msg.skip_checksum and not bip39.check(msg.mnemonic):
         raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
 
-    await require_confirm(session_id, Text(
+    await require_confirm(ctx, Text(
         'Loading seed', ui.ICON_RESET,
         ui.BOLD, 'Loading private seed', 'is not recommended.',
         ui.NORMAL, 'Continue only if you', 'know what you are doing!'))

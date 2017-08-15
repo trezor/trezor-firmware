@@ -4,26 +4,7 @@ from trezor import io
 from trezor import wire
 from trezor import main
 
-# Load applications
-from apps.common import storage
-if __debug__:
-    from apps import debug
-from apps import homescreen
-from apps import management
-from apps import wallet
-from apps import ethereum
-from apps import fido_u2f
-
-# Boot applications
-if __debug__:
-    debug.boot()
-homescreen.boot()
-management.boot()
-wallet.boot()
-ethereum.boot()
-fido_u2f.boot()
-
-# Intialize the USB stack
+# initialize the USB stack
 usb_wire = io.HID(
     iface_num=0x00,
     ep_in=0x81,
@@ -90,11 +71,30 @@ usb.add(usb_vcp)
 usb.add(usb_u2f)
 usb.open()
 
-# Initialize the wire codec pipeline
-wire.setup(usb_wire.iface_num())
+# load applications
+from apps.common import storage
+if __debug__:
+    from apps import debug
+from apps import homescreen
+from apps import management
+from apps import wallet
+from apps import ethereum
+from apps import fido_u2f
 
-# Load default homescreen
+# boot applications
+if __debug__:
+    debug.boot()
+homescreen.boot()
+management.boot()
+wallet.boot()
+ethereum.boot()
+fido_u2f.boot(usb_u2f)
+
+# initialize the wire codec pipeline
+wire.setup(usb_wire)
+
+# load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
 
-# Run main even loop and specify which screen is default
+# run main even loop and specify which screen is default
 main.run(default_workflow=layout_homescreen)

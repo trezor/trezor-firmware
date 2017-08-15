@@ -3,7 +3,7 @@ from trezor import wire
 
 
 @unimport
-async def sign_tx(session_id, msg):
+async def sign_tx(ctx, msg):
     from trezor.messages.RequestType import TXFINISHED
     from trezor.messages.wire_types import TxAck
 
@@ -11,7 +11,7 @@ async def sign_tx(session_id, msg):
     from . import signing
     from . import layout
 
-    root = await seed.get_root(session_id)
+    root = await seed.get_root(ctx)
 
     signer = signing.sign_tx(msg, root)
     res = None
@@ -23,13 +23,13 @@ async def sign_tx(session_id, msg):
         if req.__qualname__ == 'TxRequest':
             if req.request_type == TXFINISHED:
                 break
-            res = await wire.call(session_id, req, TxAck)
+            res = await ctx.call(req, TxAck)
         elif req.__qualname__ == 'UiConfirmOutput':
-            res = await layout.confirm_output(session_id, req.output, req.coin)
+            res = await layout.confirm_output(ctx, req.output, req.coin)
         elif req.__qualname__ == 'UiConfirmTotal':
-            res = await layout.confirm_total(session_id, req.spending, req.fee, req.coin)
+            res = await layout.confirm_total(ctx, req.spending, req.fee, req.coin)
         elif req.__qualname__ == 'UiConfirmFeeOverThreshold':
-            res = await layout.confirm_feeoverthreshold(session_id, req.fee, req.coin)
+            res = await layout.confirm_feeoverthreshold(ctx, req.fee, req.coin)
         else:
             raise TypeError('Invalid signing instruction')
     return req

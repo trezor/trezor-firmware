@@ -11,7 +11,7 @@ def nth(n):
 
 
 @unimport
-async def layout_recovery_device(session_id, msg):
+async def layout_recovery_device(ctx, msg):
 
     msg = 'Please enter ' + nth(msg.word_count) + ' word'
 

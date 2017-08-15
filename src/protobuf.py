@@ -14,7 +14,7 @@ async def load_uvarint(reader):
     shift = 0
     byte = 0x80
     while byte & 0x80:
-        await reader.readinto(buffer)
+        await reader.areadinto(buffer)
         byte = buffer[0]
         result += (byte & 0x7F) << shift
         shift += 7
@@ -27,7 +27,7 @@ async def dump_uvarint(writer, n):
     while shifted:
         shifted = n >> 7
         buffer[0] = (n & 0x7F) | (0x80 if shifted else 0x00)
-        await writer.write(buffer)
+        await writer.awrite(buffer)
         n = shifted
 
 
@@ -69,11 +69,11 @@ class LimitedReader:
         self.reader = reader
         self.limit = limit
 
-    async def readinto(self, buf):
+    async def areadinto(self, buf):
         if self.limit < len(buf):
             raise EOFError
         else:
-            nread = await self.reader.readinto(buf)
+            nread = await self.reader.areadinto(buf)
             self.limit -= nread
             return nread
 
@@ -83,7 +83,7 @@ class CountingWriter:
     def __init__(self):
         self.size = 0
 
-    async def write(self, buf):
+    async def awrite(self, buf):
         nwritten = len(buf)
         self.size += nwritten
         return nwritten
@@ -112,7 +112,7 @@ async def load_message(reader, msg_type):
                 await load_uvarint(reader)
             elif wtype == 2:
                 ivalue = await load_uvarint(reader)
-                await reader.readinto(bytearray(ivalue))
+                await reader.areadinto(bytearray(ivalue))
             else:
                 raise ValueError
             continue
@@ -129,10 +129,10 @@ async def load_message(reader, msg_type):
             fvalue = bool(ivalue)
         elif ftype is BytesType:
             fvalue = bytearray(ivalue)
-            await reader.readinto(fvalue)
+            await reader.areadinto(fvalue)
         elif ftype is UnicodeType:
             fvalue = bytearray(ivalue)
-            await reader.readinto(fvalue)
+            await reader.areadinto(fvalue)
             fvalue = str(fvalue, 'utf8')
         elif issubclass(ftype, MessageType):
             fvalue = await load_message(LimitedReader(reader, ivalue), ftype)
@@ -186,11 +186,11 @@ async def dump_message(writer, msg):
 
             elif ftype is BytesType:
                 await dump_uvarint(writer, len(svalue))
-                await writer.write(svalue)
+                await writer.awrite(svalue)
 
             elif ftype is UnicodeType:
                 await dump_uvarint(writer, len(svalue))
-                await writer.write(bytes(svalue, 'utf8'))
+                await writer.awrite(bytes(svalue, 'utf8'))
 
             elif issubclass(ftype, MessageType):
                 counter = CountingWriter()

@@ -226,11 +226,11 @@ class Cmd:
         return Msg(self.cid, cla, ins, p1, p2, lc, data)
 
 
-async def read_cmd(iface: int) -> Cmd:
+async def read_cmd(iface: io.HID) -> Cmd:
     desc_init = frame_init()
     desc_cont = frame_cont()
 
-    buf, = await loop.select(iface)
+    buf, = await loop.select(iface.iface_num())
     # log.debug(__name__, 'read init %s', buf)
 
     ifrm = overlay_struct(buf, desc_init)
@@ -252,7 +252,7 @@ async def read_cmd(iface: int) -> Cmd:
         data = data[:bcnt]
 
     while datalen < bcnt:
-        buf, = await loop.select(iface)
+        buf, = await loop.select(iface.iface_num())
         # log.debug(__name__, 'read cont %s', buf)
 
         cfrm = overlay_struct(buf, desc_cont)
@@ -282,7 +282,7 @@ async def read_cmd(iface: int) -> Cmd:
     return Cmd(ifrm.cid, ifrm.cmd, data)
 
 
-def send_cmd(cmd: Cmd, iface: int) -> None:
+def send_cmd(cmd: Cmd, iface: io.HID) -> None:
     init_desc = frame_init()
     cont_desc = frame_cont()
     offset = 0
@@ -295,7 +295,7 @@ def send_cmd(cmd: Cmd, iface: int) -> None:
     frm.bcnt = datalen
 
     offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
-    io.send(iface, buf)
+    iface.write(buf)
     # log.debug(__name__, 'send init %s', buf)
 
     if offset < datalen:
@@ -304,18 +304,17 @@ def send_cmd(cmd: Cmd, iface: int) -> None:
     while offset < datalen:
         frm.seq = seq
         offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
-        utime.sleep_ms(1)  # FIXME: do async send
-        io.send(iface, buf)
+        utime.sleep_ms(1)  # FIXME: async write
+        iface.write(buf)
         # log.debug(__name__, 'send cont %s', buf)
         seq += 1
 
 
-def boot():
-    iface = 0x03
+def boot(iface: io.HID):
     loop.schedule_task(handle_reports(iface))
 
 
-async def handle_reports(iface: int):
+async def handle_reports(iface: io.HID):
     while True:
         try:
             req = await read_cmd(iface)

@@ -14,22 +14,22 @@ def split_address(address):
     return chunks(address, 17)
 
 
-async def confirm_output(session_id, output, coin):
+async def confirm_output(ctx, output, coin):
     content = Text('Confirm output', ui.ICON_RESET,
                    ui.BOLD, format_amount(output.amount, coin),
                    ui.NORMAL, 'to',
                    ui.MONO, *split_address(output.address))
-    return await confirm(session_id, content, ButtonRequestType.ConfirmOutput)
+    return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-async def confirm_total(session_id, spending, fee, coin):
+async def confirm_total(ctx, spending, fee, coin):
     content = Text('Confirm transaction', ui.ICON_RESET,
                    'Sending: %s' % format_amount(spending, coin),
                    'Fee: %s' % format_amount(fee, coin))
-    return await hold_to_confirm(session_id, content, ButtonRequestType.SignTx)
+    return await hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
-async def confirm_feeoverthreshold(session_id, fee, coin):
+async def confirm_feeoverthreshold(ctx, fee, coin):
     content = Text('Confirm high fee:', ui.ICON_RESET,
                    ui.BOLD, format_amount(fee, coin))
-    return await confirm(session_id, content, ButtonRequestType.FeeOverThreshold)
+    return await confirm(ctx, content, ButtonRequestType.FeeOverThreshold)

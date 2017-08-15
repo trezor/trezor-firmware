@@ -3,7 +3,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_apply_settings(session_id, msg):
+async def layout_apply_settings(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import ProcessError
     from trezor.ui.text import Text
@@ -11,7 +11,7 @@ async def layout_apply_settings(session_id, msg):
     from ..common.request_pin import protect_by_pin
     from ..common import storage
 
-    await protect_by_pin(session_id)
+    await protect_by_pin(ctx)
 
     if msg.homescreen is not None:
         raise wire.FailureError(
@@ -21,20 +21,20 @@ async def layout_apply_settings(session_id, msg):
         raise wire.FailureError(ProcessError, 'No setting provided')
 
     if msg.label is not None:
-        await require_confirm(session_id, Text(
+        await require_confirm(ctx, Text(
             'Change label', ui.ICON_RESET,
             'Do you really want to', 'change label to',
             ui.BOLD, '%s' % msg.label))
 
     if msg.language is not None:
-        await require_confirm(session_id, Text(
+        await require_confirm(ctx, Text(
             'Change language', ui.ICON_RESET,
             'Do you really want to', 'change language to',
             ui.BOLD, '%s' % msg.language,
             ui.NORMAL, '?'))
 
     if msg.use_passphrase is not None:
-        await require_confirm(session_id, Text(
+        await require_confirm(ctx, Text(
             'Enable passphrase' if msg.use_passphrase else 'Disable passphrase',
             ui.ICON_RESET,
             'Do you really want to',

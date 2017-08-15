@@ -2,7 +2,7 @@ from trezor.utils import unimport
 
 
 @unimport
-async def layout_get_public_key(session_id, msg):
+async def layout_get_public_key(ctx, msg):
     from trezor.messages.HDNodeType import HDNodeType
     from trezor.messages.PublicKey import PublicKey
     from ..common import coins
@@ -11,7 +11,7 @@ async def layout_get_public_key(session_id, msg):
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
 
-    node = await seed.get_root(session_id)
+    node = await seed.get_root(ctx)
     node.derive_path(address_n)
     coin = coins.by_name(coin_name)
 

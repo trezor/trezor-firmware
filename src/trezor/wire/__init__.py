@@ -8,57 +8,81 @@ from trezor import workflow
 from . import codec_v1
 from . import codec_v2
 
-workflows = {}
+workflow_handlers = {}
 
 
-def register(wire_type, handler, *args):
-    if wire_type in workflows:
+def register(mtype, handler, *args):
+    '''Register `handler` to get scheduled after `mtype` message is received.'''
+    if mtype in workflow_handlers:
         raise KeyError
-    workflows[wire_type] = (handler, args)
+    workflow_handlers[mtype] = (handler, args)
 
 
-def setup(interface):
-    session_supervisor = codec_v2.SesssionSupervisor(interface,
-                                                     session_handler)
+def setup(iface):
+    '''Initialize the wire stack on passed USB interface.'''
+    session_supervisor = codec_v2.SesssionSupervisor(iface, session_handler)
     session_supervisor.open(codec_v1.SESSION_ID)
     loop.schedule_task(session_supervisor.listen())
 
 
 class Context:
-    def __init__(self, interface, session_id):
-        self.interface = interface
-        self.session_id = session_id
-
-    def get_reader(self):
-        if self.session_id == codec_v1.SESSION_ID:
-            return codec_v1.Reader(self.interface)
-        else:
-            return codec_v2.Reader(self.interface, self.session_id)
-
-    def get_writer(self, mtype, msize):
-        if self.session_id == codec_v1.SESSION_ID:
-            return codec_v1.Writer(self.interface, mtype, msize)
-        else:
-            return codec_v2.Writer(self.interface, self.session_id, mtype, msize)
-
-    async def read(self, types):
-        reader = self.get_reader()
-        await reader.open()
-        if reader.type not in types:
-            raise UnexpectedMessageError(reader)
-        return await protobuf.load_message(reader,
-                                           messages.get_type(reader.type))
-
-    async def write(self, msg):
-        counter = protobuf.CountingWriter()
-        await protobuf.dump_message(counter, msg)
-        writer = self.get_writer(msg.MESSAGE_WIRE_TYPE, counter.size)
-        await protobuf.dump_message(writer, msg)
-        await writer.close()
+    def __init__(self, iface, sid):
+        self.iface = iface
+        self.sid = sid
 
     async def call(self, msg, types):
+        '''
+        Reply with `msg` and wait for one of `types`. See `self.write()` and
+        `self.read()`.
+        '''
         await self.write(msg)
         return await self.read(types)
+
+    async def read(self, types):
+        '''
+        Wait for incoming message on this wire context and return it.  Raises
+        `UnexpectedMessageError` if the message type does not match one of
+        `types`; and caller should always make sure to re-raise it.
+        '''
+        reader = self.getreader()
+
+        await reader.aopen()  # wait for the message header
+
+        # if we got a message with unexpected type, raise the reader via
+        # `UnexpectedMessageError` and let the session handler deal with it
+        if reader.type not in types:
+            raise UnexpectedMessageError(reader)
+
+        # look up the protobuf class and parse the message
+        pbtype = messages.get_type(reader.type)
+        return await protobuf.load_message(reader, pbtype)
+
+    async def write(self, msg):
+        '''
+        Write a protobuf message to this wire context.
+        '''
+        writer = self.getwriter()
+
+        # get the message size
+        counter = protobuf.CountingWriter()
+        await protobuf.dump_message(counter, msg)
+
+        # write the message
+        writer.setheader(msg.MESSAGE_WIRE_TYPE, counter.size)
+        await protobuf.dump_message(writer, msg)
+        await writer.aclose()
+
+    def getreader(self):
+        if self.sid == codec_v1.SESSION_ID:
+            return codec_v1.Reader(self.iface)
+        else:
+            return codec_v2.Reader(self.iface, self.sid)
+
+    def getwriter(self):
+        if self.sid == codec_v1.SESSION_ID:
+            return codec_v1.Writer(self.iface)
+        else:
+            return codec_v2.Writer(self.iface, self.sid)
 
 
 class UnexpectedMessageError(Exception):
@@ -74,60 +98,69 @@ class FailureError(Exception):
         self.message = message
 
 
-class Workflow:
-    def __init__(self, default):
-        self.handlers = {}
-        self.default = default
-
-    async def __call__(self, interface, session_id):
-        ctx = Context(interface, session_id)
-        while True:
+async def session_handler(iface, sid):
+    reader = None
+    ctx = Context(iface, sid)
+    while True:
+        try:
+            # wait for new message, if needed, and find handler
+            if not reader:
+                reader = ctx.getreader()
+                await reader.aopen()
             try:
-                reader = ctx.get_reader()
-                await reader.open()
-                try:
-                    handler = self.handlers[reader.type]
-                except KeyError:
-                    handler = self.default
-                try:
-                    await handler(ctx, reader)
-                except UnexpectedMessageError as unexp_msg:
-                    reader = unexp_msg.reader
-            except Exception as e:
-                log.exception(__name__, e)
+                handler, args = workflow_handlers[reader.type]
+            except KeyError:
+                handler, args = unexpected_msg, ()
+
+            await handler(ctx, reader, *args)
+
+        except UnexpectedMessageError as exc:
+            # retry with opened reader from the exception
+            reader = exc.reader
+            continue
+        except FailureError as exc:
+            # we log FailureError as warning, not as exception
+            log.warning(__name__, 'failure: %s', exc.message)
+        except Exception as exc:
+            # sessions are never closed by raised exceptions
+            log.exception(__name__, exc)
+
+        # read new message in next iteration
+        reader = None
 
 
 async def protobuf_workflow(ctx, reader, handler, *args):
-    msg = await protobuf.load_message(reader, messages.get_type(reader.type))
+    from trezor.messages.Failure import Failure
+    from trezor.messages.FailureType import FirmwareError
+
+    req = await protobuf.load_message(reader, messages.get_type(reader.type))
     try:
-        res = await handler(reader.sid, msg, *args)
-    except Exception as exc:
-        if not isinstance(exc, UnexpectedMessageError):
-            await ctx.write(make_failure_msg(exc))
+        res = await handler(ctx, req, *args)
+    except UnexpectedMessageError:
+        # session handler takes care of this one
         raise
-    else:
-        if res:
-            await ctx.write(res)
+    except FailureError as exc:
+        # respond with specific code and message
+        await ctx.write(Failure(code=exc.code, message=exc.message))
+        raise
+    except Exception as exc:
+        # respond with a generic code and message
+        await ctx.write(Failure(code=FirmwareError, message='Firmware error'))
+        raise
+    if res:
+        # respond with a specific response
+        await ctx.write(res)
 
 
-async def handle_unexp_msg(ctx, reader):
+async def unexpected_msg(ctx, reader):
+    from trezor.messages.Failure import Failure
+    from trezor.messages.FailureType import UnexpectedMessage
+
     # receive the message and throw it away
     while reader.size > 0:
         buf = bytearray(reader.size)
-        await reader.readinto(buf)
+        await reader.areadinto(buf)
+
     # respond with an unknown message error
-    from trezor.messages.Failure import Failure
-    from trezor.messages.FailureType import UnexpectedMessage
     await ctx.write(
         Failure(code=UnexpectedMessage, message='Unexpected message'))
-
-def make_failure_msg(exc):
-    from trezor.messages.Failure import Failure
-    from trezor.messages.FailureType import FirmwareError
-    if isinstance(exc, FailureError):
-        code = exc.code
-        message = exc.message
-    else:
-        code = FirmwareError
-        message = 'Firmware Error'
-    return Failure(code=code, message=message)

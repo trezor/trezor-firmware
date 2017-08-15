@@ -10,7 +10,7 @@ if __debug__:
 
 
 @unimport
-async def layout_reset_device(session_id, msg):
+async def layout_reset_device(ctx, msg):
     from trezor.ui.text import Text
     from trezor.crypto import hashlib, random, bip39
     from trezor.messages.EntropyRequest import EntropyRequest
@@ -39,21 +39,21 @@ async def layout_reset_device(session_id, msg):
     if msg.display_random:
         entropy_lines = chunks(ubinascii.hexlify(internal_entropy), 16)
         entropy_content = Text('Internal entropy', ui.ICON_RESET, *entropy_lines)
-        await require_confirm(session_id, entropy_content, ButtonRequestType.ResetDevice)
+        await require_confirm(ctx, entropy_content, ButtonRequestType.ResetDevice)
 
     if msg.pin_protection:
-        pin = await request_pin_twice(session_id)
+        pin = await request_pin_twice(ctx)
     else:
         pin = None
 
-    external_entropy_ack = await wire.call(session_id, EntropyRequest(), EntropyAck)
+    external_entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
     ctx = hashlib.sha256()
     ctx.update(internal_entropy)
     ctx.update(external_entropy_ack.entropy)
     entropy = ctx.digest()
     mnemonic = bip39.from_data(entropy[:msg.strength // 8])
 
-    await show_mnemonic_by_word(session_id, mnemonic)
+    await show_mnemonic_by_word(ctx, mnemonic)
 
     storage.load_mnemonic(mnemonic)
     storage.load_settings(pin=pin,
@@ -64,7 +64,7 @@ async def layout_reset_device(session_id, msg):
     return Success(message='Initialized')
 
 
-async def show_mnemonic_by_word(session_id, mnemonic):
+async def show_mnemonic_by_word(ctx, mnemonic):
     from trezor.ui.text import Text
     from trezor.messages.ButtonRequestType import ConfirmWord
     from apps.common.confirm import confirm
@@ -80,7 +80,7 @@ async def show_mnemonic_by_word(session_id, mnemonic):
     while index < len(words):
         word = words[index]
         current_word = word
-        await confirm(session_id,
+        await confirm(ctx,
                       Text(
                           'Recovery seed setup', ui.ICON_RESET,
                           ui.NORMAL, 'Write down seed word' if recovery else 'Confirm seed word', ' ',

@@ -1,7 +1,6 @@
 from micropython import const
 import ustruct
 
-from trezor import io
 from trezor import loop
 from trezor import utils
 
@@ -32,13 +31,13 @@ class Reader:
     def __repr__(self):
         return '<ReaderV1: type=%d size=%dB>' % (self.type, self.size)
 
-    async def open(self):
+    async def aopen(self):
         '''
         Begin the message transmission by waiting for initial V2 message report
         on this session.  `self.type` and `self.size` are initialized and
-        available after `open()` returns.
+        available after `aopen()` returns.
         '''
-        read = loop.select(self.iface | loop.READ)
+        read = loop.select(self.iface.iface_num() | loop.READ)
         while True:
             # wait for initial report
             report = await read
@@ -55,7 +54,7 @@ class Reader:
         self.data = report[_REP_INIT_DATA:_REP_INIT_DATA + msize]
         self.ofs = 0
 
-    async def readinto(self, buf):
+    async def areadinto(self, buf):
         '''
         Read exactly `len(buf)` bytes into `buf`, waiting for additional
         reports, if needed.  Raises `EOFError` if end-of-message is encountered
@@ -64,7 +63,7 @@ class Reader:
         if self.size < len(buf):
             raise EOFError
 
-        read = loop.select(self.iface | loop.READ)
+        read = loop.select(self.iface.iface_num() | loop.READ)
         nread = 0
         while nread < len(buf):
             if self.ofs == len(self.data):
@@ -93,20 +92,28 @@ class Writer:
     async-file-like interface.
     '''
 
-    def __init__(self, iface, mtype, msize):
+    def __init__(self, iface):
         self.iface = iface
-        self.type = mtype
-        self.size = msize
+        self.type = None
+        self.size = None
         self.data = bytearray(_REP_LEN)
-        self.ofs = _REP_INIT_DATA
-
-        # load the report with initial header
-        ustruct.pack_into(_REP_INIT, self.data, 0, _REP_MARKER, _REP_MAGIC, _REP_MAGIC, mtype, msize)
+        self.ofs = 0
 
     def __repr__(self):
         return '<WriterV2: type=%d size=%dB>' % (self.type, self.size)
 
-    async def write(self, buf):
+    def setheader(self, mtype, msize):
+        '''
+        Reset the writer state and load the message header with passed type and
+        total message size.
+        '''
+        self.type = mtype
+        self.size = msize
+        ustruct.pack_into(_REP_INIT, self.data, 0, _REP_MARKER, _REP_MAGIC,
+                          _REP_MAGIC, mtype, msize)
+        self.ofs = _REP_INIT_DATA
+
+    async def awrite(self, buf):
         '''
         Encode and write every byte from `buf`.  Does not need to be called in
         case message has zero length.  Raises `EOFError` if the length of `buf`
@@ -115,7 +122,7 @@ class Writer:
         if self.size < len(buf):
             raise EOFError
 
-        write = loop.select(self.iface | loop.WRITE)
+        write = loop.select(self.iface.iface_num() | loop.WRITE)
         nwritten = 0
         while nwritten < len(buf):
             # copy as much as possible to report buffer
@@ -127,12 +134,12 @@ class Writer:
             if self.ofs == _REP_LEN:
                 # we are at the end of the report, flush it
                 await write
-                io.write(self.iface, self.data)
+                self.iface.write(self.data)
                 self.ofs = _REP_CONT_DATA
 
         return nwritten
 
-    async def close(self):
+    async def aclose(self):
         '''Flush and close the message transmission.'''
         if self.ofs != _REP_CONT_DATA:
             # we didn't write anything or last write() wasn't report-aligned,
@@ -141,5 +148,5 @@ class Writer:
                 self.data[self.ofs] = 0x00
                 self.ofs += 1
 
-            await loop.select(self.iface | loop.WRITE)
-            io.send(self.iface, self.data)
+            await loop.select(self.iface.iface_num() | loop.WRITE)
+            self.iface.write(self.data)
