@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
 import unittest
 import common
 import trezorlib.types_pb2 as proto_types
@@ -50,6 +51,7 @@ class TestMsgGetaddress(common.TrezorTest):
         self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/1")), '1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3')
         self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/1/0")), '1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE')
 
+    @pytest.mark.multisig
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []
