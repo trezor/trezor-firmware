@@ -5,6 +5,9 @@
  * see LICENSE file for details
  */
 
+#include <string.h>
+#include <unistd.h>
+
 #if defined TREZOR_STM32
 #include "usb.h"
 #include "touch.h"
