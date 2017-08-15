@@ -55,7 +55,7 @@ for i in \
     test_zerosig.py \
     ; do
 
-        if pytest -q $i ; then
+        if pytest -k-multisig -q $i ; then
            results+=("OK   $i")
         else
            results+=("FAIL $i")
