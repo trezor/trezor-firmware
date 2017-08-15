@@ -21,6 +21,15 @@
 
 /// def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
 ///     '''
+///     Wait until one of `ifaces` is ready to read or write (using masks
+//      `io.POLL_READ` and `io.POLL_WRITE`) and assign the result into
+///     `list_ref`:
+///
+///     `list_ref[0]` - the interface number, including the mask
+///     `list_ref[1]` - for touch event, tuple of (event_type, x_position, y_position)
+///                   - for HID read event, received bytes
+///
+///     If timeout occurs, False is returned, True otherwise.
 ///     '''
 STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t timeout_us) {
     mp_obj_list_t *ret = MP_OBJ_TO_PTR(list_ref);
@@ -180,8 +189,22 @@ STATIC mp_obj_t mod_trezorio_HID_iface_num(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_HID_iface_num_obj, mod_trezorio_HID_iface_num);
 
+/// def write(self, msg: bytes) -> int:
+///     '''
+///     Sends message using USB HID (device) or UDP (emulator).
+///     '''
+STATIC mp_obj_t mod_trezorio_HID_write(mp_obj_t self, mp_obj_t msg) {
+    mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
+    mp_buffer_info_t buf;
+    mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
+    ssize_t r = usb_hid_write(o->info.iface_num, buf.buf, buf.len);
+    return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_write_obj, mod_trezorio_HID_write);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_HID_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_iface_num), MP_ROM_PTR(&mod_trezorio_HID_iface_num_obj) },
+    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_HID_write_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_HID_locals_dict, mod_trezorio_HID_locals_dict_table);
 
@@ -397,7 +420,7 @@ STATIC mp_obj_t mod_trezorio_USB_add(mp_obj_t self, mp_obj_t iface) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_add_obj, mod_trezorio_USB_add);
 
-/// def start(self) -> None:
+/// def open(self) -> None:
 ///     '''
 ///     Initializes the USB stack.
 ///     '''
@@ -457,7 +480,7 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_open_obj, mod_trezorio_USB_open);
 
-/// def stop(self) -> None:
+/// def close(self) -> None:
 ///     '''
 ///     Cleans up the USB stack.
 ///     '''
@@ -483,23 +506,6 @@ STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_close_obj, mod_trezorio_USB_close);
 
-/// def write(self, iface: int, msg: bytes) -> int:
-///     '''
-///     Sends message using USB HID (device) or UDP (emulator).
-///     '''
-STATIC mp_obj_t mod_trezorio_USB_write(mp_obj_t self, mp_obj_t iface, mp_obj_t msg) {
-    mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
-    if (o->state != USB_OPENED) {
-        mp_raise_msg(&mp_type_RuntimeError, "not initialized");
-    }
-    mp_buffer_info_t buf;
-    mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
-    uint8_t i = mp_obj_get_int(iface);
-    ssize_t r = usb_hid_write(i, buf.buf, buf.len);
-    return MP_OBJ_NEW_SMALL_INT(r);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USB_write_obj, mod_trezorio_USB_write);
-
 STATIC mp_obj_t mod_trezorio_USB___del__(mp_obj_t self) {
     mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
     if (o->state != USB_CLOSED) {
@@ -515,7 +521,6 @@ STATIC const mp_rom_map_elem_t mod_trezorio_USB_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_add), MP_ROM_PTR(&mod_trezorio_USB_add_obj) },
     { MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_USB_open_obj) },
     { MP_ROM_QSTR(MP_QSTR_close), MP_ROM_PTR(&mod_trezorio_USB_close_obj) },
-    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_USB_write_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorio_USB___del___obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_USB_locals_dict, mod_trezorio_USB_locals_dict_table);
