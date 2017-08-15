@@ -30,7 +30,7 @@ class Context:
         self.iface = iface
         self.sid = sid
 
-    async def call(self, msg, types):
+    async def call(self, msg, *types):
         '''
         Reply with `msg` and wait for one of `types`. See `self.write()` and
         `self.read()`.
