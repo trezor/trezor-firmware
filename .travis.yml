@@ -29,7 +29,7 @@ addons:
     - libudev-dev
 
 install:
-    - pip3 install ed25519 pyblake2
+    - pip install ed25519 pyblake2
     - pip3 install flake8
     - pip3 install pytest
     - pip3 install ecdsa mnemonic protobuf requests
