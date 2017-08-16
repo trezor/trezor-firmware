@@ -26,7 +26,7 @@
 // filled CoinType Protobuf structure defined in https://github.com/trezor/trezor-common/blob/master/protob/types.proto#L133
 // address types > 0xFF represent a two-byte prefix in big-endian order
 const CoinType coins[COINS_COUNT] = {
-	{true, "Bitcoin",  true, " BTC",  true,    0, true,     500000, true,    5, true, "\x18" "Bitcoin Signed Message:\n",  true, 0x0488b21e, true, 0x0488ade4, true, false, false, 0, },
+	{true, "Bitcoin",  true, " BTC",  true,    0, true,     500000, true,    5, true, "\x18" "Bitcoin Signed Message:\n",  true, 0x0488b21e, true, 0x0488ade4, true, true,  false, 0, },
 	{true, "Testnet",  true, " TEST", true,  111, true,   10000000, true,  196, true, "\x18" "Bitcoin Signed Message:\n",  true, 0x043587cf, true, 0x04358394, true, true,  false, 0, },
 	{true, "Bcash",    true, " BCH",  true,    0, true,     500000, true,    5, true, "\x18" "Bitcoin Signed Message:\n",  true, 0x0488b21e, true, 0x0488ade4, true, false, true,  0, },
 	{true, "Namecoin", true, " NMC",  true,   52, true,   10000000, true,    5, true, "\x19" "Namecoin Signed Message:\n", true, 0x019da462, true, 0x019d9cfe, true, false, false, 0, },
