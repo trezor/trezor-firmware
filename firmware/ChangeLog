@@ -1,3 +1,8 @@
+Version 1.5.2
+* Stable release, required update
+* clean memory on start
+* fix storage import from older versions
+
 Version 1.5.1
 * Stable release, optional update
 * Wipe storage after 16 wrong PIN attempts
