@@ -1,40 +1,43 @@
-from trezor import log, loop, ui
+from trezor import log
+from trezor import loop
+from trezor import ui
 
-_started = []
-_default = None
-_default_genfunc = None
+started = []
+default = None
+default_handler = None
 
 
-def start_default(genfunc):
-    global _default
-    global _default_genfunc
-    _default_genfunc = genfunc
-    _default = _default_genfunc()
-    log.info(__name__, 'start default %s', _default)
-    loop.schedule_task(_default)
+def onstart(w):
+    closedefault()
+    started.append(w)
     ui.display.backlight(ui.BACKLIGHT_NORMAL)
+    log.debug(__name__, 'onstart: %s', w)
 
 
-def close_default():
-    global _default
-    if _default is not None:
-        log.info(__name__, 'close default %s', _default)
-        _default.close()
-        _default = None
+def onclose(w):
+    started.remove(w)
+    log.debug(__name__, 'onclose: %s', w)
+
+    if not started and default_handler:
+        startdefault(default_handler)
 
 
-def start(workflow):
-    close_default()
-    _started.append(workflow)
-    log.info(__name__, 'start %s', workflow)
-    loop.schedule_task(_watch(workflow))
-    ui.display.backlight(ui.BACKLIGHT_NORMAL)
+def closedefault():
+    global default
+
+    if default:
+        default.close()
+        default = None
+        log.debug(__name__, 'closedefault')
 
 
-async def _watch(workflow):
-    try:
-        return await workflow
-    finally:
-        _started.remove(workflow)
-        if not _started and _default_genfunc is not None:
-            start_default(_default_genfunc)
+def startdefault(handler):
+    global default
+    global default_handler
+
+    if not default:
+        default_handler = handler
+        default = handler()
+        loop.schedule_task(default)
+        ui.display.backlight(ui.BACKLIGHT_NORMAL)
+        log.debug(__name__, 'startdefault')

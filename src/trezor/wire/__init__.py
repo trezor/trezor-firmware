@@ -112,7 +112,12 @@ async def session_handler(iface, sid):
             except KeyError:
                 handler, args = unexpected_msg, ()
 
-            await handler(ctx, reader, *args)
+            w = handler(ctx, reader, *args)
+            try:
+                workflow.onstart(w)
+                await w
+            finally:
+                workflow.onclose(w)
 
         except UnexpectedMessageError as exc:
             # retry with opened reader from the exception

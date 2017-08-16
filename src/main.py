@@ -1,8 +1,15 @@
 from micropython import const
 
+from trezor import config
 from trezor import io
+from trezor import log
+from trezor import loop
 from trezor import wire
-from trezor import main
+from trezor import workflow
+
+config.init()
+
+log.level = log.DEBUG
 
 # initialize the USB stack
 usb_wire = io.HID(
@@ -97,4 +104,5 @@ wire.setup(usb_wire)
 from apps.homescreen.homescreen import layout_homescreen
 
 # run main even loop and specify which screen is default
-main.run(default_workflow=layout_homescreen)
+workflow.startdefault(layout_homescreen)
+loop.run()

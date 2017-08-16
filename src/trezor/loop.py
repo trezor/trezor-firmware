@@ -4,7 +4,7 @@ the form of python coroutines (either plain generators or `async` functions) are
 stepped through until completion, and can get asynchronously blocked by
 `yield`ing or `await`ing a syscall.
 
-See `schedule_task`, `run_forever`, and syscalls `Sleep`, `Select`, `Signal`
+See `schedule_task`, `run`, and syscalls `Sleep`, `Select`, `Signal`
 and `Wait`.
 '''
 
@@ -41,7 +41,7 @@ if __debug__:
 def schedule_task(task, value=None, deadline=None):
     '''
     Schedule task to be executed with `value` on given `deadline` (in
-    microseconds).  Does not start the event loop itself, see `run_forever`.
+    microseconds).  Does not start the event loop itself, see `run`.
     '''
     if deadline is None:
         deadline = utime.ticks_us()
@@ -75,7 +75,7 @@ def _unpause_task(task):
             _paused_tasks[iface].remove(task)
 
 
-def run_forever():
+def run():
     '''
     Loop forever, stepping through scheduled tasks and awaiting I/O events
     inbetween.  Use `schedule_task` first to add a coroutine to the task queue.
