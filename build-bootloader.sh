@@ -4,6 +4,7 @@ set -e
 IMAGE=trezor-mcu-build
 TAG=${1:-master}
 BINFILE=build/bootloader-$TAG.bin
+ELFFILE=build/bootloader-$TAG.elf
 
 docker build -t $IMAGE .
 docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
@@ -15,8 +16,8 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	make && \
 	make -C bootloader && \
 	make -C bootloader align && \
-	cp bootloader/bootloader.bin /$BINFILE"
-
+	cp bootloader/bootloader.bin /$BINFILE && \
+	cp bootloader/bootloader.elf /$ELFFILE"
 /usr/bin/env python -c "
 from __future__ import print_function
 import hashlib

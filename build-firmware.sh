@@ -4,6 +4,7 @@ set -e
 IMAGE=trezor-mcu-build
 TAG=${1:-master}
 BINFILE=build/trezor-$TAG.bin
+ELFFILE=build/trezor-$TAG.elf
 
 docker build -t $IMAGE .
 docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
@@ -15,7 +16,8 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	make && \
 	make -C firmware && \
 	make -C firmware sign && \
-	cp firmware/trezor.bin /$BINFILE"
+	cp firmware/trezor.bin /$BINFILE && \
+	cp firmware/trezor.elf /$ELFFILE"
 
 /usr/bin/env python -c "
 from __future__ import print_function
