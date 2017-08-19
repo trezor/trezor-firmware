@@ -396,7 +396,7 @@ def self_test(client):
 
 @cli.command(help='Get address for specified path.')
 @click.option('-c', '--coin', default='Bitcoin')
-@click.option('-n', '--address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
 @click.option('-t', '--script-type', type=click.Choice(['address', 'segwit', 'p2shsegwit']), default='address')
 @click.option('-d', '--show-display', is_flag=True)
 @click.pass_obj
@@ -413,7 +413,7 @@ def get_address(client, coin, address, script_type, show_display):
 
 @cli.command(help='Get public node of given path.')
 @click.option('-c', '--coin', default='Bitcoin')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'")
 @click.option('-e', '--curve')
 @click.option('-d', '--show-display', is_flag=True)
 @click.pass_obj
@@ -439,7 +439,7 @@ def get_public_node(client, coin, address, curve, show_display):
 
 @cli.command(help='Sign message using address of given path.')
 @click.option('-c', '--coin', default='Bitcoin')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
 @click.option('-t', '--script-type', type=click.Choice(['address', 'segwit', 'p2shsegwit']), default='address')
 @click.argument('message')
 @click.pass_obj
@@ -471,7 +471,7 @@ def verify_message(client, coin, address, signature, message):
 
 
 @cli.command(help='Sign message with Ethereum address.')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/60'/0'/0/0")
 @click.argument('message')
 @click.pass_obj
 def ethereum_sign_message(client, address, message):
@@ -504,7 +504,7 @@ def ethereum_verify_message(client, address, signature, message):
 
 
 @cli.command(help='Encrypt value by given key and path.')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/10016'/0")
 @click.argument('key')
 @click.argument('value')
 @click.pass_obj
@@ -515,7 +515,7 @@ def encrypt_keyvalue(client, address, key, value):
 
 
 @cli.command(help='Decrypt value by given key and path.')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/10016'/0")
 @click.argument('key')
 @click.argument('value')
 @click.pass_obj
@@ -527,7 +527,7 @@ def decrypt_keyvalue(client, address, key, value):
 @cli.command(help='Encrypt message.')
 @click.option('-c', '--coin', default='Bitcoin')
 @click.option('-d', '--display-only', is_flag=True)
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
 @click.argument('pubkey')
 @click.argument('message')
 @click.pass_obj
@@ -544,7 +544,7 @@ def encrypt_message(client, coin, display_only, address, pubkey, message):
 
 
 @cli.command(help='Decrypt message.')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
 @click.argument('payload')
 @click.pass_obj
 def decrypt_message(client, address, payload):
@@ -560,7 +560,7 @@ def decrypt_message(client, address, payload):
 
 
 @cli.command(help='Get Ethereum address in hex encoding.')
-@click.option('-n', '-address')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/60'/0'/0/0")
 @click.option('-d', '--show-display', is_flag=True)
 @click.pass_obj
 def ethereum_get_address(client, address, show_display):
@@ -570,9 +570,9 @@ def ethereum_get_address(client, address, show_display):
 
 
 @cli.command(help='Sign (and optionally publish) Ethereum transaction. Use TO as destination address or set TO to "" for contract creation.')
-@click.option('-a', '--host', default='localhost:8545', help='RPC port of ethereum node for automatic gas/nonce estimation')
+@click.option('-a', '--host', default='localhost:8545', help='RPC port of ethereum node for automatic gas/nonce estimation and publishing')
 @click.option('-c', '--chain-id', type=int, help='EIP-155 chain id (replay protection)')
-@click.option('-n', '-address', help='BIP-32 path to signing key')
+@click.option('-n', '--address', required=True, help="BIP-32 path to source address, e.g., m/44'/60'/0'/0/0")
 @click.option('-v', '--value', default='0', help='Ether amount to transfer, e.g. "100 milliether"')
 @click.option('-g', '--gas-limit', type=int, help='Gas limit - Required for offline signing')
 @click.option('-t', '--gas-price', help='Gas price, e.g. "20 nanoether" - Required for offline signing')
