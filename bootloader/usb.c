@@ -36,6 +36,8 @@
 #include "ecdsa.h"
 #include "secp256k1.h"
 
+#define FIRMWARE_MAGIC "TRZR"
+
 #define ENDPOINT_ADDRESS_IN         (0x81)
 #define ENDPOINT_ADDRESS_OUT        (0x01)
 
@@ -479,8 +481,16 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware is too big.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
 				return;
 			}
+			// check firmware magic
+			if (memcmp(p, FIRMWARE_MAGIC, 4) != 0) {
+				send_msg_failure(dev);
+				flash_state = STATE_END;
+				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Wrong firmware header.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
+				return;
+			}
 			flash_state = STATE_FLASHING;
-			flash_pos = 0;
+			p += 4;         // Don't flash firmware header yet.
+			flash_pos = 4;
 			wi = 0;
 			flash_unlock();
 			while (p < buf + 64) {
@@ -560,31 +570,23 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 		layoutProgress("INSTALLING ... Please wait", 1000);
 		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
-		// check if to restore old storage area but only if signatures are ok
-		if ((flags & 0x01) && signatures_ok(NULL)) {
-			// copy new stuff
-			memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_DESC_LEN);
-			// replace "TRZR" in header with 0000 when hash not confirmed
-			if (!hash_check_ok) {
-				meta_backup[0] = 0;
-				meta_backup[1] = 0;
-				meta_backup[2] = 0;
-				meta_backup[3] = 0;
-			}
-			// erase storage
-			erase_metadata_sectors();
-			// restore metadata from backup
-			restore_metadata(meta_backup);
+		// wipe storage if signatures are not ok or the firmware flag isn't set.
+		if ((flags & 0x01) == 0 || !signatures_ok(NULL)) {
 			memset(meta_backup, 0, sizeof(meta_backup));
-		} else {
-			// replace "TRZR" in header with 0000 when hash not confirmed
-			if (!hash_check_ok) {
-				// no need to erase, because we are just erasing bits
-				flash_unlock();
-				flash_program_word(FLASH_META_START, 0x00000000);
-				flash_lock();
-			}
 		}
+		// copy new firmware header
+		memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_DESC_LEN);
+		// write "TRZR" in header only when hash was confirmed
+		if (hash_check_ok) {
+			memcpy(meta_backup, FIRMWARE_MAGIC, 4);
+		} else {
+			memset(meta_backup, 0, 4);
+		}
+
+		// no need to erase, because we are not changing any already flashed byte.
+		restore_metadata(meta_backup);
+		memset(meta_backup, 0, sizeof(meta_backup));
+
 		flash_state = STATE_END;
 		if (hash_check_ok) {
 			layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your TREZOR.", NULL);
