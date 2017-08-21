@@ -24,8 +24,7 @@ color = True
 def _log(name, mlevel, msg, *args):
     if __debug__ and mlevel >= level:
         if color:
-            fmt = '%d \x1b[35m%s\x1b[0m %s \x1b[' + \
-                _leveldict[mlevel][1] + 'm' + msg + '\x1b[0m'
+            fmt = '%d \x1b[35m%s\x1b[0m \x1b[' + _leveldict[mlevel][1] + 'm%s\x1b[0m ' + msg
         else:
             fmt = '%d %s %s ' + msg
         print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args))
