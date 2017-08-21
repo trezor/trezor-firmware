@@ -76,7 +76,6 @@ usb = io.USB(
 usb.add(usb_wire)
 usb.add(usb_vcp)
 usb.add(usb_u2f)
-usb.open()
 
 # load applications
 from apps.common import storage
@@ -97,8 +96,9 @@ wallet.boot()
 ethereum.boot()
 fido_u2f.boot(usb_u2f)
 
-# initialize the wire codec pipeline
+# initialize the wire codec and start the USB
 wire.setup(usb_wire)
+usb.open()
 
 # load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
