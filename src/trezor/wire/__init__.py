@@ -46,6 +46,10 @@ class Context:
         '''
         reader = self.getreader()
 
+        if __debug__:
+            log.debug(__name__, '%s:%x read: %s',
+                      self.iface.iface_num(), self.sid, types)
+
         await reader.aopen()  # wait for the message header
 
         # if we got a message with unexpected type, raise the reader via
@@ -62,6 +66,10 @@ class Context:
         Write a protobuf message to this wire context.
         '''
         writer = self.getwriter()
+
+        if __debug__:
+            log.debug(__name__, '%s:%x write: %s',
+                      self.iface.iface_num(), self.sid, msg)
 
         # get the message size
         counter = protobuf.CountingWriter()

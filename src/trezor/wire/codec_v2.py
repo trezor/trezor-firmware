@@ -124,6 +124,9 @@ class Writer:
         self.ofs = 0
         self.seq = 0
 
+    def __repr__(self):
+        return '<WriterV2: type=%d size=%dB>' % (self.type, self.size)
+
     def setheader(self, mtype, msize):
         '''
         Reset the writer state and load the message header with passed type and

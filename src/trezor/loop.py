@@ -120,16 +120,19 @@ def _step_task(task, value):
         else:
             result = task.send(value)
     except StopIteration as e:
-        log.debug(__name__, '%s finished', task)
+        if __debug__:
+            log.debug(__name__, 'finish: %s', task)
     except Exception as e:
-        log.exception(__name__, e)
+        if __debug__:
+            log.exception(__name__, e)
     else:
         if isinstance(result, Syscall):
             result.handle(task)
         elif result is None:
             schedule_task(task)
         else:
-            log.error(__name__, '%s is unknown syscall', result)
+            if __debug__:
+                log.error(__name__, 'unknown syscall: %s', result)
         if after_step_hook:
             after_step_hook()
 

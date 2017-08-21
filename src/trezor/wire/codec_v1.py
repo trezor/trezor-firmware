@@ -100,7 +100,7 @@ class Writer:
         self.ofs = 0
 
     def __repr__(self):
-        return '<WriterV2: type=%d size=%dB>' % (self.type, self.size)
+        return '<WriterV1: type=%d size=%dB>' % (self.type, self.size)
 
     def setheader(self, mtype, msize):
         '''
