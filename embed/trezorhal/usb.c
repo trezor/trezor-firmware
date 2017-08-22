@@ -200,12 +200,12 @@ static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
 }
 
 static uint8_t *usb_get_config_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    *length = 0;
+    USBD_GetString(UNCONST(""), usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    *length = 0;
+    USBD_GetString(UNCONST(""), usb_str_buf, length);
     return usb_str_buf;
 }
 
