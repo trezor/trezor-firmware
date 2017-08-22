@@ -130,7 +130,7 @@ static void recovery_request(void) {
  * Check mnemonic and send success/failure.
  */
 static void recovery_done(void) {
-	char new_mnemonic[sizeof(storage.mnemonic)] = {0};
+	char new_mnemonic[241] = {0}; // TODO: remove constant
 
 	strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
 	for (uint32_t i = 1; i < word_count; i++) {
@@ -141,13 +141,11 @@ static void recovery_done(void) {
 		// New mnemonic is valid.
 		if (!dry_run) {
 			// Update mnemonic on storage.
-			storage.has_mnemonic = true;
-			strlcpy(storage.mnemonic, new_mnemonic, sizeof(new_mnemonic));
+			storage_setMnemonic(new_mnemonic);
 			memset(new_mnemonic, 0, sizeof(new_mnemonic));
 			if (!enforce_wordlist) {
 				// not enforcing => mark storage as imported
-				storage.has_imported = true;
-				storage.imported = true;
+				storage_setImported(true);
 			}
 			storage_commit();
 			fsm_sendSuccess(_("Device recovered"));
@@ -421,8 +419,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 			return;
 		}
 
-		storage.has_passphrase_protection = true;
-		storage.passphrase_protection = passphrase_protection;
+		storage_setPassphraseProtection(passphrase_protection);
 		storage_setLanguage(language);
 		storage_setLabel(label);
 		storage_setU2FCounter(u2f_counter);

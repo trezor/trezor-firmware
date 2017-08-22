@@ -44,6 +44,7 @@ const char *storage_getLanguage(void);
 void storage_setLanguage(const char *lang);
 
 void storage_setPassphraseProtection(bool passphrase_protection);
+bool storage_hasPassphraseProtection(void);
 
 const uint8_t *storage_getHomescreen(void);
 void storage_setHomescreen(const uint8_t *data, uint32_t size);
@@ -51,10 +52,17 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size);
 void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
 
+void storage_setMnemonic(const char *mnemonic);
 bool storage_containsMnemonic(const char *mnemonic);
+bool storage_hasMnemonic(void);
+const char *storage_getMnemonic(void);
+
+bool storage_hasNode(void);
+const HDNode *storage_getNode(void);
 
 bool storage_containsPin(const char *pin);
 bool storage_hasPin(void);
+const char *storage_getPin(void);
 void storage_setPin(const char *pin);
 void session_cachePin(void);
 bool session_isPinCached(void);
@@ -68,14 +76,16 @@ void storage_setU2FCounter(uint32_t u2fcounter);
 
 bool storage_isInitialized(void);
 
+bool storage_isImported(void);
+void storage_setImported(bool imported);
+
 bool storage_needsBackup(void);
+void storage_setNeedsBackup(bool needs_backup);
 
 void storage_applyFlags(uint32_t flags);
 uint32_t storage_getFlags(void);
 
 void storage_wipe(void);
-
-extern Storage storage;
 
 extern char storage_uuid_str[25];
 

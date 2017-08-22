@@ -217,20 +217,20 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 	resp->has_minor_version = true;  resp->minor_version = VERSION_MINOR;
 	resp->has_patch_version = true;  resp->patch_version = VERSION_PATCH;
 	resp->has_device_id = true;      strlcpy(resp->device_id, storage_uuid_str, sizeof(resp->device_id));
-	resp->has_pin_protection = true; resp->pin_protection = storage.has_pin;
-	resp->has_passphrase_protection = true; resp->passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
+	resp->has_pin_protection = true; resp->pin_protection = storage_hasPin();
+	resp->has_passphrase_protection = true; resp->passphrase_protection = storage_hasPassphraseProtection();
 #ifdef SCM_REVISION
 	int len = sizeof(SCM_REVISION) - 1;
 	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, len); resp->revision.size = len;
 #endif
 	resp->has_bootloader_hash = true; resp->bootloader_hash.size = memory_bootloader_hash(resp->bootloader_hash.bytes);
-	if (storage.has_language) {
+	if (storage_getLanguage()) {
 		resp->has_language = true;
-		strlcpy(resp->language, storage.language, sizeof(resp->language));
+		strlcpy(resp->language, storage_getLanguage(), sizeof(resp->language));
 	}
-	if (storage.has_label) {
+	if (storage_getLabel()) {
 		resp->has_label = true;
-		strlcpy(resp->label, storage.label, sizeof(resp->label));
+		strlcpy(resp->label, storage_getLabel(), sizeof(resp->label));
 	}
 	
 	_Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
@@ -262,7 +262,7 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 		resp->coins[i].force_bip143 = coins[i].force_bip143;
 	}
 	resp->has_initialized = true; resp->initialized = storage_isInitialized();
-	resp->has_imported = true; resp->imported = storage.has_imported && storage.imported;
+	resp->has_imported = true; resp->imported = storage_isImported();
 	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
 	resp->has_needs_backup = true; resp->needs_backup = storage_needsBackup();
@@ -1520,9 +1520,9 @@ void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
 	resp.layout.size = OLED_BUFSIZE;
 	memcpy(resp.layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
 
-	if (storage.has_pin) {
+	if (storage_hasPin()) {
 		resp.has_pin = true;
-		strlcpy(resp.pin, storage.pin, sizeof(resp.pin));
+		strlcpy(resp.pin, storage_getPin(), sizeof(resp.pin));
 	}
 
 	resp.has_matrix = true;
@@ -1540,18 +1540,18 @@ void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
 	resp.has_recovery_word_pos = true;
 	resp.recovery_word_pos = recovery_get_word_pos();
 
-	if (storage.has_mnemonic) {
+	if (storage_hasMnemonic()) {
 		resp.has_mnemonic = true;
-		strlcpy(resp.mnemonic, storage.mnemonic, sizeof(resp.mnemonic));
+		strlcpy(resp.mnemonic, storage_getMnemonic(), sizeof(resp.mnemonic));
 	}
 
-	if (storage.has_node) {
+	if (storage_hasNode()) {
 		resp.has_node = true;
-		memcpy(&(resp.node), &(storage.node), sizeof(HDNode));
+		memcpy(&(resp.node), storage_getNode(), sizeof(HDNode));
 	}
 
 	resp.has_passphrase_protection = true;
-	resp.passphrase_protection = storage.has_passphrase_protection && storage.passphrase_protection;
+	resp.passphrase_protection = storage_hasPassphraseProtection();
 
 	msg_debug_write(MessageType_MessageType_DebugLinkState, &resp);
 }

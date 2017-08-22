@@ -65,8 +65,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 		return;
 	}
 
-	storage.has_passphrase_protection = true;
-	storage.passphrase_protection = passphrase_protection;
+	storage_setPassphraseProtection(passphrase_protection);
 	storage_setLanguage(language);
 	storage_setLabel(label);
 	storage_setU2FCounter(u2f_counter);
@@ -88,13 +87,10 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Update(&ctx, int_entropy, 32);
 	sha256_Update(&ctx, ext_entropy, len);
 	sha256_Final(&ctx, int_entropy);
-	strlcpy(storage.mnemonic, mnemonic_from_data(int_entropy, strength / 8), sizeof(storage.mnemonic));
+	storage_setNeedsBackup(true);
+	storage_setMnemonic(mnemonic_from_data(int_entropy, strength / 8));
 	memset(int_entropy, 0, 32);
 	awaiting_entropy = false;
-
-	storage.has_mnemonic = true;
-	storage.has_needs_backup = true;
-	storage.needs_backup = true;
 
 	if (skip_backup) {
 		storage_commit();
@@ -116,27 +112,28 @@ void reset_backup(bool separated)
 		return;
 	}
 
-	storage.has_needs_backup = true;
-	storage.needs_backup = false;
+	storage_setNeedsBackup(false);
 
 	if (separated) {
 		storage_commit();
 	}
 
+	const char *mnemonic = storage_getMnemonic();
+
 	for (int pass = 0; pass < 2; pass++) {
 		int i = 0, word_pos = 1;
-		while (storage.mnemonic[i] != 0) {
+		while (mnemonic[i] != 0) {
 			// copy current_word
 			int j = 0;
-			while (storage.mnemonic[i] != ' ' && storage.mnemonic[i] != 0 && j + 1 < (int)sizeof(current_word)) {
-				current_word[j] = storage.mnemonic[i];
+			while (mnemonic[i] != ' ' && mnemonic[i] != 0 && j + 1 < (int)sizeof(current_word)) {
+				current_word[j] = mnemonic[i];
 				i++; j++;
 			}
 			current_word[j] = 0;
-			if (storage.mnemonic[i] != 0) {
+			if (mnemonic[i] != 0) {
 				i++;
 			}
-			layoutResetWord(current_word, pass, word_pos, storage.mnemonic[i] == 0);
+			layoutResetWord(current_word, pass, word_pos, mnemonic[i] == 0);
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				if (!separated) {
 					storage_reset();

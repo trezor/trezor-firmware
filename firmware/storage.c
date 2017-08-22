@@ -343,6 +343,11 @@ void storage_setPassphraseProtection(bool passphrase_protection)
 	storage.passphrase_protection = passphrase_protection;
 }
 
+bool storage_hasPassphraseProtection(void)
+{
+	return storage.has_passphrase_protection && storage.passphrase_protection;
+}
+
 void storage_setHomescreen(const uint8_t *data, uint32_t size)
 {
 	if (data && size == 1024) {
@@ -446,6 +451,32 @@ const uint8_t *storage_getHomescreen(void)
 	return (storage.has_homescreen && storage.homescreen.size == 1024) ? storage.homescreen.bytes : 0;
 }
 
+void storage_setMnemonic(const char *mnemonic)
+{
+	storage.has_mnemonic = true;
+	strlcpy(storage.mnemonic, mnemonic, sizeof(storage.mnemonic));
+}
+
+bool storage_hasNode(void)
+{
+	return storageRom->has_node;
+}
+
+const HDNode *storage_getNode(void)
+{
+	return storageRom->has_node ? (const HDNode *)&storageRom->node : 0;
+}
+
+bool storage_hasMnemonic(void)
+{
+	return storageRom->has_mnemonic;
+}
+
+const char *storage_getMnemonic(void)
+{
+	return storage.has_mnemonic ? storage.mnemonic : 0;
+}
+
 /* Check whether mnemonic matches storage. The mnemonic must be
  * a null-terminated string.
  */
@@ -496,6 +527,11 @@ void storage_setPin(const char *pin)
 	}
 	storage_commit();
 	sessionPinCached = false;
+}
+
+const char *storage_getPin(void)
+{
+	return storageRom->has_pin ? storageRom->pin : 0;
 }
 
 void session_cachePassphrase(const char *passphrase)
@@ -599,9 +635,26 @@ bool storage_isInitialized(void)
 	return storage.has_node || storage.has_mnemonic;
 }
 
+bool storage_isImported(void)
+{
+	return storage.has_imported && storage.imported;
+}
+
+void storage_setImported(bool imported)
+{
+	storage.has_imported = true;
+	storage.imported = imported;
+}
+
 bool storage_needsBackup(void)
 {
 	return storage.has_needs_backup && storage.needs_backup;
+}
+
+void storage_setNeedsBackup(bool needs_backup)
+{
+	storage.has_needs_backup = true;
+	storage.needs_backup = needs_backup;
 }
 
 void storage_applyFlags(uint32_t flags)

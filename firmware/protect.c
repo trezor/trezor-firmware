@@ -155,7 +155,7 @@ static void protectCheckMaxTry(uint32_t wait) {
 
 bool protectPin(bool use_cached)
 {
-	if (!storage.has_pin || storage.pin[0] == 0 || (use_cached && session_isPinCached())) {
+	if (!storage_hasPin() || (use_cached && session_isPinCached())) {
 		return true;
 	}
 	uint32_t *fails = storage_getPinFailsPtr();
@@ -237,7 +237,7 @@ bool protectChangePin(void)
 
 bool protectPassphrase(void)
 {
-	if (!storage.has_passphrase_protection || !storage.passphrase_protection || session_isPassphraseCached()) {
+	if (!storage_hasPassphraseProtection() || session_isPassphraseCached()) {
 		return true;
 	}
 
