@@ -152,27 +152,29 @@ bool storage_from_flash(void)
 	memcpy(storage_uuid, (void *)(FLASH_STORAGE_START + sizeof(storage_magic)), sizeof(storage_uuid));
 	data2hex(storage_uuid, sizeof(storage_uuid), storage_uuid_str);
 
+#define OLD_STORAGE_SIZE(last_member) (offsetof(Storage, last_member) + pb_membersize(Storage, last_member))
+
 	// copy storage
 	size_t old_storage_size = 0;
 
 	if (version == 1 || version == 2) {
-		old_storage_size = 460;
+		old_storage_size = OLD_STORAGE_SIZE(imported);
 	} else
 	if (version == 3 || version == 4 || version == 5) {
 		// added homescreen
-		old_storage_size = 1488;
+		old_storage_size = OLD_STORAGE_SIZE(homescreen);
 	} else
 	if (version == 6 || version == 7) {
 		// added u2fcounter
-		old_storage_size = 1496;
+		old_storage_size = OLD_STORAGE_SIZE(u2f_counter);
 	} else
 	if (version == 8) {
 		// added flags and needsBackup
-		old_storage_size = 1504;
+		old_storage_size = OLD_STORAGE_SIZE(flags);
 	} else
 	if (version == 9) {
 		// added u2froot
-		old_storage_size = 1640;
+		old_storage_size = OLD_STORAGE_SIZE(u2froot);
 	}
 
 	// erase newly added fields
