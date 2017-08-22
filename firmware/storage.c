@@ -157,22 +157,19 @@ bool storage_from_flash(void)
 	// copy storage
 	size_t old_storage_size = 0;
 
-	if (version == 1 || version == 2) {
+	if (version == 0) {
+	} else if (version <= 2) {
 		old_storage_size = OLD_STORAGE_SIZE(imported);
-	} else
-	if (version == 3 || version == 4 || version == 5) {
+	} else if (version <= 5) {
 		// added homescreen
 		old_storage_size = OLD_STORAGE_SIZE(homescreen);
-	} else
-	if (version == 6 || version == 7) {
+	} else if (version <= 7) {
 		// added u2fcounter
 		old_storage_size = OLD_STORAGE_SIZE(u2f_counter);
-	} else
-	if (version == 8) {
+	} else if (version <= 8) {
 		// added flags and needsBackup
 		old_storage_size = OLD_STORAGE_SIZE(flags);
-	} else
-	if (version == 9) {
+	} else if (version <= 9) {
 		// added u2froot
 		old_storage_size = OLD_STORAGE_SIZE(u2froot);
 	}
