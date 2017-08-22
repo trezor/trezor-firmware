@@ -228,6 +228,7 @@ bool protectChangePin(void)
 
 	if (result) {
 		storage_setPin(pin_compare);
+		storage_update();
 	}
 
 	memset(pin_compare, 0, sizeof(pin_compare));

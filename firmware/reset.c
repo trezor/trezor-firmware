@@ -69,6 +69,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	storage_setLanguage(language);
 	storage_setLabel(label);
 	storage_setU2FCounter(u2f_counter);
+	storage_update();
 
 	EntropyRequest resp;
 	memset(&resp, 0, sizeof(EntropyRequest));
@@ -93,7 +94,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	awaiting_entropy = false;
 
 	if (skip_backup) {
-		storage_commit();
+		storage_update();
 		fsm_sendSuccess(_("Device successfully initialized"));
 		layoutHome();
 	} else {
@@ -115,7 +116,7 @@ void reset_backup(bool separated)
 	storage_setNeedsBackup(false);
 
 	if (separated) {
-		storage_commit();
+		storage_update();
 	}
 
 	const char *mnemonic = storage_getMnemonic();
@@ -136,7 +137,8 @@ void reset_backup(bool separated)
 			layoutResetWord(current_word, pass, word_pos, mnemonic[i] == 0);
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				if (!separated) {
-					storage_reset();
+					storage_clear_update();
+					session_clear(true);
 				}
 				layoutHome();
 				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
@@ -149,7 +151,7 @@ void reset_backup(bool separated)
 	if (separated) {
 		fsm_sendSuccess(_("Seed successfully backed up"));
 	} else {
-		storage_commit();
+		storage_update();
 		fsm_sendSuccess(_("Device successfully initialized"));
 	}
 	layoutHome();

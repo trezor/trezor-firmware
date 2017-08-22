@@ -330,6 +330,7 @@ void fsm_msgChangePin(ChangePin *msg)
 
 	if (removal) {
 		storage_setPin(0);
+		storage_update();
 		fsm_sendSuccess(_("PIN removed"));
 	} else {
 		if (protectChangePin()) {
@@ -457,7 +458,6 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 	}
 
 	storage_loadDevice(msg);
-	storage_commit();
 	fsm_sendSuccess(_("Device loaded"));
 	layoutHome();
 }
@@ -647,7 +647,7 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	if (msg->has_homescreen) {
 		storage_setHomescreen(msg->homescreen.bytes, msg->homescreen.size);
 	}
-	storage_commit();
+	storage_update();
 	fsm_sendSuccess(_("Settings applied"));
 	layoutHome();
 }
@@ -1199,6 +1199,7 @@ void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 		return;
 	}
 	storage_setU2FCounter(msg->u2f_counter);
+	storage_update();
 	fsm_sendSuccess(_("U2F counter set"));
 	layoutHome();
 }

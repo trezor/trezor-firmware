@@ -147,7 +147,7 @@ static void recovery_done(void) {
 				// not enforcing => mark storage as imported
 				storage_setImported(true);
 			}
-			storage_commit();
+			storage_update();
 			fsm_sendSuccess(_("Device recovered"));
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
@@ -174,7 +174,7 @@ static void recovery_done(void) {
 		// New mnemonic is invalid.
 		memset(new_mnemonic, 0, sizeof(new_mnemonic));
 		if (!dry_run) {
-			storage_reset();
+			session_clear(true);
 		} else {
 			layoutDialog(&bmp_icon_error, NULL, _("Confirm"), NULL,
 				_("The seed is"), _("INVALID!"), NULL, NULL, NULL, NULL);
@@ -423,6 +423,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 		storage_setLanguage(language);
 		storage_setLabel(label);
 		storage_setU2FCounter(u2f_counter);
+		storage_update();
 	}
 
 	if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
@@ -448,7 +449,7 @@ static void recovery_scrambledword(const char *word)
 	if (word_pos == 0) { // fake word
 		if (strcmp(word, fake_word) != 0) {
 			if (!dry_run) {
-				storage_reset();
+				session_clear(true);
 			}
 			fsm_sendFailure(FailureType_Failure_ProcessError, _("Wrong word retyped"));
 			layoutHome();
@@ -467,7 +468,7 @@ static void recovery_scrambledword(const char *word)
 			}
 			if (!found) {
 				if (!dry_run) {
-					storage_reset();
+					session_clear(true);
 				}
 				fsm_sendFailure(FailureType_Failure_DataError, _("Word not found in a wordlist"));
 				layoutHome();

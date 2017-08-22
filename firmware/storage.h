@@ -25,10 +25,12 @@
 #include "messages.pb.h"
 #include "bip32.h"
 
+extern Storage storageUpdate;
+
 void storage_init(void);
-void storage_reset_uuid(void);
-void storage_reset(void);
-void storage_commit(void);
+void storage_generate_uuid(void);
+void storage_clear_update(void);
+void storage_update(void);
 void session_clear(bool clear_pin);
 
 void storage_loadDevice(LoadDevice *msg);
