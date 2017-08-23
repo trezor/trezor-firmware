@@ -11,7 +11,7 @@
 	"xpub_magic": "0488b21e",
 	"xprv_magic": "0488ade4",
 	"bip44": 0,
-	"segwit": false,
+	"segwit": true,
 	"forkid": null,
 	"default_fee_b": {
 		"Low": 10,
