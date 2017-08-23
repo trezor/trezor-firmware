@@ -642,8 +642,9 @@ void fsm_msgGetAddress(GetAddress *msg)
 	if (!node) return;
 	hdnode_fill_public_key(node);
 
+	char address[MAX_ADDR_SIZE];
 	layoutProgress(_("Computing address"), 0);
-	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, resp->address)) {
+	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, address)) {
 		fsm_sendFailure(FailureType_Failure_DataError, _("Can't encode address"));
 		layoutHome();
 		return;
@@ -664,7 +665,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 		}
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(resp->address, desc, qrcode);
+			layoutAddress(address, desc, qrcode);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}
@@ -672,6 +673,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 		}
 	}
 
+	strlcpy(resp->address, address, sizeof(resp->address));
 	msg_write(MessageType_MessageType_Address, resp);
 	layoutHome();
 }
