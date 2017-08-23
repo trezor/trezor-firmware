@@ -439,6 +439,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			if (brand_new_firmware || button.YesUp) {
 				// backup metadata
 				backup_metadata(meta_backup);
+				flash_clear_status_flags();
 				flash_unlock();
 				// erase metadata area
 				for (int i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
@@ -452,6 +453,20 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				}
 				layoutProgress("INSTALLING ... Please wait", 0);
 				flash_lock();
+
+				// check that metadata was succesfully erased
+				// flash status register should show now error and
+				// the config block should contain only \xff.
+				uint8_t hash[32];
+				sha256_Raw((unsigned char *)FLASH_META_START, FLASH_META_LEN, hash);
+				if ((FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) != 0
+					|| memcmp(hash, "\x2d\x86\x4c\x0b\x78\x9a\x43\x21\x4e\xee\x85\x24\xd3\x18\x20\x75\x12\x5e\x5c\xa2\xcd\x52\x7f\x35\x82\xec\x87\xff\xd9\x40\x76\xbc", 32) != 0) {
+					send_msg_failure(dev);
+					flash_state = STATE_END;
+					layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
+					return;
+				}
+
 				send_msg_success(dev);
 				flash_state = STATE_FLASHSTART;
 				return;
