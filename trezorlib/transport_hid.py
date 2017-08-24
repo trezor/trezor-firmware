@@ -16,168 +16,136 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-'''USB HID implementation of Transport.'''
+from __future__ import absolute_import
 
 import time
 import hid
-from .transport import TransportV1, TransportV2, ConnectionError
+
+from .protocol_v1 import ProtocolV1
+from .protocol_v2 import ProtocolV2
+from .transport import Transport
+
+DEV_TREZOR1 = (0x534c, 0x0001)
+DEV_TREZOR2 = (0x1209, 0x53c0)
+DEV_TREZOR2_BL = (0x1209, 0x1201)
 
 
-def enumerate():
-    """
-    Return a list of available TREZOR devices.
-    """
-    devices = {}
-    for d in hid.enumerate(0, 0):
-        vendor_id = d['vendor_id']
-        product_id = d['product_id']
-        serial_number = d['serial_number']
-        interface_number = d['interface_number']
-        usage_page = d['usage_page']
-        path = d['path']
+class HidTransport(Transport):
+    '''
+    HidTransport implements transport over USB HID interface.
+    '''
 
-        if (vendor_id, product_id) in DEVICE_IDS:
-            devices.setdefault(serial_number, [None, None])
-            # first match by usage_page, then try interface number
-            if usage_page == 0xFF00 or interface_number == 0:  # normal link
-                devices[serial_number][0] = path
-            elif usage_page == 0xFF01 or interface_number == 1:  # debug link
-                devices[serial_number][1] = path
+    def __init__(self, device, protocol=None):
+        super(HidTransport, self).__init__()
 
-    # List of two-tuples (path_normal, path_debuglink)
-    return sorted(devices.values())
-
-
-def find_by_path(path=None):
-    """
-    Finds a device by transport-specific path.
-    If path is not set, return first device.
-    """
-    devices = enumerate()
-    for dev in devices:
-        if not path or path in dev:
-            return HidTransport(dev)
-    raise Exception('Device not found')
-
-
-def path_to_transport(path):
-    try:
-        device = [d for d in hid.enumerate(0, 0) if d['path'] == path][0]
-    except IndexError:
-        raise ConnectionError("Connection failed")
-
-    # VID/PID found, let's find proper transport
-    try:
-        transport = DEVICE_TRANSPORTS[(device['vendor_id'], device['product_id'])]
-    except IndexError:
-        raise Exception("Unknown transport for VID:PID %04x:%04x" % (device['vendor_id'], device['product_id']))
-
-    return transport
-
-
-class _HidTransport(object):
-    def __init__(self, device, *args, **kwargs):
+        if protocol is None:
+            if is_trezor2(device):
+                protocol = ProtocolV2()
+            else:
+                protocol = ProtocolV1()
+        self.device = device
+        self.protocol = protocol
         self.hid = None
         self.hid_version = None
 
-        device = device[int(bool(kwargs.get('debug_link')))]
-        super(_HidTransport, self).__init__(device, *args, **kwargs)
+    def __str__(self):
+        return self.device['path']
 
-    def is_connected(self):
-        """
-        Check if the device is still connected.
-        """
-        for d in hid.enumerate(0, 0):
-            if d['path'] == self.device:
-                return True
-        return False
+    @staticmethod
+    def enumerate(debug=False):
+        return [
+            HidTransport(dev) for dev in hid.enumerate(0, 0)
+            if ((is_trezor1(dev) or is_trezor2(dev) or is_trezor2_bl(dev)) and
+                (is_debug(dev) == debug))
+        ]
 
-    def _open(self):
+    @staticmethod
+    def find_by_path(path=None):
+        for transport in HidTransport.enumerate():
+            if path is None or transport.device['path'] == path:
+                return transport
+        raise Exception('HID device not found')
+
+    def find_debug(self):
+        if isinstance(self.protocol, ProtocolV2):
+            # For v2 protocol, lets use the same HID interface, but with a different session
+            debug = HidTransport(self.device, ProtocolV2())
+            debug.hid = self.hid
+            debug.hid_version = self.hid_version
+            return debug
+        if isinstance(self.protocol, ProtocolV1):
+            # For v1 protocol, find debug USB interface for the same serial number
+            for debug in HidTransport.enumerate(debug=True):
+                if debug.device['serial_number'] == self.device['serial_number']:
+                    return debug
+
+    def open(self):
+        if self.hid:
+            return
         self.hid = hid.device()
-        self.hid.open_path(self.device)
+        self.hid.open_path(self.device['path'])
         self.hid.set_nonblocking(True)
-
-        # determine hid_version
-        if isinstance(self, HidTransportV2):
-            self.hid_version = 2
+        if is_trezor1(self.device):
+            self.hid_version = self.probe_hid_version()
         else:
-            r = self.hid.write([0, 63, ] + [0xFF] * 63)
-            if r == 65:
-                self.hid_version = 2
-                return
-            r = self.hid.write([63, ] + [0xFF] * 63)
-            if r == 64:
-                self.hid_version = 1
-                return
-            raise ConnectionError("Unknown HID version")
+            self.hid_version = 2
+        self.protocol.session_begin(self)
 
-    def _close(self):
-        self.hid.close()
+    def close(self):
+        self.protocol.session_end(self)
+        try:
+            self.hid.close()
+        except OSError:
+            pass  # Failing to close the handle is not a problem
         self.hid = None
+        self.hid_version = None
 
-    def _write_chunk(self, chunk):
+    def read(self):
+        return self.protocol.read(self)
+
+    def write(self, msg):
+        return self.protocol.write(self, msg)
+
+    def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise Exception("Unexpected data length")
-
+            raise Exception('Unexpected chunk size: %d' % len(chunk))
         if self.hid_version == 2:
             self.hid.write(b'\0' + chunk)
         else:
             self.hid.write(chunk)
 
-    def _read_chunk(self):
-        start = time.time()
-
+    def read_chunk(self):
         while True:
-            data = self.hid.read(64)
-            if not len(data):
-                if time.time() - start > 10:
-                    # Over 10 s of no response, let's check if
-                    # device is still alive
-                    if not self.is_connected():
-                        raise ConnectionError("Connection failed")
-
-                    # Restart timer
-                    start = time.time()
-
+            chunk = self.hid.read(64)
+            if chunk:
+                break
+            else:
                 time.sleep(0.001)
-                continue
+        if len(chunk) != 64:
+            raise Exception('Unexpected chunk size: %d' % len(chunk))
+        return bytearray(chunk)
 
-            break
-
-        if len(data) != 64:
-            raise Exception("Unexpected chunk size: %d" % len(data))
-
-        return bytearray(data)
-
-
-class HidTransportV1(_HidTransport, TransportV1):
-    pass
-
-
-class HidTransportV2(_HidTransport, TransportV2):
-    pass
+    def probe_hid_version(self):
+        n = self.hid.write([0, 63] + [0xFF] * 63)
+        if n == 65:
+            return 2
+        n = self.hid.write([63] + [0xFF] * 63)
+        if n == 64:
+            return 1
+        raise Exception('Unknown HID version')
 
 
-DEVICE_IDS = [
-    (0x534c, 0x0001),  # TREZOR
-    (0x1209, 0x53c0),  # TREZORv2 Bootloader
-    (0x1209, 0x53c1),  # TREZORv2
-]
-
-DEVICE_TRANSPORTS = {
-    (0x534c, 0x0001): HidTransportV1,  # TREZOR
-    (0x1209, 0x53c0): HidTransportV1,  # TREZORv2 Bootloader
-    (0x1209, 0x53c1): HidTransportV2,  # TREZORv2
-}
+def is_trezor1(dev):
+    return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR1
 
 
-# Backward compatible wrapper, decides for proper transport
-# based on VID/PID of given path
-def HidTransport(device, *args, **kwargs):
-    transport = path_to_transport(device[0])
-    return transport(device, *args, **kwargs)
+def is_trezor2(dev):
+    return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR2
 
 
-# Backward compatibility hack; HidTransport is a function, not a class like before
-HidTransport.enumerate = enumerate
-HidTransport.find_by_path = find_by_path
+def is_trezor2_bl(dev):
+    return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR2_BL
+
+
+def is_debug(dev):
+    return (dev['usage_page'] == 0xFF01 or dev['interface_number'] == 1)

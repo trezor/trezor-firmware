@@ -17,14 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-'''BridgeTransport implements transport TREZOR Bridge (aka trezord).'''
+from __future__ import absolute_import
 
-import binascii
-import json
 import requests
 from google.protobuf import json_format
-from . import messages_pb2 as proto
-from .transport import TransportV1
+
+from . import messages_pb2
+from .transport import Transport
 
 TREZORD_HOST = 'https://localback.net:21324'
 CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
@@ -34,93 +33,84 @@ def get_error(resp):
     return ' (error=%d str=%s)' % (resp.status_code, resp.json()['error'])
 
 
-class BridgeTransport(TransportV1):
+class BridgeTransport(Transport):
+    '''
+    BridgeTransport implements transport through TREZOR Bridge (aka trezord).
+    '''
 
-    CONFIGURED = False
+    configured = False
 
-    def __init__(self, device, *args, **kwargs):
-        self.configure()
+    def __init__(self, device):
+        super(BridgeTransport, self).__init__()
 
-        self.path = device['path']
-
+        self.device = device
+        self.conn = requests.Session()
         self.session = None
         self.response = None
-        self.conn = requests.Session()
 
-        super(BridgeTransport, self).__init__(device, *args, **kwargs)
+    def __str__(self):
+        return self.device['path']
 
     @staticmethod
     def configure():
-        if BridgeTransport.CONFIGURED:
+        if BridgeTransport.configured:
             return
         r = requests.get(CONFIG_URL, verify=False)
         if r.status_code != 200:
             raise Exception('Could not fetch config from %s' % CONFIG_URL)
-
-        config = r.text
-
-        r = requests.post(TREZORD_HOST + '/configure', data=config)
+        r = requests.post(TREZORD_HOST + '/configure', data=r.text)
         if r.status_code != 200:
             raise Exception('trezord: Could not configure' + get_error(r))
-        BridgeTransport.CONFIGURED = True
+        BridgeTransport.configured = True
 
-    @classmethod
-    def enumerate(cls):
-        """
-        Return a list of available TREZOR devices.
-        """
-        cls.configure()
+    @staticmethod
+    def enumerate():
+        BridgeTransport.configure()
         r = requests.get(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
-            raise Exception('trezord: Could not enumerate devices' + get_error(r))
-        enum = r.json()
-        return enum
+            raise Exception('trezord: Could not enumerate devices' +
+                            get_error(r))
+        return [BridgeTransport(dev) for dev in r.json()]
 
-    @classmethod
-    def find_by_path(cls, path=None):
-        """
-        Finds a device by transport-specific path.
-        If path is not set, return first device.
-        """
-        devices = cls.enumerate()
-        for dev in devices:
-            if not path or dev['path'] == binascii.hexlify(path):
-                return cls(dev)
-        raise Exception('Device not found')
+    @staticmethod
+    def find_by_path(path):
+        for transport in BridgeTransport.enumerate():
+            if path is None or transport.device['path'] == path:
+                return transport
+        raise Exception('Bridge device not found')
 
-    def _open(self):
-        r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.path)
+    def open(self):
+        r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.device['path'])
         if r.status_code != 200:
-            raise Exception('trezord: Could not acquire session' + get_error(r))
-        resp = r.json()
-        self.session = resp['session']
+            raise Exception('trezord: Could not acquire session' +
+                            get_error(r))
+        self.session = r.json()['session']
 
-    def _close(self):
+    def close(self):
+        if not self.session:
+            return
         r = self.conn.post(TREZORD_HOST + '/release/%s' % self.session)
         if r.status_code != 200:
-            raise Exception('trezord: Could not release session' + get_error(r))
-        else:
-            self.session = None
+            raise Exception('trezord: Could not release session' +
+                            get_error(r))
+        self.session = None
 
-    def _ready_to_read(self):
-        return self.response is not None
-
-    def write(self, protobuf_msg):
-        # Override main 'write' method, HTTP transport cannot be
-        # splitted to chunks
-        cls = protobuf_msg.__class__.__name__
-        msg = json_format.MessageToJson(protobuf_msg, preserving_proto_field_name=True)
-        payload = '{"type": "%s", "message": %s}' % (cls, msg)
-        r = self.conn.post(TREZORD_HOST + '/call/%s' % self.session, data=payload)
+    def write(self, msg):
+        msgname = msg.__class__.__name__
+        msgjson = json_format.MessageToJson(
+            msg, preserving_proto_field_name=True)
+        payload = '{"type": "%s", "message": %s}' % (msgname, msgjson)
+        r = self.conn.post(
+            TREZORD_HOST + '/call/%s' % self.session, data=payload)
         if r.status_code != 200:
             raise Exception('trezord: Could not write message' + get_error(r))
-        else:
-            self.response = r.json()
+        self.response = r.json()
 
-    def _read(self):
+    def read(self):
         if self.response is None:
             raise Exception('No response stored')
-        cls = getattr(proto, self.response['type'])
-        inst = cls()
-        pb = json_format.ParseDict(self.response['message'], inst)
-        return (0, 'protobuf', pb)
+        msgtype = getattr(messages_pb2, self.response['type'])
+        msg = msgtype()
+        msg = json_format.ParseDict(self.response['message'], msg)
+        self.response = None
+        return msg

@@ -153,11 +153,11 @@ def session(f):
     # with session activation / deactivation
     def wrapped_f(*args, **kwargs):
         client = args[0]
+        client.get_transport().session_begin()
         try:
-            client.transport.session_begin()
             return f(*args, **kwargs)
         finally:
-            client.transport.session_end()
+            client.get_transport().session_end()
     return wrapped_f
 
 
@@ -179,17 +179,23 @@ def normalize_nfc(txt):
 class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
-    def __init__(self, transport, **kwargs):
-        self.transport = transport
+    def __init__(self, connect, **kwargs):
+        self.connect = connect
+        self.transport = None
         super(BaseClient, self).__init__()  # *args, **kwargs)
 
+    def get_transport(self):
+        if self.transport is None:
+            self.transport = self.connect()
+        return self.transport
+
     def cancel(self):
-        self.transport.write(proto.Cancel())
+        self.get_transport().write(proto.Cancel())
 
     @session
     def call_raw(self, msg):
-        self.transport.write(msg)
-        return self.transport.read_blocking()
+        self.get_transport().write(msg)
+        return self.get_transport().read()
 
     @session
     def call(self, msg):
@@ -211,9 +217,6 @@ class BaseClient(object):
             raise PinException(msg.code, msg.message)
 
         raise CallException(msg.code, msg.message)
-
-    def close(self):
-        self.transport.close()
 
 
 class VerboseWireMixin(object):

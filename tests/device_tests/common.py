@@ -59,16 +59,16 @@ def pipe_exists(path):
         return False
 
 
-if HID_ENABLED and len(HidTransport.enumerate()) > 0:
+if HID_ENABLED and HidTransport.enumerate():
 
     devices = HidTransport.enumerate()
     print('Using TREZOR')
     TRANSPORT = HidTransport
     TRANSPORT_ARGS = (devices[0],)
-    TRANSPORT_KWARGS = {'debug_link': False}
+    TRANSPORT_KWARGS = {}
     DEBUG_TRANSPORT = HidTransport
-    DEBUG_TRANSPORT_ARGS = (devices[0],)
-    DEBUG_TRANSPORT_KWARGS = {'debug_link': True}
+    DEBUG_TRANSPORT_ARGS = (devices[0].find_debug(),)
+    DEBUG_TRANSPORT_KWARGS = {}
 
 elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
 

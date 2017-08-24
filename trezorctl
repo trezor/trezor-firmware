@@ -65,11 +65,12 @@ def cli(ctx, transport, path, verbose, is_json):
     if ctx.invoked_subcommand == 'list':
         ctx.obj = transport
     else:
-        t = get_transport(transport, path)
+        def connect():
+            return get_transport(transport, path)
         if verbose:
-            ctx.obj = TrezorClientVerbose(t)
+            ctx.obj = TrezorClientVerbose(connect)
         else:
-            ctx.obj = TrezorClient(t)
+            ctx.obj = TrezorClient(connect)
 
 
 @cli.resultcallback()
@@ -108,11 +109,7 @@ def print_result(res, transport, path, verbose, is_json):
 def ls(transport_name):
     transport_class = get_transport_class_by_name(transport_name)
     devices = transport_class.enumerate()
-    if transport_name == 'usb':
-        return [dev[0] for dev in devices]
-    if transport_name == 'bridge':
-        return devices
-    return []
+    return devices
 
 
 #

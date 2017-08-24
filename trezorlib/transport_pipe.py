@@ -16,91 +16,94 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+from __future__ import absolute_import
+
 import os
 import time
-from select import select
 
-from .transport import TransportV1
-
-"""PipeTransport implements fake wire transport over local named pipe.
-Use this transport for talking with trezor simulator."""
+from .protocol_v1 import ProtocolV1
 
 
-class PipeTransport(TransportV1):
+class PipeTransport(object):
+    '''
+    PipeTransport implements fake wire transport over local named pipe.
+    Use this transport for talking with trezor-emu.
+    '''
 
-    def __init__(self, device='/tmp/pipe.trezor', is_device=False, *args, **kwargs):
+    def __init__(self, device=None, is_device=False):
+        super(PipeTransport, self).__init__()
+
         if not device:
             device = '/tmp/pipe.trezor'
-        self.is_device = is_device  # set True if act as device
+        self.device = device
+        self.is_device = is_device
+        self.filename_read = None
+        self.filename_write = None
+        self.read_f = None
+        self.write_f = None
+        self.protocol = ProtocolV1()
 
-        super(PipeTransport, self).__init__(device, *args, **kwargs)
+    def __str__(self):
+        return self.device
 
-    @classmethod
-    def enumerate(cls):
-        raise Exception('This transport cannot enumerate devices')
+    @staticmethod
+    def enumerate():
+        raise NotImplementedError('This transport cannot enumerate devices')
 
-    @classmethod
-    def find_by_path(cls, path=None):
-        return cls(path)
+    @staticmethod
+    def find_by_path(path=None):
+        return PipeTransport(path)
 
-    def _open(self):
+    def open(self):
         if self.is_device:
             self.filename_read = self.device + '.to'
             self.filename_write = self.device + '.from'
-
             os.mkfifo(self.filename_read, 0o600)
             os.mkfifo(self.filename_write, 0o600)
         else:
             self.filename_read = self.device + '.from'
             self.filename_write = self.device + '.to'
-
             if not os.path.exists(self.filename_write):
                 raise Exception("Not connected")
 
-        self.write_fd = os.open(self.filename_write, os.O_RDWR)  # |os.O_NONBLOCK)
-        self.write_f = os.fdopen(self.write_fd, 'w+b', 0)
+        self.read_f = os.open(self.filename_read, 'rb', 0)
+        self.write_f = os.open(self.filename_write, 'w+b', 0)
 
-        self.read_fd = os.open(self.filename_read, os.O_RDWR)  # |os.O_NONBLOCK)
-        self.read_f = os.fdopen(self.read_fd, 'rb', 0)
+        self.protocol.session_begin(self)
 
-    def _close(self):
-        self.read_f.close()
-        self.write_f.close()
+    def close(self):
+        self.protocol.session_end(self)
+        if self.read_f:
+            self.read_f.close()
+            self.read_f = None
+        if self.write_f:
+            self.write_f.close()
+            self.write_f = None
         if self.is_device:
             os.unlink(self.filename_read)
             os.unlink(self.filename_write)
+        self.filename_read = None
+        self.filename_write = None
 
-    def _ready_to_read(self):
-        rlist, _, _ = select([self.read_f], [], [], 0)
-        return len(rlist) > 0
+    def read(self):
+        return self.protocol.read(self)
 
-    def _write_chunk(self, chunk):
+    def write(self, msg):
+        return self.protocol.write(self, msg)
+
+    def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise Exception("Unexpected data length")
+            raise Exception('Unexpected chunk size: %d' % len(chunk))
+        self.write_f.write(chunk)
+        self.write_f.flush()
 
-        try:
-            self.write_f.write(chunk)
-            self.write_f.flush()
-        except OSError:
-            print("Error while writing to socket")
-            raise
-
-    def _read_chunk(self):
+    def read_chunk(self):
         while True:
-            try:
-                data = self.read_f.read(64)
-            except IOError:
-                print("Failed to read from device")
-                raise
-
-            if not len(data):
+            chunk = self.read_f.read(64)
+            if chunk:
+                break
+            else:
                 time.sleep(0.001)
-                continue
-
-            break
-
-        if len(data) != 64:
-            raise Exception("Unexpected chunk size: %d" % len(data))
-
-        return bytearray(data)
+        if len(chunk) != 64:
+            raise Exception('Unexpected chunk size: %d' % len(chunk))
+        return bytearray(chunk)

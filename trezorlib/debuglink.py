@@ -43,14 +43,13 @@ class DebugLink(object):
 
     def close(self):
         self.transport.session_end()
-        self.transport.close()
 
     def _call(self, msg, nowait=False):
         print("DEBUGLINK SEND", pprint(msg))
         self.transport.write(msg)
         if nowait:
             return
-        ret = self.transport.read_blocking()
+        ret = self.transport.read()
         print("DEBUGLINK RECV", pprint(ret))
         return ret
 

@@ -16,66 +16,76 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-'''UDP Socket implementation of Transport.'''
+from __future__ import absolute_import
 
 import socket
-from select import select
-from .transport import TransportV2
+
+from .protocol_v2 import ProtocolV2
+from .transport import Transport
 
 
-class UdpTransport(TransportV2):
+class UdpTransport(Transport):
 
-    def __init__(self, device, *args, **kwargs):
-        if device is None:
-            device = ''
-        device = device.split(':')
-        if len(device) < 2:
-            if not device[0]:
-                # Default port used by trezor v2
-                device = ('127.0.0.1', 21324)
-            else:
-                device = ('127.0.0.1', int(device[0]))
+    DEFAULT_HOST = '127.0.0.1'
+    DEFAULT_PORT = 21324
+
+    def __init__(self, device=None, protocol=None):
+        super(UdpTransport, self).__init__()
+
+        if not device:
+            host = UdpTransport.DEFAULT_HOST
+            port = UdpTransport.DEFAULT_PORT
         else:
-            device = (device[0], int(device[1]))
-
+            host = device.split(':').get(0)
+            port = device.split(':').get(1, UdpTransport.DEFAULT_PORT)
+            port = int(port)
+        if not protocol:
+            protocol = ProtocolV2()
+        self.device = (host, port)
+        self.protocol = protocol
         self.socket = None
-        super(UdpTransport, self).__init__(device, *args, **kwargs)
 
-    @classmethod
-    def enumerate(cls):
-        raise Exception('This transport cannot enumerate devices')
+    def __str__(self):
+        return self.device
 
-    @classmethod
-    def find_by_path(cls, path=None):
-        return cls(path)
+    @staticmethod
+    def enumerate():
+        raise NotImplementedError('This transport cannot enumerate devices')
 
-    def _open(self):
+    @staticmethod
+    def find_by_path(path=None):
+        return UdpTransport(path)
+
+    def open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
         self.socket.settimeout(10)
+        self.protocol.session_begin(self)
 
-    def _close(self):
-        self.socket.close()
-        self.socket = None
+    def close(self):
+        if self.socket:
+            self.protocol.session_end(self)
+            self.socket.close()
+            self.socket = None
 
-    def _ready_to_read(self):
-        rlist, _, _ = select([self.socket], [], [], 0)
-        return len(rlist) > 0
+    def read(self):
+        return self.protocol.read(self)
 
-    def _write_chunk(self, chunk):
+    def write(self, msg):
+        return self.protocol.write(self, msg)
+
+    def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise Exception("Unexpected data length")
-
+            raise Exception('Unexpected data length')
         self.socket.sendall(chunk)
 
-    def _read_chunk(self):
+    def read_chunk(self):
         while True:
             try:
-                data = self.socket.recv(64)
+                chunk = self.socket.recv(64)
                 break
             except socket.timeout:
                 continue
-        if len(data) != 64:
-            raise Exception("Unexpected chunk size: %d" % len(data))
-
-        return bytearray(data)
+        if len(chunk) != 64:
+            raise Exception('Unexpected chunk size: %d' % len(chunk))
+        return bytearray(chunk)
