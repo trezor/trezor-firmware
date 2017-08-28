@@ -19,7 +19,7 @@ env:
     - DEBUG_LINK=1 FASTFLASH=1
 
 script:
-  - CFLAGS="-std=c99" make -C vendor/libopencm3 lib/stm32/f2
+  - make -C vendor/libopencm3 lib/stm32/f2
   - make
   - make -C bootloader
   - make -C fastflash

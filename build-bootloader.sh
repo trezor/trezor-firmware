@@ -12,9 +12,8 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	cd trezor-mcu && \
 	git checkout $TAG && \
 	git submodule update --init && \
-	CFLAGS='-std=c99' make -C vendor/libopencm3 && \
+	make -C vendor/libopencm3 && \
 	make && \
-	make -C bootloader && \
 	make -C bootloader align && \
 	cp bootloader/bootloader.bin /$BINFILE && \
 	cp bootloader/bootloader.elf /$ELFFILE"
