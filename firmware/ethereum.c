@@ -115,6 +115,27 @@ static void hash_rlp_field(const uint8_t *buf, size_t size)
 }
 
 /*
+ * Push an RLP encoded number to the hash buffer.
+ * Ethereum yellow paper says to convert to big endian and strip leading zeros.
+ */
+static void hash_rlp_number(uint32_t number)
+{
+	if (!number) {
+		return;
+	}
+	uint8_t data[4];
+	data[0] = (number >> 24) & 0xff;
+	data[1] = (number >> 16) & 0xff;
+	data[2] = (number >> 8) & 0xff;
+	data[3] = (number) & 0xff;
+	int offset = 0;
+	while (!data[offset]) {
+		offset++;
+	}
+	hash_rlp_field(data + offset, 4 - offset);
+}
+
+/*
  * Calculate the number of bytes needed for an RLP length header.
  * NOTE: supports up to 16MB of data (how unlikely...)
  * FIXME: improve
@@ -133,7 +154,6 @@ static int rlp_calculate_length(int length, uint8_t firstbyte)
 		return 4 + length;
 	}
 }
-
 
 static void send_request_chunk(void)
 {
@@ -160,17 +180,8 @@ static void send_signature(void)
 
 	/* eip-155 replay protection */
 	if (chain_id != 0) {
-		uint8_t data[4];
-		data[0] = (chain_id >> 24) & 0xff;
-		data[1] = (chain_id >> 16) & 0xff;
-		data[2] = (chain_id >> 8) & 0xff;
-		data[3] = (chain_id) & 0xff;
-		int offset = 0;
-		while (!data[offset]) {
-			offset++;
-		}
 		/* hash v=chain_id, r=0, s=0 */
-		hash_rlp_field(data+offset, 4-offset);
+		hash_rlp_number(chain_id);
 		hash_rlp_length(0, 0);
 		hash_rlp_length(0, 0);
 	}
@@ -239,7 +250,6 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 			case 42: suffix = " tETH"; break;  // Ethereum Testnet: Kovan
 			case  2: suffix = " EXP";  break;  // Expanse
 			case  8: suffix = " UBQ";  break;  // UBIQ
-			case 7762959: suffix = " MUSIC"; break; // Musicoin
 			default: suffix = " UNKN"; break;  // unknown chain
 		}
 	}
