@@ -34,11 +34,14 @@
 #include "gettext.h"
 #include "ethereum_tokens.h"
 
+/* maximum supported chain id.  v must fit in an uint32_t. */
+#define MAX_CHAIN_ID 2147483630
+
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest msg_tx_request;
 static CONFIDENTIAL uint8_t privkey[32];
-static uint8_t chain_id;
+static uint32_t chain_id;
 struct SHA3_CTX keccak_ctx;
 
 static inline void hash_data(const uint8_t *buf, size_t size)
@@ -157,8 +160,17 @@ static void send_signature(void)
 
 	/* eip-155 replay protection */
 	if (chain_id != 0) {
+		uint8_t data[4];
+		data[0] = (chain_id >> 24) & 0xff;
+		data[1] = (chain_id >> 16) & 0xff;
+		data[2] = (chain_id >> 8) & 0xff;
+		data[3] = (chain_id) & 0xff;
+		int offset = 0;
+		while (!data[offset]) {
+			offset++;
+		}
 		/* hash v=chain_id, r=0, s=0 */
-		hash_rlp_field(&chain_id, 1);
+		hash_rlp_field(data+offset, 4-offset);
 		hash_rlp_length(0, 0);
 		hash_rlp_length(0, 0);
 	}
@@ -225,6 +237,9 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 			case  3: suffix = " tETH"; break;  // Ethereum Testnet: Ropsten
 			case  4: suffix = " tETH"; break;  // Ethereum Testnet: Rinkeby
 			case 42: suffix = " tETH"; break;  // Ethereum Testnet: Kovan
+			case  2: suffix = " EXP";  break;  // Expanse
+			case  8: suffix = " UBQ";  break;  // UBIQ
+			case 7762959: suffix = " MUSIC"; break; // Musicoin
 			default: suffix = " UNKN"; break;  // unknown chain
 		}
 	}
@@ -414,12 +429,12 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 
 	/* eip-155 chain id */
 	if (msg->has_chain_id) {
-		if (msg->chain_id < 1 || msg->chain_id > 109) {
+		if (msg->chain_id < 1 || msg->chain_id > MAX_CHAIN_ID) {
 			fsm_sendFailure(FailureType_Failure_DataError, _("Chain Id out of bounds"));
 			ethereum_signing_abort();
 			return;
 		}
-		chain_id = (uint8_t) msg->chain_id;
+		chain_id = msg->chain_id;
 	} else {
 		chain_id = 0;
 	}
