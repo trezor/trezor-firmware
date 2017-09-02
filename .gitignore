@@ -3,5 +3,6 @@
 .vscode/
 .mypy_cache/
 __pycache__/
+_attic/
 build/
 emu.config
