@@ -78,8 +78,8 @@ enum MessageType {
 	MessageType_EthereumMessageSignature = 66 [(wire_out) = true];
 	MessageType_NEMGetAddress = 67 [(wire_in) = true];
 	MessageType_NEMAddress = 68 [(wire_out) = true];
-	MessageType_NEMTransaction = 69 [(wire_in) = true];
-	MessageType_NEMRequestAnnounce = 70 [(wire_out) = true];
+	MessageType_NEMSignTx = 69 [(wire_in) = true];
+	MessageType_NEMSignedTx = 70 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -842,10 +842,10 @@ message NEMAddress {
 
 /**
  * Request: Ask device to sign transaction
- * @next NEMRequestAnnounce
+ * @next NEMSignedTx
  * @next Failure
  */
-message NEMTransaction {
+message NEMSignTx {
 	optional NEMTransactionCommon transaction = 1;			// Common part of transaction
 	optional NEMTransactionCommon multisig = 2;			// Common part of inner transaction for multisig transactions
 	optional NEMTransfer transfer = 3;				// Transfer transaction part
@@ -858,9 +858,9 @@ message NEMTransaction {
 
 /**
  * Response: Contains NEM transaction data and signature
- * @prev NEMTransaction
+ * @prev NEMSignTx
  */
-message NEMRequestAnnounce {
+message NEMSignedTx {
 	optional bytes data = 1;	// Transaction data
 	optional bytes signature = 2;	// Signature for the transaction
 }
