@@ -40,7 +40,7 @@ class ProtocolV1(object):
         while data:
             # Report ID, data padded to 63 bytes
             chunk = b'?' + data[:REPLEN - 1]
-            chunk = chunk.ljust(REPLEN, bytes([0x00]))
+            chunk = chunk.ljust(REPLEN, b'\x00')
             transport.write_chunk(chunk)
             data = data[63:]
 
