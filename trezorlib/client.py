@@ -667,6 +667,12 @@ class ProtocolMixin(object):
         ret = self.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
         return ret
 
+    @field("address")
+    @expect(proto.NEMAddress)
+    def nem_get_address(self, n, network, show_display=False):
+        n = self._convert_prime(n)
+        return self.call(proto.NEMGetAddress(address_n=n, network=network, show_display=show_display))
+
     @expect(proto.NEMSignedTx)
     def nem_sign_tx(self, n, transaction):
         n = self._convert_prime(n)
