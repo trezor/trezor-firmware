@@ -72,7 +72,7 @@ def process_image(ifn, savefiles=False):
             f.write(data)
             print('Written %s ... %d bytes' % (ofn, len(data)))
         with open(ofn_py, 'wb') as f:
-            f.write(('%s = %s ' % (bname, data)).encode())
+            f.write(('%s = %s\n' % (bname, data)).encode())
             print('Written %s ... %d bytes' % (ofn_py, len(data)))
         with open(ofn_h, 'wt') as f:
             f.write('static const uint8_t toi_%s[] = {\n' % bname)
