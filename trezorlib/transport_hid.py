@@ -26,8 +26,8 @@ from .protocol_v2 import ProtocolV2
 from .transport import Transport
 
 DEV_TREZOR1 = (0x534c, 0x0001)
-DEV_TREZOR2 = (0x1209, 0x53c0)
-DEV_TREZOR2_BL = (0x1209, 0x1201)
+DEV_TREZOR2 = (0x1209, 0x53c1)
+DEV_TREZOR2_BL = (0x1209, 0x53c0)
 
 
 class HidTransport(Transport):
