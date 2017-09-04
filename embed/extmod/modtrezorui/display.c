@@ -177,6 +177,48 @@ void display_image(int x, int y, int w, int h, const void *data, int datalen)
     sinf_inflate(data, datalen, inflate_callback_image, userdata);
 }
 
+static void inflate_callback_avatar(uint8_t byte, uint32_t pos, void *userdata)
+{
+    int w = ((int *)userdata)[0];
+    int x0 = ((int *)userdata)[1];
+    int x1 = ((int *)userdata)[2];
+    int y0 = ((int *)userdata)[3];
+    int y1 = ((int *)userdata)[4];
+    int fgcolor = ((int *)userdata)[5];
+    int bgcolor = ((int *)userdata)[6];
+    int px = (pos / 2) % w;
+    int py = (pos / 2) / w;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+        int d = (px - w / 2) * (px - w / 2) + (py - w / 2) * (py - w / 2);
+        if (d < 70 * 70) { // inside circle
+            DATA(byte);
+        } else
+        if (d >= 72 * 72) { // outside circle
+            DATA((bgcolor >> 8 * (1 - pos % 2)) & 0xFF);
+        } else { // circle
+            DATA((fgcolor >> 8 * (1 - pos % 2)) & 0xFF);
+        }
+    }
+}
+
+void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
+{
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
+    int x0, y0, x1, y1;
+    clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
+    display_set_window(x0, y0, x1, y1);
+    int userdata[7];
+    userdata[0] = AVATAR_IMAGE_SIZE;
+    userdata[1] = x0 - x;
+    userdata[2] = x1 - x;
+    userdata[3] = y0 - y;
+    userdata[4] = y1 - y;
+    userdata[5] = fgcolor;
+    userdata[6] = bgcolor;
+    sinf_inflate(data, datalen, inflate_callback_avatar, userdata);
+}
+
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 {
     uint16_t *colortable = (uint16_t *)(((int *)userdata) + 5);

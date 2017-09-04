@@ -23,6 +23,7 @@
 #define FONT_BOLD   2
 #endif
 
+#define AVATAR_IMAGE_SIZE 144
 #define LOADER_ICON_SIZE 64
 
 #define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
@@ -49,6 +50,7 @@ void display_bar(int x, int y, int w, int h, uint16_t c);
 void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint8_t r);
 
 void display_image(int x, int y, int w, int h, const void *data, int datalen);
+void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor);
 void display_icon(int x, int y, int w, int h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor);
 
 #ifndef TREZOR_PRINT_DISABLE

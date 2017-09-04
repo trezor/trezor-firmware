@@ -107,10 +107,41 @@ STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args, const mp_obj_t *args) 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_image_obj, 4, 4, mod_trezorui_Display_image);
 
+/// def avatar(self, x: int, y: int, image: bytes, fgcolor: int, bgcolor: int) -> None:
+///     '''
+///     Renders an avatar at position (x,y).
+///     The image needs to be in TREZOR Optimized Image Format (TOIF) - full-color mode.
+///     Image needs to be of exactly AVATAR_IMAGE_SIZE x AVATAR_IMAGE_SIZE pixels size.
+///     '''
+STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args, const mp_obj_t *args) {
+    mp_int_t x = mp_obj_get_int(args[1]);
+    mp_int_t y = mp_obj_get_int(args[2]);
+    mp_buffer_info_t image;
+    mp_get_buffer_raise(args[3], &image, MP_BUFFER_READ);
+    const uint8_t *data = image.buf;
+    if (image.len < 8 || memcmp(data, "TOIf", 4) != 0) {
+        mp_raise_ValueError("Invalid image format");
+    }
+    mp_int_t w = *(uint16_t *)(data + 4);
+    mp_int_t h = *(uint16_t *)(data + 6);
+    if (w != AVATAR_IMAGE_SIZE || h != AVATAR_IMAGE_SIZE) {
+        mp_raise_ValueError("Invalid image size");
+    }
+    mp_int_t datalen = *(uint32_t *)(data + 8);
+    if (datalen != image.len - 12) {
+        mp_raise_ValueError("Invalid size of data");
+    }
+    mp_int_t fgcolor = mp_obj_get_int(args[4]);
+    mp_int_t bgcolor = mp_obj_get_int(args[5]);
+    display_avatar(x, y, data + 12, datalen, fgcolor, bgcolor);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_avatar_obj, 6, 6, mod_trezorui_Display_avatar);
+
 /// def icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
 ///     '''
 ///     Renders an icon at position (x,y), fgcolor is used as foreground color, bgcolor as background.
-///     The image needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
+///     The icon needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
 ///     '''
 STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
     mp_int_t x = mp_obj_get_int(args[1]);
@@ -380,6 +411,7 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_trezorui_Display_bar_obj) },
     { MP_ROM_QSTR(MP_QSTR_bar_radius), MP_ROM_PTR(&mod_trezorui_Display_bar_radius_obj) },
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_trezorui_Display_image_obj) },
+    { MP_ROM_QSTR(MP_QSTR_avatar), MP_ROM_PTR(&mod_trezorui_Display_avatar_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_trezorui_Display_icon_obj) },
     { MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&mod_trezorui_Display_print_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_trezorui_Display_text_obj) },
