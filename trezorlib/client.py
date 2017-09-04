@@ -189,6 +189,9 @@ class BaseClient(object):
             self.transport = self.connect()
         return self.transport
 
+    def close(self):
+        pass
+
     def cancel(self):
         self.get_transport().write(proto.Cancel())
 
