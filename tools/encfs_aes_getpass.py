@@ -41,7 +41,7 @@ def choose_device(devices):
 
     if len(devices) == 1:
         try:
-            return HidTransport(devices[0])
+            return devices[0]
         except IOError:
             raise Exception("Device is currently in use")
 
@@ -50,18 +50,16 @@ def choose_device(devices):
     sys.stderr.write("Available devices:\n")
     for d in devices:
         try:
-            t = HidTransport(d)
+            client = TrezorClient(d)
         except IOError:
             sys.stderr.write("[-] <device is currently in use>\n")
             continue
-
-        client = TrezorClient(t)
 
         if client.features.label:
             sys.stderr.write("[%d] %s\n" % (i, client.features.label))
         else:
             sys.stderr.write("[%d] <no label>\n" % i)
-        t.close()
+        client.close()
         i += 1
 
     sys.stderr.write("----------------------------\n")
@@ -69,7 +67,7 @@ def choose_device(devices):
 
     try:
         device_id = int(input())
-        return HidTransport(devices[device_id])
+        return devices[device_id]
     except:
         raise Exception("Invalid choice, exiting...")
 

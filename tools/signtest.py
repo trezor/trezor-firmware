@@ -161,9 +161,8 @@ def main():
         return
 
     # Use first connected device
-    print(devices[0][0])
-    # transport = BridgeTransport(devices[0][0])
-    transport = HidTransport(devices[0])
+    transport = devices[0]
+    print(transport)
 
     txstore = MyTxApiBitcoin()
 

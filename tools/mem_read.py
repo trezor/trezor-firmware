@@ -25,10 +25,10 @@ def main():
         return
 
     # Use first connected device
-    transport = HidTransport(devices[0])
+    transport = devices[0]
+    debug_transport = devices[0].find_debug()
 
     # Creates object for manipulating TREZOR
-    debug_transport = HidTransport(devices[0], **{'debug_link': True})
     client = TrezorClient(transport)
     debug = DebugLink(debug_transport)
 

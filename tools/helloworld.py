@@ -15,7 +15,7 @@ def main():
         return
 
     # Use first connected device
-    transport = HidTransport(devices[0])
+    transport = devices[0]
 
     # Creates object for manipulating TREZOR
     client = TrezorClient(transport)

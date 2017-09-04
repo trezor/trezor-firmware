@@ -34,7 +34,7 @@ def get_client():
     devices = HidTransport.enumerate()    # list all connected TREZORs on USB
     if len(devices) == 0:                 # check whether we found any
         return None
-    transport = HidTransport(devices[0])  # use first connected device
+    transport = devices[0]                # use first connected device
     return TrezorClient(transport)        # creates object for communicating with TREZOR
 
 
