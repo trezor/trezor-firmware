@@ -78,6 +78,7 @@ class HidTransport(Transport):
             for debug in HidTransport.enumerate(debug=True):
                 if debug.device['serial_number'] == self.device['serial_number']:
                     return debug
+        raise Exception('Debug HID device not found')
 
     def open(self):
         if self.hid:
