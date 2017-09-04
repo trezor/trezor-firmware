@@ -53,11 +53,18 @@ class HidTransport(Transport):
 
     @staticmethod
     def enumerate(debug=False):
-        return [
-            HidTransport(dev) for dev in hid.enumerate(0, 0)
-            if ((is_trezor1(dev) or is_trezor2(dev) or is_trezor2_bl(dev)) and
-                (is_debug(dev) == debug))
-        ]
+        devices = []
+        for dev in hid.enumerate(0, 0):
+            if not (is_trezor1(dev) or is_trezor2(dev) or is_trezor2_bl(dev)):
+                continue
+            if debug:
+                if not is_debuglink(dev):
+                    continue
+            else:
+                if not is_wirelink(dev):
+                    continue
+            devices.append(HidTransport(dev))
+        return devices
 
     @staticmethod
     def find_by_path(path=None):
@@ -148,5 +155,9 @@ def is_trezor2_bl(dev):
     return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR2_BL
 
 
-def is_debug(dev):
+def is_wirelink(dev):
+    return (dev['usage_page'] == 0xFF00 or dev['interface_number'] == 0)
+
+
+def is_debuglink(dev):
     return (dev['usage_page'] == 0xFF01 or dev['interface_number'] == 1)
