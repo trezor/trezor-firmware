@@ -67,7 +67,7 @@ class ProtocolV1(object):
             raise Exception('Unexpected magic characters')
         try:
             headerlen = struct.calcsize('>HL')
-            (msg_type, datalen) = struct.unpack('>HL', bytes(chunk[3:3 + headerlen]))
+            (msg_type, datalen) = struct.unpack('>HL', chunk[3:3 + headerlen])
         except:
             raise Exception('Cannot parse header')
 

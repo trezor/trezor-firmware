@@ -31,7 +31,7 @@ class ProtocolV2(object):
 
     def session_begin(self, transport):
         chunk = struct.pack('>B', 0x03)
-        chunk = chunk.ljust(REPLEN, bytes([0x00]))
+        chunk = chunk.ljust(REPLEN, b'\x00')
         transport.write_chunk(chunk)
         resp = transport.read_chunk()
         self.session = self.parse_session_open(resp)
@@ -40,10 +40,11 @@ class ProtocolV2(object):
         if not self.session:
             return
         chunk = struct.pack('>BL', 0x04, self.session)
-        chunk = chunk.ljust(REPLEN, bytes([0x00]))
+        chunk = chunk.ljust(REPLEN, b'\x00')
         transport.write_chunk(chunk)
         resp = transport.read_chunk()
-        if resp[0] != 0x04:
+        (magic, ) = struct.unpack('>B', resp[:1])
+        if magic != 0x04:
             raise Exception('Expected session close')
         self.session = None
 
@@ -65,7 +66,7 @@ class ProtocolV2(object):
                 repheader = struct.pack('>BLL', 0x02, self.session, seq)
             datalen = REPLEN - len(repheader)
             chunk = repheader + data[:datalen]
-            chunk = chunk.ljust(REPLEN, bytes([0x00]))
+            chunk = chunk.ljust(REPLEN, b'\x00')
             transport.write_chunk(chunk)
             data = data[datalen:]
             seq += 1
@@ -95,7 +96,7 @@ class ProtocolV2(object):
     def parse_first(self, chunk):
         try:
             headerlen = struct.calcsize('>BLLL')
-            (magic, session, msg_type, datalen) = struct.unpack('>BLLL', bytes(chunk[:headerlen]))
+            (magic, session, msg_type, datalen) = struct.unpack('>BLLL', chunk[:headerlen])
         except:
             raise Exception('Cannot parse header')
         if magic != 0x01:
@@ -107,7 +108,7 @@ class ProtocolV2(object):
     def parse_next(self, chunk):
         try:
             headerlen = struct.calcsize('>BLL')
-            (magic, session, sequence) = struct.unpack('>BLL', bytes(chunk[:headerlen]))
+            (magic, session, sequence) = struct.unpack('>BLL', chunk[:headerlen])
         except:
             raise Exception('Cannot parse header')
         if magic != 0x02:
@@ -119,7 +120,7 @@ class ProtocolV2(object):
     def parse_session_open(self, chunk):
         try:
             headerlen = struct.calcsize('>BL')
-            (magic, session) = struct.unpack('>BL', bytes(chunk[:headerlen]))
+            (magic, session) = struct.unpack('>BL', chunk[:headerlen])
         except:
             raise Exception('Cannot parse header')
         if magic != 0x03:
