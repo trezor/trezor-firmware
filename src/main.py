@@ -75,7 +75,7 @@ usb = io.USB(
 )
 usb.add(usb_wire)
 usb.add(usb_vcp)
-# usb.add(usb_u2f)
+usb.add(usb_u2f)
 
 # load applications
 from apps.common import storage
