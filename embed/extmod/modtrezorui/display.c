@@ -39,14 +39,19 @@ static int DISPLAY_OFFSET[2] = {0, 0};
 
 // common display functions
 
-static void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
+static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1, uint8_t step)
 {
     uint8_t cr, cg, cb;
+    cr = (((color0 & 0xF800) >> 11) * step + ((color1 & 0xF800) >> 11) * (15 - step)) / 15;
+    cg = (((color0 & 0x07E0) >> 5) * step + ((color1 & 0x07E0) >> 5) * (15 - step)) / 15;
+    cb = ((color0 & 0x001F) * step + (color1 & 0x001F) * (15 - step)) / 15;
+    return (cr << 11) | (cg << 5) | cb;
+}
+
+static inline void set_color_table(uint16_t colortable[16], uint16_t fgcolor, uint16_t bgcolor)
+{
     for (int i = 0; i < 16; i++) {
-        cr = (((fgcolor & 0xF800) >> 11) * i + ((bgcolor & 0xF800) >> 11) * (15 - i)) / 15;
-        cg = (((fgcolor & 0x07E0) >> 5) * i + ((bgcolor & 0x07E0) >> 5) * (15 - i)) / 15;
-        cb = ((fgcolor & 0x001F) * i + (bgcolor & 0x001F) * (15 - i)) / 15;
-        colortable[i] = (cr << 11) | (cg << 5) | cb;
+        colortable[i] = interpolate_color(fgcolor, bgcolor, i);
     }
 }
 
@@ -147,17 +152,23 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
     }
 }
 
-static void inflate_callback_image(uint8_t byte, uint32_t pos, void *userdata)
+static void inflate_callback_image(uint8_t byte1, uint32_t pos, void *userdata)
 {
-    int w = ((int *)userdata)[0];
-    int x0 = ((int *)userdata)[1];
-    int x1 = ((int *)userdata)[2];
-    int y0 = ((int *)userdata)[3];
-    int y1 = ((int *)userdata)[4];
-    int px = (pos / 2) % w;
-    int py = (pos / 2) / w;
+    static uint8_t byte0;
+    if (pos % 2 == 0) {
+        byte0 = byte1;
+        return;
+    }
+    const int w = ((const int *)userdata)[0];
+    const int x0 = ((const int *)userdata)[1];
+    const int x1 = ((const int *)userdata)[2];
+    const int y0 = ((const int *)userdata)[3];
+    const int y1 = ((const int *)userdata)[4];
+    const int px = (pos / 2) % w;
+    const int py = (pos / 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-        DATA(byte);
+        DATA(byte0);
+        DATA(byte1);
     }
 }
 
@@ -168,35 +179,57 @@ void display_image(int x, int y, int w, int h, const void *data, int datalen)
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
-    int userdata[5];
-    userdata[0] = w;
-    userdata[1] = x0 - x;
-    userdata[2] = x1 - x;
-    userdata[3] = y0 - y;
-    userdata[4] = y1 - y;
+    int userdata[5] = {w, x0 - x, x1 - x, y0 - y, y1 - y};
     sinf_inflate(data, datalen, inflate_callback_image, userdata);
 }
 
-static void inflate_callback_avatar(uint8_t byte, uint32_t pos, void *userdata)
+static void inflate_callback_avatar(uint8_t byte1, uint32_t pos, void *userdata)
 {
-    int w = ((int *)userdata)[0];
-    int x0 = ((int *)userdata)[1];
-    int x1 = ((int *)userdata)[2];
-    int y0 = ((int *)userdata)[3];
-    int y1 = ((int *)userdata)[4];
-    int fgcolor = ((int *)userdata)[5];
-    int bgcolor = ((int *)userdata)[6];
-    int px = (pos / 2) % w;
-    int py = (pos / 2) / w;
+#define AVATAR_BORDER_SIZE  4
+#define AVATAR_BORDER_LOW   (AVATAR_IMAGE_SIZE / 2 - AVATAR_BORDER_SIZE) * (AVATAR_IMAGE_SIZE / 2 - AVATAR_BORDER_SIZE)
+#define AVATAR_BORDER_HIGH  (AVATAR_IMAGE_SIZE / 2) * (AVATAR_IMAGE_SIZE / 2)
+#define AVATAR_ANTIALIAS    1
+    static uint8_t byte0;
+    if (pos % 2 == 0) {
+        byte0 = byte1;
+        return;
+    }
+    const int w = ((const int *)userdata)[0];
+    const int x0 = ((const int *)userdata)[1];
+    const int x1 = ((const int *)userdata)[2];
+    const int y0 = ((const int *)userdata)[3];
+    const int y1 = ((const int *)userdata)[4];
+    const int fgcolor = ((const int *)userdata)[5];
+    const int bgcolor = ((const int *)userdata)[6];
+    const int px = (pos / 2) % w;
+    const int py = (pos / 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
         int d = (px - w / 2) * (px - w / 2) + (py - w / 2) * (py - w / 2);
-        if (d < 70 * 70) { // inside circle
-            DATA(byte);
+        // inside border area
+        if (d < AVATAR_BORDER_LOW) {
+            DATA(byte0);
+            DATA(byte1);
         } else
-        if (d >= 72 * 72) { // outside circle
-            DATA((bgcolor >> 8 * (1 - pos % 2)) & 0xFF);
-        } else { // circle
-            DATA((fgcolor >> 8 * (1 - pos % 2)) & 0xFF);
+        // outside border area
+        if (d > AVATAR_BORDER_HIGH) {
+            DATA(bgcolor >> 8);
+            DATA(bgcolor & 0xFF);
+        // border area
+        } else {
+#if AVATAR_ANTIALIAS
+            d = 31 * (d - AVATAR_BORDER_LOW) / (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
+            uint16_t c;
+            if (d >= 16) {
+                c = interpolate_color(bgcolor, fgcolor, d - 16);
+            } else {
+                c = interpolate_color(fgcolor, (byte0 << 8) | byte1 , d);
+            }
+            DATA(c >> 8);
+            DATA(c & 0xFF);
+#else
+            DATA(fgcolor >> 8);
+            DATA(fgcolor & 0xFF);
+#endif
         }
     }
 }
@@ -208,27 +241,20 @@ void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolo
     int x0, y0, x1, y1;
     clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
-    int userdata[7];
-    userdata[0] = AVATAR_IMAGE_SIZE;
-    userdata[1] = x0 - x;
-    userdata[2] = x1 - x;
-    userdata[3] = y0 - y;
-    userdata[4] = y1 - y;
-    userdata[5] = fgcolor;
-    userdata[6] = bgcolor;
+    int userdata[7] = {AVATAR_IMAGE_SIZE, x0 - x, x1 - x, y0 - y, y1 - y, fgcolor, bgcolor};
     sinf_inflate(data, datalen, inflate_callback_avatar, userdata);
 }
 
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 {
-    uint16_t *colortable = (uint16_t *)(((int *)userdata) + 5);
-    int w = ((int *)userdata)[0];
-    int x0 = ((int *)userdata)[1];
-    int x1 = ((int *)userdata)[2];
-    int y0 = ((int *)userdata)[3];
-    int y1 = ((int *)userdata)[4];
-    int px = (pos * 2) % w;
-    int py = (pos * 2) / w;
+    const uint16_t *colortable = (const uint16_t *)(((const int *)userdata) + 5);
+    const int w = ((const int *)userdata)[0];
+    const int x0 = ((const int *)userdata)[1];
+    const int x1 = ((const int *)userdata)[2];
+    const int y0 = ((const int *)userdata)[3];
+    const int y1 = ((const int *)userdata)[4];
+    const int px = (pos * 2) % w;
+    const int py = (pos * 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
         DATA(colortable[byte >> 4] >> 8);
         DATA(colortable[byte >> 4] & 0xFF);
@@ -245,12 +271,7 @@ void display_icon(int x, int y, int w, int h, const void *data, int datalen, uin
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
-    int userdata[5 + 16 * sizeof(uint16_t) / sizeof(int)];
-    userdata[0] = w;
-    userdata[1] = x0 - x;
-    userdata[2] = x1 - x;
-    userdata[3] = y0 - y;
-    userdata[4] = y1 - y;
+    int userdata[5 + 16 * sizeof(uint16_t) / sizeof(int)] = {w, x0 - x, x1 - x, y0 - y, y1 - y};
     set_color_table((uint16_t *)(userdata + 5), fgcolor, bgcolor);
     sinf_inflate(data, datalen, inflate_callback_icon, userdata);
 }
