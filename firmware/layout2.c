@@ -220,6 +220,61 @@ void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
+void layoutResetWord(const char *word, int pass, int word_pos, bool last)
+{
+	layoutLast = layoutResetWord;
+	oledSwipeLeft();
+
+	const char *btnYes;
+	if (last) {
+		if (pass == 1) {
+			btnYes = _("Finish");
+		} else {
+			btnYes = _("Again");
+		}
+	} else {
+		btnYes = _("Next");
+	}
+
+	const char *action;
+	if (pass == 1) {
+		action = _("Please check the seed");
+	} else {
+		action = _("Write down the seed");
+	}
+
+	char index_str[] = "##th word is:";
+	if (word_pos < 10) {
+		index_str[0] = ' ';
+	} else {
+		index_str[0] = '0' + word_pos / 10;
+	}
+	index_str[1] = '0' + word_pos % 10;
+	if (word_pos == 1 || word_pos == 21) {
+		index_str[2] = 's'; index_str[3] = 't';
+	} else
+	if (word_pos == 2 || word_pos == 22) {
+		index_str[2] = 'n'; index_str[3] = 'd';
+	} else
+	if (word_pos == 3 || word_pos == 23) {
+		index_str[2] = 'r'; index_str[3] = 'd';
+	}
+
+	int left = 0;
+	oledClear();
+	oledDrawBitmap(0, 0, &bmp_icon_info);
+	left = bmp_icon_info.width + 4;
+
+	oledDrawString(left, 0 * 9, action);
+	oledDrawString(left, 2 * 9, word_pos < 10 ? index_str + 1 : index_str);
+	oledDrawStringDouble(left, 3 * 9, word);
+	oledHLine(OLED_HEIGHT - 13);
+	oledDrawString(OLED_WIDTH - fontCharWidth('\x06') - 1, OLED_HEIGHT - 8, "\x06");
+	oledDrawString(OLED_WIDTH - oledStringWidth(btnYes) - fontCharWidth('\x06') - 3, OLED_HEIGHT - 8, btnYes);
+	oledInvert(OLED_WIDTH - oledStringWidth(btnYes) - fontCharWidth('\x06') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+	oledRefresh();
+}
+
 void layoutAddress(const char *address, const char *desc, bool qrcode)
 {
 	if (layoutLast != layoutAddress) {

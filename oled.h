@@ -42,7 +42,10 @@ void oledClearPixel(int x, int y);
 void oledInvertPixel(int x, int y);
 void oledDrawChar(int x, int y, char c, int zoom);
 int oledStringWidth(const char *text);
-void oledDrawString(int x, int y, const char* text);
+
+#define oledDrawString(x, y, text) oledDrawStringSize((x),  (y), (text), 1)
+#define oledDrawStringDouble(x, y, text) oledDrawStringSize((x),  (y), (text), 2)
+void oledDrawStringSize(int x, int y, const char* text, int size);
 void oledDrawStringCenter(int y, const char* text);
 void oledDrawStringRight(int x, int y, const char* text);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);

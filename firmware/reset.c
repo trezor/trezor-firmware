@@ -106,7 +106,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 
 }
 
-static char current_word[10], current_word_display[11];
+static char current_word[10];
 
 // separated == true if called as a separate workflow via BackupMessage
 void reset_backup(bool separated)
@@ -133,40 +133,7 @@ void reset_backup(bool separated)
 			if (storage.mnemonic[i] != 0) {
 				i++;
 			}
-			char desc[] = "##th word is:";
-			if (word_pos < 10) {
-				desc[0] = ' ';
-			} else {
-				desc[0] = '0' + word_pos / 10;
-			}
-			desc[1] = '0' + word_pos % 10;
-			if (word_pos == 1 || word_pos == 21) {
-				desc[2] = 's'; desc[3] = 't';
-			} else
-			if (word_pos == 2 || word_pos == 22) {
-				desc[2] = 'n'; desc[3] = 'd';
-			} else
-			if (word_pos == 3 || word_pos == 23) {
-				desc[2] = 'r'; desc[3] = 'd';
-			}
-			current_word_display[0] = 0x01;
-			for (j = 0; current_word[j]; j++) {
-				current_word_display[j + 1] = current_word[j] + 'A' - 'a';
-			}
-			current_word_display[j + 1] = 0;
-			if (storage.mnemonic[i] == 0) { // last word
-				if (pass == 1) {
-					layoutDialogSwipe(&bmp_icon_info, NULL, _("Finish"), NULL, _("Please check the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
-				} else {
-					layoutDialogSwipe(&bmp_icon_info, NULL, _("Again"), NULL, _("Write down the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
-				}
-			} else {
-				if (pass == 1) {
-					layoutDialogSwipe(&bmp_icon_info, NULL, _("Next"), NULL, _("Please check the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
-				} else {
-					layoutDialogSwipe(&bmp_icon_info, NULL, _("Next"), NULL, _("Write down the seed"), NULL, (word_pos < 10 ? desc + 1 : desc), current_word_display, NULL, NULL);
-				}
-			}
+			layoutResetWord(current_word, pass, word_pos, storage.mnemonic[i] == 0);
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				if (!separated) {
 					storage_reset();

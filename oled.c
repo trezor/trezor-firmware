@@ -281,14 +281,9 @@ int oledStringWidth(const char *text) {
 	return l;
 }
 
-void oledDrawString(int x, int y, const char* text)
+void oledDrawStringSize(int x, int y, const char* text, int size)
 {
 	if (!text) return;
-	int size = 1;
-	if (*text == 0x01) { // double size
-		text++;
-		size = 2;
-	}
 	int l = 0;
 	for (; *text; text++) {
 		char c = oledConvertChar(*text);
