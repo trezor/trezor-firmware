@@ -1,5 +1,7 @@
 # pylint: disable=E0602
 
+import os
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -82,7 +84,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/hal/stm32f4xx_ll_fsmc.c',
 ]
 
-env = Environment()
+env = Environment(ENV=os.environ)
 
 env.Replace(
     AS='arm-none-eabi-as',
