@@ -25,6 +25,7 @@
 
 #include "rng.h"
 #include "layout.h"
+#include "util.h"
 
 uint32_t __stack_chk_guard;
 
@@ -65,9 +66,6 @@ void setup(void)
 	// enable SPI clock
 	rcc_periph_clock_enable(RCC_SPI1);
 
-	// enable OTG FS clock
-	rcc_periph_clock_enable(RCC_OTGFS);
-
 	// enable RNG
 	rcc_periph_clock_enable(RCC_RNG);
 	RNG_CR |= RNG_CR_RNGEN;
@@ -98,8 +96,14 @@ void setup(void)
 	spi_enable(SPI1);
 
 	// enable OTG_FS
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
-	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+	gpio_set_af(GPIOA, GPIO_AF10, GPIO10 | GPIO11 | GPIO12);
+
+	// enable OTG FS clock
+	rcc_periph_clock_enable(RCC_OTGFS);
+	// clear USB OTG_FS peripheral dedicated RAM
+	memset_reg((void *) 0x50020000, (void *) 0x50020500, 0);
 }
 
 void setupApp(void)
@@ -120,4 +124,7 @@ void setupApp(void)
 	// hotfix for old bootloader
 	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO9);
 	spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_8, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
+
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
+	gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
 }
