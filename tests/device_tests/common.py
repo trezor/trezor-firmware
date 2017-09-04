@@ -91,13 +91,19 @@ elif UDP_ENABLED:
     DEBUG_TRANSPORT_KWARGS = {}
 
 
+def get_transport():
+    return TRANSPORT(*TRANSPORT_ARGS, **TRANSPORT_KWARGS)
+
+
+def get_debug_transport():
+    return DEBUG_TRANSPORT(*DEBUG_TRANSPORT_ARGS, **DEBUG_TRANSPORT_KWARGS)
+
+
 class TrezorTest(unittest.TestCase):
 
     def setUp(self):
-        transport = TRANSPORT(*TRANSPORT_ARGS, **TRANSPORT_KWARGS)
-        debug_transport = DEBUG_TRANSPORT(*DEBUG_TRANSPORT_ARGS, **DEBUG_TRANSPORT_KWARGS)
-        self.client = TrezorClientDebugLink(transport)
-        self.client.set_debuglink(debug_transport)
+        self.client = TrezorClientDebugLink(get_transport)
+        self.client.set_debuglink(get_debug_transport())
         self.client.set_tx_api(tx_api.TxApiBitcoin)
         # self.client.set_buttonwait(3)
 
