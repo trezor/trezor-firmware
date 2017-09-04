@@ -343,7 +343,7 @@ static volatile char tiny = 0;
 static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 {
 	(void)ep;
-	static uint8_t buf[64] __attribute__ ((aligned(4)));
+	static CONFIDENTIAL uint8_t buf[64] __attribute__ ((aligned(4)));
 	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
 	debugLog(0, "", "hid_rx_callback");
 	if (!tiny) {
@@ -356,7 +356,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
 {
 	(void)ep;
-	static uint8_t buf[64] __attribute__ ((aligned(4)));
+	static CONFIDENTIAL uint8_t buf[64] __attribute__ ((aligned(4)));
 
 	debugLog(0, "", "hid_u2f_rx_callback");
 	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
@@ -367,7 +367,7 @@ static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
 static void hid_debug_rx_callback(usbd_device *dev, uint8_t ep)
 {
 	(void)ep;
-	static uint8_t buf[64] __attribute__ ((aligned(4)));
+	static CONFIDENTIAL uint8_t buf[64] __attribute__ ((aligned(4)));
 	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, 64) != 64) return;
 	debugLog(0, "", "hid_debug_rx_callback");
 	if (!tiny) {

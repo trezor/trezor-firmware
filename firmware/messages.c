@@ -222,7 +222,7 @@ enum {
 
 void msg_process(char type, uint16_t msg_id, const pb_field_t *fields, uint8_t *msg_raw, uint32_t msg_size)
 {
-	static uint8_t msg_data[MSG_IN_SIZE];
+	static CONFIDENTIAL uint8_t msg_data[MSG_IN_SIZE];
 	memset(msg_data, 0, sizeof(msg_data));
 	pb_istream_t stream = pb_istream_from_buffer(msg_raw, msg_size);
 	bool status = pb_decode(&stream, fields, msg_data);
@@ -236,7 +236,7 @@ void msg_process(char type, uint16_t msg_id, const pb_field_t *fields, uint8_t *
 void msg_read_common(char type, const uint8_t *buf, int len)
 {
 	static char read_state = READSTATE_IDLE;
-	static uint8_t msg_in[MSG_IN_SIZE];
+	static CONFIDENTIAL uint8_t msg_in[MSG_IN_SIZE];
 	static uint16_t msg_id = 0xFFFF;
 	static uint32_t msg_size = 0;
 	static uint32_t msg_pos = 0;
@@ -304,7 +304,7 @@ const uint8_t *msg_debug_out_data(void)
 
 #endif
 
-uint8_t msg_tiny[64];
+CONFIDENTIAL uint8_t msg_tiny[64];
 uint16_t msg_tiny_id = 0xFFFF;
 
 void msg_read_tiny(const uint8_t *buf, int len)
