@@ -32,7 +32,6 @@
 #include "rng.h"
 #include "hmac.h"
 #include "util.h"
-#include "macros.h"
 #include "gettext.h"
 
 #include "u2f/u2f.h"
@@ -274,7 +273,7 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len)
 		dialog_timeout = U2F_TIMEOUT;
 
 	U2FHID_FRAME f;
-	MEMSET_BZERO(&f, sizeof(f));
+	memset(&f, 0, sizeof(f));
 	f.cid = cid;
 	f.init.cmd = U2FHID_WINK;
 	f.init.bcntl = 0;
@@ -294,7 +293,7 @@ void u2fhid_init(const U2FHID_FRAME *in)
 		return;
 	}
 
-	MEMSET_BZERO(&f, sizeof(f));
+	memset(&f, 0, sizeof(f));
 	f.cid = in->cid;
 	f.init.cmd = U2FHID_INIT;
 	f.init.bcnth = 0;
@@ -374,7 +373,7 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
 
 	// debugLog(0, "", "send_u2fhid_msg");
 
-	MEMSET_BZERO(&f, sizeof(f));
+	memset(&f, 0, sizeof(f));
 	f.cid = cid;
 	f.init.cmd = cmd;
 	f.init.bcnth = len >> 8;
@@ -390,7 +389,7 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
 	// Cont packet(s)
 	for (; l > 0; l -= psz, p += psz) {
 		// debugLog(0, "", "send_u2fhid_msg con");
-		MEMSET_BZERO(&f.cont.data, sizeof(f.cont.data));
+		memset(&f.cont.data, 0, sizeof(f.cont.data));
 		f.cont.seq = seq++;
 		psz = MIN(sizeof(f.cont.data), l);
 		memcpy(f.cont.data, p, psz);
@@ -407,7 +406,7 @@ void send_u2fhid_error(uint32_t fcid, uint8_t err)
 {
 	U2FHID_FRAME f;
 
-	MEMSET_BZERO(&f, sizeof(f));
+	memset(&f, 0, sizeof(f));
 	f.cid = fcid;
 	f.init.cmd = U2FHID_ERROR;
 	f.init.bcntl = 1;
@@ -585,8 +584,7 @@ void u2f_register(const APDU *a)
 	if (last_req_state == REG_PASS) {
 		uint8_t data[sizeof(U2F_REGISTER_RESP) + 2];
 		U2F_REGISTER_RESP *resp = (U2F_REGISTER_RESP *)&data;
-		MEMSET_BZERO(data, sizeof(data));
-
+		memset(data, 0, sizeof(data));
 
 		resp->registerId = U2F_REGISTER_ID;
 		resp->keyHandleLen = KEY_HANDLE_LEN;

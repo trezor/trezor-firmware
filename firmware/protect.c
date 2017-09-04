@@ -212,24 +212,27 @@ bool protectPin(bool use_cached)
 
 bool protectChangePin(void)
 {
-	const char *pin;
-	char pin1[17], pin2[17];
-	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
+	static CONFIDENTIAL char pin_compare[17];
+
+	const char *pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
+
 	if (!pin) {
 		return false;
 	}
-	strlcpy(pin1, pin, sizeof(pin1));
+
+	strlcpy(pin_compare, pin, sizeof(pin_compare));
+
 	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond, _("Please re-enter new PIN:"));
-	if (!pin) {
-		return false;
+
+	const bool result = pin && (strncmp(pin_compare, pin, sizeof(pin_compare)) == 0);
+
+	if (result) {
+		storage_setPin(pin_compare);
 	}
-	strlcpy(pin2, pin, sizeof(pin2));
-	if (strcmp(pin1, pin2) == 0) {
-		storage_setPin(pin1);
-		return true;
-	} else {
-		return false;
-	}
+
+	memset(pin_compare, 0, sizeof(pin_compare));
+
+	return result;
 }
 
 bool protectPassphrase(void)

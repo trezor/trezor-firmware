@@ -439,6 +439,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			if (brand_new_firmware || button.YesUp) {
 				// backup metadata
 				backup_metadata(meta_backup);
+				flash_wait_for_last_operation();
 				flash_clear_status_flags();
 				flash_unlock();
 				// erase metadata area
@@ -452,6 +453,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
 				}
 				layoutProgress("INSTALLING ... Please wait", 0);
+				flash_wait_for_last_operation();
 				flash_lock();
 
 				// check that metadata was succesfully erased
