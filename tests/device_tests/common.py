@@ -59,51 +59,37 @@ def pipe_exists(path):
         return False
 
 
-if HID_ENABLED and HidTransport.enumerate():
-
-    devices = HidTransport.enumerate()
-    print('Using TREZOR')
-    TRANSPORT = HidTransport
-    TRANSPORT_ARGS = (devices[0],)
-    TRANSPORT_KWARGS = {}
-    DEBUG_TRANSPORT = HidTransport
-    DEBUG_TRANSPORT_ARGS = (devices[0].find_debug(),)
-    DEBUG_TRANSPORT_KWARGS = {}
-
-elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
-
-    print('Using Emulator (v1=pipe)')
-    TRANSPORT = PipeTransport
-    TRANSPORT_ARGS = ('/tmp/pipe.trezor', False)
-    TRANSPORT_KWARGS = {}
-    DEBUG_TRANSPORT = PipeTransport
-    DEBUG_TRANSPORT_ARGS = ('/tmp/pipe.trezor_debug', False)
-    DEBUG_TRANSPORT_KWARGS = {}
-
-elif UDP_ENABLED:
-
-    print('Using Emulator (v2=udp)')
-    TRANSPORT = UdpTransport
-    TRANSPORT_ARGS = ('', )
-    TRANSPORT_KWARGS = {}
-    DEBUG_TRANSPORT = UdpTransport
-    DEBUG_TRANSPORT_ARGS = ('', )
-    DEBUG_TRANSPORT_KWARGS = {}
-
-
 def get_transport():
-    return TRANSPORT(*TRANSPORT_ARGS, **TRANSPORT_KWARGS)
+    if HID_ENABLED and HidTransport.enumerate():
+        devices = HidTransport.enumerate()
+        wirelink = devices[0]
+        debuglink = devices[0].find_debug()
+
+    elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
+        wirelink = PipeTransport('/tmp/pipe.trezor', False)
+        debuglink = PipeTransport('/tmp/pipe.trezor_debug', False)
+
+    elif UDP_ENABLED:
+        wirelink = UdpTransport()
+        debuglink = UdpTransport()
+
+    return wirelink, debuglink
 
 
-def get_debug_transport():
-    return DEBUG_TRANSPORT(*DEBUG_TRANSPORT_ARGS, **DEBUG_TRANSPORT_KWARGS)
+if HID_ENABLED and HidTransport.enumerate():
+    print('Using TREZOR')
+elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
+    print('Using Emulator (v1=pipe)')
+elif UDP_ENABLED:
+    print('Using Emulator (v2=udp)')
 
 
 class TrezorTest(unittest.TestCase):
 
     def setUp(self):
-        self.client = TrezorClientDebugLink(get_transport)
-        self.client.set_debuglink(get_debug_transport())
+        wirelink, debuglink = get_transport()
+        self.client = TrezorClientDebugLink(wirelink)
+        self.client.set_debuglink(debuglink)
         self.client.set_tx_api(tx_api.TxApiBitcoin)
         # self.client.set_buttonwait(3)
 

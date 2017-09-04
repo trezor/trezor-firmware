@@ -153,11 +153,11 @@ def session(f):
     # with session activation / deactivation
     def wrapped_f(*args, **kwargs):
         client = args[0]
-        client.get_transport().session_begin()
+        client.transport.session_begin()
         try:
             return f(*args, **kwargs)
         finally:
-            client.get_transport().session_end()
+            client.transport.session_end()
     return wrapped_f
 
 
@@ -179,26 +179,20 @@ def normalize_nfc(txt):
 class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
-    def __init__(self, connect, **kwargs):
-        self.connect = connect
-        self.transport = None
+    def __init__(self, transport, **kwargs):
+        self.transport = transport
         super(BaseClient, self).__init__()  # *args, **kwargs)
-
-    def get_transport(self):
-        if self.transport is None:
-            self.transport = self.connect()
-        return self.transport
 
     def close(self):
         pass
 
     def cancel(self):
-        self.get_transport().write(proto.Cancel())
+        self.transport.write(proto.Cancel())
 
     @session
     def call_raw(self, msg):
-        self.get_transport().write(msg)
-        return self.get_transport().read()
+        self.transport.write(msg)
+        return self.transport.read()
 
     @session
     def call(self, msg):
