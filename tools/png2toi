@@ -3,6 +3,7 @@ from PIL import Image
 import sys
 import struct
 import zlib
+from os.path import basename
 
 
 def process_rgb(w, h, pix):
@@ -43,11 +44,15 @@ def process_image(ifn, savefiles=False):
 
     pix = im.load()
 
+    bname = basename(ifn[:-4])
+    ofn_h = '%s.h' % bname
+    ofn_py = '%s.py' % bname
+
     if im.mode == 'RGB':
-        ofn = '%s.toif' % ifn[:-4]
+        ofn = '%s.toif' % bname
         pixeldata = process_rgb(w, h, pix)
     else:
-        ofn = '%s.toig' % ifn[:-4]
+        ofn = '%s.toig' % bname
         pixeldata = process_grayscale(w, h, pix)
     z = zlib.compressobj(level=9, wbits=10)
     zdata = z.compress(pixeldata) + z.flush()
@@ -66,8 +71,11 @@ def process_image(ifn, savefiles=False):
         with open(ofn, 'wb') as f:
             f.write(data)
             print('Written %s ... %d bytes' % (ofn, len(data)))
-        with open(ofn + '.h', 'wt') as f:
-            f.write('static const uint8_t toi_%s[] = {\n' % ifn[:-4])
+        with open(ofn_py, 'wb') as f:
+            f.write(('%s = %s ' % (bname, data)).encode())
+            print('Written %s ... %d bytes' % (ofn_py, len(data)))
+        with open(ofn_h, 'wt') as f:
+            f.write('static const uint8_t toi_%s[] = {\n' % bname)
             f.write('    // magic\n')
             if im.mode == 'RGB':
                 f.write("    'T', 'O', 'I', 'f',\n")
@@ -83,7 +91,7 @@ def process_image(ifn, savefiles=False):
             for b in zdata:
                 f.write(' 0x%02x,' % b)
             f.write('\n};\n')
-            print('Written %s ... done' % (ofn + '.h'))
+            print('Written %s ... done' % ofn_py)
 
     return data
 
