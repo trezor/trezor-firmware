@@ -25,31 +25,42 @@ cd trezor-core
 #### Debian/Ubuntu
 
 ```sh
+sudo pip install ed25519 pyblake2
+
 sudo dpkg --add-architecture i386
 sudo apt-get update
 sudo apt-get install scons libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
-pip install ed25519 pyblake2
+
 make build_unix
 ```
 
 #### Fedora
 
 ```sh
+sudo pip install ed25519 pyblake2
+
 sudo yum install scons SDL2-devel.i686 SDL2_image-devel.i686
+
 make build_unix
 ```
 
 #### openSUSE
 
 ```sh
+sudo pip install ed25519 pyblake2
+
 sudo zypper install scons libSDL2-devel-32bit libSDL2_image-devel-32bit
+
 make build_unix
 ```
 
 ### OS X
 
 ```sh
+pip install ed25519 pyblake2
+
 brew install scons sdl2 sdl2_image
+
 make build_unix
 ```
 
@@ -67,8 +78,11 @@ please install [stlink](https://github.com/texane/stlink).
 #### Debian/Ubuntu
 
 ```sh
+sudo pip install ed25519 pyblake2
+
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
-make build_trezorhal
+
+make build_boardloader build_bootloader build_firmware
 ```
 
 ### OS X
@@ -76,3 +90,4 @@ make build_trezorhal
 1. Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install stlink, run `brew install stlink`
+4. Run `make build_boardloader build_bootloader build_firmware`
