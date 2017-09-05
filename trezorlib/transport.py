@@ -20,6 +20,10 @@
 from __future__ import absolute_import
 
 
+class TransportException(Exception):
+    pass
+
+
 class Transport(object):
 
     def __init__(self):

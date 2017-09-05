@@ -76,7 +76,7 @@ class UdpTransport(Transport):
 
     def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise Exception('Unexpected data length')
+            raise TransportException('Unexpected data length')
         self.socket.sendall(chunk)
 
     def read_chunk(self):
@@ -87,5 +87,5 @@ class UdpTransport(Transport):
             except socket.timeout:
                 continue
         if len(chunk) != 64:
-            raise Exception('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException('Unexpected chunk size: %d' % len(chunk))
         return bytearray(chunk)

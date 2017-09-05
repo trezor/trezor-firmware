@@ -23,7 +23,7 @@ import requests
 from google.protobuf import json_format
 
 from . import messages_pb2
-from .transport import Transport
+from .transport import Transport, TransportException
 
 TREZORD_HOST = 'https://localback.net:21324'
 CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
@@ -57,10 +57,12 @@ class BridgeTransport(Transport):
             return
         r = requests.get(CONFIG_URL, verify=False)
         if r.status_code != 200:
-            raise Exception('Could not fetch config from %s' % CONFIG_URL)
+            raise TransportException(
+                'Could not fetch config from %s' % CONFIG_URL)
         r = requests.post(TREZORD_HOST + '/configure', data=r.text)
         if r.status_code != 200:
-            raise Exception('trezord: Could not configure' + get_error(r))
+            raise TransportException('trezord: Could not configure' +
+                                     get_error(r))
         BridgeTransport.configured = True
 
     @staticmethod
@@ -68,8 +70,8 @@ class BridgeTransport(Transport):
         BridgeTransport.configure()
         r = requests.get(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
-            raise Exception('trezord: Could not enumerate devices' +
-                            get_error(r))
+            raise TransportException('trezord: Could not enumerate devices' +
+                                     get_error(r))
         return [BridgeTransport(dev) for dev in r.json()]
 
     @staticmethod
@@ -77,13 +79,13 @@ class BridgeTransport(Transport):
         for transport in BridgeTransport.enumerate():
             if path is None or transport.device['path'] == path:
                 return transport
-        raise Exception('Bridge device not found')
+        raise TransportException('Bridge device not found')
 
     def open(self):
         r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.device['path'])
         if r.status_code != 200:
-            raise Exception('trezord: Could not acquire session' +
-                            get_error(r))
+            raise TransportException('trezord: Could not acquire session' +
+                                     get_error(r))
         self.session = r.json()['session']
 
     def close(self):
@@ -91,8 +93,8 @@ class BridgeTransport(Transport):
             return
         r = self.conn.post(TREZORD_HOST + '/release/%s' % self.session)
         if r.status_code != 200:
-            raise Exception('trezord: Could not release session' +
-                            get_error(r))
+            raise TransportException('trezord: Could not release session' +
+                                     get_error(r))
         self.session = None
 
     def write(self, msg):
@@ -103,12 +105,13 @@ class BridgeTransport(Transport):
         r = self.conn.post(
             TREZORD_HOST + '/call/%s' % self.session, data=payload)
         if r.status_code != 200:
-            raise Exception('trezord: Could not write message' + get_error(r))
+            raise TransportException('trezord: Could not write message' +
+                                     get_error(r))
         self.response = r.json()
 
     def read(self):
         if self.response is None:
-            raise Exception('No response stored')
+            raise TransportException('No response stored')
         msgtype = getattr(messages_pb2, self.response['type'])
         msg = msgtype()
         msg = json_format.ParseDict(self.response['message'], msg)

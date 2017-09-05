@@ -23,7 +23,7 @@ import hid
 
 from .protocol_v1 import ProtocolV1
 from .protocol_v2 import ProtocolV2
-from .transport import Transport
+from .transport import Transport, TransportException
 
 DEV_TREZOR1 = (0x534c, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53c1)
@@ -96,7 +96,7 @@ class HidTransport(Transport):
         for transport in HidTransport.enumerate():
             if path is None or transport.device['path'] == path:
                 return transport
-        raise Exception('HID device not found')
+        raise TransportException('HID device not found')
 
     def find_debug(self):
         if isinstance(self.protocol, ProtocolV2):
@@ -109,7 +109,7 @@ class HidTransport(Transport):
             for debug in HidTransport.enumerate(debug=True):
                 if debug.device['serial_number'] == self.device['serial_number']:
                     return debug
-        raise Exception('Debug HID device not found')
+        raise TransportException('Debug HID device not found')
 
     def open(self):
         self.hid.open()
@@ -121,7 +121,7 @@ class HidTransport(Transport):
 
     def close(self):
         self.protocol.session_end(self)
-            self.hid.close()
+        self.hid.close()
         self.hid_version = None
 
     def read(self):
@@ -132,7 +132,7 @@ class HidTransport(Transport):
 
     def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise Exception('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException('Unexpected chunk size: %d' % len(chunk))
         if self.hid_version == 2:
             self.hid.handle.write(b'\0' + chunk)
         else:
@@ -146,7 +146,7 @@ class HidTransport(Transport):
             else:
                 time.sleep(0.001)
         if len(chunk) != 64:
-            raise Exception('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException('Unexpected chunk size: %d' % len(chunk))
         return bytearray(chunk)
 
     def probe_hid_version(self):
@@ -156,7 +156,7 @@ class HidTransport(Transport):
         n = self.hid.handle.write([63] + [0xFF] * 63)
         if n == 64:
             return 1
-        raise Exception('Unknown HID version')
+        raise TransportException('Unknown HID version')
 
 
 def is_trezor1(dev):

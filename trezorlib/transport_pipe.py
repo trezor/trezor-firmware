@@ -22,9 +22,10 @@ import os
 import time
 
 from .protocol_v1 import ProtocolV1
+from .transport import Transport, TransportException
 
 
-class PipeTransport(object):
+class PipeTransport(Transport):
     '''
     PipeTransport implements fake wire transport over local named pipe.
     Use this transport for talking with trezor-emu.
@@ -64,7 +65,7 @@ class PipeTransport(object):
             self.filename_read = self.device + '.from'
             self.filename_write = self.device + '.to'
             if not os.path.exists(self.filename_write):
-                raise Exception("Not connected")
+                raise TransportException('Not connected')
 
         self.read_f = os.open(self.filename_read, 'rb', 0)
         self.write_f = os.open(self.filename_write, 'w+b', 0)
@@ -93,7 +94,7 @@ class PipeTransport(object):
 
     def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise Exception('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException('Unexpected chunk size: %d' % len(chunk))
         self.write_f.write(chunk)
         self.write_f.flush()
 
@@ -105,5 +106,5 @@ class PipeTransport(object):
             else:
                 time.sleep(0.001)
         if len(chunk) != 64:
-            raise Exception('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException('Unexpected chunk size: %d' % len(chunk))
         return bytearray(chunk)
