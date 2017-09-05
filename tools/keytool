@@ -77,7 +77,7 @@ def combinePubkeys(m, n):
         sum = None
         for j in range(0, n):
             if mask & (1 << j) != 0:
-                if sum == None:
+                if sum is None:
                     sum = pks[j]
                 else:
                     sum = ed25519raw.edwards(sum, pks[j])
@@ -88,9 +88,8 @@ def combinePubkeys(m, n):
 def get_nonce(sk, data, ctr):
     h = ed25519raw.H(sk)
     b = ed25519raw.b
-    a = 2**(b - 2) + sum(2**i * ed25519raw.bit(h, i) for i in range(3, b - 2))
-    r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data +
-                        binascii.unhexlify("%08x" % ctr))
+    a = 2 ** (b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
+    r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
     R = ed25519raw.scalarmult(ed25519raw.B, r)
     return (r, ed25519raw.encodepoint(R))
 
@@ -255,6 +254,7 @@ def test():
     print('Global sig: %s' % hex(sig))
     ed25519raw.checkvalid(sig, digest, globalPk)
     print('Valid Signature!')
+
 
 if __name__ == '__main__':
     test()

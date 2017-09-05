@@ -165,6 +165,7 @@ def write_to_file(genpath, t, out):
     f.write(data)
     f.close()
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('modulename', type=str, help="Name of module to generate")

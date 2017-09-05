@@ -107,6 +107,7 @@ def clear_directory(top_dir):
 
         os.rmdir(root)
 
+
 if __name__ == '__main__':
     clear_directory('../mocks/generated')
     build_directory('../embed/extmod', '../mocks/generated')

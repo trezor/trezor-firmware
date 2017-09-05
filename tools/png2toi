@@ -56,7 +56,7 @@ def process_image(ifn, savefiles=False):
         pixeldata = process_grayscale(w, h, pix)
     z = zlib.compressobj(level=9, wbits=10)
     zdata = z.compress(pixeldata) + z.flush()
-    zdata = zdata[2:-4] # strip header and checksum
+    zdata = zdata[2:-4]  # strip header and checksum
 
     data = b''
     if im.mode == 'RGB':

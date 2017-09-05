@@ -14,8 +14,9 @@ def sign_data(seckey, data):
     digest = pyblake2.blake2s(data).digest()
     return signkey.sign(digest)
 
+
 def format_sigmask(sigmask):
-    bits = [ str(b + 1) if sigmask & (1<<b) else '.' for b in range(8) ]
+    bits = [str(b + 1) if sigmask & (1 << b) else '.' for b in range(8)]
     return '0x%02x = [%s]' % (sigmask, ' '.join(bits))
 
 
@@ -67,10 +68,10 @@ class BinImage(object):
         print()
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB427s', \
-            self.magic, self.hdrlen, self.expiry, self.codelen, \
-            self.vmajor, self.vminor, self.vpatch, self.vbuild, \
-            self.reserved)
+        header = struct.pack('<4sIIIBBBB427s',
+                                self.magic, self.hdrlen, self.expiry, self.codelen,
+                                self.vmajor, self.vminor, self.vpatch, self.vbuild,
+                                self.reserved)
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
@@ -94,7 +95,7 @@ class BinImage(object):
 class FirmwareImage(BinImage):
 
     def __init__(self, data, vhdrlen):
-        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=7*128*1024)
+        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=7 * 128 * 1024)
         self.vhdrlen = vhdrlen
         self.vheader = data[:vhdrlen]
 
@@ -104,10 +105,11 @@ class FirmwareImage(BinImage):
             f.write(self.serialize_header())
             f.write(self.code)
 
+
 class BootloaderImage(BinImage):
 
     def __init__(self, data):
-        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=64*1024 + 7*128*1024)
+        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=64 * 1024 + 7 * 128 * 1024)
 
 
 class VendorHeader(object):
@@ -140,7 +142,7 @@ class VendorHeader(object):
         p += self.vimg_len
         self.sigmask = data[p]
         p += 1
-        self.sig = data[p:p+64]
+        self.sig = data[p:p + 64]
         assert len(data) == 4 + 4 + 4 + 1 + 1 + 1 + 1 + \
                             32 * len(self.vpub) + \
                             1 + self.vstr_len + vstr_pad + \
@@ -162,14 +164,14 @@ class VendorHeader(object):
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIBBBB', \
-            self.magic, self.hdrlen, self.expiry, \
-            self.vmajor, self.vminor, \
-            self.vsig_m, self.vsig_n)
+        header = struct.pack('<4sIIBBBB',
+                               self.magic, self.hdrlen, self.expiry,
+                               self.vmajor, self.vminor,
+                               self.vsig_m, self.vsig_n)
         for i in range(self.vsig_n):
             header += self.vpub[i]
         header += struct.pack('<B', self.vstr_len) + self.vstr
-        header += (-len(header) & 3) * b'\x00' # vstr_pad
+        header += (-len(header) & 3) * b'\x00'  # vstr_pad
         header += self.vimg
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)
@@ -204,6 +206,7 @@ def binopen(filename):
     if magic == b'TRZF':
         return FirmwareImage(data, 0)
     raise Exception('Unknown file format')
+
 
 def main():
     if len(sys.argv) < 2:

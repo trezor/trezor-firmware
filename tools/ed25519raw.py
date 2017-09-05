@@ -26,6 +26,7 @@ def expmod(b, e, m):
 def inv(x):
     return expmod(x, q - 2, q)
 
+
 d = -121665 * inv(121666)
 I = expmod(2, (q - 1) >> 2, q)
 
@@ -38,6 +39,7 @@ def xrecover(y):
     if x % 2 != 0:
         x = q - x
     return x
+
 
 By = 4 * inv(5)
 Bx = xrecover(By)
