@@ -134,14 +134,14 @@ int display_init(void) {
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
-    // LCD_FMARK/PD12
+    // LCD_FMARK/PD12 (tearing effect)
     GPIO_InitStructure.Pin = GPIO_PIN_12;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-    // LCD_PWM/PB13
+    // LCD_PWM/PB13 (backlight control)
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull      = GPIO_NOPULL;
     GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -224,7 +224,7 @@ int display_init(void) {
     CMD(0x01);                                      // software reset
     HAL_Delay(20);
     CMD(0x28);                                      // display off
-    CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30;
+    CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30);
     CMD(0xED); DATA(0x64); DATA(0x03); DATA(0x12); DATA(0x81);
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
     CMD(0xCB); DATA(0x39); DATA(0x2C); DATA(0x00); DATA(0x34); DATA(0x02);
@@ -288,6 +288,7 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 }
 
 void display_refresh(void) {
+    // synchronize with the panel synchronization signal in order to avoid visual tearing effects
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
 }

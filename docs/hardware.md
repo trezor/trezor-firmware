@@ -19,10 +19,9 @@ TODO
 
 ## Developer Kit
 
-* 1 x [Waveshare Core405R Dev Board](http://www.waveshare.com/core405r.htm)
+* 1 x [STM32F407G-DISC1](http://www.st.com/en/evaluation-tools/stm32f4discovery.html)
 * 1 x USB Cable Type A Plug/Male to Type Mini-B Plug/Male
-* 1 x ST-LINK V2 STM32 USB Debug Adapter
-* Female to female jumper wires with 0.1" header contacts
+* 1 x USB Cable Type A Plug/Male to Type Micro-B Plug/Male
 * 1 x Display
 * 1 x Capacitive Touch Panel / Sensor
 * 1 x microSD Socket
@@ -38,27 +37,27 @@ TODO
 
 ##### Pinout
 
-|Description|MCU Pin|
-|-----------|-------|
-|LCD_RST|PC14|
-|LCD_FMARK|PD12 [TODO: what is this for?]|
-|LCD_PWM|PB13 [TODO: what is this for?]|
-|LCD_CS|PD7|
-|LCD_RS|PD11|
-|LCD_RD|PD4|
-|LCD_WR|PD5|
-|LCD_D0|PD14|
-|LCD_D1|PD15|
-|LCD_D2|PD0|
-|LCD_D3|PD1|
-|LCD_D4|PE7|
-|LCD_D5|PE8|
-|LCD_D6|PE9|
-|LCD_D7|PE10|
+|Description|MCU Pin|Notes|
+|-----------|-------|-----|
+|LCD_RST|PC14||
+|LCD_FMARK|PD12|tearing effect input|
+|LCD_PWM|PB13|backlight control (brightness)|
+|LCD_CS|PD7||
+|LCD_RS|PD11|register select aka command/data|
+|LCD_RD|PD4||
+|LCD_WR|PD5||
+|LCD_D0|PD14||
+|LCD_D1|PD15||
+|LCD_D2|PD0||
+|LCD_D3|PD1||
+|LCD_D4|PE7||
+|LCD_D5|PE8||
+|LCD_D6|PE9||
+|LCD_D7|PE10||
 
 #### Capacitive Touch Panel / Sensor
 * Bus/Interface: I2C
-* Driver IC: FT6206 [TODO: does this matter]
+* Driver IC: FT6206 [TODO: does this matter?]
 * single touch
 
 ##### Pinout
@@ -97,6 +96,7 @@ TODO
 
 #### Dev Board
 * [Schematic](http://www.waveshare.com/w/upload/0/05/CorexxxR-Schematic.pdf)
-* [STM32F405RGT6](http://www.st.com/en/microcontrollers/stm32f405rg.html)
+* [STM32F407VGT6](http://www.st.com/content/st_com/en/products/microcontrollers/stm32-32-bit-arm-cortex-mcus/stm32-high-performance-mcus/stm32f4-series/stm32f407-417/stm32f407vg.html)
 * HSE / High-Speed External Crystal: 8 MHz
+* Integrated STMicroelectronics ST-LINK/V2.1 debugger
 

@@ -28,6 +28,7 @@ cd trezor-core
 sudo dpkg --add-architecture i386
 sudo apt-get update
 sudo apt-get install scons libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
+pip install ed25519 pyblake2
 make build_unix
 ```
 
