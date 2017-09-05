@@ -64,7 +64,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_SDCard_capacity_obj, mod_trezorio_
 
 /// def read(self, block_num: int, buf: bytearray) -> bool:
 ///     '''
-///     Reads block_num block from the SD card into buf.
+///     Reads blocks starting with block_num from the SD card into buf.
+///     Number of bytes read is length of buf rounded down to multiply of SDCARD_BLOCK_SIZE.
 ///     Returns True if in case of success, False otherwise.
 ///     '''
 STATIC mp_obj_t mod_trezorio_SDCard_read(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
@@ -77,7 +78,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_read_obj, mod_trezorio_SDCa
 
 /// def write(self, block_num: int, buf: bytes) -> bool:
 ///     '''
-///     Writes block_num block from buf to the SD card.
+///     Writes blocks starting with block_num from buf to the SD card.
+///     Number of bytes written is length of buf rounded down to multiply of SDCARD_BLOCK_SIZE.
 ///     Returns True if in case of success, False otherwise.
 ///     '''
 STATIC mp_obj_t mod_trezorio_SDCard_write(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
