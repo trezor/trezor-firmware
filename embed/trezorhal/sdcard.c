@@ -99,8 +99,7 @@ bool sdcard_power_on(void) {
     sd_handle.Init.ClockDiv            = SDIO_TRANSFER_CLK_DIV;
 
     // init the SD interface, with retry if it's not ready yet
-    HAL_SD_CardInfoTypedef cardinfo;
-    for (int retry = 10; HAL_SD_Init(&sd_handle, &cardinfo) != SD_OK; retry--) {
+    for (int retry = 10; HAL_SD_Init(&sd_handle) != HAL_OK; retry--) {
         if (retry == 0) {
             goto error;
         }
@@ -108,7 +107,7 @@ bool sdcard_power_on(void) {
     }
 
     // configure the SD bus width for wide operation
-    if (HAL_SD_WideBusOperation_Config(&sd_handle, SDIO_BUS_WIDE_4B) != SD_OK) {
+    if (HAL_SD_ConfigWideBusOperation(&sd_handle, SDIO_BUS_WIDE_4B) != HAL_OK) {
         HAL_SD_DeInit(&sd_handle);
         goto error;
     }
@@ -133,39 +132,77 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
     if (sd_handle.Instance == NULL) {
         return 0;
     }
-    HAL_SD_CardInfoTypedef cardinfo;
-    HAL_SD_Get_CardInfo(&sd_handle, &cardinfo);
-    return cardinfo.CardCapacity;
+    HAL_SD_CardInfoTypeDef cardinfo;
+    HAL_SD_GetCardInfo(&sd_handle, &cardinfo);
+    return (uint64_t)cardinfo.LogBlockNbr * (uint64_t)cardinfo.LogBlockSize;
 }
 
 void SDIO_IRQHandler(void) {
     HAL_SD_IRQHandler(&sd_handle);
 }
 
+static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd, uint32_t timeout) {
+    // Wait for HAL driver to be ready (eg for DMA to finish)
+    uint32_t start = HAL_GetTick();
+    while (sd->State == HAL_SD_STATE_BUSY) {
+        if (HAL_GetTick() - start >= timeout) {
+            return HAL_TIMEOUT;
+        }
+    }
+    // Wait for SD card to complete the operation
+    for (;;) {
+        HAL_SD_CardStateTypeDef state = HAL_SD_GetCardState(sd);
+        if (state == HAL_SD_CARD_TRANSFER) {
+            return HAL_OK;
+        }
+        if (!(state == HAL_SD_CARD_SENDING || state == HAL_SD_CARD_RECEIVING || state == HAL_SD_CARD_PROGRAMMING)) {
+            return HAL_ERROR;
+        }
+        if (HAL_GetTick() - start >= timeout) {
+            return HAL_TIMEOUT;
+        }
+    }
+    return HAL_OK;
+}
+
 uint32_t sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
-        return SD_ERROR;
+        return HAL_ERROR;
     }
 
     // check that dest pointer is aligned on a 4-byte boundary
     if (((uint32_t)dest & 3) != 0) {
-        return SD_INVALID_PARAMETER;
+        return HAL_ERROR;
     }
 
-    return HAL_SD_ReadBlocks_BlockNumber(&sd_handle, (uint32_t*)dest, block_num, SDCARD_BLOCK_SIZE, num_blocks);
+    HAL_StatusTypeDef err = HAL_OK;
+
+    err = HAL_SD_ReadBlocks(&sd_handle, dest, block_num, num_blocks, 60000);
+    if (err == HAL_OK) {
+        err = sdcard_wait_finished(&sd_handle, 60000);
+    }
+
+    return err;
 }
 
 uint32_t sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
-        return SD_ERROR;
+        return HAL_ERROR;
     }
 
     // check that src pointer is aligned on a 4-byte boundary
     if (((uint32_t)src & 3) != 0) {
-        return SD_INVALID_PARAMETER;
+        return HAL_ERROR;
     }
 
-    return HAL_SD_WriteBlocks_BlockNumber(&sd_handle, (uint32_t*)src, block_num, SDCARD_BLOCK_SIZE, num_blocks);
+    HAL_StatusTypeDef err = HAL_OK;
+
+    err = HAL_SD_WriteBlocks(&sd_handle, (uint8_t*)src, block_num, num_blocks, 60000);
+    if (err == HAL_OK) {
+        err = sdcard_wait_finished(&sd_handle, 60000);
+    }
+
+    return err;
 }

@@ -203,16 +203,16 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
-    'vendor/micropython/unix/main.c',
-    'vendor/micropython/unix/gccollect.c',
-    'vendor/micropython/unix/unix_mphal.c',
-    'vendor/micropython/unix/mpthreadport.c',
-    'vendor/micropython/unix/input.c',
-    'vendor/micropython/unix/file.c',
-    'vendor/micropython/unix/modos.c',
-    'vendor/micropython/unix/modtime.c',
-    'vendor/micropython/unix/moduselect.c',
-    'vendor/micropython/unix/alloc.c',
+    'vendor/micropython/ports/unix/main.c',
+    'vendor/micropython/ports/unix/gccollect.c',
+    'vendor/micropython/ports/unix/unix_mphal.c',
+    'vendor/micropython/ports/unix/mpthreadport.c',
+    'vendor/micropython/ports/unix/input.c',
+    'vendor/micropython/ports/unix/file.c',
+    'vendor/micropython/ports/unix/modos.c',
+    'vendor/micropython/ports/unix/modtime.c',
+    'vendor/micropython/ports/unix/moduselect.c',
+    'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
     'embed/unix/touch.c',
 ]
@@ -247,7 +247,7 @@ env.Replace(
         'embed/unix',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
-        'vendor/micropython/unix',
+        'vendor/micropython/ports/unix',
         'vendor/micropython/lib/mp-readline',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
