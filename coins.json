@@ -21,7 +21,10 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "bitcoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Testnet",
@@ -42,7 +45,10 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "bitcoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Bcash",
@@ -66,7 +72,10 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "bitcoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Bcash Testnet",
@@ -87,7 +96,10 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 10,
-	"firmware": "debug"
+	"firmware": "debug",
+	"address_prefix": "bitcoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Namecoin",
@@ -108,7 +120,10 @@
 	},
 	"dust_limit": 2940,
 	"blocktime_minutes": 10,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "namecoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Litecoin",
@@ -129,7 +144,10 @@
 	},
 	"dust_limit": 54600,
 	"blocktime_minutes": 2.5,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "litecoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Dogecoin",
@@ -150,7 +168,10 @@
 	},
 	"dust_limit": 10000000,
 	"blocktime_minutes": 1,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "dogecoin:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Dash",
@@ -171,7 +192,10 @@
 	},
 	"dust_limit": 5460,
 	"blocktime_minutes": 2.5,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "dash:",
+	"min_address_length": 27,
+	"max_address_length": 34
 },
 {
 	"coin_name": "Zcash",
@@ -192,7 +216,10 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 2.5,
-	"firmware": "stable"
+	"firmware": "stable",
+	"address_prefix": "zcash:",
+	"min_address_length": 35,
+	"max_address_length": 95
 },
 {
 	"coin_name": "Zcash Testnet",
@@ -213,6 +240,9 @@
 	},
 	"dust_limit": 546,
 	"blocktime_minutes": 2.5,
-	"firmware": "debug"
+	"firmware": "debug",
+	"address_prefix": "zcash:",
+	"min_address_length": 35,
+	"max_address_length": 95
 }
 ]
