@@ -229,8 +229,9 @@ class Cmd:
 async def read_cmd(iface: io.HID) -> Cmd:
     desc_init = frame_init()
     desc_cont = frame_cont()
+    read = loop.select(iface.iface_num())
 
-    buf, = await loop.select(iface.iface_num())
+    buf = await read
     # log.debug(__name__, 'read init %s', buf)
 
     ifrm = overlay_struct(buf, desc_init)
@@ -252,7 +253,7 @@ async def read_cmd(iface: io.HID) -> Cmd:
         data = data[:bcnt]
 
     while datalen < bcnt:
-        buf, = await loop.select(iface.iface_num())
+        buf = await read
         # log.debug(__name__, 'read cont %s', buf)
 
         cfrm = overlay_struct(buf, desc_cont)
@@ -444,10 +445,12 @@ class ConfirmState:
     def fork(self) -> None:
         self.deadline_ms = utime.ticks_ms() + _CONFIRM_STATE_TIMEOUT_MS
         self.task = self.confirm()
-        workflow.start(self.task)
+        workflow.onstart(self.task)
+        loop.schedule_task(self.task)
 
     def kill(self) -> None:
         if self.task is not None:
+            workflow.onclose(self.task)
             self.task.close()
 
     async def confirm(self) -> None:
