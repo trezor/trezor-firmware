@@ -105,7 +105,7 @@ def run():
             # message received, run tasks paused on the interface
             msg_tasks = _paused_tasks.pop(msg_entry[0], ())
             for task in msg_tasks:
-                    _step_task(task, msg_entry[1])
+                _step_task(task, msg_entry[1])
         else:
             # timeout occurred, run the first scheduled task
             if _scheduled_tasks:
