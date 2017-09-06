@@ -34,6 +34,13 @@ async def respond_Pong(ctx, msg):
     s = Success()
     s.message = msg.message
 
+    if msg.button_protection:
+        from apps.common.confirm import require_confirm
+        from trezor.messages.ButtonRequestType import ProtectCall
+        from trezor.ui.text import Text
+        from trezor import ui
+        await require_confirm(ctx, Text('Confirm', ui.ICON_RESET), ProtectCall)
+
     if msg.pin_protection:
         from apps.common.request_pin import protect_by_pin
         await protect_by_pin(ctx)
@@ -42,8 +49,6 @@ async def respond_Pong(ctx, msg):
         from apps.common.request_passphrase import protect_by_passphrase
         await protect_by_passphrase(ctx)
 
-    # TODO: handle other fields:
-    # button_protection
     return s
 
 
