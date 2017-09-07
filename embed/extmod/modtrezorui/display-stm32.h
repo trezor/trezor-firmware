@@ -142,13 +142,13 @@ int display_init(void) {
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-    // LCD_PWM/PB13 (backlight control)
+    // LCD_PWM/PA7 (backlight control)
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull      = GPIO_NOPULL;
     GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
-    GPIO_InitStructure.Pin       = GPIO_PIN_13;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin       = GPIO_PIN_7;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     GPIO_InitStructure.Alternate = GPIO_AF12_FSMC;
     //                             LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4   LCD_WR/PD5
