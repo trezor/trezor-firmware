@@ -7,8 +7,17 @@
 
 #include STM32_HAL_H
 
+#ifndef DISPLAY_ILI9341V
 #define DISPLAY_ILI9341V 0
+#endif
+
+#ifndef DISPLAY_ST7789V
 #define DISPLAY_ST7789V  1
+#endif
+
+#ifndef DISPLAY_VSYNC
+#define DISPLAY_VSYNC    1
+#endif
 
 // FSMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_FSMC_BASE   0x60000000
@@ -62,53 +71,45 @@ void display_set_orientation(int degrees)
             CMD(0x36);
 #if DISPLAY_ILI9341V
             DATA(BGR | MX | MY);
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = 80;
 #endif
 #if DISPLAY_ST7789V
-            DATA(RGB | MX | MY );
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = 80;
+            DATA(RGB | MX | MY);
 #endif
+            BUFFER_OFFSET_X = 0;
+            BUFFER_OFFSET_Y = MAX_DISPLAY_RESY - DISPLAY_RESY;
             break;
         case 90:
             CMD(0x36);
 #if DISPLAY_ILI9341V
-            DATA(BGR | MV | MX);
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = 0;
+            DATA(BGR | MV | MY);
 #endif
 #if DISPLAY_ST7789V
-            DATA(RGB | MV | MY );
-            BUFFER_OFFSET_X = 80;
-            BUFFER_OFFSET_Y = 0;
+            DATA(RGB | MV | MY);
 #endif
+            BUFFER_OFFSET_X = MAX_DISPLAY_RESY - DISPLAY_RESX;
+            BUFFER_OFFSET_Y = 0;
             break;
         case 180:
             CMD(0x36);
 #if DISPLAY_ILI9341V
             DATA(BGR);
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = 0;
 #endif
 #if DISPLAY_ST7789V
             DATA(RGB);
+#endif
             BUFFER_OFFSET_X = 0;
             BUFFER_OFFSET_Y = 0;
-#endif
             break;
         case 270:
             CMD(0x36);
 #if DISPLAY_ILI9341V
-            DATA(BGR | MV | MY);
-            BUFFER_OFFSET_X = 80;
-            BUFFER_OFFSET_Y = 0;
+            DATA(BGR | MV | MX);
 #endif
 #if DISPLAY_ST7789V
             DATA(RGB | MV | MX);
+#endif
             BUFFER_OFFSET_X = 0;
             BUFFER_OFFSET_Y = 0;
-#endif
             break;
     }
 }
@@ -244,7 +245,7 @@ int display_init(void) {
     CMD(0xE0); DATA(0x0F); DATA(0x2F); DATA(0x2C); DATA(0x0B); DATA(0x0F); DATA(0x09); DATA(0x56); DATA(0xD9); DATA(0x4A); DATA(0x0B); DATA(0x14); DATA(0x05); DATA(0x0C); DATA(0x06); DATA(0x00);
     // gamma curve 2
     CMD(0xE1); DATA(0x00); DATA(0x10); DATA(0x13); DATA(0x04); DATA(0x10); DATA(0x06); DATA(0x25); DATA(0x26); DATA(0x3B); DATA(0x04); DATA(0x0B); DATA(0x0A); DATA(0x33); DATA(0x39); DATA(0x0F);
-    CMD(0x21);                                      // invert colors
+    CMD(0x20);                                      // don't invert colors
 #endif
 #if DISPLAY_ST7789V
     CMD(0x01);                                      // software reset
@@ -288,9 +289,11 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 }
 
 void display_refresh(void) {
+#if DISPLAY_VSYNC
     // synchronize with the panel synchronization signal in order to avoid visual tearing effects
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
+#endif
 }
 
 void display_save(const char *filename)

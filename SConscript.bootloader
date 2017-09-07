@@ -102,7 +102,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_ioreq.c',
 ]
 
-env = Environment(ENV=os.environ)
+env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
 
 env.Replace(
     AS='arm-none-eabi-as',

@@ -16,6 +16,14 @@ UNIX_PORT_OPTS ?= TREZOR_X86=1
 endif
 CROSS_PORT_OPTS ?= MICROPY_FORCE_32BIT=1
 
+ifeq ($(DISPLAY_ILI9341V), 1)
+CFLAGS += -DDISPLAY_ILI9341V=1
+CFLAGS += -DDISPLAY_ST7789V=0
+endif
+
+ifeq ($(DISPLAY_VSYNC), 0)
+CFLAGS += -DDISPLAY_VSYNC=0
+endif
 
 ## help commands:
 
@@ -57,13 +65,13 @@ style: ## run code style check on application sources
 build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all
 
 build_boardloader: ## build boardloader
-	$(SCONS) build/boardloader/boardloader.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" build/boardloader/boardloader.bin
 
 build_bootloader: ## build bootloader
-	$(SCONS) build/bootloader/bootloader.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" build/bootloader/bootloader.bin
 
 build_firmware: res build_cross ## build firmware with frozen modules
-	$(SCONS) build/firmware/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin
 
 build_unix: ## build unix port
 	$(SCONS) build/unix/micropython $(UNIX_PORT_OPTS)

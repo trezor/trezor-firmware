@@ -5,6 +5,8 @@
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {}
+    display_orientation(0);
+    display_backlight(255);
     display_print_color(COLOR_WHITE, COLOR_RED128);
     display_printf("\nFATAL ERROR:\n%s\n", msg);
     if (file) {
@@ -13,12 +15,7 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, 
     if (func) {
         display_printf("Func: %s\n", func);
     }
-    for (;;) {
-        display_backlight(255);
-        HAL_Delay(950);
-        display_backlight(128);
-        HAL_Delay(50);
-    }
+    for (;;);
 }
 
 #ifndef NDEBUG
