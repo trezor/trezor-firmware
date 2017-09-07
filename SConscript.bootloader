@@ -128,7 +128,6 @@ env.Replace(
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',
         'embed/trezorhal',
-        'embed/trezorhal/hal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/ports/stm32',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',

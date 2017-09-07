@@ -329,7 +329,6 @@ env.Replace(
         '.',
         'embed/firmware',
         'embed/trezorhal',
-        'embed/trezorhal/hal',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
