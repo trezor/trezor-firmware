@@ -278,6 +278,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/rng.c',
+    'embed/trezorhal/sbu.c',
     'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32_it.c',
     'embed/trezorhal/stm32_system.c',

@@ -11,11 +11,14 @@
 
 #if MICROPY_PY_TREZORIO
 
+#include "modtrezorio-sbu.h"
 #include "modtrezorio-sdcard.h"
 #include "modtrezorio-msg.h"
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio) },
+
+    { MP_ROM_QSTR(MP_QSTR_SBU), MP_ROM_PTR(&mod_trezorio_SBU_type) },
 
     { MP_ROM_QSTR(MP_QSTR_SDCard), MP_ROM_PTR(&mod_trezorio_SDCard_type) },
 
