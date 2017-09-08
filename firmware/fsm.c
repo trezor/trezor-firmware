@@ -694,7 +694,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 		}
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(address, desc, qrcode);
+			layoutAddress(address, desc, qrcode, msg->script_type == InputScriptType_SPENDWITNESS);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}
@@ -732,7 +732,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(address, desc, qrcode);
+			layoutAddress(address, desc, qrcode, false);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}
@@ -1160,7 +1160,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(resp->address, desc, qrcode);
+			layoutAddress(resp->address, desc, qrcode, false);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}

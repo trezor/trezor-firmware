@@ -23,9 +23,10 @@ def get_fields(coin):
         'true' if coin['forkid'] is not None else 'false',
         '%d' % coin['address_type'] if coin['address_type'] is not None else '0',
         '%d' % coin['address_type_p2sh'] if coin['address_type_p2sh'] is not None else '0',
-        '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '00000000',
-        '0x%s' % coin['xprv_magic'] if coin['xprv_magic'] is not None else '00000000',
-        '%d' % coin['forkid'] if coin['forkid'] else '0'
+        '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '0x00000000',
+        '0x%s' % coin['xprv_magic'] if coin['xprv_magic'] is not None else '0x00000000',
+        '%d' % coin['forkid'] if coin['forkid'] else '0',
+        '"%s"' % coin['bech32_prefix'] if coin.get('bech32_prefix') is not None else 'NULL'
     ]
 
 

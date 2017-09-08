@@ -40,6 +40,7 @@ typedef struct _CoinInfo {
 	uint32_t xpub_magic;
 	uint32_t xprv_magic;
 	uint32_t forkid;
+	const char *bech32_prefix;
 } CoinInfo;
 
 extern const CoinInfo coins[COINS_COUNT];

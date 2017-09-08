@@ -31,6 +31,9 @@
 #include "address.h"
 #include "messages.pb.h"
 #include "types.pb.h"
+#include "segwit_addr.h"
+
+#define SEGWIT_VERSION_0 0
 
 static const uint8_t segwit_header[2] = {0,1};
 
@@ -77,11 +80,12 @@ bool compute_address(const CoinInfo *coin,
 		}
 		if (script_type == InputScriptType_SPENDWITNESS) {
 			// segwit p2wsh:  script hash is single sha256
-			if (!coin->has_segwit) {
+			if (!coin->has_segwit || !coin->bech32_prefix) {
 				return 0;
 			}
-			// disable native segwit for now
-			return 0;
+			if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_0, digest, 32)) {
+				return 0;
+			}
 		} else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
 			// segwit p2wsh encapsuled in p2sh address
 			if (!coin->has_segwit) {
@@ -111,11 +115,13 @@ bool compute_address(const CoinInfo *coin,
 		}
 	} else if (script_type == InputScriptType_SPENDWITNESS) {
 		// segwit p2wpkh:  pubkey hash is ripemd160 of sha256
-		if (!coin->has_segwit) {
+		if (!coin->has_segwit || !coin->bech32_prefix) {
 			return 0;
 		}
-		// disable native segwit for now
-		return 0;
+		ecdsa_get_pubkeyhash(node->public_key, digest);
+		if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_0, digest, 20)) {
+			return 0;
+		}
 	} else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
 		// segwit p2wpkh embedded in p2sh
 		if (!coin->has_segwit) {
@@ -163,8 +169,8 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 				input_script_type = InputScriptType_SPENDMULTISIG;
 				break;
 			case OutputScriptType_PAYTOWITNESS:
-				// disable native segwit for now
-				return 0;
+				input_script_type = InputScriptType_SPENDWITNESS;
+				break;
 			case OutputScriptType_PAYTOP2SHWITNESS:
 				input_script_type = InputScriptType_SPENDP2SHWITNESS;
 				break;
@@ -187,8 +193,9 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 
 	addr_raw_len = base58_decode_check(in->address, addr_raw, MAX_ADDR_RAW_SIZE);
 	size_t prefix_len;
-	if (address_check_prefix(addr_raw, coin->address_type) // p2pkh
-			   && addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type))) {
+	if (coin->has_address_type                                  // p2pkh
+		&& address_check_prefix(addr_raw, coin->address_type)
+		&& addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type))) {
 		out->script_pubkey.bytes[0] = 0x76; // OP_DUP
 		out->script_pubkey.bytes[1] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[2] = 0x14; // pushing 20 bytes
@@ -196,13 +203,26 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		out->script_pubkey.bytes[23] = 0x88; // OP_EQUALVERIFY
 		out->script_pubkey.bytes[24] = 0xAC; // OP_CHECKSIG
 		out->script_pubkey.size = 25;
-	} else if (address_check_prefix(addr_raw, coin->address_type_p2sh) // p2sh
+	} else if (coin->has_address_type_p2sh                      // p2sh
+			   && address_check_prefix(addr_raw, coin->address_type_p2sh)
 			   && addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type_p2sh))) {
 		out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
 		memcpy(out->script_pubkey.bytes + 2, addr_raw + prefix_len, 20);
 		out->script_pubkey.bytes[22] = 0x87; // OP_EQUAL
 		out->script_pubkey.size = 23;
+	} else if (coin->bech32_prefix) {
+		int witver;
+		if (!segwit_addr_decode(&witver, addr_raw, &addr_raw_len, coin->bech32_prefix, in->address)) {
+			return 0;
+		}
+		// segwit:
+		// push 1 byte version id (opcode OP_0 = 0, OP_i = 80+i)
+		// push addr_raw (segwit_addr_decode makes sure addr_raw_len is at most 40)
+		out->script_pubkey.bytes[0] = witver == 0 ? 0 : 80 + witver;
+		out->script_pubkey.bytes[1] = addr_raw_len;
+		memcpy(out->script_pubkey.bytes + 2, addr_raw, addr_raw_len);
+		out->script_pubkey.size = addr_raw_len + 2;
 	} else {
 		return 0;
 	}

@@ -277,7 +277,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledRefresh();
 }
 
-void layoutAddress(const char *address, const char *desc, bool qrcode)
+void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase)
 {
 	if (layoutLast != layoutAddress) {
 		layoutSwipe();
@@ -286,40 +286,44 @@ void layoutAddress(const char *address, const char *desc, bool qrcode)
 	}
 	layoutLast = layoutAddress;
 
+	uint32_t addrlen = strlen(address);
 	if (qrcode) {
 		static unsigned char bitdata[QR_MAX_BITDATA];
-		int side = qr_encode(QR_LEVEL_M, 0, address, 0, bitdata);
+		char address_upcase[addrlen + 1];
+		if (ignorecase) {
+			for (uint32_t i = 0; i < addrlen + 1; i++) {
+				address_upcase[i] = address[i] >= 'a' && address[i] <= 'z' ?
+					address[i] + 'A' - 'a' : address[i];
+			}
+		}
+		int side = qr_encode(addrlen <= (ignorecase ? 60 : 40) ? QR_LEVEL_M : QR_LEVEL_L, 0,
+							 ignorecase ? address_upcase : address, 0, bitdata);
 
+		oledInvert(0, 0, 63, 63);
 		if (side > 0 && side <= 29) {
-			oledInvert(0, 0, (side + 2) * 2, (side + 2) * 2);
+			int offset = 32 - side; 
 			for (int i = 0; i < side; i++) {
 				for (int j = 0; j< side; j++) {
 					int a = j * side + i;
 					if (bitdata[a / 8] & (1 << (7 - a % 8))) {
-						oledClearPixel(2 + i * 2, 2 + j * 2);
-						oledClearPixel(3 + i * 2, 2 + j * 2);
-						oledClearPixel(2 + i * 2, 3 + j * 2);
-						oledClearPixel(3 + i * 2, 3 + j * 2);
+						oledBox(offset + i * 2, offset + j * 2,
+								offset + 1 + i * 2, offset + 1 + j * 2, false);
 					}
 				}
 			}
 		} else if (side > 0 && side <= 60) {
-			oledInvert(0, 0, (side + 3), (side + 3));
+			int offset = 32 - (side / 2); 
 			for (int i = 0; i < side; i++) {
 				for (int j = 0; j< side; j++) {
 					int a = j * side + i;
 					if (bitdata[a / 8] & (1 << (7 - a % 8))) {
-						oledClearPixel(2 + i, 2 + j);
+						oledClearPixel(offset + i, offset + j);
 					}
 				}
 			}
 		}
 	} else {
-		uint32_t addrlen = strlen(address);
-		uint32_t rowlen = addrlen / 2;
-		if (addrlen % 2) {
-			rowlen++;
-		}
+		uint32_t rowlen = (addrlen - 1) / (addrlen <= 40 ? 2 : addrlen <= 60 ? 3 : 4) + 1;
 		const char **str = split_message((const uint8_t *)address, addrlen, rowlen);
 		if (desc) {
 			oledDrawString(0, 0 * 9, desc);
