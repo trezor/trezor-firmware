@@ -146,9 +146,6 @@ int main(void)
         __fatal_error("sdcard_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    display_clear();
-    display_backlight(255);
-
     display_printf("TREZOR Boardloader %d.%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
     display_printf("==================\n");
     display_printf("starting boardloader\n");

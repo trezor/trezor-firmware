@@ -83,7 +83,6 @@ void check_and_jump(void)
 
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
         HAL_Delay(1000); // TODO: remove?
-        display_printf("JUMP!\n");
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
     } else {
@@ -195,16 +194,13 @@ int main(void)
 {
     periph_init();
 
-    if (0 != display_init()) {
-        __fatal_error("display_init", __FILE__, __LINE__, __FUNCTION__);
-    }
+    display_pwm_init();
+    display_orientation(0);
+    display_backlight(255);
 
     if (0 != touch_init()) {
         __fatal_error("touch_init", __FILE__, __LINE__, __FUNCTION__);
     }
-
-    display_clear();
-    display_backlight(255);
 
     display_printf("TREZOR Bootloader %d.%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
     display_printf("=================\n");

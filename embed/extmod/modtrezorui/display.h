@@ -42,6 +42,7 @@
 
 // provided by port
 
+void display_pwm_init(void);
 int display_init(void);
 void display_refresh(void);
 void display_save(const char *filename);

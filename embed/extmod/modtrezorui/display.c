@@ -24,8 +24,8 @@
 #include <string.h>
 #include <stdarg.h>
 
-static int DISPLAY_BACKLIGHT = 0;
-static int DISPLAY_ORIENTATION = 0;
+static int DISPLAY_BACKLIGHT = -1;
+static int DISPLAY_ORIENTATION = -1;
 static int DISPLAY_OFFSET[2] = {0, 0};
 
 #if defined TREZOR_STM32
@@ -67,8 +67,8 @@ static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0, in
 
 void display_clear(void)
 {
-    display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-    for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY * 2; i++) {
+    display_set_window_raw(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+    for (int i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY * 2; i++) {
         DATA(0x00);
     }
 }
