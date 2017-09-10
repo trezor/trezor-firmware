@@ -34,7 +34,6 @@ SOURCE_MOD += [
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/lib/libc/string0.c',
-    'vendor/micropython/ports/stm32/startup_stm32.S',
 ]
 
 SOURCE_STMHAL = [
@@ -71,6 +70,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_BOARDLOADER = [
+    'embed/boardloader/startup.s',
     'embed/boardloader/main.c',
 ]
 
@@ -121,6 +121,7 @@ env.Replace(
         'TREZOR_STM32',
         'MCU_SERIES_F4',
     ] + CPPDEFINES_MOD,
+    ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 #
@@ -144,5 +145,5 @@ program_elf = env.Command(
 program_bin = env.Command(
     target='boardloader.bin',
     source=program_elf,
-    action='$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+    action='$OBJCOPY -O binary $SOURCE $TARGET',
 )

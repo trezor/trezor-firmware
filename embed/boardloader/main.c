@@ -131,7 +131,6 @@ void check_and_jump(void)
 
 int main(void)
 {
-    SCB->VTOR = BOARDLOADER_START;
     periph_init();
 
     if (0 != display_init()) {
