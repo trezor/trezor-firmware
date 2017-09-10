@@ -80,90 +80,11 @@
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
 
-// Set the following to 1 to get some more information on the Hard Fault
-// More information about decoding the fault registers can be found here:
-// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0646a/Cihdjcfc.html
-
-// The ARMv7M Architecture manual (section B.1.5.6) says that upon entry
-// to an exception, that the registers will be in the following order on the
-// stack: R0, R1, R2, R3, R12, LR, PC, XPSR
-
-typedef struct {
-    uint32_t    r0, r1, r2, r3, r12, lr, pc, xpsr;
-} ExceptionRegisters_t;
-
-int pyb_hard_fault_debug = 1;
-
-void HardFault_C_Handler(ExceptionRegisters_t *regs) {
-    if (!pyb_hard_fault_debug) {
-        NVIC_SystemReset();
-    }
-
-    // We need to disable the USB so it doesn't try to write data out on
-    // the VCP and then block indefinitely waiting for the buffer to drain.
-    // pyb_usb_flags = 0;
-
-    display_printf("HardFault\n");
-
-    display_printf("R0    %08x\n", (unsigned int)regs->r0);
-    display_printf("R1    %08x\n", (unsigned int)regs->r1);
-    display_printf("R2    %08x\n", (unsigned int)regs->r2);
-    display_printf("R3    %08x\n", (unsigned int)regs->r3);
-    display_printf("R12   %08x\n", (unsigned int)regs->r12);
-    display_printf("SP    %08x\n", (unsigned int)regs);
-    display_printf("LR    %08x\n", (unsigned int)regs->lr);
-    display_printf("PC    %08x\n", (unsigned int)regs->pc);
-    display_printf("XPSR  %08x\n", (unsigned int)regs->xpsr);
-
-    uint32_t cfsr = SCB->CFSR;
-
-    display_printf("HFSR  %08x\n", (unsigned int)SCB->HFSR);
-    display_printf("CFSR  %08x\n", (unsigned int)cfsr);
-    if (cfsr & 0x80) {
-        display_printf("MMFAR %08x\n", (unsigned int)SCB->MMFAR);
-    }
-    if (cfsr & 0x8000) {
-        display_printf("BFAR  %08x\n", (unsigned int)SCB->BFAR);
-    }
-
-    if ((void*)&_ram_start <= (void*)regs && (void*)regs < (void*)&_ram_end) {
-        display_printf("Stack:\n");
-        uint32_t *stack_top = &_estack;
-        if ((void*)regs < (void*)&_heap_end) {
-            // stack not in static stack area so limit the amount we print
-            stack_top = (uint32_t*)regs + 32;
-        }
-        for (uint32_t *sp = (uint32_t*)regs; sp < stack_top; ++sp) {
-            display_printf("  %08x  %08x\n", (unsigned int)sp, (unsigned int)*sp);
-        }
-    }
-
+void HardFault_Handler(void) {
     /* Go to infinite loop when Hard Fault exception occurs */
     while (1) {
         __fatal_error("HardFault", __FILE__, __LINE__, __FUNCTION__);
     }
-}
-
-// Naked functions have no compiler generated gunk, so are the best thing to
-// use for asm functions.
-__attribute__((naked))
-void HardFault_Handler(void) {
-
-    // From the ARMv7M Architecture Reference Manual, section B.1.5.6
-    // on entry to the Exception, the LR register contains, amongst other
-    // things, the value of CONTROL.SPSEL. This can be found in bit 3.
-    //
-    // If CONTROL.SPSEL is 0, then the exception was stacked up using the
-    // main stack pointer (aka MSP). If CONTROL.SPSEL is 1, then the exception
-    // was stacked up using the process stack pointer (aka PSP).
-
-    __asm volatile(
-    " tst lr, #4    \n"         // Test Bit 3 to see which stack pointer we should use.
-    " ite eq        \n"         // Tell the assembler that the nest 2 instructions are if-then-else
-    " mrseq r0, msp \n"         // Make R0 point to main stack pointer
-    " mrsne r0, psp \n"         // Make R0 point to process stack pointer
-    " b HardFault_C_Handler \n" // Off to C land
-    );
 }
 
 /**
