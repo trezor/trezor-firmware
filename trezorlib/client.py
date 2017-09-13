@@ -241,7 +241,8 @@ class TextUIMixin(object):
     def callback_RecoveryMatrix(self, msg):
         if self.recovery_matrix_first_pass:
             self.recovery_matrix_first_pass = False
-            log("Use the numeric keypad to describe positions.  For the word list use only left and right keys. The layout is:")
+            log("Use the numeric keypad to describe positions.  For the word list use only left and right keys.")
+            log("Use backspace to correct an entry.  The keypad layout is:")
             log("    7 8 9     7 | 9")
             log("    4 5 6     4 | 6")
             log("    1 2 3     1 | 3")
