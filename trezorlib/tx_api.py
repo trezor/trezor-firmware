@@ -173,8 +173,11 @@ class TxApiBlockCypher(TxApi):
         return t
 
 
-TxApiBitcoin = TxApiInsight(network='insight_bitcoin', url='https://insight.bitpay.com/api/')
-TxApiTestnet = TxApiInsight(network='insight_testnet', url='https://test-insight.bitpay.com/api/')
-TxApiLitecoin = TxApiBlockCypher(network='blockcypher_litecoin', url='https://api.blockcypher.com/v1/ltc/main/')
+TxApiBitcoin = TxApiInsight(network='insight_bitcoin', url='https://btc-bitcore1.trezor.io/api/')
+TxApiTestnet = TxApiInsight(network='insight_testnet', url='https://testnet-bitcore3.trezor.io/api/')
+TxApiLitecoin = TxApiInsight(network='insight_litecoin', url='https://ltc-bitcore1.trezor.io/api/')
+TxApiDash = TxApiInsight(network='insight_dash', url='https://dash-bitcore1.trezor.io/api/')
+TxApiZcash = TxApiInsight(network='insight_zcash', url='https://zec-bitcore1.trezor.io/api/', zcash=True)
+TxApiBcash = TxApiInsight(network='insight_zcash', url='https://bch-bitcore2.trezor.io/api/')
+
 TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
-TxApiZcashTestnet = TxApiInsight(network='insight_zcashtestnet', url='https://explorer.testnet.z.cash/api/', zcash=True)

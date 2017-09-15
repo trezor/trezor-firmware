@@ -34,6 +34,7 @@ from . import tools
 # from . import mapping
 from . import messages_pb2 as proto
 from . import types_pb2 as types
+from .coins import coins_slip44
 from .debuglink import DebugLink
 
 # Python2 vs Python3
@@ -481,20 +482,8 @@ class ProtocolMixin(object):
             n = n[1:]
 
         # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
-        coins = {
-            "Bitcoin": 0,
-            "Testnet": 1,
-            "Namecoin": 7,
-            "Litecoin": 2,
-            "Dogecoin": 3,
-            "Dash": 5,
-            "Ether": 60,
-            "EtherClassic": 61,
-            "Zcash": 133,
-            "Decred": 42
-        }
-        if n[0] in coins:
-            n = ["44'", "%d'" % coins[n[0]]] + n[1:]
+        if n[0] in coins_slip44:
+            n = ["44'", "%d'" % coins_slip44[n[0]]] + n[1:]
 
         path = []
         for x in n:

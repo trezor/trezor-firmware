@@ -26,6 +26,7 @@ setup(
     py_modules=[
         'trezorlib.ckd_public',
         'trezorlib.client',
+        'trezorlib.coins',
         'trezorlib.debuglink',
         'trezorlib.ed25519cosi',
         'trezorlib.ed25519raw',
