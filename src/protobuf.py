@@ -5,20 +5,20 @@ bytes, string, embedded message and repeated fields.
 For de-sererializing (loading) protobuf types, object with `AsyncReader`
 interface is required:
 
-    class AsyncReader:
-        async def areadinto(self, buffer):
-            """
-            Reads `len(buffer)` bytes into `buffer`, or raises `EOFError`.
-            """
+>>> class AsyncReader:
+>>>     async def areadinto(self, buffer):
+>>>         """
+>>>         Reads `len(buffer)` bytes into `buffer`, or raises `EOFError`.
+>>>         """
 
 For serializing (dumping) protobuf types, object with `AsyncWriter` interface is
 required:
 
-    class AsyncWriter:
-        async def awrite(self, buffer):
-            """
-            Writes all bytes from `buffer`, or raises `EOFError`.
-            """
+>>> class AsyncWriter:
+>>>     async def awrite(self, buffer):
+>>>         """
+>>>         Writes all bytes from `buffer`, or raises `EOFError`.
+>>>         """
 '''
 
 from micropython import const

@@ -1,4 +1,4 @@
-from trezor import ui, res, loop
+from trezor import ui, res, loop, io
 from trezor.crypto import bip39
 from trezor.ui import display
 from trezor.ui.button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
@@ -136,9 +136,9 @@ class KeyboardMultiTap(ui.Widget):
                 btn.disable()
 
     def __iter__(self):
-        timeout = loop.Sleep(1000 * 1000 * 1)
-        touch = loop.Select(loop.TOUCH)
-        wait = loop.Wait((touch, timeout))
+        timeout = loop.sleep(1000 * 1000 * 1)
+        touch = loop.select(io.TOUCH)
+        wait = loop.wait(touch, timeout)
         while True:
             self.render()
             result = yield wait
@@ -223,9 +223,9 @@ class KeyboardZooming(ui.Widget):
                 break
 
     def __iter__(self):
-        timeout = loop.Sleep(1000 * 1000 * 1)
-        touch = loop.Select(loop.TOUCH)
-        wait = loop.Wait((touch, timeout))
+        timeout = loop.sleep(1000 * 1000 * 1)
+        touch = loop.select(io.TOUCH)
+        wait = loop.wait(touch, timeout)
         while True:
             self.render()
             result = yield wait

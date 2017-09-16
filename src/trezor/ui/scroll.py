@@ -16,7 +16,7 @@ async def paginate(render_page, page_count, page=0, *args):
     while True:
         changer = change_page(page, page_count)
         renderer = render_page(page, page_count, *args)
-        waiter = loop.Wait([changer, renderer])
+        waiter = loop.wait(changer, renderer)
         result = await waiter
         if changer in waiter.finished:
             page = result
@@ -25,25 +25,28 @@ async def paginate(render_page, page_count, page=0, *args):
 
 
 async def animate_swipe():
-    await ui.animate_pulse(render_swipe_icon, ui.GREY, ui.DARK_GREY, speed=300000, delay=200000)
+    time_delay = const(30000)
+    draw_delay = const(200000)
 
-
-def render_swipe_icon(fg):
-    ui.display.bar_radius(102, 214, 36, 4, fg, ui.BLACK, 2)
-    ui.display.bar_radius(106, 222, 28, 4, fg, ui.BLACK, 2)
-    ui.display.bar_radius(110, 230, 20, 4, fg, ui.BLACK, 2)
+    sleep = loop.sleep(time_delay)
+    for t in ui.pulse(draw_delay):
+        fg = ui.blend(ui.GREY, ui.DARK_GREY, t)
+        ui.display.bar_radius(102, 214, 36, 4, fg, ui.BLACK, 2)
+        ui.display.bar_radius(106, 222, 28, 4, fg, ui.BLACK, 2)
+        ui.display.bar_radius(110, 230, 20, 4, fg, ui.BLACK, 2)
+        await sleep
 
 
 def render_scrollbar(page, page_count):
-    screen_height = const(220)
+    bbox = const(220)
     size = const(10)
 
     padding = 18
-    if page_count * padding > screen_height:
-        padding = screen_height // page_count
+    if page_count * padding > bbox:
+        padding = bbox // page_count
 
     x = const(225)
-    y = (screen_height // 2) - (page_count // 2) * padding
+    y = (bbox // 2) - (page_count // 2) * padding
 
     for i in range(0, page_count):
         if i != page:

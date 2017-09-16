@@ -1,6 +1,12 @@
 from micropython import const
-from trezor import ui, loop
-from . import display, in_area, rotate_coords, Widget
+
+from trezor import io
+from trezor import ui
+
+from trezor.ui import display
+from trezor.ui import contains
+from trezor.ui import rotate
+from trezor.ui import Widget
 
 
 DEFAULT_BUTTON = {
@@ -142,18 +148,18 @@ class Button(Widget):
         if self.state & BTN_DISABLED:
             return
         if not self.absolute:
-            pos = rotate_coords(pos)
-        if event == loop.TOUCH_START:
-            if in_area(pos, self.area):
+            pos = rotate(pos)
+        if event == io.TOUCH_START:
+            if contains(pos, self.area):
                 self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
-        elif event == loop.TOUCH_MOVE and self.state & BTN_STARTED:
-            if in_area(pos, self.area):
+        elif event == io.TOUCH_MOVE and self.state & BTN_STARTED:
+            if contains(pos, self.area):
                 if not self.state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
             else:
                 if self.state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY
-        elif event == loop.TOUCH_END and self.state & BTN_STARTED:
+        elif event == io.TOUCH_END and self.state & BTN_STARTED:
             self.state = BTN_DIRTY
-            if in_area(pos, self.area):
+            if contains(pos, self.area):
                 return BTN_CLICKED

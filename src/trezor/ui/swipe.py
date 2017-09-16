@@ -1,7 +1,7 @@
 import utime
 from micropython import const
-from trezor import loop, ui
-from . import in_area, rotate_coords
+from trezor import io, ui
+from . import contains, rotate
 
 _SWIPE_DISTANCE_THRESHOLD = const(20)  # Min pixels in the primary direction
 _SWIPE_VELOCITY_THRESHOLD = const(200)  # Min pixels per second
@@ -26,12 +26,12 @@ class Swipe(ui.Widget):
     def touch(self, event, pos):
 
         if not self.absolute:
-            pos = rotate_coords(pos)
+            pos = rotate(pos)
 
         temp_time = utime.ticks_ms() / 1000
 
         # primary now for fading purposes
-        if event == loop.TOUCH_MOVE and self.start_pos is not None:
+        if event == io.TOUCH_MOVE and self.start_pos is not None:
             pdx = pos[0] - self.start_pos[0]
             pdy = pos[1] - self.start_pos[1]
             td = temp_time - self.start_time
@@ -52,13 +52,13 @@ class Swipe(ui.Widget):
                     else:
                         ui.display.backlight(self.light_target)
 
-        elif event == loop.TOUCH_START and in_area(pos, self.area):
+        elif event == io.TOUCH_START and contains(pos, self.area):
             self.start_time = temp_time
             self.start_pos = pos
             self.light_origin = ui.BACKLIGHT_NORMAL
             ui.display.backlight(self.light_origin)
 
-        elif event == loop.TOUCH_END and self.start_pos is not None:
+        elif event == io.TOUCH_END and self.start_pos is not None:
             td = temp_time - self.start_time
             pdx = pos[0] - self.start_pos[0]
             pdy = pos[1] - self.start_pos[1]

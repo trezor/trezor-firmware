@@ -6,7 +6,8 @@ from utest import *
 from ustruct import pack, unpack
 from ubinascii import hexlify, unhexlify
 
-from trezor.loop import Select, Syscall, READ, WRITE
+from trezor import io
+from trezor.loop import select, Syscall
 from trezor.crypto import random
 from trezor.utils import chunks
 from trezor.wire import codec_v1
@@ -39,7 +40,7 @@ def test_reader():
 
     # open, expected one read
     first_report = report_header + message[:rep_len - len(report_header)]
-    assert_async(reader.aopen(), [(None, Select(READ | interface_num)), (first_report, StopIteration()),])
+    assert_async(reader.aopen(), [(None, select(io.POLL_READ | interface_num)), (first_report, StopIteration()),])
     assert_eq(reader.type, message_type)
     assert_eq(reader.size, message_len)
 
@@ -66,7 +67,7 @@ def test_reader():
     next_report_header = bytearray(unhexlify('3f'))
     next_report = next_report_header + message[rep_len - len(report_header):][:rep_len - len(next_report_header)]
     onebyte_buffer = bytearray(1)
-    assert_async(reader.areadinto(onebyte_buffer), [(None, Select(READ | interface_num)), (next_report, StopIteration()),])
+    assert_async(reader.areadinto(onebyte_buffer), [(None, select(io.POLL_READ | interface_num)), (next_report, StopIteration()),])
     assert_eq(onebyte_buffer, message[len(short_buffer):][len(aligned_buffer):][:len(onebyte_buffer)])
     assert_eq(reader.size, message_len - len(short_buffer) - len(aligned_buffer) - len(onebyte_buffer))
 
@@ -85,7 +86,7 @@ def test_reader():
     expected_syscalls = []
     for i, _ in enumerate(next_reports):
         prev_report = next_reports[i - 1] if i > 0 else None
-        expected_syscalls.append((prev_report, Select(READ | interface_num)))
+        expected_syscalls.append((prev_report, select(io.POLL_READ | interface_num)))
     expected_syscalls.append((next_reports[-1], StopIteration()))
     assert_async(reader.areadinto(long_buffer), expected_syscalls)
     assert_eq(long_buffer, message[-start_size:])
@@ -128,7 +129,7 @@ def test_writer():
     # aligned write, expected one report
     start_size = writer.size
     aligned_payload = bytearray(range(rep_len - len(report_header) - len(short_payload)))
-    assert_async(writer.awrite(aligned_payload), [(None, Select(WRITE | interface_num)), (None, StopIteration()),])
+    assert_async(writer.awrite(aligned_payload), [(None, select(io.POLL_WRITE | interface_num)), (None, StopIteration()),])
     assert_eq(interface.data, [report_header
          + short_payload
          + aligned_payload
@@ -154,7 +155,7 @@ def test_writer():
     expected_reports[-1] += bytearray(bytes(1) * (rep_len - len(expected_reports[-1])))
     # test write
     expected_write_reports = expected_reports[:-1]
-    assert_async(writer.awrite(long_payload), len(expected_write_reports) * [(None, Select(WRITE | interface_num))] + [(None, StopIteration())])
+    assert_async(writer.awrite(long_payload), len(expected_write_reports) * [(None, select(io.POLL_WRITE | interface_num))] + [(None, StopIteration())])
     assert_eq(interface.data, expected_write_reports)
     assert_eq(writer.size, start_size - len(long_payload))
     interface.data.clear()
@@ -163,7 +164,7 @@ def test_writer():
     assert_eq(interface.data, [])
     # test close
     expected_close_reports = expected_reports[-1:]
-    assert_async(writer.aclose(), len(expected_close_reports) * [(None, Select(WRITE | interface_num))] + [(None, StopIteration())])
+    assert_async(writer.aclose(), len(expected_close_reports) * [(None, select(io.POLL_WRITE | interface_num))] + [(None, StopIteration())])
     assert_eq(interface.data, expected_close_reports)
     assert_eq(writer.size, 0)
 

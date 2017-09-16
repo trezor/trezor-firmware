@@ -3,7 +3,8 @@ from trezor.utils import unimport
 
 # used to confirm/cancel the dialogs from outside of this module (i.e.
 # through debug link)
-signal = loop.Signal()
+if __debug__:
+    signal = loop.signal()
 
 
 @unimport
@@ -20,7 +21,12 @@ async def confirm(ctx, content, code=None, *args, **kwargs):
     if code is None:
         code = Other
     await ctx.call(ButtonRequest(code=code), ButtonAck)
-    return await loop.Wait((signal, dialog)) == CONFIRMED
+
+    if __debug__:
+        waiter = loop.wait(signal, dialog)
+    else:
+        waiter = dialog
+    return await waiter == CONFIRMED
 
 
 @unimport
@@ -37,7 +43,12 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
     if code is None:
         code = Other
     await ctx.call(ButtonRequest(code=code), ButtonAck)
-    return await loop.Wait((signal, dialog)) == CONFIRMED
+
+    if __debug__:
+        waiter = loop.wait(signal, dialog)
+    else:
+        waiter = dialog
+    return await waiter == CONFIRMED
 
 
 @unimport

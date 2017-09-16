@@ -38,6 +38,6 @@ def startdefault(handler):
     if not default:
         default_handler = handler
         default = handler()
-        loop.schedule_task(default)
+        loop.schedule(default)
         ui.display.backlight(ui.BACKLIGHT_NORMAL)
         log.debug(__name__, 'startdefault')

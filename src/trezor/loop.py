@@ -4,8 +4,7 @@ the form of python coroutines (either plain generators or `async` functions) are
 stepped through until completion, and can get asynchronously blocked by
 `yield`ing or `await`ing a syscall.
 
-See `schedule_task`, `run`, and syscalls `Sleep`, `Select`, `Signal`
-and `Wait`.
+See `schedule`, `run`, and syscalls `sleep`, `select`, `signal` and `wait`.
 '''
 
 import utime
@@ -14,21 +13,11 @@ from micropython import const
 from trezor import log
 from trezor import io
 
-TOUCH = io.TOUCH
-TOUCH_START = io.TOUCH_START
-TOUCH_MOVE = io.TOUCH_MOVE
-TOUCH_END = io.TOUCH_END
-
-READ = io.POLL_READ
-WRITE = io.POLL_WRITE
-
 after_step_hook = None  # function, called after each task step
 
-_MAX_SELECT_DELAY = const(1000000)  # usec delay if queue is empty
-_MAX_QUEUE_SIZE = const(64)  # maximum number of scheduled tasks
-
-_paused_tasks = {}  # {message interface: [task]}
-_scheduled_tasks = utimeq.utimeq(_MAX_QUEUE_SIZE)
+_QUEUE_SIZE = const(64)  # maximum number of scheduled tasks
+_queue = utimeq.utimeq(_QUEUE_SIZE)
+_paused = {}
 
 if __debug__:
     # for performance stats
@@ -38,47 +27,48 @@ if __debug__:
     log_delay_rb = array.array('i', [0] * log_delay_rb_len)
 
 
-def schedule_task(task, value=None, deadline=None):
+def schedule(task, value=None, deadline=None):
     '''
     Schedule task to be executed with `value` on given `deadline` (in
     microseconds).  Does not start the event loop itself, see `run`.
     '''
     if deadline is None:
         deadline = utime.ticks_us()
-    _scheduled_tasks.push(deadline, task, value)
+    _queue.push(deadline, task, value)
 
 
-def unschedule_task(task):
+def unschedule(task):
     '''
-    Remove task from the time queue.  Cancels previous `schedule_task`.
+    Remove task from the time queue.  Cancels previous `schedule`.
     '''
-    global _scheduled_tasks
+    global _queue
     task_entry = [0, 0, 0]  # deadline, task, value
-    queue_copy = utimeq.utimeq(_MAX_QUEUE_SIZE)
-    while _scheduled_tasks:
-        _scheduled_tasks.pop(task_entry)
-        if task_entry[1] is not task:
-            queue_copy.push(task_entry[0], task_entry[1], task_entry[2])
-    _scheduled_tasks = queue_copy
+    queue_copy = utimeq.utimeq(_QUEUE_SIZE)
+    while _queue:
+        _queue.pop(task_entry)
+        t, v, d = task_entry
+        if t is not task:
+            queue_copy.push(t, v, d)
+    _queue = queue_copy
 
 
-def _pause_task(task, iface):
-    tasks = _paused_tasks.get(iface, None)
+def pause(task, iface):
+    tasks = _paused.get(iface, None)
     if tasks is None:
-        tasks = _paused_tasks[iface] = []
+        tasks = _paused[iface] = []
     tasks.append(task)
 
 
-def _unpause_task(task):
-    for iface in _paused_tasks:
-        if task in _paused_tasks[iface]:
-            _paused_tasks[iface].remove(task)
+def unpause(task):
+    for iface in _paused:
+        if task in _paused[iface]:
+            _paused[iface].remove(task)
 
 
 def run():
     '''
     Loop forever, stepping through scheduled tasks and awaiting I/O events
-    inbetween.  Use `schedule_task` first to add a coroutine to the task queue.
+    inbetween.  Use `schedule` first to add a coroutine to the task queue.
     Tasks yield back to the scheduler on any I/O, usually by calling `await` on
     a `Syscall`.
     '''
@@ -86,34 +76,35 @@ def run():
     if __debug__:
         global log_delay_pos
 
+    max_delay = const(1000000)  # usec delay if queue is empty
+
     task_entry = [0, 0, 0]  # deadline, task, value
     msg_entry = [0, 0]  # iface | flags, value
     while True:
         # compute the maximum amount of time we can wait for a message
-        if _scheduled_tasks:
-            delay = utime.ticks_diff(
-                _scheduled_tasks.peektime(), utime.ticks_us())
+        if _queue:
+            delay = utime.ticks_diff(_queue.peektime(), utime.ticks_us())
         else:
-            delay = _MAX_SELECT_DELAY
+            delay = max_delay
 
         if __debug__:
             # add current delay to ring buffer for performance stats
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
 
-        if io.poll(_paused_tasks, msg_entry, delay):
+        if io.poll(_paused, msg_entry, delay):
             # message received, run tasks paused on the interface
-            msg_tasks = _paused_tasks.pop(msg_entry[0], ())
+            msg_tasks = _paused.pop(msg_entry[0], ())
             for task in msg_tasks:
-                _step_task(task, msg_entry[1])
+                _step(task, msg_entry[1])
         else:
             # timeout occurred, run the first scheduled task
-            if _scheduled_tasks:
-                _scheduled_tasks.pop(task_entry)
-                _step_task(task_entry[1], task_entry[2])
+            if _queue:
+                _queue.pop(task_entry)
+                _step(task_entry[1], task_entry[2])
 
 
-def _step_task(task, value):
+def _step(task, value):
     try:
         if isinstance(value, Exception):
             result = task.throw(value)
@@ -129,7 +120,7 @@ def _step_task(task, value):
         if isinstance(result, Syscall):
             result.handle(task)
         elif result is None:
-            schedule_task(task)
+            schedule(task)
         else:
             if __debug__:
                 log.error(__name__, 'unknown syscall: %s', result)
@@ -148,15 +139,16 @@ class Syscall:
         return (yield self)
 
 
-class Sleep(Syscall):
+class sleep(Syscall):
     '''
     Pause current task and resume it after given delay.  Although the delay is
     given in microseconds, sub-millisecond precision is not guaranteed.  Result
     value is the calculated deadline.
 
     Example:
-        planned = await loop.Sleep(1000 * 1000)  # sleep for 1ms
-        print('missed by %d us', utime.ticks_diff(utime.ticks_us(), planned))
+
+    >>> planned = await loop.sleep(1000 * 1000)  # sleep for 1ms
+    >>> print('missed by %d us', utime.ticks_diff(utime.ticks_us(), planned))
     '''
 
     def __init__(self, delay_us):
@@ -164,43 +156,45 @@ class Sleep(Syscall):
 
     def handle(self, task):
         deadline = utime.ticks_add(utime.ticks_us(), self.delay_us)
-        schedule_task(task, deadline, deadline)
+        schedule(task, deadline, deadline)
 
 
-class Select(Syscall):
+class select(Syscall):
     '''
     Pause current task, and resume only after a message on `msg_iface` is
     received.  Messages are received either from an USB interface, or the
     touch display.  Result value a tuple of message values.
 
     Example:
-        hid_report, = await loop.Select(0xABCD)  # await USB HID report
-        event, x, y = await loop.Select(loop.TOUCH)  # await touch event
+
+    >>> hid_report, = await loop.select(0xABCD)  # await USB HID report
+    >>> event, x, y = await loop.select(io.TOUCH)  # await touch event
     '''
 
     def __init__(self, msg_iface):
         self.msg_iface = msg_iface
 
     def handle(self, task):
-        _pause_task(task, self.msg_iface)
+        pause(task, self.msg_iface)
 
 
 _NO_VALUE = ()
 
 
-class Signal(Syscall):
+class signal(Syscall):
     '''
     Pause current task, and let other running task to resume it later with a
     result value or an exception.
 
     Example:
-        # in task #1:
-        signal = loop.Signal()
-        result = await signal
-        print('awaited result:', result)
-        # in task #2:
-        signal.send('hello from task #2')
-        # prints in the next iteration of the event loop
+
+    >>> # in task #1:
+    >>> signal = loop.signal()
+    >>> result = await signal
+    >>> print('awaited result:', result)
+    >>> # in task #2:
+    >>> signal.send('hello from task #2')
+    >>> # prints in the next iteration of the event loop
     '''
 
     def __init__(self):
@@ -217,36 +211,37 @@ class Signal(Syscall):
 
     def _deliver(self):
         if self.task is not None and self.value is not _NO_VALUE:
-            schedule_task(self.task, self.value)
+            schedule(self.task, self.value)
             self.task = None
             self.value = _NO_VALUE
 
 
-class Wait(Syscall):
+class wait(Syscall):
     '''
     Execute one or more children tasks and wait until one or more of them exit.
-    Return value of `Wait` is the return value of task that triggered the
-    completion.  By default, `Wait` returns after the first child completes, and
+    Return value of `wait` is the return value of task that triggered the
+    completion.  By default, `wait` returns after the first child completes, and
     other running children are killed (by cancelling any pending schedules and
     calling `close()`).
 
     Example:
-        # async def wait_for_touch(): ...
-        # async def animate_logo(): ...
-        touch_task = wait_for_touch()
-        animation_task = animate_logo()
-        waiter = loop.Wait((touch_task, animation_task))
-        result = await waiter
-        if animation_task in waiter.finished:
-            print('animation task returned', result)
-        else:
-            print('touch task returned', result)
 
-    Note: You should not directly `yield` a `Wait` instance, see logic in
-    `Wait.__iter__` for explanation.  Always use `await`.
+    >>> # async def wait_for_touch(): ...
+    >>> # async def animate_logo(): ...
+    >>> touch_task = wait_for_touch()
+    >>> animation_task = animate_logo()
+    >>> waiter = loop.wait(touch_task, animation_task)
+    >>> result = await waiter
+    >>> if animation_task in waiter.finished:
+    >>>     print('animation task returned', result)
+    >>> else:
+    >>>     print('touch task returned', result)
+
+    Note: You should not directly `yield` a `wait` instance, see logic in
+    `wait.__iter__` for explanation.  Always use `await`.
     '''
 
-    def __init__(self, children, wait_for=1, exit_others=True):
+    def __init__(self, *children, wait_for=1, exit_others=True):
         self.children = children
         self.wait_for = wait_for
         self.exit_others = exit_others
@@ -259,13 +254,13 @@ class Wait(Syscall):
         self.finished = []
         self.scheduled = [self._wait(c) for c in self.children]
         for ct in self.scheduled:
-            schedule_task(ct)
+            schedule(ct)
 
     def exit(self):
         for task in self.scheduled:
             if task not in self.finished:
-                _unpause_task(task)
-                unschedule_task(task)
+                unpause(task)
+                unschedule(task)
                 task.close()
 
     async def _wait(self, child):
@@ -281,7 +276,7 @@ class Wait(Syscall):
         if self.wait_for == len(self.finished) or isinstance(result, Exception):
             if self.exit_others:
                 self.exit()
-            schedule_task(self.callback, result)
+            schedule(self.callback, result)
 
     def __iter__(self):
         try:
@@ -293,10 +288,10 @@ class Wait(Syscall):
             raise
 
 
-class Put(Syscall):
+class put(Syscall):
 
-    def __init__(self, chan, value=None):
-        self.chan = chan
+    def __init__(self, ch, value=None):
+        self.ch = ch
         self.value = value
 
     def __call__(self, value):
@@ -304,30 +299,30 @@ class Put(Syscall):
         return self
 
     def handle(self, task):
-        self.chan.schedule_put(schedule_task, task, self.value)
+        self.ch.schedule_put(schedule, task, self.value)
 
 
-class Take(Syscall):
+class take(Syscall):
 
-    def __init__(self, chan):
-        self.chan = chan
+    def __init__(self, ch):
+        self.ch = ch
 
     def __call__(self):
         return self
 
     def handle(self, task):
-        if self.chan.schedule_take(schedule_task, task) and self.chan.id is not None:
-            _pause_task(self.chan, self.chan.id)
+        if self.ch.schedule_take(schedule, task) and self.ch.id is not None:
+            pause(self.ch, self.ch.id)
 
 
-class Chan:
+class chan:
 
     def __init__(self, id=None):
         self.id = id
         self.putters = []
         self.takers = []
-        self.put = Put(self)
-        self.take = Take(self)
+        self.put = put(self)
+        self.take = take(self)
 
     def schedule_publish(self, schedule, value):
         if self.takers:
@@ -357,9 +352,3 @@ class Chan:
         else:
             self.takers.append(taker)
             return False
-
-
-select = Select
-sleep = Sleep
-wait = Wait
-signal = Signal

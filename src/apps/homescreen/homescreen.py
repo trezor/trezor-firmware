@@ -10,10 +10,10 @@ async def swipe_to_rotate():
 
 
 async def dim_screen():
-    await loop.Sleep(5 * 1000000)
+    await loop.sleep(5 * 1000000)
     await ui.backlight_slide(ui.BACKLIGHT_DIM)
     while True:
-        await loop.Sleep(1000000)
+        await loop.sleep(1000000)
 
 
 def display_homescreen():
@@ -35,4 +35,4 @@ def display_homescreen():
 async def layout_homescreen():
     while True:
         display_homescreen()
-        await loop.Wait([swipe_to_rotate(), dim_screen()])
+        await loop.wait(swipe_to_rotate(), dim_screen())

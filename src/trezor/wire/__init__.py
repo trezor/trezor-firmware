@@ -22,7 +22,7 @@ def setup(iface):
     '''Initialize the wire stack on passed USB interface.'''
     session_supervisor = codec_v2.SesssionSupervisor(iface, session_handler)
     session_supervisor.open(codec_v1.SESSION_ID)
-    loop.schedule_task(session_supervisor.listen())
+    loop.schedule(session_supervisor.listen())
 
 
 class Context:

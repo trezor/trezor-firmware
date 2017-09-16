@@ -5,11 +5,14 @@ import math
 import utime
 
 from trezorui import Display
-from trezor import loop, res
+
+from trezor import io
+from trezor import loop
+from trezor import res
 
 display = Display()
 
-if sys.platform not in ('trezor', 'pyboard'):  # stmhal
+if sys.platform != 'trezor':
     loop.after_step_hook = display.refresh
 
 
@@ -72,7 +75,7 @@ ICON_WIPE     = 'trezor/res/header_icons/wipe.toig'
 ICON_RECOVERY = 'trezor/res/header_icons/recovery.toig'
 
 
-def in_area(pos: tuple, area: tuple) -> bool:
+def contains(pos: tuple, area: tuple) -> bool:
     x, y = pos
     ax, ay, aw, ah = area
     return ax <= x <= ax + aw and ay <= y <= ay + ah
@@ -88,42 +91,35 @@ def blend(ca: int, cb: int, t: float) -> int:
                     lerpi((ca << 3) & 0xF8, (cb << 3) & 0xF8, t))
 
 
+def pulse(delay):
+    while True:
+        # normalize sin from interval -1:1 to 0:1
+        yield 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
+
+
 async def alert(count=3):
+    short_sleep = loop.sleep(20000)
+    long_sleep = loop.sleep(80000)
     current = display.backlight()
     for i in range(count * 2):
         if i % 2 == 0:
             display.backlight(BACKLIGHT_MAX)
-            yield loop.Sleep(20000)
+            yield short_sleep
         else:
             display.backlight(BACKLIGHT_NORMAL)
-            yield loop.Sleep(80000)
+            yield long_sleep
     display.backlight(current)
 
 
-async def backlight_slide(val, speed=20000):
+async def backlight_slide(val, delay=20000):
+    sleep = loop.sleep(delay)
     current = display.backlight()
     for i in range(current, val, -1 if current > val else 1):
         display.backlight(i)
-        await loop.Sleep(speed)
+        await sleep
 
 
-def animate_pulse(func, ca, cb, speed=200000, delay=30000):
-    while True:
-        # normalize sin from interval -1:1 to 0:1
-        y = 0.5 + 0.5 * math.sin(utime.ticks_us() / speed)
-        c = blend(ca, cb, y)
-        func(c)
-        yield loop.Sleep(delay)
-
-
-def header(title, icon=ICON_RESET, fg=BLACK, bg=BLACK):
-    display.bar(0, 0, 240, 32, bg)
-    if icon is not None:
-        display.icon(8, 4, res.load(icon), fg, bg)
-    display.text(8 + 24 + 2, 24, title, BOLD, fg, bg)
-
-
-def rotate_coords(pos: tuple) -> tuple:
+def rotate(pos: tuple) -> tuple:
     r = display.orientation()
     if r == 0:
         return pos
@@ -136,6 +132,13 @@ def rotate_coords(pos: tuple) -> tuple:
         return (240 - y, x)
 
 
+def header(title, icon=ICON_RESET, fg=BLACK, bg=BLACK):
+    display.bar(0, 0, 240, 32, bg)
+    if icon is not None:
+        display.icon(8, 4, res.load(icon), fg, bg)
+    display.text(8 + 24 + 2, 24, title, BOLD, fg, bg)
+
+
 class Widget:
 
     def render(self):
@@ -145,9 +148,10 @@ class Widget:
         pass
 
     def __iter__(self):
+        touch = loop.select(io.TOUCH)
         while True:
             self.render()
-            event, *pos = yield loop.Select(loop.TOUCH)
+            event, *pos = yield touch
             result = self.touch(event, pos)
             if result is not None:
                 return result

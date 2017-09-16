@@ -1,5 +1,3 @@
-from micropython import const
-
 from trezor import config
 from trezor import io
 from trezor import log

@@ -41,7 +41,7 @@ class ConfirmDialog(Widget):
                 return CANCELLED
 
     async def __iter__(self):
-        return await loop.Wait((super().__iter__(), self.content))
+        return await loop.wait(super().__iter__(), self.content)
 
 
 _STARTED = const(-1)
@@ -82,5 +82,5 @@ class HoldToConfirmDialog(Widget):
             else:
                 content_loop = self.content
             confirm_loop = super().__iter__()  # default loop (render on touch)
-            result = await loop.wait((content_loop, confirm_loop))
+            result = await loop.wait(content_loop, confirm_loop)
         return result

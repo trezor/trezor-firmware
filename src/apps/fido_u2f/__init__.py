@@ -312,7 +312,7 @@ def send_cmd(cmd: Cmd, iface: io.HID) -> None:
 
 
 def boot(iface: io.HID):
-    loop.schedule_task(handle_reports(iface))
+    loop.schedule(handle_reports(iface))
 
 
 async def handle_reports(iface: io.HID):
@@ -446,7 +446,7 @@ class ConfirmState:
         self.deadline_ms = utime.ticks_ms() + _CONFIRM_STATE_TIMEOUT_MS
         self.task = self.confirm()
         workflow.onstart(self.task)
-        loop.schedule_task(self.task)
+        loop.schedule(self.task)
 
     def kill(self) -> None:
         if self.task is not None:

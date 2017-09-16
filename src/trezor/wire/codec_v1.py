@@ -1,6 +1,7 @@
 from micropython import const
 import ustruct
 
+from trezor import io
 from trezor import loop
 from trezor import utils
 
@@ -37,7 +38,7 @@ class Reader:
         on this session.  `self.type` and `self.size` are initialized and
         available after `aopen()` returns.
         '''
-        read = loop.select(self.iface.iface_num() | loop.READ)
+        read = loop.select(self.iface.iface_num() | io.POLL_READ)
         while True:
             # wait for initial report
             report = await read
@@ -63,7 +64,7 @@ class Reader:
         if self.size < len(buf):
             raise EOFError
 
-        read = loop.select(self.iface.iface_num() | loop.READ)
+        read = loop.select(self.iface.iface_num() | io.POLL_READ)
         nread = 0
         while nread < len(buf):
             if self.ofs == len(self.data):
@@ -122,7 +123,7 @@ class Writer:
         if self.size < len(buf):
             raise EOFError
 
-        write = loop.select(self.iface.iface_num() | loop.WRITE)
+        write = loop.select(self.iface.iface_num() | io.POLL_WRITE)
         nwritten = 0
         while nwritten < len(buf):
             # copy as much as possible to report buffer
@@ -148,5 +149,5 @@ class Writer:
                 self.data[self.ofs] = 0x00
                 self.ofs += 1
 
-            await loop.select(self.iface.iface_num() | loop.WRITE)
+            await loop.select(self.iface.iface_num() | io.POLL_WRITE)
             self.iface.write(self.data)
