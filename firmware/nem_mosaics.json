@@ -33,5 +33,25 @@
         "mosaic": "breeze-token",
         "divisibility": 0,
         "networks": [ 104 ]
+    },
+    {
+        "name": "PacNEM Game Credits",
+        "ticker": " PAC:HRT",
+        "namespace": "pacnem",
+        "mosaic": "heart",
+        "divisibility": 0,
+        "networks": [ 104 ]
+    },
+    {
+        "name": "PacNEM Score Tokens",
+        "ticker": " PAC:CHS",
+        "namespace": "pacnem",
+        "mosaic": "cheese",
+        "divisibility": 6,
+        "levy": "MosaicLevy_Percentile",
+        "fee": 100,
+        "levy_namespace": "nem",
+        "levy_mosaic": "xem",
+        "networks": [ 104 ]
     }
 ]
