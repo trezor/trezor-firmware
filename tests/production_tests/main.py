@@ -1,7 +1,7 @@
 import utime
 
-from trezor import io
-from trezor import ui
+import trezorio as io
+import trezorui as ui
 
 usb_vcp = io.VCP(
     iface_num=0x00,
@@ -24,7 +24,7 @@ usb.add(usb_vcp)
 
 usb.open()
 
-d = ui.display
+d = ui.Display()
 sd = io.SDCard()
 sbu = io.SBU()
 
