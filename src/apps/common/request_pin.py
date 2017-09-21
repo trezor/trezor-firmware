@@ -23,18 +23,35 @@ async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
     await ctx.call(ButtonRequest(code=ProtectCall),
                    ButtonAck)
 
+    def onchange():
+        c = dialog.cancel
+        if matrix.pin:
+            c.content = 'Clean'
+        else:
+            c.content = 'Cancel'
+        c.taint()
+        c.render()
+
     ui.display.clear()
-    matrix = PinMatrix(label)
+    matrix = PinMatrix(label, with_zero=True)
+    matrix.onchange = onchange
     dialog = ConfirmDialog(matrix)
+    dialog.cancel.area = (0, 240 - 48, 80, 48)
+    dialog.confirm.area = (240 - 80, 240 - 48, 80, 48)
 
-    result = await dialog
-    pin = matrix.pin
-    matrix = None
+    while True:
+        res = await dialog
+        pin = matrix.pin
 
-    if result != CONFIRMED:
-        raise wire.FailureError(PinCancelled, 'PIN cancelled')
-
-    return pin
+        if res == CONFIRMED:
+            matrix = None
+            return pin
+        elif res != CONFIRMED and pin:
+            matrix.change('')
+            continue
+        else:
+            matrix = None
+            raise wire.FailureError(PinCancelled, 'PIN cancelled')
 
 
 @unimport
