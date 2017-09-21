@@ -1,3 +1,5 @@
+from trezor import log
+from trezor import loop
 from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import \
     DebugLinkDecision, DebugLinkGetState, DebugLinkStop, \
@@ -60,6 +62,17 @@ async def dispatch_DebugLinkFlashErase(ctx, msg):
     pass
 
 
+async def memory_stats(interval):
+    import micropython
+    import gc
+
+    sleep = loop.sleep(interval * 1000 * 1000)
+    while True:
+        micropython.mem_info()
+        gc.collect()
+        await sleep
+
+
 def boot():
     register(DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
     register(DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)
@@ -67,3 +80,5 @@ def boot():
     register(DebugLinkMemoryRead, protobuf_workflow, dispatch_DebugLinkMemoryRead)
     register(DebugLinkMemoryWrite, protobuf_workflow, dispatch_DebugLinkMemoryWrite)
     register(DebugLinkFlashErase, protobuf_workflow, dispatch_DebugLinkFlashErase)
+
+    # loop.schedule(memory_stats(10))
