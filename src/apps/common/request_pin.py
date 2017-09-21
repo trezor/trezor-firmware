@@ -26,11 +26,14 @@ async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
     ui.display.clear()
     matrix = PinMatrix(label)
     dialog = ConfirmDialog(matrix)
+
+    result = await dialog
     pin = matrix.pin
     matrix = None
 
-    if await dialog != CONFIRMED:
+    if result != CONFIRMED:
         raise wire.FailureError(PinCancelled, 'PIN cancelled')
+
     return pin
 
 
@@ -60,7 +63,7 @@ async def request_pin_on_client(ctx: wire.Context, code: int=None) -> str:
     return _decode_pin(ack.pin, digits)
 
 
-request_pin = request_pin_on_client
+request_pin = request_pin_on_display
 
 
 @unimport
