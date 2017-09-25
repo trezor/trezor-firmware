@@ -1,5 +1,5 @@
 from micropython import const
-from trezor import ui, res
+from trezor import ui
 from trezor.crypto import random
 from trezor.ui import display
 from trezor.ui.button import Button, BTN_CLICKED
@@ -53,14 +53,6 @@ class PinMatrix(ui.Widget):
         # pin matrix buttons
         for btn in self.pin_buttons:
             btn.render()
-
-        # vertical border bars
-        # display.bar(79, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
-        # display.bar(158, 48, 2, 143, ui.blend(ui.BLACK, ui.WHITE, 0.25))
-
-        # horizontal border bars
-        # display.bar(0, 95, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
-        # display.bar(0, 142, 240, 2, ui.blend(ui.BLACK, ui.WHITE, 0.25))
 
     def touch(self, event, pos):
         for btn in self.pin_buttons:

@@ -3,78 +3,10 @@ from micropython import const
 from trezor import io
 from trezor import ui
 
-from trezor.ui import display
 from trezor.ui import contains
+from trezor.ui import display
 from trezor.ui import rotate
 from trezor.ui import Widget
-
-
-DEFAULT_BUTTON = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.WHITE,
-    'text-style': ui.NORMAL,
-    'border-color': ui.BLACK,
-    'radius': ui.BTN_RADIUS,
-}
-DEFAULT_BUTTON_ACTIVE = {
-    'bg-color': ui.GREY,
-    'fg-color': ui.BLACK,
-    'text-style': ui.BOLD,
-    'border-color': ui.GREY,
-    'radius': ui.BTN_RADIUS,
-}
-DEFAULT_BUTTON_DISABLED = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.GREY,
-    'text-style': ui.NORMAL,
-    'border-color': ui.BLACK,
-    'radius': ui.BTN_RADIUS,
-}
-
-CANCEL_BUTTON = {
-    'bg-color': ui.RED,
-    'fg-color': ui.WHITE,
-    'text-style': ui.BOLD,
-    'border-color': ui.RED,
-    'radius': ui.BTN_RADIUS,
-}
-CANCEL_BUTTON_ACTIVE = {
-    'bg-color': ui.ACTIVE_RED,
-    'fg-color': ui.WHITE,
-    'text-style': ui.BOLD,
-    'border-color': ui.ACTIVE_RED,
-    'radius': ui.BTN_RADIUS,
-}
-
-CONFIRM_BUTTON = {
-    'bg-color': ui.GREEN,
-    'fg-color': ui.WHITE,
-    'text-style': ui.BOLD,
-    'border-color': ui.GREEN,
-    'radius': ui.BTN_RADIUS,
-}
-CONFIRM_BUTTON_ACTIVE = {
-    'bg-color': ui.ACTIVE_GREEN,
-    'fg-color': ui.WHITE,
-    'text-style': ui.BOLD,
-    'border-color': ui.ACTIVE_GREEN,
-    'radius': ui.BTN_RADIUS,
-}
-
-CLEAR_BUTTON = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.WHITE,
-    'text-style': ui.NORMAL,
-    'border-color': ui.BLACK,
-    'radius': ui.BTN_RADIUS,
-}
-CLEAR_BUTTON_ACTIVE = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.GREY,
-    'text-style': ui.NORMAL,
-    'border-color': ui.BLACK,
-    'radius': ui.BTN_RADIUS,
-}
 
 BTN_CLICKED = const(1)
 
@@ -93,9 +25,9 @@ class Button(Widget):
                  absolute=False):
         self.area = area
         self.content = content
-        self.normal_style = normal_style or DEFAULT_BUTTON
-        self.active_style = active_style or DEFAULT_BUTTON_ACTIVE
-        self.disabled_style = disabled_style or DEFAULT_BUTTON_DISABLED
+        self.normal_style = normal_style or ui.BTN_DEFAULT
+        self.active_style = active_style or ui.BTN_DEFAULT_ACTIVE
+        self.disabled_style = disabled_style or ui.BTN_DEFAULT_DISABLED
         self.absolute = absolute
         self.state = BTN_DIRTY
 
@@ -114,33 +46,33 @@ class Button(Widget):
             return
         state = self.state & ~BTN_DIRTY
         if state & BTN_DISABLED:
-            style = self.disabled_style
+            s = self.disabled_style
         elif state & BTN_ACTIVE:
-            style = self.active_style
+            s = self.active_style
         else:
-            style = self.normal_style
+            s = self.normal_style
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
         display.bar_radius(ax, ay, aw, ah,
-                           style['border-color'],
+                           s['border-color'],
                            ui.BLACK,
-                           style['radius'])
+                           s['radius'])
         display.bar_radius(ax + 1, ay + 1, aw - 2, ah - 2,
-                           style['bg-color'],
-                           style['border-color'],
-                           style['radius'])
+                           s['bg-color'],
+                           s['border-color'],
+                           s['radius'])
 
         if isinstance(self.content, str):
             display.text_center(tx, ty, self.content,
-                                style['text-style'],
-                                style['fg-color'],
-                                style['bg-color'])
+                                s['text-style'],
+                                s['fg-color'],
+                                s['bg-color'])
 
         else:
             display.icon(ax, ay, self.content,
-                         style['fg-color'],
-                         style['bg-color'])
+                         s['fg-color'],
+                         s['bg-color'])
 
         self.state = state
 
@@ -150,10 +82,10 @@ class Button(Widget):
         if not self.absolute:
             pos = rotate(pos)
         if event == io.TOUCH_START:
-            if contains(pos, self.area):
+            if contains(self.area, pos):
                 self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
         elif event == io.TOUCH_MOVE and self.state & BTN_STARTED:
-            if contains(pos, self.area):
+            if contains(self.area, pos):
                 if not self.state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
             else:
@@ -161,5 +93,5 @@ class Button(Widget):
                     self.state = BTN_STARTED | BTN_DIRTY
         elif event == io.TOUCH_END and self.state & BTN_STARTED:
             self.state = BTN_DIRTY
-            if contains(pos, self.area):
+            if contains(self.area, pos):
                 return BTN_CLICKED

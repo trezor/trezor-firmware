@@ -52,7 +52,7 @@ class Swipe(ui.Widget):
                     else:
                         ui.display.backlight(self.light_target)
 
-        elif event == io.TOUCH_START and contains(pos, self.area):
+        elif event == io.TOUCH_START and contains(self.area, pos):
             self.start_time = temp_time
             self.start_pos = pos
             self.light_origin = ui.BACKLIGHT_NORMAL

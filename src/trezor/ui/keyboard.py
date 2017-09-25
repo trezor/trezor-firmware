@@ -1,20 +1,7 @@
 from trezor import ui, res, loop, io
 from trezor.crypto import bip39
 from trezor.ui import display
-from trezor.ui.button import Button, BTN_CLICKED, CLEAR_BUTTON, CLEAR_BUTTON_ACTIVE
-
-KEY_BUTTON = {
-    'bg-color': ui.BLACKISH,
-    'fg-color': ui.WHITE,
-    'text-style': ui.MONO,
-    'border-color': ui.BLACK,
-}
-KEY_BUTTON_ACTIVE = {
-    'bg-color': ui.GREY,
-    'fg-color': ui.BLACK,
-    'text-style': ui.MONO,
-    'border-color': ui.GREY,
-}
+from trezor.ui.button import Button, BTN_CLICKED
 
 
 def cell_area(i, n_x=3, n_y=3, start_x=0, start_y=40, end_x=240, end_y=240 - 48, spacing=0):
@@ -29,8 +16,8 @@ def key_buttons():
     keys = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
     # keys = [' ', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
     return [Button(cell_area(i), k,
-                   normal_style=KEY_BUTTON,
-                   active_style=KEY_BUTTON_ACTIVE) for i, k in enumerate(keys)]
+                   normal_style=ui.BTN_KEY,
+                   active_style=ui.BTN_KEY_ACTIVE) for i, k in enumerate(keys)]
 
 
 def compute_mask(text):
@@ -56,8 +43,8 @@ class KeyboardMultiTap(ui.Widget):
         self.sugg_button = Button((5, 5, 240 - 35, 30), '')
         self.bs_button = Button((240 - 35, 5, 30, 30),
                                 res.load('trezor/res/pin_close.toig'),
-                                normal_style=CLEAR_BUTTON,
-                                active_style=CLEAR_BUTTON_ACTIVE)
+                                normal_style=ui.BTN_CLEAR,
+                                active_style=ui.BTN_CLEAR_ACTIVE)
 
     def render(self):
 
@@ -172,8 +159,8 @@ class KeyboardZooming(ui.Widget):
         self.key_buttons = key_buttons()
         self.bs_button = Button((240 - 35, 5, 30, 30),
                                 res.load('trezor/res/pin_close.toig'),
-                                normal_style=CLEAR_BUTTON,
-                                active_style=CLEAR_BUTTON_ACTIVE)
+                                normal_style=ui.BTN_CLEAR,
+                                active_style=ui.BTN_CLEAR_ACTIVE)
 
     def render(self):
         self.render_input()
@@ -208,8 +195,8 @@ class KeyboardZooming(ui.Widget):
             if btn.touch(event, pos) == BTN_CLICKED:
                 self.content += btn.content
                 self.zoom_buttons = None
-                for btn in self.key_buttons:
-                    btn.taint()
+                for b in self.key_buttons:
+                    b.taint()
                 self.bs_button.taint()
                 break
 
@@ -217,8 +204,8 @@ class KeyboardZooming(ui.Widget):
         for btn in self.key_buttons:
             if btn.touch(event, pos) == BTN_CLICKED:
                 self.zoom_buttons = zoom_buttons(btn.content, self.uppercase)
-                for btn in self.zoom_buttons:
-                    btn.taint()
+                for b in self.zoom_buttons:
+                    b.taint()
                 self.bs_button.taint()
                 break
 

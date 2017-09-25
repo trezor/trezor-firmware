@@ -4,27 +4,13 @@ from trezor import loop
 from trezor import ui
 
 
-DEFAULT_LOADER = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.WHITE,
-    'icon': None,
-    'icon-fg-color': None,
-}
-DEFAULT_LOADER_ACTIVE = {
-    'bg-color': ui.BLACK,
-    'fg-color': ui.ACTIVE_GREEN,
-    'icon': None,
-    'icon-fg-color': None,
-}
-
-
 class Loader(ui.Widget):
 
     def __init__(self, target_ms=1000, normal_style=None, active_style=None):
         self.target_ms = target_ms
         self.start_ticks_ms = None
-        self.normal_style = normal_style or DEFAULT_LOADER
-        self.active_style = active_style or DEFAULT_LOADER_ACTIVE
+        self.normal_style = normal_style or ui.LDR_DEFAULT
+        self.active_style = active_style or ui.LDR_DEFAULT_ACTIVE
 
     def start(self):
         self.start_ticks_ms = utime.ticks_ms()
@@ -42,18 +28,18 @@ class Loader(ui.Widget):
     def render(self):
         progress = min(utime.ticks_ms() - self.start_ticks_ms, self.target_ms)
         if progress == self.target_ms:
-            style = self.active_style
+            s = self.active_style
         else:
-            style = self.normal_style
-        if style['icon'] is None:
+            s = self.normal_style
+        if s['icon'] is None:
             ui.display.loader(
-                progress, -8, style['fg-color'], style['bg-color'])
-        elif style['icon-fg-color'] is None:
+                progress, -8, s['fg-color'], s['bg-color'])
+        elif s['icon-fg-color'] is None:
             ui.display.loader(
-                progress, -8, style['fg-color'], style['bg-color'], style['icon'])
+                progress, -8, s['fg-color'], s['bg-color'], s['icon'])
         else:
             ui.display.loader(
-                progress, -8, style['fg-color'], style['bg-color'], style['icon'], style['icon-fg-color'])
+                progress, -8, s['fg-color'], s['bg-color'], s['icon'], s['icon-fg-color'])
 
     def __iter__(self):
         sleep = loop.sleep(1000000 // 60)  # 60 fps
