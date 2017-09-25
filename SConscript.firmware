@@ -326,6 +326,7 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     CCFLAGS_OPT='-O3',
     LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections',
+    LINKFLAGS0='-nostdlib -T embed/firmware/memory0.ld --gc-sections',
     CPPPATH=[
         '.',
         'embed/firmware',
@@ -421,10 +422,24 @@ program_elf = env.Command(
     '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
 )
 
+program0_elf = env.Command(
+    target='firmware0.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $LINKFLAGS0 $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
+)
+
 program_bin = env.Command(
     target='firmware.bin',
     source=program_elf,
     action=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '$BINCTL $TARGET -s 1 4141414141414141414141414141414141414141414141414141414141414141',
+    ], )
+
+program0_bin = env.Command(
+    target='firmware0.bin',
+    source=program0_elf,
+    action=[
+        '$OBJCOPY -O binary -j .flash -j .data $SOURCE $TARGET',
     ], )

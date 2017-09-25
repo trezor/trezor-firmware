@@ -72,6 +72,7 @@ build_bootloader: ## build bootloader
 
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware0.bin
 
 build_unix: ## build unix port
 	$(SCONS) build/unix/micropython $(UNIX_PORT_OPTS)
@@ -114,6 +115,9 @@ flash_bootloader: ## flash bootloader using st-flash
 flash_firmware: ## flash firmware using st-flash
 	st-flash write $(FIRMWARE_BUILD_DIR)/firmware.bin 0x08020000
 
+flash_firmware0: ## flash firmware0 using st-flash
+	st-flash write $(FIRMWARE_BUILD_DIR)/firmware0.bin 0x08000000
+
 flash_combine: ## flash combined image using st-flash
 	st-flash write $(FIRMWARE_BUILD_DIR)/combined.bin 0x08000000
 
@@ -144,6 +148,7 @@ sizecheck: ## check sizes of binary files
 	test 32768 -ge $(shell stat -c%s $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
 	test 65536 -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
 	test 917504 -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)
+	test 1048576 -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware0.bin)
 
 combine: ## combine boardloader + bootloader + firmware into one combined image
 	./tools/combine_firmware \
