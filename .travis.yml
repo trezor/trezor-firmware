@@ -27,6 +27,8 @@ addons:
     - libnewlib-arm-none-eabi
     - libusb-1.0-0-dev
     - libudev-dev
+    - python3
+    - python3-pip
 
 install:
     - pip3 install scons
