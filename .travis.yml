@@ -30,13 +30,16 @@ addons:
     - python3
     - python3-pip
 
+before_install:
+    - pip3 install --user --upgrade pip setuptools wheel
+
 install:
-    - pip3 install scons
-    - pip3 install ed25519 pyblake2
-    - pip3 install flake8
-    - pip3 install pytest
-    - pip3 install ecdsa mnemonic protobuf requests
-    - pip3 install git+https://github.com/trezor/python-trezor@master
+    - pip3 install --user scons
+    - pip3 install --user ed25519 pyblake2
+    - pip3 install --user flake8
+    - pip3 install --user pytest
+    - pip3 install --user ecdsa mnemonic protobuf requests
+    - pip3 install --user git+https://github.com/trezor/python-trezor@master
 
 script:
   - test "$GOAL" != "stm32" || make vendorheader
