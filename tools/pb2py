@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Converts Google's protobuf python definitions of TREZOR wire messages
 # to plain-python objects as used in TREZOR Core and python-trezor
 

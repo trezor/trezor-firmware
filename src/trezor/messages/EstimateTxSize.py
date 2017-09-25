@@ -6,6 +6,6 @@ class EstimateTxSize(p.MessageType):
     FIELDS = {
         1: ('outputs_count', p.UVarintType, 0),  # required
         2: ('inputs_count', p.UVarintType, 0),  # required
-        3: ('coin_name', p.UnicodeType, 0),  # default=u'Bitcoin'
+        3: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
     }
     MESSAGE_WIRE_TYPE = 43

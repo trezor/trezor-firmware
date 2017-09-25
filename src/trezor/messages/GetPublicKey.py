@@ -7,6 +7,6 @@ class GetPublicKey(p.MessageType):
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
         2: ('ecdsa_curve_name', p.UnicodeType, 0),
         3: ('show_display', p.BoolType, 0),
-        4: ('coin_name', p.UnicodeType, 0),  # default=u'Bitcoin'
+        4: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
     }
     MESSAGE_WIRE_TYPE = 11

@@ -9,7 +9,7 @@ class LoadDevice(p.MessageType):
         2: ('node', HDNodeType, 0),
         3: ('pin', p.UnicodeType, 0),
         4: ('passphrase_protection', p.BoolType, 0),
-        5: ('language', p.UnicodeType, 0),  # default=u'english'
+        5: ('language', p.UnicodeType, 0),  # default='english'
         6: ('label', p.UnicodeType, 0),
         7: ('skip_checksum', p.BoolType, 0),
         8: ('u2f_counter', p.UVarintType, 0),

@@ -10,7 +10,7 @@ class SimpleSignTx(p.MessageType):
         1: ('inputs', TxInputType, p.FLAG_REPEATED),
         2: ('outputs', TxOutputType, p.FLAG_REPEATED),
         3: ('transactions', TransactionType, p.FLAG_REPEATED),
-        4: ('coin_name', p.UnicodeType, 0),  # default=u'Bitcoin'
+        4: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
         5: ('version', p.UVarintType, 0),  # default=1
         6: ('lock_time', p.UVarintType, 0),  # default=0
     }

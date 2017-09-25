@@ -7,7 +7,7 @@ class RecoveryDevice(p.MessageType):
         1: ('word_count', p.UVarintType, 0),
         2: ('passphrase_protection', p.BoolType, 0),
         3: ('pin_protection', p.BoolType, 0),
-        4: ('language', p.UnicodeType, 0),  # default=u'english'
+        4: ('language', p.UnicodeType, 0),  # default='english'
         5: ('label', p.UnicodeType, 0),
         6: ('enforce_wordlist', p.BoolType, 0),
         8: ('type', p.UVarintType, 0),
