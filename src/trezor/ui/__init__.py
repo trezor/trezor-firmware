@@ -62,13 +62,13 @@ def rotate(pos: tuple) -> tuple:
         return (240 - y, x)
 
 
-def pulse(delay):
+def pulse(delay: int):
     while True:
         # normalize sin from interval -1:1 to 0:1
         yield 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
 
 
-async def alert(count=3):
+async def alert(count: int=3):
     short_sleep = loop.sleep(20000)
     long_sleep = loop.sleep(80000)
     current = display.backlight()
@@ -82,7 +82,7 @@ async def alert(count=3):
     display.backlight(current)
 
 
-async def backlight_slide(val, delay=20000):
+async def backlight_slide(val: int, delay: int=20000):
     sleep = loop.sleep(delay)
     current = display.backlight()
     for i in range(current, val, -1 if current > val else 1):
@@ -90,7 +90,18 @@ async def backlight_slide(val, delay=20000):
         await sleep
 
 
-def header(title, icon=ICON_RESET, fg=BLACK, bg=BLACK):
+def layout(f):
+    async def inner(*args, **kwargs):
+        slider = backlight_slide(BACKLIGHT_NORMAL, 4000)
+        loop.schedule(slider)
+        await f(*args, **kwargs)
+        slider.close()
+        await backlight_slide(BACKLIGHT_DIM, 4000)
+
+    return inner
+
+
+def header(title: str, icon: bytes=ICON_RESET, fg: int=BLACK, bg: int=BLACK):
     display.bar(0, 0, 240, 32, bg)
     if icon is not None:
         display.icon(8, 4, res.load(icon), fg, bg)
@@ -106,9 +117,9 @@ class Widget:
 
     def __iter__(self):
         touch = loop.select(io.TOUCH)
-        while True:
+        result = None
+        while result is None:
             self.render()
             event, *pos = yield touch
             result = self.touch(event, pos)
-            if result is not None:
-                return result
+        return result
