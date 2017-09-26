@@ -6,12 +6,12 @@ from trezor.ui import NORMAL, BOLD, MONO
 RADIUS = const(2)
 
 # backlight brightness
-BACKLIGHT_NORMAL = const(60)
+BACKLIGHT_NORMAL = const(150)
 BACKLIGHT_DIM    = const(5)
 BACKLIGHT_NONE   = const(2)
 BACKLIGHT_MAX    = const(255)
 
-# colors
+# color palette
 LIGHT_RED   = rgb(0xFF, 0x00, 0x00)
 RED         = rgb(0xE4, 0x57, 0x2E) # RED E4572E
 ACTIVE_RED  = rgb(0xA6, 0x40, 0x22) # ACTIVE DARK RED A64022
@@ -38,7 +38,11 @@ DARK_GREY   = rgb(0x3E, 0x3E, 0x3E)
 BLUE_GRAY   = rgb(0x60, 0x7D, 0x8B)
 BLACK       = rgb(0x00, 0x00, 0x00)
 WHITE       = rgb(0xFA, 0xFA, 0xFA)
-BLACKISH     = rgb(0x20, 0x20, 0x20)
+BLACKISH    = rgb(0x20, 0x20, 0x20)
+
+# common color styles
+BG = BLACK
+FG = WHITE
 
 # icons
 ICON_RESET    = 'trezor/res/header_icons/reset.toig'
@@ -47,90 +51,90 @@ ICON_RECOVERY = 'trezor/res/header_icons/recovery.toig'
 
 # buttons
 BTN_DEFAULT = {
-    'bg-color': BLACK,
-    'fg-color': WHITE,
+    'bg-color': BG,
+    'fg-color': FG,
     'text-style': NORMAL,
-    'border-color': BLACK,
+    'border-color': BG,
     'radius': RADIUS,
 }
 BTN_DEFAULT_ACTIVE = {
     'bg-color': GREY,
-    'fg-color': BLACK,
+    'fg-color': BG,
     'text-style': BOLD,
     'border-color': GREY,
     'radius': RADIUS,
 }
 BTN_DEFAULT_DISABLED = {
-    'bg-color': BLACK,
+    'bg-color': BG,
     'fg-color': GREY,
     'text-style': NORMAL,
-    'border-color': BLACK,
+    'border-color': BG,
     'radius': RADIUS,
 }
 BTN_CANCEL = {
     'bg-color': RED,
-    'fg-color': WHITE,
+    'fg-color': FG,
     'text-style': BOLD,
     'border-color': RED,
     'radius': RADIUS,
 }
 BTN_CANCEL_ACTIVE = {
     'bg-color': ACTIVE_RED,
-    'fg-color': WHITE,
+    'fg-color': FG,
     'text-style': BOLD,
     'border-color': ACTIVE_RED,
     'radius': RADIUS,
 }
 BTN_CONFIRM = {
     'bg-color': GREEN,
-    'fg-color': WHITE,
+    'fg-color': FG,
     'text-style': BOLD,
     'border-color': GREEN,
     'radius': RADIUS,
 }
 BTN_CONFIRM_ACTIVE = {
     'bg-color': ACTIVE_GREEN,
-    'fg-color': WHITE,
+    'fg-color': FG,
     'text-style': BOLD,
     'border-color': ACTIVE_GREEN,
     'radius': RADIUS,
 }
 BTN_CLEAR = {
-    'bg-color': BLACK,
-    'fg-color': WHITE,
+    'bg-color': BG,
+    'fg-color': FG,
     'text-style': NORMAL,
-    'border-color': BLACK,
+    'border-color': BG,
     'radius': RADIUS,
 }
 BTN_CLEAR_ACTIVE = {
-    'bg-color': BLACK,
+    'bg-color': BG,
     'fg-color': GREY,
     'text-style': NORMAL,
-    'border-color': BLACK,
+    'border-color': BG,
     'radius': RADIUS,
 }
 BTN_KEY = {
     'bg-color': BLACKISH,
-    'fg-color': WHITE,
+    'fg-color': FG,
     'text-style': MONO,
-    'border-color': BLACK,
+    'border-color': BG,
 }
 BTN_KEY_ACTIVE = {
     'bg-color': GREY,
-    'fg-color': BLACK,
+    'fg-color': BG,
     'text-style': MONO,
     'border-color': GREY,
 }
 
 # loader
 LDR_DEFAULT = {
-    'bg-color': BLACK,
-    'fg-color': WHITE,
+    'bg-color': BG,
+    'fg-color': FG,
     'icon': None,
     'icon-fg-color': None,
 }
 LDR_DEFAULT_ACTIVE = {
-    'bg-color': BLACK,
+    'bg-color': BG,
     'fg-color': ACTIVE_GREEN,
     'icon': None,
     'icon-fg-color': None,
