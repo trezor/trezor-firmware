@@ -25,6 +25,12 @@ ifeq ($(DISPLAY_VSYNC), 0)
 CFLAGS += -DDISPLAY_VSYNC=0
 endif
 
+ifeq ($(STLINKv21), 1)
+OPENOCD = openocd -f interface/stlink-v2-1.cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
+else
+OPENOCD = openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
+endif
+
 ## help commands:
 
 help: ## show this help
@@ -104,27 +110,30 @@ clean_cross: ## clean mpy-cross build
 
 ## flash commands:
 
-flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using st-flash
+flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using OpenOCD
 
-flash_boardloader: ## flash boardloader using st-flash
-	st-flash write $(BOARDLOADER_BUILD_DIR)/boardloader.bin 0x08000000
+flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08000000; exit"
 
-flash_bootloader: ## flash bootloader using st-flash
-	st-flash write $(BOOTLOADER_BUILD_DIR)/bootloader.bin 0x08010000
+flash_bootloader: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08010000; exit"
 
-flash_firmware: ## flash firmware using st-flash
-	st-flash write $(FIRMWARE_BUILD_DIR)/firmware.bin 0x08020000
+flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08020000; exit"
 
-flash_firmware0: ## flash firmware0 using st-flash
-	st-flash write $(FIRMWARE_BUILD_DIR)/firmware0.bin 0x08000000
+flash_firmware0: $(FIRMWARE_BUILD_DIR)/firmware0.bin ## flash firmware0 using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08000000; exit"
 
-flash_combine: ## flash combined image using st-flash
-	st-flash write $(FIRMWARE_BUILD_DIR)/combined.bin 0x08000000
+flash_combine: $(FIRMWARE_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08000000; exit"
+
+flash_erase: ## erase all sectors in flash bank 0
+	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
 
 ## openocd debug commands:
 
 openocd: ## start openocd which connects to the device
-	openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
+	$(OPENOCD)
 
 gdb: ## start remote gdb session which connects to the openocd
 	arm-none-eabi-gdb $(FIRMWARE_BUILD_DIR)/firmware.elf -ex 'target remote localhost:3333'

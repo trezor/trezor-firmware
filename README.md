@@ -25,7 +25,7 @@ cd trezor-core
 #### Debian/Ubuntu
 
 ```sh
-sudo pip install ed25519 pyblake2
+sudo -H pip install ed25519 pyblake2
 
 sudo dpkg --add-architecture i386
 sudo apt-get update
@@ -73,7 +73,7 @@ Not supported yet ...
 ### Linux
 
 For flashing firmware to blank device (without bootloader) by `make flash`,
-please install [stlink](https://github.com/texane/stlink).
+or `make flash STLINKv21=1` if using a ST-LINK/V2.1 interface.
 
 #### Debian/Ubuntu
 
