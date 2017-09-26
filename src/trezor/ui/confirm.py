@@ -1,17 +1,18 @@
 from micropython import const
 from trezor import loop
-from trezor import ui
+from trezor import ui, res
 from trezor.ui import Widget
 from trezor.ui.button import Button, BTN_CLICKED, BTN_STARTED
 from trezor.ui.loader import Loader
 
 CONFIRMED = const(1)
 CANCELLED = const(2)
-
+DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
+DEFAULT_CANCEL = res.load(ui.ICON_CLEAR)
 
 class ConfirmDialog(Widget):
 
-    def __init__(self, content, confirm='Confirm', cancel='Cancel'):
+    def __init__(self, content, confirm=DEFAULT_CONFIRM, cancel=DEFAULT_CANCEL):
         self.content = content
         if cancel is not None:
             self.confirm = Button((121, 240 - 48, 119, 48), confirm,

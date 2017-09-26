@@ -1,10 +1,12 @@
-from trezor import ui
+from trezor import ui, res
 from trezor import wire
 from trezor.utils import unimport
 
 if __debug__:
     matrix = None
 
+DEFAULT_CANCEL = res.load(ui.ICON_CLEAR)
+DEFAULT_LOCK = res.load(ui.ICON_LOCK)
 
 @unimport
 async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
@@ -26,9 +28,9 @@ async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
     def onchange():
         c = dialog.cancel
         if matrix.pin:
-            c.content = 'Clean'
+            c.content = DEFAULT_CANCEL
         else:
-            c.content = 'Cancel'
+            c.content = DEFAULT_LOCK
         c.taint()
         c.render()
 

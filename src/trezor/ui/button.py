@@ -58,7 +58,7 @@ class Button(Widget):
                            s['border-color'],
                            ui.BG,
                            s['radius'])
-        display.bar_radius(ax + 1, ay + 1, aw - 2, ah - 2,
+        display.bar_radius(ax + 4, ay + 4, aw - 8, ah - 8,
                            s['bg-color'],
                            s['border-color'],
                            s['radius'])
@@ -70,7 +70,7 @@ class Button(Widget):
                                 s['bg-color'])
 
         else:
-            display.icon(ax, ay, self.content,
+            display.icon(tx - 15, ty - 20, self.content,
                          s['fg-color'],
                          s['bg-color'])
 

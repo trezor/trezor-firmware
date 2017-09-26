@@ -48,6 +48,10 @@ FG = WHITE
 ICON_RESET    = 'trezor/res/header_icons/reset.toig'
 ICON_WIPE     = 'trezor/res/header_icons/wipe.toig'
 ICON_RECOVERY = 'trezor/res/header_icons/recovery.toig'
+ICON_CLEAR    = 'trezor/res/clear.toig'
+ICON_CONFIRM  = 'trezor/res/confirm.toig'
+ICON_LOCK     = 'trezor/res/lock.toig'
+ICON_SEND     = 'trezor/res/send.toig'
 
 # buttons
 BTN_DEFAULT = {
@@ -75,7 +79,7 @@ BTN_CANCEL = {
     'bg-color': RED,
     'fg-color': FG,
     'text-style': BOLD,
-    'border-color': RED,
+    'border-color': BG,
     'radius': RADIUS,
 }
 BTN_CANCEL_ACTIVE = {
@@ -89,7 +93,7 @@ BTN_CONFIRM = {
     'bg-color': GREEN,
     'fg-color': FG,
     'text-style': BOLD,
-    'border-color': GREEN,
+    'border-color': BG,
     'radius': RADIUS,
 }
 BTN_CONFIRM_ACTIVE = {
