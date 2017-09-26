@@ -425,9 +425,9 @@ class ConfirmContent(ui.Widget):
             header = 'U2F Register'
         else:
             header = 'U2F Authenticate'
-        ui.header(header, ui.ICON_RESET, ui.GREEN, ui.BLACK)
+        ui.header(header, ui.ICON_RESET, ui.GREEN, ui.BG)
         ui.display.image((240 - 64) // 2, 90, self.app_icon)
-        ui.display.text_center(120, 185, self.app_name, ui.MONO, ui.WHITE, ui.BLACK)
+        ui.display.text_center(120, 185, self.app_name, ui.MONO, ui.FG, ui.BG)
 
 
 _CONFIRM_STATE_TIMEOUT_MS = const(10 * 1000)

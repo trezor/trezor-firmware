@@ -37,9 +37,9 @@ async def animate_swipe():
     sleep = loop.sleep(time_delay)
     for t in ui.pulse(draw_delay):
         fg = ui.blend(ui.GREY, ui.DARK_GREY, t)
-        ui.display.bar_radius(102, 214, 36, 4, fg, ui.BLACK, 2)
-        ui.display.bar_radius(106, 222, 28, 4, fg, ui.BLACK, 2)
-        ui.display.bar_radius(110, 230, 20, 4, fg, ui.BLACK, 2)
+        ui.display.bar_radius(102, 214, 36, 4, fg, ui.BG, 2)
+        ui.display.bar_radius(106, 222, 28, 4, fg, ui.BG, 2)
+        ui.display.bar_radius(110, 230, 20, 4, fg, ui.BG, 2)
         await sleep
 
 
@@ -57,6 +57,6 @@ def render_scrollbar(page, page_count):
     for i in range(0, page_count):
         if i != page:
             ui.display.bar_radius(x, y + i * padding, size,
-                                  size, ui.DARK_GREY, ui.BLACK, 4)
+                                  size, ui.DARK_GREY, ui.BG, 4)
     ui.display.bar_radius(x, y + page * padding, size,
-                          size, ui.WHITE, ui.BLACK, 4)
+                          size, ui.FG, ui.BG, 4)

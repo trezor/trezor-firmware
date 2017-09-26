@@ -45,10 +45,10 @@ class PinMatrix(ui.Widget):
         header = '*' * len(self.pin) if self.pin else self.label
 
         # clear canvas under input line
-        display.bar(0, 0, 205, 48, ui.BLACK)
+        display.bar(0, 0, 205, 48, ui.BG)
 
         # input line with a header
-        display.text_center(120, 30, header, ui.BOLD, ui.GREY, ui.BLACK)
+        display.text_center(120, 30, header, ui.BOLD, ui.GREY, ui.BG)
 
         # pin matrix buttons
         for btn in self.pin_buttons:

@@ -35,8 +35,8 @@ async def layout_cipher_key_value(ctx, msg):
 
     ui.display.clear()
     ui.display.text(10, 30, 'CipherKeyValue',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 60, msg.key, ui.MONO, ui.WHITE, ui.BLACK)
+                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
+    ui.display.text(10, 60, msg.key, ui.MONO, ui.FG, ui.BG)
 
     node = await seed.get_root(ctx)
     node.derive_path(msg.address_n)

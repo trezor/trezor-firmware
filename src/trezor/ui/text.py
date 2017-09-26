@@ -17,9 +17,9 @@ class Text(ui.Widget):
         offset_x = TEXT_MARGIN_LEFT
         offset_y = TEXT_LINE_HEIGHT + TEXT_HEADER_HEIGHT
         style = ui.NORMAL
-        fg = ui.WHITE
-        bg = ui.BLACK
-        ui.header(self.header_text, self.header_icon, ui.GREEN, ui.BLACK)
+        fg = ui.FG
+        bg = ui.BG
+        ui.header(self.header_text, self.header_icon, ui.GREEN, ui.BG)
 
         for item in self.content:
             if isinstance(item, str):

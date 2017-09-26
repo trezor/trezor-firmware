@@ -20,9 +20,9 @@ def serialize_identity(identity):
 def display_identity(identity: str, challenge_visual: str):
     ui.display.clear()
     ui.display.text(10, 30, 'Identity:',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 60, challenge_visual, ui.MONO, ui.WHITE, ui.BLACK)
-    ui.display.text(10, 80, identity, ui.MONO, ui.WHITE, ui.BLACK)
+                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
+    ui.display.text(10, 60, challenge_visual, ui.MONO, ui.FG, ui.BG)
+    ui.display.text(10, 80, identity, ui.MONO, ui.FG, ui.BG)
 
 
 def get_identity_path(identity: str, index: int):

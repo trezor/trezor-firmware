@@ -16,8 +16,8 @@ async def layout_recovery_device(ctx, msg):
     msg = 'Please enter ' + nth(msg.word_count) + ' word'
 
     ui.display.clear()
-    ui.header('Recovery device', ui.ICON_RECOVERY, ui.BLACK, ui.LIGHT_GREEN)
-    ui.display.text(10, 74, msg, ui.BOLD, ui.WHITE, ui.BLACK)
-    ui.display.text(10, 104, 'of your mnemonic.', ui.BOLD, ui.WHITE, ui.BLACK)
+    ui.header('Recovery device', ui.ICON_RECOVERY, ui.BG, ui.LIGHT_GREEN)
+    ui.display.text(10, 74, msg, ui.BOLD, ui.FG, ui.BG)
+    ui.display.text(10, 104, 'of your mnemonic.', ui.BOLD, ui.FG, ui.BG)
 
     # TODO

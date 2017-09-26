@@ -12,8 +12,8 @@ async def layout_sign_message(ctx, msg):
 
     ui.display.clear()
     ui.display.text(10, 30, 'Signing message',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 60, msg.message, ui.MONO, ui.WHITE, ui.BLACK)
+                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
+    ui.display.text(10, 60, msg.message, ui.MONO, ui.FG, ui.BG)
 
     coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)

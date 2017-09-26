@@ -123,7 +123,7 @@ protect_by_pin = protect_by_pin_or_fail
 def _render_pin_failure(sleep_ms: int):
     ui.display.clear()
     ui.display.text_center(240, 240, 'Sleeping for %d seconds' % (sleep_ms / 1000),
-                           ui.BOLD, ui.RED, ui.BLACK)
+                           ui.BOLD, ui.RED, ui.BG)
 
 
 def _get_code_and_label(code: int):

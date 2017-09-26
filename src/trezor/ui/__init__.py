@@ -101,7 +101,7 @@ def layout(f):
     return inner
 
 
-def header(title: str, icon: bytes=ICON_RESET, fg: int=BLACK, bg: int=BLACK):
+def header(title: str, icon: bytes=ICON_RESET, fg: int=BG, bg: int=BG):
     display.bar(0, 0, 240, 32, bg)
     if icon is not None:
         display.icon(8, 4, res.load(icon), fg, bg)

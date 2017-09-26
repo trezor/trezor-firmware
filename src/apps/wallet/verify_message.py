@@ -30,8 +30,8 @@ async def layout_verify_message(ctx, msg):
 
     ui.display.clear()
     ui.display.text(10, 30, 'Verifying message',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
-    ui.display.text(10, 60, msg.message, ui.MONO, ui.WHITE, ui.BLACK)
-    ui.display.text(10, 80, msg.address, ui.MONO, ui.WHITE, ui.BLACK)
+                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
+    ui.display.text(10, 60, msg.message, ui.MONO, ui.FG, ui.BG)
+    ui.display.text(10, 80, msg.address, ui.MONO, ui.FG, ui.BG)
 
     return Success(message='Message verified')

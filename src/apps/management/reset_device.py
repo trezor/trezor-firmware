@@ -104,11 +104,11 @@ async def show_mnemonic(mnemonic):
 
 
 async def show_mnemonic_page(page, page_count, mnemonic):
-    from trezor.ui.button import Button, CONFIRM_BUTTON, CONFIRM_BUTTON_ACTIVE
+    from trezor.ui.button import Button
     from trezor.ui.scroll import render_scrollbar, animate_swipe
 
     ui.display.clear()
-    ui.header('Write down your seed', ui.ICON_RESET, ui.BLACK, ui.LIGHT_GREEN)
+    ui.header('Write down your seed', ui.ICON_RESET, ui.BG, ui.LIGHT_GREEN)
     render_scrollbar(page, page_count)
 
     for pi, (wi, word) in enumerate(mnemonic[page]):
@@ -118,14 +118,14 @@ async def show_mnemonic_page(page, page_count, mnemonic):
         if pos > 9:
             offset += 12
         ui.display.text(
-            10, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BLACK)
+            10, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BG)
         ui.display.text(
-            30 + offset, top, '%s' % word, ui.BOLD, ui.WHITE, ui.BLACK)
+            30 + offset, top, '%s' % word, ui.BOLD, ui.FG, ui.BG)
 
     if page + 1 == page_count:
         await Button(
             (0, 240 - 48, 240, 48), 'Finish',
-            normal_style=CONFIRM_BUTTON,
-            active_style=CONFIRM_BUTTON_ACTIVE)
+            normal_style=ui.BTN_CONFIRM,
+            active_style=ui.BTN_CONFIRM_ACTIVE)
     else:
         await animate_swipe()

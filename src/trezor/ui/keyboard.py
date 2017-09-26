@@ -49,29 +49,29 @@ class KeyboardMultiTap(ui.Widget):
     def render(self):
 
         # clear canvas under input line
-        display.bar(0, 0, 205, 40, ui.BLACK)
+        display.bar(0, 0, 205, 40, ui.BG)
 
         # input line
         content_width = display.text_width(self.content, ui.BOLD)
-        display.text(20, 30, self.content, ui.BOLD, ui.WHITE, ui.BLACK)
+        display.text(20, 30, self.content, ui.BOLD, ui.FG, ui.BG)
 
         # pending marker
         if self.pending_button is not None:
             pending_width = display.text_width(self.content[-1:], ui.BOLD)
             pending_x = 20 + content_width - pending_width
-            display.bar(pending_x, 33, pending_width + 2, 3, ui.WHITE)
+            display.bar(pending_x, 33, pending_width + 2, 3, ui.FG)
 
         # auto-suggest
         if self.sugg_word is not None:
             sugg_rest = self.sugg_word[len(self.content):]
             sugg_x = 20 + content_width
-            display.text(sugg_x, 30, sugg_rest, ui.BOLD, ui.GREY, ui.BLACK)
+            display.text(sugg_x, 30, sugg_rest, ui.BOLD, ui.GREY, ui.BG)
 
         # render backspace button
         if self.content:
             self.bs_button.render()
         else:
-            display.bar(240 - 48, 0, 48, 42, ui.BLACK)
+            display.bar(240 - 48, 0, 48, 42, ui.BG)
 
         # key buttons
         for btn in self.key_buttons:
@@ -173,10 +173,10 @@ class KeyboardZooming(ui.Widget):
 
     def render_input(self):
         if self.content:
-            display.bar(0, 0, 200, 40, ui.BLACK)
+            display.bar(0, 0, 200, 40, ui.BG)
         else:
-            display.bar(0, 0, 240, 40, ui.BLACK)
-        display.text(20, 30, self.content, ui.BOLD, ui.GREY, ui.BLACK)
+            display.bar(0, 0, 240, 40, ui.BG)
+        display.text(20, 30, self.content, ui.BOLD, ui.GREY, ui.BG)
         if self.content:
             self.bs_button.render()
 
