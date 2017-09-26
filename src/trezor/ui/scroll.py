@@ -1,14 +1,20 @@
 from micropython import const
 from trezor import loop, ui
-from .swipe import Swipe, SWIPE_UP, SWIPE_DOWN
+from .swipe import Swipe, SWIPE_UP, SWIPE_DOWN, SWIPE_VERTICAL
 
 
 async def change_page(page, page_count):
     while True:
-        s = await Swipe()
-        if s == SWIPE_UP and page < page_count - 1:
+        if page == 0:
+            d = SWIPE_UP
+        elif page == page_count - 1:
+            d = SWIPE_DOWN
+        else:
+            d = SWIPE_VERTICAL
+        s = await Swipe(directions=d)
+        if s == SWIPE_UP:
             return page + 1  # scroll down
-        elif s == SWIPE_DOWN and page > 0:
+        elif s == SWIPE_DOWN:
             return page - 1  # scroll up
 
 
@@ -25,7 +31,7 @@ async def paginate(render_page, page_count, page=0, *args):
 
 
 async def animate_swipe():
-    time_delay = const(30000)
+    time_delay = const(40000)
     draw_delay = const(200000)
 
     sleep = loop.sleep(time_delay)

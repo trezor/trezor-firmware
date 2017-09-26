@@ -3,10 +3,10 @@ from trezor.utils import unimport
 
 
 async def swipe_to_rotate():
-    from trezor.ui.swipe import Swipe
+    from trezor.ui.swipe import Swipe, degrees
 
-    degrees = await Swipe(absolute=True)
-    ui.display.orientation(degrees)
+    swipe = await Swipe(absolute=True)
+    ui.display.orientation(degrees(swipe))
 
 
 async def dim_screen():
