@@ -18,7 +18,10 @@ class Loader(ui.Widget):
 
     def stop(self):
         ui.display.bar(0, 32, 240, 240 - 80, ui.BG)
-        ticks_diff = utime.ticks_ms() - self.start_ticks_ms
+        if self.start_ticks_ms is not None:
+            ticks_diff = utime.ticks_ms() - self.start_ticks_ms
+        else:
+            ticks_diff = 0
         self.start_ticks_ms = None
         return ticks_diff >= self.target_ms
 
