@@ -60,7 +60,7 @@ bool copy_sdcard(void)
     display_printf("erasing flash ");
 
     // erase flash (except boardloader)
-    if (0 != flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_FIRMWARE_END, progress_callback)) {
+    if (!flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_FIRMWARE_END, progress_callback)) {
         display_printf(" failed\n");
         return false;
     }
@@ -81,21 +81,25 @@ bool copy_sdcard(void)
         return false;
     }
 
-    HAL_FLASH_Unlock();
+    if (!flash_unlock()) {
+        display_printf("could not unlock flash\n");
+        return false;
+    }
+
     for (int i = 0; i < (HEADER_SIZE + hdr.codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]) != HAL_OK) {
                 display_printf("copy failed\n");
                 sdcard_power_off();
-                HAL_FLASH_Lock();
+                flash_lock();
                 return false;
             }
         }
     }
 
     sdcard_power_off();
-    HAL_FLASH_Lock();
+    flash_lock();
 
     display_printf("done\n");
 

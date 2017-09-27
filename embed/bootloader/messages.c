@@ -240,7 +240,13 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
     if (firmware_remaining > 0 && firmware_remaining % 4 == 0) {
         // erase flash
-        flash_erase_sectors(FLASH_SECTOR_FIRMWARE_START, FLASH_SECTOR_FIRMWARE_END, progress_erase);
+        if (!flash_erase_sectors(FLASH_SECTOR_FIRMWARE_START, FLASH_SECTOR_FIRMWARE_END, progress_erase)) {
+            MSG_SEND_INIT(Failure);
+            MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+            MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
+            MSG_SEND(Failure);
+            return;
+        }
         // request new firmware
         chunk_requested = (firmware_remaining > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
@@ -284,11 +290,18 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
 
 void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
-    HAL_FLASH_Unlock();
+    if (!flash_unlock()) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+        MSG_SEND_ASSIGN_STRING(message, "Could not unlock flash");
+        MSG_SEND(Failure);
+        return;
+    }
+
     MSG_RECV_INIT(FirmwareUpload);
     MSG_RECV_CALLBACK(payload, _read_payload);
     MSG_RECV(FirmwareUpload);
-    HAL_FLASH_Lock();
+    flash_lock();
 
     if (chunk_size != chunk_requested) {
         MSG_SEND_INIT(Failure);
