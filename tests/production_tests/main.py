@@ -25,6 +25,7 @@ usb.add(usb_vcp)
 usb.open()
 
 d = ui.Display()
+otp = io.FlashOTP()
 sd = io.SDCard()
 sbu = io.SBU()
 
@@ -112,14 +113,19 @@ def test_sbu(v):
     print('OK')
 
 
-def test_otp_read(v):
-    # FIXME: really read
-    otp = '00000'
-    print('OK', otp)
+def test_otp_read():
+    data = bytearray(32)
+    otp.read(0, 0, data)
+    data = bytes(data).rstrip(b'\x00\xff').decode()
+    print('OK', data)
 
 
 def test_otp_write(v):
-    # FIXME: really write
+    if len(v) < 32:
+        v = v + '\x00' * (32 - len(v))
+    data = v[:32].encode()
+    otp.write(0, 0, data)
+    otp.lock(0)
     print('OK')
 
 
@@ -147,7 +153,7 @@ while True:
             test_sbu(line[4:])
 
         elif line.startswith('OTP READ'):
-            test_otp_read(line[8:])
+            test_otp_read()
 
         elif line.startswith('OTP WRITE '):
             test_otp_write(line[10:])
