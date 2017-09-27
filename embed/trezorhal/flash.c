@@ -84,6 +84,17 @@ bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val))
 #define FLASH_OTP_NUM_BLOCKS      16
 #define FLASH_OTP_BLOCK_SIZE      32
 
+bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
+{
+    if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
+        return false;
+    }
+    for (uint8_t i = 0; i < datalen; i++) {
+        data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i);
+    }
+    return true;
+}
+
 bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen)
 {
     if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
@@ -101,17 +112,6 @@ bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t
     }
     flash_lock();
     return ret == HAL_OK;
-}
-
-bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
-{
-    if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
-        return false;
-    }
-    for (uint8_t i = 0; i < datalen; i++) {
-        data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i);
-    }
-    return true;
 }
 
 bool flash_otp_lock(uint8_t block)

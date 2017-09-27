@@ -25,8 +25,8 @@ bool flash_lock(void);
 
 bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val));
 
-bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen);
 bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen);
+bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen);
 bool flash_otp_lock(uint8_t block);
 bool flash_otp_is_locked(uint8_t block);
 
