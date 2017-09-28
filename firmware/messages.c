@@ -320,7 +320,8 @@ void msg_read_tiny(const uint8_t *buf, int len)
 	}
 
 	const pb_field_t *fields = 0;
-	pb_istream_t stream = pb_istream_from_buffer(buf + 9, msg_size);
+	// upstream nanopb is missing const qualifier, so we have to cast :-/
+	pb_istream_t stream = pb_istream_from_buffer((uint8_t *)buf + 9, msg_size);
 
 	switch (msg_id) {
 		case MessageType_MessageType_PinMatrixAck:
