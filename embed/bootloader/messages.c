@@ -1,5 +1,3 @@
-#include STM32_HAL_H
-
 #include <string.h>
 
 #include <pb_decode.h>
@@ -279,7 +277,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
         }
         // write data
         for (int i = 0; i < BUFSIZE / sizeof(uint32_t); i++) {
-            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FIRMWARE_START + firmware_flashed + chunk_written + i * sizeof(uint32_t), buf[i]) != HAL_OK) {
+            if (!flash_write_word(FIRMWARE_START + firmware_flashed + chunk_written + i * sizeof(uint32_t), buf[i])) {
                 return false;
             }
         }

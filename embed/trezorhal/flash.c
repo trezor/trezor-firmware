@@ -45,8 +45,7 @@ void flash_set_option_bytes(void)
 bool flash_unlock(void)
 {
     HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
-                           FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
     return true;
 }
 
@@ -80,6 +79,16 @@ bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val))
     return true;
 }
 
+bool flash_write_byte(uint32_t address, uint8_t data)
+{
+    return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data);
+}
+
+bool flash_write_word(uint32_t address, uint32_t data)
+{
+    return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data);
+}
+
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
 #define FLASH_OTP_NUM_BLOCKS      16
 #define FLASH_OTP_BLOCK_SIZE      32
@@ -103,15 +112,15 @@ bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t
     if (!flash_unlock()) {
         return false;
     }
-    HAL_StatusTypeDef ret;
+    bool ret;
     for (uint8_t i = 0; i < datalen; i++) {
-        ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i, data[i]);
-        if (ret != HAL_OK) {
+        ret = flash_write_byte(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i, data[i]);
+        if (!ret) {
             break;
         }
     }
     flash_lock();
-    return ret == HAL_OK;
+    return ret;
 }
 
 bool flash_otp_lock(uint8_t block)
