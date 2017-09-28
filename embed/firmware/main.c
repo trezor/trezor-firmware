@@ -21,11 +21,21 @@
 #include "sdcard.h"
 #include "touch.h"
 
+bool firmware_standalone(void)
+{
+    extern const uint32_t _flash_start;
+    return _flash_start == 0x0800000;
+}
+
 int main(void) {
 
     periph_init();
 
     pendsv_init();
+
+    if (firmware_standalone()) {
+        display_init();
+    }
 
     display_pwm_init();
     display_orientation(0);

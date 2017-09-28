@@ -85,6 +85,9 @@ SECTIONS
     .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
+_flash_start = ORIGIN(FLASH);
+_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
+
 /* RAM extents for the garbage collector */
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 _ram_start = ORIGIN(RAM);
