@@ -35,11 +35,11 @@ int main(void) {
 
     if (firmware_standalone()) {
         display_init();
+    } else {
+        display_pwm_init();
+        display_orientation(0);
+        display_backlight(255);
     }
-
-    display_pwm_init();
-    display_orientation(0);
-    display_backlight(255);
 
     if (0 != flash_init()) {
         __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
