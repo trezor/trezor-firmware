@@ -13,6 +13,8 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	git checkout $TAG && \
 	git submodule update --init && \
 	make -C vendor/libopencm3 && \
+	make -C vendor/nanopb/generator/proto && \
+	make -C firmware/protob && \
 	make && \
 	make -C firmware sign && \
 	cp firmware/trezor.bin /$BINFILE && \
