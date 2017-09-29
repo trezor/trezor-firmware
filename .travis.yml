@@ -8,6 +8,10 @@ addons:
       - build-essential
       - gcc-arm-none-eabi
       - libnewlib-arm-none-eabi
+      - protobuf-compiler
+      - libprotobuf-dev
+      - python-protobuf
+      - python3-protobuf
 
 env:
   global:
@@ -20,9 +24,11 @@ env:
 
 script:
   - make -C vendor/libopencm3 lib/stm32/f2
+  - make -C vendor/nanopb/generator/proto
   - make
   - make -C bootloader
   - make -C fastflash
+  - make -C firmware/protob
   - make -C firmware
   - make -C demo
 

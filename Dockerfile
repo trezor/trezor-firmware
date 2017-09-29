@@ -9,4 +9,4 @@ RUN apt-get update
 # install build tools and dependencies
 
 RUN apt-get install -y build-essential git python python-ecdsa gcc-arm-none-eabi
-RUN apt-get install protobuf-compiler libprotobuf-dev python-protobuf python3-protobuf
+RUN apt-get install -y protobuf-compiler libprotobuf-dev python-protobuf python3-protobuf
