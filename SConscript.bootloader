@@ -40,7 +40,6 @@ SOURCE_MOD += [
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/lib/libc/string0.c',
-    'vendor/micropython/ports/stm32/startup_stm32.S',
 ]
 
 SOURCE_STMHAL = [
@@ -77,6 +76,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_BOOTLOADER = [
+    'embed/bootloader/startup.S',
     'embed/bootloader/header.S',
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',

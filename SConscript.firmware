@@ -225,7 +225,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/ports/stm32/gccollect.c',
     'vendor/micropython/ports/stm32/gchelper.s',
     'vendor/micropython/ports/stm32/pendsv.c',
-    'vendor/micropython/ports/stm32/startup_stm32.S',
     'vendor/micropython/ports/stm32/systick.c',
 ]
 
@@ -268,6 +267,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_FIRMWARE = [
+    'embed/firmware/startup.S',
     'embed/firmware/header.S',
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
