@@ -34,6 +34,7 @@ extern const BITMAP bmp_logo64_empty;
 extern const BITMAP bmp_u2f_bitbucket;
 extern const BITMAP bmp_u2f_dropbox;
 extern const BITMAP bmp_u2f_fastmail;
+extern const BITMAP bmp_u2f_gandi;
 extern const BITMAP bmp_u2f_github;
 extern const BITMAP bmp_u2f_gitlab;
 extern const BITMAP bmp_u2f_google;
