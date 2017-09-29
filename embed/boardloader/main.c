@@ -1,5 +1,3 @@
-#include STM32_HAL_H
-
 #include <string.h>
 
 #include "common.h"

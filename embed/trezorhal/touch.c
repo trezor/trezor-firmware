@@ -79,6 +79,18 @@ uint32_t touch_read(void) {
     return 0;
 }
 
+void touch_click(void)
+{
+    // flush touch events if any
+    while (touch_read()) { }
+    // wait for TOUCH_START
+    while ((touch_read() & TOUCH_START) == 0) { }
+    // wait for TOUCH_END
+    while ((touch_read() & TOUCH_END) == 0) { }
+    // flush touch events if any
+    while (touch_read()) { }
+}
+
 void I2C1_EV_IRQHandler(void) {
     HAL_I2C_EV_IRQHandler(&i2c_handle);
 }

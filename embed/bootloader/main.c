@@ -1,5 +1,3 @@
-#include STM32_HAL_H
-
 #include <string.h>
 #include <sys/types.h>
 #include <assert.h>
@@ -82,7 +80,7 @@ void check_and_jump(void)
         display_printf("valid firmware signature\n");
 
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
-        HAL_Delay(1000); // TODO: remove?
+        touch_click();
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
     } else {
