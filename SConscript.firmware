@@ -434,7 +434,7 @@ program_bin = env.Command(
     source=program_elf,
     action=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
-        '$BINCTL $TARGET -s 1 4141414141414141414141414141414141414141414141414141414141414141',
+        '$BINCTL $TARGET -s 1 4747474747474747474747474747474747474747474747474747474747474747',
     ], )
 
 program0_bin = env.Command(

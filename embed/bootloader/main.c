@@ -47,6 +47,14 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     display_refresh();
 }
 
+const uint8_t BOOTLOADER_KEY_M = 1;
+const uint8_t BOOTLOADER_KEY_N = 3;
+static const uint8_t * const BOOTLOADER_KEYS[] = {
+    (const uint8_t *)"\xd7\x59\x79\x3b\xbc\x13\xa2\x81\x9a\x82\x7c\x76\xad\xb6\xfb\xa8\xa4\x9a\xee\x00\x7f\x49\xf2\xd0\x99\x2d\x99\xb8\x25\xad\x2c\x48",
+    (const uint8_t *)"\x63\x55\x69\x1c\x17\x8a\x8f\xf9\x10\x07\xa7\x47\x8a\xfb\x95\x5e\xf7\x35\x2c\x63\xe7\xb2\x57\x03\x98\x4c\xf7\x8b\x26\xe2\x1a\x56",
+    (const uint8_t *)"\xee\x93\xa4\xf6\x6f\x8d\x16\xb8\x19\xbb\x9b\xeb\x9f\xfc\xcd\xfc\xdc\x14\x12\xe8\x7f\xee\x6a\x32\x4c\x2a\x99\xa1\xe0\xe6\x71\x48",
+};
+
 void check_and_jump(void)
 {
     display_printf("checking vendor header\n");
@@ -59,7 +67,7 @@ void check_and_jump(void)
         return;
     }
 
-    if (vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr)) {
+    if (vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS)) {
         display_printf("valid vendor header signature\n");
     } else {
         display_printf("invalid vendor header signature\n");
@@ -76,7 +84,7 @@ void check_and_jump(void)
         return;
     }
 
-    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, &vhdr)) {
+    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub)) {
         display_printf("valid firmware signature\n");
 
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);

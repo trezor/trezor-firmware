@@ -104,6 +104,14 @@ bool copy_sdcard(void)
     return true;
 }
 
+const uint8_t BOARDLOADER_KEY_M = 1;
+const uint8_t BOARDLOADER_KEY_N = 3;
+static const uint8_t * const BOARDLOADER_KEYS[] = {
+    (const uint8_t *)"\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d",
+    (const uint8_t *)"\x21\x52\xf8\xd1\x9b\x79\x1d\x24\x45\x32\x42\xe1\x5f\x2e\xab\x6c\xb7\xcf\xfa\x7b\x6a\x5e\xd3\x00\x97\x96\x0e\x06\x98\x81\xdb\x12",
+    (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
+};
+
 void check_and_jump(void)
 {
     display_printf("checking bootloader\n");
@@ -117,7 +125,7 @@ void check_and_jump(void)
         return;
     }
 
-    if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, NULL)) {
+    if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS)) {
         display_printf("valid bootloader signature\n");
         display_printf("JUMP!\n");
         jump_to(BOOTLOADER_START + HEADER_SIZE);

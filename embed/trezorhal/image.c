@@ -6,49 +6,27 @@
 #include "common.h"
 #include "image.h"
 
-static const uint8_t * const SATOSHILABS_PUBKEYS[] = {
-    (const uint8_t *)"\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d",
-    (const uint8_t *)"\x21\x52\xf8\xd1\x9b\x79\x1d\x24\x45\x32\x42\xe1\x5f\x2e\xab\x6c\xb7\xcf\xfa\x7b\x6a\x5e\xd3\x00\x97\x96\x0e\x06\x98\x81\xdb\x12",
-    (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
-    (const uint8_t *)"\xd7\x59\x79\x3b\xbc\x13\xa2\x81\x9a\x82\x7c\x76\xad\xb6\xfb\xa8\xa4\x9a\xee\x00\x7f\x49\xf2\xd0\x99\x2d\x99\xb8\x25\xad\x2c\x48",
-    (const uint8_t *)"\x63\x55\x69\x1c\x17\x8a\x8f\xf9\x10\x07\xa7\x47\x8a\xfb\x95\x5e\xf7\x35\x2c\x63\xe7\xb2\x57\x03\x98\x4c\xf7\x8b\x26\xe2\x1a\x56",
-};
-
-static bool compute_pubkey(const vendor_header *vhdr, uint8_t sigmask, ed25519_public_key res)
+static bool compute_pubkey(uint8_t sig_m, uint8_t sig_n, const uint8_t * const *pub, uint8_t sigmask, ed25519_public_key res)
 {
-    uint8_t vsig_m;
-    uint8_t vsig_n;
-    const uint8_t * const *vpub;
+    if (!sig_m || !sig_n) return false;
+    if (sig_m > sig_n) return false;
 
-    if (vhdr) {
-        vsig_m = vhdr->vsig_m;
-        vsig_n = vhdr->vsig_n;
-        vpub = vhdr->vpub;
-    } else {
-        vsig_m = 1;
-        vsig_n = 5;
-        vpub = SATOSHILABS_PUBKEYS;
-    }
+    // discard bits higher than sig_n
+    sigmask &= ((1 << sig_n) - 1);
 
-    if (!vsig_m || !vsig_n) return false;
-    if (vsig_m > vsig_n) return false;
+    // remove if number of set bits in sigmask is not equal to sig_m
+    if (__builtin_popcount(sigmask) != sig_m) return false;
 
-    // discard bits higher than vsig_n
-    sigmask &= ((1 << vsig_n) - 1);
-
-    // remove if number of set bits in sigmask is not equal to vsig_m
-    if (__builtin_popcount(sigmask) != vsig_m) return false;
-
-    ed25519_public_key keys[vsig_m];
+    ed25519_public_key keys[sig_m];
     int j = 0;
-    for (int i = 0; i < vsig_n; i++) {
+    for (int i = 0; i < sig_n; i++) {
         if ((1 << i) & sigmask) {
-            memcpy(keys[j], vpub[i], 32);
+            memcpy(keys[j], pub[i], 32);
             j++;
         }
     }
 
-    return 0 == ed25519_cosi_combine_publickeys(res, keys, vsig_m);
+    return 0 == ed25519_cosi_combine_publickeys(res, keys, sig_m);
 }
 
 bool image_parse_header(const uint8_t *data, uint32_t magic, uint32_t maxsize, image_header *hdr)
@@ -83,7 +61,7 @@ bool image_parse_header(const uint8_t *data, uint32_t magic, uint32_t maxsize, i
     return true;
 }
 
-bool image_check_signature(const uint8_t *data, const image_header *hdr, const vendor_header *vhdr)
+bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys)
 {
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
@@ -96,7 +74,7 @@ bool image_check_signature(const uint8_t *data, const image_header *hdr, const v
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
-    if (!compute_pubkey(vhdr, hdr->sigmask, pub)) return false;
+    if (!compute_pubkey(key_m, key_n, keys, hdr->sigmask, pub)) return false;
 
     return 0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)hdr->sig);
 }
@@ -149,7 +127,7 @@ bool vendor_parse_header(const uint8_t *data, vendor_header *vhdr)
     return true;
 }
 
-bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr)
+bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys)
 {
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
@@ -161,7 +139,7 @@ bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr)
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
-    if (!compute_pubkey(NULL, vhdr->sigmask, pub)) return false;
+    if (!compute_pubkey(key_m, key_n, keys, vhdr->sigmask, pub)) return false;
 
     return 0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)vhdr->sig);
 }
