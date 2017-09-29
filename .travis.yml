@@ -27,6 +27,7 @@ script:
   - make
   - make -C bootloader
   - make -C fastflash
+  - sed -i '/, deprecated = true/d' firmware/protob/messages.proto # protobuf 2.5 compatibility :-/
   - make -C firmware/protob
   - make -C firmware
   - make -C demo

@@ -25,7 +25,7 @@ def handle_message(message, extension):
     bootloader = options.Extensions[wire_bootloader]
     tiny = options.Extensions[wire_tiny] and direction == "i"
 
-    if options.deprecated:
+    if getattr(options, 'deprecated', None):
         return '\t// Message %s is deprecated' % short_name
     if bootloader:
         return '\t// Message %s is used in bootloader mode only' % short_name
