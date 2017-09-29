@@ -9,5 +9,5 @@ knownapps = {
     hashlib.sha256(b'https://www.gstatic.com/securitykey/origins.json').digest():      'Google',
     hashlib.sha256(b'https://slushpool.com/static/security/u2f.json').digest():        'Slush Pool',
     hashlib.sha256(b'https://demo.yubico.com').digest():                               'Yubico U2F Demo',
-    hashlib.sha256(b'https://account.gandi.net/api/u2f/trusted_facets.json').digest(): 'Gandi.net',
+    hashlib.sha256(b'https://account.gandi.net/api/u2f/trusted_facets.json').digest(): 'Gandi',
 }
