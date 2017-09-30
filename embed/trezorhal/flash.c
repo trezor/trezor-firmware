@@ -112,7 +112,7 @@ bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t
     if (!flash_unlock()) {
         return false;
     }
-    bool ret;
+    bool ret = false;
     for (uint8_t i = 0; i < datalen; i++) {
         ret = flash_write_byte(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i, data[i]);
         if (!ret) {
