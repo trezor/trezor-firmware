@@ -95,3 +95,18 @@ bootloader.o: ../fastflash/bootloader.bin
 		--redefine-sym _binary_$(shell echo -n "$<" | tr -c "[:alnum:]" "_")_size=__bootloader_size__ \
 		--rename-section .data=.rodata \
 		$< $@
+
+# ensure header files are generated prior to compiling sources
+coins.c crypto.c fsm.c transaction.c: coins_count.h
+coins.c: coins_array.h
+
+#################
+# Code Generation
+coins_count.h: coins-gen.py coins.json
+	./$< count > $@
+
+coins_array.h: coins-gen.py coins.json
+	./$< array > $@
+
+clean::
+	rm -f coins_count.h coins_array.h

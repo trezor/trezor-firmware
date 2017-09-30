@@ -1,9 +1,14 @@
-#!/usr/bin/env python3
-import json
+#!/usr/bin/env python2
+from __future__ import print_function
+import json, sys
 
-coins_json = json.load(open('../vendor/trezor-common/coins.json', 'r'))
+coins_json = json.load(open('coins.json', 'r'))
 
 coins_stable, coins_debug = [], []
+
+if len(sys.argv) != 2 or sys.argv[1] not in ("count", "array"):
+    print("usage: coins-gen.py [count|array]\n", file=sys.stderr)
+    sys.exit(1)
 
 
 def get_fields(coin):
@@ -59,20 +64,23 @@ for coin in coins_json:
 justify_width(coins_stable)
 justify_width(coins_debug)
 
-for row in coins_stable:
-    print('\t{' + ' '.join(row) + ' },')
+print("// THIS IS A GENERATED FILE - DO NOT HAND EDIT\n\n")
 
-print('#if DEBUG_LINK')
+if sys.argv[1] == "array":
+    for row in coins_stable:
+        print('\t{' + ' '.join(row) + ' },')
 
-for row in coins_debug:
-    print('\t{' + ' '.join(row) + ' },')
+    print('#if DEBUG_LINK')
 
-print('#endif')
+    for row in coins_debug:
+        print('\t{' + ' '.join(row) + ' },')
 
-print('-' * 32)
+    print('#endif')
 
-print('#if DEBUG_LINK')
-print('#define COINS_COUNT %d' % (len(coins_stable) + len(coins_debug)))
-print('#else')
-print('#define COINS_COUNT %d' % (len(coins_stable)))
-print('#endif')
+
+if sys.argv[1] == "count":
+    print('#if DEBUG_LINK')
+    print('#define COINS_COUNT %d' % (len(coins_stable) + len(coins_debug)))
+    print('#else')
+    print('#define COINS_COUNT %d' % (len(coins_stable)))
+    print('#endif')

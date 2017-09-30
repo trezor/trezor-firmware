@@ -21,13 +21,8 @@
 #define __COINS_H__
 
 #include "messages.pb.h"
-#include "types.pb.h"
 
-#if DEBUG_LINK
-#define COINS_COUNT 10
-#else
-#define COINS_COUNT 8
-#endif
+#include "coins_count.h"
 
 _Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
 
