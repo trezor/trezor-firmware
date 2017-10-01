@@ -14,7 +14,7 @@ fields = [
     'segwit',
 ]
 
-coins = json.load(open('../../trezor-common/coins.json', 'r'))
+coins = json.load(open('../../../trezor-common/coins.json', 'r'))
 
 print('COINS = [')
 for c in coins:

@@ -3,8 +3,10 @@
 import binascii
 import ed25519raw
 
+
 def hex_to_c(s):
     return '"\\x' + '\\x'.join([s[i:i + 2] for i in range(0, len(s), 2)]) + '"'
+
 
 for c in 'ABCDEFGHI':
     print()

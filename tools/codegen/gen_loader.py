@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+
+# script used to generate /embed/extmod/modtrezorui/loader.h
+
 import math
 import sys
 
@@ -15,7 +18,7 @@ with open('loader.h', 'wt') as f:
             c = {}
             for i in [5, 15]:
                 if (inner - 0.5 <= d) and (d <= inner + 0.5):
-                    c[i] = 15 * (d - inner + 0.5);
+                    c[i] = 15 * (d - inner + 0.5)
                 elif (inner + 0.5 <= d) and (d <= inner + 1.5):
                     c[i] = 15
                 elif (inner + 1.5 <= d) and (d <= inner + 2.5):

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+
+# script used to generate /embed/extmod/modtrezorui/font_*_*.c
+
+
 import freetype
 
 MIN_GLYPH = ord(' ')
