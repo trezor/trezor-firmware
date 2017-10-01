@@ -33,8 +33,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image(60, 32, w, h, vimg + 12, datalen);
-// FIXME: uncomment next line
-//    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
         (int)(fw_version & 0xFF),
@@ -42,8 +41,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
         (int)((fw_version >> 16) & 0xFF),
         (int)((fw_version >> 24) & 0xFF)
     );
-// FIXME: uncomment next line
-//    display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
+    display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY128, COLOR_BLACK);
     display_refresh();
 }
 

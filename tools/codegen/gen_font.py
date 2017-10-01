@@ -8,6 +8,8 @@ import freetype
 MIN_GLYPH = ord(' ')
 MAX_GLYPH = ord('~')
 
+FONT_BPP = 2
+
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
 
@@ -40,9 +42,14 @@ def process_face(name, style, size):
             f.write('/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d' % (c, name, style, size, i, bitmap.width, bitmap.rows, metrics.horiAdvance // 64, metrics.horiBearingX // 64, metrics.horiBearingY // 64))
             buf = list(bitmap.buffer)
             if len(buf) > 0:
-                if len(buf) % 2 > 0:
-                    buf.append(0)
-                buf = [((a & 0xF0) | (b >> 4)) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)]]
+                if FONT_BPP == 2:
+                    for _ in range(4 - len(buf) % 4):
+                        buf.append(0)
+                    buf = [((a & 0xC0) | ((b & 0xC0) >> 2) | ((c & 0xC0) >> 4) | ((d & 0xC0) >> 6)) for a, b, c, d in [buf[i:i + 4] for i in range(0, len(buf), 4)]]
+                elif FONT_BPP == 4:
+                    if len(buf) % 2 > 0:
+                        buf.append(0)
+                    buf = [((a & 0xF0) | (b >> 4)) for a, b in [buf[i:i + 2] for i in range(0, len(buf), 2)]]
                 f.write(', ' + ', '.join(['%d' % x for x in buf]))
             f.write(' };\n')
         f.write('\nconst uint8_t * const Font_%s_%s_%d[%d + 1 - %d] = {\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))

@@ -443,12 +443,13 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
                     int rx = i - sx;
                     int ry = j - sy;
                     int a = rx + ry * w;
-                    uint8_t c;
-                    if (a % 2 == 0) {
-                        c = g[5 + a/2] >> 4;
-                    } else {
-                        c = g[5 + a/2] & 0x0F;
-                    }
+                    #if FONT_BPP == 2
+                    uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
+                    #elif FONT_BPP == 4
+                    uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+                    #else
+                    #error Unsupported FONT_BPP value
+                    #endif
                     DATA(colortable[c] >> 8);
                     DATA(colortable[c] & 0xFF);
                 }

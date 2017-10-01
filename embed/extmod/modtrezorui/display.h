@@ -17,6 +17,8 @@
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
 
+#define FONT_BPP    2
+
 #ifndef TREZOR_FONT_MONO_DISABLE
 #define FONT_MONO   0
 #endif
