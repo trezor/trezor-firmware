@@ -47,7 +47,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     display_refresh();
 }
 
-const uint8_t BOOTLOADER_KEY_M = 1;
+const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
 static const uint8_t * const BOOTLOADER_KEYS[] = {
     (const uint8_t *)"\xd7\x59\x79\x3b\xbc\x13\xa2\x81\x9a\x82\x7c\x76\xad\xb6\xfb\xa8\xa4\x9a\xee\x00\x7f\x49\xf2\xd0\x99\x2d\x99\xb8\x25\xad\x2c\x48",

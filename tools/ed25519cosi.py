@@ -220,17 +220,17 @@ def test(data):
         sks.append(seckey)
         pks.append(pubkey)
         ctr = 0
-        (r, R) = get_nonce(seckey, digest, ctr)
+        r, R = get_nonce(seckey, digest, ctr)
         print('Local nonce:  %s' % hex(ed25519raw.encodeint(r)))
         print('Local commit: %s' % hex(R))
         nonces.append(r)
         commits.append(R)
 
-    globalPk = combine_keys([pks[i] for i in keyset])
-    globalR = combine_keys([commits[i] for i in keyset])
+    global_pk = combine_keys([pks[i] for i in keyset])
+    global_R = combine_keys([commits[i] for i in keyset])
     print('-----------------')
-    print('Global pubkey: %s' % hex(globalPk))
-    print('Global commit: %s' % hex(globalR))
+    print('Global pubkey: %s' % hex(global_pk))
+    print('Global commit: %s' % hex(global_R))
     print('-----------------')
 
     for i in range(0, N):
@@ -240,17 +240,15 @@ def test(data):
         R = commits[i]
         h = ed25519raw.H(seckey)
         b = ed25519raw.b
-        a = 2**(b - 2) + sum(2**i * ed25519raw.bit(h, i)
-                             for i in range(3, b - 2))
-        S = (r + ed25519raw.Hint(globalR + globalPk + digest) * a) % ed25519raw.l
+        a = 2**(b - 2) + sum(2**i * ed25519raw.bit(h, i) for i in range(3, b - 2))
+        S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
         print('Local sig %d: %s' % (i + 1, hex(ed25519raw.encodeint(S))))
-        commits.append(R)
         sigs.append(ed25519raw.encodeint(S))
 
     print('-----------------')
-    sig = combine_sig(globalR, [sigs[i] for i in keyset])
+    sig = combine_sig(global_R, [sigs[i] for i in keyset])
     print('Global sig: %s' % hex(sig))
-    ed25519raw.checkvalid(sig, digest, globalPk)
+    ed25519raw.checkvalid(sig, digest, global_pk)
     print('Valid Signature!')
 
 

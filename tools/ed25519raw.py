@@ -14,7 +14,7 @@ def H(m):
 
 def expmod(b, e, m):
     if e < 0:
-        raise Exception("negative exponent")
+        raise Exception('negative exponent')
     if e == 0:
         return 1
     t = expmod(b, e >> 1, m)**2 % m
@@ -120,18 +120,18 @@ def decodepoint(s):
         x = q - x
     P = [x, y]
     if not isoncurve(P):
-        raise Exception("decoding point that is not on curve")
+        raise Exception('decoding point that is not on curve')
     return P
 
 
 def checkvalid(s, m, pk):
     if len(s) != b >> 2:
-        raise Exception("signature length is wrong")
+        raise Exception('signature length is wrong')
     if len(pk) != b >> 3:
-        raise Exception("public-key length is wrong")
+        raise Exception('public-key length is wrong')
     R = decodepoint(s[0:b >> 3])
     A = decodepoint(pk)
     S = decodeint(s[b >> 3:b >> 2])
     h = Hint(encodepoint(R) + pk + m)
     if scalarmult(B, S) != edwards(R, scalarmult(A, h)):
-        raise Exception("signature does not pass verification")
+        raise Exception('signature does not pass verification')

@@ -8,16 +8,36 @@ import binascii
 import pyblake2
 
 import ed25519raw
+import ed25519cosi
 
 
 def sign_data(seckeys, data):
+    digest = pyblake2.blake2s(data).digest()
     if len(seckeys) == 1:
         sk = seckeys[0]
         pk = ed25519raw.publickey(sk)
-        digest = pyblake2.blake2s(data).digest()
         return ed25519raw.signature(digest, sk, pk)
     else:
-        raise NotImplementedError
+        pubkeys = [ed25519raw.publickey(sk) for sk in seckeys]
+        ctr = 0
+        nonces = []
+        commits = []
+        for sk in seckeys:
+            r, R = ed25519cosi.get_nonce(sk, digest, ctr)
+            nonces.append(r)
+            commits.append(R)
+        global_pk = ed25519cosi.combine_keys(pubkeys)
+        global_R = ed25519cosi.combine_keys(commits)
+        sigs = []
+        for sk, r, R in zip(seckeys, nonces, commits):
+            h = ed25519raw.H(sk)
+            b = ed25519raw.b
+            a = 2**(b - 2) + sum(2**i * ed25519raw.bit(h, i) for i in range(3, b - 2))
+            S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
+            sigs.append(ed25519raw.encodeint(S))
+        sig = ed25519cosi.combine_sig(global_R, sigs)
+        ed25519raw.checkvalid(sig, digest, global_pk)
+        return sig
 
 
 def format_sigmask(sigmask):
@@ -186,6 +206,14 @@ class VendorHeader(object):
         return header
 
     def sign(self, sigmask, seckeys):
+        # check whether provided arguments match vsig_m/vsig_n
+        if len(seckeys) != self.vsig_m:
+            raise Exception('invalid number of signatures (vsig_m expected %d, got %d)' % (self.vsig_m, len(seckeys)))
+        if sigmask >= (1 << self.vsig_n):
+            raise Exception('signature index is higher than vsig_n (%d)' % self.vsig_n)
+        if bin(sigmask).count('1') != self.vsig_m:
+            raise Exception('invalid number of indexes (vsig_m expected %d, got %d)' % (self.vsig_m, bin(sigmask).count('1')))
+        # sign
         header = self.serialize_header(sig=False)
         self.sigmask = sigmask
         self.sig = sign_data(seckeys, header)
@@ -224,7 +252,7 @@ def main():
         sigmask = 0
         if ':' in sys.argv[3]:
             for idx in sys.argv[3].split(':'):
-                sigmask = 1 << (int(idx) - 1)
+                sigmask |= 1 << (int(idx) - 1)
         else:
             sigmask = 1 << (int(sys.argv[3]) - 1)
         if ':' in sys.argv[4]:
