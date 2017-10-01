@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 import binascii
 import ed25519raw
@@ -201,8 +200,7 @@ def main():
         usage()
 
 
-def test():
-    data = sys.argv[1].encode()
+def test(data):
     N = 3
     keyset = [0, 2]
 
@@ -257,4 +255,7 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    if len(sys.argv) > 1:
+        test(data=sys.argv[1].encode())
+    else:
+        test(data=b'test')

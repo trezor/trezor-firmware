@@ -35,7 +35,7 @@ before_install:
 
 install:
     - pip3 install --user scons
-    - pip3 install --user ed25519 pyblake2
+    - pip3 install --user pyblake2
     - pip3 install --user flake8
     - pip3 install --user pytest
     - pip3 install --user ecdsa mnemonic protobuf requests

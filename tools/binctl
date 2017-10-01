@@ -5,14 +5,19 @@ from __future__ import print_function
 import sys
 import struct
 import binascii
-import ed25519
 import pyblake2
 
+import ed25519raw
 
-def sign_data(seckey, data):
-    signkey = ed25519.SigningKey(seckey)
-    digest = pyblake2.blake2s(data).digest()
-    return signkey.sign(digest)
+
+def sign_data(seckeys, data):
+    if len(seckeys) == 1:
+        sk = seckeys[0]
+        pk = ed25519raw.publickey(sk)
+        digest = pyblake2.blake2s(data).digest()
+        return ed25519raw.signature(digest, sk, pk)
+    else:
+        raise NotImplementedError
 
 
 def format_sigmask(sigmask):
@@ -79,12 +84,12 @@ class BinImage(object):
         assert len(header) == self.hdrlen
         return header
 
-    def sign(self, sigmask, seckey):
+    def sign(self, sigmask, seckeys):
         header = self.serialize_header(sig=False)
         data = header + self.code
         assert len(data) == self.hdrlen + self.codelen
         self.sigmask = sigmask
-        self.sig = sign_data(seckey, data)
+        self.sig = sign_data(seckeys, data)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
@@ -180,10 +185,10 @@ class VendorHeader(object):
         assert len(header) == self.hdrlen
         return header
 
-    def sign(self, sigmask, seckey):
+    def sign(self, sigmask, seckeys):
         header = self.serialize_header(sig=False)
         self.sigmask = sigmask
-        self.sig = sign_data(seckey, header)
+        self.sig = sign_data(seckeys, header)
 
     def write(self, filename):
         with open(filename, 'wb') as f:
@@ -216,9 +221,17 @@ def main():
     sign = len(sys.argv) > 2 and sys.argv[2] == '-s'
     b = binopen(fn)
     if sign:
-        sigmask = 1 << (int(sys.argv[3]) - 1)
-        seckey = binascii.unhexlify(sys.argv[4])
-        b.sign(sigmask, seckey)
+        sigmask = 0
+        if ':' in sys.argv[3]:
+            for idx in sys.argv[3].split(':'):
+                sigmask = 1 << (int(idx) - 1)
+        else:
+            sigmask = 1 << (int(sys.argv[3]) - 1)
+        if ':' in sys.argv[4]:
+            seckeys = [binascii.unhexlify(h) for h in sys.argv[4].split(':')]
+        else:
+            seckeys = [binascii.unhexlify(sys.argv[4])]
+        b.sign(sigmask, seckeys)
         print()
         b.write(fn)
     b.print()
