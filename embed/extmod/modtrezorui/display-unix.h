@@ -12,11 +12,11 @@
 
 #define DISPLAY_BORDER 16
 
-static SDL_Renderer *RENDERER = 0;
-static SDL_Surface  *BUFFER   = 0;
-static SDL_Texture  *TEXTURE  = 0;
-static int DATAODD = 0;
-static int POSX, POSY, SX, SY, EX, EY = 0;
+static SDL_Renderer *RENDERER;
+static SDL_Surface *BUFFER;
+static SDL_Texture *TEXTURE;
+static int DATAODD;
+static int POSX, POSY, SX, SY, EX, EY;
 
 void DATA(uint8_t x) {
     if (!RENDERER) {
