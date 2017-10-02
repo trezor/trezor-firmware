@@ -53,7 +53,7 @@ def unschedule(task):
 
 
 def pause(task, iface):
-    tasks = _paused.get(iface, None)
+    tasks = _paused.get(iface)
     if tasks is None:
         tasks = _paused[iface] = []
     tasks.append(task)
@@ -94,9 +94,11 @@ def run():
 
         if io.poll(_paused, msg_entry, delay):
             # message received, run tasks paused on the interface
-            msg_tasks = _paused.pop(msg_entry[0], ())
-            for task in msg_tasks:
-                _step(task, msg_entry[1])
+            msg_tasks = _paused.get(msg_entry[0])
+            if msg_tasks is not None:
+                for task in msg_tasks:
+                    _step(task, msg_entry[1])
+                msg_tasks.clear()
         else:
             # timeout occurred, run the first scheduled task
             if _queue:
