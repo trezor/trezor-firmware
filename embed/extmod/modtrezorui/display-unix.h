@@ -19,6 +19,9 @@ static int DATAODD = 0;
 static int POSX, POSY, SX, SY, EX, EY = 0;
 
 void DATA(uint8_t x) {
+    if (!RENDERER) {
+        display_init();
+    }
     if (POSX <= EX && POSY <= EY) {
         ((uint8_t *)BUFFER->pixels)[POSX * 2 + POSY * BUFFER->pitch + (DATAODD ^ 1)] = x;
     }
@@ -65,6 +68,9 @@ int display_init(void)
 static void display_set_window_raw(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
 #ifndef TREZOR_NOUI
+    if (!RENDERER) {
+        display_init();
+    }
     SX = x0; SY = y0;
     EX = x1; EY = y1;
     POSX = SX; POSY = SY;
@@ -80,6 +86,9 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 void display_refresh(void)
 {
 #ifndef TREZOR_NOUI
+    if (!RENDERER) {
+        display_init();
+    }
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
@@ -95,6 +104,9 @@ static void display_set_orientation(int degrees)
 static void display_set_backlight(int val)
 {
 #ifndef TREZOR_NOUI
+    if (!RENDERER) {
+        display_init();
+    }
     SDL_SetRenderDrawColor(RENDERER, val, val, val, 255);
 #endif
 }
@@ -102,6 +114,9 @@ static void display_set_backlight(int val)
 void display_save(const char *filename)
 {
 #ifndef TREZOR_NOUI
+    if (!RENDERER) {
+        display_init();
+    }
     IMG_SavePNG(BUFFER, filename);
 #endif
 }
