@@ -61,6 +61,9 @@ int display_init(void)
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
     SDL_SetTextureAlphaMod(TEXTURE, 0);
+
+    DISPLAY_BACKLIGHT = 0;
+    DISPLAY_ORIENTATION = 0;
 #endif
     return 0;
 }
