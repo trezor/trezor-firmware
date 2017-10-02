@@ -54,6 +54,16 @@ sudo zypper install scons libSDL2-devel-32bit libSDL2_image-devel-32bit
 make build_unix
 ```
 
+#### Arch
+
+```sh
+sudo pip install pyblake2
+
+sudo pacman -S gcc-multilib scons lib32-sdl2 lib32-sdl2_image
+
+make build_unix
+```
+
 ### OS X
 
 ```sh
