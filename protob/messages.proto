@@ -80,6 +80,10 @@ enum MessageType {
 	MessageType_NEMAddress = 68 [(wire_out) = true];
 	MessageType_NEMSignTx = 69 [(wire_in) = true];
 	MessageType_NEMSignedTx = 70 [(wire_out) = true];
+	MessageType_CosiCommit = 71 [(wire_in) = true];
+	MessageType_CosiCommitment = 72 [(wire_out) = true];
+	MessageType_CosiSign = 73 [(wire_in) = true];
+	MessageType_CosiSignature = 74 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -863,6 +867,49 @@ message NEMSignTx {
 message NEMSignedTx {
 	optional bytes data = 1;	// Transaction data
 	optional bytes signature = 2;	// Signature for the transaction
+}
+
+///////////////////
+// CoSi messages //
+///////////////////
+
+/**
+ * Request: Ask device to commit to CoSi signing
+ * @next CosiCommitment
+ * @next Failure
+ */
+message CosiCommit {
+	repeated uint32 address_n = 1;		// BIP-32 path to derive the key from master node
+	optional bytes data = 2;		// Data to be signed
+}
+
+/**
+ * Response: Contains a CoSi commitment
+ * @prev CosiCommit
+ */
+message CosiCommitment {
+	optional bytes commitment = 1;		// Commitment
+	optional bytes pubkey = 2;		// Public key
+}
+
+/**
+ * Request: Ask device to sign using CoSi
+ * @next CosiSignature
+ * @next Failure
+ */
+message CosiSign {
+	repeated uint32 address_n = 1;		// BIP-32 path to derive the key from master node
+	optional bytes data = 2;		// Data to be signed
+	optional bytes global_commitment = 3;	// Aggregated commitment
+	optional bytes global_pubkey = 4;	// Aggregated public key
+}
+
+/**
+ * Response: Contains a CoSi signature
+ * @prev CosiSign
+ */
+message CosiSignature {
+	optional bytes signature = 1;		// Signature
 }
 
 /////////////////////////////////////////////////////////////
