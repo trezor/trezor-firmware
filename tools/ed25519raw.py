@@ -1,11 +1,12 @@
 # orignal version downloaded from https://ed25519.cr.yp.to/python/ed25519.py
 # modified for Python 3 by Jochen Hoenicke <hoenicke@gmail.com>
 
+import sys
 import hashlib
 
 b = 256
-q = 2**255 - 19
-l = 2**252 + 27742317777372353535851937790883648493
+q = 2 ** 255 - 19
+l = 2 ** 252 + 27742317777372353535851937790883648493
 
 
 def H(m):
@@ -17,7 +18,7 @@ def expmod(b, e, m):
         raise Exception('negative exponent')
     if e == 0:
         return 1
-    t = expmod(b, e >> 1, m)**2 % m
+    t = expmod(b, e >> 1, m) ** 2 % m
     if e & 1:
         t = (t * b) % m
     return t
@@ -68,35 +69,44 @@ def scalarmult(P, e):
 
 def encodeint(y):
     bits = [(y >> i) & 1 for i in range(b)]
-    return bytes([sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b >> 3)])
+    if sys.version_info.major < 3:
+        return ''.join([chr(sum([bits[i * 8 + j] << j for j in range(8)])) for i in range(b >> 3)])
+    else:
+        return bytes([sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b >> 3)])
 
 
 def encodepoint(P):
     x = P[0]
     y = P[1]
     bits = [(y >> i) & 1 for i in range(b - 1)] + [x & 1]
-    return bytes([sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b >> 3)])
+    if sys.version_info.major < 3:
+        return ''.join([chr(sum([bits[i * 8 + j] << j for j in range(8)])) for i in range(b >> 3)])
+    else:
+        return bytes([sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b >> 3)])
 
 
 def bit(h, i):
-    return (h[i >> 3] >> (i & 7)) & 1
+    if sys.version_info.major < 3:
+        return (ord(h[i >> 3]) >> (i & 7)) & 1
+    else:
+        return (h[i >> 3] >> (i & 7)) & 1
 
 
 def publickey(sk):
     h = H(sk)
-    a = 2**(b - 2) + sum(2**i * bit(h, i) for i in range(3, b - 2))
+    a = 2 ** (b - 2) + sum(2 ** i * bit(h, i) for i in range(3, b - 2))
     A = scalarmult(B, a)
     return encodepoint(A)
 
 
 def Hint(m):
     h = H(m)
-    return sum(2**i * bit(h, i) for i in range(2 * b))
+    return sum(2 ** i * bit(h, i) for i in range(2 * b))
 
 
 def signature(m, sk, pk):
     h = H(sk)
-    a = 2**(b - 2) + sum(2**i * bit(h, i) for i in range(3, b - 2))
+    a = 2 ** (b - 2) + sum(2 ** i * bit(h, i) for i in range(3, b - 2))
     r = Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + m)
     R = scalarmult(B, r)
     S = (r + Hint(encodepoint(R) + pk + m) * a) % l
@@ -110,11 +120,11 @@ def isoncurve(P):
 
 
 def decodeint(s):
-    return sum(2**i * bit(s, i) for i in range(0, b))
+    return sum(2 ** i * bit(s, i) for i in range(0, b))
 
 
 def decodepoint(s):
-    y = sum(2**i * bit(s, i) for i in range(0, b - 1))
+    y = sum(2 ** i * bit(s, i) for i in range(0, b - 1))
     x = xrecover(y)
     if x & 1 != bit(s, b - 1):
         x = q - x

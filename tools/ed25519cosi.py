@@ -1,5 +1,7 @@
+import sys
 from functools import reduce
 import binascii
+
 import ed25519raw
 
 
@@ -19,7 +21,10 @@ def combine_sig(R, sigs):
 def get_nonce(sk, data, ctr):
     h = ed25519raw.H(sk)
     b = ed25519raw.b
-    r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
+    if sys.version_info.major < 3:
+        r = ed25519raw.Hint(''.join([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
+    else:
+        r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
     R = ed25519raw.scalarmult(ed25519raw.B, r)
     return r, ed25519raw.encodepoint(R)
 
@@ -41,7 +46,7 @@ def self_test(digest):
     sigs = []
     for i in range(0, N):
         print('----- Key %d ------' % (i + 1))
-        seckey = bytes([0x41 + i]) * 32
+        seckey = (chr(0x41 + i) * 32).encode()
         pubkey = ed25519raw.publickey(seckey)
         print('Secret Key: %s' % to_hex(seckey))
         print('Public Key: %s' % to_hex(pubkey))
@@ -81,7 +86,6 @@ def self_test(digest):
 
 
 if __name__ == '__main__':
-    import sys
     if len(sys.argv) > 1:
         self_test(digest=sys.argv[1])
     else:
