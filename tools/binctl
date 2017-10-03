@@ -7,8 +7,7 @@ import struct
 import binascii
 import pyblake2
 
-import ed25519raw
-import ed25519cosi
+from trezorlib import ed25519raw, ed25519cosi
 
 
 def sign_data(seckeys, data):
