@@ -73,7 +73,7 @@
 	"dust_limit": 546,
 	"blocktime_minutes": 10,
 	"firmware": "stable",
-	"address_prefix": "bitcoin:",
+	"address_prefix": "bitcoincash:",
 	"min_address_length": 27,
 	"max_address_length": 34
 },
@@ -97,7 +97,7 @@
 	"dust_limit": 546,
 	"blocktime_minutes": 10,
 	"firmware": "debug",
-	"address_prefix": "bitcoin:",
+	"address_prefix": "bitcoincash:",
 	"min_address_length": 27,
 	"max_address_length": 34
 },
