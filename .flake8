@@ -9,4 +9,8 @@ ignore =
     # E402: module level import not at top of file
     E402,
     # E501: line too long
-    E501
+    E501,
+    # F403: star import used, unable to detect undefined names
+    F403,
+    # F405: name may be undefined, or defined from star imports
+    F405

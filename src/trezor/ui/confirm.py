@@ -10,6 +10,7 @@ CANCELLED = const(2)
 DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
 DEFAULT_CANCEL = res.load(ui.ICON_CLEAR)
 
+
 class ConfirmDialog(Widget):
 
     def __init__(self, content, confirm=DEFAULT_CONFIRM, cancel=DEFAULT_CANCEL):

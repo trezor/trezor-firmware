@@ -8,6 +8,7 @@ if __debug__:
 DEFAULT_CANCEL = res.load(ui.ICON_CLEAR)
 DEFAULT_LOCK = res.load(ui.ICON_LOCK)
 
+
 @unimport
 async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
     from trezor.messages.ButtonRequest import ButtonRequest
