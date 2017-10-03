@@ -27,6 +27,8 @@ setup(
         'trezorlib.ckd_public',
         'trezorlib.client',
         'trezorlib.debuglink',
+        'trezorlib.ed25519cosi',
+        'trezorlib.ed25519raw',
         'trezorlib.mapping',
         'trezorlib.messages_pb2',
         'trezorlib.protocol_v1',
