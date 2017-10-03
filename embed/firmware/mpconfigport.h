@@ -66,7 +66,9 @@
 #define MICROPY_REPL_AUTO_INDENT    (1)
 #define MICROPY_LONGINT_IMPL        (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_ENABLE_SOURCE_LINE  (1)
+#ifndef MICROPY_FLOAT_IMPL // can be configured by each board via mpconfigboard.mk
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
+#endif
 #define MICROPY_STREAMS_NON_BLOCK   (1)
 #define MICROPY_MODULE_WEAK_LINKS   (1)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (1)
@@ -91,13 +93,13 @@
 #define MICROPY_PY_BUILTINS_INPUT   (1)
 #define MICROPY_PY_BUILTINS_POW3    (0)
 #define MICROPY_PY_BUILTINS_HELP    (0)
-#define MICROPY_PY_BUILTINS_HELP_TEXT stmhal_help_text
+#define MICROPY_PY_BUILTINS_HELP_TEXT stm32_help_text
 #define MICROPY_PY_BUILTINS_HELP_MODULES (0)
 #define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
 #define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (1)
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (1)
-#define MICROPY_PY_CMATH            (1)
+#define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_IO               (0)
 #define MICROPY_PY_IO_FILEIO        (0)
 #define MICROPY_PY_SYS_MAXSIZE      (0)
@@ -105,16 +107,30 @@
 #define MICROPY_PY_SYS_STDFILES     (0)
 #define MICROPY_PY_SYS_STDIO_BUFFER (0)
 #define MICROPY_PY_UERRNO           (1)
+#ifndef MICROPY_PY_THREAD
 #define MICROPY_PY_THREAD           (0)
+#endif
 #define MICROPY_PY_THREAD_GIL       (0)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (1)
+#define MICROPY_PY_UJSON            (0)
+#define MICROPY_PY_URE              (0)
+#define MICROPY_PY_UHEAPQ           (0)
+#define MICROPY_PY_UHASHLIB         (0)
 #define MICROPY_PY_UBINASCII        (1)
 #define MICROPY_PY_UBINASCII_CRC32  (1)
+#define MICROPY_PY_URANDOM          (0)
+#define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
+#define MICROPY_PY_USELECT          (0)
 #define MICROPY_PY_UTIMEQ           (1)
 #define MICROPY_PY_UTIME_MP_HAL     (1)
+#define MICROPY_PY_MACHINE          (0)
+#define MICROPY_PY_FRAMEBUF         (0)
+#define MICROPY_PY_USOCKET          (0)
+#define MICROPY_PY_NETWORK          (0)
+
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
 #define MICROPY_PY_TREZORIO         (1)

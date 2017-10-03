@@ -1,5 +1,5 @@
 /*
- * This file is part of the Micro Python project, http://micropython.org/
+ * This file is part of the MicroPython project, http://micropython.org/
  *
  * The MIT License (MIT)
  *
@@ -24,7 +24,7 @@
  * THE SOFTWARE.
  */
 
-// options to control how Micro Python is built
+// options to control how MicroPython is built
 
 #define MICROPY_ALLOC_PATH_MAX      (PATH_MAX)
 #define MICROPY_PERSISTENT_CODE_LOAD (1)
@@ -100,7 +100,7 @@
 #ifndef MICROPY_PY_MATH_SPECIAL_FUNCTIONS
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (1)
 #endif
-#define MICROPY_PY_CMATH            (1)
+#define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_IO_FILEIO        (1)
 #define MICROPY_PY_IO_RESOURCE_STREAM (0)
 #define MICROPY_PY_GC_COLLECT_RETVAL (1)
