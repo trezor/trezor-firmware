@@ -53,7 +53,7 @@ script:
   - test "$GOAL" != "unix" || make test
   - test "$GOAL" != "unix" || make testpy
 
-  - test "$GOAL" != "src" || make style
+  # - test "$GOAL" != "src" || make style
 
 notifications:
   webhooks:
