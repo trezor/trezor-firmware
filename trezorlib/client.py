@@ -659,6 +659,16 @@ class ProtocolMixin(object):
     def get_ecdh_session_key(self, identity, peer_public_key, ecdsa_curve_name=DEFAULT_CURVE):
         return self.call(proto.GetECDHSessionKey(identity=identity, peer_public_key=peer_public_key, ecdsa_curve_name=ecdsa_curve_name))
 
+    @expect(proto.CosiCommitment)
+    def cosi_commit(self, n, data):
+        n = self._convert_prime(n)
+        return self.call(proto.CosiCommit(address_n=n, data=data))
+
+    @expect(proto.CosiSignature)
+    def cosi_sign(self, n, data, global_commitment, global_pubkey):
+        n = self._convert_prime(n)
+        return self.call(proto.CosiSign(address_n=n, data=data, global_commitment=global_commitment, global_pubkey=global_pubkey))
+
     @field('message')
     @expect(proto.Success)
     def set_u2f_counter(self, u2f_counter):

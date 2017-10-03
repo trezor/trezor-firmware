@@ -681,6 +681,11 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
         return 'Signed raw transaction: %s' % tx_hex
 
 
+#
+# NEM functions
+#
+
+
 @cli.command(help='Get NEM address for specified path.')
 @click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/43'/0/0")
 @click.option('-N', '--network', type=int, default=0x68)
@@ -692,7 +697,7 @@ def nem_get_address(connect, address, network, show_display):
     return client.nem_get_address(address_n, network, show_display)
 
 
-@cli.command(help='Sign (and optionally broadcast) NEM transaction')
+@cli.command(help='Sign (and optionally broadcast) NEM transaction.')
 @click.option('-n', '--address', help='BIP-32 path to signing key')
 @click.option('-f', '--file', type=click.File('r'), default='-', help='Transaction in NIS (RequestPrepareAnnounce) format')
 @click.option('-b', '--broadcast', help='NIS to announce transaction to')
@@ -712,6 +717,33 @@ def nem_sign_tx(connect, address, file, broadcast):
         return requests.post("{}/transaction/announce".format(broadcast), json=payload).json()
     else:
         return payload
+
+
+#
+# CoSi functions
+#
+
+
+@cli.command(help='Ask device to commit to CoSi signing.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
+@click.argument('data')
+@click.pass_obj
+def cosi_commit(connect, address, data):
+    client = connect()
+    address_n = client.expand_path(address)
+    return client.cosi_commit(address_n, binascii.unhexlify(data))
+
+
+@cli.command(help='Ask device to sign using CoSi.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
+@click.argument('data')
+@click.argument('global_commitment')
+@click.argument('global_pubkey')
+@click.pass_obj
+def cosi_sign(connect, address, data, global_commitment, global_pubkey):
+    client = connect()
+    address_n = client.expand_path(address)
+    return client.cosi_sign(address_n, binascii.unhexlify(data), binascii.unhexlify(global_commitment), binascii.unhexlify(global_pubkey))
 
 
 #
