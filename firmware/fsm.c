@@ -17,6 +17,8 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libopencm3/stm32/flash.h>
+
 #include "trezor.h"
 #include "fsm.h"
 #include "messages.h"
@@ -48,10 +50,10 @@
 #include "ripemd160.h"
 #include "curves.h"
 #include "secp256k1.h"
-#include <libopencm3/stm32/flash.h>
 #include "ethereum.h"
 #include "nem.h"
 #include "nem2.h"
+#include "rfc6979.h"
 #include "gettext.h"
 
 // message methods
@@ -1312,6 +1314,81 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	resp->signature.size = sizeof(ed25519_signature);
 
 	msg_write(MessageType_MessageType_NEMSignedTx, resp);
+	layoutHome();
+}
+
+void fsm_msgCosiCommit(CosiCommit *msg)
+{
+	RESP_INIT(CosiCommitment);
+
+	CHECK_INITIALIZED
+
+	CHECK_PARAM(msg->has_data, _("No data provided"));
+
+	layoutCosiCommitSign(msg->data.bytes, msg->data.size, false);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
+	CHECK_PIN
+
+	HDNode *node = fsm_getDerivedNode(ED25519_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	uint8_t nonce[32];
+	sha256_Raw(msg->data.bytes, msg->data.size, nonce);
+	rfc6979_state rng;
+	init_rfc6979(node->private_key, nonce, &rng);
+	generate_rfc6979(nonce, &rng);
+
+	resp->has_commitment = true;
+	resp->has_pubkey = true;
+	resp->commitment.size = 32;
+	resp->pubkey.size = 32;
+
+	ed25519_publickey(nonce, resp->commitment.bytes);
+	ed25519_publickey(node->private_key, resp->pubkey.bytes);
+
+	msg_write(MessageType_MessageType_CosiCommitment, resp);
+	layoutHome();
+}
+
+void fsm_msgCosiSign(CosiSign *msg)
+{
+	RESP_INIT(CosiSignature);
+
+	CHECK_INITIALIZED
+
+	CHECK_PARAM(msg->has_data, _("No data provided"));
+	CHECK_PARAM(msg->has_global_commitment && msg->global_commitment.size == 32, _("Invalid global commitment"));
+	CHECK_PARAM(msg->has_global_pubkey && msg->global_pubkey.size == 32, _("Invalid global pubkey"));
+
+	layoutCosiCommitSign(msg->data.bytes, msg->data.size, true);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
+	CHECK_PIN
+
+	HDNode *node = fsm_getDerivedNode(ED25519_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	uint8_t nonce[32];
+	sha256_Raw(msg->data.bytes, msg->data.size, nonce);
+	rfc6979_state rng;
+	init_rfc6979(node->private_key, nonce, &rng);
+	generate_rfc6979(nonce, &rng);
+
+	resp->has_signature = true;
+	resp->signature.size = 32;
+
+	ed25519_cosi_sign(msg->data.bytes, msg->data.size, node->private_key, nonce, msg->global_commitment.bytes, msg->global_pubkey.bytes, resp->signature.bytes);
+
+	msg_write(MessageType_MessageType_CosiSignature, resp);
 	layoutHome();
 }
 

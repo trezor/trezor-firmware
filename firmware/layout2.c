@@ -644,3 +644,22 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 		break;
 	}
 }
+
+void layoutCosiCommitSign(const uint8_t *data, uint32_t len, bool final_sign)
+{
+	char str[4][17];
+	if (len == 32) {
+		data2hex(data     , 8, str[0]);
+		data2hex(data +  8, 8, str[1]);
+		data2hex(data + 16, 8, str[2]);
+		data2hex(data + 24, 8, str[3]);
+	} else {
+		strlcpy(str[0], "Data", sizeof(str[0]));
+		strlcpy(str[1], "of", sizeof(str[1]));
+		strlcpy(str[2], "unsupported", sizeof(str[2]));
+		strlcpy(str[3], "length", sizeof(str[3]));
+	}
+	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
+		final_sign ? _("CoSi sign message?") : _("CoSi commit message?"),
+		str[0], str[1], str[2], str[3], NULL, NULL);
+}

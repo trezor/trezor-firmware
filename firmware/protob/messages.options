@@ -149,6 +149,19 @@ NEMAddress.address			max_size:41
 NEMSignedTx.data			max_size:2048
 NEMSignedTx.signature			max_size:64
 
+CosiCommit.address_n			max_count:8
+CosiCommit.data				max_size:32
+
+CosiCommitment.commitment		max_size:32
+CosiCommitment.pubkey			max_size:32
+
+CosiSign.address_n			max_count:8
+CosiSign.data				max_size:32
+CosiSign.global_commitment		max_size:32
+CosiSign.global_pubkey			max_size:32
+
+CosiSignature.signature			max_size:32
+
 # deprecated
 SimpleSignTx				skip_message:true
 

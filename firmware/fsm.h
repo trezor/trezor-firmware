@@ -69,6 +69,9 @@ void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg);
 void fsm_msgNEMGetAddress(NEMGetAddress *msg);
 void fsm_msgNEMSignTx(NEMSignTx *msg);
 
+void fsm_msgCosiCommit(CosiCommit *msg);
+void fsm_msgCosiSign(CosiSign *msg);
+
 // debug message functions
 #if DEBUG_LINK
 //void fsm_msgDebugLinkDecision(DebugLinkDecision *msg);
