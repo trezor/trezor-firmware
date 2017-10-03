@@ -30,6 +30,8 @@
 #include "qr_encode.h"
 #include "timer.h"
 #include "bignum.h"
+#include "secp256k1.h"
+#include "nem2.h"
 #include "gettext.h"
 
 #define BITCOIN_DIVISIBILITY (8)
@@ -464,4 +466,181 @@ void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appico
 		appicon = &bmp_icon_question;
 	}
 	layoutDialog(appicon, NULL, verb, NULL, verb, _("U2F security key?"), NULL, appname, NULL, NULL);
+}
+
+void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address) {
+	static char first_third[NEM_ADDRESS_SIZE / 3 + 1];
+	strlcpy(first_third, address, sizeof(first_third));
+
+	static char second_third[NEM_ADDRESS_SIZE / 3 + 1];
+	strlcpy(second_third, &address[NEM_ADDRESS_SIZE / 3], sizeof(second_third));
+
+	const char *third_third = &address[NEM_ADDRESS_SIZE * 2 / 3];
+
+	layoutDialogSwipe(icon,
+		btnNo,
+		btnYes,
+		desc,
+		line1,
+		first_third,
+		second_third,
+		third_third,
+		NULL,
+		NULL);
+}
+
+void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *multiplier, uint64_t fee) {
+	char str_out[32], str_fee[32];
+
+	nem_mosaicFormatAmount(NEM_MOSAIC_DEFINITION_XEM, quantity, multiplier, str_out, sizeof(str_out));
+	nem_mosaicFormatAmount(NEM_MOSAIC_DEFINITION_XEM, fee, NULL, str_fee, sizeof(str_fee));
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		_("Confirm transfer of"),
+		str_out,
+		_("and network fee of"),
+		str_fee,
+		NULL,
+		NULL);
+}
+
+void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, uint64_t fee1, const char *fee2_desc, uint64_t fee2) {
+	char str_fee1[32], str_fee2[32];
+
+	nem_mosaicFormatAmount(NEM_MOSAIC_DEFINITION_XEM, fee1, NULL, str_fee1, sizeof(str_fee1));
+
+	if (fee2_desc) {
+		nem_mosaicFormatAmount(NEM_MOSAIC_DEFINITION_XEM, fee2, NULL, str_fee2, sizeof(str_fee2));
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		confirm ? _("Confirm") : _("Next"),
+		desc,
+		fee1_desc,
+		str_fee1,
+		fee2_desc,
+		fee2_desc ? str_fee2 : NULL,
+		NULL,
+		NULL);
+}
+
+void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network) {
+	char str_out[32], str_levy[32];
+
+	nem_mosaicFormatAmount(definition, quantity, multiplier, str_out, sizeof(str_out));
+
+	if (definition->has_levy) {
+		nem_mosaicFormatLevy(definition, quantity, multiplier, network, str_levy, sizeof(str_levy));
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		definition->has_name ? definition->name : _("Mosaic"),
+		_("Confirm transfer of"),
+		str_out,
+		definition->has_levy ? _("and levy of") : NULL,
+		definition->has_levy ? str_levy : NULL,
+		NULL,
+		NULL);
+}
+
+void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *multiplier) {
+	char mosaic_name[32];
+	nem_mosaicFormatName(namespace, mosaic, mosaic_name, sizeof(mosaic_name));
+
+	char str_out[32];
+	nem_mosaicFormatAmount(NULL, quantity, multiplier, str_out, sizeof(str_out));
+
+	char *decimal = strchr(str_out, '.');
+	if (decimal != NULL) {
+		*decimal = '\0';
+	}
+
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("I take the risk"),
+		_("Unknown Mosaic"),
+		_("Confirm transfer of"),
+		str_out,
+		_("raw units of"),
+		mosaic_name,
+		NULL,
+		NULL);
+}
+
+void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted) {
+	if (payload[0] == 0xFE) {
+		char encoded[(length - 1) * 2 + 1];
+		data2hex(&payload[1], length - 1, encoded);
+
+		const char **str = split_message((uint8_t *) encoded, sizeof(encoded) - 1, 16);
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
+			encrypted ? _("Encrypted hex data") : _("Unencrypted hex data"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	} else {
+		const char **str = split_message(payload, length, 16);
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
+			encrypted ? _("Encrypted message") : _("Unencrypted message"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	}
+}
+
+void layoutNEMMosaicDescription(const char *description) {
+	const char **str = split_message((uint8_t *) description, strlen(description), 16);
+	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"),
+		_("Mosaic Description"),
+		str[0], str[1], str[2], str[3], NULL, NULL);
+}
+
+void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
+	const NEMMosaicDefinition *mosaic;
+	if (nem_mosaicMatches(definition, definition->levy_namespace, definition->levy_mosaic, network)) {
+		mosaic = definition;
+	} else {
+		mosaic = nem_mosaicByName(definition->levy_namespace, definition->levy_mosaic, network);
+	}
+
+	char mosaic_name[32];
+	if (mosaic == NULL) {
+		nem_mosaicFormatName(definition->levy_namespace, definition->levy_mosaic, mosaic_name, sizeof(mosaic_name));
+	}
+
+	char str_out[32];
+
+	switch (definition->levy) {
+	case NEMMosaicLevy_MosaicLevy_Percentile:
+		bn_format_uint64(definition->fee, NULL, NULL, 0, 0, false, str_out, sizeof(str_out));
+
+		layoutDialogSwipe(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			_("Percentile Levy"),
+			_("Raw levy value is"),
+			str_out,
+			_("in"),
+			mosaic ? (mosaic == definition ? _("the same mosaic") : mosaic->name) : mosaic_name,
+			NULL,
+			NULL);
+		break;
+
+	case NEMMosaicLevy_MosaicLevy_Absolute:
+	default:
+		nem_mosaicFormatAmount(mosaic, definition->fee, NULL, str_out, sizeof(str_out));
+		layoutDialogSwipe(&bmp_icon_question,
+			_("Cancel"),
+			_("Next"),
+			_("Absolute Levy"),
+			_("Levy is"),
+			str_out,
+			mosaic ? (mosaic == definition ? _("in the same mosaic") : NULL) : _("in raw units of"),
+			mosaic ? NULL : mosaic_name,
+			NULL,
+			NULL);
+		break;
+	}
 }

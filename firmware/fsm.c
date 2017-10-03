@@ -50,6 +50,8 @@
 #include "secp256k1.h"
 #include <libopencm3/stm32/flash.h>
 #include "ethereum.h"
+#include "nem.h"
+#include "nem2.h"
 #include "gettext.h"
 
 // message methods
@@ -1101,6 +1103,215 @@ void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 	}
 	storage_setU2FCounter(msg->u2f_counter);
 	fsm_sendSuccess(_("U2F counter set"));
+	layoutHome();
+}
+
+void fsm_msgNEMGetAddress(NEMGetAddress *msg)
+{
+	if (!msg->has_network) {
+		msg->network = NEM_NETWORK_MAINNET;
+	}
+
+	const char *network;
+	CHECK_PARAM((network = nem_network_name(msg->network)), _("Invalid NEM network"));
+
+	CHECK_INITIALIZED
+	CHECK_PIN
+
+	RESP_INIT(NEMAddress);
+
+	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	if (!hdnode_get_nem_address(node, msg->network, resp->address))
+		return;
+
+	if (msg->has_show_display && msg->show_display) {
+		char desc[16];
+		strlcpy(desc, network, sizeof(desc));
+		strlcat(desc, ":", sizeof(desc));
+
+		bool qrcode = false;
+		for (;;) {
+			layoutAddress(resp->address, desc, qrcode);
+			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+				break;
+			}
+			qrcode = !qrcode;
+		}
+	}
+
+	msg_write(MessageType_MessageType_NEMAddress, resp);
+	layoutHome();
+}
+
+void fsm_msgNEMSignTx(NEMSignTx *msg) {
+	const char *reason;
+
+#define NEM_CHECK_PARAM(s)         CHECK_PARAM(        (reason = (s)) == NULL, reason)
+#define NEM_CHECK_PARAM_WHEN(b, s) CHECK_PARAM(!(b) || (reason = (s)) == NULL, reason)
+
+	CHECK_PARAM(msg->has_transaction, _("No common provided"));
+
+	// Ensure exactly one transaction is provided
+	unsigned int provided = msg->has_transfer +
+		msg->has_provision_namespace +
+		msg->has_mosaic_creation +
+		msg->has_supply_change +
+		msg->has_aggregate_modification;
+	CHECK_PARAM(provided != 0, _("No transaction provided"));
+	CHECK_PARAM(provided == 1, _("More than one transaction provided"));
+
+	NEM_CHECK_PARAM(nem_validate_common(&msg->transaction, false));
+	NEM_CHECK_PARAM_WHEN(msg->has_transfer, nem_validate_transfer(&msg->transfer, msg->transaction.network));
+	NEM_CHECK_PARAM_WHEN(msg->has_provision_namespace, nem_validate_provision_namespace(&msg->provision_namespace, msg->transaction.network));
+	NEM_CHECK_PARAM_WHEN(msg->has_mosaic_creation, nem_validate_mosaic_creation(&msg->mosaic_creation, msg->transaction.network));
+	NEM_CHECK_PARAM_WHEN(msg->has_supply_change, nem_validate_supply_change(&msg->supply_change));
+	NEM_CHECK_PARAM_WHEN(msg->has_aggregate_modification, nem_validate_aggregate_modification(&msg->aggregate_modification, !msg->has_multisig));
+
+	bool cosigning = msg->has_cosigning && msg->cosigning;
+	if (msg->has_multisig) {
+		NEM_CHECK_PARAM(nem_validate_common(&msg->multisig, true));
+
+		CHECK_PARAM(msg->transaction.network == msg->multisig.network, _("Inner transaction network is different"));
+	} else {
+		CHECK_PARAM(!cosigning, _("No multisig transaction to cosign"));
+	}
+
+	CHECK_INITIALIZED
+	CHECK_PIN
+
+	const char *network = nem_network_name(msg->transaction.network);
+
+	if (msg->has_multisig) {
+		char address[NEM_ADDRESS_SIZE + 1];
+		nem_get_address(msg->multisig.signer.bytes, msg->multisig.network, address);
+
+		if (!nem_askMultisig(address, network, cosigning, msg->transaction.fee)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+			layoutHome();
+			return;
+		}
+	}
+
+	RESP_INIT(NEMSignedTx);
+
+	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n, msg->transaction.address_n_count);
+	if (!node) return;
+
+	hdnode_fill_public_key(node);
+
+	const NEMTransactionCommon *common = msg->has_multisig ? &msg->multisig : &msg->transaction;
+
+	char address[NEM_ADDRESS_SIZE + 1];
+	hdnode_get_nem_address(node, common->network, address);
+
+	if (msg->has_transfer) {
+		msg->transfer.mosaics_count = nem_canonicalizeMosaics(msg->transfer.mosaics, msg->transfer.mosaics_count);
+	}
+
+	if (msg->has_transfer && !nem_askTransfer(common, &msg->transfer, network)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
+	if (msg->has_provision_namespace && !nem_askProvisionNamespace(common, &msg->provision_namespace, network)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
+	if (msg->has_mosaic_creation && !nem_askMosaicCreation(common, &msg->mosaic_creation, network, address)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
+	if (msg->has_supply_change && !nem_askSupplyChange(common, &msg->supply_change, network)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
+	if (msg->has_aggregate_modification && !nem_askAggregateModification(common, &msg->aggregate_modification, network, !msg->has_multisig)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
+	nem_transaction_ctx context;
+	nem_transaction_start(&context, &node->public_key[1], resp->data.bytes, sizeof(resp->data.bytes));
+
+	if (msg->has_multisig) {
+		uint8_t buffer[sizeof(resp->data.bytes)];
+
+		nem_transaction_ctx inner;
+		nem_transaction_start(&inner, msg->multisig.signer.bytes, buffer, sizeof(buffer));
+
+		if (msg->has_transfer && !nem_fsmTransfer(&inner, NULL, &msg->multisig, &msg->transfer)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_provision_namespace && !nem_fsmProvisionNamespace(&inner, &msg->multisig, &msg->provision_namespace)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_mosaic_creation && !nem_fsmMosaicCreation(&inner, &msg->multisig, &msg->mosaic_creation)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_supply_change && !nem_fsmSupplyChange(&inner, &msg->multisig, &msg->supply_change)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_aggregate_modification && !nem_fsmAggregateModification(&inner, &msg->multisig, &msg->aggregate_modification)) {
+			layoutHome();
+			return;
+		}
+
+		if (!nem_fsmMultisig(&context, &msg->transaction, &inner, cosigning)) {
+			layoutHome();
+			return;
+		}
+	} else {
+		if (msg->has_transfer && !nem_fsmTransfer(&context, node, &msg->transaction, &msg->transfer)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_provision_namespace && !nem_fsmProvisionNamespace(&context, &msg->transaction, &msg->provision_namespace)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_mosaic_creation && !nem_fsmMosaicCreation(&context, &msg->transaction, &msg->mosaic_creation)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_supply_change && !nem_fsmSupplyChange(&context, &msg->transaction, &msg->supply_change)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_aggregate_modification && !nem_fsmAggregateModification(&context, &msg->transaction, &msg->aggregate_modification)) {
+			layoutHome();
+			return;
+		}
+	}
+
+	resp->has_data = true;
+	resp->data.size = nem_transaction_end(&context, node->private_key, resp->signature.bytes);
+
+	resp->has_signature = true;
+	resp->signature.size = sizeof(ed25519_signature);
+
+	msg_write(MessageType_MessageType_NEMSignedTx, resp);
 	layoutHome();
 }
 
