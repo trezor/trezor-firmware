@@ -10,6 +10,20 @@ import pyblake2
 from trezorlib import ed25519raw, ed25519cosi
 
 
+if sys.version_info.major < 3:
+    input = raw_input
+
+
+def get_trezor(index):
+    from trezorlib.client import TrezorClient
+    from trezorlib.transport_hid import HidTransport
+    devices = HidTransport.enumerate()
+    if len(devices) > index:
+        return TrezorClient(devices[index])
+    else:
+        raise Exception('TREZOR with such index not found')
+
+
 def sign_data(seckeys, data):
     digest = pyblake2.blake2s(data).digest()
     if len(seckeys) == 1:
@@ -17,23 +31,42 @@ def sign_data(seckeys, data):
         pk = ed25519raw.publickey(sk)
         return ed25519raw.signature(digest, sk, pk)
     else:
-        pubkeys = [ed25519raw.publickey(sk) for sk in seckeys]
         ctr = 0
+        pubkeys = []
         nonces = []
         commits = []
-        for sk in seckeys:
-            r, R = ed25519cosi.get_nonce(sk, digest, ctr)
+        for i, sk in enumerate(seckeys):
+            if sk == 'trezor':
+                t = get_trezor(i)
+                # FIXME: path below should change according to what is being signed
+                commit = t.cosi_commit(t.expand_path("10018'/0'"), digest)
+                pk = commit.pubkey
+                r = None
+                R = commit.commitment
+            else:
+                pk = ed25519raw.publickey(sk)
+                r, R = ed25519cosi.get_nonce(sk, digest, ctr)
+            pubkeys.append(pk)
             nonces.append(r)
             commits.append(R)
         global_pk = ed25519cosi.combine_keys(pubkeys)
         global_R = ed25519cosi.combine_keys(commits)
         sigs = []
-        for sk, r, R in zip(seckeys, nonces, commits):
-            h = ed25519raw.H(sk)
-            b = ed25519raw.b
-            a = 2**(b - 2) + sum(2**i * ed25519raw.bit(h, i) for i in range(3, b - 2))
-            S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
-            sigs.append(ed25519raw.encodeint(S))
+        for i, sk in enumerate(seckeys):
+            if sk == 'trezor':
+                t = get_trezor(i)
+                # FIXME: path below should change according to what is being signed
+                signature = t.cosi_sign(t.expand_path("10018'/0'"), digest, global_R, global_pk)
+                sig = signature.signature
+            else:
+                r = nonces[i]
+                R = commits[i]
+                h = ed25519raw.H(sk)
+                b = ed25519raw.b
+                a = 2 ** (b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
+                S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
+                sig = ed25519raw.encodeint(S)
+            sigs.append(sig)
         sig = ed25519cosi.combine_sig(global_R, sigs)
         ed25519raw.checkvalid(sig, digest, global_pk)
         return sig
@@ -255,7 +288,10 @@ def main():
         else:
             sigmask = 1 << (int(sys.argv[3]) - 1)
         if ':' in sys.argv[4]:
-            seckeys = [binascii.unhexlify(h) for h in sys.argv[4].split(':')]
+            seckeys = sys.argv[4].split(':')
+            for i in range(len(seckeys)):
+                if seckeys[i] != 'trezor':
+                    seckeys[i] = binascii.unhexlify(seckeys[i])
         else:
             seckeys = [binascii.unhexlify(sys.argv[4])]
         b.sign(sigmask, seckeys)
