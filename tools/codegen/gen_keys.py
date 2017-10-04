@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import binascii
-import ed25519raw
+from trezorlib import ed25519raw
 
 
 def hex_to_c(s):

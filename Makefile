@@ -152,6 +152,10 @@ vendorheader: ## construct default vendor header
 	./tools/build_vendorheader 'e28a8970753332bd72fef413e6b0b2ef1b4aadda7aa2c141f233712a6876b351:d4eec1869fb1b8a4e817516ad5a931557cb56805c3eb16e8f3a803d647df7869:772c8a442b7db06e166cfbc1ccbcbcde6f3eba76a4e98ef3ffc519502237d6ef' 2 0.0 DEVELOPMENT assets/vendor_devel.toif embed/firmware/vendorheader.bin
 	./tools/binctl embed/firmware/vendorheader.bin -s 1:2 4444444444444444444444444444444444444444444444444444444444444444:4545454545454545454545454545454545454545454545454545454545454545
 
+vendorheader_sl: ## construct SatoshiLabs vendor header
+	./tools/build_vendorheader '32ad994ce596a15f4c174ec85da062488e305c66397f9954fc36df301b70d06e:03fdd9a9c3911652d5effca4540d96ed92d85850a47d256ab0a2d728c0d1a298:2218c25f8ba70c82eba8ed6a321df209c0a7643d014f33bf9317846f62923830' 2 0.0 SatoshiLabs assets/vendor_satoshilabs.toif embed/firmware/vendorheader_sl.bin
+	./tools/binctl embed/firmware/vendorheader_sl.bin -s 1:2 trezor:trezor
+
 binctl: ## print info about binary files
 	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 	./tools/binctl embed/firmware/vendorheader.bin
