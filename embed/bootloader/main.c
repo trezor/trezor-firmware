@@ -61,36 +61,24 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 
 void check_and_jump(void)
 {
-    display_printf("checking vendor header\n");
-
     vendor_header vhdr;
-    if (vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        display_printf("valid vendor header\n");
-    } else {
+    if (!vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
         display_printf("invalid vendor header\n");
         return;
     }
 
-    if (vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS)) {
-        display_printf("valid vendor header signature\n");
-    } else {
+    if (!vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS)) {
         display_printf("invalid vendor header signature\n");
         return;
     }
 
-    display_printf("checking firmware header\n");
-
     image_header hdr;
-    if (image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        display_printf("valid firmware header\n");
-    } else {
+    if (!image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
         display_printf("invalid firmware header\n");
         return;
     }
 
     if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub)) {
-        display_printf("valid firmware signature\n");
-
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
         if (vhdr.vtrust < 50) {
             touch_click();
@@ -98,7 +86,6 @@ void check_and_jump(void)
             hal_delay(1000);
         }
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
-
     } else {
         display_printf("invalid firmware signature\n");
     }
@@ -215,10 +202,6 @@ int main(void)
     if (0 != touch_init()) {
         __fatal_error("touch_init", __FILE__, __LINE__, __FUNCTION__);
     }
-
-    display_printf("TREZOR Bootloader %d.%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
-    display_printf("=================\n");
-    display_printf("starting bootloader\n");
 
     uint32_t touched = 0;
     for (int i = 0; i < 10; i++) {

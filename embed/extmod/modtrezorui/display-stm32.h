@@ -139,6 +139,7 @@ void display_pwm_init(void)
     TIM_OC_InitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
     TIM_OC_InitStructure.OCNIdleState = TIM_OCNIDLESTATE_SET;
     HAL_TIM_PWM_ConfigChannel(&TIM1_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
+    display_set_backlight(0);
     HAL_TIM_PWM_Start(&TIM1_Handle, TIM_CHANNEL_1);
     HAL_TIMEx_PWMN_Start(&TIM1_Handle, TIM_CHANNEL_1);
 }
@@ -278,7 +279,6 @@ int display_init(void) {
     display_clear();
     display_orientation(0);
     display_unsleep();
-    display_backlight(255);
     return 0;
 }
 

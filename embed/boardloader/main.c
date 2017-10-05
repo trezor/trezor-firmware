@@ -16,20 +16,14 @@ void pendsv_isr_handler(void) {
 
 bool check_sdcard(void)
 {
-    display_printf("checking for SD card\n");
-
     if (!sdcard_is_present()) {
-        display_printf("no SD card found\n");
         return false;
     }
-
-    display_printf("SD card found\n");
 
     sdcard_power_on();
 
     uint64_t cap = sdcard_get_capacity_in_bytes();
     if (cap < 1024 * 1024) {
-        display_printf("SD card too small\n");
         sdcard_power_off();
         return false;
     }
@@ -41,10 +35,8 @@ bool check_sdcard(void)
     sdcard_power_off();
 
     if (image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, NULL)) {
-        display_printf("SD card header is valid\n");
         return true;
     } else {
-        display_printf("SD card header is invalid\n");
         return false;
     }
 }
@@ -99,7 +91,8 @@ bool copy_sdcard(void)
     sdcard_power_off();
     flash_lock();
 
-    display_printf("done\n");
+    display_printf("done\n\n");
+    display_printf("Unplug the device and remove the SD card\n");
 
     return true;
 }
@@ -120,22 +113,15 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 void check_and_jump(void)
 {
-    display_printf("checking bootloader\n");
-
     image_header hdr;
 
-    if (image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        display_printf("valid bootloader header\n");
-    } else {
+    if (!image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
         display_printf("invalid bootloader header\n");
         return;
     }
 
     if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS)) {
-        display_printf("valid bootloader signature\n");
-        display_printf("JUMP!\n");
         jump_to(BOOTLOADER_START + HEADER_SIZE);
-
     } else {
         display_printf("invalid bootloader signature\n");
     }
@@ -157,13 +143,11 @@ int main(void)
         __fatal_error("sdcard_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    display_printf("TREZOR Boardloader %d.%d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
-    display_printf("==================\n");
-    display_printf("starting boardloader\n");
-
     if (check_sdcard()) {
         if (!copy_sdcard()) {
             __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
+        } else {
+            for (;;);
         }
     }
 
