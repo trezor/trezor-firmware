@@ -129,6 +129,8 @@ def test_otp_write(v):
     print('OK')
 
 
+d.clear()
+
 while True:
 
     try:
