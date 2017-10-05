@@ -1,3 +1,10 @@
+#
+# 2048 Game ported to TREZOR Core by Pavol Rusnak (stick@satoshilabs.com)
+#
+# inspired by https://github.com/gabrielecirulli/2048
+#
+
+
 from trezor import ui
 from trezor import loop
 from trezor import workflow
