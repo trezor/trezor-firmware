@@ -92,7 +92,11 @@ void check_and_jump(void)
         display_printf("valid firmware signature\n");
 
         display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
-        touch_click();
+        if (vhdr.vtrust < 50) {
+            touch_click();
+        } else {
+            hal_delay(1000);
+        }
         jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
     } else {

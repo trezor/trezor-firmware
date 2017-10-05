@@ -82,14 +82,16 @@ of 512 bytes.
 | 0x000D | 1      | vminor | version (minor) |
 | 0x000E | 1      | vsig_m | number of signatures needed to run the firmware from this vendor |
 | 0x000F | 1      | vsig_n | number of different pubkeys vendor provides for signing |
-| 0x0010 | 32     | vpub1 | vendor pubkey 1 |
+| 0x0010 | 1      | vtrust | level of vendor trust (0-100) |
+| 0x0011 | 15     | reserved | not used yet (zeroed) |
+| 0x0020 | 32     | vpub1 | vendor pubkey 1 |
 | ...    | ...    | ... | ... |
 | ?      | 32     | vpubn | vendor pubkey n |
 | ?      | 1      | vstr_len | vendor string length |
 | ?      | ?      | vstr | vendor string |
 | ?      | ?      | vstrpad | padding to a multiple of 4 bytes |
 | ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
-| ?      | ?      | reserved | padding to an address that is -65 modulo 512 |
+| ?      | ?      | reserved | padding to an address that is -65 modulo 512 (zeroed) |
 | ?      | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
 | ?      | 64     | sig | SatoshiLabs aggregated signature |
 

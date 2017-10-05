@@ -21,22 +21,24 @@ def encode_pubkey(pubkey):
 
 def main():
     if len(sys.argv) < 7:
-        print('Usage build_vendorheader "pubkey1hex:pubkey2hex:..." m version vendorname vendorimage.toif vendorheader.bin')
+        print('Usage build_vendorheader "pubkey1hex:pubkey2hex:..." m version vendortrust vendorname vendorimage.toif vendorheader.bin')
         return 1
 
     keys = [encode_pubkey(x) for x in sys.argv[1].split(':')]
     m = int(sys.argv[2])
     (vmajor, vminor) = [int(x) for x in sys.argv[3].split('.')]
-    vname = sys.argv[4]
-    ifn = sys.argv[5]
-    ofn = sys.argv[6]
+    vtrust = int(sys.argv[4])
+    vname = sys.argv[5]
+    ifn = sys.argv[6]
+    ofn = sys.argv[7]
     if not ifn.endswith('.toif'):
         print('Must provide TOIF file')
         return 2
 
     expiry = 0
     vheader = b'TRZV' + \
-        struct.pack('<IIBBBB', 0, expiry, vmajor, vminor, m, len(keys))
+        struct.pack('<IIBBBBB', 0, expiry, vmajor, vminor, m, len(keys), vtrust)
+    vheader += 15 * b'\0'
     for k in keys:
         vheader += k
     vheader += encode_vendor(vname) + open(ifn, 'rb').read()

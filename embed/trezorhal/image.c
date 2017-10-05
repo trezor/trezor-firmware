@@ -98,23 +98,24 @@ bool vendor_parse_header(const uint8_t *data, vendor_header *vhdr)
 
     memcpy(&vhdr->vsig_m, data + 14, 1);
     memcpy(&vhdr->vsig_n, data + 15, 1);
+    memcpy(&vhdr->vtrust, data + 16, 1);
 
     if (vhdr->vsig_n > MAX_VENDOR_PUBLIC_KEYS) {
         return false;
     }
 
     for (int i = 0; i < vhdr->vsig_n; i++) {
-        vhdr->vpub[i] = data + 16 + i * 32;
+        vhdr->vpub[i] = data + 32 + i * 32;
     }
     for (int i = vhdr->vsig_n; i < MAX_VENDOR_PUBLIC_KEYS; i++) {
         vhdr->vpub[i] = 0;
     }
 
-    memcpy(&vhdr->vstr_len, data + 16 + vhdr->vsig_n * 32, 1);
+    memcpy(&vhdr->vstr_len, data + 32 + vhdr->vsig_n * 32, 1);
 
-    vhdr->vstr = data + 16 + vhdr->vsig_n * 32 + 1;
+    vhdr->vstr = data + 32 + vhdr->vsig_n * 32 + 1;
 
-    vhdr->vimg = data + 16 + vhdr->vsig_n * 32 + 1 + vhdr->vstr_len;
+    vhdr->vimg = data + 32 + vhdr->vsig_n * 32 + 1 + vhdr->vstr_len;
     // align to 4 bytes
     vhdr->vimg += (-(uintptr_t)vhdr->vimg) & 3;
 

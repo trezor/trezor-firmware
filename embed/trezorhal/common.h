@@ -16,4 +16,6 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val);
 
 void jump_to(uint32_t address);
 
+void hal_delay(uint32_t ms);
+
 #endif

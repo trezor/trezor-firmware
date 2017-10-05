@@ -71,3 +71,8 @@ void jump_to(uint32_t start)
     __asm__ volatile("msr msp, %0"::"g" (*(volatile uint32_t *)start));
     (*(void (**)())(start + 4))();
 }
+
+void hal_delay(uint32_t ms)
+{
+    HAL_Delay(ms);
+}
