@@ -47,6 +47,7 @@ static void progress_callback(uint16_t val) {
 
 bool copy_sdcard(void)
 {
+    display_backlight(255);
     display_printf("erasing flash ");
 
     // erase flash (except boardloader)
