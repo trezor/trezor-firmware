@@ -96,6 +96,7 @@
 #define MICROPY_HW_CLK_LAST_FREQ (1)
 
 #include "common.h"
+#include "rng.h"
 
 /**
   * @}
@@ -216,6 +217,8 @@ void SystemInit(void)
     while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
     // turn off the HSI as it is now unused (it will be turned on again automatically if a clock security failure occurs)
     RCC->CR &= ~RCC_CR_HSION;
+    // init the TRNG peripheral
+    rng_init();
     // enable full access to the fpu coprocessor
     #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
         SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */

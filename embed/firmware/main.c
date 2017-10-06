@@ -50,10 +50,6 @@ int main(void) {
         __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
     }
 
-    if (0 != rng_init()) {
-        __fatal_error("rng_init", __FILE__, __LINE__, __FUNCTION__);
-    }
-
     if (0 != sdcard_init()) {
         __fatal_error("sdcard_init", __FILE__, __LINE__, __FUNCTION__);
     }

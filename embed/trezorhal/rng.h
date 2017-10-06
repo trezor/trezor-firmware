@@ -3,5 +3,6 @@
 
 int rng_init(void);
 uint32_t rng_get(void);
+uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous);
 
 #endif

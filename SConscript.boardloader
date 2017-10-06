@@ -82,6 +82,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32_it.c',
     'embed/trezorhal/stm32_system.c',
+    'embed/trezorhal/rng.c',
 ]
 
 env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
