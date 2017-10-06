@@ -393,6 +393,8 @@ memset_reg:
   .global reset_handler
   .type reset_handler, STT_FUNC
 reset_handler:
+  bl SystemInit
+
   // wipe memory to remove any possible vestiges of sensitive data
   ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
   ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
@@ -409,9 +411,6 @@ reset_handler:
   ldr r1, =data_lma     // src addr
   ldr r2, =data_size    // size in bytes
   bl memcpy
-
-  // CMSIS initialization
-  bl SystemInit
 
   // enter the application code
   bl main

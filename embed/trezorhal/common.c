@@ -29,8 +29,6 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val) {
     __fatal_error("uncaught exception", __FILE__, __LINE__, __FUNCTION__);
 }
 
-extern void SystemClock_Config(void);
-
 void periph_init(void) {
 
     // STM32F4xx HAL library initialization:
@@ -40,20 +38,11 @@ void periph_init(void) {
     //  - global MSP (MCU Support Package) initialization
     HAL_Init();
 
-    // Set the system clock to be HSE
-    SystemClock_Config();
-
-    // Enable CSS (Clock Security System)
-    HAL_RCC_EnableCSS();
-
     // Enable GPIO clocks
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
-
-    // Enable the CCM RAM
-    __HAL_RCC_CCMDATARAMEN_CLK_ENABLE();
 
     // Clear the reset flags
     PWR->CR |= PWR_CR_CSBF;

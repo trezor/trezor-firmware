@@ -23,11 +23,16 @@
 
 bool firmware_standalone(void)
 {
+    // linker script defined symbol -- reference 3.5.5 in GNU linker manual
     extern const uint32_t _flash_start;
-    return _flash_start == 0x0800000;
+    return &_flash_start == ((uint32_t *) 0x0800000);
 }
 
 int main(void) {
+
+    if (firmware_standalone()) {
+        SystemInit();
+    }
 
     periph_init();
 
