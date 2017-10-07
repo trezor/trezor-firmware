@@ -404,3 +404,21 @@ enum NEMModificationType {
 	CosignatoryModification_Add = 1;
 	CosignatoryModification_Delete = 2;
 }
+
+/**
+ * Structure representing the importance transfer part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMImportanceTransfer {
+	optional NEMImportanceTransferMode mode = 1;	// Mode of importance transfer
+	optional bytes public_key = 2;			// Public key of the remote account
+}
+
+/**
+ * Mode of importance transfer
+ * @used_in NEMModificationType
+ */
+enum NEMImportanceTransferMode {
+	ImportanceTransfer_Activate = 1;
+	ImportanceTransfer_Deactivate = 2;
+}
