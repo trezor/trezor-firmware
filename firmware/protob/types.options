@@ -70,3 +70,5 @@ NEMMosaicSupplyChange.mosaic		max_size:33
 NEMAggregateModification.modifications	max_count:16
 
 NEMCosignatoryModification.public_key	max_size:32
+
+NEMImportanceTransfer.public_key	max_size:32

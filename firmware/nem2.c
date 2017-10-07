@@ -155,6 +155,14 @@ const char *nem_validate_aggregate_modification(const NEMAggregateModification *
 	return NULL;
 }
 
+const char *nem_validate_importance_transfer(const NEMImportanceTransfer *importance_transfer) {
+	if (!importance_transfer->has_mode) return _("No mode provided");
+	if (!importance_transfer->has_public_key) return _("No remote account provided");
+	if (importance_transfer->public_key.size != 32) return _("Invalid remote account provided");
+
+	return NULL;
+}
+
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc) {
 	if (transfer->mosaics_count) {
 		const NEMMosaic *xem = NULL;
@@ -606,6 +614,40 @@ bool nem_fsmAggregateModification(nem_transaction_ctx *context, const NEMTransac
 	}
 
 	return true;
+}
+
+bool nem_askImportanceTransfer(const NEMTransactionCommon *common, const NEMImportanceTransfer *importance_transfer, const char *desc) {
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Next"),
+		desc,
+		importance_transfer->mode == NEMImportanceTransferMode_ImportanceTransfer_Activate ? _("Activate remote") : _("Deactivate remote"),
+		_("harvesting?"),
+		NULL,
+		NULL,
+		NULL,
+		NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		return false;
+	}
+
+	layoutNEMNetworkFee(desc, true, _("Confirm network fee"), common->fee, NULL, 0);
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool nem_fsmImportanceTransfer(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMImportanceTransfer *importance_transfer) {
+	return nem_transaction_create_importance_transfer(context,
+		common->network,
+		common->timestamp,
+		NULL,
+		common->fee,
+		common->deadline,
+		importance_transfer->mode,
+		importance_transfer->public_key.bytes);
 }
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee) {

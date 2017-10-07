@@ -34,6 +34,7 @@ const char *nem_validate_provision_namespace(const NEMProvisionNamespace *provis
 const char *nem_validate_mosaic_creation(const NEMMosaicCreation *mosaic_creation, uint8_t network);
 const char *nem_validate_supply_change(const NEMMosaicSupplyChange *supply_change);
 const char *nem_validate_aggregate_modification(const NEMAggregateModification *aggregate_modification, bool creation);
+const char *nem_validate_importance_transfer(const NEMImportanceTransfer *importance_transfer);
 
 bool nem_askTransfer(const NEMTransactionCommon *common, const NEMTransfer *transfer, const char *desc);
 bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node, const NEMTransactionCommon *common, const NEMTransfer *transfer);
@@ -49,6 +50,9 @@ bool nem_fsmSupplyChange(nem_transaction_ctx *context, const NEMTransactionCommo
 
 bool nem_askAggregateModification(const NEMTransactionCommon *common, const NEMAggregateModification *aggregate_modification, const char *desc, bool creation);
 bool nem_fsmAggregateModification(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMAggregateModification *aggregate_modification);
+
+bool nem_askImportanceTransfer(const NEMTransactionCommon *common, const NEMImportanceTransfer *importance_transfer, const char *desc);
+bool nem_fsmImportanceTransfer(nem_transaction_ctx *context, const NEMTransactionCommon *common, const NEMImportanceTransfer *importance_transfer);
 
 bool nem_askMultisig(const char *address, const char *desc, bool cosigning, uint64_t fee);
 bool nem_fsmMultisig(nem_transaction_ctx *context, const NEMTransactionCommon *common, const nem_transaction_ctx *inner, bool cosigning);

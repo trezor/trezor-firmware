@@ -1160,7 +1160,8 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		msg->has_provision_namespace +
 		msg->has_mosaic_creation +
 		msg->has_supply_change +
-		msg->has_aggregate_modification;
+		msg->has_aggregate_modification +
+		msg->has_importance_transfer;
 	CHECK_PARAM(provided != 0, _("No transaction provided"));
 	CHECK_PARAM(provided == 1, _("More than one transaction provided"));
 
@@ -1170,6 +1171,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	NEM_CHECK_PARAM_WHEN(msg->has_mosaic_creation, nem_validate_mosaic_creation(&msg->mosaic_creation, msg->transaction.network));
 	NEM_CHECK_PARAM_WHEN(msg->has_supply_change, nem_validate_supply_change(&msg->supply_change));
 	NEM_CHECK_PARAM_WHEN(msg->has_aggregate_modification, nem_validate_aggregate_modification(&msg->aggregate_modification, !msg->has_multisig));
+	NEM_CHECK_PARAM_WHEN(msg->has_importance_transfer, nem_validate_importance_transfer(&msg->importance_transfer));
 
 	bool cosigning = msg->has_cosigning && msg->cosigning;
 	if (msg->has_multisig) {
@@ -1242,6 +1244,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		return;
 	}
 
+	if (msg->has_importance_transfer && !nem_askImportanceTransfer(common, &msg->importance_transfer, network)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, _("Signing cancelled by user"));
+		layoutHome();
+		return;
+	}
+
 	nem_transaction_ctx context;
 	nem_transaction_start(&context, &node->public_key[1], resp->data.bytes, sizeof(resp->data.bytes));
 
@@ -1276,6 +1284,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 			return;
 		}
 
+		if (msg->has_importance_transfer && !nem_fsmImportanceTransfer(&inner, &msg->multisig, &msg->importance_transfer)) {
+			layoutHome();
+			return;
+		}
+
 		if (!nem_fsmMultisig(&context, &msg->transaction, &inner, cosigning)) {
 			layoutHome();
 			return;
@@ -1302,6 +1315,11 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 		}
 
 		if (msg->has_aggregate_modification && !nem_fsmAggregateModification(&context, &msg->transaction, &msg->aggregate_modification)) {
+			layoutHome();
+			return;
+		}
+
+		if (msg->has_importance_transfer && !nem_fsmImportanceTransfer(&context, &msg->transaction, &msg->importance_transfer)) {
 			layoutHome();
 			return;
 		}
