@@ -42,6 +42,7 @@
 #define NEM_ADDRESS_SIZE_RAW 25
 
 #define NEM_TRANSACTION_TYPE_TRANSFER                0x0101
+#define NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER     0x0801
 #define NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION  0x1001
 #define NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE      0x1002
 #define NEM_TRANSACTION_TYPE_MULTISIG                0x1004
@@ -175,5 +176,14 @@ bool nem_transaction_write_cosignatory_modification(nem_transaction_ctx *ctx,
 
 bool nem_transaction_write_minimum_cosignatories(nem_transaction_ctx *ctx,
 	int32_t relative_change);
+
+bool nem_transaction_create_importance_transfer(nem_transaction_ctx *ctx,
+	uint8_t  network,
+	uint32_t timestamp,
+	const ed25519_public_key signer,
+	uint64_t fee,
+	uint32_t deadline,
+	uint32_t mode,
+	const ed25519_public_key remote);
 
 #endif

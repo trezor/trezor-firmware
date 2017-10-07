@@ -584,3 +584,34 @@ bool nem_transaction_write_minimum_cosignatories(nem_transaction_ctx *ctx,
 
 	return true;
 }
+
+bool nem_transaction_create_importance_transfer(nem_transaction_ctx *ctx,
+	uint8_t  network,
+	uint32_t timestamp,
+	const ed25519_public_key signer,
+	uint64_t fee,
+	uint32_t deadline,
+	uint32_t mode,
+	const ed25519_public_key remote) {
+
+	if (!signer) {
+		signer = ctx->public_key;
+	}
+
+	bool ret = nem_transaction_write_common(ctx,
+		NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
+		network << 24 | 1,
+		timestamp,
+		signer,
+		fee,
+		deadline);
+	if (!ret) return false;
+
+#define NEM_SERIALIZE \
+	serialize_u32(mode) \
+	serialize_write(remote, sizeof(ed25519_public_key))
+
+#include "nem_serialize.h"
+
+	return true;
+}
