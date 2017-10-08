@@ -273,7 +273,7 @@ message IdentityType {
 
 /**
  * Structure representing the common part for NEM transactions
- * @used_in NEMTransaction
+ * @used_in NEMSignTx
  */
 message NEMTransactionCommon {
 	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
@@ -286,7 +286,7 @@ message NEMTransactionCommon {
 
 /**
  * Structure representing the transfer transaction part for NEM transactions
- * @used_in NEMTransaction
+ * @used_in NEMSignTx
  */
 message NEMTransfer {
 	optional string recipient = 1;			// Address of the recipient
@@ -308,7 +308,7 @@ message NEMMosaic {
 
 /**
  * Structure representing the provision namespace part for NEM transactions
- * @used_in NEMTransaction
+ * @used_in NEMSignTx
  */
 message NEMProvisionNamespace {
 	optional string namespace = 1;			// New part concatenated to the parent
@@ -328,7 +328,7 @@ enum NEMMosaicLevy {
 
 /**
  * Structure representing the mosaic definition creation part for NEM transactions
- * @used_in NEMTransaction
+ * @used_in NEMSignTx
  */
 message NEMMosaicCreation {
 	optional NEMMosaicDefinition definition = 1;	// Mosaic definition
@@ -360,7 +360,7 @@ message NEMMosaicDefinition {
 
 /**
  * Structure representing the mosaic supply change part for NEM transactions
- * @used_in NEMTransaction
+ * @used_in NEMSignTx
  */
 message NEMMosaicSupplyChange {
 	optional string namespace = 1;			// Fully qualified name of the namespace
@@ -380,7 +380,7 @@ enum NEMSupplyChangeType {
 
 /**
  * Structure representing the aggregate modification part for NEM transactions
- * @used_in NEMTransaction
+ * @used_in NEMSignTx
  */
 message NEMAggregateModification {
 	repeated NEMCosignatoryModification modifications = 1;	// Cosignatory modifications
@@ -403,4 +403,22 @@ message NEMCosignatoryModification {
 enum NEMModificationType {
 	CosignatoryModification_Add = 1;
 	CosignatoryModification_Delete = 2;
+}
+
+/**
+ * Structure representing the importance transfer part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMImportanceTransfer {
+	optional NEMImportanceTransferMode mode = 1;	// Mode of importance transfer
+	optional bytes public_key = 2;			// Public key of the remote account
+}
+
+/**
+ * Mode of importance transfer
+ * @used_in NEMModificationType
+ */
+enum NEMImportanceTransferMode {
+	ImportanceTransfer_Activate = 1;
+	ImportanceTransfer_Deactivate = 2;
 }

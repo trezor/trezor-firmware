@@ -858,6 +858,7 @@ message NEMSignTx {
 	optional NEMMosaicCreation mosaic_creation = 6;			// Mosaic definition creation part
 	optional NEMMosaicSupplyChange supply_change = 7;		// Mosaic supply change part
 	optional NEMAggregateModification aggregate_modification = 8;	// Aggregate modification part
+	optional NEMImportanceTransfer importance_transfer = 9;		// Importance transfer part
 }
 
 /**
