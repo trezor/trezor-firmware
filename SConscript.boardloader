@@ -71,6 +71,7 @@ SOURCE_STMHAL = [
 
 SOURCE_BOARDLOADER = [
     'embed/common/vectortable.s',
+    'embed/common/util.s',
     'embed/boardloader/startup.s',
     'embed/boardloader/main.c',
 ]
