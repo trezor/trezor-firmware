@@ -70,8 +70,6 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_BOARDLOADER = [
-    'embed/common/vectortable.s',
-    'embed/common/util.s',
     'embed/boardloader/startup.s',
     'embed/boardloader/main.c',
 ]
@@ -85,6 +83,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/stm32_it.c',
     'embed/trezorhal/stm32_system.c',
     'embed/trezorhal/rng.c',
+    'embed/trezorhal/util.s',
+    'embed/trezorhal/vectortable.s',
 ]
 
 env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
