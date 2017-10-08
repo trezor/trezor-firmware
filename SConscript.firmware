@@ -344,6 +344,7 @@ env.Replace(
         'STM32F405xx',
         ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
     ] + CPPDEFINES_MOD,
+    ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 env.Replace(

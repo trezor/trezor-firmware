@@ -76,6 +76,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_BOOTLOADER = [
+    'embed/common/util.s',
     'embed/bootloader/startup.S',
     'embed/bootloader/header.S',
     'embed/bootloader/main.c',
@@ -141,6 +142,7 @@ env.Replace(
         'MCU_SERIES_F4',
         'PB_FIELD_16BIT',
     ] + CPPDEFINES_MOD,
+    ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 env.Replace(

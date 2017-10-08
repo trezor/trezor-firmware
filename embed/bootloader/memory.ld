@@ -97,3 +97,10 @@ _ram_start = ORIGIN(RAM);
 _ram_end = ORIGIN(RAM) + LENGTH(RAM);
 _heap_start = _ebss; /* heap starts just after statically allocated memory */
 _heap_end = 0x2001c000; /* tunable */
+/* used by the startup code to wipe memory */
+ccmram_start = ORIGIN(CCMRAM);
+ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
+
+/* used by the startup code to wipe memory */
+sram_start = ORIGIN(RAM);
+sram_end = ORIGIN(RAM) + LENGTH(RAM);
