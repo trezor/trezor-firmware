@@ -267,7 +267,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_FIRMWARE = [
-    'embed/firmware/startup.S',
+    'embed/firmware/startup.s',
     'embed/firmware/header.S',
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
@@ -288,6 +288,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_core.c',
     'embed/trezorhal/usbd_ctlreq.c',
     'embed/trezorhal/usbd_ioreq.c',
+    'embed/trezorhal/util.s',
+    'embed/trezorhal/vectortable.s',
 ]
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
