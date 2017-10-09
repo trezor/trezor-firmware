@@ -645,8 +645,20 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 	}
 }
 
-void layoutCosiCommitSign(const uint8_t *data, uint32_t len, bool final_sign)
+void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count, const uint8_t *data, uint32_t len, bool final_sign)
 {
+	char *desc = final_sign ? _("CoSi sign message?") : _("CoSi commit message?");
+	if (address_n_count == 2 && address_n[0] == (0x80000000 + 10018) && (address_n[1] & 0x80000000) && (address_n[1] & 0x7FFFFFFF) <= 9) {
+		char desc_buf[32];
+		if (final_sign) {
+			strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
+			desc_buf[16] = '0' + (address_n[1] & 0x7FFFFFFF);
+		} else {
+			strlcpy(desc_buf, _("CoSi commit index #?"), sizeof(desc_buf));
+			desc_buf[18] = '0' + (address_n[1] & 0x7FFFFFFF);
+		}
+		desc = desc_buf;
+	}
 	char str[4][17];
 	if (len == 32) {
 		data2hex(data     , 8, str[0]);
@@ -659,7 +671,6 @@ void layoutCosiCommitSign(const uint8_t *data, uint32_t len, bool final_sign)
 		strlcpy(str[2], "unsupported", sizeof(str[2]));
 		strlcpy(str[3], "length", sizeof(str[3]));
 	}
-	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-		final_sign ? _("CoSi sign message?") : _("CoSi commit message?"),
+	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc,
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }

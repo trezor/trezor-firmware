@@ -1343,7 +1343,7 @@ void fsm_msgCosiCommit(CosiCommit *msg)
 
 	CHECK_PARAM(msg->has_data, _("No data provided"));
 
-	layoutCosiCommitSign(msg->data.bytes, msg->data.size, false);
+	layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes, msg->data.size, false);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
@@ -1383,7 +1383,7 @@ void fsm_msgCosiSign(CosiSign *msg)
 	CHECK_PARAM(msg->has_global_commitment && msg->global_commitment.size == 32, _("Invalid global commitment"));
 	CHECK_PARAM(msg->has_global_pubkey && msg->global_pubkey.size == 32, _("Invalid global pubkey"));
 
-	layoutCosiCommitSign(msg->data.bytes, msg->data.size, true);
+	layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes, msg->data.size, true);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
