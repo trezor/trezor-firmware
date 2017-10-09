@@ -13,7 +13,7 @@ async def dim_screen():
     await loop.sleep(5 * 1000000)
     await ui.backlight_slide(ui.BACKLIGHT_DIM)
     while True:
-        await loop.sleep(1000000)
+        await loop.sleep(10000000)
 
 
 def display_homescreen():
