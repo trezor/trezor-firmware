@@ -4053,6 +4053,8 @@ START_TEST(test_rc4_rfc6229)
 }
 END_TEST
 
+#include "test_segwit.c"
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -4264,6 +4266,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("rc4");
 	tcase_add_test(tc, test_rc4_rfc6229);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("segwit");
+	tcase_add_test(tc, test_segwit);
 	suite_add_tcase(s, tc);
 
 	return s;
