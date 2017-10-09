@@ -60,3 +60,13 @@ def render_scrollbar(page, page_count):
                                   size, ui.DARK_GREY, ui.BG, 4)
     ui.display.bar_radius(x, y + page * padding, size,
                           size, ui.FG, ui.BG, 4)
+
+
+class Scrollbar(ui.Widget):
+
+    def __init__(self, page, page_count):
+        self.page = page
+        self.page_count = page_count
+
+    def render(self):
+        render_scrollbar(self.page, self.page_count)
