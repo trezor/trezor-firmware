@@ -9,7 +9,7 @@ DEFAULT_CANCEL = res.load(ui.ICON_CLEAR)
 DEFAULT_LOCK = res.load(ui.ICON_LOCK)
 
 
-@unimport
+@ui.layout
 async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.messages.ButtonRequestType import ProtectCall
@@ -41,6 +41,7 @@ async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
     dialog = ConfirmDialog(matrix)
     dialog.cancel.area = (0, 240 - 48, 80, 48)
     dialog.confirm.area = (240 - 80, 240 - 48, 80, 48)
+    matrix.onchange()
 
     while True:
         res = await dialog
