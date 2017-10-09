@@ -16,17 +16,18 @@ memset_reg:
   bne .L_loop_begin
   bx lr
 
-  .set SCB_VTOR, 0xE000ED08 // reference "Cortex-M4 Devices Generic User Guide" section 4.3
-
   .global jump_to
   .type jump_to, STT_FUNC
 jump_to:
   mov r4, r0            // save input argument r0
-  // todo: this subroutine re-points the exception handlers before the C code
-  //       that comprises them have been given a good environment to run.
-  //       so, the this needs to disable interrupts before the VTOR
-  //       switch and then the reset_handler of the next stage needs to re-enable interrupts.
-  // todo: CPSID f
+  // this subroutine re-points the exception handlers before the C code
+  // that comprises them has been given a good environment to run.
+  // therefore, this code needs to disable interrupts before the VTOR
+  // update. then, the reset_handler of the next stage needs to re-enable interrupts.
+  // the following prevents activation of all exceptions except Non-Maskable Interrupt (NMI).
+  // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.8:
+  // "there is no requirement to insert memory barrier instructions after CPSID".
+  cpsid f
   // wipe memory at the end of the current stage of code
   ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
   ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
@@ -36,15 +37,16 @@ jump_to:
   ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
   ldr r2, =0            // r2 - the word-sized value to be written
   bl memset_reg
-  // todo: need to think through exception handler races for the VTOR and MSP change below
-  //       there are probably corner cases still.
-  // use the next stage's exception handlers
-  ldr r0, =SCB_VTOR
-  str r4, [r0]
   // give the next stage a fresh main stack pointer
   ldr r0, [r4]
   msr msp, r0
+  // point to the next stage's exception handlers
+  // AN321, section 4.11: "a memory barrier is not required after a VTOR update"
+  .set SCB_VTOR, 0xE000ED08 // reference "Cortex-M4 Devices Generic User Guide" section 4.3
+  ldr r0, =SCB_VTOR
+  str r4, [r0]
   // go on to the next stage
+  ldr lr, =0xffffffff   // set the link register to reset value. there is no reason to return here.
   ldr r0, [r4, 4]
   bx r0
 

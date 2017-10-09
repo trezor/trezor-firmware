@@ -22,6 +22,12 @@ reset_handler:
   ldr r2, =data_size    // size in bytes
   bl memcpy
 
+  // re-enable exceptions
+  // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.7:
+  // "If it is not necessary to ensure that a pended interrupt is recognized immediately before
+  // subsequent operations, it is not necessary to insert a memory barrier instruction."
+  cpsie f
+
   // enter the application code
   bl main
 
