@@ -105,7 +105,7 @@ bootloader.o: ../fastflash/bootloader.bin
 coins.c crypto.c fsm.c transaction.c: coins_count.h
 coins.c: coins_array.h
 
-nem2.c layout2.c: nem_mosaics.h
+nem2.c layout2.c fsm.c: nem_mosaics.h
 
 #################
 # Code Generation
