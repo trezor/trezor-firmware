@@ -25,11 +25,8 @@ ifeq ($(DISPLAY_VSYNC), 0)
 CFLAGS += -DDISPLAY_VSYNC=0
 endif
 
-ifeq ($(STLINKv21), 1)
-OPENOCD = openocd -f interface/stlink-v2-1.cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
-else
-OPENOCD = openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
-endif
+STLINK_VER ?= v2
+OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
 
 ## help commands:
 
