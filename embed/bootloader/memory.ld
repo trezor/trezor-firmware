@@ -1,106 +1,55 @@
-/*
-    TREZORv2 linker script
-    based on common.ld and stm32f405.ld
-*/
+/* TREZORv2 bootloader linker script */
 
-/* Specify the memory areas */
-MEMORY
-{
-    FLASH (rx)      : ORIGIN = 0x08010000, LENGTH =   64K
-    CCMRAM (xrw)    : ORIGIN = 0x10000000, LENGTH =   64K
-    RAM (xrw)       : ORIGIN = 0x20000000, LENGTH =  128K
+ENTRY(reset_handler)
+
+MEMORY {
+  FLASH  (rx)  : ORIGIN = 0x08010000, LENGTH = 64K
+  CCMRAM (wal) : ORIGIN = 0x10000000, LENGTH = 64K
+  SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 128K
 }
 
-/* produce a link error if there is not this amount of RAM for these sections */
-_minimum_stack_size = 2K;
-_minimum_heap_size = 16K;
+main_stack_base = ORIGIN(CCMRAM) + LENGTH(CCMRAM); /* 8-byte aligned full descending stack */
 
-/* Define tho top end of the stack.  The stack is full descending so begins just
-   above last byte of RAM.  Note that EABI requires the stack to be 8-byte
-   aligned for a call. */
-_estack = ORIGIN(RAM) + LENGTH(RAM);
+/* used by the startup code to populate variables used by the C code */
+data_lma = LOADADDR(.data);
+data_vma = ADDR(.data);
+data_size = SIZEOF(.data);
 
-ENTRY(Reset_Handler)
-
-/* define output sections */
-SECTIONS
-{
-    /* Firmware Header */
-    .header :
-    {
-        KEEP(*(.header))
-    } > FLASH
-
-    /* The startup code goes first into FLASH */
-    .flash :
-    {
-        . = ALIGN(4);
-        KEEP(*(.isr_vector)) /* Startup code */
-        . = ALIGN(4);
-        *(.text*)          /* .text* sections (code) */
-        *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
-        . = ALIGN(512);
-        _etext = .;        /* define a global symbol at end of code */
-    } >FLASH
-
-    /* used by the startup to initialize data */
-    _sidata = LOADADDR(.data);
-
-    /* This is the initialized data section
-    The program executes knowing that the data is in the RAM
-    but the loader puts the initial values in the FLASH (inidata).
-    It is one task of the startup to copy the initial values from FLASH to RAM. */
-    .data :
-    {
-        . = ALIGN(4);
-        _sdata = .;        /* create a global symbol at data start; used by startup code in order to initialise the .data section in RAM */
-        *(.data*)          /* .data* sections */
-
-        . = ALIGN(512);
-        _edata = .;        /* define a global symbol at data end; used by startup code in order to initialise the .data section in RAM */
-    } >RAM AT> FLASH
-
-    /* Uninitialized data section */
-    .bss :
-    {
-        . = ALIGN(4);
-        _sbss = .;         /* define a global symbol at bss start; used by startup code */
-        *(.bss*)
-        *(COMMON)
-
-        . = ALIGN(4);
-        _ebss = .;         /* define a global symbol at bss end; used by startup code and GC */
-    } >RAM
-
-    /* this is to define the start of the heap, and make sure we have a minimum size */
-    .heap :
-    {
-        . = ALIGN(4);
-        . = . + _minimum_heap_size;
-        . = ALIGN(4);
-    } >RAM
-
-    /* this just checks there is enough RAM for the stack */
-    .stack :
-    {
-        . = ALIGN(4);
-        . = . + _minimum_stack_size;
-        . = ALIGN(4);
-    } >RAM
-
-    .ARM.attributes 0 : { *(.ARM.attributes) }
-}
-
-/* RAM extents for the garbage collector */
-_codelen = SIZEOF(.flash) + SIZEOF(.data);
-_ram_start = ORIGIN(RAM);
-_ram_end = ORIGIN(RAM) + LENGTH(RAM);
-_heap_start = _ebss; /* heap starts just after statically allocated memory */
-_heap_end = 0x2001c000; /* tunable */
 /* used by the startup code to wipe memory */
 ccmram_start = ORIGIN(CCMRAM);
 ccmram_end = ORIGIN(CCMRAM) + LENGTH(CCMRAM);
 
 /* used by the startup code to wipe memory */
-sram_start = ORIGIN(RAM);
-sram_end = ORIGIN(RAM) + LENGTH(RAM);
+sram_start = ORIGIN(SRAM);
+sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
+
+_codelen = SIZEOF(.flash) + SIZEOF(.data);
+
+SECTIONS {
+  .header : ALIGN(4) {
+    KEEP(*(.header));
+  } >FLASH AT>FLASH
+
+  .flash : ALIGN(512) {
+    KEEP(*(.vector_table));
+    . = ALIGN(4);
+    *(.text*);
+    . = ALIGN(4);
+    *(.rodata*);
+    . = ALIGN(512);
+  } >FLASH AT>FLASH
+
+  .data : ALIGN(4) {
+    *(.data*);
+    . = ALIGN(512);
+  } >CCMRAM AT>FLASH
+
+  .bss : ALIGN(4) {
+    *(.bss*);
+    . = ALIGN(4);
+  } >CCMRAM
+
+  .stack : ALIGN(8) {
+    . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
+  } >CCMRAM
+}

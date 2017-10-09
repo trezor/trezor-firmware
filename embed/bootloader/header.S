@@ -1,6 +1,8 @@
+    .syntax unified
+
 #include "version.h"
 
-    .section  .header,"a",%progbits
+    .section .header, "a"
 
     .type g_header, %object
     .size g_header, .-g_header

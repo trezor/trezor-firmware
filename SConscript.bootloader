@@ -76,7 +76,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_BOOTLOADER = [
-    'embed/bootloader/startup.S',
+    'embed/bootloader/startup.s',
     'embed/bootloader/header.S',
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',
@@ -101,6 +101,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_ctlreq.c',
     'embed/trezorhal/usbd_ioreq.c',
     'embed/trezorhal/util.s',
+    'embed/trezorhal/vectortable.s',
 ]
 
 env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
