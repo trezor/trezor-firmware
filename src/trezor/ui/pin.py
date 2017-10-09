@@ -48,7 +48,7 @@ class PinMatrix(ui.Widget):
         display.bar(0, 0, 205, 48, ui.BG)
 
         # input line with a header
-        display.text_center(120, 30, header, ui.BOLD, ui.GREY, ui.BG)
+        display.text_center(120, 30, header, ui.NORMAL, ui.blend(ui.BG, ui.FG, 0.5), ui.BG)
 
         # pin matrix buttons
         for btn in self.pin_buttons:

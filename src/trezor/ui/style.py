@@ -62,10 +62,10 @@ BTN_DEFAULT = {
     'radius': RADIUS,
 }
 BTN_DEFAULT_ACTIVE = {
-    'bg-color': GREY,
+    'bg-color': FG,
     'fg-color': BG,
     'text-style': BOLD,
-    'border-color': GREY,
+    'border-color': FG,
     'radius': RADIUS,
 }
 BTN_DEFAULT_DISABLED = {
@@ -76,31 +76,31 @@ BTN_DEFAULT_DISABLED = {
     'radius': RADIUS,
 }
 BTN_CANCEL = {
-    'bg-color': RED,
+    'bg-color': LIGHT_RED,
     'fg-color': FG,
     'text-style': BOLD,
-    'border-color': BG,
+    'border-color': LIGHT_RED,
     'radius': RADIUS,
 }
 BTN_CANCEL_ACTIVE = {
-    'bg-color': ACTIVE_RED,
-    'fg-color': FG,
+    'bg-color': FG,
+    'fg-color': LIGHT_RED,
     'text-style': BOLD,
-    'border-color': ACTIVE_RED,
+    'border-color': LIGHT_RED,
     'radius': RADIUS,
 }
 BTN_CONFIRM = {
     'bg-color': GREEN,
     'fg-color': FG,
     'text-style': BOLD,
-    'border-color': BG,
+    'border-color': GREEN,
     'radius': RADIUS,
 }
 BTN_CONFIRM_ACTIVE = {
-    'bg-color': ACTIVE_GREEN,
-    'fg-color': FG,
+    'bg-color': FG,
+    'fg-color': GREEN,
     'text-style': BOLD,
-    'border-color': ACTIVE_GREEN,
+    'border-color': FG,
     'radius': RADIUS,
 }
 BTN_CLEAR = {
@@ -139,7 +139,7 @@ LDR_DEFAULT = {
 }
 LDR_DEFAULT_ACTIVE = {
     'bg-color': BG,
-    'fg-color': ACTIVE_GREEN,
-    'icon': None,
-    'icon-fg-color': None,
+    'fg-color': GREEN,
+    'icon': ICON_SEND,
+    'icon-fg-color': GREEN,
 }
