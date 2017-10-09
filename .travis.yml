@@ -8,18 +8,22 @@ addons:
       - build-essential
       - gcc-arm-none-eabi
       - libnewlib-arm-none-eabi
-      - protobuf-compiler
-      - libprotobuf-dev
-      - python-protobuf
 
 env:
   global:
     - MAKEFLAGS=-j2
+    - PROTOBUF_VERSION=3.4.0
   matrix:
     - DEBUG_LINK=0 FASTFLASH=0
     - DEBUG_LINK=1 FASTFLASH=0
     - DEBUG_LINK=0 FASTFLASH=1
     - DEBUG_LINK=1 FASTFLASH=1
+
+install:
+  - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+  - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
+  - export PATH="$(pwd)/protoc/bin:$PATH"
+  - pip2 install --user "protobuf==${PROTOBUF_VERSION}"
 
 script:
   - make -C vendor/libopencm3 lib/stm32/f2
@@ -27,7 +31,6 @@ script:
   - make
   - make -C bootloader
   - make -C fastflash
-  - sed -i '/, deprecated = true/d' firmware/protob/messages.proto # protobuf 2.5 compatibility :-/
   - make -C firmware/protob
   - make -C firmware
   - make -C demo

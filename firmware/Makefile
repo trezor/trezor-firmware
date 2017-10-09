@@ -105,6 +105,8 @@ bootloader.o: ../fastflash/bootloader.bin
 coins.c crypto.c fsm.c transaction.c: coins_count.h
 coins.c: coins_array.h
 
+nem2.c layout2.c: nem_mosaics.h
+
 #################
 # Code Generation
 coins_count.h: coins-gen.py coins.json
@@ -113,5 +115,9 @@ coins_count.h: coins-gen.py coins.json
 coins_array.h: coins-gen.py coins.json
 	./$< array > $@
 
+nem_mosaics.c nem_mosaics.h: nem_mosaics.py nem_mosaics.json
+	./$<
+
 clean::
 	rm -f coins_count.h coins_array.h
+	rm -f nem_mosaics.c nem_mosaics.h
