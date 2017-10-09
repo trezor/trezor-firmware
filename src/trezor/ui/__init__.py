@@ -92,11 +92,11 @@ async def backlight_slide(val: int, delay: int=20000):
 
 def layout(f):
     async def inner(*args, **kwargs):
-        slider = backlight_slide(BACKLIGHT_NORMAL, 4000)
+        slider = backlight_slide(BACKLIGHT_NORMAL, 1000)
         loop.schedule(slider)
         await f(*args, **kwargs)
         slider.close()
-        await backlight_slide(BACKLIGHT_DIM, 4000)
+        await backlight_slide(BACKLIGHT_DIM, 1000)
 
     return inner
 
