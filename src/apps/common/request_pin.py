@@ -84,7 +84,7 @@ async def request_pin_on_client(ctx: wire.Context, code: int=None) -> str:
     return _decode_pin(ack.pin, digits)
 
 
-request_pin = request_pin_on_display
+request_pin = request_pin_on_client
 
 
 @unimport
