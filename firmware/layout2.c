@@ -645,11 +645,16 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 	}
 }
 
+static inline bool is_slip18(const uint32_t *address_n, size_t address_n_count)
+{
+	return address_n_count == 2 && address_n[0] == (0x80000000 + 10018) && (address_n[1] & 0x80000000) && (address_n[1] & 0x7FFFFFFF) <= 9;
+}
+
 void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count, const uint8_t *data, uint32_t len, bool final_sign)
 {
 	char *desc = final_sign ? _("CoSi sign message?") : _("CoSi commit message?");
-	if (address_n_count == 2 && address_n[0] == (0x80000000 + 10018) && (address_n[1] & 0x80000000) && (address_n[1] & 0x7FFFFFFF) <= 9) {
-		char desc_buf[32];
+	char desc_buf[32];
+	if (is_slip18(address_n, address_n_count)) {
 		if (final_sign) {
 			strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
 			desc_buf[16] = '0' + (address_n[1] & 0x7FFFFFFF);
