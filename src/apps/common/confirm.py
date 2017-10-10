@@ -7,6 +7,7 @@ if __debug__:
     signal = loop.signal()
 
 
+@ui.layout
 @unimport
 async def confirm(ctx, content, code=None, *args, **kwargs):
     from trezor.ui.confirm import ConfirmDialog, CONFIRMED
@@ -29,6 +30,7 @@ async def confirm(ctx, content, code=None, *args, **kwargs):
     return await waiter == CONFIRMED
 
 
+@ui.layout
 @unimport
 async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
     from trezor.ui.confirm import HoldToConfirmDialog, CONFIRMED

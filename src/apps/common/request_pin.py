@@ -58,6 +58,7 @@ async def request_pin_on_display(ctx: wire.Context, code: int=None) -> str:
             raise wire.FailureError(PinCancelled, 'PIN cancelled')
 
 
+@ui.layout
 @unimport
 async def request_pin_on_client(ctx: wire.Context, code: int=None) -> str:
     from trezor.messages.FailureType import PinCancelled
