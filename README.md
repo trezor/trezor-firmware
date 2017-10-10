@@ -83,7 +83,7 @@ Not supported yet ...
 ### Linux
 
 For flashing firmware to blank device (without bootloader) use `make flash`,
-or `make flash STLINKv21=1` if using a ST-LINK/V2.1 interface.
+or `make flash STLINK_VER=v2-1` if using a ST-LINK/V2.1 interface.
 
 #### Debian/Ubuntu
 

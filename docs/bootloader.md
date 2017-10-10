@@ -1,6 +1,6 @@
 # TREZOR Core Bootloader
 
-TREZOR initialization in split into two stages.
+TREZOR initialization is split into two stages.
 See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
 
 First stage (boardloader) is stored in write-protected area, which means it is non-upgradable.
@@ -14,6 +14,20 @@ and runs it if everything is OK.
 If first stage boardloader finds a valid second stage bootloader image
 on the SD card (in raw format, no filesystem), it will replace the internal
 second stage, allowing a second stage update via SD card.
+
+The boardloader is special in that it is the device's write protected embedded code.
+The primary purpose for write protecting the boardloader is to make it the
+immutable portion that can defend against code-based attacks (e.g.- BadUSB)
+and bugs that would reprogram any/all of the embedded code.
+It assures that only verified signed embedded code is run on the device
+(and that the intended code is run, and not skipped).
+The write protection also provides some defense against attacks where the
+attacker has physical control of the device.
+
+The boardloader must include an update mechanism for later stage code because
+if it did not, then a corruption/erasure of later stage flash memory would
+leave the device unusable (only the boardloader could run and it would not
+pass execution to a later stage that fails signature validation).
 
 ## Second Stage - Bootloader
 
