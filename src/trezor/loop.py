@@ -65,6 +65,12 @@ def unpause(task):
             _paused[iface].remove(task)
 
 
+def close(task):
+    unschedule(task)
+    unpause(task)
+    task.close()
+
+
 def run():
     '''
     Loop forever, stepping through scheduled tasks and awaiting I/O events
@@ -259,9 +265,7 @@ class wait(Syscall):
     def exit(self):
         for task in self.scheduled:
             if task not in self.finished:
-                unpause(task)
-                unschedule(task)
-                task.close()
+                close(task)
 
     async def _wait(self, child):
         try:

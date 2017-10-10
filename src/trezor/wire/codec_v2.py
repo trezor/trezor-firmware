@@ -227,7 +227,7 @@ class SesssionSupervisor:
     def close(self, sid):
         if sid in self.handling_tasks:
             task = self.handling_tasks.pop(sid)
-            task.close()
+            loop.close(task)
 
     def newsid(self):
         while True:

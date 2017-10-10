@@ -26,7 +26,7 @@ def closedefault():
     global default
 
     if default:
-        default.close()
+        loop.close(default)
         default = None
         log.debug(__name__, 'closedefault')
 

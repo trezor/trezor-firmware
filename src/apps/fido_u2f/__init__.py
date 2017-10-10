@@ -451,7 +451,8 @@ class ConfirmState:
     def kill(self) -> None:
         if self.task is not None:
             workflow.onclose(self.task)
-            self.task.close()
+            loop.close(self.task)
+            self.task = None
 
     async def confirm(self) -> None:
         from trezor.ui.confirm import HoldToConfirmDialog
