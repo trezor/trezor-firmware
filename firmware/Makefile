@@ -101,14 +101,6 @@ bootloader.o: ../fastflash/bootloader.bin
 		--rename-section .data=.rodata \
 		$< $@
 
-# ensure header files are generated prior to compiling sources
-coins.c crypto.c fsm.c transaction.c: coins_count.h
-coins.c: coins_array.h
-
-nem2.c layout2.c fsm.c: nem_mosaics.h
-
-#################
-# Code Generation
 coins_count.h: coins-gen.py coins.json
 	./$< count > $@
 
