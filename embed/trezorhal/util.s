@@ -48,6 +48,18 @@ jump_to:
   // go on to the next stage
   ldr lr, =0xffffffff   // set the link register to reset value. there is no reason to return here.
   ldr r0, [r4, 4]
+  ldr r1, =0
+  ldr r2, =0
+  ldr r3, =0
+  ldr r4, =0
+  ldr r5, =0
+  ldr r6, =0
+  ldr r7, =0
+  ldr r8, =0
+  ldr r9, =0
+  ldr r10, =0
+  ldr r11, =0
+  ldr r12, =0
   bx r0
 
   .end
