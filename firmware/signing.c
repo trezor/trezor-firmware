@@ -68,6 +68,12 @@ static uint8_t multisig_fp[32];
 static uint32_t in_address_n[8];
 static size_t in_address_n_count;
 
+/* marker for in_address_n_count to indicate a mismatch in bip32 paths in 
+   input */
+#define BIP32_NOCHANGEALLOWED 1
+/* maximum allowed change index */
+#define MAX_BIP32_LAST_ELEMENT 1000000
+
 enum {
 	SIGHASH_ALL = 1,
 	SIGHASH_FORKID = 0x40,
@@ -328,61 +334,45 @@ void phase2_request_next_input(void)
 
 void extract_input_bip32_path(const TxInputType *tinput)
 {
-	if (in_address_n_count == (size_t) -1) {
+	if (in_address_n_count == BIP32_NOCHANGEALLOWED) {
 		return;
 	}
 	size_t count = tinput->address_n_count;
-	if (count < 1) {
+	if (count < 2) {
 		// no change address allowed
-		in_address_n_count = (size_t) -1;
+		in_address_n_count = BIP32_NOCHANGEALLOWED;
 		return;
 	}
 	if (in_address_n_count == 0) {
 		// initialize in_address_n on first input seen
 		in_address_n_count = count;
-		if (count > 2) { // if longer than 2 elements, store first N - 2
-			memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
-		}
+		// store first N - 2
+		memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
 		return;
 	}
 	// check whether they are same length
 	if (in_address_n_count != count) {
-		in_address_n_count = (size_t) -1;
+		in_address_n_count = BIP32_NOCHANGEALLOWED;
 		return;
 	}
-	if (count > 2 && memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t)) != 0) {
+	if (memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t)) != 0) {
 		// mismatch -> no change address allowed
-		in_address_n_count = (size_t) -1;
+		in_address_n_count = BIP32_NOCHANGEALLOWED;
 		return;
 	}
 }
-
-#define MAX_BIP32_LAST_ELEMENT 1000000
 
 bool check_change_bip32_path(const TxOutputType *toutput)
 {
 	size_t count = toutput->address_n_count;
 
-	if (count < 1 || in_address_n_count < 1) {
-		return 0;
-	}
-
-	if (count != in_address_n_count) {
-		return 0;
-	}
-
-	if (toutput->address_n[count - 1] > MAX_BIP32_LAST_ELEMENT) {
-		return 0;
-	}
-
-	if (count >= 2) {
-		if (0 != memcmp(in_address_n, toutput->address_n, (count - 2) * sizeof(uint32_t)) ||
-		       toutput->address_n[count - 2] != 1) {
-			return 0;
-		}
-	}
-
-	return 1;
+	// Note: count >= 2 and count == in_address_n_count
+	// imply that in_address_n_count != BIP32_NOCHANGEALLOWED
+	return (count >= 2
+			&& count == in_address_n_count
+			&& 0 == memcmp(in_address_n, toutput->address_n, (count - 2) * sizeof(uint32_t))
+			&& toutput->address_n[count - 2] == 1
+			&& toutput->address_n[count - 1] <= MAX_BIP32_LAST_ELEMENT);
 }
 
 bool compile_input_script_sig(TxInputType *tinput)
@@ -397,14 +387,12 @@ bool compile_input_script_sig(TxInputType *tinput)
 			return false;
 		}
 	}
-	if (in_address_n_count >= 1) {
+	if (in_address_n_count != BIP32_NOCHANGEALLOWED) {
 		// check that input address didn't change
 		size_t count = tinput->address_n_count;
-		if (count != in_address_n_count) {
-			return false;
-		}
-		if (count >= 2
-			&& 0 != memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t))) {
+		if (count < 2
+			|| count != in_address_n_count
+			|| 0 != memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t))) {
 			return false;
 		}
 	}
