@@ -46,9 +46,9 @@ def unschedule(task):
     queue_copy = utimeq.utimeq(_QUEUE_SIZE)
     while _queue:
         _queue.pop(task_entry)
-        t, v, d = task_entry
+        d, t, v = task_entry
         if t is not task:
-            queue_copy.push(t, v, d)
+            queue_copy.push(d, t, v)
     _queue = queue_copy
 
 
