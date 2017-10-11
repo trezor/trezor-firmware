@@ -19,6 +19,13 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, 
     for (;;);
 }
 
+uint32_t __stack_chk_guard;
+
+void __attribute__((noreturn)) __stack_chk_fail(void)
+{
+    __fatal_error("Stack smashing detected.", NULL, 0, NULL);
+}
+
 #ifndef NDEBUG
 void __assert_func(const char *file, int line, const char *func, const char *expr) {
     display_printf("\nassert(%s)\n", expr);

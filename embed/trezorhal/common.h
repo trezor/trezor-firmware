@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #define BOARDLOADER_START  0x08000000
-#define BOOTLOADER_START   0x08010000
-#define FIRMWARE_START     0x08020000
+#define BOOTLOADER_START   0x08020000
+#define FIRMWARE_START     0x08040000
 #define HEADER_SIZE        0x200
 
 extern void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
@@ -19,5 +19,7 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, 
 void jump_to(uint32_t address);
 
 void hal_delay(uint32_t ms);
+
+extern uint32_t __stack_chk_guard;
 
 #endif

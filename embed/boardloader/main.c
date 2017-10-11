@@ -4,6 +4,7 @@
 #include "display.h"
 #include "image.h"
 #include "flash.h"
+#include "rng.h"
 #include "sdcard.h"
 #include "version.h"
 
@@ -143,6 +144,8 @@ void check_and_jump(void)
 
 int main(void)
 {
+    __stack_chk_guard = rng_get();
+
     clear_peripheral_local_memory();
     periph_init();
 

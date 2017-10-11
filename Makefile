@@ -28,6 +28,14 @@ endif
 STLINK_VER ?= v2
 OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
 
+BOARDLOADER_START   = 0x08000000
+BOOTLOADER_START    = 0x08020000
+FIRMWARE_START      = 0x08040000
+
+BOARDLOADER_MAXSIZE = 49152
+BOOTLOADER_MAXSIZE  = 131072
+FIRMWARE_MAXSIZE    = 786432
+
 ## help commands:
 
 help: ## show this help
@@ -109,16 +117,16 @@ clean_cross: ## clean mpy-cross build
 flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using OpenOCD
 
 flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08000000; exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
 
 flash_bootloader: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08010000; exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08020000; exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 
 flash_combine: $(FIRMWARE_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< 0x08000000; exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
 
 flash_erase: ## erase all sectors in flash bank 0
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
@@ -159,13 +167,13 @@ bloaty: ## run bloaty size profiler
 	bloaty -d compileunits -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 
 sizecheck: ## check sizes of binary files
-	test 32768 -ge $(shell stat -c%s $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
-	test 65536 -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
-	test 917504 -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)
+	test $(BOARDLOADER_MAXSIZE) -ge $(shell stat -c%s $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
+	test $(BOOTLOADER_MAXSIZE) -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
+	test $(FIRMWARE_MAXSIZE) -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
 combine: ## combine boardloader + bootloader + firmware into one combined image
 	./tools/combine_firmware \
-		0x08000000 $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
-		0x08010000 $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
-		0x08020000 $(FIRMWARE_BUILD_DIR)/firmware.bin \
+		$(BOARDLOADER_START) $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
+		$(BOOTLOADER_START) $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
+		$(FIRMWARE_START) $(FIRMWARE_BUILD_DIR)/firmware.bin \
 		> $(FIRMWARE_BUILD_DIR)/combined.bin \

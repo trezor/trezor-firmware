@@ -21,30 +21,17 @@
 #include "sdcard.h"
 #include "touch.h"
 
-bool firmware_standalone(void)
+int main(void)
 {
-    // linker script defined symbol -- reference 3.5.5 in GNU linker manual
-    extern const uint32_t _flash_start;
-    return &_flash_start == ((uint32_t *) 0x0800000);
-}
-
-int main(void) {
-
-    if (firmware_standalone()) {
-        SystemInit();
-    }
+    __stack_chk_guard = rng_get();
 
     periph_init();
 
     pendsv_init();
 
-    if (firmware_standalone()) {
-        display_init();
-    } else {
-        display_pwm_init();
-        display_orientation(0);
-        display_backlight(255);
-    }
+    display_pwm_init();
+    display_orientation(0);
+    display_backlight(255);
 
     if (0 != flash_init()) {
         __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);

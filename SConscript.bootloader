@@ -93,6 +93,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
+    'embed/trezorhal/rng.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/touch.c',
     'embed/trezorhal/usb.c',
@@ -122,6 +123,7 @@ env.Replace(
     '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith '
     '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections ' +
+    '-fstack-protector-all ' +
     CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-nostdlib -T embed/bootloader/memory.ld --gc-sections',

@@ -6,6 +6,7 @@
 #include "display.h"
 #include "image.h"
 #include "flash.h"
+#include "rng.h"
 #include "touch.h"
 #include "usb.h"
 #include "version.h"
@@ -16,7 +17,8 @@
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
 
-void pendsv_isr_handler(void) {
+void pendsv_isr_handler(void)
+{
     __fatal_error("pendsv", __FILE__, __LINE__, __FUNCTION__);
 }
 
@@ -193,6 +195,8 @@ void mainloop(void)
 
 int main(void)
 {
+    __stack_chk_guard = rng_get();
+
     periph_init();
 
     display_pwm_init();
