@@ -5,7 +5,7 @@ ENTRY(reset_handler)
 MEMORY {
   FLASH  (rx)  : ORIGIN = 0x08040000, LENGTH = 768K
   CCMRAM (wal) : ORIGIN = 0x10000000, LENGTH = 64K
-  SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 128K
+  SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 192K
 }
 
 main_stack_base = ORIGIN(SRAM) + LENGTH(SRAM); /* 8-byte aligned full descending stack */
