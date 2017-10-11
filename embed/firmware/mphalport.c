@@ -14,7 +14,7 @@ int mp_hal_stdin_rx_chr(void) {
         }
         return c;
     } else {
-        __fatal_error("vcp stdio is not configured", __FILE__, __LINE__, __func__);
+        __fatal_error("vcp stdio is not configured", __FILE__, __LINE__, __FUNCTION__);
     }
 }
 
