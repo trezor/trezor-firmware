@@ -8,7 +8,7 @@ import freetype
 MIN_GLYPH = ord(' ')
 MAX_GLYPH = ord('~')
 
-FONT_BPP = 2
+FONT_BPP = 4
 
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
