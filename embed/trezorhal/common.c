@@ -60,6 +60,9 @@ void hal_delay(uint32_t ms)
     HAL_Delay(ms);
 }
 
+#define USB_OTG_HS_DATA_FIFO_RAM  (USB_OTG_HS_PERIPH_BASE + 0x20000U) // reference RM0090 section 35.12.1 Figure 413
+#define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
+
 void clear_peripheral_local_memory(void)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_OTGHSEN; // enable USB_OTG_HS peripheral clock so that the peripheral memory is accessible
