@@ -36,7 +36,7 @@ help: ## show this help
 ## dependencies commands:
 
 vendor: ## update git submodules
-	git submodule update --init
+	git submodule update --init --recursive --force
 
 res: ## update resources
 	./tools/res_collect
