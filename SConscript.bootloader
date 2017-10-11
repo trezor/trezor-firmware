@@ -71,7 +71,6 @@ SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c',
-    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fsmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
 ]
@@ -140,7 +139,7 @@ env.Replace(
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
-        'STM32F405xx',
+        'STM32F427xx',
         'TREZOR_STM32',
         'MCU_SERIES_F4',
         'PB_FIELD_16BIT',

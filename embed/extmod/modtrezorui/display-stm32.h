@@ -7,10 +7,6 @@
 
 #include STM32_HAL_H
 
-#if !defined(STM32F405xx) && !defined(STM32F427xx)
-#error Unsupported MCU
-#endif
-
 #ifndef DISPLAY_ILI9341V
 #define DISPLAY_ILI9341V 0
 #endif
@@ -152,12 +148,7 @@ int display_init(void) {
     // init peripherials
     __HAL_RCC_GPIOE_CLK_ENABLE();
     __HAL_RCC_TIM1_CLK_ENABLE();
-#ifdef STM32F405xx
-    __HAL_RCC_FSMC_CLK_ENABLE();
-#endif
-#ifdef STM32F427xx
     __HAL_RCC_FMC_CLK_ENABLE();
-#endif
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -184,12 +175,7 @@ int display_init(void) {
     GPIO_InitStructure.Pin       = GPIO_PIN_7;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-#ifdef STM32F405xx
-    GPIO_InitStructure.Alternate = GPIO_AF12_FSMC;
-#endif
-#ifdef STM32F427xx
     GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
-#endif
     //                             LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4   LCD_WR/PD5
     GPIO_InitStructure.Pin       = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
@@ -205,39 +191,6 @@ int display_init(void) {
     // timing values from:
     // http://ele-tech.com/html/it-is-developed-that-embedded-stm32-fsmc-interface-drives-tft-lcd-to-be-designed.html
 
-#ifdef STM32F405xx
-    FSMC_NORSRAM_InitTypeDef FSMC_NORSRAMInitStructure;
-    FSMC_NORSRAM_TimingTypeDef FSMC_NORSRAMTimingStructure;
-
-    FSMC_NORSRAMTimingStructure.AddressSetupTime = 2;
-    FSMC_NORSRAMTimingStructure.AddressHoldTime = 0;
-    FSMC_NORSRAMTimingStructure.DataSetupTime = 5;
-    FSMC_NORSRAMTimingStructure.BusTurnAroundDuration = 0;
-    FSMC_NORSRAMTimingStructure.CLKDivision = 0;
-    FSMC_NORSRAMTimingStructure.DataLatency = 0;
-    FSMC_NORSRAMTimingStructure.AccessMode = FSMC_ACCESS_MODE_B;
-
-    FSMC_NORSRAMInitStructure.NSBank = FSMC_NORSRAM_BANK1;
-    FSMC_NORSRAMInitStructure.DataAddressMux = FSMC_DATA_ADDRESS_MUX_DISABLE;
-    FSMC_NORSRAMInitStructure.MemoryType = FSMC_MEMORY_TYPE_NOR;
-    FSMC_NORSRAMInitStructure.MemoryDataWidth = FSMC_NORSRAM_MEM_BUS_WIDTH_8;
-    FSMC_NORSRAMInitStructure.BurstAccessMode = FSMC_BURST_ACCESS_MODE_DISABLE;
-    FSMC_NORSRAMInitStructure.WaitSignalPolarity = FSMC_WAIT_SIGNAL_POLARITY_LOW;
-    FSMC_NORSRAMInitStructure.WrapMode = FSMC_WRAP_MODE_DISABLE;
-    FSMC_NORSRAMInitStructure.WaitSignalActive = FSMC_WAIT_TIMING_BEFORE_WS;
-    FSMC_NORSRAMInitStructure.WriteOperation = FSMC_WRITE_OPERATION_ENABLE;
-    FSMC_NORSRAMInitStructure.WaitSignal = FSMC_WAIT_SIGNAL_DISABLE;
-    FSMC_NORSRAMInitStructure.ExtendedMode = FSMC_EXTENDED_MODE_DISABLE;
-    FSMC_NORSRAMInitStructure.AsynchronousWait = FSMC_ASYNCHRONOUS_WAIT_DISABLE;
-    FSMC_NORSRAMInitStructure.WriteBurst = FSMC_WRITE_BURST_DISABLE;
-    FSMC_NORSRAMInitStructure.PageSize = FSMC_PAGE_SIZE_NONE;
-
-    FSMC_NORSRAM_Init(FSMC_NORSRAM_DEVICE, &FSMC_NORSRAMInitStructure);
-    FSMC_NORSRAM_Timing_Init(FSMC_NORSRAM_DEVICE, &FSMC_NORSRAMTimingStructure, FSMC_NORSRAMInitStructure.NSBank);
-    // FSMC_NORSRAM_Extended_Timing_Init(FSMC_NORSRAM_EXTENDED_DEVICE, &FSMC_NORSRAMTimingStructure, FSMC_NORSRAMInitStructure.NSBank, FSMC_NORSRAMInitStructure.ExtendedMode);
-    __FSMC_NORSRAM_ENABLE(FSMC_NORSRAM_DEVICE, FSMC_NORSRAMInitStructure.NSBank);
-#endif
-#ifdef STM32F427xx
     FMC_NORSRAM_InitTypeDef FMC_NORSRAMInitStructure;
     FMC_NORSRAM_TimingTypeDef FMC_NORSRAMTimingStructure;
 
@@ -268,7 +221,6 @@ int display_init(void) {
     FMC_NORSRAM_Timing_Init(FMC_NORSRAM_DEVICE, &FMC_NORSRAMTimingStructure, FMC_NORSRAMInitStructure.NSBank);
     // FMC_NORSRAM_Extended_Timing_Init(FMC_NORSRAM_EXTENDED_DEVICE, &FMC_NORSRAMTimingStructure, FMC_NORSRAMInitStructure.NSBank, FMC_NORSRAMInitStructure.ExtendedMode);
     __FMC_NORSRAM_ENABLE(FMC_NORSRAM_DEVICE, FMC_NORSRAMInitStructure.NSBank);
-#endif
 
     // hardware reset
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
