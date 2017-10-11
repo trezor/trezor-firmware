@@ -204,7 +204,13 @@ static inline mp_uint_t disable_irq(void) {
 #define MICROPY_EVENT_POLL_HOOK            __WFI();
 
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
-#define MICROPY_HW_MCU_NAME "STM32F405VG"
+#if defined(STM32F405xx)
+#define MICROPY_HW_MCU_NAME "STM32F405xx"
+#elif defined(STM32F427xx)
+#define MICROPY_HW_MCU_NAME "STM32F427xx"
+#else
+#error Unsupported MCU
+#endif
 #define MICROPY_PY_SYS_PLATFORM "trezor"
 
 // There is no classical C heap in bare-metal ports, only Python
