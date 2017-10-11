@@ -1,6 +1,5 @@
 #include STM32_HAL_H
 
-#include "pendsv.h"
 #include "rng.h"
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
@@ -37,10 +36,6 @@ void SystemInit(void)
     #endif
 }
 
-void PendSV_Handler(void) {
-    pendsv_isr_handler();
-}
-
 void SysTick_Handler(void) {
     // Instead of calling HAL_IncTick we do the increment here of the counter.
     // This is purely for efficiency, since SysTick is called 1000 times per
@@ -69,4 +64,3 @@ void SysTick_Handler(void) {
     //     dma_idle_handler(uwTick);
     // }
 }
-

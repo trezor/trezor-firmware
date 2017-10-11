@@ -17,11 +17,6 @@
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
 
-void pendsv_isr_handler(void)
-{
-    __fatal_error("pendsv", __FILE__, __LINE__, __FUNCTION__);
-}
-
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
 {
     display_clear();

@@ -10,8 +10,6 @@
 
 extern void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 
-void clear_peripheral_local_memory(void);
-
 void periph_init(void);
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func);

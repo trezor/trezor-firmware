@@ -86,6 +86,10 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val) {
     __fatal_error("uncaught exception", NULL, 0, NULL);
 }
 
+void PendSV_Handler(void) {
+    pendsv_isr_handler();
+}
+
 // MicroPython file I/O stubs
 
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
