@@ -71,6 +71,7 @@ SOURCE_STMHAL = [
 
 SOURCE_BOARDLOADER = [
     'embed/boardloader/startup.s',
+    'embed/boardloader/lowlevel.c',
     'embed/boardloader/main.c',
 ]
 
