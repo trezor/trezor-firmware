@@ -24,7 +24,7 @@ TODO
 * 1 x USB Cable Type A Plug/Male to Type Micro-B Plug/Male
 * 1 x [ER-TFTM028-4 Display + Capacitive Touch Panel Module](http://www.ebay.com/itm/302049581340) (Note: specify 40-Pin Header, 8080 8-bit Parallel, VDD=3.3V, Capacitive Touch Panel)
 * 1 x [microSD Board](https://www.waveshare.com/product/modules/storage/sd-tf-storage/micro-sd-storage-board.htm)
-* 27 x Female to female jumper wires with 0.1" header contacts
+* 32 x Female to female jumper wires with 0.1" header contacts
 
 #### Display
 
@@ -56,7 +56,7 @@ TODO
 #### Capacitive Touch Panel / Sensor
 
 * Bus/Interface: I2C
-* Driver IC: FT6206 [TODO: does this matter?]
+* Driver IC: FT6206
 * single touch
 
 ##### Pinout
@@ -84,21 +84,16 @@ TODO
 
 #### USB Socket
 
-|Description|MCU Pin|
-|-----------|-------|
-|OTG_FS_VBUS|PA9|
-|OTG_FS_ID|PA10|
-|OTG_FS_DM|PA11|
-|OTG_FS_DP|PA12|
+* USB HS (high-speed) peripheral in FS (full-speed) mode
 
 ##### Pinout
 
 |Description|MCU Pin|
 |-----------|-------|
-|OTG_FS_VBUS|PA9|
-|OTG_FS_ID|PA10|
-|OTG_FS_DM|PA11|
-|OTG_FS_DP|PA12|
+|OTG_HS_VBUS|PB13|
+|OTG_HS_ID|PB12|
+|OTG_HS_DM|PB14|
+|OTG_HS_DP|PB15|
 
 #### Dev Board
 
