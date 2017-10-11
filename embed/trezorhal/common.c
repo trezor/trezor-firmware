@@ -27,7 +27,7 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 #endif
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-    __fatal_error("uncaught exception", __FILE__, __LINE__, __FUNCTION__);
+    __fatal_error("uncaught exception", NULL, 0, NULL);
 }
 
 void periph_init(void) {
