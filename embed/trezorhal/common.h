@@ -8,6 +8,13 @@
 #define FIRMWARE_START     0x08020000
 #define HEADER_SIZE        0x200
 
+#define USB_OTG_HS_DATA_FIFO_RAM  (USB_OTG_HS_PERIPH_BASE + 0x20000U) // reference RM0090 section 35.12.1 Figure 413
+#define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
+
+extern void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
+
+void clear_peripheral_local_memory(void);
+
 void periph_init(void);
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func);

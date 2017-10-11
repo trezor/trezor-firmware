@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "display.h"
+#include "rng.h"
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {}
@@ -57,4 +58,13 @@ void periph_init(void) {
 void hal_delay(uint32_t ms)
 {
     HAL_Delay(ms);
+}
+
+void clear_peripheral_local_memory(void)
+{
+    RCC->AHB1ENR |= RCC_AHB1ENR_OTGHSEN; // enable USB_OTG_HS peripheral clock so that the peripheral memory is accessible
+    const uint32_t unpredictable = rng_get();
+    memset_reg((volatile void *) USB_OTG_HS_DATA_FIFO_RAM, (volatile void *) (USB_OTG_HS_DATA_FIFO_RAM + USB_OTG_HS_DATA_FIFO_SIZE), unpredictable);
+    memset_reg((volatile void *) USB_OTG_HS_DATA_FIFO_RAM, (volatile void *) (USB_OTG_HS_DATA_FIFO_RAM + USB_OTG_HS_DATA_FIFO_SIZE), 0);
+    RCC->AHB1ENR &= ~RCC_AHB1ENR_OTGHSEN; // disable USB OTG_HS peripheral clock as the peripheral is not needed right now
 }

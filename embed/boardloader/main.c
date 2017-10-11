@@ -130,6 +130,7 @@ void check_and_jump(void)
 
 int main(void)
 {
+    clear_peripheral_local_memory();
     periph_init();
 
     if (0 != display_init()) {
