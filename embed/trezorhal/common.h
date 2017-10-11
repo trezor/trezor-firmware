@@ -16,8 +16,6 @@ void periph_init(void);
 
 void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func);
 
-void __attribute__((noreturn)) nlr_jump_fail(void *val);
-
 void jump_to(uint32_t address);
 
 void hal_delay(uint32_t ms);

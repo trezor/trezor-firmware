@@ -93,7 +93,13 @@ int main(void) {
     return 0;
 }
 
-// Micropython file I/O stubs
+// MicroPython default exception handler
+
+void __attribute__((noreturn)) nlr_jump_fail(void *val) {
+    __fatal_error("uncaught exception", NULL, 0, NULL);
+}
+
+// MicroPython file I/O stubs
 
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     return NULL;
