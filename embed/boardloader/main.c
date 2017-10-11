@@ -34,11 +34,7 @@ bool check_sdcard(void)
 
     sdcard_power_off();
 
-    if (image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, NULL)) {
-        return true;
-    } else {
-        return false;
-    }
+    return image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, NULL);
 }
 
 static void progress_callback(uint16_t val) {
@@ -48,6 +44,23 @@ static void progress_callback(uint16_t val) {
 bool copy_sdcard(void)
 {
     display_backlight(255);
+
+    display_printf("copying bootloader from SD card\n");
+    display_printf("in 5 seconds ...\n\n");
+    display_printf("unplug now if you want to abort\n\n");
+
+    display_printf("5 ");
+    hal_delay(1000);
+    display_printf("4 ");
+    hal_delay(1000);
+    display_printf("3 ");
+    hal_delay(1000);
+    display_printf("2 ");
+    hal_delay(1000);
+    display_printf("1 ");
+    hal_delay(1000);
+    display_printf("0!\n\n");
+
     display_printf("erasing flash ");
 
     // erase flash (except boardloader)
