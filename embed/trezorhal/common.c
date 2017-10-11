@@ -4,17 +4,23 @@
 #include "display.h"
 #include "rng.h"
 
-void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
+void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func) {
     for (volatile uint32_t delay = 0; delay < 10000000; delay++) {}
     display_orientation(0);
     display_backlight(255);
     display_print_color(COLOR_WHITE, COLOR_RED128);
-    display_printf("\nFATAL ERROR:\n%s\n", msg);
+    display_printf("\nFATAL ERROR:\n");
+    if (expr) {
+        display_printf("expr: %s\n", expr);
+    }
+    if (msg) {
+        display_printf("msg : %s\n", msg);
+    }
     if (file) {
-        display_printf("File: %s:%d\n", file, line);
+        display_printf("file: %s:%d\n", file, line);
     }
     if (func) {
-        display_printf("Func: %s\n", func);
+        display_printf("func: %s\n", func);
     }
     for (;;);
 }
@@ -23,13 +29,12 @@ uint32_t __stack_chk_guard;
 
 void __attribute__((noreturn)) __stack_chk_fail(void)
 {
-    __fatal_error("Stack smashing detected.", NULL, 0, NULL);
+    trassert(0, "Stack smashing detected");
 }
 
 #ifndef NDEBUG
 void __assert_func(const char *file, int line, const char *func, const char *expr) {
-    display_printf("\nassert(%s)\n", expr);
-    __fatal_error("Assertion failed", file, line, func);
+    __fatal_error(expr, "assert failed", file, line, func);
 }
 #endif
 

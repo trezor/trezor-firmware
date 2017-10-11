@@ -147,21 +147,13 @@ int main(void)
     clear_otg_hs_memory();
     periph_init();
 
-    if (0 != display_init()) {
-        __fatal_error("display_init", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if (0 != flash_init()) {
-        __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if (0 != sdcard_init()) {
-        __fatal_error("sdcard_init", __FILE__, __LINE__, __FUNCTION__);
-    }
+    trassert(0 == display_init(), NULL);
+    trassert(0 == flash_init(), NULL);
+    trassert(0 == sdcard_init(), NULL);
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
-            __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
+            trassert(true == copy_sdcard(), NULL);
         } else {
             for (;;);
         }
@@ -169,7 +161,7 @@ int main(void)
 
     check_and_jump();
 
-    __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
+    trassert(0, "halt");
 
     return 0;
 }

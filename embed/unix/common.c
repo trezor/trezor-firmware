@@ -3,13 +3,20 @@
 
 #include "common.h"
 
-void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func) {
-    printf("\nFATAL ERROR:\n%s\n", msg);
+void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func)
+{
+    printf("\nFATAL ERROR:\n");
+    if (expr) {
+        printf("expr: %s\n", expr);
+    }
+    if (msg) {
+        printf("msg : %s\n", msg);
+    }
     if (file) {
-        printf("File: %s:%d\n", file, line);
+        printf("file: %s:%d\n", file, line);
     }
     if (func) {
-        printf("Func: %s\n", func);
+        printf("func: %s\n", func);
     }
     exit(1);
 }

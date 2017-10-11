@@ -12,7 +12,9 @@ extern void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 
 void periph_init(void);
 
-void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file, int line, const char *func);
+void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
+
+#define trassert(expr, msg) ((expr) ? (void)0 : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
 void jump_to(uint32_t address);
 

@@ -1,6 +1,5 @@
 #include <string.h>
 #include <sys/types.h>
-#include <assert.h>
 
 #include "common.h"
 #include "display.h"
@@ -129,28 +128,17 @@ int usb_init_all(void) {
         .report_desc      = hid_report_desc,
     };
 
-    if (0 != usb_init(&dev_info)) {
-        __fatal_error("usb_init", __FILE__, __LINE__, __FUNCTION__);
-    }
-    if (0 != usb_hid_add(&hid_info)) {
-        __fatal_error("usb_hid_add", __FILE__, __LINE__, __FUNCTION__);
-    }
-    if (0 != usb_start()) {
-        __fatal_error("usb_start", __FILE__, __LINE__, __FUNCTION__);
-    }
+    trassert(0 == usb_init(&dev_info), NULL);
+    trassert(0 == usb_hid_add(&hid_info), NULL);
+    trassert(0 == usb_start(), NULL);
 
     return 0;
 }
 
 void mainloop(void)
 {
-    if (0 != flash_init()) {
-        __fatal_error("flash_init", __FILE__, __LINE__, __FUNCTION__);
-    }
-
-    if (0 != usb_init_all()) {
-        __fatal_error("usb_init_all", __FILE__, __LINE__, __FUNCTION__);
-    }
+    trassert(0 == flash_init(), NULL);
+    trassert(0 == usb_init_all(), NULL);
 
     display_clear();
 
@@ -161,7 +149,7 @@ void mainloop(void)
         if (r != USB_PACKET_SIZE) {
             continue;
         }
-        assert(r == USB_PACKET_SIZE);
+        trassert(r == USB_PACKET_SIZE, NULL);
         uint16_t msg_id;
         uint32_t msg_size;
         if (!msg_parse_header(buf, &msg_id, &msg_size)) {
@@ -198,9 +186,7 @@ int main(void)
     display_orientation(0);
     display_backlight(255);
 
-    if (0 != touch_init()) {
-        __fatal_error("touch_init", __FILE__, __LINE__, __FUNCTION__);
-    }
+    trassert(0 == touch_init(), NULL);
 
     uint32_t touched = 0;
     for (int i = 0; i < 10; i++) {
@@ -213,7 +199,7 @@ int main(void)
         check_and_jump();
     }
 
-    __fatal_error("HALT", __FILE__, __LINE__, __FUNCTION__);
+    trassert(0, "halt");
 
     return 0;
 }
