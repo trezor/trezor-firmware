@@ -16,7 +16,6 @@
 | Sector  9 | 0x080A0000 - 0x080BFFFF | 128 KiB | firmware
 | Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | firmware
 | Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | firmware
-|-----------|-------------------------|--------:|----------------------
 | Sector 12 | 0x08100000 - 0x08103FFF |  16 KiB | ?
 | Sector 13 | 0x08104000 - 0x08107FFF |  16 KiB | ?
 | Sector 14 | 0x08108000 - 0x0810BFFF |  16 KiB | ?
@@ -34,7 +33,7 @@
 
 | region  | range                   |  size   | function
 |---------|-------------------------|--------:|----------------------
-| CCM RAM | 0x10000000 - 0x1000FFFF |  64 KiB | Core Coupled Memory
+| CCMRAM  | 0x10000000 - 0x1000FFFF |  64 KiB | Core Coupled Memory
 | SRAM1   | 0x20000000 - 0x2001BFFF | 112 KiB | General Purpose SRAM
 | SRAM2   | 0x2001C000 - 0x2001FFFF |  16 KiB | General Purpose SRAM
 | SRAM3   | 0x20020000 - 0x2002FFFF |  64 KiB | General Purpose SRAM
