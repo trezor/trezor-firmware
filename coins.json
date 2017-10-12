@@ -2,6 +2,7 @@
 {
 	"coin_name": "Bitcoin",
 	"coin_shortcut": "BTC",
+	"coin_label": "Bitcoin",
 	"address_type": 0,
 	"address_type_p2sh": 5,
 	"maxfee_kb": 500000,
@@ -24,11 +25,16 @@
 	"firmware": "stable",
 	"address_prefix": "bitcoin:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": [
+		"https://btc-bitcore3.trezor.io", 
+		"https://btc-bitcore1.trezor.io"
+	]
 },
 {
 	"coin_name": "Testnet",
 	"coin_shortcut": "TEST",
+	"coin_label": "Testnet",
 	"address_type": 111,
 	"address_type_p2sh": 196,
 	"maxfee_kb": 10000000,
@@ -48,11 +54,16 @@
 	"firmware": "stable",
 	"address_prefix": "bitcoin:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": [
+		"https://testnet-bitcore3.trezor.io",
+		"https://testnet-bitcore4.trezor.io"
+	]
 },
 {
 	"coin_name": "Bcash",
 	"coin_shortcut": "BCH",
+	"coin_label": "Bitcoin Cash",
 	"address_type": 0,
 	"address_type_p2sh": 5,
 	"maxfee_kb": 500000,
@@ -75,11 +86,15 @@
 	"firmware": "stable",
 	"address_prefix": "bitcoincash:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": [
+		"https://bch-bitcore2.trezor.io"
+	]
 },
 {
 	"coin_name": "Bcash Testnet",
 	"coin_shortcut": "TBCH",
+	"coin_label": "Bitcoin Cash Testnet",
 	"address_type": 111,
 	"address_type_p2sh": 196,
 	"maxfee_kb": 10000000,
@@ -99,11 +114,13 @@
 	"firmware": "debug",
 	"address_prefix": "bitcoincash:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": []
 },
 {
 	"coin_name": "Namecoin",
 	"coin_shortcut": "NMC",
+	"coin_label": "Namecoin",
 	"address_type": 52,
 	"address_type_p2sh": 5,
 	"maxfee_kb": 10000000,
@@ -123,11 +140,13 @@
 	"firmware": "stable",
 	"address_prefix": "namecoin:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": []
 },
 {
 	"coin_name": "Litecoin",
 	"coin_shortcut": "LTC",
+	"coin_label": "Litecoin",
 	"address_type": 48,
 	"address_type_p2sh": 50,
 	"maxfee_kb": 40000000,
@@ -147,11 +166,15 @@
 	"firmware": "stable",
 	"address_prefix": "litecoin:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": [
+		"https://ltc-bitcore3.trezor.io"
+	]
 },
 {
 	"coin_name": "Dogecoin",
 	"coin_shortcut": "DOGE",
+	"coin_label": "Dogecoin",
 	"address_type": 30,
 	"address_type_p2sh": 22,
 	"maxfee_kb": 1000000000,
@@ -171,11 +194,13 @@
 	"firmware": "stable",
 	"address_prefix": "dogecoin:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": []
 },
 {
 	"coin_name": "Dash",
 	"coin_shortcut": "DASH",
+	"coin_label": "Dash",
 	"address_type": 76,
 	"address_type_p2sh": 16,
 	"maxfee_kb": 100000,
@@ -195,11 +220,16 @@
 	"firmware": "stable",
 	"address_prefix": "dash:",
 	"min_address_length": 27,
-	"max_address_length": 34
+	"max_address_length": 34,
+	"bitcore": [
+		"https://dash-bitcore1.trezor.io",
+		"https://dash-bitcore3.trezor.io"
+	]
 },
 {
 	"coin_name": "Zcash",
 	"coin_shortcut": "ZEC",
+	"coin_label": "Zcash",
 	"address_type": 7352,
 	"address_type_p2sh": 7357,
 	"maxfee_kb": 1000000,
@@ -219,11 +249,15 @@
 	"firmware": "stable",
 	"address_prefix": "zcash:",
 	"min_address_length": 35,
-	"max_address_length": 95
+	"max_address_length": 95,
+	"bitcore": [
+		"https://zec-bitcore1.trezor.io/"
+	]
 },
 {
 	"coin_name": "Zcash Testnet",
 	"coin_shortcut": "TAZ",
+	"coin_label": "Zcash Testnet",
 	"address_type": 7461,
 	"address_type_p2sh": 7354,
 	"maxfee_kb": 10000000,
@@ -243,6 +277,7 @@
 	"firmware": "debug",
 	"address_prefix": "zcash:",
 	"min_address_length": 35,
-	"max_address_length": 95
+	"max_address_length": 95,
+	"bitcore": []
 }
 ]
