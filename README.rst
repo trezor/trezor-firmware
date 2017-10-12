@@ -27,6 +27,19 @@ On Linux you might need to run these commands first:
   sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
   sudo pip install setuptools
 
+On FreeBSD you can install the packages:
+
+.. code::
+
+  pkg install security/py-trezor
+
+or build via ports:
+
+.. code::
+
+  cd /usr/ports/security/py-trezor
+  make install clean
+
 Usage
 -----
 
