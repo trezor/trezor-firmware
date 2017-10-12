@@ -38,7 +38,7 @@ BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
 FIRMWARE_MAXSIZE    = 786432
 
-GITREV=$(shell git rev-parse --short HEAD)
+GITREV=$(shell git describe --always --dirty)
 CFLAGS += -DGITREV=$(GITREV)
 
 ## help commands:
