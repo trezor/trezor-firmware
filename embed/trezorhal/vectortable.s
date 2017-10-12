@@ -14,7 +14,7 @@ default_handler:
   .endm
 
   // Reference:
-  // Table 61 - STM32F405 Reference manual (RM0090)
+  // Table 62 - STM32F427 Reference manual (RM0090)
   // Section B1.5 - ARMv7-M Architecture Reference Manual
   .section .vector_table, "a"
 vector_table:
@@ -25,13 +25,13 @@ vector_table:
   add_handler MemManage_Handler
   add_handler BusFault_Handler
   add_handler UsageFault_Handler
-  .word 0
-  .word 0
-  .word 0
-  .word 0
+  add_handler architecture_reserved_handler
+  add_handler architecture_reserved_handler
+  add_handler architecture_reserved_handler
+  add_handler architecture_reserved_handler
   add_handler SVC_Handler
   add_handler DebugMon_Handler
-  .word 0
+  add_handler architecture_reserved_handler
   add_handler PendSV_Handler
   add_handler SysTick_Handler
   add_handler WWDG_IRQHandler
@@ -113,8 +113,17 @@ vector_table:
   add_handler OTG_HS_WKUP_IRQHandler
   add_handler OTG_HS_IRQHandler
   add_handler DCMI_IRQHandler
-  .word 0
+  add_handler CRYP_IRQHandler
   add_handler HASH_RNG_IRQHandler
   add_handler FPU_IRQHandler
+  add_handler UART7_IRQHandler
+  add_handler UART8_IRQHandler
+  add_handler SPI4_IRQHandler
+  add_handler SPI5_IRQHandler
+  add_handler SPI6_IRQHandler
+  add_handler SAI1_IRQHandler
+  add_handler LTDC_IRQHandler
+  add_handler LTDC_ER_IRQHandler
+  add_handler DMA2D_IRQHandler
 
   .end
