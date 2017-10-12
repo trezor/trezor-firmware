@@ -156,11 +156,8 @@ int main(void)
     ensure(0 == sdcard_init(), NULL);
 
     if (check_sdcard()) {
-        if (!copy_sdcard()) {
-            ensure(true == copy_sdcard(), NULL);
-        } else {
-            for (;;);
-        }
+        ensure(true == copy_sdcard(), NULL);
+        for (;;);
     }
 
     check_and_jump();
