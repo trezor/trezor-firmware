@@ -33,9 +33,9 @@ int main(void)
     display_orientation(0);
     display_backlight(255);
 
-    trassert(0 == flash_init(), NULL);
-    trassert(0 == sdcard_init(), NULL);
-    trassert(0 == touch_init(), NULL);
+    ensure(0 == flash_init(), NULL);
+    ensure(0 == sdcard_init(), NULL);
+    ensure(0 == touch_init(), NULL);
 
     for (;;) {
         printf("CORE: Starting main loop\n");
@@ -75,7 +75,7 @@ int main(void)
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-    trassert(0, "uncaught exception");
+    ensure(0, "uncaught exception");
 }
 
 void PendSV_Handler(void) {

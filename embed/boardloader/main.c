@@ -151,13 +151,13 @@ int main(void)
     clear_otg_hs_memory();
     periph_init();
 
-    trassert(0 == display_init(), NULL);
-    trassert(0 == flash_init(), NULL);
-    trassert(0 == sdcard_init(), NULL);
+    ensure(0 == display_init(), NULL);
+    ensure(0 == flash_init(), NULL);
+    ensure(0 == sdcard_init(), NULL);
 
     if (check_sdcard()) {
         if (!copy_sdcard()) {
-            trassert(true == copy_sdcard(), NULL);
+            ensure(true == copy_sdcard(), NULL);
         } else {
             for (;;);
         }
@@ -165,7 +165,7 @@ int main(void)
 
     check_and_jump();
 
-    trassert(0, "halt");
+    ensure(0, "halt");
 
     return 0;
 }

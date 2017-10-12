@@ -128,17 +128,17 @@ int usb_init_all(void) {
         .report_desc      = hid_report_desc,
     };
 
-    trassert(0 == usb_init(&dev_info), NULL);
-    trassert(0 == usb_hid_add(&hid_info), NULL);
-    trassert(0 == usb_start(), NULL);
+    ensure(0 == usb_init(&dev_info), NULL);
+    ensure(0 == usb_hid_add(&hid_info), NULL);
+    ensure(0 == usb_start(), NULL);
 
     return 0;
 }
 
 void mainloop(void)
 {
-    trassert(0 == flash_init(), NULL);
-    trassert(0 == usb_init_all(), NULL);
+    ensure(0 == flash_init(), NULL);
+    ensure(0 == usb_init_all(), NULL);
 
     display_clear();
 
@@ -149,7 +149,7 @@ void mainloop(void)
         if (r != USB_PACKET_SIZE) {
             continue;
         }
-        trassert(r == USB_PACKET_SIZE, NULL);
+        ensure(r == USB_PACKET_SIZE, NULL);
         uint16_t msg_id;
         uint32_t msg_size;
         if (!msg_parse_header(buf, &msg_id, &msg_size)) {
@@ -190,12 +190,12 @@ void check_bootloader_version(void)
              bits[i / 8] |= (1 << (7 - (i % 8)));
         }
     }
-    trassert(true == flash_otp_write(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(true == flash_otp_write(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
 
     uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
-    trassert(true == flash_otp_read(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(true == flash_otp_read(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
 
-    trassert(0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE), "Bootloader downgraded");
+    ensure(0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE), "Bootloader downgraded");
 }
 
 int main(void)
@@ -212,7 +212,7 @@ int main(void)
     display_orientation(0);
     display_backlight(255);
 
-    trassert(0 == touch_init(), NULL);
+    ensure(0 == touch_init(), NULL);
 
     uint32_t touched = 0;
     for (int i = 0; i < 10; i++) {
@@ -225,7 +225,7 @@ int main(void)
         check_and_jump();
     }
 
-    trassert(0, "halt");
+    ensure(0, "halt");
 
     return 0;
 }
