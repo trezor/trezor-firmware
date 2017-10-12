@@ -25,6 +25,8 @@ ifeq ($(DISPLAY_VSYNC), 0)
 CFLAGS += -DDISPLAY_VSYNC=0
 endif
 
+PRODUCTION ?= 0
+
 STLINK_VER ?= v2
 OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
 
@@ -76,10 +78,10 @@ style: ## run code style check on application sources
 build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all
 
 build_boardloader: ## build boardloader
-	$(SCONS) CFLAGS="$(CFLAGS)" build/boardloader/boardloader.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/boardloader/boardloader.bin
 
 build_bootloader: ## build bootloader
-	$(SCONS) CFLAGS="$(CFLAGS)" build/bootloader/bootloader.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/bootloader/bootloader.bin
 
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin

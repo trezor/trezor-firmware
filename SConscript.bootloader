@@ -104,7 +104,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/vectortable.s',
 ]
 
-env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
 env.Replace(
     AS='arm-none-eabi-as',
