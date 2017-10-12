@@ -4,8 +4,9 @@
 #include "display.h"
 #include "rng.h"
 
+void shutdown(void);
+
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func) {
-    for (volatile uint32_t delay = 0; delay < 10000000; delay++) {}
     display_orientation(0);
     display_backlight(255);
     display_print_color(COLOR_WHITE, COLOR_RED128);
@@ -27,6 +28,7 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
 #define STR(s) #s
     display_printf("rev : %s\n", XSTR(GITREV));
 #endif
+    shutdown();
     for (;;);
 }
 

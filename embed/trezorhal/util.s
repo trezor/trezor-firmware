@@ -62,4 +62,33 @@ jump_to:
   ldr r12, =0
   bx r0
 
+  .global shutdown
+  .type shutdown, STT_FUNC
+shutdown:
+  cpsid f
+  ldr r0, =ccmram_start
+  ldr r1, =ccmram_end
+  ldr r2, =0
+  bl memset_reg
+  ldr r0, =sram_start
+  ldr r1, =sram_end
+  ldr r2, =0
+  bl memset_reg
+  ldr lr, =0xffffffff
+  ldr r0, =0
+  ldr r1, =0
+  ldr r2, =0
+  ldr r3, =0
+  ldr r4, =0
+  ldr r5, =0
+  ldr r6, =0
+  ldr r7, =0
+  ldr r8, =0
+  ldr r9, =0
+  ldr r10, =0
+  ldr r11, =0
+  ldr r12, =0
+
+  b . // loop forever
+
   .end
