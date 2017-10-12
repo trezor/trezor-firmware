@@ -10,6 +10,8 @@
 
 extern void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 
+void clear_otg_hs_memory(void);
+
 void periph_init(void);
 
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
