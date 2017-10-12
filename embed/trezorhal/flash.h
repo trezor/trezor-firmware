@@ -24,6 +24,9 @@ bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val));
 bool flash_write_byte(uint32_t address, uint8_t data);
 bool flash_write_word(uint32_t address, uint32_t data);
 
+#define FLASH_OTP_NUM_BLOCKS      16
+#define FLASH_OTP_BLOCK_SIZE      32
+
 bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen);
 bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen);
 bool flash_otp_lock(uint8_t block);

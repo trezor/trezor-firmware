@@ -144,6 +144,10 @@ int main(void)
 {
     __stack_chk_guard = rng_get();
 
+#if PRODUCTION
+    flash_set_option_bytes();
+#endif
+
     clear_otg_hs_memory();
     periph_init();
 

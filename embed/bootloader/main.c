@@ -176,9 +176,35 @@ void mainloop(void)
     }
 }
 
+// protection against bootloader downgrade
+
+#define BOOTLOADER_VERSION_OTP_BLOCK 1
+
+void check_bootloader_version(void)
+{
+    uint8_t bits[FLASH_OTP_BLOCK_SIZE];
+    for (int i = 0; i < FLASH_OTP_BLOCK_SIZE * 8; i++) {
+        if (i < VERSION_MONOTONIC) {
+             bits[i / 8] &= ~(1 << (7 - (i % 8)));
+        } else {
+             bits[i / 8] |= (1 << (7 - (i % 8)));
+        }
+    }
+    trassert(true == flash_otp_write(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
+
+    uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
+    trassert(true == flash_otp_read(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
+
+    trassert(0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE), "Bootloader downgraded");
+}
+
 int main(void)
 {
     __stack_chk_guard = rng_get();
+
+#if PRODUCTION
+    check_bootloader_version();
+#endif
 
     periph_init();
 

@@ -56,8 +56,6 @@ bool flash_write_word(uint32_t address, uint32_t data)
 }
 
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
-#define FLASH_OTP_NUM_BLOCKS      16
-#define FLASH_OTP_BLOCK_SIZE      32
 
 bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
 {
