@@ -221,7 +221,7 @@ SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX + SOURCE_EMIT_NATIVE
 
-env = Environment(ENV=os.environ)
+env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
 
 env.Tool('micropython')
 

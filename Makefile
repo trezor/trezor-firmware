@@ -38,6 +38,9 @@ BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
 FIRMWARE_MAXSIZE    = 786432
 
+GITREV=$(shell git rev-parse --short HEAD)
+CFLAGS += -DGITREV=$(GITREV)
+
 ## help commands:
 
 help: ## show this help
@@ -87,10 +90,10 @@ build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin
 
 build_unix: ## build unix port
-	$(SCONS) build/unix/micropython $(UNIX_PORT_OPTS)
+	$(SCONS) CFLAGS="$(CFLAGS)" build/unix/micropython $(UNIX_PORT_OPTS)
 
 build_unix_noui: ## build unix port without UI support
-	$(SCONS) build/unix/micropython $(UNIX_PORT_OPTS) TREZOR_NOUI=1
+	$(SCONS) CFLAGS="$(CFLAGS)" build/unix/micropython $(UNIX_PORT_OPTS) TREZOR_NOUI=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
