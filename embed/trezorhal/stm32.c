@@ -11,6 +11,8 @@ void SystemInit(void)
 {
     // set flash wait states for an increasing HCLK frequency -- reference RM0090 section 3.5.1
     FLASH->ACR = FLASH_ACR_LATENCY_5WS;
+    // wait until the new wait state config takes effect -- per section 3.5.1 guidance
+    while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS);
     // configure main PLL; assumes HSE is 8 MHz; this should evaluate to 0x27402a04 -- reference RM0090 section 7.3.2
     RCC->PLLCFGR = (RCC_PLLCFGR_RST_VALUE & ~RCC_PLLCFGR_PLLQ & ~RCC_PLLCFGR_PLLSRC & ~RCC_PLLCFGR_PLLP & ~RCC_PLLCFGR_PLLN & ~RCC_PLLCFGR_PLLM)
                    | (7 << RCC_PLLCFGR_PLLQ_Pos)   // Q = 7
@@ -23,11 +25,14 @@ void SystemInit(void)
     // wait until PLL and HSE ready
     while((RCC->CR & (RCC_CR_PLLRDY | RCC_CR_HSERDY)) != (RCC_CR_PLLRDY | RCC_CR_HSERDY));
     // APB2=2, APB1=4, AHB=1, system clock = main PLL
-    RCC->CFGR = RCC_CFGR_PPRE2_DIV2 | RCC_CFGR_PPRE1_DIV4 | RCC_CFGR_HPRE_DIV1 | RCC_CFGR_SW_PLL;
-    // wait until PLL is system clock
-    while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
+    const int cfgr = RCC_CFGR_PPRE2_DIV2 | RCC_CFGR_PPRE1_DIV4 | RCC_CFGR_HPRE_DIV1 | RCC_CFGR_SW_PLL;
+    RCC->CFGR = cfgr;
+    // wait until PLL is system clock and also verify that the pre-scalers were set
+    while(RCC->CFGR != (RCC_CFGR_SWS_PLL | cfgr));
     // turn off the HSI as it is now unused (it will be turned on again automatically if a clock security failure occurs)
     RCC->CR &= ~RCC_CR_HSION;
+    // wait until ths HSI is off
+    while((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION);
     // init the TRNG peripheral
     rng_init();
     // enable full access to the fpu coprocessor
