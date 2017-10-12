@@ -2,7 +2,10 @@
 
 int rng_init(void)
 {
-    RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN; // enable TRNG peripheral clock
+    // enable TRNG peripheral clock
+    // use the HAL version due to section 2.1.6 of STM32F42xx Errata sheet
+    // "Delay after an RCC peripheral clock enabling"
+    __HAL_RCC_RNG_CLK_ENABLE();
     RNG->CR = RNG_CR_RNGEN; // enable TRNG
     return 0;
 }
