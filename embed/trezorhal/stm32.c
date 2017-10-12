@@ -41,7 +41,9 @@ void SystemInit(void)
     #endif
 }
 
-void SysTick_Handler(void) {
+#define __nostackprotector __attribute__((__optimize__("no-stack-protector")))
+
+void __nostackprotector SysTick_Handler(void) {
     // Instead of calling HAL_IncTick we do the increment here of the counter.
     // This is purely for efficiency, since SysTick is called 1000 times per
     // second at the highest interrupt priority.
