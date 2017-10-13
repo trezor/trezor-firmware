@@ -152,11 +152,22 @@ int display_init(void) {
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
+    // LCD_PWM/PA7 (backlight control)
+    GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull      = GPIO_NOPULL;
+    GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
+    GPIO_InitStructure.Pin       = GPIO_PIN_7;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    display_pwm_init();
+
     // LCD_RST/PC14
-    GPIO_InitStructure.Pin = GPIO_PIN_14;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = 0;
+    GPIO_InitStructure.Pin = GPIO_PIN_14;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
@@ -167,14 +178,9 @@ int display_init(void) {
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-    // LCD_PWM/PA7 (backlight control)
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull      = GPIO_NOPULL;
     GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
-    GPIO_InitStructure.Pin       = GPIO_PIN_7;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-
     GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
     //                             LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4   LCD_WR/PD5
     GPIO_InitStructure.Pin       = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
@@ -186,41 +192,36 @@ int display_init(void) {
     GPIO_InitStructure.Pin       = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
     HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-    display_pwm_init();
+    // Reference UM1725 "Description of STM32F4 HAL and LL drivers", section 64.2.1 "How to use this driver"
+    SRAM_HandleTypeDef external_display_data_sram;
+    external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
+    external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
+    external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
+    external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
+    external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
+    external_display_data_sram.Init.BurstAccessMode = FMC_BURST_ACCESS_MODE_DISABLE;
+    external_display_data_sram.Init.WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
+    external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
+    external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
+    external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
+    external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
+    external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
+    external_display_data_sram.Init.AsynchronousWait = FMC_ASYNCHRONOUS_WAIT_DISABLE;
+    external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
+    external_display_data_sram.Init.ContinuousClock = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+    external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
 
-    // timing values from:
-    // http://ele-tech.com/html/it-is-developed-that-embedded-stm32-fsmc-interface-drives-tft-lcd-to-be-designed.html
+    // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
+    FMC_NORSRAM_TimingTypeDef normal_mode_timing;
+    normal_mode_timing.AddressSetupTime = 15; // works, not sure if optimal
+    normal_mode_timing.AddressHoldTime = 15; // don't care
+    normal_mode_timing.DataSetupTime = 1; // works, not sure if optimal
+    normal_mode_timing.BusTurnAroundDuration = 15; // works, not sure if optimal
+    normal_mode_timing.CLKDivision = 16; // don't care
+    normal_mode_timing.DataLatency = 17; // don't care
+    normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A; // don't care
 
-    FMC_NORSRAM_InitTypeDef FMC_NORSRAMInitStructure;
-    FMC_NORSRAM_TimingTypeDef FMC_NORSRAMTimingStructure;
-
-    FMC_NORSRAMTimingStructure.AddressSetupTime = 2;
-    FMC_NORSRAMTimingStructure.AddressHoldTime = 0;
-    FMC_NORSRAMTimingStructure.DataSetupTime = 5;
-    FMC_NORSRAMTimingStructure.BusTurnAroundDuration = 0;
-    FMC_NORSRAMTimingStructure.CLKDivision = 0;
-    FMC_NORSRAMTimingStructure.DataLatency = 0;
-    FMC_NORSRAMTimingStructure.AccessMode = FMC_ACCESS_MODE_B;
-
-    FMC_NORSRAMInitStructure.NSBank = FMC_NORSRAM_BANK1;
-    FMC_NORSRAMInitStructure.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
-    FMC_NORSRAMInitStructure.MemoryType = FMC_MEMORY_TYPE_NOR;
-    FMC_NORSRAMInitStructure.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
-    FMC_NORSRAMInitStructure.BurstAccessMode = FMC_BURST_ACCESS_MODE_DISABLE;
-    FMC_NORSRAMInitStructure.WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
-    FMC_NORSRAMInitStructure.WrapMode = FMC_WRAP_MODE_DISABLE;
-    FMC_NORSRAMInitStructure.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
-    FMC_NORSRAMInitStructure.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
-    FMC_NORSRAMInitStructure.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
-    FMC_NORSRAMInitStructure.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
-    FMC_NORSRAMInitStructure.AsynchronousWait = FMC_ASYNCHRONOUS_WAIT_DISABLE;
-    FMC_NORSRAMInitStructure.WriteBurst = FMC_WRITE_BURST_DISABLE;
-    FMC_NORSRAMInitStructure.PageSize = FMC_PAGE_SIZE_NONE;
-
-    FMC_NORSRAM_Init(FMC_NORSRAM_DEVICE, &FMC_NORSRAMInitStructure);
-    FMC_NORSRAM_Timing_Init(FMC_NORSRAM_DEVICE, &FMC_NORSRAMTimingStructure, FMC_NORSRAMInitStructure.NSBank);
-    // FMC_NORSRAM_Extended_Timing_Init(FMC_NORSRAM_EXTENDED_DEVICE, &FMC_NORSRAMTimingStructure, FMC_NORSRAMInitStructure.NSBank, FMC_NORSRAMInitStructure.ExtendedMode);
-    __FMC_NORSRAM_ENABLE(FMC_NORSRAM_DEVICE, FMC_NORSRAMInitStructure.NSBank);
+    HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
 
     // hardware reset
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
@@ -236,7 +237,7 @@ int display_init(void) {
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
     CMD(0xCB); DATA(0x39); DATA(0x2C); DATA(0x00); DATA(0x34); DATA(0x02);
     CMD(0xF7); DATA(0x20);
-    CMD(0xEA); DATA(0x00); DATA(0x00);
+    CMD(0xEA); DATA(0x00);
     CMD(0xC0); DATA(0x23);                          // power control   VRH[5:0]
     CMD(0xC1); DATA(0x12);                          // power control   SAP[2:0] BT[3:0]
     CMD(0xC5); DATA(0x60); DATA(0x44);              // vcm control 1
