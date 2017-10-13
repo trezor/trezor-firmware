@@ -16,6 +16,17 @@
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
 
+#define BACKLIGHT_NORMAL 150
+
+void display_fade(int start, int end, int delay)
+{
+    for (int i = 0; i < 100; i++) {
+        display_backlight(start + i * (end - start) / 100);
+        hal_delay(delay / 100);
+    }
+    display_backlight(end);
+}
+
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
 {
     display_clear();
@@ -182,7 +193,7 @@ int main(void)
 
     display_pwm_init();
     display_orientation(0);
-    display_backlight(255);
+    display_backlight(0);
 
     ensure(0 == touch_init(), NULL);
 
@@ -217,12 +228,15 @@ int main(void)
         "invalid firmware signature");
 
     display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
+    display_fade(0, BACKLIGHT_NORMAL, 1000);
     if (vhdr.vtrust < 50) {
         display_text_center(120, 238, "click to continue ...", -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
         touch_click();
     } else {
         hal_delay(1000);
     }
+    display_fade(BACKLIGHT_NORMAL, 0, 500);
+    display_clear();
 
     jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
