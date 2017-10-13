@@ -57,34 +57,6 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 
 void check_and_jump(void)
 {
-    vendor_header vhdr;
-    if (!vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        display_printf("invalid vendor header\n");
-        return;
-    }
-
-    if (!vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS)) {
-        display_printf("invalid vendor header signature\n");
-        return;
-    }
-
-    image_header hdr;
-    if (!image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        display_printf("invalid firmware header\n");
-        return;
-    }
-
-    if (image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub)) {
-        display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
-        if (vhdr.vtrust < 50) {
-            touch_click();
-        } else {
-            hal_delay(1000);
-        }
-        jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
-    } else {
-        display_printf("invalid firmware signature\n");
-    }
 }
 
 int usb_init_all(void) {
@@ -135,7 +107,7 @@ int usb_init_all(void) {
     return 0;
 }
 
-void mainloop(void)
+void bootloader_loop(void)
 {
     ensure(0 == flash_init(), NULL);
     ensure(0 == usb_init_all(), NULL);
@@ -220,12 +192,39 @@ int main(void)
     }
 
     if (touched != 0) {
-        mainloop();
-    } else {
-        check_and_jump();
+        bootloader_loop();
+        shutdown();
     }
 
-    ensure(0, "halt");
+    vendor_header vhdr;
+
+    ensure(
+        vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr),
+        "invalid vendor header");
+
+    ensure(
+        vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS),
+        "invalid vendor header signature");
+
+    image_header hdr;
+
+    ensure(
+        image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr),
+        "invalid firmware header");
+
+    ensure(
+        image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
+        "invalid firmware signature");
+
+    display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
+    if (vhdr.vtrust < 50) {
+        display_text_center(120, 238, "click to continue ...", -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
+        touch_click();
+    } else {
+        hal_delay(1000);
+    }
+
+    jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
 
     return 0;
 }
