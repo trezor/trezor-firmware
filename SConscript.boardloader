@@ -33,7 +33,6 @@ SOURCE_MOD += [
 ]
 
 SOURCE_MICROPYTHON = [
-    'vendor/micropython/lib/libc/string0.c',
 ]
 
 SOURCE_STMHAL = [
@@ -105,7 +104,7 @@ env.Replace(
     '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith '
     '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
-    '-fstack-protector-all '
+    '-fstack-protector-all -ffreestanding '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-nostdlib -T embed/boardloader/memory.ld --gc-sections',
@@ -143,7 +142,7 @@ program_elf = env.Command(
     target='boardloader.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
+    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a`',
 )
 
 program_bin = env.Command(
