@@ -44,32 +44,28 @@ bool copy_sdcard(void)
 {
     display_backlight(255);
 
-    display_printf("copying bootloader from SD card\n");
-    display_printf("in 5 seconds ...\n\n");
+    display_printf("TREZOR Boardloader\n");
+    display_printf("==================\n\n");
+
+    display_printf("bootloader found on the SD card\n\n");
+    display_printf("applying bootloader in 10 seconds\n\n");
     display_printf("unplug now if you want to abort\n\n");
 
-    display_printf("5 ");
-    hal_delay(1000);
-    display_printf("4 ");
-    hal_delay(1000);
-    display_printf("3 ");
-    hal_delay(1000);
-    display_printf("2 ");
-    hal_delay(1000);
-    display_printf("1 ");
-    hal_delay(1000);
-    display_printf("0!\n\n");
+    for (int i = 10; i >= 0; i--) {
+        display_printf("%d ", i);
+        hal_delay(1000);
+    }
 
-    display_printf("erasing flash ");
+    display_printf("\n\nerasing flash:\n");
 
     // erase flash (except boardloader)
     if (!flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_FIRMWARE_END, progress_callback)) {
         display_printf(" failed\n");
         return false;
     }
-    display_printf(" done\n");
+    display_printf(" done\n\n");
 
-    display_printf("copying new bootloader from SD card\n");
+    display_printf("copying new bootloader from SD card\n\n");
 
     sdcard_power_on();
 
@@ -104,7 +100,7 @@ bool copy_sdcard(void)
     sdcard_power_off();
     flash_lock();
 
-    display_printf("done\n\n");
+    display_printf("\ndone\n\n");
     display_printf("Unplug the device and remove the SD card\n");
 
     return true;
@@ -124,22 +120,6 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 #endif
 };
 
-void check_and_jump(void)
-{
-    image_header hdr;
-
-    if (!image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        display_printf("invalid bootloader header\n");
-        return;
-    }
-
-    if (image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS)) {
-        jump_to(BOOTLOADER_START + HEADER_SIZE);
-    } else {
-        display_printf("invalid bootloader signature\n");
-    }
-}
-
 int main(void)
 {
     __stack_chk_guard = rng_get();
@@ -156,13 +136,21 @@ int main(void)
     ensure(0 == sdcard_init(), NULL);
 
     if (check_sdcard()) {
-        ensure(true == copy_sdcard(), NULL);
-        for (;;);
+        ensure(copy_sdcard(), NULL);
+        shutdown();
     }
 
-    check_and_jump();
+    image_header hdr;
 
-    ensure(0, "halt");
+    ensure(
+        image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr),
+        "invalid bootloader header");
+
+    ensure(
+        image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS),
+        "invalid bootloader signature");
+
+    jump_to(BOOTLOADER_START + HEADER_SIZE);
 
     return 0;
 }
