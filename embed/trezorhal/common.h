@@ -22,6 +22,8 @@ void jump_to(uint32_t address);
 
 void hal_delay(uint32_t ms);
 
+void shutdown(void);
+
 extern uint32_t __stack_chk_guard;
 
 #endif

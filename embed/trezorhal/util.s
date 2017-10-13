@@ -66,6 +66,7 @@ jump_to:
   .type shutdown, STT_FUNC
 shutdown:
   cpsid f
+  bl clear_otg_hs_memory
   ldr r0, =ccmram_start
   ldr r1, =ccmram_end
   ldr r2, =0
