@@ -104,7 +104,7 @@ env.Replace(
     '-fstack-protector-all -ffreestanding '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-nostdlib -T embed/boardloader/memory.ld --gc-sections',
+    LINKFLAGS='-nostdlib -T embed/boardloader/memory.ld --gc-sections -Map=build/boardloader/boardloader.map',
     CPPPATH=[
         'embed/boardloader',
         'embed/trezorhal',

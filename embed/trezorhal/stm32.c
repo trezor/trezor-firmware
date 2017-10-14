@@ -41,13 +41,9 @@ void SystemInit(void)
     SCB->CPACR |= ((3U << 22) | (3U << 20));
 }
 
+volatile uint32_t uwTick = 0;
+
 void SysTick_Handler(void)
 {
-    extern volatile uint32_t uwTick;
     uwTick += 1;
-    // TODO: verify the following claim, or remove
-    // Read the systick control regster. This has the side effect of clearing
-    // the COUNTFLAG bit, which makes the logic in sys_tick_get_microseconds
-    // work properly.
-    SysTick->CTRL;
 }

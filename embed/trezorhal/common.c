@@ -30,7 +30,7 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
     for (;;);
 }
 
-uint32_t __stack_chk_guard;
+uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void)
 {
