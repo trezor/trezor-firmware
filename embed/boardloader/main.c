@@ -125,6 +125,10 @@ int main(void)
 
 #if PRODUCTION
     flash_set_option_bytes();
+    if (!flash_check_option_bytes()) {
+        // TODO: erase storage
+        ensure(0, "wrong option bytes");
+    }
 #endif
 
     clear_otg_hs_memory();
