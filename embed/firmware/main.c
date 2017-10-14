@@ -23,7 +23,6 @@
 
 int main(void)
 {
-    __stack_chk_guard = rng_get();
 
     periph_init();
 

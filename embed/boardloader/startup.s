@@ -47,6 +47,11 @@ reset_handler:
   ldr r2, =data_size    // size in bytes
   bl memcpy
 
+  // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
+  bl rng_get
+  ldr r1, = __stack_chk_guard
+  str r0, [r1]
+
   // enter the application code
   bl main
 

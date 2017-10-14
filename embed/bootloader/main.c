@@ -183,7 +183,6 @@ void check_bootloader_version(void)
 
 int main(void)
 {
-    __stack_chk_guard = rng_get();
 
 #if PRODUCTION
     check_bootloader_version();

@@ -122,7 +122,6 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 int main(void)
 {
-    __stack_chk_guard = rng_get();
 
 #if PRODUCTION
     flash_set_option_bytes();
