@@ -38,9 +38,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/font_roboto_bold_20.c',
 ]
 
-SOURCE_MICROPYTHON = [
-]
-
 SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c',
@@ -156,7 +153,6 @@ env.Replace(
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
-obj_program += env.Object(source=SOURCE_MICROPYTHON)
 obj_program += env.Object(source=SOURCE_STMHAL)
 obj_program += env.Object(source=SOURCE_TREZORHAL)
 
