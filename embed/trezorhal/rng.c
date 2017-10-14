@@ -1,13 +1,14 @@
 #include STM32_HAL_H
 
-int rng_init(void)
+#pragma GCC optimize("no-stack-protector") // applies to all functions in this file
+
+void rng_init(void)
 {
     // enable TRNG peripheral clock
     // use the HAL version due to section 2.1.6 of STM32F42xx Errata sheet
     // "Delay after an RCC peripheral clock enabling"
     __HAL_RCC_RNG_CLK_ENABLE();
     RNG->CR = RNG_CR_RNGEN; // enable TRNG
-    return 0;
 }
 
 uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous)

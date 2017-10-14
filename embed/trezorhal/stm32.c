@@ -5,7 +5,9 @@
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 const uint8_t APBPrescTable[8] = {0, 0, 0, 0, 1, 2, 3, 4};
 
-uint32_t SystemCoreClock = 168000000;
+uint32_t SystemCoreClock = 168000000U;
+
+#pragma GCC optimize("no-stack-protector") // applies to all functions in this file
 
 void SystemInit(void)
 {
@@ -15,17 +17,17 @@ void SystemInit(void)
     while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS);
     // configure main PLL; assumes HSE is 8 MHz; this should evaluate to 0x27402a04 -- reference RM0090 section 7.3.2
     RCC->PLLCFGR = (RCC_PLLCFGR_RST_VALUE & ~RCC_PLLCFGR_PLLQ & ~RCC_PLLCFGR_PLLSRC & ~RCC_PLLCFGR_PLLP & ~RCC_PLLCFGR_PLLN & ~RCC_PLLCFGR_PLLM)
-                   | (7 << RCC_PLLCFGR_PLLQ_Pos)   // Q = 7
+                   | (7U << RCC_PLLCFGR_PLLQ_Pos)   // Q = 7
                    | RCC_PLLCFGR_PLLSRC_HSE        // PLLSRC = HSE
-                   | (0 << RCC_PLLCFGR_PLLP_Pos)   // P = 2 (two bits, 00 means PLLP = 2)
-                   | (168 << RCC_PLLCFGR_PLLN_Pos) // N = 168
-                   | (4 << RCC_PLLCFGR_PLLM_Pos);  // M = 4
+                   | (0U << RCC_PLLCFGR_PLLP_Pos)   // P = 2 (two bits, 00 means PLLP = 2)
+                   | (168U << RCC_PLLCFGR_PLLN_Pos) // N = 168
+                   | (4U << RCC_PLLCFGR_PLLM_Pos);  // M = 4
     // enable clock security system, HSE clock, and main PLL
     RCC->CR |= RCC_CR_CSSON | RCC_CR_HSEON | RCC_CR_PLLON;
     // wait until PLL and HSE ready
     while((RCC->CR & (RCC_CR_PLLRDY | RCC_CR_HSERDY)) != (RCC_CR_PLLRDY | RCC_CR_HSERDY));
     // APB2=2, APB1=4, AHB=1, system clock = main PLL
-    const int cfgr = RCC_CFGR_PPRE2_DIV2 | RCC_CFGR_PPRE1_DIV4 | RCC_CFGR_HPRE_DIV1 | RCC_CFGR_SW_PLL;
+    const uint32_t cfgr = RCC_CFGR_PPRE2_DIV2 | RCC_CFGR_PPRE1_DIV4 | RCC_CFGR_HPRE_DIV1 | RCC_CFGR_SW_PLL;
     RCC->CFGR = cfgr;
     // wait until PLL is system clock and also verify that the pre-scalers were set
     while(RCC->CFGR != (RCC_CFGR_SWS_PLL | cfgr));
@@ -35,39 +37,17 @@ void SystemInit(void)
     while((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION);
     // init the TRNG peripheral
     rng_init();
-    // enable full access to the fpu coprocessor
-    #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
-        SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
-    #endif
+    // set CP10 and CP11 to enable full access to the fpu coprocessor; ARMv7-M Architecture Reference Manual section B3.2.20
+    SCB->CPACR |= ((3U << 22) | (3U << 20));
 }
 
-#define __nostackprotector __attribute__((__optimize__("no-stack-protector")))
-
-void __nostackprotector SysTick_Handler(void) {
-    // Instead of calling HAL_IncTick we do the increment here of the counter.
-    // This is purely for efficiency, since SysTick is called 1000 times per
-    // second at the highest interrupt priority.
-    // Note: we don't need uwTick to be declared volatile here because this is
-    // the only place where it can be modified, and the code is more efficient
-    // without the volatile specifier.
-    extern uint32_t uwTick;
+void SysTick_Handler(void)
+{
+    extern volatile uint32_t uwTick;
     uwTick += 1;
-
+    // TODO: verify the following claim, or remove
     // Read the systick control regster. This has the side effect of clearing
     // the COUNTFLAG bit, which makes the logic in sys_tick_get_microseconds
     // work properly.
     SysTick->CTRL;
-
-    // Right now we have the storage and DMA controllers to process during
-    // this interrupt and we use custom dispatch handlers.  If this needs to
-    // be generalised in the future then a dispatch table can be used as
-    // follows: ((void(*)(void))(systick_dispatch[uwTick & 0xf]))();
-
-    // if (STORAGE_IDLE_TICK(uwTick)) {
-    //     NVIC->STIR = FLASH_IRQn;
-    // }
-
-    // if (DMA_IDLE_ENABLED() && DMA_IDLE_TICK(uwTick)) {
-    //     dma_idle_handler(uwTick);
-    // }
 }
