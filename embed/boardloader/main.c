@@ -13,10 +13,10 @@
 #define IMAGE_MAGIC   0x425A5254 // TRZB
 #define IMAGE_MAXSIZE (1 * 64 * 1024 + 7 * 128 * 1024)
 
-bool check_sdcard(void)
+static uint32_t check_sdcard(void)
 {
     if (!sdcard_is_present()) {
-        return false;
+        return 0;
     }
 
     sdcard_power_on();
@@ -24,7 +24,7 @@ bool check_sdcard(void)
     uint64_t cap = sdcard_get_capacity_in_bytes();
     if (cap < 1024 * 1024) {
         sdcard_power_off();
-        return false;
+        return 0;
     }
 
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
@@ -33,14 +33,20 @@ bool check_sdcard(void)
 
     sdcard_power_off();
 
-    return image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, NULL);
+    image_header hdr;
+
+    if (image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
+        return hdr.codelen;
+    } else {
+        return 0;
+    }
 }
 
 static void progress_callback(uint16_t val) {
     display_printf(".");
 }
 
-bool copy_sdcard(void)
+static bool copy_sdcard(void)
 {
     display_backlight(255);
 
@@ -56,6 +62,13 @@ bool copy_sdcard(void)
         hal_delay(1000);
     }
 
+    uint32_t codelen = check_sdcard();
+
+    if (!codelen) {
+        display_printf("no SD card, aborting\n");
+        return false;
+    }
+
     display_printf("\n\nerasing flash:\n");
 
     // erase flash (except boardloader)
@@ -65,27 +78,18 @@ bool copy_sdcard(void)
     }
     display_printf(" done\n\n");
 
-    display_printf("copying new bootloader from SD card\n\n");
-
-    sdcard_power_on();
-
-    // copy bootloader from SD card to Flash
-    uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
-    sdcard_read_blocks((uint8_t *)buf, 0, 1);
-
-    image_header hdr;
-    if (!image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
-        display_printf("invalid header\n");
-        sdcard_power_off();
-        return false;
-    }
-
     if (!flash_unlock()) {
         display_printf("could not unlock flash\n");
         return false;
     }
 
-    for (int i = 0; i < (HEADER_SIZE + hdr.codelen) / SDCARD_BLOCK_SIZE; i++) {
+    // copy bootloader from SD card to Flash
+    display_printf("copying new bootloader from SD card\n\n");
+
+    sdcard_power_on();
+
+    uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
+    for (int i = 0; i < (HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (!flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
