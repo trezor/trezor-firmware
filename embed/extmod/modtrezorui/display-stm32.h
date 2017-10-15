@@ -210,13 +210,13 @@ int display_init(void) {
 
     // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
     FMC_NORSRAM_TimingTypeDef normal_mode_timing;
-    normal_mode_timing.AddressSetupTime = 15; // works, not sure if optimal
-    normal_mode_timing.AddressHoldTime = 15; // don't care
-    normal_mode_timing.DataSetupTime = 5; // works, not sure if optimal
-    normal_mode_timing.BusTurnAroundDuration = 15; // works, not sure if optimal
-    normal_mode_timing.CLKDivision = 16; // don't care
-    normal_mode_timing.DataLatency = 17; // don't care
-    normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A; // don't care
+    normal_mode_timing.AddressSetupTime = 4;
+    normal_mode_timing.AddressHoldTime = 1;
+    normal_mode_timing.DataSetupTime = 4;
+    normal_mode_timing.BusTurnAroundDuration = 0;
+    normal_mode_timing.CLKDivision = 2;
+    normal_mode_timing.DataLatency = 2;
+    normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
 
     HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
 
