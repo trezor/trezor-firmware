@@ -29,6 +29,17 @@ if it did not, then a corruption/erasure of later stage flash memory would
 leave the device unusable (only the boardloader could run and it would not
 pass execution to a later stage that fails signature validation).
 
+Developer note:
+
+A microSD card can be prepared with the following. Note that the bootloader is allocated 128 KiB.
+
+WARNING: Ensure that you want to overwrite and destroy the contents of `/dev/mmcblk0` before running these commands.
+Likewise, `/dev/mmcblk0` may be replaced by your own specific destination.
+
+ 1. `sudo dd if=/dev/zero of=/dev/mmcblk0 bs=512 count=256 conv=fsync`
+
+ 1. `sudo dd if=build/bootloader/bootloader.bin of=/dev/mmcblk0 bs=512 conv=fsync`
+
 ## Second Stage - Bootloader
 
 Second stage checks the integrity and signatures of the firmware and runs
