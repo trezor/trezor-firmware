@@ -15,10 +15,6 @@
 #define DISPLAY_ST7789V  1
 #endif
 
-#ifndef DISPLAY_VSYNC
-#define DISPLAY_VSYNC    1
-#endif
-
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE  0x60000000
 #define DISPLAY_MEMORY_PIN   16
@@ -172,10 +168,11 @@ int display_init(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
     // LCD_FMARK/PD12 (tearing effect)
-    GPIO_InitStructure.Pin = GPIO_PIN_12;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = 0;
+    GPIO_InitStructure.Pin = GPIO_PIN_12;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
     GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
@@ -242,6 +239,7 @@ int display_init(void) {
     CMD(0xC1); DATA(0x12);                          // power control   SAP[2:0] BT[3:0]
     CMD(0xC5); DATA(0x60); DATA(0x44);              // vcm control 1
     CMD(0xC7); DATA(0x8A);                          // vcm control 2
+    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On
     CMD(0x3A); DATA(0x55);                          // memory access control (16-bit 565)
     CMD(0xB1); DATA(0x00); DATA(0x18);              // framerate
     CMD(0xB6); DATA(0x0A); DATA(0xA2);              // display function control
@@ -299,12 +297,11 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
     display_set_window_raw(x0, y0, x1, y1);
 }
 
-void display_refresh(void) {
-#if DISPLAY_VSYNC
+void display_refresh(void)
+{
     // synchronize with the panel synchronization signal in order to avoid visual tearing effects
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
-#endif
 }
 
 void display_save(const char *filename)

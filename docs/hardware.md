@@ -24,7 +24,7 @@ TODO
 * 1 x USB Cable Type A Plug/Male to Type Micro-B Plug/Male
 * 1 x [ER-TFTM028-4 Display + Capacitive Touch Panel Module](http://www.ebay.com/itm/302049581340) (Note: specify 40-Pin Header, 8080 8-bit Parallel, VDD=3.3V, Capacitive Touch Panel)
 * 1 x [microSD Board](https://www.waveshare.com/product/modules/storage/sd-tf-storage/micro-sd-storage-board.htm)
-* 27 x Female to female jumper wires with 0.1" header contacts
+* 28 x Female to female jumper wires with 0.1" header contacts
 
 #### Display
 
@@ -38,7 +38,7 @@ TODO
 |Description|MCU Pin|Notes|
 |-----------|-------|-----|
 |LCD_RST|PC14|display module pin 21|
-|LCD_FMARK|PD12|tearing effect input|
+|LCD_FMARK|PD12|tearing effect input; display module pin 22|
 |LCD_PWM|PA7|backlight control (brightness); display module pin 29|
 |LCD_CS|PD7|display module pin 23|
 |LCD_RS|PD11|register select aka command/data; display module pin 24|
