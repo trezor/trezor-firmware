@@ -57,19 +57,19 @@ static bool copy_sdcard(void)
     display_printf("applying bootloader in 10 seconds\n\n");
     display_printf("unplug now if you want to abort\n\n");
 
+    uint32_t codelen;
+
     for (int i = 10; i >= 0; i--) {
         display_printf("%d ", i);
         hal_delay(1000);
+        codelen = check_sdcard();
+        if (!codelen) {
+            display_printf("\n\nno SD card, aborting\n");
+            return false;
+        }
     }
 
-    uint32_t codelen = check_sdcard();
-
-    if (!codelen) {
-        display_printf("no SD card, aborting\n");
-        return false;
-    }
-
-    display_printf("\n\nerasing flash:\n");
+    display_printf("\n\nerasing flash:\n\n");
 
     // erase flash (except boardloader)
     if (!flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_FIRMWARE_END, progress_callback)) {
@@ -143,7 +143,7 @@ int main(void)
     ensure(0 == sdcard_init(), NULL);
 
     if (check_sdcard()) {
-        ensure(copy_sdcard(), NULL);
+        copy_sdcard();
         shutdown();
     }
 
