@@ -212,7 +212,7 @@ int display_init(void) {
     FMC_NORSRAM_TimingTypeDef normal_mode_timing;
     normal_mode_timing.AddressSetupTime = 15; // works, not sure if optimal
     normal_mode_timing.AddressHoldTime = 15; // don't care
-    normal_mode_timing.DataSetupTime = 1; // works, not sure if optimal
+    normal_mode_timing.DataSetupTime = 5; // works, not sure if optimal
     normal_mode_timing.BusTurnAroundDuration = 15; // works, not sure if optimal
     normal_mode_timing.CLKDivision = 16; // don't care
     normal_mode_timing.DataLatency = 17; // don't care
