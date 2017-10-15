@@ -45,5 +45,7 @@ volatile uint32_t uwTick = 0;
 
 void SysTick_Handler(void)
 {
-    uwTick += 1;
+    // this is a millisecond tick counter that wraps after approximately
+    // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
+    uwTick++;
 }
