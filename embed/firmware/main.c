@@ -28,9 +28,7 @@ int main(void)
 
     pendsv_init();
 
-    display_pwm_init();
     display_orientation(0);
-    display_backlight(255);
 
     ensure(0 == flash_init(), NULL);
     ensure(0 == sdcard_init(), NULL);

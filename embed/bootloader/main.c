@@ -197,9 +197,7 @@ int main(void)
 
     periph_init();
 
-    display_pwm_init();
     display_orientation(0);
-    display_backlight(0);
 
     ensure(0 == touch_init(), NULL);
 

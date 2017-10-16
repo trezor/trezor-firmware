@@ -22,8 +22,6 @@
 #define CMD(X)  (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE))) = (X))
 #define DATA(X) (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE | (1 << DISPLAY_MEMORY_PIN)))) = (X))
 
-static TIM_HandleTypeDef TIM1_Handle;
-
 #define LED_PWM_TIM_PERIOD (10000)
 
 static uint32_t timer1_get_source_freq() {
@@ -112,12 +110,28 @@ void display_set_orientation(int degrees)
 
 void display_set_backlight(int val)
 {
-    __HAL_TIM_SET_COMPARE(&TIM1_Handle, TIM_CHANNEL_1, LED_PWM_TIM_PERIOD * val / 255);
+    TIM1->CCR1 = LED_PWM_TIM_PERIOD * val / 255;
 }
 
-void display_pwm_init(void)
+int display_init(void)
 {
+    // init peripherials
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_TIM1_CLK_ENABLE();
+    __HAL_RCC_FMC_CLK_ENABLE();
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    // LCD_PWM/PA7 (backlight control)
+    GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull      = GPIO_NOPULL;
+    GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
+    GPIO_InitStructure.Pin       = GPIO_PIN_7;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+
     // enable PWM timer
+    TIM_HandleTypeDef TIM1_Handle;
     TIM1_Handle.Instance = TIM1;
     TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
     TIM1_Handle.Init.Prescaler = timer1_get_source_freq() / 1000000 - 1; // TIM runs at 1MHz
@@ -135,28 +149,11 @@ void display_pwm_init(void)
     TIM_OC_InitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
     TIM_OC_InitStructure.OCNIdleState = TIM_OCNIDLESTATE_SET;
     HAL_TIM_PWM_ConfigChannel(&TIM1_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
+
     display_backlight(0);
+
     HAL_TIM_PWM_Start(&TIM1_Handle, TIM_CHANNEL_1);
     HAL_TIMEx_PWMN_Start(&TIM1_Handle, TIM_CHANNEL_1);
-}
-
-int display_init(void) {
-    // init peripherials
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_TIM1_CLK_ENABLE();
-    __HAL_RCC_FMC_CLK_ENABLE();
-
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    // LCD_PWM/PA7 (backlight control)
-    GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStructure.Pull      = GPIO_NOPULL;
-    GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
-    GPIO_InitStructure.Pin       = GPIO_PIN_7;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    display_pwm_init();
 
     // LCD_RST/PC14
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -268,7 +265,6 @@ int display_init(void) {
     // gamma curve 2
     // CMD(0xE1); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
 #endif
-    display_backlight(0);
     display_clear();
     display_orientation(0);
     display_unsleep();
