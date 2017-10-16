@@ -66,10 +66,6 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 #endif
 };
 
-void check_and_jump(void)
-{
-}
-
 int usb_init_all(void) {
     static const usb_dev_info_t dev_info = {
         .vendor_id     = 0x1209,
@@ -124,6 +120,8 @@ void bootloader_loop(void)
     ensure(0 == usb_init_all(), NULL);
 
     display_clear();
+    display_text_center(120, 30, "TREZOR Bootloader", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_fade(0, BACKLIGHT_NORMAL, 1000);
 
     uint8_t buf[USB_PACKET_SIZE];
 
@@ -147,10 +145,19 @@ void bootloader_loop(void)
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 6: // FirmwareErase
+                display_text_center(120, 230, "Updating firmware", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
-                process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
+                r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
+                if (r < 0) { // error
+                    display_clear();
+                    display_text_center(120, 230, "Error", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                } else
+                if (r == 0) { // last chunk received
+                    display_clear();
+                    display_text_center(120, 230, "Done", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                }
                 break;
             default:
                 process_msg_unknown(USB_IFACE_NUM, msg_size, buf);
@@ -201,7 +208,8 @@ int main(void)
         touched |= touch_read();
     }
 
-    if (touched != 0) {
+    // start the bootloader if user touched the screen or no firmware installed
+    if (touched != 0 || !vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL)) {
         bootloader_loop();
         shutdown();
     }

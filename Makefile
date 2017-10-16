@@ -178,3 +178,6 @@ combine: ## combine boardloader + bootloader + firmware into one combined image
 		$(BOOTLOADER_START) $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
 		$(FIRMWARE_START) $(FIRMWARE_BUILD_DIR)/firmware.bin \
 		> $(FIRMWARE_BUILD_DIR)/combined.bin \
+
+upload: ## upload firmware using trezorctl
+	trezorctl firmware_update -f $(FIRMWARE_BUILD_DIR)/firmware.bin

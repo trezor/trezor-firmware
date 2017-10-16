@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include <pb.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "messages.pb.h"
@@ -7,10 +8,16 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "image.h"
 #include "usb.h"
 #include "version.h"
 
 #include "messages.h"
+
+#define FIRMWARE_CHUNK_SIZE (128 * 1024)
+
+#define MSG_HEADER1_LEN 9
+#define MSG_HEADER2_LEN 1
 
 bool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
 {
@@ -204,8 +211,8 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
-    // TODO: properly detect firmware
-    MSG_SEND_ASSIGN_VALUE(firmware_present, false);
+    bool firmware_present = vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL);
+    MSG_SEND_ASSIGN_VALUE(firmware_present, firmware_present);
     MSG_SEND(Features);
 }
 
@@ -286,14 +293,14 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
     return true;
 }
 
-void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
+int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     if (!flash_unlock()) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Could not unlock flash");
         MSG_SEND(Failure);
-        return;
+        return -1;
     }
 
     MSG_RECV_INIT(FirmwareUpload);
@@ -318,10 +325,10 @@ void process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *b
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
         MSG_SEND(FirmwareRequest);
     } else {
-        display_clear();
         MSG_SEND_INIT(Success);
         MSG_SEND(Success);
     }
+    return (int)firmware_remaining;
 }
 
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
