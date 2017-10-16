@@ -228,9 +228,9 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 
 static uint32_t firmware_remaining, firmware_flashed, chunk_requested;
 
-static void progress_erase(uint16_t val)
+static void progress_erase(int pos, int len)
 {
-    display_loader(val / 4, 0, 0xFFFF, 0, 0, 0, 0);
+    display_loader(250 * pos / len, 0, COLOR_WHITE, COLOR_BLACK, 0, 0, 0);
 }
 
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -245,7 +245,22 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
     if (firmware_remaining > 0 && firmware_remaining % 4 == 0) {
         // erase flash
-        if (!flash_erase_sectors(FLASH_SECTOR_FIRMWARE_START, FLASH_SECTOR_FIRMWARE_END, progress_erase)) {
+        uint8_t sectors[] = {
+            FLASH_SECTOR_FIRMWARE_START,
+            7,
+            8,
+            9,
+            10,
+            FLASH_SECTOR_FIRMWARE_END,
+            FLASH_SECTOR_FIRMWARE_EXTRA_START,
+            18,
+            19,
+            20,
+            21,
+            22,
+            FLASH_SECTOR_FIRMWARE_EXTRA_END,
+        };
+        if (!flash_erase_sectors(sectors, 6 + 7, progress_erase)) {
             MSG_SEND_INIT(Failure);
             MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
             MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
@@ -276,7 +291,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
     chunk_size = stream->bytes_left;
     while (stream->bytes_left) {
         // print loader
-        display_loader(250 + 750 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, 0xFFFF, 0, 0, 0, 0);
+        display_loader(250 + 750 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, COLOR_WHITE, COLOR_BLACK, 0, 0, 0);
         memset(buf, 0xFF, sizeof(buf));
         // read data
         if (!pb_read(stream, (pb_byte_t *)buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
@@ -329,6 +344,48 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND(Success);
     }
     return (int)firmware_remaining;
+}
+
+static void progress_wipe(int pos, int len)
+{
+    display_loader(1000 * pos / len, 0, COLOR_WHITE, COLOR_BLACK, 0, 0, 0);
+}
+
+int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
+{
+    uint8_t sectors[] = {
+        FLASH_SECTOR_STORAGE_1,
+        FLASH_SECTOR_STORAGE_2,
+        FLASH_SECTOR_PIN_AREA,
+        FLASH_SECTOR_FIRMWARE_START,
+        7,
+        8,
+        9,
+        10,
+        FLASH_SECTOR_FIRMWARE_END,
+        FLASH_SECTOR_UNUSED_START,
+        13,
+        14,
+        FLASH_SECTOR_UNUSED_END,
+        FLASH_SECTOR_FIRMWARE_EXTRA_START,
+        18,
+        19,
+        20,
+        21,
+        22,
+        FLASH_SECTOR_FIRMWARE_EXTRA_END,
+    };
+    if (!flash_erase_sectors(sectors, 2 + 1 + 6 + 4 + 7, progress_wipe)) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+        MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
+        MSG_SEND(Failure);
+        return -1;
+    } else {
+        MSG_SEND_INIT(Success);
+        MSG_SEND(Success);
+        return 0;
+    }
 }
 
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)

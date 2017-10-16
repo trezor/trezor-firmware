@@ -42,7 +42,7 @@ static uint32_t check_sdcard(void)
     }
 }
 
-static void progress_callback(uint16_t val) {
+static void progress_callback(int pos, int len) {
     display_printf(".");
 }
 
@@ -72,7 +72,30 @@ static bool copy_sdcard(void)
     display_printf("\n\nerasing flash:\n\n");
 
     // erase all flash (except boardloader)
-    if (!flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_LAST, progress_callback)) {
+    uint8_t sectors[] = {
+        FLASH_SECTOR_STORAGE_1,
+        FLASH_SECTOR_STORAGE_2,
+        FLASH_SECTOR_PIN_AREA,
+        FLASH_SECTOR_BOOTLOADER,
+        FLASH_SECTOR_FIRMWARE_START,
+        7,
+        8,
+        9,
+        10,
+        FLASH_SECTOR_FIRMWARE_END,
+        FLASH_SECTOR_UNUSED_START,
+        13,
+        14,
+        FLASH_SECTOR_UNUSED_END,
+        FLASH_SECTOR_FIRMWARE_EXTRA_START,
+        18,
+        19,
+        20,
+        21,
+        22,
+        FLASH_SECTOR_FIRMWARE_EXTRA_END,
+    };
+    if (!flash_erase_sectors(sectors, 2 + 1 + 1 + 6 + 4 + 7, progress_callback)) {
         display_printf(" failed\n");
         return false;
     }
@@ -130,8 +153,8 @@ int main(void)
 #if PRODUCTION
     flash_set_option_bytes();
     if (!flash_check_option_bytes()) {
-        flash_erase_sectors(FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_1, NULL);
-        flash_erase_sectors(FLASH_SECTOR_STORAGE_2, FLASH_SECTOR_STORAGE_2, NULL);
+        uint8_t sectors[] = {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2};
+        flash_erase_sectors(sectors, 2, NULL);
         ensure(0, "wrong option bytes");
     }
 #endif

@@ -47,7 +47,7 @@ void flash_set_option_bytes(void);
 bool flash_unlock(void);
 bool flash_lock(void);
 
-bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val));
+bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len));
 bool flash_write_byte(uint32_t address, uint8_t data);
 bool flash_write_word(uint32_t address, uint32_t data);
 

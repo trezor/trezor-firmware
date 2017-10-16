@@ -21,7 +21,7 @@ bool flash_lock(void)
     return true;
 }
 
-bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val))
+bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
 {
     if (!flash_unlock()) {
         return false;
@@ -31,14 +31,17 @@ bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val))
     EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
     EraseInitStruct.NbSectors = 1;
     uint32_t SectorError = 0;
-    for (int i = start; i <= end; i++) {
-        EraseInitStruct.Sector = i;
+    if (progress) {
+        progress(0, len);
+    }
+    for (int i = 0; i < len; i++) {
+        EraseInitStruct.Sector = sectors[i];
         if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
             flash_lock();
             return false;
         }
         if (progress) {
-            progress(1000 * (i - start + 1) / (end - start + 1));
+            progress(i + 1, len);
         }
     }
     flash_lock();

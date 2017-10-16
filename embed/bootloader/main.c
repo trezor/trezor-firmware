@@ -144,19 +144,36 @@ void bootloader_loop(void)
             case 1: // Ping
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
+            case 5: // WipeDevice
+                display_clear();
+                display_text_center(120, 30, "Wiping Device", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
+                if (r < 0) { // error
+                    display_clear();
+                    display_text_center(120, 30, "Error", -1, FONT_BOLD, COLOR_RED, COLOR_BLACK);
+                    display_loader(1000, 0, COLOR_RED, COLOR_BLACK, 0, 0, 0);
+                } else { // success
+                    display_clear();
+                    display_text_center(120, 30, "Done", -1, FONT_BOLD, COLOR_GREEN, COLOR_BLACK);
+                    display_loader(1000, 0, COLOR_GREEN, COLOR_BLACK, 0, 0, 0);
+                }
+                break;
             case 6: // FirmwareErase
-                display_text_center(120, 230, "Updating firmware", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                display_clear();
+                display_text_center(120, 30, "Updating Firmware", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
                 r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
                     display_clear();
-                    display_text_center(120, 230, "Error", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                    display_text_center(120, 30, "Error", -1, FONT_BOLD, COLOR_RED, COLOR_BLACK);
+                    display_loader(1000, 0, COLOR_RED, COLOR_BLACK, 0, 0, 0);
                 } else
                 if (r == 0) { // last chunk received
                     display_clear();
-                    display_text_center(120, 230, "Done", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                    display_text_center(120, 30, "Done", -1, FONT_BOLD, COLOR_GREEN, COLOR_BLACK);
+                    display_loader(1000, 0, COLOR_GREEN, COLOR_BLACK, 0, 0, 0);
                 }
                 break;
             default:
@@ -201,13 +218,16 @@ int main(void)
 
     ensure(0 == touch_init(), NULL);
 
-    uint32_t touched = 0;
-    for (int i = 0; i < 10; i++) {
-        touched |= touch_read();
+    // delay to detect touch
+    hal_delay(100);
+    bool touched = false;
+    // flush touch events
+    while (touch_read()) {
+        touched = true;
     }
 
     // start the bootloader if user touched the screen or no firmware installed
-    if (touched != 0 || !vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL)) {
+    if (touched || !vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL)) {
         bootloader_loop();
         shutdown();
     }
