@@ -75,7 +75,6 @@ static bool copy_sdcard(void)
     uint8_t sectors[] = {
         FLASH_SECTOR_STORAGE_1,
         FLASH_SECTOR_STORAGE_2,
-        FLASH_SECTOR_PIN_AREA,
         FLASH_SECTOR_BOOTLOADER,
         FLASH_SECTOR_FIRMWARE_START,
         7,
@@ -94,8 +93,9 @@ static bool copy_sdcard(void)
         21,
         22,
         FLASH_SECTOR_FIRMWARE_EXTRA_END,
+        FLASH_SECTOR_PIN_AREA,
     };
-    if (!flash_erase_sectors(sectors, 2 + 1 + 1 + 6 + 4 + 7, progress_callback)) {
+    if (!flash_erase_sectors(sectors, 2 + 1 + 6 + 4 + 7 + 1, progress_callback)) {
         display_printf(" failed\n");
         return false;
     }
@@ -153,7 +153,10 @@ int main(void)
 #if PRODUCTION
     flash_set_option_bytes();
     if (!flash_check_option_bytes()) {
-        uint8_t sectors[] = {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2};
+        uint8_t sectors[] = {
+            FLASH_SECTOR_STORAGE_1,
+            FLASH_SECTOR_STORAGE_2,
+        };
         flash_erase_sectors(sectors, 2, NULL);
         ensure(0, "wrong option bytes");
     }

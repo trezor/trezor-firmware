@@ -38,7 +38,6 @@
 //                                          22
 //                                          23
 #define FLASH_SECTOR_FIRMWARE_EXTRA_END     23
-#define FLASH_SECTOR_LAST                   23
 
 int flash_init(void);
 
