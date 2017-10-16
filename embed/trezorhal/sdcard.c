@@ -30,9 +30,6 @@
 
 #include "sdcard.h"
 
-#define IRQ_PRI_SDIO            4
-#define IRQ_SUBPRI_SDIO         0
-
 static SD_HandleTypeDef sd_handle;
 
 int sdcard_init(void) {
@@ -64,16 +61,10 @@ int sdcard_init(void) {
 void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
     // enable SDIO clock
     __HAL_RCC_SDIO_CLK_ENABLE();
-
-    // NVIC configuration for SDIO interrupts
-    HAL_NVIC_SetPriority(SDIO_IRQn, IRQ_PRI_SDIO, IRQ_SUBPRI_SDIO);
-    HAL_NVIC_EnableIRQ(SDIO_IRQn);
-
     // GPIO have already been initialised by sdcard_init
 }
 
 void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
-    HAL_NVIC_DisableIRQ(SDIO_IRQn);
     __HAL_RCC_SDIO_CLK_DISABLE();
 }
 
@@ -135,10 +126,6 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
     HAL_SD_CardInfoTypeDef cardinfo;
     HAL_SD_GetCardInfo(&sd_handle, &cardinfo);
     return (uint64_t)cardinfo.LogBlockNbr * (uint64_t)cardinfo.LogBlockSize;
-}
-
-void SDIO_IRQHandler(void) {
-    HAL_SD_IRQHandler(&sd_handle);
 }
 
 static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd, uint32_t timeout) {
