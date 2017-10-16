@@ -227,8 +227,7 @@ int display_init(void) {
     HAL_Delay(5);
 #if DISPLAY_ILI9341V
     CMD(0x01);                                      // software reset
-    HAL_Delay(20);
-    CMD(0x28);                                      // display off
+    HAL_Delay(120);
     CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30);
     CMD(0xED); DATA(0x64); DATA(0x03); DATA(0x12); DATA(0x81);
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
@@ -245,17 +244,14 @@ int display_init(void) {
     CMD(0xB6); DATA(0x0A); DATA(0xA2);              // display function control
     CMD(0xF6); DATA(0x01); DATA(0x30); DATA(0x00);  // interface control
     CMD(0xF2); DATA(0x00);                          // 3 gamma func disable
-    CMD(0x26); DATA(0x01);                          // gamma func enable
     // gamma curve 1
     CMD(0xE0); DATA(0x0F); DATA(0x2F); DATA(0x2C); DATA(0x0B); DATA(0x0F); DATA(0x09); DATA(0x56); DATA(0xD9); DATA(0x4A); DATA(0x0B); DATA(0x14); DATA(0x05); DATA(0x0C); DATA(0x06); DATA(0x00);
     // gamma curve 2
     CMD(0xE1); DATA(0x00); DATA(0x10); DATA(0x13); DATA(0x04); DATA(0x10); DATA(0x06); DATA(0x25); DATA(0x26); DATA(0x3B); DATA(0x04); DATA(0x0B); DATA(0x0A); DATA(0x33); DATA(0x39); DATA(0x0F);
-    CMD(0x20);                                      // don't invert colors
 #endif
 #if DISPLAY_ST7789V
     CMD(0x01);                                      // software reset
-    HAL_Delay(20);
-    CMD(0x28);                                      // display off
+    HAL_Delay(120);
     CMD(0x3A); DATA(0x55);                          // COLMOD: Interface Pixel format
     CMD(0xB2); DATA(0x08); DATA(0x08); DATA(0x00); DATA(0x22); DATA(0x22); // PORCTRK: Porch setting
     CMD(0xB7); DATA(0x35);                          // GCTRL: Gate Control
@@ -271,8 +267,6 @@ int display_init(void) {
     // CMD(0xE0); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
     // gamma curve 2
     // CMD(0xE1); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
-    CMD(0x26); DATA(0x01);                          // gamma func (gc3) enable
-    CMD(0x20);                                      // don't invert colors
 #endif
     display_backlight(0);
     display_clear();
