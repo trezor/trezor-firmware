@@ -26,7 +26,7 @@ bool flash_lock(void)
     return false;
 }
 
-bool flash_erase_sectors(int start, int end, void (*progress)(uint16_t val))
+bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
 {
     return false;
 }
