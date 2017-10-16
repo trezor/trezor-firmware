@@ -4,14 +4,41 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define FLASH_SECTOR_BOARDLOADER_START 0
-#define FLASH_SECTOR_BOARDLOADER_END   2
+// see docs/memory.md for more information
 
-#define FLASH_SECTOR_BOOTLOADER_START  5
-#define FLASH_SECTOR_BOOTLOADER_END    5
+#define FLASH_SECTOR_BOARDLOADER_START       0
+//                                           1
+#define FLASH_SECTOR_BOARDLOADER_END         2
 
-#define FLASH_SECTOR_FIRMWARE_START    6
-#define FLASH_SECTOR_FIRMWARE_END      11
+#define FLASH_SECTOR_PIN_AREA                3
+
+#define FLASH_SECTOR_STORAGE_1               4
+
+#define FLASH_SECTOR_BOOTLOADER              5
+
+#define FLASH_SECTOR_FIRMWARE_START          6
+//                                           7
+//                                           8
+//                                           9
+//                                          10
+#define FLASH_SECTOR_FIRMWARE_END           11
+
+#define FLASH_SECTOR_UNUSED_START           12
+//                                          13
+//                                          14
+#define FLASH_SECTOR_UNUSED_END             15
+
+#define FLASH_SECTOR_STORAGE_2              16
+
+#define FLASH_SECTOR_FIRMWARE_EXTRA_START   17
+//                                          18
+//                                          19
+//                                          20
+//                                          21
+//                                          22
+//                                          23
+#define FLASH_SECTOR_FIRMWARE_EXTRA_END     23
+#define FLASH_SECTOR_LAST                   23
 
 int flash_init(void);
 

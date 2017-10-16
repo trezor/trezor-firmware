@@ -71,8 +71,8 @@ static bool copy_sdcard(void)
 
     display_printf("\n\nerasing flash:\n\n");
 
-    // erase flash (except boardloader)
-    if (!flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_FIRMWARE_END, progress_callback)) {
+    // erase all flash (except boardloader)
+    if (!flash_erase_sectors(FLASH_SECTOR_BOARDLOADER_END + 1, FLASH_SECTOR_LAST, progress_callback)) {
         display_printf(" failed\n");
         return false;
     }
@@ -130,7 +130,8 @@ int main(void)
 #if PRODUCTION
     flash_set_option_bytes();
     if (!flash_check_option_bytes()) {
-        // TODO: erase storage
+        flash_erase_sectors(FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_1, NULL);
+        flash_erase_sectors(FLASH_SECTOR_STORAGE_2, FLASH_SECTOR_STORAGE_2, NULL);
         ensure(0, "wrong option bytes");
     }
 #endif
