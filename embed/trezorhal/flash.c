@@ -91,6 +91,28 @@ secbool flash_write_word(uint32_t address, uint32_t data)
     return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
 }
 
+bool flash_write_byte_rel(uint32_t sector, uint32_t offset, uint8_t data)
+{
+    return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, SECTOR_TABLE[sector] + offset, data);
+}
+
+bool flash_write_word_rel(uint32_t sector, uint32_t offset, uint32_t data)
+{
+    if (offset % 4 != 0) {
+        return false;
+    }
+    return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, SECTOR_TABLE[sector] + offset, data);
+}
+
+bool flash_read_word_rel(uint32_t sector, uint32_t offset, uint32_t *data)
+{
+    if (offset % 4 != 0) {
+        return false;
+    }
+    *data = *((uint32_t *) SECTOR_TABLE[sector] + offset);
+    return true;
+}
+
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
 
 secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
