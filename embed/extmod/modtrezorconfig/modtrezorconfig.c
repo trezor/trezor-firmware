@@ -13,10 +13,12 @@
 #include <stdint.h>
 #include <string.h>
 #include "norcow.h"
-#include "flash.h"
+#include "../../trezorhal/flash.h"
 
 #define MAX_WRONG_PINS  15
-#define FAIL_SECTOR_LEN 16 * 1024
+
+#define FAIL_SECTOR_LEN 0x4000
+
 #define STORAGE_KEY_PIN 0x00
 
 static void pin_fails_reset(uint32_t ofs)
@@ -25,7 +27,7 @@ static void pin_fails_reset(uint32_t ofs)
         // ofs points to the last word of the PIN fails area.  Because there is
         // no space left, we recycle the sector (set all words to 0xffffffff).
         // On next unlock attempt, we start counting from the the first word.
-        flash_erase_sectors(FLASH_SECTOR_PIN_AREA, FLASH_SECTOR_PIN_AREA, NULL);
+        flash_erase_sectors((uint8_t[]) { FLASH_SECTOR_PIN_AREA }, 1, NULL);
     } else {
         // Mark this counter as exhausted.  On next unlock attempt, pinfails_get
         // seeks to the next word.
