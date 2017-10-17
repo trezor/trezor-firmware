@@ -11,12 +11,14 @@
 #include "version.h"
 #include "mini_printf.h"
 
+#include "icon_cross.h"
+#include "icon_tick.h"
+#include "icon_tools.h"
 #include "messages.h"
+#include "style.h"
 
 #define IMAGE_MAGIC   0x465A5254 // TRZF
 #define IMAGE_MAXSIZE (7 * 128 * 1024)
-
-#define BACKLIGHT_NORMAL 150
 
 void display_fade(int start, int end, int delay)
 {
@@ -25,6 +27,31 @@ void display_fade(int start, int end, int delay)
         hal_delay(delay / 100);
     }
     display_backlight(end);
+}
+
+void display_header(const char *text)
+{
+    display_bar(0, 0, 240, 32, COLOR_BL_ORANGE);
+    display_icon(8, 4, 24, 24, icon_tools, sizeof(icon_tools), COLOR_BLACK, COLOR_BL_ORANGE);
+    display_text(8 + 24 + 8, 23, text, -1, FONT_BOLD, COLOR_BLACK, COLOR_BL_ORANGE);
+}
+
+void display_footer(const char *text, uint16_t color)
+{
+    display_bar(0, 184, 240, 56, COLOR_BLACK);
+    display_text_center(120, 220, text, -1, FONT_BOLD, color, COLOR_BLACK);
+}
+
+void display_done(void)
+{
+    display_loader(1000, 0, COLOR_BL_GREEN, COLOR_BLACK, icon_tick, sizeof(icon_tick), COLOR_WHITE);
+    display_footer("Done", COLOR_BL_GREEN);
+}
+
+void display_error(void)
+{
+    display_loader(1000, 0, COLOR_BL_RED, COLOR_BLACK, icon_cross, sizeof(icon_cross), COLOR_WHITE);
+    display_footer("Error", COLOR_BL_RED);
 }
 
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
@@ -120,7 +147,7 @@ void bootloader_loop(void)
     ensure(0 == usb_init_all(), NULL);
 
     display_clear();
-    display_text_center(120, 30, "TREZOR Bootloader", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_header("TREZOR Bootloader");
     display_fade(0, BACKLIGHT_NORMAL, 1000);
 
     uint8_t buf[USB_PACKET_SIZE];
@@ -145,35 +172,33 @@ void bootloader_loop(void)
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 5: // WipeDevice
+                display_fade(BACKLIGHT_NORMAL, 0, 100);
                 display_clear();
-                display_text_center(120, 30, "Wiping Device", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                display_header("Wiping Device");
+                display_footer("In progress ...", COLOR_WHITE);
+                display_fade(0, BACKLIGHT_NORMAL, 100);
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
-                    display_clear();
-                    display_text_center(120, 30, "Error", -1, FONT_BOLD, COLOR_RED, COLOR_BLACK);
-                    display_loader(1000, 0, COLOR_RED, COLOR_BLACK, 0, 0, 0);
+                    display_error();
                 } else { // success
-                    display_clear();
-                    display_text_center(120, 30, "Done", -1, FONT_BOLD, COLOR_GREEN, COLOR_BLACK);
-                    display_loader(1000, 0, COLOR_GREEN, COLOR_BLACK, 0, 0, 0);
+                    display_done();
                 }
                 break;
             case 6: // FirmwareErase
+                display_fade(BACKLIGHT_NORMAL, 0, 100);
                 display_clear();
-                display_text_center(120, 30, "Updating Firmware", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+                display_header("Updating Firmware");
+                display_footer("In progress ...", COLOR_WHITE);
+                display_fade(0, BACKLIGHT_NORMAL, 100);
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
                 r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
-                    display_clear();
-                    display_text_center(120, 30, "Error", -1, FONT_BOLD, COLOR_RED, COLOR_BLACK);
-                    display_loader(1000, 0, COLOR_RED, COLOR_BLACK, 0, 0, 0);
+                    display_error();
                 } else
                 if (r == 0) { // last chunk received
-                    display_clear();
-                    display_text_center(120, 30, "Done", -1, FONT_BOLD, COLOR_GREEN, COLOR_BLACK);
-                    display_loader(1000, 0, COLOR_GREEN, COLOR_BLACK, 0, 0, 0);
+                    display_done();
                 }
                 break;
             default:
@@ -222,6 +247,14 @@ int main(void)
     while (touch_read()) {
         touched = true;
     }
+
+
+
+
+
+touched = true;
+
+
 
     // start the bootloader if user touched the screen or no firmware installed
     if (touched || !vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL)) {

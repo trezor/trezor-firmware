@@ -29,24 +29,24 @@
 #define FONT_BOLD   2
 #endif
 
-#define AVATAR_IMAGE_SIZE 144
-#define LOADER_ICON_SIZE 64
+#define AVATAR_IMAGE_SIZE  144
+#define LOADER_ICON_SIZE   64
 
 #define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
 
-#define COLOR_WHITE      RGB16(255, 255, 255)
-#define COLOR_GRAY128    RGB16(127, 127, 127)
-#define COLOR_GRAY64     RGB16(63, 63, 63)
-#define COLOR_BLACK      RGB16(0, 0, 0)
+#define COLOR_WHITE      RGB16(0xFF, 0xFF, 0xFF)
+#define COLOR_GRAY128    RGB16(0x7F, 0x7F, 0x7F)
+#define COLOR_GRAY64     RGB16(0x3F, 0x3F, 0x3F)
+#define COLOR_BLACK      RGB16(0x00, 0x00, 0x00)
 
-#define COLOR_RED        RGB16(255, 0, 0)
-#define COLOR_RED128     RGB16(127, 0, 0)
+#define COLOR_RED        RGB16(0xFF, 0x00, 0x00)
+#define COLOR_RED128     RGB16(0x7F, 0x00, 0x00)
 
-#define COLOR_GREEN      RGB16(0, 255, 0)
-#define COLOR_GREEN128   RGB16(0, 127, 0)
+#define COLOR_GREEN      RGB16(0x00, 0xFF, 0x00)
+#define COLOR_GREEN128   RGB16(0x00, 0x7F, 0x00)
 
-#define COLOR_BLUE       RGB16(0, 0, 255)
-#define COLOR_BLUE128    RGB16(0, 0, 127)
+#define COLOR_BLUE       RGB16(0x00, 0x00, 0xFF)
+#define COLOR_BLUE128    RGB16(0x00, 0x00, 0x7F)
 
 // provided by port
 
