@@ -248,14 +248,6 @@ int main(void)
         touched = true;
     }
 
-
-
-
-
-touched = true;
-
-
-
     // start the bootloader if user touched the screen or no firmware installed
     if (touched || !vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL)) {
         bootloader_loop();
