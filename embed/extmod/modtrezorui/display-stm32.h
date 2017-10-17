@@ -225,6 +225,8 @@ int display_init(void)
 #if DISPLAY_ILI9341V
     CMD(0x01);                                      // software reset
     HAL_Delay(120);
+    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On; V-blanking only
+    CMD(0x3A); DATA(0x55);                          // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
     CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30);
     CMD(0xED); DATA(0x64); DATA(0x03); DATA(0x12); DATA(0x81);
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
@@ -235,8 +237,6 @@ int display_init(void)
     CMD(0xC1); DATA(0x12);                          // power control   SAP[2:0] BT[3:0]
     CMD(0xC5); DATA(0x60); DATA(0x44);              // vcm control 1
     CMD(0xC7); DATA(0x8A);                          // vcm control 2
-    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On
-    CMD(0x3A); DATA(0x55);                          // memory access control (16-bit 565)
     CMD(0xB1); DATA(0x00); DATA(0x18);              // framerate
     CMD(0xB6); DATA(0x0A); DATA(0xA2);              // display function control
     CMD(0xF6); DATA(0x01); DATA(0x30); DATA(0x00);  // interface control
@@ -249,7 +249,8 @@ int display_init(void)
 #if DISPLAY_ST7789V
     CMD(0x01);                                      // software reset
     HAL_Delay(120);
-    CMD(0x3A); DATA(0x55);                          // COLMOD: Interface Pixel format
+    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On; V-blanking only
+    CMD(0x3A); DATA(0x55);                          // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
     CMD(0xB2); DATA(0x08); DATA(0x08); DATA(0x00); DATA(0x22); DATA(0x22); // PORCTRK: Porch setting
     CMD(0xB7); DATA(0x35);                          // GCTRL: Gate Control
     CMD(0xC2); DATA(0x01); DATA(0xFF);              // VDVVRHEN: VDV and VRH Command Enable
@@ -258,7 +259,6 @@ int display_init(void)
     CMD(0xBB); DATA(0x20);                          // VCOMS: VCOM setting
     CMD(0xC5); DATA(0x20);                          // VCMOFSET
     // CMD(0xC6); DATA(0x0F);                       // FRCTRL2: Framerate Control (60 Hz)
-    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On
     CMD(0xD0); DATA(0xA4); DATA(0xA1);              // PWCTRL1: Power Control 1
     // gamma curve 1
     // CMD(0xE0); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
