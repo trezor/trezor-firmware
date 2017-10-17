@@ -42,16 +42,28 @@ void display_footer(const char *text, uint16_t color)
     display_text_center(120, 220, text, -1, FONT_BOLD, color, COLOR_BLACK);
 }
 
-void display_done(void)
+void display_done(int restart)
 {
-    display_loader(1000, 0, COLOR_BL_GREEN, COLOR_BLACK, icon_tick, sizeof(icon_tick), COLOR_WHITE);
-    display_footer("Done", COLOR_BL_GREEN);
+    if (restart == 0 || restart == 3) {
+        display_loader(1000, 0, COLOR_BL_GREEN, COLOR_BLACK, icon_tick, sizeof(icon_tick), COLOR_WHITE);
+    }
+    if (restart == 3) {
+        display_footer("Done! Restarting in 3s", COLOR_BL_GREEN);
+    } else
+    if (restart == 2) {
+        display_footer("Done! Restarting in 2s", COLOR_BL_GREEN);
+    } else
+    if (restart == 1) {
+        display_footer("Done! Restarting in 1s", COLOR_BL_GREEN);
+    } else {
+        display_footer("Done! Unplug the device", COLOR_BL_GREEN);
+    }
 }
 
 void display_error(void)
 {
     display_loader(1000, 0, COLOR_BL_RED, COLOR_BLACK, icon_cross, sizeof(icon_cross), COLOR_WHITE);
-    display_footer("Error", COLOR_BL_RED);
+    display_footer("Error! Unplug the device", COLOR_BL_RED);
 }
 
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
@@ -141,7 +153,7 @@ int usb_init_all(void) {
     return 0;
 }
 
-void bootloader_loop(void)
+bool bootloader_loop(void)
 {
     ensure(0 == flash_init(), NULL);
     ensure(0 == usb_init_all(), NULL);
@@ -180,8 +192,10 @@ void bootloader_loop(void)
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
                     display_error();
+                    return false; // shutdown
                 } else { // success
-                    display_done();
+                    display_done(0);
+                    return false; // shutdown
                 }
                 break;
             case 6: // FirmwareErase
@@ -196,9 +210,14 @@ void bootloader_loop(void)
                 r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
                     display_error();
+                    return false; // shutdown
                 } else
                 if (r == 0) { // last chunk received
-                    display_done();
+                    display_done(3); hal_delay(1000);
+                    display_done(2); hal_delay(1000);
+                    display_done(1); hal_delay(1000);
+                    display_fade(BACKLIGHT_NORMAL, 0, 500);
+                    return true; // jump to firmware
                 }
                 break;
             default:
@@ -250,8 +269,9 @@ int main(void)
 
     // start the bootloader if user touched the screen or no firmware installed
     if (touched || !vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL)) {
-        bootloader_loop();
-        shutdown();
+        if (!bootloader_loop()) {
+            shutdown();
+        }
     }
 
     vendor_header vhdr;

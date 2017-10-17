@@ -58,7 +58,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
             memcpy(state->buf + state->packet_pos, buf + written, USB_PACKET_SIZE - state->packet_pos);
             written += USB_PACKET_SIZE - state->packet_pos;
             // send packet
-            usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 1);
+            usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
             // prepare new packet
             state->packet_index++;
             memset(state->buf, 0, USB_PACKET_SIZE);
@@ -78,7 +78,7 @@ static void _usb_write_flush(usb_write_state *state)
         memset(state->buf + state->packet_pos, 0, USB_PACKET_SIZE - state->packet_pos);
     }
     // send packet
-    usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 1);
+    usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
 }
 
 static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fields[], const void *msg)
