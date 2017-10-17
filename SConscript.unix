@@ -215,6 +215,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
     'embed/unix/touch.c',
+    'embed/unix/flash.c',
 ]
 
 SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']

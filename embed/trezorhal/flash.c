@@ -91,12 +91,12 @@ secbool flash_write_word(uint32_t address, uint32_t data)
     return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
 }
 
-bool flash_write_byte_rel(uint32_t sector, uint32_t offset, uint8_t data)
+bool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
 {
     return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, SECTOR_TABLE[sector] + offset, data);
 }
 
-bool flash_write_word_rel(uint32_t sector, uint32_t offset, uint32_t data)
+bool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
 {
     if (offset % 4 != 0) {
         return false;
@@ -104,7 +104,7 @@ bool flash_write_word_rel(uint32_t sector, uint32_t offset, uint32_t data)
     return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, SECTOR_TABLE[sector] + offset, data);
 }
 
-bool flash_read_word_rel(uint32_t sector, uint32_t offset, uint32_t *data)
+bool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
 {
     if (offset % 4 != 0) {
         return false;
