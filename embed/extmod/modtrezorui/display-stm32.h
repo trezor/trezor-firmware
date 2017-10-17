@@ -24,16 +24,6 @@
 
 #define LED_PWM_TIM_PERIOD (10000)
 
-static uint32_t timer1_get_source_freq() {
-    uint32_t source;
-    // TIM1 is on APB2
-    source = HAL_RCC_GetPCLK2Freq();
-    if ((uint32_t)((RCC->CFGR & RCC_CFGR_PPRE2) >> 3) != RCC_HCLK_DIV1) {
-        source *= 2;
-    }
-    return source;
-}
-
 static void __attribute__((unused)) display_sleep(void) {
 #if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x28); // display off
@@ -134,7 +124,8 @@ int display_init(void)
     TIM_HandleTypeDef TIM1_Handle;
     TIM1_Handle.Instance = TIM1;
     TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
-    TIM1_Handle.Init.Prescaler = timer1_get_source_freq() / 1000000 - 1; // TIM runs at 1MHz
+    // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration, we want 1 MHz
+    TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
     TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
     TIM1_Handle.Init.RepetitionCounter = 0;
