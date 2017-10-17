@@ -62,9 +62,4 @@ void periph_init(void)
     // Clear the reset flags
     PWR->CR |= PWR_CR_CSBF;
     RCC->CSR |= RCC_CSR_RMVF;
-
-    // Enable CPU ticks
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // Enable DWT
-    DWT->CYCCNT = 0;  // Reset Cycle Count Register
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable Cycle Count Register
 }
