@@ -5,5 +5,6 @@
 
 void flash_set_option_bytes(void);
 bool flash_check_option_bytes(void);
+void periph_init(void);
 
 #endif

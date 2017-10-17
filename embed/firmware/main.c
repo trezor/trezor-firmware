@@ -23,7 +23,6 @@
 
 int main(void)
 {
-
     pendsv_init();
 
     display_orientation(0);

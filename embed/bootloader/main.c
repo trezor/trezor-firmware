@@ -207,7 +207,6 @@ void check_bootloader_version(void)
 
 int main(void)
 {
-
 #if PRODUCTION
     check_bootloader_version();
 #endif
