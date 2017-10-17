@@ -212,8 +212,6 @@ int main(void)
     check_bootloader_version();
 #endif
 
-    periph_init();
-
     display_orientation(0);
 
     ensure(0 == touch_init(), NULL);

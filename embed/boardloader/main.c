@@ -1,3 +1,5 @@
+#include STM32_HAL_H
+
 #include <string.h>
 
 #include "common.h"
@@ -146,6 +148,31 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
     (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
 #endif
 };
+
+void periph_init(void)
+{
+    // STM32F4xx HAL library initialization:
+    //  - configure the Flash prefetch, instruction and data caches
+    //  - configure the Systick to generate an interrupt each 1 msec
+    //  - set NVIC Group Priority to 4
+    //  - global MSP (MCU Support Package) initialization
+    HAL_Init();
+
+    // Enable GPIO clocks
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    // Clear the reset flags
+    PWR->CR |= PWR_CR_CSBF;
+    RCC->CSR |= RCC_CSR_RMVF;
+
+    // Enable CPU ticks
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // Enable DWT
+    DWT->CYCCNT = 0;  // Reset Cycle Count Register
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;  // Enable Cycle Count Register
+}
 
 int main(void)
 {

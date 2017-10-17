@@ -24,8 +24,6 @@
 int main(void)
 {
 
-    periph_init();
-
     pendsv_init();
 
     display_orientation(0);
