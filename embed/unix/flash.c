@@ -62,19 +62,6 @@ static void flash_read(void)
     }
 }
 
-static void *sector_ptr(uint8_t sector, uint32_t offset, uint32_t size)
-{
-    if (sector >= SECTOR_COUNT) {
-        return NULL;
-    }
-    uint32_t sector_size = sector_table[sector + 1] - sector_table[sector];
-    if (offset + size > sector_size) {
-        return NULL;
-    }
-    uint32_t sector_offset = sector_table[sector] - sector_table[0];
-    return flash_buffer + sector_offset + offset;
-}
-
 int flash_init(void)
 {
     flash_read();
@@ -93,6 +80,19 @@ bool flash_unlock(void)
 bool flash_lock(void)
 {
     return true;
+}
+
+const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
+{
+    if (sector >= SECTOR_COUNT) {
+        return NULL;
+    }
+    uint32_t sector_size = sector_table[sector + 1] - sector_table[sector];
+    if (offset + size > sector_size) {
+        return NULL;
+    }
+    uint32_t sector_offset = sector_table[sector] - sector_table[0];
+    return flash_buffer + sector_offset + offset;
 }
 
 bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
@@ -115,12 +115,12 @@ bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int p
 
 bool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
 {
-    uint8_t *flash = sector_ptr(sector, offset, sizeof(data));
+    uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, sizeof(data));
     if (!flash) {
         return false;
     }
     if ((flash[0] & data) != data) {
-        return false;  // we cannot change zeros to ones
+        return false;  // we cannot change zeroes to ones
     }
     flash[0] = data;
     flash_sync();
@@ -132,12 +132,12 @@ bool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
     if (offset % 4) {  // we write only at 4-byte boundary
         return false;
     }
-    uint32_t *flash = sector_ptr(sector, offset, sizeof(data));
+    uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
     if (!flash) {
         return false;
     }
     if ((flash[0] & data) != data) {
-        return false;  // we cannot change zeros to ones
+        return false;  // we cannot change zeroes to ones
     }
     flash[0] = data;
     flash_sync();
@@ -149,7 +149,7 @@ bool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
     if (offset % 4) {  // we read only at 4-byte boundary
         return false;
     }
-    uint32_t *flash = sector_ptr(sector, offset, sizeof(data));
+    uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
     if (!flash) {
         return false;
     }

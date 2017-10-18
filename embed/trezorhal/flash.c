@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) Pavol Rusnak, Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include STM32_HAL_H
 
 #include <string.h>
+
 #include "flash.h"
 
 // see docs/memory.md for more information
@@ -44,6 +52,19 @@ secbool flash_lock(void)
 {
     HAL_FLASH_Lock();
     return sectrue;
+}
+
+const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
+{
+    if (sector >= SECTOR_COUNT) {
+        return NULL;
+    }
+    uint32_t addr = SECTOR_TABLE[sector];
+    uint32_t next = SECTOR_TABLE[sector + 1];
+    if (offset + size > next - addr) {
+        return NULL;
+    }
+    return (const uint8_t *)addr + offset;
 }
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
@@ -91,26 +112,26 @@ secbool flash_write_word(uint32_t address, uint32_t data)
     return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
 }
 
-bool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
+secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
 {
-    return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, SECTOR_TABLE[sector] + offset, data);
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, SECTOR_TABLE[sector] + offset, data));
 }
 
-bool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
+secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
 {
     if (offset % 4 != 0) {
-        return false;
+        return secfalse;
     }
-    return HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, SECTOR_TABLE[sector] + offset, data);
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, SECTOR_TABLE[sector] + offset, data));
 }
 
-bool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
+secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
 {
     if (offset % 4 != 0) {
-        return false;
+        return secfalse;
     }
     *data = *((uint32_t *) SECTOR_TABLE[sector] + offset);
-    return true;
+    return sectrue;
 }
 
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
