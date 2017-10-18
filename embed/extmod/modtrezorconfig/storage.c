@@ -11,7 +11,7 @@
 #include "../../trezorhal/flash.h"
 
 // Byte-length of flash sector containing fail counters.
-#define PIN_AREA_LEN 0x4000
+#define PIN_SECTOR_SIZE 0x4000
 
 // Maximum number of failed unlock attempts.
 #define PIN_MAX_TRIES 15
@@ -34,7 +34,7 @@ bool storage_init(void)
 
 static void pin_fails_reset(uint32_t ofs)
 {
-    if (ofs + sizeof(uint32_t) >= PIN_AREA_LEN) {
+    if (ofs + sizeof(uint32_t) >= PIN_SECTOR_SIZE) {
         // ofs points to the last word of the PIN fails area.  Because there is
         // no space left, we recycle the sector (set all words to 0xffffffff).
         // On next unlock attempt, we start counting from the the first word.
@@ -87,7 +87,7 @@ static bool pin_fails_read(uint32_t *ofs, uint32_t *ctr)
     if (!ofs || !ctr) {
         return false;
     }
-    for (uint32_t o = 0; o < PIN_AREA_LEN; o += sizeof(uint32_t)) {
+    for (uint32_t o = 0; o < PIN_SECTOR_SIZE; o += sizeof(uint32_t)) {
         uint32_t c = 0;
         if (!flash_read_word_rel(FLASH_SECTOR_PIN_AREA, o, &c)) {
             return false;
