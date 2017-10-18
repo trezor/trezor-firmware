@@ -14,8 +14,8 @@ I2C_HandleTypeDef i2c_handle = {
     .Instance = I2C1,
 };
 
-int touch_init(void) {
-
+int touch_init(void)
+{
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();
 
@@ -44,17 +44,14 @@ int touch_init(void) {
         return 1;
     }
 
-    // Enable IRQs
-    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-    HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
-
     return 0;
 }
 
 #define TOUCH_ADDRESS 56
 #define TOUCH_PACKET_SIZE 16
 
-uint32_t touch_read(void) {
+uint32_t touch_read(void)
+{
     static uint8_t data[TOUCH_PACKET_SIZE], old_data[TOUCH_PACKET_SIZE];
     if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS << 1, data, TOUCH_PACKET_SIZE, 1)) {
         return 0; // read failure
@@ -89,12 +86,4 @@ void touch_click(void)
     while ((touch_read() & TOUCH_END) == 0) { }
     // flush touch events if any
     while (touch_read()) { }
-}
-
-void I2C1_EV_IRQHandler(void) {
-    HAL_I2C_EV_IRQHandler(&i2c_handle);
-}
-
-void I2C1_ER_IRQHandler(void) {
-    HAL_I2C_ER_IRQHandler(&i2c_handle);
 }
