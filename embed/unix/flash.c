@@ -66,6 +66,7 @@ static void flash_read(void)
 
 int flash_init(void)
 {
+    memset(flash_buffer, 0xFF, sizeof(flash_buffer));
     flash_read();
     return 0;
 }
