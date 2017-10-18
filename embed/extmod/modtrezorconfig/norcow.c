@@ -1,44 +1,16 @@
 #include <string.h>
 
 #include "norcow.h"
-#include "norcow_config.h"
 
-#ifdef NORCOW_UNIX
-#ifndef NORCOW_FILE
-#error Undefined NORCOW_FILE
-#endif
-#include <stdio.h>
-uint8_t norcow_buffer[NORCOW_SECTOR_COUNT * NORCOW_SECTOR_SIZE];
-#endif
+#include "../../trezorhal/flash.h"
 
-#ifdef NORCOW_STM32
 #ifndef NORCOW_SECTORS
-#error Undefined NORCOW_SECTORS
-#endif
-#ifndef NORCOW_ADDRESSES
-#error Undefined NORCOW_ADDRESSES
-#endif
-static uint32_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
-static uint32_t norcow_addresses[NORCOW_SECTOR_COUNT] = NORCOW_ADDRESSES;
-#include STM32_HAL_H
+#define NORCOW_SECTORS {4, 16}
 #endif
 
+static uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
 static uint8_t norcow_active_sector = 0;
 static uint32_t norcow_active_offset = 0;
-
-/*
- * Synchronizes in-memory storage with file on disk (UNIX only)
- */
-#ifdef NORCOW_UNIX
-static void norcow_sync(void)
-{
-    FILE *f = fopen(NORCOW_FILE, "wb");
-    if (f) {
-        fwrite(norcow_buffer, sizeof(norcow_buffer), 1, f);
-        fclose(f);
-    }
-}
-#endif
 
 /*
  * Erases sector
@@ -48,26 +20,7 @@ static bool norcow_erase(uint8_t sector)
     if (sector >= NORCOW_SECTOR_COUNT) {
         return false;
     }
-#ifdef NORCOW_UNIX
-    memset(norcow_buffer + sector * NORCOW_SECTOR_SIZE, 0xFF, NORCOW_SECTOR_SIZE);
-    norcow_sync();
-    return true;
-#endif
-#ifdef NORCOW_STM32
-    HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
-    FLASH_EraseInitTypeDef EraseInitStruct;
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    EraseInitStruct.NbSectors = 1;
-    EraseInitStruct.Sector = norcow_sectors[sector];
-    HAL_StatusTypeDef r;
-    uint32_t SectorError = 0;
-    r = HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError);
-    HAL_FLASH_Lock();
-    return r == HAL_OK;
-#endif
-    return false;
+    return flash_erase_sectors(&norcow_sectors[sector], 1, NULL);
 }
 
 /*
@@ -79,15 +32,7 @@ static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size)
     if (sector >= NORCOW_SECTOR_COUNT) {
         return NULL;
     }
-    if (offset + size > NORCOW_SECTOR_SIZE) {
-        return NULL;
-    }
-#ifdef NORCOW_UNIX
-    return (const void *)(norcow_buffer + sector * NORCOW_SECTOR_SIZE + offset);
-#endif
-#ifdef NORCOW_STM32
-    return (const void *)(norcow_addresses[sector] + offset);
-#endif
+    return flash_get_address(norcow_sectors[sector], offset, size);
 }
 
 /*
@@ -95,44 +40,34 @@ static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size)
  */
 static bool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const uint8_t *data, uint16_t len)
 {
-    if (offset % 4) { // we write only at 4-byte boundary
+    if (sector >= NORCOW_SECTOR_COUNT) {
         return false;
     }
-    const uint8_t *ptr = (const uint8_t *)norcow_ptr(sector, offset, sizeof(uint32_t) + len);
-    if (!ptr) {
+    if (!flash_unlock()) {
         return false;
     }
-#ifdef NORCOW_UNIX
-    // check whether we are about just change 1s to 0s
-    // and bailout if not
-    if ((*(uint32_t *)ptr & prefix) != prefix) {
+    // write prefix
+    if (!flash_write_word_rel(norcow_sectors[sector], offset, prefix)) {
+        flash_lock();
         return false;
     }
-    for (size_t i = 0; i < len; i++) {
-        if ((ptr[sizeof(uint32_t) + i] & data[i]) != data[i]) {
+    offset += sizeof(uint32_t);
+    // write data
+    for (uint16_t i = 0; i < len; i++, offset++) {
+        if (!flash_write_byte_rel(norcow_sectors[sector], offset, data[i])) {
+            flash_lock();
             return false;
         }
     }
-    memcpy((void *)ptr, &prefix, sizeof(uint32_t));
-    memcpy((void *)(ptr + sizeof(uint32_t)), data, len);
-    norcow_sync();
-    return true;
-#endif
-#ifdef NORCOW_STM32
-    HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
-    uint32_t addr = (uint32_t)ptr;
-    HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, prefix);
-    addr += 4;
-    for (size_t i = 0; i < (len + 3) / sizeof(uint32_t); i++) {
-        const uint32_t *d = (const uint32_t *)(data + i * sizeof(uint32_t));
-        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, addr, *d);
-        addr += 4;
+    // pad with zeroes
+    for (; offset % 4; offset++) {
+        if (!flash_write_byte_rel(norcow_sectors[sector], offset, 0x00)) {
+            flash_lock();
+            return false;
+        }
     }
-    HAL_FLASH_Lock();
+    flash_lock();
     return true;
-#endif
-    return false;
 }
 
 #define ALIGN4(X) (X) = ((X) + 3) & ~3
@@ -272,17 +207,6 @@ static void compact()
  */
 bool norcow_init(void)
 {
-#ifdef NORCOW_UNIX
-    memset(norcow_buffer, 0xFF, sizeof(norcow_buffer));
-    FILE *f = fopen(NORCOW_FILE, "rb");
-    if (f) {
-        size_t r = fread(norcow_buffer, sizeof(norcow_buffer), 1, f);
-        fclose(f);
-        if (r != 1) {
-            memset(norcow_buffer, 0xFF, sizeof(norcow_buffer));
-        }
-    }
-#endif
     // detect active sector (inactive sectors are empty = start with 0xFF)
     for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
         const uint8_t *b = norcow_ptr(i, 0, 1);
