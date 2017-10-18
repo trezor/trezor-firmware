@@ -10,6 +10,10 @@
 
 #include "../trezorhal/flash.h"
 
+#ifndef FLASH_FILE
+#define FLASH_FILE "/var/tmp/trezor.config"
+#endif
+
 #define SECTOR_COUNT 24
 
 static const uint32_t sector_table[SECTOR_COUNT + 1] = {
@@ -39,8 +43,6 @@ static const uint32_t sector_table[SECTOR_COUNT + 1] = {
     [23] = 0x081E0000, // - 0x081FFFFF | 128 KiB
     [24] = 0x08200000, // last element - not a valid sector
 };
-
-#define FLASH_FILE "tmp"
 
 static uint8_t flash_buffer[0x200000];
 
