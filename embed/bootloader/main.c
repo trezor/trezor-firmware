@@ -260,11 +260,10 @@ int main(void)
     ensure(0 == touch_init(), NULL);
 
     // delay to detect touch
-    hal_delay(100);
-    bool touched = false;
-    // flush touch events
-    while (touch_read()) {
-        touched = true;
+    uint32_t touched = 0;
+    for (int i = 0; i < 100; i++) {
+        touched |= touch_read();
+        hal_delay(1);
     }
 
     // start the bootloader if user touched the screen or no firmware installed
