@@ -10,8 +10,8 @@
 #include "lowlevel.h"
 #include "version.h"
 
-#define IMAGE_MAGIC   0x425A5254 // TRZB
-#define IMAGE_MAXSIZE (1 * 64 * 1024 + 7 * 128 * 1024)
+#define BOOTLOADER_IMAGE_MAGIC   0x425A5254 // TRZB
+#define BOOTLOADER_IMAGE_MAXSIZE (1 * 128 * 1024)
 
 static uint32_t check_sdcard(void)
 {
@@ -35,7 +35,7 @@ static uint32_t check_sdcard(void)
 
     image_header hdr;
 
-    if (image_parse_header((const uint8_t *)buf, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr)) {
+    if (image_parse_header((const uint8_t *)buf, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, &hdr)) {
         return hdr.codelen;
     } else {
         return 0;
@@ -176,7 +176,7 @@ int main(void)
     image_header hdr;
 
     ensure(
-        image_parse_header((const uint8_t *)BOOTLOADER_START, IMAGE_MAGIC, IMAGE_MAXSIZE, &hdr),
+        image_parse_header((const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, &hdr),
         "invalid bootloader header");
 
     ensure(

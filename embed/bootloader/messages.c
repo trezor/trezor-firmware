@@ -212,7 +212,8 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
-    bool firmware_present = vendor_parse_header((const uint8_t *)FIRMWARE_START, NULL);
+    vendor_header vhdr;
+    bool firmware_present = vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr);
     MSG_SEND_ASSIGN_VALUE(firmware_present, firmware_present);
     MSG_SEND(Features);
 }
