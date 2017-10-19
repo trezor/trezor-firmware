@@ -41,7 +41,7 @@ void SystemInit(void)
     SCB->CPACR |= ((3U << 22) | (3U << 20));
 }
 
-volatile uint32_t uwTick = 0;
+extern volatile uint32_t uwTick;
 
 void SysTick_Handler(void)
 {

@@ -320,13 +320,13 @@ env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
-    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith '
+    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -fno-common '
     '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     CCFLAGS_OPT='-O3',
-    LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections',
+    LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections -Map=build/firmware/firmware.map --warn-common',
     CPPPATH=[
         '.',
         'embed/firmware',
