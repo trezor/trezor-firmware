@@ -31,7 +31,7 @@ TODO
 * Resolution: 240px x 240px -OR- 240px x 320px
 * Driver IC: ST7789V or ILI9341V (on-chip display data RAM of 240x320x18 bits)
 * 18-bit (262,144) RGB color graphic type TFT-LCD
-* Bus/Interface: 8-bit parallel
+* Bus/Interface: 8080-I 8-bit parallel with 16-bit/pixel (RGB 5-6-5)
 
 ##### Pinout
 
@@ -56,7 +56,7 @@ TODO
 #### Capacitive Touch Panel / Sensor
 
 * Bus/Interface: I2C
-* Driver IC: FT6206
+* Driver IC: FT6236 or FT6206
 * single touch
 
 ##### Pinout
@@ -107,7 +107,7 @@ Minimum MCU requirements:
 * 2048 KB Flash memory
 * 192 KB SRAM
 * 64 KB CCMRAM
-* FSMC controller
+* FMC controller
 * TRNG
 
 #### Clock Tree

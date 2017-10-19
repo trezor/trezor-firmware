@@ -25,7 +25,7 @@ cd trezor-core
 #### Debian/Ubuntu
 
 ```sh
-sudo -H pip install pyblake2
+sudo pip3 install --no-cache-dir pyblake2
 
 sudo dpkg --add-architecture i386
 sudo apt-get update
@@ -37,7 +37,7 @@ make build_unix
 #### Fedora
 
 ```sh
-sudo pip install pyblake2
+sudo pip3 install --no-cache-dir pyblake2
 
 sudo yum install scons SDL2-devel.i686 SDL2_image-devel.i686
 
@@ -47,7 +47,7 @@ make build_unix
 #### openSUSE
 
 ```sh
-sudo pip install pyblake2
+sudo pip3 install --no-cache-dir pyblake2
 
 sudo zypper install scons libSDL2-devel-32bit libSDL2_image-devel-32bit
 
@@ -57,7 +57,7 @@ make build_unix
 #### Arch
 
 ```sh
-sudo pip install pyblake2
+sudo pip3 install --no-cache-dir pyblake2
 
 sudo pacman -S gcc-multilib scons lib32-sdl2 lib32-sdl2_image
 
@@ -67,7 +67,7 @@ make build_unix
 ### OS X
 
 ```sh
-pip install pyblake2
+pip3 install --no-cache-dir pyblake2
 
 brew install scons sdl2 sdl2_image
 
@@ -88,7 +88,7 @@ or `make flash STLINK_VER=v2-1` if using a ST-LINK/V2.1 interface.
 #### Debian/Ubuntu
 
 ```sh
-sudo pip install pyblake2
+sudo pip3 install --no-cache-dir pyblake2
 
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
 
