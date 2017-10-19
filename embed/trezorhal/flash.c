@@ -35,11 +35,6 @@ static const uint32_t SECTOR_TABLE[SECTOR_COUNT + 1] = {
     [24] = 0x08200000, // last element - not a valid sector
 };
 
-int flash_init(void)
-{
-    return 0;
-}
-
 bool flash_unlock(void)
 {
     HAL_FLASH_Unlock();

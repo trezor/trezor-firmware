@@ -155,7 +155,6 @@ int usb_init_all(void) {
 
 bool bootloader_loop(void)
 {
-    ensure(0 == flash_init(), NULL);
     ensure(0 == usb_init_all(), NULL);
 
     display_clear();

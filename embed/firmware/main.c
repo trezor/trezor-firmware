@@ -27,7 +27,6 @@ int main(void)
 
     display_orientation(0);
 
-    ensure(0 == flash_init(), NULL);
     ensure(0 == sdcard_init(), NULL);
     ensure(0 == touch_init(), NULL);
 

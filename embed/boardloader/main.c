@@ -165,7 +165,6 @@ int main(void)
     periph_init();
 
     ensure(0 == display_init(), NULL);
-    ensure(0 == flash_init(), NULL);
     ensure(0 == sdcard_init(), NULL);
 
     if (check_sdcard()) {
