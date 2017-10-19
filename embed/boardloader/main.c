@@ -149,6 +149,8 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 int main(void)
 {
+    periph_init(); // need the systick timer running before the production flash (and many other HAL) operations
+
 #if PRODUCTION
     flash_set_option_bytes();
     if (!flash_check_option_bytes()) {
@@ -162,7 +164,6 @@ int main(void)
 #endif
 
     clear_otg_hs_memory();
-    periph_init();
 
     ensure(0 == display_init(), NULL);
     ensure(0 == sdcard_init(), NULL);

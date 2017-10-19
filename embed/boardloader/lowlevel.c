@@ -1,5 +1,6 @@
 #include STM32_HAL_H
 
+#include "flash.h"
 #include "lowlevel.h"
 
 #define WANTED_WRP (OB_WRP_SECTOR_0 | OB_WRP_SECTOR_1 | OB_WRP_SECTOR_2)
@@ -10,28 +11,46 @@ void flash_set_option_bytes(void)
 {
     FLASH_OBProgramInitTypeDef opts;
 
-    HAL_FLASHEx_OBGetConfig(&opts);
+    while (1) {
+        HAL_FLASHEx_OBGetConfig(&opts);
 
-    opts.OptionType = 0;
+        opts.OptionType = 0;
 
-    if (opts.WRPSector != WANTED_WRP) {
-        opts.OptionType = OPTIONBYTE_WRP;
-        opts.WRPState = OB_WRPSTATE_ENABLE;
-        opts.WRPSector = WANTED_WRP;
-        opts.Banks = FLASH_BANK_1;
-    }
+        if (opts.WRPSector != WANTED_WRP) {
+            opts.OptionType |= OPTIONBYTE_WRP;
+            opts.WRPState = OB_WRPSTATE_ENABLE;
+            opts.WRPSector = WANTED_WRP;
+            opts.Banks = FLASH_BANK_1;
+        }
 
-    if (opts.RDPLevel != WANTED_RDP) {
-        opts.OptionType = OPTIONBYTE_RDP;
-        opts.RDPLevel = WANTED_RDP;
-    }
+        if (opts.RDPLevel != WANTED_RDP) {
+            opts.OptionType |= OPTIONBYTE_RDP;
+            opts.RDPLevel = WANTED_RDP;
+        }
 
-    if (opts.BORLevel != WANTED_BOR) {
-        opts.OptionType = OPTIONBYTE_BOR;
-        opts.BORLevel = WANTED_BOR;
-    }
+        if (opts.BORLevel != WANTED_BOR) {
+            opts.OptionType |= OPTIONBYTE_BOR;
+            opts.BORLevel = WANTED_BOR;
+        }
 
-    if (opts.OptionType != 0) {
+        if (opts.OptionType == 0) {
+            break; // protections are configured
+        }
+
+        uint32_t sector_error = 0;
+        FLASH_EraseInitTypeDef erase;
+        erase.TypeErase = FLASH_TYPEERASE_SECTORS;
+        erase.Banks = FLASH_BANK_1 | FLASH_BANK_2;
+        erase.Sector = FLASH_SECTOR_3;
+        erase.NbSectors = 21;
+        erase.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+
+        // attempt to erase all sectors except the boardloader sectors
+        flash_unlock();
+        HAL_FLASHEx_Erase(&erase, &sector_error);
+        flash_lock();
+
+        // now attempt to lock down the boardloader sectors
         HAL_FLASHEx_OBProgram(&opts);
     }
 }
