@@ -162,7 +162,7 @@ void usb_init_all(void) {
     };
 
     usb_init(&dev_info);
-    ensure(0 == usb_hid_add(&hid_info), NULL);
+    ensure(usb_hid_add(&hid_info), NULL);
     usb_start();
 }
 

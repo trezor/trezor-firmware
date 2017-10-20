@@ -69,9 +69,9 @@ typedef struct {
     uint8_t ep_in_is_idle; // Set to 1 after IN endpoint gets idle
 } usb_hid_state_t;
 
-int usb_hid_add(const usb_hid_info_t *hid_info);
-int usb_hid_can_read(uint8_t iface_num);
-int usb_hid_can_write(uint8_t iface_num);
+bool usb_hid_add(const usb_hid_info_t *hid_info);
+bool usb_hid_can_read(uint8_t iface_num);
+bool usb_hid_can_write(uint8_t iface_num);
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
 

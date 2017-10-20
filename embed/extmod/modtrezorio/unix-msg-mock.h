@@ -58,42 +58,34 @@ void usb_start(void) {
 void usb_stop(void) {
 }
 
-int usb_hid_add(const usb_hid_info_t *info) {
-    return 0;
+bool usb_hid_add(const usb_hid_info_t *info) {
+    return true;
 }
 
-int usb_vcp_add(const usb_vcp_info_t *info) {
-    return 0;
+bool usb_vcp_add(const usb_vcp_info_t *info) {
+    return true;
 }
 
-int usb_hid_can_read(uint8_t iface_num) {
+bool usb_hid_can_read(uint8_t iface_num) {
     if (iface_num != TREZOR_UDP_IFACE) {
-        return 0;
+        return false;
     }
     struct pollfd fds[] = {
         { sock, POLLIN, 0 },
     };
     int r = poll(fds, 1, 0);
-    if (r > 0) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return r > 0;
 }
 
-int usb_hid_can_write(uint8_t iface_num) {
+bool usb_hid_can_write(uint8_t iface_num) {
     if (iface_num != TREZOR_UDP_IFACE) {
-        return 0;
+        return false;
     }
     struct pollfd fds[] = {
         { sock, POLLOUT, 0 },
     };
     int r = poll(fds, 1, 0);
-    if (r > 0) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return r > 0;
 }
 
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {

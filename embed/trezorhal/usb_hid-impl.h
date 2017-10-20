@@ -17,34 +17,34 @@
 
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
-int usb_hid_add(const usb_hid_info_t *info) {
+bool usb_hid_add(const usb_hid_info_t *info) {
 
     usb_iface_t *iface = usb_get_iface(info->iface_num);
 
     if (iface == NULL) {
-        return 1; // Invalid interface number
+        return false; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_DISABLED) {
-        return 1; // Interface is already enabled
+        return false; // Interface is already enabled
     }
 
     usb_hid_descriptor_block_t *d = usb_desc_alloc_iface(sizeof(usb_hid_descriptor_block_t));
 
     if (d == NULL) {
-        return 1; // Not enough space in the configuration descriptor
+        return false; // Not enough space in the configuration descriptor
     }
 
     if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
-        return 1; // IN EP is invalid
+        return false; // IN EP is invalid
     }
     if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
-        return 1; // OUT EP is invalid
+        return false; // OUT EP is invalid
     }
     if (info->rx_buffer == NULL) {
-        return 1;
+        return false;
     }
     if (info->report_desc == NULL) {
-        return 1;
+        return false;
     }
 
     // Interface descriptor
@@ -101,41 +101,41 @@ int usb_hid_add(const usb_hid_info_t *info) {
     iface->hid.last_read_len   = 0;
     iface->hid.ep_in_is_idle   = 1;
 
-    return 0;
+    return true;
 }
 
-int usb_hid_can_read(uint8_t iface_num) {
+bool usb_hid_can_read(uint8_t iface_num) {
     usb_iface_t *iface = usb_get_iface(iface_num);
     if (iface == NULL) {
-        return 0; // Invalid interface number
+        return false; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_HID) {
-        return 0; // Invalid interface type
+        return false; // Invalid interface type
     }
     if (iface->hid.last_read_len == 0) {
-        return 0; // Nothing in the receiving buffer
+        return false; // Nothing in the receiving buffer
     }
     if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
-        return 0; // Device is not configured
+        return false; // Device is not configured
     }
-    return 1;
+    return true;
 }
 
-int usb_hid_can_write(uint8_t iface_num) {
+bool usb_hid_can_write(uint8_t iface_num) {
     usb_iface_t *iface = usb_get_iface(iface_num);
     if (iface == NULL) {
-        return 0; // Invalid interface number
+        return false; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_HID) {
-        return 0; // Invalid interface type
+        return false; // Invalid interface type
     }
     if (iface->hid.ep_in_is_idle == 0) {
-        return 0; // Last transmission is not over yet
+        return false; // Last transmission is not over yet
     }
     if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
-        return 0; // Device is not configured
+        return false; // Device is not configured
     }
-    return 1;
+    return true;
 }
 
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
@@ -216,7 +216,7 @@ int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, 
     return usb_hid_write(iface_num, buf, len);
 }
 
-static int usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t cfg_idx) {
+static void usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t cfg_idx) {
     // Open endpoints
     USBD_LL_OpenEP(dev, state->ep_in, USBD_EP_TYPE_INTR, state->max_packet_len);
     USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_INTR, state->max_packet_len);
@@ -230,16 +230,12 @@ static int usb_hid_class_init(USBD_HandleTypeDef *dev, usb_hid_state_t *state, u
 
     // Prepare the OUT EP to receive next packet
     USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer, state->max_packet_len);
-
-    return USBD_OK;
 }
 
-static int usb_hid_class_deinit(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t cfg_idx) {
+static void usb_hid_class_deinit(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t cfg_idx) {
     // Close endpoints
     USBD_LL_CloseEP(dev, state->ep_in);
     USBD_LL_CloseEP(dev, state->ep_out);
-
-    return USBD_OK;
 }
 
 static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, USBD_SetupReqTypedef *req) {
@@ -298,17 +294,17 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
         }
         break;
     }
+
     return USBD_OK;
 }
 
-static uint8_t usb_hid_class_data_in(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
+static void usb_hid_class_data_in(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
     if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
         state->ep_in_is_idle = 1;
     }
-    return USBD_OK;
 }
 
-static uint8_t usb_hid_class_data_out(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
+static void usb_hid_class_data_out(USBD_HandleTypeDef *dev, usb_hid_state_t *state, uint8_t ep_num) {
     if (ep_num == state->ep_out) {
         state->last_read_len = USBD_LL_GetRxDataSize(dev, ep_num);
 
@@ -321,5 +317,4 @@ static uint8_t usb_hid_class_data_out(USBD_HandleTypeDef *dev, usb_hid_state_t *
             usb_ep_set_nak(dev, ep_num);
         }
     }
-    return USBD_OK;
 }
