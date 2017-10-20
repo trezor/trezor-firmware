@@ -66,6 +66,21 @@ void display_error(void)
     display_footer("Error! Unplug the device", COLOR_BL_RED);
 }
 
+void display_welcome(void)
+{
+    display_clear();
+    display_header("TREZOR Bootloader");
+
+    uint8_t dom[32];
+    // format: TREZOR2-YYMMDD
+    if (flash_otp_read(0, 0, dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[14] == 0) {
+        display_qrcode(120, 120, (const char *)dom, 14, 4);
+        display_text_center(120, 210, (const char *)dom, 14, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    }
+
+    display_fade(0, BACKLIGHT_NORMAL, 1000);
+}
+
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
 {
     display_clear();
@@ -155,9 +170,7 @@ bool bootloader_loop(void)
 {
     usb_init_all();
 
-    display_clear();
-    display_header("TREZOR Bootloader");
-    display_fade(0, BACKLIGHT_NORMAL, 1000);
+    display_welcome();
 
     uint8_t buf[USB_PACKET_SIZE];
 
