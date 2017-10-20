@@ -1,6 +1,5 @@
 #include STM32_HAL_H
 
-#include "flash.h"
 #include "lowlevel.h"
 
 #define WANTED_WRP (OB_WRP_SECTOR_0 | OB_WRP_SECTOR_1 | OB_WRP_SECTOR_2)
@@ -11,7 +10,7 @@ void flash_set_option_bytes(void)
 {
     FLASH_OBProgramInitTypeDef opts;
 
-    while (1) {
+    for(;;) {
         HAL_FLASHEx_OBGetConfig(&opts);
 
         opts.OptionType = 0;
@@ -37,20 +36,7 @@ void flash_set_option_bytes(void)
             break; // protections are configured
         }
 
-        uint32_t sector_error = 0;
-        FLASH_EraseInitTypeDef erase;
-        erase.TypeErase = FLASH_TYPEERASE_SECTORS;
-        erase.Banks = FLASH_BANK_1 | FLASH_BANK_2;
-        erase.Sector = FLASH_SECTOR_3;
-        erase.NbSectors = 21;
-        erase.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-
-        // attempt to erase all sectors except the boardloader sectors
-        flash_unlock();
-        HAL_FLASHEx_Erase(&erase, &sector_error);
-        flash_lock();
-
-        // now attempt to lock down the boardloader sectors
+        // attempt to lock down the boardloader sectors
         HAL_FLASHEx_OBProgram(&opts);
     }
 }
