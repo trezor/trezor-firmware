@@ -10,7 +10,7 @@
 
 #include <stdbool.h>
 
-int sbu_init(void);
+void sbu_init(void);
 void sbu_set(bool sbu1, bool sbu2);
 
 #endif

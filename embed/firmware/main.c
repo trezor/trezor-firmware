@@ -27,8 +27,8 @@ int main(void)
 
     display_orientation(0);
 
-    ensure(0 == sdcard_init(), NULL);
-    ensure(0 == touch_init(), NULL);
+    sdcard_init();
+    ensure(touch_init(), NULL);
 
     for (;;) {
         printf("CORE: Starting main loop\n");

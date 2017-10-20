@@ -14,7 +14,7 @@ I2C_HandleTypeDef i2c_handle = {
     .Instance = I2C1,
 };
 
-int touch_init(void)
+bool touch_init(void)
 {
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();
@@ -41,10 +41,10 @@ int touch_init(void)
 
     // Init I2C handle
     if (HAL_I2C_Init(&i2c_handle) != HAL_OK) {
-        return 1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
 #define TOUCH_ADDRESS 56

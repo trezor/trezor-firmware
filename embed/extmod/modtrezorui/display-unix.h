@@ -38,7 +38,7 @@ void DATA(uint8_t x) {
 #define DATA(X) (void)(X);
 #endif
 
-int display_init(void)
+void display_init(void)
 {
 #ifndef TREZOR_NOUI
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -65,7 +65,6 @@ int display_init(void)
     DISPLAY_BACKLIGHT = 0;
     DISPLAY_ORIENTATION = 0;
 #endif
-    return 0;
 }
 
 static void display_set_window_raw(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)

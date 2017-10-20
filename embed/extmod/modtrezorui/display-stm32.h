@@ -103,7 +103,7 @@ void display_set_backlight(int val)
     TIM1->CCR1 = LED_PWM_TIM_PERIOD * val / 255;
 }
 
-int display_init(void)
+void display_init(void)
 {
     // init peripherials
     __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -259,7 +259,6 @@ int display_init(void)
     display_clear();
     display_orientation(0);
     display_unsleep();
-    return 0;
 }
 
 static void display_set_window_raw(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)

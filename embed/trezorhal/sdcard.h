@@ -32,7 +32,7 @@
 // this is a fixed size and should not be changed
 #define SDCARD_BLOCK_SIZE (512)
 
-int sdcard_init(void);
+void sdcard_init(void);
 bool sdcard_is_present(void);
 bool sdcard_power_on(void);
 bool sdcard_power_off(void);

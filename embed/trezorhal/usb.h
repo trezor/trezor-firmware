@@ -8,6 +8,7 @@
 #ifndef __TREZORHAL_USB_H__
 #define __TREZORHAL_USB_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define USB_EP_DIR_OUT 0x00
@@ -116,9 +117,9 @@ typedef struct {
     usb_iface_type_t type;
 } usb_iface_t;
 
-int usb_init(const usb_dev_info_t *dev_info);
-int usb_deinit(void);
-int usb_start(void);
-int usb_stop(void);
+bool usb_init(const usb_dev_info_t *dev_info);
+void usb_deinit(void);
+void usb_start(void);
+void usb_stop(void);
 
 #endif

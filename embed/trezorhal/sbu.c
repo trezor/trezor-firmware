@@ -9,7 +9,7 @@
 
 #include "sbu.h"
 
-int sbu_init(void) {
+void sbu_init(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
 
     // SBU1/PA2 SBU2/PA3
@@ -21,8 +21,6 @@ int sbu_init(void) {
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-
-    return 0;
 }
 
 void sbu_set(bool sbu1, bool sbu2) {

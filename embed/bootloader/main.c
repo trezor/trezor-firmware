@@ -148,7 +148,7 @@ int usb_init_all(void) {
 
     ensure(0 == usb_init(&dev_info), NULL);
     ensure(0 == usb_hid_add(&hid_info), NULL);
-    ensure(0 == usb_start(), NULL);
+    usb_start();
 
     return 0;
 }
@@ -256,7 +256,7 @@ int main(void)
 
     display_orientation(0);
 
-    ensure(0 == touch_init(), NULL);
+    ensure(touch_init(), NULL);
 
     // delay to detect touch
     uint32_t touched = 0;

@@ -50,7 +50,7 @@
 
 // provided by port
 
-int display_init(void);
+void display_init(void);
 void display_refresh(void);
 void display_save(const char *filename);
 

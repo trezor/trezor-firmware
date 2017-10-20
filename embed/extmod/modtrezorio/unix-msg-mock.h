@@ -23,12 +23,12 @@ static int sock;
 static struct sockaddr_in si_me, si_other;
 static socklen_t slen = 0;
 
-int usb_init(const usb_dev_info_t *dev_info) {
+bool usb_init(const usb_dev_info_t *dev_info) {
     (void)dev_info;
 
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
-        return -1;
+        return false;
     }
 
     fcntl(sock, F_SETFL, O_NONBLOCK);
@@ -49,22 +49,19 @@ int usb_init(const usb_dev_info_t *dev_info) {
 
     int b = bind(sock, (struct sockaddr*)&si_me, sizeof(si_me));
     if (b < 0) {
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-int usb_deinit(void) {
-    return 0;
+void usb_deinit(void) {
 }
 
-int usb_start(void) {
-    return 0;
+void usb_start(void) {
 }
 
-int usb_stop(void) {
-    return 0;
+void usb_stop(void) {
 }
 
 int usb_hid_add(const usb_hid_info_t *info) {

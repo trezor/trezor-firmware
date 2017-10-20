@@ -32,7 +32,7 @@
 
 static SD_HandleTypeDef sd_handle;
 
-int sdcard_init(void) {
+void sdcard_init(void) {
     // invalidate the sd_handle
     sd_handle.Instance = NULL;
 
@@ -54,8 +54,6 @@ int sdcard_init(void) {
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Pin = GPIO_PIN_13;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-    return 0;
 }
 
 void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {

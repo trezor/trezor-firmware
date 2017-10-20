@@ -38,8 +38,6 @@
 //                                          22
 #define FLASH_SECTOR_FIRMWARE_EXTRA_END     23
 
-int flash_init(void);
-
 void flash_set_option_bytes(void);
 
 bool flash_unlock(void);

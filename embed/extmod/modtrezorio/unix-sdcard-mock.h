@@ -9,8 +9,7 @@
 
 #define SD_ERROR 41U
 
-int sdcard_init(void) {
-    return 0;
+void sdcard_init(void) {
 }
 
 bool sdcard_is_present(void) {

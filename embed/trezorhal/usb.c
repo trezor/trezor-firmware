@@ -49,7 +49,7 @@ static int check_desc_str(const uint8_t *s) {
     }
 }
 
-int usb_init(const usb_dev_info_t *dev_info) {
+bool usb_init(const usb_dev_info_t *dev_info) {
 
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
@@ -71,7 +71,7 @@ int usb_init(const usb_dev_info_t *dev_info) {
     if ((0 != check_desc_str(dev_info->manufacturer)) ||
         (0 != check_desc_str(dev_info->product)) ||
         (0 != check_desc_str(dev_info->serial_number))) {
-        return 1; // Invalid descriptor string
+        return false; // Invalid descriptor string
     }
     usb_str_table.manufacturer  = dev_info->manufacturer;
     usb_str_table.product       = dev_info->product;
@@ -91,31 +91,28 @@ int usb_init(const usb_dev_info_t *dev_info) {
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
 
     if (0 != USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_ID)) {
-        return 1;
+        return false;
     }
     if (0 != USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class)) {
-        return 1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-int usb_deinit(void) {
+void usb_deinit(void) {
     USBD_DeInit(&usb_dev_handle);
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
     }
-    return 0;
 }
 
-int usb_start(void) {
+void usb_start(void) {
     USBD_Start(&usb_dev_handle);
-    return 0;
 }
 
-int usb_stop(void) {
+void usb_stop(void) {
     USBD_Stop(&usb_dev_handle);
-    return 0;
 }
 
 /*

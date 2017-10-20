@@ -165,8 +165,8 @@ int main(void)
 
     clear_otg_hs_memory();
 
-    ensure(0 == display_init(), NULL);
-    ensure(0 == sdcard_init(), NULL);
+    display_init();
+    sdcard_init();
 
     if (check_sdcard()) {
         copy_sdcard();

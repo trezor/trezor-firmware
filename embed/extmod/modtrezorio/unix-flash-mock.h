@@ -7,11 +7,6 @@
 
 #include "../../trezorhal/flash.h"
 
-int flash_init(void)
-{
-    return 0;
-}
-
 void flash_set_option_bytes(void)
 {
 }
