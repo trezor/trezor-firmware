@@ -28,10 +28,10 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
     return 0;
 }
 
-uint32_t sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
-   return SD_ERROR;
+bool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
+   return false;
 }
 
-uint32_t sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
-   return SD_ERROR;
+bool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
+   return false;
 }

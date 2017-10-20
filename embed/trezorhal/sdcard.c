@@ -150,15 +150,15 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd, uint32_t tim
     return HAL_OK;
 }
 
-uint32_t sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
+bool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
-        return HAL_ERROR;
+        return false;
     }
 
     // check that dest pointer is aligned on a 4-byte boundary
     if (((uint32_t)dest & 3) != 0) {
-        return HAL_ERROR;
+        return false;
     }
 
     HAL_StatusTypeDef err = HAL_OK;
@@ -168,18 +168,18 @@ uint32_t sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks)
         err = sdcard_wait_finished(&sd_handle, 60000);
     }
 
-    return err;
+    return err == HAL_OK;
 }
 
-uint32_t sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
+bool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
-        return HAL_ERROR;
+        return false;
     }
 
     // check that src pointer is aligned on a 4-byte boundary
     if (((uint32_t)src & 3) != 0) {
-        return HAL_ERROR;
+        return false;
     }
 
     HAL_StatusTypeDef err = HAL_OK;
@@ -189,5 +189,5 @@ uint32_t sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_b
         err = sdcard_wait_finished(&sd_handle, 60000);
     }
 
-    return err;
+    return err == HAL_OK;
 }

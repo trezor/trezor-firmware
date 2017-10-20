@@ -37,9 +37,7 @@ bool sdcard_is_present(void);
 bool sdcard_power_on(void);
 bool sdcard_power_off(void);
 uint64_t sdcard_get_capacity_in_bytes(void);
-
-// these return 0 on success, non-zero on error
-uint32_t sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks);
-uint32_t sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks);
+bool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks);
+bool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks);
 
 #endif
