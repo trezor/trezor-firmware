@@ -161,7 +161,7 @@ void usb_init_all(void) {
         .report_desc      = hid_report_desc,
     };
 
-    ensure(usb_init(&dev_info), NULL);
+    usb_init(&dev_info);
     ensure(0 == usb_hid_add(&hid_info), NULL);
     usb_start();
 }
@@ -267,7 +267,7 @@ int main(void)
 
     display_orientation(0);
 
-    ensure(touch_init(), NULL);
+    touch_init();
 
     // delay to detect touch
     uint32_t touched = 0;

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../unix/common.h"
 #include "../../trezorhal/usb.h"
 #include "../../trezorhal/touch.h"
 
@@ -23,13 +24,11 @@ static int sock;
 static struct sockaddr_in si_me, si_other;
 static socklen_t slen = 0;
 
-bool usb_init(const usb_dev_info_t *dev_info) {
+void usb_init(const usb_dev_info_t *dev_info) {
     (void)dev_info;
 
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sock < 0) {
-        return false;
-    }
+    ensure(sock >= 0, NULL);
 
     fcntl(sock, F_SETFL, O_NONBLOCK);
 
@@ -47,12 +46,7 @@ bool usb_init(const usb_dev_info_t *dev_info) {
         si_me.sin_port = htons(TREZOR_UDP_PORT);
     }
 
-    int b = bind(sock, (struct sockaddr*)&si_me, sizeof(si_me));
-    if (b < 0) {
-        return false;
-    }
-
-    return true;
+    ensure(0 == bind(sock, (struct sockaddr*)&si_me, sizeof(si_me)), NULL);
 }
 
 void usb_deinit(void) {

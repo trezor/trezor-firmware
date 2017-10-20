@@ -8,13 +8,15 @@
 #include STM32_HAL_H
 
 #include <string.h>
+
+#include "common.h"
 #include "touch.h"
 
 I2C_HandleTypeDef i2c_handle = {
     .Instance = I2C1,
 };
 
-bool touch_init(void)
+void touch_init(void)
 {
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();
@@ -39,12 +41,7 @@ bool touch_init(void)
     init->NoStretchMode   = I2C_NOSTRETCH_DISABLE;
     init->OwnAddress2     = 0;
 
-    // Init I2C handle
-    if (HAL_I2C_Init(&i2c_handle) != HAL_OK) {
-        return false;
-    }
-
-    return true;
+    ensure(HAL_I2C_Init(&i2c_handle) == HAL_OK, NULL);
 }
 
 #define TOUCH_ADDRESS 56

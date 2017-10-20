@@ -7,6 +7,7 @@
 
 #include STM32_HAL_H
 
+#include "common.h"
 #include "usb.h"
 #include "usbd_core.h"
 
@@ -41,15 +42,11 @@ static USBD_HandleTypeDef usb_dev_handle;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
 
-static int check_desc_str(const uint8_t *s) {
-    if (!s || strlen((const char *)s) > USB_MAX_STR_SIZE) {
-        return 1;
-    } else {
-        return 0;
-    }
+static bool check_desc_str(const uint8_t *s) {
+    return s && strlen((const char *)s) <= USB_MAX_STR_SIZE;
 }
 
-bool usb_init(const usb_dev_info_t *dev_info) {
+void usb_init(const usb_dev_info_t *dev_info) {
 
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
@@ -68,11 +65,10 @@ bool usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.bNumConfigurations = 1;
 
     // String table
-    if ((0 != check_desc_str(dev_info->manufacturer)) ||
-        (0 != check_desc_str(dev_info->product)) ||
-        (0 != check_desc_str(dev_info->serial_number))) {
-        return false; // Invalid descriptor string
-    }
+    ensure(check_desc_str(dev_info->manufacturer), NULL);
+    ensure(check_desc_str(dev_info->product), NULL);
+    ensure(check_desc_str(dev_info->serial_number), NULL);
+
     usb_str_table.manufacturer  = dev_info->manufacturer;
     usb_str_table.product       = dev_info->product;
     usb_str_table.serial_number = dev_info->serial_number;
@@ -90,14 +86,8 @@ bool usb_init(const usb_dev_info_t *dev_info) {
     // Pointer to interface descriptor data
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
 
-    if (0 != USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_ID)) {
-        return false;
-    }
-    if (0 != USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class)) {
-        return false;
-    }
-
-    return true;
+    ensure(USBD_OK == USBD_Init(&usb_dev_handle, (USBD_DescriptorsTypeDef*)&usb_descriptors, USB_PHY_ID), NULL);
+    ensure(USBD_OK == USBD_RegisterClass(&usb_dev_handle, (USBD_ClassTypeDef*)&usb_class), NULL);
 }
 
 void usb_deinit(void) {

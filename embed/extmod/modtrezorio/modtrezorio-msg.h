@@ -439,9 +439,7 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
     mp_obj_get_array(MP_OBJ_FROM_PTR(&o->ifaces), &iface_cnt, &iface_objs);
 
     // Initialize the USB stack
-    if (usb_init(&o->info) != true) {
-        mp_raise_msg(&mp_type_RuntimeError, "failed to initialize USB");
-    }
+    usb_init(&o->info);
 
     int vcp_iface_num = -1;
 

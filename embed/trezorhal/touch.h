@@ -15,7 +15,7 @@
 #define TOUCH_MOVE  0x00020000
 #define TOUCH_END   0x00040000
 
-bool touch_init(void);
+void touch_init(void);
 uint32_t touch_read(void);
 void touch_click(void);
 

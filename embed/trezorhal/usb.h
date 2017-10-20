@@ -117,7 +117,7 @@ typedef struct {
     usb_iface_type_t type;
 } usb_iface_t;
 
-bool usb_init(const usb_dev_info_t *dev_info);
+void usb_init(const usb_dev_info_t *dev_info);
 void usb_deinit(void);
 void usb_start(void);
 void usb_stop(void);
