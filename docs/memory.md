@@ -29,6 +29,27 @@
 | Sector 22 | 0x081C0000 - 0x081DFFFF | 128 KiB | firmware extra
 | Sector 23 | 0x081E0000 - 0x081FFFFF | 128 KiB | firmware extra
 
+## OTP
+
+| block    | range                   | size | function
+|----------|-------------------------|------|--------------------------------
+| block  0 | 0x1FFF7800 - 0x1FFF781F | 32 B | device manufacturing date
+| block  1 | 0x1FFF7820 - 0x1FFF783F | 32 B | bootloader downgrade protection
+| block  2 | 0x1FFF7840 - 0x1FFF785F | 32 B | unused
+| block  3 | 0x1FFF7860 - 0x1FFF787F | 32 B | unused
+| block  4 | 0x1FFF7880 - 0x1FFF789F | 32 B | unused
+| block  5 | 0x1FFF78A0 - 0x1FFF78BF | 32 B | unused
+| block  6 | 0x1FFF78C0 - 0x1FFF78DF | 32 B | unused
+| block  7 | 0x1FFF78E0 - 0x1FFF78FF | 32 B | unused
+| block  8 | 0x1FFF7900 - 0x1FFF791F | 32 B | unused
+| block  9 | 0x1FFF7920 - 0x1FFF793F | 32 B | unused
+| block 10 | 0x1FFF7940 - 0x1FFF795F | 32 B | unused
+| block 11 | 0x1FFF7960 - 0x1FFF797F | 32 B | unused
+| block 12 | 0x1FFF7980 - 0x1FFF799F | 32 B | unused
+| block 13 | 0x1FFF79A0 - 0x1FFF79BF | 32 B | unused
+| block 14 | 0x1FFF79C0 - 0x1FFF79DF | 32 B | unused
+| block 15 | 0x1FFF79E0 - 0x1FFF79FF | 32 B | unused
+
 ## RAM
 
 | region  | range                   |  size   | function
