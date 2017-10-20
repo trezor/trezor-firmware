@@ -105,7 +105,7 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 #endif
 };
 
-int usb_init_all(void) {
+void usb_init_all(void) {
     static const usb_dev_info_t dev_info = {
         .vendor_id     = 0x1209,
         .product_id    = 0x53C0,
@@ -146,16 +146,14 @@ int usb_init_all(void) {
         .report_desc      = hid_report_desc,
     };
 
-    ensure(0 == usb_init(&dev_info), NULL);
+    ensure(usb_init(&dev_info), NULL);
     ensure(0 == usb_hid_add(&hid_info), NULL);
     usb_start();
-
-    return 0;
 }
 
 bool bootloader_loop(void)
 {
-    ensure(0 == usb_init_all(), NULL);
+    usb_init_all();
 
     display_clear();
     display_header("TREZOR Bootloader");
