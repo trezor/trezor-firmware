@@ -163,7 +163,7 @@ int main(void)
             FLASH_SECTOR_STORAGE_2,
         };
         flash_erase_sectors(sectors, 2, NULL);
-        ensure(0, "wrong option bytes");
+        return 2;
     }
 #endif
 
