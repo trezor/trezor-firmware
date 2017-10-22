@@ -151,6 +151,10 @@ int main(void)
 {
     periph_init(); // need the systick timer running before the production flash (and many other HAL) operations
 
+    if (!reset_flags_init()) {
+        return 1;
+    }
+
 #if PRODUCTION
     flash_set_option_bytes();
     if (!flash_check_option_bytes()) {

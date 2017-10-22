@@ -76,7 +76,20 @@ void periph_init(void)
     HAL_PWR_ConfigPVD(&pvd_config);
     HAL_PWR_EnablePVD();
     NVIC_EnableIRQ(PVD_IRQn);
+}
 
-    // Clear the reset flags
-    RCC->CSR |= RCC_CSR_RMVF;
+bool reset_flags_init(void)
+{
+#if PRODUCTION
+    // this is effective enough that it makes development painful, so only use it for production.
+    // check the reset flags to assure that we arrive here due to a regular full power-on event,
+    // and not as a result of a lesser reset.
+    if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_SFTRSTF | RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) != (RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
+        return false;
+    }
+#endif
+
+    RCC->CSR |= RCC_CSR_RMVF; // clear the reset flags
+
+    return true;
 }
