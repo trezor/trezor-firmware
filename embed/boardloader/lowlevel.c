@@ -78,6 +78,5 @@ void periph_init(void)
     NVIC_EnableIRQ(PVD_IRQn);
 
     // Clear the reset flags
-    PWR->CR |= PWR_CR_CSBF;
     RCC->CSR |= RCC_CSR_RMVF;
 }
