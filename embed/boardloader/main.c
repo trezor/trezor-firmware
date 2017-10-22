@@ -173,8 +173,7 @@ int main(void)
     sdcard_init();
 
     if (check_sdcard()) {
-        copy_sdcard();
-        shutdown();
+        return copy_sdcard() ? 0 : 3;
     }
 
     image_header hdr;
