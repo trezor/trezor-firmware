@@ -134,7 +134,7 @@ class HidTransport(Transport):
         if len(chunk) != 64:
             raise TransportException('Unexpected chunk size: %d' % len(chunk))
         if self.hid_version == 2:
-            self.hid.handle.write(b'\0' + chunk)
+            self.hid.handle.write(b'\0' + bytearray(chunk))
         else:
             self.hid.handle.write(chunk)
 
