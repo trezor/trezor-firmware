@@ -40,7 +40,7 @@ def compose_message(json, proto):
     import config_pb2
 
     cfg = config_pb2.Configuration()
-    cfg.valid_until = int(time.time()) + json['valid_days'] * 3600 * 24
+    cfg.valid_until = 2147483647 # maxint
     cfg.wire_protocol.MergeFrom(proto)
 
     for url in json['whitelist_urls']:
