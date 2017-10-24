@@ -44,6 +44,36 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_unlock_obj, mod_trezorconfig_unlock);
 
+/// def has_pin() -> bool:
+///     '''
+///     Returns True if storage has a configured PIN, False otherwise.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
+    if (storage_has_pin()) {
+        return mp_const_true;
+    } else {
+        return mp_const_false;
+    }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj, mod_trezorconfig_has_pin);
+
+/// def change_pin(pin: str, newpin: str) -> bool:
+///     '''
+///     Change PIN. Returns True on success, False on failure.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
+    mp_buffer_info_t pinbuf;
+    mp_get_buffer_raise(pin, &pinbuf, MP_BUFFER_READ);
+    mp_buffer_info_t newbuf;
+    mp_get_buffer_raise(newpin, &newbuf, MP_BUFFER_READ);
+    bool r = storage_change_pin(pinbuf.buf, pinbuf.len, newbuf.buf, newbuf.len);
+    if (!r) {
+        return mp_const_false;
+    }
+    return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_change_pin_obj, mod_trezorconfig_change_pin);
+
 /// def get(app: int, key: int) -> bytes:
 ///     '''
 ///     Gets a value of given key for given app (or empty bytes if not set).
@@ -97,6 +127,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorconfig) },
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&mod_trezorconfig_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_unlock), MP_ROM_PTR(&mod_trezorconfig_unlock_obj) },
+    { MP_ROM_QSTR(MP_QSTR_has_pin), MP_ROM_PTR(&mod_trezorconfig_has_pin_obj) },
+    { MP_ROM_QSTR(MP_QSTR_change_pin), MP_ROM_PTR(&mod_trezorconfig_change_pin_obj) },
     { MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mod_trezorconfig_get_obj) },
     { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mod_trezorconfig_set_obj) },
     { MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_trezorconfig_wipe_obj) },

@@ -24,6 +24,9 @@ static bool unlocked = false;
 
 bool storage_init(void)
 {
+    if (!flash_init()) {
+        return false;
+    }
     if (!norcow_init()) {
         return false;
     }
@@ -112,12 +115,10 @@ static bool const_cmp(const uint8_t *pub, size_t publen, const uint8_t *sec, siz
 
 static bool pin_check(const uint8_t *pin, size_t pinlen)
 {
-    const void *st_pin;
-    uint16_t st_pinlen;
-    if (!norcow_get(PIN_KEY, &st_pin, &st_pinlen)) {
-        return false;
-    }
-    return const_cmp(pin, pinlen, st_pin, (size_t)st_pinlen);
+    const void *spin = NULL;
+    uint16_t spinlen = 0;
+    norcow_get(PIN_KEY, &spin, &spinlen);
+    return const_cmp(pin, pinlen, spin, (size_t)spinlen);
 }
 
 bool storage_unlock(const uint8_t *pin, size_t len)
@@ -180,6 +181,33 @@ bool storage_set(uint16_t key, const void *val, uint16_t len)
         return false;
     }
     return norcow_set(key, val, len);
+}
+
+bool storage_has_pin(void)
+{
+    if (!initialized) {
+        return false;
+    }
+    const void *spin = NULL;
+    uint16_t spinlen = 0;
+    norcow_get(PIN_KEY, &spin, &spinlen);
+    return spinlen != 0;
+}
+
+bool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin, size_t newlen)
+{
+    if (!initialized) {
+        return false;
+    }
+    if (!unlocked) {
+        // shutdown();
+        return false;
+    }
+    if (!pin_check(pin, len)) {
+        return false;
+    }
+    // TODO
+    return true;
 }
 
 bool storage_wipe(void)
