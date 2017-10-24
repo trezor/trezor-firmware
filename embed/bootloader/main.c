@@ -12,8 +12,11 @@
 #include "mini_printf.h"
 
 #include "icon_cross.h"
+#include "icon_lock.h"
 #include "icon_tick.h"
 #include "icon_tools.h"
+#include "icon_update.h"
+#include "icon_wipe.h"
 #include "messages.h"
 #include "style.h"
 
@@ -29,23 +32,37 @@ void display_fade(int start, int end, int delay)
     display_backlight(end);
 }
 
-void display_header(const char *text)
+#define ICON_TOOLS  0
+#define ICON_UPDATE 1
+#define ICON_WIPE   2
+
+void display_header(int icon, const char *text)
 {
-    display_bar(0, 0, 240, 32, COLOR_BL_ORANGE);
-    display_icon(8, 4, 24, 24, icon_tools, sizeof(icon_tools), COLOR_BLACK, COLOR_BL_ORANGE);
+    display_bar(0, 0, DISPLAY_RESX, 32, COLOR_BL_ORANGE);
+    switch (icon) {
+        case ICON_TOOLS :
+            display_icon(8, 4, 24, 24, toi_icon_tools, sizeof(toi_icon_tools), COLOR_BLACK, COLOR_BL_ORANGE);
+            break  ;
+        case ICON_UPDATE:
+            display_icon(8, 4, 24, 24, toi_icon_update, sizeof(toi_icon_update), COLOR_BLACK, COLOR_BL_ORANGE);
+            break;
+        case ICON_WIPE:
+            display_icon(8, 4, 24, 24, toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK, COLOR_BL_ORANGE);
+            break;
+    }
     display_text(8 + 24 + 8, 23, text, -1, FONT_BOLD, COLOR_BLACK, COLOR_BL_ORANGE);
 }
 
 void display_footer(const char *text, uint16_t color)
 {
-    display_bar(0, 184, 240, 56, COLOR_BLACK);
-    display_text_center(120, 220, text, -1, FONT_BOLD, color, COLOR_BLACK);
+    display_bar(0, 184, DISPLAY_RESX, 56, COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 20, text, -1, FONT_BOLD, color, COLOR_BLACK);
 }
 
 void display_done(int restart)
 {
     if (restart == 0 || restart == 3) {
-        display_loader(1000, 0, COLOR_BL_GREEN, COLOR_BLACK, icon_tick, sizeof(icon_tick), COLOR_WHITE);
+        display_loader(1000, 0, COLOR_BL_GREEN, COLOR_BLACK, toi_icon_tick, sizeof(toi_icon_tick), COLOR_WHITE);
     }
     if (restart == 3) {
         display_footer("Done! Restarting in 3s", COLOR_BL_GREEN);
@@ -62,24 +79,32 @@ void display_done(int restart)
 
 void display_error(void)
 {
-    display_loader(1000, 0, COLOR_BL_RED, COLOR_BLACK, icon_cross, sizeof(icon_cross), COLOR_WHITE);
+    display_loader(1000, 0, COLOR_BL_RED, COLOR_BLACK, toi_icon_cross, sizeof(toi_icon_cross), COLOR_WHITE);
     display_footer("Error! Unplug the device", COLOR_BL_RED);
 }
 
 void display_welcome(void)
 {
+    vendor_header vhdr;
+    bool firmware_present = vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr);
     display_clear();
-    display_header("TREZOR Bootloader");
-
-    uint8_t dom[32];
-    // format: TREZOR2-YYMMDD
-    if (flash_otp_read(0, 0, dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[14] == 0) {
-        display_qrcode(120, 120, (const char *)dom, 14, 4);
-        display_text_center(120, 210, (const char *)dom, 14, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    if (!firmware_present) {
+        display_icon((DISPLAY_RESX - 124) / 2, (DISPLAY_RESY - 40 - 180) / 2, 124, 180, toi_icon_lock, sizeof(toi_icon_lock), COLOR_WHITE, COLOR_BLACK);
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 20, "Go to trezor.io/start", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    } else {
+        display_header(ICON_TOOLS, "TREZOR Bootloader");
+        uint8_t dom[32];
+        // format: TREZOR2-YYMMDD
+        if (flash_otp_read(0, 0, dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[14] == 0) {
+            display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, (const char *)dom, 14, 4);
+            display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, (const char *)dom, 14, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+        }
     }
-
     display_fade(0, BACKLIGHT_NORMAL, 1000);
 }
+
+#define VENDOR_IMAGE_RESX 120
+#define VENDOR_IMAGE_RESY 120
 
 void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
 {
@@ -89,12 +114,12 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     }
     uint16_t w = *(uint16_t *)(vimg + 4);
     uint16_t h = *(uint16_t *)(vimg + 6);
-    if (w != 120 || h != 120) {
+    if (w != VENDOR_IMAGE_RESX || h != VENDOR_IMAGE_RESY) {
         return;
     }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_image(60, 32, w, h, vimg + 12, datalen);
-    display_text_center(120, 192, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_image((DISPLAY_RESX - w) / 2, 32, w, h, vimg + 12, datalen);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
         (int)(fw_version & 0xFF),
@@ -102,7 +127,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
         (int)((fw_version >> 16) & 0xFF),
         (int)((fw_version >> 24) & 0xFF)
     );
-    display_text_center(120, 215, ver_str, -1, FONT_BOLD, COLOR_GRAY128, COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, COLOR_BLACK);
     display_refresh();
 }
 
@@ -196,7 +221,7 @@ bool bootloader_loop(void)
             case 5: // WipeDevice
                 display_fade(BACKLIGHT_NORMAL, 0, 100);
                 display_clear();
-                display_header("Wiping Device");
+                display_header(ICON_WIPE, "Wiping Device");
                 display_footer("In progress ...", COLOR_WHITE);
                 display_fade(0, BACKLIGHT_NORMAL, 100);
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
@@ -215,7 +240,7 @@ bool bootloader_loop(void)
             case 6: // FirmwareErase
                 display_fade(BACKLIGHT_NORMAL, 0, 100);
                 display_clear();
-                display_header("Updating Firmware");
+                display_header(ICON_UPDATE, "Updating Firmware");
                 display_footer("In progress ...", COLOR_WHITE);
                 display_fade(0, BACKLIGHT_NORMAL, 100);
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
@@ -314,7 +339,7 @@ int main(void)
     display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
     display_fade(0, BACKLIGHT_NORMAL, 1000);
     if (vhdr.vtrust < 50) {
-        display_text_center(120, 238, "click to continue ...", -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, "click to continue ...", -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
         touch_click();
     } else {
         hal_delay(1000);

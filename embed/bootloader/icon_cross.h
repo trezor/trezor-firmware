@@ -1,4 +1,4 @@
-static const uint8_t icon_cross[] = {
+static const uint8_t toi_icon_cross[] = {
     // magic
     'T', 'O', 'I', 'g',
     // width (16-bit), height (16-bit)

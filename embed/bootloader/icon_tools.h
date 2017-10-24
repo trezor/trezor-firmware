@@ -1,4 +1,4 @@
-static const uint8_t icon_tools[] = {
+static const uint8_t toi_icon_tools[] = {
 /*
     // magic
     'T', 'O', 'I', 'g',

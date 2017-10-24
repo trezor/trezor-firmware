@@ -1,4 +1,4 @@
-static const uint8_t icon_tick[] = {
+static const uint8_t toi_icon_tick[] = {
     // magic
     'T', 'O', 'I', 'g',
     // width (16-bit), height (16-bit)
