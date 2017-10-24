@@ -22,7 +22,7 @@ async def request_passphrase(ctx):
 async def protect_by_passphrase(ctx):
     from apps.common import storage
 
-    if storage.is_protected_by_passphrase():
+    if storage.has_passphrase():
         return await request_passphrase(ctx)
     else:
         return ''

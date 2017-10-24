@@ -19,10 +19,10 @@ async def respond_Features(ctx, msg):
 
     f.device_id = storage.get_device_id()
     f.label = storage.get_label()
-    f.language = storage.get_language()
     f.initialized = storage.is_initialized()
-    f.pin_protection = storage.is_protected_by_pin()
-    f.passphrase_protection = storage.is_protected_by_passphrase()
+    f.passphrase_protection = storage.has_passphrase()
+    f.pin_protection = False
+    f.language = 'english'
 
     return f
 
@@ -40,10 +40,6 @@ async def respond_Pong(ctx, msg):
         from trezor.ui.text import Text
         from trezor import ui
         await require_confirm(ctx, Text('Confirm', ui.ICON_RESET), ProtectCall)
-
-    if msg.pin_protection:
-        from apps.common.request_pin import protect_by_pin
-        await protect_by_pin(ctx)
 
     if msg.passphrase_protection:
         from apps.common.request_passphrase import protect_by_passphrase
