@@ -1,0 +1,155 @@
+# pylint: disable=E0602
+
+import os
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+
+# modtrezorui
+CPPDEFINES_MOD += [
+    'TREZOR_FONT_MONO_DISABLE',
+    'TREZOR_FONT_NORMAL_DISABLE',
+    ('QR_MAX_VERSION', '0'),
+]
+SOURCE_MOD += [
+    'embed/extmod/modtrezorui/display.c',
+    'embed/extmod/modtrezorui/inflate.c',
+    'embed/extmod/modtrezorui/font_bitmap.c',
+    'embed/extmod/modtrezorui/font_roboto_bold_20.c',
+    'embed/extmod/modtrezorui/trezor-qrenc/qr_encode.c',
+]
+
+SOURCE_STMHAL = [
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dac_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dac.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rng.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rtc_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rtc.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
+]
+
+SOURCE_PRODTEST = [
+    'embed/prodtest/startup.s',
+    'embed/prodtest/header.S',
+    'embed/prodtest/main.c',
+]
+
+SOURCE_TREZORHAL = [
+    'embed/trezorhal/common.c',
+    'embed/trezorhal/flash.c',
+    'embed/trezorhal/mini_printf.c',
+    'embed/trezorhal/rng.c',
+    'embed/trezorhal/sbu.c',
+    'embed/trezorhal/sdcard.c',
+    'embed/trezorhal/stm32.c',
+    'embed/trezorhal/touch.c',
+    'embed/trezorhal/usb.c',
+    'embed/trezorhal/usbd_conf.c',
+    'embed/trezorhal/usbd_core.c',
+    'embed/trezorhal/usbd_ctlreq.c',
+    'embed/trezorhal/usbd_ioreq.c',
+    'embed/trezorhal/util.s',
+    'embed/trezorhal/vectortable.s',
+]
+
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+
+env.Replace(
+    AS='arm-none-eabi-as',
+    AR='arm-none-eabi-ar',
+    CC='arm-none-eabi-gcc',
+    LINK='arm-none-eabi-ld',
+    SIZE='arm-none-eabi-size',
+    STRIP='arm-none-eabi-strip',
+    OBJCOPY='arm-none-eabi-objcopy', )
+
+env.Replace(
+    CCFLAGS='-Os '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -fno-common '
+    '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
+    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-fstack-protector-all -ffreestanding '
+    + CCFLAGS_MOD,
+    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
+    LINKFLAGS='-nostdlib -T embed/prodtest/memory.ld --gc-sections -Map=build/prodtest/firmware.map --warn-common',
+    CPPPATH=[
+        'embed/prodtest',
+        'embed/trezorhal',
+        'embed/extmod/modtrezorui',
+        'vendor/micropython/ports/stm32',
+        'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
+        'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
+        'vendor/micropython/lib/cmsis/inc',
+    ] + CPPPATH_MOD,
+    CPPDEFINES=[
+        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
+        'STM32F427xx',
+        'TREZOR_STM32',
+        'MCU_SERIES_F4',
+    ] + CPPDEFINES_MOD,
+    ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
+
+env.Replace(
+    BINCTL='tools/binctl', )
+
+#
+# Program objects
+#
+
+obj_program = []
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_PRODTEST)
+obj_program += env.Object(source=SOURCE_STMHAL)
+obj_program += env.Object(source=SOURCE_TREZORHAL)
+
+obj_program.extend(
+    env.Command(
+        target='embed/prodtest/vendorheader.o',
+        source='embed/firmware/vendorheader.bin',
+        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+        ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' $SOURCE $TARGET', ))
+
+program_elf = env.Command(
+    target='firmware.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a`',
+)
+
+program_bin = env.Command(
+    target='firmware.bin',
+    source=program_elf,
+    action=[
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$BINCTL $TARGET -s 1:2 4747474747474747474747474747474747474747474747474747474747474747:4848484848484848484848484848484848484848484848484848484848484848',
+    ], )

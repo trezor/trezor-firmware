@@ -82,6 +82,9 @@ build_boardloader: ## build boardloader
 build_bootloader: ## build bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/bootloader/bootloader.bin
 
+build_prodtest: ## build production test firmware
+	$(SCONS) CFLAGS="$(CFLAGS)" build/prodtest/firmware.bin
+
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin
 
@@ -96,13 +99,16 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_boardloader clean_bootloader clean_firmware clean_unix clean_cross ## clean all
+clean: clean_boardloader clean_bootloader clean_prodtest clean_firmware clean_unix clean_cross ## clean all
 
 clean_boardloader: ## clean boardloader build
 	rm -rf build/boardloader
 
 clean_bootloader: ## clean bootloader build
 	rm -rf build/bootloader
+
+clean_prodtest: ## clean prodtest build
+	rm -rf build/prodtest
 
 clean_firmware: ## clean firmware build
 	rm -rf build/firmware
