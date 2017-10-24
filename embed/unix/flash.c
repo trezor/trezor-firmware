@@ -64,11 +64,11 @@ static void flash_read(void)
     }
 }
 
-int flash_init(void)
+bool flash_init(void)
 {
     memset(flash_buffer, 0xFF, sizeof(flash_buffer));
     flash_read();
-    return 0;
+    return true;
 }
 
 void flash_set_option_bytes(void)
