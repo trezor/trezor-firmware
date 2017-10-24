@@ -86,7 +86,7 @@ def run():
 
     task_entry = [0, 0, 0]  # deadline, task, value
     msg_entry = [0, 0]  # iface | flags, value
-    while True:
+    while _queue or _paused:
         # compute the maximum amount of time we can wait for a message
         if _queue:
             delay = utime.ticks_diff(_queue.peektime(), utime.ticks_us())

@@ -1,11 +1,10 @@
-from trezor import config
+import boot
+
 from trezor import io
 from trezor import log
 from trezor import loop
 from trezor import wire
 from trezor import workflow
-
-config.init()
 
 log.level = log.DEBUG
 
@@ -102,7 +101,6 @@ usb.add(usb_vcp)
 usb.add(usb_u2f)
 
 # load applications
-from apps.common import storage
 if __debug__:
     from apps import debug
 from apps import homescreen
