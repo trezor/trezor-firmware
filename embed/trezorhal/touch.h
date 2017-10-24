@@ -17,6 +17,6 @@
 
 void touch_init(void);
 uint32_t touch_read(void);
-void touch_click(void);
+uint32_t touch_click(void);
 
 #endif
