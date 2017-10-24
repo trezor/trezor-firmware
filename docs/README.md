@@ -1,6 +1,6 @@
 # TREZOR Core documentation
 
-![TREZOR Logo](docs/logo.png)
+![TREZOR Logo](logo.png)
 
 * [TREZOR Core API](api.md)
 * [TREZOR Core Bootloader](bootloader.md)
