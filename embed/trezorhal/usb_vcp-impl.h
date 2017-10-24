@@ -331,6 +331,10 @@ static void usb_vcp_class_init(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
 }
 
 static void usb_vcp_class_deinit(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, uint8_t cfg_idx) {
+    // Flush endpoints
+    USBD_LL_FlushEP(dev, state->ep_in);
+    USBD_LL_FlushEP(dev, state->ep_out);
+    USBD_LL_FlushEP(dev, state->ep_cmd);
     // Close endpoints
     USBD_LL_CloseEP(dev, state->ep_in);
     USBD_LL_CloseEP(dev, state->ep_out);
