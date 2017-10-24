@@ -226,6 +226,8 @@ bool bootloader_loop(void)
                     display_done(3); hal_delay(1000);
                     display_done(2); hal_delay(1000);
                     display_done(1); hal_delay(1000);
+                    usb_stop();
+                    usb_deinit();
                     display_fade(BACKLIGHT_NORMAL, 0, 500);
                     return true; // jump to firmware
                 }
