@@ -1,5 +1,7 @@
 # TREZOR Core documentation
 
+![TREZOR Logo](docs/logo.png)
+
 * [TREZOR Core API](api.md)
 * [TREZOR Core Bootloader](bootloader.md)
 * [TREZOR Core Image Format](toif.md)
