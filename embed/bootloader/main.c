@@ -281,7 +281,7 @@ int main(void)
     // start the bootloader if user touched the screen or no firmware installed
     if (touched || !vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
         if (!bootloader_loop()) {
-            shutdown();
+            return 1;
         }
     }
 
