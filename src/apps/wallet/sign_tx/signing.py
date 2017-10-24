@@ -15,8 +15,8 @@ from trezor.messages import OutputScriptType, InputScriptType, FailureType
 
 from apps.common import address_type
 from apps.common import coins
+from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.writers import *
-
 
 # Machine instructions
 # ===
@@ -137,7 +137,10 @@ def sanitize_tx_binoutput(tx: TransactionType) -> TxOutputBinType:
 # ===
 
 # Phase 1
-async def check_tx_fee(tx: SignTx, root, segwit=False):
+# - check inputs, previous transactions, and outputs
+# - ask for confirmations
+# - check fee
+async def check_tx_fee(tx: SignTx, root, segwit):
 
     coin = coins.by_name(tx.coin_name)
 
@@ -145,6 +148,7 @@ async def check_tx_fee(tx: SignTx, root, segwit=False):
     # are the same as in Phase 2.  it is thus not required to fully hash the
     # tx, as the SignTx info is streamed only once
     h_first = HashWriter(sha256)  # not a real tx hash
+    bip143 = Bip143()
 
     txo_bin = TxOutputBinType()
     tx_req = TxRequest()
@@ -159,6 +163,9 @@ async def check_tx_fee(tx: SignTx, root, segwit=False):
         txi = await request_tx_input(tx_req, i)
         write_tx_input_check(h_first, txi)
         if segwit:
+            # Add I to segwit hash_prevouts, hash_sequence
+            bip143.add_prevouts(txi)
+            bip143.add_sequence(txi)
             total_in += txi.amount
         else:
             total_in += await get_prevtx_output_value(
@@ -179,6 +186,7 @@ async def check_tx_fee(tx: SignTx, root, segwit=False):
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         write_tx_output(h_first, txo_bin)
+        bip143.add_output(txo_bin)
         total_out += txo_bin.amount
 
     fee = total_in - total_out
@@ -195,19 +203,16 @@ async def check_tx_fee(tx: SignTx, root, segwit=False):
         raise SigningError(FailureType.ActionCancelled,
                            'Total cancelled')
 
-    return h_first, tx_req, txo_bin
+    return h_first, tx_req, txo_bin, bip143
 
 
-async def sign_tx(tx: SignTx, root):
+async def sign_tx(tx: SignTx, root, segwit=False):
 
     tx = sanitize_sign_tx(tx)
 
     # Phase 1
-    # - check inputs, previous transactions, and outputs
-    # - ask for confirmations
-    # - check fee
 
-    h_first, tx_req, txo_bin = await check_tx_fee(tx, root)
+    h_first, tx_req, txo_bin, bip143 = await check_tx_fee(tx, root, segwit)
 
     # Phase 2
     # - sign inputs
@@ -230,55 +235,64 @@ async def sign_tx(tx: SignTx, root):
 
         write_varint(h_sign, tx.inputs_count)
 
-        for i in range(tx.inputs_count):
-            # STAGE_REQUEST_4_INPUT
-            txi = await request_tx_input(tx_req, i)
-            write_tx_input_check(h_second, txi)
-            if i == i_sign:
-                txi_sign = txi
-                key_sign = node_derive(root, txi.address_n)
-                key_sign_pub = key_sign.public_key()
-                txi.script_sig = input_derive_script(txi, key_sign_pub)
-            else:
-                txi.script_sig = bytes()
-            write_tx_input(h_sign, txi)
+        if segwit:
+            txi = await request_tx_input(tx_req, i_sign)
+            # if hashType != ANYONE_CAN_PAY ? todo
 
-        write_varint(h_sign, tx.outputs_count)
+            # todo: what to do with other types?
+            script_code = input_derive_script(txi, coin, root)
+            bip143.preimage(tx, txi, script_code)
+            # Return serialized input chunk ? todo
+        else:
+            for i in range(tx.inputs_count):
+                # STAGE_REQUEST_4_INPUT
+                txi = await request_tx_input(tx_req, i)
+                write_tx_input_check(h_second, txi)
+                if i == i_sign:
+                    txi_sign = txi
+                    key_sign = node_derive(root, txi.address_n)
+                    key_sign_pub = key_sign.public_key()
+                    txi.script_sig = input_derive_script(txi, key_sign_pub)
+                else:
+                    txi.script_sig = bytes()
+                write_tx_input(h_sign, txi)
 
-        for o in range(tx.outputs_count):
-            # STAGE_REQUEST_4_OUTPUT
-            txo = await request_tx_output(tx_req, o)
-            txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin, root)
-            write_tx_output(h_second, txo_bin)
-            write_tx_output(h_sign, txo_bin)
+            write_varint(h_sign, tx.outputs_count)
 
-        write_uint32(h_sign, tx.lock_time)
+            for o in range(tx.outputs_count):
+                # STAGE_REQUEST_4_OUTPUT
+                txo = await request_tx_output(tx_req, o)
+                txo_bin.amount = txo.amount
+                txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+                write_tx_output(h_second, txo_bin)
+                write_tx_output(h_sign, txo_bin)
 
-        write_uint32(h_sign, 0x00000001)  # SIGHASH_ALL hash_type
+            write_uint32(h_sign, tx.lock_time)
 
-        # check the control digests
-        if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
-            raise SigningError(FailureType.ProcessError,
-                               'Transaction has changed during signing')
+            write_uint32(h_sign, 0x00000001)  # SIGHASH_ALL hash_type
 
-        # compute the signature from the tx digest
-        signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, True))
-        tx_ser.signature_index = i_sign
-        tx_ser.signature = signature
+            # check the control digests
+            if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
+                raise SigningError(FailureType.ProcessError,
+                                   'Transaction has changed during signing')
 
-        # serialize input with correct signature
-        txi_sign.script_sig = input_derive_script(
-            txi_sign, key_sign_pub, signature)
-        w_txi_sign = bytearray_with_cap(
-            len(txi_sign.prev_hash) + 4 + 5 + len(txi_sign.script_sig) + 4)
-        if i_sign == 0:  # serializing first input => prepend tx version and inputs count
-            write_uint32(w_txi_sign, tx.version)
-            write_varint(w_txi_sign, tx.inputs_count)
-        write_tx_input(w_txi_sign, txi_sign)
-        tx_ser.serialized_tx = w_txi_sign
+            # compute the signature from the tx digest
+            signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, True))
+            tx_ser.signature_index = i_sign
+            tx_ser.signature = signature
 
-        tx_req.serialized = tx_ser
+            # serialize input with correct signature
+            txi_sign.script_sig = input_derive_script(
+                txi_sign, key_sign_pub, signature)
+            w_txi_sign = bytearray_with_cap(
+                len(txi_sign.prev_hash) + 4 + 5 + len(txi_sign.script_sig) + 4)
+            if i_sign == 0:  # serializing first input => prepend tx version and inputs count
+                write_uint32(w_txi_sign, tx.version)
+                write_varint(w_txi_sign, tx.inputs_count)
+            write_tx_input(w_txi_sign, txi_sign)
+            tx_ser.serialized_tx = w_txi_sign
+
+            tx_req.serialized = tx_ser
 
     for o in range(tx.outputs_count):
         # STAGE_REQUEST_5_OUTPUT
@@ -400,6 +414,9 @@ def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes=None) ->
             return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
         else:
             return script_spendaddress_new(pubkey, signature)
+
+    if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # todo
+        return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
 
     else:
         raise SigningError(FailureType.SyntaxError,
