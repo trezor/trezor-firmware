@@ -23,7 +23,7 @@ def process_grayscale(w, h, data):
     return bytes(pix)
 
 
-def process_image(ifn):
+def process_image(ifn, ofn):
 
     data = open(ifn, 'rb').read()
 
@@ -38,7 +38,8 @@ def process_image(ifn):
     else:
         print('Unsupported format')
         return 3
-    ofn = '%s.png' % ifn[:-5]
+    if ofn is None:
+        ofn = '%s.png' % ifn[:-5]
 
     w, h = struct.unpack('<HH', data[4:8])
 
@@ -74,7 +75,7 @@ def process_image(ifn):
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage: toi2png image.toi[fg]')
+        print('Usage: toi2png image.toi[fg] [output]')
         return 1
 
     ifn = sys.argv[1]
@@ -82,7 +83,8 @@ def main():
         print('Must provide TOIF/TOIG file')
         return 2
 
-    process_image(ifn)
+    ofn = sys.argv[2] if len(sys.argv) > 2 else None
+    process_image(ifn, ofn)
 
 
 main()
