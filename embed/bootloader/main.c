@@ -202,9 +202,13 @@ bool bootloader_loop(void)
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
                     display_error();
+                    usb_stop();
+                    usb_deinit();
                     return false; // shutdown
                 } else { // success
                     display_done(0);
+                    usb_stop();
+                    usb_deinit();
                     return false; // shutdown
                 }
                 break;
@@ -220,6 +224,8 @@ bool bootloader_loop(void)
                 r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
                     display_error();
+                    usb_stop();
+                    usb_deinit();
                     return false; // shutdown
                 } else
                 if (r == 0) { // last chunk received
