@@ -347,7 +347,7 @@ int main(void)
     display_fade(BACKLIGHT_NORMAL, 0, 500);
     display_clear();
 
-    jump_to(FIRMWARE_START + vhdr.hdrlen + HEADER_SIZE);
+    jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
     return 0;
 }

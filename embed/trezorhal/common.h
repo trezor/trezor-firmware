@@ -3,11 +3,6 @@
 
 #include <stdint.h>
 
-#define BOARDLOADER_START  0x08000000
-#define BOOTLOADER_START   0x08020000
-#define FIRMWARE_START     0x08040000
-#define HEADER_SIZE        0x200
-
 extern void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 
 void clear_otg_hs_memory(void);

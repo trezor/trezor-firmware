@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define BOARDLOADER_START  0x08000000
+#define BOOTLOADER_START   0x08020000
+#define FIRMWARE_START     0x08040000
+#define IMAGE_HEADER_SIZE  0x200
+
 typedef struct {
     uint32_t magic;
     uint32_t hdrlen;

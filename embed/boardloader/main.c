@@ -112,7 +112,7 @@ static bool copy_sdcard(void)
     sdcard_power_on();
 
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
-    for (int i = 0; i < (HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
+    for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (!flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
@@ -186,7 +186,7 @@ int main(void)
         image_check_signature((const uint8_t *)BOOTLOADER_START, &hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS),
         "invalid bootloader signature");
 
-    jump_to(BOOTLOADER_START + HEADER_SIZE);
+    jump_to(BOOTLOADER_START + IMAGE_HEADER_SIZE);
 
     return 0;
 }

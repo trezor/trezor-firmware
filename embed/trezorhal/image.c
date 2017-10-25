@@ -35,7 +35,7 @@ bool image_parse_header(const uint8_t * const data, const uint32_t magic, const 
     if (hdr->magic != magic) return false;
 
     memcpy(&hdr->hdrlen, data + 4, 4);
-    if (hdr->hdrlen != HEADER_SIZE) return false;
+    if (hdr->hdrlen != IMAGE_HEADER_SIZE) return false;
 
     memcpy(&hdr->expiry, data + 8, 4);
     // TODO: expiry mechanism needs to be ironed out before production or those
@@ -63,11 +63,11 @@ bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-    blake2s_Update(&ctx, data, HEADER_SIZE - 65);
+    blake2s_Update(&ctx, data, IMAGE_HEADER_SIZE - 65);
     for (int i = 0; i < 65; i++) {
         blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
     }
-    blake2s_Update(&ctx, data + HEADER_SIZE, hdr->codelen);
+    blake2s_Update(&ctx, data + IMAGE_HEADER_SIZE, hdr->codelen);
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
