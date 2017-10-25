@@ -33,8 +33,11 @@ _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
 
 SECTIONS {
-  .header : ALIGN(4) {
+  .vendorheader : ALIGN(4) {
     KEEP(*(.vendorheader))
+  } >FLASH AT>FLASH
+
+  .header : ALIGN(4) {
     KEEP(*(.header));
   } >FLASH AT>FLASH
 
