@@ -25,6 +25,7 @@ import binascii
 import click
 import functools
 import json
+import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
 import trezorlib.types_pb2 as types
@@ -452,10 +453,8 @@ def sign_tx(connect, coin):
         raise Exception('Coin "%s" is not supported' % coin)
     client.set_tx_api(txapi)
 
-    try:
+    if sys.version_info.major < 3:
         input = raw_input
-    except:
-        pass
 
     inputs = []
     while True:
