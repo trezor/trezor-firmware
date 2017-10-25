@@ -6,6 +6,8 @@ import sys
 import struct
 import binascii
 
+import pyblake2
+
 from trezorlib import ed25519raw, ed25519cosi
 
 
@@ -89,7 +91,7 @@ class BinImage(object):
 class FirmwareImage(BinImage):
 
     def __init__(self, data, vhdrlen):
-        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=7 * 128 * 1024)
+        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=6 * 128 * 1024)
         self.vhdrlen = vhdrlen
         self.vheader = data[:vhdrlen]
 
@@ -103,7 +105,7 @@ class FirmwareImage(BinImage):
 class BootloaderImage(BinImage):
 
     def __init__(self, data):
-        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=64 * 1024 + 7 * 128 * 1024)
+        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=1 * 128 * 1024)
 
 
 class VendorHeader(object):
@@ -158,6 +160,7 @@ class VendorHeader(object):
         print('  * vimg    : (%d bytes)' % len(self.vimg))
         print('  * sigmask :', format_sigmask(self.sigmask))
         print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+        print()
 
     def serialize_header(self, sig=True):
         header = struct.pack('<4sIIBBBBB',
@@ -183,7 +186,6 @@ class VendorHeader(object):
         if bin(sigmask).count('1') != self.vsig_m:
             raise Exception('invalid number of indexes (vsig_m expected %d, got %d)' % (self.vsig_m, bin(sigmask).count('1')))
         # sign
-        header = self.serialize_header(sig=False)
         self.sigmask = sigmask
         self.sig = signature
 
@@ -204,7 +206,22 @@ def binopen(filename):
             return vheader
         subdata = data[vheader.hdrlen:]
         if subdata[:4] == b'TRZF':
-            return FirmwareImage(data, vheader.hdrlen)
+            firmware = FirmwareImage(data, vheader.hdrlen)
+            # check signatures against signing keys in the vendor header
+            if firmware.sigmask > 0:
+                pk = [vheader.vpub[i] for i in range(8) if firmware.sigmask & (1 << i)]
+                global_pk = ed25519cosi.combine_keys(pk)
+                subdata_nosig = bytearray(subdata)
+                subdata_nosig[512 - 65:512] = 65 * b'\x00'
+                digest = pyblake2.blake2s(subdata_nosig).digest()
+                try:
+                    ed25519raw.checkvalid(firmware.sig, digest, global_pk)
+                    print('Firmware signature OK')
+                except:
+                    print('Firmware signature INCORRECT')
+            else:
+                 print('No firmware signature')
+            return firmware
     if magic == b'TRZF':
         return FirmwareImage(data, 0)
     raise Exception('Unknown file format')
