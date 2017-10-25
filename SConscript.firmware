@@ -353,7 +353,9 @@ env.Replace(
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross',
-    BINCTL='tools/binctl', )
+    BINCTL='tools/binctl',
+    COMBINE_SIGN='tools/combine_sign',
+)
 
 #
 # Micropython version
@@ -428,5 +430,5 @@ program_bin = env.Command(
     source=program_elf,
     action=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
-        '$BINCTL $TARGET -s 1:2 4747474747474747474747474747474747474747474747474747474747474747:4848484848484848484848484848484848484848484848484848484848484848',
+        '$BINCTL $TARGET -s 1:2 `$COMBINE_SIGN firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
     ], )
