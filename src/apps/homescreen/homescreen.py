@@ -20,6 +20,7 @@ def display_homescreen():
     from apps.common import storage
 
     image = res.load('apps/homescreen/res/trezor_lock.toig')
+    ui.display.bar(0, 0, ui.SCREEN, ui.SCREEN, ui.BG)
     ui.display.icon((ui.SCREEN - 124) // 2, (ui.SCREEN - 40 - 180) // 2, image, ui.FG, ui.BG)
 
     if not storage.is_initialized():
