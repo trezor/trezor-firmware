@@ -18,11 +18,14 @@ def format_sigmask(sigmask):
 
 # bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
+IMAGE_HEADER_SIZE = 0x400
+IMAGE_SIG_SIZE    = 65
+
 
 class BinImage(object):
 
     def __init__(self, data, magic, max_size):
-        header = struct.unpack('<4sIIIBBBB427sB64s', data[:512])
+        header = struct.unpack('<4sIIIBBBB939sB64s', data[:IMAGE_HEADER_SIZE])
         self.magic, \
         self.hdrlen, \
         self.expiry, \
@@ -35,12 +38,12 @@ class BinImage(object):
         self.sigmask, \
         self.sig = header
         assert self.magic == magic
-        assert self.hdrlen == 512
+        assert self.hdrlen == IMAGE_HEADER_SIZE
         total_len = self.hdrlen + self.codelen
         assert total_len % 512 == 0
         assert total_len >= 4 * 1024
         assert total_len <= max_size
-        assert self.reserved == 427 * b'\x00'
+        assert self.reserved == 939 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
@@ -64,14 +67,14 @@ class BinImage(object):
         print()
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB427s',
+        header = struct.pack('<4sIIIBBBB939s',
                                 self.magic, self.hdrlen, self.expiry, self.codelen,
                                 self.vmajor, self.vminor, self.vpatch, self.vbuild,
                                 self.reserved)
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
-            header += 65 * b'\x00'
+            header += IMAGE_SIG_SIZE * b'\x00'
         assert len(header) == self.hdrlen
         return header
 
@@ -134,7 +137,7 @@ class VendorHeader(object):
         p += self.vstr_len
         vstr_pad = -p & 3
         p += vstr_pad
-        self.vimg_len = len(data) - 65 - p
+        self.vimg_len = len(data) - IMAGE_SIG_SIZE - p
         self.vimg = data[p:p + self.vimg_len]
         p += self.vimg_len
         self.sigmask = data[p]
@@ -144,7 +147,7 @@ class VendorHeader(object):
                             32 * len(self.vpub) + \
                             1 + self.vstr_len + vstr_pad + \
                             self.vimg_len + \
-                            1 + 64
+                            IMAGE_SIG_SIZE
 
     def print(self):
         print('TREZOR Vendor Header')
@@ -176,7 +179,7 @@ class VendorHeader(object):
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
-            header += 65 * b'\x00'
+            header += IMAGE_SIG_SIZE * b'\x00'
         assert len(header) == self.hdrlen
         return header
 
@@ -212,7 +215,7 @@ def binopen(filename):
                 pk = [vheader.vpub[i] for i in range(8) if firmware.sigmask & (1 << i)]
                 global_pk = ed25519cosi.combine_keys(pk)
                 subdata_nosig = bytearray(subdata)
-                subdata_nosig[512 - 65:512] = 65 * b'\x00'
+                subdata_nosig[IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE:IMAGE_HEADER_SIZE] = IMAGE_SIG_SIZE * b'\x00'
                 digest = pyblake2.blake2s(subdata_nosig).digest()
                 try:
                     ed25519raw.checkvalid(firmware.sig, digest, global_pk)
@@ -220,7 +223,7 @@ def binopen(filename):
                 except:
                     print('Firmware signature INCORRECT')
             else:
-                 print('No firmware signature')
+                print('No firmware signature')
             return firmware
     if magic == b'TRZF':
         return FirmwareImage(data, 0)

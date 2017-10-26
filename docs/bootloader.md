@@ -67,7 +67,7 @@ TREZOR Core (second stage) bootloader consists of 2 parts:
 
 ### Bootloader Header
 
-Total length of bootloader header is always 512 bytes.
+Total length of bootloader header is always 1024 bytes.
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
@@ -79,9 +79,9 @@ Total length of bootloader header is always 512 bytes.
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 427    | reserved | not used yet (zeroed) |
-| 0x01BF | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
-| 0x01C0 | 64     | sig | SatoshiLabs aggregated signature |
+| 0x0014 | 939    | reserved | not used yet (zeroed) |
+| 0x03BF | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
+| 0x03C0 | 64     | sig | SatoshiLabs aggregated signature |
 
 ## Firmware Format
 
@@ -122,7 +122,7 @@ of 512 bytes.
 
 ### Firmware Header
 
-Total length of firmware header is always 512 bytes.
+Total length of firmware header is always 1024 bytes.
 
 | offset | length | name | description |
 |-------:|-------:|------|-------------|
@@ -134,9 +134,10 @@ Total length of firmware header is always 512 bytes.
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 427    | reserved | not used yet (zeroed) |
-| 0x01BF | 1      | sigmask | vendor signature indexes (bitmap) |
-| 0x01C0 | 64     | sig | vendor aggregated signature |
+| 0x0014 | 939    | reserved | not used yet (zeroed) |
+| 0x03BF | 1      | sigmask | vendor signature indexes (bitmap) |
+| 0x03C0 | 64     | sig | vendor aggregated signature |
+
 
 ## Various ideas
 

@@ -49,11 +49,11 @@ bool image_parse_header(const uint8_t * const data, const uint32_t magic, const 
 
     memcpy(&hdr->version, data + 16, 4);
 
-    // uint8_t reserved[427];
+    // uint8_t reserved[939];
 
-    memcpy(&hdr->sigmask, data + 0x01BF, 1);
+    memcpy(&hdr->sigmask, data + IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE, 1);
 
-    memcpy(hdr->sig, data + 0x01C0, 64);
+    memcpy(hdr->sig, data + IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE + 1, IMAGE_SIG_SIZE - 1);
 
     return true;
 }
@@ -63,8 +63,8 @@ bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-    blake2s_Update(&ctx, data, IMAGE_HEADER_SIZE - 65);
-    for (int i = 0; i < 65; i++) {
+    blake2s_Update(&ctx, data, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
+    for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
         blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
     }
     blake2s_Update(&ctx, data + IMAGE_HEADER_SIZE, hdr->codelen);
@@ -112,11 +112,11 @@ bool vendor_parse_header(const uint8_t * const data, vendor_header * const vhdr)
     // align to 4 bytes
     vhdr->vimg += (-(uintptr_t)vhdr->vimg) & 3;
 
-    // uint8_t reserved[427];
+    // reserved for padding
 
-    memcpy(&vhdr->sigmask, data + vhdr->hdrlen - 65, 1);
+    memcpy(&vhdr->sigmask, data + vhdr->hdrlen - IMAGE_SIG_SIZE, 1);
 
-    memcpy(vhdr->sig, data + vhdr->hdrlen - 64, 64);
+    memcpy(vhdr->sig, data + vhdr->hdrlen - IMAGE_SIG_SIZE + 1, IMAGE_SIG_SIZE - 1);
 
     return true;
 }
@@ -126,8 +126,8 @@ bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr, uint
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-    blake2s_Update(&ctx, data, vhdr->hdrlen - 65);
-    for (int i = 0; i < 65; i++) {
+    blake2s_Update(&ctx, data, vhdr->hdrlen - IMAGE_SIG_SIZE);
+    for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
         blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
     }
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);

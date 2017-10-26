@@ -7,7 +7,8 @@
 #define BOARDLOADER_START  0x08000000
 #define BOOTLOADER_START   0x08020000
 #define FIRMWARE_START     0x08040000
-#define IMAGE_HEADER_SIZE  0x200
+#define IMAGE_HEADER_SIZE  0x400
+#define IMAGE_SIG_SIZE     65
 
 typedef struct {
     uint32_t magic;
@@ -15,7 +16,7 @@ typedef struct {
     uint32_t expiry;
     uint32_t codelen;
     uint32_t version;
-    // uint8_t reserved[427];
+    // uint8_t reserved[939];
     uint8_t sigmask;
     uint8_t sig[64];
 } image_header;
@@ -30,7 +31,7 @@ typedef struct {
     uint8_t vsig_m;
     uint8_t vsig_n;
     uint8_t vtrust;
-    // uint8_t reserved[16];
+    // uint8_t reserved[15];
     const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
     uint8_t vstr_len;
     const uint8_t *vstr;
