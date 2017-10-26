@@ -38,6 +38,10 @@
 //                                          22
 #define FLASH_SECTOR_FIRMWARE_EXTRA_END     23
 
+#define FLASH_SECTOR_COUNT 24
+
+extern const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1];
+
 void flash_set_option_bytes(void);
 
 bool flash_unlock(void);

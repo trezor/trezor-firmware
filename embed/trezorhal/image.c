@@ -4,6 +4,7 @@
 #include "ed25519-donna/ed25519.h"
 
 #include "common.h"
+#include "flash.h"
 #include "image.h"
 
 static bool compute_pubkey(uint8_t sig_m, uint8_t sig_n, const uint8_t * const *pub, uint8_t sigmask, ed25519_public_key res)
@@ -138,19 +139,24 @@ static bool check_hash(const uint8_t * const hash, const uint8_t * const data, i
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-bool check_image_contents(const image_header * const hdr, const uint8_t * const data, uint32_t firstskip, int maxblocks)
+bool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks)
 {
+    if (!sectors || blocks < 1) {
+        return false;
+    }
+    const void *data = (const void *)(FLASH_SECTOR_TABLE[sectors[0]] + firstskip);
     int remaining = hdr->codelen;
-    if (!check_hash(hdr->hashes, data + firstskip, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
+    if (!check_hash(hdr->hashes, data, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
         return false;
     }
     int block = 1;
     remaining -= IMAGE_CHUNK_SIZE - firstskip;
     while (remaining > 0) {
-        if (block >= maxblocks) {
+        if (block >= blocks) {
             return false;
         }
-        if (!check_hash(hdr->hashes + block * 32, data + block * IMAGE_CHUNK_SIZE, MIN(remaining, IMAGE_CHUNK_SIZE))) {
+        data = (const void *)FLASH_SECTOR_TABLE[sectors[block]];
+        if (!check_hash(hdr->hashes + block * 32, data, MIN(remaining, IMAGE_CHUNK_SIZE))) {
             return false;
         }
         block++;

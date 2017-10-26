@@ -5,9 +5,7 @@
 
 // see docs/memory.md for more information
 
-#define SECTOR_COUNT 24
-
-static const uint32_t SECTOR_TABLE[SECTOR_COUNT + 1] = {
+const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [ 0] = 0x08000000, // - 0x08003FFF |  16 KiB
     [ 1] = 0x08004000, // - 0x08007FFF |  16 KiB
     [ 2] = 0x08008000, // - 0x0800BFFF |  16 KiB
@@ -68,7 +66,7 @@ bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int p
             return false;
         }
         // check whether the sector was really deleted (contains only 0xFF)
-        uint32_t addr_start = SECTOR_TABLE[sectors[i]], addr_end = SECTOR_TABLE[sectors[i] + 1];
+        uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]], addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
         for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
             if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
                 return false;
