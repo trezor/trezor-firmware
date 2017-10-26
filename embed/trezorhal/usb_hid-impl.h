@@ -194,10 +194,10 @@ int usb_hid_read_select(uint32_t timeout) {
     return -1; // Timeout
 }
 
-int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, uint32_t timeout) {
+int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int timeout) {
     const uint32_t start = HAL_GetTick();
     while (!usb_hid_can_read(iface_num)) {
-        if (HAL_GetTick() - start >= timeout) {
+        if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
             return 0; // Timeout
         }
         __WFI(); // Enter sleep mode, waiting for interrupt
@@ -205,10 +205,10 @@ int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, uint32_
     return usb_hid_read(iface_num, buf, len);
 }
 
-int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, uint32_t timeout) {
+int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, int timeout) {
     const uint32_t start = HAL_GetTick();
     while (!usb_hid_can_write(iface_num)) {
-        if (HAL_GetTick() - start >= timeout) {
+        if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
             return 0; // Timeout
         }
         __WFI(); // Enter sleep mode, waiting for interrupt

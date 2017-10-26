@@ -76,5 +76,5 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
 
 int usb_hid_read_select(uint32_t timeout);
-int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, uint32_t timeout);
-int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, uint32_t timeout);
+int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int timeout);
+int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, int timeout);
