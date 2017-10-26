@@ -79,9 +79,14 @@ Total length of bootloader header is always 1024 bytes.
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 939    | reserved | not used yet (zeroed) |
+| 0x0014 | 12     | reserved | not used yet (zeroed) |
+| 0x0020 | 32     | hash1 | hash of the first code chunk (128 - 1 KiB), this excludes the header |
+| 0x0040 | 32     | hash2 | hash of the second code chunk (128 KiB), zeroed if unused |
+| ...    | ...    | ... | ... |
+| 0x0200 | 32     | hash16 | hash of the last possible code chunk (128 KiB), zeroed if unused |
+| 0x0220 | 415    | reserved | not used yet (zeroed) |
 | 0x03BF | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
-| 0x03C0 | 64     | sig | SatoshiLabs aggregated signature |
+| 0x03C0 | 64     | sig | SatoshiLabs aggregated signature of the bootloader header |
 
 ## Firmware Format
 
@@ -118,7 +123,7 @@ of 512 bytes.
 | ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
 | ?      | ?      | reserved | padding to an address that is -65 modulo 512 (zeroed) |
 | ?      | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
-| ?      | 64     | sig | SatoshiLabs aggregated signature |
+| ?      | 64     | sig | SatoshiLabs aggregated signature of the vendor header |
 
 ### Firmware Header
 
@@ -134,9 +139,14 @@ Total length of firmware header is always 1024 bytes.
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 939    | reserved | not used yet (zeroed) |
+| 0x0014 | 12     | reserved | not used yet (zeroed) |
+| 0x0020 | 32     | hash1 | hash of the first code chunk (128 - 1 KiB), this excludes the header |
+| 0x0040 | 32     | hash2 | hash of the second code chunk (128 KiB), zeroed if unused |
+| ...    | ...    | ... | ... |
+| 0x0200 | 32     | hash16 | hash of the last possible code chunk (128 KiB), zeroed if unused |
+| 0x0220 | 415    | reserved | not used yet (zeroed) |
 | 0x03BF | 1      | sigmask | vendor signature indexes (bitmap) |
-| 0x03C0 | 64     | sig | vendor aggregated signature |
+| 0x03C0 | 64     | sig | vendor aggregated signature of the firmware header |
 
 
 ## Various ideas

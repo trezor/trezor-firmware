@@ -18,14 +18,15 @@ def format_sigmask(sigmask):
 
 # bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
-IMAGE_HEADER_SIZE = 0x400
+IMAGE_HEADER_SIZE = 1024
 IMAGE_SIG_SIZE    = 65
+IMAGE_CHUNK_SIZE  = 128 * 1024
 
 
 class BinImage(object):
 
     def __init__(self, data, magic, max_size):
-        header = struct.unpack('<4sIIIBBBB939sB64s', data[:IMAGE_HEADER_SIZE])
+        header = struct.unpack('<4sIIIBBBB12s512s415sB64s', data[:IMAGE_HEADER_SIZE])
         self.magic, \
         self.hdrlen, \
         self.expiry, \
@@ -34,7 +35,9 @@ class BinImage(object):
         self.vminor, \
         self.vpatch, \
         self.vbuild, \
-        self.reserved, \
+        self.reserved1, \
+        self.hashes, \
+        self.reserved2, \
         self.sigmask, \
         self.sig = header
         assert self.magic == magic
@@ -43,7 +46,8 @@ class BinImage(object):
         assert total_len % 512 == 0
         assert total_len >= 4 * 1024
         assert total_len <= max_size
-        assert self.reserved == 939 * b'\x00'
+        assert self.reserved1 == 12 * b'\x00'
+        assert self.reserved2 == 415 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
 
@@ -56,21 +60,45 @@ class BinImage(object):
             total_len = self.hdrlen + self.codelen
         else:
             print('TREZOR Unknown Image')
-        print('  * magic   :', self.magic.decode('ascii'))
+        print('  * magic   :', self.magic.decode())
         print('  * hdrlen  :', self.hdrlen)
         print('  * expiry  :', self.expiry)
         print('  * codelen :', self.codelen)
         print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
+        print('  * hashes: %s' % ('OK' if self.check_hashes() else 'INCORRECT'))
+        for i in range(16):
+            print('    - %02d : %s' % (i, binascii.hexlify(self.hashes[i * 32:i * 32 + 32]).decode()))
         print('  * sigmask :', format_sigmask(self.sigmask))
-        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+        print('  * sig     :', binascii.hexlify(self.sig).decode())
         print('  * total   : %d bytes' % total_len)
         print()
 
+    def compute_hashes(self):
+        hashes = b''
+        for i in range(16):
+            if i == 0:
+                d = self.code[:IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE]
+            else:
+                s = IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE + (i - 1) * IMAGE_CHUNK_SIZE
+                d = self.code[s:s + IMAGE_CHUNK_SIZE]
+            if len(d) > 0:
+                h = pyblake2.blake2s(d).digest()
+            else:
+                h = 32 * b'\x00'
+            hashes += h
+        return hashes
+
+    def check_hashes(self):
+        return self.hashes == self.compute_hashes()
+
+    def update_hashes(self):
+        self.hashes = self.compute_hashes()
+
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB939s',
+        header = struct.pack('<4sIIIBBBB12s512s415s',
                                 self.magic, self.hdrlen, self.expiry, self.codelen,
                                 self.vmajor, self.vminor, self.vpatch, self.vbuild,
-                                self.reserved)
+                                self.reserved1, self.hashes, self.reserved2)
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)
         else:
@@ -94,7 +122,7 @@ class BinImage(object):
 class FirmwareImage(BinImage):
 
     def __init__(self, data, vhdrlen):
-        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=6 * 128 * 1024)
+        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=6 * IMAGE_CHUNK_SIZE)
         self.vhdrlen = vhdrlen
         self.vheader = data[:vhdrlen]
 
@@ -108,7 +136,7 @@ class FirmwareImage(BinImage):
 class BootloaderImage(BinImage):
 
     def __init__(self, data):
-        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=1 * 128 * 1024)
+        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=1 * IMAGE_CHUNK_SIZE)
 
 
 class VendorHeader(object):
@@ -148,21 +176,22 @@ class VendorHeader(object):
                             1 + self.vstr_len + vstr_pad + \
                             self.vimg_len + \
                             IMAGE_SIG_SIZE
+        assert len(data) % 512 == 0
 
     def print(self):
         print('TREZOR Vendor Header')
-        print('  * magic   :', self.magic.decode('ascii'))
+        print('  * magic   :', self.magic.decode())
         print('  * hdrlen  :', self.hdrlen)
         print('  * expiry  :', self.expiry)
         print('  * version : %d.%d' % (self.vmajor, self.vminor))
         print('  * scheme  : %d out of %d' % (self.vsig_m, self.vsig_n))
         print('  * trust   :', self.vtrust)
         for i in range(self.vsig_n):
-            print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode('ascii'))
-        print('  * vstr    :', self.vstr.decode('ascii'))
+            print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode())
+        print('  * vstr    :', self.vstr.decode())
         print('  * vimg    : (%d bytes)' % len(self.vimg))
         print('  * sigmask :', format_sigmask(self.sigmask))
-        print('  * sig     :', binascii.hexlify(self.sig).decode('ascii'))
+        print('  * sig     :', binascii.hexlify(self.sig).decode())
         print()
 
     def serialize_header(self, sig=True):
@@ -214,9 +243,8 @@ def binopen(filename):
             if firmware.sigmask > 0:
                 pk = [vheader.vpub[i] for i in range(8) if firmware.sigmask & (1 << i)]
                 global_pk = ed25519cosi.combine_keys(pk)
-                subdata_nosig = bytearray(subdata)
-                subdata_nosig[IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE:IMAGE_HEADER_SIZE] = IMAGE_SIG_SIZE * b'\x00'
-                digest = pyblake2.blake2s(subdata_nosig).digest()
+                hdr = subdata[:IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE] + IMAGE_SIG_SIZE * b'\x00'
+                digest = pyblake2.blake2s(hdr).digest()
                 try:
                     ed25519raw.checkvalid(firmware.sig, digest, global_pk)
                     print('Firmware signature OK')
@@ -232,10 +260,11 @@ def binopen(filename):
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage: binctl file.bin [-s sigmask signature]')
+        print('Usage: binctl file.bin [-s sigmask signature] [-h]')
         return 1
     fn = sys.argv[1]
     sign = len(sys.argv) > 2 and sys.argv[2] == '-s'
+    rehash = len(sys.argv) == 3 and sys.argv[2] == '-h'
     b = binopen(fn)
     if sign:
         sigmask = 0
@@ -247,6 +276,9 @@ def main():
         signature = binascii.unhexlify(sys.argv[4])
         b.sign(sigmask, signature)
         print()
+        b.write(fn)
+    if rehash:
+        b.update_hashes()
         b.write(fn)
     b.print()
 

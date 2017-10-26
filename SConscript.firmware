@@ -430,6 +430,7 @@ program_bin = env.Command(
     source=program_elf,
     action=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE build/firmware/firmware.bin.novhdr',
-        '$BINCTL $TARGET -s 1:2 `$COMBINE_SIGN firmware build/firmware/firmware.bin.novhdr 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
+        '$BINCTL $TARGET -h',
+        'dd if=$TARGET of=build/firmware/header.tosign bs=1 count=1024 skip=`stat -c%s embed/firmware/vendorheader.bin`',
+        '$BINCTL $TARGET -s 1:2 `$COMBINE_SIGN firmware build/firmware/header.tosign 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
     ], )

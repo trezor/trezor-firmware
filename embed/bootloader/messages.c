@@ -15,8 +15,6 @@
 #include "messages.h"
 #include "style.h"
 
-#define FIRMWARE_CHUNK_SIZE (128 * 1024)
-
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
@@ -270,7 +268,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             return;
         }
         // request new firmware
-        chunk_requested = (firmware_remaining > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_remaining;
+        chunk_requested = (firmware_remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
         MSG_SEND_ASSIGN_VALUE(offset, 0);
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
@@ -336,7 +334,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     firmware_flashed += chunk_requested;
 
     if (firmware_remaining > 0) {
-        chunk_requested = (firmware_remaining > FIRMWARE_CHUNK_SIZE) ? FIRMWARE_CHUNK_SIZE : firmware_remaining;
+        chunk_requested = (firmware_remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
         MSG_SEND_ASSIGN_VALUE(offset, firmware_flashed);
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);

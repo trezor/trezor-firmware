@@ -7,8 +7,10 @@
 #define BOARDLOADER_START  0x08000000
 #define BOOTLOADER_START   0x08020000
 #define FIRMWARE_START     0x08040000
+
 #define IMAGE_HEADER_SIZE  0x400
 #define IMAGE_SIG_SIZE     65
+#define IMAGE_CHUNK_SIZE   (128 * 1024)
 
 typedef struct {
     uint32_t magic;
