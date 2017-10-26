@@ -61,13 +61,13 @@ uint32_t touch_read(void)
 
     if (data[0] == 0xff && data[1] == 0x00) {
         if (data[2] == 0x01 && data[3] == 0x00) {
-            return TOUCH_START | (data[4] << 8) | data[6]; // touch start
+            return TOUCH_START | ((data[3] & 0xF) << 20) | (data[4] << 12) | ((data[5] & 0xF) << 8) | data[6];
         } else
         if (data[2] == 0x01 && data[3] == 0x80) {
-            return TOUCH_MOVE  | (data[4] << 8) | data[6]; // touch move
+            return TOUCH_MOVE  | ((data[3] & 0xF) << 20) | (data[4] << 12) | ((data[5] & 0xF) << 8) | data[6];
         } else
         if (data[2] == 0x00 && data[3] == 0x40) {
-            return TOUCH_END   | (data[4] << 8) | data[6]; // touch end
+            return TOUCH_END   | ((data[3] & 0xF) << 20) | (data[4] << 12) | ((data[5] & 0xF) << 8) | data[6];
         }
     }
 

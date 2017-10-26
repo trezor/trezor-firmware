@@ -53,12 +53,12 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t t
             const mp_uint_t mode = i & 0xFF00;
 
             if (iface == TOUCH_IFACE) {
-                uint32_t evt = touch_read();
+                const uint32_t evt = touch_read();
                 if (evt) {
                     mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-                    tuple->items[0] = MP_OBJ_NEW_SMALL_INT((evt & 0xFF0000) >> 16); // event type
-                    tuple->items[1] = MP_OBJ_NEW_SMALL_INT((evt & 0xFF00) >> 8); // x position
-                    tuple->items[2] = MP_OBJ_NEW_SMALL_INT((evt & 0xFF)); // y position
+                    tuple->items[0] = MP_OBJ_NEW_SMALL_INT((evt >> 24) & 0xFFU); // event type
+                    tuple->items[1] = MP_OBJ_NEW_SMALL_INT((evt >> 12) & 0xFFFU); // x position
+                    tuple->items[2] = MP_OBJ_NEW_SMALL_INT(evt & 0xFFFU); // y position
                     ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
                     ret->items[1] = MP_OBJ_FROM_PTR(tuple);
                     return mp_const_true;

@@ -10,9 +10,9 @@
 
 #include <stdint.h>
 
-#define TOUCH_START 0x00010000
-#define TOUCH_MOVE  0x00020000
-#define TOUCH_END   0x00040000
+#define TOUCH_START (1U << 24)
+#define TOUCH_MOVE  (2U << 24)
+#define TOUCH_END   (4U << 24)
 
 void touch_init(void);
 uint32_t touch_read(void);

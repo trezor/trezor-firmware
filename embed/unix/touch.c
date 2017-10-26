@@ -11,6 +11,7 @@
 #endif
 
 #include "options.h"
+#include "embed/trezorhal/touch.h"
 
 uint32_t touch_read(void)
 {
@@ -28,18 +29,16 @@ uint32_t touch_read(void)
                 if (x < 0 || y < 0 || x >= DISPLAY_RESX || y >= DISPLAY_RESY) break;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
-                        return (0x00 << 24) | (0x01 << 16) | (x << 8) | y; // touch_start
-                        break;
+                        return TOUCH_START | (x << 12) | y;
                     case SDL_MOUSEMOTION:
                         // remove other SDL_MOUSEMOTION events from queue
                         SDL_FlushEvent(SDL_MOUSEMOTION);
                         if (event.motion.state) {
-                            return (0x00 << 24) | (0x02 << 16) | (x << 8) | y; // touch_move
+                            return TOUCH_MOVE | (x << 12) | y;
                         }
                         break;
                     case SDL_MOUSEBUTTONUP:
-                        return (0x00 << 24) | (0x04 << 16) | (x << 8) | y; // touch_end
-                        break;
+                        return TOUCH_END | (x << 12) | y;
                 }
                 break;
             case SDL_KEYUP:
