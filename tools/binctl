@@ -74,12 +74,16 @@ class BinImage(object):
         print()
 
     def compute_hashes(self):
+        if self.magic == b'TRZF':
+            hdrlen = self.vhdrlen + self.hdrlen
+        else:
+            hdrlen = self.hdrlen
         hashes = b''
         for i in range(16):
             if i == 0:
-                d = self.code[:IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE]
+                d = self.code[:IMAGE_CHUNK_SIZE - hdrlen]
             else:
-                s = IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE + (i - 1) * IMAGE_CHUNK_SIZE
+                s = IMAGE_CHUNK_SIZE - hdrlen + (i - 1) * IMAGE_CHUNK_SIZE
                 d = self.code[s:s + IMAGE_CHUNK_SIZE]
             if len(d) > 0:
                 h = pyblake2.blake2s(d).digest()

@@ -328,7 +328,7 @@ int main(void)
         "invalid firmware header");
 
     ensure(
-        check_image_contents(&hdr, (const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), 6),
+        check_image_contents(&hdr, (const uint8_t *)FIRMWARE_START, IMAGE_HEADER_SIZE + vhdr.hdrlen, 6),
         "invalid firmware hash");
 
     display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);

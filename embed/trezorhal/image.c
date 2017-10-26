@@ -138,14 +138,14 @@ static bool check_hash(const uint8_t * const hash, const uint8_t * const data, i
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-bool check_image_contents(const image_header * const hdr, const uint8_t * const data, int maxblocks)
+bool check_image_contents(const image_header * const hdr, const uint8_t * const data, uint32_t firstskip, int maxblocks)
 {
     int remaining = hdr->codelen;
-    if (!check_hash(hdr->hashes, data + IMAGE_HEADER_SIZE, MIN(remaining, IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE))) {
+    if (!check_hash(hdr->hashes, data + firstskip, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
         return false;
     }
     int block = 1;
-    remaining -= IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE;
+    remaining -= IMAGE_CHUNK_SIZE - firstskip;
     while (remaining > 0) {
         if (block >= maxblocks) {
             return false;
