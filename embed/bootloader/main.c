@@ -327,6 +327,10 @@ int main(void)
         load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr),
         "invalid firmware header");
 
+    ensure(
+        check_image_contents(&hdr, (const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), 6),
+        "invalid firmware hash");
+
     display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
     display_fade(0, BACKLIGHT_NORMAL, 1000);
     if (vhdr.vtrust < 50) {

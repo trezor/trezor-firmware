@@ -128,3 +128,33 @@ bool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n
 
     return 0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)vhdr->sig);
 }
+
+static bool check_hash(const uint8_t * const hash, const uint8_t * const data, int len)
+{
+    uint8_t h[BLAKE2S_DIGEST_LENGTH];
+    blake2s(data, len, h, BLAKE2S_DIGEST_LENGTH);
+    return 0 == memcmp(h, hash, BLAKE2S_DIGEST_LENGTH);
+}
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+bool check_image_contents(const image_header * const hdr, const uint8_t * const data, int maxblocks)
+{
+    int remaining = hdr->codelen;
+    if (!check_hash(hdr->hashes, data + IMAGE_HEADER_SIZE, MIN(remaining, IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE))) {
+        return false;
+    }
+    int block = 1;
+    remaining -= IMAGE_CHUNK_SIZE - IMAGE_HEADER_SIZE;
+    while (remaining > 0) {
+        if (block >= maxblocks) {
+            return false;
+        }
+        if (!check_hash(hdr->hashes + block * 32, data + block * IMAGE_CHUNK_SIZE, MIN(remaining, IMAGE_CHUNK_SIZE))) {
+            return false;
+        }
+        block++;
+        remaining -= IMAGE_CHUNK_SIZE;
+    }
+    return true;
+}

@@ -48,4 +48,6 @@ bool load_image_header(const uint8_t * const data, const uint32_t magic, const u
 
 bool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
 
+bool check_image_contents(const image_header * const hdr, const uint8_t * const data, int maxblocks);
+
 #endif

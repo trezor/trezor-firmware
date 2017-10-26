@@ -182,6 +182,10 @@ int main(void)
         load_image_header((const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr),
         "invalid bootloader header");
 
+    ensure(
+        check_image_contents(&hdr, (const uint8_t *)BOOTLOADER_START, 1),
+        "invalid bootloader hash");
+
     jump_to(BOOTLOADER_START + IMAGE_HEADER_SIZE);
 
     return 0;
