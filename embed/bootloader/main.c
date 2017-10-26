@@ -220,7 +220,7 @@ bool bootloader_loop(bool firmware_present)
                 display_fade(BACKLIGHT_NORMAL, 0, 100);
                 display_clear();
                 display_header(ICON_WIPE, "Wiping Device");
-                display_footer("In progress ...", COLOR_WHITE);
+                display_footer("Please wait ...", COLOR_WHITE);
                 display_fade(0, BACKLIGHT_NORMAL, 100);
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
@@ -239,7 +239,7 @@ bool bootloader_loop(bool firmware_present)
                 display_fade(BACKLIGHT_NORMAL, 0, 100);
                 display_clear();
                 display_header(ICON_UPDATE, "Updating Firmware");
-                display_footer("In progress ...", COLOR_WHITE);
+                display_footer("Please wait ...", COLOR_WHITE);
                 display_fade(0, BACKLIGHT_NORMAL, 100);
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
