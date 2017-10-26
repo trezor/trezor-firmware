@@ -21,9 +21,7 @@
 #include "usb.h"
 #include "mini_printf.h"
 
-enum {
-    VCP_IFACE = 0x00,
-};
+enum { VCP_IFACE = 0x00 };
 
 static void vcp_intr(void)
 {
@@ -33,22 +31,14 @@ static void vcp_intr(void)
 
 static void vcp_puts(const char *s, size_t len)
 {
-    for (;;) {
-        if (usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *)s, len, 1000) > 0) {
-            break;
-        }
-    }
+    usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *) s, len, -1);
 }
 
 static char vcp_getchar(void)
 {
-    uint8_t c;
-    for (;;) {
-        if (usb_vcp_read_blocking(VCP_IFACE, &c, 1, 1000) > 0) {
-            break;
-        }
-    }
-    return (char)c;
+    uint8_t c = 0;
+    usb_vcp_read_blocking(VCP_IFACE, &c, 1, -1);
+    return (char) c;
 }
 
 static void vcp_readline(char *buf, size_t len)
@@ -59,15 +49,15 @@ static void vcp_readline(char *buf, size_t len)
             vcp_puts("\r\n", 2);
             break;
         }
-        if (c < 32 || c > 126) {
+        if (c < 32 || c > 126) {  // not printable
             continue;
         }
         if (len > 1) {  // leave space for \0
             *buf = c;
             buf++;
             len--;
+            vcp_puts(&c, 1);
         }
-        vcp_puts(&c, 1);
     }
     if (len > 0) {
         *buf = '\0';
@@ -77,10 +67,10 @@ static void vcp_readline(char *buf, size_t len)
 static void vcp_printf(const char *fmt, ...)
 {
     static char buf[128];
-	va_list va;
-	va_start(va, fmt);
-	int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
-	va_end(va);
+    va_list va;
+    va_start(va, fmt);
+    int r = mini_vsnprintf(buf, sizeof(buf), fmt, va);
+    va_end(va);
     vcp_puts(buf, r);
     vcp_puts("\r\n", 2);
 }
@@ -114,7 +104,7 @@ static void usb_init_all(void)
         .tx_buffer_len    = VCP_BUFFER_LEN,
         .rx_buffer_len    = VCP_BUFFER_LEN,
         .rx_intr_fn       = vcp_intr,
-        .rx_intr_byte     = 3, // Ctrl-C
+        .rx_intr_byte     = 3,  // Ctrl-C
         .iface_num        = VCP_IFACE,
         .data_iface_num   = 0x01,
         .ep_cmd           = 0x82,
@@ -134,16 +124,15 @@ static void test_display(const char *colors)
     display_clear();
 
     size_t l = strlen(colors);
-    size_t w = 240 / l;
+    size_t w = DISPLAY_RESX / l;
 
     for (size_t i = 0; i < l; i++) {
-        uint16_t c;
+        uint16_t c = 0x0000;  // black
         switch (colors[i]) {
         case 'R': c = 0xF800; break;
         case 'G': c = 0x07E0; break;
         case 'B': c = 0x001F; break;
         case 'W': c = 0xFFFF; break;
-        default: c = 0x0000; break;
         }
         display_bar(i * w, 0, i * w + w, 240, c);
     }
@@ -154,20 +143,16 @@ static void test_display(const char *colors)
 static bool touch_click_timeout(uint32_t *touch, uint32_t timeout_ms)
 {
     uint32_t deadline = HAL_GetTick() + timeout_ms;
-    uint32_t r;
+    uint32_t r = 0;
 
-    while (touch_read()) { }
+    while (touch_read());
     while ((touch_read() & TOUCH_START) == 0) {
-        if (HAL_GetTick() > deadline) {
-            return false;
-        }
+        if (HAL_GetTick() > deadline) return false;
     }
     while (((r = touch_read()) & TOUCH_END) == 0) {
-        if (HAL_GetTick() > deadline) {
-            return false;
-        }
+        if (HAL_GetTick() > deadline) return false;
     }
-    while (touch_read()) { }
+    while (touch_read());
 
     *touch = r;
     return true;
@@ -187,10 +172,11 @@ static void test_touch(const char *args)
     }
     display_refresh();
 
-    uint32_t click;
-
+    uint32_t click = 0;
     if (touch_click_timeout(&click, timeout * 1000)) {
-        vcp_printf("OK %d %d", 0, 0);
+        uint32_t x = (evt & 0xFF00) >> 8;
+        uint32_t y = (evt & 0xFF);
+        vcp_printf("OK %d %d", x, y);
     } else {
         vcp_printf("ERROR TIMEOUT");
     }
@@ -201,6 +187,7 @@ static void test_touch(const char *args)
 static void test_pwm(const char *args)
 {
     int v = atoi(args);
+
     display_backlight(v);
     display_refresh();
     vcp_printf("OK");
@@ -208,30 +195,35 @@ static void test_pwm(const char *args)
 
 static void test_sd(void)
 {
+    static uint8_t buf1[8 * 1024];
+    static uint8_t buf2[8 * 1024];
+
     if (!sdcard_is_present()) {
         vcp_printf("ERROR NOCARD");
         return;
     }
+
     sdcard_power_on();
-    static uint8_t buf1[8 * 1024];
     if (!sdcard_read_blocks(buf1, 0, 0)) {
         vcp_printf("ERROR sdcard_read_blocks");
-        return;
+        goto power_off;
     }
     if (!sdcard_write_blocks(buf1, 0, 0)) {
         vcp_printf("ERROR sdcard_write_blocks");
-        return;
+        goto power_off;
     }
-    static uint8_t buf2[8 * 1024];
     if (!sdcard_read_blocks(buf2, 0, 0)) {
         vcp_printf("ERROR sdcard_read_blocks");
-        return;
+        goto power_off;
     }
     if (memcmp(buf1, buf2, sizeof(buf1)) != 0) {
         vcp_printf("ERROR DATA MISMATCH");
+        goto power_off;
     }
-    sdcard_power_off();
     vcp_printf("OK");
+
+power_off:
+    sdcard_power_off();
 }
 
 static void test_sbu(const char *args)
@@ -245,9 +237,9 @@ static void test_sbu(const char *args)
 static void test_otp_read(void)
 {
     uint8_t data[32];
+    memset(data, 0, sizeof(data));
     flash_otp_read(0, 0, data, sizeof(data));
-
-    vcp_printf("OK %s", (const char *)data);
+    vcp_printf("OK %s", (const char *) data);
 }
 
 static void test_otp_write(const char *args)
@@ -255,8 +247,7 @@ static void test_otp_write(const char *args)
     char data[32];
     memset(data, 0, sizeof(data));
     strcpy(data, args);
-
-    flash_otp_write(0, 0, (const uint8_t *)data, sizeof(data));
+    flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data));
     flash_otp_lock(0);
     vcp_printf("OK");
 }
