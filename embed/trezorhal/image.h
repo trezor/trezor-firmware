@@ -18,7 +18,9 @@ typedef struct {
     uint32_t expiry;
     uint32_t codelen;
     uint32_t version;
-    // uint8_t reserved[939];
+    // uint8_t reserved[12];
+    uint8_t hashes[512];
+    // uint8_t reserved[415];
     uint8_t sigmask;
     uint8_t sig[64];
 } image_header;
@@ -42,12 +44,8 @@ typedef struct {
     uint8_t sig[64];
 } vendor_header;
 
-bool image_parse_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, image_header * const hdr);
+bool load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr);
 
-bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys);
-
-bool vendor_parse_header(const uint8_t * const data, vendor_header * const vhdr);
-
-bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys);
+bool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
 
 #endif

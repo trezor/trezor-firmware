@@ -83,10 +83,8 @@ void display_error(void)
     display_footer("Error! Unplug the device", COLOR_BL_RED);
 }
 
-void display_welcome(void)
+void display_welcome(bool firmware_present)
 {
-    vendor_header vhdr;
-    bool firmware_present = vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr);
     display_clear();
     if (!firmware_present) {
         display_icon((DISPLAY_RESX - 124) / 2, (DISPLAY_RESY - 40 - 180) / 2, 124, 180, toi_icon_lock, sizeof(toi_icon_lock), COLOR_WHITE, COLOR_BLACK);
@@ -191,11 +189,11 @@ void usb_init_all(void) {
     usb_start();
 }
 
-bool bootloader_loop(void)
+bool bootloader_loop(bool firmware_present)
 {
     usb_init_all();
 
-    display_welcome();
+    display_welcome(firmware_present);
 
     uint8_t buf[USB_PACKET_SIZE];
 
@@ -213,7 +211,7 @@ bool bootloader_loop(void)
         }
         switch (msg_id) {
             case 0: // Initialize
-                process_msg_Initialize(USB_IFACE_NUM, msg_size, buf);
+                process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, firmware_present);
                 break;
             case 1: // Ping
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
@@ -312,29 +310,22 @@ int main(void)
     vendor_header vhdr;
 
     // start the bootloader if user touched the screen or no firmware installed
-    if (touched || !vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
-        if (!bootloader_loop()) {
+    bool firmware_present = load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr);
+    if (touched || !firmware_present) {
+        if (!bootloader_loop(firmware_present)) {
             return 1;
         }
     }
 
-    ensure(
-        vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr),
+    ensure (
+        load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr),
         "invalid vendor header");
-
-    ensure(
-        vendor_check_signature((const uint8_t *)FIRMWARE_START, &vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS),
-        "invalid vendor header signature");
 
     image_header hdr;
 
     ensure(
-        image_parse_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, &hdr),
+        load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr),
         "invalid firmware header");
-
-    ensure(
-        image_check_signature((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), &hdr, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub),
-        "invalid firmware signature");
 
     display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
     display_fade(0, BACKLIGHT_NORMAL, 1000);

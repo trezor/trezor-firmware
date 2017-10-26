@@ -199,7 +199,7 @@ static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const 
 #define MSG_RECV_CALLBACK(FIELD, CALLBACK) do { msg_recv.FIELD.funcs.decode = &CALLBACK; } while (0)
 #define MSG_RECV(TYPE) do { _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv); } while(0)
 
-void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
+void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, bool firmware_present)
 {
     MSG_RECV_INIT(Initialize);
     MSG_RECV(Initialize);
@@ -210,8 +210,6 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
-    vendor_header vhdr;
-    bool firmware_present = vendor_parse_header((const uint8_t *)FIRMWARE_START, &vhdr);
     MSG_SEND_ASSIGN_VALUE(firmware_present, firmware_present);
     MSG_SEND(Features);
 }

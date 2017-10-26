@@ -29,7 +29,7 @@ static bool compute_pubkey(uint8_t sig_m, uint8_t sig_n, const uint8_t * const *
     return 0 == ed25519_cosi_combine_publickeys(res, keys, sig_m);
 }
 
-bool image_parse_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, image_header * const hdr)
+bool load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr)
 {
     memcpy(&hdr->magic, data, 4);
     if (hdr->magic != magic) return false;
@@ -49,17 +49,14 @@ bool image_parse_header(const uint8_t * const data, const uint32_t magic, const 
 
     memcpy(&hdr->version, data + 16, 4);
 
-    // uint8_t reserved[939];
+    memcpy(hdr->hashes, data + 32, 512);
 
     memcpy(&hdr->sigmask, data + IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE, 1);
 
     memcpy(hdr->sig, data + IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE + 1, IMAGE_SIG_SIZE - 1);
 
-    return true;
-}
+    // check header signature
 
-bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys)
-{
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
@@ -67,7 +64,6 @@ bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t
     for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
         blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
     }
-    blake2s_Update(&ctx, data + IMAGE_HEADER_SIZE, hdr->codelen);
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
@@ -76,13 +72,13 @@ bool image_check_signature(const uint8_t *data, const image_header *hdr, uint8_t
     return 0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)hdr->sig);
 }
 
-bool vendor_parse_header(const uint8_t * const data, vendor_header * const vhdr)
+bool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr)
 {
     memcpy(&vhdr->magic, data, 4);
     if (vhdr->magic != 0x565A5254) return false; // TRZV
 
     memcpy(&vhdr->hdrlen, data + 4, 4);
-    // TODO: sanity check hdr->hdrlen as it is used as a src to memcpy below
+    if (vhdr->hdrlen > 64 * 1024) return false;
 
     memcpy(&vhdr->expiry, data + 8, 4);
     if (vhdr->expiry != 0) return false;
@@ -112,17 +108,12 @@ bool vendor_parse_header(const uint8_t * const data, vendor_header * const vhdr)
     // align to 4 bytes
     vhdr->vimg += (-(uintptr_t)vhdr->vimg) & 3;
 
-    // reserved for padding
-
     memcpy(&vhdr->sigmask, data + vhdr->hdrlen - IMAGE_SIG_SIZE, 1);
 
     memcpy(vhdr->sig, data + vhdr->hdrlen - IMAGE_SIG_SIZE + 1, IMAGE_SIG_SIZE - 1);
 
-    return true;
-}
+    // check header signature
 
-bool vendor_check_signature(const uint8_t *data, const vendor_header *vhdr, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys)
-{
     uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
