@@ -27,17 +27,17 @@
 #ifndef __TREZORHAL_SDCARD_H__
 #define __TREZORHAL_SDCARD_H__
 
-#include <stdbool.h>
+#include "secbool.h"
 
 // this is a fixed size and should not be changed
 #define SDCARD_BLOCK_SIZE (512)
 
 void sdcard_init(void);
-bool sdcard_is_present(void);
-bool sdcard_power_on(void);
-bool sdcard_power_off(void);
+secbool sdcard_is_present(void);
+secbool sdcard_power_on(void);
+secbool sdcard_power_off(void);
 uint64_t sdcard_get_capacity_in_bytes(void);
-bool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks);
-bool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks);
+secbool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks);
+secbool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks);
 
 #endif

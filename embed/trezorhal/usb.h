@@ -8,8 +8,8 @@
 #ifndef __TREZORHAL_USB_H__
 #define __TREZORHAL_USB_H__
 
-#include <stdbool.h>
 #include <stdint.h>
+#include "secbool.h"
 
 #define USB_EP_DIR_OUT 0x00
 #define USB_EP_DIR_IN  0x80

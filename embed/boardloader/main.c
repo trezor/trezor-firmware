@@ -49,7 +49,7 @@ static uint32_t check_sdcard(void)
 
     image_header hdr;
 
-    if (load_image_header((const uint8_t *)buf, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr)) {
+    if (sectrue == load_image_header((const uint8_t *)buf, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr)) {
         return hdr.codelen;
     } else {
         return 0;
@@ -60,7 +60,7 @@ static void progress_callback(int pos, int len) {
     display_printf(".");
 }
 
-static bool copy_sdcard(void)
+static secbool copy_sdcard(void)
 {
     display_backlight(255);
 
@@ -79,7 +79,7 @@ static bool copy_sdcard(void)
         codelen = check_sdcard();
         if (!codelen) {
             display_printf("\n\nno SD card, aborting\n");
-            return false;
+            return secfalse;
         }
     }
 
@@ -111,13 +111,13 @@ static bool copy_sdcard(void)
     };
     if (!flash_erase_sectors(sectors, 2 + 1 + 6 + 4 + 7 + 1, progress_callback)) {
         display_printf(" failed\n");
-        return false;
+        return secfalse;
     }
     display_printf(" done\n\n");
 
     if (!flash_unlock()) {
         display_printf("could not unlock flash\n");
-        return false;
+        return secfalse;
     }
 
     // copy bootloader from SD card to Flash
@@ -133,7 +133,7 @@ static bool copy_sdcard(void)
                 display_printf("copy failed\n");
                 sdcard_power_off();
                 flash_lock();
-                return false;
+                return secfalse;
             }
         }
     }
@@ -144,7 +144,7 @@ static bool copy_sdcard(void)
     display_printf("\ndone\n\n");
     display_printf("Unplug the device and remove the SD card\n");
 
-    return true;
+    return sectrue;
 }
 
 int main(void)
@@ -173,7 +173,7 @@ int main(void)
     sdcard_init();
 
     if (check_sdcard()) {
-        return copy_sdcard() ? 0 : 3;
+        return copy_sdcard() == sectrue ? 0 : 3;
     }
 
     image_header hdr;

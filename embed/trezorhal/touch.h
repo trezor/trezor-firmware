@@ -8,7 +8,6 @@
 #ifndef __TREZORHAL_TOUCH_H__
 #define __TREZORHAL_TOUCH_H__
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define TOUCH_START 0x00010000

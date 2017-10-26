@@ -34,7 +34,7 @@ uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void)
 {
-    ensure(0, "Stack smashing detected");
+    ensure(secfalse, "Stack smashing detected");
 }
 
 #ifndef NDEBUG

@@ -11,37 +11,37 @@ void flash_set_option_bytes(void)
 {
 }
 
-bool flash_unlock(void)
+secbool flash_unlock(void)
 {
-    return false;
+    return secfalse;
 }
 
-bool flash_lock(void)
+secbool flash_lock(void)
 {
-    return false;
+    return secfalse;
 }
 
-bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
+secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
 {
-    return false;
+    return secfalse;
 }
 
-bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
+secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
 {
-    return false;
+    return secfalse;
 }
 
-bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen)
+secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen)
 {
-    return false;
+    return secfalse;
 }
 
-bool flash_otp_lock(uint8_t block)
+secbool flash_otp_lock(uint8_t block)
 {
-    return false;
+    return secfalse;
 }
 
-bool flash_otp_is_locked(uint8_t block)
+secbool flash_otp_is_locked(uint8_t block)
 {
-    return false;
+    return secfalse;
 }

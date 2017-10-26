@@ -86,9 +86,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 5, 5, mod
 STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t msg;
     if (n_args > 0 && mp_get_buffer(args[0], &msg, MP_BUFFER_READ)) {
-        ensure(0, msg.buf);
+        ensure(secfalse, msg.buf);
     } else {
-        ensure(0, "halt");
+        ensure(secfalse, "halt");
     }
     return mp_const_none;
 }

@@ -68,7 +68,7 @@ int main(void)
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-    ensure(0, "uncaught exception");
+    ensure(secfalse, "uncaught exception");
 }
 
 void PendSV_Handler(void) {

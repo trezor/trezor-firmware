@@ -2,7 +2,7 @@
 #define __TREZORHAL_IMAGE_H__
 
 #include <stdint.h>
-#include <stdbool.h>
+#include "secbool.h"
 
 #define BOARDLOADER_START  0x08000000
 #define BOOTLOADER_START   0x08020000
@@ -44,10 +44,10 @@ typedef struct {
     uint8_t sig[64];
 } vendor_header;
 
-bool load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr);
+secbool load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr);
 
-bool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
+secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
 
-bool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks);
+secbool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks);
 
 #endif

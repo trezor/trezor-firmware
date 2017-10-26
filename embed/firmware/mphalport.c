@@ -6,7 +6,7 @@ static int vcp_iface_num = -1;
 
 int mp_hal_stdin_rx_chr(void) {
 
-    ensure(vcp_iface_num >= 0, "vcp stdio is not configured");
+    ensure(sectrue * (vcp_iface_num >= 0), "vcp stdio is not configured");
 
 #define VCP_READ_TIMEOUT  25
     uint8_t c = 0;

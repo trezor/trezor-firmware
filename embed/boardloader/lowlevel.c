@@ -41,12 +41,12 @@ void flash_set_option_bytes(void)
     }
 }
 
-bool flash_check_option_bytes(void)
+secbool flash_check_option_bytes(void)
 {
-    return
-        ((FLASH->OPTCR & FLASH_OPTCR_nWRP) == (FLASH_OPTCR_nWRP_0 | FLASH_OPTCR_nWRP_1 | FLASH_OPTCR_nWRP_2)) &&
-        ((FLASH->OPTCR & FLASH_OPTCR_RDP) == FLASH_OPTCR_RDP_2) &&
-        ((FLASH->OPTCR & FLASH_OPTCR_BOR_LEV) == (FLASH_OPTCR_BOR_LEV_0 | FLASH_OPTCR_BOR_LEV_1));
+    if ((FLASH->OPTCR & FLASH_OPTCR_nWRP) != (FLASH_OPTCR_nWRP_0 | FLASH_OPTCR_nWRP_1 | FLASH_OPTCR_nWRP_2)) return secfalse;
+    if ((FLASH->OPTCR & FLASH_OPTCR_RDP) != FLASH_OPTCR_RDP_2) return secfalse;
+    if ((FLASH->OPTCR & FLASH_OPTCR_BOR_LEV) != (FLASH_OPTCR_BOR_LEV_0 | FLASH_OPTCR_BOR_LEV_1)) return secfalse;
+    return sectrue;
 }
 
 void periph_init(void)
@@ -78,18 +78,18 @@ void periph_init(void)
     NVIC_EnableIRQ(PVD_IRQn);
 }
 
-bool reset_flags_init(void)
+secbool reset_flags_init(void)
 {
 #if PRODUCTION
     // this is effective enough that it makes development painful, so only use it for production.
     // check the reset flags to assure that we arrive here due to a regular full power-on event,
     // and not as a result of a lesser reset.
     if ((RCC->CSR & (RCC_CSR_LPWRRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_SFTRSTF | RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) != (RCC_CSR_PORRSTF | RCC_CSR_PINRSTF | RCC_CSR_BORRSTF)) {
-        return false;
+        return secfalse;
     }
 #endif
 
     RCC->CSR |= RCC_CSR_RMVF; // clear the reset flags
 
-    return true;
+    return sectrue;
 }

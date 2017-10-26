@@ -8,9 +8,9 @@
 #ifndef __TREZORHAL_SBU_H__
 #define __TREZORHAL_SBU_H__
 
-#include <stdbool.h>
+#include "secbool.h"
 
 void sbu_init(void);
-void sbu_set(bool sbu1, bool sbu2);
+void sbu_set(secbool sbu1, secbool sbu2);
 
 #endif

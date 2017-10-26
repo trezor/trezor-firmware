@@ -119,9 +119,9 @@ typedef struct {
     uint8_t ep_in_is_idle; // Set to 1 after IN endpoint gets idle
 } usb_vcp_state_t;
 
-bool usb_vcp_add(const usb_vcp_info_t *vcp_info);
-bool usb_vcp_can_read(uint8_t iface_num);
-bool usb_vcp_can_write(uint8_t iface_num);
+secbool usb_vcp_add(const usb_vcp_info_t *vcp_info);
+secbool usb_vcp_can_read(uint8_t iface_num);
+secbool usb_vcp_can_write(uint8_t iface_num);
 int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
 int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
 

@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "secbool.h"
 #include "touch.h"
 
 I2C_HandleTypeDef i2c_handle = {
@@ -41,7 +42,7 @@ void touch_init(void)
     init->NoStretchMode   = I2C_NOSTRETCH_DISABLE;
     init->OwnAddress2     = 0;
 
-    ensure(HAL_I2C_Init(&i2c_handle) == HAL_OK, NULL);
+    ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
 }
 
 #define TOUCH_ADDRESS 56

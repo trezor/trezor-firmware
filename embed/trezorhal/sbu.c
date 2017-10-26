@@ -23,7 +23,7 @@ void sbu_init(void) {
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
-void sbu_set(bool sbu1, bool sbu2) {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, sbu1 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, sbu2 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+void sbu_set(secbool sbu1, secbool sbu2) {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, sbu1 == sectrue ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, sbu2 == sectrue ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }

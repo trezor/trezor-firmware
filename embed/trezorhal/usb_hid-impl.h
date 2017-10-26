@@ -17,34 +17,34 @@
 
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
-bool usb_hid_add(const usb_hid_info_t *info) {
+secbool usb_hid_add(const usb_hid_info_t *info) {
 
     usb_iface_t *iface = usb_get_iface(info->iface_num);
 
     if (iface == NULL) {
-        return false; // Invalid interface number
+        return secfalse; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_DISABLED) {
-        return false; // Interface is already enabled
+        return secfalse; // Interface is already enabled
     }
 
     usb_hid_descriptor_block_t *d = usb_desc_alloc_iface(sizeof(usb_hid_descriptor_block_t));
 
     if (d == NULL) {
-        return false; // Not enough space in the configuration descriptor
+        return secfalse; // Not enough space in the configuration descriptor
     }
 
     if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
-        return false; // IN EP is invalid
+        return secfalse; // IN EP is invalid
     }
     if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
-        return false; // OUT EP is invalid
+        return secfalse; // OUT EP is invalid
     }
     if (info->rx_buffer == NULL) {
-        return false;
+        return secfalse;
     }
     if (info->report_desc == NULL) {
-        return false;
+        return secfalse;
     }
 
     // Interface descriptor
@@ -101,41 +101,41 @@ bool usb_hid_add(const usb_hid_info_t *info) {
     iface->hid.last_read_len   = 0;
     iface->hid.ep_in_is_idle   = 1;
 
-    return true;
+    return sectrue;
 }
 
-bool usb_hid_can_read(uint8_t iface_num) {
+secbool usb_hid_can_read(uint8_t iface_num) {
     usb_iface_t *iface = usb_get_iface(iface_num);
     if (iface == NULL) {
-        return false; // Invalid interface number
+        return secfalse; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_HID) {
-        return false; // Invalid interface type
+        return secfalse; // Invalid interface type
     }
     if (iface->hid.last_read_len == 0) {
-        return false; // Nothing in the receiving buffer
+        return secfalse; // Nothing in the receiving buffer
     }
     if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
-        return false; // Device is not configured
+        return secfalse; // Device is not configured
     }
-    return true;
+    return sectrue;
 }
 
-bool usb_hid_can_write(uint8_t iface_num) {
+secbool usb_hid_can_write(uint8_t iface_num) {
     usb_iface_t *iface = usb_get_iface(iface_num);
     if (iface == NULL) {
-        return false; // Invalid interface number
+        return secfalse; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_HID) {
-        return false; // Invalid interface type
+        return secfalse; // Invalid interface type
     }
     if (iface->hid.ep_in_is_idle == 0) {
-        return false; // Last transmission is not over yet
+        return secfalse; // Last transmission is not over yet
     }
     if (usb_dev_handle.dev_state != USBD_STATE_CONFIGURED) {
-        return false; // Device is not configured
+        return secfalse; // Device is not configured
     }
-    return true;
+    return sectrue;
 }
 
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {

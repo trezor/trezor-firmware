@@ -42,49 +42,49 @@
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
-bool usb_vcp_add(const usb_vcp_info_t *info) {
+secbool usb_vcp_add(const usb_vcp_info_t *info) {
 
     usb_iface_t *iface = usb_get_iface(info->iface_num);
 
     if (iface == NULL) {
-        return false; // Invalid interface number
+        return secfalse; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_DISABLED) {
-        return false; // Interface is already enabled
+        return secfalse; // Interface is already enabled
     }
 
     usb_vcp_descriptor_block_t *d = usb_desc_alloc_iface(sizeof(usb_vcp_descriptor_block_t));
 
     if (d == NULL) {
-        return false; // Not enough space in the configuration descriptor
+        return secfalse; // Not enough space in the configuration descriptor
     }
 
     if ((info->ep_cmd & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
-        return false; // IN CMD EP is invalid
+        return secfalse; // IN CMD EP is invalid
     }
     if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
-        return false; // IN EP is invalid
+        return secfalse; // IN EP is invalid
     }
     if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
-        return false; // OUT EP is invalid
+        return secfalse; // OUT EP is invalid
     }
     if ((info->rx_buffer_len == 0) || (info->rx_buffer_len & (info->rx_buffer_len - 1)) != 0) {
-        return false; // Capacity needs to be a power of 2
+        return secfalse; // Capacity needs to be a power of 2
     }
     if ((info->tx_buffer_len == 0) || (info->tx_buffer_len & (info->tx_buffer_len - 1)) != 0) {
-        return false; // Capacity needs to be a power of 2
+        return secfalse; // Capacity needs to be a power of 2
     }
     if (info->rx_buffer == NULL) {
-        return false;
+        return secfalse;
     }
     if (info->rx_packet == NULL) {
-        return false;
+        return secfalse;
     }
     if (info->tx_buffer == NULL) {
-        return false;
+        return secfalse;
     }
     if (info->tx_packet == NULL) {
-        return false;
+        return secfalse;
     }
 
     // Interface association descriptor
@@ -205,7 +205,7 @@ bool usb_vcp_add(const usb_vcp_info_t *info) {
 
     iface->vcp.ep_in_is_idle = 1;
 
-    return true;
+    return sectrue;
 }
 
 static inline size_t ring_length(usb_rbuf_t *b) {
@@ -220,32 +220,32 @@ static inline int ring_full(usb_rbuf_t *b) {
     return ring_length(b) == b->cap;
 }
 
-bool usb_vcp_can_read(uint8_t iface_num) {
+secbool usb_vcp_can_read(uint8_t iface_num) {
     usb_iface_t *iface = usb_get_iface(iface_num);
     if (iface == NULL) {
-        return false; // Invalid interface number
+        return secfalse; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_VCP) {
-        return false; // Invalid interface type
+        return secfalse; // Invalid interface type
     }
     if (ring_empty(&iface->vcp.rx_ring)) {
-        return false; // Nothing in the rx buffer
+        return secfalse; // Nothing in the rx buffer
     }
-    return true;
+    return sectrue;
 }
 
-bool usb_vcp_can_write(uint8_t iface_num) {
+secbool usb_vcp_can_write(uint8_t iface_num) {
     usb_iface_t *iface = usb_get_iface(iface_num);
     if (iface == NULL) {
-        return false; // Invalid interface number
+        return secfalse; // Invalid interface number
     }
     if (iface->type != USB_IFACE_TYPE_VCP) {
-        return false; // Invalid interface type
+        return secfalse; // Invalid interface type
     }
     if (ring_full(&iface->vcp.tx_ring)) {
-        return false; // Tx ring buffer is full
+        return secfalse; // Tx ring buffer is full
     }
-    return true;
+    return sectrue;
 }
 
 int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {

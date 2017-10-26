@@ -1,8 +1,8 @@
 #ifndef __TREZORHAL_FLASH_H__
 #define __TREZORHAL_FLASH_H__
 
-#include <stdbool.h>
 #include <stdint.h>
+#include "secbool.h"
 
 // see docs/memory.md for more information
 
@@ -44,19 +44,19 @@ extern const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1];
 
 void flash_set_option_bytes(void);
 
-bool flash_unlock(void);
-bool flash_lock(void);
+secbool flash_unlock(void);
+secbool flash_lock(void);
 
-bool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len));
-bool flash_write_byte(uint32_t address, uint8_t data);
-bool flash_write_word(uint32_t address, uint32_t data);
+secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len));
+secbool flash_write_byte(uint32_t address, uint8_t data);
+secbool flash_write_word(uint32_t address, uint32_t data);
 
 #define FLASH_OTP_NUM_BLOCKS      16
 #define FLASH_OTP_BLOCK_SIZE      32
 
-bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen);
-bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen);
-bool flash_otp_lock(uint8_t block);
-bool flash_otp_is_locked(uint8_t block);
+secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen);
+secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen);
+secbool flash_otp_lock(uint8_t block);
+secbool flash_otp_is_locked(uint8_t block);
 
 #endif

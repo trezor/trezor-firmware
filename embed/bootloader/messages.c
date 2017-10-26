@@ -9,6 +9,7 @@
 #include "display.h"
 #include "flash.h"
 #include "image.h"
+#include "secbool.h"
 #include "usb.h"
 #include "version.h"
 
@@ -18,14 +19,14 @@
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
-bool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
+secbool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
 {
     if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
-        return false;
+        return secfalse;
     }
     *msg_id = (buf[3] << 8) + buf[4];
     *msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
-    return true;
+    return sectrue;
 }
 
 typedef struct {
@@ -35,6 +36,7 @@ typedef struct {
     uint8_t buf[USB_PACKET_SIZE];
 } usb_write_state;
 
+/* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
 {
     usb_write_state *state = (usb_write_state *)(stream->state);
@@ -79,7 +81,7 @@ static void _usb_write_flush(usb_write_state *state)
     usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
 }
 
-static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fields[], const void *msg)
+static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fields[], const void *msg)
 {
     // determine message size by serializing it into a dummy stream
     pb_ostream_t sizestream = {
@@ -89,7 +91,7 @@ static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t field
         .bytes_written = 0,
         .errmsg = NULL};
     if (!pb_encode(&sizestream, fields, msg)) {
-        return false;
+        return secfalse;
     }
     const uint32_t msg_size = sizestream.bytes_written;
 
@@ -113,12 +115,12 @@ static bool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t field
     };
 
     if (!pb_encode(&stream, fields, msg)) {
-        return false;
+        return secfalse;
     }
 
     _usb_write_flush(&state);
 
-    return true;
+    return sectrue;
 }
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
@@ -134,6 +136,7 @@ typedef struct {
     uint8_t *buf;
 } usb_read_state;
 
+/* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count)
 {
     usb_read_state *state = (usb_read_state *)(stream->state);
@@ -170,7 +173,7 @@ static void _usb_read_flush(usb_read_state *state)
     (void)state;
 }
 
-static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const pb_field_t fields[], void *msg)
+static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const pb_field_t fields[], void *msg)
 {
     usb_read_state state = {
         .iface_num = iface_num,
@@ -187,19 +190,19 @@ static bool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const 
     };
 
     if (!pb_decode_noinit(&stream, fields, msg)) {
-        return false;
+        return secfalse;
     }
 
     _usb_read_flush(&state);
 
-    return true;
+    return sectrue;
 }
 
 #define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
 #define MSG_RECV_CALLBACK(FIELD, CALLBACK) do { msg_recv.FIELD.funcs.decode = &CALLBACK; } while (0)
 #define MSG_RECV(TYPE) do { _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv); } while(0)
 
-void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, bool firmware_present)
+void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, secbool firmware_present)
 {
     MSG_RECV_INIT(Initialize);
     MSG_RECV(Initialize);
@@ -281,6 +284,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
 static uint32_t chunk_size = 0;
 
+/* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
 #define BUFSIZE 4096

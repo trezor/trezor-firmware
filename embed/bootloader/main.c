@@ -5,11 +5,12 @@
 #include "display.h"
 #include "image.h"
 #include "flash.h"
+#include "mini_printf.h"
 #include "rng.h"
+#include "secbool.h"
 #include "touch.h"
 #include "usb.h"
 #include "version.h"
-#include "mini_printf.h"
 
 #include "icon_cross.h"
 #include "icon_lock.h"
@@ -83,13 +84,14 @@ void display_error(void)
     display_footer("Error! Unplug the device", COLOR_BL_RED);
 }
 
-void display_welcome(bool firmware_present)
+void display_welcome(secbool firmware_present)
 {
     display_clear();
-    if (!firmware_present) {
+    if (secfalse == firmware_present) {
         display_icon((DISPLAY_RESX - 124) / 2, (DISPLAY_RESY - 40 - 180) / 2, 124, 180, toi_icon_lock, sizeof(toi_icon_lock), COLOR_WHITE, COLOR_BLACK);
         display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 20, "Go to trezor.io/start", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
-    } else {
+    }
+    if (sectrue == firmware_present) {
         display_header(ICON_TOOLS, "TREZOR Bootloader");
         uint8_t dom[32];
         // format: TREZOR2-YYMMDD
@@ -189,7 +191,7 @@ void usb_init_all(void) {
     usb_start();
 }
 
-bool bootloader_loop(bool firmware_present)
+secbool bootloader_loop(secbool firmware_present)
 {
     usb_init_all();
 
@@ -202,7 +204,7 @@ bool bootloader_loop(bool firmware_present)
         if (r != USB_PACKET_SIZE) {
             continue;
         }
-        ensure(r == USB_PACKET_SIZE, NULL);
+        ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
         uint16_t msg_id;
         uint32_t msg_size;
         if (!msg_parse_header(buf, &msg_id, &msg_size)) {
@@ -227,12 +229,12 @@ bool bootloader_loop(bool firmware_present)
                     display_error();
                     usb_stop();
                     usb_deinit();
-                    return false; // shutdown
+                    return secfalse; // shutdown
                 } else { // success
                     display_done(0);
                     usb_stop();
                     usb_deinit();
-                    return false; // shutdown
+                    return secfalse; // shutdown
                 }
                 break;
             case 6: // FirmwareErase
@@ -249,7 +251,7 @@ bool bootloader_loop(bool firmware_present)
                     display_error();
                     usb_stop();
                     usb_deinit();
-                    return false; // shutdown
+                    return secfalse; // shutdown
                 } else
                 if (r == 0) { // last chunk received
                     display_done(3); hal_delay(1000);
@@ -258,7 +260,7 @@ bool bootloader_loop(bool firmware_present)
                     usb_stop();
                     usb_deinit();
                     display_fade(BACKLIGHT_NORMAL, 0, 500);
-                    return true; // jump to firmware
+                    return sectrue; // jump to firmware
                 }
                 break;
             default:
@@ -282,12 +284,12 @@ void check_bootloader_version(void)
              bits[i / 8] |= (1 << (7 - (i % 8)));
         }
     }
-    ensure(true == flash_otp_write(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_write(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
 
     uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
-    ensure(true == flash_otp_read(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_read(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
 
-    ensure(0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE), "Bootloader downgraded");
+    ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)), "Bootloader downgraded");
 }
 
 int main(void)
@@ -310,14 +312,14 @@ int main(void)
     vendor_header vhdr;
 
     // start the bootloader if user touched the screen or no firmware installed
-    bool firmware_present = load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr);
-    if (touched || !firmware_present) {
-        if (!bootloader_loop(firmware_present)) {
+    secbool firmware_present = load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr);
+    if (touched || firmware_present != sectrue) {
+        if (bootloader_loop(firmware_present) != sectrue) {
             return 1;
         }
     }
 
-    ensure (
+    ensure(
         load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr),
         "invalid vendor header");
 
