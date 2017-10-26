@@ -14,12 +14,13 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "mini_printf.h"
 #include "rng.h"
 #include "sbu.h"
 #include "sdcard.h"
+#include "secbool.h"
 #include "touch.h"
 #include "usb.h"
-#include "mini_printf.h"
 
 enum { VCP_IFACE = 0x00 };
 
@@ -140,22 +141,22 @@ static void test_display(const char *colors)
     vcp_printf("OK");
 }
 
-static bool touch_click_timeout(uint32_t *touch, uint32_t timeout_ms)
+static secbool touch_click_timeout(uint32_t *touch, uint32_t timeout_ms)
 {
     uint32_t deadline = HAL_GetTick() + timeout_ms;
     uint32_t r = 0;
 
     while (touch_read());
     while ((touch_read() & TOUCH_START) == 0) {
-        if (HAL_GetTick() > deadline) return false;
+        if (HAL_GetTick() > deadline) return secfalse;
     }
     while (((r = touch_read()) & TOUCH_END) == 0) {
-        if (HAL_GetTick() > deadline) return false;
+        if (HAL_GetTick() > deadline) return secfalse;
     }
     while (touch_read());
 
     *touch = r;
-    return true;
+    return sectrue;
 }
 
 static void test_touch(const char *args)
@@ -172,8 +173,8 @@ static void test_touch(const char *args)
     }
     display_refresh();
 
-    uint32_t click = 0;
-    if (touch_click_timeout(&click, timeout * 1000)) {
+    uint32_t evt = 0;
+    if (touch_click_timeout(&evt, timeout * 1000)) {
         uint32_t x = (evt & 0xFF00) >> 8;
         uint32_t y = (evt & 0xFF);
         vcp_printf("OK %d %d", x, y);
@@ -228,8 +229,8 @@ power_off:
 
 static void test_sbu(const char *args)
 {
-    bool sbu1 = args[0] == '1';
-    bool sbu2 = args[1] == '1';
+    secbool sbu1 = sectrue * (args[0] == '1');
+    secbool sbu2 = sectrue * (args[1] == '1');
     sbu_set(sbu1, sbu2);
     vcp_printf("OK");
 }
@@ -252,9 +253,9 @@ static void test_otp_write(const char *args)
     vcp_printf("OK");
 }
 
-static bool startswith(const char *s, const char *prefix)
+static secbool startswith(const char *s, const char *prefix)
 {
-    return strncmp(s, prefix, strlen(prefix)) == 0;
+    return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
 }
 
 int main(void)

@@ -136,10 +136,10 @@ env.Replace(
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
-        'STM32F427xx',
         'TREZOR_STM32',
         'MCU_SERIES_F4',
+        'STM32F427xx',
+        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
         'PB_FIELD_16BIT',
     ] + CPPDEFINES_MOD,
     ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',

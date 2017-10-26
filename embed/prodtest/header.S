@@ -16,7 +16,9 @@ g_header:
     .byte VERSION_MINOR              // vminor
     .byte VERSION_PATCH              // vpatch
     .byte VERSION_BUILD              // vbuild
-    . = . + 427                      // reserved
+    . = . + 12                       // reserved
+    . = . + 512                      // hash1 ... hash16
+    . = . + 415                      // reserved
     .byte 0                          // sigmask
     . = . + 64                       // sig
 g_header_end:

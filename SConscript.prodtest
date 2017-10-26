@@ -99,27 +99,29 @@ env.Replace(
     '-fstack-protector-all -ffreestanding '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-nostdlib -T embed/prodtest/memory.ld --gc-sections -Map=build/prodtest/firmware.map --warn-common',
+    LINKFLAGS='-nostdlib -T embed/prodtest/memory.ld --gc-sections -Map=build/prodtest/prodtest.map --warn-common',
     CPPPATH=[
         'embed/prodtest',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/micropython/ports/stm32',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
         'vendor/micropython/lib/cmsis/inc',
+        'vendor/micropython/ports/stm32',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
-        'STM32F427xx',
         'TREZOR_STM32',
         'MCU_SERIES_F4',
+        'STM32F427xx',
+        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
     ] + CPPDEFINES_MOD,
     ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 env.Replace(
-    BINCTL='tools/binctl', )
+    BINCTL='tools/binctl',
+    COMBINE_SIGN='tools/combine_sign',
+)
 
 #
 # Program objects
@@ -140,16 +142,18 @@ obj_program.extend(
         ' $SOURCE $TARGET', ))
 
 program_elf = env.Command(
-    target='firmware.elf',
+    target='prodtest.elf',
     source=obj_program,
     action=
     '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a`',
 )
 
 program_bin = env.Command(
-    target='firmware.bin',
+    target='prodtest.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
-        '$BINCTL $TARGET -s 1:2 4747474747474747474747474747474747474747474747474747474747474747:4848484848484848484848484848484848484848484848484848484848484848',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
+        '$BINCTL $TARGET -h',
+        'dd if=$TARGET of=build/prodtest/header.tosign bs=1 count=1024 skip=`stat -c%s embed/firmware/vendorheader.bin`',
+        '$BINCTL $TARGET -s 1:2 `$COMBINE_SIGN firmware build/prodtest/header.tosign 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
     ], )

@@ -6,6 +6,7 @@ SCONS = scons -Q -j $(JOBS)
 
 BOARDLOADER_BUILD_DIR = build/boardloader
 BOOTLOADER_BUILD_DIR  = build/bootloader
+PRODTEST_BUILD_DIR    = build/prodtest
 FIRMWARE_BUILD_DIR    = build/firmware
 
 UNAME_S := $(shell uname -s)
@@ -74,7 +75,7 @@ style: ## run code style check on application sources
 
 ## build commands:
 
-build: build_boardloader build_bootloader build_firmware build_unix build_cross ## build all
+build: build_boardloader build_bootloader build_prodtest build_firmware build_unix build_cross ## build all
 
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/boardloader/boardloader.bin
@@ -83,7 +84,7 @@ build_bootloader: ## build bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/bootloader/bootloader.bin
 
 build_prodtest: ## build production test firmware
-	$(SCONS) CFLAGS="$(CFLAGS)" build/prodtest/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" build/prodtest/prodtest.bin
 
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin
@@ -128,6 +129,9 @@ flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader
 
 flash_bootloader: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
+
+flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
@@ -186,3 +190,6 @@ combine: ## combine boardloader + bootloader + firmware into one combined image
 
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -f $(FIRMWARE_BUILD_DIR)/firmware.bin
+
+upload_prodtest: ## upload prodtest using trezorctl
+	trezorctl firmware_update -f $(PRODTEST_BUILD_DIR)/prodtest.bin
