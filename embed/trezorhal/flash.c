@@ -61,11 +61,11 @@ secbool flash_lock(void)
 
 const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
 {
-    if (sector >= SECTOR_COUNT) {
+    if (sector >= FLASH_SECTOR_COUNT) {
         return NULL;
     }
-    uint32_t addr = SECTOR_TABLE[sector];
-    uint32_t next = SECTOR_TABLE[sector + 1];
+    uint32_t addr = FLASH_SECTOR_TABLE[sector];
+    uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
     if (offset + size > next - addr) {
         return NULL;
     }
@@ -119,7 +119,7 @@ secbool flash_write_word(uint32_t address, uint32_t data)
 
 secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
 {
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, SECTOR_TABLE[sector] + offset, data));
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_SECTOR_TABLE[sector] + offset, data));
 }
 
 secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
@@ -127,7 +127,7 @@ secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
     if (offset % 4 != 0) {
         return secfalse;
     }
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, SECTOR_TABLE[sector] + offset, data));
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_SECTOR_TABLE[sector] + offset, data));
 }
 
 secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
@@ -135,7 +135,7 @@ secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
     if (offset % 4 != 0) {
         return secfalse;
     }
-    *data = *((uint32_t *) SECTOR_TABLE[sector] + offset);
+    *data = *((uint32_t *) FLASH_SECTOR_TABLE[sector] + offset);
     return sectrue;
 }
 

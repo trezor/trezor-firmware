@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "../../trezorhal/secbool.h"
 
 /*
  * Storage parameters:
@@ -14,21 +15,21 @@
 /*
  * Initialize storage
  */
-bool norcow_init(void);
+secbool norcow_init(void);
 
 /*
  * Wipe the storage
  */
-bool norcow_wipe(void);
+secbool norcow_wipe(void);
 
 /*
  * Looks for the given key, returns status of the operation
  */
-bool norcow_get(uint16_t key, const void **val, uint16_t *len);
+secbool norcow_get(uint16_t key, const void **val, uint16_t *len);
 
 /*
  * Sets the given key, returns status of the operation
  */
-bool norcow_set(uint16_t key, const void *val, uint16_t len);
+secbool norcow_set(uint16_t key, const void *val, uint16_t len);
 
 #endif

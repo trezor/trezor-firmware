@@ -15,10 +15,10 @@ static uint32_t norcow_active_offset = 0;
 /*
  * Erases sector
  */
-static bool norcow_erase(uint8_t sector)
+static secbool norcow_erase(uint8_t sector)
 {
     if (sector >= NORCOW_SECTOR_COUNT) {
-        return false;
+        return secfalse;
     }
     return flash_erase_sectors(&norcow_sectors[sector], 1, NULL);
 }
@@ -38,36 +38,36 @@ static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size)
 /*
  * Writes data to given sector, starting from offset
  */
-static bool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const uint8_t *data, uint16_t len)
+static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const uint8_t *data, uint16_t len)
 {
     if (sector >= NORCOW_SECTOR_COUNT) {
-        return false;
+        return secfalse;
     }
-    if (!flash_unlock()) {
-        return false;
+    if (sectrue != flash_unlock()) {
+        return secfalse;
     }
     // write prefix
-    if (!flash_write_word_rel(norcow_sectors[sector], offset, prefix)) {
+    if (sectrue != flash_write_word_rel(norcow_sectors[sector], offset, prefix)) {
         flash_lock();
-        return false;
+        return secfalse;
     }
     offset += sizeof(uint32_t);
     // write data
     for (uint16_t i = 0; i < len; i++, offset++) {
-        if (!flash_write_byte_rel(norcow_sectors[sector], offset, data[i])) {
+        if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, data[i])) {
             flash_lock();
-            return false;
+            return secfalse;
         }
     }
     // pad with zeroes
     for (; offset % 4; offset++) {
-        if (!flash_write_byte_rel(norcow_sectors[sector], offset, 0x00)) {
+        if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, 0x00)) {
             flash_lock();
-            return false;
+            return secfalse;
         }
     }
     flash_lock();
-    return true;
+    return sectrue;
 }
 
 #define ALIGN4(X) (X) = ((X) + 3) & ~3
@@ -75,34 +75,34 @@ static bool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, const
 /*
  * Reads one item starting from offset
  */
-static bool read_item(uint8_t sector, uint32_t offset, uint16_t *key, const void **val, uint16_t *len, uint32_t *pos)
+static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key, const void **val, uint16_t *len, uint32_t *pos)
 {
     *pos = offset;
 
     const void *k = norcow_ptr(sector, *pos, 2);
-    if (k == NULL) return false;
+    if (k == NULL) return secfalse;
     *pos += 2;
     memcpy(key, k, sizeof(uint16_t));
     if (*key == 0xFFFF) {
-        return false;
+        return secfalse;
     }
 
     const void *l = norcow_ptr(sector, *pos, 2);
-    if (l == NULL) return false;
+    if (l == NULL) return secfalse;
     *pos += 2;
     memcpy(len, l, sizeof(uint16_t));
 
     *val = norcow_ptr(sector, *pos, *len);
-    if (*val == NULL) return false;
+    if (*val == NULL) return secfalse;
     *pos += *len;
     ALIGN4(*pos);
-    return true;
+    return sectrue;
 }
 
 /*
  * Writes one item starting from offset
  */
-static bool write_item(uint8_t sector, uint32_t offset, uint16_t key, const void *val, uint16_t len, uint32_t *pos)
+static secbool write_item(uint8_t sector, uint32_t offset, uint16_t key, const void *val, uint16_t len, uint32_t *pos)
 {
     uint32_t prefix = (len << 16) | key;
     *pos = offset + sizeof(uint32_t) + len;
@@ -113,7 +113,7 @@ static bool write_item(uint8_t sector, uint32_t offset, uint16_t key, const void
 /*
  * Finds item in given sector
  */
-static bool find_item(uint8_t sector, uint16_t key, const void **val, uint16_t *len)
+static secbool find_item(uint8_t sector, uint16_t key, const void **val, uint16_t *len)
 {
     *val = 0;
     *len = 0;
@@ -122,15 +122,16 @@ static bool find_item(uint8_t sector, uint16_t key, const void **val, uint16_t *
         uint16_t k, l;
         const void *v;
         uint32_t pos;
-        bool r = read_item(sector, offset, &k, &v, &l, &pos);
-        if (!r) break;
+        if (sectrue != read_item(sector, offset, &k, &v, &l, &pos)) {
+            break;
+        }
         if (key == k) {
             *val = v;
             *len = l;
         }
         offset = pos;
     }
-    return (*val);
+    return sectrue * (*val != NULL);
 }
 
 /*
@@ -143,8 +144,9 @@ static uint32_t find_free_offset(uint8_t sector)
         uint16_t key, len;
         const void *val;
         uint32_t pos;
-        bool r = read_item(sector, offset, &key, &val, &len, &pos);
-        if (!r) break;
+        if (sectrue != read_item(sector, offset, &key, &val, &len, &pos)) {
+            break;
+        }
         offset = pos;
     }
     return offset;
@@ -164,17 +166,15 @@ static void compact()
         uint16_t k, l;
         const void *v;
         uint32_t pos;
-        bool r = read_item(norcow_active_sector, offset, &k, &v, &l, &pos);
-        if (!r) break;
+        secbool r = read_item(norcow_active_sector, offset, &k, &v, &l, &pos);
+        if (sectrue != r) break;
         offset = pos;
 
         // check if not already saved
         const void *v2;
         uint16_t l2;
         r = find_item(norcow_next_sector, k, &v2, &l2);
-        if (r) {
-            continue;
-        }
+        if (sectrue == r) continue;
 
         // scan for latest instance
         uint32_t offsetr = offset;
@@ -182,7 +182,7 @@ static void compact()
             uint16_t k2;
             uint32_t posr;
             r = read_item(norcow_active_sector, offsetr, &k2, &v2, &l2, &posr);
-            if (!r) break;
+            if (sectrue != r) break;
             if (k == k2) {
                 v = v2;
                 l = l2;
@@ -193,7 +193,7 @@ static void compact()
         // copy the last item
         uint32_t posw;
         r = write_item(norcow_next_sector, offsetw, k, v, l, &posw);
-        if (!r) { } // TODO: error
+        if (sectrue != r) { } // TODO: error
         offsetw = posw;
     }
 
@@ -205,7 +205,7 @@ static void compact()
 /*
  * Initializes storage
  */
-bool norcow_init(void)
+secbool norcow_init(void)
 {
     // detect active sector (inactive sectors are empty = start with 0xFF)
     for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
@@ -216,28 +216,28 @@ bool norcow_init(void)
         }
     }
     norcow_active_offset = find_free_offset(norcow_active_sector);
-    return true;
+    return sectrue;
 }
 
 /*
  * Wipe the storage
  */
-bool norcow_wipe(void)
+secbool norcow_wipe(void)
 {
     for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
-        if (!norcow_erase(i)) {
-            return false;
+        if (sectrue != norcow_erase(i)) {
+            return secfalse;
         }
     }
     norcow_active_sector = 0;
     norcow_active_offset = 0;
-    return true;
+    return sectrue;
 }
 
 /*
  * Looks for the given key, returns status of the operation
  */
-bool norcow_get(uint16_t key, const void **val, uint16_t *len)
+secbool norcow_get(uint16_t key, const void **val, uint16_t *len)
 {
     return find_item(norcow_active_sector, key, val, len);
 }
@@ -245,7 +245,7 @@ bool norcow_get(uint16_t key, const void **val, uint16_t *len)
 /*
  * Sets the given key, returns status of the operation
  */
-bool norcow_set(uint16_t key, const void *val, uint16_t len)
+secbool norcow_set(uint16_t key, const void *val, uint16_t len)
 {
     // check whether there is enough free space
     // and compact if full
@@ -254,8 +254,8 @@ bool norcow_set(uint16_t key, const void *val, uint16_t len)
     }
     // write item
     uint32_t pos;
-    bool r = write_item(norcow_active_sector, norcow_active_offset, key, val, len, &pos);
-    if (r) {
+    secbool r = write_item(norcow_active_sector, norcow_active_offset, key, val, len, &pos);
+    if (sectrue == r) {
         norcow_active_offset = pos;
     }
     return r;
