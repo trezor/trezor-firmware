@@ -166,10 +166,10 @@ static void test_touch(const char *args)
 
     display_clear();
     switch (column) {
-    case 1: display_bar(0, 0, 120, 120, 0xFFFF); break;
-    case 2: display_bar(120, 0, 120, 120, 0xFFFF); break;
-    case 3: display_bar(120, 120, 120, 120, 0xFFFF); break;
-    default: display_bar(0, 120, 120, 120, 0xFFFF); break;
+        case 1: display_bar(0, 0, 120, 120, 0xFFFF); break;
+        case 2: display_bar(120, 0, 120, 120, 0xFFFF); break;
+        case 3: display_bar(120, 120, 120, 120, 0xFFFF); break;
+        default: display_bar(0, 120, 120, 120, 0xFFFF); break;
     }
     display_refresh();
 
@@ -247,7 +247,7 @@ static void test_otp_write(const char *args)
 {
     char data[32];
     memset(data, 0, sizeof(data));
-    strncpy(data, args, 31);
+    strncpy(data, args, sizeof(data) - 1);
     flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data));
     flash_otp_lock(0);
     vcp_printf("OK");
