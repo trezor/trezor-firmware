@@ -55,12 +55,12 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
     EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
     EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
     EraseInitStruct.NbSectors = 1;
-    uint32_t SectorError = 0;
     if (progress) {
         progress(0, len);
     }
     for (int i = 0; i < len; i++) {
         EraseInitStruct.Sector = sectors[i];
+        uint32_t SectorError;
         if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
             flash_lock();
             return secfalse;
@@ -69,6 +69,7 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
         uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]], addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
         for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
             if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
+                flash_lock();
                 return secfalse;
             }
         }

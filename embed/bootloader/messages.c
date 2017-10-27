@@ -125,8 +125,7 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; }
-// FIXME: strcpy -> strncpy
-#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; strcpy(msg_send.FIELD, VALUE); }
+#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; memset(msg_send.FIELD, 0, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); }
 #define MSG_SEND(TYPE) _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send)
 
 typedef struct {
@@ -320,6 +319,16 @@ static image_header hdr;
 
 extern secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr);
 
+secbool compare_to_current_vendor_header(const vendor_header * const new_vhdr)
+{
+    vendor_header current_vhdr;
+    if (sectrue != load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
+        return secfalse;
+    }
+    // TODO: less strict rules
+    return sectrue * (0 == memcmp(new_vhdr, &current_vhdr, sizeof(vendor_header)));
+}
+
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     MSG_RECV_INIT(FirmwareUpload);
@@ -352,7 +361,17 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             return -3;
         }
 
-        // TODO: erase storage if vendor is being changed
+        if (sectrue != compare_to_current_vendor_header(&vhdr)) {
+            uint8_t sectors_storage[] = {
+                FLASH_SECTOR_STORAGE_1,
+                FLASH_SECTOR_STORAGE_2,
+            };
+            ensure(flash_erase_sectors(sectors_storage, 2, NULL), NULL);
+            uint8_t sectors_pin[] = {
+                FLASH_SECTOR_PIN_AREA,
+            };
+            ensure(flash_erase_sectors(sectors_pin, 2, NULL), NULL);
+        }
 
         firstskip = IMAGE_HEADER_SIZE + vhdr.hdrlen;
     }
