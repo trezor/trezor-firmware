@@ -90,7 +90,7 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
         .max_size = SIZE_MAX,
         .bytes_written = 0,
         .errmsg = NULL};
-    if (!pb_encode(&sizestream, fields, msg)) {
+    if (false == pb_encode(&sizestream, fields, msg)) {
         return secfalse;
     }
     const uint32_t msg_size = sizestream.bytes_written;
@@ -114,7 +114,7 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
         .errmsg = NULL
     };
 
-    if (!pb_encode(&stream, fields, msg)) {
+    if (false == pb_encode(&stream, fields, msg)) {
         return secfalse;
     }
 
@@ -124,10 +124,10 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
 }
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
-#define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) do { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; } while (0)
+#define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; }
 // FIXME: strcpy -> strncpy
-#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) do { msg_send.has_##FIELD = true; strcpy(msg_send.FIELD, VALUE); } while (0)
-#define MSG_SEND(TYPE) do { _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send); } while (0)
+#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; strcpy(msg_send.FIELD, VALUE); }
+#define MSG_SEND(TYPE) _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send)
 
 typedef struct {
     uint8_t iface_num;
@@ -189,7 +189,7 @@ static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, con
         .errmsg = NULL
     };
 
-    if (!pb_decode_noinit(&stream, fields, msg)) {
+    if (false == pb_decode_noinit(&stream, fields, msg)) {
         return secfalse;
     }
 
@@ -199,8 +199,8 @@ static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, con
 }
 
 #define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
-#define MSG_RECV_CALLBACK(FIELD, CALLBACK) do { msg_recv.FIELD.funcs.decode = &CALLBACK; } while (0)
-#define MSG_RECV(TYPE) do { _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv); } while(0)
+#define MSG_RECV_CALLBACK(FIELD, CALLBACK) { msg_recv.FIELD.funcs.decode = &CALLBACK; }
+#define MSG_RECV(TYPE) _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv)
 
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, secbool firmware_present)
 {
@@ -261,7 +261,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             22,
             FLASH_SECTOR_FIRMWARE_EXTRA_END,
         };
-        if (!flash_erase_sectors(sectors, 6 + 7, progress_erase)) {
+        if (sectrue != flash_erase_sectors(sectors, 6 + 7, progress_erase)) {
             MSG_SEND_INIT(Failure);
             MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
             MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
@@ -283,36 +283,53 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 }
 
 static uint32_t chunk_size = 0;
+// SRAM is unused, so we can use it for chunk buffer
+uint8_t * const chunk_buffer = (uint8_t * const)0x20000000;
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-#define BUFSIZE 4096
-    uint32_t buf[BUFSIZE / sizeof(uint32_t)];
+#define BUFSIZE 32768
+
+    if (stream->bytes_left > IMAGE_CHUNK_SIZE) {
+        chunk_size = 0;
+        return false;
+    }
+
+    // clear chunk buffer
+    memset(chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
+
     uint32_t chunk_written = 0;
     chunk_size = stream->bytes_left;
+
     while (stream->bytes_left) {
-        // print loader
+        // update loader
         display_loader(250 + 750 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, COLOR_BL_BLUE, COLOR_BLACK, 0, 0, 0);
-        memset(buf, 0xFF, sizeof(buf));
         // read data
-        if (!pb_read(stream, (pb_byte_t *)buf, (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
+        if (!pb_read(stream, (pb_byte_t *)(chunk_buffer + chunk_written), (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
+            chunk_size = 0;
             return false;
-        }
-        // write data
-        for (int i = 0; i < BUFSIZE / sizeof(uint32_t); i++) {
-            if (!flash_write_word(FIRMWARE_START + firmware_flashed + chunk_written + i * sizeof(uint32_t), buf[i])) {
-                return false;
-            }
         }
         chunk_written += BUFSIZE;
     }
+
     return true;
 }
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
-    if (!flash_unlock()) {
+    MSG_RECV_INIT(FirmwareUpload);
+    MSG_RECV_CALLBACK(payload, _read_payload);
+    secbool r = MSG_RECV(FirmwareUpload);
+
+    if (sectrue != r || chunk_size != chunk_requested) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
+        MSG_SEND_ASSIGN_STRING(message, "Invalid chunk size");
+        MSG_SEND(Failure);
+    }
+
+    if (sectrue != flash_unlock()) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Could not unlock flash");
@@ -320,17 +337,13 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         return -1;
     }
 
-    MSG_RECV_INIT(FirmwareUpload);
-    MSG_RECV_CALLBACK(payload, _read_payload);
-    MSG_RECV(FirmwareUpload);
-    flash_lock();
-
-    if (chunk_size != chunk_requested) {
-        MSG_SEND_INIT(Failure);
-        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
-        MSG_SEND_ASSIGN_STRING(message, "Invalid chunk size");
-        MSG_SEND(Failure);
+    // TODO: don't use firmware_flashed, but block index, so we can fill into non-continous area
+    const uint32_t * const src = (const uint32_t * const)chunk_buffer;
+    for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
+        ensure(flash_write_word(FIRMWARE_START + firmware_flashed + i * sizeof(uint32_t), src[i]), NULL);
     }
+
+    flash_lock();
 
     firmware_remaining -= chunk_requested;
     firmware_flashed += chunk_requested;
@@ -377,7 +390,7 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
         FLASH_SECTOR_FIRMWARE_EXTRA_END,
         FLASH_SECTOR_PIN_AREA,
     };
-    if (!flash_erase_sectors(sectors, 2 + 6 + 4 + 7 + 1, progress_wipe)) {
+    if (sectrue != flash_erase_sectors(sectors, 2 + 6 + 4 + 7 + 1, progress_wipe)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
