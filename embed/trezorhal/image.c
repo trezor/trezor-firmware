@@ -9,7 +9,7 @@
 
 static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n, const uint8_t * const *pub, uint8_t sigmask, ed25519_public_key res)
 {
-    if (!sig_m || !sig_n) return secfalse;
+    if (0 == sig_m || 0 == sig_n) return secfalse;
     if (sig_m > sig_n) return secfalse;
 
     // discard bits higher than sig_n
@@ -68,7 +68,7 @@ secbool load_image_header(const uint8_t * const data, const uint32_t magic, cons
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
-    if (!compute_pubkey(key_m, key_n, keys, hdr->sigmask, pub)) return secfalse;
+    if (sectrue != compute_pubkey(key_m, key_n, keys, hdr->sigmask, pub)) return secfalse;
 
     return sectrue * (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)hdr->sig));
 }
@@ -125,7 +125,7 @@ secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t ke
     blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
-    if (!compute_pubkey(key_m, key_n, keys, vhdr->sigmask, pub)) return secfalse;
+    if (sectrue != compute_pubkey(key_m, key_n, keys, vhdr->sigmask, pub)) return secfalse;
 
     return sectrue * (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)vhdr->sig));
 }
@@ -141,12 +141,12 @@ static secbool check_hash(const uint8_t * const hash, const uint8_t * const data
 
 secbool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks)
 {
-    if (!sectors || blocks < 1) {
+    if (0 == sectors || blocks < 1) {
         return secfalse;
     }
     const void *data = (const void *)(FLASH_SECTOR_TABLE[sectors[0]] + firstskip);
     int remaining = hdr->codelen;
-    if (!check_hash(hdr->hashes, data, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
+    if (sectrue != check_hash(hdr->hashes, data, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
         return secfalse;
     }
     int block = 1;
@@ -156,7 +156,7 @@ secbool check_image_contents(const image_header * const hdr, uint32_t firstskip,
             return secfalse;
         }
         data = (const void *)FLASH_SECTOR_TABLE[sectors[block]];
-        if (!check_hash(hdr->hashes + block * 32, data, MIN(remaining, IMAGE_CHUNK_SIZE))) {
+        if (sectrue != check_hash(hdr->hashes + block * 32, data, MIN(remaining, IMAGE_CHUNK_SIZE))) {
             return secfalse;
         }
         block++;

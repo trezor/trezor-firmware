@@ -199,25 +199,25 @@ static void test_sd(void)
     static uint8_t buf1[8 * 1024];
     static uint8_t buf2[8 * 1024];
 
-    if (!sdcard_is_present()) {
+    if (sectrue != sdcard_is_present()) {
         vcp_printf("ERROR NOCARD");
         return;
     }
 
     sdcard_power_on();
-    if (!sdcard_read_blocks(buf1, 0, 0)) {
+    if (sectrue != sdcard_read_blocks(buf1, 0, 0)) {
         vcp_printf("ERROR sdcard_read_blocks");
         goto power_off;
     }
-    if (!sdcard_write_blocks(buf1, 0, 0)) {
+    if (sectrue != sdcard_write_blocks(buf1, 0, 0)) {
         vcp_printf("ERROR sdcard_write_blocks");
         goto power_off;
     }
-    if (!sdcard_read_blocks(buf2, 0, 0)) {
+    if (sectrue != sdcard_read_blocks(buf2, 0, 0)) {
         vcp_printf("ERROR sdcard_read_blocks");
         goto power_off;
     }
-    if (memcmp(buf1, buf2, sizeof(buf1)) != 0) {
+    if (0 != memcmp(buf1, buf2, sizeof(buf1))) {
         vcp_printf("ERROR DATA MISMATCH");
         goto power_off;
     }

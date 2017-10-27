@@ -207,7 +207,7 @@ secbool bootloader_loop(secbool firmware_present)
         ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
         uint16_t msg_id;
         uint32_t msg_size;
-        if (!msg_parse_header(buf, &msg_id, &msg_size)) {
+        if (sectrue != msg_parse_header(buf, &msg_id, &msg_size)) {
             // invalid header -> discard
             continue;
         }

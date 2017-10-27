@@ -449,13 +449,13 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
 
         if (MP_OBJ_IS_TYPE(iface, &mod_trezorio_HID_type)) {
             mp_obj_HID_t *hid = MP_OBJ_TO_PTR(iface);
-            if (!usb_hid_add(&hid->info)) {
+            if (sectrue != usb_hid_add(&hid->info)) {
                 usb_deinit();
                 mp_raise_msg(&mp_type_RuntimeError, "failed to add HID interface");
             }
         } else if (MP_OBJ_IS_TYPE(iface, &mod_trezorio_VCP_type)) {
             mp_obj_VCP_t *vcp = MP_OBJ_TO_PTR(iface);
-            if (!usb_vcp_add(&vcp->info)) {
+            if (sectrue != usb_vcp_add(&vcp->info)) {
                 usb_deinit();
                 mp_raise_msg(&mp_type_RuntimeError, "failed to add VCP interface");
             }

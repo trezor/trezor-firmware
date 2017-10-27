@@ -71,7 +71,7 @@ secbool sdcard_is_present(void) {
 }
 
 secbool sdcard_power_on(void) {
-    if (!sdcard_is_present()) {
+    if (sectrue != sdcard_is_present()) {
         return secfalse;
     }
     if (sd_handle.Instance) {
@@ -109,7 +109,7 @@ error:
 }
 
 secbool sdcard_power_off(void) {
-    if (!sd_handle.Instance) {
+    if (NULL == sd_handle.Instance) {
         return sectrue;
     }
     HAL_SD_DeInit(&sd_handle);

@@ -29,7 +29,7 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 static uint32_t check_sdcard(void)
 {
-    if (!sdcard_is_present()) {
+    if (sectrue != sdcard_is_present()) {
         return 0;
     }
 
@@ -77,7 +77,7 @@ static secbool copy_sdcard(void)
         display_printf("%d ", i);
         hal_delay(1000);
         codelen = check_sdcard();
-        if (!codelen) {
+        if (0 == codelen) {
             display_printf("\n\nno SD card, aborting\n");
             return secfalse;
         }
@@ -109,13 +109,13 @@ static secbool copy_sdcard(void)
         FLASH_SECTOR_FIRMWARE_EXTRA_END,
         FLASH_SECTOR_PIN_AREA,
     };
-    if (!flash_erase_sectors(sectors, 2 + 1 + 6 + 4 + 7 + 1, progress_callback)) {
+    if (sectrue != flash_erase_sectors(sectors, 2 + 1 + 6 + 4 + 7 + 1, progress_callback)) {
         display_printf(" failed\n");
         return secfalse;
     }
     display_printf(" done\n\n");
 
-    if (!flash_unlock()) {
+    if (sectrue != flash_unlock()) {
         display_printf("could not unlock flash\n");
         return secfalse;
     }
@@ -129,7 +129,7 @@ static secbool copy_sdcard(void)
     for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
         sdcard_read_blocks((uint8_t *)buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            if (!flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
+            if (sectrue != flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
                 display_printf("copy failed\n");
                 sdcard_power_off();
                 flash_lock();
@@ -151,13 +151,13 @@ int main(void)
 {
     periph_init(); // need the systick timer running before the production flash (and many other HAL) operations
 
-    if (!reset_flags_init()) {
+    if (sectrue != reset_flags_init()) {
         return 1;
     }
 
 #if PRODUCTION
     flash_set_option_bytes();
-    if (!flash_check_option_bytes()) {
+    if (sectrue != flash_check_option_bytes()) {
         uint8_t sectors[] = {
             FLASH_SECTOR_STORAGE_1,
             FLASH_SECTOR_STORAGE_2,

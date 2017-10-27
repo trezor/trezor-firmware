@@ -48,7 +48,7 @@ secbool flash_lock(void)
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
 {
-    if (!flash_unlock()) {
+    if (sectrue != flash_unlock()) {
         return secfalse;
     }
     FLASH_EraseInitTypeDef EraseInitStruct;
@@ -108,7 +108,7 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint
     if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
         return secfalse;
     }
-    if (!flash_unlock()) {
+    if (sectrue != flash_unlock()) {
         return secfalse;
     }
     secbool ret = secfalse;
@@ -127,7 +127,7 @@ secbool flash_otp_lock(uint8_t block)
     if (block >= FLASH_OTP_NUM_BLOCKS) {
         return secfalse;
     }
-    if (!flash_unlock()) {
+    if (sectrue != flash_unlock()) {
         return secfalse;
     }
     HAL_StatusTypeDef ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_OTP_LOCK_BASE + block, 0x00);

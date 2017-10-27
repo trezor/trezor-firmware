@@ -39,7 +39,7 @@ STATIC mp_obj_t mod_trezorio_FlashOTP_write(size_t n_args, const mp_obj_t *args)
     uint8_t offset = mp_obj_get_int(args[2]);
     mp_buffer_info_t data;
     mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
-    if (!flash_otp_write(block, offset, data.buf, data.len)) {
+    if (sectrue != flash_otp_write(block, offset, data.buf, data.len)) {
         mp_raise_ValueError("write failed");
     }
     return mp_const_none;
@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorio_FlashOTP_read(size_t n_args, const mp_obj_t *args) 
     uint8_t offset = mp_obj_get_int(args[2]);
     mp_buffer_info_t data;
     mp_get_buffer_raise(args[3], &data, MP_BUFFER_WRITE);
-    if (!flash_otp_read(block, offset, data.buf, data.len)) {
+    if (sectrue != flash_otp_read(block, offset, data.buf, data.len)) {
         mp_raise_ValueError("read failed");
     }
     return mp_const_none;
@@ -68,7 +68,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FlashOTP_read_obj, 4, 4,
 ///     '''
 STATIC mp_obj_t mod_trezorio_FlashOTP_lock(mp_obj_t self, mp_obj_t block) {
     uint8_t b = mp_obj_get_int(block);
-    if (!flash_otp_lock(b)) {
+    if (sectrue != flash_otp_lock(b)) {
         mp_raise_ValueError("lock failed");
     }
     return mp_const_none;

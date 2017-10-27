@@ -43,7 +43,7 @@ static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
 
 static secbool check_desc_str(const uint8_t *s) {
-    if (!s) return secfalse;
+    if (NULL == s) return secfalse;
     if (strlen((const char *)s) > USB_MAX_STR_SIZE) return secfalse;
     return sectrue;
 }

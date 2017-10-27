@@ -170,6 +170,7 @@ vendorheader_sl: ## construct SatoshiLabs vendor header
 binctl: ## print info about binary files
 	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 	./tools/binctl embed/firmware/vendorheader.bin
+	./tools/binctl $(PRODTEST_BUILD_DIR)/prodtest.bin
 	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 bloaty: ## run bloaty size profiler
