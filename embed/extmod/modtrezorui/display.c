@@ -19,6 +19,7 @@
 
 #include "trezor-qrenc/qr_encode.h"
 
+#include "common.h"
 #include "display.h"
 
 #include <string.h>
@@ -615,4 +616,13 @@ int display_backlight(int val)
         display_set_backlight(val);
     }
     return DISPLAY_BACKLIGHT;
+}
+
+void display_fade(int start, int end, int delay)
+{
+    for (int i = 0; i < 100; i++) {
+        display_backlight(start + i * (end - start) / 100);
+        hal_delay(delay / 100);
+    }
+    display_backlight(end);
 }

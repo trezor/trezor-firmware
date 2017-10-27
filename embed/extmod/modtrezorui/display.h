@@ -82,5 +82,6 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
 int *display_offset(int xy[2]);
 int display_orientation(int degrees);
 int display_backlight(int val);
+void display_fade(int start, int end, int delay);
 
 #endif

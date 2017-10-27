@@ -30,6 +30,7 @@ OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla
 BOARDLOADER_START   = 0x08000000
 BOOTLOADER_START    = 0x08020000
 FIRMWARE_START      = 0x08040000
+PRODTEST_START      = 0x08040000
 
 BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
@@ -136,7 +137,7 @@ flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenO
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
 
-flash_combine: $(FIRMWARE_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
+flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
 
 flash_erase: ## erase all sectors in flash bank 0
@@ -161,7 +162,7 @@ gdb_firmware: $(FIRMWARE_BUILD_DIR)/firmware.elf ## start remote gdb session to 
 ## misc commands:
 
 vendorheader: ## construct and sign the default vendor header
-	./tools/build_vendorheader e28a8970753332bd72fef413e6b0b2ef1b4aadda7aa2c141f233712a6876b351:d4eec1869fb1b8a4e817516ad5a931557cb56805c3eb16e8f3a803d647df7869:772c8a442b7db06e166cfbc1ccbcbcde6f3eba76a4e98ef3ffc519502237d6ef 2 0.0 10 DEVELOPMENT assets/vendor_devel.toif embed/firmware/vendorheader.bin
+	./tools/build_vendorheader e28a8970753332bd72fef413e6b0b2ef1b4aadda7aa2c141f233712a6876b351:d4eec1869fb1b8a4e817516ad5a931557cb56805c3eb16e8f3a803d647df7869:772c8a442b7db06e166cfbc1ccbcbcde6f3eba76a4e98ef3ffc519502237d6ef 2 0.0 50 DEVELOPMENT assets/vendor_devel.toif embed/firmware/vendorheader.bin
 	./tools/binctl embed/firmware/vendorheader.bin -s 1:2 `./tools/combine_sign vendorheader embed/firmware/vendorheader.bin 4444444444444444444444444444444444444444444444444444444444444444 4545454545454545454545454545454545454545454545454545454545454545`
 
 vendorheader_sl: ## construct SatoshiLabs vendor header
@@ -182,12 +183,12 @@ sizecheck: ## check sizes of binary files
 	test $(BOOTLOADER_MAXSIZE) -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
 	test $(FIRMWARE_MAXSIZE) -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
-combine: ## combine boardloader + bootloader + firmware into one combined image
+combine: ## combine boardloader + bootloader + prodtest into one combined image
 	./tools/combine_firmware \
 		$(BOARDLOADER_START) $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		$(BOOTLOADER_START) $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
-		$(FIRMWARE_START) $(FIRMWARE_BUILD_DIR)/firmware.bin \
-		> $(FIRMWARE_BUILD_DIR)/combined.bin \
+		$(PRODTEST_START) $(PRODTEST_BUILD_DIR)/prodtest.bin \
+		> $(PRODTEST_BUILD_DIR)/combined.bin \
 
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -f $(FIRMWARE_BUILD_DIR)/firmware.bin

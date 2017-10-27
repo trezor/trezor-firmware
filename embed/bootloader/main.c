@@ -21,15 +21,6 @@
 #include "messages.h"
 #include "style.h"
 
-void display_fade(int start, int end, int delay)
-{
-    for (int i = 0; i < 100; i++) {
-        display_backlight(start + i * (end - start) / 100);
-        hal_delay(delay / 100);
-    }
-    display_backlight(end);
-}
-
 #define ICON_TOOLS  0
 #define ICON_UPDATE 1
 #define ICON_WIPE   2
@@ -90,12 +81,7 @@ void display_welcome(secbool firmware_present)
     }
     if (sectrue == firmware_present) {
         display_header(ICON_TOOLS, "TREZOR Bootloader");
-        uint8_t dom[32];
-        // format: TREZOR2-YYMMDD
-        if (flash_otp_read(0, 0, dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[14] == 0) {
-            display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, (const char *)dom, 14, 4);
-            display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, (const char *)dom, 14, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
-        }
+        // TODO: show info about installed firmware
     }
     display_fade(0, BACKLIGHT_NORMAL, 1000);
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "common.h"
 
@@ -24,4 +25,9 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
     printf("rev : %s\n", XSTR(GITREV));
 #endif
     exit(1);
+}
+
+void hal_delay(uint32_t ms)
+{
+    usleep(1000 * ms);
 }

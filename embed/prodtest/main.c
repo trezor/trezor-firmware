@@ -130,10 +130,10 @@ static void test_display(const char *colors)
     for (size_t i = 0; i < l; i++) {
         uint16_t c = 0x0000;  // black
         switch (colors[i]) {
-        case 'R': c = 0xF800; break;
-        case 'G': c = 0x07E0; break;
-        case 'B': c = 0x001F; break;
-        case 'W': c = 0xFFFF; break;
+            case 'R': c = 0xF800; break;
+            case 'G': c = 0x07E0; break;
+            case 'B': c = 0x001F; break;
+            case 'W': c = 0xFFFF; break;
         }
         display_bar(i * w, 0, i * w + w, 240, c);
     }
@@ -247,7 +247,7 @@ static void test_otp_write(const char *args)
 {
     char data[32];
     memset(data, 0, sizeof(data));
-    strcpy(data, args);
+    strncpy(data, args, 31);
     flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data));
     flash_otp_lock(0);
     vcp_printf("OK");
@@ -258,16 +258,26 @@ static secbool startswith(const char *s, const char *prefix)
     return sectrue * (0 == strncmp(s, prefix, strlen(prefix)));
 }
 
+#define BACKLIGHT_NORMAL 150
+
 int main(void)
 {
     display_orientation(0);
-    display_backlight(255);
     sdcard_init();
     touch_init();
     sbu_init();
     usb_init_all();
 
     display_clear();
+
+    char dom[32];
+    // format: TREZOR2-YYMMDD
+    if (sectrue == flash_otp_read(0, 0, (uint8_t *)dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[31] == 0) {
+        display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, strlen(dom), 4);
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    }
+
+    display_fade(0, BACKLIGHT_NORMAL, 1000);
 
     char line[128];
 
