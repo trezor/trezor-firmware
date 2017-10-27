@@ -21,9 +21,6 @@
 #include "messages.h"
 #include "style.h"
 
-#define FIRMWARE_IMAGE_MAGIC   0x465A5254 // TRZF
-#define FIRMWARE_IMAGE_MAXSIZE (6 * 128 * 1024)
-
 void display_fade(int start, int end, int delay)
 {
     for (int i = 0; i < 100; i++) {
@@ -292,6 +289,11 @@ void check_bootloader_version(void)
     ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)), "Bootloader downgraded");
 }
 
+secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr)
+{
+    return load_vendor_header(data, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, vhdr);
+}
+
 int main(void)
 {
 #if PRODUCTION
@@ -312,7 +314,7 @@ int main(void)
     vendor_header vhdr;
 
     // start the bootloader if user touched the screen or no firmware installed
-    secbool firmware_present = load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr);
+    secbool firmware_present = load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
     if (touched || firmware_present != sectrue) {
         if (bootloader_loop(firmware_present) != sectrue) {
             return 1;
@@ -320,7 +322,7 @@ int main(void)
     }
 
     ensure(
-        load_vendor_header((const uint8_t *)FIRMWARE_START, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, &vhdr),
+        load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr),
         "invalid vendor header");
 
     image_header hdr;

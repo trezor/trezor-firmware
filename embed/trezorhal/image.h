@@ -12,6 +12,12 @@
 #define IMAGE_SIG_SIZE     65
 #define IMAGE_CHUNK_SIZE   (128 * 1024)
 
+#define BOOTLOADER_IMAGE_MAGIC   0x425A5254 // TRZB
+#define BOOTLOADER_IMAGE_MAXSIZE (1 * 128 * 1024)
+
+#define FIRMWARE_IMAGE_MAGIC   0x465A5254 // TRZF
+#define FIRMWARE_IMAGE_MAXSIZE (6 * 128 * 1024)
+
 typedef struct {
     uint32_t magic;
     uint32_t hdrlen;

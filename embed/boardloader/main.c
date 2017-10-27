@@ -10,9 +10,6 @@
 #include "lowlevel.h"
 #include "version.h"
 
-#define BOOTLOADER_IMAGE_MAGIC   0x425A5254 // TRZB
-#define BOOTLOADER_IMAGE_MAXSIZE (1 * 128 * 1024)
-
 const uint8_t BOARDLOADER_KEY_M = 2;
 const uint8_t BOARDLOADER_KEY_N = 3;
 static const uint8_t * const BOARDLOADER_KEYS[] = {

@@ -227,7 +227,7 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     MSG_SEND(Success);
 }
 
-static uint32_t firmware_remaining, firmware_flashed, chunk_requested;
+static uint32_t firmware_remaining, firmware_block, chunk_requested;
 
 static void progress_erase(int pos, int len)
 {
@@ -237,7 +237,7 @@ static void progress_erase(int pos, int len)
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     firmware_remaining = 0;
-    firmware_flashed = 0;
+    firmware_block = 0;
     chunk_requested = 0;
 
     MSG_RECV_INIT(FirmwareErase);
@@ -304,7 +304,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
 
     while (stream->bytes_left) {
         // update loader
-        display_loader(250 + 750 * (firmware_flashed + chunk_written) / (firmware_flashed + firmware_remaining), 0, COLOR_BL_BLUE, COLOR_BLACK, 0, 0, 0);
+        display_loader(250 + 750 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining), 0, COLOR_BL_BLUE, COLOR_BLACK, 0, 0, 0);
         // read data
         if (!pb_read(stream, (pb_byte_t *)(chunk_buffer + chunk_written), (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
             chunk_size = 0;
@@ -315,6 +315,10 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
 
     return true;
 }
+
+static image_header hdr;
+
+extern secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr);
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
@@ -327,6 +331,25 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid chunk size");
         MSG_SEND(Failure);
+        return -1;
+    }
+
+    if (firmware_block == 0) {
+        vendor_header vhdr;
+        if (sectrue != load_vendor_header_keys(chunk_buffer, &vhdr)) {
+            MSG_SEND_INIT(Failure);
+            MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+            MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header");
+            MSG_SEND(Failure);
+            return -2;
+        }
+        if (sectrue != load_image_header(chunk_buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr)) {
+            MSG_SEND_INIT(Failure);
+            MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+            MSG_SEND_ASSIGN_STRING(message, "Invalid firmware header");
+            MSG_SEND(Failure);
+            return -3;
+        }
     }
 
     if (sectrue != flash_unlock()) {
@@ -334,24 +357,31 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Could not unlock flash");
         MSG_SEND(Failure);
-        return -1;
+        return -4;
     }
 
-    // TODO: don't use firmware_flashed, but block index, so we can fill into non-continous area
+    // TODO: fix writing to non-continous area
     const uint32_t * const src = (const uint32_t * const)chunk_buffer;
     for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
-        ensure(flash_write_word(FIRMWARE_START + firmware_flashed + i * sizeof(uint32_t), src[i]), NULL);
+        if (sectrue != flash_write_word(FIRMWARE_START + firmware_block * IMAGE_CHUNK_SIZE + i * sizeof(uint32_t), src[i])) {
+            MSG_SEND_INIT(Failure);
+            MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+            MSG_SEND_ASSIGN_STRING(message, "Could not write data");
+            MSG_SEND(Failure);
+            flash_lock();
+            return -5;
+        }
     }
 
     flash_lock();
 
     firmware_remaining -= chunk_requested;
-    firmware_flashed += chunk_requested;
+    firmware_block++;
 
     if (firmware_remaining > 0) {
         chunk_requested = (firmware_remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
-        MSG_SEND_ASSIGN_VALUE(offset, firmware_flashed);
+        MSG_SEND_ASSIGN_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
         MSG_SEND(FirmwareRequest);
     } else {
