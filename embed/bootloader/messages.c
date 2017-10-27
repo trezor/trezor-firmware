@@ -334,6 +334,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         return -1;
     }
 
+    uint32_t firstskip = 0;
     if (firmware_block == 0) {
         vendor_header vhdr;
         if (sectrue != load_vendor_header_keys(chunk_buffer, &vhdr)) {
@@ -350,6 +351,18 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             MSG_SEND(Failure);
             return -3;
         }
+
+        // TODO: erase storage if vendor is being changed
+
+        firstskip = IMAGE_HEADER_SIZE + vhdr.hdrlen;
+    }
+
+    if (sectrue != check_single_hash(hdr.hashes + firmware_block * 32, chunk_buffer + firstskip, chunk_size - firstskip)) {
+        MSG_SEND_INIT(Failure);
+        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
+        MSG_SEND_ASSIGN_STRING(message, "Invalid chunk hash");
+        MSG_SEND(Failure);
+        return -4;
     }
 
     if (sectrue != flash_unlock()) {
@@ -357,7 +370,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Could not unlock flash");
         MSG_SEND(Failure);
-        return -4;
+        return -5;
     }
 
     // TODO: fix writing to non-continous area
@@ -369,7 +382,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             MSG_SEND_ASSIGN_STRING(message, "Could not write data");
             MSG_SEND(Failure);
             flash_lock();
-            return -5;
+            return -6;
         }
     }
 

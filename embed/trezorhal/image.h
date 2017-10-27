@@ -13,10 +13,11 @@
 #define IMAGE_CHUNK_SIZE   (128 * 1024)
 
 #define BOOTLOADER_IMAGE_MAGIC   0x425A5254 // TRZB
-#define BOOTLOADER_IMAGE_MAXSIZE (1 * 128 * 1024)
+#define BOOTLOADER_IMAGE_MAXSIZE (1 * IMAGE_CHUNK_SIZE)
 
-#define FIRMWARE_IMAGE_MAGIC   0x465A5254 // TRZF
-#define FIRMWARE_IMAGE_MAXSIZE (6 * 128 * 1024)
+#define FIRMWARE_IMAGE_MAGIC     0x465A5254 // TRZF
+#define FIRMWARE_IMAGE_MAXSIZE   (6 * IMAGE_CHUNK_SIZE)
+// TODO: change above limitation to 13 blocks after fixing writing to non-continuous area
 
 typedef struct {
     uint32_t magic;
@@ -53,6 +54,8 @@ typedef struct {
 secbool load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr);
 
 secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
+
+secbool check_single_hash(const uint8_t * const hash, const uint8_t * const data, int len);
 
 secbool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks);
 

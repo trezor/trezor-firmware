@@ -130,7 +130,7 @@ secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t ke
     return sectrue * (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)vhdr->sig));
 }
 
-static secbool check_hash(const uint8_t * const hash, const uint8_t * const data, int len)
+secbool check_single_hash(const uint8_t * const hash, const uint8_t * const data, int len)
 {
     uint8_t h[BLAKE2S_DIGEST_LENGTH];
     blake2s(data, len, h, BLAKE2S_DIGEST_LENGTH);
@@ -146,7 +146,7 @@ secbool check_image_contents(const image_header * const hdr, uint32_t firstskip,
     }
     const void *data = (const void *)(FLASH_SECTOR_TABLE[sectors[0]] + firstskip);
     int remaining = hdr->codelen;
-    if (sectrue != check_hash(hdr->hashes, data, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
+    if (sectrue != check_single_hash(hdr->hashes, data, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
         return secfalse;
     }
     int block = 1;
@@ -156,7 +156,7 @@ secbool check_image_contents(const image_header * const hdr, uint32_t firstskip,
             return secfalse;
         }
         data = (const void *)FLASH_SECTOR_TABLE[sectors[block]];
-        if (sectrue != check_hash(hdr->hashes + block * 32, data, MIN(remaining, IMAGE_CHUNK_SIZE))) {
+        if (sectrue != check_single_hash(hdr->hashes + block * 32, data, MIN(remaining, IMAGE_CHUNK_SIZE))) {
             return secfalse;
         }
         block++;
