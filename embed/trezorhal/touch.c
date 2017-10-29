@@ -43,13 +43,13 @@ void touch_init(void)
     ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
 }
 
-#define TOUCH_ADDRESS 56
+#define TOUCH_ADDRESS (0x38 << 1) // the HAL requires the 7-bit address to be shifted by one bit
 #define TOUCH_PACKET_SIZE 16
 
 uint32_t touch_read(void)
 {
     static uint8_t data[TOUCH_PACKET_SIZE], old_data[TOUCH_PACKET_SIZE];
-    if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS << 1, data, TOUCH_PACKET_SIZE, 1)) {
+    if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS, data, TOUCH_PACKET_SIZE, 1)) {
         return 0; // read failure
     }
     if (0 == memcmp(data, old_data, TOUCH_PACKET_SIZE)) {
