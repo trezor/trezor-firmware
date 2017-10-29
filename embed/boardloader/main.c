@@ -38,9 +38,9 @@ static uint32_t check_sdcard(void)
         return 0;
     }
 
-    uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
+    uint32_t buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
 
-    sdcard_read_blocks(buf, 0, 1);
+    sdcard_read_blocks(buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
 
     sdcard_power_off();
 
