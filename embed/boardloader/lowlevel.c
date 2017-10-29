@@ -65,13 +65,12 @@ void periph_init(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
     // enable the PVD (programmable voltage detector).
-    // select the "2.7V" threshold (level 5). the typical electrical
-    // characteristic values are similar to BOR level 3.
+    // select the "2.6V" threshold (level 4).
     // this detector will be active regardless of the
     // flash option byte BOR setting.
     __HAL_RCC_PWR_CLK_ENABLE();
     PWR_PVDTypeDef pvd_config;
-    pvd_config.PVDLevel = PWR_PVDLEVEL_5;
+    pvd_config.PVDLevel = PWR_PVDLEVEL_4;
     pvd_config.Mode = PWR_PVD_MODE_IT_RISING_FALLING;
     HAL_PWR_ConfigPVD(&pvd_config);
     HAL_PWR_EnablePVD();
