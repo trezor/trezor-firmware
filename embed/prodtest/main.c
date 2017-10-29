@@ -197,8 +197,8 @@ static void test_pwm(const char *args)
 static void test_sd(void)
 {
 #define BLOCK_SIZE (32 * 1024)
-    static uint8_t buf1[BLOCK_SIZE];
-    static uint8_t buf2[BLOCK_SIZE];
+    static uint32_t buf1[BLOCK_SIZE / sizeof(uint32_t)];
+    static uint32_t buf2[BLOCK_SIZE / sizeof(uint32_t)];
 
     if (sectrue != sdcard_is_present()) {
         vcp_printf("ERROR NOCARD");
@@ -211,8 +211,8 @@ static void test_sd(void)
         goto power_off;
     }
     for (int j = 1; j <= 2; j++) {
-        for (int i = 0; i < BLOCK_SIZE; i++) {
-            buf1[i] ^= 0xFF;
+        for (int i = 0; i < BLOCK_SIZE / sizeof(uint32_t); i++) {
+            buf1[i] ^= 0xFFFFFFFF;
         }
         if (sectrue != sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
             vcp_printf("ERROR sdcard_write_blocks (%d)", j);
