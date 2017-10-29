@@ -5,7 +5,7 @@
   .global default_handler
   .type default_handler, STT_FUNC
 default_handler:
-  b . // loop forever
+  b shutdown
 
   .macro add_handler symbol_name:req
     .word \symbol_name
