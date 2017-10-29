@@ -196,8 +196,9 @@ static void test_pwm(const char *args)
 
 static void test_sd(void)
 {
-    static uint8_t buf1[8 * 1024];
-    static uint8_t buf2[8 * 1024];
+#define BLOCK_SIZE (32 * 1024)
+    static uint8_t buf1[BLOCK_SIZE];
+    static uint8_t buf2[BLOCK_SIZE];
 
     if (sectrue != sdcard_is_present()) {
         vcp_printf("ERROR NOCARD");
@@ -205,21 +206,26 @@ static void test_sd(void)
     }
 
     sdcard_power_on();
-    if (sectrue != sdcard_read_blocks(buf1, 0, 0)) {
-        vcp_printf("ERROR sdcard_read_blocks");
+    if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
+        vcp_printf("ERROR sdcard_read_blocks (0)");
         goto power_off;
     }
-    if (sectrue != sdcard_write_blocks(buf1, 0, 0)) {
-        vcp_printf("ERROR sdcard_write_blocks");
-        goto power_off;
-    }
-    if (sectrue != sdcard_read_blocks(buf2, 0, 0)) {
-        vcp_printf("ERROR sdcard_read_blocks");
-        goto power_off;
-    }
-    if (0 != memcmp(buf1, buf2, sizeof(buf1))) {
-        vcp_printf("ERROR DATA MISMATCH");
-        goto power_off;
+    for (int j = 1; j <= 2; j++) {
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            buf1[i] ^= 0xFF;
+        }
+        if (sectrue != sdcard_write_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
+            vcp_printf("ERROR sdcard_write_blocks (%d)", j);
+            goto power_off;
+        }
+        if (sectrue != sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
+            vcp_printf("ERROR sdcard_read_blocks (%d)", j);
+            goto power_off;
+        }
+        if (0 != memcmp(buf1, buf2, sizeof(buf1))) {
+            vcp_printf("ERROR DATA MISMATCH");
+            goto power_off;
+        }
     }
     vcp_printf("OK");
 
