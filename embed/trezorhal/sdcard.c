@@ -150,7 +150,7 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd, uint32_t tim
     return HAL_OK;
 }
 
-secbool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) {
+secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
         return secfalse;
@@ -163,7 +163,7 @@ secbool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) 
 
     HAL_StatusTypeDef err = HAL_OK;
 
-    err = HAL_SD_ReadBlocks(&sd_handle, dest, block_num, num_blocks, 60000);
+    err = HAL_SD_ReadBlocks(&sd_handle, (uint8_t *)dest, block_num, num_blocks, 60000);
     if (err == HAL_OK) {
         err = sdcard_wait_finished(&sd_handle, 60000);
     }
@@ -171,7 +171,7 @@ secbool sdcard_read_blocks(void *dest, uint32_t block_num, uint32_t num_blocks) 
     return sectrue * (err == HAL_OK);
 }
 
-secbool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_blocks) {
+secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num, uint32_t num_blocks) {
     // check that SD card is initialised
     if (sd_handle.Instance == NULL) {
         return secfalse;
@@ -184,7 +184,7 @@ secbool sdcard_write_blocks(const void *src, uint32_t block_num, uint32_t num_bl
 
     HAL_StatusTypeDef err = HAL_OK;
 
-    err = HAL_SD_WriteBlocks(&sd_handle, (uint8_t*)src, block_num, num_blocks, 60000);
+    err = HAL_SD_WriteBlocks(&sd_handle, (uint8_t *)src, block_num, num_blocks, 60000);
     if (err == HAL_OK) {
         err = sdcard_wait_finished(&sd_handle, 60000);
     }

@@ -124,7 +124,7 @@ static secbool copy_sdcard(void)
 
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
     for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
-        sdcard_read_blocks((uint8_t *)buf, i, 1);
+        sdcard_read_blocks(buf, i, 1);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (sectrue != flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
                 display_printf("copy failed\n");
