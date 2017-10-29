@@ -9,42 +9,45 @@ void flash_set_option_bytes(void)
 {
     FLASH_OBProgramInitTypeDef opts;
 
-    for(;;) {
-        HAL_FLASHEx_OBGetConfig(&opts);
+    HAL_FLASHEx_OBGetConfig(&opts);
 
-        opts.OptionType = 0;
+    opts.OptionType = 0;
 
-        if (opts.WRPSector != WANTED_WRP) {
-            opts.OptionType |= OPTIONBYTE_WRP;
-            opts.WRPState = OB_WRPSTATE_ENABLE;
-            opts.WRPSector = WANTED_WRP;
-            opts.Banks = FLASH_BANK_1;
-        }
-
-        if (opts.RDPLevel != WANTED_RDP) {
-            opts.OptionType |= OPTIONBYTE_RDP;
-            opts.RDPLevel = WANTED_RDP;
-        }
-
-        if (opts.OptionType == 0) {
-            break; // protections are configured
-        }
-
-        // attempt to lock down the boardloader sectors
-        HAL_FLASH_Unlock();
-        HAL_FLASH_OB_Unlock();
-        HAL_FLASHEx_OBProgram(&opts);
-        HAL_FLASH_OB_Launch();
-        HAL_FLASH_OB_Lock();
-        HAL_FLASH_Lock();
+    if (opts.WRPSector != WANTED_WRP) {
+        opts.OptionType |= OPTIONBYTE_WRP;
+        opts.WRPState = OB_WRPSTATE_ENABLE;
+        opts.WRPSector = WANTED_WRP;
+        opts.Banks = FLASH_BANK_1;
     }
+
+    if (opts.RDPLevel != WANTED_RDP) {
+        opts.OptionType |= OPTIONBYTE_RDP;
+        opts.RDPLevel = WANTED_RDP;
+    }
+
+    if (opts.OptionType == 0) {
+        return; // protections are configured
+    }
+
+    // attempt to lock down the boardloader sectors
+    HAL_FLASH_Unlock();
+    HAL_FLASH_OB_Unlock();
+    HAL_FLASHEx_OBProgram(&opts);
+    HAL_FLASH_OB_Launch();
+    HAL_FLASH_OB_Lock();
+    HAL_FLASH_Lock();
 }
+
+#define FLASH_OPTION_BYTES_1 (*(const uint64_t *)0x1FFFC000)
+#define FLASH_OPTION_BYTES_2 (*(const uint64_t *)0x1FFFC008)
 
 secbool flash_check_option_bytes(void)
 {
-    if ((FLASH->OPTCR & FLASH_OPTCR_nWRP) != (FLASH_OPTCR_nWRP_0 | FLASH_OPTCR_nWRP_1 | FLASH_OPTCR_nWRP_2)) return secfalse;
-    if ((FLASH->OPTCR & FLASH_OPTCR_RDP) != FLASH_OPTCR_RDP_2) return secfalse;
-    return sectrue;
+    //                         RDP level 2                   WRP for sectors 0, 1 and 2         flash option control register matches
+    if (((FLASH_OPTION_BYTES_1 & 0xFFEC) == 0xCCEC) && ((FLASH_OPTION_BYTES_2 & 0x0FFF) == 0x0FF8) && (FLASH->OPTCR == 0x0FF8CCED)) {
+        return sectrue;
+    }
+    return secfalse;
 }
 
 void periph_init(void)
@@ -77,6 +80,7 @@ void periph_init(void)
 
 secbool reset_flags_init(void)
 {
+/*
 #if PRODUCTION
     // this is effective enough that it makes development painful, so only use it for production.
     // check the reset flags to assure that we arrive here due to a regular full power-on event,
@@ -85,6 +89,7 @@ secbool reset_flags_init(void)
         return secfalse;
     }
 #endif
+*/
 
     RCC->CSR |= RCC_CSR_RMVF; // clear the reset flags
 
