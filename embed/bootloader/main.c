@@ -293,7 +293,10 @@ int main(void)
     // delay to detect touch
     uint32_t touched = 0;
     for (int i = 0; i < 100; i++) {
-        touched |= touch_read();
+        touched = touch_read();
+        if (touched) {
+            break;
+        }
         hal_delay(1);
     }
 

@@ -43,29 +43,43 @@ void touch_init(void)
     ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
 }
 
-#define TOUCH_ADDRESS (0x38 << 1) // the HAL requires the 7-bit address to be shifted by one bit
-#define TOUCH_PACKET_SIZE 16
+#define TOUCH_ADDRESS (0x38U << 1) // the HAL requires the 7-bit address to be shifted by one bit
+#define TOUCH_PACKET_SIZE 7U
+#define EVENT_PRESS_DOWN 0x00U
+#define EVENT_CONTACT 0x80U
+#define EVENT_LIFT_UP 0x40U
+#define EVENT_NO_EVENT 0xC0U
+#define GESTURE_NO_GESTURE 0x00U
+#define X_POS_MSB (touch_data[3] & 0xFU)
+#define X_POS_LSB (touch_data[4])
+#define Y_POS_MSB (touch_data[5] & 0xFU)
+#define Y_POS_LSB (touch_data[6])
+#define X_Y_POS ((X_POS_MSB << 20) | (X_POS_LSB << 12) | (Y_POS_MSB << 8) | (Y_POS_LSB))
 
 uint32_t touch_read(void)
 {
-    static uint8_t data[TOUCH_PACKET_SIZE], old_data[TOUCH_PACKET_SIZE];
-    if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS, data, TOUCH_PACKET_SIZE, 1)) {
+    static uint8_t touch_data[TOUCH_PACKET_SIZE], previous_touch_data[TOUCH_PACKET_SIZE];
+
+    if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS, touch_data, TOUCH_PACKET_SIZE, 1)) {
         return 0; // read failure
     }
-    if (0 == memcmp(data, old_data, TOUCH_PACKET_SIZE)) {
-        return 0; // no new event
-    }
-    memcpy(old_data, data, TOUCH_PACKET_SIZE);
 
-    if (data[0] == 0xff && data[1] == 0x00) {
-        if (data[2] == 0x01 && data[3] == 0x00) {
-            return TOUCH_START | ((data[3] & 0xF) << 20) | (data[4] << 12) | ((data[5] & 0xF) << 8) | data[6];
-        } else
-        if (data[2] == 0x01 && data[3] == 0x80) {
-            return TOUCH_MOVE  | ((data[3] & 0xF) << 20) | (data[4] << 12) | ((data[5] & 0xF) << 8) | data[6];
-        } else
-        if (data[2] == 0x00 && data[3] == 0x40) {
-            return TOUCH_END   | ((data[3] & 0xF) << 20) | (data[4] << 12) | ((data[5] & 0xF) << 8) | data[6];
+    if (0 == memcmp(previous_touch_data, touch_data, TOUCH_PACKET_SIZE)) {
+        return 0; // polled and got the same event again
+    } else {
+        memcpy(previous_touch_data, touch_data, TOUCH_PACKET_SIZE);
+    }
+
+    const uint32_t number_of_touch_points = touch_data[2] & 0x0F; // valid values are 0, 1, 2 (invalid 0xF before first touch) (tested with FT6206)
+    const uint32_t event_flag = touch_data[3] & 0xC0;
+
+    if (touch_data[1] == GESTURE_NO_GESTURE) {
+        if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
+            return TOUCH_START | X_Y_POS;
+        } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
+            return TOUCH_MOVE | X_Y_POS;
+        } else if ((number_of_touch_points == 0) && (event_flag == EVENT_LIFT_UP)) {
+            return TOUCH_END | X_Y_POS;
         }
     }
 
@@ -74,7 +88,7 @@ uint32_t touch_read(void)
 
 uint32_t touch_click(void)
 {
-    uint32_t r;
+    uint32_t r = 0;
     // flush touch events if any
     while (touch_read()) { }
     // wait for TOUCH_START
