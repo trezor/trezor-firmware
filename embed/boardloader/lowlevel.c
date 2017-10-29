@@ -4,7 +4,6 @@
 
 #define WANTED_WRP (OB_WRP_SECTOR_0 | OB_WRP_SECTOR_1 | OB_WRP_SECTOR_2)
 #define WANTED_RDP (OB_RDP_LEVEL_2)
-#define WANTED_BOR (OB_BOR_LEVEL3)
 
 void flash_set_option_bytes(void)
 {
@@ -27,17 +26,17 @@ void flash_set_option_bytes(void)
             opts.RDPLevel = WANTED_RDP;
         }
 
-        if (opts.BORLevel != WANTED_BOR) {
-            opts.OptionType |= OPTIONBYTE_BOR;
-            opts.BORLevel = WANTED_BOR;
-        }
-
         if (opts.OptionType == 0) {
             break; // protections are configured
         }
 
         // attempt to lock down the boardloader sectors
+        HAL_FLASH_Unlock();
+        HAL_FLASH_OB_Unlock();
         HAL_FLASHEx_OBProgram(&opts);
+        HAL_FLASH_OB_Launch();
+        HAL_FLASH_OB_Lock();
+        HAL_FLASH_Lock();
     }
 }
 
@@ -45,7 +44,6 @@ secbool flash_check_option_bytes(void)
 {
     if ((FLASH->OPTCR & FLASH_OPTCR_nWRP) != (FLASH_OPTCR_nWRP_0 | FLASH_OPTCR_nWRP_1 | FLASH_OPTCR_nWRP_2)) return secfalse;
     if ((FLASH->OPTCR & FLASH_OPTCR_RDP) != FLASH_OPTCR_RDP_2) return secfalse;
-    if ((FLASH->OPTCR & FLASH_OPTCR_BOR_LEV) != (FLASH_OPTCR_BOR_LEV_0 | FLASH_OPTCR_BOR_LEV_1)) return secfalse;
     return sectrue;
 }
 
