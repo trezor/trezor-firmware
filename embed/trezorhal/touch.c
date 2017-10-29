@@ -13,9 +13,7 @@
 #include "secbool.h"
 #include "touch.h"
 
-I2C_HandleTypeDef i2c_handle = {
-    .Instance = I2C1,
-};
+static I2C_HandleTypeDef i2c_handle;
 
 void touch_init(void)
 {
@@ -32,15 +30,15 @@ void touch_init(void)
     };
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    I2C_InitTypeDef *init = &(i2c_handle.Init);
-    init->OwnAddress1 = 0xFE; // master
-    init->ClockSpeed = 400000;
-    init->DutyCycle = I2C_DUTYCYCLE_16_9;
-    init->AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
-    init->DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    init->GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    init->NoStretchMode   = I2C_NOSTRETCH_DISABLE;
-    init->OwnAddress2     = 0;
+    i2c_handle.Instance = I2C1;
+    i2c_handle.Init.ClockSpeed = 400000;
+    i2c_handle.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
+    i2c_handle.Init.OwnAddress1 = 0xFE; // master
+    i2c_handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2c_handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    i2c_handle.Init.OwnAddress2 = 0;
+    i2c_handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    i2c_handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
     ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
 }
