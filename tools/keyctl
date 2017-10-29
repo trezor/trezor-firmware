@@ -44,7 +44,9 @@ def commit(index, filename, seckey):
         _, R = ed25519cosi.get_nonce(sk, digest, ctr)
     else:
         t = get_trezor()
-        commit = t.cosi_commit(t.expand_path("10018'/%d'" % index), digest)
+        path = "10018'/%d'" % index
+        print('commiting to hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
+        commit = t.cosi_commit(t.expand_path(path), digest)
         pk = commit.pubkey
         R = commit.commitment
     print('%s+%s' % (binascii.hexlify(pk).decode(), binascii.hexlify(R).decode()))
@@ -86,7 +88,9 @@ def sign(index, filename, global_commit, seckey):
         sig = ed25519raw.encodeint(S)
     else:
         t = get_trezor()
-        signature = t.cosi_sign(t.expand_path("10018'/%d'" % index), digest, global_R, global_pk)
+        path = "10018'/%d'" % index
+        print('signing hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
+        signature = t.cosi_sign(t.expand_path(path), digest, global_R, global_pk)
         sig = signature.signature
     print(binascii.hexlify(sig).decode())
 
