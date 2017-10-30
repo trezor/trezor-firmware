@@ -9,6 +9,7 @@ cd device_tests
 pytest \
     -k-multisig \
     --ignore test_bip32_speed.py \
+    --ignore test_cosi.py \
     --ignore test_debuglink.py \
     --ignore test_msg_applysettings.py \
     --ignore test_msg_changepin.py \
