@@ -14,18 +14,19 @@ class TestSegwitBip143(unittest.TestCase):
 
     tx = SignTx(coin_name='Bitcoin', version=1, lock_time=0x00000492, inputs_count=1, outputs_count=2)
     inp1 = TxInputType(address_n=[0],
-                       prev_hash=unhexlify('db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a5477'),
+                       # Trezor expects hash in reversed format
+                       prev_hash=unhexlify('77541aeb3c4dac9260b68f74f44c973081a9d4cb2ebe8038b2d70faa201b6bdb'),
                        prev_index=1,
                        amount=1000000000,  # 10 btc
                        script_type=InputScriptType.SPENDP2SHWITNESS,  # todo is this correct?
                        sequence=0xfffffffe)
     out1 = TxOutputType(address='1Fyxts6r24DpEieygQiNnWxUdb18ANa5p7',
                         amount=0x000000000bebb4b8,
-                        script_type=OutputScriptType.PAYTOWITNESS,
+                        script_type=OutputScriptType.PAYTOADDRESS,
                         address_n=None)
     out2 = TxOutputType(address='1Q5YjKVj5yQWHBBsyEBamkfph3cA6G9KK8',
                         amount=0x000000002faf0800,
-                        script_type=OutputScriptType.PAYTOWITNESS,
+                        script_type=OutputScriptType.PAYTOADDRESS,
                         address_n=None)
 
     def test_bip143_prevouts(self):
@@ -72,10 +73,8 @@ class TestSegwitBip143(unittest.TestCase):
             txo_bin.script_pubkey = output_derive_script(txo, coin, root)
             bip143.add_output(txo_bin)
 
-        # test data public key
-        script_code = input_derive_script(self.inp1, unhexlify('03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873'))
-        self.assertEqual(hexlify(script_code), b'76a91479091972186c449eb1ded22b78e40d009bdf008988ac')
-        result = bip143.preimage(self.tx, self.inp1, script_code)
+        # test data public key hash
+        result = bip143.preimage_hash(self.tx, self.inp1, unhexlify('79091972186c449eb1ded22b78e40d009bdf0089'))
         self.assertEqual(hexlify(result), b'64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6')
 
 

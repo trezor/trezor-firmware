@@ -4,14 +4,13 @@ from trezor.crypto import base58, der
 from trezor.utils import ensure
 
 from trezor.messages.CoinType import CoinType
-from trezor.messages.SignTx import SignTx
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXFINISHED
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
-from trezor.messages import OutputScriptType, InputScriptType, FailureType
+from trezor.messages import OutputScriptType
 
 from apps.common import address_type
 from apps.common import coins
@@ -140,7 +139,7 @@ def sanitize_tx_binoutput(tx: TransactionType) -> TxOutputBinType:
 # - check inputs, previous transactions, and outputs
 # - ask for confirmations
 # - check fee
-async def check_tx_fee(tx: SignTx, root, segwit):
+async def check_tx_fee(tx: SignTx, root):
 
     coin = coins.by_name(tx.coin_name)
 
@@ -157,17 +156,20 @@ async def check_tx_fee(tx: SignTx, root, segwit):
     total_in = 0  # sum of input amounts
     total_out = 0  # sum of output amounts
     change_out = 0  # change output amount
+    segwit = {}  # dict of booleans stating if input is segwit
 
     for i in range(tx.inputs_count):
         # STAGE_REQUEST_1_INPUT
         txi = await request_tx_input(tx_req, i)
         write_tx_input_check(h_first, txi)
-        if segwit:
+        if txi.script_type == InputScriptType.SPENDP2SHWITNESS:
+            segwit[i] = True
             # Add I to segwit hash_prevouts, hash_sequence
             bip143.add_prevouts(txi)
             bip143.add_sequence(txi)
             total_in += txi.amount
         else:
+            segwit[i] = False
             total_in += await get_prevtx_output_value(
                 tx_req, txi.prev_hash, txi.prev_index)
 
@@ -203,16 +205,16 @@ async def check_tx_fee(tx: SignTx, root, segwit):
         raise SigningError(FailureType.ActionCancelled,
                            'Total cancelled')
 
-    return h_first, tx_req, txo_bin, bip143
+    return h_first, tx_req, txo_bin, bip143, segwit
 
 
-async def sign_tx(tx: SignTx, root, segwit=False):
+async def sign_tx(tx: SignTx, root):
 
     tx = sanitize_sign_tx(tx)
 
     # Phase 1
 
-    h_first, tx_req, txo_bin, bip143 = await check_tx_fee(tx, root, segwit)
+    h_first, tx_req, txo_bin, bip143, segwit = await check_tx_fee(tx, root)
 
     # Phase 2
     # - sign inputs
@@ -235,14 +237,25 @@ async def sign_tx(tx: SignTx, root, segwit=False):
 
         write_varint(h_sign, tx.inputs_count)
 
-        if segwit:
-            txi = await request_tx_input(tx_req, i_sign)
-            # if hashType != ANYONE_CAN_PAY ? todo
+        if segwit[i_sign]:
+            # STAGE_REQUEST_SEGWIT_INPUT
+            txi_sign = await request_tx_input(tx_req, i_sign)
+            if txi_sign.script_type == InputScriptType.SPENDP2SHWITNESS:
+                key_sign = node_derive(root, txi_sign.address_n)
+                key_sign_pub = key_sign.public_key()
+                txi_sign.script_sig = input_derive_script(txi_sign, key_sign_pub)
+                w_txi = bytearray_with_cap(
+                    7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
+                if i_sign == 0:  # serializing first input => prepend meta
+                    write_uint32(w_txi, tx.version)
+                    write_varint(w_txi, 0x00)  # segwit witness marker
+                    write_varint(w_txi, 0x01)  # segwit witness flag
+                    write_varint(w_txi, tx.inputs_count)
+                write_tx_input(w_txi, txi_sign)
+                tx_ser.serialized_tx = w_txi
 
-            # todo: what to do with other types?
-            script_code = input_derive_script(txi, coin, root)
-            bip143.preimage(tx, txi, script_code)
-            # Return serialized input chunk ? todo
+            tx_req.serialized = tx_ser
+
         else:
             for i in range(tx.inputs_count):
                 # STAGE_REQUEST_4_INPUT
@@ -285,7 +298,7 @@ async def sign_tx(tx: SignTx, root, segwit=False):
             txi_sign.script_sig = input_derive_script(
                 txi_sign, key_sign_pub, signature)
             w_txi_sign = bytearray_with_cap(
-                len(txi_sign.prev_hash) + 4 + 5 + len(txi_sign.script_sig) + 4)
+                5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
             if i_sign == 0:  # serializing first input => prepend tx version and inputs count
                 write_uint32(w_txi_sign, tx.version)
                 write_varint(w_txi_sign, tx.inputs_count)
@@ -306,13 +319,34 @@ async def sign_tx(tx: SignTx, root, segwit=False):
         if o == 0:  # serializing first output => prepend outputs count
             write_varint(w_txo_bin, tx.outputs_count)
         write_tx_output(w_txo_bin, txo_bin)
-        if o == tx.outputs_count - 1:  # serializing last output => append tx lock_time
-            write_uint32(w_txo_bin, tx.lock_time)
-        tx_ser.signature_index = None
+
+        tx_ser.signature_index = None  # @todo delete?
         tx_ser.signature = None
         tx_ser.serialized_tx = w_txo_bin
 
         tx_req.serialized = tx_ser
+
+    for i in range(tx.inputs_count):
+        if segwit[i]:
+            # STAGE_REQUEST_SEGWIT_WITNESS
+            txi = await request_tx_input(tx_req, i)
+            # todo check amount?
+            # if hashType != ANYONE_CAN_PAY ? todo
+            # todo: what to do with other types?
+            key_sign = node_derive(root, txi.address_n)
+            key_sign_pub = key_sign.public_key()
+            bip143_hash = bip143.preimage_hash(tx, txi, ecdsa_hash_pubkey(key_sign_pub))
+
+            signature = ecdsa_sign(key_sign, bip143_hash)
+
+            witness = get_p2wpkh_witness(signature, key_sign_pub)
+
+            tx_ser.serialized_tx = witness
+            tx_req.serialized = tx_ser
+        # else
+            # witness is 0x00
+
+    write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
     await request_tx_finish(tx_req)
 
@@ -384,6 +418,7 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
 
 def output_paytoaddress_extract_raw_address(
         o: TxOutputType, coin: CoinType, root, p2sh: bool=False) -> bytes:
+    # todo if segwit then addr_type = p2sh ?
     addr_type = coin.address_type_p2sh if p2sh else coin.address_type
     # TODO: dont encode/decode more then necessary
     if o.address_n is not None:
@@ -415,8 +450,8 @@ def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes=None) ->
         else:
             return script_spendaddress_new(pubkey, signature)
 
-    if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # todo
-        return script_paytoaddress_new(ecdsa_hash_pubkey(pubkey))
+    if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
+        return script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
 
     else:
         raise SigningError(FailureType.SyntaxError,
@@ -471,6 +506,18 @@ def script_paytoscripthash_new(scripthash: bytes) -> bytearray:
     return s
 
 
+# P2WPKH is nested in P2SH to be backwards compatible
+# see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+# this pushes 16 00 14 <pubkeyhash>
+def script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
+    w = bytearray_with_cap(3 + len(pubkeyhash))
+    write_op_push(w, len(pubkeyhash) + 2)  # 0x16 - length of the redeemScript
+    w.append(0x00)  # witness version byte
+    w.append(0x14)  # P2WPKH witness program (pub key hash length + pub key hash)
+    write_bytes(w, pubkeyhash)
+    return w
+
+
 def script_paytoopreturn_new(data: bytes) -> bytearray:
     w = bytearray_with_cap(1 + 5 + len(data))
     w.append(0x6A)  # OP_RETURN
@@ -481,9 +528,21 @@ def script_paytoopreturn_new(data: bytes) -> bytearray:
 
 def script_spendaddress_new(pubkey: bytes, signature: bytes) -> bytearray:
     w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
+    append_signature_and_pubkey(w, pubkey, signature)
+    return w
+
+
+def get_p2wpkh_witness(signature: bytes, pubkey: bytes):
+    w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
+    write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
+    append_signature_and_pubkey(w, pubkey, signature)
+    return w
+
+
+def append_signature_and_pubkey(w: bytearray, pubkey: bytes, signature: bytes) -> bytearray:
     write_op_push(w, len(signature) + 1)
     write_bytes(w, signature)
-    w.append(0x01)
+    w.append(0x01)  # SIGHASH_ALL
     write_op_push(w, len(pubkey))
     write_bytes(w, pubkey)
     return w
