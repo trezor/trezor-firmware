@@ -246,7 +246,21 @@ static void test_otp_read(void)
     uint8_t data[32];
     memset(data, 0, sizeof(data));
     flash_otp_read(0, 0, data, sizeof(data));
-    vcp_printf("OK %s", (const char *) data);
+
+    // strip trailing 0xFF
+    for (size_t i = 0; i < sizeof(data); i++) {
+        if (data[i] == 0xFF) {
+            data[i] = 0x00;
+            break;
+        }
+    }
+
+    // use (null) for empty data
+    if (data[0] == 0x00) {
+        vcp_printf("OK (null)");
+    } else {
+        vcp_printf("OK %s", (const char *) data);
+    }
 }
 
 static void test_otp_write(const char *args)
