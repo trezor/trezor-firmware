@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef uint32_t secbool;
-#define sectrue  0xAAAAAAAA
-#define secfalse 0x00000000
+#define sectrue  0xAAAAAAAAU
+#define secfalse 0x00000000U
 
 #endif
