@@ -66,30 +66,29 @@ jump_to:
   .type shutdown, STT_FUNC
 shutdown:
   cpsid f
-  bl clear_otg_hs_memory
+  ldr r0, =0
+  mov r1, r0
+  mov r2, r0
+  mov r3, r0
+  mov r4, r0
+  mov r5, r0
+  mov r6, r0
+  mov r7, r0
+  mov r8, r0
+  mov r9, r0
+  mov r10, r0
+  mov r11, r0
+  mov r12, r0
+  ldr lr, =0xffffffff
   ldr r0, =ccmram_start
   ldr r1, =ccmram_end
-  ldr r2, =0
+  // set to value in r2
   bl memset_reg
   ldr r0, =sram_start
   ldr r1, =sram_end
-  ldr r2, =0
+  // set to value in r2
   bl memset_reg
-  ldr lr, =0xffffffff
-  ldr r0, =0
-  ldr r1, =0
-  ldr r2, =0
-  ldr r3, =0
-  ldr r4, =0
-  ldr r5, =0
-  ldr r6, =0
-  ldr r7, =0
-  ldr r8, =0
-  ldr r9, =0
-  ldr r10, =0
-  ldr r11, =0
-  ldr r12, =0
-
+  bl clear_otg_hs_memory
   b . // loop forever
 
   .end
