@@ -30,7 +30,7 @@
 
 static uint32_t inputs_count;
 static uint32_t outputs_count;
-static const CoinType *coin;
+static const CoinInfo *coin;
 static const HDNode *root;
 static CONFIDENTIAL HDNode node;
 static bool signing = false;
@@ -424,7 +424,7 @@ bool compile_input_script_sig(TxInputType *tinput)
 	return tinput->script_sig.size > 0;
 }
 
-void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinType *_coin, const HDNode *_root, uint32_t _version, uint32_t _lock_time)
+void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinInfo *_coin, const HDNode *_root, uint32_t _version, uint32_t _lock_time)
 {
 	inputs_count = _inputs_count;
 	outputs_count = _outputs_count;
@@ -827,7 +827,7 @@ void signing_txack(TransactionType *tx)
 				}
 			} else if  (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS
 						|| tx->inputs[0].script_type == InputScriptType_SPENDP2SHWITNESS) {
-				if (!coin->has_segwit || !coin->segwit) {
+				if (!coin->has_segwit) {
 					fsm_sendFailure(FailureType_Failure_DataError, _("Segwit not enabled on this coin"));
 					signing_abort();
 					return;

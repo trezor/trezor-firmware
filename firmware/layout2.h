@@ -22,6 +22,7 @@
 
 #include "layout.h"
 #include "types.pb.h"
+#include "coins.h"
 #include "bitmaps.h"
 #include "bignum.h"
 #include "trezor.h"
@@ -39,9 +40,9 @@ void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
 void layoutHome(void);
-void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out);
-void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_fee);
-void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee);
+void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out);
+void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out, uint64_t amount_fee);
+void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee);
 void layoutSignMessage(const uint8_t *msg, uint32_t len);
 void layoutVerifyAddress(const char *address);
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len);

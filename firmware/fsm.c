@@ -163,9 +163,9 @@ void fsm_sendFailure(FailureType code, const char *text)
 	msg_write(MessageType_MessageType_Failure, resp);
 }
 
-const CoinType *fsm_getCoin(bool has_name, const char *name)
+const CoinInfo *fsm_getCoin(bool has_name, const char *name)
 {
-	const CoinType *coin;
+	const CoinInfo *coin;
 	if (has_name) {
 		coin = coinByName(name);
 	} else {
@@ -208,6 +208,8 @@ void fsm_msgInitialize(Initialize *msg)
 	fsm_msgGetFeatures(0);
 }
 
+_Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
+
 void fsm_msgGetFeatures(GetFeatures *msg)
 {
 	(void)msg;
@@ -233,7 +235,12 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 		strlcpy(resp->label, storage.label, sizeof(resp->label));
 	}
 	resp->coins_count = COINS_COUNT;
-	memcpy(resp->coins, coins, COINS_COUNT * sizeof(CoinType));
+	for (int i = 0; i < COINS_COUNT; i++) {
+		resp->coins[i].has_coin_name = true;
+		strlcpy(resp->coins[i].coin_name, coins[i].coin_name, sizeof(resp->coins[i].coin_name));
+		resp->coins[i].has_maxfee_kb = true;
+		resp->coins[i].maxfee_kb = coins[i].maxfee_kb;
+	}
 	resp->has_initialized = true; resp->initialized = storage_isInitialized();
 	resp->has_imported = true; resp->imported = storage.has_imported && storage.imported;
 	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
@@ -358,7 +365,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 
 	const char *curve = SECP256K1_NAME;
@@ -471,7 +478,7 @@ void fsm_msgSignTx(SignTx *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, 0, 0);
 	if (!node) return;
@@ -640,7 +647,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
@@ -794,7 +801,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	CHECK_PIN
 
-	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
 	if (!node) return;
@@ -822,7 +829,7 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	CHECK_PARAM(msg->has_address, _("No address provided"));
 	CHECK_PARAM(msg->has_message, _("No message provided"));
 
-	const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 	uint32_t address_type;
@@ -992,7 +999,7 @@ void fsm_msgEncryptMessage(EncryptMessage *msg)
 	const HDNode *node = 0;
 	uint8_t address_raw[MAX_ADDR_RAW_SIZE];
 	if (signing) {
-		const CoinType *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+		const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 		if (!coin) return;
 
 		CHECK_PIN

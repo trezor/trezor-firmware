@@ -23,13 +23,12 @@
 #include "ecdsa.h"
 #include "base58.h"
 
-// filled CoinType Protobuf structure defined in https://github.com/trezor/trezor-common/blob/master/protob/types.proto#L133
-// address types > 0xFF represent a two-byte prefix in big-endian order
-const CoinType coins[COINS_COUNT] = {
+// filled CoinInfo structure defined in coins.h
+const CoinInfo coins[COINS_COUNT] = {
 #include "coins_array.h"
 };
 
-const CoinType *coinByName(const char *name)
+const CoinInfo *coinByName(const char *name)
 {
 	if (!name) return 0;
 	for (int i = 0; i < COINS_COUNT; i++) {
@@ -40,7 +39,7 @@ const CoinType *coinByName(const char *name)
 	return 0;
 }
 
-const CoinType *coinByAddressType(uint32_t address_type)
+const CoinInfo *coinByAddressType(uint32_t address_type)
 {
 	for (int i = 0; i < COINS_COUNT; i++) {
 		if (address_type == coins[i].address_type) {
@@ -50,7 +49,7 @@ const CoinType *coinByAddressType(uint32_t address_type)
 	return 0;
 }
 
-bool coinExtractAddressType(const CoinType *coin, const char *addr, uint32_t *address_type)
+bool coinExtractAddressType(const CoinInfo *coin, const char *addr, uint32_t *address_type)
 {
 	if (!addr) return false;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
@@ -61,7 +60,7 @@ bool coinExtractAddressType(const CoinType *coin, const char *addr, uint32_t *ad
 	return false;
 }
 
-bool coinExtractAddressTypeRaw(const CoinType *coin, const uint8_t *addr_raw, uint32_t *address_type)
+bool coinExtractAddressTypeRaw(const CoinInfo *coin, const uint8_t *addr_raw, uint32_t *address_type)
 {
 	if (coin->has_address_type && address_check_prefix(addr_raw, coin->address_type)) {
 		*address_type = coin->address_type;

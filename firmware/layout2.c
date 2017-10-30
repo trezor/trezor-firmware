@@ -97,10 +97,10 @@ void layoutHome(void)
 	system_millis_lock_start = system_millis;
 }
 
-void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
+void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 {
 	char str_out[32];
-	bn_format_uint64(out->amount, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
+	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
 	static char first_half[17 + 1];
 	strlcpy(first_half, out->address, sizeof(first_half));
 	layoutDialogSwipe(&bmp_icon_question,
@@ -116,11 +116,11 @@ void layoutConfirmOutput(const CoinType *coin, const TxOutputType *out)
 	);
 }
 
-void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_fee)
+void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out, uint64_t amount_fee)
 {
 	char str_out[32], str_fee[32];
-	bn_format_uint64(amount_out, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
-	bn_format_uint64(amount_fee, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_fee, sizeof(str_fee));
+	bn_format_uint64(amount_out, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
+	bn_format_uint64(amount_fee, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),
@@ -134,10 +134,10 @@ void layoutConfirmTx(const CoinType *coin, uint64_t amount_out, uint64_t amount_
 	);
 }
 
-void layoutFeeOverThreshold(const CoinType *coin, uint64_t fee)
+void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee)
 {
 	char str_fee[32];
-	bn_format_uint64(fee, NULL, coin->has_coin_shortcut ? coin->coin_shortcut : NULL, BITCOIN_DIVISIBILITY, 0, false, str_fee, sizeof(str_fee));
+	bn_format_uint64(fee, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_fee, sizeof(str_fee));
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),

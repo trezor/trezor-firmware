@@ -110,7 +110,7 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 	}
 }
 
-int cryptoMessageSign(const CoinType *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature)
+int cryptoMessageSign(const CoinInfo *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature)
 {
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -143,7 +143,7 @@ int cryptoMessageSign(const CoinType *coin, HDNode *node, InputScriptType script
 	return result;
 }
 
-int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature)
+int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature)
 {
 	// check for invalid signature prefix
 	if (signature[0] < 27 || signature[0] > 43) {

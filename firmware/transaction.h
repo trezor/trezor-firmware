@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "sha2.h"
 #include "bip32.h"
+#include "coins.h"
 #include "types.pb.h"
 
 typedef struct {
@@ -45,13 +46,13 @@ typedef struct {
 	SHA256_CTX ctx;
 } TxStruct;
 
-bool compute_address(const CoinType *coin, InputScriptType script_type, const HDNode *node, bool has_multisig, const MultisigRedeemScriptType *multisig, char address[MAX_ADDR_SIZE]);
+bool compute_address(const CoinInfo *coin, InputScriptType script_type, const HDNode *node, bool has_multisig, const MultisigRedeemScriptType *multisig, char address[MAX_ADDR_SIZE]);
 uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash, uint8_t *out);
 uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out);
 uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, uint8_t *hash);
 uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, const uint8_t *pubkey, uint32_t pubkey_len, uint8_t sighash, uint8_t *out);
 uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t sighash, uint8_t *out);
-int compile_output(const CoinType *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm);
+int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm);
 
 uint32_t tx_prevout_hash(SHA256_CTX *ctx, const TxInputType *input);
 uint32_t tx_script_hash(SHA256_CTX *ctx, uint32_t size, const uint8_t *data);

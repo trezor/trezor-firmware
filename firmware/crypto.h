@@ -27,6 +27,7 @@
 #include <bip32.h>
 #include <sha2.h>
 #include <pb.h>
+#include "coins.h"
 #include "types.pb.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
@@ -37,9 +38,9 @@ int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 
 int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
-int cryptoMessageSign(const CoinType *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature);
+int cryptoMessageSign(const CoinInfo *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature);
 
-int cryptoMessageVerify(const CoinType *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature);
+int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature);
 
 /* ECIES disabled
 int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t *payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t *privkey, const uint8_t *address_raw);

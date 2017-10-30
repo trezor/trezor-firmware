@@ -13,34 +13,18 @@ if len(sys.argv) != 2 or sys.argv[1] not in ("count", "array"):
 
 def get_fields(coin):
     return [
-        'true' if coin['coin_name'] is not None else 'false',
         '"%s"' % coin['coin_name'] if coin['coin_name'] is not None else 'NULL',
-
-        'true' if coin['coin_shortcut'] is not None else 'false',
         '" %s"' % coin['coin_shortcut'] if coin['coin_shortcut'] is not None else 'NULL',
-
-        'true' if coin['address_type'] is not None else 'false',
-        '%d' % coin['address_type'] if coin['address_type'] is not None else '0',
-
-        'true' if coin['maxfee_kb'] is not None else 'false',
         '%d' % coin['maxfee_kb'] if coin['maxfee_kb'] is not None else '0',
-
-        'true' if coin['address_type_p2sh'] is not None else 'false',
-        '%d' % coin['address_type_p2sh'] if coin['address_type_p2sh'] is not None else '0',
-
-        'true' if coin['signed_message_header'] is not None else 'false',
         '"\\x%02x" "%s"' % (len(coin['signed_message_header']), coin['signed_message_header'].replace('\n', '\\n')) if coin['signed_message_header'] is not None else 'NULL',
-
-        'true' if coin['xpub_magic'] is not None else 'false',
-        '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '00000000',
-
-        'true' if coin['xprv_magic'] is not None else 'false',
-        '0x%s' % coin['xprv_magic'] if coin['xprv_magic'] is not None else '00000000',
-
-        'true' if coin['segwit'] is not None else 'false',
+        'true' if coin['address_type'] is not None else 'false',
+        'true' if coin['address_type_p2sh'] is not None else 'false',
         'true' if coin['segwit'] else 'false',
-
         'true' if coin['forkid'] is not None else 'false',
+        '%d' % coin['address_type'] if coin['address_type'] is not None else '0',
+        '%d' % coin['address_type_p2sh'] if coin['address_type_p2sh'] is not None else '0',
+        '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '00000000',
+        '0x%s' % coin['xprv_magic'] if coin['xprv_magic'] is not None else '00000000',
         '%d' % coin['forkid'] if coin['forkid'] else '0'
     ]
 

@@ -20,17 +20,33 @@
 #ifndef __COINS_H__
 #define __COINS_H__
 
-#include "messages.pb.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "coins_count.h"
 
-_Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
+typedef struct _CoinInfo {
+	const char *coin_name;
+	const char *coin_shortcut;
+	uint64_t maxfee_kb;
+	const char *signed_message_header;
+	bool has_address_type;
+	bool has_address_type_p2sh;
+	bool has_segwit;
+	bool has_forkid;
+	// address types > 0xFF represent a two-byte prefix in big-endian order
+	uint32_t address_type;
+	uint32_t address_type_p2sh;
+	uint32_t xpub_magic;
+	uint32_t xprv_magic;
+	uint32_t forkid;
+} CoinInfo;
 
-extern const CoinType coins[COINS_COUNT];
+extern const CoinInfo coins[COINS_COUNT];
 
-const CoinType *coinByName(const char *name);
-const CoinType *coinByAddressType(uint32_t address_type);
-bool coinExtractAddressType(const CoinType *coin, const char *addr, uint32_t *address_type);
-bool coinExtractAddressTypeRaw(const CoinType *coin, const uint8_t *addr_raw, uint32_t *address_type);
+const CoinInfo *coinByName(const char *name);
+const CoinInfo *coinByAddressType(uint32_t address_type);
+bool coinExtractAddressType(const CoinInfo *coin, const char *addr, uint32_t *address_type);
+bool coinExtractAddressTypeRaw(const CoinInfo *coin, const uint8_t *addr_raw, uint32_t *address_type);
 
 #endif
