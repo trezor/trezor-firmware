@@ -182,9 +182,9 @@ bloaty: ## run bloaty size profiler
 	bloaty -d compileunits -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 
 sizecheck: ## check sizes of binary files
-	test $(BOARDLOADER_MAXSIZE) -ge $(shell stat -c%s $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
-	test $(BOOTLOADER_MAXSIZE) -ge $(shell stat -c%s $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
-	test $(FIRMWARE_MAXSIZE) -ge $(shell stat -c%s $(FIRMWARE_BUILD_DIR)/firmware.bin)
+	test $(BOARDLOADER_MAXSIZE) -ge $(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
+	test $(BOOTLOADER_MAXSIZE) -ge $(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
+	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
 combine: ## combine boardloader + bootloader + prodtest into one combined image
 	./tools/combine_firmware \

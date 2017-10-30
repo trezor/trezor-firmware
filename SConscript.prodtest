@@ -154,6 +154,6 @@ program_bin = env.Command(
     action=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
         '$BINCTL $TARGET -h',
-        'dd if=$TARGET of=build/prodtest/header.tosign bs=1 count=1024 skip=`stat -c%s embed/firmware/vendorheader.bin`',
+        'dd if=$TARGET of=build/prodtest/header.tosign bs=1 count=1024 skip=`wc -c < embed/firmware/vendorheader.bin | tr -d " "`',
         '$BINCTL $TARGET -s 1:2 `$COMBINE_SIGN firmware build/prodtest/header.tosign 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
     ], )
