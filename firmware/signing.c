@@ -68,11 +68,16 @@ static uint8_t multisig_fp[32];
 static uint32_t in_address_n[8];
 static size_t in_address_n_count;
 
-/* marker for in_address_n_count to indicate a mismatch in bip32 paths in 
+/* A marker for in_address_n_count to indicate a mismatch in bip32 paths in
    input */
 #define BIP32_NOCHANGEALLOWED 1
-/* maximum allowed change index */
-#define MAX_BIP32_LAST_ELEMENT 1000000
+/* The number of bip32 levels used in a wallet (chain and address) */
+#define BIP32_WALLET_DEPTH    2
+/* The chain id used for change */
+#define BIP32_CHANGE_CHAIN    1
+/* The maximum allowed change address.  This should be large enough for normal
+   use and still allow to quickly brute-force the correct bip32 path. */
+#define BIP32_MAX_LAST_ELEMENT 1000000
 
 enum {
 	SIGHASH_ALL = 1,
@@ -338,7 +343,7 @@ void extract_input_bip32_path(const TxInputType *tinput)
 		return;
 	}
 	size_t count = tinput->address_n_count;
-	if (count < 2) {
+	if (count < BIP32_WALLET_DEPTH) {
 		// no change address allowed
 		in_address_n_count = BIP32_NOCHANGEALLOWED;
 		return;
@@ -346,16 +351,19 @@ void extract_input_bip32_path(const TxInputType *tinput)
 	if (in_address_n_count == 0) {
 		// initialize in_address_n on first input seen
 		in_address_n_count = count;
-		// store first N - 2
-		memcpy(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t));
+		// store the bip32 path up to the account
+		memcpy(in_address_n, tinput->address_n,
+			   (count - BIP32_WALLET_DEPTH) * sizeof(uint32_t));
 		return;
 	}
-	// check whether they are same length
+	// check that all addresses use a path of same length
 	if (in_address_n_count != count) {
 		in_address_n_count = BIP32_NOCHANGEALLOWED;
 		return;
 	}
-	if (memcmp(in_address_n, tinput->address_n, (count - 2) * sizeof(uint32_t)) != 0) {
+	// check that the bip32 path up to the account matches
+	if (memcmp(in_address_n, tinput->address_n,
+			   (count - BIP32_WALLET_DEPTH) * sizeof(uint32_t)) != 0) {
 		// mismatch -> no change address allowed
 		in_address_n_count = BIP32_NOCHANGEALLOWED;
 		return;
@@ -366,13 +374,17 @@ bool check_change_bip32_path(const TxOutputType *toutput)
 {
 	size_t count = toutput->address_n_count;
 
-	// Note: count >= 2 and count == in_address_n_count
+	// Check that the change path has the same bip32 path length,
+	// the same path up to the account, and that the wallet components
+	// (chain id and address) are as expected.
+	// Note: count >= BIP32_WALLET_DEPTH and count == in_address_n_count
 	// imply that in_address_n_count != BIP32_NOCHANGEALLOWED
-	return (count >= 2
+	return (count >= BIP32_WALLET_DEPTH
 			&& count == in_address_n_count
-			&& 0 == memcmp(in_address_n, toutput->address_n, (count - 2) * sizeof(uint32_t))
-			&& toutput->address_n[count - 2] == 1
-			&& toutput->address_n[count - 1] <= MAX_BIP32_LAST_ELEMENT);
+			&& 0 == memcmp(in_address_n, toutput->address_n,
+						   (count - BIP32_WALLET_DEPTH) * sizeof(uint32_t))
+			&& toutput->address_n[count - 2] == BIP32_CHANGE_CHAIN
+			&& toutput->address_n[count - 1] <= BIP32_MAX_LAST_ELEMENT);
 }
 
 bool compile_input_script_sig(TxInputType *tinput)
