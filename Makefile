@@ -65,8 +65,8 @@ emu: ## run emulator
 test: ## run unit tests
 	cd tests ; ./run_tests.sh
 
-testpy: ## run selected unit tests from python-trezor
-	cd tests ; ./run_tests_device.sh
+test_emu: ## run selected device tests from python-trezor
+	cd tests ; ./run_tests_device_emu.sh
 
 pylint: ## run pylint on application sources
 	pylint -E $(shell find src -name *.py)

@@ -54,7 +54,7 @@ script:
 
   - test "$GOAL" != "unix" || make build_unix_noui
   - test "$GOAL" != "unix" || make test
-  - test "$GOAL" != "unix" || make testpy
+  - test "$GOAL" != "unix" || make test_emu
 
   # - test "$GOAL" != "src" || make style
 
