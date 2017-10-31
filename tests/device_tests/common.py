@@ -104,6 +104,7 @@ class TrezorTest(unittest.TestCase):
         self.pin8 = '45678978'
 
         self.client.wipe_device()
+        self.client.transport.session_begin()
 
         print("Setup finished")
         print("--------------")
@@ -121,6 +122,7 @@ class TrezorTest(unittest.TestCase):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=True, label='test', language='english')
 
     def tearDown(self):
+        self.client.transport.session_end()
         self.client.close()
 
 
