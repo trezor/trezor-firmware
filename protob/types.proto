@@ -170,6 +170,7 @@ message CoinType {
 	optional uint32 xprv_magic = 10 [default=76066276];	// default=0x0488ade4
 	optional bool segwit = 11;
 	optional uint32 forkid = 12;
+	optional bool force_bip143 = 13;
 }
 
 /**
