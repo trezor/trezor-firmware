@@ -610,6 +610,16 @@ static bool signing_check_fee(void) {
 	return true;
 }
 
+static uint32_t signing_hash_type(void) {
+	uint32_t hash_type = SIGHASH_ALL;
+
+	if (coin->has_forkid) {
+		hash_type |= (coin->forkid << 8) | SIGHASH_FORKID;
+	}
+
+	return hash_type;
+}
+
 static void phase1_request_next_output(void) {
 	if (idx1 < outputs_count - 1) {
 		idx1++;
@@ -628,8 +638,8 @@ static void phase1_request_next_output(void) {
 	}
 }
 
-static void signing_hash_bip143(const TxInputType *txinput, uint8_t sighash, uint32_t forkid, uint8_t *hash) {
-	uint32_t hash_type = (forkid << 8) | sighash;
+static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
+	uint32_t hash_type = signing_hash_type();
 	sha256_Init(&hashers[0]);
 	sha256_Update(&hashers[0], (const uint8_t *)&version, 4);
 	sha256_Update(&hashers[0], hash_prevouts, 32);
@@ -645,7 +655,7 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t sighash, uin
 	sha256_Raw(hash, 32, hash);
 }
 
-static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, const uint8_t *public_key, const uint8_t *hash, uint8_t sighash) {
+static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, const uint8_t *public_key, const uint8_t *hash) {
 	resp.serialized.has_signature_index = true;
 	resp.serialized.signature_index = idx1;
 	resp.serialized.has_signature = true;
@@ -657,6 +667,7 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, 
 	}
 	resp.serialized.signature.size = ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 
+	uint8_t sighash = signing_hash_type() & 0xff;
 	if (txinput->has_multisig) {
 		// fill in the signature
 		int pubkey_idx = cryptoMultisigPubkeyIndex(&(txinput->multisig), public_key);
@@ -689,10 +700,9 @@ static bool signing_sign_input(void) {
 		return false;
 	}
 
-	uint8_t sighash = SIGHASH_ALL;
 	tx_hash_final(&ti, hash, false);
 	resp.has_serialized = true;
-	if (!signing_sign_hash(&input, privkey, pubkey, hash, sighash))
+	if (!signing_sign_hash(&input, privkey, pubkey, hash))
 		return false;
 	resp.serialized.serialized_tx.size = tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
 	return true;
@@ -716,10 +726,10 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 		}
 		authorized_amount -= txinput->amount;
 
-		signing_hash_bip143(txinput, SIGHASH_ALL, 0, hash);
+		signing_hash_bip143(txinput, hash);
 
 		resp.has_serialized = true;
-		if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash, SIGHASH_ALL))
+		if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash))
 			return false;
 		if (txinput->has_multisig) {
 			uint32_t r = 1; // skip number of items (filled in later)
@@ -1035,8 +1045,8 @@ void signing_txack(TransactionType *tx)
 				authorized_amount -= tx->inputs[0].amount;
 
 				uint8_t hash[32];
-				signing_hash_bip143(&tx->inputs[0], SIGHASH_ALL | SIGHASH_FORKID, coin->forkid, hash);
-				if (!signing_sign_hash(&tx->inputs[0], node.private_key, node.public_key, hash, SIGHASH_ALL | SIGHASH_FORKID))
+				signing_hash_bip143(&tx->inputs[0], hash);
+				if (!signing_sign_hash(&tx->inputs[0], node.private_key, node.public_key, hash))
 					return;
 				// since this took a longer time, update progress
 				signatures++;
