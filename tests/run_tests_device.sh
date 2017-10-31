@@ -27,7 +27,6 @@ pytest \
     --ignore test_msg_recoverydevice_dryrun.py \
     --ignore test_msg_recoverydevice.py \
     --ignore test_msg_resetdevice_skipbackup.py \
-    --ignore test_msg_resetdevice.py \
     --ignore test_msg_signmessage_segwit.py \
     --ignore test_msg_signtx_bch.py \
     --ignore test_msg_signtx_segwit_native.py \
