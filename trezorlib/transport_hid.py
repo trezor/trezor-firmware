@@ -20,6 +20,7 @@ from __future__ import absolute_import
 
 import time
 import hid
+import os
 
 from .protocol_v1 import ProtocolV1
 from .protocol_v2 import ProtocolV2
@@ -63,7 +64,9 @@ class HidTransport(Transport):
             hid_handle = HidHandle(device['path'])
 
         if protocol is None:
-            if is_trezor2(device):
+            force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
+
+            if is_trezor2(device) and not int(force_v1):
                 protocol = ProtocolV2()
             else:
                 protocol = ProtocolV1()
@@ -74,7 +77,7 @@ class HidTransport(Transport):
         self.hid_version = None
 
     def __str__(self):
-        return self.device['path']
+        return self.device['path'].decode()
 
     @staticmethod
     def enumerate(debug=False):
