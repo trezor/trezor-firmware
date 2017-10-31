@@ -21,7 +21,6 @@ pytest \
     --ignore test_msg_getaddress_segwit.py \
     --ignore test_msg_getaddress_show.py \
     --ignore test_msg_loaddevice_xprv.py \
-    --ignore test_msg_loaddevice.py \
     --ignore test_msg_nem_getaddress.py \
     --ignore test_msg_nem_signtx.py \
     --ignore test_msg_ping.py \
