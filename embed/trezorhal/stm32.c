@@ -22,6 +22,8 @@ void SystemInit(void)
                    | (0U << RCC_PLLCFGR_PLLP_Pos)   // P = 2 (two bits, 00 means PLLP = 2)
                    | (168U << RCC_PLLCFGR_PLLN_Pos) // N = 168
                    | (4U << RCC_PLLCFGR_PLLM_Pos);  // M = 4
+    // enable spread spectrum clock for main PLL
+    RCC->SSCGR = RCC_SSCGR_SSCGEN | (44 << RCC_SSCGR_INCSTEP_Pos) | (250 << RCC_SSCGR_MODPER_Pos);
     // enable clock security system, HSE clock, and main PLL
     RCC->CR |= RCC_CR_CSSON | RCC_CR_HSEON | RCC_CR_PLLON;
     // wait until PLL and HSE ready
