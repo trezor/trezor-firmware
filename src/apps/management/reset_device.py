@@ -47,10 +47,10 @@ async def layout_reset_device(ctx, msg):
         pin = None
 
     external_entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
-    ctx = hashlib.sha256()
-    ctx.update(internal_entropy)
-    ctx.update(external_entropy_ack.entropy)
-    entropy = ctx.digest()
+    ehash = hashlib.sha256()
+    ehash.update(internal_entropy)
+    ehash.update(external_entropy_ack.entropy)
+    entropy = ehash.digest()
     mnemonic = bip39.from_data(entropy[:msg.strength // 8])
 
     await show_mnemonic_by_word(ctx, mnemonic)
@@ -74,23 +74,23 @@ async def show_mnemonic_by_word(ctx, mnemonic):
     if __debug__:
         global current_word
 
-    index = 0
-    recovery = True
-
-    while index < len(words):
-        word = words[index]
-        current_word = word
+    for index, word in enumerate(words):
+        if __debug__:
+            current_word = word
         await confirm(ctx,
-                      Text(
-                          'Recovery seed setup', ui.ICON_RESET,
-                          ui.NORMAL, 'Write down seed word' if recovery else 'Confirm seed word', ' ',
-                          ui.BOLD, '%d. %s' % (index + 1, word)),
-                      ConfirmWord,
-                      'Next', None)
-        index += 1
-        if index == len(words) and recovery:
-            recovery = False
-            index = 0
+                      Text('Recovery seed setup', ui.ICON_RESET,
+                           ui.NORMAL, 'Write down seed word', '',
+                           ui.BOLD, '%d. %s' % (index + 1, word)),
+                      ConfirmWord, confirm='Next', cancel=None)
+
+    for index, word in enumerate(words):
+        if __debug__:
+            current_word = word
+        await confirm(ctx,
+                      Text('Recovery seed setup', ui.ICON_RESET,
+                           ui.NORMAL, 'Confirm seed word', '',
+                           ui.BOLD, '%d. %s' % (index + 1, word)),
+                      ConfirmWord, confirm='Next', cancel=None)
 
 
 async def show_mnemonic(mnemonic):
@@ -117,14 +117,13 @@ async def show_mnemonic_page(page, page_count, mnemonic):
         offset = 0
         if pos > 9:
             offset += 12
-        ui.display.text(
-            10, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BG)
-        ui.display.text(
-            30 + offset, top, '%s' % word, ui.BOLD, ui.FG, ui.BG)
+        ui.display.text(10, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BG)
+        ui.display.text(30 + offset, top, '%s' % word, ui.BOLD, ui.FG, ui.BG)
 
     if page + 1 == page_count:
         await Button(
-            (0, 240 - 48, 240, 48), 'Finish',
+            (0, 240 - 48, 240, 48),
+            'Finish',
             normal_style=ui.BTN_CONFIRM,
             active_style=ui.BTN_CONFIRM_ACTIVE)
     else:
