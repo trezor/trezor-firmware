@@ -36,7 +36,7 @@ const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 secbool flash_unlock(void)
 {
     HAL_FLASH_Unlock();
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+    FLASH->SR |= FLASH_STATUS_ALL_FLAGS; // clear all status flags
     return sectrue;
 }
 

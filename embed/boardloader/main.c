@@ -146,23 +146,22 @@ static secbool copy_sdcard(void)
 
 int main(void)
 {
-    periph_init(); // need the systick timer running before the production flash (and many other HAL) operations
-
     if (sectrue != reset_flags_init()) {
         return 1;
     }
 
-#if PRODUCTION
-    flash_set_option_bytes();
-    if (sectrue != flash_check_option_bytes()) {
-        uint8_t sectors[] = {
+    // need the systick timer running before many HAL operations.
+    // want the PVD enabled before flash operations too.
+    periph_init();
+
+    if (sectrue != flash_configure_option_bytes()) {
+        const uint8_t sectors[] = {
             FLASH_SECTOR_STORAGE_1,
             FLASH_SECTOR_STORAGE_2,
         };
         flash_erase_sectors(sectors, 2, NULL);
         return 2;
     }
-#endif
 
     clear_otg_hs_memory();
 
