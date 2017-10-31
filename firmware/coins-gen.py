@@ -21,6 +21,7 @@ def get_fields(coin):
         'true' if coin['address_type_p2sh'] is not None else 'false',
         'true' if coin['segwit'] else 'false',
         'true' if coin['forkid'] is not None else 'false',
+        'true' if coin['force_bip143'] else 'false',
         '%d' % coin['address_type'] if coin['address_type'] is not None else '0',
         '%d' % coin['address_type_p2sh'] if coin['address_type_p2sh'] is not None else '0',
         '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '0x00000000',

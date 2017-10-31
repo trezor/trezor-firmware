@@ -34,6 +34,7 @@ typedef struct _CoinInfo {
 	bool has_address_type_p2sh;
 	bool has_segwit;
 	bool has_forkid;
+	bool force_bip143;
 	// address types > 0xFF represent a two-byte prefix in big-endian order
 	uint32_t address_type;
 	uint32_t address_type_p2sh;

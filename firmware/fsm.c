@@ -258,6 +258,8 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 		resp->coins[i].segwit = coins[i].has_segwit;
 		resp->coins[i].has_forkid = coins[i].has_forkid;
 		resp->coins[i].forkid = coins[i].forkid;
+		resp->coins[i].has_force_bip143 = true;
+		resp->coins[i].force_bip143 = coins[i].force_bip143;
 	}
 	resp->has_initialized = true; resp->initialized = storage_isInitialized();
 	resp->has_imported = true; resp->imported = storage.has_imported && storage.imported;
