@@ -455,25 +455,13 @@ uint32_t tx_serialize_middle_hash(TxStruct *tx)
 uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 {
 	memcpy(out, &(tx->lock_time), 4);
-	if (tx->add_hash_type) {
-		uint32_t ht = 1;
-		memcpy(out + 4, &ht, 4);
-		return 8;
-	} else {
-		return 4;
-	}
+	return 4;
 }
 
 uint32_t tx_serialize_footer_hash(TxStruct *tx)
 {
 	sha256_Update(&(tx->ctx), (const uint8_t *)&(tx->lock_time), 4);
-	if (tx->add_hash_type) {
-		uint32_t ht = 1;
-		sha256_Update(&(tx->ctx), (const uint8_t *)&ht, 4);
-		return 8;
-	} else {
-		return 4;
-	}
+	return 4;
 }
 
 uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_t *out)
@@ -545,13 +533,12 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 	return datalen;
 }
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t extra_data_len, bool add_hash_type)
+void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t extra_data_len)
 {
 	tx->inputs_len = inputs_len;
 	tx->outputs_len = outputs_len;
 	tx->version = version;
 	tx->lock_time = lock_time;
-	tx->add_hash_type = add_hash_type;
 	tx->have_inputs = 0;
 	tx->have_outputs = 0;
 	tx->extra_data_len = extra_data_len;
