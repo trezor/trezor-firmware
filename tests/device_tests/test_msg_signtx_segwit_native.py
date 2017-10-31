@@ -39,7 +39,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
             script_type=proto_types.SPENDP2SHWITNESS,
         )
         out1 = proto_types.TxOutputType(
-            address='QWywnqNMsMNavbCgMYiQLa91ApvsVRoaqt1i',
+            address='tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s',
             amount=12300000,
             script_type=proto_types.PAYTOADDRESS,
         )
@@ -78,7 +78,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
             script_type=proto_types.SPENDP2SHWITNESS,
         )
         out1 = proto_types.TxOutputType(
-            address='QWywnqNMsMNavbCgMYiQLa91ApvsVRoaqt1i',
+            address='tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s',
             amount=12300000,
             script_type=proto_types.PAYTOADDRESS,
         )
@@ -109,7 +109,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         self.client.set_tx_api(TxApiTestnet)
         inp1 = proto_types.TxInputType(
             address_n=self.client.expand_path("49'/1'/0'/0/0"),
-            # QWywnqNMsMNavbCgMYiQLa91ApvsVRoaqt1i
+            # tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
             amount=12300000,
             prev_hash=binascii.unhexlify('09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a'),
             prev_index=0,
@@ -121,7 +121,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
             script_type=proto_types.PAYTOADDRESS,
         )
         out2 = proto_types.TxOutputType(
-            address='QWzGpyMkAEvmkSVprBzRRVQMP6UPp17q4kQn',
+            address='tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu',
             script_type=proto_types.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,
         )
@@ -148,7 +148,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         self.client.set_tx_api(TxApiTestnet)
         inp1 = proto_types.TxInputType(
             address_n=self.client.expand_path("49'/1'/0'/0/0"),
-            # QWywnqNMsMNavbCgMYiQLa91ApvsVRoaqt1i
+            # tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
             amount=12300000,
             prev_hash=binascii.unhexlify('09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a'),
             prev_index=0,
@@ -194,14 +194,14 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         )
         inp2 = proto_types.TxInputType(
             address_n=self.client.expand_path("49'/1'/0'/1/0"),
-            # QWzGpyMkAEvmkSVprBzRRVQMP6UPp17q4kQn
+            # tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu
             amount=7289000,
             prev_hash=binascii.unhexlify('65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b'),
             prev_index=1,
             script_type=proto_types.SPENDWITNESS,
         )
         out1 = proto_types.TxOutputType(
-            address='QWzCpc1NeTN7hNDzK9sQQ9yrTQP8zh5Hef5J',
+            address='tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc',
             amount=12300000,
             script_type=proto_types.PAYTOADDRESS,
         )
@@ -246,7 +246,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
-        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        nodes = [self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)) for index in range(1, 4)]
         multisig = proto_types.MultisigRedeemScriptType(
             pubkeys=map(lambda n: proto_types.HDNodePathType(node=deserialize(n.xpub), address_n=[2, 0]), nodes),
             signatures=[b'', b'', b''],
@@ -263,7 +263,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         )
 
         out1 = proto_types.TxOutputType(
-            address='T7nZJt6QbGJy6Hok4EF2LqtJPcT7z7VFSrSysGS3tEqCfDPwizqy4',
+            address='tb1qch62pf820spe9mlq49ns5uexfnl6jzcezp7d328fw58lj0rhlhasge9hzy',
             amount=1605000,
             script_type=proto_types.PAYTOADDRESS
         )
@@ -302,7 +302,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_multisig_2(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
-        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        nodes = [self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)) for index in range(1, 4)]
         multisig = proto_types.MultisigRedeemScriptType(
             pubkeys=map(lambda n: proto_types.HDNodePathType(node=deserialize(n.xpub), address_n=[2, 1]), nodes),
             signatures=[b'', b'', b''],
@@ -319,7 +319,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
         )
 
         out1 = proto_types.TxOutputType(
-            address='T7nY3A3kewpDKumsdhonP4TBDfTXFSc2RNhZxkqmeeszRDHjM5yUn',
+            address='tb1qr6xa5v60zyt3ry9nmfew2fk5g9y3gerkjeu6xxdz7qga5kknz2ssld9z2z',
             amount=1604000,
             script_type=proto_types.PAYTOADDRESS
         )
@@ -358,7 +358,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_multisig_3_change(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
-        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        nodes = [self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)) for index in range(1, 4)]
         multisig = proto_types.MultisigRedeemScriptType(
             pubkeys=map(lambda n: proto_types.HDNodePathType(node=deserialize(n.xpub), address_n=[2, 0]), nodes),
             signatures=[b'', b'', b''],
@@ -419,7 +419,7 @@ class TestMsgSigntxSegwit(common.TrezorTest):
     def test_send_multisig_4_change(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
-        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        nodes = [self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)) for index in range(1, 4)]
         multisig = proto_types.MultisigRedeemScriptType(
             pubkeys=map(lambda n: proto_types.HDNodePathType(node=deserialize(n.xpub), address_n=[1, 1]), nodes),
             signatures=[b'', b'', b''],
