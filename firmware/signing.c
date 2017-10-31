@@ -807,9 +807,9 @@ void signing_txack(TransactionType *tx)
 				}
 #endif
 
-				if (coin->has_forkid) {
+				if (coin->force_bip143) {
 					if (!tx->inputs[0].has_amount) {
-						fsm_sendFailure(FailureType_Failure_DataError, _("SIGHASH_FORKID input without amount"));
+						fsm_sendFailure(FailureType_Failure_DataError, _("BIP 143 input without amount"));
 						signing_abort();
 						return;
 					}
@@ -1027,7 +1027,7 @@ void signing_txack(TransactionType *tx)
 			resp.serialized.has_serialized_tx = true;
 			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
 				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
-				if (!coin->has_forkid) {
+				if (!coin->force_bip143) {
 					fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
 					signing_abort();
 					return;
