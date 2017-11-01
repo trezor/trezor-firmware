@@ -101,17 +101,29 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 {
 	char str_out[32];
 	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
-	static char first_half[17 + 1];
-	strlcpy(first_half, out->address, sizeof(first_half));
+	static char lines[2][28];
+	const char *addr = out->address;
+	int addrlen = strlen(addr);
+	int numlines = addrlen <= 34 ? 2 : 3;
+	strcpy(lines[0], _("to "));
+	int linelen = (addrlen + (numlines == 3 ? 3 : 0) - 1) / numlines + 1;
+	if (linelen > 27)
+		linelen = 27;
+	if (numlines == 3) {
+		strlcpy(lines[0] + 3, addr, linelen - 3 + 1);
+		addr += linelen - 3;
+	}
+	strlcpy(lines[1], addr, linelen + 1);
+	addr += linelen;
 	layoutDialogSwipe(&bmp_icon_question,
 		_("Cancel"),
 		_("Confirm"),
 		NULL,
 		_("Confirm sending"),
 		str_out,
-		_("to"),
-		first_half,
-		out->address + 17,
+		lines[0],
+		lines[1],
+		addr,
 		NULL
 	);
 }
