@@ -122,12 +122,14 @@ BTN_KEY = {
     'fg-color': FG,
     'text-style': MONO,
     'border-color': BG,
+    'radius': RADIUS,
 }
 BTN_KEY_ACTIVE = {
-    'bg-color': GREY,
-    'fg-color': BG,
+    'bg-color': FG,
+    'fg-color': BLACKISH,
     'text-style': MONO,
-    'border-color': GREY,
+    'border-color': FG,
+    'radius': RADIUS,
 }
 
 # loader

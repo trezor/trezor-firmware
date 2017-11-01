@@ -2,22 +2,41 @@ from trezor import ui, wire
 from trezor.utils import unimport
 
 
-def nth(n):
-    if 4 <= n % 100 <= 20:
-        sfx = 'th'
-    else:
-        sfx = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
-    return str(n) + sfx
-
-
 @unimport
 async def layout_recovery_device(ctx, msg):
+    from trezor.crypto import bip39
+    from trezor.messages.FailureType import UnexpectedMessage, ProcessError
+    from trezor.messages.Success import Success
+    from trezor.ui.keyboard import KeyboardMultiTap
+    from trezor.ui.text import Text
+    from apps.common import storage
+    from apps.common.confirm import require_confirm
 
-    msg = 'Please enter ' + nth(msg.word_count) + ' word'
+    if storage.is_initialized():
+        raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
-    ui.display.clear()
-    ui.header('Recovery device', ui.ICON_RECOVERY, ui.BG, ui.LIGHT_GREEN)
-    ui.display.text(10, 74, msg, ui.BOLD, ui.FG, ui.BG)
-    ui.display.text(10, 104, 'of your mnemonic.', ui.BOLD, ui.FG, ui.BG)
+    words = []
 
-    # TODO
+    kbd = KeyboardMultiTap()
+    for i in range(0, msg.word_count):
+        kbd.prompt = '%s. ' % (i + 1)
+        word = await kbd
+        words.append(word)
+
+    # TODO: confirm words, start again?
+    await require_confirm(ctx, Text(
+        'Recovering seed', ui.ICON_RESET))
+
+    mnemonic = ' '.join(words)
+
+    if not msg.enforce_wordlist and not bip39.check(mnemonic):
+        raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
+
+    # TODO: request pin
+    pin = ''
+
+    storage.load_mnemonic(mnemonic)
+    storage.load_settings(pin=pin,
+                          passphrase_protection=msg.passphrase_protection,
+                          language=msg.language,
+                          label=msg.label)
