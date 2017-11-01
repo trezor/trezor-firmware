@@ -849,14 +849,8 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 
 	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
-	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
-	uint32_t address_type;
-	if (!coinExtractAddressType(coin, msg->address, &address_type) || !ecdsa_address_decode(msg->address, address_type, addr_raw)) {
-		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid address"));
-		return;
-	}
 	layoutProgressSwipe(_("Verifying"), 0);
-	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, address_type, addr_raw, msg->signature.bytes) == 0) {
+	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, msg->address, msg->signature.bytes) == 0) {
 		layoutVerifyAddress(msg->address);
 		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);

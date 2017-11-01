@@ -31,6 +31,8 @@
 #include "address.h"
 #include "macros.h"
 #include "coins.h"
+#include "base58.h"
+#include "segwit_addr.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -143,7 +145,7 @@ int cryptoMessageSign(const CoinInfo *coin, HDNode *node, InputScriptType script
 	return result;
 }
 
-int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t message_len, uint32_t address_type, const uint8_t *address_raw, const uint8_t *signature)
+int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t message_len, const char *address, const uint8_t *signature)
 {
 	// check for invalid signature prefix
 	if (signature[0] < 27 || signature[0] > 43) {
@@ -177,30 +179,41 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 
 	// check if the address is correct
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
+	uint8_t recovered_raw[MAX_ADDR_RAW_SIZE];
 
 	// p2pkh
 	if (signature[0] >= 27 && signature[0] <= 34) {
-		if (address_type != coin->address_type) {
-			return 4;
-		}
-		ecdsa_get_address_raw(pubkey, address_type, addr_raw);
-		if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
+		size_t len = base58_decode_check(address, addr_raw, MAX_ADDR_RAW_SIZE);
+		ecdsa_get_address_raw(pubkey, coin->address_type, recovered_raw);
+		if (memcmp(recovered_raw, addr_raw, len) != 0
+			|| len != address_prefix_bytes_len(coin->address_type) + 20) {
 			return 2;
 		}
 	} else
 	// segwit-in-p2sh
 	if (signature[0] >= 35 && signature[0] <= 38) {
-		if (address_type != coin->address_type_p2sh) {
-			return 4;
-		}
-		ecdsa_get_address_segwit_p2sh_raw(pubkey, address_type, addr_raw);
-		if (memcmp(addr_raw, address_raw, address_prefix_bytes_len(address_type) + 20) != 0) {
+		size_t len = base58_decode_check(address, addr_raw, MAX_ADDR_RAW_SIZE);
+		ecdsa_get_address_segwit_p2sh_raw(pubkey, coin->address_type_p2sh, recovered_raw);
+		if (memcmp(recovered_raw, addr_raw, len) != 0
+			|| len != address_prefix_bytes_len(coin->address_type_p2sh) + 20) {
 			return 2;
 		}
 	} else
 	// segwit
 	if (signature[0] >= 39 && signature[0] <= 42) {
-		return 2; // not supported yet
+		int witver;
+		size_t len;
+		if (!coin->bech32_prefix
+			|| !segwit_addr_decode(&witver, recovered_raw, &len, coin->bech32_prefix, address)) {
+			return 4;
+		}
+		ecdsa_get_pubkeyhash(pubkey, addr_raw);
+		if (memcmp(recovered_raw, addr_raw, len) != 0
+			|| witver != 0 || len != 20) {
+			return 2;
+		}
+	} else {
+		return 4;
 	}
 
 	return 0;
