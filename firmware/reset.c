@@ -118,7 +118,10 @@ void reset_backup(bool separated)
 
 	storage.has_needs_backup = true;
 	storage.needs_backup = false;
-	storage_commit();
+
+	if (separated) {
+		storage_commit();
+	}
 
 	for (int pass = 0; pass < 2; pass++) {
 		int i = 0, word_pos = 1;
@@ -149,6 +152,7 @@ void reset_backup(bool separated)
 	if (separated) {
 		fsm_sendSuccess(_("Seed successfully backed up"));
 	} else {
+		storage_commit();
 		fsm_sendSuccess(_("Device successfully initialized"));
 	}
 	layoutHome();
