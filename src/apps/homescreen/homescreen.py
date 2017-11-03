@@ -16,7 +16,8 @@ async def dim_screen():
         await loop.sleep(10000000)
 
 
-def display_homescreen():
+@ui.layout
+async def display_homescreen():
     from apps.common import storage
 
     image = res.load('apps/homescreen/res/trezor_lock.toig')
@@ -26,14 +27,13 @@ def display_homescreen():
     if not storage.is_initialized():
         label = 'Go to trezor.io/start'
     else:
-        label = storage.get_label()
-        if not label:
-            label = 'My TREZOR'
+        label = storage.get_label() or 'My TREZOR'
     ui.display.text_center(ui.SCREEN // 2, ui.SCREEN - 20, label, ui.BOLD, ui.FG, ui.BG)
+
+    await dim_screen()
 
 
 @unimport
 async def layout_homescreen():
     while True:
-        display_homescreen()
-        await loop.wait(swipe_to_rotate(), dim_screen())
+        await loop.wait(swipe_to_rotate(), display_homescreen())
