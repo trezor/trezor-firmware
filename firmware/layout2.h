@@ -28,7 +28,11 @@
 
 extern void *layoutLast;
 
-void layoutSwipe(void);
+#if DEBUG_LINK
+#define layoutSwipe oledClear
+#else
+#define layoutSwipe oledSwipeLeft
+#endif
 
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6);
 void layoutProgressSwipe(const char *desc, int permil);
