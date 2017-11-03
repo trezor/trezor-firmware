@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "pinmatrix.h"
+#include "layout2.h"
 #include "oled.h"
 #include "rng.h"
 
@@ -31,7 +32,7 @@ void pinmatrix_draw(const char *text)
 		&bmp_digit0, &bmp_digit1, &bmp_digit2, &bmp_digit3, &bmp_digit4,
 		&bmp_digit5, &bmp_digit6, &bmp_digit7, &bmp_digit8, &bmp_digit9,
 	};
-	oledSwipeLeft();
+	layoutSwipe();
 	const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 2;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {

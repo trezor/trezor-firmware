@@ -38,10 +38,19 @@
 
 void *layoutLast = layoutHome;
 
+void layoutSwipe(void) {
+#if DEBUG_LINK
+	oledClear();
+#else
+	oledSwipeLeft();
+#endif
+}
+
+
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
 {
 	layoutLast = layoutDialogSwipe;
-	oledSwipeLeft();
+	layoutSwipe();
 	layoutDialog(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5, line6);
 }
 
@@ -51,7 +60,7 @@ void layoutProgressSwipe(const char *desc, int permil)
 		oledClear();
 	} else {
 		layoutLast = layoutProgressSwipe;
-		oledSwipeLeft();
+		layoutSwipe();
 	}
 	layoutProgress(desc, permil);
 }
@@ -68,7 +77,7 @@ void layoutHome(void)
 	if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
 		oledClear();
 	} else {
-		oledSwipeLeft();
+		layoutSwipe();
 	}
 	layoutLast = layoutHome;
 	const char *label = storage_isInitialized() ? storage_getLabel() : _("Go to trezor.io/start");
@@ -225,7 +234,7 @@ void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address)
 void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 {
 	layoutLast = layoutResetWord;
-	oledSwipeLeft();
+	layoutSwipe();
 
 	const char *btnYes;
 	if (last) {
@@ -280,7 +289,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 void layoutAddress(const char *address, const char *desc, bool qrcode)
 {
 	if (layoutLast != layoutAddress) {
-		oledSwipeLeft();
+		layoutSwipe();
 	} else {
 		oledClear();
 	}
