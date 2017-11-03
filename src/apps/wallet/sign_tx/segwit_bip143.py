@@ -51,7 +51,7 @@ class Bip143:
 
         write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # hashOutputs
         write_uint32(h_preimage, tx.lock_time)  # nLockTime
-        write_uint32(h_preimage, 0x00000001)  # nHashType  todo
+        write_uint32(h_preimage, 0x00000001)  # nHashType - only SIGHASH_ALL currently
 
         return get_tx_hash(h_preimage, True)
 

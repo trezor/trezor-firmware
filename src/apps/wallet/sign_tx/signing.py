@@ -205,7 +205,7 @@ async def sign_tx(tx: SignTx, root):
             write_varint(w_txo_bin, tx.outputs_count)
         write_tx_output(w_txo_bin, txo_bin)
 
-        tx_ser.signature_index = None  # @todo delete?
+        tx_ser.signature_index = None
         tx_ser.signature = None
         tx_ser.serialized_tx = w_txo_bin
 
@@ -216,8 +216,6 @@ async def sign_tx(tx: SignTx, root):
             # STAGE_REQUEST_SEGWIT_WITNESS
             txi = await request_tx_input(tx_req, i)
             # todo check amount?
-            # if hashType != ANYONE_CAN_PAY ? todo
-            # todo: what to do with other types?
             key_sign = node_derive(root, txi.address_n)
             key_sign_pub = key_sign.public_key()
             bip143_hash = bip143.preimage_hash(tx, txi, ecdsa_hash_pubkey(key_sign_pub))
@@ -299,6 +297,14 @@ def get_p2wpkh_witness(signature: bytes, pubkey: bytes):
 
 
 def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
+
+    # if PAYTOADDRESS check address prefix todo could be better?
+    if o.script_type == OutputScriptType.PAYTOADDRESS and o.address:
+        raw = base58.decode_check(o.address)
+        coin_type, address = address_type.split(coin, raw)
+        if int.from_bytes(coin_type, 'little') == coin.address_type_p2sh:
+            o.script_type = OutputScriptType.PAYTOSCRIPTHASH
+
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         ra = output_paytoaddress_extract_raw_address(o, coin, root)
         ra = address_type.strip(coin.address_type, ra)
@@ -306,6 +312,13 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
 
     elif o.script_type == OutputScriptType.PAYTOSCRIPTHASH:
         ra = output_paytoaddress_extract_raw_address(o, coin, root, p2sh=True)
+        ra = address_type.strip(coin.address_type_p2sh, ra)
+        return script_paytoscripthash_new(ra)
+
+    elif o.script_type == OutputScriptType.PAYTOP2SHWITNESS:  # todo ok? check if change?
+        node = node_derive(root, o.address_n)
+        address = get_p2wpkh_in_p2sh_address(node.public_key(), coin)
+        ra = base58.decode_check(address)
         ra = address_type.strip(coin.address_type_p2sh, ra)
         return script_paytoscripthash_new(ra)
 
@@ -323,7 +336,6 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
 
 def output_paytoaddress_extract_raw_address(
         o: TxOutputType, coin: CoinType, root, p2sh: bool=False) -> bytes:
-    # todo if segwit then addr_type = p2sh ?
     addr_type = coin.address_type_p2sh if p2sh else coin.address_type
     # TODO: dont encode/decode more then necessary
     if o.address_n is not None:
@@ -385,6 +397,22 @@ def ecdsa_sign(node, digest: bytes) -> bytes:
     sig = secp256k1.sign(node.private_key(), digest)
     sigder = der.encode_seq((sig[1:33], sig[33:65]))
     return sigder
+
+
+def get_p2wpkh_in_p2sh_address(pubkey: bytes, coin: CoinType) -> str:
+    pubkeyhash = ecdsa_hash_pubkey(pubkey)
+    s = bytearray(22)
+    s[0] = 0x00  # OP_0
+    s[1] = 0x14  # pushing 20 bytes
+    s[2:22] = pubkeyhash
+    h = sha256(s).digest()
+    h = ripemd160(h).digest()
+
+    s = bytearray(21)  # todo better?
+    s[0] = coin.address_type_p2sh
+    s[1:21] = h
+
+    return base58.encode_check(bytes(s))
 
 
 # TX Scripts
