@@ -44,7 +44,7 @@ class TestSignSegwitTx(unittest.TestCase):
         )
         out2 = TxOutputType(
             address='2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX',
-            script_type=OutputScriptType.PAYTOSCRIPTHASH,  # todo
+            script_type=OutputScriptType.PAYTOSCRIPTHASH,  # todo!
             amount=123456789 - 11000 - 12300000,
             address_n=None,
         )
