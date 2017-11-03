@@ -11,15 +11,20 @@ async def layout_recovery_device(ctx, msg):
     from trezor.ui.text import Text
     from apps.common import storage
     from apps.common.confirm import require_confirm
+    from apps.common.request_words import request_words
 
     if storage.is_initialized():
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
     words = []
 
+    wc = await request_words(ctx, Text(
+        'Device recovery', ui.ICON_RECOVERY, 'Number of words?'))
+    msg.word_count = int(wc)
+    ui.display.clear()
     kbd = KeyboardMultiTap()
     for i in range(0, msg.word_count):
-        kbd.prompt = '%s. ' % (i + 1)
+        kbd.prompt = 'Type %s. word' % (i + 1)
         word = await kbd
         words.append(word)
 

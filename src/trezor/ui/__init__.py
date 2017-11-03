@@ -106,11 +106,10 @@ def layout(f):
     return inner
 
 
-def header(title: str, icon: bytes=ICON_RESET, fg: int=BG, bg: int=BG):
-    display.bar(0, 0, 240, 32, bg)
+def header(title: str, icon: bytes=ICON_RESET, fg: int=BG, bg: int=BG, ifg: int=BG):
     if icon is not None:
-        display.icon(8, 4, res.load(icon), fg, bg)
-    display.text(8 + 24 + 2, 24, title, BOLD, fg, bg)
+        display.icon(14, 14, res.load(icon), ifg, bg)
+    display.text(44, 35, title, BOLD, fg, bg)
 
 
 class Widget:

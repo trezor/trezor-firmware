@@ -1,9 +1,9 @@
 from micropython import const
 from trezor import ui
 
-TEXT_HEADER_HEIGHT = const(32)
+TEXT_HEADER_HEIGHT = const(51)
 TEXT_LINE_HEIGHT = const(23)
-TEXT_MARGIN_LEFT = const(10)
+TEXT_MARGIN_LEFT = const(14)
 
 
 class Text(ui.Widget):
@@ -19,7 +19,7 @@ class Text(ui.Widget):
         style = ui.NORMAL
         fg = ui.FG
         bg = ui.BG
-        ui.header(self.header_text, self.header_icon, ui.GREEN, ui.BG)
+        ui.header(self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, ui.ORANGE_ICON)
 
         for item in self.content:
             if isinstance(item, str):

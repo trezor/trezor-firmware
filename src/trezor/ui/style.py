@@ -38,7 +38,10 @@ DARK_GREY   = rgb(0x3E, 0x3E, 0x3E)
 BLUE_GRAY   = rgb(0x60, 0x7D, 0x8B)
 BLACK       = rgb(0x00, 0x00, 0x00)
 WHITE       = rgb(0xFA, 0xFA, 0xFA)
-BLACKISH    = rgb(0x20, 0x20, 0x20)
+BLACKISH    = rgb(0x30, 0x30, 0x30)
+
+TITLE_GREY  = rgb(0x9B, 0x9B, 0x9B)
+ORANGE_ICON = rgb(0xF5, 0xA6, 0x23)
 
 # common color styles
 BG = BLACK
@@ -47,11 +50,13 @@ FG = WHITE
 # icons
 ICON_RESET    = 'trezor/res/header_icons/reset.toig'
 ICON_WIPE     = 'trezor/res/header_icons/wipe.toig'
-ICON_RECOVERY = 'trezor/res/header_icons/recovery.toig'
+ICON_RECOVERY = 'trezor/res/header_icons/reset.toig'
 ICON_CLEAR    = 'trezor/res/clear.toig'
 ICON_CONFIRM  = 'trezor/res/confirm.toig'
+ICON_CONFIRM2 = 'trezor/res/confirm2.toig'
 ICON_LOCK     = 'trezor/res/lock.toig'
 ICON_SEND     = 'trezor/res/send.toig'
+ICON_CLICK    = 'trezor/res/click.toig'
 
 # buttons
 BTN_DEFAULT = {
@@ -104,7 +109,7 @@ BTN_CONFIRM_ACTIVE = {
     'radius': RADIUS,
 }
 BTN_CLEAR = {
-    'bg-color': BG,
+    'bg-color': ORANGE,
     'fg-color': FG,
     'text-style': NORMAL,
     'border-color': BG,
@@ -129,6 +134,13 @@ BTN_KEY_ACTIVE = {
     'fg-color': BLACKISH,
     'text-style': MONO,
     'border-color': FG,
+    'radius': RADIUS,
+}
+BTN_KEY_DISABLED = {
+    'bg-color': BG,
+    'fg-color': GREY,
+    'text-style': MONO,
+    'border-color': BG,
     'radius': RADIUS,
 }
 

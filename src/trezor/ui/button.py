@@ -32,11 +32,13 @@ class Button(Widget):
         self.state = BTN_DIRTY
 
     def enable(self):
-        self.state &= ~BTN_DISABLED
-        self.state |= BTN_DIRTY
+        if self.state & BTN_DISABLED:
+            self.state &= ~BTN_DISABLED
+            self.state |= BTN_DIRTY
 
     def disable(self):
-        self.state |= BTN_DISABLED | BTN_DIRTY
+        if not self.state & BTN_DISABLED:
+            self.state |= BTN_DISABLED | BTN_DIRTY
 
     def taint(self):
         self.state |= BTN_DIRTY
@@ -54,6 +56,7 @@ class Button(Widget):
         ax, ay, aw, ah = self.area
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
+
         display.bar_radius(ax, ay, aw, ah,
                            s['border-color'],
                            ui.BG,
@@ -70,7 +73,7 @@ class Button(Widget):
                                 s['bg-color'])
 
         else:
-            display.icon(tx - 15, ty - 20, self.content,
+            display.icon(tx - 8, ty - 16, self.content,
                          s['fg-color'],
                          s['bg-color'])
 
