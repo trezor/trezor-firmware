@@ -242,7 +242,7 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 		}
 		if (coins[i].coin_shortcut) {
 			resp->coins[i].has_coin_shortcut = true;
-			strlcpy(resp->coins[i].coin_shortcut, coins[i].coin_shortcut, sizeof(resp->coins[i].coin_shortcut));
+			strlcpy(resp->coins[i].coin_shortcut, coins[i].coin_shortcut + 1, sizeof(resp->coins[i].coin_shortcut));
 		}
 		resp->coins[i].has_address_type = coins[i].has_address_type;
 		resp->coins[i].address_type = coins[i].address_type;
