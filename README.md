@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.org/trezor/trezor-core.svg?branch=master)](https://travis-ci.org/trezor/trezor-core)
 [![Gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
-This is the core of the upcoming TREZOR v2.
+This is the source code for 2nd generation of TREZOR called TREZOR model T.
 
 ## Documentation
 
@@ -84,20 +84,22 @@ Not supported yet ...
 
 For flashing firmware to blank device (without bootloader) use `make flash`,
 or `make flash STLINK_VER=v2-1` if using a ST-LINK/V2.1 interface.
+You need to have OpenOCD installed
 
 #### Debian/Ubuntu
 
 ```sh
-sudo pip3 install --no-cache-dir pyblake2
+sudo pip3 install click pyblake2 scons
+sudo pip3 install --no-deps git+https://github.com/trezor/python-trezor.git@master
 
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
 
-make build_boardloader build_bootloader build_firmware
+make vendorheader build_boardloader build_bootloader build_firmware
 ```
 
 ### OS X
 
 1. Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
-3. To install stlink, run `brew install stlink`
-4. Run `make build_boardloader build_bootloader build_firmware`
+3. To install OpenOCD, run `brew install open-ocd`
+4. Run `make vendorheader build_boardloader build_bootloader build_firmware`
