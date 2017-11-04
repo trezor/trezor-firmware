@@ -11,8 +11,4 @@ docker run -t -v $(pwd)/build-docker:/build:z $IMAGE /bin/sh -c "\
 	ln -s /build build &&
 	git checkout $TAG && \
 	git submodule update --init --recursive && \
-	make vendorheader && \
-	make build_boardloader && \
-	make build_bootloader && \
-	make build_prodtest && \
-	make build_firmware"
+	make clean vendor vendorheader build_boardloader build_bootloader build_prodtest build_firmware"

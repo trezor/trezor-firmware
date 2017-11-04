@@ -84,12 +84,12 @@ Not supported yet ...
 
 For flashing firmware to blank device (without bootloader) use `make flash`,
 or `make flash STLINK_VER=v2-1` if using a ST-LINK/V2.1 interface.
-You need to have OpenOCD installed
+You need to have OpenOCD installed.
 
 #### Debian/Ubuntu
 
 ```sh
-sudo pip3 install click pyblake2 scons
+sudo pip3 install --no-cache-dir click pyblake2 scons
 sudo pip3 install --no-deps git+https://github.com/trezor/python-trezor.git@master
 
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi

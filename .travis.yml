@@ -33,16 +33,16 @@ before_install:
 
 install:
     - pip3 install --user scons
-    - pip3 install --user pyblake2
     - pip3 install --user flake8
     - pip3 install --user pytest
     - pip3 install --user ecdsa mnemonic protobuf requests
-    - pip3 install --user git+https://github.com/trezor/python-trezor@master
+    - pip3 install --user click pyblake2
+    - pip3 install --user --no-deps git+https://github.com/trezor/python-trezor@master
 
 before_script:
     - test "$GOAL" != "stm32" || wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
     - test "$GOAL" != "stm32" || tar xfj gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-    - test "$GOAL" != "stm32" || export PATH=$PATH:$PWD/gcc-arm-none-eabi-6-2017-q2-update/bin
+    - test "$GOAL" != "stm32" || export PATH=$PWD/gcc-arm-none-eabi-6-2017-q2-update/bin:$PATH
 
 script:
   - test "$GOAL" != "stm32" || make vendorheader
