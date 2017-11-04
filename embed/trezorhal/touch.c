@@ -17,17 +17,17 @@ static I2C_HandleTypeDef i2c_handle;
 
 void touch_init(void)
 {
+    GPIO_InitTypeDef GPIO_InitStructure;
+
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();
 
     // Init SCL and SDA GPIO lines (PB6 & PB7)
-    GPIO_InitTypeDef GPIO_InitStructure = {
-        .Pin = GPIO_PIN_6 | GPIO_PIN_7,
-        .Mode = GPIO_MODE_AF_OD,
-        .Pull = GPIO_NOPULL,
-        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
-        .Alternate = GPIO_AF4_I2C1,
-    };
+    GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = GPIO_AF4_I2C1;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     i2c_handle.Instance = I2C1;
@@ -41,6 +41,21 @@ void touch_init(void)
     i2c_handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
     ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
+
+    // PC5 capacitive touch panel module reset (RSTN)
+    GPIO_InitStructure.Pin = GPIO_PIN_5;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = 0;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+    // reset the touch panel by toggling the reset line (active low)
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_Delay(10); // being conservative, min is 5ms
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
+    HAL_Delay(10); // being conservative, min is 5ms
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms
 }
 
 #define TOUCH_ADDRESS (0x38U << 1) // the HAL requires the 7-bit address to be shifted by one bit
