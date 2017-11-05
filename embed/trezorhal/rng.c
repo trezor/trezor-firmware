@@ -1,4 +1,4 @@
-#include STM32_HAL_H
+#include "rng.h"
 
 #pragma GCC optimize("no-stack-protector") // applies to all functions in this file
 
@@ -15,9 +15,7 @@ uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous)
 {
     uint32_t temp = previous;
     do {
-        while ((RNG->SR & (RNG_SR_SECS | RNG_SR_CECS | RNG_SR_DRDY)) != RNG_SR_DRDY) {
-            ; // wait until TRNG is ready
-        }
+        while ((RNG->SR & (RNG_SR_SECS | RNG_SR_CECS | RNG_SR_DRDY)) != RNG_SR_DRDY); // wait until TRNG is ready
         temp = RNG->DR; // read the data from the TRNG
     } while (compare_previous && (temp == previous)); // RM0090 section 24.3.1 FIPS continuous random number generator test
     return temp;
