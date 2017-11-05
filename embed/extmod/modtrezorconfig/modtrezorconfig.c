@@ -20,8 +20,7 @@
 ///     called from this module!
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_init(void) {
-    bool r = storage_init();
-    if (!r) {
+    if (sectrue != storage_init()) {
         mp_raise_msg(&mp_type_RuntimeError, "Could not initialize config module");
     }
     return mp_const_none;
@@ -36,8 +35,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_ini
 STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin) {
     mp_buffer_info_t buf;
     mp_get_buffer_raise(pin, &buf, MP_BUFFER_READ);
-    bool r = storage_unlock(buf.buf, buf.len);
-    if (!r) {
+    if (sectrue != storage_unlock(buf.buf, buf.len)) {
         return mp_const_false;
     }
     return mp_const_true;
@@ -66,8 +64,7 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
     mp_get_buffer_raise(pin, &pinbuf, MP_BUFFER_READ);
     mp_buffer_info_t newbuf;
     mp_get_buffer_raise(newpin, &newbuf, MP_BUFFER_READ);
-    bool r = storage_change_pin(pinbuf.buf, pinbuf.len, newbuf.buf, newbuf.len);
-    if (!r) {
+    if (sectrue != storage_change_pin(pinbuf.buf, pinbuf.len, newbuf.buf, newbuf.len)) {
         return mp_const_false;
     }
     return mp_const_true;
@@ -84,8 +81,7 @@ STATIC mp_obj_t mod_trezorconfig_get(mp_obj_t app, mp_obj_t key) {
     uint16_t appkey = a << 8 | k;
     uint16_t len = 0;
     const void *val;
-    bool r = storage_get(appkey, &val, &len);
-    if (!r || len == 0) {
+    if (sectrue != storage_get(appkey, &val, &len) || len == 0) {
         return mp_const_empty_bytes;
     }
     return mp_obj_new_str_of_type(&mp_type_bytes, val, len);
@@ -102,8 +98,7 @@ STATIC mp_obj_t mod_trezorconfig_set(mp_obj_t app, mp_obj_t key, mp_obj_t value)
     uint16_t appkey = a << 8 | k;
     mp_buffer_info_t v;
     mp_get_buffer_raise(value, &v, MP_BUFFER_READ);
-    bool r = storage_set(appkey, v.buf, v.len);
-    if (!r) {
+    if (sectrue != storage_set(appkey, v.buf, v.len)) {
         mp_raise_msg(&mp_type_RuntimeError, "Could not save value");
     }
     return mp_const_none;
@@ -115,8 +110,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_set_obj, mod_trezorconfig_set)
 ///     Erases the whole config. Use with caution!
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_wipe(void) {
-    bool r = storage_wipe();
-    if (!r) {
+    if (sectrue != storage_wipe()) {
        mp_raise_msg(&mp_type_RuntimeError, "Could not wipe storage");
     }
     return mp_const_none;

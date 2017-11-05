@@ -2,7 +2,6 @@
 #define __NORCOW_H__
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "../../trezorhal/secbool.h"
 
 /*
