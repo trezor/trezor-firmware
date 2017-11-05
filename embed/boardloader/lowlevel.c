@@ -13,7 +13,7 @@
     #define WANT_WRP_SECTORS (0)
 #endif
 
-#define WANT_BOR_LEVEL (OB_BOR_LEVEL3)
+#define WANT_BOR_LEVEL (OB_BOR_LEVEL2)
 
 // reference RM0090 section 3.9.10; SPRMOD is 0 meaning PCROP disabled.; DB1M is 0 because we use 2MB dual-bank; BFB2 is 0 allowing boot from flash;
 #define FLASH_OPTCR_VALUE ( (((~WANT_WRP_SECTORS) << FLASH_OPTCR_nWRP_Pos) & FLASH_OPTCR_nWRP_Msk) | \
