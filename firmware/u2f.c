@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project.
+ * This file is part of the TREZOR project, https://trezor.io/
  *
  * Copyright (C) 2015 Mark Bryars <mbryars@google.com>
  *
