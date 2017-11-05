@@ -1154,7 +1154,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(resp->address, desc, qrcode, false);
+			layoutAddress(resp->address, desc, qrcode, true);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}
