@@ -71,10 +71,6 @@ secbool flash_init(void)
     return sectrue;
 }
 
-void flash_set_option_bytes(void)
-{
-}
-
 secbool flash_unlock(void)
 {
     return sectrue;

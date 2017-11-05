@@ -47,8 +47,6 @@ extern const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1];
 
 secbool flash_init(void);
 
-void flash_set_option_bytes(void);
-
 secbool flash_unlock(void);
 secbool flash_lock(void);
 
