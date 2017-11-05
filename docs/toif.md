@@ -56,3 +56,4 @@ zdata = zdata[2:-4] # strip header and checksum
 ## Tools
 
 * [png2toi](../tools/png2toi) - tool for converting PNG into TOI format
+* [toi2png](../tools/toi2png) - tool for converting TOI into PNG

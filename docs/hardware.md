@@ -65,7 +65,7 @@ TODO
 |-----------|-------|-----|
 |I2C1_SCL|PB6|display module pin 30|
 |I2C1_SDA|PB7|display module pin 31|
-|EINT|PC4||
+|EINT|PC4|display module pin 39|
 |REST|PC5||
 
 #### microSD Socket
