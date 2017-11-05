@@ -43,8 +43,6 @@
 // note: FLASH_SR_RDERR is STM32F42xxx and STM32F43xxx specific (STM32F427) (reference RM0090 section 3.7.5)
 #define FLASH_STATUS_ALL_FLAGS (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
 
-extern const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1];
-
 secbool flash_init(void);
 
 secbool flash_unlock(void);

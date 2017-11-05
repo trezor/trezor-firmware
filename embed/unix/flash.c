@@ -86,11 +86,11 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
     if (sector >= SECTOR_COUNT) {
         return NULL;
     }
-    uint32_t sector_size = sector_table[sector + 1] - sector_table[sector];
+    const uint32_t sector_size = sector_table[sector + 1] - sector_table[sector];
     if (offset + size > sector_size) {
         return NULL;
     }
-    uint32_t sector_offset = sector_table[sector] - sector_table[0];
+    const uint32_t sector_offset = sector_table[sector] - sector_table[0];
     return flash_buffer + sector_offset + offset;
 }
 
@@ -100,9 +100,9 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
         progress(0, len);
     }
     for (int i = 0; i < len; i++) {
-        uint8_t sector = sectors[i];
-        uint32_t offset = sector_table[sector] - sector_table[0];
-        uint32_t size = sector_table[sector + 1] - sector_table[sector];
+        const uint8_t sector = sectors[i];
+        const uint32_t offset = sector_table[sector] - sector_table[0];
+        const uint32_t size = sector_table[sector + 1] - sector_table[sector];
         memset(flash_buffer + offset, 0xFF, size);
         if (progress) {
             progress(i + 1, len);
@@ -148,7 +148,7 @@ secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
     if (offset % 4) {  // we read only at 4-byte boundary
         return secfalse;
     }
-    uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
+    const uint32_t *flash = (const uint32_t *)flash_get_address(sector, offset, sizeof(data));
     if (!flash) {
         return secfalse;
     }
