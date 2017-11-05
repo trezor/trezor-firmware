@@ -119,7 +119,8 @@ env.Replace(
         'TREZOR_STM32',
         'MCU_SERIES_F4',
         'STM32F427xx',
-        ('STM32_HAL_H', '"<stm32f4xx_hal.h>"'),
+        'USE_HAL_DRIVER',
+        ('STM32_HAL_H', '"<stm32f4xx.h>"'),
     ] + CPPDEFINES_MOD,
     ASFLAGS='-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16',
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
