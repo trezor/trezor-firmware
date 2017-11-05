@@ -19,7 +19,7 @@ memset_reg:
   .global jump_to
   .type jump_to, STT_FUNC
 jump_to:
-  mov r4, r0            // save input argument r0
+  mov r4, r0            // save input argument r0 (the address of the next stage's vector table) (r4 is callee save)
   // this subroutine re-points the exception handlers before the C code
   // that comprises them has been given a good environment to run.
   // therefore, this code needs to disable interrupts before the VTOR
@@ -29,6 +29,7 @@ jump_to:
   // "there is no requirement to insert memory barrier instructions after CPSID".
   cpsid f
   // wipe memory at the end of the current stage of code
+  bl clear_otg_hs_memory
   ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
   ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
   ldr r2, =0            // r2 - the word-sized value to be written
@@ -37,30 +38,33 @@ jump_to:
   ldr r1, =sram_end     // r1 - point to byte after the end of SRAM
   ldr r2, =0            // r2 - the word-sized value to be written
   bl memset_reg
+  mov lr, r4
+  // clear out the general purpose registers before the next stage's code can run (even the NMI exception handler)
+  ldr r0, =0
+  mov r1, r0
+  mov r2, r0
+  mov r3, r0
+  mov r4, r0
+  mov r5, r0
+  mov r6, r0
+  mov r7, r0
+  mov r8, r0
+  mov r9, r0
+  mov r10, r0
+  mov r11, r0
+  mov r12, r0
   // give the next stage a fresh main stack pointer
-  ldr r0, [r4]
-  msr msp, r0
+  ldr r0, [lr]          // set r0 to the main stack pointer in the next stage's vector table
+  msr msp, r0           // give the next stage its main stack pointer
   // point to the next stage's exception handlers
   // AN321, section 4.11: "a memory barrier is not required after a VTOR update"
   .set SCB_VTOR, 0xE000ED08 // reference "Cortex-M4 Devices Generic User Guide" section 4.3
   ldr r0, =SCB_VTOR
-  str r4, [r0]
+  str lr, [r0]
+  mov r0, r1            // zero out r0
   // go on to the next stage
-  ldr lr, =0xffffffff   // set the link register to reset value. there is no reason to return here.
-  ldr r0, [r4, 4]
-  ldr r1, =0
-  ldr r2, =0
-  ldr r3, =0
-  ldr r4, =0
-  ldr r5, =0
-  ldr r6, =0
-  ldr r7, =0
-  ldr r8, =0
-  ldr r9, =0
-  ldr r10, =0
-  ldr r11, =0
-  ldr r12, =0
-  bx r0
+  ldr lr, [lr, 4]       // set lr to the next stage's reset_handler
+  bx lr
 
   .global shutdown
   .type shutdown, STT_FUNC
