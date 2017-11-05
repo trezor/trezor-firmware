@@ -1,5 +1,5 @@
-#ifndef __TREZORHAL_SECBOOL_H__
-#define __TREZORHAL_SECBOOL_H__
+#ifndef TREZORHAL_SECBOOL_H
+#define TREZORHAL_SECBOOL_H
 
 #include <stdint.h>
 
