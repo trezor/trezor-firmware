@@ -144,7 +144,7 @@ class expect(object):
         def wrapped_f(*args, **kwargs):
             ret = f(*args, **kwargs)
             if not isinstance(ret, self.expected):
-                raise Exception("Got %s, expected %s" % (ret.__class__, self.expected))
+                raise RuntimeError("Got %s, expected %s" % (ret.__class__, self.expected))
             return ret
         return wrapped_f
 
@@ -174,7 +174,7 @@ def normalize_nfc(txt):
         if isinstance(txt, str):
             return unicodedata.normalize('NFC', txt)
 
-    raise Exception('unicode/str or bytes/str expected')
+    raise ValueError('unicode/str or bytes/str expected')
 
 
 class BaseClient(object):
@@ -204,7 +204,7 @@ class BaseClient(object):
         if handler is not None:
             msg = handler(resp)
             if msg is None:
-                raise Exception("Callback %s must return protobuf message, not None" % handler)
+                raise ValueError("Callback %s must return protobuf message, not None" % handler)
             resp = self.call(msg)
 
         return resp
@@ -355,7 +355,7 @@ class DebugLinkMixin(object):
         # return isinstance(value, TypeError)
         # Evaluate missed responses in 'with' statement
         if self.expected_responses is not None and len(self.expected_responses):
-            raise Exception("Some of expected responses didn't come from device: %s" %
+            raise RuntimeError("Some of expected responses didn't come from device: %s" %
                             [pprint(x) for x in self.expected_responses])
 
         # Cleanup
@@ -364,7 +364,7 @@ class DebugLinkMixin(object):
 
     def set_expected_responses(self, expected):
         if not self.in_with_statement:
-            raise Exception("Must be called inside 'with' statement")
+            raise RuntimeError("Must be called inside 'with' statement")
         self.expected_responses = expected
 
     def setup_debuglink(self, button, pin_correct):
@@ -441,7 +441,7 @@ class DebugLinkMixin(object):
         if pos != 0:
             return proto.WordAck(word=self.mnemonic[pos - 1])
 
-        raise Exception("Unexpected call")
+        raise RuntimeError("Unexpected call")
 
 
 class ProtocolMixin(object):
@@ -459,7 +459,7 @@ class ProtocolMixin(object):
     def init_device(self):
         self.features = expect(proto.Features)(self.call)(proto.Initialize())
         if str(self.features.vendor) not in self.VENDORS:
-            raise Exception("Unsupported device")
+            raise RuntimeError("Unsupported device")
 
     def _get_local_entropy(self):
         return os.urandom(32)
@@ -844,7 +844,7 @@ class ProtocolMixin(object):
             if self.tx_api:
                 tx.CopyFrom(self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode('utf-8')))
             else:
-                raise Exception('TX_API not defined')
+                raise RuntimeError('TX_API not defined')
             known_hashes.append(inp.prev_hash)
 
         return msg
@@ -869,7 +869,7 @@ class ProtocolMixin(object):
             if self.tx_api:
                 txes[inp.prev_hash] = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode('utf-8'))
             else:
-                raise Exception('TX_API not defined')
+                raise RuntimeError('TX_API not defined')
             known_hashes.append(inp.prev_hash)
 
         return txes
@@ -912,7 +912,7 @@ class ProtocolMixin(object):
 
             if res.HasField('serialized') and res.serialized.HasField('signature_index'):
                 if signatures[res.serialized.signature_index] is not None:
-                    raise Exception("Signature for index %d already filled" % res.serialized.signature_index)
+                    raise ValueError("Signature for index %d already filled" % res.serialized.signature_index)
                 signatures[res.serialized.signature_index] = res.serialized.signature
 
             if res.request_type == types.TXFINISHED:
@@ -971,7 +971,7 @@ class ProtocolMixin(object):
                 continue
 
         if None in signatures:
-            raise Exception("Some signatures are missing!")
+            raise RuntimeError("Some signatures are missing!")
 
         log("SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" %
             (time.time() - start, counter, len(serialized_tx)))
@@ -989,10 +989,10 @@ class ProtocolMixin(object):
     @expect(proto.Success)
     def recovery_device(self, word_count, passphrase_protection, pin_protection, label, language, type=types.RecoveryDeviceType_ScrambledWords, expand=False, dry_run=False):
         if self.features.initialized and not dry_run:
-            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+            raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
         if word_count not in (12, 18, 24):
-            raise Exception("Invalid word count. Use 12/18/24")
+            raise ValueError("Invalid word count. Use 12/18/24")
 
         self.recovery_matrix_first_pass = True
 
@@ -1019,7 +1019,7 @@ class ProtocolMixin(object):
     @session
     def reset_device(self, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter=0, skip_backup=False):
         if self.features.initialized:
-            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+            raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
         # Begin with device reset workflow
         msg = proto.ResetDevice(display_random=display_random,
@@ -1033,7 +1033,7 @@ class ProtocolMixin(object):
 
         resp = self.call(msg)
         if not isinstance(resp, proto.EntropyRequest):
-            raise Exception("Invalid response, expected EntropyRequest")
+            raise RuntimeError("Invalid response, expected EntropyRequest")
 
         external_entropy = self._get_local_entropy()
         log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode('ascii'))
@@ -1062,10 +1062,10 @@ class ProtocolMixin(object):
             mnemonic = m.expand(mnemonic)
 
         if not skip_checksum and not m.check(mnemonic):
-            raise Exception("Invalid mnemonic checksum")
+            raise ValueError("Invalid mnemonic checksum")
 
         if self.features.initialized:
-            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+            raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
         resp = self.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
                                           passphrase_protection=passphrase_protection,
@@ -1079,23 +1079,23 @@ class ProtocolMixin(object):
     @expect(proto.Success)
     def load_device_by_xprv(self, xprv, pin, passphrase_protection, label, language):
         if self.features.initialized:
-            raise Exception("Device is initialized already. Call wipe_device() and try again.")
+            raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
         if xprv[0:4] not in ('xprv', 'tprv'):
-            raise Exception("Unknown type of xprv")
+            raise ValueError("Unknown type of xprv")
 
         if len(xprv) < 100 and len(xprv) > 112:
-            raise Exception("Invalid length of xprv")
+            raise ValueError("Invalid length of xprv")
 
         node = types.HDNodeType()
         data = binascii.hexlify(tools.b58decode(xprv, None))
 
         if data[90:92] != b'00':
-            raise Exception("Contain invalid private key")
+            raise ValueError("Contain invalid private key")
 
         checksum = binascii.hexlify(hashlib.sha256(hashlib.sha256(binascii.unhexlify(data[:156])).digest()).digest()[:4])
         if checksum != data[156:]:
-            raise Exception("Checksum doesn't match")
+            raise ValueError("Checksum doesn't match")
 
         # version 0488ade4
         # depth 00
@@ -1122,7 +1122,7 @@ class ProtocolMixin(object):
     @session
     def firmware_update(self, fp):
         if self.features.bootloader_mode is False:
-            raise Exception("Device must be in bootloader mode")
+            raise RuntimeError("Device must be in bootloader mode")
 
         data = fp.read()
 
@@ -1139,7 +1139,7 @@ class ProtocolMixin(object):
                 return True
             elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
                 return False
-            raise Exception("Unexpected result %s" % resp)
+            raise RuntimeError("Unexpected result %s" % resp)
 
         # TREZORv2 method
         if isinstance(resp, proto.FirmwareRequest):
@@ -1154,15 +1154,15 @@ class ProtocolMixin(object):
                     return True
                 elif isinstance(resp, proto.Failure) and resp.code == types.Failure_FirmwareError:
                     return False
-                raise Exception("Unexpected result %s" % resp)
+                raise RuntimeError("Unexpected result %s" % resp)
 
-        raise Exception("Unexpected message %s" % resp)
+        raise RuntimeError("Unexpected message %s" % resp)
 
     @field('message')
     @expect(proto.Success)
     def self_test(self):
         if self.features.bootloader_mode is False:
-            raise Exception("Device must be in bootloader mode")
+            raise RuntimeError("Device must be in bootloader mode")
 
         return self.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
 

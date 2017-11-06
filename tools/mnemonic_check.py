@@ -29,25 +29,25 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     random - binary stream of random data from external HRNG
     '''
     if strength not in (128, 192, 256):
-        raise Exception("Invalid strength")
+        raise ValueError("Invalid strength")
 
     if not internal_entropy:
-        raise Exception("Internal entropy is not provided")
+        raise ValueError("Internal entropy is not provided")
 
     if len(internal_entropy) < 32:
-        raise Exception("Internal entropy too short")
+        raise ValueError("Internal entropy too short")
 
     if not external_entropy:
-        raise Exception("External entropy is not provided")
+        raise ValueError("External entropy is not provided")
 
     if len(external_entropy) < 32:
-        raise Exception("External entropy too short")
+        raise ValueError("External entropy too short")
 
     entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
     entropy_stripped = entropy[:strength // 8]
 
     if len(entropy_stripped) * 8 != strength:
-        raise Exception("Entropy length mismatch")
+        raise ValueError("Entropy length mismatch")
 
     return entropy_stripped
 

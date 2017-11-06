@@ -54,7 +54,7 @@ def hash_160_to_bc_address(h160, address_type):
 def compress_pubkey(public_key):
     if byteindex(public_key, 0) == 4:
         return bytes((byteindex(public_key, 64) & 1) + 2) + public_key[1:33]
-    raise Exception("Pubkey is already compressed")
+    raise ValueError("Pubkey is already compressed")
 
 
 def public_key_to_bc_address(public_key, address_type, compress=True):

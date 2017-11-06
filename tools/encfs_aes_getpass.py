@@ -37,13 +37,13 @@ def wait_for_devices():
 
 def choose_device(devices):
     if not len(devices):
-        raise Exception("No TREZOR connected!")
+        raise RuntimeError("No TREZOR connected!")
 
     if len(devices) == 1:
         try:
             return devices[0]
         except IOError:
-            raise Exception("Device is currently in use")
+            raise RuntimeError("Device is currently in use")
 
     i = 0
     sys.stderr.write("----------------------------\n")
@@ -69,7 +69,7 @@ def choose_device(devices):
         device_id = int(input())
         return devices[device_id]
     except:
-        raise Exception("Invalid choice, exiting...")
+        raise ValueError("Invalid choice, exiting...")
 
 
 def main():
@@ -101,7 +101,7 @@ def main():
         passw = hashlib.sha256(trezor_entropy + urandom_entropy).digest()
 
         if len(passw) != 32:
-            raise Exception("32 bytes password expected")
+            raise ValueError("32 bytes password expected")
 
         bip32_path = [10, 0]
         passw_encrypted = client.encrypt_keyvalue(bip32_path, label, passw, False, True)

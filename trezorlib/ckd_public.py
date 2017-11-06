@@ -53,7 +53,7 @@ def sec_to_public_pair(pubkey):
     x = string_to_number(pubkey[1:33])
     sec0 = pubkey[:1]
     if sec0 not in (b'\2', b'\3'):
-        raise Exception("Compressed pubkey expected")
+        raise ValueError("Compressed pubkey expected")
 
     def public_pair_for_x(generator, x, is_even):
         curve = generator.curve()
@@ -81,7 +81,7 @@ def get_address(public_node, address_type):
 
 def public_ckd(public_node, n):
     if not isinstance(n, list):
-        raise Exception('Parameter must be a list')
+        raise ValueError('Parameter must be a list')
 
     node = proto_types.HDNodeType()
     node.CopyFrom(public_node)
@@ -97,7 +97,7 @@ def get_subnode(node, i):
     i_as_bytes = struct.pack(">L", i)
 
     if is_prime(i):
-        raise Exception("Prime derivation not supported")
+        raise ValueError("Prime derivation not supported")
 
     # Public derivation
     data = node.public_key + i_as_bytes
@@ -116,7 +116,7 @@ def get_subnode(node, i):
     point = I_left_as_exponent * SECP256k1.generator + Point(SECP256k1.curve, x, y, SECP256k1.order)
 
     if point == INFINITY:
-        raise Exception("Point cannot be INFINITY")
+        raise ValueError("Point cannot be INFINITY")
 
     # Convert public point to compressed public key
     node_out.public_key = point_to_pubkey(point)
@@ -143,7 +143,7 @@ def deserialize(xpub):
     data = tools.b58decode(xpub, None)
 
     if tools.Hash(data[:-4])[:4] != data[-4:]:
-        raise Exception("Checksum failed")
+        raise ValueError("Checksum failed")
 
     node = proto_types.HDNodeType()
     node.depth = struct.unpack('>B', data[4:5])[0]

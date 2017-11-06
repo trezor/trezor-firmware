@@ -64,17 +64,17 @@ class ProtocolV1(object):
 
     def parse_first(self, chunk):
         if chunk[:3] != b'?##':
-            raise Exception('Unexpected magic characters')
+            raise RuntimeError('Unexpected magic characters')
         try:
             headerlen = struct.calcsize('>HL')
             (msg_type, datalen) = struct.unpack('>HL', chunk[3:3 + headerlen])
         except:
-            raise Exception('Cannot parse header')
+            raise RuntimeError('Cannot parse header')
 
         data = chunk[3 + headerlen:]
         return (msg_type, datalen, data)
 
     def parse_next(self, chunk):
         if chunk[:1] != b'?':
-            raise Exception('Unexpected magic characters')
+            raise RuntimeError('Unexpected magic characters')
         return chunk[1:]

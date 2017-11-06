@@ -31,22 +31,22 @@ tx_api.cache_dir = '../txcache'
 try:
     from trezorlib.transport_hid import HidTransport
     HID_ENABLED = True
-except Exception as e:
-    print('HID transport disabled:', e.message, e.args)
+except ImportError as e:
+    print('HID transport disabled:', e)
     HID_ENABLED = False
 
 try:
     from trezorlib.transport_pipe import PipeTransport
     PIPE_ENABLED = True
-except Exception as e:
-    print('PIPE transport disabled:', e.message, e.args)
+except ImportError as e:
+    print('PIPE transport disabled:', e)
     PIPE_ENABLED = False
 
 try:
     from trezorlib.transport_udp import UdpTransport
     UDP_ENABLED = True
-except Exception as e:
-    print('UDP transport disabled:', e.message, e.args)
+except ImportError as e:
+    print('UDP transport disabled:', e)
     UDP_ENABLED = False
 
 
@@ -132,24 +132,24 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     random - binary stream of random data from external HRNG
     '''
     if strength not in (128, 192, 256):
-        raise Exception("Invalid strength")
+        raise ValueError("Invalid strength")
 
     if not internal_entropy:
-        raise Exception("Internal entropy is not provided")
+        raise ValueError("Internal entropy is not provided")
 
     if len(internal_entropy) < 32:
-        raise Exception("Internal entropy too short")
+        raise ValueError("Internal entropy too short")
 
     if not external_entropy:
-        raise Exception("External entropy is not provided")
+        raise ValueError("External entropy is not provided")
 
     if len(external_entropy) < 32:
-        raise Exception("External entropy too short")
+        raise ValueError("External entropy too short")
 
     entropy = hashlib.sha256(internal_entropy + external_entropy).digest()
     entropy_stripped = entropy[:strength // 8]
 
     if len(entropy_stripped) * 8 != strength:
-        raise Exception("Entropy length mismatch")
+        raise ValueError("Entropy length mismatch")
 
     return entropy_stripped

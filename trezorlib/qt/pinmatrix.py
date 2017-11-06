@@ -25,7 +25,7 @@ class PinButton(QPushButton):
         elif QT_VERSION_STR >= '4':
             QObject.connect(self, SIGNAL('clicked()'), self._pressed)
         else:
-            raise Exception('Unsupported Qt version')
+            raise RuntimeError('Unsupported Qt version')
 
     def _pressed(self):
         self.password.setText(self.password.text() + str(self.encoded_value))
@@ -52,7 +52,7 @@ class PinMatrixWidget(QWidget):
         elif QT_VERSION_STR >= '4':
             QObject.connect(self.password, SIGNAL('textChanged(QString)'), self._password_changed)
         else:
-            raise Exception('Unsupported Qt version')
+            raise RuntimeError('Unsupported Qt version')
 
         self.strength = QLabel()
         self.strength.setMinimumWidth(75)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     elif QT_VERSION_STR >= '4':
         QObject.connect(ok, SIGNAL('clicked()'), clicked)
     else:
-        raise Exception('Unsupported Qt version')
+        raise RuntimeError('Unsupported Qt version')
 
     vbox = QVBoxLayout()
     vbox.addWidget(matrix)

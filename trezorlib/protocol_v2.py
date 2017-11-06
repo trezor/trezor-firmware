@@ -45,12 +45,12 @@ class ProtocolV2(object):
         resp = transport.read_chunk()
         (magic, ) = struct.unpack('>B', resp[:1])
         if magic != 0x04:
-            raise Exception('Expected session close')
+            raise RuntimeError('Expected session close')
         self.session = None
 
     def write(self, transport, msg):
         if not self.session:
-            raise Exception('Missing session for v2 protocol')
+            raise RuntimeError('Missing session for v2 protocol')
 
         # Serialize whole message
         data = bytearray(msg.SerializeToString())
@@ -73,7 +73,7 @@ class ProtocolV2(object):
 
     def read(self, transport):
         if not self.session:
-            raise Exception('Missing session for v2 protocol')
+            raise RuntimeError('Missing session for v2 protocol')
 
         # Read header with first part of message data
         chunk = transport.read_chunk()
@@ -98,11 +98,11 @@ class ProtocolV2(object):
             headerlen = struct.calcsize('>BLLL')
             (magic, session, msg_type, datalen) = struct.unpack('>BLLL', chunk[:headerlen])
         except:
-            raise Exception('Cannot parse header')
+            raise RuntimeError('Cannot parse header')
         if magic != 0x01:
-            raise Exception('Unexpected magic character')
+            raise RuntimeError('Unexpected magic character')
         if session != self.session:
-            raise Exception('Session id mismatch')
+            raise RuntimeError('Session id mismatch')
         return msg_type, datalen, chunk[headerlen:]
 
     def parse_next(self, chunk):
@@ -110,11 +110,11 @@ class ProtocolV2(object):
             headerlen = struct.calcsize('>BLL')
             (magic, session, sequence) = struct.unpack('>BLL', chunk[:headerlen])
         except:
-            raise Exception('Cannot parse header')
+            raise RuntimeError('Cannot parse header')
         if magic != 0x02:
-            raise Exception('Unexpected magic characters')
+            raise RuntimeError('Unexpected magic characters')
         if session != self.session:
-            raise Exception('Session id mismatch')
+            raise RuntimeError('Session id mismatch')
         return chunk[headerlen:]
 
     def parse_session_open(self, chunk):
@@ -122,7 +122,7 @@ class ProtocolV2(object):
             headerlen = struct.calcsize('>BL')
             (magic, session) = struct.unpack('>BL', chunk[:headerlen])
         except:
-            raise Exception('Cannot parse header')
+            raise RuntimeError('Cannot parse header')
         if magic != 0x03:
-            raise Exception('Unexpected magic character')
+            raise RuntimeError('Unexpected magic character')
         return session

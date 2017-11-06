@@ -46,7 +46,7 @@ class TxApi(object):
             r = requests.get(url, headers={'User-agent': 'Mozilla/5.0'})
             j = r.json()
         except:
-            raise Exception('URL error: %s' % url)
+            raise RuntimeError('URL error: %s' % url)
         if cache_dir and cache_file:
             try:  # saving into cache
                 json.dump(j, open(cache_file, 'w'))

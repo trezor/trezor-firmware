@@ -450,7 +450,7 @@ def sign_tx(connect, coin):
     try:
         txapi = coins_txapi[coin]
     except:
-        raise Exception('Coin "%s" is not supported' % coin)
+        raise ValueError('Coin "%s" is not supported' % coin)
     client.set_tx_api(txapi)
 
     if sys.version_info.major < 3:

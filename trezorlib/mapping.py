@@ -48,7 +48,7 @@ def check_missing():
     missing = list(set(types) - set(map_type_to_class.values()))
 
     if len(missing):
-        raise Exception("Following protobuf messages are not defined in mapping: %s" % missing)
+        raise ValueError("Following protobuf messages are not defined in mapping: %s" % missing)
 
 
 build_map()
