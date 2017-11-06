@@ -8,6 +8,7 @@ BUILD_DIR             = build
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
+REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
 UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
 
@@ -89,6 +90,11 @@ build_bootloader: ## build bootloader
 build_prodtest: ## build production test firmware
 	$(SCONS) CFLAGS="$(CFLAGS)" $(PRODTEST_BUILD_DIR)/prodtest.bin
 
+build_reflash: ## build reflash firmware + reflash image
+	$(SCONS) CFLAGS="$(CFLAGS)" $(REFLASH_BUILD_DIR)/reflash.bin
+	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
+	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
+
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
@@ -113,6 +119,9 @@ clean_bootloader: ## clean bootloader build
 
 clean_prodtest: ## clean prodtest build
 	rm -rf $(PRODTEST_BUILD_DIR)
+
+clean_reflash: ## clean reflash build
+	rm -rf $(REFLASH_BUILD_DIR)
 
 clean_firmware: ## clean firmware build
 	rm -rf $(FIRMWARE_BUILD_DIR)
