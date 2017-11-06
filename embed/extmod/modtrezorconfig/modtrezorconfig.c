@@ -47,11 +47,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_unlock_obj, mod_trezorconfig_u
 ///     Returns True if storage has a configured PIN, False otherwise.
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
-    if (storage_has_pin()) {
-        return mp_const_true;
-    } else {
+    if (sectrue != storage_has_pin()) {
         return mp_const_false;
     }
+    return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj, mod_trezorconfig_has_pin);
 
