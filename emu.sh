@@ -7,9 +7,9 @@ OPTLEVEL="${OPTLEVEL:-0}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"
 if file $EXE | grep -q 80386 ; then
-HEAPSIZE="${HEAPSIZE:-100000}"
+HEAPSIZE="${HEAPSIZE:-163K}"
 else
-HEAPSIZE="${HEAPSIZE:-1000000}"
+HEAPSIZE="${HEAPSIZE:-326K}"
 fi
 
 ARGS="-O${OPTLEVEL} -X heapsize=${HEAPSIZE}"
