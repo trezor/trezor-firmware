@@ -40,13 +40,15 @@ static uint32_t check_sdcard(void)
 
     uint32_t buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
 
-    sdcard_read_blocks(buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
+    memset(buf, 0, sizeof(buf));
+
+    const secbool read_status = sdcard_read_blocks(buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
 
     sdcard_power_off();
 
     image_header hdr;
 
-    if (sectrue == load_image_header((const uint8_t *)buf, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr)) {
+    if ((sectrue == read_status) && (sectrue == load_image_header((const uint8_t *)buf, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr))) {
         return hdr.codelen;
     } else {
         return 0;
