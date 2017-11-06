@@ -130,6 +130,8 @@ secbool storage_unlock(const uint8_t *pin, size_t len)
         return secfalse;
     }
 
+    unlocked = secfalse;
+
     uint32_t ofs;
     uint32_t ctr;
     if (sectrue != pin_fails_read(&ofs, &ctr)) {
@@ -153,7 +155,10 @@ secbool storage_unlock(const uint8_t *pin, size_t len)
         return secfalse;
     }
     pin_fails_reset(ofs);
-    return sectrue;
+
+    unlocked = sectrue;
+
+    return unlocked;
 }
 
 secbool storage_get(uint16_t key, const void **val, uint16_t *len)
