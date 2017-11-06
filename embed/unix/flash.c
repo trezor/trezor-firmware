@@ -55,20 +55,17 @@ static void flash_sync(void)
     }
 }
 
-static void flash_read(void)
-{
-    FILE *f = fopen(FLASH_FILE, "rb");
-    if (f) {
-        size_t r = fread(flash_buffer, sizeof(flash_buffer), 1, f);
-        (void)r;
-        fclose(f);
-    }
-}
-
 secbool flash_init(void)
 {
-    memset(flash_buffer, 0xFF, sizeof(flash_buffer));
-    flash_read();
+    FILE *f = fopen(FLASH_FILE, "rb");
+    size_t r = 0;
+    if (f) {
+        r = fread(flash_buffer, sizeof(flash_buffer), 1, f);
+        fclose(f);
+    }
+    if (r != 1) {
+        memset(flash_buffer, 0xFF, sizeof(flash_buffer));
+    }
     return sectrue;
 }
 
