@@ -20,7 +20,7 @@ async def _show_entropy(ctx):
     from trezor.ui.container import Container
     from ..common.confirm import require_confirm
 
-    content = Container(
-        Text('Confirm entropy', ui.ICON_RESET, ui.MONO, 'Do you really want to send entropy?'))
-
-    await require_confirm(ctx, content, code=ProtectCall)
+    await require_confirm(ctx, Text(
+        'Confirm entropy', ui.ICON_RESET,
+        ui.BOLD, 'Do you really want', 'to send entropy?',
+        ui.NORMAL, 'Continue only if you', 'know what you are doing!'),code=ProtectCall)
