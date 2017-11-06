@@ -89,9 +89,13 @@ void display_welcome(secbool firmware_present)
 #define VENDOR_IMAGE_RESX 120
 #define VENDOR_IMAGE_RESY 120
 
-void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version)
+void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version, char red_background)
 {
-    display_clear();
+    if (red_background) {
+        display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_RED);
+    } else {
+        display_clear();
+    }
     if (memcmp(vimg, "TOIf", 4) != 0) {
         return;
     }
@@ -102,7 +106,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
     }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image((DISPLAY_RESX - w) / 2, 32, w, h, vimg + 12, datalen);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, red_background ? COLOR_BL_RED : COLOR_BLACK);
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
         (int)(fw_version & 0xFF),
@@ -110,7 +114,7 @@ void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, ui
         (int)((fw_version >> 16) & 0xFF),
         (int)((fw_version >> 24) & 0xFF)
     );
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, red_background ? COLOR_BL_RED : COLOR_BLACK);
     display_refresh();
 }
 
@@ -339,14 +343,26 @@ int main(void)
         check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, sectors, 13),
         "invalid firmware hash");
 
-    display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version);
+    display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version, (vhdr.vtrust & 0x0010) == 0);
     display_fade(0, BACKLIGHT_NORMAL, 1000);
-    if (vhdr.vtrust < 50) {
-        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, "click to continue ...", -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
-        touch_click();
-    } else {
+
+    if ((vhdr.vtrust & 0x0001) == 0) {
         hal_delay(1000);
     }
+    if ((vhdr.vtrust & 0x0002) == 0) {
+        hal_delay(2000);
+    }
+    if ((vhdr.vtrust & 0x0004) == 0) {
+        hal_delay(4000);
+    }
+    if ((vhdr.vtrust & 0x0008) == 0) {
+        hal_delay(8000);
+    }
+    if ((vhdr.vtrust & 0x0020) == 0) {
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, "click to continue ...", -1, FONT_BOLD, COLOR_GRAY64, COLOR_BLACK);
+        touch_click();
+    }
+
     display_fade(BACKLIGHT_NORMAL, 0, 500);
     display_clear();
 

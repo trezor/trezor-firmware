@@ -112,8 +112,8 @@ of 512 bytes.
 | 0x000D | 1      | vminor | version (minor) |
 | 0x000E | 1      | vsig_m | number of signatures needed to run the firmware from this vendor |
 | 0x000F | 1      | vsig_n | number of different pubkeys vendor provides for signing |
-| 0x0010 | 1      | vtrust | level of vendor trust (0-100) |
-| 0x0011 | 15     | reserved | not used yet (zeroed) |
+| 0x0010 | 2      | vtrust | level of vendor trust (bitmap) |
+| 0x0012 | 14     | reserved | not used yet (zeroed) |
 | 0x0020 | 32     | vpub1 | vendor pubkey 1 |
 | ...    | ...    | ... | ... |
 | ?      | 32     | vpubn | vendor pubkey n |
@@ -124,6 +124,19 @@ of 512 bytes.
 | ?      | ?      | reserved | padding to an address that is -65 modulo 512 (zeroed) |
 | ?      | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
 | ?      | 64     | sig | SatoshiLabs aggregated signature of the vendor header |
+
+#### Vendor Trust
+
+Vendor trust is stored as bitmap where unset bit means the feature is active.
+
+| bit | hex    | meaning                                 |
+|-----|--------|-----------------------------------------|
+|  0  | 0x0001 | wait 1 second                           |
+|  1  | 0x0002 | wait 2 seconds                          |
+|  2  | 0x0004 | wait 4 seconds                          |
+|  3  | 0x0008 | wait 8 seconds                          |
+|  4  | 0x0010 | use red background instead of black one |
+|  5  | 0x0020 | require user click                      |
 
 ### Firmware Header
 

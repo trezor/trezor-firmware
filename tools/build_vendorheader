@@ -37,8 +37,8 @@ def main():
 
     expiry = 0
     vheader = b'TRZV' + \
-        struct.pack('<IIBBBBB', 0, expiry, vmajor, vminor, m, len(keys), vtrust)
-    vheader += 15 * b'\0'
+        struct.pack('<IIBBBBH', 0, expiry, vmajor, vminor, m, len(keys), vtrust)
+    vheader += 14 * b'\0'
     for k in keys:
         vheader += k
     vheader += encode_vendor(vname) + open(ifn, 'rb').read()

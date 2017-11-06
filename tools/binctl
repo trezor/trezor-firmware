@@ -146,7 +146,7 @@ class BootloaderImage(BinImage):
 class VendorHeader(object):
 
     def __init__(self, data):
-        header = struct.unpack('<4sIIBBBBB', data[:17])
+        header = struct.unpack('<4sIIBBBBH', data[:18])
         self.magic, \
         self.hdrlen, \
         self.expiry, \
@@ -189,7 +189,7 @@ class VendorHeader(object):
         print('  * expiry  :', self.expiry)
         print('  * version : %d.%d' % (self.vmajor, self.vminor))
         print('  * scheme  : %d out of %d' % (self.vsig_m, self.vsig_n))
-        print('  * trust   :', self.vtrust)
+        print('  * trust   :', self.vtrust, '=', bin(self.vtrust))
         for i in range(self.vsig_n):
             print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode())
         print('  * vstr    :', self.vstr.decode())
@@ -199,11 +199,11 @@ class VendorHeader(object):
         print()
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIBBBBB',
+        header = struct.pack('<4sIIBBBBH',
                                self.magic, self.hdrlen, self.expiry,
                                self.vmajor, self.vminor,
                                self.vsig_m, self.vsig_n, self.vtrust)
-        header += 15 * b'\x00'
+        header += 14 * b'\x00'
         for i in range(self.vsig_n):
             header += self.vpub[i]
         header += struct.pack('<B', self.vstr_len) + self.vstr

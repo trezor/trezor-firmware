@@ -88,7 +88,7 @@ secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t ke
 
     memcpy(&vhdr->vsig_m, data + 14, 1);
     memcpy(&vhdr->vsig_n, data + 15, 1);
-    memcpy(&vhdr->vtrust, data + 16, 1);
+    memcpy(&vhdr->vtrust, data + 16, 2);
 
     if (vhdr->vsig_n > MAX_VENDOR_PUBLIC_KEYS) {
         return secfalse;

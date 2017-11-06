@@ -41,8 +41,8 @@ typedef struct {
     uint16_t version;
     uint8_t vsig_m;
     uint8_t vsig_n;
-    uint8_t vtrust;
-    // uint8_t reserved[15];
+    uint16_t vtrust;
+    // uint8_t reserved[14];
     const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
     uint8_t vstr_len;
     const uint8_t *vstr;
