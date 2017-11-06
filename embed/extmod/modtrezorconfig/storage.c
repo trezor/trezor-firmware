@@ -211,10 +211,12 @@ secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin
         // shutdown();
         return secfalse;
     }
+    // TODO: check for max length
+    // TODO: check with fail handling
     if (sectrue != pin_check(pin, len)) {
         return secfalse;
     }
-    // TODO: change pin in storage
+    norcow_set(PIN_KEY, (const void *)newpin, (uint16_t)newlen);
     return sectrue;
 }
 
