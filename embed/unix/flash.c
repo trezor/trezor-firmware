@@ -59,7 +59,8 @@ static void flash_read(void)
 {
     FILE *f = fopen(FLASH_FILE, "rb");
     if (f) {
-        fread(flash_buffer, sizeof(flash_buffer), 1, f);
+        size_t r = fread(flash_buffer, sizeof(flash_buffer), 1, f);
+        (void)r;
         fclose(f);
     }
 }
