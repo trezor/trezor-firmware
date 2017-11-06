@@ -4,10 +4,12 @@ JOBS = 4
 MAKE = make -j $(JOBS)
 SCONS = scons -Q -j $(JOBS)
 
-BOARDLOADER_BUILD_DIR = build/boardloader
-BOOTLOADER_BUILD_DIR  = build/bootloader
-PRODTEST_BUILD_DIR    = build/prodtest
-FIRMWARE_BUILD_DIR    = build/firmware
+BUILD_DIR             = build
+BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
+BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
+PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
+FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
+UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -55,7 +57,7 @@ res: ## update resources
 ## emulator commands:
 
 run: ## run unix port
-	cd src ; ../build/unix/micropython
+	cd src ; ../$(UNIX_BUILD_DIR)/micropython
 
 emu: ## run emulator
 	./emu.sh
@@ -79,22 +81,22 @@ style: ## run code style check on application sources
 build: build_boardloader build_bootloader build_prodtest build_firmware build_unix build_cross ## build all
 
 build_boardloader: ## build boardloader
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/boardloader/boardloader.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
 
 build_bootloader: ## build bootloader
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" build/bootloader/bootloader.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 
 build_prodtest: ## build production test firmware
-	$(SCONS) CFLAGS="$(CFLAGS)" build/prodtest/prodtest.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 build_firmware: res build_cross ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" build/firmware/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: ## build unix port
-	$(SCONS) CFLAGS="$(CFLAGS)" build/unix/micropython $(UNIX_PORT_OPTS)
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS)
 
 build_unix_noui: ## build unix port without UI support
-	$(SCONS) CFLAGS="$(CFLAGS)" build/unix/micropython $(UNIX_PORT_OPTS) TREZOR_NOUI=1
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_NOUI=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -104,19 +106,19 @@ build_cross: ## build mpy-cross port
 clean: clean_boardloader clean_bootloader clean_prodtest clean_firmware clean_unix clean_cross ## clean all
 
 clean_boardloader: ## clean boardloader build
-	rm -rf build/boardloader
+	rm -rf $(BOARDLOADER_BUILD_DIR)
 
 clean_bootloader: ## clean bootloader build
-	rm -rf build/bootloader
+	rm -rf $(BOOTLOADER_BUILD_DIR)
 
 clean_prodtest: ## clean prodtest build
-	rm -rf build/prodtest
+	rm -rf $(PRODTEST_BUILD_DIR)
 
 clean_firmware: ## clean firmware build
-	rm -rf build/firmware
+	rm -rf $(FIRMWARE_BUILD_DIR)
 
 clean_unix: ## clean unix build
-	rm -rf build/unix
+	rm -rf $(UNIX_BUILD_DIR)
 
 clean_cross: ## clean mpy-cross build
 	$(MAKE) -C vendor/micropython/mpy-cross clean $(CROSS_PORT_OPTS)
