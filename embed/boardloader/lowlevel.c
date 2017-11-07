@@ -13,7 +13,7 @@
     #define WANT_WRP_SECTORS (0)
 #endif
 
-#define WANT_BOR_LEVEL (OB_BOR_LEVEL2)
+#define WANT_BOR_LEVEL (OB_BOR_LEVEL3)
 
 // reference RM0090 section 3.9.10; SPRMOD is 0 meaning PCROP disabled.; DB1M is 0 because we use 2MB dual-bank; BFB2 is 0 allowing boot from flash;
 #define FLASH_OPTCR_VALUE ( (((~WANT_WRP_SECTORS) << FLASH_OPTCR_nWRP_Pos) & FLASH_OPTCR_nWRP_Msk) | \
@@ -120,12 +120,12 @@ void periph_init(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
     // enable the PVD (programmable voltage detector).
-    // select the "2.6V" threshold (level 4).
+    // select the "2.7V" threshold (level 5).
     // this detector will be active regardless of the
     // flash option byte BOR setting.
     __HAL_RCC_PWR_CLK_ENABLE();
     PWR_PVDTypeDef pvd_config;
-    pvd_config.PVDLevel = PWR_PVDLEVEL_4;
+    pvd_config.PVDLevel = PWR_PVDLEVEL_5;
     pvd_config.Mode = PWR_PVD_MODE_IT_RISING_FALLING;
     HAL_PWR_ConfigPVD(&pvd_config);
     HAL_PWR_EnablePVD();

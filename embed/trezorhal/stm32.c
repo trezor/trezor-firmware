@@ -51,3 +51,11 @@ void SysTick_Handler(void)
     // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
     uwTick++;
 }
+
+extern void shutdown(void);
+
+void PVD_IRQHandler(void)
+{
+    TIM1->CCR1 = 0; // turn off display backlight
+    shutdown();
+}
