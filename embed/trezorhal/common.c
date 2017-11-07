@@ -30,13 +30,6 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
     for (;;);
 }
 
-uint32_t __stack_chk_guard = 0;
-
-void __attribute__((noreturn)) __stack_chk_fail(void)
-{
-    ensure(secfalse, "Stack smashing detected");
-}
-
 #ifndef NDEBUG
 void __assert_func(const char *file, int line, const char *func, const char *expr) {
     __fatal_error(expr, "assert failed", file, line, func);
@@ -58,4 +51,11 @@ void clear_otg_hs_memory(void)
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE(); // enable USB_OTG_HS peripheral clock so that the peripheral memory is accessible
     memset_reg((volatile void *) USB_OTG_HS_DATA_FIFO_RAM, (volatile void *) (USB_OTG_HS_DATA_FIFO_RAM + USB_OTG_HS_DATA_FIFO_SIZE), 0);
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE(); // disable USB OTG_HS peripheral clock as the peripheral is not needed right now
+}
+
+uint32_t __stack_chk_guard = 0;
+
+void __attribute__((noreturn)) __stack_chk_fail(void)
+{
+    ensure(secfalse, "Stack smashing detected");
 }

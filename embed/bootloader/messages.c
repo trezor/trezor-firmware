@@ -318,7 +318,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
 
 static image_header hdr;
 
-extern secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr);
+secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr);
 
 secbool compare_to_current_vendor_header(const vendor_header * const new_vhdr)
 {

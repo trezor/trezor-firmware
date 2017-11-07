@@ -385,7 +385,7 @@ void display_print(const char *text, int textlen)
 }
 
 #ifndef TREZOR_UNIX
-extern int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va);
+int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va);
 #endif
 
 // variadic display_print
