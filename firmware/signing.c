@@ -733,6 +733,8 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 		resp.has_serialized = true;
 		if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash))
 			return false;
+
+		uint8_t sighash = signing_hash_type() & 0xff;
 		if (txinput->has_multisig) {
 			uint32_t r = 1; // skip number of items (filled in later)
 			resp.serialized.serialized_tx.bytes[r] = 0; r++;
@@ -742,7 +744,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 					continue;
 				}
 				nwitnesses++;
-				txinput->multisig.signatures[i].bytes[txinput->multisig.signatures[i].size] = 1;
+				txinput->multisig.signatures[i].bytes[txinput->multisig.signatures[i].size] = sighash;
 				r += tx_serialize_script(txinput->multisig.signatures[i].size + 1, txinput->multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
 			}
 			uint32_t script_len = compile_script_multisig(&txinput->multisig, 0);
@@ -753,7 +755,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 		} else { // single signature
 			uint32_t r = 0;
 			r += ser_length(2, resp.serialized.serialized_tx.bytes + r);
-			resp.serialized.signature.bytes[resp.serialized.signature.size] = 1;
+			resp.serialized.signature.bytes[resp.serialized.signature.size] = sighash;
 			r += tx_serialize_script(resp.serialized.signature.size + 1, resp.serialized.signature.bytes, resp.serialized.serialized_tx.bytes + r);
 			r += tx_serialize_script(33, node.public_key, resp.serialized.serialized_tx.bytes + r);
 			resp.serialized.serialized_tx.size = r;
