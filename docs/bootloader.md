@@ -160,14 +160,3 @@ Total length of firmware header is always 1024 bytes.
 | 0x0220 | 415    | reserved | not used yet (zeroed) |
 | 0x03BF | 1      | sigmask | vendor signature indexes (bitmap) |
 | 0x03C0 | 64     | sig | vendor aggregated signature of the firmware header |
-
-
-## Various ideas
-
-* Bootloader should be able to read vendor + firmware header and send info
-  about FW to client in features message.
-* Bootloader should not try to run firmware if there is not any.
-* Storage wiping rule: Don't erase storage when old FW and new FW are signed
-  using the same key set. Otherwise erase.
-* Bootloader should send error to client when firmware update fails and allow
-  client to try one more time. This prevents storage area erasure by accident.

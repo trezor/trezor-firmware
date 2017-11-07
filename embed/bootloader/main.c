@@ -81,7 +81,7 @@ void display_welcome(secbool firmware_present)
     }
     if (sectrue == firmware_present) {
         display_header(ICON_TOOLS, "TREZOR Bootloader");
-        // TODO: show info about installed firmware
+        // TODO: show info about installed firmware (vendor, version, etc.)
     }
     display_fade(0, BACKLIGHT_NORMAL, 1000);
 }

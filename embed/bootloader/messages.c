@@ -213,6 +213,7 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, 
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
     MSG_SEND_ASSIGN_VALUE(firmware_present, firmware_present);
+    // TODO: pass info about installed firmware (vendor, version, etc.)
     MSG_SEND(Features);
 }
 
@@ -325,8 +326,27 @@ secbool compare_to_current_vendor_header(const vendor_header * const new_vhdr)
     if (sectrue != load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
         return secfalse;
     }
-    // TODO: less strict rules
-    return sectrue * (0 == memcmp(new_vhdr, &current_vhdr, sizeof(vendor_header)));
+    // check whether current and new vendor header have the same key set
+    if (new_vhdr->vsig_m != current_vhdr.vsig_m) {
+        return secfalse;
+    }
+    if (new_vhdr->vsig_n != current_vhdr.vsig_n) {
+        return secfalse;
+    }
+    for (int i = 0; i < MAX_VENDOR_PUBLIC_KEYS; i++) {
+        if (new_vhdr->vpub[i] != 0 && current_vhdr.vpub[i] != 0) {
+            if (0 != memcmp(new_vhdr->vpub[i], current_vhdr.vpub[i], 32)) {
+                return secfalse;
+            }
+        }
+        if (new_vhdr->vpub[i] == 0 && current_vhdr.vpub[i] != 0) {
+            return secfalse;
+        }
+        if (new_vhdr->vpub[i] != 0 && current_vhdr.vpub[i] == 0) {
+            return secfalse;
+        }
+    }
+    return sectrue;
 }
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
