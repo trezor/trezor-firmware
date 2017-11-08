@@ -13,9 +13,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../unix/common.h"
 #include "../../trezorhal/usb.h"
 #include "../../trezorhal/touch.h"
+
+void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
+
+#define ensure(expr, msg) (((expr) == sectrue) ? (void)0 : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
 #define TREZOR_UDP_IFACE 0
 #define TREZOR_UDP_PORT 21324

@@ -31,3 +31,8 @@ void hal_delay(uint32_t ms)
 {
     usleep(1000 * ms);
 }
+
+void shutdown(void)
+{
+    exit(1);
+}
