@@ -67,6 +67,7 @@ static bool multisig_fp_set, multisig_fp_mismatch;
 static uint8_t multisig_fp[32];
 static uint32_t in_address_n[8];
 static size_t in_address_n_count;
+static uint32_t tx_weight;
 
 /* A marker for in_address_n_count to indicate a mismatch in bip32 paths in
    input */
@@ -78,6 +79,13 @@ static size_t in_address_n_count;
 /* The maximum allowed change address.  This should be large enough for normal
    use and still allow to quickly brute-force the correct bip32 path. */
 #define BIP32_MAX_LAST_ELEMENT 1000000
+
+/* transaction header size: 4 byte version */
+#define TXSIZE_HEADER 4
+/* transaction footer size: 4 byte lock time */
+#define TXSIZE_FOOTER 4
+/* transaction segwit overhead 2 marker */
+#define TXSIZE_SEGWIT_OVERHEAD 2
 
 enum {
 	SIGHASH_ALL = 1,
@@ -433,6 +441,10 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinInf
 	version = _version;
 	lock_time = _lock_time;
 
+	tx_weight = 4 * (TXSIZE_HEADER + TXSIZE_FOOTER
+					 + ser_length_size(inputs_count)
+					 + ser_length_size(outputs_count));
+
 	signatures = 0;
 	idx1 = 0;
 	to_spend = 0;
@@ -590,15 +602,13 @@ static bool signing_check_fee(void) {
 		return false;
 	}
 	uint64_t fee = to_spend - spending;
-	uint64_t tx_est_size_kb = (transactionEstimateSize(inputs_count, outputs_count) + 999) / 1000;
-	if (fee > tx_est_size_kb * coin->maxfee_kb) {
+	if (fee > ((uint64_t) tx_weight * coin->maxfee_kb)/4000) {
 		layoutFeeOverThreshold(coin, fee);
 		if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold, false)) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			signing_abort();
 			return false;
 		}
-		layoutProgress(_("Signing transaction"), progress);
 	}
 	// last confirmation
 	layoutConfirmTx(coin, to_spend - change_spend, fee);
@@ -799,6 +809,7 @@ void signing_txack(TransactionType *tx)
 	switch (signing_stage) {
 		case STAGE_REQUEST_1_INPUT:
 			signing_check_input(&tx->inputs[0]);
+			tx_weight += tx_input_weight(&tx->inputs[0]);
 			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
 				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
 				memcpy(&input, tx->inputs, sizeof(TxInputType));
@@ -848,6 +859,9 @@ void signing_txack(TransactionType *tx)
 					fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
 					signing_abort();
 					return;
+				}
+				if (!to.is_segwit) {
+					tx_weight += TXSIZE_SEGWIT_OVERHEAD + to.inputs_len;
 				}
 #if !ENABLE_SEGWIT_NONSEGWIT_MIXING
 				// don't mix segwit and non-segwit inputs
@@ -939,6 +953,7 @@ void signing_txack(TransactionType *tx)
 			if (!signing_check_output(&tx->outputs[0])) {
 				return;
 			}
+			tx_weight += tx_output_weight(coin, &tx->outputs[0]);
 			phase1_request_next_output();
 			return;
 		case STAGE_REQUEST_4_INPUT:

@@ -35,19 +35,41 @@
 
 #define SEGWIT_VERSION_0 0
 
+/* transaction input size (without script): 32 prevhash, 4 idx, 4 sequence */
+#define TXSIZE_INPUT 40
+/* transaction output size (without script): 8 amount */
+#define TXSIZE_OUTPUT 8
+/* size of a pubkey */
+#define TXSIZE_PUBKEY 33
+/* size of a DER signature (3 type bytes, 3 len bytes, 33 R, 32 S, 1 sighash */
+#define TXSIZE_SIGNATURE 72
+/* size of a multiscript without pubkey (1 M, 1 N, 1 checksig) */
+#define TXSIZE_MULTISIGSCRIPT 3
+/* size of a p2wpkh script (1 version, 1 push, 20 hash) */
+#define TXSIZE_WITNESSPKHASH 22
+/* size of a p2wsh script (1 version, 1 push, 32 hash) */
+#define TXSIZE_WITNESSSCRIPT 34
+/* size of a p2pkh script (dup, hash, push, 20 pubkeyhash, equal, checksig) */
+#define TXSIZE_P2PKHASH 25
+/* size of a p2sh script (hash, push, 20 scripthash, equal) */
+#define TXSIZE_P2SCRIPT 23
+
 static const uint8_t segwit_header[2] = {0,1};
+
+#define op_push_size(len) ((len) < 0x4c ? 1 : (len) < 0x100 ? 2 : \
+						   (len) < 0x10000 ? 3 : 5)
 
 uint32_t op_push(uint32_t i, uint8_t *out) {
 	if (i < 0x4C) {
 		out[0] = i & 0xFF;
 		return 1;
 	}
-	if (i < 0xFF) {
+	if (i < 0x100) {
 		out[0] = 0x4C;
 		out[1] = i & 0xFF;
 		return 2;
 	}
-	if (i < 0xFFFF) {
+	if (i < 0x10000) {
 		out[0] = 0x4D;
 		out[1] = i & 0xFF;
 		out[2] = (i >> 8) & 0xFF;
@@ -560,7 +582,68 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 	}
 }
 
-uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs)
-{
-	return 10 + inputs * 149 + outputs * 35;
+uint32_t tx_input_weight(const TxInputType *txinput) {
+	uint32_t input_script_size;
+	if (txinput->has_multisig) {
+		uint32_t multisig_script_size = TXSIZE_MULTISIGSCRIPT
+			+ txinput->multisig.pubkeys_count * (1 + TXSIZE_PUBKEY);
+		input_script_size = 1 // the OP_FALSE bug in multisig
+			+ txinput->multisig.m * (1 + TXSIZE_SIGNATURE)
+			+ op_push_size(multisig_script_size) + multisig_script_size;
+	} else {
+		input_script_size = (1 + TXSIZE_SIGNATURE + 1 + TXSIZE_PUBKEY);
+	}
+	uint32_t weight = 4 * TXSIZE_INPUT;
+	if (txinput->script_type == InputScriptType_SPENDADDRESS
+		|| txinput->script_type == InputScriptType_SPENDMULTISIG) {
+		input_script_size += ser_length_size(input_script_size);
+		weight += 4 * input_script_size;
+	} else if (txinput->script_type == InputScriptType_SPENDWITNESS
+			   || txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+		if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+			weight += 4 * (2 + (txinput->has_multisig
+								? TXSIZE_WITNESSSCRIPT : TXSIZE_WITNESSPKHASH));
+		} else {
+			weight += 4; // empty input script
+		}
+		weight += input_script_size; // discounted witness
+	}
+	return weight;
+}
+
+uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
+	uint32_t output_script_size = 0;
+	if (txoutput->script_type == OutputScriptType_PAYTOOPRETURN) {
+		output_script_size = 1 + op_push_size(txoutput->op_return_data.size)
+			+ txoutput->op_return_data.size;
+	} else if (txoutput->address_n_count > 0) {
+		if (txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
+			output_script_size = txoutput->has_multisig
+				? TXSIZE_WITNESSSCRIPT : TXSIZE_WITNESSPKHASH;
+		} else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS) {
+			output_script_size = TXSIZE_P2SCRIPT;
+		} else {
+			output_script_size = txoutput->has_multisig
+				? TXSIZE_P2SCRIPT : TXSIZE_P2PKHASH;
+		}
+	} else {
+		uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
+		int witver;
+		size_t addr_raw_len;
+		if (coin->bech32_prefix
+			&& segwit_addr_decode(&witver, addr_raw, &addr_raw_len, coin->bech32_prefix, txoutput->address)) {
+			output_script_size = 2 + addr_raw_len;
+		} else {
+			addr_raw_len = base58_decode_check(txoutput->address, addr_raw, MAX_ADDR_RAW_SIZE);
+			if (coin->has_address_type
+				&& address_check_prefix(addr_raw, coin->address_type)) {
+				output_script_size = TXSIZE_P2PKHASH;
+			} else if (coin->has_address_type_p2sh
+					   && address_check_prefix(addr_raw, coin->address_type_p2sh)) {
+				output_script_size = TXSIZE_P2SCRIPT;
+			}
+		} 
+	}
+	output_script_size += ser_length_size(output_script_size);
+	return 4 * (TXSIZE_OUTPUT + output_script_size);
 }

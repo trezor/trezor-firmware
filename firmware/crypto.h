@@ -30,6 +30,8 @@
 #include "coins.h"
 #include "types.pb.h"
 
+#define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
+
 uint32_t ser_length(uint32_t len, uint8_t *out);
 
 uint32_t ser_length_hash(SHA256_CTX *ctx, uint32_t len);

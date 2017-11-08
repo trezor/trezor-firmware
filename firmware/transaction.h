@@ -71,6 +71,7 @@ uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output);
 uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_t datalen);
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
 
-uint32_t transactionEstimateSize(uint32_t inputs, uint32_t outputs);
+uint32_t tx_input_weight(const TxInputType *txinput);
+uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput);
 
 #endif
