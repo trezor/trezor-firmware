@@ -356,7 +356,7 @@ class DebugLinkMixin(object):
         # Evaluate missed responses in 'with' statement
         if self.expected_responses is not None and len(self.expected_responses):
             raise RuntimeError("Some of expected responses didn't come from device: %s" %
-                            [pprint(x) for x in self.expected_responses])
+                               [pprint(x) for x in self.expected_responses])
 
         # Cleanup
         self.expected_responses = None
