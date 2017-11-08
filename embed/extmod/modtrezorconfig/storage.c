@@ -7,6 +7,7 @@
 
 #include <string.h>
 
+#include "common.h"
 #include "norcow.h"
 #include "../../trezorhal/flash.h"
 
@@ -19,11 +20,16 @@
 // Norcow storage key of configured PIN.
 #define PIN_KEY 0x0000
 
+// Maximum PIN length.
+#define PIN_MAXLEN 32
+
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
 
 secbool storage_init(void)
 {
+    initialized = secfalse;
+    unlocked = secfalse;
     if (sectrue != flash_init()) {
         return secfalse;
     }
@@ -31,7 +37,6 @@ secbool storage_init(void)
         return secfalse;
     }
     initialized = sectrue;
-    unlocked = secfalse;
     return sectrue;
 }
 
@@ -84,7 +89,7 @@ static void pin_fails_check_max(uint32_t ctr)
                 break;
             }
         }
-        // shutdown();
+        shutdown();
     }
 }
 
@@ -113,25 +118,23 @@ static secbool const_cmp(const uint8_t *pub, size_t publen, const uint8_t *sec, 
     for (size_t i = 0; i < publen; i++) {
         diff |= pub[i] ^ sec[i];
     }
-    return sectrue * (diff == 0);
+    return sectrue * (0 == diff);
 }
 
-static secbool pin_check(const uint8_t *pin, size_t pinlen)
+static secbool pin_cmp(const uint8_t *pin, size_t pinlen)
 {
     const void *spin = NULL;
     uint16_t spinlen = 0;
     norcow_get(PIN_KEY, &spin, &spinlen);
-    return const_cmp(pin, pinlen, spin, (size_t)spinlen);
+    if (NULL != spin) {
+        return const_cmp(pin, pinlen, spin, spinlen);
+    } else {
+        return sectrue * (0 == pinlen);
+    }
 }
 
-secbool storage_unlock(const uint8_t *pin, size_t len)
+static secbool pin_check(const uint8_t *pin, size_t len)
 {
-    if (sectrue != initialized) {
-        return secfalse;
-    }
-
-    unlocked = secfalse;
-
     uint32_t ofs;
     uint32_t ctr;
     if (sectrue != pin_fails_read(&ofs, &ctr)) {
@@ -141,7 +144,7 @@ secbool storage_unlock(const uint8_t *pin, size_t len)
 
     // Sleep for ~ctr seconds before checking the PIN.
     for (uint32_t wait = ~ctr; wait > 0; wait--) {
-        // hal_delay(1000);
+        hal_delay(1000);
     }
 
     // First, we increase PIN fail counter in storage, even before checking the
@@ -150,27 +153,27 @@ secbool storage_unlock(const uint8_t *pin, size_t len)
     if (sectrue != pin_fails_increase(ofs)) {
         return secfalse;
     }
-    if (sectrue != pin_check(pin, len)) {
+    if (sectrue != pin_cmp(pin, len)) {
         pin_fails_check_max(ctr << 1);
         return secfalse;
     }
     pin_fails_reset(ofs);
 
-    unlocked = sectrue;
+    return sectrue;
+}
 
+secbool storage_unlock(const uint8_t *pin, size_t len)
+{
+    unlocked = secfalse;
+    if (sectrue == initialized && sectrue == pin_check(pin, len)) {
+        unlocked = sectrue;
+    }
     return unlocked;
 }
 
 secbool storage_get(uint16_t key, const void **val, uint16_t *len)
 {
-    if (sectrue != initialized) {
-        return secfalse;
-    }
-    if (sectrue != unlocked) {
-        // shutdown();
-        return secfalse;
-    }
-    if (key == PIN_KEY) {
+    if (sectrue != initialized || sectrue != unlocked || PIN_KEY == key) {
         return secfalse;
     }
     return norcow_get(key, val, len);
@@ -178,14 +181,7 @@ secbool storage_get(uint16_t key, const void **val, uint16_t *len)
 
 secbool storage_set(uint16_t key, const void *val, uint16_t len)
 {
-    if (sectrue != initialized) {
-        return secfalse;
-    }
-    if (sectrue != unlocked) {
-        // shutdown();
-        return secfalse;
-    }
-    if (key == PIN_KEY) {
+    if (sectrue != initialized || sectrue != unlocked || PIN_KEY == key) {
         return secfalse;
     }
     return norcow_set(key, val, len);
@@ -199,25 +195,18 @@ secbool storage_has_pin(void)
     const void *spin = NULL;
     uint16_t spinlen = 0;
     norcow_get(PIN_KEY, &spin, &spinlen);
-    return sectrue * (spinlen != 0);
+    return sectrue * (0 != spinlen);
 }
 
 secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin, size_t newlen)
 {
-    if (sectrue != initialized) {
+    if (sectrue != initialized || sectrue != unlocked || newlen > PIN_MAXLEN) {
         return secfalse;
     }
-    if (sectrue != unlocked) {
-        // shutdown();
-        return secfalse;
-    }
-    // TODO: check for max length
-    // TODO: check with fail handling
     if (sectrue != pin_check(pin, len)) {
         return secfalse;
     }
-    norcow_set(PIN_KEY, (const void *)newpin, (uint16_t)newlen);
-    return sectrue;
+    return norcow_set(PIN_KEY, newpin, newlen);
 }
 
 secbool storage_wipe(void)
