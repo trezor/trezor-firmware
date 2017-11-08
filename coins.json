@@ -294,7 +294,7 @@
 	"bitcore": []
 }, {
 	"coin_name": "Bitcoin",
-	"coin_shortcut": "BTC",
+	"coin_shortcut": "B2X",
 	"coin_label": "Bitcoin Segwit2x",
 	"address_type": 0,
 	"address_type_p2sh": 5,
