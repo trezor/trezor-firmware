@@ -14,18 +14,19 @@ See https://trezor.io for more information
 Install
 -------
 
-(Run with sudo if not running in superuser mode under Linux)
-
-.. code::
-
-  pip install trezor
-
-On Linux you might need to run these commands first:
+Linux requirements:
 
 .. code::
 
   sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
-  sudo pip install setuptools
+
+Linux & Mac Python requirements:
+
+.. code::
+
+  sudo -H pip install setuptools
+  sudo -H pip install -r requirements.txt
+  sudo -H pip install trezor
 
 On FreeBSD you can install the packages:
 
