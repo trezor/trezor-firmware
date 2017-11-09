@@ -58,6 +58,8 @@ or to learn options of a particular command:
 
 or visit `usage <USAGE.rst>`_ page for more info.
 
+NOTE: The ``trezorctl`` command is `available for Debian Stretch <https://packages.debian.org/en/stretch/python-trezor>`_ (and comes pre-installed on `Tails OS <https://tails.boum.org/>`_).
+
 To use the library in your application look at the following example.
 
 Example
