@@ -58,7 +58,8 @@ class Bip143:
     # this not redeemScript nor scriptPubKey
     # for P2WPKH this is always 0x1976a914{20-byte-pubkey-hash}88ac
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
-        if txi.script_type == InputScriptType.SPENDP2SHWITNESS:
+        # p2wpkh in p2sh or native p2wpkh
+        if txi.script_type in (InputScriptType.SPENDP2SHWITNESS, InputScriptType.SPENDWITNESS):
             s = bytearray(25)
             s[0] = 0x76  # OP_DUP
             s[1] = 0xA9  # OP_HASH_160
