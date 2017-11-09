@@ -17,6 +17,7 @@ from trezor.messages import OutputScriptType
 from apps.common import coins
 from apps.wallet.sign_tx import signing
 
+
 class TestSignSegwitTx(unittest.TestCase):
     # pylint: disable=C0301
 
@@ -210,6 +211,114 @@ class TestSignSegwitTx(unittest.TestCase):
         with self.assertRaises(StopIteration):
             signer.send(None)
 
+    # see https://github.com/trezor/trezor-mcu/commit/6b615ce40567cc0da0b3b38ff668916aaae9dd4b#commitcomment-25505919
+    # for the rational behind this attack
+    def test_send_p2wpkh_in_p2sh_attack_amount(self):
+
+        coin = coins.by_name('Testnet')
+
+        seed = bip39.seed(' '.join(['all'] * 12), '')
+        root = bip32.from_seed(seed, 'secp256k1')
+
+        inp1 = TxInputType(
+            # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
+            address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
+            amount=10,
+            prev_hash=unhexlify('20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337'),
+            prev_index=0,
+            script_type=InputScriptType.SPENDP2SHWITNESS,
+            sequence=0xffffffff,
+        )
+        inpattack = TxInputType(
+            # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
+            address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
+            amount=9,  # modified!
+            prev_hash=unhexlify('20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337'),
+            prev_index=0,
+            script_type=InputScriptType.SPENDP2SHWITNESS,
+            sequence=0xffffffff,
+        )
+        out1 = TxOutputType(
+            address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
+            amount=8,
+            script_type=OutputScriptType.PAYTOADDRESS,
+            address_n=None,
+        )
+        out2 = TxOutputType(
+            address_n = [49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
+            script_type = OutputScriptType.PAYTOP2SHWITNESS,
+            amount = 1,
+        )
+        tx = SignTx(coin_name='Testnet', version=None, lock_time=None, inputs_count=1, outputs_count=2)
+
+        messages = [
+            None,
+
+            # check fee
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
+            TxAck(tx=TransactionType(inputs=[inpattack])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
+                      serialized=None),
+            TxAck(tx=TransactionType(outputs=[out1])),
+
+            signing.UiConfirmOutput(out1, coin),
+            True,
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None),
+                      serialized=None),
+            TxAck(tx=TransactionType(outputs=[out2])),
+
+            signing.UiConfirmTotal(8, 0, coin),
+            True,
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
+                      serialized=None),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
+                      serialized=TxRequestSerializedType(
+                          # returned serialized inpattack
+                          serialized_tx=unhexlify(
+                              '0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff'),
+                      )),
+            TxAck(tx=TransactionType(outputs=[out1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None),
+                      serialized=TxRequestSerializedType(
+                          # returned serialized out1
+                          serialized_tx=unhexlify(
+                              '0208000000000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac'),
+                          signature_index=None,
+                          signature=None,
+                      )),
+            TxAck(tx=TransactionType(outputs=[out2])),
+
+            # segwit
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
+                      serialized=TxRequestSerializedType(
+                          # returned serialized out2
+                          serialized_tx=unhexlify(
+                              '010000000000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87'),
+                          signature_index=None,
+                          signature=None,
+                      )),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXFINISHED, details=None)
+        ]
+
+        signer = signing.sign_tx(tx, root)
+        i = 0
+        messages_count = int(len(messages) / 2)
+        for request, response in chunks(messages, 2):
+            if i == messages_count - 1:  # last message should throw SigningError
+                self.assertRaises(signing.SigningError, signer.send, request)
+            else:
+                self.assertEqualEx(signer.send(request), response)
+            i += 1
+        with self.assertRaises(StopIteration):
+            signer.send(None)
 
     def assertEqualEx(self, a, b):
         # hack to avoid adding __eq__ to signing.Ui* classes

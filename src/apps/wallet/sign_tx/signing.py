@@ -94,7 +94,7 @@ async def check_tx_fee(tx: SignTx, root):
         raise SigningError(FailureType.ActionCancelled,
                            'Total cancelled')
 
-    return h_first, tx_req, txo_bin, bip143, segwit
+    return h_first, tx_req, txo_bin, bip143, segwit, total_in
 
 
 async def sign_tx(tx: SignTx, root):
@@ -103,7 +103,7 @@ async def sign_tx(tx: SignTx, root):
 
     # Phase 1
 
-    h_first, tx_req, txo_bin, bip143, segwit = await check_tx_fee(tx, root)
+    h_first, tx_req, txo_bin, bip143, segwit, authorized_in = await check_tx_fee(tx, root)
 
     # Phase 2
     # - sign inputs
@@ -215,7 +215,13 @@ async def sign_tx(tx: SignTx, root):
         if segwit[i]:
             # STAGE_REQUEST_SEGWIT_WITNESS
             txi = await request_tx_input(tx_req, i)
-            # todo check amount?
+
+            # Check amount
+            if txi.amount > authorized_in:
+                raise SigningError(FailureType.ProcessError,
+                                   'Transaction has changed during signing')
+            authorized_in -= txi.amount
+
             key_sign = node_derive(root, txi.address_n)
             key_sign_pub = key_sign.public_key()
             bip143_hash = bip143.preimage_hash(tx, txi, ecdsa_hash_pubkey(key_sign_pub))
