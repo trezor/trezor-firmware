@@ -214,6 +214,7 @@ void display_init(void)
     CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
     CMD(0xB6); DATA(0x0A); DATA(0xC2); DATA(0x27); DATA(0x00); // Display Function Control: gate scan direction 319 -> 0
     CMD(0xF6); DATA(0x09); DATA(0x30); DATA(0x00); // Interface Control: XOR BGR as ST7789V does
+    // the above config is the most important and definitely necessary
     CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30);
     CMD(0xED); DATA(0x64); DATA(0x03); DATA(0x12); DATA(0x81);
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
@@ -235,15 +236,8 @@ void display_init(void)
     CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
     CMD(0xC0); DATA(0x20); // LCMCTRL: LCM Control: XOR RGB setting
     CMD(0xE4); DATA(0x1d); DATA(0x0A); DATA(0x11); // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is gate 80.; gate scan direction 319 -> 0
-
+    // the above config is the most important and definitely necessary
     CMD(0xB2); DATA(0x08); DATA(0x08); DATA(0x00); DATA(0x22); DATA(0x22); // PORCTRK: Porch setting
-    CMD(0xB7); DATA(0x35);                          // GCTRL: Gate Control
-    CMD(0xC2); DATA(0x01); DATA(0xFF);              // VDVVRHEN: VDV and VRH Command Enable
-    CMD(0xC3); DATA(0x0B);                          // VRHS: VRH Set
-    CMD(0xC4); DATA(0x20);                          // VDVS: VDV Set
-    CMD(0xBB); DATA(0x20);                          // VCOMS: VCOM setting
-    CMD(0xC5); DATA(0x20);                          // VCMOFSET
-    // CMD(0xC6); DATA(0x0F);                       // FRCTRL2: Framerate Control (60 Hz)
     CMD(0xD0); DATA(0xA4); DATA(0xA1);              // PWCTRL1: Power Control 1
     // gamma curve 1
     // CMD(0xE0); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
