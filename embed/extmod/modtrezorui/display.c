@@ -68,10 +68,14 @@ static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0, in
 
 void display_clear(void)
 {
-    display_set_window_raw(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
-    for (int i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY * 2; i++) {
-        DATA(0x00);
+    const int saved_orientation = DISPLAY_ORIENTATION;
+    display_orientation(0); // set MADCTL first so that we can set the window correctly next
+    display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1); // address the complete frame memory
+    for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
+        DATA(0x00); DATA(0x00); // 2 bytes per pixel because we're using RGB 5-6-5 format
     }
+    display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1); // go back to restricted window
+    display_orientation(saved_orientation); // if valid, go back to the saved orientation
 }
 
 void display_bar(int x, int y, int w, int h, uint16_t c)

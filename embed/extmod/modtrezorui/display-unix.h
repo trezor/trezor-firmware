@@ -67,7 +67,7 @@ void display_init(void)
 #endif
 }
 
-static void display_set_window_raw(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
 #ifndef TREZOR_NOUI
     if (!RENDERER) {
@@ -78,11 +78,6 @@ static void display_set_window_raw(uint16_t x0, uint16_t y0, uint16_t x1, uint16
     POSX = SX; POSY = SY;
     DATAODD = 0;
 #endif
-}
-
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
-{
-    display_set_window_raw(x0, y0, x1, y1);
 }
 
 void display_refresh(void)

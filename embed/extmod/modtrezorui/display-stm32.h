@@ -44,65 +44,62 @@ static void display_unsleep(void)
 
 static uint16_t BUFFER_OFFSET_X = 0, BUFFER_OFFSET_Y = 0;
 
+static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+{
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
+    x0 += BUFFER_OFFSET_X;
+    x1 += BUFFER_OFFSET_X;
+    y0 += BUFFER_OFFSET_Y;
+    y1 += BUFFER_OFFSET_Y;
+    CMD(0x2A); DATA(x0 >> 8); DATA(x0 & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
+    CMD(0x2B); DATA(y0 >> 8); DATA(y0 & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
+    CMD(0x2C);
+#endif
+}
+
 void display_set_orientation(int degrees)
 {
-#define RGB (0)
-#define BGR (1 << 3)
-#define MV  (1 << 5)
-#define MX  (1 << 6)
-#define MY  (1 << 7)
-    // memory access control
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
+    #define MV  (1 << 5)
+    #define MX  (1 << 6)
+    #define MY  (1 << 7)
+    // MADCTL: Memory Data Access Control
+    // reference section 9.3 in the ILI9341 manual; 8.12 in the ST7789V manual
+    BUFFER_OFFSET_X = 0;
+    BUFFER_OFFSET_Y = 0;
+    uint8_t display_command_parameter = 0;
     switch (degrees) {
         case 0:
-            CMD(0x36);
-#if DISPLAY_ILI9341V
-            DATA(BGR | MX | MY);
-#endif
-#if DISPLAY_ST7789V
-            DATA(RGB | MX | MY);
-#endif
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = MAX_DISPLAY_RESY - DISPLAY_RESY;
+            display_command_parameter = 0;
             break;
         case 90:
-            CMD(0x36);
-#if DISPLAY_ILI9341V
-            DATA(BGR | MV | MY);
-#endif
-#if DISPLAY_ST7789V
-            DATA(RGB | MV | MY);
-#endif
-            BUFFER_OFFSET_X = MAX_DISPLAY_RESY - DISPLAY_RESX;
-            BUFFER_OFFSET_Y = 0;
+            display_command_parameter = MV | MX;
             break;
         case 180:
-            CMD(0x36);
-#if DISPLAY_ILI9341V
-            DATA(BGR);
-#endif
-#if DISPLAY_ST7789V
-            DATA(RGB);
-#endif
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = 0;
+            display_command_parameter = MX | MY;
+            BUFFER_OFFSET_Y = MAX_DISPLAY_RESY - DISPLAY_RESY;
             break;
         case 270:
-            CMD(0x36);
-#if DISPLAY_ILI9341V
-            DATA(BGR | MV | MX);
-#endif
-#if DISPLAY_ST7789V
-            DATA(RGB | MV | MX);
-#endif
-            BUFFER_OFFSET_X = 0;
-            BUFFER_OFFSET_Y = 0;
+            display_command_parameter = MV | MY;
+            BUFFER_OFFSET_X = MAX_DISPLAY_RESY - DISPLAY_RESX;
             break;
     }
+    CMD(0x36); DATA(display_command_parameter);
+    display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1); // reset the column and page extents
+#endif
 }
 
 void display_set_backlight(int val)
 {
     TIM1->CCR1 = LED_PWM_TIM_PERIOD * val / 255;
+}
+
+void display_hardware_reset(void)
+{
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET); // LCD_RST/PC14
+    HAL_Delay(1); // wait 1 millisecond. only needs to be low for 10 microseconds.
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET); // LCD_RST/PC14
+    HAL_Delay(120); // max wait time for hardware reset is 120 milliseconds (experienced display flakiness using only 5ms wait before sending commands)
 }
 
 void display_init(void)
@@ -210,16 +207,13 @@ void display_init(void)
 
     HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
 
-    // hardware reset
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-    HAL_Delay(20);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-    HAL_Delay(5);
+    display_hardware_reset();
 #if DISPLAY_ILI9341V
-    CMD(0x01);                                      // software reset
-    HAL_Delay(120);
-    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On; V-blanking only
-    CMD(0x3A); DATA(0x55);                          // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
+    // most recent manual: https://www.newhavendisplay.com/app_notes/ILI9341.pdf
+    CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
+    CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
+    CMD(0xB6); DATA(0x0A); DATA(0xC2); DATA(0x27); DATA(0x00); // Display Function Control: change gate scan direction
+    CMD(0xF6); DATA(0x09); DATA(0x30); DATA(0x00); // Interface Control: XOR BGR as ST7789V does
     CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30);
     CMD(0xED); DATA(0x64); DATA(0x03); DATA(0x12); DATA(0x81);
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
@@ -231,8 +225,6 @@ void display_init(void)
     CMD(0xC5); DATA(0x60); DATA(0x44);              // vcm control 1
     CMD(0xC7); DATA(0x8A);                          // vcm control 2
     CMD(0xB1); DATA(0x00); DATA(0x18);              // framerate
-    CMD(0xB6); DATA(0x0A); DATA(0xA2);              // display function control
-    CMD(0xF6); DATA(0x01); DATA(0x30); DATA(0x00);  // interface control
     CMD(0xF2); DATA(0x00);                          // 3 gamma func disable
     // gamma curve 1
     CMD(0xE0); DATA(0x0F); DATA(0x2F); DATA(0x2C); DATA(0x0B); DATA(0x0F); DATA(0x09); DATA(0x56); DATA(0xD9); DATA(0x4A); DATA(0x0B); DATA(0x14); DATA(0x05); DATA(0x0C); DATA(0x06); DATA(0x00);
@@ -240,10 +232,11 @@ void display_init(void)
     CMD(0xE1); DATA(0x00); DATA(0x10); DATA(0x13); DATA(0x04); DATA(0x10); DATA(0x06); DATA(0x25); DATA(0x26); DATA(0x3B); DATA(0x04); DATA(0x0B); DATA(0x0A); DATA(0x33); DATA(0x39); DATA(0x0F);
 #endif
 #if DISPLAY_ST7789V
-    CMD(0x01);                                      // software reset
-    HAL_Delay(120);
-    CMD(0x35); DATA(0x00);                          // TEON: Tearing Effect Line On; V-blanking only
-    CMD(0x3A); DATA(0x55);                          // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
+    CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
+    CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
+    CMD(0xC0); DATA(0x20); // LCMCTRL: LCM Control: XOR RGB setting
+    CMD(0xE4); DATA(0x1d); DATA(0x0A); DATA(0x11); // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is gate 80.; gate scan direction 319 -> 0
+
     CMD(0xB2); DATA(0x08); DATA(0x08); DATA(0x00); DATA(0x22); DATA(0x22); // PORCTRK: Porch setting
     CMD(0xB7); DATA(0x35);                          // GCTRL: Gate Control
     CMD(0xC2); DATA(0x01); DATA(0xFF);              // VDVVRHEN: VDV and VRH Command Enable
@@ -259,24 +252,7 @@ void display_init(void)
     // CMD(0xE1); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
 #endif
     display_clear();
-    display_orientation(0);
     display_unsleep();
-}
-
-static void display_set_window_raw(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
-{
-#if DISPLAY_ILI9341V || DISPLAY_ST7789V
-    CMD(0x2A); DATA(x0 >> 8); DATA(x0 & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
-    CMD(0x2B); DATA(y0 >> 8); DATA(y0 & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
-    CMD(0x2C);
-#endif
-}
-
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
-{
-    x0 += BUFFER_OFFSET_X; y0 += BUFFER_OFFSET_Y;
-    x1 += BUFFER_OFFSET_X; y1 += BUFFER_OFFSET_Y;
-    display_set_window_raw(x0, y0, x1, y1);
 }
 
 void display_refresh(void)
