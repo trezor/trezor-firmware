@@ -212,14 +212,13 @@ void display_init(void)
     // most recent manual: https://www.newhavendisplay.com/app_notes/ILI9341.pdf
     CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
     CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
-    CMD(0xB6); DATA(0x0A); DATA(0xC2); DATA(0x27); DATA(0x00); // Display Function Control: change gate scan direction
+    CMD(0xB6); DATA(0x0A); DATA(0xC2); DATA(0x27); DATA(0x00); // Display Function Control: gate scan direction 319 -> 0
     CMD(0xF6); DATA(0x09); DATA(0x30); DATA(0x00); // Interface Control: XOR BGR as ST7789V does
     CMD(0xCF); DATA(0x00); DATA(0xC1); DATA(0x30);
     CMD(0xED); DATA(0x64); DATA(0x03); DATA(0x12); DATA(0x81);
     CMD(0xE8); DATA(0x85); DATA(0x10); DATA(0x7A);
-    CMD(0xCB); DATA(0x39); DATA(0x2C); DATA(0x00); DATA(0x34); DATA(0x02);
     CMD(0xF7); DATA(0x20);
-    CMD(0xEA); DATA(0x00);
+    CMD(0xEA); DATA(0x00); DATA(0x00);
     CMD(0xC0); DATA(0x23);                          // power control   VRH[5:0]
     CMD(0xC1); DATA(0x12);                          // power control   SAP[2:0] BT[3:0]
     CMD(0xC5); DATA(0x60); DATA(0x44);              // vcm control 1
