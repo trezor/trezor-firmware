@@ -33,11 +33,12 @@ static void __attribute__((unused)) display_sleep(void)
 #endif
 }
 
-static void display_unsleep(void) {
+static void display_unsleep(void)
+{
 #if DISPLAY_ILI9341V || DISPLAY_ST7789V
-    CMD(0x11); // exit sleep
-    HAL_Delay(20);
-    CMD(0x29); // display on
+    CMD(0x11); // SLPOUT: Sleep Out
+    HAL_Delay(5); // need to wait 5 milliseconds after "sleep out" before sending any new commands
+    CMD(0x29); // DISPON: Display On
 #endif
 }
 
