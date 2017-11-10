@@ -150,6 +150,9 @@ flash_erase: ## erase all sectors in flash bank 0
 openocd: ## start openocd which connects to the device
 	$(OPENOCD)
 
+openocd_reset: ## cause a system reset using OpenOCD
+	$(OPENOCD) -c "init; reset; exit"
+
 GDB = arm-none-eabi-gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
 
 gdb_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.elf ## start remote gdb session to openocd with boardloader symbols
