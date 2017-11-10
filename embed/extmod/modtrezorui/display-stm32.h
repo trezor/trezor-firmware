@@ -237,7 +237,6 @@ void display_init(void)
     CMD(0xC0); DATA(0x20); // LCMCTRL: LCM Control: XOR RGB setting
     CMD(0xE4); DATA(0x1d); DATA(0x0A); DATA(0x11); // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is gate 80.; gate scan direction 319 -> 0
     // the above config is the most important and definitely necessary
-    CMD(0xB2); DATA(0x08); DATA(0x08); DATA(0x00); DATA(0x22); DATA(0x22); // PORCTRK: Porch setting
     CMD(0xD0); DATA(0xA4); DATA(0xA1);              // PWCTRL1: Power Control 1
     // gamma curve 1
     // CMD(0xE0); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
