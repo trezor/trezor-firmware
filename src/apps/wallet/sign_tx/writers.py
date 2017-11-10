@@ -25,6 +25,8 @@ def write_tx_input_check(w, i: TxInputType):
     for n in i.address_n:
         write_uint32(w, n)
     write_uint32(w, i_sequence)
+    i_amount = i.amount if i.amount is not None else 0
+    write_uint32(w, i_amount)  # this is probably redundant, but better safe than sorry
 
 
 def write_tx_output(w, o: TxOutputBinType):

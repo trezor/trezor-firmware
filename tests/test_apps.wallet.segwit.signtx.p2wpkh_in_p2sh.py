@@ -18,7 +18,7 @@ from apps.common import coins
 from apps.wallet.sign_tx import signing
 
 
-class TestSignSegwitTx(unittest.TestCase):
+class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
     # pylint: disable=C0301
 
     def test_send_p2wpkh_in_p2sh(self):
@@ -136,9 +136,10 @@ class TestSignSegwitTx(unittest.TestCase):
             address_n=None,
         )
         out2 = TxOutputType(
-            address_n = [49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
-            script_type = OutputScriptType.PAYTOP2SHWITNESS,
-            amount = 123456789 - 11000 - 12300000,
+            address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
+            script_type=OutputScriptType.PAYTOP2SHWITNESS,
+            amount=123456789 - 11000 - 12300000,
+            address=None,  # todo ask about sanitizing
         )
         tx = SignTx(coin_name='Testnet', version=None, lock_time=None, inputs_count=1, outputs_count=2)
 
@@ -245,9 +246,10 @@ class TestSignSegwitTx(unittest.TestCase):
             address_n=None,
         )
         out2 = TxOutputType(
-            address_n = [49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
-            script_type = OutputScriptType.PAYTOP2SHWITNESS,
-            amount = 1,
+            address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
+            script_type=OutputScriptType.PAYTOP2SHWITNESS,
+            amount=1,
+            address=None,  # todo ask about sanitizing
         )
         tx = SignTx(coin_name='Testnet', version=None, lock_time=None, inputs_count=1, outputs_count=2)
 
