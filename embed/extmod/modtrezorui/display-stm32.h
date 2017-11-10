@@ -24,11 +24,12 @@
 
 #define LED_PWM_TIM_PERIOD (10000)
 
-static void __attribute__((unused)) display_sleep(void) {
+static void __attribute__((unused)) display_sleep(void)
+{
 #if DISPLAY_ILI9341V || DISPLAY_ST7789V
-    CMD(0x28); // display off
-    HAL_Delay(20);
-    CMD(0x10); // enter sleep
+    CMD(0x28); // DISPOFF: Display Off
+    CMD(0x10); // SLPIN: Sleep in
+    HAL_Delay(5); // need to wait 5 milliseconds after "sleep in" before sending any new commands
 #endif
 }
 
