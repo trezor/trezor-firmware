@@ -290,8 +290,6 @@ int main(void)
     check_bootloader_version();
 #endif
 
-    display_orientation(0);
-
     touch_init();
 
     // delay to detect touch

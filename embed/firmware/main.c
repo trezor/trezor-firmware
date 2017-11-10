@@ -25,7 +25,6 @@ int main(void)
 {
     // Init peripherals
     pendsv_init();
-    display_orientation(0);
     sdcard_init();
     touch_init();
 
