@@ -97,7 +97,10 @@ void display_set_backlight(int val)
 void display_hardware_reset(void)
 {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET); // LCD_RST/PC14
-    HAL_Delay(1); // wait 1 millisecond. only needs to be low for 10 microseconds.
+    // wait 10 milliseconds. only needs to be low for 10 microseconds.
+    // my dev display module ties display reset and touch panel reset together.
+    // keeping this low for max(display_reset_time, ctpm_reset_time) aids development and does not hurt.
+    HAL_Delay(10);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET); // LCD_RST/PC14
     HAL_Delay(120); // max wait time for hardware reset is 120 milliseconds (experienced display flakiness using only 5ms wait before sending commands)
 }
@@ -147,12 +150,12 @@ void display_init(void)
 
     // LCD_RST/PC14
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Alternate = 0;
     GPIO_InitStructure.Pin = GPIO_PIN_14;
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET); // default to keeping display in reset
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 
     // LCD_FMARK/PD12 (tearing effect)
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
