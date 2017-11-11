@@ -26,7 +26,7 @@ void touch_init(void)
     GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW; // I2C is a KHz bus and low speed is still good into the low MHz
     GPIO_InitStructure.Alternate = GPIO_AF4_I2C1;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
@@ -42,38 +42,42 @@ void touch_init(void)
 
     ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
 
-    // PC5 capacitive touch panel module reset (RSTN)
+    // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
+    //GPIO_InitStructure.Pin = GPIO_PIN_4;
+    //GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    //GPIO_InitStructure.Pull = GPIO_PULLUP;
+    //GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    //GPIO_InitStructure.Alternate = 0;
+    //HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    // PC5 capacitive touch panel module (CTPM) reset (RSTN)
     GPIO_InitStructure.Pin = GPIO_PIN_5;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Alternate = 0;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-    // reset the touch panel by toggling the reset line (active low)
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET); // set the pin value before driving it out
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure); // switch the pin to be an output
+    // reset the touch panel by keeping its reset line low (active low) low for a minimum of 5ms
     HAL_Delay(10); // being conservative, min is 5ms
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
-    HAL_Delay(10); // being conservative, min is 5ms
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
-    HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms
-}
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // release CTPM reset
+    HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms, giving an extra 10ms
 
-#define TOUCH_ADDRESS (0x38U << 1) // the HAL requires the 7-bit address to be shifted by one bit
-#define TOUCH_PACKET_SIZE 7U
-#define EVENT_PRESS_DOWN 0x00U
-#define EVENT_CONTACT 0x80U
-#define EVENT_LIFT_UP 0x40U
-#define EVENT_NO_EVENT 0xC0U
-#define GESTURE_NO_GESTURE 0x00U
-#define X_POS_MSB (touch_data[3] & 0xFU)
-#define X_POS_LSB (touch_data[4])
-#define Y_POS_MSB (touch_data[5] & 0xFU)
-#define Y_POS_LSB (touch_data[6])
-#define X_Y_POS ((X_POS_MSB << 20) | (X_POS_LSB << 12) | (Y_POS_MSB << 8) | (Y_POS_LSB))
+    // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM keeps this input line (to PC4) low while a finger is on the screen.
+    //uint8_t touch_panel_config[] = {0xA4, 0x00};
+    //ensure(sectrue * (HAL_OK == HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, touch_panel_config, sizeof(touch_panel_config), 10)), NULL);
+}
 
 uint32_t touch_read(void)
 {
     static uint8_t touch_data[TOUCH_PACKET_SIZE], previous_touch_data[TOUCH_PACKET_SIZE];
+
+    //const GPIO_PinState ctpm_interrupt_line = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4);
+
+    uint8_t outgoing[] = {0x00}; // start reading from address 0x00
+    if (HAL_OK != HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, outgoing, sizeof(outgoing), 1)) {
+        return 0;
+    }
 
     if (HAL_OK != HAL_I2C_Master_Receive(&i2c_handle, TOUCH_ADDRESS, touch_data, TOUCH_PACKET_SIZE, 1)) {
         return 0; // read failure
