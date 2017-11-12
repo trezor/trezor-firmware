@@ -5,7 +5,7 @@
 	"coin_label": "Bitcoin",
 	"address_type": 0,
 	"address_type_p2sh": 5,
-	"maxfee_kb": 500000,
+	"maxfee_kb": 2000000,
 	"minfee_kb": 1000,
 	"signed_message_header": "Bitcoin Signed Message:\n",
 	"hash_genesis_block": "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
