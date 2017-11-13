@@ -36,9 +36,9 @@ class UdpTransport(Transport):
             host = UdpTransport.DEFAULT_HOST
             port = UdpTransport.DEFAULT_PORT
         else:
-            host = device.split(':').get(0)
-            port = device.split(':').get(1, UdpTransport.DEFAULT_PORT)
-            port = int(port)
+            devparts = device.split(':')
+            host = devparts[0]
+            port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
         if not protocol:
             protocol = ProtocolV2()
         self.device = (host, port)
