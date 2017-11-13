@@ -32,6 +32,13 @@ Get first receiving address of first account for Bitcoin (SegWit-in-P2SH):
   trezorctl get_address -c Bitcoin -t p2shsegwit -n "m/49'/0'/0'/0/0"
 
 
+Get Legacy Bitcoin ``xpub`` (can be used to create a watch-only wallet):
+
+.. code::
+
+  trezorctl get_public_node -c Bitcoin -n "m/44'/0'/0'"
+
+
 Litecoin
 --------
 
