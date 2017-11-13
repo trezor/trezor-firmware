@@ -173,7 +173,6 @@ def normalize_nfc(txt):
             return unicodedata.normalize('NFC', txt.decode('utf-8'))
         if isinstance(txt, str):
             return unicodedata.normalize('NFC', txt)
-
     raise ValueError('unicode/str or bytes/str expected')
 
 
@@ -285,7 +284,7 @@ class TextUIMixin(object):
         passphrase = getpass.getpass('')
         log("Confirm your Passphrase: ")
         if passphrase == getpass.getpass(''):
-            passphrase = normalize_nfc(passphrase)
+            passphrase = Mnemonic.normalize_string(passphrase)
             return proto.PassphraseAck(passphrase=passphrase)
         else:
             log("Passphrase did not match! ")
@@ -372,10 +371,10 @@ class DebugLinkMixin(object):
         self.pin_correct = pin_correct
 
     def set_passphrase(self, passphrase):
-        self.passphrase = normalize_nfc(passphrase)
+        self.passphrase = Mnemonic.normalize_string(passphrase)
 
     def set_mnemonic(self, mnemonic):
-        self.mnemonic = normalize_nfc(mnemonic).split(' ')
+        self.mnemonic = Mnemonic.normalize_string(mnemonic).split(' ')
 
     def call_raw(self, msg):
 
@@ -1036,7 +1035,7 @@ class ProtocolMixin(object):
             raise RuntimeError("Invalid response, expected EntropyRequest")
 
         external_entropy = self._get_local_entropy()
-        log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode('ascii'))
+        log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode())
         ret = self.call(proto.EntropyAck(entropy=external_entropy))
         self.init_device()
         return ret
@@ -1054,7 +1053,7 @@ class ProtocolMixin(object):
         mnemonic = Mnemonic.normalize_string(mnemonic)
 
         # Convert mnemonic to ASCII stream
-        mnemonic = normalize_nfc(mnemonic)
+        mnemonic = mnemonic.decode()
 
         m = Mnemonic('english')
 
