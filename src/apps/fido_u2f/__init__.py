@@ -413,10 +413,13 @@ class ConfirmContent(ui.Widget):
             icon = ui.ICON_RESET  # TODO: warning icon
         elif app_id in knownapps.knownapps:
             name = knownapps.knownapps[app_id]
-            icon = res.load('apps/fido_u2f/res/u2f_%s.toif' % name.lower().replace(' ', '_'))
+            try:
+                icon = res.load('apps/fido_u2f/res/u2f_%s.toif' % name.lower().replace(' ', '_'))
+            except:
+                icon = res.load('apps/fido_u2f/res/u2f_generic.toif')
         else:
             name = '%s...%s' % (ubinascii.hexlify(app_id[:4]), ubinascii.hexlify(app_id[-4:]))
-            icon = res.load('apps/fido_u2f/res/u2f_unknown.toif')
+            icon = res.load('apps/fido_u2f/res/u2f_generic.toif')
         self.app_name = name
         self.app_icon = icon
 
