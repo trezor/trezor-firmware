@@ -164,7 +164,7 @@ void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee)
 }
 
 // split longer string into 4 rows, rowlen chars each
-const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
+static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 {
 	static char str[4][32 + 1];
 	if (rowlen > 32) {
@@ -289,7 +289,45 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledRefresh();
 }
 
-void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase)
+static const char *address_n_str(const uint32_t *address_n, size_t address_n_count)
+{
+	if (address_n_count > 8) {
+		return _("Unknown long path");
+	}
+	if (address_n_count == 0) {
+		return _("Path: m");
+	}
+
+	//                  "Path: m"    /   i   '
+	static char address_str[7 + 8 * (1 + 9 + 1) + 1];
+	char *c = address_str + sizeof(address_str) - 1;
+
+	*c = 0; c--;
+
+	for (int n = (int)address_n_count - 1; n >= 0; n--) {
+		uint32_t i = address_n[n];
+		if (i & 0x80000000) {
+			*c = '\''; c--;
+		}
+		i = i & 0x7fffffff;
+		do {
+			*c = '0' + (i % 10); c--;
+			i /= 10;
+		} while (i > 0);
+		*c = '/'; c--;
+	}
+	*c = 'm'; c--;
+	*c = ' '; c--;
+	*c = ':'; c--;
+	*c = 'h'; c--;
+	*c = 't'; c--;
+	*c = 'a'; c--;
+	*c = 'P';
+
+	return c;
+}
+
+void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count)
 {
 	if (layoutLast != layoutAddress) {
 		layoutSwipe();
@@ -313,7 +351,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 
 		oledInvert(0, 0, 63, 63);
 		if (side > 0 && side <= 29) {
-			int offset = 32 - side; 
+			int offset = 32 - side;
 			for (int i = 0; i < side; i++) {
 				for (int j = 0; j< side; j++) {
 					int a = j * side + i;
@@ -343,6 +381,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 		for (int i = 0; i < 4; i++) {
 			oledDrawString(0, (i + 1) * 9 + 4, str[i]);
 		}
+		oledDrawString(0, 42, address_n_str(address_n, address_n_count));
 	}
 
 	if (!qrcode) {

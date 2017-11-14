@@ -163,7 +163,7 @@ void fsm_sendFailure(FailureType code, const char *text)
 	msg_write(MessageType_MessageType_Failure, resp);
 }
 
-const CoinInfo *fsm_getCoin(bool has_name, const char *name)
+static const CoinInfo *fsm_getCoin(bool has_name, const char *name)
 {
 	const CoinInfo *coin;
 	if (has_name) {
@@ -179,7 +179,7 @@ const CoinInfo *fsm_getCoin(bool has_name, const char *name)
 	return coin;
 }
 
-HDNode *fsm_getDerivedNode(const char *curve, uint32_t *address_n, size_t address_n_count)
+static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n, size_t address_n_count)
 {
 	static CONFIDENTIAL HDNode node;
 	if (!storage_getRootNode(&node, curve, true)) {
@@ -696,7 +696,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 		}
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(address, desc, qrcode, msg->script_type == InputScriptType_SPENDWITNESS);
+			layoutAddress(address, desc, qrcode, msg->script_type == InputScriptType_SPENDWITNESS, msg->address_n, msg->address_n_count);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}
@@ -734,7 +734,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(address, desc, qrcode, false);
+			layoutAddress(address, desc, qrcode, false, msg->address_n, msg->address_n_count);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}
@@ -1156,7 +1156,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 
 		bool qrcode = false;
 		for (;;) {
-			layoutAddress(resp->address, desc, qrcode, true);
+			layoutAddress(resp->address, desc, qrcode, true, msg->address_n, msg->address_n_count);
 			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 				break;
 			}

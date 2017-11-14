@@ -430,7 +430,7 @@ void u2f_version(const APDU *a)
 	send_u2f_msg(version_response, sizeof(version_response));
 }
 
-void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname, const BITMAP **appicon) {
+static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname, const BITMAP **appicon) {
 	static char buf[8+2+8+1];
 
 	for (unsigned int i = 0; i < sizeof(u2f_well_known)/sizeof(U2FWellKnown); i++) {
@@ -448,7 +448,7 @@ void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname,
 	*appicon = NULL;
 }
 
-const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
+static const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 {
 	static CONFIDENTIAL HDNode node;
 	if (!storage_getRootNode(&node, NIST256P1_NAME, false)) {
@@ -467,7 +467,7 @@ const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 	return &node;
 }
 
-const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
+static const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 {
 	uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
 
@@ -499,7 +499,7 @@ const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handle[])
 }
 
 
-const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle[])
+static const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle[])
 {
 	uint32_t key_path[KEY_PATH_ENTRIES];
 	key_path[0] = U2F_KEY_PATH;
