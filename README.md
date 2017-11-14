@@ -1,6 +1,7 @@
 # trezor-common
 
-[![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
+[![Build Status](https://travis-ci.org/trezor/trezor-common.svg?branch=master)](https://travis-ci.org/trezor/trezor-common)
+[![Gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 Common files shared among TREZOR repositories.
 
