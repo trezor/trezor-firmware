@@ -1053,7 +1053,7 @@ class ProtocolMixin(object):
         mnemonic = Mnemonic.normalize_string(mnemonic)
 
         # Convert mnemonic to ASCII stream
-        mnemonic = mnemonic.decode()
+        mnemonic = mnemonic.encode()
 
         m = Mnemonic('english')
 
