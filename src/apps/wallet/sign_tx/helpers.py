@@ -107,8 +107,10 @@ def sanitize_tx_meta(tx: TransactionType) -> TransactionType:
 
 def sanitize_tx_input(tx: TransactionType) -> TxInputType:
     txi = tx.inputs[0]
-    txi.script_type = (
-        txi.script_type if txi.script_type is not None else InputScriptType.SPENDADDRESS)
+    if txi.script_type is None:
+        txi.script_type = InputScriptType.SPENDADDRESS
+    if txi.sequence is None:
+        txi.sequence = 4294967295
     return txi
 
 

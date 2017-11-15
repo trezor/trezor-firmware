@@ -1,3 +1,5 @@
+from micropython import const
+
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxInputType import TxInputType
 from trezor.crypto.hashlib import sha256
@@ -5,26 +7,22 @@ from trezor.crypto.hashlib import sha256
 # TX Serialization
 # ===
 
-_DEFAULT_SEQUENCE = 4294967295
-
 
 def write_tx_input(w, i: TxInputType):
-    i_sequence = i.sequence if i.sequence is not None else _DEFAULT_SEQUENCE
     write_bytes_rev(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_varint(w, len(i.script_sig))
     write_bytes(w, i.script_sig)
-    write_uint32(w, i_sequence)
+    write_uint32(w, i.sequence)
 
 
 def write_tx_input_check(w, i: TxInputType):
-    i_sequence = i.sequence if i.sequence is not None else _DEFAULT_SEQUENCE
     write_bytes(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_uint32(w, len(i.address_n))
     for n in i.address_n:
         write_uint32(w, n)
-    write_uint32(w, i_sequence)
+    write_uint32(w, i.sequence)
     i_amount = i.amount if i.amount is not None else 0
     write_uint32(w, i_amount)  # this is probably redundant, but better safe than sorry
 
