@@ -171,6 +171,12 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		if (in->amount != 0) {
 			return 0; // failed to compile output
 		}
+		if (needs_confirm) {
+			layoutConfirmOpReturn(in->op_return_data.bytes, in->op_return_data.size);
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+				return -1; // user aborted
+			}
+		}
 		uint32_t r = 0;
 		out->script_pubkey.bytes[0] = 0x6A; r++; // OP_RETURN
 		r += op_push(in->op_return_data.size, out->script_pubkey.bytes + r);

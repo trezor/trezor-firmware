@@ -36,6 +36,33 @@
 
 #define BITCOIN_DIVISIBILITY (8)
 
+// split longer string into 4 rows, rowlen chars each
+static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
+{
+	static char str[4][32 + 1];
+	if (rowlen > 32) {
+		rowlen = 32;
+	}
+	memset(str, 0, sizeof(str));
+	strlcpy(str[0], (char *)msg, rowlen + 1);
+	if (len > rowlen) {
+		strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
+	}
+	if (len > rowlen * 2) {
+		strlcpy(str[2], (char *)msg + rowlen * 2, rowlen + 1);
+	}
+	if (len > rowlen * 3) {
+		strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
+	}
+	if (len > rowlen * 4) {
+		str[3][rowlen - 1] = '.';
+		str[3][rowlen - 2] = '.';
+		str[3][rowlen - 3] = '.';
+	}
+	static const char *ret[4] = { str[0], str[1], str[2], str[3] };
+	return ret;
+}
+
 void *layoutLast = layoutHome;
 
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
@@ -128,6 +155,37 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 	);
 }
 
+void layoutConfirmOpReturn(const uint8_t *data, uint32_t size)
+{
+	bool ascii_only = true;
+	for (uint32_t i = 0; i < size; i++) {
+		if (data[i] < ' ' || data[i] > '~') {
+			ascii_only = false;
+			break;
+		}
+	}
+	const char **str;
+	if (!ascii_only) {
+		char hex[65];
+		memset(hex, 0, sizeof(hex));
+		data2hex(data, (size > 32) ? 32 : size, hex);
+		str = split_message((const uint8_t *)hex, size * 2, 16);
+	} else {
+		str = split_message(data, size, 20);
+	}
+	layoutDialogSwipe(&bmp_icon_question,
+		_("Cancel"),
+		_("Confirm"),
+		NULL,
+		_("Confirm OP_RETURN:"),
+		str[0],
+		str[1],
+		str[2],
+		str[3],
+		NULL
+	);
+}
+
 void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out, uint64_t amount_fee)
 {
 	char str_out[32], str_fee[32];
@@ -161,28 +219,6 @@ void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee)
 		_("Send anyway?"),
 		NULL
 	);
-}
-
-// split longer string into 4 rows, rowlen chars each
-static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
-{
-	static char str[4][32 + 1];
-	if (rowlen > 32) {
-		rowlen = 32;
-	}
-	memset(str, 0, sizeof(str));
-	strlcpy(str[0], (char *)msg, rowlen + 1);
-	if (len > rowlen) {
-		strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
-	}
-	if (len > rowlen * 2) {
-		strlcpy(str[2], (char *)msg + rowlen * 2, rowlen + 1);
-	}
-	if (len > rowlen * 3) {
-		strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
-	}
-	static const char *ret[4] = { str[0], str[1], str[2], str[3] };
-	return ret;
 }
 
 void layoutSignMessage(const uint8_t *msg, uint32_t len)

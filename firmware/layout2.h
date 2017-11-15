@@ -41,6 +41,7 @@ void layoutProgressSwipe(const char *desc, int permil);
 void layoutScreensaver(void);
 void layoutHome(void);
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out);
+void layoutConfirmOpReturn(const uint8_t *data, uint32_t size);
 void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out, uint64_t amount_fee);
 void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee);
 void layoutSignMessage(const uint8_t *msg, uint32_t len);
