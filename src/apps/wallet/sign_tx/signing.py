@@ -231,13 +231,12 @@ async def sign_tx(tx: SignTx, root):
             bip143_hash = bip143.preimage_hash(tx, txi, ecdsa_hash_pubkey(key_sign_pub))
 
             signature = ecdsa_sign(key_sign, bip143_hash)
-
             witness = get_p2wpkh_witness(signature, key_sign_pub)
 
+            tx_ser.signature_index = i
+            tx_ser.signature = signature
             tx_ser.serialized_tx = witness
             tx_req.serialized = tx_ser
-        # else
-            # witness is 0x00
 
     write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
