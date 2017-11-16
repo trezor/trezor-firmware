@@ -1,7 +1,16 @@
+Version 1.6.0
+* Stable release, optional update
+* Native SegWit (Bech32) address support
+* Show recognized BIP44/BIP49 paths in GetAddress dialog
+* NEM support
+* Expanse and UBIQ chains support
+* Bitcoin Gold, DigiByte, Monacoin support
+* Ed25519 collective signatures (CoSi) support
+
 Version 1.5.2
 * Stable release, required update
-* clean memory on start
-* fix storage import from older versions
+* Clean memory on start
+* Fix storage import from older versions
 
 Version 1.5.1
 * Stable release, optional update
