@@ -27,7 +27,8 @@ def get_fields(coin):
         '0x%s' % coin['xpub_magic'] if coin['xpub_magic'] is not None else '0x00000000',
         '0x%s' % coin['xprv_magic'] if coin['xprv_magic'] is not None else '0x00000000',
         '%d' % coin['forkid'] if coin['forkid'] else '0',
-        '"%s"' % coin['bech32_prefix'] if coin.get('bech32_prefix') is not None else 'NULL'
+        '"%s"' % coin['bech32_prefix'] if coin.get('bech32_prefix') is not None else 'NULL',
+        '0x%08x' % (0x80000000 + coin['bip44']),
     ]
 
 

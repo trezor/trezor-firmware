@@ -42,12 +42,14 @@ typedef struct _CoinInfo {
 	uint32_t xprv_magic;
 	uint32_t forkid;
 	const char *bech32_prefix;
+	uint32_t coin_type;
 } CoinInfo;
 
 extern const CoinInfo coins[COINS_COUNT];
 
 const CoinInfo *coinByName(const char *name);
 const CoinInfo *coinByAddressType(uint32_t address_type);
+const CoinInfo *coinByCoinType(uint32_t coin_type);
 bool coinExtractAddressType(const CoinInfo *coin, const char *addr, uint32_t *address_type);
 bool coinExtractAddressTypeRaw(const CoinInfo *coin, const uint8_t *addr_raw, uint32_t *address_type);
 
