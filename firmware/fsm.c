@@ -694,6 +694,34 @@ void fsm_msgGetAddress(GetAddress *msg)
 		} else {
 			strlcpy(desc, _("Address:"), sizeof(desc));
 		}
+
+		bool mismatch = false;
+		if (msg->address_n_count == 5) {
+			if (msg->address_n[0] == (0x80000000 + 44)) {
+				mismatch |= msg->script_type != InputScriptType_SPENDADDRESS;
+				mismatch |= coin != coinByCoinType(msg->address_n[1]);
+			} else
+			if (msg->address_n[0] == (0x80000000 + 45)) {
+				mismatch |= msg->script_type != InputScriptType_SPENDMULTISIG;
+				mismatch |= coin != coinByCoinType(msg->address_n[1]);
+			} else
+			if (msg->address_n[0] == (0x80000000 + 49)) {
+				mismatch |= !coin->has_segwit;
+				mismatch |= !coin->has_address_type_p2sh;
+				mismatch |= msg->script_type != InputScriptType_SPENDP2SHWITNESS;
+				mismatch |= coin != coinByCoinType(msg->address_n[1]);
+			}
+		}
+
+		if (mismatch) {
+			layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL, _("Wrong address path"), _("for selected coin."), NULL, _("Continue at your"), _("own risk!"), NULL);
+			if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+				layoutHome();
+				return;
+			}
+		}
+
 		bool qrcode = false;
 		for (;;) {
 			layoutAddress(address, desc, qrcode, msg->script_type == InputScriptType_SPENDWITNESS, msg->address_n, msg->address_n_count);
