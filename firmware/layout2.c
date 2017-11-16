@@ -325,6 +325,25 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledRefresh();
 }
 
+static const char *slip44_extras(uint32_t coin_type)
+{
+	if ((coin_type & 0x80000000) == 0) {
+		return 0;
+	}
+	switch (coin_type & 0x7fffffff) {
+		case    40: return "EXP";  // Expanse
+		case    43: return "NEM";  // NEM
+		case    60: return "ETH";  // Ethereum Mainnet
+		case    61: return "ETC";  // Ethereum Classic Mainnet
+		case   108: return "UBQ";  // UBIQ
+		case   137: return "RSK";  // Rootstock Mainnet
+		case 37310: return "tRSK"; // Rootstock Testnet
+	}
+	return 0;
+}
+
+#define BIP32_MAX_LAST_ELEMENT 1000000
+
 static const char *address_n_str(const uint32_t *address_n, size_t address_n_count)
 {
 	if (address_n_count > 8) {
@@ -332,6 +351,53 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 	}
 	if (address_n_count == 0) {
 		return _("Path: m");
+	}
+
+	// known BIP44/49 path
+	static char path[100];
+	if (address_n_count == 5 &&
+		(address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49)) &&
+		(address_n[1] & 0x80000000) &&
+		(address_n[2] & 0x80000000) &&
+		(address_n[3] <= 1) &&
+		(address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
+			bool segwit = (address_n[0] == (0x80000000 + 49));
+			bool legacy = false;
+			const CoinInfo *coin = coinByCoinType(address_n[1]);
+			const char *abbr = 0;
+			if (segwit) {
+				if (coin && coin->has_segwit && coin->has_address_type_p2sh) {
+					abbr = coin->coin_shortcut + 1;
+				}
+			} else {
+				if (coin) {
+					if (coin->has_segwit && coin->has_address_type_p2sh) {
+						legacy = true;
+					}
+					abbr = coin->coin_shortcut + 1;
+				} else {
+					abbr = slip44_extras(address_n[1]);
+				}
+			}
+			uint32_t accnum = (address_n[2] & 0x7fffffff) + 1;
+			if (abbr && accnum < 100) {
+				memset(path, 0, sizeof(path));
+				strlcpy(path, abbr, sizeof(path));
+				if (legacy) {
+					strlcat(path, " legacy", sizeof(path));
+				}
+				strlcat(path, " account #", sizeof(path));
+				char acc[3];
+				memset(acc, 0, sizeof(acc));
+				if (accnum < 10) {
+					acc[0] = '0' + accnum;
+				} else {
+					acc[0] = '0' + (accnum / 10);
+					acc[1] = '0' + (accnum % 10);
+				}
+				strlcat(path, acc, sizeof(path));
+				return path;
+			}
 	}
 
 	//                  "Path: m"    /   i   '
