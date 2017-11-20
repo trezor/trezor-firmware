@@ -340,7 +340,9 @@
 	"address_prefix": "bitcoingold:",
 	"min_address_length": 27,
 	"max_address_length": 34,
-	"bitcore": []
+	"bitcore": [
+		"https://btg-bitcore2.trezor.io"
+	]
 },
 {
 	"coin_name": "DigiByte",
