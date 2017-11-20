@@ -30,8 +30,6 @@ pytest \
     --ignore test_msg_signmessage_segwit_native.py \
     --ignore test_msg_signmessage_segwit.py \
     --ignore test_msg_signtx_bch.py \
-    --ignore test_msg_signtx_segwit_native.py \
-    --ignore test_msg_signtx_segwit.py \
     --ignore test_msg_signtx_zcash.py \
     --ignore test_msg_verifymessage_segwit_native.py \
     --ignore test_msg_verifymessage_segwit.py \
