@@ -102,8 +102,8 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
             TxRequest(request_type=TXFINISHED, details=None, serialized=TxRequestSerializedType(
                 serialized_tx=unhexlify('02483045022100ccd253bfdf8a5593cd7b6701370c531199f0f05a418cd547dfc7da3f21515f0f02203fa08a0753688871c220648f9edadbdb98af42e5d8269364a326572cf703895b012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000'),
-                signature_index=None,
-                signature=None,
+                signature_index=0,
+                signature=unhexlify('3045022100ccd253bfdf8a5593cd7b6701370c531199f0f05a418cd547dfc7da3f21515f0f02203fa08a0753688871c220648f9edadbdb98af42e5d8269364a326572cf703895b'),
             )),
         ]
 
@@ -201,8 +201,8 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXFINISHED, details=None, serialized=TxRequestSerializedType(
                 serialized_tx=unhexlify(
                     '02483045022100ccd253bfdf8a5593cd7b6701370c531199f0f05a418cd547dfc7da3f21515f0f02203fa08a0753688871c220648f9edadbdb98af42e5d8269364a326572cf703895b012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000'),
-                signature_index=None,
-                signature=None,
+                signature_index=0,
+                signature=unhexlify('3045022100ccd253bfdf8a5593cd7b6701370c531199f0f05a418cd547dfc7da3f21515f0f02203fa08a0753688871c220648f9edadbdb98af42e5d8269364a326572cf703895b'),
             )),
         ]
 
@@ -249,7 +249,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             script_type=OutputScriptType.PAYTOP2SHWITNESS,
             amount=1,
-            address=None,  # todo ask about sanitizing
+            address=None,
         )
         tx = SignTx(coin_name='Testnet', version=None, lock_time=None, inputs_count=1, outputs_count=2)
 
