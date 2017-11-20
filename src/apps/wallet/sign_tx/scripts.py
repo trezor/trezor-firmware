@@ -56,12 +56,14 @@ def input_script_native_p2wpkh_or_p2wsh() -> bytearray:
     return bytearray(0)
 
 
-# output script consists of 00 14 <20-byte-key-hash>
-def output_script_native_p2wpkh_or_p2wsh(pubkeyhash: bytes) -> bytearray:
-    w = bytearray_with_cap(3 + len(pubkeyhash))
+# output script is either:
+# 00 14 <20-byte-key-hash>
+# 00 20 <32-byte-script-hash>
+def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
+    w = bytearray_with_cap(3 + len(witprog))
     w.append(0x00)  # witness version byte
-    w.append(len(pubkeyhash))  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
-    write_bytes(w, pubkeyhash)  # pub key hash
+    w.append(len(witprog))  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
+    write_bytes(w, witprog)  # pub key hash
     return w
 
 
