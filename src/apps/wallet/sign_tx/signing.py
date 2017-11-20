@@ -116,7 +116,7 @@ async def check_tx_fee(tx: SignTx, root):
         raise SigningError(FailureType.ActionCancelled,
                            'Total cancelled')
 
-    return h_first, tx_req, txo_bin, bip143, segwit, total_in, wallet_path
+    return h_first, bip143, segwit, total_in, wallet_path
 
 
 async def sign_tx(tx: SignTx, root):
@@ -125,8 +125,7 @@ async def sign_tx(tx: SignTx, root):
 
     # Phase 1
 
-    h_first, tx_req, txo_bin, bip143, segwit, authorized_in, wallet_path = \
-        await check_tx_fee(tx, root)
+    h_first, bip143, segwit, authorized_in, wallet_path = await check_tx_fee(tx, root)
 
     # Phase 2
     # - sign inputs
@@ -134,6 +133,11 @@ async def sign_tx(tx: SignTx, root):
 
     coin = coins.by_name(tx.coin_name)
     tx_ser = TxRequestSerializedType()
+
+    txo_bin = TxOutputBinType()
+    tx_req = TxRequest()
+    tx_req.details = TxRequestDetailsType()
+    tx_req.serialized = None
 
     for i_sign in range(tx.inputs_count):
         # hash of what we are signing with this input

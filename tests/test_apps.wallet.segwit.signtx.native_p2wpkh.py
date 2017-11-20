@@ -44,7 +44,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             address_n=None,  # @todo ask honza about sanitizing
         )
         out2 = TxOutputType(
-                address='tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu',
+            address='tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,
             address_n=None,
@@ -170,7 +170,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 # returned serialized inp1
                 serialized_tx=unhexlify('010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff'),
             )),
-            TxAck(tx=TransactionType(outputs=[out1])),
+            # the out has to be cloned not to send the same object which was modified
+            TxAck(tx=TransactionType(outputs=[TxOutputType(**out1.__dict__)])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=TxRequestSerializedType(
                 # returned serialized out1
@@ -178,7 +179,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 signature_index=None,
                 signature=None,
             )),
-            TxAck(tx=TransactionType(outputs=[out2])),
+            TxAck(tx=TransactionType(outputs=[TxOutputType(**out2.__dict__)])),
 
             # segwit
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
