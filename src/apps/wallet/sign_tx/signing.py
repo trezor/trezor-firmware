@@ -64,6 +64,8 @@ async def check_tx_fee(tx: SignTx, root):
         txi = await request_tx_input(tx_req, i)
         wallet_path = input_extract_wallet_path(txi, wallet_path)
         write_tx_input_check(h_first, txi)
+        bip143.add_prevouts(txi)
+        bip143.add_sequence(txi)
         if (txi.script_type == InputScriptType.SPENDWITNESS or
                 txi.script_type == InputScriptType.SPENDP2SHWITNESS):
             if not coin.segwit:
@@ -73,8 +75,6 @@ async def check_tx_fee(tx: SignTx, root):
                 raise SigningError(FailureType.DataError,
                                    'Segwit input without amount')
             segwit[i] = True
-            bip143.add_prevouts(txi)
-            bip143.add_sequence(txi)
             total_in += txi.amount
         elif txi.script_type == InputScriptType.SPENDADDRESS:
             segwit[i] = False
