@@ -98,7 +98,7 @@
 #define MICROPY_PY_SYS_EXC_INFO     (1)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (1)
 #ifndef MICROPY_PY_MATH_SPECIAL_FUNCTIONS
-#define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (1)
+#define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (0)
 #endif
 #define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_IO_FILEIO        (1)
@@ -109,15 +109,15 @@
 #define MICROPY_STACKLESS           (0)
 #define MICROPY_STACKLESS_STRICT    (0)
 
-#define MICROPY_PY_OS_STATVFS       (1)
+#define MICROPY_PY_OS_STATVFS       (0)
 #define MICROPY_PY_UTIME            (1)
 #define MICROPY_PY_UTIME_MP_HAL     (1)
-#define MICROPY_PY_UERRNO           (1)
+#define MICROPY_PY_UERRNO           (0)
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (1)
-#define MICROPY_PY_UJSON            (1)
-#define MICROPY_PY_URE              (1)
-#define MICROPY_PY_UHEAPQ           (1)
+#define MICROPY_PY_UJSON            (0)
+#define MICROPY_PY_URE              (0)
+#define MICROPY_PY_UHEAPQ           (0)
 #define MICROPY_PY_UTIMEQ           (1)
 #define MICROPY_PY_UHASHLIB         (0)
 #if MICROPY_PY_USSL && MICROPY_SSL_AXTLS
