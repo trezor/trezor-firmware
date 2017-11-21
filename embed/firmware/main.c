@@ -23,44 +23,36 @@
 
 int main(void)
 {
+    // Init peripherals
     pendsv_init();
-
     display_orientation(0);
-
     sdcard_init();
     touch_init();
 
-    for (;;) {
-        printf("CORE: Starting main loop\n");
-        // Stack limit should be less than real stack size, so we have a chance
-        // to recover from limit hit.
-        mp_stack_set_top(&_estack);
-        mp_stack_set_limit((char*)&_estack - (char*)&_heap_end - 1024);
+    printf("CORE: Preparing stack\n");
+    // Stack limit should be less than real stack size, so we have a chance
+    // to recover from limit hit.
+    mp_stack_set_top(&_estack);
+    mp_stack_set_limit((char*)&_estack - (char*)&_heap_end - 1024);
 
-        // GC init
-        gc_init(&_heap_start, &_heap_end);
+    // GC init
+    printf("CORE: Starting GC\n");
+    gc_init(&_heap_start, &_heap_end);
 
-        // Interpreter init
-        mp_init();
-        mp_obj_list_init(mp_sys_argv, 0);
-        mp_obj_list_init(mp_sys_path, 0);
-        mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
+    // Interpreter init
+    printf("CORE: Starting interpreter\n");
+    mp_init();
+    mp_obj_list_init(mp_sys_argv, 0);
+    mp_obj_list_init(mp_sys_path, 0);
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
 
-        // Run the main script
-        printf("CORE: Executing main script\n");
-        pyexec_frozen_module("main.py");
+    // Execute the main script
+    printf("CORE: Executing main script\n");
+    pyexec_frozen_module("main.py");
 
-        // Run REPL
-        printf("CORE: Executing REPL\n");
-        for (;;) {
-            if (pyexec_friendly_repl() != 0) {
-                break;
-            }
-        }
-
-        // Clean up
-        mp_deinit();
-    }
+    // Clean up
+    printf("CORE: Main script finished, cleaning up\n");
+    mp_deinit();
 
     return 0;
 }
@@ -75,11 +67,7 @@ void PendSV_Handler(void) {
     pendsv_isr_handler();
 }
 
-// MicroPython file I/O stubs
-
-mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
-    return NULL;
-}
+// MicroPython builtin stubs
 
 mp_import_stat_t mp_import_stat(const char *path) {
     return MP_IMPORT_STAT_NO_EXIST;
@@ -89,7 +77,3 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
-
-void mp_reader_new_file(mp_reader_t *reader, const char *filename) {
-    mp_raise_OSError(MP_ENOENT); // assume "file not found"
-}
