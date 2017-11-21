@@ -176,7 +176,7 @@ async def sign_tx(tx: SignTx, root):
                 raise SigningError(FailureType.ProcessError,
                                    'Only one change output is valid')
             change_out = txo.amount
-        elif txo.script_type != OutputScriptType.PAYTOOPRETURN:
+        else:
             if not await confirm_output(txo, coin):
                 raise SigningError(FailureType.ActionCancelled,
                                    'Output cancelled')

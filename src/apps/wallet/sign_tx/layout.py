@@ -15,6 +15,7 @@ def split_address(address):
 
 
 async def confirm_output(ctx, output, coin):
+    # TODO: handle OP_RETURN correctly
     content = Text('Confirm output', ui.ICON_RESET,
                    ui.BOLD, format_amount(output.amount, coin),
                    ui.NORMAL, 'to',
