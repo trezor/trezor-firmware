@@ -33,7 +33,6 @@
 
 // stuff from py/mpconfig.h
 #define MICROPY_ENABLE_COMPILER     (0)
-#define MICROPY_CPYTHON_COMPAT      (0)
 
 // frozen modules
 #define MICROPY_MODULE_FROZEN_MPY   (1)
