@@ -2,6 +2,7 @@ from trezor import ui
 from trezor.utils import chunks
 from trezor.ui.text import Text
 from trezor.messages import ButtonRequestType
+from trezor.messages import OutputScriptType
 from apps.common.confirm import confirm
 from apps.common.confirm import hold_to_confirm
 
@@ -15,11 +16,14 @@ def split_address(address):
 
 
 async def confirm_output(ctx, output, coin):
-    # TODO: handle OP_RETURN correctly
+    if output.script_type == OutputScriptType.PAYTOOPRETURN:
+        address = 'OP_RETURN'  # TODO: handle OP_RETURN correctly
+    else:
+        address = output.address
     content = Text('Confirm output', ui.ICON_RESET,
                    ui.BOLD, format_amount(output.amount, coin),
                    ui.NORMAL, 'to',
-                   ui.MONO, *split_address(output.address))
+                   ui.MONO, *split_address(address))
     return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 

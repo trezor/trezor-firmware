@@ -1,3 +1,5 @@
+from micropython import const
+
 from trezor.crypto.hashlib import sha256, ripemd160
 from trezor.crypto.curve import secp256k1
 from trezor.crypto import base58, der, bech32
@@ -66,8 +68,9 @@ async def check_tx_fee(tx: SignTx, root):
         write_tx_input_check(h_first, txi)
         bip143.add_prevouts(txi)
         bip143.add_sequence(txi)
-        if (txi.script_type == InputScriptType.SPENDWITNESS or
-                txi.script_type == InputScriptType.SPENDP2SHWITNESS):
+        is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
+                     txi.script_type == InputScriptType.SPENDP2SHWITNESS)
+        if is_segwit:
             if not coin.segwit:
                 raise SigningError(FailureType.DataError,
                                    'Segwit not enabled on this coin')
@@ -140,29 +143,20 @@ async def sign_tx(tx: SignTx, root):
     tx_req.serialized = None
 
     for i_sign in range(tx.inputs_count):
-        # hash of what we are signing with this input
-        h_sign = HashWriter(sha256)
-        # same as h_first, checked at the end of this iteration
-        h_second = HashWriter(sha256)
-
         txi_sign = None
         key_sign = None
         key_sign_pub = None
-
-        write_uint32(h_sign, tx.version)
-
-        write_varint(h_sign, tx.inputs_count)
 
         if segwit[i_sign]:
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await request_tx_input(tx_req, i_sign)
 
-            if (txi_sign.script_type != InputScriptType.SPENDWITNESS and
-                    txi_sign.script_type != InputScriptType.SPENDP2SHWITNESS):
+            is_segwit = (txi_sign.script_type == InputScriptType.SPENDWITNESS or
+                         txi_sign.script_type == InputScriptType.SPENDP2SHWITNESS)
+            if not is_segwit:
                 raise SigningError(FailureType.ProcessError,
                                    'Transaction has changed during signing')
             input_check_wallet_path(txi_sign, wallet_path)
-            write_tx_input_check(h_second, txi_sign)
 
             key_sign = node_derive(root, txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
@@ -176,6 +170,14 @@ async def sign_tx(tx: SignTx, root):
             tx_req.serialized = tx_ser
 
         else:
+            # hash of what we are signing with this input
+            h_sign = HashWriter(sha256)
+            # same as h_first, checked before signing the digest
+            h_second = HashWriter(sha256)
+
+            write_uint32(h_sign, tx.version)
+            write_varint(h_sign, tx.inputs_count)
+
             for i in range(tx.inputs_count):
                 # STAGE_REQUEST_4_INPUT
                 txi = await request_tx_input(tx_req, i)
@@ -232,7 +234,6 @@ async def sign_tx(tx: SignTx, root):
         txo = await request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
-        write_tx_output(h_second, txo_bin)  # for segwit (not yet checked)
 
         # serialize output
         w_txo_bin = bytearray_with_cap(
@@ -247,13 +248,17 @@ async def sign_tx(tx: SignTx, root):
 
         tx_req.serialized = tx_ser
 
+    any_segwit = True in segwit.values()
+
     for i in range(tx.inputs_count):
         if segwit[i]:
             # STAGE_REQUEST_SEGWIT_WITNESS
             txi = await request_tx_input(tx_req, i)
             input_check_wallet_path(txi, wallet_path)
 
-            if txi.amount > authorized_in:
+            is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
+                         txi.script_type == InputScriptType.SPENDP2SHWITNESS)
+            if not is_segwit or txi.amount > authorized_in:
                 raise SigningError(FailureType.ProcessError,
                                    'Transaction has changed during signing')
             authorized_in -= txi.amount
@@ -265,12 +270,15 @@ async def sign_tx(tx: SignTx, root):
             signature = ecdsa_sign(key_sign, bip143_hash)
             witness = get_p2wpkh_witness(signature, key_sign_pub)
 
+            tx_ser.serialized_tx = witness
             tx_ser.signature_index = i
             tx_ser.signature = signature
-            tx_ser.serialized_tx = witness
-            tx_req.serialized = tx_ser
-        else:
-            pass  # TODO: empty witness
+        elif any_segwit:
+            tx_ser.serialized_tx = bytearray(1)  # empty witness for non-segwit inputs
+            tx_ser.signature_index = None
+            tx_ser.signature = None
+
+        tx_req.serialized = tx_ser
 
     write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
@@ -460,13 +468,10 @@ def output_is_change(o: TxOutputType, wallet_path: list) -> bool:
 def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
     if i.script_type == InputScriptType.SPENDADDRESS:
         return input_script_p2pkh_or_p2sh(pubkey, signature)  # p2pkh or p2sh
-
     if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
-
     elif i.script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or p2wsh
         return input_script_native_p2wpkh_or_p2wsh()
-
     else:
         raise SigningError(FailureType.ProcessError, 'Invalid script type')
 

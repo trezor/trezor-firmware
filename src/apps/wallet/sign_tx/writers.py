@@ -19,12 +19,12 @@ def write_tx_input(w, i: TxInputType):
 def write_tx_input_check(w, i: TxInputType):
     write_bytes(w, i.prev_hash)
     write_uint32(w, i.prev_index)
+    write_uint32(w, i.script_type)
     write_uint32(w, len(i.address_n))
     for n in i.address_n:
         write_uint32(w, n)
     write_uint32(w, i.sequence)
-    i_amount = i.amount if i.amount is not None else 0
-    write_uint32(w, i_amount)  # this is probably redundant, but better safe than sorry
+    write_uint32(w, i.amount or 0)
 
 
 def write_tx_output(w, o: TxOutputBinType):

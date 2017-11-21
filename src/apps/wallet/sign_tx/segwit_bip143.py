@@ -59,7 +59,9 @@ class Bip143:
     # for P2WPKH this is always 0x1976a914{20-byte-pubkey-hash}88ac
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
         # p2wpkh in p2sh or native p2wpkh
-        if txi.script_type in (InputScriptType.SPENDP2SHWITNESS, InputScriptType.SPENDWITNESS):
+        is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
+                     txi.script_type == InputScriptType.SPENDP2SHWITNESS)
+        if is_segwit:
             s = bytearray(25)
             s[0] = 0x76  # OP_DUP
             s[1] = 0xA9  # OP_HASH_160
@@ -69,5 +71,5 @@ class Bip143:
             s[24] = 0xAC  # OP_CHECKSIG
             return s
         else:
-            raise Bip143Error(FailureType.SyntaxError,
+            raise Bip143Error(FailureType.DataError,
                               'Unknown input script type for bip143 script code')
