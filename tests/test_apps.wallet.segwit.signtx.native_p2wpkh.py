@@ -41,7 +41,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp',
             amount=5000000,
             script_type=OutputScriptType.PAYTOADDRESS,
-            address_n=None,  # @todo ask honza about sanitizing
+            address_n=None,
         )
         out2 = TxOutputType(
             address='tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu',
