@@ -237,8 +237,9 @@ void display_init(void)
 #if DISPLAY_ST7789V
     CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
     CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
+    CMD(0xDF); DATA(0x5A); DATA(0x69); DATA(0x02); DATA(0x01); // CMD2EN: Commands in command table 2 can be executed when EXTC level is Low
     CMD(0xC0); DATA(0x20); // LCMCTRL: LCM Control: XOR RGB setting
-    CMD(0xE4); DATA(0x1d); DATA(0x0A); DATA(0x11); // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is gate 80.; gate scan direction 319 -> 0
+    CMD(0xE4); DATA(0x1D); DATA(0x0A); DATA(0x11); // GATECTRL: Gate Control; NL = 240 gate lines, first scan line is gate 80.; gate scan direction 319 -> 0
     // the above config is the most important and definitely necessary
     CMD(0xD0); DATA(0xA4); DATA(0xA1);              // PWCTRL1: Power Control 1
     // gamma curve 1
