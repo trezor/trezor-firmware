@@ -36,6 +36,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDP2SHWITNESS,
             sequence=0xffffffff,
+            multisig=None,
         )
         out1 = TxOutputType(
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
@@ -128,6 +129,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDP2SHWITNESS,
             sequence=0xffffffff,
+            multisig=None,
         )
         out1 = TxOutputType(
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
@@ -230,6 +232,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDP2SHWITNESS,
             sequence=0xffffffff,
+            multisig=None,
         )
         inpattack = TxInputType(
             # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -239,6 +242,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDP2SHWITNESS,
             sequence=0xffffffff,
+            multisig=None,
         )
         out1 = TxOutputType(
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',

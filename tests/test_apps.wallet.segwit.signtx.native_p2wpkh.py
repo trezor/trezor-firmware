@@ -36,6 +36,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDWITNESS,
             sequence=0xffffffff,
+            multisig=None,
         )
         out1 = TxOutputType(
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp',
@@ -128,6 +129,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDWITNESS,
             sequence=0xffffffff,
+            multisig=None,
         )
         out1 = TxOutputType(
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp',

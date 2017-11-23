@@ -15,6 +15,7 @@ from apps.wallet.sign_tx.helpers import *
 from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.writers import *
+from apps.wallet.sign_tx.tx_weight_calculator import *
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
@@ -51,6 +52,7 @@ async def check_tx_fee(tx: SignTx, root):
     # tx, as the SignTx info is streamed only once
     h_first = HashWriter(sha256)  # not a real tx hash
     bip143 = Bip143()
+    weight = TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
     txo_bin = TxOutputBinType()
     tx_req = TxRequest()
@@ -67,6 +69,7 @@ async def check_tx_fee(tx: SignTx, root):
         txi = await request_tx_input(tx_req, i)
         wallet_path = input_extract_wallet_path(txi, wallet_path)
         write_tx_input_check(h_first, txi)
+        weight.add_input(txi)
         bip143.add_prevouts(txi)
         bip143.add_sequence(txi)
         is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
@@ -93,6 +96,7 @@ async def check_tx_fee(tx: SignTx, root):
         txo = await request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+        weight.add_output(txo_bin.script_pubkey)
         if output_is_change(txo, wallet_path):
             if change_out != 0:
                 raise SigningError(FailureType.ProcessError,
@@ -110,8 +114,8 @@ async def check_tx_fee(tx: SignTx, root):
         raise SigningError(FailureType.NotEnoughFunds,
                            'Not enough funds')
 
-    tx_size_b = estimate_tx_size(tx.inputs_count, tx.outputs_count)
-    if fee > coin.maxfee_kb * ((tx_size_b + 999) // 1000):
+    # fee > (coin.maxfee per byte * tx size)
+    if fee > (coin.maxfee_kb / 1000) * (weight.get_total() / 4):
         if not await confirm_feeoverthreshold(fee, coin):
             raise SigningError(FailureType.ActionCancelled,
                                'Signing cancelled')
@@ -318,10 +322,6 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
                            'Encountered invalid prev_hash')
 
     return total_out
-
-
-def estimate_tx_size(inputs: int, outputs: int) -> int:
-    return 10 + inputs * 149 + outputs * 35
 
 
 # TX Helpers
