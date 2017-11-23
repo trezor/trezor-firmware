@@ -1,4 +1,3 @@
-
 from trezor.messages.CoinType import CoinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
