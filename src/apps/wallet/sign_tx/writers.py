@@ -1,8 +1,7 @@
-from micropython import const
 
-from trezor.messages.TxOutputBinType import TxOutputBinType
-from trezor.messages.TxInputType import TxInputType
 from trezor.crypto.hashlib import sha256
+
+from apps.wallet.sign_tx.writers import *
 
 # TX Serialization
 # ===
