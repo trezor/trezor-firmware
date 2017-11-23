@@ -16,7 +16,7 @@ class AddressError(Exception):
     pass
 
 
-def get_address(script_type: InputScriptType, coin: CoinType, node) -> bytes:
+def get_address(script_type: InputScriptType, coin: CoinType, node) -> str:
 
     if script_type == InputScriptType.SPENDADDRESS:  # p2pkh
         return node.address(coin.address_type)
