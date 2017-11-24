@@ -45,6 +45,7 @@ class TestSignTx(unittest.TestCase):
                            # amount=390000,
                            prev_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
                            prev_index=0,
+                           amount=None,
                            script_type=None,
                            sequence=None)
         out1 = TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',

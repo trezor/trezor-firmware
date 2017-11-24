@@ -8,17 +8,19 @@ async def layout_get_address(ctx, msg):
     from trezor.messages.FailureType import ProcessError
     from ..common import coins
     from ..common import seed
+    from ..wallet.sign_tx import addresses
 
     if msg.multisig:
         raise wire.FailureError(ProcessError, 'GetAddress.multisig is unsupported')
 
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
+    coin = coins.by_name(coin_name)
 
     node = await seed.get_root(ctx)
     node.derive_path(address_n)
-    coin = coins.by_name(coin_name)
-    address = node.address(coin.address_type)
+
+    address = addresses.get_address(msg.script_type, coin, node)
 
     if msg.show_display:
         await _show_address(ctx, address)

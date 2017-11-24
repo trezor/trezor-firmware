@@ -17,8 +17,6 @@ pytest \
     --ignore test_msg_ethereum_signmessage.py \
     --ignore test_msg_ethereum_signtx.py \
     --ignore test_msg_ethereum_verifymessage.py \
-    --ignore test_msg_getaddress_segwit_native.py \
-    --ignore test_msg_getaddress_segwit.py \
     --ignore test_msg_getaddress_show.py \
     --ignore test_msg_loaddevice_xprv.py \
     --ignore test_msg_nem_getaddress.py \
@@ -30,8 +28,6 @@ pytest \
     --ignore test_msg_signmessage_segwit_native.py \
     --ignore test_msg_signmessage_segwit.py \
     --ignore test_msg_signtx_bch.py \
-    --ignore test_msg_signtx_segwit_native.py \
-    --ignore test_msg_signtx_segwit.py \
     --ignore test_msg_signtx_zcash.py \
     --ignore test_msg_verifymessage_segwit_native.py \
     --ignore test_msg_verifymessage_segwit.py \

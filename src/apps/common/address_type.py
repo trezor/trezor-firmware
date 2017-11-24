@@ -28,13 +28,12 @@ def strip(address_type, raw_address):
 
 
 def split(coin, raw_address):
-    l = None
-    for f in ['', '_p2sh', '_p2wpkh', '_p2wsh']:
-        at = getattr(coin, 'address_type' + f)
+    for f in ('address_type',
+              'address_type_p2sh',
+              'address_type_p2wpkh',
+              'address_type_p2wsh'):
+        at = getattr(coin, f)
         if at is not None and check(at, raw_address):
-            l = length(coin.address_type)
-            break
-    if l is not None:
-        return raw_address[:l], raw_address[l:]
-    else:
-        raise ValueError('Invalid addressXXX')
+            l = length(at)
+            return raw_address[:l], raw_address[l:]
+    raise ValueError('Invalid address')

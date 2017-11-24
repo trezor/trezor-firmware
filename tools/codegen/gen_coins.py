@@ -4,17 +4,30 @@ import json
 fields = [
     'coin_name',
     'coin_shortcut',
+    'coin_label',
     'address_type',
     'address_type_p2sh',
     'maxfee_kb',
+    'minfee_kb',
     'signed_message_header',
-    'xpub_magic',
+    'hash_genesis_block',
     'xprv_magic',
+    'xpub_magic',
+    'bech32_prefix',
     'bip44',
     'segwit',
+    'forkid',
+    'default_fee_b',
+    'dust_limit',
+    'blocktime_minutes',
+    'firmware',
+    'address_prefix',
+    'min_address_length',
+    'max_address_length',
+    'bitcore',
 ]
 
-coins = json.load(open('../../../trezor-common/coins.json', 'r'))
+coins = json.load(open('../../vendor/trezor-common/coins.json', 'r'))
 
 print('COINS = [')
 for c in coins:
