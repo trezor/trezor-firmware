@@ -552,6 +552,9 @@ static bool signing_check_output(TxOutputType *txoutput) {
 		}
 		/*
 		 * only allow segwit change if amount is smaller than what segwit inputs paid.
+		 * this was added during the times segwit was not yet fully activated
+		 * to make sure the user is not tricked to use witness change output
+		 * instead of regular one therefore creating ANYONECANSPEND output
 		 */
 		if ((txoutput->script_type == OutputScriptType_PAYTOWITNESS
 			 || txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS)
