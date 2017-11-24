@@ -1,6 +1,5 @@
 import sys
 import uio
-import ure
 
 __all__ = [
     'run_tests',
