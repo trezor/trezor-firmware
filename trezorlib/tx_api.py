@@ -32,19 +32,23 @@ class TxApi(object):
         self.network = network
         self.url = url
 
+    def get_url(self, resource, resourceid):
+        url = '%s%s/%s' % (self.url, resource, resourceid)
+        return url
+
     def fetch_json(self, resource, resourceid):
         global cache_dir
         if cache_dir:
             cache_file = '%s/%s_%s_%s.json' % (cache_dir, self.network, resource, resourceid)
             try:  # looking into cache first
-                j = json.load(open(cache_file))
+                j = json.load(open(cache_file), parse_float=str)
                 return j
             except:
                 pass
         try:
-            url = '%s%s/%s' % (self.url, resource, resourceid)
+            url = self.get_url(resource, resourceid)
             r = requests.get(url, headers={'User-agent': 'Mozilla/5.0'})
-            j = r.json()
+            j = r.json(parse_float=str)
         except:
             raise RuntimeError('URL error: %s' % url)
         if cache_dir and cache_file:
@@ -88,7 +92,7 @@ class TxApiInsight(TxApi):
 
         for vout in data['vout']:
             o = t.bin_outputs.add()
-            o.amount = int(Decimal(str(vout['value'])) * 100000000)
+            o.amount = int(Decimal(vout['value']) * 100000000)
             o.script_pubkey = binascii.unhexlify(vout['scriptPubKey']['hex'])
 
         if self.zcash:
