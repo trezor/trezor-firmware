@@ -20,9 +20,9 @@ async def dim_screen():
 async def display_homescreen():
     from apps.common import storage
 
-    image = res.load('apps/homescreen/res/trezor_lock.toig')
+    image = res.load('apps/homescreen/res/homescreen.toif')
     ui.display.bar(0, 0, ui.SCREEN, ui.SCREEN, ui.BG)
-    ui.display.icon((ui.SCREEN - 124) // 2, (ui.SCREEN - 40 - 180) // 2, image, ui.FG, ui.BG)
+    ui.display.avatar((ui.SCREEN - 144) // 2, (ui.SCREEN - 144) // 2 - 10, image, ui.WHITE, ui.BLACK)
 
     if not storage.is_initialized():
         label = 'Go to trezor.io/start'
