@@ -120,6 +120,22 @@ static void usb_init_all(void)
     usb_start();
 }
 
+static void test_border(void)
+{
+    enum {
+        W  = 2,
+        RX = DISPLAY_RESX,
+        RY = DISPLAY_RESY,
+    };
+    display_clear();
+    display_bar(0,    0,    RX, W,  0xFFFF);
+    display_bar(0,    RY-W, RX, W,  0xFFFF);
+    display_bar(0,    0,    W,  RY, 0xFFFF);
+    display_bar(RX-W, 0,    W,  RY, 0xFFFF);
+    display_refresh();
+    vcp_printf("OK");
+}
+
 static void test_display(const char *colors)
 {
     display_clear();
@@ -306,6 +322,9 @@ int main(void)
 
         if (startswith(line, "PING")) {
             vcp_printf("OK");
+
+        } else if (startswith(line, "BORDER")) {
+            test_border();
 
         } else if (startswith(line, "DISP ")) {
             test_display(line + 5);
