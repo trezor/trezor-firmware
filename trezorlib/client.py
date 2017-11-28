@@ -277,6 +277,8 @@ class TextUIMixin(object):
         log("    1 2 3")
         log("Please enter %s: " % desc)
         pin = getpass.getpass('')
+        if not pin.isdigit():
+            raise ValueError('Non-numerical PIN provided')
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
