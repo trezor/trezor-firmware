@@ -250,7 +250,7 @@ void layoutCipherKeyValue(bool encrypt, const char *key)
 {
 	const char **str = split_message((const uint8_t *)key, strlen(key), 16);
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-		encrypt ? _("Encode value of this key?") : _("Decode value of this key?"),
+		encrypt ? _("Encrypt value of this key?") : _("Decrypt value of this key?"),
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
