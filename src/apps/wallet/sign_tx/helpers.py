@@ -5,7 +5,7 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TransactionType import TransactionType
-from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXFINISHED
+from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXEXTRADATA, TXFINISHED
 from trezor.messages import InputScriptType
 
 # Machine instructions
@@ -55,6 +55,17 @@ def request_tx_meta(tx_req: TxRequest, tx_hash: bytes=None):
     return sanitize_tx_meta(ack.tx)
 
 
+def request_tx_extra_data(tx_req: TxRequest, offset: int, size: int, tx_hash: bytes=None):
+    tx_req.request_type = TXEXTRADATA
+    tx_req.details.extra_data_offset = offset
+    tx_req.details.extra_data_len = size
+    tx_req.details.tx_hash = tx_hash
+    tx_req.details.request_index = None
+    ack = yield tx_req
+    tx_req.serialized = None
+    return ack.tx.extra_data
+
+
 def request_tx_input(tx_req: TxRequest, i: int, tx_hash: bytes=None):
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
@@ -101,6 +112,7 @@ def sanitize_tx_meta(tx: TransactionType) -> TransactionType:
     tx.lock_time = tx.lock_time if tx.lock_time is not None else 0
     tx.inputs_cnt = tx.inputs_cnt if tx.inputs_cnt is not None else 0
     tx.outputs_cnt = tx.outputs_cnt if tx.outputs_cnt is not None else 0
+    tx.extra_data_len = tx.extra_data_len if tx.extra_data_len is not None else 0
     return tx
 
 

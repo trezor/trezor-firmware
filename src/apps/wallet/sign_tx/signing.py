@@ -319,6 +319,13 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
 
     write_uint32(txh, tx.lock_time)
 
+    ofs = 0
+    while ofs < tx.extra_data_len:
+        size = min(1024, tx.extra_data_len - ofs)
+        data = await request_tx_extra_data(tx_req, ofs, size, prev_hash)
+        write_bytes(txh, data)
+        ofs += len(data)
+
     if get_tx_hash(txh, True, True) != prev_hash:
         raise SigningError(FailureType.ProcessError,
                            'Encountered invalid prev_hash')
