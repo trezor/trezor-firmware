@@ -7,7 +7,6 @@ python_trezor.egg-info/
 trezor.egg-info/
 *.pyc
 *.bin
-*.png
 *.py.cache
 distribute-*.egg
 distribute-*.tar.gz

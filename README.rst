@@ -56,7 +56,7 @@ or to learn options of a particular command:
 
   trezorctl commands --help
 
-or visit `usage <USAGE.rst>`_ page for more info.
+or visit `docs/USAGE.rst <docs/USAGE.rst>`_ page for more info.
 
 NOTE: The ``trezorctl`` command is `available for Debian Stretch <https://packages.debian.org/en/stretch/python-trezor>`_ (and comes pre-installed on `Tails OS <https://tails.boum.org/>`_).
 
