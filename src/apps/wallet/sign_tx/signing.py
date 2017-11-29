@@ -59,6 +59,7 @@ async def check_tx_fee(tx: SignTx, root):
     tx_req.details = TxRequestDetailsType()
 
     total_in = 0  # sum of input amounts
+    segwit_in = 0  # sum of segwit input amounts
     total_out = 0  # sum of output amounts
     change_out = 0  # change output amount
     wallet_path = []  # common prefix of input paths
@@ -82,6 +83,7 @@ async def check_tx_fee(tx: SignTx, root):
                 raise SigningError(FailureType.DataError,
                                    'Segwit input without amount')
             segwit[i] = True
+            segwit_in += txi.amount
             total_in += txi.amount
         elif txi.script_type == InputScriptType.SPENDADDRESS:
             segwit[i] = False
@@ -97,7 +99,7 @@ async def check_tx_fee(tx: SignTx, root):
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         weight.add_output(txo_bin.script_pubkey)
-        if output_is_change(txo, wallet_path):
+        if output_is_change(txo, wallet_path, segwit_in):
             if change_out != 0:
                 raise SigningError(FailureType.ProcessError,
                                    'Only one change output is valid')
@@ -396,8 +398,15 @@ def get_address_for_change(o: TxOutputType, coin: CoinType, root):
     return get_address(input_script_type, coin, node_derive(root, o.address_n))
 
 
-def output_is_change(o: TxOutputType, wallet_path: list) -> bool:
+def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool:
     address_n = o.address_n
+    is_segwit = (o.script_type == OutputScriptType.PAYTOWITNESS or
+                 o.script_type == OutputScriptType.PAYTOP2SHWITNESS)
+    if is_segwit and o.amount > segwit_in:
+        # if the output is segwit, make sure it doesn't spend more than what the
+        # segwit inputs paid.  this is to prevent user being tricked into
+        # creating ANYONECANSPEND outputs before full segwit activation.
+        return False
     return (address_n is not None and wallet_path is not None
             and wallet_path == address_n[:-_BIP32_WALLET_DEPTH]
             and address_n[-2] == _BIP32_CHANGE_CHAIN
