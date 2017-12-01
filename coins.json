@@ -374,9 +374,7 @@
 	"address_prefix": "digibyte:",
 	"min_address_length": 27,
 	"max_address_length": 34,
-	"bitcore": [
-		"https://digiexplorer.info"
-	]
+	"bitcore": []
 },
 {
 	"coin_name": "Monacoin",
