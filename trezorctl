@@ -447,10 +447,13 @@ def get_public_node(connect, coin, address, curve, show_display):
 @click.pass_obj
 def sign_tx(connect, coin):
     client = connect()
-    try:
+    if coin in coins_txapi:
         txapi = coins_txapi[coin]
-    except:
-        raise ValueError('Coin "%s" is not supported' % coin)
+    else:
+        sys.stderr.write('Coin "%s" is not recognized.\n' % coin)
+        sys.stderr.write('Supported coin types: %s\n' % ", ".join(coins_txapi.keys()))
+        sys.exit(1)
+
     client.set_tx_api(txapi)
 
     if sys.version_info.major < 3:
