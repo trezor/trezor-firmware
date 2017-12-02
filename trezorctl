@@ -114,7 +114,7 @@ def ls(transport_name):
     return devices
 
 
-@cli.command(name='version', help='Show version of trezorctl/trezorlib.')
+@cli.command(help='Show version of trezorctl/trezorlib.')
 def version():
     from trezorlib import __version__ as VERSION
     return VERSION
