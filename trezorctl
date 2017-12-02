@@ -115,8 +115,7 @@ def ls(transport_name):
 
 
 @cli.command(name='version', help='Show version of trezorctl/trezorlib.')
-@click.pass_obj
-def version(_):
+def version():
     from trezorlib import __version__ as VERSION
     return VERSION
 

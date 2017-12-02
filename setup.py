@@ -47,7 +47,6 @@ setup(
         'trezorlib.transport_udp',
         'trezorlib.tx_api',
         'trezorlib.types_pb2',
-        'trezorlib.version',
     ],
     scripts=['trezorctl'],
     install_requires=install_requires,
