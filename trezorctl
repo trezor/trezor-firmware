@@ -450,8 +450,8 @@ def sign_tx(connect, coin):
     if coin in coins_txapi:
         txapi = coins_txapi[coin]
     else:
-        sys.stderr.write('Coin "%s" is not recognized.\n' % coin)
-        sys.stderr.write('Supported coin types: %s\n' % ", ".join(coins_txapi.keys()))
+        click.echo('Coin "%s" is not recognized.' % coin, err=True)
+        click.echo('Supported coin types: %s' % ', '.join(coins_txapi.keys()), err=True)
         sys.exit(1)
 
     client.set_tx_api(txapi)
