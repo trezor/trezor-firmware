@@ -17,9 +17,11 @@ if '--disable-hidapi' in sys.argv:
 else:
     install_requires.append('hidapi>=0.7.99.post20')
 
+from trezorlib.version import VERSION
+
 setup(
     name='trezor',
-    version='0.8.0a0',
+    version=VERSION,
     author='TREZOR',
     author_email='info@trezor.io',
     description='Python library for communicating with TREZOR Hardware Wallet',
@@ -45,6 +47,7 @@ setup(
         'trezorlib.transport_udp',
         'trezorlib.tx_api',
         'trezorlib.types_pb2',
+        'trezorlib.version',
     ],
     scripts=['trezorctl'],
     install_requires=install_requires,
