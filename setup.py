@@ -17,7 +17,7 @@ if '--disable-hidapi' in sys.argv:
 else:
     install_requires.append('hidapi>=0.7.99.post20')
 
-from trezorlib.version import VERSION
+from trezorlib import __version__ as VERSION
 
 setup(
     name='trezor',
