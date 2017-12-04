@@ -227,6 +227,7 @@ static void send_msg_features(usbd_device *dev)
 	//           - patch_version = VERSION_PATCH
 	//           - bootloader_mode = True
 	//           - firmware_present = True/False
+	//           - model = "1"
 	if (brand_new_firmware) {
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
 			// header
@@ -242,8 +243,9 @@ static void send_msg_features(usbd_device *dev)
 			"\x20" VERSION_PATCH_CHAR
 			"\x28" "\x01"
 			"\x90\x01" "\x00"
+			"\xaa" "\x01" "1"
 			// padding
-			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
 	} else {
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
@@ -260,8 +262,9 @@ static void send_msg_features(usbd_device *dev)
 			"\x20" VERSION_PATCH_CHAR
 			"\x28" "\x01"
 			"\x90\x01" "\x01"
+			"\xaa" "\x01" "1"
 			// padding
-			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
 	}
 }
