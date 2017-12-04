@@ -9,8 +9,10 @@ async def layout_ethereum_get_address(ctx, msg):
     from trezor.crypto.hashlib import sha3_256
     from ..common import seed
 
+    address_n = msg.address_n or ()
+
     node = await seed.get_root(ctx)
-    node.derive_path(msg.address_n or ())
+    node.derive_path(address_n)
 
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False)  # uncompressed
@@ -18,21 +20,46 @@ async def layout_ethereum_get_address(ctx, msg):
 
     if msg.show_display:
         await _show_address(ctx, address)
+
     return EthereumAddress(address=address)
 
 
 async def _show_address(ctx, address):
     from trezor.messages.ButtonRequestType import Address
     from trezor.ui.text import Text
+    from trezor.ui.qr import Qr
+    from trezor.ui.container import Container
     from ..common.confirm import require_confirm
 
-    # TODO: qr code
-
-    content = Text('Confirm address', ui.ICON_RESET,
-                   ui.MONO, *_split_address(address))
+    address = _ethereum_address_hex(address)
+    lines = _split_address(address)
+    content = Container(
+        Qr(address, (120, 135), 3),
+        Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines))
     await require_confirm(ctx, content, code=Address)
 
 
 def _split_address(address):
     from trezor.utils import chunks
-    return chunks(address, 20)
+    return chunks(address, 21)
+
+
+def _ethereum_address_hex(address):
+    from ubinascii import hexlify
+    from trezor.crypto.hashlib import sha3_256
+
+    hx = hexlify(address).decode()
+    hs = sha3_256(hx).digest(True)
+    h = ''
+
+    for i in range(20):
+        l = hx[i * 2]
+        if hs[i] & 0x80 and l >= 'a' and l <= 'f':
+            l = l.upper()
+        h += l
+        l = hx[i * 2 + 1]
+        if hs[i] & 0x08 and l >= 'a' and l <= 'f':
+            l = l.upper()
+        h += l
+
+    return '0x' + h
