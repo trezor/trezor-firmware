@@ -18,7 +18,7 @@ const pb_field_t GetFeatures_fields[1] = {
     PB_LAST_FIELD
 };
 
-const pb_field_t Features_fields[18] = {
+const pb_field_t Features_fields[19] = {
     PB_FIELD(  1, STRING  , OPTIONAL, STATIC  , FIRST, Features, vendor, vendor, 0),
     PB_FIELD(  2, UINT32  , OPTIONAL, STATIC  , OTHER, Features, major_version, vendor, 0),
     PB_FIELD(  3, UINT32  , OPTIONAL, STATIC  , OTHER, Features, minor_version, major_version, 0),
@@ -36,6 +36,7 @@ const pb_field_t Features_fields[18] = {
     PB_FIELD( 16, BOOL    , OPTIONAL, STATIC  , OTHER, Features, pin_cached, imported, 0),
     PB_FIELD( 17, BOOL    , OPTIONAL, STATIC  , OTHER, Features, passphrase_cached, pin_cached, 0),
     PB_FIELD( 18, BOOL    , OPTIONAL, STATIC  , OTHER, Features, firmware_present, passphrase_cached, 0),
+    PB_FIELD( 21, STRING  , OPTIONAL, STATIC  , OTHER, Features, model, firmware_present, 0),
     PB_LAST_FIELD
 };
 

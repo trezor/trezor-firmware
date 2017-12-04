@@ -103,6 +103,8 @@ typedef struct _Features {
     bool passphrase_cached;
     bool has_firmware_present;
     bool firmware_present;
+    bool has_model;
+    char model[17];
 /* @@protoc_insertion_point(struct:Features) */
 } Features;
 
@@ -151,7 +153,7 @@ typedef struct _Success {
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, ""}
 #define Ping_init_default                        {false, "", false, 0, false, 0, false, 0}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, (FailureType)0, false, ""}
@@ -162,7 +164,7 @@ typedef struct _Success {
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, ""}
 #define Ping_init_zero                           {false, "", false, 0, false, 0, false, 0}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, (FailureType)0, false, ""}
@@ -194,6 +196,7 @@ typedef struct _Success {
 #define Features_pin_cached_tag                  16
 #define Features_passphrase_cached_tag           17
 #define Features_firmware_present_tag            18
+#define Features_model_tag                       21
 #define FirmwareErase_length_tag                 1
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
@@ -208,7 +211,7 @@ typedef struct _Success {
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t GetFeatures_fields[1];
-extern const pb_field_t Features_fields[18];
+extern const pb_field_t Features_fields[19];
 extern const pb_field_t Ping_fields[5];
 extern const pb_field_t Success_fields[2];
 extern const pb_field_t Failure_fields[3];
@@ -221,7 +224,7 @@ extern const pb_field_t FirmwareUpload_fields[3];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-#define Features_size                            209
+#define Features_size                            229
 #define Ping_size                                265
 #define Success_size                             259
 #define Failure_size                             270

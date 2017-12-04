@@ -25,5 +25,6 @@ class Features(p.MessageType):
         18: ('firmware_present', p.BoolType, 0),
         19: ('needs_backup', p.BoolType, 0),
         20: ('flags', p.UVarintType, 0),
+        21: ('model', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 17

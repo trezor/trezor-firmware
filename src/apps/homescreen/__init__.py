@@ -15,6 +15,7 @@ async def respond_Features(ctx, msg):
     f.major_version = 2
     f.minor_version = 0
     f.patch_version = 0
+    f.model = 'T'
     f.coins = coins.COINS
 
     f.device_id = storage.get_device_id()

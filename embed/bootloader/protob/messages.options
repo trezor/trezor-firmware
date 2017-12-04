@@ -4,6 +4,7 @@ Features.language			max_size:17
 Features.label				max_size:33
 Features.revision			max_size:20
 Features.bootloader_hash		max_size:32
+Features.model				max_size:17
 
 Ping.message				max_size:256
 

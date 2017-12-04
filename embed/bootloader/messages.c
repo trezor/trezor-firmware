@@ -213,6 +213,7 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, 
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
     MSG_SEND_ASSIGN_VALUE(firmware_present, firmware_present);
+    MSG_SEND_ASSIGN_STRING(model, "T");
     // TODO: pass info about installed firmware (vendor, version, etc.)
     MSG_SEND(Features);
 }

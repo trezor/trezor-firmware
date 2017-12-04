@@ -14,4 +14,5 @@ class CoinType(p.MessageType):
         10: ('xprv_magic', p.UVarintType, 0),  # default=76066276
         11: ('segwit', p.BoolType, 0),
         12: ('forkid', p.UVarintType, 0),
+        13: ('force_bip143', p.BoolType, 0),
     }
