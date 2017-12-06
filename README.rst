@@ -7,7 +7,7 @@ python-trezor
 .. image:: https://badges.gitter.im/trezor/community.svg
     :target: https://gitter.im/trezor/community
 
-Python library for communicating with TREZOR Hardware Wallet
+Python library and commandline client for communicating with TREZOR Hardware Wallet
 
 See https://trezor.io for more information
 
@@ -41,67 +41,21 @@ or build via ports:
   cd /usr/ports/security/py-trezor
   make install clean
 
-Usage
------
 
-There is a command line tool called ``trezorctl`` which can perform various tasks. Use the following to learn about its commands:
+Commandline client (trezorctl)
+---------------------------
 
-.. code::
+The included ``trezorctl`` python script can perform various tasks such as changing setting in the Trezor, signing transactions, retrieving account info and addresses. See the `docs/ <docs/>`_ sub folder for detailed examples and options.
 
-  trezorctl --help
+NOTE: An older version of the ``trezorctl`` command is `available for Debian Stretch <https://packages.debian.org/en/stretch/python-trezor>`_ (and comes pre-installed on `Tails OS <https://tails.boum.org/>`_).
 
-or to learn options of a particular command:
 
-.. code::
+Python Library
+--------------
 
-  trezorctl commands --help
+You can use this python library to interact with a Bitcoin Trezor and use its capabilities in your application.
+See examples here in the `tools/ <tools/>`_ sub folder.
 
-or visit `docs/USAGE.rst <docs/USAGE.rst>`_ page for more info.
-
-NOTE: The ``trezorctl`` command is `available for Debian Stretch <https://packages.debian.org/en/stretch/python-trezor>`_ (and comes pre-installed on `Tails OS <https://tails.boum.org/>`_).
-
-To use the library in your application look at the following example.
-
-Example
--------
-
-also found in ``tools/helloworld.py``
-
-.. code:: python
-
-  #!/usr/bin/env python
-
-  from trezorlib.client import TrezorClient
-  from trezorlib.transport_hid import HidTransport
-
-  def main():
-      # List all connected TREZORs on USB
-      devices = HidTransport.enumerate()
-
-      # Check whether we found any
-      if len(devices) == 0:
-          print('No TREZOR found')
-          return
-
-      # Use first connected device
-      transport = HidTransport(devices[0])
-
-      # Creates object for manipulating TREZOR
-      client = TrezorClient(transport)
-
-      # Print out TREZOR's features and settings
-      print(client.features)
-
-      # Get the first address of first BIP44 account
-      # (should be the same address as shown in wallet.trezor.io)
-      bip32_path = client.expand_path("44'/0'/0'/0/0")
-      address = client.get_address('Bitcoin', bip32_path)
-      print('Bitcoin address:', address)
-
-      client.close()
-
-  if __name__ == '__main__':
-      main()
 
 PIN Entering
 ------------

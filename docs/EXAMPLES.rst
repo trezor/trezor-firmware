@@ -1,7 +1,7 @@
-Usage
-=====
+Examples demonstrating how to use trezorctl
+===========================================
 
-Show help for all command:
+Show all available `options <OPTIONS.rst>`_:
 
 .. code::
 
@@ -15,8 +15,8 @@ Retrieve features, settings and coin types supported by your device:
   trezorctl get_features
 
 
-Bitcoin
--------
+Bitcoin examples
+----------------
 
 Get first receiving address of first account for Bitcoin (Legacy / non-SegWit):
 
@@ -97,8 +97,8 @@ The signed transaction text can then be inspected in Electrum (`screenshot <sign
 The final broadcast and mined transaction can be seen here: https://blockchain.info/tx/270684c14be85efec9adafa50339fd120658381ed2300b9207d0a0df2a5f0bf9
 
 
-Litecoin
---------
+Litecoin examples
+-----------------
 
 Get first receiving address of first account for Litecoin (Bech32 native SegWit P2WPKH):
 
@@ -114,7 +114,7 @@ Get first receiving address of first account for Litecoin (SegWit-in-P2SH):
   trezorctl get_address --coin Litecoin --script-type p2shsegwit --address "m/49'/2'/0'/0/0"
 
 
-NOTES
+Notes
 -----
 
-1. Bech32 native SegWit encoded addresses require Trezor Firmware v1.6.0 or later.
+1. Bech32 native SegWit encoded addresses require `Trezor Firmware v1.6.0 <https://github.com/trezor/trezor-mcu/releases>`_ or later.
