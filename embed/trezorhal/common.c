@@ -4,6 +4,8 @@
 #include "display.h"
 #include "rng.h"
 
+void shutdown(void);
+
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func) {
     display_orientation(0);
     display_backlight(255);

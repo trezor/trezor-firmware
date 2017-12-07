@@ -27,7 +27,7 @@ enum { VCP_IFACE = 0x00 };
 static void vcp_intr(void)
 {
     display_clear();
-    shutdown();
+    ensure(secfalse, "vcp_intr");
 }
 
 static void vcp_puts(const char *s, size_t len)

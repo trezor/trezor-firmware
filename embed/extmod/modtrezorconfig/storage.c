@@ -89,7 +89,7 @@ static void pin_fails_check_max(uint32_t ctr)
                 break;
             }
         }
-        shutdown();
+        ensure(secfalse, "pin_fails_check_max");
     }
 }
 

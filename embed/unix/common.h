@@ -9,6 +9,4 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
 
 void hal_delay(uint32_t ms);
 
-void shutdown(void);
-
 #endif

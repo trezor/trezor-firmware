@@ -13,6 +13,8 @@
 #include "options.h"
 #include "embed/trezorhal/touch.h"
 
+void __shutdown(void);
+
 uint32_t touch_read(void)
 {
 #ifndef TREZOR_NOUI
@@ -43,11 +45,11 @@ uint32_t touch_read(void)
                 break;
             case SDL_KEYUP:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    exit(3);
+                    __shutdown();
                 }
                 break;
             case SDL_QUIT:
-                exit(3);
+                __shutdown();
                 break;
         }
     }
