@@ -42,18 +42,21 @@ void display_init(void)
 {
 #ifndef TREZOR_NOUI
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        printf("SDL_Init Error: %s\n", SDL_GetError());
+        printf("%s\n", SDL_GetError());
+        ensure(secfalse, "SDL_Init error");
     }
     SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DISPLAY_RESX + 2 * DISPLAY_BORDER, DISPLAY_RESY + 2 * DISPLAY_BORDER, SDL_WINDOW_SHOWN);
     if (!win) {
-        printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
+        printf("%s\n", SDL_GetError());
         SDL_Quit();
+        ensure(secfalse, "SDL_CreateWindow error");
     }
     RENDERER = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
     if (!RENDERER) {
-        printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        printf("%s\n", SDL_GetError());
         SDL_DestroyWindow(win);
         SDL_Quit();
+        ensure(secfalse, "SDL_CreateRenderer error");
     }
     SDL_SetRenderDrawColor(RENDERER, DISPLAY_BACKLIGHT, DISPLAY_BACKLIGHT, DISPLAY_BACKLIGHT, 255);
     SDL_RenderClear(RENDERER);
