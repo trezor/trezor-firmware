@@ -11,6 +11,7 @@ SOURCE_MOD = []
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
     'embed/extmod/modtrezorconfig/norcow.c',
+    'embed/extmod/modtrezorconfig/storage.c',
 ]
 
 # modtrezorcrypto

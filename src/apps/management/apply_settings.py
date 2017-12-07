@@ -8,10 +8,7 @@ async def layout_apply_settings(ctx, msg):
     from trezor.messages.FailureType import ProcessError
     from trezor.ui.text import Text
     from ..common.confirm import require_confirm
-    from ..common.request_pin import protect_by_pin
     from ..common import storage
-
-    await protect_by_pin(ctx)
 
     if msg.homescreen is not None:
         raise wire.FailureError(
@@ -42,7 +39,6 @@ async def layout_apply_settings(ctx, msg):
             'encryption?'))
 
     storage.load_settings(label=msg.label,
-                          language=msg.language,
-                          passphrase_protection=msg.use_passphrase)
+                          use_passphrase=msg.use_passphrase)
 
     return Success(message='Settings applied')

@@ -12,6 +12,7 @@ LIBS_MOD = []
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
     'embed/extmod/modtrezorconfig/norcow.c',
+    'embed/extmod/modtrezorconfig/storage.c',
 ]
 
 # modtrezorcrypto
@@ -215,6 +216,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
     'embed/unix/touch.c',
+    'embed/unix/flash.c',
 ]
 
 SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']

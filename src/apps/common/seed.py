@@ -21,13 +21,10 @@ async def get_seed(ctx: wire.Context) -> bytes:
 async def compute_seed(ctx: wire.Context) -> bytes:
     from trezor.messages.FailureType import ProcessError
     from .request_passphrase import protect_by_passphrase
-    from .request_pin import protect_by_pin
     from . import storage
 
     if not storage.is_initialized():
         raise wire.FailureError(ProcessError, 'Device is not initialized')
-
-    await protect_by_pin(ctx)
 
     passphrase = await protect_by_passphrase(ctx)
     return bip39.seed(storage.get_mnemonic(), passphrase)
@@ -37,8 +34,6 @@ def get_root_without_passphrase(curve_name=_DEFAULT_CURVE):
     from . import storage
     if not storage.is_initialized():
         raise Exception('Device is not initialized')
-    if storage.is_locked():
-        raise Exception('Unlock first')
     seed = bip39.seed(storage.get_mnemonic(), '')
     root = bip32.from_seed(seed, curve_name)
     return root

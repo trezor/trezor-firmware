@@ -144,7 +144,10 @@ secbool check_image_contents(const image_header * const hdr, uint32_t firstskip,
     if (0 == sectors || blocks < 1) {
         return secfalse;
     }
-    const void *data = (const void *)(FLASH_SECTOR_TABLE[sectors[0]] + firstskip);
+    const void *data = flash_get_address(sectors[0], firstskip, IMAGE_CHUNK_SIZE - firstskip);
+    if (!data) {
+        return secfalse;
+    }
     int remaining = hdr->codelen;
     if (sectrue != check_single_hash(hdr->hashes, data, MIN(remaining, IMAGE_CHUNK_SIZE - firstskip))) {
         return secfalse;
@@ -155,7 +158,10 @@ secbool check_image_contents(const image_header * const hdr, uint32_t firstskip,
         if (block >= blocks) {
             return secfalse;
         }
-        data = (const void *)FLASH_SECTOR_TABLE[sectors[block]];
+        data = flash_get_address(sectors[block], 0, IMAGE_CHUNK_SIZE);
+        if (!data) {
+            return secfalse;
+        }
         if (sectrue != check_single_hash(hdr->hashes + block * 32, data, MIN(remaining, IMAGE_CHUNK_SIZE))) {
             return secfalse;
         }

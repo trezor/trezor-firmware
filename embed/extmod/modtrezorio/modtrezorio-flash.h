@@ -5,13 +5,7 @@
  * see LICENSE file for details
  */
 
-#if defined TREZOR_STM32
-#include "flash.h"
-#elif defined TREZOR_UNIX
-#include "unix-flash-mock.h"
-#else
-#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
-#endif
+#include "../../trezorhal/flash.h"
 
 /// class FlashOTP:
 ///     '''

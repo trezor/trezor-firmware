@@ -26,9 +26,9 @@ async def layout_load_device(ctx, msg):
         ui.NORMAL, 'Continue only if you', 'know what you are doing!'))
 
     storage.load_mnemonic(msg.mnemonic)
-    storage.load_settings(pin=msg.pin,
-                          passphrase_protection=msg.passphrase_protection,
-                          language=msg.language,
+    storage.load_settings(use_passphrase=msg.passphrase_protection,
                           label=msg.label)
+    if msg.pin:
+        storage.change_pin('', msg.pin)
 
     return Success(message='Device loaded')

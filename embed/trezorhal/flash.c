@@ -1,11 +1,19 @@
+/*
+ * Copyright (c) Pavol Rusnak, Jan Pochyla, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include STM32_HAL_H
 
 #include <string.h>
+
 #include "flash.h"
 
 // see docs/memory.md for more information
 
-const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
+static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [ 0] = 0x08000000, // - 0x08003FFF |  16 KiB
     [ 1] = 0x08004000, // - 0x08007FFF |  16 KiB
     [ 2] = 0x08008000, // - 0x0800BFFF |  16 KiB
@@ -33,6 +41,11 @@ const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [24] = 0x08200000, // last element - not a valid sector
 };
 
+secbool flash_init(void)
+{
+    return sectrue;
+}
+
 secbool flash_unlock(void)
 {
     HAL_FLASH_Unlock();
@@ -44,6 +57,19 @@ secbool flash_lock(void)
 {
     HAL_FLASH_Lock();
     return sectrue;
+}
+
+const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
+{
+    if (sector >= FLASH_SECTOR_COUNT) {
+        return NULL;
+    }
+    uint32_t addr = FLASH_SECTOR_TABLE[sector];
+    uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
+    if (addr + offset + size > next) {
+        return NULL;
+    }
+    return (const uint8_t *)addr + offset;
 }
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
@@ -66,7 +92,7 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
             return secfalse;
         }
         // check whether the sector was really deleted (contains only 0xFF)
-        uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]], addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
+        const uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]], addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
         for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
             if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
                 flash_lock();
@@ -89,6 +115,28 @@ secbool flash_write_byte(uint32_t address, uint8_t data)
 secbool flash_write_word(uint32_t address, uint32_t data)
 {
     return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
+}
+
+secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
+{
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_SECTOR_TABLE[sector] + offset, data));
+}
+
+secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
+{
+    if (offset % 4 != 0) {
+        return secfalse;
+    }
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_SECTOR_TABLE[sector] + offset, data));
+}
+
+secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
+{
+    if (offset % 4 != 0) {
+        return secfalse;
+    }
+    *data = *((const uint32_t *)FLASH_SECTOR_TABLE[sector] + offset);
+    return sectrue;
 }
 
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
