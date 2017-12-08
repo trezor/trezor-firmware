@@ -72,7 +72,7 @@ static void norcow_erase(uint8_t sector, secbool set_magic)
     ensure(sectrue * (sector <= NORCOW_SECTOR_COUNT), "invalid sector");
     ensure(flash_erase_sectors(&norcow_sectors[sector], 1, NULL), "erase failed");
     if (sectrue == set_magic) {
-        ensure(norcow_write(norcow_active_sector, 0, NORCOW_MAGIC, NULL, 0), "set magic failed");
+        ensure(norcow_write(sector, 0, NORCOW_MAGIC, NULL, 0), "set magic failed");
     }
 }
 
@@ -206,13 +206,15 @@ static void compact()
         // copy the last item
         uint32_t posw;
         r = write_item(norcow_next_sector, offsetw, k, v, l, &posw);
-        if (sectrue != r) { } // TODO: error
+        if (sectrue != r) {
+            // TODO: error
+        }
         offsetw = posw;
     }
 
     norcow_erase(norcow_active_sector, secfalse);
     norcow_active_sector = norcow_next_sector;
-    norcow_active_offset = find_free_offset(norcow_active_sector);
+    norcow_active_offset = offsetw;
 }
 
 /*
@@ -231,16 +233,13 @@ secbool norcow_init(void)
         }
     }
     // no active sectors found - let's erase
-    if (sectrue != found) {
-        norcow_active_sector = 0;
+    if (sectrue == found) {
+        norcow_active_offset = find_free_offset(norcow_active_sector);
+    } else {
         if (sectrue != norcow_wipe()) {
             return secfalse;
         }
-        if (sectrue != norcow_write(norcow_active_sector, 0, NORCOW_MAGIC, NULL, 0)) {
-            return secfalse;
-        }
     }
-    norcow_active_offset = find_free_offset(norcow_active_sector);
     return sectrue;
 }
 
