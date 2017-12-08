@@ -6,8 +6,14 @@
  */
 
 #include <string.h>
-#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#include "common.h"
 #include "../trezorhal/flash.h"
 
 #ifndef FLASH_FILE
@@ -15,6 +21,8 @@
 #endif
 
 #define SECTOR_COUNT 24
+
+#define FLASH_SIZE 0x200000
 
 static const uint32_t sector_table[SECTOR_COUNT + 1] = {
     [ 0] = 0x08000000, // - 0x08003FFF |  16 KiB
@@ -44,28 +52,49 @@ static const uint32_t sector_table[SECTOR_COUNT + 1] = {
     [24] = 0x08200000, // last element - not a valid sector
 };
 
-static uint8_t flash_buffer[0x200000];
+static int flash_fd;
+static uint8_t *flash_buffer;
 
-static void flash_sync(void)
+static void flash_exit(void)
 {
-    FILE *f = fopen(FLASH_FILE, "wb");
-    if (f) {
-        fwrite(flash_buffer, sizeof(flash_buffer), 1, f);
-        fclose(f);
-    }
+    int r = munmap(flash_buffer, FLASH_SIZE);
+    ensure(sectrue * (r == 0), "munmap failed");
+    r = close(flash_fd);
+    ensure(sectrue * (r == 0), "close failed");
 }
 
 secbool flash_init(void)
 {
-    FILE *f = fopen(FLASH_FILE, "rb");
-    size_t r = 0;
-    if (f) {
-        r = fread(flash_buffer, sizeof(flash_buffer), 1, f);
-        fclose(f);
+    int r;
+
+    // check whether the file exists and it has the correct size
+    struct stat sb;
+    r = stat(FLASH_FILE, &sb);
+
+    // (re)create if non existant or wrong size
+    if (r != 0 || sb.st_size != FLASH_SIZE) {
+        int fd = open(FLASH_FILE, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
+        ensure(sectrue * (fd >= 0), "open failed");
+        for (int i = 0; i < FLASH_SIZE / 16; i++) {
+            ssize_t s = write(fd, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 16);
+            ensure(sectrue * (s >= 0), "write failed");
+        }
+        r = close(fd);
+        ensure(sectrue * (r == 0), "close failed");
     }
-    if (r != 1) {
-        memset(flash_buffer, 0xFF, sizeof(flash_buffer));
-    }
+
+    // mmap file
+    int fd = open(FLASH_FILE, O_RDWR);
+    ensure(sectrue * (fd >= 0), "open failed");
+
+    void *map = mmap(0, FLASH_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    ensure(sectrue * (map != MAP_FAILED), "mmap failed");
+
+    flash_fd = fd;
+    flash_buffer = (uint8_t *)map;
+
+    atexit(flash_exit);
+
     return sectrue;
 }
 
@@ -105,7 +134,6 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
         if (progress) {
             progress(i + 1, len);
         }
-        flash_sync();
     }
     return sectrue;
 }
@@ -120,7 +148,6 @@ secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
         return secfalse;  // we cannot change zeroes to ones
     }
     flash[0] = data;
-    flash_sync();
     return sectrue;
 }
 
@@ -137,7 +164,6 @@ secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
         return secfalse;  // we cannot change zeroes to ones
     }
     flash[0] = data;
-    flash_sync();
     return sectrue;
 }
 
