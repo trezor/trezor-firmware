@@ -2,26 +2,20 @@
 
 #include "norcow.h"
 
+#include "common.h"
 #include "../../trezorhal/flash.h"
 
 #ifndef NORCOW_SECTORS
-#define NORCOW_SECTORS {4, 16}
+#define NORCOW_SECTORS {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
 #endif
+
+// NRCW = 4e524357
+#define NORCOW_MAGIC      ((uint32_t)0x5743524e)
+#define NORCOW_MAGIC_LEN  (sizeof(uint32_t))
 
 static uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
 static uint8_t norcow_active_sector = 0;
-static uint32_t norcow_active_offset = 0;
-
-/*
- * Erases sector
- */
-static secbool norcow_erase(uint8_t sector)
-{
-    if (sector >= NORCOW_SECTOR_COUNT) {
-        return secfalse;
-    }
-    return flash_erase_sectors(&norcow_sectors[sector], 1, NULL);
-}
+static uint32_t norcow_active_offset = NORCOW_MAGIC_LEN;
 
 /*
  * Returns pointer to sector, starting with offset
@@ -29,9 +23,7 @@ static secbool norcow_erase(uint8_t sector)
  */
 static const void *norcow_ptr(uint8_t sector, uint32_t offset, uint32_t size)
 {
-    if (sector >= NORCOW_SECTOR_COUNT) {
-        return NULL;
-    }
+    ensure(sectrue * (sector <= NORCOW_SECTOR_COUNT), "invalid sector");
     return flash_get_address(norcow_sectors[sector], offset, size);
 }
 
@@ -51,23 +43,37 @@ static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, co
         flash_lock();
         return secfalse;
     }
-    offset += sizeof(uint32_t);
-    // write data
-    for (uint16_t i = 0; i < len; i++, offset++) {
-        if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, data[i])) {
-            flash_lock();
-            return secfalse;
+    if (len > 0) {
+        offset += sizeof(uint32_t);
+        // write data
+        for (uint16_t i = 0; i < len; i++, offset++) {
+            if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, data[i])) {
+                flash_lock();
+                return secfalse;
+            }
         }
-    }
-    // pad with zeroes
-    for (; offset % 4; offset++) {
-        if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, 0x00)) {
-            flash_lock();
-            return secfalse;
+        // pad with zeroes
+        for (; offset % 4; offset++) {
+            if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, 0x00)) {
+                flash_lock();
+                return secfalse;
+            }
         }
     }
     flash_lock();
     return sectrue;
+}
+
+/*
+ * Erases sector (and sets a magic)
+ */
+static void norcow_erase(uint8_t sector, secbool set_magic)
+{
+    ensure(sectrue * (sector <= NORCOW_SECTOR_COUNT), "invalid sector");
+    ensure(flash_erase_sectors(&norcow_sectors[sector], 1, NULL), "erase failed");
+    if (sectrue == set_magic) {
+        ensure(norcow_write(norcow_active_sector, 0, NORCOW_MAGIC, NULL, 0), "set magic failed");
+    }
 }
 
 #define ALIGN4(X) (X) = ((X) + 3) & ~3
@@ -117,7 +123,7 @@ static secbool find_item(uint8_t sector, uint16_t key, const void **val, uint16_
 {
     *val = 0;
     *len = 0;
-    uint32_t offset = 0;
+    uint32_t offset = NORCOW_MAGIC_LEN;
     for (;;) {
         uint16_t k, l;
         const void *v;
@@ -139,7 +145,7 @@ static secbool find_item(uint8_t sector, uint16_t key, const void **val, uint16_
  */
 static uint32_t find_free_offset(uint8_t sector)
 {
-    uint32_t offset = 0;
+    uint32_t offset = NORCOW_MAGIC_LEN;
     for (;;) {
         uint16_t key, len;
         const void *val;
@@ -158,8 +164,9 @@ static uint32_t find_free_offset(uint8_t sector)
 static void compact()
 {
     uint8_t norcow_next_sector = (norcow_active_sector + 1) % NORCOW_SECTOR_COUNT;
+    norcow_erase(norcow_next_sector, sectrue);
 
-    uint32_t offset = 0, offsetw = 0;
+    uint32_t offset = NORCOW_MAGIC_LEN, offsetw = NORCOW_MAGIC_LEN;
 
     for (;;) {
         // read item
@@ -167,14 +174,18 @@ static void compact()
         const void *v;
         uint32_t pos;
         secbool r = read_item(norcow_active_sector, offset, &k, &v, &l, &pos);
-        if (sectrue != r) break;
+        if (sectrue != r) {
+            break;
+        }
         offset = pos;
 
         // check if not already saved
         const void *v2;
         uint16_t l2;
         r = find_item(norcow_next_sector, k, &v2, &l2);
-        if (sectrue == r) continue;
+        if (sectrue == r) {
+            continue;
+        }
 
         // scan for latest instance
         uint32_t offsetr = offset;
@@ -182,7 +193,9 @@ static void compact()
             uint16_t k2;
             uint32_t posr;
             r = read_item(norcow_active_sector, offsetr, &k2, &v2, &l2, &posr);
-            if (sectrue != r) break;
+            if (sectrue != r) {
+                break;
+            }
             if (k == k2) {
                 v = v2;
                 l = l2;
@@ -197,7 +210,7 @@ static void compact()
         offsetw = posw;
     }
 
-    norcow_erase(norcow_active_sector);
+    norcow_erase(norcow_active_sector, secfalse);
     norcow_active_sector = norcow_next_sector;
     norcow_active_offset = find_free_offset(norcow_active_sector);
 }
@@ -207,12 +220,24 @@ static void compact()
  */
 secbool norcow_init(void)
 {
-    // detect active sector (inactive sectors are empty = start with 0xFF)
+    secbool found = secfalse;
+    // detect active sector - starts with magic
     for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
-        const uint8_t *b = norcow_ptr(i, 0, 1);
-        if (b != NULL && *b != 0xFF) {
+        const uint32_t *magic = norcow_ptr(i, 0, NORCOW_MAGIC_LEN);
+        if (magic != NULL && *magic == NORCOW_MAGIC) {
+            found = sectrue;
             norcow_active_sector = i;
             break;
+        }
+    }
+    // no active sectors found - let's erase
+    if (sectrue != found) {
+        norcow_active_sector = 0;
+        if (sectrue != norcow_wipe()) {
+            return secfalse;
+        }
+        if (sectrue != norcow_write(norcow_active_sector, 0, NORCOW_MAGIC, NULL, 0)) {
+            return secfalse;
         }
     }
     norcow_active_offset = find_free_offset(norcow_active_sector);
@@ -224,13 +249,12 @@ secbool norcow_init(void)
  */
 secbool norcow_wipe(void)
 {
-    for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
-        if (sectrue != norcow_erase(i)) {
-            return secfalse;
-        }
+    norcow_erase(0, sectrue);
+    for (uint8_t i = 1; i < NORCOW_SECTOR_COUNT; i++) {
+        norcow_erase(i, secfalse);
     }
     norcow_active_sector = 0;
-    norcow_active_offset = 0;
+    norcow_active_offset = NORCOW_MAGIC_LEN;
     return sectrue;
 }
 
