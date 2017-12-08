@@ -84,6 +84,17 @@ class TestConfig(unittest.TestCase):
             value2 = config.get(appid, key)
             self.assertEqual(value, value2)
 
+    def test_compact(self):
+        config.init()
+        config.wipe()
+        self.assertEqual(config.unlock(''), True)
+        appid, key = 1, 1
+        for _ in range(259):
+            value = random.bytes(259)
+            config.set(appid, key, value)
+        value2 = config.get(appid, key)
+        self.assertEqual(value, value2)
+
     def test_get_default(self):
         config.init()
         config.wipe()

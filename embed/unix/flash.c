@@ -52,15 +52,12 @@ static const uint32_t sector_table[SECTOR_COUNT + 1] = {
     [24] = 0x08200000, // last element - not a valid sector
 };
 
-static int flash_fd;
 static uint8_t *flash_buffer;
 
 static void flash_exit(void)
 {
     int r = munmap(flash_buffer, FLASH_SIZE);
     ensure(sectrue * (r == 0), "munmap failed");
-    r = close(flash_fd);
-    ensure(sectrue * (r == 0), "close failed");
 }
 
 secbool flash_init(void)
@@ -90,7 +87,6 @@ secbool flash_init(void)
     void *map = mmap(0, FLASH_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
-    flash_fd = fd;
     flash_buffer = (uint8_t *)map;
 
     atexit(flash_exit);

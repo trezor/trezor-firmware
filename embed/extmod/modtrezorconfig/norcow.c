@@ -214,7 +214,7 @@ static void compact()
 
     norcow_erase(norcow_active_sector, secfalse);
     norcow_active_sector = norcow_next_sector;
-    norcow_active_offset = offsetw;
+    norcow_active_offset = find_free_offset(norcow_active_sector);
 }
 
 /*
