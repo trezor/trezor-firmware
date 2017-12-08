@@ -1,57 +1,70 @@
 from trezor import ui
+from trezor import config
 from trezor.utils import unimport
 
 
-def confirm_set_pin(ctx):
+async def request_pin(ctx):
+    from trezor.messages.ButtonRequest import ButtonRequest
+    from trezor.messages.wire_types import ButtonAck
+    from apps.common.request_pin import request_pin
+
+    await ctx.call(ButtonRequest(), ButtonAck)
+
+    return await request_pin()
+
+
+async def request_pin_confirm(ctx):
+    while True:
+        pin1 = await request_pin(ctx)
+        pin2 = await request_pin(ctx)
+        if pin1 == pin2:
+            return pin1
+        # TODO: display a message and wait
+
+
+def confirm_change_pin(ctx, msg):
     from apps.common.confirm import require_confirm
     from trezor.ui.text import Text
-    return require_confirm(ctx, Text(
-        'Change PIN', ui.ICON_RESET,
-        'Do you really want to', ui.BOLD,
-        'set new PIN?'))
 
+    has_pin = config.has_pin()
 
-def confirm_change_pin(ctx):
-    from apps.common.confirm import require_confirm
-    from trezor.ui.text import Text
-    return require_confirm(ctx, Text(
-        'Change PIN', ui.ICON_RESET,
-        'Do you really want to', ui.BOLD,
-        'change current PIN?'))
+    if msg.remove and has_pin:  # removing pin
+        return require_confirm(ctx, Text(
+            'Remove PIN', ui.ICON_RESET,
+            'Do you really want to', ui.BOLD,
+            'remove current PIN?'))
 
+    if not msg.remove and has_pin:  # changing pin
+        return require_confirm(ctx, Text(
+            'Change PIN', ui.ICON_RESET,
+            'Do you really want to', ui.BOLD,
+            'change current PIN?'))
 
-def confirm_remove_pin(ctx):
-    from apps.common.confirm import require_confirm
-    from trezor.ui.text import Text
-    return require_confirm(ctx, Text(
-        'Remove PIN', ui.ICON_RESET,
-        'Do you really want to', ui.BOLD,
-        'remove current PIN?'))
+    if not msg.remove and not has_pin:  # setting new pin
+        return require_confirm(ctx, Text(
+            'Change PIN', ui.ICON_RESET,
+            'Do you really want to', ui.BOLD,
+            'set new PIN?'))
 
 
 @unimport
 async def layout_change_pin(ctx, msg):
     from trezor.messages.Success import Success
-    from apps.common.request_pin import protect_by_pin, request_pin_twice
-    from apps.common import storage
 
-    if msg.remove:
-        if storage.is_protected_by_pin():
-            await confirm_remove_pin(ctx)
-            await protect_by_pin(ctx, at_least_once=True)
-        pin = ''
+    await confirm_change_pin(ctx, msg)
 
+    if config.has_pin():
+        curr_pin = await request_pin(ctx)
     else:
-        if storage.is_protected_by_pin():
-            await confirm_change_pin(ctx)
-            await protect_by_pin(ctx, at_least_once=True)
-        else:
-            await confirm_set_pin(ctx)
-        pin = await request_pin_twice(ctx)
+        curr_pin = ''
+    if msg.remove:
+        new_pin = ''
+    else:
+        new_pin = await request_pin_confirm(ctx)
 
-    storage.load_settings(pin=pin)
-    if pin:
-        storage.lock()
+    config.change_pin(curr_pin, new_pin)
+
+    if new_pin:
         return Success(message='PIN changed')
     else:
         return Success(message='PIN removed')

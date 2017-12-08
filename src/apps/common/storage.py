@@ -51,10 +51,6 @@ def load_settings(label: str = None, use_passphrase: bool = None):
         config.set(_APP, _USE_PASSPHRASE, b'')
 
 
-def change_pin(pin: str, newpin: str):
-    return config.change_pin(pin, newpin)
-
-
 def wipe():
     from . import cache
     config.wipe()
