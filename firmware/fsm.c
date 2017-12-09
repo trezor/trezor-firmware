@@ -389,7 +389,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
 
-	const char *curve = SECP256K1_NAME;
+	const char *curve = coin->curve_name;
 	if (msg->has_ecdsa_curve_name) {
 		curve = msg->ecdsa_curve_name;
 	}
@@ -501,7 +501,7 @@ void fsm_msgSignTx(SignTx *msg)
 
 	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
-	const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, 0, 0);
+	const HDNode *node = fsm_getDerivedNode(coin->curve_name, 0, 0);
 	if (!node) return;
 
 	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
@@ -670,7 +670,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
-	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n, msg->address_n_count);
 	if (!node) return;
 	hdnode_fill_public_key(node);
 
@@ -852,7 +852,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 
 	const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
 	if (!coin) return;
-	HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n, msg->address_n_count);
+	HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n, msg->address_n_count);
 	if (!node) return;
 
 	layoutProgressSwipe(_("Signing"), 0);
