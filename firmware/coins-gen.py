@@ -29,7 +29,7 @@ def get_fields(coin):
         '%d' % coin['forkid'] if coin['forkid'] else '0',
         '"%s"' % coin['bech32_prefix'] if coin.get('bech32_prefix') is not None else 'NULL',
         '0x%08x' % (0x80000000 + coin['bip44']),
-        'HASHER_SHA2',
+        '&%s_info' % 'secp256k1',
     ]
 
 

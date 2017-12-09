@@ -97,7 +97,7 @@ bool compute_address(const CoinInfo *coin,
 		if (cryptoMultisigPubkeyIndex(multisig, node->public_key) < 0) {
 			return 0;
 		}
-		if (compile_script_multisig_hash(multisig, coin->hasher_type, digest) == 0) {
+		if (compile_script_multisig_hash(multisig, coin->curve->hasher_type, digest) == 0) {
 			return 0;
 		}
 		if (script_type == InputScriptType_SPENDWITNESS) {
@@ -119,11 +119,11 @@ bool compute_address(const CoinInfo *coin,
 			raw[0] = 0; // push version
 			raw[1] = 32; // push 32 bytes
 			memcpy(raw+2, digest, 32); // push hash
-			hasher_Raw(coin->hasher_type, raw, 34, digest);
+			hasher_Raw(coin->curve->hasher_type, raw, 34, digest);
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
 			address_write_prefix_bytes(coin->address_type_p2sh, raw);
 			ripemd160(digest, 32, raw + prelen);
-			if (!base58_encode_check(raw, prelen + 20, coin->hasher_type, address, MAX_ADDR_SIZE)) {
+			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_type, address, MAX_ADDR_SIZE)) {
 				return 0;
 			}
 		} else {
@@ -131,7 +131,7 @@ bool compute_address(const CoinInfo *coin,
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
 			address_write_prefix_bytes(coin->address_type_p2sh, raw);
 			ripemd160(digest, 32, raw + prelen);
-			if (!base58_encode_check(raw, prelen + 20, coin->hasher_type, address, MAX_ADDR_SIZE)) {
+			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_type, address, MAX_ADDR_SIZE)) {
 				return 0;
 			}
 		}
@@ -140,7 +140,7 @@ bool compute_address(const CoinInfo *coin,
 		if (!coin->has_segwit || !coin->bech32_prefix) {
 			return 0;
 		}
-		ecdsa_get_pubkeyhash(node->public_key, coin->hasher_type, digest);
+		ecdsa_get_pubkeyhash(node->public_key, coin->curve->hasher_type, digest);
 		if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_0, digest, 20)) {
 			return 0;
 		}
@@ -152,9 +152,9 @@ bool compute_address(const CoinInfo *coin,
 		if (!coin->has_address_type_p2sh) {
 			return 0;
 		}
-		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, coin->hasher_type, address, MAX_ADDR_SIZE);
+		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, coin->curve->hasher_type, address, MAX_ADDR_SIZE);
 	} else {
-		ecdsa_get_address(node->public_key, coin->address_type, coin->hasher_type, address, MAX_ADDR_SIZE);
+		ecdsa_get_address(node->public_key, coin->address_type, coin->curve->hasher_type, address, MAX_ADDR_SIZE);
 	}
 	return 1;
 }
@@ -219,7 +219,7 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		return 0; // failed to compile output
 	}
 
-	addr_raw_len = base58_decode_check(in->address, coin->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
+	addr_raw_len = base58_decode_check(in->address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
 	size_t prefix_len;
 	if (coin->has_address_type                                  // p2pkh
 		&& address_check_prefix(addr_raw, coin->address_type)
@@ -639,7 +639,7 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 			&& segwit_addr_decode(&witver, addr_raw, &addr_raw_len, coin->bech32_prefix, txoutput->address)) {
 			output_script_size = 2 + addr_raw_len;
 		} else {
-			addr_raw_len = base58_decode_check(txoutput->address, coin->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
+			addr_raw_len = base58_decode_check(txoutput->address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
 			if (coin->has_address_type
 				&& address_check_prefix(addr_raw, coin->address_type)) {
 				output_script_size = TXSIZE_P2PKHASH;

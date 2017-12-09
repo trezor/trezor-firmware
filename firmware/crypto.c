@@ -114,7 +114,7 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 
 static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message, size_t message_len, uint8_t hash[HASHER_DIGEST_LENGTH]) {
 	Hasher hasher;
-	hasher_Init(&hasher, coin->hasher_type);
+	hasher_Init(&hasher, coin->curve->hasher_type);
 	hasher_Update(&hasher, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
 	uint8_t varint[5];
 	uint32_t l = ser_length(message_len, varint);
@@ -178,8 +178,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 
 	// p2pkh
 	if (signature[0] >= 27 && signature[0] <= 34) {
-		size_t len = base58_decode_check(address, coin->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
-		ecdsa_get_address_raw(pubkey, coin->address_type, coin->hasher_type, recovered_raw);
+		size_t len = base58_decode_check(address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
+		ecdsa_get_address_raw(pubkey, coin->address_type, coin->curve->hasher_type, recovered_raw);
 		if (memcmp(recovered_raw, addr_raw, len) != 0
 			|| len != address_prefix_bytes_len(coin->address_type) + 20) {
 			return 2;
@@ -187,8 +187,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 	} else
 	// segwit-in-p2sh
 	if (signature[0] >= 35 && signature[0] <= 38) {
-		size_t len = base58_decode_check(address, coin->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
-		ecdsa_get_address_segwit_p2sh_raw(pubkey, coin->address_type_p2sh, coin->hasher_type, recovered_raw);
+		size_t len = base58_decode_check(address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
+		ecdsa_get_address_segwit_p2sh_raw(pubkey, coin->address_type_p2sh, coin->curve->hasher_type, recovered_raw);
 		if (memcmp(recovered_raw, addr_raw, len) != 0
 			|| len != address_prefix_bytes_len(coin->address_type_p2sh) + 20) {
 			return 2;
@@ -202,7 +202,7 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 			|| !segwit_addr_decode(&witver, recovered_raw, &len, coin->bech32_prefix, address)) {
 			return 4;
 		}
-		ecdsa_get_pubkeyhash(pubkey, coin->hasher_type, addr_raw);
+		ecdsa_get_pubkeyhash(pubkey, coin->curve->hasher_type, addr_raw);
 		if (memcmp(recovered_raw, addr_raw, len) != 0
 			|| witver != 0 || len != 20) {
 			return 2;

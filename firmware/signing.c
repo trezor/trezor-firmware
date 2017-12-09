@@ -424,7 +424,7 @@ bool compile_input_script_sig(TxInputType *tinput)
 		tinput->script_sig.size = compile_script_multisig(&(tinput->multisig), tinput->script_sig.bytes);
 	} else { // SPENDADDRESS
 		uint8_t hash[20];
-		ecdsa_get_pubkeyhash(node.public_key, coin->hasher_type, hash);
+		ecdsa_get_pubkeyhash(node.public_key, coin->curve->hasher_type, hash);
 		tinput->script_sig.size = compile_script_sig(coin->address_type, hash, tinput->script_sig.bytes);
 	}
 	return tinput->script_sig.size > 0;
@@ -463,11 +463,11 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinInf
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
 
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, 0, coin->hasher_type);
+	tx_init(&to, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_type);
 	// segwit hashes for hashPrevouts and hashSequence
-	hasher_Init(&hashers[0], coin->hasher_type);
-	hasher_Init(&hashers[1], coin->hasher_type);
-	hasher_Init(&hashers[2], coin->hasher_type);
+	hasher_Init(&hashers[0], coin->curve->hasher_type);
+	hasher_Init(&hashers[1], coin->curve->hasher_type);
+	hasher_Init(&hashers[2], coin->curve->hasher_type);
 
 	layoutProgressSwipe(_("Signing transaction"), 0);
 
@@ -883,7 +883,7 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_META:
-			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len, coin->hasher_type);
+			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len, coin->curve->hasher_type);
 			progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
 			idx2 = 0;
 			if (tp.inputs_len > 0) {
@@ -957,7 +957,7 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
-				tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->hasher_type);
+				tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_type);
 				hasher_Reset(&hashers[0]);
 			}
 			// check prevouts and script type
@@ -1091,7 +1091,7 @@ void signing_txack(TransactionType *tx)
 				tx->inputs[0].script_sig.bytes[1] = 0x00; // witness 0 script
 				tx->inputs[0].script_sig.bytes[2] = 0x20; // push 32 bytes (digest)
 				// compute digest of multisig script
-				if (!compile_script_multisig_hash(&tx->inputs[0].multisig, coin->hasher_type, tx->inputs[0].script_sig.bytes + 3)) {
+				if (!compile_script_multisig_hash(&tx->inputs[0].multisig, coin->curve->hasher_type, tx->inputs[0].script_sig.bytes + 3)) {
 					fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
 					signing_abort();
 					return;

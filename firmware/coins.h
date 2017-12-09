@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "bip32.h"
 #include "coins_count.h"
 #include "hasher.h"
 
@@ -44,7 +45,7 @@ typedef struct _CoinInfo {
 	uint32_t forkid;
 	const char *bech32_prefix;
 	uint32_t coin_type;
-	HasherType hasher_type;
+	const curve_info *curve;
 } CoinInfo;
 
 extern const CoinInfo coins[COINS_COUNT];
