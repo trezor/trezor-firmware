@@ -20,7 +20,6 @@ OBJS += protect.o
 OBJS += layout2.o
 OBJS += recovery.o
 OBJS += reset.o
-OBJS += hasher.o
 OBJS += signing.o
 OBJS += crypto.o
 OBJS += ethereum.o
@@ -59,6 +58,8 @@ OBJS += ../vendor/trezor-crypto/segwit_addr.o
 OBJS += ../vendor/trezor-crypto/ripemd160.o
 OBJS += ../vendor/trezor-crypto/sha2.o
 OBJS += ../vendor/trezor-crypto/sha3.o
+OBJS += ../vendor/trezor-crypto/blake256.o
+OBJS += ../vendor/trezor-crypto/hasher.o
 
 OBJS += ../vendor/trezor-crypto/aes/aescrypt.o
 OBJS += ../vendor/trezor-crypto/aes/aeskey.o
