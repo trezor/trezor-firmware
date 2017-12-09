@@ -25,6 +25,10 @@
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/vector.h>
 
+// Statement expressions make these macros side-effect safe
+#define MIN(a, b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
+#define MAX(a, b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
+
 void delay(uint32_t wait);
 
 // converts uint32 to hexa (8 digits)

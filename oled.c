@@ -306,9 +306,6 @@ void oledDrawStringRight(int x, int y, const char* text)
 	oledDrawString(x, y, text);
 }
 
-#define max(X,Y) ((X) > (Y) ? (X) : (Y))
-#define min(X,Y) ((X) < (Y) ? (X) : (Y))
-
 void oledDrawBitmap(int x, int y, const BITMAP *bmp)
 {
 	for (int i = 0; i < bmp->width; i++) {
@@ -327,10 +324,10 @@ void oledDrawBitmap(int x, int y, const BITMAP *bmp)
  */
 void oledInvert(int x1, int y1, int x2, int y2)
 {
-	x1 = max(x1, 0);
-	y1 = max(y1, 0);
-	x2 = min(x2, OLED_WIDTH - 1);
-	y2 = min(y2, OLED_HEIGHT - 1);
+	x1 = MAX(x1, 0);
+	y1 = MAX(y1, 0);
+	x2 = MIN(x2, OLED_WIDTH - 1);
+	y2 = MIN(y2, OLED_HEIGHT - 1);
 	for (int x = x1; x <= x2; x++) {
 		for (int y = y1; y <= y2; y++) {
 			oledInvertPixel(x,y);
@@ -343,10 +340,10 @@ void oledInvert(int x1, int y1, int x2, int y2)
  */
 void oledBox(int x1, int y1, int x2, int y2, bool set)
 {
-	x1 = max(x1, 0);
-	y1 = max(y1, 0);
-	x2 = min(x2, OLED_WIDTH - 1);
-	y2 = min(y2, OLED_HEIGHT - 1);
+	x1 = MAX(x1, 0);
+	y1 = MAX(y1, 0);
+	x2 = MIN(x2, OLED_WIDTH - 1);
+	y2 = MIN(y2, OLED_HEIGHT - 1);
 	for (int x = x1; x <= x2; x++) {
 		for (int y = y1; y <= y2; y++) {
 			set ? oledDrawPixel(x, y) : oledClearPixel(x, y);

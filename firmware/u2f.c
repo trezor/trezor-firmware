@@ -40,8 +40,6 @@
 #include "u2f_knownapps.h"
 #include "u2f.h"
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
 // About 1/2 Second according to values used in protect.c
 #define U2F_TIMEOUT (800000/2)
 #define U2F_OUT_PKT_BUFFER_LEN 128
