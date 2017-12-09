@@ -23,4 +23,5 @@ async def _show_entropy(ctx):
     await require_confirm(ctx, Text(
         'Confirm entropy', ui.ICON_RESET,
         ui.BOLD, 'Do you really want', 'to send entropy?',
-        ui.NORMAL, 'Continue only if you', 'know what you are doing!'),code=ProtectCall)
+        ui.NORMAL, 'Continue only if you', 'know what you are doing!'),
+        code=ProtectCall)

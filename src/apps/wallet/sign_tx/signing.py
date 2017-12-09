@@ -414,10 +414,10 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
         # segwit inputs paid.  this is to prevent user being tricked into
         # creating ANYONECANSPEND outputs before full segwit activation.
         return False
-    return (address_n is not None and wallet_path is not None
-            and wallet_path == address_n[:-_BIP32_WALLET_DEPTH]
-            and address_n[-2] == _BIP32_CHANGE_CHAIN
-            and address_n[-1] <= _BIP32_MAX_LAST_ELEMENT)
+    return (address_n is not None and wallet_path is not None and
+            wallet_path == address_n[:-_BIP32_WALLET_DEPTH] and
+            address_n[-2] == _BIP32_CHANGE_CHAIN and
+            address_n[-1] <= _BIP32_MAX_LAST_ELEMENT)
 
 
 # Tx Inputs

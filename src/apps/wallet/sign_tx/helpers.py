@@ -131,4 +131,3 @@ def sanitize_tx_output(tx: TransactionType) -> TxOutputType:
 
 def sanitize_tx_binoutput(tx: TransactionType) -> TxOutputBinType:
     return tx.bin_outputs[0]
-

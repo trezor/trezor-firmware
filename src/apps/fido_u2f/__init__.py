@@ -415,7 +415,7 @@ class ConfirmContent(ui.Widget):
             name = knownapps.knownapps[app_id]
             try:
                 icon = res.load('apps/fido_u2f/res/u2f_%s.toif' % name.lower().replace(' ', '_'))
-            except:
+            except FileNotFoundError:
                 icon = res.load('apps/fido_u2f/res/u2f_generic.toif')
         else:
             name = '%s...%s' % (ubinascii.hexlify(app_id[:4]), ubinascii.hexlify(app_id[-4:]))

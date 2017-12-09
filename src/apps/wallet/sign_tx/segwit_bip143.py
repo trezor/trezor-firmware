@@ -4,6 +4,7 @@ from trezor.messages import InputScriptType, FailureType
 
 from apps.wallet.sign_tx.writers import *
 
+
 class Bip143Error(ValueError):
     pass
 
