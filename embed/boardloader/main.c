@@ -85,7 +85,7 @@ static secbool copy_sdcard(void)
     display_printf("\n\nerasing flash:\n\n");
 
     // erase all flash (except boardloader)
-    uint8_t sectors[] = {
+    const uint8_t sectors[] = {
         FLASH_SECTOR_STORAGE_1,
         FLASH_SECTOR_STORAGE_2,
         FLASH_SECTOR_BOOTLOADER,
@@ -108,7 +108,7 @@ static secbool copy_sdcard(void)
         FLASH_SECTOR_FIRMWARE_EXTRA_END,
         FLASH_SECTOR_PIN_AREA,
     };
-    if (sectrue != flash_erase_sectors(sectors, 2 + 1 + 6 + 4 + 7 + 1, progress_callback)) {
+    if (sectrue != flash_erase_sectors(sectors, sizeof(sectors), progress_callback)) {
         display_printf(" failed\n");
         return secfalse;
     }
@@ -161,7 +161,7 @@ int main(void)
             FLASH_SECTOR_STORAGE_1,
             FLASH_SECTOR_STORAGE_2,
         };
-        flash_erase_sectors(sectors, 2, NULL);
+        flash_erase_sectors(sectors, sizeof(sectors), NULL);
         return 2;
     }
 

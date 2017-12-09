@@ -67,16 +67,14 @@ int main(void)
 
     display_printf("updating boardloader + bootloader\n");
 
-    uint8_t sectors[] = {
+    const uint8_t sectors[] = {
         FLASH_SECTOR_BOARDLOADER_START,
         1,
         FLASH_SECTOR_BOARDLOADER_END,
         FLASH_SECTOR_BOOTLOADER,
     };
     display_printf("erasing sectors");
-    ensure(
-        flash_erase_sectors(sectors, sizeof(sectors), progress_callback),
-        "flash_erase_sectors");
+    ensure(flash_erase_sectors(sectors, sizeof(sectors), progress_callback), "flash_erase_sectors");
     display_printf("\n");
     display_printf("erased\n");
 

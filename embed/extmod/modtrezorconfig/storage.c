@@ -41,7 +41,7 @@ static void pin_fails_reset(uint32_t ofs)
         // ofs points to the last word of the PIN fails area.  Because there is
         // no space left, we recycle the sector (set all words to 0xffffffff).
         // On next unlock attempt, we start counting from the the first word.
-        flash_erase_sectors((uint8_t[]) { FLASH_SECTOR_PIN_AREA }, 1, NULL);
+        flash_erase_sector(FLASH_SECTOR_PIN_AREA);
     } else {
         // Mark this counter as exhausted.  On next unlock attempt, pinfails_get
         // seeks to the next word.

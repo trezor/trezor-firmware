@@ -6,14 +6,14 @@
 #include "../../trezorhal/flash.h"
 
 #ifndef NORCOW_SECTORS
-#define NORCOW_SECTORS {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
+#define NORCOW_SECTORS (const uint8_t []){FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
 #endif
 
 // NRCW = 4e524357
 #define NORCOW_MAGIC      ((uint32_t)0x5743524e)
 #define NORCOW_MAGIC_LEN  (sizeof(uint32_t))
 
-static uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
+static const uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
 static uint8_t norcow_active_sector = 0;
 static uint32_t norcow_active_offset = NORCOW_MAGIC_LEN;
 
@@ -70,7 +70,7 @@ static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, co
 static void norcow_erase(uint8_t sector, secbool set_magic)
 {
     ensure(sectrue * (sector <= NORCOW_SECTOR_COUNT), "invalid sector");
-    ensure(flash_erase_sectors(&norcow_sectors[sector], 1, NULL), "erase failed");
+    ensure(flash_erase_sector(norcow_sectors[sector]), "erase failed");
     if (sectrue == set_magic) {
         ensure(norcow_write(sector, 0, NORCOW_MAGIC, NULL, 0), "set magic failed");
     }
