@@ -20,9 +20,7 @@
 ///     called from this module!
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_init(void) {
-    if (sectrue != storage_init()) {
-        mp_raise_msg(&mp_type_RuntimeError, "Could not initialize config module");
-    }
+    storage_init();
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_init);

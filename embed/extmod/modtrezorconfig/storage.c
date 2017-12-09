@@ -26,18 +26,13 @@
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
 
-secbool storage_init(void)
+void storage_init(void)
 {
     initialized = secfalse;
     unlocked = secfalse;
-    if (sectrue != flash_init()) {
-        return secfalse;
-    }
-    if (sectrue != norcow_init()) {
-        return secfalse;
-    }
+    flash_init();
+    norcow_init();
     initialized = sectrue;
-    return sectrue;
 }
 
 static void pin_fails_reset(uint32_t ofs)
@@ -84,11 +79,7 @@ static secbool pin_fails_increase(uint32_t ofs)
 static void pin_fails_check_max(uint32_t ctr)
 {
     if (~ctr >= 1 << PIN_MAX_TRIES) {
-        for (;;) {
-            if (norcow_wipe()) {
-                break;
-            }
-        }
+        norcow_wipe();
         ensure(secfalse, "pin_fails_check_max");
     }
 }
@@ -209,7 +200,7 @@ secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin
     return norcow_set(PIN_KEY, newpin, newlen);
 }
 
-secbool storage_wipe(void)
+void storage_wipe(void)
 {
-    return norcow_wipe();
+    norcow_wipe();
 }

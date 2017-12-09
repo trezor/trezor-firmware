@@ -14,12 +14,12 @@
 /*
  * Initialize storage
  */
-secbool norcow_init(void);
+void norcow_init(void);
 
 /*
  * Wipe the storage
  */
-secbool norcow_wipe(void);
+void norcow_wipe(void);
 
 /*
  * Looks for the given key, returns status of the operation

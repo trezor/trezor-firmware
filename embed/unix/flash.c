@@ -60,7 +60,7 @@ static void flash_exit(void)
     ensure(sectrue * (r == 0), "munmap failed");
 }
 
-secbool flash_init(void)
+void flash_init(void)
 {
     int r;
 
@@ -90,8 +90,6 @@ secbool flash_init(void)
     flash_buffer = (uint8_t *)map;
 
     atexit(flash_exit);
-
-    return sectrue;
 }
 
 secbool flash_unlock(void)

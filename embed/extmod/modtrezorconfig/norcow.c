@@ -220,7 +220,7 @@ static void compact()
 /*
  * Initializes storage
  */
-secbool norcow_init(void)
+void norcow_init(void)
 {
     secbool found = secfalse;
     // detect active sector - starts with magic
@@ -236,17 +236,14 @@ secbool norcow_init(void)
     if (sectrue == found) {
         norcow_active_offset = find_free_offset(norcow_active_sector);
     } else {
-        if (sectrue != norcow_wipe()) {
-            return secfalse;
-        }
+        norcow_wipe();
     }
-    return sectrue;
 }
 
 /*
  * Wipe the storage
  */
-secbool norcow_wipe(void)
+void norcow_wipe(void)
 {
     norcow_erase(0, sectrue);
     for (uint8_t i = 1; i < NORCOW_SECTOR_COUNT; i++) {
@@ -254,7 +251,6 @@ secbool norcow_wipe(void)
     }
     norcow_active_sector = 0;
     norcow_active_offset = NORCOW_MAGIC_LEN;
-    return sectrue;
 }
 
 /*

@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include "../../trezorhal/secbool.h"
 
-secbool storage_init(void);
+void storage_init(void);
 secbool storage_wipe(void);
 secbool storage_unlock(const uint8_t *pin, size_t len);
 secbool storage_has_pin(void);
