@@ -613,7 +613,7 @@ void u2f_register(const APDU *a)
 		memcpy(sig_base.chal, req->chal, U2F_CHAL_SIZE);
 		memcpy(sig_base.keyHandle, &resp->keyHandleCertSig, KEY_HANDLE_LEN);
 		memcpy(sig_base.pubKey, &resp->pubKey, U2F_PUBKEY_LEN);
-		if (ecdsa_sign(&nist256p1, U2F_ATT_PRIV_KEY, (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL, NULL) != 0) {
+		if (ecdsa_sign(&nist256p1, HASHER_SHA2, U2F_ATT_PRIV_KEY, (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL, NULL) != 0) {
 			send_u2f_error(U2F_SW_WRONG_DATA);
 			return;
 		}
@@ -735,7 +735,7 @@ void u2f_authenticate(const APDU *a)
 		sig_base.flags = resp->flags;
 		memcpy(sig_base.ctr, resp->ctr, 4);
 		memcpy(sig_base.chal, req->chal, U2F_CHAL_SIZE);
-		if (ecdsa_sign(&nist256p1, node->private_key, (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL, NULL) != 0) {
+		if (ecdsa_sign(&nist256p1, HASHER_SHA2, node->private_key, (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL, NULL) != 0) {
 			send_u2f_error(U2F_SW_WRONG_DATA);
 			return;
 		}

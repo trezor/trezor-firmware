@@ -424,7 +424,7 @@ bool compile_input_script_sig(TxInputType *tinput)
 		tinput->script_sig.size = compile_script_multisig(&(tinput->multisig), tinput->script_sig.bytes);
 	} else { // SPENDADDRESS
 		uint8_t hash[20];
-		ecdsa_get_pubkeyhash(node.public_key, hash);
+		ecdsa_get_pubkeyhash(node.public_key, coin->hasher_type, hash);
 		tinput->script_sig.size = compile_script_sig(coin->address_type, hash, tinput->script_sig.bytes);
 	}
 	return tinput->script_sig.size > 0;
