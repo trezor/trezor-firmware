@@ -7,6 +7,7 @@ set(SOURCES
     ripemd160.c
     sha2.c
     sha3.c
+    hasher.c
     aes/aescrypt.c aes/aeskey.c aes/aestab.c aes/aes_modes.c
     ed25519-donna/curve25519-donna-32bit.c ed25519-donna/curve25519-donna-helpers.c ed25519-donna/modm-donna-32bit.c
     ed25519-donna/ed25519-donna-basepoint-table.c ed25519-donna/ed25519-donna-32bit-tables.c ed25519-donna/ed25519-donna-impl-base.c
