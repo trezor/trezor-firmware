@@ -148,7 +148,7 @@ static secbool copy_sdcard(void)
 
 int main(void)
 {
-    if (sectrue != reset_flags_init()) {
+    if (sectrue != reset_flags_check()) {
         return 1;
     }
 

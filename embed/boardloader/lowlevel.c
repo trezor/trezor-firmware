@@ -132,7 +132,7 @@ void periph_init(void)
     NVIC_EnableIRQ(PVD_IRQn);
 }
 
-secbool reset_flags_init(void)
+secbool reset_flags_check(void)
 {
 #if PRODUCTION
     // this is effective enough that it makes development painful, so only use it for production.
