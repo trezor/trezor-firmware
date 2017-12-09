@@ -6,7 +6,7 @@
 #include "../../trezorhal/flash.h"
 
 #ifndef NORCOW_SECTORS
-#define NORCOW_SECTORS (const uint8_t []){FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
+#define NORCOW_SECTORS {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
 #endif
 
 // NRCW = 4e524357
