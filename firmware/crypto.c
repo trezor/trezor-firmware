@@ -112,18 +112,22 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uin
 	}
 }
 
-int cryptoMessageSign(const CoinInfo *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature)
-{
-	SHA256_CTX ctx;
-	sha256_Init(&ctx);
-	sha256_Update(&ctx, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
+static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message, size_t message_len, uint8_t hash[HASHER_DIGEST_LENGTH]) {
+	Hasher hasher;
+	hasher_Init(&hasher, coin->hasher_type);
+	hasher_Update(&hasher, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
 	uint8_t varint[5];
 	uint32_t l = ser_length(message_len, varint);
-	sha256_Update(&ctx, varint, l);
-	sha256_Update(&ctx, message, message_len);
-	uint8_t hash[32];
-	sha256_Final(&ctx, hash);
-	sha256_Raw(hash, 32, hash);
+	hasher_Update(&hasher, varint, l);
+	hasher_Update(&hasher, message, message_len);
+	hasher_Double(&hasher, hash);
+}
+
+int cryptoMessageSign(const CoinInfo *coin, HDNode *node, InputScriptType script_type, const uint8_t *message, size_t message_len, uint8_t *signature)
+{
+	uint8_t hash[HASHER_DIGEST_LENGTH];
+	cryptoMessageHash(coin, message, message_len, hash);
+
 	uint8_t pby;
 	int result = hdnode_sign_digest(node, hash, signature + 1, &pby, NULL);
 	if (result == 0) {
@@ -152,17 +156,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 		return 1;
 	}
 
-	// calculate hash
-	SHA256_CTX ctx;
-	sha256_Init(&ctx);
-	sha256_Update(&ctx, (const uint8_t *)coin->signed_message_header, strlen(coin->signed_message_header));
-	uint8_t varint[5];
-	uint32_t l = ser_length(message_len, varint);
-	sha256_Update(&ctx, varint, l);
-	sha256_Update(&ctx, message, message_len);
-	uint8_t hash[32];
-	sha256_Final(&ctx, hash);
-	sha256_Raw(hash, 32, hash);
+	uint8_t hash[HASHER_DIGEST_LENGTH];
+	cryptoMessageHash(coin, message, message_len, hash);
 
 	uint8_t recid = (signature[0] - 27) % 4;
 	bool compressed = signature[0] >= 31;
