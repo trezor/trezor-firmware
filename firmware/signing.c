@@ -463,7 +463,7 @@ void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinInf
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
 
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, 0);
+	tx_init(&to, inputs_count, outputs_count, version, lock_time, 0, coin->hasher_type);
 	// segwit hashes for hashPrevouts and hashSequence
 	hasher_Init(&hashers[0], coin->hasher_type);
 	hasher_Init(&hashers[1], coin->hasher_type);
@@ -883,7 +883,7 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_META:
-			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len);
+			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len, coin->hasher_type);
 			progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
 			idx2 = 0;
 			if (tp.inputs_len > 0) {
@@ -957,7 +957,7 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
-				tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0);
+				tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->hasher_type);
 				hasher_Reset(&hashers[0]);
 			}
 			// check prevouts and script type
