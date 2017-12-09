@@ -24,6 +24,7 @@
 #include <stdbool.h>
 
 #include "coins_count.h"
+#include "hasher.h"
 
 typedef struct _CoinInfo {
 	const char *coin_name;
@@ -43,6 +44,7 @@ typedef struct _CoinInfo {
 	uint32_t forkid;
 	const char *bech32_prefix;
 	uint32_t coin_type;
+	HasherType hasher_type;
 } CoinInfo;
 
 extern const CoinInfo coins[COINS_COUNT];

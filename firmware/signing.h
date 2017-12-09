@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include "bip32.h"
 #include "coins.h"
+#include "hasher.h"
 #include "types.pb.h"
 
 void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinInfo *_coin, const HDNode *_root, uint32_t _version, uint32_t _lock_time);

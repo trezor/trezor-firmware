@@ -97,7 +97,7 @@ bool compute_address(const CoinInfo *coin,
 		if (cryptoMultisigPubkeyIndex(multisig, node->public_key) < 0) {
 			return 0;
 		}
-		if (compile_script_multisig_hash(multisig, digest) == 0) {
+		if (compile_script_multisig_hash(multisig, coin->hasher_type, digest) == 0) {
 			return 0;
 		}
 		if (script_type == InputScriptType_SPENDWITNESS) {
@@ -119,7 +119,7 @@ bool compute_address(const CoinInfo *coin,
 			raw[0] = 0; // push version
 			raw[1] = 32; // push 32 bytes
 			memcpy(raw+2, digest, 32); // push hash
-			sha256_Raw(raw, 34, digest);
+			hasher_Raw(coin->hasher_type, raw, 34, digest);
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
 			address_write_prefix_bytes(coin->address_type_p2sh, raw);
 			ripemd160(digest, 32, raw + prelen);
@@ -305,7 +305,7 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 	return r;
 }
 
-uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, uint8_t *hash)
+uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, HasherType hasher_type, uint8_t *hash)
 {
 	if (!multisig->has_m) return 0;
 	const uint32_t m = multisig->m;
@@ -313,22 +313,22 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	if (m < 1 || m > 15) return 0;
 	if (n < 1 || n > 15) return 0;
 
-	SHA256_CTX ctx;
-	sha256_Init(&ctx);
+	Hasher hasher;
+	hasher_Init(&hasher, hasher_type);
 
 	uint8_t d[2];
-	d[0] = 0x50 + m; sha256_Update(&ctx, d, 1);
+	d[0] = 0x50 + m; hasher_Update(&hasher, d, 1);
 	for (uint32_t i = 0; i < n; i++) {
-		d[0] = 33; sha256_Update(&ctx, d, 1); // OP_PUSH 33
+		d[0] = 33; hasher_Update(&hasher, d, 1); // OP_PUSH 33
 		const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
 		if (!pubkey) return 0;
-		sha256_Update(&ctx, pubkey, 33);
+		hasher_Update(&hasher, pubkey, 33);
 	}
 	d[0] = 0x50 + n;
 	d[1] = 0xAE;
-	sha256_Update(&ctx, d, 2);
+	hasher_Update(&hasher, d, 2);
 
-	sha256_Final(&ctx, hash);
+	hasher_Final(&hasher, hash);
 
 	return 1;
 }
@@ -367,33 +367,33 @@ uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uin
 
 // tx methods
 
-uint32_t tx_prevout_hash(SHA256_CTX *ctx, const TxInputType *input)
+uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input)
 {
 	for (int i = 0; i < 32; i++) {
-		sha256_Update(ctx, &(input->prev_hash.bytes[31 - i]), 1);
+		hasher_Update(hasher, &(input->prev_hash.bytes[31 - i]), 1);
 	}
-	sha256_Update(ctx, (const uint8_t *)&input->prev_index, 4);
+	hasher_Update(hasher, (const uint8_t *)&input->prev_index, 4);
 	return 36;
 }
 
-uint32_t tx_script_hash(SHA256_CTX *ctx, uint32_t size, const uint8_t *data)
+uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data)
 {
-	int r = ser_length_hash(ctx, size);
-	sha256_Update(ctx, data, size);
+	int r = ser_length_hash(hasher, size);
+	hasher_Update(hasher, data, size);
 	return r + size;
 }
 
-uint32_t tx_sequence_hash(SHA256_CTX *ctx, const TxInputType *input)
+uint32_t tx_sequence_hash(Hasher *hasher, const TxInputType *input)
 {
-	sha256_Update(ctx, (const uint8_t *)&input->sequence, 4);
+	hasher_Update(hasher, (const uint8_t *)&input->sequence, 4);
 	return 4;
 }
 
-uint32_t tx_output_hash(SHA256_CTX *ctx, const TxOutputBinType *output)
+uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output)
 {
 	uint32_t r = 0;
-	sha256_Update(ctx, (const uint8_t *)&output->amount, 8); r += 8;
-	r += tx_script_hash(ctx, output->script_pubkey.size, output->script_pubkey.bytes);
+	hasher_Update(hasher, (const uint8_t *)&output->amount, 8); r += 8;
+	r += tx_script_hash(hasher, output->script_pubkey.size, output->script_pubkey.bytes);
 	return r;
 }
 
@@ -418,12 +418,12 @@ uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out)
 uint32_t tx_serialize_header_hash(TxStruct *tx)
 {
 	int r = 4;
-	sha256_Update(&(tx->ctx), (const uint8_t *)&(tx->version), 4);
+	hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version), 4);
 	if (tx->is_segwit) {
-		sha256_Update(&(tx->ctx), segwit_header, 2);
+		hasher_Update(&(tx->hasher), segwit_header, 2);
 		r += 2;
 	}
-	return r + ser_length_hash(&(tx->ctx), tx->inputs_len);
+	return r + ser_length_hash(&(tx->hasher), tx->inputs_len);
 }
 
 uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out)
@@ -460,9 +460,9 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input)
 	if (tx->have_inputs == 0) {
 		r += tx_serialize_header_hash(tx);
 	}
-	r += tx_prevout_hash(&(tx->ctx), input);
-	r += tx_script_hash(&(tx->ctx), input->script_sig.size, input->script_sig.bytes);
-	r += tx_sequence_hash(&(tx->ctx), input);
+	r += tx_prevout_hash(&(tx->hasher), input);
+	r += tx_script_hash(&(tx->hasher), input->script_sig.size, input->script_sig.bytes);
+	r += tx_sequence_hash(&(tx->hasher), input);
 
 	tx->have_inputs++;
 	tx->size += r;
@@ -477,7 +477,7 @@ uint32_t tx_serialize_middle(TxStruct *tx, uint8_t *out)
 
 uint32_t tx_serialize_middle_hash(TxStruct *tx)
 {
-	return ser_length_hash(&(tx->ctx), tx->outputs_len);
+	return ser_length_hash(&(tx->hasher), tx->outputs_len);
 }
 
 uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
@@ -488,7 +488,7 @@ uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 
 uint32_t tx_serialize_footer_hash(TxStruct *tx)
 {
-	sha256_Update(&(tx->ctx), (const uint8_t *)&(tx->lock_time), 4);
+	hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->lock_time), 4);
 	return 4;
 }
 
@@ -531,7 +531,7 @@ uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output)
 	if (tx->have_outputs == 0) {
 		r += tx_serialize_middle_hash(tx);
 	}
-	r += tx_output_hash(&(tx->ctx), output);
+	r += tx_output_hash(&(tx->hasher), output);
 	tx->have_outputs++;
 	if (tx->have_outputs == tx->outputs_len
 		&& !tx->is_segwit) {
@@ -555,7 +555,7 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 		// we are receiving too much data
 		return 0;
 	}
-	sha256_Update(&(tx->ctx), data, datalen);
+	hasher_Update(&(tx->hasher), data, datalen);
 	tx->extra_data_received += datalen;
 	tx->size += datalen;
 	return datalen;
@@ -573,13 +573,12 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->extra_data_received = 0;
 	tx->size = 0;
 	tx->is_segwit = false;
-	sha256_Init(&(tx->ctx));
+	hasher_Init(&(tx->hasher), HASHER_SHA2);
 }
 
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 {
-	sha256_Final(&(t->ctx), hash);
-	sha256_Raw(hash, 32, hash);
+	hasher_Double(&(t->hasher), hash);
 	if (!reverse) return;
 	for (uint8_t i = 0; i < 16; i++) {
 		uint8_t k = hash[31 - i];

@@ -28,13 +28,14 @@
 #include <sha2.h>
 #include <pb.h>
 #include "coins.h"
+#include "hasher.h"
 #include "types.pb.h"
 
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
 
-uint32_t ser_length_hash(SHA256_CTX *ctx, uint32_t len);
+uint32_t ser_length_hash(Hasher *hasher, uint32_t len);
 
 int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len, uint8_t *signature);
 
