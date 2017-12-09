@@ -715,10 +715,10 @@ void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
+int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_type, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
 	uint8_t hash[32];
-	sha256_Raw(msg, msg_len, hash);
+	hasher_Raw(hasher_type, msg, msg_len, hash);
 	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
@@ -727,11 +727,11 @@ int ecdsa_sign(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t 
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign_double(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
+int ecdsa_sign_double(const ecdsa_curve *curve, HasherType hasher_type, const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]))
 {
 	uint8_t hash[32];
-	sha256_Raw(msg, msg_len, hash);
-	sha256_Raw(hash, 32, hash);
+	hasher_Raw(hasher_type, msg, msg_len, hash);
+	hasher_Raw(hasher_type, hash, 32, hash);
 	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
@@ -880,75 +880,75 @@ int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, ui
 	return 1;
 }
 
-void ecdsa_get_pubkeyhash(const uint8_t *pub_key, uint8_t *pubkeyhash)
+void ecdsa_get_pubkeyhash(const uint8_t *pub_key, HasherType hasher_type, uint8_t *pubkeyhash)
 {
-	uint8_t h[32];
+	uint8_t h[HASHER_DIGEST_LENGTH];
 	if (pub_key[0] == 0x04) {  // uncompressed format
-		sha256_Raw(pub_key, 65, h);
+		hasher_Raw(hasher_type, pub_key, 65, h);
 	} else if (pub_key[0] == 0x00) { // point at infinity
-		sha256_Raw(pub_key, 1, h);
-	} else {
-		sha256_Raw(pub_key, 33, h); // expecting compressed format
+		hasher_Raw(hasher_type, pub_key,  1, h);
+	} else { // expecting compressed format
+		hasher_Raw(hasher_type, pub_key, 33, h);
 	}
-	ripemd160(h, 32, pubkeyhash);
+	ripemd160(h, HASHER_DIGEST_LENGTH, pubkeyhash);
 	MEMSET_BZERO(h, sizeof(h));
 }
 
-void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version, uint8_t *addr_raw)
+void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version, HasherType hasher_type, uint8_t *addr_raw)
 {
 	size_t prefix_len = address_prefix_bytes_len(version);
 	address_write_prefix_bytes(version, addr_raw);
-	ecdsa_get_pubkeyhash(pub_key, addr_raw + prefix_len);
+	ecdsa_get_pubkeyhash(pub_key, hasher_type, addr_raw + prefix_len);
 }
 
-void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize)
+void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, HasherType hasher_type, char *addr, int addrsize)
 {
 	uint8_t raw[MAX_ADDR_RAW_SIZE];
 	size_t prefix_len = address_prefix_bytes_len(version);
-	ecdsa_get_address_raw(pub_key, version, raw);
-	base58_encode_check(raw, 20 + prefix_len, addr, addrsize);
+	ecdsa_get_address_raw(pub_key, version, hasher_type, raw);
+	base58_encode_check(raw, 20 + prefix_len, hasher_type, addr, addrsize);
 	// not as important to clear this one, but we might as well
 	MEMSET_BZERO(raw, sizeof(raw));
 }
 
-void ecdsa_get_address_segwit_p2sh_raw(const uint8_t *pub_key, uint32_t version, uint8_t *addr_raw)
+void ecdsa_get_address_segwit_p2sh_raw(const uint8_t *pub_key, uint32_t version, HasherType hasher_type, uint8_t *addr_raw)
 {
 	size_t prefix_len = address_prefix_bytes_len(version);
 	uint8_t digest[32];
 	addr_raw[0] = 0; // version byte
 	addr_raw[1] = 20; // push 20 bytes
-	ecdsa_get_pubkeyhash(pub_key, addr_raw + 2);
-	sha256_Raw(addr_raw, 22, digest);
+	ecdsa_get_pubkeyhash(pub_key, hasher_type, addr_raw + 2);
+	hasher_Raw(hasher_type, addr_raw, 22, digest);
 	address_write_prefix_bytes(version, addr_raw);
 	ripemd160(digest, 32, addr_raw + prefix_len);
 }
 
-void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version, char *addr, int addrsize)
+void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version, HasherType hasher_type, char *addr, int addrsize)
 {
 	uint8_t raw[MAX_ADDR_RAW_SIZE];
 	size_t prefix_len = address_prefix_bytes_len(version);
-	ecdsa_get_address_segwit_p2sh_raw(pub_key, version, raw);
-	base58_encode_check(raw, prefix_len + 20, addr, addrsize);
+	ecdsa_get_address_segwit_p2sh_raw(pub_key, version, hasher_type, raw);
+	base58_encode_check(raw, prefix_len + 20, hasher_type, addr, addrsize);
 	MEMSET_BZERO(raw, sizeof(raw));
 }
 
-void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, char *wif, int wifsize)
+void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, HasherType hasher_type, char *wif, int wifsize)
 {
 	uint8_t wif_raw[MAX_WIF_RAW_SIZE];
 	size_t prefix_len = address_prefix_bytes_len(version);
 	address_write_prefix_bytes(version, wif_raw);
 	memcpy(wif_raw + prefix_len, priv_key, 32);
 	wif_raw[prefix_len + 32] = 0x01;
-	base58_encode_check(wif_raw, prefix_len + 32 + 1, wif, wifsize);
+	base58_encode_check(wif_raw, prefix_len + 32 + 1, hasher_type, wif, wifsize);
 	// private keys running around our stack can cause trouble
 	MEMSET_BZERO(wif_raw, sizeof(wif_raw));
 }
 
-int ecdsa_address_decode(const char *addr, uint32_t version, uint8_t *out)
+int ecdsa_address_decode(const char *addr, uint32_t version, HasherType hasher_type, uint8_t *out)
 {
 	if (!addr) return 0;
 	int prefix_len = address_prefix_bytes_len(version);
-	return base58_decode_check(addr, out, 20 + prefix_len) == 20 + prefix_len
+	return base58_decode_check(addr, hasher_type, out, 20 + prefix_len) == 20 + prefix_len
 		&& address_check_prefix(out, version);
 }
 
@@ -1029,20 +1029,20 @@ int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub)
 // msg is a data that was signed
 // msg_len is the message length
 
-int ecdsa_verify(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
+int ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_type, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
 {
 	uint8_t hash[32];
-	sha256_Raw(msg, msg_len, hash);
+	hasher_Raw(hasher_type, msg, msg_len, hash);
 	int res = ecdsa_verify_digest(curve, pub_key, sig, hash);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;
 }
 
-int ecdsa_verify_double(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
+int ecdsa_verify_double(const ecdsa_curve *curve, HasherType hasher_type, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *msg, uint32_t msg_len)
 {
 	uint8_t hash[32];
-	sha256_Raw(msg, msg_len, hash);
-	sha256_Raw(hash, 32, hash);
+	hasher_Raw(hasher_type, msg, msg_len, hash);
+	hasher_Raw(hasher_type, hash, 32, hash);
 	int res = ecdsa_verify_digest(curve, pub_key, sig, hash);
 	MEMSET_BZERO(hash, sizeof(hash));
 	return res;

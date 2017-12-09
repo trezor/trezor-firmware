@@ -123,15 +123,15 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58)
 	return true;
 }
 
-int b58check(const void *bin, size_t binsz, const char *base58str)
+int b58check(const void *bin, size_t binsz, HasherType hasher_type, const char *base58str)
 {
 	unsigned char buf[32];
 	const uint8_t *binc = bin;
 	unsigned i;
 	if (binsz < 4)
 		return -4;
-	sha256_Raw(bin, binsz - 4, buf);
-	sha256_Raw(buf, 32, buf);
+	hasher_Raw(hasher_type, bin, binsz - 4, buf);
+	hasher_Raw(hasher_type, buf, 32, buf);
 	if (memcmp(&binc[binsz - 4], buf, 4))
 		return -1;
 
@@ -188,7 +188,7 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz)
 	return true;
 }
 
-int base58_encode_check(const uint8_t *data, int datalen, char *str, int strsize)
+int base58_encode_check(const uint8_t *data, int datalen, HasherType hasher_type, char *str, int strsize)
 {
 	if (datalen > 128) {
 		return 0;
@@ -196,15 +196,15 @@ int base58_encode_check(const uint8_t *data, int datalen, char *str, int strsize
 	uint8_t buf[datalen + 32];
 	uint8_t *hash = buf + datalen;
 	memcpy(buf, data, datalen);
-	sha256_Raw(data, datalen, hash);
-	sha256_Raw(hash, 32, hash);
+	hasher_Raw(hasher_type, data, datalen, hash);
+	hasher_Raw(hasher_type, hash, 32, hash);
 	size_t res = strsize;
 	bool success = b58enc(str, &res, buf, datalen + 4);
 	MEMSET_BZERO(buf, sizeof(buf));
 	return success ? res : 0;
 }
 
-int base58_decode_check(const char *str, uint8_t *data, int datalen)
+int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data, int datalen)
 {
 	if (datalen > 128) {
 		return 0;
@@ -215,7 +215,7 @@ int base58_decode_check(const char *str, uint8_t *data, int datalen)
 		return 0;
 	}
 	uint8_t *nd = d + datalen + 4 - res;
-	if (b58check(nd, res, str) < 0) {
+	if (b58check(nd, res, hasher_type, str) < 0) {
 		return 0;
 	}
 	memcpy(data, nd, res - 4);

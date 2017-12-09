@@ -21,7 +21,7 @@ void process_job(uint32_t jobid, const char *xpub, uint32_t change, uint32_t fro
 	for (i = from; i < to; i++) {
 		memcpy(&child, &node, sizeof(HDNode));
 		hdnode_public_ckd(&child, i);
-		ecdsa_get_address(child.public_key, 0, address, sizeof(address));
+		ecdsa_get_address(child.public_key, 0, HASHER_SHA2, address, sizeof(address));
 		printf("%d %d %s\n", jobid, i, address);
 	}
 }

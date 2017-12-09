@@ -56,7 +56,7 @@ const ecdsa_curve secp256k1 = {
 };
 
 const curve_info secp256k1_info = {
-	/* bip32_name */
-	"Bitcoin seed",
-	&secp256k1
+	.bip32_name = "Bitcoin seed",
+	.params = &secp256k1,
+	.hasher_type = HASHER_SHA2,
 };

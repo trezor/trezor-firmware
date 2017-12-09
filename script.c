@@ -32,14 +32,14 @@ int script_output_to_address(const uint8_t *script, int scriptlen, char *addr, i
 	if (scriptlen == 25 && script[0] == 0x76 && script[1] == 0xA9 && script[2] == 0x14 && script[23] == 0x88 && script[24] == 0xAC) {
 		raw[0] = 0x00;
 		memcpy(raw + 1, script + 3, 20);
-		return base58_encode_check(raw, 1 + 20, addr, addrsize);
+		return base58_encode_check(raw, 1 + 20, HASHER_SHA2, addr, addrsize);
 	}
 
 	// P2SH
 	if (scriptlen == 23 && script[0] == 0xA9 && script[1] == 0x14 && script[22] == 0x87) {
 		raw[0] = 0x05;
 		memcpy(raw + 1, script + 2, 20);
-		return base58_encode_check(raw, 1 + 20, addr, addrsize);
+		return base58_encode_check(raw, 1 + 20, HASHER_SHA2, addr, addrsize);
 	}
 
 	// P2WPKH
@@ -48,7 +48,7 @@ int script_output_to_address(const uint8_t *script, int scriptlen, char *addr, i
 		raw[1] = 0x00;
 		raw[2] = 0x00;
 		memcpy(raw + 3, script + 2, 20);
-		return base58_encode_check(raw, 3 + 20, addr, addrsize);
+		return base58_encode_check(raw, 3 + 20, HASHER_SHA2, addr, addrsize);
 	}
 
 	// P2WSH
@@ -57,7 +57,7 @@ int script_output_to_address(const uint8_t *script, int scriptlen, char *addr, i
 		raw[1] = 0x00;
 		raw[2] = 0x00;
 		memcpy(raw + 3, script + 2, 32);
-		return base58_encode_check(raw, 3 + 32, addr, addrsize);
+		return base58_encode_check(raw, 3 + 32, HASHER_SHA2, addr, addrsize);
 	}
 
 	return 0;

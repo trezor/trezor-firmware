@@ -34,6 +34,7 @@
 typedef struct {
 	const char *bip32_name;    // string for generating BIP32 xprv from seed
 	const ecdsa_curve *params; // ecdsa curve parameters, null for ed25519
+	HasherType hasher_type;    // hasher type for BIP32 and ECDSA
 } curve_info;
 
 typedef struct {
@@ -59,7 +60,7 @@ int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent, co
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i);
 
-void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, char *addr, int addrsize, int addrformat);
+void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, HasherType hasher_type, char *addr, int addrsize, int addrformat);
 
 #if USE_BIP32_CACHE
 int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count, uint32_t *fingerprint);
