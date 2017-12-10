@@ -21,9 +21,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/* OpenSSL's SHA256_CTX/SHA512_CTX conflicts with our own */
+#define SHA256_CTX _openssl_SHA256_CTX
+#define SHA512_CTX _openssl_SHA512_CTX
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
 #include <openssl/sha.h>
+#undef SHA256_CTX
+#undef SHA512_CTX
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -37,7 +43,7 @@
 void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 {
 	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
-	SHA256_CTX sha256;
+	struct SHA256state_st sha256;
 	EC_GROUP *ecgroup;
 
 	ecgroup = EC_GROUP_new_by_curve_name(nid);
@@ -101,6 +107,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 		BN_bin2bn(sig + 32, 32, signature->s);
 
 		// compute the digest of the message
+		// note: these are OpenSSL functions, not our own
 		SHA256_Init(&sha256);
 		SHA256_Update(&sha256, msg, msg_len);
 		SHA256_Final(hash, &sha256);
