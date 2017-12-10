@@ -34,5 +34,5 @@ Step 3 should produce the same sha256 fingerprint like your local build (for the
 
 **WARNING: This will erase the recovery seed stored on the device! You should never do this on TREZOR that contains coins!**
 
-1. Install python-trezor: `pip install trezor`, (<a href="https://github.com/trezor/python-trezor">more info</a>
+1. Install python-trezor: `pip install trezor` (<a href="https://github.com/trezor/python-trezor">more info</a>)
 2. `trezorctl firmware_update -f build/trezor-TAG.bin`
