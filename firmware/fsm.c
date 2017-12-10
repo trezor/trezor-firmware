@@ -541,7 +541,7 @@ void fsm_msgSignTx(SignTx *msg)
 	const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
 	if (!node) return;
 
-	signing_init(msg->inputs_count, msg->outputs_count, coin, node, msg->version, msg->lock_time);
+	signing_init(msg, coin, node);
 }
 
 void fsm_msgTxAck(TxAck *msg)

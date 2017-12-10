@@ -430,14 +430,14 @@ bool compile_input_script_sig(TxInputType *tinput)
 	return tinput->script_sig.size > 0;
 }
 
-void signing_init(uint32_t _inputs_count, uint32_t _outputs_count, const CoinInfo *_coin, const HDNode *_root, uint32_t _version, uint32_t _lock_time)
+void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 {
-	inputs_count = _inputs_count;
-	outputs_count = _outputs_count;
+	inputs_count = msg->inputs_count;
+	outputs_count = msg->outputs_count;
 	coin = _coin;
 	root = _root;
-	version = _version;
-	lock_time = _lock_time;
+	version = msg->version;
+	lock_time = msg->lock_time;
 
 	tx_weight = 4 * (TXSIZE_HEADER + TXSIZE_FOOTER
 					 + ser_length_size(inputs_count)
