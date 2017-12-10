@@ -84,6 +84,7 @@ def coin_to_struct(coin):
         ("has_segwit",            format_bool(coin["segwit"])),
         ("has_forkid",            format_bool(coin["forkid"] is not None)),
         ("force_bip143",          format_bool(coin["force_bip143"])),
+        ("decred",                format_bool(coin["decred"])),
         ("address_type",          format_number(coin["address_type"])),
         ("address_type_p2sh",     format_number(coin["address_type_p2sh"])),
         ("xpub_magic",            format_hex(coin["xpub_magic"])),
