@@ -173,6 +173,7 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 {
 	memset(out, 0, sizeof(TxOutputBinType));
 	out->amount = in->amount;
+	out->decred_script_version = in->decred_script_version;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 	size_t addr_raw_len;
 
@@ -399,10 +400,14 @@ uint32_t tx_sequence_hash(Hasher *hasher, const TxInputType *input)
 	return 4;
 }
 
-uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output)
+uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output, bool decred)
 {
 	uint32_t r = 0;
 	hasher_Update(hasher, (const uint8_t *)&output->amount, 8); r += 8;
+	if (decred) {
+		uint16_t script_version = output->decred_script_version & 0xFFFF;
+		hasher_Update(hasher, (const uint8_t *)&script_version, 2); r += 2;
+	}
 	r += tx_script_hash(hasher, output->script_pubkey.size, output->script_pubkey.bytes);
 	return r;
 }
@@ -451,7 +456,12 @@ uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out
 	}
 	r += 32;
 	memcpy(out + r, &input->prev_index, 4); r += 4;
-	r += tx_serialize_script(input->script_sig.size, input->script_sig.bytes, out + r);
+	if (tx->is_decred) {
+		uint8_t tree = input->decred_tree & 0xFF;
+		out[r++] = tree;
+	} else {
+		r += tx_serialize_script(input->script_sig.size, input->script_sig.bytes, out + r);
+	}
 	memcpy(out + r, &input->sequence, 4); r += 4;
 
 	tx->have_inputs++;
@@ -471,8 +481,60 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input)
 		r += tx_serialize_header_hash(tx);
 	}
 	r += tx_prevout_hash(&(tx->hasher), input);
-	r += tx_script_hash(&(tx->hasher), input->script_sig.size, input->script_sig.bytes);
+	if (tx->is_decred) {
+		uint8_t tree = input->decred_tree & 0xFF;
+		hasher_Update(&(tx->hasher), (const uint8_t *)&(tree), 1); r++;
+	} else {
+		r += tx_script_hash(&(tx->hasher), input->script_sig.size, input->script_sig.bytes);
+	}
 	r += tx_sequence_hash(&(tx->hasher), input);
+
+	tx->have_inputs++;
+	tx->size += r;
+
+	return r;
+}
+
+uint32_t tx_serialize_decred_witness(TxStruct *tx, const TxInputType *input, uint8_t *out)
+{
+	static const uint64_t amount = 0;
+	static const uint32_t block_height = 0x00000000;
+	static const uint32_t block_index = 0xFFFFFFFF;
+
+	if (tx->have_inputs >= tx->inputs_len) {
+		// already got all inputs
+		return 0;
+	}
+	uint32_t r = 0;
+	if (tx->have_inputs == 0) {
+		r += ser_length(tx->inputs_len, out + r);
+	}
+	memcpy(out + r, &amount, 8); r += 8;
+	memcpy(out + r, &block_height, 4); r += 4;
+	memcpy(out + r, &block_index, 4); r += 4;
+	r += tx_serialize_script(input->script_sig.size, input->script_sig.bytes, out + r);
+
+	tx->have_inputs++;
+	tx->size += r;
+
+	return r;
+}
+
+uint32_t tx_serialize_decred_witness_hash(TxStruct *tx, const TxInputType *input)
+{
+	if (tx->have_inputs >= tx->inputs_len) {
+		// already got all inputs
+		return 0;
+	}
+	uint32_t r = 0;
+	if (tx->have_inputs == 0) {
+		r += tx_serialize_header_hash(tx);
+	}
+	if (input == NULL) {
+		r += ser_length_hash(&(tx->hasher), 0);
+	} else {
+		r += tx_script_hash(&(tx->hasher), input->script_sig.size, input->script_sig.bytes);
+	}
 
 	tx->have_inputs++;
 	tx->size += r;
@@ -493,12 +555,20 @@ uint32_t tx_serialize_middle_hash(TxStruct *tx)
 uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 {
 	memcpy(out, &(tx->lock_time), 4);
+	if (tx->is_decred) {
+		memcpy(out + 4, &(tx->decred_expiry), 4);
+		return 8;
+	}
 	return 4;
 }
 
 uint32_t tx_serialize_footer_hash(TxStruct *tx)
 {
 	hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->lock_time), 4);
+	if (tx->is_decred) {
+		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->decred_expiry), 4);
+		return 8;
+	}
 	return 4;
 }
 
@@ -517,6 +587,10 @@ uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_
 		r += tx_serialize_middle(tx, out + r);
 	}
 	memcpy(out + r, &output->amount, 8); r += 8;
+	if (tx->is_decred) {
+		uint16_t script_version = output->decred_script_version & 0xFFFF;
+		memcpy(out + r, &script_version, 2); r += 2;
+	}
 	r += tx_serialize_script(output->script_pubkey.size, output->script_pubkey.bytes, out + r);
 	tx->have_outputs++;
 	if (tx->have_outputs == tx->outputs_len
@@ -541,7 +615,7 @@ uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output)
 	if (tx->have_outputs == 0) {
 		r += tx_serialize_middle_hash(tx);
 	}
-	r += tx_output_hash(&(tx->hasher), output);
+	r += tx_output_hash(&(tx->hasher), output, tx->is_decred);
 	tx->have_outputs++;
 	if (tx->have_outputs == tx->outputs_len
 		&& !tx->is_segwit) {
@@ -583,12 +657,18 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->extra_data_received = 0;
 	tx->size = 0;
 	tx->is_segwit = false;
+	tx->is_decred = false;
+	tx->decred_expiry = 0;
 	hasher_Init(&(tx->hasher), hasher_type);
 }
 
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 {
-	hasher_Double(&(t->hasher), hash);
+	if (t->is_decred) {
+		hasher_Final(&(t->hasher), hash);
+	} else {
+		hasher_Double(&(t->hasher), hash);
+	}
 	if (!reverse) return;
 	for (uint8_t i = 0; i < 16; i++) {
 		uint8_t k = hash[31 - i];
