@@ -2139,6 +2139,7 @@ START_TEST(test_keccak_256)
 }
 END_TEST
 
+// test vectors from https://raw.githubusercontent.com/monero-project/monero/master/tests/hash/tests-extra-blake.txt
 START_TEST(test_blake256)
 {
 	struct {
