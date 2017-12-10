@@ -26,6 +26,7 @@
 #include "options.h"
 
 extern const char SECP256K1_NAME[];
+extern const char SECP256K1_DECRED_NAME[];
 extern const char NIST256P1_NAME[];
 extern const char ED25519_NAME[];
 extern const char ED25519_SHA3_NAME[];

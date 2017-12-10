@@ -60,3 +60,9 @@ const curve_info secp256k1_info = {
 	.params = &secp256k1,
 	.hasher_type = HASHER_SHA2,
 };
+
+const curve_info secp256k1_decred_info = {
+	.bip32_name = "Decred seed",
+	.params = &secp256k1,
+	.hasher_type = HASHER_BLAKE,
+};
