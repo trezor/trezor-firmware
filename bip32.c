@@ -625,11 +625,11 @@ int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint, uint32_t 
 }
 
 // check for validity of curve point in case of public data not performed
-int hdnode_deserialize(const char *str, uint32_t version_public, uint32_t version_private, HDNode *node, uint32_t *fingerprint)
+int hdnode_deserialize(const char *str, uint32_t version_public, uint32_t version_private, const char *curve, HDNode *node, uint32_t *fingerprint)
 {
 	uint8_t node_data[78];
 	memset(node, 0, sizeof(HDNode));
-	node->curve = get_curve_by_name(SECP256K1_NAME);
+	node->curve = get_curve_by_name(curve);
 	if (base58_decode_check(str, node->curve->hasher_type, node_data, sizeof(node_data)) != sizeof(node_data)) {
 		return -1;
 	}

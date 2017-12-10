@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include "bip32.h"
+#include "curves.h"
 #include "ecdsa.h"
 
 #define VERSION_PUBLIC  0x0488b21e
@@ -11,7 +12,7 @@
 void process_job(uint32_t jobid, const char *xpub, uint32_t change, uint32_t from, uint32_t to)
 {
 	HDNode node, child;
-	if (change > 1 || to <= from || hdnode_deserialize(xpub, VERSION_PUBLIC, VERSION_PRIVATE, &node, NULL) != 0) {
+	if (change > 1 || to <= from || hdnode_deserialize(xpub, VERSION_PUBLIC, VERSION_PRIVATE, SECP256K1_NAME, &node, NULL) != 0) {
 		printf("%d error\n", jobid);
 		return;
 	}
