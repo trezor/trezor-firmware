@@ -134,7 +134,7 @@ secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
     if (offset % 4 != 0) {
         return secfalse;
     }
-    *data = *((const uint32_t *)FLASH_SECTOR_TABLE[sector] + offset);
+    *data = *((const uint32_t *) (FLASH_SECTOR_TABLE[sector] + offset));
     return sectrue;
 }
 
