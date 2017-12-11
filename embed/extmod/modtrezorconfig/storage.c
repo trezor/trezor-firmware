@@ -78,7 +78,7 @@ static secbool pin_fails_increase(uint32_t ofs)
 
 static void pin_fails_check_max(uint32_t ctr)
 {
-    if (~ctr >= 1 << PIN_MAX_TRIES) {
+    if (~ctr >= (1 << PIN_MAX_TRIES)) {
         norcow_wipe();
         ensure(secfalse, "pin_fails_check_max");
     }
