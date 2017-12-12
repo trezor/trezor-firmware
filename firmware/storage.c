@@ -53,7 +53,8 @@ Storage CONFIDENTIAL storageUpdate;
 _Static_assert(((uint32_t)&storageUpdate & 3) == 0, "storage unaligned");
 _Static_assert((sizeof(storageUpdate) & 3) == 0, "storage unaligned");
 
-const Storage *storageRom = (const Storage *)(FLASH_STORAGE_START + sizeof(storage_magic) + sizeof(storage_uuid));
+#define STORAGE_ROM ((const Storage *)(FLASH_STORAGE_START + sizeof(storage_magic) + sizeof(storage_uuid)))
+const Storage *storageRom = STORAGE_ROM;
 
 char storage_uuid_str[25];
 
@@ -187,9 +188,8 @@ bool storage_from_flash(void)
 		flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
 		flash_program_word(FLASH_STORAGE_PINAREA, 0xffffffff << pinctr);
 		// erase storageRom.has_pin_failed_attempts and storageRom.pin_failed_attempts
-		_Static_assert(((uint32_t)&storageRom->has_pin_failed_attempts & 3) == 0, "storage.has_pin_failed_attempts unaligned");
-		_Static_assert(((uint32_t)&storageRom->pin_failed_attempts & 3) == 0, "storage.pin_failed_attempts unaligned");
-		flash_program_word((uint32_t)&storageRom->has_pin_failed_attempts, 0);
+		_Static_assert(((uint32_t)&STORAGE_ROM->pin_failed_attempts & 3) == 0, "storage.pin_failed_attempts unaligned");
+		flash_program_byte((uint32_t)&storageRom->has_pin_failed_attempts, 0);
 		flash_program_word((uint32_t)&storageRom->pin_failed_attempts, 0);
 		flash_lock();
 		storage_check_flash_errors();
