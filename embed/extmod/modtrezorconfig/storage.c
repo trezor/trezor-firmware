@@ -11,17 +11,18 @@
 #include "norcow.h"
 #include "../../trezorhal/flash.h"
 
-// Byte-length of flash sector containing fail counters.
-#define PIN_SECTOR_SIZE 0x4000
-
-// Maximum number of failed unlock attempts.
-#define PIN_MAX_TRIES 15
-
 // Norcow storage key of configured PIN.
 #define PIN_KEY 0x0000
 
 // Maximum PIN length.
 #define PIN_MAXLEN 32
+
+// Byte-length of flash section containing fail counters.
+#define PIN_FAIL_KEY 0x0001
+#define PIN_FAIL_SECTOR_SIZE 32
+
+// Maximum number of failed unlock attempts.
+#define PIN_MAX_TRIES 15
 
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
@@ -35,41 +36,24 @@ void storage_init(void)
     initialized = sectrue;
 }
 
-static void pin_fails_reset(uint32_t ofs)
+static void pin_fails_reset(uint16_t ofs)
 {
-    if (ofs + sizeof(uint32_t) >= PIN_SECTOR_SIZE) {
-        // ofs points to the last word of the PIN fails area.  Because there is
-        // no space left, we recycle the sector (set all words to 0xffffffff).
-        // On next unlock attempt, we start counting from the the first word.
-        flash_erase_sector(FLASH_SECTOR_PIN_AREA);
-    } else {
-        // Mark this counter as exhausted.  On next unlock attempt, pinfails_get
-        // seeks to the next word.
-        flash_unlock();
-        flash_write_word_rel(FLASH_SECTOR_PIN_AREA, ofs, 0);
-        flash_lock();
-    }
+    norcow_update(PIN_FAIL_KEY, ofs, 0);
 }
 
-static secbool pin_fails_increase(uint32_t ofs)
+static secbool pin_fails_increase(const uint32_t *ptr, uint16_t ofs)
 {
-    uint32_t ctr = ~PIN_MAX_TRIES;
-    if (sectrue != flash_read_word_rel(FLASH_SECTOR_PIN_AREA, ofs, &ctr)) {
-        return secfalse;
-    }
+    uint32_t ctr = *ptr;
     ctr = ctr << 1;
 
     flash_unlock();
-    if (sectrue != flash_write_word_rel(FLASH_SECTOR_PIN_AREA, ofs, ctr)) {
+    if (sectrue != norcow_update(PIN_FAIL_KEY, ofs, ctr)) {
         flash_lock();
         return secfalse;
     }
     flash_lock();
 
-    uint32_t check = 0;
-    if (sectrue != flash_read_word_rel(FLASH_SECTOR_PIN_AREA, ofs, &check)) {
-        return secfalse;
-    }
+    uint32_t check = *ptr;
     if (ctr != check) {
         return secfalse;
     }
@@ -82,25 +66,6 @@ static void pin_fails_check_max(uint32_t ctr)
         norcow_wipe();
         ensure(secfalse, "pin_fails_check_max");
     }
-}
-
-static secbool pin_fails_read(uint32_t *ofs, uint32_t *ctr)
-{
-    if (NULL == ofs || NULL == ctr) {
-        return secfalse;
-    }
-    for (uint32_t o = 0; o < PIN_SECTOR_SIZE; o += sizeof(uint32_t)) {
-        uint32_t c = 0;
-        if (!flash_read_word_rel(FLASH_SECTOR_PIN_AREA, o, &c)) {
-            return secfalse;
-        }
-        if (c != 0) {
-            *ofs = o;
-            *ctr = c;
-            return sectrue;
-        }
-    }
-    return secfalse;
 }
 
 static secbool const_cmp(const uint8_t *pub, size_t publen, const uint8_t *sec, size_t seclen)
@@ -126,11 +91,47 @@ static secbool pin_cmp(const uint8_t *pin, size_t pinlen)
 
 static secbool pin_check(const uint8_t *pin, size_t len)
 {
-    uint32_t ofs;
+    uint32_t ofs = 0;
     uint32_t ctr;
-    if (sectrue != pin_fails_read(&ofs, &ctr)) {
-        return secfalse;
+    const void *vpinfail;
+    const uint32_t *pinfail = NULL;
+    uint16_t pinfaillen;
+
+    // The PIN_FAIL_KEY points to an area of words, initialized to
+    // 0xffffffff (meaning no pin failures).  The first non-zero word
+    // in this area is the current pin failure counter.  If  PIN_FAIL_KEY
+    // has no configuration or is empty, the pin failure counter is 0.
+    // We rely on the fact that flash allows to clear bits and we clear one
+    // bit to indicate pin failure.  On success, the word is set to 0,
+    // indicating that the next word is the pin failure counter.
+
+    // Find the current pin failure counter
+    secbool found = secfalse;
+    if (secfalse != norcow_get(PIN_FAIL_KEY, &vpinfail, &pinfaillen)) {
+        pinfail = vpinfail;
+        for (ofs = 0; ofs < pinfaillen / sizeof(uint32_t); ofs++) {
+            if (pinfail[ofs]) {
+                found = sectrue;
+                break;
+            }
+        }
     }
+    if (found == secfalse) {
+        // No pin failure section, or all entries used -> create a new one.
+        uint32_t pinarea[PIN_FAIL_SECTOR_SIZE];
+        memset(pinarea, 0xff, sizeof(pinarea));
+        if (sectrue != norcow_set(PIN_FAIL_KEY, pinarea, sizeof(pinarea))) {
+            return secfalse;
+        }
+        if (sectrue != norcow_get(PIN_FAIL_KEY, &vpinfail, &pinfaillen)) {
+            return secfalse;
+        }
+        pinfail = vpinfail;
+        ofs = 0;
+    }
+
+    // Read current failure counter
+    ctr = pinfail[ofs];
     pin_fails_check_max(ctr);
 
     // Sleep for ~ctr seconds before checking the PIN.
@@ -141,14 +142,15 @@ static secbool pin_check(const uint8_t *pin, size_t len)
     // First, we increase PIN fail counter in storage, even before checking the
     // PIN.  If the PIN is correct, we reset the counter afterwards.  If not, we
     // check if this is the last allowed attempt.
-    if (sectrue != pin_fails_increase(ofs)) {
+    if (sectrue != pin_fails_increase(pinfail + ofs, ofs * sizeof(uint32_t))) {
         return secfalse;
     }
     if (sectrue != pin_cmp(pin, len)) {
         pin_fails_check_max(ctr << 1);
         return secfalse;
     }
-    pin_fails_reset(ofs);
+    // Finally set the counter to 0 to indicate success.
+    pin_fails_reset(ofs * sizeof(uint32_t));
 
     return sectrue;
 }
@@ -164,7 +166,7 @@ secbool storage_unlock(const uint8_t *pin, size_t len)
 
 secbool storage_get(uint16_t key, const void **val, uint16_t *len)
 {
-    if (sectrue != initialized || sectrue != unlocked || PIN_KEY == key) {
+    if (sectrue != initialized || sectrue != unlocked || (key >> 8) == 0) {
         return secfalse;
     }
     return norcow_get(key, val, len);
@@ -172,7 +174,7 @@ secbool storage_get(uint16_t key, const void **val, uint16_t *len)
 
 secbool storage_set(uint16_t key, const void *val, uint16_t len)
 {
-    if (sectrue != initialized || sectrue != unlocked || PIN_KEY == key) {
+    if (sectrue != initialized || sectrue != unlocked || (key >> 8) == 0) {
         return secfalse;
     }
     return norcow_set(key, val, len);

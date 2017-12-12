@@ -279,3 +279,21 @@ secbool norcow_set(uint16_t key, const void *val, uint16_t len)
     }
     return r;
 }
+
+/*
+ * Update a word in flash at the given pointer.  The pointer must point
+ * into the NORCOW area.
+ */
+secbool norcow_update(uint16_t key, uint16_t offset, uint32_t value)
+{
+    const void *ptr;
+    uint16_t len;
+    if (sectrue != find_item(norcow_active_sector, key, &ptr, &len)) {
+        return secfalse;
+    }
+    if ((offset & 3) != 0 || offset >= len) {
+        return secfalse;
+    }
+    uint32_t sector_offset = (const uint8_t*) ptr - (const uint8_t *)norcow_ptr(norcow_active_sector, 0, NORCOW_SECTOR_SIZE) + offset;
+    return flash_write_word_rel(norcow_sectors[norcow_active_sector], sector_offset, value);
+}
