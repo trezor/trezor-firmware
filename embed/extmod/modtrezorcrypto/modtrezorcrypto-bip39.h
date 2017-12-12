@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/bip39.h"
+#include "bip39.h"
 
 /// def find_word(prefix: str) -> Optional[str]:
 ///     '''

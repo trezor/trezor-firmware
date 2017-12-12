@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/sha2.h"
+#include "sha2.h"
 
 /// class Sha1:
 ///     '''

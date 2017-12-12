@@ -10,9 +10,9 @@ SOURCE_MOD = []
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
-    'embed/extmod/modtrezorcrypto/trezor-crypto',
-    'embed/extmod/modtrezorcrypto/trezor-crypto/aes',
-    'embed/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna',
+    'vendor/trezor-crypto',
+    'vendor/trezor-crypto/aes',
+    'vendor/trezor-crypto/ed25519-donna',
 ]
 CPPDEFINES_MOD += [
     'AES_128',
@@ -21,9 +21,9 @@ CPPDEFINES_MOD += [
     'ED25519_NO_PRECOMP',
 ]
 SOURCE_MOD += [
-    'embed/extmod/modtrezorcrypto/trezor-crypto/blake2s.c',
-    'embed/extmod/modtrezorcrypto/trezor-crypto/ed25519-donna/ed25519.c',
-    'embed/extmod/modtrezorcrypto/trezor-crypto/sha2.c',
+    'vendor/trezor-crypto/blake2s.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
+    'vendor/trezor-crypto/sha2.c',
 ]
 
 # modtrezorui

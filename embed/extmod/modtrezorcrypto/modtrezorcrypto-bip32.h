@@ -7,8 +7,8 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/bip32.h"
-#include "trezor-crypto/curves.h"
+#include "bip32.h"
+#include "curves.h"
 
 /// class HDNode:
 ///     '''

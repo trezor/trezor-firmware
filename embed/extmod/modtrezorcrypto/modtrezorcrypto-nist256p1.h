@@ -7,8 +7,8 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/ecdsa.h"
-#include "trezor-crypto/nist256p1.h"
+#include "ecdsa.h"
+#include "nist256p1.h"
 
 /// def generate_secret() -> bytes:
 ///     '''

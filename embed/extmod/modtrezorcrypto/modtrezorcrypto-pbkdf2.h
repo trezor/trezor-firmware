@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/pbkdf2.h"
+#include "pbkdf2.h"
 
 /// class Pbkdf2:
 ///     '''

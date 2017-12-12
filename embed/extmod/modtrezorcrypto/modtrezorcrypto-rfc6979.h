@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/rfc6979.h"
+#include "rfc6979.h"
 
 /// class Rfc6979:
 ///     '''

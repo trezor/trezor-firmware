@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/bignum.h"
+#include "bignum.h"
 #include "ssss.h"
 
 /// def split(m: int, n: int, secret: bytes) -> tuple:

@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/ripemd160.h"
+#include "ripemd160.h"
 
 /// class Ripemd160:
 ///     '''

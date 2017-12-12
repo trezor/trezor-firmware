@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/blake2s.h"
+#include "blake2s.h"
 
 /// class Blake2s:
 ///     '''

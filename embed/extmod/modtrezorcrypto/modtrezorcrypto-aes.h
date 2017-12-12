@@ -7,7 +7,7 @@
 
 #include "py/objstr.h"
 
-#include "trezor-crypto/aes/aes.h"
+#include "aes/aes.h"
 
 /// class AES:
 ///     '''
