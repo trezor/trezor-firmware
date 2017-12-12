@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import print_function
 
 from trezorlib.debuglink import DebugLink
@@ -36,7 +36,7 @@ def main():
     arg2 = int(sys.argv[2], 16)
     step = 0x400 if arg2 >= 0x400 else arg2
 
-    f = open('memory.dat', 'w')
+    f = open('memory.dat', 'wb')
 
     for addr in range(arg1, arg1 + arg2, step):
         mem = debug.memory_read(addr, step)
