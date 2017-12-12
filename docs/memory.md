@@ -7,7 +7,7 @@
 | Sector  0 | 0x08000000 - 0x08003FFF |  16 KiB | boardloader (1st stage) (write-protected)
 | Sector  1 | 0x08004000 - 0x08007FFF |  16 KiB | boardloader (1st stage) (write-protected)
 | Sector  2 | 0x08008000 - 0x0800BFFF |  16 KiB | boardloader (1st stage) (write-protected)
-| Sector  3 | 0x0800C000 - 0x0800FFFF |  16 KiB | PIN counter area
+| Sector  3 | 0x0800C000 - 0x0800FFFF |  16 KiB | unused
 | Sector  4 | 0x08010000 - 0x0801FFFF |  64 KiB | storage area #1
 | Sector  5 | 0x08020000 - 0x0803FFFF | 128 KiB | bootloader (2nd stage)
 | Sector  6 | 0x08040000 - 0x0805FFFF | 128 KiB | firmware
