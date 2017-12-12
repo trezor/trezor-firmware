@@ -660,6 +660,67 @@ void fsm_msgApplyFlags(ApplyFlags *msg)
 	fsm_sendSuccess(_("Flags applied"));
 }
 
+static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg)
+{
+	bool mismatch = false;
+
+	// m : no path
+	if (msg->address_n_count == 0) {
+		return false;
+	}
+
+	// m/44' : BIP44 Legacy
+	// m / purpose' / coin_type' / account' / change / address_index
+	if (msg->address_n[0] == (0x80000000 + 44)) {
+		mismatch |= (msg->script_type != InputScriptType_SPENDADDRESS);
+		mismatch |= (msg->address_n_count == 5);
+		mismatch |= (msg->address_n[1] != coin->coin_type);
+		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
+		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
+		mismatch |= (msg->address_n[4] & 0x80000000) == 0x80000000;
+		return mismatch;
+	}
+
+	// m/45' - BIP45 Copay Abandoned Multisig P2SH
+	// m / purpose' / cosigner_index / change / address_index
+	if (msg->address_n[0] == (0x80000000 + 45)) {
+		mismatch |= (msg->script_type != InputScriptType_SPENDMULTISIG);
+		mismatch |= (msg->address_n_count == 4);
+		mismatch |= (msg->address_n[1] & 0x80000000) == 0x80000000;
+		mismatch |= (msg->address_n[2] & 0x80000000) == 0x80000000;
+		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
+		return mismatch;
+	}
+
+	// m/45' - BIP48 Copay Multisig P2SH
+	// m / purpose' / coin_type' / account' / change / address_index
+	if (msg->address_n[0] == (0x80000000 + 48)) {
+		mismatch |= (msg->script_type != InputScriptType_SPENDMULTISIG);
+		mismatch |= (msg->address_n_count == 5);
+		mismatch |= (msg->address_n[1] != coin->coin_type);
+		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
+		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
+		mismatch |= (msg->address_n[4] & 0x80000000) == 0x80000000;
+		return mismatch;
+	}
+
+	// m/49' : BIP49 SegWit
+	// m / purpose' / coin_type' / account' / change / address_index
+	if (msg->address_n[0] == (0x80000000 + 49)) {
+		mismatch |= (msg->script_type != InputScriptType_SPENDP2SHWITNESS);
+		mismatch |= !coin->has_segwit;
+		mismatch |= !coin->has_address_type_p2sh;
+		mismatch |= (msg->address_n_count == 5);
+		mismatch |= (msg->address_n[1] != coin->coin_type);
+		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
+		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
+		mismatch |= (msg->address_n[4] & 0x80000000) == 0x80000000;
+		return mismatch;
+	}
+
+	return false;
+}
+
 void fsm_msgGetAddress(GetAddress *msg)
 {
 	RESP_INIT(Address);
@@ -696,23 +757,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 			strlcpy(desc, _("Address:"), sizeof(desc));
 		}
 
-		bool mismatch = false;
-		if (msg->address_n_count == 5) {
-			if (msg->address_n[0] == (0x80000000 + 44)) {
-				mismatch |= msg->script_type != InputScriptType_SPENDADDRESS;
-				mismatch |= coin != coinByCoinType(msg->address_n[1]);
-			} else
-			if (msg->address_n[0] == (0x80000000 + 45)) {
-				mismatch |= msg->script_type != InputScriptType_SPENDMULTISIG;
-				mismatch |= coin != coinByCoinType(msg->address_n[1]);
-			} else
-			if (msg->address_n[0] == (0x80000000 + 49)) {
-				mismatch |= !coin->has_segwit;
-				mismatch |= !coin->has_address_type_p2sh;
-				mismatch |= msg->script_type != InputScriptType_SPENDP2SHWITNESS;
-				mismatch |= coin != coinByCoinType(msg->address_n[1]);
-			}
-		}
+		bool mismatch = path_mismatched(coin, msg);
 
 		if (mismatch) {
 			layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL, _("Wrong address path"), _("for selected coin."), NULL, _("Continue at your"), _("own risk!"), NULL);
