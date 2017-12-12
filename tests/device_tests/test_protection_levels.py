@@ -20,8 +20,7 @@ import unittest
 import common
 import binascii
 
-from trezorlib import messages_pb2 as proto
-from trezorlib import types_pb2 as proto_types
+from trezorlib import messages as proto
 
 
 TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
@@ -158,42 +157,19 @@ class TestProtectionLevels(common.TrezorTest):
                 binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
                 'This is an example of a signed message.')
 
-    """
-    def test_simplesigntx(self):
-        self.setup_mnemonic_pin_passphrase()
-
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
-
-        out1 = proto_types.TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-                              amount=390000 - 10000,
-                              script_type=proto_types.PAYTOADDRESS,
-                              )
-
-        with self.client:
-            self.client.set_expected_responses([proto.PinMatrixRequest(),
-                                                proto.PassphraseRequest(),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                                                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
-                                                proto.TxRequest(request_type=proto_types.TXFINISHED)])
-            self.client.simple_sign_tx('Bitcoin', [inp1, ], [out1, ])
-    """
-
     def test_signtx(self):
         self.setup_mnemonic_pin_passphrase()
 
-        inp1 = proto_types.TxInputType(
+        inp1 = proto.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
             amount=390000 - 10000,
-            script_type=proto_types.PAYTOADDRESS,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         with self.client:
@@ -201,18 +177,18 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.set_expected_responses([
                 proto.PinMatrixRequest(),
                 proto.PassphraseRequest(),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXFINISHED),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
             self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
 

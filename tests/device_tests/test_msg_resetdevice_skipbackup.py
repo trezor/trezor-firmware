@@ -19,7 +19,7 @@
 import unittest
 import common
 
-from trezorlib import messages_pb2 as proto
+from trezorlib import messages as proto
 from mnemonic import Mnemonic
 
 

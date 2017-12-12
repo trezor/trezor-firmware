@@ -19,8 +19,7 @@ import unittest
 import common
 import binascii
 
-from trezorlib import messages_pb2 as proto
-from trezorlib import types_pb2 as proto_types
+from trezorlib import messages as proto
 
 # tx hash: 209368053ac61969b6838ceb7e31badeb622ed6aa42d6c58365c42ad1a11e19d
 SIGNATURE_TESTNET_SIMPLE = binascii.unhexlify(
@@ -41,11 +40,11 @@ class TestMsgNEMSigntx(common.TrezorTest):
         with self.client:
             self.client.set_expected_responses([
                 # Confirm transfer and network fee
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 # Unencrypted message
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
-                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.NEMSignedTx(signature=SIGNATURE_TESTNET_SIMPLE),
             ])
 
@@ -69,9 +68,9 @@ class TestMsgNEMSigntx(common.TrezorTest):
         with self.client:
             self.client.set_expected_responses([
                 # Confirm transfer and network fee
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
-                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.NEMSignedTx(signature=SIGNATURE_TESTNET_XEM_AS_MOSAIC),
             ])
 

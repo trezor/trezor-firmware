@@ -18,8 +18,10 @@
 
 from __future__ import absolute_import
 
+from io import BytesIO
 import struct
 from . import mapping
+from . import protobuf
 
 REPLEN = 64
 
@@ -33,7 +35,9 @@ class ProtocolV1(object):
         pass
 
     def write(self, transport, msg):
-        ser = msg.SerializeToString()
+        data = BytesIO()
+        protobuf.dump_message(data, msg)
+        ser = data.getvalue()
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
         data = bytearray(b"##" + header + ser)
 
@@ -54,12 +58,11 @@ class ProtocolV1(object):
             chunk = transport.read_chunk()
             data.extend(self.parse_next(chunk))
 
-        # Strip padding zeros
-        data = data[:datalen]
+        # Strip padding
+        data = BytesIO(data[:datalen])
 
         # Parse to protobuf
-        msg = mapping.get_class(msg_type)()
-        msg.ParseFromString(bytes(data))
+        msg = protobuf.load_message(data, mapping.get_class(msg_type))
         return msg
 
     def parse_first(self, chunk):

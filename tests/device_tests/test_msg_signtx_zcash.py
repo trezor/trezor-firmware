@@ -21,8 +21,7 @@ import unittest
 import common
 import binascii
 
-import trezorlib.messages_pb2 as proto
-import trezorlib.types_pb2 as proto_types
+from trezorlib import messages as proto
 from trezorlib.tx_api import TxApiZcash
 
 
@@ -37,36 +36,36 @@ class TestMsgSigntx(common.TrezorTest):
         # tx: 93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c
         # input 0: 1.234567 TAZ
 
-        inp1 = proto_types.TxInputType(
+        inp1 = proto.TxInputType(
             address_n=[2147483692, 2147483649, 2147483648, 0, 0],  # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
             # amount=123456700,
             prev_hash=TXHASH_93373e,
             prev_index=0,
         )
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z',
             amount=123456700 - 1940,
-            script_type=proto_types.PAYTOADDRESS,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         with self.client:
             self.client.set_tx_api(TxApiZcash)
             self.client.set_expected_responses([
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_93373e)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_93373e)),
-                proto.TxRequest(request_type=proto_types.TXEXTRADATA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=0, extra_data_len=1024)),
-                proto.TxRequest(request_type=proto_types.TXEXTRADATA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=1024, extra_data_len=1024)),
-                proto.TxRequest(request_type=proto_types.TXEXTRADATA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=2048, extra_data_len=1024)),
-                proto.TxRequest(request_type=proto_types.TXEXTRADATA, details=proto_types.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=3072, extra_data_len=629)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput),
-                proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
-                proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto_types.TXFINISHED),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_93373e)),
+                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=0, extra_data_len=1024)),
+                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=1024, extra_data_len=1024)),
+                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=2048, extra_data_len=1024)),
+                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=3072, extra_data_len=629)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
 
             (signatures, serialized_tx) = self.client.sign_tx('Zcash', [inp1, ], [out1, ])

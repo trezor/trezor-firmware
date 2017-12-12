@@ -21,7 +21,6 @@ import common
 
 
 class TestDeviceLoad(common.TrezorTest):
-
     def test_load_device_1(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -29,7 +28,7 @@ class TestDeviceLoad(common.TrezorTest):
         self.assertEqual(mnemonic, self.mnemonic12)
 
         pin = self.client.debug.read_pin()[0]
-        self.assertEqual(pin, '')
+        self.assertEqual(pin, None)
 
         passphrase_protection = self.client.debug.read_passphrase_protection()
         self.assertEqual(passphrase_protection, False)

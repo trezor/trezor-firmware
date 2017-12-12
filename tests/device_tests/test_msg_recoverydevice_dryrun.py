@@ -21,7 +21,7 @@ from __future__ import print_function
 import unittest
 import common
 
-from trezorlib import messages_pb2 as proto
+from trezorlib import messages as proto
 
 
 class TestDeviceRecoveryDryRun(common.TrezorTest):

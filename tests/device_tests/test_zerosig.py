@@ -23,7 +23,7 @@ import binascii
 import sys
 import common
 
-import trezorlib.types_pb2 as proto_types
+from trezorlib import messages as proto
 
 if sys.version_info < (3,):
     def byteindex(data, index):
@@ -45,7 +45,7 @@ class TestZeroSig(common.TrezorTest):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
 
-        inp1 = proto_types.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+        inp1 = proto.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                              # amount=390000,
                              prev_hash=TXHASH_d5f65e,
                              prev_index=0,
@@ -54,9 +54,9 @@ class TestZeroSig(common.TrezorTest):
         msg = self.client._prepare_sign_tx('Bitcoin', [inp1, ], [])
 
         for n in range(3500, 200000):
-            out1 = proto_types.TxOutputType(address_n=[n],
+            out1 = proto.TxOutputType(address_n=[n],
                                   amount=390000 - 10000,
-                                  script_type=proto_types.PAYTOADDRESS,
+                                  script_type=proto.OutputScriptType.PAYTOADDRESS,
                                   )
             msg.ClearField('outputs')
             msg.outputs.extend([out1, ])
@@ -74,7 +74,7 @@ class TestZeroSig(common.TrezorTest):
     def test_one_zero_signature(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        inp1 = proto_types.TxInputType(
+        inp1 = proto.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             # amount=390000,
             prev_hash=TXHASH_d5f65e,
@@ -82,10 +82,10 @@ class TestZeroSig(common.TrezorTest):
         )
 
         # Following address_n has been mined by 'test_mine_zero_signature'
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address_n=[177],
             amount=390000 - 10000,
-            script_type=proto_types.PAYTOADDRESS,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
@@ -97,7 +97,7 @@ class TestZeroSig(common.TrezorTest):
     def test_two_zero_signature(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        inp1 = proto_types.TxInputType(
+        inp1 = proto.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             # amount=390000,
             prev_hash=TXHASH_d5f65e,
@@ -105,10 +105,10 @@ class TestZeroSig(common.TrezorTest):
         )
 
         # Following address_n has been mined by 'test_mine_zero_signature'
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address_n=[16518],
             amount=390000 - 10000,
-            script_type=proto_types.PAYTOADDRESS,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])

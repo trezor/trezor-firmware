@@ -20,7 +20,6 @@ import unittest
 import common
 import hashlib
 
-from trezorlib import messages_pb2 as proto
 from trezorlib import ed25519raw, ed25519cosi
 
 

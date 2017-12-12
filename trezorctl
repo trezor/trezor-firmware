@@ -28,7 +28,8 @@ import json
 import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
-import trezorlib.types_pb2 as types
+from trezorlib import messages as proto
+from trezorlib import protobuf
 from trezorlib.coins import coins_txapi
 
 
@@ -78,16 +79,12 @@ def cli(ctx, transport, path, verbose, is_json):
 @cli.resultcallback()
 def print_result(res, transport, path, verbose, is_json):
     if is_json:
-        from google.protobuf import json_format, message
-        if isinstance(res, message.Message):
-            click.echo(json_format.MessageToJson(res, preserving_proto_field_name=True))
+        if issubclass(res.__class__, protobuf.MessageType):
+            click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
     else:
-        from google.protobuf import text_format, message
-        if isinstance(res, message.Message):
-            click.echo('%s {\n%s}' % (res.DESCRIPTOR.name, text_format.MessageToString(res, indent=4)))
-        elif isinstance(res, list):
+        if isinstance(res, list):
             for line in res:
                 click.echo(line)
         elif isinstance(res, dict):
@@ -219,7 +216,7 @@ def set_homescreen(connect, filename):
         from PIL import Image
         im = Image.open(filename)
         if im.size != (128, 64):
-            raise CallException(types.Failure_DataError, 'Wrong size of the image')
+            raise CallException(proto.FailureType.DataError, 'Wrong size of the image')
         im = im.convert('1')
         pix = im.load()
         img = bytearray(1024)
@@ -257,7 +254,7 @@ def wipe_device(connect):
 @click.pass_obj
 def load_device(connect, mnemonic, expand, xprv, pin, passphrase_protection, label, ignore_checksum, slip0014):
     if not mnemonic and not xprv and not slip0014:
-        raise CallException(types.Failure_DataError, 'Please provide mnemonic or xprv')
+        raise CallException(proto.FailureType.DataError, 'Please provide mnemonic or xprv')
 
     client = connect()
     if mnemonic:
@@ -298,8 +295,8 @@ def load_device(connect, mnemonic, expand, xprv, pin, passphrase_protection, lab
 @click.pass_obj
 def recovery_device(connect, words, expand, pin_protection, passphrase_protection, label, rec_type, dry_run):
     typemap = {
-        'scrambled': types.RecoveryDeviceType_ScrambledWords,
-        'matrix':    types.RecoveryDeviceType_Matrix
+        'scrambled': proto.RecoveryDeviceType.ScrambledWords,
+        'matrix':    proto.RecoveryDeviceType.Matrix
     }
     return connect().recovery_device(
         int(words),
@@ -385,7 +382,7 @@ def firmware_update(connect, filename, url, version, skip_check):
         if fp[:8] == b'54525a52' or fp[:8] == b'54525a56':
             fp = binascii.unhexlify(fp)
         if fp[:4] != b'TRZR' and fp[:4] != b'TRZV':
-            raise CallException(types.Failure_FirmwareError, 'TREZOR firmware header expected')
+            raise CallException(proto.FailureType.FirmwareError, 'TREZOR firmware header expected')
 
     click.echo('Please confirm action on device...')
 
@@ -414,9 +411,9 @@ def get_address(connect, coin, address, script_type, show_display):
     client = connect()
     address_n = client.expand_path(address)
     typemap = {
-        'address': types.SPENDADDRESS,
-        'segwit': types.SPENDWITNESS,
-        'p2shsegwit': types.SPENDP2SHWITNESS,
+        'address': proto.OutputScriptType.SPENDADDRESS,
+        'segwit': proto.OutputScriptType.SPENDWITNESS,
+        'p2shsegwit': proto.OutputScriptType.SPENDP2SHWITNESS,
     }
     script_type = typemap[script_type]
     return client.get_address(coin, address_n, show_display, script_type=script_type)
@@ -477,7 +474,7 @@ def sign_tx(connect, coin):
             break
         prev_in_hash, prev_in_vout = prev.split(':')
         addrn = input("Node path to sign with (e.g.- %s/0'/0/0): " % coin).strip()
-        inputs.append(types.TxInputType(
+        inputs.append(proto.TxInputType(
             prev_hash=binascii.unhexlify(prev_in_hash),
             prev_index=int(prev_in_vout, 10),
             address_n=client.expand_path(addrn)
@@ -490,9 +487,9 @@ def sign_tx(connect, coin):
         if out_addr == '':
             break
         out_amount = input('Amount (in satoshis): ').strip()
-        outputs.append(types.TxOutputType(
+        outputs.append(proto.TxOutputType(
             amount=int(out_amount, 10),
-            script_type=types.PAYTOADDRESS,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
             address=out_addr
         ))
 
@@ -523,9 +520,9 @@ def sign_message(connect, coin, address, message, script_type):
     client = connect()
     address_n = client.expand_path(address)
     typemap = {
-        'address': types.SPENDADDRESS,
-        'segwit': types.SPENDWITNESS,
-        'p2shsegwit': types.SPENDP2SHWITNESS,
+        'address': proto.InputScriptType.SPENDADDRESS,
+        'segwit': proto.InputScriptType.SPENDWITNESS,
+        'p2shsegwit': proto.InputScriptType.SPENDP2SHWITNESS,
     }
     script_type = typemap[script_type]
     res = client.sign_message(coin, address_n, message, script_type)
@@ -693,7 +690,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
     if ' ' in value:
         value, unit = value.split(' ', 1)
         if unit.lower() not in ether_units:
-            raise CallException(types.Failure_DataError, 'Unrecognized ether unit %r' % unit)
+            raise CallException(proto.Failure_DataError, 'Unrecognized ether unit %r' % unit)
         value = int(value) * ether_units[unit.lower()]
     else:
         value = int(value)
@@ -702,7 +699,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
         if ' ' in gas_price:
             gas_price, unit = gas_price.split(' ', 1)
             if unit.lower() not in ether_units:
-                raise CallException(types.Failure_DataError, 'Unrecognized gas price unit %r' % unit)
+                raise CallException(proto.Failure_DataError, 'Unrecognized gas price unit %r' % unit)
             gas_price = int(gas_price) * ether_units[unit.lower()]
         else:
             gas_price = int(gas_price)

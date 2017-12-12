@@ -18,7 +18,7 @@
 
 from __future__ import print_function
 
-from . import messages_pb2 as proto
+from . import messages as proto
 
 
 def pin_info(pin):

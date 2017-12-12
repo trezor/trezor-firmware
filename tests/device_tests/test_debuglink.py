@@ -19,7 +19,7 @@
 import unittest
 import common
 
-from trezorlib import messages_pb2 as proto
+from trezorlib import messages as proto
 
 
 class TestDebugLink(common.TrezorTest):
@@ -32,11 +32,6 @@ class TestDebugLink(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         mnemonic = self.client.debug.read_mnemonic()
         self.assertEqual(mnemonic, self.mnemonic12)
-
-    def test_node(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-        node = self.client.debug.read_node()
-        self.assertIsNotNone(node)
 
     def test_pin(self):
         self.setup_mnemonic_pin_passphrase()

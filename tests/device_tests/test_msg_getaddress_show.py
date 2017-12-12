@@ -19,7 +19,7 @@
 import unittest
 import common
 import trezorlib.ckd_public as bip32
-import trezorlib.types_pb2 as proto_types
+from trezorlib import messages as proto
 
 
 class TestMsgGetaddress(common.TrezorTest):
@@ -34,11 +34,11 @@ class TestMsgGetaddress(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         node = bip32.deserialize('xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy')
-        multisig = proto_types.MultisigRedeemScriptType(
+        multisig = proto.MultisigRedeemScriptType(
             pubkeys=[
-                proto_types.HDNodePathType(node=node, address_n=[1]),
-                proto_types.HDNodePathType(node=node, address_n=[2]),
-                proto_types.HDNodePathType(node=node, address_n=[3])
+                proto.HDNodePathType(node=node, address_n=[1]),
+                proto.HDNodePathType(node=node, address_n=[2]),
+                proto.HDNodePathType(node=node, address_n=[3])
             ],
             signatures=[b'', b'', b''],
             m=2,
@@ -54,9 +54,9 @@ class TestMsgGetaddress(common.TrezorTest):
 
         pubs = []
         for x in range(15):
-            pubs.append(proto_types.HDNodePathType(node=node, address_n=[x]))
+            pubs.append(proto.HDNodePathType(node=node, address_n=[x]))
 
-        multisig = proto_types.MultisigRedeemScriptType(
+        multisig = proto.MultisigRedeemScriptType(
             pubkeys=pubs,
             signatures=[b''] * 15,
             m=15,

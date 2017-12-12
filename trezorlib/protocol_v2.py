@@ -19,7 +19,10 @@
 from __future__ import absolute_import
 
 import struct
+from io import BytesIO
+from . import messages as proto
 from . import mapping
+from . import protobuf
 
 REPLEN = 64
 
@@ -49,11 +52,14 @@ class ProtocolV2(object):
         self.session = None
 
     def write(self, transport, msg):
+        print(msg)
         if not self.session:
             raise RuntimeError('Missing session for v2 protocol')
 
         # Serialize whole message
-        data = bytearray(msg.SerializeToString())
+        data = BytesIO()
+        protobuf.dump_message(data, msg)
+        data = data.getvalue()
         dataheader = struct.pack('>LL', mapping.get_type(msg), len(data))
         data = dataheader + data
         seq = -1
@@ -86,11 +92,11 @@ class ProtocolV2(object):
             data.extend(next_data)
 
         # Strip padding
-        data = data[:datalen]
+        data = BytesIO(data[:datalen])
 
         # Parse to protobuf
-        msg = mapping.get_class(msg_type)()
-        msg.ParseFromString(bytes(data))
+        msg = protobuf.load_message(data, mapping.get_class(msg_type))
+        print(msg)
         return msg
 
     def parse_first(self, chunk):

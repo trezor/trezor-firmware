@@ -3,7 +3,6 @@ from setuptools import setup
 
 install_requires = [
     'ecdsa>=0.9',
-    'protobuf>=3.0.0',
     'mnemonic>=0.17',
     'setuptools>=19.0',
     'requests>=2.4.0',
@@ -34,7 +33,8 @@ setup(
         'trezorlib.ed25519cosi',
         'trezorlib.ed25519raw',
         'trezorlib.mapping',
-        'trezorlib.messages_pb2',
+        'trezorlib.messages',
+        'trezorlib.protobuf',
         'trezorlib.protocol_v1',
         'trezorlib.protocol_v2',
         'trezorlib.qt.pinmatrix',
@@ -46,7 +46,6 @@ setup(
         'trezorlib.transport',
         'trezorlib.transport_udp',
         'trezorlib.tx_api',
-        'trezorlib.types_pb2',
     ],
     scripts=['trezorctl'],
     install_requires=install_requires,

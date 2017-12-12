@@ -20,9 +20,8 @@ import unittest
 import common
 import binascii
 
-import trezorlib.messages_pb2 as proto
+from trezorlib import messages as proto
 import trezorlib.ckd_public as bip32
-import trezorlib.types_pb2 as proto_types
 from trezorlib import tx_api
 
 
@@ -66,101 +65,101 @@ class TestMultisigChange(common.TrezorTest):
     #   tx: e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3
     #   input 1: 0.001 BTC
 
-    multisig_in1 = proto_types.MultisigRedeemScriptType(
+    multisig_in1 = proto.MultisigRedeemScriptType(
         pubkeys=[
-            proto_types.HDNodePathType(node=node_ext2, address_n=[0, 0]),
-            proto_types.HDNodePathType(node=node_ext1, address_n=[0, 0]),
-            proto_types.HDNodePathType(node=node_int, address_n=[0, 0])
+            proto.HDNodePathType(node=node_ext2, address_n=[0, 0]),
+            proto.HDNodePathType(node=node_ext1, address_n=[0, 0]),
+            proto.HDNodePathType(node=node_int, address_n=[0, 0])
         ],
         signatures=[b'', b'', b''],
         m=2,
     )
 
-    multisig_in2 = proto_types.MultisigRedeemScriptType(
+    multisig_in2 = proto.MultisigRedeemScriptType(
         pubkeys=[
-            proto_types.HDNodePathType(node=node_ext1, address_n=[0, 1]),
-            proto_types.HDNodePathType(node=node_ext2, address_n=[0, 1]),
-            proto_types.HDNodePathType(node=node_int, address_n=[0, 1]),
+            proto.HDNodePathType(node=node_ext1, address_n=[0, 1]),
+            proto.HDNodePathType(node=node_ext2, address_n=[0, 1]),
+            proto.HDNodePathType(node=node_int, address_n=[0, 1]),
         ],
         signatures=[b'', b'', b''],
         m=2,
     )
 
-    multisig_in3 = proto_types.MultisigRedeemScriptType(
+    multisig_in3 = proto.MultisigRedeemScriptType(
         pubkeys=[
-            proto_types.HDNodePathType(node=node_ext1, address_n=[0, 1]),
-            proto_types.HDNodePathType(node=node_ext3, address_n=[0, 1]),
-            proto_types.HDNodePathType(node=node_int, address_n=[0, 1])
+            proto.HDNodePathType(node=node_ext1, address_n=[0, 1]),
+            proto.HDNodePathType(node=node_ext3, address_n=[0, 1]),
+            proto.HDNodePathType(node=node_int, address_n=[0, 1])
         ],
         signatures=[b'', b'', b''],
         m=2,
     )
 
     # 2N9W4z9AhAPaHghtqVQPbaTAGHdbrhKeBQw
-    inp1 = proto_types.TxInputType(
+    inp1 = proto.TxInputType(
         address_n=[45 | 0x80000000, 0, 0, 0],
         prev_hash=binascii.unhexlify('16c6c8471b8db7a628f2b2bb86bfeefae1766463ce8692438c7fd3fce3f43ce5'),
         prev_index=1,
-        script_type=proto_types.SPENDMULTISIG,
+        script_type=proto.InputScriptType.SPENDMULTISIG,
         multisig=multisig_in1,
     )
 
     # 2NDBG6QXQLtnQ3jRGkrqo53BiCeXfQXLdj4
-    inp2 = proto_types.TxInputType(
+    inp2 = proto.TxInputType(
         address_n=[45 | 0x80000000, 0, 0, 1],
         prev_hash=binascii.unhexlify('d80c34ee14143a8bf61125102b7ef594118a3796cad670fa8ee15080ae155318'),
         prev_index=0,
-        script_type=proto_types.SPENDMULTISIG,
+        script_type=proto.InputScriptType.SPENDMULTISIG,
         multisig=multisig_in2,
     )
 
     # 2MvwPWfp2XPU3S1cMwgEMKBPUw38VP5SBE4
-    inp3 = proto_types.TxInputType(
+    inp3 = proto.TxInputType(
         address_n=[45 | 0x80000000, 0, 0, 1],
         prev_hash=binascii.unhexlify('b0946dc27ba308a749b11afecc2018980af18f79e89ad6b080b58220d856f739'),
         prev_index=0,
-        script_type=proto_types.SPENDMULTISIG,
+        script_type=proto.InputScriptType.SPENDMULTISIG,
         multisig=multisig_in3,
     )
 
     def _responses(self, inp1, inp2, change=0):
         resp = [
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-            proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=inp1.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
-            proto.TxRequest(request_type=proto_types.TXMETA, details=proto_types.TxRequestDetailsType(tx_hash=inp2.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=inp2.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0, tx_hash=inp2.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1, tx_hash=inp2.prev_hash)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=inp1.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
+            proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=inp2.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=inp2.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=inp2.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1, tx_hash=inp2.prev_hash)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
         ]
         if change != 1:
             resp.append(
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput)
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput)
             )
         resp.append(
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1))
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1))
         )
         if change != 2:
             resp.append(
-                proto.ButtonRequest(code=proto_types.ButtonRequest_ConfirmOutput)
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput)
             )
         resp += [
-            proto.ButtonRequest(code=proto_types.ButtonRequest_SignTx),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-            proto.TxRequest(request_type=proto_types.TXINPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=0)),
-            proto.TxRequest(request_type=proto_types.TXOUTPUT, details=proto_types.TxRequestDetailsType(request_index=1)),
-            proto.TxRequest(request_type=proto_types.TXFINISHED),
+            proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+            proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+            proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
         ]
         return resp
 
@@ -168,16 +167,16 @@ class TestMultisigChange(common.TrezorTest):
     def test_external_external(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='muevUcG1Bb8eM2nGUGhqmeujHRX7YXjSEu',
             amount=40000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address='mwdrpMVSJxxsM8f8xbnCHn9ERaRT1NG1UX',
             amount=44000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
         with self.client:
@@ -190,16 +189,16 @@ class TestMultisigChange(common.TrezorTest):
     def test_external_internal(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='muevUcG1Bb8eM2nGUGhqmeujHRX7YXjSEu',
             amount=40000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address_n=self.client.expand_path("45'/0/1/1"),
             amount=44000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
         with self.client:
@@ -212,16 +211,16 @@ class TestMultisigChange(common.TrezorTest):
     def test_internal_external(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address_n=self.client.expand_path("45'/0/1/0"),
             amount=40000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address='mwdrpMVSJxxsM8f8xbnCHn9ERaRT1NG1UX',
             amount=44000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
         with self.client:
@@ -234,16 +233,16 @@ class TestMultisigChange(common.TrezorTest):
     def test_multisig_external_external(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='2N2aFoogGntQFFwdUVPfRmutXD22ThcNTsR',
             amount=40000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address='2NFJjQcU8mw4Z3ywpbek8HL1VoJ27GDrkHw',
             amount=44000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
         with self.client:
@@ -256,27 +255,27 @@ class TestMultisigChange(common.TrezorTest):
     def test_multisig_change_match_first(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        multisig_out1 = proto_types.MultisigRedeemScriptType(
+        multisig_out1 = proto.MultisigRedeemScriptType(
             pubkeys=[
-                proto_types.HDNodePathType(node=self.node_ext2, address_n=[1, 0]),
-                proto_types.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
-                proto_types.HDNodePathType(node=self.node_int, address_n=[1, 0])
+                proto.HDNodePathType(node=self.node_ext2, address_n=[1, 0]),
+                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
+                proto.HDNodePathType(node=self.node_int, address_n=[1, 0])
             ],
             signatures=[b'', b'', b''],
             m=2,
         )
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address_n=[0x80000000 | 45, 0, 1, 0],
             multisig=multisig_out1,
             amount=40000000,
-            script_type=proto_types.PAYTOMULTISIG
+            script_type=proto.OutputScriptType.PAYTOMULTISIG
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address='2NFJjQcU8mw4Z3ywpbek8HL1VoJ27GDrkHw',
             amount=44000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
         with self.client:
@@ -289,27 +288,27 @@ class TestMultisigChange(common.TrezorTest):
     def test_multisig_change_match_second(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        multisig_out2 = proto_types.MultisigRedeemScriptType(
+        multisig_out2 = proto.MultisigRedeemScriptType(
             pubkeys=[
-                proto_types.HDNodePathType(node=self.node_ext1, address_n=[1, 1]),
-                proto_types.HDNodePathType(node=self.node_ext2, address_n=[1, 1]),
-                proto_types.HDNodePathType(node=self.node_int, address_n=[1, 1])
+                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 1]),
+                proto.HDNodePathType(node=self.node_ext2, address_n=[1, 1]),
+                proto.HDNodePathType(node=self.node_int, address_n=[1, 1])
             ],
             signatures=[b'', b'', b''],
             m=2,
         )
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='2N2aFoogGntQFFwdUVPfRmutXD22ThcNTsR',
             amount=40000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address_n=[0x80000000 | 45, 0, 1, 1],
             multisig=multisig_out2,
             amount=44000000,
-            script_type=proto_types.PAYTOMULTISIG
+            script_type=proto.OutputScriptType.PAYTOMULTISIG
         )
 
         with self.client:
@@ -322,27 +321,27 @@ class TestMultisigChange(common.TrezorTest):
     def test_multisig_mismatch_change(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        multisig_out2 = proto_types.MultisigRedeemScriptType(
+        multisig_out2 = proto.MultisigRedeemScriptType(
             pubkeys=[
-                proto_types.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
-                proto_types.HDNodePathType(node=self.node_int, address_n=[1, 0]),
-                proto_types.HDNodePathType(node=self.node_ext3, address_n=[1, 0])
+                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
+                proto.HDNodePathType(node=self.node_int, address_n=[1, 0]),
+                proto.HDNodePathType(node=self.node_ext3, address_n=[1, 0])
             ],
             signatures=[b'', b'', b''],
             m=2,
         )
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address='2N2aFoogGntQFFwdUVPfRmutXD22ThcNTsR',
             amount=40000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address_n=[0x80000000 | 45, 0, 1, 0],
             multisig=multisig_out2,
             amount=44000000,
-            script_type=proto_types.PAYTOMULTISIG
+            script_type=proto.OutputScriptType.PAYTOMULTISIG
         )
 
         with self.client:
@@ -355,27 +354,27 @@ class TestMultisigChange(common.TrezorTest):
     def test_multisig_mismatch_inputs(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        multisig_out1 = proto_types.MultisigRedeemScriptType(
+        multisig_out1 = proto.MultisigRedeemScriptType(
             pubkeys=[
-                proto_types.HDNodePathType(node=self.node_ext2, address_n=[1, 0]),
-                proto_types.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
-                proto_types.HDNodePathType(node=self.node_int, address_n=[1, 0])
+                proto.HDNodePathType(node=self.node_ext2, address_n=[1, 0]),
+                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
+                proto.HDNodePathType(node=self.node_int, address_n=[1, 0])
             ],
             signatures=[b'', b'', b''],
             m=2,
         )
 
-        out1 = proto_types.TxOutputType(
+        out1 = proto.TxOutputType(
             address_n=[0x80000000 | 45, 0, 1, 0],
             multisig=multisig_out1,
             amount=40000000,
-            script_type=proto_types.PAYTOMULTISIG
+            script_type=proto.OutputScriptType.PAYTOMULTISIG
         )
 
-        out2 = proto_types.TxOutputType(
+        out2 = proto.TxOutputType(
             address='2NFJjQcU8mw4Z3ywpbek8HL1VoJ27GDrkHw',
             amount=65000000,
-            script_type=proto_types.PAYTOADDRESS
+            script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
         with self.client:

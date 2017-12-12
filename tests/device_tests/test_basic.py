@@ -19,7 +19,7 @@
 import unittest
 import common
 
-from trezorlib import messages_pb2 as messages
+from trezorlib import messages
 
 
 class TestBasic(common.TrezorTest):

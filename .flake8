@@ -14,6 +14,8 @@ ignore =
     F841,
     # F401: module imported but unused
     F401,
+    # F403: used import *
+    F403,
     # E241: multiple spaces after ':'
     E241,
     # E402: module level import not at top of file

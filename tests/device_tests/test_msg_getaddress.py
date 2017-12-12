@@ -19,7 +19,7 @@
 import pytest
 import unittest
 import common
-import trezorlib.types_pb2 as proto_types
+from trezorlib import messages as proto
 import trezorlib.ckd_public as bip32
 
 
@@ -59,8 +59,8 @@ class TestMsgGetaddress(common.TrezorTest):
             xpubs.append(n.xpub)
 
         def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
-            return proto_types.MultisigRedeemScriptType(
-                pubkeys=map(lambda xpub: proto_types.HDNodePathType(node=bip32.deserialize(xpub), address_n=[chain, nr]), xpubs),
+            return proto.MultisigRedeemScriptType(
+                pubkeys=list(map(lambda xpub: proto.HDNodePathType(node=bip32.deserialize(xpub), address_n=[chain, nr]), xpubs)),
                 signatures=signatures,
                 m=2,
             )

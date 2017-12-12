@@ -22,8 +22,8 @@ import time
 import unittest
 import common
 
-from trezorlib import messages_pb2 as proto
-from trezorlib.client import PinException
+from trezorlib import messages as proto
+from trezorlib.client import PinException, CallException
 
 # FIXME TODO Add passphrase tests
 
@@ -87,7 +87,7 @@ class TestProtectCall(common.TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         with self.client:
-            self.assertEqual(self.client.debug.read_pin()[0], '')
+            self.assertEqual(self.client.debug.read_pin()[0], None)
             self.client.set_expected_responses([proto.Success()])
             self._some_protected_call(False, True, True)
 

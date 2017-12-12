@@ -21,8 +21,8 @@ import binascii
 from decimal import Decimal
 import requests
 import json
-from . import types_pb2 as proto_types
 
+from . import messages as proto
 cache_dir = None
 
 
@@ -45,6 +45,7 @@ class TxApi(object):
                 return j
             except:
                 pass
+
         try:
             url = self.get_url(resource, resourceid)
             r = requests.get(url, headers={'User-agent': 'Mozilla/5.0'})
@@ -72,12 +73,12 @@ class TxApiInsight(TxApi):
 
         data = self.fetch_json('tx', txhash)
 
-        t = proto_types.TransactionType()
+        t = proto.TransactionType()
         t.version = data['version']
         t.lock_time = data['locktime']
 
         for vin in data['vin']:
-            i = t.inputs.add()
+            i = t._add_inputs()
             if 'coinbase' in vin.keys():
                 i.prev_hash = b"\0" * 32
                 i.prev_index = 0xffffffff  # signed int -1
@@ -91,7 +92,7 @@ class TxApiInsight(TxApi):
                 i.sequence = vin['sequence']
 
         for vout in data['vout']:
-            o = t.bin_outputs.add()
+            o = t._add_bin_outputs()
             o.amount = int(Decimal(vout['value']) * 100000000)
             o.script_pubkey = binascii.unhexlify(vout['scriptPubKey']['hex'])
 
@@ -120,7 +121,7 @@ class TxApiSmartbit(TxApi):
 
         data = data['transaction']
 
-        t = proto_types.TransactionType()
+        t = proto.TransactionType()
         t.version = int(data['version'])
         t.lock_time = data['locktime']
 
@@ -152,7 +153,7 @@ class TxApiBlockCypher(TxApi):
 
         data = self.fetch_json('txs', txhash)
 
-        t = proto_types.TransactionType()
+        t = proto.TransactionType()
         t.version = data['ver']
         t.lock_time = data['lock_time']
 

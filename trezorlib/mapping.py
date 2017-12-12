@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2012-2016 Marek Palatinus <slush@satoshilabs.com>
 # Copyright (C) 2012-2016 Pavol Rusnak <stick@satoshilabs.com>
+# Copyright (C) 2016      Jochen Hoenicke <hoenicke@gmail.com>
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -16,19 +17,28 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import messages_pb2 as proto
+from . import messages
+from . import protobuf
 
 map_type_to_class = {}
 map_class_to_type = {}
 
 
 def build_map():
-    for msg_type, i in proto.MessageType.items():
-        msg_name = msg_type.replace('MessageType_', '')
-        msg_class = getattr(proto, msg_name)
+    for msg_name in dir(messages.MessageType):
+        if msg_name.startswith('__'):
+            continue
 
-        map_type_to_class[i] = msg_class
-        map_class_to_type[msg_class] = i
+        try:
+            msg_class = getattr(messages, msg_name)
+        except AttributeError:
+            raise
+            raise ValueError("Implementation of protobuf message '%s' is missing" % msg_name)
+
+        wire_type = getattr(messages.MessageType, msg_name)
+
+        map_type_to_class[wire_type] = msg_class
+        map_class_to_type[msg_class] = wire_type
 
 
 def get_type(msg):
@@ -39,17 +49,4 @@ def get_class(t):
     return map_type_to_class[t]
 
 
-def check_missing():
-    from google.protobuf import reflection
-
-    types = [getattr(proto, item) for item in dir(proto)
-             if issubclass(getattr(proto, item).__class__, reflection.GeneratedProtocolMessageType)]
-
-    missing = list(set(types) - set(map_type_to_class.values()))
-
-    if len(missing):
-        raise ValueError("Following protobuf messages are not defined in mapping: %s" % missing)
-
-
 build_map()
-check_missing()

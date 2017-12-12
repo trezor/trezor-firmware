@@ -28,7 +28,7 @@ from ecdsa.curves import SECP256k1
 from ecdsa.ellipticcurve import Point, INFINITY
 
 from . import tools
-from . import types_pb2 as proto_types
+from . import messages as proto
 
 PRIME_DERIVATION_FLAG = 0x80000000
 
@@ -83,7 +83,7 @@ def public_ckd(public_node, n):
     if not isinstance(n, list):
         raise ValueError('Parameter must be a list')
 
-    node = proto_types.HDNodeType()
+    node = proto.HDNodeType()
     node.CopyFrom(public_node)
 
     for i in n:
@@ -105,7 +105,7 @@ def get_subnode(node, i):
     I64 = hmac.HMAC(key=node.chain_code, msg=data, digestmod=hashlib.sha512).digest()
     I_left_as_exponent = string_to_number(I64[:32])
 
-    node_out = proto_types.HDNodeType()
+    node_out = proto.HDNodeType()
     node_out.depth = node.depth + 1
     node_out.child_num = i
     node_out.chain_code = I64[32:]
@@ -145,7 +145,7 @@ def deserialize(xpub):
     if tools.Hash(data[:-4])[:4] != data[-4:]:
         raise ValueError("Checksum failed")
 
-    node = proto_types.HDNodeType()
+    node = proto.HDNodeType()
     node.depth = struct.unpack('>B', data[4:5])[0]
     node.fingerprint = struct.unpack('>I', data[5:9])[0]
     node.child_num = struct.unpack('>I', data[9:13])[0]
