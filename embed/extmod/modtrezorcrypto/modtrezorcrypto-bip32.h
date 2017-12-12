@@ -336,7 +336,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_deserialize(mp_obj_t value, mp_obj_t vers
     uint32_t vpriv = mp_obj_get_int_truncated(version_private);
     HDNode hdnode;
     uint32_t fingerprint;
-    if (hdnode_deserialize(valueb.buf, vpub, vpriv, &hdnode, &fingerprint) < 0) {
+    if (hdnode_deserialize(valueb.buf, vpub, vpriv, SECP256K1_NAME, &hdnode, &fingerprint) < 0) {
         mp_raise_ValueError("Failed to deserialize");
     }
 
