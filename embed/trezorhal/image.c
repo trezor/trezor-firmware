@@ -130,6 +130,22 @@ secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t ke
     return sectrue * (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)vhdr->sig));
 }
 
+void vendor_keys_hash(const vendor_header * const vhdr, uint8_t *hash)
+{
+    BLAKE2S_CTX ctx;
+    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+    blake2s_Update(&ctx, &(vhdr->vsig_m), sizeof(vhdr->vsig_m));
+    blake2s_Update(&ctx, &(vhdr->vsig_n), sizeof(vhdr->vsig_n));
+    for (int i = 0; i < MAX_VENDOR_PUBLIC_KEYS; i++) {
+        if (vhdr->vpub[i] != 0) {
+            blake2s_Update(&ctx, vhdr->vpub[i], 32);
+        } else {
+            blake2s_Update(&ctx, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+        }
+    }
+    blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+}
+
 secbool check_single_hash(const uint8_t * const hash, const uint8_t * const data, int len)
 {
     uint8_t h[BLAKE2S_DIGEST_LENGTH];

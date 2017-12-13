@@ -327,27 +327,10 @@ secbool compare_to_current_vendor_header(const vendor_header * const new_vhdr)
     if (sectrue != load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
         return secfalse;
     }
-    // check whether current and new vendor header have the same key set
-    if (new_vhdr->vsig_m != current_vhdr.vsig_m) {
-        return secfalse;
-    }
-    if (new_vhdr->vsig_n != current_vhdr.vsig_n) {
-        return secfalse;
-    }
-    for (int i = 0; i < MAX_VENDOR_PUBLIC_KEYS; i++) {
-        if (new_vhdr->vpub[i] != 0 && current_vhdr.vpub[i] != 0) {
-            if (0 != memcmp(new_vhdr->vpub[i], current_vhdr.vpub[i], 32)) {
-                return secfalse;
-            }
-        }
-        if (new_vhdr->vpub[i] == 0 && current_vhdr.vpub[i] != 0) {
-            return secfalse;
-        }
-        if (new_vhdr->vpub[i] != 0 && current_vhdr.vpub[i] == 0) {
-            return secfalse;
-        }
-    }
-    return sectrue;
+    uint8_t hash1[32], hash2[32];
+    vendor_keys_hash(new_vhdr, hash1);
+    vendor_keys_hash(&current_vhdr, hash2);
+    return sectrue * (0 == memcmp(hash1, hash2, 32));
 }
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)

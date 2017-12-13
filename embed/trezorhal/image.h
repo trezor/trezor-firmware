@@ -55,6 +55,8 @@ secbool load_image_header(const uint8_t * const data, const uint32_t magic, cons
 
 secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
 
+void vendor_keys_hash(const vendor_header * const vhdr, uint8_t *hash);
+
 secbool check_single_hash(const uint8_t * const hash, const uint8_t * const data, int len);
 
 secbool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks);
