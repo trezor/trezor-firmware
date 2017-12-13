@@ -11,6 +11,7 @@ _MNEMONIC       = const(0x0002)  # str
 _LANGUAGE       = const(0x0003)  # str
 _LABEL          = const(0x0004)  # str
 _USE_PASSPHRASE = const(0x0005)  # 0x01 or empty
+_HOMESCREEN     = const(0x0006)  # bytes
 
 
 def get_device_id() -> str:
@@ -37,18 +38,27 @@ def has_passphrase() -> bool:
     return bool(config.get(_APP, _USE_PASSPHRASE))
 
 
+def get_homescreen() -> bytes:
+    return config.get(_APP, _HOMESCREEN)
+
+
 def load_mnemonic(mnemonic: str):
     config.set(_APP, _VERSION, _STORAGE_VERSION)
     config.set(_APP, _MNEMONIC, mnemonic.encode())
 
 
-def load_settings(label: str = None, use_passphrase: bool = None):
+def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None):
     if label is not None:
         config.set(_APP, _LABEL, label.encode())
     if use_passphrase is True:
         config.set(_APP, _USE_PASSPHRASE, b'\x01')
     if use_passphrase is False:
         config.set(_APP, _USE_PASSPHRASE, b'')
+    if homescreen is not None:
+        if homescreen[:8] == b'TOIf\x90\x00\x90\x00':
+            config.set(_APP, _HOMESCREEN, homescreen)
+        else:
+            config.set(_APP, _HOMESCREEN, b'')
 
 
 def wipe():
