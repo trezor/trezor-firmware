@@ -172,11 +172,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/mpstate.c',
     'vendor/micropython/py/mpz.c',
     'vendor/micropython/py/nativeglue.c',
-    'vendor/micropython/py/nlrsetjmp.c',
-    'vendor/micropython/py/nlrthumb.c',
-    'vendor/micropython/py/nlrx64.c',
-    'vendor/micropython/py/nlrx86.c',
-    'vendor/micropython/py/nlrxtensa.c',
     'vendor/micropython/py/obj.c',
     'vendor/micropython/py/objarray.c',
     'vendor/micropython/py/objattrtuple.c',
@@ -283,6 +278,7 @@ SOURCE_FIRMWARE = [
     'embed/firmware/header.S',
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
+    'embed/firmware/nlrthumb.c',
 ]
 
 SOURCE_TREZORHAL = [
@@ -335,6 +331,7 @@ env.Replace(
     '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -fno-common '
     '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-fstack-protector-all '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections -Map=build/firmware/firmware.map --warn-common',
