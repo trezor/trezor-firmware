@@ -259,7 +259,7 @@ secbool bootloader_loop(secbool firmware_present)
 
 // protection against bootloader downgrade
 
-#define BOOTLOADER_VERSION_OTP_BLOCK 1
+#define OTP_BLOCK_BOOTLOADER_VERSION 1
 
 void check_bootloader_version(void)
 {
@@ -271,10 +271,10 @@ void check_bootloader_version(void)
              bits[i / 8] |= (1 << (7 - (i % 8)));
         }
     }
-    ensure(flash_otp_write(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_write(OTP_BLOCK_BOOTLOADER_VERSION, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
 
     uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
-    ensure(flash_otp_read(BOOTLOADER_VERSION_OTP_BLOCK, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_read(OTP_BLOCK_BOOTLOADER_VERSION, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
 
     ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)), "Bootloader downgraded");
 }
@@ -282,6 +282,19 @@ void check_bootloader_version(void)
 secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr)
 {
     return load_vendor_header(data, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, vhdr);
+}
+
+#define OTP_BLOCK_VENDOR_KEYS_LOCK 2
+
+secbool check_vendor_keys_lock(const vendor_header * const vhdr) {
+    uint8_t lock[FLASH_OTP_BLOCK_SIZE];
+    ensure(flash_otp_read(OTP_BLOCK_VENDOR_KEYS_LOCK, 0, lock, FLASH_OTP_BLOCK_SIZE), NULL);
+    if (0 == memcmp(lock, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", FLASH_OTP_BLOCK_SIZE)) {
+        return sectrue;
+    }
+    uint8_t hash[32];
+    vendor_keys_hash(vhdr, hash);
+    return sectrue * (0 == memcmp(lock, hash, 32));
 }
 
 int main(void)
@@ -315,6 +328,10 @@ int main(void)
     ensure(
         load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr),
         "invalid vendor header");
+
+    ensure(
+        check_vendor_keys_lock(&vhdr),
+        "unauthorized vendor keys");
 
     image_header hdr;
 
