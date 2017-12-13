@@ -59,7 +59,7 @@ static uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 #define KEY_HANDLE_LEN (KEY_PATH_LEN + SHA256_DIGEST_LENGTH)
 
 // Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-#define KEY_PATH_ENTRIES (1 + KEY_PATH_LEN / sizeof(uint32_t))
+#define KEY_PATH_ENTRIES (KEY_PATH_LEN / sizeof(uint32_t))
 
 // Defined as UsbSignHandler.BOGUS_APP_ID_HASH
 // in https://github.com/google/u2f-ref-code/blob/master/u2f-chrome-extension/usbsignhandler.js#L118
@@ -450,7 +450,7 @@ static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **a
 static const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 {
 	static CONFIDENTIAL HDNode node;
-	if (!storage_getRootNode(&node, NIST256P1_NAME, false)) {
+	if (!storage_getU2FRoot(&node)) {
 		layoutHome();
 		debugLog(0, "", "ERR: Device not init");
 		return 0;
@@ -472,14 +472,13 @@ static const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handl
 
 	// Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
 	uint32_t key_path[KEY_PATH_ENTRIES];
-	key_path[0] = U2F_KEY_PATH;
-	for (uint32_t i = 1; i < KEY_PATH_ENTRIES; i++) {
+	for (uint32_t i = 0; i < KEY_PATH_ENTRIES; i++) {
 		// high bit for hardened keys
 		key_path[i]= 0x80000000 | random32();
 	}
 
 	// First half of keyhandle is key_path
-	memcpy(key_handle, &key_path[1], KEY_PATH_LEN);
+	memcpy(key_handle, key_path, KEY_PATH_LEN);
 
 	// prepare keypair from /random data
 	const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
@@ -501,9 +500,8 @@ static const HDNode *generateKeyHandle(const uint8_t app_id[], uint8_t key_handl
 static const HDNode *validateKeyHandle(const uint8_t app_id[], const uint8_t key_handle[])
 {
 	uint32_t key_path[KEY_PATH_ENTRIES];
-	key_path[0] = U2F_KEY_PATH;
-	memcpy(&key_path[1], key_handle, KEY_PATH_LEN);
-	for (unsigned int i = 1; i < KEY_PATH_ENTRIES; i++) {
+	memcpy(key_path, key_handle, KEY_PATH_LEN);
+	for (unsigned int i = 0; i < KEY_PATH_ENTRIES; i++) {
 		// check high bit for hardened keys
 		if (! (key_path[i] & 0x80000000)) {
 			return NULL;
@@ -557,8 +555,6 @@ void u2f_register(const APDU *a)
 
 	// First Time request, return not present and display request dialog
 	if (last_req_state == INIT) {
-		// wake up crypto system to be ready for signing
-		getDerivedNode(NULL, 0);
 		// error: testof-user-presence is required
 		buttonUpdate(); // Clear button state
 		if (0 == memcmp(req->appId, BOGUS_APPID, U2F_APPID_SIZE)) {

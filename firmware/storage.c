@@ -41,6 +41,7 @@
 #include "layout2.h"
 #include "usb.h"
 #include "gettext.h"
+#include "u2f.h"
 
 /* magic constant to check validity of storage block */
 static const uint32_t storage_magic = 0x726f7473;   // 'stor' as uint32_t
@@ -108,7 +109,7 @@ static bool sessionPinCached;
 static bool sessionPassphraseCached;
 static char CONFIDENTIAL sessionPassphrase[51];
 
-#define STORAGE_VERSION 8
+#define STORAGE_VERSION 9
 
 void storage_show_error(void)
 {
@@ -126,6 +127,7 @@ void storage_check_flash_errors(void)
 
 bool storage_from_flash(void)
 {
+	storage_clear_update();
 	if (memcmp((void *)FLASH_STORAGE_START, &storage_magic, sizeof(storage_magic)) != 0) {
 		// wrong magic
 		return false;
@@ -140,6 +142,7 @@ bool storage_from_flash(void)
 	// version 6: since 1.3.6
 	// version 7: since 1.5.1
 	// version 8: since 1.5.2
+	// version 9: since 1.6.1
 	if (version > STORAGE_VERSION) {
 		// downgrade -> clear storage
 		return false;
@@ -156,13 +159,20 @@ bool storage_from_flash(void)
 		old_storage_size = 460;
 	} else
 	if (version == 3 || version == 4 || version == 5) {
+		// added homescreen
 		old_storage_size = 1488;
 	} else
 	if (version == 6 || version == 7) {
+		// added u2fcounter
 		old_storage_size = 1496;
 	} else
 	if (version == 8) {
+		// added flags and needsBackup
 		old_storage_size = 1504;
+	} else
+	if (version == 9) {
+		// added u2froot
+		old_storage_size = 1704;
 	}
 
 	// erase newly added fields
@@ -204,8 +214,15 @@ bool storage_from_flash(void)
 		storage_u2f_offset++;
 		u2fword >>= 1;
 	}
-	// note: we don't update storage version on flash at this point,
-	// but it is already upgraded when it comes to content
+	// force recomputing u2f root for storage version < 9.
+	if (version < 9) {
+		storageUpdate.has_mnemonic = storageRom->has_mnemonic;
+		strlcpy(storageUpdate.mnemonic, storageRom->mnemonic, sizeof(storageUpdate.mnemonic));
+	}
+	// update storage version on flash
+	if (version != STORAGE_VERSION) {
+		storage_update();
+	}
 	return true;
 }
 
@@ -242,6 +259,29 @@ static uint32_t storage_flash_words(uint32_t addr, const uint32_t *src, int nwor
 	return addr;
 }
 
+static void get_u2froot_callback(uint32_t iter, uint32_t total)
+{
+	layoutProgress(_("Updating"), 1000 * iter / total);
+}
+
+static void storage_compute_u2froot(const char* mnemonic, HDNodeType *u2froot) {
+	static CONFIDENTIAL HDNode node;
+	char oldTiny = usbTiny(1);
+	mnemonic_to_seed(mnemonic, "", sessionSeed, get_u2froot_callback); // BIP-0039
+	usbTiny(oldTiny);
+	hdnode_from_seed(sessionSeed, 64, NIST256P1_NAME, &node);
+	hdnode_private_ckd(&node, U2F_KEY_PATH);
+	u2froot->depth = node.depth;
+	u2froot->child_num = U2F_KEY_PATH;
+	u2froot->chain_code.size = sizeof(node.chain_code);
+	memcpy(u2froot->chain_code.bytes, node.chain_code, sizeof(node.chain_code));
+	u2froot->has_private_key = true;
+	u2froot->private_key.size = sizeof(node.private_key);
+	memcpy(u2froot->private_key.bytes, node.private_key, sizeof(node.private_key));
+	memset(&node, 0, sizeof(node));
+	session_clear(false); // invalidate seed cache
+}
+
 // if storage is filled in - update fields that has has_field set to true
 // if storage is NULL - do not backup original content - essentialy a wipe
 static void storage_commit_locked(bool update)
@@ -261,6 +301,11 @@ static void storage_commit_locked(bool update)
 			memcpy(&storageUpdate.node, &storageRom->node, sizeof(HDNodeType));
 			storageUpdate.has_mnemonic = storageRom->has_mnemonic;
 			strlcpy(storageUpdate.mnemonic, storageRom->mnemonic, sizeof(storageUpdate.mnemonic));
+			storageUpdate.has_u2froot = storageRom->has_u2froot;
+			memcpy(&storageUpdate.u2froot, &storageRom->u2froot, sizeof(HDNodeType));
+		} else if (storageUpdate.has_mnemonic) {
+			storageUpdate.has_u2froot = true;
+			storage_compute_u2froot(storageUpdate.mnemonic, &storageUpdate.u2froot);
 		}
 		if (!storageUpdate.has_passphrase_protection) {
 			storageUpdate.has_passphrase_protection = storageRom->has_passphrase_protection;
@@ -465,6 +510,12 @@ const uint8_t *storage_getSeed(bool usePassphrase)
 	}
 
 	return NULL;
+}
+
+bool storage_getU2FRoot(HDNode *node)
+{
+	return storageRom->has_u2froot
+		&& hdnode_from_xprv(storageRom->u2froot.depth, storageRom->u2froot.child_num, storageRom->u2froot.chain_code.bytes, storageRom->u2froot.private_key.bytes, NIST256P1_NAME, node);
 }
 
 bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
