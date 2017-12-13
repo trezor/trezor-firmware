@@ -215,6 +215,7 @@ bool storage_from_flash(void)
 		u2fword >>= 1;
 	}
 	// force recomputing u2f root for storage version < 9.
+	// this is done by re-setting the mnemonic, which triggers the computation
 	if (version < 9) {
 		storageUpdate.has_mnemonic = storageRom->has_mnemonic;
 		strlcpy(storageUpdate.mnemonic, storageRom->mnemonic, sizeof(storageUpdate.mnemonic));
