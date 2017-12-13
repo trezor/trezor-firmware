@@ -35,6 +35,7 @@
 
 #define BLAKE224_DIGEST_LENGTH 28
 #define BLAKE256_DIGEST_LENGTH 32
+#define BLAKE256_BLOCK_LENGTH  64
 
 typedef struct {
   uint32_t h[8], s[4], t[2];
