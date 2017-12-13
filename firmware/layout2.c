@@ -121,7 +121,7 @@ void layoutHome(void)
 	oledRefresh();
 
 	// Reset lock screen timeout
-	system_millis_lock_start = system_millis;
+	system_millis_lock_start = timer_ms();
 }
 
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)

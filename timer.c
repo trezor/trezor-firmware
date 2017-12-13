@@ -27,9 +27,6 @@
 /* 1 tick = 1 ms */
 volatile uint32_t system_millis;
 
-/* Screen timeout */
-uint32_t system_millis_lock_start;
-
 /*
  * Initialise the Cortex-M3 SysTick timer
  */

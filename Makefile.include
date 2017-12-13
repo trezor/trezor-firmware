@@ -1,6 +1,18 @@
 TOP_DIR       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOOLCHAIN_DIR ?= $(TOP_DIR)vendor/libopencm3
 
+ifeq ($(EMULATOR),1)
+CC      = gcc
+LD      = gcc
+OBJCOPY = objcopy
+OBJDUMP = objdump
+AR      = ar
+AS      = as
+
+OPTFLAGS ?= -O3
+DBGFLAGS ?= -g3
+CPUFLAGS ?= -m32
+else
 PREFIX ?= arm-none-eabi-
 CC      = $(PREFIX)gcc
 LD      = $(PREFIX)gcc
@@ -15,6 +27,7 @@ OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
 CPUFLAGS ?= -mcpu=cortex-m3 -mthumb
 FPUFLAGS ?= -msoft-float
+endif
 
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
@@ -55,6 +68,28 @@ CFLAGS   += $(OPTFLAGS) \
             -I$(TOP_DIR)vendor/trezor-crypto/ed25519-donna \
             -I$(TOP_DIR)vendor/trezor-qrenc
 
+ifeq ($(EMULATOR),1)
+CFLAGS   += -DEMULATOR=1
+
+ifeq ($(HEADLESS),1)
+CFLAGS   += -DHEADLESS=1
+else
+CFLAGS   += -DHEADLESS=0
+
+CFLAGS   += $(shell pkg-config --cflags sdl2)
+LDLIBS   += $(shell pkg-config --libs sdl2)
+endif
+
+CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
+CFLAGS   += -include stdio.h
+
+LDFLAGS  += -L$(TOP_DIR) \
+            -L$(TOP_DIR)emulator \
+            $(CPUFLAGS)
+
+LDLIBS   += -ltrezor -lemulator
+LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
+else
 ifdef APPVER
 CFLAGS   += -DAPPVER=$(APPVER)
 LDSCRIPT  = $(TOP_DIR)/memory_app_$(APPVER).ld
@@ -62,17 +97,7 @@ else
 LDSCRIPT  = $(TOP_DIR)/memory.ld
 endif
 
-ifeq ($(MEMORY_PROTECT), 0)
-CFLAGS += -DMEMORY_PROTECT=0
-else
-CFLAGS += -DMEMORY_PROTECT=1
-endif
-
-ifeq ($(DEBUG_RNG), 1)
-CFLAGS += -DDEBUG_RNG=1
-else
-CFLAGS += -DDEBUG_RNG=0
-endif
+CFLAGS   += -DEMULATOR=0
 
 LDFLAGS  += --static \
             -Wl,--start-group \
@@ -93,6 +118,19 @@ LIBDEPS  += $(TOP_DIR)/libtrezor.a
 
 LDLIBS   += -lopencm3_stm32f2
 LIBDEPS  += $(TOOLCHAIN_DIR)/lib/libopencm3_stm32f2.a
+endif
+
+ifeq ($(MEMORY_PROTECT), 0)
+CFLAGS += -DMEMORY_PROTECT=0
+else
+CFLAGS += -DMEMORY_PROTECT=1
+endif
+
+ifeq ($(DEBUG_RNG), 1)
+CFLAGS += -DDEBUG_RNG=1
+else
+CFLAGS += -DDEBUG_RNG=0
+endif
 
 all: $(NAME).bin
 

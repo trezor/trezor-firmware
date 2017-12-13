@@ -505,7 +505,7 @@ static bool signing_check_input(TxInputType *txinput) {
 	tx_sequence_hash(&hashers[1], txinput);
 	// hash prevout and script type to check it later (relevant for fee computation)
 	tx_prevout_hash(&hashers[2], txinput);
-	hasher_Update(&hashers[2], &txinput->script_type, sizeof(&txinput->script_type));
+	hasher_Update(&hashers[2], (const uint8_t *) &txinput->script_type, sizeof(&txinput->script_type));
 	return true;
 }
 
@@ -962,7 +962,7 @@ void signing_txack(TransactionType *tx)
 			}
 			// check prevouts and script type
 			tx_prevout_hash(&hashers[0], tx->inputs);
-			hasher_Update(&hashers[0], &tx->inputs[0].script_type, sizeof(&tx->inputs[0].script_type));
+			hasher_Update(&hashers[0], (const uint8_t *) &tx->inputs[0].script_type, sizeof(&tx->inputs[0].script_type));
 			if (idx2 == idx1) {
 				if (!compile_input_script_sig(&tx->inputs[0])) {
 					fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));

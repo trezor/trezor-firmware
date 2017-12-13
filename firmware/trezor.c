@@ -32,6 +32,9 @@
 #include "gettext.h"
 #include "fastflash.h"
 
+/* Screen timeout */
+uint32_t system_millis_lock_start;
+
 void check_lock_screen(void)
 {
 	buttonUpdate();
@@ -73,7 +76,7 @@ void check_lock_screen(void)
 
 	// if homescreen is shown for longer than 10 minutes, lock too
 	if (layoutLast == layoutHome) {
-		if ((system_millis - system_millis_lock_start) >= 600000) {
+		if ((timer_ms() - system_millis_lock_start) >= 600000) {
 			// lock the screen
 			session_clear(true);
 			layoutScreensaver();

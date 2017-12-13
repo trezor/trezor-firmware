@@ -105,10 +105,11 @@ void oledInvertPixel(int x, int y)
 	_oledbuffer[OLED_OFFSET(x, y)] ^= OLED_MASK(x, y);
 }
 
+#if !EMULATOR
 /*
  * Send a block of data via the SPI bus.
  */
-inline void SPISend(uint32_t base, uint8_t *data, int len)
+static inline void SPISend(uint32_t base, const uint8_t *data, int len)
 {
 	delay(1);
 	for (int i = 0; i < len; i++) {
@@ -123,7 +124,7 @@ inline void SPISend(uint32_t base, uint8_t *data, int len)
  */
 void oledInit()
 {
-	static uint8_t s[25] = {
+	static const uint8_t s[25] = {
 		OLED_DISPLAYOFF,
 		OLED_SETDISPLAYCLOCKDIV,
 		0x80,
@@ -169,6 +170,7 @@ void oledInit()
 	oledClear();
 	oledRefresh();
 }
+#endif
 
 /*
  * Clears the display buffer (sets all pixels to black)
@@ -184,9 +186,10 @@ void oledClear()
  * make the change visible.  All other operations only change the buffer
  * not the content of the display.
  */
+#if !EMULATOR
 void oledRefresh()
 {
-	static uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
+	static const uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
 
 	// draw triangle in upper right corner
 	if (is_debug_link) {
@@ -216,6 +219,7 @@ void oledRefresh()
 		oledInvertPixel(OLED_WIDTH - 1, 4);
 	}
 }
+#endif
 
 const uint8_t *oledGetBuffer()
 {

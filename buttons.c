@@ -21,12 +21,18 @@
 
 struct buttonState button;
 
+#if !EMULATOR
+uint16_t buttonRead(void) {
+	return gpio_port_read(BTN_PORT);
+}
+#endif
+
 void buttonUpdate()
 {
 	uint16_t state;
 	static uint16_t last_state = BTN_PIN_YES | BTN_PIN_NO;
 
-	state = gpio_port_read(BTN_PORT);
+	state = buttonRead();
 
 	if ((state & BTN_PIN_YES) == 0) {	// Yes button is down
 		if ((last_state & BTN_PIN_YES) == 0) {		// last Yes was down

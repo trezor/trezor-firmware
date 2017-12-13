@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project, https://trezor.io/
  *
- * Copyright (C) 2016 Saleem Rashid <trezor@saleemrashid.com>
+ * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,22 +17,24 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TIMER_H__
-#define __TIMER_H__
-
-#include <stdint.h>
-
-void timer_init(void);
+#ifndef __EMULATOR_H__
+#define __EMULATOR_H__
 
 #if EMULATOR
-uint32_t timer_ms(void);
-#else
-static inline uint32_t timer_ms(void) {
-        /* 1 tick = 1 ms */
-        extern volatile uint32_t system_millis;
 
-        return system_millis;
-}
+#include "strl.h"
+
+#include <stddef.h>
+
+extern void *emulator_flash_base;
+
+void emulatorPoll(void);
+void emulatorRandom(void *buffer, size_t size);
+
+void emulatorSocketInit(void);
+size_t emulatorSocketRead(void *buffer, size_t size);
+size_t emulatorSocketWrite(const void *buffer, size_t size);
+
 #endif
 
 #endif

@@ -446,9 +446,9 @@ char usbTiny(char set)
 
 void usbSleep(uint32_t millis)
 {
-	uint32_t start = system_millis;
+	uint32_t start = timer_ms();
 
-	while ((system_millis - start) < millis) {
+	while ((timer_ms() - start) < millis) {
 		usbd_poll(usbd_dev);
 	}
 }

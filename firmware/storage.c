@@ -55,7 +55,13 @@ _Static_assert(((uint32_t)&storageUpdate & 3) == 0, "storage unaligned");
 _Static_assert((sizeof(storageUpdate) & 3) == 0, "storage unaligned");
 
 #define STORAGE_ROM ((const Storage *)(FLASH_STORAGE_START + sizeof(storage_magic) + sizeof(storage_uuid)))
+
+#if EMULATOR
+// TODO: Fix this for emulator
+#define storageRom STORAGE_ROM
+#else
 const Storage *storageRom = STORAGE_ROM;
+#endif
 
 char storage_uuid_str[25];
 
@@ -92,7 +98,10 @@ be added to the storage u2f_counter to get the real counter value.
 #define FLASH_STORAGE_U2FAREA_LEN (0x100)
 #define FLASH_STORAGE_REALLEN     (sizeof(storage_magic) + sizeof(storage_uuid) + sizeof(Storage))
 
+#if !EMULATOR
+// TODO: Fix this for emulator
 _Static_assert(FLASH_STORAGE_START + FLASH_STORAGE_REALLEN <= FLASH_STORAGE_PINAREA, "Storage struct is too large for TREZOR flash");
+#endif
 
 /* Current u2f offset, i.e. u2f counter is
  * storage.u2f_counter + storage_u2f_offset.
@@ -119,10 +128,12 @@ void storage_show_error(void)
 
 void storage_check_flash_errors(void)
 {
+#if !EMULATOR
 	// flash operation failed
 	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
 		storage_show_error();
 	}
+#endif
 }
 
 bool storage_from_flash(void)
@@ -197,7 +208,10 @@ bool storage_from_flash(void)
 		flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
 		flash_program_word(FLASH_STORAGE_PINAREA, 0xffffffff << pinctr);
 		// erase storageRom.has_pin_failed_attempts and storageRom.pin_failed_attempts
+#if !EMULATOR
+// TODO: Fix this for emulator
 		_Static_assert(((uint32_t)&STORAGE_ROM->pin_failed_attempts & 3) == 0, "storage.pin_failed_attempts unaligned");
+#endif
 		flash_program_byte((uint32_t)&storageRom->has_pin_failed_attempts, 0);
 		flash_program_word((uint32_t)&storageRom->pin_failed_attempts, 0);
 		flash_lock();

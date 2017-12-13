@@ -47,7 +47,11 @@ void debugLog(int level, const char *bucket, const char *text)
 {
 	(void)level;
 	(void)bucket;
+#if EMULATOR
+	puts(text);
+#else
 	oledDebug(text);
+#endif
 }
 
 char *debugInt(const uint32_t i)

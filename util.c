@@ -17,7 +17,6 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libopencm3/cm3/scb.h>
 #include "util.h"
 
 inline void delay(uint32_t wait)
@@ -71,9 +70,4 @@ uint32_t readprotobufint(uint8_t **ptr)
 void __attribute__((noreturn)) system_halt(void)
 {
 	for (;;) {} // loop forever
-}
-
-void __attribute__((noreturn)) system_reset(void)
-{
-	scb_reset_system();
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project, https://trezor.io/
  *
- * Copyright (C) 2016 Saleem Rashid <trezor@saleemrashid.com>
+ * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,22 +17,16 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#include "rng.h"
 
-#include <stdint.h>
+uint32_t random32(void) {
+	static uint32_t last = 0;
+	uint32_t new;
 
-void timer_init(void);
+	do {
+		emulatorRandom(&new, sizeof(new));
+	} while (last == new);
 
-#if EMULATOR
-uint32_t timer_ms(void);
-#else
-static inline uint32_t timer_ms(void) {
-        /* 1 tick = 1 ms */
-        extern volatile uint32_t system_millis;
-
-        return system_millis;
+	last = new;
+	return new;
 }
-#endif
-
-#endif

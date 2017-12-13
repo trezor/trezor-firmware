@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project, https://trezor.io/
  *
- * Copyright (C) 2016 Saleem Rashid <trezor@saleemrashid.com>
+ * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,22 +17,24 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#include "buttons.h"
 
-#include <stdint.h>
+#if !HEADLESS
+#include <SDL.h>
+#endif
 
-void timer_init(void);
+uint16_t buttonRead(void) {
+	uint16_t state = 0;
 
-#if EMULATOR
-uint32_t timer_ms(void);
-#else
-static inline uint32_t timer_ms(void) {
-        /* 1 tick = 1 ms */
-        extern volatile uint32_t system_millis;
+#if !HEADLESS
+	const uint8_t *scancodes = SDL_GetKeyboardState(NULL);
+	if (scancodes[SDL_SCANCODE_LEFT]) {
+		state |= BTN_PIN_NO;
+	}
+	if (scancodes[SDL_SCANCODE_RIGHT]) {
+		state |= BTN_PIN_YES;
+	}
+#endif
 
-        return system_millis;
+	return ~state;
 }
-#endif
-
-#endif

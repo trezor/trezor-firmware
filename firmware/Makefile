@@ -7,7 +7,12 @@ endif
 
 NAME  = trezor
 
+ifeq ($(EMULATOR),1)
+OBJS += udp.o
+else
 OBJS += usb.o
+endif
+
 OBJS += u2f.o
 OBJS += messages.o
 OBJS += storage.o

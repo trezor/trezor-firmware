@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project, https://trezor.io/
  *
- * Copyright (C) 2016 Saleem Rashid <trezor@saleemrashid.com>
+ * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,22 +17,29 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#include "strl.h"
 
-#include <stdint.h>
+#include <string.h>
 
-void timer_init(void);
+size_t strlcpy(char *dst, const char *src, size_t size) {
+	if (size == 0) {
+		return 0;
+	}
 
-#if EMULATOR
-uint32_t timer_ms(void);
-#else
-static inline uint32_t timer_ms(void) {
-        /* 1 tick = 1 ms */
-        extern volatile uint32_t system_millis;
+	for (size_t i = 0; i < size - 1; i++) {
+		dst[i] = src[i];
 
-        return system_millis;
+		if (src[i] == '\0') {
+			return i;
+		}
+	}
+
+	dst[size - 1] = '\0';
+	return size - 2;
 }
-#endif
 
-#endif
+size_t strlcat(char *dst, const char *src, size_t size) {
+	size_t n = strnlen(dst, size);
+
+	return n + strlcpy(&dst[n], src, size - n);
+}

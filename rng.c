@@ -23,6 +23,7 @@
 
 #include "rng.h"
 
+#if !EMULATOR
 uint32_t random32(void)
 {
 	static uint32_t last = 0, new = 0;
@@ -34,6 +35,7 @@ uint32_t random32(void)
 	last = new;
 	return new;
 }
+#endif
 
 uint32_t random_uniform(uint32_t n)
 {

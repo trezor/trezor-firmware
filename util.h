@@ -22,8 +22,10 @@
 
 #include <stdint.h>
 
+#if !EMULATOR
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/vector.h>
+#endif
 
 // Statement expressions make these macros side-effect safe
 #define MIN(a, b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? _a : _b; })
@@ -42,9 +44,8 @@ uint32_t readprotobufint(uint8_t **ptr);
 
 // halt execution (or do an endless loop)
 void __attribute__((noreturn)) system_halt(void);
-// reset system
-void __attribute__((noreturn)) system_reset(void);
 
+#if !EMULATOR
 // defined in memory.ld
 extern uint8_t _ram_start[], _ram_end[];
 
@@ -65,5 +66,6 @@ static inline void __attribute__((noreturn)) load_vector_table(const vector_tabl
 	// Prevent compiler from generating stack protector code (which causes CPU fault because the stack is moved)
 	for (;;);
 }
+#endif
 
 #endif

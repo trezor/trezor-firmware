@@ -234,6 +234,7 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 	}
 	
 	_Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
+
 	resp->coins_count = COINS_COUNT;
 	for (int i = 0; i < COINS_COUNT; i++) {
 		if (coins[i].coin_name) {
