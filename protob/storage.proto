@@ -25,4 +25,5 @@ message Storage {
 	optional uint32 u2f_counter = 11;		// sequence number for u2f authentications
 	optional bool needs_backup = 12;		// seed is not backed up yet
 	optional uint32 flags = 13;			// device flags
+	optional HDNodeType u2froot = 14;		// U2F root node
 }
