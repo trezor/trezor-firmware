@@ -16,6 +16,7 @@
 #include "modtrezorcrypto-aes.h"
 #include "modtrezorcrypto-bip32.h"
 #include "modtrezorcrypto-bip39.h"
+#include "modtrezorcrypto-blake256.h"
 #include "modtrezorcrypto-blake2b.h"
 #include "modtrezorcrypto-blake2s.h"
 #include "modtrezorcrypto-curve25519.h"
@@ -36,6 +37,7 @@
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto) },
     { MP_ROM_QSTR(MP_QSTR_AES), MP_ROM_PTR(&mod_trezorcrypto_AES_type) },
+    { MP_ROM_QSTR(MP_QSTR_blake256), MP_ROM_PTR(&mod_trezorcrypto_Blake256_type) },
     { MP_ROM_QSTR(MP_QSTR_blake2b), MP_ROM_PTR(&mod_trezorcrypto_Blake2b_type) },
     { MP_ROM_QSTR(MP_QSTR_blake2s), MP_ROM_PTR(&mod_trezorcrypto_Blake2s_type) },
     { MP_ROM_QSTR(MP_QSTR_pbkdf2), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_type) },
