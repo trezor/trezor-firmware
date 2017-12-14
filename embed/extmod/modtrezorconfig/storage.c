@@ -10,6 +10,8 @@
 #include "common.h"
 #include "norcow.h"
 #include "../../trezorhal/flash.h"
+#include "py/runtime.h"
+#include "py/obj.h"
 
 // Norcow storage key of configured PIN.
 #define PIN_KEY 0x0000
@@ -89,14 +91,11 @@ static secbool pin_cmp(const uint8_t *pin, size_t pinlen)
     }
 }
 
-static secbool pin_check(const uint8_t *pin, size_t len)
+static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs)
 {
-    uint32_t ofs = 0;
-    uint32_t ctr;
     const void *vpinfail;
-    const uint32_t *pinfail = NULL;
     uint16_t pinfaillen;
-
+    unsigned int ofs;
     // The PIN_FAIL_KEY points to an area of words, initialized to
     // 0xffffffff (meaning no pin failures).  The first non-zero word
     // in this area is the current pin failure counter.  If  PIN_FAIL_KEY
@@ -106,36 +105,51 @@ static secbool pin_check(const uint8_t *pin, size_t len)
     // indicating that the next word is the pin failure counter.
 
     // Find the current pin failure counter
-    secbool found = secfalse;
     if (secfalse != norcow_get(PIN_FAIL_KEY, &vpinfail, &pinfaillen)) {
-        pinfail = vpinfail;
+        *pinfail = vpinfail;
         for (ofs = 0; ofs < pinfaillen / sizeof(uint32_t); ofs++) {
-            if (pinfail[ofs]) {
-                found = sectrue;
-                break;
+            if (((const uint32_t *) vpinfail)[ofs]) {
+                *pinfail = vpinfail;
+                *pofs = ofs;
+                return sectrue;
             }
         }
     }
-    if (found == secfalse) {
-        // No pin failure section, or all entries used -> create a new one.
-        uint32_t pinarea[PIN_FAIL_SECTOR_SIZE];
-        memset(pinarea, 0xff, sizeof(pinarea));
-        if (sectrue != norcow_set(PIN_FAIL_KEY, pinarea, sizeof(pinarea))) {
-            return secfalse;
-        }
-        if (sectrue != norcow_get(PIN_FAIL_KEY, &vpinfail, &pinfaillen)) {
-            return secfalse;
-        }
-        pinfail = vpinfail;
-        ofs = 0;
+
+    // No pin failure section, or all entries used -> create a new one.
+    uint32_t pinarea[PIN_FAIL_SECTOR_SIZE];
+    memset(pinarea, 0xff, sizeof(pinarea));
+    if (sectrue != norcow_set(PIN_FAIL_KEY, pinarea, sizeof(pinarea))) {
+        return secfalse;
+    }
+    if (sectrue != norcow_get(PIN_FAIL_KEY, &vpinfail, &pinfaillen)) {
+        return secfalse;
+    }
+    *pinfail = vpinfail;
+    *pofs = 0;
+    return sectrue;
+}
+
+static secbool pin_check(const uint8_t *pin, size_t len, mp_obj_t callback)
+{
+    const uint32_t *pinfail = NULL;
+    uint32_t ofs;
+    uint32_t ctr;
+
+    // Get the pin failure counter
+    if (pin_get_fails(&pinfail, &ofs) != sectrue) {
+        return secfalse;
     }
 
     // Read current failure counter
     ctr = pinfail[ofs];
+    // Wipe storage if too many failures
     pin_fails_check_max(ctr);
 
     // Sleep for ~ctr seconds before checking the PIN.
     for (uint32_t wait = ~ctr; wait > 0; wait--) {
+        mp_obj_t waitobj = mp_obj_new_int(wait);
+        mp_call_function_1(callback, waitobj);
         hal_delay(1000);
     }
 
@@ -146,6 +160,7 @@ static secbool pin_check(const uint8_t *pin, size_t len)
         return secfalse;
     }
     if (sectrue != pin_cmp(pin, len)) {
+        // Wipe storage if too many failures
         pin_fails_check_max(ctr << 1);
         return secfalse;
     }
@@ -155,10 +170,10 @@ static secbool pin_check(const uint8_t *pin, size_t len)
     return sectrue;
 }
 
-secbool storage_unlock(const uint8_t *pin, size_t len)
+secbool storage_unlock(const uint8_t *pin, size_t len, mp_obj_t callback)
 {
     unlocked = secfalse;
-    if (sectrue == initialized && sectrue == pin_check(pin, len)) {
+    if (sectrue == initialized && sectrue == pin_check(pin, len, callback)) {
         unlocked = sectrue;
     }
     return unlocked;
@@ -191,12 +206,12 @@ secbool storage_has_pin(void)
     return sectrue * (0 != spinlen);
 }
 
-secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin, size_t newlen)
+secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin, size_t newlen, mp_obj_t callback)
 {
     if (sectrue != initialized || sectrue != unlocked || newlen > PIN_MAXLEN) {
         return secfalse;
     }
-    if (sectrue != pin_check(pin, len)) {
+    if (sectrue != pin_check(pin, len, callback)) {
         return secfalse;
     }
     return norcow_set(PIN_KEY, newpin, newlen);
