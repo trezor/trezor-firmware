@@ -29,6 +29,6 @@ async def layout_load_device(ctx, msg):
     storage.load_settings(use_passphrase=msg.passphrase_protection,
                           label=msg.label)
     if msg.pin:
-        config.change_pin('', msg.pin)
+        config.change_pin('', msg.pin, None)
 
     return Success(message='Device loaded')

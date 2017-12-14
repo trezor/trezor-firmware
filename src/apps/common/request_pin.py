@@ -2,6 +2,16 @@ from trezor import res
 from trezor import ui
 
 
+def show_pin_timeout(wait, total):
+    ui.display.clear()
+    ui.display.loader(1000 - (1000 * wait // total), 0, ui.FG, ui.BG)
+    if wait == 1:
+        ui.display.text_center(120, 220, 'Waiting for 1 second', ui.BOLD, ui.FG, ui.BG)
+    else:
+        ui.display.text_center(120, 220, 'Waiting for %d seconds' % wait, ui.BOLD, ui.FG, ui.BG)
+    ui.display.refresh()
+
+
 class PinCancelled(Exception):
     pass
 

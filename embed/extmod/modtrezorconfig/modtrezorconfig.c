@@ -25,7 +25,7 @@ STATIC mp_obj_t mod_trezorconfig_init(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_init);
 
-/// def unlock(pin: str, waitcallback: (int -> None)) -> bool:
+/// def unlock(pin: str, waitcallback: (int, int -> None)) -> bool:
 ///     '''
 ///     Attempts to unlock the storage with given PIN.  Returns True on
 ///     success, False on failure.
@@ -52,7 +52,7 @@ STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj, mod_trezorconfig_has_pin);
 
-/// def change_pin(pin: str, newpin: str, waitcallback: (int -> None)) -> bool:
+/// def change_pin(pin: str, newpin: str, waitcallback: (int, int -> None)) -> bool:
 ///     '''
 ///     Change PIN. Returns True on success, False on failure.
 ///     '''

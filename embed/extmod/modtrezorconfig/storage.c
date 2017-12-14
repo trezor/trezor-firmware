@@ -148,8 +148,9 @@ static secbool pin_check(const uint8_t *pin, size_t len, mp_obj_t callback)
 
     // Sleep for ~ctr seconds before checking the PIN.
     for (uint32_t wait = ~ctr; wait > 0; wait--) {
-        mp_obj_t waitobj = mp_obj_new_int(wait);
-        mp_call_function_1(callback, waitobj);
+        if (mp_obj_is_callable(callback)) {
+            mp_call_function_2(callback, mp_obj_new_int(wait), mp_obj_new_int(~ctr));
+        }
         hal_delay(1000);
     }
 

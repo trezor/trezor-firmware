@@ -2,13 +2,7 @@ from trezor import config
 from trezor import loop
 from trezor import ui
 
-from apps.common.request_pin import request_pin
-
-
-def show_timeout(wait):
-    # TODO
-    from trezor import log
-    log.debug('PIN', 'waiting %d seconds', wait)
+from apps.common.request_pin import request_pin, show_pin_timeout
 
 
 async def unlock_layout():
@@ -17,7 +11,7 @@ async def unlock_layout():
             pin = await request_pin()
         else:
             pin = ''
-        if config.unlock(pin, show_timeout):
+        if config.unlock(pin, show_pin_timeout):
             return
         else:
             await unlock_failed()

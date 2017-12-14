@@ -50,6 +50,7 @@ def confirm_change_pin(ctx, msg):
 @unimport
 async def layout_change_pin(ctx, msg):
     from trezor.messages.Success import Success
+    from apps.common.request_pin import show_pin_timeout
 
     await confirm_change_pin(ctx, msg)
 
@@ -62,11 +63,7 @@ async def layout_change_pin(ctx, msg):
     else:
         new_pin = await request_pin_confirm(ctx)
 
-    def show_timeout(wait):
-        # TODO
-        return
-
-    config.change_pin(curr_pin, new_pin, show_timeout)
+    config.change_pin(curr_pin, new_pin, show_pin_timeout)
 
     if new_pin:
         return Success(message='PIN changed')
