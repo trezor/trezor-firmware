@@ -4,14 +4,14 @@ from trezor import config
 
 _STORAGE_VERSION = b'\x01'
 
-_APP            = const(0x0001)  # app namespace
-_DEVICE_ID      = const(0x0000)  # bytes
-_VERSION        = const(0x0001)  # int
-_MNEMONIC       = const(0x0002)  # str
-_LANGUAGE       = const(0x0003)  # str
-_LABEL          = const(0x0004)  # str
-_USE_PASSPHRASE = const(0x0005)  # 0x01 or empty
-_HOMESCREEN     = const(0x0006)  # bytes
+_APP            = const(0x01)  # app namespace
+_DEVICE_ID      = const(0x00)  # bytes
+_VERSION        = const(0x01)  # int
+_MNEMONIC       = const(0x02)  # str
+_LANGUAGE       = const(0x03)  # str
+_LABEL          = const(0x04)  # str
+_USE_PASSPHRASE = const(0x05)  # 0x01 or empty
+_HOMESCREEN     = const(0x06)  # bytes
 
 
 def get_device_id() -> str:
