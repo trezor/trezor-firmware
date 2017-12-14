@@ -25,20 +25,20 @@ STATIC mp_obj_t mod_trezorconfig_init(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_init);
 
-/// def unlock(pin: str) -> bool:
+/// def unlock(pin: str, waitcallback: (int -> None)) -> bool:
 ///     '''
 ///     Attempts to unlock the storage with given PIN.  Returns True on
 ///     success, False on failure.
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin) {
+STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t waitcallback) {
     mp_buffer_info_t buf;
     mp_get_buffer_raise(pin, &buf, MP_BUFFER_READ);
-    if (sectrue != storage_unlock(buf.buf, buf.len)) {
+    if (sectrue != storage_unlock(buf.buf, buf.len, waitcallback)) {
         return mp_const_false;
     }
     return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_unlock_obj, mod_trezorconfig_unlock);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj, mod_trezorconfig_unlock);
 
 /// def has_pin() -> bool:
 ///     '''
@@ -52,21 +52,21 @@ STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj, mod_trezorconfig_has_pin);
 
-/// def change_pin(pin: str, newpin: str) -> bool:
+/// def change_pin(pin: str, newpin: str, waitcallback: (int -> None)) -> bool:
 ///     '''
 ///     Change PIN. Returns True on success, False on failure.
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
+STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin, mp_obj_t waitcallback) {
     mp_buffer_info_t pinbuf;
     mp_get_buffer_raise(pin, &pinbuf, MP_BUFFER_READ);
     mp_buffer_info_t newbuf;
     mp_get_buffer_raise(newpin, &newbuf, MP_BUFFER_READ);
-    if (sectrue != storage_change_pin(pinbuf.buf, pinbuf.len, newbuf.buf, newbuf.len)) {
+    if (sectrue != storage_change_pin(pinbuf.buf, pinbuf.len, newbuf.buf, newbuf.len, waitcallback)) {
         return mp_const_false;
     }
     return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_change_pin_obj, mod_trezorconfig_change_pin);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_change_pin_obj, mod_trezorconfig_change_pin);
 
 /// def get(app: int, key: int) -> bytes:
 ///     '''

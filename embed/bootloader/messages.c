@@ -371,7 +371,6 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
                 FLASH_SECTOR_STORAGE_2,
             };
             ensure(flash_erase_sectors(sectors_storage, sizeof(sectors_storage), NULL), NULL);
-            ensure(flash_erase_sector(FLASH_SECTOR_PIN_AREA), NULL);
         }
 
         firstskip = IMAGE_HEADER_SIZE + vhdr.hdrlen;
@@ -432,6 +431,7 @@ static void progress_wipe(int pos, int len)
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     const uint8_t sectors[] = {
+        3,
         FLASH_SECTOR_STORAGE_1,
         FLASH_SECTOR_STORAGE_2,
         FLASH_SECTOR_FIRMWARE_START,
@@ -451,7 +451,6 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
         21,
         22,
         FLASH_SECTOR_FIRMWARE_EXTRA_END,
-        FLASH_SECTOR_PIN_AREA,
     };
     if (sectrue != flash_erase_sectors(sectors, sizeof(sectors), progress_wipe)) {
         MSG_SEND_INIT(Failure);

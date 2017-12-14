@@ -62,7 +62,11 @@ async def layout_change_pin(ctx, msg):
     else:
         new_pin = await request_pin_confirm(ctx)
 
-    config.change_pin(curr_pin, new_pin)
+    def show_timeout(wait):
+        # TODO
+        return
+
+    config.change_pin(curr_pin, new_pin, show_timeout)
 
     if new_pin:
         return Success(message='PIN changed')

@@ -10,7 +10,7 @@
 //                                           1
 #define FLASH_SECTOR_BOARDLOADER_END         2
 
-#define FLASH_SECTOR_PIN_AREA                3
+//                                           3
 
 #define FLASH_SECTOR_STORAGE_1               4
 
