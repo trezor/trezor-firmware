@@ -79,7 +79,11 @@ Total length of bootloader header is always 1024 bytes.
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 12     | reserved | not used yet (zeroed) |
+| 0x0014 | 1      | fix_vmajor | version of last critical bugfix (major) |
+| 0x0015 | 1      | fix_vminor | version of last critical bugfix (minor) |
+| 0x0016 | 1      | fix_vpatch | version of last critical bugfix (patch) |
+| 0x0017 | 1      | fix_vbuild | version of last critical bugfix (build) |
+| 0x0018 | 8      | reserved | not used yet (zeroed) |
 | 0x0020 | 32     | hash1 | hash of the first code chunk (128 - 1 KiB), this excludes the header |
 | 0x0040 | 32     | hash2 | hash of the second code chunk (128 KiB), zeroed if unused |
 | ...    | ...    | ... | ... |
@@ -152,7 +156,11 @@ Total length of firmware header is always 1024 bytes.
 | 0x0011 | 1      | vminor | version (minor) |
 | 0x0012 | 1      | vpatch | version (patch) |
 | 0x0013 | 1      | vbuild | version (build) |
-| 0x0014 | 12     | reserved | not used yet (zeroed) |
+| 0x0014 | 1      | fix_vmajor | version of last critical bugfix (major) |
+| 0x0015 | 1      | fix_vminor | version of last critical bugfix (minor) |
+| 0x0016 | 1      | fix_vpatch | version of last critical bugfix (patch) |
+| 0x0017 | 1      | fix_vbuild | version of last critical bugfix (build) |
+| 0x0018 | 8      | reserved | not used yet (zeroed) |
 | 0x0020 | 32     | hash1 | hash of the first code chunk (128 - 1 KiB), this excludes the header |
 | 0x0040 | 32     | hash2 | hash of the second code chunk (128 KiB), zeroed if unused |
 | ...    | ...    | ... | ... |

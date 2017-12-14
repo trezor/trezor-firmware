@@ -26,7 +26,7 @@ IMAGE_CHUNK_SIZE  = 128 * 1024
 class BinImage(object):
 
     def __init__(self, data, magic, max_size):
-        header = struct.unpack('<4sIIIBBBB12s512s415sB64s', data[:IMAGE_HEADER_SIZE])
+        header = struct.unpack('<4sIIIBBBBBBBB8s512s415sB64s', data[:IMAGE_HEADER_SIZE])
         self.magic, \
         self.hdrlen, \
         self.expiry, \
@@ -35,6 +35,10 @@ class BinImage(object):
         self.vminor, \
         self.vpatch, \
         self.vbuild, \
+        self.fix_vmajor, \
+        self.fix_vminor, \
+        self.fix_vpatch, \
+        self.fix_vbuild, \
         self.reserved1, \
         self.hashes, \
         self.reserved2, \
@@ -46,7 +50,7 @@ class BinImage(object):
         assert total_len % 512 == 0
         assert total_len >= 4 * 1024
         assert total_len <= max_size
-        assert self.reserved1 == 12 * b'\x00'
+        assert self.reserved1 == 8 * b'\x00'
         assert self.reserved2 == 415 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
@@ -66,6 +70,7 @@ class BinImage(object):
         print('  * expiry  :', self.expiry)
         print('  * codelen :', self.codelen)
         print('  * version : %d.%d.%d.%d' % (self.vmajor, self.vminor, self.vpatch, self.vbuild))
+        print('  * fixver  : %d.%d.%d.%d' % (self.fix_vmajor, self.fix_vminor, self.fix_vpatch, self.fix_vbuild))
         print('  * hashes: %s' % ('OK' if self.check_hashes() else 'INCORRECT'))
         for i in range(16):
             print('    - %02d : %s' % (i, binascii.hexlify(self.hashes[i * 32:i * 32 + 32]).decode()))
@@ -101,9 +106,10 @@ class BinImage(object):
         self.hashes = self.compute_hashes()
 
     def serialize_header(self, sig=True):
-        header = struct.pack('<4sIIIBBBB12s512s415s',
+        header = struct.pack('<4sIIIBBBBBBBB8s512s415s',
                                 self.magic, self.hdrlen, self.expiry, self.codelen,
                                 self.vmajor, self.vminor, self.vpatch, self.vbuild,
+                                self.fix_vmajor, self.fix_vminor, self.fix_vpatch, self.fix_vbuild,
                                 self.reserved1, self.hashes, self.reserved2)
         if sig:
             header += struct.pack('<B64s', self.sigmask, self.sig)

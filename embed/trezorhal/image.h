@@ -25,7 +25,8 @@ typedef struct {
     uint32_t expiry;
     uint32_t codelen;
     uint32_t version;
-    // uint8_t reserved[12];
+    uint32_t fix_version;
+    // uint8_t reserved[8];
     uint8_t hashes[512];
     // uint8_t reserved[415];
     uint8_t sigmask;
