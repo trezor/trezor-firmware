@@ -10,7 +10,7 @@
 #include "../../trezorhal/secbool.h"
 
 void storage_init(void);
-secbool storage_wipe(void);
+void storage_wipe(void);
 secbool storage_unlock(const uint8_t *pin, size_t len);
 secbool storage_has_pin(void);
 secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin, size_t newlen);

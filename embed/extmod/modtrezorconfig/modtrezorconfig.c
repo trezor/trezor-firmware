@@ -107,9 +107,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_set_obj, mod_trezorconfig_set)
 ///     Erases the whole config. Use with caution!
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_wipe(void) {
-    if (sectrue != storage_wipe()) {
-       mp_raise_msg(&mp_type_RuntimeError, "Could not wipe storage");
-    }
+    storage_wipe();
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj, mod_trezorconfig_wipe);
