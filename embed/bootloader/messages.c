@@ -317,11 +317,26 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
     return true;
 }
 
-static image_header hdr;
-
 secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * const vhdr);
 
-secbool compare_to_current_vendor_header(const vendor_header * const new_vhdr)
+static int version_compare(uint32_t vera, uint32_t verb)
+{
+    int a, b;
+    a = vera & 0xFF;
+    b = verb & 0xFF;
+    if (a != b) return a - b;
+    a = (vera >> 8) & 0xFF;
+    b = (verb >> 8) & 0xFF;
+    if (a != b) return a - b;
+    a = (vera >> 16) & 0xFF;
+    b = (verb >> 16) & 0xFF;
+    if (a != b) return a - b;
+    a = (vera >> 24) & 0xFF;
+    b = (verb >> 24) & 0xFF;
+    return a - b;
+}
+
+static secbool is_legit_upgrade(const vendor_header * const new_vhdr, const image_header * const new_hdr)
 {
     vendor_header current_vhdr;
     if (sectrue != load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
@@ -330,7 +345,17 @@ secbool compare_to_current_vendor_header(const vendor_header * const new_vhdr)
     uint8_t hash1[32], hash2[32];
     vendor_keys_hash(new_vhdr, hash1);
     vendor_keys_hash(&current_vhdr, hash2);
-    return sectrue * (0 == memcmp(hash1, hash2, 32));
+    if (0 != memcmp(hash1, hash2, 32)) {
+        return secfalse;
+    }
+    image_header current_hdr;
+    if (sectrue != load_image_header((const uint8_t *)FIRMWARE_START + current_vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, current_vhdr.vsig_m, current_vhdr.vsig_n, current_vhdr.vpub, &current_hdr)) {
+        return secfalse;
+    }
+    if (version_compare(new_hdr->version, current_hdr.fix_version) < 0) {
+        return secfalse;
+    }
+    return sectrue;
 }
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -346,6 +371,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND(Failure);
         return -1;
     }
+
+    static image_header hdr;
 
     uint32_t firstskip = 0;
     if (firmware_block == 0) {
@@ -365,7 +392,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             return -3;
         }
 
-        if (sectrue != compare_to_current_vendor_header(&vhdr)) {
+        if (sectrue != is_legit_upgrade(&vhdr, &hdr)) {
             const uint8_t sectors_storage[] = {
                 FLASH_SECTOR_STORAGE_1,
                 FLASH_SECTOR_STORAGE_2,
