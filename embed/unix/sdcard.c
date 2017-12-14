@@ -5,7 +5,7 @@
  * see LICENSE file for details
  */
 
-#include "../../trezorhal/sdcard.h"
+#include "sdcard.h"
 
 void sdcard_init(void) {
 }

@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../trezorhal/usb.h"
-#include "../../trezorhal/touch.h"
+#include "usb.h"
+#include "touch.h"
 
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
 

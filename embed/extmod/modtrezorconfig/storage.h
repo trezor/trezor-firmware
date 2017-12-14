@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "../../trezorhal/secbool.h"
+#include "secbool.h"
 #include "py/obj.h"
 
 void storage_init(void);

@@ -11,7 +11,7 @@
 #endif
 
 #include "options.h"
-#include "embed/trezorhal/touch.h"
+#include "touch.h"
 
 void __shutdown(void);
 

@@ -5,13 +5,7 @@
  * see LICENSE file for details
  */
 
-#if defined TREZOR_STM32
 #include "sbu.h"
-#elif defined TREZOR_UNIX
-#include "unix-sbu-mock.h"
-#else
-#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
-#endif
 
 /// class SBU:
 ///     '''

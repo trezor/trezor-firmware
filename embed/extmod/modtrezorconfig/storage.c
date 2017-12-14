@@ -9,7 +9,8 @@
 
 #include "common.h"
 #include "norcow.h"
-#include "../../trezorhal/flash.h"
+#include "flash.h"
+
 #include "py/runtime.h"
 #include "py/obj.h"
 

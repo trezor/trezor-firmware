@@ -1,0 +1,1 @@
+../trezorhal/touch.h

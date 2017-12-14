@@ -1,0 +1,1 @@
+../trezorhal/usb_hid-defs.h

@@ -8,15 +8,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#if defined TREZOR_STM32
 #include "usb.h"
 #include "touch.h"
-#include "pendsv.h"
-#elif defined TREZOR_UNIX
-#include "unix-msg-mock.h"
-#else
-#error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
-#endif
+
+void pendsv_kbd_intr(void);
+void mp_hal_set_vcp_iface(int iface_num);
 
 #define TOUCH_IFACE (255)
 #define POLL_READ  (0x0000)

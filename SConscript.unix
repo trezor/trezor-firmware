@@ -222,8 +222,11 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/moduselect.c',
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
-    'embed/unix/touch.c',
     'embed/unix/flash.c',
+    'embed/unix/sdcard.c',
+    'embed/unix/sbu.c',
+    'embed/unix/touch.c',
+    'embed/unix/usb.c',
 ]
 
 SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']

@@ -2,7 +2,7 @@
 #define __NORCOW_H__
 
 #include <stdint.h>
-#include "../../trezorhal/secbool.h"
+#include "secbool.h"
 
 /*
  * Storage parameters:

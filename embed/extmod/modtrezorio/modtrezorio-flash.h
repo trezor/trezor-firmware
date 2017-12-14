@@ -5,7 +5,7 @@
  * see LICENSE file for details
  */
 
-#include "../../trezorhal/flash.h"
+#include "flash.h"
 
 /// class FlashOTP:
 ///     '''

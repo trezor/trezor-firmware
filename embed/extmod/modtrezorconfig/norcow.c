@@ -3,7 +3,7 @@
 #include "norcow.h"
 
 #include "common.h"
-#include "../../trezorhal/flash.h"
+#include "flash.h"
 
 #ifndef NORCOW_SECTORS
 #define NORCOW_SECTORS {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}

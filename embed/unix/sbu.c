@@ -5,7 +5,7 @@
  * see LICENSE file for details
  */
 
-#include "../../trezorhal/sbu.h"
+#include "sbu.h"
 
 void sbu_init(void)
 {

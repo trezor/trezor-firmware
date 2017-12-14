@@ -14,10 +14,10 @@
 #include <sys/types.h>
 
 #include "common.h"
-#include "../trezorhal/flash.h"
+#include "flash.h"
 
 #ifndef FLASH_FILE
-#define FLASH_FILE "/var/tmp/trezor.config"
+#define FLASH_FILE "/var/tmp/trezor.flash"
 #endif
 
 #define SECTOR_COUNT 24
