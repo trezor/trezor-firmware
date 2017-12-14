@@ -172,7 +172,7 @@ bool storage_from_flash(void)
 	} else
 	if (version == 9) {
 		// added u2froot
-		old_storage_size = 1704;
+		old_storage_size = 1640;
 	}
 
 	// erase newly added fields
