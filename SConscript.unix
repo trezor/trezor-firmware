@@ -71,7 +71,12 @@ SOURCE_MOD += [
 ]
 
 # modtrezorui
-CPPDEFINES_MOD += [('QR_MAX_VERSION', '0')]
+CPPDEFINES_MOD += [
+    'TREZOR_FONT_BOLD_ENABLE',
+    'TREZOR_FONT_MONO_ENABLE',
+    'TREZOR_FONT_NORMAL_ENABLE',
+    ('QR_MAX_VERSION', '0'),
+]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/inflate.c',

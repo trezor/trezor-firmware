@@ -7,13 +7,13 @@
 
 #include "inflate.h"
 #include "font_bitmap.h"
-#ifndef TREZOR_FONT_MONO_DISABLE
+#ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_robotomono_regular_20.h"
 #endif
-#ifndef TREZOR_FONT_NORMAL_DISABLE
+#ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_roboto_regular_20.h"
 #endif
-#ifndef TREZOR_FONT_BOLD_DISABLE
+#ifdef TREZOR_FONT_BOLD_ENABLE
 #include "font_roboto_bold_20.h"
 #endif
 
@@ -294,15 +294,15 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
         return 0;
     }
     switch (font) {
-#ifndef TREZOR_FONT_MONO_DISABLE
+#ifdef TREZOR_FONT_MONO_ENABLE
         case FONT_MONO:
             return Font_RobotoMono_Regular_20[c - ' '];
 #endif
-#ifndef TREZOR_FONT_NORMAL_DISABLE
+#ifdef TREZOR_FONT_NORMAL_ENABLE
         case FONT_NORMAL:
             return Font_Roboto_Regular_20[c - ' '];
 #endif
-#ifndef TREZOR_FONT_BOLD_DISABLE
+#ifdef TREZOR_FONT_BOLD_ENABLE
         case FONT_BOLD:
             return Font_Roboto_Bold_20[c - ' '];
 #endif

@@ -19,13 +19,13 @@
 
 #define FONT_BPP    4
 
-#ifndef TREZOR_FONT_MONO_DISABLE
+#ifdef TREZOR_FONT_MONO_ENABLE
 #define FONT_MONO   0
 #endif
-#ifndef TREZOR_FONT_NORMAL_DISABLE
+#ifdef TREZOR_FONT_NORMAL_ENABLE
 #define FONT_NORMAL 1
 #endif
-#ifndef TREZOR_FONT_BOLD_DISABLE
+#ifdef TREZOR_FONT_BOLD_ENABLE
 #define FONT_BOLD   2
 #endif
 
