@@ -35,6 +35,10 @@ typedef struct {
 
 #define MAX_VENDOR_PUBLIC_KEYS 8
 
+#define VTRUST_WAIT  0x000F
+#define VTRUST_RED   0x0010
+#define VTRUST_CLICK 0x0020
+
 typedef struct {
     uint32_t magic;
     uint32_t hdrlen;
