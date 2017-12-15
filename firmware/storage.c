@@ -152,7 +152,7 @@ bool storage_from_flash(void)
 	memcpy(storage_uuid, (void *)(FLASH_STORAGE_START + sizeof(storage_magic)), sizeof(storage_uuid));
 	data2hex(storage_uuid, sizeof(storage_uuid), storage_uuid_str);
 
-#define OLD_STORAGE_SIZE(last_member) (offsetof(Storage, last_member) + pb_membersize(Storage, last_member))
+#define OLD_STORAGE_SIZE(last_member) (((offsetof(Storage, last_member) + pb_membersize(Storage, last_member)) + 3) & ~3)
 
 	// copy storage
 	size_t old_storage_size = 0;
