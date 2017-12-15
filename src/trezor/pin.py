@@ -1,6 +1,7 @@
 def pin_to_int(pin):
     return int('1' + pin)
 
+
 def show_pin_timeout(wait, total):
     from trezor import ui
     ui.display.bar(0, 0, ui.SCREEN, ui.SCREEN, ui.BG)
