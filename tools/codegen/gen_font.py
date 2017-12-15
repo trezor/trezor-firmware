@@ -33,13 +33,20 @@ def process_face(name, style, size):
             metrics = face.glyph.metrics
             assert metrics.width // 64 == bitmap.width
             assert metrics.height // 64 == bitmap.rows
+            assert metrics.width % 64 == 0
+            assert metrics.height % 64 == 0
             assert metrics.horiAdvance % 64 == 0
             assert metrics.horiBearingX % 64 == 0
             assert metrics.horiBearingY % 64 == 0
             assert bitmap.width == bitmap.pitch
             assert len(bitmap.buffer) == bitmap.pitch * bitmap.rows
-            print('Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes)' % (c, bitmap.width, bitmap.rows, bitmap.num_grays, len(bitmap.buffer)))
-            f.write('/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d' % (c, name, style, size, i, bitmap.width, bitmap.rows, metrics.horiAdvance // 64, metrics.horiBearingX // 64, metrics.horiBearingY // 64))
+            width = metrics.width // 64
+            rows = metrics.height // 64
+            horiAdvance = metrics.horiAdvance // 64
+            horiBearingX = metrics.horiBearingX // 64
+            horiBearingY = metrics.horiBearingY // 64
+            print('Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)' % (c, bitmap.width, bitmap.rows, bitmap.num_grays, len(bitmap.buffer), horiAdvance, horiBearingX, horiBearingY))
+            f.write('/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d' % (c, name, style, size, i, width, rows, horiAdvance, horiBearingX, horiBearingY))
             buf = list(bitmap.buffer)
             if len(buf) > 0:
                 if FONT_BPP == 2:
