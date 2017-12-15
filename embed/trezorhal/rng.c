@@ -1,5 +1,7 @@
 #include "rng.h"
 
+#include STM32_HAL_H
+
 #pragma GCC optimize("no-stack-protector") // applies to all functions in this file
 
 void rng_init(void)

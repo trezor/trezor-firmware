@@ -43,13 +43,23 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_bytes_obj, mod_trezorcr
 ///     Shuffles items of given list (in-place).
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_random_shuffle(mp_obj_t data) {
-    size_t item_cnt;
+    size_t count;
     mp_obj_t *items;
-    mp_obj_get_array(data, &item_cnt, &items);
-    if (item_cnt > 256) {
+    mp_obj_get_array(data, &count, &items);
+    if (count > 256) {
         mp_raise_ValueError("Maximum list size is 256 items");
     }
-    random_permute(items, sizeof(mp_obj_t *), item_cnt);
+    if (count <= 1) {
+        return mp_const_none;
+    }
+    // Fisher-Yates shuffle
+    mp_obj_t t;
+    for (size_t i = count - 1; i >= 1; i--) {
+        size_t j = random_uniform(i + 1);
+        t = items[i];
+        items[i] = items[j];
+        items[j] = t;
+    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_shuffle_obj, mod_trezorcrypto_random_shuffle);

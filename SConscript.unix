@@ -223,6 +223,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
     'embed/unix/flash.c',
+    'embed/unix/rng.c',
     'embed/unix/sdcard.c',
     'embed/unix/sbu.c',
     'embed/unix/touch.c',
