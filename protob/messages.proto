@@ -84,6 +84,8 @@ enum MessageType {
 	MessageType_CosiCommitment = 72 [(wire_out) = true];
 	MessageType_CosiSign = 73 [(wire_in) = true];
 	MessageType_CosiSignature = 74 [(wire_out) = true];
+	MessageType_NEMDecryptMessage = 75 [(wire_in) = true];
+	MessageType_NEMDecryptedMessage = 76 [(wire_out) = true];
 	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true];
 	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
@@ -869,6 +871,26 @@ message NEMSignTx {
 message NEMSignedTx {
 	optional bytes data = 1;	// Transaction data
 	optional bytes signature = 2;	// Signature for the transaction
+}
+
+/**
+ * Request: Ask device to decrypt NEM transaction payload
+ * @next NEMDecryptedMessage
+ * @next Failure
+ */
+message NEMDecryptMessage {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional uint32 network = 2;			// Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
+	optional bytes public_key = 3;			// Public key of the other party
+	optional bytes payload = 4;			// Actual message data (encrypted)
+}
+
+/**
+ * Response: Contains decrypted NEM transaction payload
+ * @prev NEMDecryptMessage
+ */
+message NEMDecryptedMessage {
+	optional bytes payload = 1;			// Actual message data (unencrypted)
 }
 
 ///////////////////
