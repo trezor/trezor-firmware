@@ -71,24 +71,15 @@ static void pin_fails_check_max(uint32_t ctr)
     }
 }
 
-static secbool const_cmp(const uint8_t *pub, size_t publen, const uint8_t *sec, size_t seclen)
-{
-    size_t diff = seclen ^ publen;
-    for (size_t i = 0; i < publen; i++) {
-        diff |= pub[i] ^ sec[i];
-    }
-    return sectrue * (0 == diff);
-}
-
-static secbool pin_cmp(const uint8_t *pin, size_t pinlen)
+static secbool pin_cmp(const uint32_t pin)
 {
     const void *spin = NULL;
     uint16_t spinlen = 0;
     norcow_get(PIN_KEY, &spin, &spinlen);
-    if (NULL != spin) {
-        return const_cmp(pin, pinlen, spin, spinlen);
+    if (NULL != spin && spinlen == sizeof(uint32_t)) {
+        return sectrue * (pin == *(const uint32_t*)spin);
     } else {
-        return sectrue * (0 == pinlen);
+        return sectrue * (1 == pin);
     }
 }
 
@@ -131,7 +122,7 @@ static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs)
     return sectrue;
 }
 
-static secbool pin_check(const uint8_t *pin, size_t len, mp_obj_t callback)
+static secbool pin_check(uint32_t pin, mp_obj_t callback)
 {
     const uint32_t *pinfail = NULL;
     uint32_t ofs;
@@ -161,7 +152,7 @@ static secbool pin_check(const uint8_t *pin, size_t len, mp_obj_t callback)
     if (sectrue != pin_fails_increase(pinfail + ofs, ofs * sizeof(uint32_t))) {
         return secfalse;
     }
-    if (sectrue != pin_cmp(pin, len)) {
+    if (sectrue != pin_cmp(pin)) {
         // Wipe storage if too many failures
         pin_fails_check_max(ctr << 1);
         return secfalse;
@@ -172,10 +163,10 @@ static secbool pin_check(const uint8_t *pin, size_t len, mp_obj_t callback)
     return sectrue;
 }
 
-secbool storage_unlock(const uint8_t *pin, size_t len, mp_obj_t callback)
+secbool storage_unlock(const uint32_t pin, mp_obj_t callback)
 {
     unlocked = secfalse;
-    if (sectrue == initialized && sectrue == pin_check(pin, len, callback)) {
+    if (sectrue == initialized && sectrue == pin_check(pin, callback)) {
         unlocked = sectrue;
     }
     return unlocked;
@@ -208,15 +199,15 @@ secbool storage_has_pin(void)
     return sectrue * (0 != spinlen);
 }
 
-secbool storage_change_pin(const uint8_t *pin, size_t len, const uint8_t *newpin, size_t newlen, mp_obj_t callback)
+secbool storage_change_pin(const uint32_t pin, const uint32_t newpin, mp_obj_t callback)
 {
-    if (sectrue != initialized || sectrue != unlocked || newlen > PIN_MAXLEN) {
+    if (sectrue != initialized || sectrue != unlocked) {
         return secfalse;
     }
-    if (sectrue != pin_check(pin, len, callback)) {
+    if (sectrue != pin_check(pin, callback)) {
         return secfalse;
     }
-    return norcow_set(PIN_KEY, newpin, newlen);
+    return norcow_set(PIN_KEY, &newpin, sizeof(uint32_t));
 }
 
 void storage_wipe(void)

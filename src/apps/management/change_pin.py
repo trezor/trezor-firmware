@@ -1,5 +1,6 @@
 from trezor import ui
 from trezor import config
+from trezor.pin import pin_to_int
 from trezor.utils import unimport
 
 
@@ -50,6 +51,8 @@ def confirm_change_pin(ctx, msg):
 @unimport
 async def layout_change_pin(ctx, msg):
     from trezor.messages.Success import Success
+    from trezor.messages.Failure import Failure
+    from trezor.messages.FailureType import PinInvalid
     from apps.common.request_pin import show_pin_timeout
 
     await confirm_change_pin(ctx, msg)
@@ -63,9 +66,10 @@ async def layout_change_pin(ctx, msg):
     else:
         new_pin = await request_pin_confirm(ctx)
 
-    config.change_pin(curr_pin, new_pin, show_pin_timeout)
-
-    if new_pin:
-        return Success(message='PIN changed')
+    if config.change_pin(pin_to_int(curr_pin), pin_to_int(new_pin), show_pin_timeout):
+        if new_pin:
+            return Success(message='PIN changed')
+        else:
+            return Success(message='PIN removed')
     else:
-        return Success(message='PIN removed')
+        return Failure(code=PinInvalid, message='PIN invalid')

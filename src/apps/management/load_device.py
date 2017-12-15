@@ -1,4 +1,5 @@
 from trezor import wire, ui, config
+from trezor.pin import pin_to_int
 from trezor.utils import unimport
 
 
@@ -29,6 +30,6 @@ async def layout_load_device(ctx, msg):
     storage.load_settings(use_passphrase=msg.passphrase_protection,
                           label=msg.label)
     if msg.pin:
-        config.change_pin('', msg.pin, None)
+        config.change_pin(pin_to_int(''), pin_to_int(msg.pin), None)
 
     return Success(message='Device loaded')

@@ -1,4 +1,5 @@
 from trezor import config
+from trezor.pin import pin_to_int
 from trezor import loop
 from trezor import ui
 
@@ -11,7 +12,7 @@ async def unlock_layout():
             pin = await request_pin()
         else:
             pin = ''
-        if config.unlock(pin, show_pin_timeout):
+        if config.unlock(pin_to_int(pin), show_pin_timeout):
             return
         else:
             await unlock_failed()
