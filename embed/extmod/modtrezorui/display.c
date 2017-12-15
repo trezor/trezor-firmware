@@ -32,7 +32,6 @@ static int DISPLAY_OFFSET[2] = {0, 0};
 #if defined TREZOR_STM32
 #include "display-stm32.h"
 #elif defined TREZOR_UNIX
-#include <stdio.h>
 #include "display-unix.h"
 #else
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
@@ -388,8 +387,11 @@ void display_print(const char *text, int textlen)
     display_refresh();
 }
 
-#ifndef TREZOR_UNIX
-int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va);
+#ifdef TREZOR_UNIX
+#define mini_vsnprintf vsnprintf
+#include <stdio.h>
+#else
+#include "mini_printf.h"
 #endif
 
 // variadic display_print
@@ -401,11 +403,7 @@ void display_printf(const char *fmt, ...)
         va_list va;
         va_start(va, fmt);
         char buf[256];
-#ifndef TREZOR_UNIX
         int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
-#else
-        int len = vsnprintf(buf, sizeof(buf), fmt, va);
-#endif
         display_print(buf, len);
         va_end(va);
     }
