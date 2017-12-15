@@ -1,9 +1,9 @@
 from trezor import config
-from trezor.pin import pin_to_int
+from trezor.pin import pin_to_int, show_pin_timeout
 from trezor import loop
 from trezor import ui
 
-from apps.common.request_pin import request_pin, show_pin_timeout
+from apps.common.request_pin import request_pin
 
 
 async def unlock_layout():
