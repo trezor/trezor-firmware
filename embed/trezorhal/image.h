@@ -31,6 +31,7 @@ typedef struct {
     // uint8_t reserved[415];
     uint8_t sigmask;
     uint8_t sig[64];
+    uint8_t fingerprint[32];
 } image_header;
 
 #define MAX_VENDOR_PUBLIC_KEYS 8

@@ -54,7 +54,9 @@ class BinImage(object):
         assert self.reserved2 == 415 * b'\x00'
         self.code = data[self.hdrlen:]
         assert len(self.code) == self.codelen
-        self.fingerprint = pyblake2.blake2s(data[:IMAGE_HEADER_SIZE - 65]).hexdigest()
+        h = pyblake2.blake2s(data[:IMAGE_HEADER_SIZE - 65])
+        h.update(b'\x00' * 65)
+        self.fingerprint = h.hexdigest()
 
     def print(self):
         if self.magic == b'TRZF':

@@ -59,19 +59,18 @@ secbool load_image_header(const uint8_t * const data, const uint32_t magic, cons
 
     // check header signature
 
-    uint8_t hash[BLAKE2S_DIGEST_LENGTH];
     BLAKE2S_CTX ctx;
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
     blake2s_Update(&ctx, data, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
     for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
         blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
     }
-    blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+    blake2s_Final(&ctx, hdr->fingerprint, BLAKE2S_DIGEST_LENGTH);
 
     ed25519_public_key pub;
     if (sectrue != compute_pubkey(key_m, key_n, keys, hdr->sigmask, pub)) return secfalse;
 
-    return sectrue * (0 == ed25519_sign_open(hash, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)hdr->sig));
+    return sectrue * (0 == ed25519_sign_open(hdr->fingerprint, BLAKE2S_DIGEST_LENGTH, pub, *(const ed25519_signature *)hdr->sig));
 }
 
 secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr)
