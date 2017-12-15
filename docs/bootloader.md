@@ -141,6 +141,7 @@ Vendor trust is stored as bitmap where unset bit means the feature is active.
 |  3  | 0x0008 | wait 8 seconds                          |
 |  4  | 0x0010 | use red background instead of black one |
 |  5  | 0x0020 | require user click                      |
+|  6  | 0x0040 | show vendor string (not just the logo)  |
 
 ### Firmware Header
 

@@ -85,13 +85,9 @@ static void display_welcome(secbool firmware_present)
 #define VENDOR_IMAGE_RESX 120
 #define VENDOR_IMAGE_RESY 120
 
-static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version, char red_background)
+static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version, uint16_t background)
 {
-    if (red_background) {
-        display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_BL_RED);
-    } else {
-        display_clear();
-    }
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, background);
     if (memcmp(vimg, "TOIf", 4) != 0) {
         return;
     }
@@ -102,7 +98,9 @@ static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_
     }
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image((DISPLAY_RESX - w) / 2, 32, w, h, vimg + 12, datalen);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, red_background ? COLOR_BL_RED : COLOR_BLACK);
+    if (vstr && vstr_len) {
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, background);
+    }
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
         (int)(fw_version & 0xFF),
@@ -110,7 +108,7 @@ static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_
         (int)((fw_version >> 16) & 0xFF),
         (int)((fw_version >> 24) & 0xFF)
     );
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, red_background ? COLOR_BL_RED : COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, background);
     display_refresh();
 }
 
@@ -358,25 +356,37 @@ int main(void)
         check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, sectors, 13),
         "invalid firmware hash");
 
-    display_vendor(vhdr.vimg, (const char *)vhdr.vstr, vhdr.vstr_len, hdr.version, (vhdr.vtrust & VTRUST_RED) == 0);
-    display_fade(0, BACKLIGHT_NORMAL, 1000);
+    // if all VTRUST flags are unset = ultimate trust => skip the procedure
 
-    int start_delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
-    while (start_delay > 0) {
-        char wait_str[16];
-        mini_snprintf(wait_str, sizeof(wait_str), "waiting for %ds", start_delay);
-        display_footer(wait_str, COLOR_GRAY64, 2);
-        hal_delay(1000);
-        start_delay--;
+    if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
+
+        display_vendor(
+            vhdr.vimg,
+            ((vhdr.vtrust & VTRUST_STRING) == 0) ? (const char *)vhdr.vstr : 0,
+            ((vhdr.vtrust & VTRUST_STRING) == 0) ? vhdr.vstr_len : 0,
+            hdr.version,
+            ((vhdr.vtrust & VTRUST_RED) == 0) ? COLOR_BL_RED : COLOR_BLACK
+        );
+
+        display_fade(0, BACKLIGHT_NORMAL, 1000);
+
+        int start_delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
+        while (start_delay > 0) {
+            char wait_str[16];
+            mini_snprintf(wait_str, sizeof(wait_str), "waiting for %ds", start_delay);
+            display_footer(wait_str, COLOR_GRAY64, 2);
+            hal_delay(1000);
+            start_delay--;
+        }
+
+        if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
+            display_footer("click to continue ...", COLOR_GRAY64, 2);
+            touch_click();
+        }
+
+        display_fade(BACKLIGHT_NORMAL, 0, 500);
+        display_clear();
     }
-
-    if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
-        display_footer("click to continue ...", COLOR_GRAY64, 2);
-        touch_click();
-    }
-
-    display_fade(BACKLIGHT_NORMAL, 0, 500);
-    display_clear();
 
     jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
