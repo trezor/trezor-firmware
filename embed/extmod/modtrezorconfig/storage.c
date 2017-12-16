@@ -39,9 +39,9 @@ void storage_init(void)
     initialized = sectrue;
 }
 
-static void pin_fails_reset(uint16_t ofs)
+static secbool pin_fails_reset(uint16_t ofs)
 {
-    norcow_update(PIN_FAIL_KEY, ofs, 0);
+    return norcow_update(PIN_FAIL_KEY, ofs, 0);
 }
 
 static secbool pin_fails_increase(const uint32_t *ptr, uint16_t ofs)
@@ -49,12 +49,9 @@ static secbool pin_fails_increase(const uint32_t *ptr, uint16_t ofs)
     uint32_t ctr = *ptr;
     ctr = ctr << 1;
 
-    flash_unlock();
     if (sectrue != norcow_update(PIN_FAIL_KEY, ofs, ctr)) {
-        flash_lock();
         return secfalse;
     }
-    flash_lock();
 
     uint32_t check = *ptr;
     if (ctr != check) {
@@ -158,9 +155,7 @@ static secbool pin_check(uint32_t pin, mp_obj_t callback)
         return secfalse;
     }
     // Finally set the counter to 0 to indicate success.
-    pin_fails_reset(ofs * sizeof(uint32_t));
-
-    return sectrue;
+    return pin_fails_reset(ofs * sizeof(uint32_t));
 }
 
 secbool storage_unlock(const uint32_t pin, mp_obj_t callback)

@@ -295,5 +295,10 @@ secbool norcow_update(uint16_t key, uint16_t offset, uint32_t value)
         return secfalse;
     }
     uint32_t sector_offset = (const uint8_t*) ptr - (const uint8_t *)norcow_ptr(norcow_active_sector, 0, NORCOW_SECTOR_SIZE) + offset;
-    return flash_write_word_rel(norcow_sectors[norcow_active_sector], sector_offset, value);
+    if (sectrue != flash_unlock()) {
+        return secfalse;
+    }
+    secbool result = flash_write_word_rel(norcow_sectors[norcow_active_sector], sector_offset, value);
+    flash_lock();
+    return result;
 }
