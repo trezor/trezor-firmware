@@ -423,33 +423,43 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
     if (textlen < 0) {
         textlen = strlen(text);
     }
-
-    int px = x + DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
-    // render glyphs
+
+    // render background bars
+    int px = x + DISPLAY_OFFSET[0];
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
-        // g[0], g[1] = width, height
-        // g[2]       = advance
-        // g[3], g[4] = bearingX, bearingY
-        if (g[0] && g[1]) {
-            int sx = px + (int8_t)(g[3]);
-            int sy = y - (int8_t)(g[4]);
-            int w = g[0];
-            int h = g[1];
+        const int8_t adv = g[2]; // advance
+        display_bar(px - 2, y - 18, adv + 3, 23, bgcolor);
+        px += adv;
+    }
+
+    // render glyphs
+    px = x + DISPLAY_OFFSET[0];
+    for (int i = 0; i < textlen; i++) {
+        const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
+        if (!g) continue;
+        const int8_t w = g[0]; // width
+        const int8_t h = g[1]; // height
+        const int8_t adv = g[2]; // advance
+        const int8_t bearX = g[3]; // bearingX
+        const int8_t bearY = g[4]; // bearingY
+        if (w && h) {
+            const int sx = px + bearX;
+            const int sy = y - bearY;
             int x0, y0, x1, y1;
             clamp_coords(sx, sy, w, h, &x0, &y0, &x1, &y1);
             display_set_window(x0, y0, x1, y1);
             for (int j = y0; j <= y1; j++) {
                 for (int i = x0; i <= x1; i++) {
-                    int rx = i - sx;
-                    int ry = j - sy;
-                    int a = rx + ry * w;
+                    const int rx = i - sx;
+                    const int ry = j - sy;
+                    const int a = rx + ry * w;
                     #if FONT_BPP == 2
-                    uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
+                    const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
                     #elif FONT_BPP == 4
-                    uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+                    const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
                     #else
                     #error Unsupported FONT_BPP value
                     #endif
@@ -458,7 +468,7 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
                 }
             }
         }
-        px += g[2];
+        px += adv;
     }
 }
 
