@@ -1,3 +1,5 @@
+EMULATOR := 1
+
 OBJS += setup.o
 
 OBJS += buttons.o
