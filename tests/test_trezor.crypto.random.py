@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import random
 
+
 class TestCryptoRandom(unittest.TestCase):
 
     def test_uniform(self):
@@ -40,6 +41,7 @@ class TestCryptoRandom(unittest.TestCase):
             random.shuffle(lst)
             self.assertEqual(len(lst), l)
             self.assertEqual(sorted(lst), list(range(l)))
+
 
 if __name__ == '__main__':
     unittest.main()

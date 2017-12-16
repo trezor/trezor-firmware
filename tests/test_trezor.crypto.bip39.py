@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import bip39
 
+
 class TestCryptoBip39(unittest.TestCase):
 
     def test_mnemonic(self):
@@ -118,6 +119,7 @@ class TestCryptoBip39(unittest.TestCase):
         ]
         for m in v:
             self.assertEqual(bip39.check(m), False)
+
 
 if __name__ == '__main__':
     unittest.main()

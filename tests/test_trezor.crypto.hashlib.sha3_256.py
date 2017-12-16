@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import hashlib
 
+
 class TestCryptoSha3_256(unittest.TestCase):
 
     # vectors from http://www.di-mgt.com.au/sha_testvectors.html
@@ -59,13 +60,14 @@ class TestCryptoSha3_256(unittest.TestCase):
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
 
-    def test_digest_multi(self):
+    def test_digest_multi_keccak(self):
         x = hashlib.sha3_256()
         d0 = x.digest(True)
         d1 = x.digest(True)
         d2 = x.digest(True)
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
+
 
 if __name__ == '__main__':
     unittest.main()

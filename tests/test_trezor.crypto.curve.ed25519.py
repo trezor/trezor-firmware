@@ -4,6 +4,7 @@ from trezor.crypto import random
 
 from trezor.crypto.curve import ed25519
 
+
 class TestCryptoEd25519(unittest.TestCase):
 
     # vectors from https://github.com/torproject/tor/blob/master/src/test/ed25519_vectors.inc
@@ -15,7 +16,8 @@ class TestCryptoEd25519(unittest.TestCase):
         ('5c8eac469bb3f1b85bc7cd893f52dc42a9ab66f1b02b5ce6a68e9b175d3bb433', '66c1a77104d86461b6f98f73acf3cd229c80624495d2d74d6fda1e940080a96b', '2385a472f599ca965bbe4d610e391cdeabeba9c336694b0d6249e551458280be122c2441dd9746a81bbfb9cd619364bab0df37ff4ceb7aefd24469c39d3bc508'),
         ('eda433d483059b6d1ff8b7cfbd0fe406bfb23722c8f3c8252629284573b61b86', 'd21c294db0e64cb2d8976625786ede1d9754186ae8197a64d72f68c792eecc19', 'e500cd0b8cfff35442f88008d894f3a2fa26ef7d3a0ca5714ae0d3e2d40caae58ba7cdf69dd126994dad6be536fcda846d89dd8138d1683cc144c8853dce7607'),
         ('4377c40431c30883c5fbd9bc92ae48d1ed8a47b81d13806beac5351739b5533d', 'c4d58b4cf85a348ff3d410dd936fa460c4f18da962c01b1963792b9dcc8a6ea6', 'd187b9e334b0050154de10bf69b3e4208a584e1a65015ec28b14bcc252cf84b8baa9c94867daa60f2a82d09ba9652d41e8dde292b624afc8d2c26441b95e3c0e'),
-        ('c6bbcce615839756aed2cc78b1de13884dd3618f48367a17597a16c1cd7a290b', '95126f14d86494020665face03f2d42ee2b312a85bc729903eb17522954a1c4a', '815213640a643d198bd056e02bba74e1c8d2d931643e84497adf3347eb485079c9afe0afce9284cdc084946b561abbb214f1304ca11228ff82702185cf28f60d'),    ]
+        ('c6bbcce615839756aed2cc78b1de13884dd3618f48367a17597a16c1cd7a290b', '95126f14d86494020665face03f2d42ee2b312a85bc729903eb17522954a1c4a', '815213640a643d198bd056e02bba74e1c8d2d931643e84497adf3347eb485079c9afe0afce9284cdc084946b561abbb214f1304ca11228ff82702185cf28f60d'),
+    ]
 
     def test_publickey(self):
         for sk, pk, _ in self.vectors:
@@ -47,6 +49,7 @@ class TestCryptoEd25519(unittest.TestCase):
             msg = random.bytes(l)
             sig = ed25519.sign(sk, msg)
             self.assertTrue(ed25519.verify(pk, sig, msg))
+
 
 if __name__ == '__main__':
     unittest.main()

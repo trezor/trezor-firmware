@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import hashlib
 
+
 class TestCryptoBlake2s(unittest.TestCase):
 
     # vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
@@ -43,6 +44,7 @@ class TestCryptoBlake2s(unittest.TestCase):
         d2 = x.digest()
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
+
 
 if __name__ == '__main__':
     unittest.main()

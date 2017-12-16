@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto.curve import curve25519
 
+
 class TestCryptoCurve25519(unittest.TestCase):
 
     vectors = [
@@ -28,6 +29,7 @@ class TestCryptoCurve25519(unittest.TestCase):
             session1 = curve25519.multiply(sk1, pk2)
             session2 = curve25519.multiply(sk2, pk1)
             self.assertEqual(session1, session2)
+
 
 if __name__ == '__main__':
     unittest.main()

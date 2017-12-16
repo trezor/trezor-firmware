@@ -40,26 +40,26 @@ def test_reader():
 
     # open, expected one read
     first_report = report_header + message[:rep_len - len(report_header)]
-    assert_async(reader.aopen(), [(None, select(io.POLL_READ | interface_num)), (first_report, StopIteration()),])
+    assert_async(reader.aopen(), [(None, select(io.POLL_READ | interface_num)), (first_report, StopIteration()), ])
     assert_eq(reader.type, message_type)
     assert_eq(reader.size, message_len)
 
     # empty read
     empty_buffer = bytearray()
-    assert_async(reader.areadinto(empty_buffer), [(None, StopIteration()),])
+    assert_async(reader.areadinto(empty_buffer), [(None, StopIteration()), ])
     assert_eq(len(empty_buffer), 0)
     assert_eq(reader.size, message_len)
 
     # short read, expected no read
     short_buffer = bytearray(32)
-    assert_async(reader.areadinto(short_buffer), [(None, StopIteration()),])
+    assert_async(reader.areadinto(short_buffer), [(None, StopIteration()), ])
     assert_eq(len(short_buffer), 32)
     assert_eq(short_buffer, message[:len(short_buffer)])
     assert_eq(reader.size, message_len - len(short_buffer))
 
     # aligned read, expected no read
     aligned_buffer = bytearray(rep_len - len(report_header) - len(short_buffer))
-    assert_async(reader.areadinto(aligned_buffer), [(None, StopIteration()),])
+    assert_async(reader.areadinto(aligned_buffer), [(None, StopIteration()), ])
     assert_eq(aligned_buffer, message[len(short_buffer):][:len(aligned_buffer)])
     assert_eq(reader.size, message_len - len(short_buffer) - len(aligned_buffer))
 
@@ -67,12 +67,12 @@ def test_reader():
     next_report_header = bytearray(unhexlify('3f'))
     next_report = next_report_header + message[rep_len - len(report_header):][:rep_len - len(next_report_header)]
     onebyte_buffer = bytearray(1)
-    assert_async(reader.areadinto(onebyte_buffer), [(None, select(io.POLL_READ | interface_num)), (next_report, StopIteration()),])
+    assert_async(reader.areadinto(onebyte_buffer), [(None, select(io.POLL_READ | interface_num)), (next_report, StopIteration()), ])
     assert_eq(onebyte_buffer, message[len(short_buffer):][len(aligned_buffer):][:len(onebyte_buffer)])
     assert_eq(reader.size, message_len - len(short_buffer) - len(aligned_buffer) - len(onebyte_buffer))
 
     # too long read, raises eof
-    assert_async(reader.areadinto(bytearray(reader.size + 1)), [(None, EOFError()),])
+    assert_async(reader.areadinto(bytearray(reader.size + 1)), [(None, EOFError()), ])
 
     # long read, expect multiple reads
     start_size = reader.size
@@ -93,7 +93,7 @@ def test_reader():
     assert_eq(reader.size, 0)
 
     # one byte read, raises eof
-    assert_async(reader.areadinto(onebyte_buffer), [(None, EOFError()),])
+    assert_async(reader.areadinto(onebyte_buffer), [(None, EOFError()), ])
 
 
 def test_writer():
@@ -112,35 +112,35 @@ def test_writer():
 
     # empty write
     start_size = writer.size
-    assert_async(writer.awrite(bytearray()), [(None, StopIteration()),])
+    assert_async(writer.awrite(bytearray()), [(None, StopIteration()), ])
     assert_eq(writer.data, report_header + bytearray(rep_len - len(report_header)))
     assert_eq(writer.size, start_size)
 
     # short write, expected no report
     start_size = writer.size
     short_payload = bytearray(range(4))
-    assert_async(writer.awrite(short_payload), [(None, StopIteration()),])
+    assert_async(writer.awrite(short_payload), [(None, StopIteration()), ])
     assert_eq(writer.size, start_size - len(short_payload))
     assert_eq(writer.data,
-              report_header
-              + short_payload
-              + bytearray(rep_len - len(report_header) - len(short_payload)))
+              report_header +
+              short_payload +
+              bytearray(rep_len - len(report_header) - len(short_payload)))
 
     # aligned write, expected one report
     start_size = writer.size
     aligned_payload = bytearray(range(rep_len - len(report_header) - len(short_payload)))
-    assert_async(writer.awrite(aligned_payload), [(None, select(io.POLL_WRITE | interface_num)), (None, StopIteration()),])
-    assert_eq(interface.data, [report_header
-         + short_payload
-         + aligned_payload
-         + bytearray(rep_len - len(report_header) - len(short_payload) - len(aligned_payload)), ])
+    assert_async(writer.awrite(aligned_payload), [(None, select(io.POLL_WRITE | interface_num)), (None, StopIteration()), ])
+    assert_eq(interface.data, [report_header +
+                               short_payload +
+                               aligned_payload +
+                               bytearray(rep_len - len(report_header) - len(short_payload) - len(aligned_payload)), ])
     assert_eq(writer.size, start_size - len(aligned_payload))
     interface.data.clear()
 
     # short write, expected no report, but data starts with correct seq and cont marker
     report_header = bytearray(unhexlify('3f'))
     start_size = writer.size
-    assert_async(writer.awrite(short_payload), [(None, StopIteration()),])
+    assert_async(writer.awrite(short_payload), [(None, StopIteration()), ])
     assert_eq(writer.size, start_size - len(short_payload))
     assert_eq(writer.data[:len(report_header) + len(short_payload)],
               report_header + short_payload)

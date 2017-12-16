@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto.aes import *
 
+
 class TestCryptoAes(unittest.TestCase):
 
     # vectors from https://github.com/ricmoo/pyaes
@@ -52,6 +53,7 @@ class TestCryptoAes(unittest.TestCase):
         a = AES_CTR_Decrypt(key=self.key)
         d = a.update(e)
         self.assertEqual(d, plain)
+
 
 if __name__ == '__main__':
     unittest.main()

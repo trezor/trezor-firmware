@@ -176,7 +176,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                           # returned serialized inp1
                           serialized_tx=unhexlify(
                               '0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff'),
-                      )),
+            )),
             # the out has to be cloned not to send the same object which was modified
             TxAck(tx=TransactionType(outputs=[TxOutputType(**out1.__dict__)])),
 
@@ -187,7 +187,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                               '02e0aebb00000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac'),
                           signature_index=None,
                           signature=None,
-                      )),
+            )),
             TxAck(tx=TransactionType(outputs=[TxOutputType(**out2.__dict__)])),
 
             # segwit
@@ -198,7 +198,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                               '3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87'),
                           signature_index=None,
                           signature=None,
-                      )),
+            )),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
             TxRequest(request_type=TXFINISHED, details=None, serialized=TxRequestSerializedType(
@@ -288,7 +288,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                           # returned serialized inpattack
                           serialized_tx=unhexlify(
                               '0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff'),
-                      )),
+            )),
             # the out has to be cloned not to send the same object which was modified
             TxAck(tx=TransactionType(outputs=[TxOutputType(**out1.__dict__)])),
 
@@ -299,7 +299,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                               '0208000000000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac'),
                           signature_index=None,
                           signature=None,
-                      )),
+            )),
             TxAck(tx=TransactionType(outputs=[TxOutputType(**out2.__dict__)])),
 
             # segwit
@@ -310,7 +310,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
                               '010000000000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87'),
                           signature_index=None,
                           signature=None,
-                      )),
+            )),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
             TxRequest(request_type=TXFINISHED, details=None)

@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import rlp
 
+
 class TestCryptoRlp(unittest.TestCase):
 
     # from https://raw.githubusercontent.com/ethereum/pyrlp/develop/tests/rlptest.json
@@ -40,11 +41,11 @@ class TestCryptoRlp(unittest.TestCase):
          'cc83646f6783676f6483636174'),
         ([b'zw', [4], 1],
          'c6827a77c10401'),
-        ([b'asdf', b'qwer', b'zxcv', b'asdf',b'qwer', b'zxcv', b'asdf', b'qwer', b'zxcv', b'asdf', b'qwer'],
+        ([b'asdf', b'qwer', b'zxcv', b'asdf', b'qwer', b'zxcv', b'asdf', b'qwer', b'zxcv', b'asdf', b'qwer'],
          'f784617364668471776572847a78637684617364668471776572847a78637684617364668471776572847a78637684617364668471776572'),
-        ([[b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv']],
+        ([[b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv']],
          'f840cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376'),
-        ([[b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv'], [b'asdf',b'qwer',b'zxcv']],
+        ([[b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv'], [b'asdf', b'qwer', b'zxcv']],
          'f90200cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376'),
         ([[[], []], []],
          'c4c2c0c0c0'),
@@ -62,6 +63,7 @@ class TestCryptoRlp(unittest.TestCase):
             o = unhexlify(o)
             o2 = rlp.encode(i)
             self.assertEqual(o, o2)
+
 
 if __name__ == '__main__':
     unittest.main()

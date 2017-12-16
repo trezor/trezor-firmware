@@ -78,6 +78,5 @@ class TestSegwitBip143(unittest.TestCase):
         self.assertEqual(hexlify(result), b'64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6')
 
 
-
 if __name__ == '__main__':
     unittest.main()

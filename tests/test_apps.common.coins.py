@@ -2,6 +2,7 @@ from common import *
 
 from apps.common import coins
 
+
 class TestCoins(unittest.TestCase):
 
     def test_coins(self):

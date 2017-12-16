@@ -2,10 +2,10 @@ from common import *
 
 from trezor.crypto import hashlib
 
+
 class TestCryptoBlake2b(unittest.TestCase):
 
     # vectors from https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2b-kat.txt
-
     vectors = [
         ('', '10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e996e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568'),
         ('00', '961f6dd1e4dd30f63901690c512e78e4b45e4742ed197c3c5e45c549fd25f2e4187b0bc9fe30492b16b0d0bc4ef9b0f34c7003fac09a5ef1532e69430234cebd'),
@@ -43,6 +43,7 @@ class TestCryptoBlake2b(unittest.TestCase):
         d2 = x.digest()
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
+
 
 if __name__ == '__main__':
     unittest.main()

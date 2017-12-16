@@ -24,9 +24,11 @@
 from common import *
 from trezor.crypto import bech32
 
+
 def segwit_scriptpubkey(witver, witprog):
     """Construct a Segwit scriptPubKey for a given witness program."""
     return bytes([witver + 0x50 if witver else 0, len(witprog)] + witprog)
+
 
 VALID_CHECKSUM = [
     "A12UEL5L",
@@ -91,7 +93,7 @@ class TestCryptoBech32(unittest.TestCase):
             hrp, _ = bech32.bech32_decode(test)
             self.assertIsNotNone(hrp)
             pos = test.rfind('1')
-            test = test[:pos+1] + chr(ord(test[pos + 1]) ^ 1) + test[pos+2:]
+            test = test[:pos + 1] + chr(ord(test[pos + 1]) ^ 1) + test[pos + 2:]
             hrp, _ = bech32.bech32_decode(test)
             self.assertIsNone(hrp)
 
@@ -128,6 +130,7 @@ class TestCryptoBech32(unittest.TestCase):
         for hrp, version, length in INVALID_ADDRESS_ENC:
             code = bech32.encode(hrp, version, [0] * length)
             self.assertIsNone(code)
+
 
 if __name__ == "__main__":
     unittest.main()

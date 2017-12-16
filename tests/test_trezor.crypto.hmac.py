@@ -4,6 +4,7 @@ from trezor.crypto import hashlib
 
 from trezor.crypto import hmac
 
+
 class TestCryptoHmac(unittest.TestCase):
 
     # vectors from https://tools.ietf.org/html/rfc4231
@@ -34,13 +35,13 @@ class TestCryptoHmac(unittest.TestCase):
         self.assertEqual(hmac.new(key, msg, hashlib.sha256).digest(), unhexlify('82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b'))
         self.assertEqual(hmac.new(key, msg, hashlib.sha512).digest(), unhexlify('b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd'))
 
-         # case 6
+        # case 6
         key = bytes([0xAA] * 131)
         msg = b'Test Using Larger Than Block-Size Key - Hash Key First'
         self.assertEqual(hmac.new(key, msg, hashlib.sha256).digest(), unhexlify('60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54'))
         self.assertEqual(hmac.new(key, msg, hashlib.sha512).digest(), unhexlify('80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598'))
 
-         # case 7
+        # case 7
         key = bytes([0xAA] * 131)
         msg = b'This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.'
         self.assertEqual(hmac.new(key, msg, hashlib.sha256).digest(), unhexlify('9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2'))
@@ -77,6 +78,7 @@ class TestCryptoHmac(unittest.TestCase):
         d2 = x.digest()
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
+
 
 if __name__ == '__main__':
     unittest.main()

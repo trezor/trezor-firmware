@@ -2,6 +2,7 @@ from common import *
 
 from trezor import utils
 
+
 class TestUtils(unittest.TestCase):
 
     def test_chunks(self):
@@ -11,6 +12,7 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(c[i].start, i * 7)
             self.assertEqual(c[i].stop, 100 if (i == 14) else (i + 1) * 7)
             self.assertEqual(c[i].step, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

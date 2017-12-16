@@ -4,6 +4,7 @@ from trezor.crypto import random
 
 from trezor.ui import display
 
+
 class TestDisplay(unittest.TestCase):
 
     def test_clear(self):
@@ -67,6 +68,7 @@ class TestDisplay(unittest.TestCase):
 
     def test_save(self):
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

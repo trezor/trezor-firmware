@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import hashlib
 
+
 class TestCryptoSha256(unittest.TestCase):
 
     # vectors from http://www.di-mgt.com.au/sha_testvectors.html
@@ -41,6 +42,7 @@ class TestCryptoSha256(unittest.TestCase):
         d2 = x.digest()
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
+
 
 if __name__ == '__main__':
     unittest.main()

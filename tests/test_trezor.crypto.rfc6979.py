@@ -3,6 +3,7 @@ from common import *
 from trezor.crypto import rfc6979
 from trezor.crypto.hashlib import sha256
 
+
 class TestCryptoRfc6979(unittest.TestCase):
 
     def test_vectors(self):
@@ -33,6 +34,7 @@ class TestCryptoRfc6979(unittest.TestCase):
         for key, msg, k in vectors:
             rng = rfc6979(unhexlify(key), sha256(msg).digest())
             self.assertEqual(rng.next(), unhexlify(k))
+
 
 if __name__ == '__main__':
     unittest.main()

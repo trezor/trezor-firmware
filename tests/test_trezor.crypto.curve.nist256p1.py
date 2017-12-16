@@ -1,8 +1,8 @@
 from common import *
 
 from trezor.crypto import random
-
 from trezor.crypto.curve import nist256p1
+
 
 class TestCryptoNist256p1(unittest.TestCase):
 
@@ -75,9 +75,9 @@ class TestCryptoNist256p1(unittest.TestCase):
             if len(sk) < 64:
                 sk = '0' * (64 - len(sk)) + sk
             pk = pk.lower()
-            pk65 = hexlify(nist256p1.publickey(unhexlify(sk), False)).decode('ascii') # uncompressed
+            pk65 = hexlify(nist256p1.publickey(unhexlify(sk), False)).decode()  # uncompressed
             self.assertEqual(str(pk65), '04' + pk)
-            pk33 = hexlify(nist256p1.publickey(unhexlify(sk))).decode('ascii')
+            pk33 = hexlify(nist256p1.publickey(unhexlify(sk))).decode()
             if pk[-1] in '02468ace':
                 self.assertEqual(pk33, '02' + pk[:64])
             else:
@@ -87,17 +87,17 @@ class TestCryptoNist256p1(unittest.TestCase):
         sk = nist256p1.generate_secret()
         pk = nist256p1.publickey(sk)
 
-        dig = bytes([1] + [0]*31)
+        dig = bytes([1] + [0] * 31)
         sig = nist256p1.sign(sk, dig)
         self.assertTrue(nist256p1.verify(pk, sig, dig))
         self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
-        dig = bytes([0]*31 + [1])
+        dig = bytes([0] * 31 + [1])
         sig = nist256p1.sign(sk, dig)
         self.assertTrue(nist256p1.verify(pk, sig, dig))
         self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
 
-        dig = bytes([0xFF]*32)
+        dig = bytes([0xFF] * 32)
         sig = nist256p1.sign(sk, dig)
         self.assertTrue(nist256p1.verify(pk, sig, dig))
         self.assertTrue(nist256p1.verify(pk, sig[1:], dig))
@@ -120,6 +120,7 @@ class TestCryptoNist256p1(unittest.TestCase):
                 sig = nist256p1.sign(sk, dig, compressed)
                 pk2 = nist256p1.verify_recover(sig, dig)
                 self.assertEqual(pk, pk2)
+
 
 if __name__ == '__main__':
     unittest.main()

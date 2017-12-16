@@ -91,6 +91,5 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         self.assertEqual(hexlify(result), b'c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670')
 
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -70,4 +70,4 @@ def wipe():
 def new_device_id() -> str:
     from ubinascii import hexlify
     from trezor.crypto import random
-    return hexlify(random.bytes(12)).decode('ascii').upper()
+    return hexlify(random.bytes(12)).decode().upper()

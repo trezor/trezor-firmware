@@ -1,8 +1,8 @@
 from common import *
 
 from trezor.crypto import random
-
 from trezor.crypto.curve import secp256k1
+
 
 class TestCryptoSecp256k1(unittest.TestCase):
 
@@ -68,9 +68,9 @@ class TestCryptoSecp256k1(unittest.TestCase):
             if len(sk) < 64:
                 sk = '0' * (64 - len(sk)) + sk
             pk = pk.lower()
-            pk65 = hexlify(secp256k1.publickey(unhexlify(sk), False)).decode('ascii') # uncompressed
+            pk65 = hexlify(secp256k1.publickey(unhexlify(sk), False)).decode()  # uncompressed
             self.assertEqual(str(pk65), '04' + pk)
-            pk33 = hexlify(secp256k1.publickey(unhexlify(sk))).decode('ascii')
+            pk33 = hexlify(secp256k1.publickey(unhexlify(sk))).decode()
             if pk[-1] in '02468ace':
                 self.assertEqual(pk33, '02' + pk[:64])
             else:
@@ -80,15 +80,15 @@ class TestCryptoSecp256k1(unittest.TestCase):
         sk = secp256k1.generate_secret()
         pk = secp256k1.publickey(sk)
 
-        dig = bytes([1] + [0]*31)
+        dig = bytes([1] + [0] * 31)
         sig = secp256k1.sign(sk, dig)
         self.assertTrue(secp256k1.verify(pk, sig, dig))
 
-        dig = bytes([0]*31 + [1])
+        dig = bytes([0] * 31 + [1])
         sig = secp256k1.sign(sk, dig)
         self.assertTrue(secp256k1.verify(pk, sig, dig))
 
-        dig = bytes([0xFF]*32)
+        dig = bytes([0xFF] * 32)
         sig = secp256k1.sign(sk, dig)
         self.assertTrue(secp256k1.verify(pk, sig, dig))
 
@@ -109,6 +109,7 @@ class TestCryptoSecp256k1(unittest.TestCase):
                 sig = secp256k1.sign(sk, dig, compressed)
                 pk2 = secp256k1.verify_recover(sig, dig)
                 self.assertEqual(pk, pk2)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,9 +2,11 @@ from common import *
 
 from trezor.crypto import pbkdf2
 
+
 class TestCryptoPbkdf2(unittest.TestCase):
 
     # vectors from https://stackoverflow.com/questions/5130513/pbkdf2-hmac-sha2-test-vectors
+
     def test_pbkdf2_hmac_sha256(self):
         P = b'password'
         S = b'salt'
@@ -45,6 +47,7 @@ class TestCryptoPbkdf2(unittest.TestCase):
         self.assertEqual(dk, unhexlify('348c89dbcbd32b2f32d814b8116e84cf2b17347ebc1800181c4e2a1fb8dd53e1'))
 
     # vectors from https://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
+
     def test_pbkdf2_hmac_sha512(self):
         P = b'password'
         S = b'salt'
@@ -99,6 +102,7 @@ class TestCryptoPbkdf2(unittest.TestCase):
         k2 = p.key()
         self.assertEqual(k0, k1)
         self.assertEqual(k0, k2)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,7 +4,10 @@ from trezor.crypto.hashlib import ripemd160
 
 from trezor.crypto import base58
 
-digestfunc_graphene = lambda x: ripemd160(x).digest()[:4]
+
+def digestfunc_graphene(x):
+    return ripemd160(x).digest()[:4]
+
 
 class TestCryptoBase58(unittest.TestCase):
 
@@ -80,6 +83,7 @@ class TestCryptoBase58(unittest.TestCase):
             self.assertEqual(base58.encode_check(unhexlify(a)), b)
         for a, b in self.vectors_graphene:
             self.assertEqual(base58.encode_check(unhexlify(a), digestfunc=digestfunc_graphene), b)
+
 
 if __name__ == '__main__':
     unittest.main()

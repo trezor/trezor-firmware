@@ -3,6 +3,7 @@ from common import *
 from trezor.crypto import random
 from trezor.crypto.curve import ed25519
 
+
 class TestCryptoEd25519Cosi(unittest.TestCase):
 
     def test_cosi(self):
@@ -40,6 +41,7 @@ class TestCryptoEd25519Cosi(unittest.TestCase):
             # check signature using normal ed25519.verify
             res = ed25519.verify(pubkey, sig, msg)
             self.assertTrue(res)
+
 
 if __name__ == '__main__':
     unittest.main()

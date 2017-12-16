@@ -7,6 +7,7 @@ HARDENED = 0x80000000
 VERSION_PUBLIC = 0x0488b21e
 VERSION_PRIVATE = 0x0488ade4
 
+
 class TestCryptoBip32(unittest.TestCase):
 
     def test_from_seed_invalid(self):
@@ -472,6 +473,7 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n2.private_key(), bytes(32))
         ns2 = n2.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns2, ns)
+
 
 if __name__ == '__main__':
     unittest.main()

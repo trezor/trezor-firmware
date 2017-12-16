@@ -105,5 +105,6 @@ class TestConfig(unittest.TestCase):
             value = config.get(appid, key)
             self.assertEqual(value, bytes())
 
+
 if __name__ == '__main__':
     unittest.main()

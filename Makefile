@@ -71,11 +71,13 @@ test: ## run unit tests
 test_emu: ## run selected device tests from python-trezor
 	cd tests ; ./run_tests_device_emu.sh
 
-pylint: ## run pylint on application sources
+pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src -name *.py)
+	pylint -E $(shell find tests -name *.py)
 
-style: ## run code style check on application sources
+style: ## run code style check on application sources and tests
 	flake8 $(shell find src -name *.py)
+	flake8 $(shell find tests -name *.py)
 
 ## build commands:
 

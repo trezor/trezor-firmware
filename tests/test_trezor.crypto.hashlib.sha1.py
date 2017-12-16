@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import hashlib
 
+
 class TestCryptoSha1(unittest.TestCase):
 
     # vectors from http://www.di-mgt.com.au/sha_testvectors.html
@@ -11,7 +12,6 @@ class TestCryptoSha1(unittest.TestCase):
         (b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq', '84983e441c3bd26ebaae4aa1f95129e5e54670f1'),
         (b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu', 'a49b2446a02c645bf419f995b67091253a04a259')
     ]
-
 
     def test_digest(self):
         for b, d in self.vectors:
@@ -42,6 +42,7 @@ class TestCryptoSha1(unittest.TestCase):
         d2 = x.digest()
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
+
 
 if __name__ == '__main__':
     unittest.main()
