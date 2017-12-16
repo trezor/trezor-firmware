@@ -5,28 +5,23 @@ from trezor.crypto import hashlib
 class TestCryptoSha1(unittest.TestCase):
 
     # vectors from http://www.di-mgt.com.au/sha_testvectors.html
+    vectors = [
+        (b'', 'da39a3ee5e6b4b0d3255bfef95601890afd80709'),
+        (b'abc', 'a9993e364706816aba3e25717850c26c9cd0d89d'),
+        (b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq', '84983e441c3bd26ebaae4aa1f95129e5e54670f1'),
+        (b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu', 'a49b2446a02c645bf419f995b67091253a04a259')
+    ]
+
 
     def test_digest(self):
-        self.assertEqual(hashlib.sha1(b'').digest(), unhexlify('da39a3ee5e6b4b0d3255bfef95601890afd80709'))
-        self.assertEqual(hashlib.sha1(b'abc').digest(), unhexlify('a9993e364706816aba3e25717850c26c9cd0d89d'))
-        self.assertEqual(hashlib.sha1(b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq').digest(), unhexlify('84983e441c3bd26ebaae4aa1f95129e5e54670f1'))
-        self.assertEqual(hashlib.sha1(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu').digest(), unhexlify('a49b2446a02c645bf419f995b67091253a04a259'))
+        for b, d in self.vectors:
+            self.assertEqual(hashlib.sha1(b).digest(), unhexlify(d))
 
     def test_update(self):
-        x = hashlib.sha1()
-        self.assertEqual(x.digest(), unhexlify('da39a3ee5e6b4b0d3255bfef95601890afd80709'))
-
-        x = hashlib.sha1()
-        x.update(b'abc')
-        self.assertEqual(x.digest(), unhexlify('a9993e364706816aba3e25717850c26c9cd0d89d'))
-
-        x = hashlib.sha1()
-        x.update(b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
-        self.assertEqual(x.digest(), unhexlify('84983e441c3bd26ebaae4aa1f95129e5e54670f1'))
-
-        x = hashlib.sha1()
-        x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')
-        self.assertEqual(x.digest(), unhexlify('a49b2446a02c645bf419f995b67091253a04a259'))
+        for b, d in self.vectors:
+            x = hashlib.sha1()
+            x.update(b)
+            self.assertEqual(x.digest(), unhexlify(d))
 
         x = hashlib.sha1()
         for i in range(1000000):
