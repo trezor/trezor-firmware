@@ -329,7 +329,7 @@ void fsm_msgChangePin(ChangePin *msg)
 	CHECK_PIN_UNCACHED
 
 	if (removal) {
-		storage_setPin(0);
+		storage_setPin("");
 		storage_update();
 		fsm_sendSuccess(_("PIN removed"));
 	} else {
