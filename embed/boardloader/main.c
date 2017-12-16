@@ -180,7 +180,7 @@ int main(void)
         load_image_header((const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr),
         "invalid bootloader header");
 
-    uint8_t sectors[] = {
+    const uint8_t sectors[] = {
         FLASH_SECTOR_BOOTLOADER,
     };
     ensure(
