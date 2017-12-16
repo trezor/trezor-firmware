@@ -180,6 +180,17 @@ void oledClear()
 	memset(_oledbuffer, 0, sizeof(_oledbuffer));
 }
 
+void oledInvertDebugLink()
+{
+	if (is_debug_link) {
+		oledInvertPixel(OLED_WIDTH - 5, 0); oledInvertPixel(OLED_WIDTH - 4, 0); oledInvertPixel(OLED_WIDTH - 3, 0); oledInvertPixel(OLED_WIDTH - 2, 0); oledInvertPixel(OLED_WIDTH - 1, 0);
+		oledInvertPixel(OLED_WIDTH - 4, 1); oledInvertPixel(OLED_WIDTH - 3, 1); oledInvertPixel(OLED_WIDTH - 2, 1); oledInvertPixel(OLED_WIDTH - 1, 1); 
+		oledInvertPixel(OLED_WIDTH - 3, 2); oledInvertPixel(OLED_WIDTH - 2, 2); oledInvertPixel(OLED_WIDTH - 1, 2);
+		oledInvertPixel(OLED_WIDTH - 2, 3); oledInvertPixel(OLED_WIDTH - 1, 3);
+		oledInvertPixel(OLED_WIDTH - 1, 4);
+	}
+}
+
 /*
  * Refresh the display. This copies the buffer to the display to show the
  * contents.  This must be called after every operation to the buffer to
@@ -192,13 +203,7 @@ void oledRefresh()
 	static const uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00, OLED_SETHIGHCOLUMN | 0x00, OLED_SETSTARTLINE | 0x00};
 
 	// draw triangle in upper right corner
-	if (is_debug_link) {
-		oledInvertPixel(OLED_WIDTH - 5, 0); oledInvertPixel(OLED_WIDTH - 4, 0); oledInvertPixel(OLED_WIDTH - 3, 0); oledInvertPixel(OLED_WIDTH - 2, 0); oledInvertPixel(OLED_WIDTH - 1, 0);
-		oledInvertPixel(OLED_WIDTH - 4, 1); oledInvertPixel(OLED_WIDTH - 3, 1); oledInvertPixel(OLED_WIDTH - 2, 1); oledInvertPixel(OLED_WIDTH - 1, 1); 
-		oledInvertPixel(OLED_WIDTH - 3, 2); oledInvertPixel(OLED_WIDTH - 2, 2); oledInvertPixel(OLED_WIDTH - 1, 2);
-		oledInvertPixel(OLED_WIDTH - 2, 3); oledInvertPixel(OLED_WIDTH - 1, 3);
-		oledInvertPixel(OLED_WIDTH - 1, 4);
-	}
+	oledInvertDebugLink();
 
 	gpio_clear(OLED_CS_PORT, OLED_CS_PIN);		// SPI select
 	SPISend(SPI_BASE, s, 3);
@@ -211,13 +216,7 @@ void oledRefresh()
 	gpio_clear(OLED_DC_PORT, OLED_DC_PIN);		// set to CMD
 
 	// return it back
-	if (is_debug_link) {
-		oledInvertPixel(OLED_WIDTH - 5, 0); oledInvertPixel(OLED_WIDTH - 4, 0); oledInvertPixel(OLED_WIDTH - 3, 0); oledInvertPixel(OLED_WIDTH - 2, 0); oledInvertPixel(OLED_WIDTH - 1, 0);
-		oledInvertPixel(OLED_WIDTH - 4, 1); oledInvertPixel(OLED_WIDTH - 3, 1); oledInvertPixel(OLED_WIDTH - 2, 1); oledInvertPixel(OLED_WIDTH - 1, 1); 
-		oledInvertPixel(OLED_WIDTH - 3, 2); oledInvertPixel(OLED_WIDTH - 2, 2); oledInvertPixel(OLED_WIDTH - 1, 2);
-		oledInvertPixel(OLED_WIDTH - 2, 3); oledInvertPixel(OLED_WIDTH - 1, 3);
-		oledInvertPixel(OLED_WIDTH - 1, 4);
-	}
+	oledInvertDebugLink();
 }
 #endif
 

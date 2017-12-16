@@ -58,6 +58,9 @@ void oledInit(void) {
 }
 
 void oledRefresh(void) {
+	/* Draw triangle in upper right corner */
+	oledInvertDebugLink();
+
 	const uint8_t *buffer = oledGetBuffer();
 
 	static uint32_t data[OLED_HEIGHT][OLED_WIDTH];
@@ -75,6 +78,9 @@ void oledRefresh(void) {
 	SDL_UpdateTexture(texture, NULL, data, OLED_WIDTH * sizeof(uint32_t));
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
+
+	/* Return it back */
+	oledInvertDebugLink();
 }
 
 void emulatorPoll(void) {
