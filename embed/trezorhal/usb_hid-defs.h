@@ -69,12 +69,12 @@ typedef struct {
     uint8_t ep_in_is_idle; // Set to 1 after IN endpoint gets idle
 } usb_hid_state_t;
 
-secbool usb_hid_add(const usb_hid_info_t *hid_info);
-secbool usb_hid_can_read(uint8_t iface_num);
-secbool usb_hid_can_write(uint8_t iface_num);
-int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
-int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
+secbool __wur usb_hid_add(const usb_hid_info_t *hid_info);
+secbool __wur usb_hid_can_read(uint8_t iface_num);
+secbool __wur usb_hid_can_write(uint8_t iface_num);
+int __wur usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len);
+int __wur usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len);
 
-int usb_hid_read_select(uint32_t timeout);
-int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int timeout);
-int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, int timeout);
+int __wur usb_hid_read_select(uint32_t timeout);
+int __wur usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int timeout);
+int __wur usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, int timeout);

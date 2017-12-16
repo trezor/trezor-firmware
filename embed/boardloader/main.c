@@ -30,7 +30,7 @@ static uint32_t check_sdcard(void)
         return 0;
     }
 
-    sdcard_power_on();
+    ensure(sdcard_power_on(), NULL);
 
     uint64_t cap = sdcard_get_capacity_in_bytes();
     if (cap < 1024 * 1024) {
@@ -122,23 +122,23 @@ static secbool copy_sdcard(void)
     // copy bootloader from SD card to Flash
     display_printf("copying new bootloader from SD card\n\n");
 
-    sdcard_power_on();
+    ensure(sdcard_power_on(), NULL);
 
     uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
     for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
-        sdcard_read_blocks(buf, i, 1);
+        ensure(sdcard_read_blocks(buf, i, 1), NULL);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
             if (sectrue != flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
                 display_printf("copy failed\n");
                 sdcard_power_off();
-                flash_lock();
+                ensure(flash_lock(), NULL);
                 return secfalse;
             }
         }
     }
 
     sdcard_power_off();
-    flash_lock();
+    ensure(flash_lock(), NULL);
 
     display_printf("\ndone\n\n");
     display_printf("Unplug the device and remove the SD card\n");
@@ -161,7 +161,9 @@ int main(void)
             FLASH_SECTOR_STORAGE_1,
             FLASH_SECTOR_STORAGE_2,
         };
-        flash_erase_sectors(sectors, sizeof(sectors), NULL);
+        // display is not initialized so don't call ensure
+        secbool r = flash_erase_sectors(sectors, sizeof(sectors), NULL);
+        (void)r;
         return 2;
     }
 

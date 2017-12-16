@@ -9,6 +9,7 @@
 
 #include <string.h>
 
+#include "common.h"
 #include "flash.h"
 
 // see docs/memory.md for more information
@@ -87,14 +88,14 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
         EraseInitStruct.Sector = sectors[i];
         uint32_t SectorError;
         if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
-            flash_lock();
+            ensure(flash_lock(), NULL);
             return secfalse;
         }
         // check whether the sector was really deleted (contains only 0xFF)
         const uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]], addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
         for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
             if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
-                flash_lock();
+                ensure(flash_lock(), NULL);
                 return secfalse;
             }
         }
@@ -102,7 +103,7 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
             progress(i + 1, len);
         }
     }
-    flash_lock();
+    ensure(flash_lock(), NULL);
     return sectrue;
 }
 
@@ -166,7 +167,7 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint
             break;
         }
     }
-    flash_lock();
+    ensure(flash_lock(), NULL);
     return ret;
 }
 
@@ -179,7 +180,7 @@ secbool flash_otp_lock(uint8_t block)
         return secfalse;
     }
     HAL_StatusTypeDef ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_OTP_LOCK_BASE + block, 0x00);
-    flash_lock();
+    ensure(flash_lock(), NULL);
     return sectrue * (ret == HAL_OK);
 }
 

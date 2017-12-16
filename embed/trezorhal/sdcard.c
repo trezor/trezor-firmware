@@ -108,13 +108,12 @@ error:
     return secfalse;
 }
 
-secbool sdcard_power_off(void) {
+void sdcard_power_off(void) {
     if (NULL == sd_handle.Instance) {
-        return sectrue;
+        return;
     }
     HAL_SD_DeInit(&sd_handle);
     sd_handle.Instance = NULL;
-    return sectrue;
 }
 
 uint64_t sdcard_get_capacity_in_bytes(void) {

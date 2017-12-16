@@ -58,7 +58,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
             memcpy(state->buf + state->packet_pos, buf + written, USB_PACKET_SIZE - state->packet_pos);
             written += USB_PACKET_SIZE - state->packet_pos;
             // send packet
-            usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
+            ensure(usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100), NULL);
             // prepare new packet
             state->packet_index++;
             memset(state->buf, 0, USB_PACKET_SIZE);
@@ -78,7 +78,7 @@ static void _usb_write_flush(usb_write_state *state)
         memset(state->buf + state->packet_pos, 0, USB_PACKET_SIZE - state->packet_pos);
     }
     // send packet
-    usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
+    ensure(usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100), NULL);
 }
 
 static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fields[], const void *msg)
@@ -157,7 +157,7 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count)
             memcpy(buf + read, state->buf + state->packet_pos, USB_PACKET_SIZE - state->packet_pos);
             read += USB_PACKET_SIZE - state->packet_pos;
             // read next packet
-            usb_hid_read_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100);
+            ensure(usb_hid_read_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, 100), NULL);
             // prepare next packet
             state->packet_index++;
             state->packet_pos = MSG_HEADER2_LEN;
@@ -427,12 +427,12 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
             MSG_SEND_ASSIGN_STRING(message, "Could not write data");
             MSG_SEND(Failure);
-            flash_lock();
+            ensure(flash_lock(), NULL);
             return -6;
         }
     }
 
-    flash_lock();
+    ensure(flash_lock(), NULL);
 
     firmware_remaining -= chunk_requested;
     firmware_block++;

@@ -59,14 +59,14 @@ typedef struct {
     uint8_t sig[64];
 } vendor_header;
 
-secbool load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr);
+secbool __wur load_image_header(const uint8_t * const data, const uint32_t magic, const uint32_t maxsize, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, image_header * const hdr);
 
-secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
+secbool __wur load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t key_n, const uint8_t * const *keys, vendor_header * const vhdr);
 
 void vendor_keys_hash(const vendor_header * const vhdr, uint8_t *hash);
 
-secbool check_single_hash(const uint8_t * const hash, const uint8_t * const data, int len);
+secbool __wur check_single_hash(const uint8_t * const hash, const uint8_t * const data, int len);
 
-secbool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks);
+secbool __wur check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks);
 
 #endif

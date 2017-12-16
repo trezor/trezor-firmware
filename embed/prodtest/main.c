@@ -32,13 +32,13 @@ static void vcp_intr(void)
 
 static void vcp_puts(const char *s, size_t len)
 {
-    usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *) s, len, -1);
+    ensure(usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *) s, len, -1), NULL);
 }
 
 static char vcp_getchar(void)
 {
     uint8_t c = 0;
-    usb_vcp_read_blocking(VCP_IFACE, &c, 1, -1);
+    ensure(usb_vcp_read_blocking(VCP_IFACE, &c, 1, -1), NULL);
     return (char) c;
 }
 
@@ -221,7 +221,7 @@ static void test_sd(void)
         return;
     }
 
-    sdcard_power_on();
+    ensure(sdcard_power_on(), NULL);
     if (sectrue != sdcard_read_blocks(buf1, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
         vcp_printf("ERROR sdcard_read_blocks (0)");
         goto power_off;
@@ -261,7 +261,7 @@ static void test_otp_read(void)
 {
     uint8_t data[32];
     memset(data, 0, sizeof(data));
-    flash_otp_read(0, 0, data, sizeof(data));
+    ensure(flash_otp_read(0, 0, data, sizeof(data)), NULL);
 
     // strip trailing 0xFF
     for (size_t i = 0; i < sizeof(data); i++) {
@@ -284,8 +284,8 @@ static void test_otp_write(const char *args)
     char data[32];
     memset(data, 0, sizeof(data));
     strncpy(data, args, sizeof(data) - 1);
-    flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data));
-    flash_otp_lock(0);
+    ensure(flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data)), NULL);
+    ensure(flash_otp_lock(0), NULL);
     vcp_printf("OK");
 }
 

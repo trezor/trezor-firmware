@@ -73,9 +73,8 @@ secbool sdcard_power_on(void) {
     return sectrue;
 }
 
-secbool sdcard_power_off(void) {
+void sdcard_power_off(void) {
     sdcard_powered = secfalse;
-    return sectrue;
 }
 
 uint64_t sdcard_get_capacity_in_bytes(void) {
