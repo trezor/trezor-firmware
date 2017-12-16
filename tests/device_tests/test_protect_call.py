@@ -121,7 +121,7 @@ class TestProtectCall(common.TrezorTest):
             if attempts <= 1:
                 expected = 0
             else:
-                expected = (2 ** (attempts - 2))
+                expected = (2 ** (attempts - 1)) - 1
             got = time.time() - start
 
             msg = "Pin delay expected to be at least %s seconds, got %s" % (expected, got)
