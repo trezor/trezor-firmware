@@ -5,7 +5,7 @@
 import math
 import sys
 
-outer = 64
+outer = 60
 inner = 42
 
 with open('loader.h', 'wt') as f:
