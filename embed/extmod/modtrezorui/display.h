@@ -18,6 +18,7 @@
 #define DISPLAY_RESY 240
 
 #define FONT_BPP    4
+#define FONT_SIZE   20
 
 #ifdef TREZOR_FONT_MONO_ENABLE
 #define FONT_MONO   0

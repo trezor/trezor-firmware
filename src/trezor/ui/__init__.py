@@ -16,13 +16,13 @@ display = Display()
 if sys.platform != 'trezor':
     loop.after_step_hook = display.refresh
 
-# font styles
+# import constants from modtrezorui
+
+SIZE = Display.FONT_SIZE
 NORMAL = Display.FONT_NORMAL
 BOLD = Display.FONT_BOLD
 MONO = Display.FONT_MONO
-
-# display width and height
-SCREEN = const(240)
+SCREEN = Display.WIDTH  # used also for height as we have square display
 
 
 def lerpi(a: int, b: int, t: float) -> int:
