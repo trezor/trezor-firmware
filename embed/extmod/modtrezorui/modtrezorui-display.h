@@ -178,7 +178,7 @@ STATIC mp_obj_t mod_trezorui_Display_print(mp_obj_t self, mp_obj_t text) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_print_obj, mod_trezorui_Display_print);
 
-/// def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
+/// def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
 ///     '''
 ///     Renders left-aligned text at position (x,y) where x is left position and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -191,14 +191,13 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    if (text.len > 0) {
-        display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
-    }
+    mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
+    display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor, minwidth);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 7, mod_trezorui_Display_text);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 8, mod_trezorui_Display_text);
 
-/// def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
+/// def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
 ///     '''
 ///     Renders text centered at position (x,y) where x is text center and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -211,14 +210,13 @@ STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args, const mp_obj_t *
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    if (text.len > 0) {
-        display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
-    }
+    mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
+    display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor, minwidth);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj, 7, 7, mod_trezorui_Display_text_center);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj, 7, 8, mod_trezorui_Display_text_center);
 
-/// def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
+/// def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
 ///     '''
 ///     Renders right-aligned text at position (x,y) where x is right position and y is baseline.
 ///     Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
@@ -231,12 +229,11 @@ STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args, const mp_obj_t *a
     mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
-    if (text.len > 0) {
-        display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
-    }
+    mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
+    display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor, minwidth);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj, 7, 7, mod_trezorui_Display_text_right);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj, 7, 8, mod_trezorui_Display_text_right);
 
 /// def text_width(self, text: str, font: int) -> int:
 ///     '''
@@ -246,10 +243,7 @@ STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text, mp
     mp_buffer_info_t txt;
     mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
     mp_int_t f = mp_obj_get_int(font);
-    uint32_t w = 0;
-    if (txt.len > 0) {
-        w = display_text_width(txt.buf, txt.len, f);
-    }
+    int w = display_text_width(txt.buf, txt.len, f);
     return MP_OBJ_NEW_SMALL_INT(w);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_text_width_obj, mod_trezorui_Display_text_width);

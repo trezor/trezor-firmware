@@ -411,32 +411,17 @@ void display_printf(const char *fmt, ...)
 
 #endif // TREZOR_PRINT_DISABLE
 
-// first two bytes are width and height of the glyph
-// third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
-// rest is packed 4-bit glyph data
-void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+static void display_text_render(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    uint16_t colortable[16];
-    set_color_table(colortable, fgcolor, bgcolor);
-
     // determine text length if not provided
     if (textlen < 0) {
         textlen = strlen(text);
     }
-    y += DISPLAY_OFFSET[1];
 
-    // render background bars
-    int px = x + DISPLAY_OFFSET[0];
-    for (int i = 0; i < textlen; i++) {
-        const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
-        if (!g) continue;
-        const int8_t adv = g[2]; // advance
-        display_bar(px - 2, y - 18, adv + 3, 23, bgcolor);
-        px += adv;
-    }
+    uint16_t colortable[16];
+    set_color_table(colortable, fgcolor, bgcolor);
 
     // render glyphs
-    px = x + DISPLAY_OFFSET[0];
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
@@ -446,7 +431,7 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
         const int8_t bearX = g[3]; // bearingX
         const int8_t bearY = g[4]; // bearingY
         if (w && h) {
-            const int sx = px + bearX;
+            const int sx = x + bearX;
             const int sy = y - bearY;
             int x0, y0, x1, y1;
             clamp_coords(sx, sy, w, h, &x0, &y0, &x1, &y1);
@@ -468,20 +453,40 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
                 }
             }
         }
-        px += adv;
+        x += adv;
     }
 }
 
-void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+#define max(x, y) (((x) > (y)) ? (x) : (y))
+
+void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth)
 {
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     int w = display_text_width(text, textlen, font);
-    display_text(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
+    int barwidth = max(w, minwidth);
+    display_bar(x - 1, y - 18, barwidth + 2, 23, bgcolor);
+    display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth)
 {
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
     int w = display_text_width(text, textlen, font);
-    display_text(x - w, y, text, textlen, font, fgcolor, bgcolor);
+    int barwidth = max(w, minwidth);
+    display_bar(x - barwidth / 2 - 1, y - 18, barwidth + 2, 23, bgcolor);
+    display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
+}
+
+void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth)
+{
+    x += DISPLAY_OFFSET[0];
+    y += DISPLAY_OFFSET[1];
+    int w = display_text_width(text, textlen, font);
+    int barwidth = max(w, minwidth);
+    display_bar(x - barwidth - 1, y - 18, barwidth + 2, 23, bgcolor);
+    display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
 }
 
 // compute the width of the text (in pixels)
@@ -495,7 +500,8 @@ int display_text_width(const char *text, int textlen, uint8_t font)
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
-        w += g[2];
+        const int8_t adv = g[2]; // advance
+        w += adv;
     }
     return w;
 }

@@ -39,13 +39,13 @@ static void display_header(int icon, const char *text)
             display_icon(8, 4, 24, 24, toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK, COLOR_BL_ORANGE);
             break;
     }
-    display_text(8 + 24 + 8, 23, text, -1, FONT_BOLD, COLOR_BLACK, COLOR_BL_ORANGE);
+    display_text(8 + 24 + 8, 23, text, -1, FONT_BOLD, COLOR_BLACK, COLOR_BL_ORANGE, 0);
 }
 
 static void display_footer(const char *text, uint16_t color, int bottom)
 {
     display_bar(0, DISPLAY_RESY - bottom - 24, DISPLAY_RESX, bottom + 24, COLOR_BLACK);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - bottom, text, -1, FONT_BOLD, color, COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - bottom, text, -1, FONT_BOLD, color, COLOR_BLACK, 0);
 }
 
 static void display_done(int restart)
@@ -73,7 +73,7 @@ static void display_welcome(secbool firmware_present)
     display_clear();
     if (secfalse == firmware_present) {
         display_icon((DISPLAY_RESX - 124) / 2, (DISPLAY_RESY - 40 - 180) / 2, 124, 180, toi_icon_lock, sizeof(toi_icon_lock), COLOR_WHITE, COLOR_BLACK);
-        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 20, "Go to trezor.io/start", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 20, "Go to trezor.io/start", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK, 0);
     }
     if (sectrue == firmware_present) {
         display_header(ICON_TOOLS, "TREZOR Bootloader");
@@ -99,7 +99,7 @@ static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_
     uint32_t datalen = *(uint32_t *)(vimg + 8);
     display_image((DISPLAY_RESX - w) / 2, 32, w, h, vimg + 12, datalen);
     if (vstr && vstr_len) {
-        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, background);
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_BOLD, COLOR_WHITE, background, 0);
     }
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
@@ -108,7 +108,7 @@ static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_
         (int)((fw_version >> 16) & 0xFF),
         (int)((fw_version >> 24) & 0xFF)
     );
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, background);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_BOLD, COLOR_GRAY128, background, 0);
     display_refresh();
 }
 
