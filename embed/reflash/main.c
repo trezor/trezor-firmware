@@ -45,9 +45,7 @@ static void flash_from_sdcard(uint32_t target, uint32_t source, uint32_t length)
             "sdcard_read_blocks");
 
         for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            ensure(
-                flash_write_word(target + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]),
-                "flash_write_word");
+            ensure(flash_write_word(target + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]), NULL);
         }
     }
 }
@@ -78,9 +76,7 @@ int main(void)
     display_printf("\n");
     display_printf("erased\n");
 
-    ensure(
-        flash_unlock(),
-        "flash_unlock");
+    ensure(flash_unlock(), NULL);
 
     sdcard_power_on();
 
@@ -92,7 +88,7 @@ int main(void)
 
     display_printf("done\n");
     sdcard_power_off();
-    flash_lock();
+    ensure(flash_lock(), NULL);
 
     return 0;
 }

@@ -45,7 +45,8 @@ STATIC mp_obj_t mod_trezorio_SDCard_power(mp_obj_t self, mp_obj_t state) {
     if (mp_obj_is_true(state)) {
         return mp_obj_new_bool(sdcard_power_on());
     } else {
-        return mp_obj_new_bool(sdcard_power_off());
+        sdcard_power_off();
+        return mp_const_true;
     }
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_SDCard_power_obj, mod_trezorio_SDCard_power);

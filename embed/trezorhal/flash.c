@@ -74,9 +74,7 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
 {
-    if (sectrue != flash_unlock()) {
-        return secfalse;
-    }
+    ensure(flash_unlock(), NULL);
     FLASH_EraseInitTypeDef EraseInitStruct;
     EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
     EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
@@ -130,15 +128,6 @@ secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
     return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_SECTOR_TABLE[sector] + offset, data));
 }
 
-secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
-{
-    if (offset % 4 != 0) {
-        return secfalse;
-    }
-    *data = *((const uint32_t *) (FLASH_SECTOR_TABLE[sector] + offset));
-    return sectrue;
-}
-
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
 
 secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
@@ -157,15 +146,10 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint
     if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
         return secfalse;
     }
-    if (sectrue != flash_unlock()) {
-        return secfalse;
-    }
+    ensure(flash_unlock(), NULL);
     secbool ret = secfalse;
     for (uint8_t i = 0; i < datalen; i++) {
-        ret = flash_write_byte(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i, data[i]);
-        if (ret != sectrue) {
-            break;
-        }
+        ensure(flash_write_byte(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i, data[i]), NULL);
     }
     ensure(flash_lock(), NULL);
     return ret;
@@ -176,9 +160,7 @@ secbool flash_otp_lock(uint8_t block)
     if (block >= FLASH_OTP_NUM_BLOCKS) {
         return secfalse;
     }
-    if (sectrue != flash_unlock()) {
-        return secfalse;
-    }
+    ensure(flash_unlock(), NULL);
     HAL_StatusTypeDef ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_OTP_LOCK_BASE + block, 0x00);
     ensure(flash_lock(), NULL);
     return sectrue * (ret == HAL_OK);

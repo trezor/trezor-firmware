@@ -114,10 +114,7 @@ static secbool copy_sdcard(void)
     }
     display_printf(" done\n\n");
 
-    if (sectrue != flash_unlock()) {
-        display_printf("could not unlock flash\n");
-        return secfalse;
-    }
+    ensure(flash_unlock(), NULL);
 
     // copy bootloader from SD card to Flash
     display_printf("copying new bootloader from SD card\n\n");
@@ -128,12 +125,7 @@ static secbool copy_sdcard(void)
     for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
         ensure(sdcard_read_blocks(buf, i, 1), NULL);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            if (sectrue != flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j])) {
-                display_printf("copy failed\n");
-                sdcard_power_off();
-                ensure(flash_lock(), NULL);
-                return secfalse;
-            }
+            ensure(flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]), NULL);
         }
     }
 

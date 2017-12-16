@@ -161,19 +161,6 @@ secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
     return sectrue;
 }
 
-secbool flash_read_word_rel(uint8_t sector, uint32_t offset, uint32_t *data)
-{
-    if (offset % 4) {  // we read only at 4-byte boundary
-        return secfalse;
-    }
-    const uint32_t *flash = (const uint32_t *)flash_get_address(sector, offset, sizeof(data));
-    if (!flash) {
-        return secfalse;
-    }
-    data[0] = flash[0];
-    return sectrue;
-}
-
 secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen)
 {
     return secfalse;

@@ -35,32 +35,23 @@ static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, co
     if (sector >= NORCOW_SECTOR_COUNT) {
         return secfalse;
     }
-    if (sectrue != flash_unlock()) {
-        return secfalse;
-    }
+    ensure(flash_unlock(), NULL);
+
     // write prefix
-    if (sectrue != flash_write_word_rel(norcow_sectors[sector], offset, prefix)) {
-        flash_lock();
-        return secfalse;
-    }
+    ensure(flash_write_word_rel(norcow_sectors[sector], offset, prefix), NULL);
+
     if (len > 0) {
         offset += sizeof(uint32_t);
         // write data
         for (uint16_t i = 0; i < len; i++, offset++) {
-            if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, data[i])) {
-                flash_lock();
-                return secfalse;
-            }
+            ensure(flash_write_byte_rel(norcow_sectors[sector], offset, data[i]), NULL);
         }
         // pad with zeroes
         for (; offset % 4; offset++) {
-            if (sectrue != flash_write_byte_rel(norcow_sectors[sector], offset, 0x00)) {
-                flash_lock();
-                return secfalse;
-            }
+            ensure(flash_write_byte_rel(norcow_sectors[sector], offset, 0x00), NULL);
         }
     }
-    flash_lock();
+    ensure(flash_lock(), NULL);
     return sectrue;
 }
 
@@ -295,10 +286,8 @@ secbool norcow_update(uint16_t key, uint16_t offset, uint32_t value)
         return secfalse;
     }
     uint32_t sector_offset = (const uint8_t*) ptr - (const uint8_t *)norcow_ptr(norcow_active_sector, 0, NORCOW_SECTOR_SIZE) + offset;
-    if (sectrue != flash_unlock()) {
-        return secfalse;
-    }
-    secbool result = flash_write_word_rel(norcow_sectors[norcow_active_sector], sector_offset, value);
-    flash_lock();
-    return result;
+    ensure(flash_unlock(), NULL);
+    ensure(flash_write_word_rel(norcow_sectors[norcow_active_sector], sector_offset, value), NULL);
+    ensure(flash_lock(), NULL);
+    return sectrue;
 }

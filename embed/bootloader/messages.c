@@ -411,25 +411,12 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         return -4;
     }
 
-    if (sectrue != flash_unlock()) {
-        MSG_SEND_INIT(Failure);
-        MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
-        MSG_SEND_ASSIGN_STRING(message, "Could not unlock flash");
-        MSG_SEND(Failure);
-        return -5;
-    }
+    ensure(flash_unlock(), NULL);
 
     // TODO: fix writing to non-continous area
     const uint32_t * const src = (const uint32_t * const)chunk_buffer;
     for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
-        if (sectrue != flash_write_word(FIRMWARE_START + firmware_block * IMAGE_CHUNK_SIZE + i * sizeof(uint32_t), src[i])) {
-            MSG_SEND_INIT(Failure);
-            MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
-            MSG_SEND_ASSIGN_STRING(message, "Could not write data");
-            MSG_SEND(Failure);
-            ensure(flash_lock(), NULL);
-            return -6;
-        }
+        ensure(flash_write_word(FIRMWARE_START + firmware_block * IMAGE_CHUNK_SIZE + i * sizeof(uint32_t), src[i]), NULL);
     }
 
     ensure(flash_lock(), NULL);
