@@ -42,7 +42,7 @@ NEMTransactionCommon.signer		max_size:32
 
 NEMTransfer.recipient			max_size:41
 NEMTransfer.public_key			max_size:32
-NEMTransfer.payload			max_size:256
+NEMTransfer.payload			max_size:1024
 NEMTransfer.mosaics			max_count:16
 
 NEMMosaic.namespace			max_size:145
