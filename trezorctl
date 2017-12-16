@@ -209,11 +209,13 @@ def set_flags(connect, flags):
 @click.option('-f', '--filename', default=None)
 @click.pass_obj
 def set_homescreen(connect, filename):
-    if filename and filename.endswith('.toif'):
+    if filename is None:
+        img = b'\x00'
+    elif filename.endswith('.toif'):
         img = open(filename, 'rb').read()
         if img[:8] != b'TOIf\x90\x00\x90\x00':
-            raise ValueError('File is not a TOIF file with size of 144x144')
-    elif filename is not None:
+            raise CallException(types.Failure_DataError, 'File is not a TOIF file with size of 144x144')
+    else:
         from PIL import Image
         im = Image.open(filename)
         if im.size != (128, 64):
@@ -227,8 +229,6 @@ def set_homescreen(connect, filename):
                     o = (i + j * 128)
                     img[o // 8] |= (1 << (7 - o % 8))
         img = bytes(img)
-    else:
-        img = b'\x00'
     return connect().apply_settings(homescreen=img)
 
 
