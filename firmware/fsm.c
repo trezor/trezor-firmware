@@ -1431,6 +1431,72 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 	layoutHome();
 }
 
+void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg)
+{
+	RESP_INIT(NEMDecryptedMessage);
+
+	CHECK_INITIALIZED
+
+	CHECK_PARAM(nem_network_name(msg->network), _("Invalid NEM network"));
+	CHECK_PARAM(msg->has_payload, _("No payload provided"));
+	CHECK_PARAM(msg->payload.size >= NEM_ENCRYPTED_PAYLOAD_SIZE(0), _("Invalid encrypted payload"));
+	CHECK_PARAM(msg->has_public_key, _("No public key provided"));
+	CHECK_PARAM(msg->public_key.size == 32, _("Invalid public key"));
+
+	char address[NEM_ADDRESS_SIZE + 1];
+	nem_get_address(msg->public_key.bytes, msg->network, address);
+
+	layoutNEMDialog(&bmp_icon_question,
+		_("Cancel"),
+		_("Confirm"),
+		_("Decrypt message"),
+		_("Confirm address?"),
+		address);
+	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
+	CHECK_PIN
+
+	HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n, msg->address_n_count);
+	if (!node) return;
+
+	const uint8_t *salt = msg->payload.bytes;
+	uint8_t *iv = &msg->payload.bytes[NEM_SALT_SIZE];
+
+	const uint8_t *payload = &msg->payload.bytes[NEM_SALT_SIZE + AES_BLOCK_SIZE];
+	size_t size = msg->payload.size - NEM_SALT_SIZE - AES_BLOCK_SIZE;
+
+	// hdnode_nem_decrypt mutates the IV, so this will modify msg
+	bool ret = hdnode_nem_decrypt(node,
+			msg->public_key.bytes,
+			iv,
+			salt,
+			payload,
+			size,
+			resp->payload.bytes);
+	if (!ret) {
+		fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to decrypt payload"));
+		layoutHome();
+		return;
+	}
+
+	resp->has_payload = true;
+	resp->payload.size = NEM_DECRYPTED_SIZE(resp->payload.bytes, size);
+
+	layoutNEMTransferPayload(resp->payload.bytes, resp->payload.size, true);
+	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
+	msg_write(MessageType_MessageType_NEMDecryptedMessage, resp);
+	layoutHome();
+}
+
 void fsm_msgCosiCommit(CosiCommit *msg)
 {
 	RESP_INIT(CosiCommitment);

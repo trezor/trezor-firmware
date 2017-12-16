@@ -150,6 +150,12 @@ NEMAddress.address			max_size:41
 NEMSignedTx.data			max_size:2048
 NEMSignedTx.signature			max_size:64
 
+NEMDecryptMessage.address_n		max_count:8
+NEMDecryptMessage.public_key		max_size:32
+NEMDecryptMessage.payload		max_size:320
+
+NEMDecryptedMessage.payload		max_size:256
+
 CosiCommit.address_n			max_count:8
 CosiCommit.data				max_size:32
 
