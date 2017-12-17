@@ -3,10 +3,15 @@
 # to plain-python objects as used in TREZOR Core and python-trezor
 
 import sys
+import importlib
 import os
 import argparse
 
 from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
+
+
+def import_pb2(name):
+    return importlib.import_module("pb2.%s_pb2" % name)
 
 
 def process_type(t, cls, msg_id, indexfile, is_upy):
@@ -149,8 +154,7 @@ def process_module(mod, genpath, indexfile, modlist, is_upy):
     types = dict([(name, cls)
                   for name, cls in mod.__dict__.items() if isinstance(cls, type)])
 
-    msg_types = __import__('pb2', globals(), locals(), [
-                           'messages_pb2', ]).messages_pb2.MessageType.items()
+    msg_types = import_pb2('messages').MessageType.items()
 
     for t, cls in sorted(types.items()):
         # Find message type for given class
@@ -185,29 +189,15 @@ def write_to_file(genpath, t, out):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('modulename', type=str, help="Name of module to generate")
+    parser.add_argument('modulename', type=import_pb2, help="Name of module to generate")
     parser.add_argument('genpath', type=str, help="Directory for generated source code")
-    parser.add_argument('-i', '--indexfile', type=str, help="[optional] Generate index file of wire types")
-    parser.add_argument('-l', '--modlist', type=str, help="[optional] Generate list of modules")
-    parser.add_argument('-p', '--protopath', type=str, help="[optional] Path to search for pregenerated Google's python sources")
+    parser.add_argument('-i', '--indexfile', type=argparse.FileType('a'), help="Generate index file of wire types")
+    parser.add_argument('-l', '--modlist', type=argparse.FileType('a'), help="Generate list of modules")
+    parser.add_argument('-p', '--protopath', type=str, help="Path to search for pregenerated Google's python sources")
     parser.add_argument('-m', '--micropython', action='store_true', help="Use micropython-favoured source code")
     args = parser.parse_args()
-
-    if args.indexfile:
-        indexfile = open(args.indexfile, 'a')
-    else:
-        indexfile = None
-
-    if args.modlist:
-        modlist = open(args.modlist, 'a')
-    else:
-        modlist = None
 
     if args.protopath:
         sys.path.append(args.protopath)
 
-    # Dynamically load module from argv[1]
-    tmp = __import__('pb2', globals(), locals(), ['%s_pb2' % args.modulename])
-    mod = getattr(tmp, "%s_pb2" % args.modulename)
-
-    process_module(mod, args.genpath, indexfile, modlist, args.micropython)
+    process_module(args.modulename, args.genpath, args.indexfile, args.modlist, args.micropython)
