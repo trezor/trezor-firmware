@@ -463,34 +463,37 @@ def sign_tx(connect, coin):
 
     client.set_tx_api(txapi)
 
-    if sys.version_info.major < 3:
-        input = raw_input
+    def outpoint(s):
+        txid, vout = s.split(':')
+        return binascii.unhexlify(txid), int(vout)
 
     inputs = []
     while True:
         click.echo()
-        prev = input('Input (prevhash:previndex, empty to move on): ').strip()
-        if prev == '':
+        prev = click.prompt('Previous output to spend (txid:vout)', type=outpoint, default='')
+        if not prev:
             break
-        prev_in_hash, prev_in_vout = prev.split(':')
-        addrn = input("Node path to sign with (e.g.- %s/0'/0/0): " % coin).strip()
+        prev_hash, prev_index = prev
+        address_n = click.prompt('BIP-32 path to derive the key', type=client.expand_path, default="%s/0'/0/0" % coin)
+        amount = click.prompt('Input amount (satoshis)', type=int, default=0)
         inputs.append(proto.TxInputType(
-            prev_hash=binascii.unhexlify(prev_in_hash),
-            prev_index=int(prev_in_vout, 10),
-            address_n=client.expand_path(addrn)
+            address_n=address_n,
+            prev_hash=prev_hash,
+            prev_index=prev_index,
+            amount=amount,
         ))
 
     outputs = []
     while True:
         click.echo()
-        out_addr = input('Pay to address (empty to move on): ').strip()
-        if out_addr == '':
+        address = click.prompt('Pay to address', default='')
+        if not address:
             break
-        out_amount = input('Amount (in satoshis): ').strip()
+        amount = click.prompt('Amount to spend (satoshis)', type=int)
         outputs.append(proto.TxOutputType(
-            amount=int(out_amount, 10),
+            address=address,
+            amount=amount,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
-            address=out_addr
         ))
 
     (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs)
