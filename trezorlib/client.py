@@ -94,7 +94,7 @@ def pprint(msg):
 
 
 def log(msg):
-    sys.stderr.write(str(msg))
+    sys.stderr.write(msg)
     sys.stderr.write('\n')
     sys.stderr.flush()
 
@@ -1038,7 +1038,7 @@ class ProtocolMixin(object):
         mnemonic = Mnemonic.normalize_string(mnemonic)
 
         # Convert mnemonic to ASCII stream
-        mnemonic = mnemonic.encode()
+        mnemonic = mnemonic.encode('utf-8')
 
         m = Mnemonic('english')
 
