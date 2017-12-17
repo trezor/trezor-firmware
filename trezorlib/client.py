@@ -32,6 +32,7 @@ from mnemonic import Mnemonic
 
 from . import messages as proto
 from . import tools
+from . import mapping
 from .coins import coins_slip44
 from .debuglink import DebugLink
 
@@ -203,6 +204,10 @@ class BaseClient(object):
             raise PinException(msg.code, msg.message)
 
         raise CallException(msg.code, msg.message)
+
+    def register_message(self, msg):
+        '''Allow application to register custom protobuf message type'''
+        mapping.register_message(msg)
 
 
 class VerboseWireMixin(object):

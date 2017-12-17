@@ -32,13 +32,21 @@ def build_map():
         try:
             msg_class = getattr(messages, msg_name)
         except AttributeError:
-            raise
             raise ValueError("Implementation of protobuf message '%s' is missing" % msg_name)
 
-        wire_type = getattr(messages.MessageType, msg_name)
+        if msg_class.MESSAGE_WIRE_TYPE != getattr(messages.MessageType, msg_name):
+            raise ValueError("Inconsistent wire type and MessageType record for '%s'" % msg_class)
 
-        map_type_to_class[wire_type] = msg_class
-        map_class_to_type[msg_class] = wire_type
+        register_message(msg_class)
+
+
+def register_message(msg_class):
+    if msg_class.MESSAGE_WIRE_TYPE in map_type_to_class:
+        raise Exception("Message for wire type %s is already registered by %s" %
+                        (msg_class.MESSAGE_WIRE_TYPE, get_class(msg_class.MESSAGE_WIRE_TYPE)))
+
+    map_class_to_type[msg_class] = msg_class.MESSAGE_WIRE_TYPE
+    map_type_to_class[msg_class.MESSAGE_WIRE_TYPE] = msg_class
 
 
 def get_type(msg):
