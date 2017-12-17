@@ -52,7 +52,6 @@ class ProtocolV2(object):
         self.session = None
 
     def write(self, transport, msg):
-        print(msg)
         if not self.session:
             raise RuntimeError('Missing session for v2 protocol')
 
@@ -96,7 +95,6 @@ class ProtocolV2(object):
 
         # Parse to protobuf
         msg = protobuf.load_message(data, mapping.get_class(msg_type))
-        print(msg)
         return msg
 
     def parse_first(self, chunk):
