@@ -598,6 +598,7 @@ message SignTx {
 	optional string coin_name = 3 [default='Bitcoin'];	// coin to use
 	optional uint32 version = 4 [default=1];		// transaction version
 	optional uint32 lock_time = 5 [default=0];		// transaction lock_time
+	optional uint32 decred_expiry = 6;
 }
 
 /**

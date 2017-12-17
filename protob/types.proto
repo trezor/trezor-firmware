@@ -197,6 +197,7 @@ message TxInputType {
 	optional InputScriptType script_type = 6 [default=SPENDADDRESS];	// defines template of input script
 	optional MultisigRedeemScriptType multisig = 7;				// Filled if input is going to spend multisig tx
 	optional uint64 amount = 8;						// amount of previous transaction output (for segwit only)
+	optional uint32 decred_tree = 9;
 }
 
 /**
@@ -211,6 +212,7 @@ message TxOutputType {
 	required OutputScriptType script_type = 4;	// output script type
 	optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
 	optional bytes op_return_data = 6;		// defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+	optional uint32 decred_script_version = 7;
 }
 
 /**
@@ -220,6 +222,7 @@ message TxOutputType {
 message TxOutputBinType {
 	required uint64 amount = 1;
 	required bytes script_pubkey = 2;
+	optional uint32 decred_script_version = 3;
 }
 
 /**
@@ -236,6 +239,7 @@ message TransactionType {
 	optional uint32 outputs_cnt = 7;
 	optional bytes extra_data = 8;
 	optional uint32 extra_data_len = 9;
+	optional uint32 decred_expiry = 10;
 }
 
 /**
