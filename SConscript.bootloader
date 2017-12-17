@@ -80,6 +80,7 @@ SOURCE_STMHAL = [
 SOURCE_BOOTLOADER = [
     'embed/bootloader/startup.s',
     'embed/bootloader/header.S',
+    'embed/bootloader/bootui.c',
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',
     'embed/bootloader/nanopb/pb_common.c',

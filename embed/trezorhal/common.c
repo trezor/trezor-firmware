@@ -6,10 +6,12 @@
 
 void shutdown(void);
 
+#define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
+
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func) {
     display_orientation(0);
     display_backlight(255);
-    display_print_color(COLOR_WHITE, COLOR_RED128);
+    display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
     display_printf("\nFATAL ERROR:\n");
     if (expr) {
         display_printf("expr: %s\n", expr);

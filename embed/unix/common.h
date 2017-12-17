@@ -1,6 +1,7 @@
 #ifndef __TREZORUNIX_COMMON_H__
 #define __TREZORUNIX_COMMON_H__
 
+#include <stdint.h>
 #include "secbool.h"
 
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);

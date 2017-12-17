@@ -2,7 +2,6 @@
 #include <sys/types.h>
 
 #include "common.h"
-#include "display.h"
 #include "image.h"
 #include "flash.h"
 #include "mini_printf.h"
@@ -12,105 +11,8 @@
 #include "usb.h"
 #include "version.h"
 
-#include "icon_cross.h"
-#include "icon_lock.h"
-#include "icon_tick.h"
-#include "icon_tools.h"
-#include "icon_update.h"
-#include "icon_wipe.h"
+#include "bootui.h"
 #include "messages.h"
-#include "style.h"
-
-#define ICON_TOOLS  0
-#define ICON_UPDATE 1
-#define ICON_WIPE   2
-
-static void display_header(int icon, const char *text)
-{
-    display_bar(0, 0, DISPLAY_RESX, 32, COLOR_BL_ORANGE);
-    switch (icon) {
-        case ICON_TOOLS :
-            display_icon(8, 4, 24, 24, toi_icon_tools, sizeof(toi_icon_tools), COLOR_BLACK, COLOR_BL_ORANGE);
-            break  ;
-        case ICON_UPDATE:
-            display_icon(8, 4, 24, 24, toi_icon_update, sizeof(toi_icon_update), COLOR_BLACK, COLOR_BL_ORANGE);
-            break;
-        case ICON_WIPE:
-            display_icon(8, 4, 24, 24, toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK, COLOR_BL_ORANGE);
-            break;
-    }
-    display_text(8 + 24 + 8, 23, text, -1, FONT_NORMAL, COLOR_BLACK, COLOR_BL_ORANGE, 0);
-}
-
-static void display_footer(const char *text, uint16_t color, int bottom)
-{
-    display_bar(0, DISPLAY_RESY - bottom - 24, DISPLAY_RESX, bottom + 24, COLOR_BLACK);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - bottom, text, -1, FONT_NORMAL, color, COLOR_BLACK, 0);
-}
-
-static void display_done(int restart)
-{
-    if (restart == 0 || restart == 3) {
-        display_loader(1000, 0, COLOR_BL_GREEN, COLOR_BLACK, toi_icon_tick, sizeof(toi_icon_tick), COLOR_WHITE);
-    }
-    if (restart <= 3 && restart >= 1) {
-        char count_str[24];
-        mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %ds", restart);
-        display_footer(count_str, COLOR_BL_GREEN, 20);
-    } else {
-        display_footer("Done! Unplug the device", COLOR_BL_GREEN, 20);
-    }
-}
-
-static void display_error(void)
-{
-    display_loader(1000, 0, COLOR_BL_RED, COLOR_BLACK, toi_icon_cross, sizeof(toi_icon_cross), COLOR_WHITE);
-    display_footer("Error! Unplug the device", COLOR_BL_RED, 20);
-}
-
-static void display_welcome(secbool firmware_present)
-{
-    display_clear();
-    if (secfalse == firmware_present) {
-        display_icon((DISPLAY_RESX - 124) / 2, (DISPLAY_RESY - 40 - 180) / 2, 124, 180, toi_icon_lock, sizeof(toi_icon_lock), COLOR_WHITE, COLOR_BLACK);
-        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 20, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_WHITE, COLOR_BLACK, 0);
-    }
-    if (sectrue == firmware_present) {
-        display_header(ICON_TOOLS, "TREZOR Bootloader");
-        // TODO: show info about installed firmware (vendor, version, etc.)
-    }
-    display_fade(0, BACKLIGHT_NORMAL, 1000);
-}
-
-#define VENDOR_IMAGE_RESX 120
-#define VENDOR_IMAGE_RESY 120
-
-static void display_vendor(const uint8_t *vimg, const char *vstr, uint32_t vstr_len, uint32_t fw_version, uint16_t background)
-{
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, background);
-    if (memcmp(vimg, "TOIf", 4) != 0) {
-        return;
-    }
-    uint16_t w = *(uint16_t *)(vimg + 4);
-    uint16_t h = *(uint16_t *)(vimg + 6);
-    if (w != VENDOR_IMAGE_RESX || h != VENDOR_IMAGE_RESY) {
-        return;
-    }
-    uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_image((DISPLAY_RESX - w) / 2, 32, w, h, vimg + 12, datalen);
-    if (vstr && vstr_len) {
-        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_NORMAL, COLOR_WHITE, background, 0);
-    }
-    char ver_str[32];
-    mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
-        (int)(fw_version & 0xFF),
-        (int)((fw_version >> 8) & 0xFF),
-        (int)((fw_version >> 16) & 0xFF),
-        (int)((fw_version >> 24) & 0xFF)
-    );
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_NORMAL, COLOR_GRAY128, background, 0);
-    display_refresh();
-}
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
@@ -196,11 +98,9 @@ static void usb_init_all(void) {
     usb_start();
 }
 
-static secbool bootloader_loop(secbool firmware_present)
+static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image_header * const hdr)
 {
     usb_init_all();
-
-    display_welcome(firmware_present);
 
     uint8_t buf[USB_PACKET_SIZE];
 
@@ -221,53 +121,45 @@ static secbool bootloader_loop(secbool firmware_present)
         }
         switch (msg_id) {
             case 0: // Initialize
-                process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, firmware_present);
+                process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
                 break;
             case 1: // Ping
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 5: // WipeDevice
-                display_fade(BACKLIGHT_NORMAL, 0, 100);
-                display_clear();
-                display_header(ICON_WIPE, "Wiping Device");
-                display_footer("Please wait ...", COLOR_WHITE, 20);
-                display_fade(0, BACKLIGHT_NORMAL, 100);
+                ui_screen_wipe();
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
-                    display_error();
+                    ui_screen_fail();
                     usb_stop();
                     usb_deinit();
                     return secfalse; // shutdown
                 } else { // success
-                    display_done(0);
+                    ui_screen_done(0);
                     usb_stop();
                     usb_deinit();
                     return secfalse; // shutdown
                 }
                 break;
             case 6: // FirmwareErase
-                display_fade(BACKLIGHT_NORMAL, 0, 100);
-                display_clear();
-                display_header(ICON_UPDATE, "Updating Firmware");
-                display_footer("Please wait ...", COLOR_WHITE, 20);
-                display_fade(0, BACKLIGHT_NORMAL, 100);
+                ui_screen_install();
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
                 r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
-                    display_error();
+                    ui_screen_fail();
                     usb_stop();
                     usb_deinit();
                     return secfalse; // shutdown
                 } else
                 if (r == 0) { // last chunk received
-                    display_done(3); hal_delay(1000);
-                    display_done(2); hal_delay(1000);
-                    display_done(1); hal_delay(1000);
+                    ui_screen_done(3); hal_delay(1000);
+                    ui_screen_done(2); hal_delay(1000);
+                    ui_screen_done(1); hal_delay(1000);
                     usb_stop();
                     usb_deinit();
-                    display_fade(BACKLIGHT_NORMAL, 0, 500);
+                    ui_fadeout();
                     return sectrue; // jump to firmware
                 }
                 break;
@@ -341,11 +233,21 @@ int main(void)
     }
 
     vendor_header vhdr;
+    image_header hdr;
+    secbool firmware_present;
 
     // start the bootloader if user touched the screen or no firmware installed
-    secbool firmware_present = load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
+    firmware_present = load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
+    if (sectrue == firmware_present) {
+        firmware_present = load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
+    }
+
+    const vendor_header * const pvhdr = (sectrue == firmware_present) ? &vhdr : NULL;
+    const image_header * const phdr = (sectrue == firmware_present) ? &hdr : NULL;
+
     if (touched || firmware_present != sectrue) {
-        if (bootloader_loop(firmware_present) != sectrue) {
+        ui_screen_info(pvhdr, phdr);
+        if (bootloader_usb_loop(pvhdr, phdr) != sectrue) {
             return 1;
         }
     }
@@ -357,8 +259,6 @@ int main(void)
     ensure(
         check_vendor_keys_lock(&vhdr),
         "unauthorized vendor keys");
-
-    image_header hdr;
 
     ensure(
         load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr),
@@ -372,32 +272,21 @@ int main(void)
 
     if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
 
-        display_vendor(
-            vhdr.vimg,
-            ((vhdr.vtrust & VTRUST_STRING) == 0) ? (const char *)vhdr.vstr : 0,
-            ((vhdr.vtrust & VTRUST_STRING) == 0) ? vhdr.vstr_len : 0,
-            hdr.version,
-            ((vhdr.vtrust & VTRUST_RED) == 0) ? COLOR_BL_RED : COLOR_BLACK
-        );
+        ui_screen_boot(&vhdr, &hdr);
 
-        display_fade(0, BACKLIGHT_NORMAL, 1000);
-
-        int start_delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
-        while (start_delay > 0) {
-            char wait_str[16];
-            mini_snprintf(wait_str, sizeof(wait_str), "waiting for %ds", start_delay);
-            display_footer(wait_str, COLOR_GRAY64, 2);
+        int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
+        while (delay > 0) {
+            ui_screen_boot_wait(delay);
             hal_delay(1000);
-            start_delay--;
+            delay--;
         }
 
         if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
-            display_footer("click to continue ...", COLOR_GRAY64, 2);
+            ui_screen_boot_click();
             touch_click();
         }
 
-        display_fade(BACKLIGHT_NORMAL, 0, 500);
-        display_clear();
+        ui_fadeout();
     }
 
     jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);

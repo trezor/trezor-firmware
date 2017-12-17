@@ -6,15 +6,14 @@
 #include "messages.pb.h"
 
 #include "common.h"
-#include "display.h"
 #include "flash.h"
 #include "image.h"
 #include "secbool.h"
 #include "usb.h"
 #include "version.h"
 
+#include "bootui.h"
 #include "messages.h"
-#include "style.h"
 
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
@@ -232,7 +231,7 @@ static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, con
 #define MSG_RECV_CALLBACK(FIELD, CALLBACK) { msg_recv.FIELD.funcs.decode = &CALLBACK; }
 #define MSG_RECV(TYPE) _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv)
 
-void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, secbool firmware_present)
+void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr)
 {
     MSG_RECV_INIT(Initialize);
     MSG_RECV(Initialize);
@@ -243,7 +242,7 @@ void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, 
     MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
-    MSG_SEND_ASSIGN_VALUE(firmware_present, firmware_present);
+    MSG_SEND_ASSIGN_VALUE(firmware_present, (vhdr && hdr));
     MSG_SEND_ASSIGN_STRING(model, "T");
     // TODO: pass info about installed firmware (vendor, version, etc.)
     MSG_SEND(Features);
@@ -261,11 +260,6 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 
 static uint32_t firmware_remaining, firmware_block, chunk_requested;
 
-static void progress_erase(int pos, int len)
-{
-    display_loader(250 * pos / len, 0, COLOR_BL_BLUE, COLOR_BLACK, 0, 0, 0);
-}
-
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     firmware_remaining = 0;
@@ -278,7 +272,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
     if ((firmware_remaining > 0) && ((firmware_remaining % 4) == 0) && (firmware_remaining <= (FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE))) {
         // erase flash
-        if (sectrue != flash_erase_sectors(firmware_sectors, FIRMWARE_SECTORS_COUNT, progress_erase)) {
+        if (sectrue != flash_erase_sectors(firmware_sectors, FIRMWARE_SECTORS_COUNT, ui_screen_install_progress_erase)) {
             MSG_SEND_INIT(Failure);
             MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
             MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
@@ -321,7 +315,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
 
     while (stream->bytes_left) {
         // update loader
-        display_loader(250 + 750 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining), 0, COLOR_BL_BLUE, COLOR_BLACK, 0, 0, 0);
+        ui_screen_install_progress_upload(250 + 750 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
         // read data
         if (!pb_read(stream, (pb_byte_t *)(chunk_buffer + chunk_written), (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
             chunk_size = 0;
@@ -461,11 +455,6 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     return (int)firmware_remaining;
 }
 
-static void progress_wipe(int pos, int len)
-{
-    display_loader(1000 * pos / len, 0, COLOR_BL_BLUE, COLOR_BLACK, 0, 0, 0);
-}
-
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     const uint8_t sectors[] = {
@@ -490,7 +479,7 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
         22,
         FLASH_SECTOR_FIRMWARE_EXTRA_END,
     };
-    if (sectrue != flash_erase_sectors(sectors, sizeof(sectors), progress_wipe)) {
+    if (sectrue != flash_erase_sectors(sectors, sizeof(sectors), ui_screen_wipe_progress)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
