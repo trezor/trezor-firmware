@@ -19,6 +19,23 @@ env:
     - DEBUG_LINK=0 FASTFLASH=1
     - DEBUG_LINK=1 FASTFLASH=1
 
+matrix:
+  include:
+    - addons:
+        apt:
+          packages:
+            - gcc-multilib
+      env:
+        - EMULATOR=1 HEADLESS=1
+        - DEBUG_LINK=1
+      before_script:
+        - sed -i '/hidapi/d' "vendor/python-trezor/requirements.txt"
+        - pip install --user --requirement "vendor/python-trezor/requirements.txt" rlp pytest
+        - pip install --user --no-deps "vendor/python-trezor"
+      script:
+        - script/cibuild
+        - script/test
+
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
   - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
