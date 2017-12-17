@@ -13,3 +13,6 @@
 [submodule "vendor/nanopb"]
 	path = vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
+[submodule "python-trezor"]
+	path = vendor/python-trezor
+	url = https://github.com/trezor/python-trezor.git

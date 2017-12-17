@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# script/test: Run test suite for application.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Kill jobs on exit
+trap "exit" INT TERM
+trap "kill 0" EXIT
+
+if [ "$EMULATOR" = 1 ]; then
+    firmware/trezor.elf &
+fi
+
+TREZOR_TRANSPORT_V1=1 pytest "vendor/python-trezor/tests/device_tests" &
+
+# Wait for either job to exit and kill the other
+wait -n
