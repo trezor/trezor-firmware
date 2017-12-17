@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 trap "exit" INT TERM
 trap "kill 0" EXIT
 
-if [ "$EMULATOR" = 1 ]; then
+if [ "$EMULATOR" = 1 ] && [ -z "$(pidof trezor.elf)" ]; then
     firmware/trezor.elf &
 fi
 
