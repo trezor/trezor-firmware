@@ -122,7 +122,10 @@ Phase1 - check inputs, previous transactions, and outputs
 foreach I (idx1):
     Request I                                                         STAGE_REQUEST_1_INPUT
     Add I to segwit hash_prevouts, hash_sequence
+    Add I to Decred hash_prefix
     Add I to TransactionChecksum (prevout and type)
+    if (Decred)
+        Return I
     If not segwit, Calculate amount of I:
         Request prevhash I, META                                      STAGE_REQUEST_2_PREV_META
         foreach prevhash I (idx2):
@@ -134,7 +137,10 @@ foreach I (idx1):
         Calculate hash of streamed tx, compare to prevhash I
 foreach O (idx1):
     Request O                                                         STAGE_REQUEST_3_OUTPUT
+    Add O to Decred hash_prefix
     Add O to TransactionChecksum
+    if (Decred)
+        Return O
     Display output
     Ask for confirmation
 
@@ -143,6 +149,9 @@ Ask for confirmation
 
 Phase2: sign inputs, check that nothing changed
 ===============================================
+
+if (Decred)
+    Skip to STAGE_REQUEST_DECRED_WITNESS
 
 foreach I (idx1):  // input to sign
     if (idx1 is segwit)
@@ -153,8 +162,8 @@ foreach I (idx1):  // input to sign
         foreach I (idx2):
             Request I                                                 STAGE_REQUEST_4_INPUT
             If idx1 == idx2
-            Remember key for signing
                 Fill scriptsig
+                Remember key for signing
             Add I to StreamTransactionSign
             Add I to TransactionChecksum
         foreach O (idx2):
@@ -181,6 +190,17 @@ foreach I (idx1):  // input to sign
     Request I                                                         STAGE_REQUEST_SEGWIT_WITNESS
     Check amount
     Sign  segwit prevhash, sequence, amount, outputs
+    Return witness
+
+Phase3: sign Decred inputs
+==========================
+
+foreach I (idx1): // input to sign                                    STAGE_REQUEST_DECRED_WITNESS
+    Request I
+    Fill scriptSig
+    Compute hash_witness
+
+    Sign (hash_type || hash_prefix || hash_witness)
     Return witness
 */
 
