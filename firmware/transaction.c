@@ -53,6 +53,8 @@
 #define TXSIZE_P2PKHASH 25
 /* size of a p2sh script (hash, push, 20 scripthash, equal) */
 #define TXSIZE_P2SCRIPT 23
+/* size of a Decred witness (without script): 8 amount, 4 block height, 4 block index */
+#define TXSIZE_DECRED_WITNESS 16
 
 static const uint8_t segwit_header[2] = {0,1};
 
@@ -677,7 +679,7 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 	}
 }
 
-uint32_t tx_input_weight(const TxInputType *txinput) {
+static uint32_t tx_input_script_size(const TxInputType *txinput) {
 	uint32_t input_script_size;
 	if (txinput->has_multisig) {
 		uint32_t multisig_script_size = TXSIZE_MULTISIGSCRIPT
@@ -688,6 +690,16 @@ uint32_t tx_input_weight(const TxInputType *txinput) {
 	} else {
 		input_script_size = (1 + TXSIZE_SIGNATURE + 1 + TXSIZE_PUBKEY);
 	}
+
+	return input_script_size;
+}
+
+uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
+	if (coin->decred) {
+		return 4 * (TXSIZE_INPUT + 1); // Decred tree
+	}
+
+	uint32_t input_script_size = tx_input_script_size(txinput);
 	uint32_t weight = 4 * TXSIZE_INPUT;
 	if (txinput->script_type == InputScriptType_SPENDADDRESS
 		|| txinput->script_type == InputScriptType_SPENDMULTISIG) {
@@ -740,5 +752,18 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 		} 
 	}
 	output_script_size += ser_length_size(output_script_size);
-	return 4 * (TXSIZE_OUTPUT + output_script_size);
+
+	uint32_t size = TXSIZE_OUTPUT;
+	if (coin->decred) {
+		size += 2; // Decred script version
+	}
+
+	return 4 * (size + output_script_size);
+}
+
+uint32_t tx_decred_witness_weight(const TxInputType *txinput) {
+	uint32_t input_script_size = tx_input_script_size(txinput);
+	uint32_t size = TXSIZE_DECRED_WITNESS + ser_length_size(input_script_size) + input_script_size;
+
+	return 4 * size;
 }

@@ -478,9 +478,13 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	version = msg->version;
 	lock_time = msg->lock_time;
 
-	tx_weight = 4 * (TXSIZE_HEADER + TXSIZE_FOOTER
-					 + ser_length_size(inputs_count)
-					 + ser_length_size(outputs_count));
+	uint32_t size = TXSIZE_HEADER + TXSIZE_FOOTER + ser_length_size(inputs_count) + ser_length_size(outputs_count);
+	if (coin->decred) {
+		size += 4; // Decred expiry
+		size += ser_length_size(inputs_count); // Witness inputs count
+	}
+
+	tx_weight = 4 * size;
 
 	signatures = 0;
 	idx1 = 0;
@@ -904,7 +908,12 @@ void signing_txack(TransactionType *tx)
 	switch (signing_stage) {
 		case STAGE_REQUEST_1_INPUT:
 			signing_check_input(&tx->inputs[0]);
-			tx_weight += tx_input_weight(&tx->inputs[0]);
+
+			tx_weight += tx_input_weight(coin, &tx->inputs[0]);
+			if (coin->decred) {
+				tx_weight += tx_decred_witness_weight(&tx->inputs[0]);
+			}
+
 			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
 				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
 				memcpy(&input, tx->inputs, sizeof(TxInputType));

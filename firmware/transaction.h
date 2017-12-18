@@ -76,7 +76,8 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 uint32_t tx_serialize_decred_witness_hash(TxStruct *tx, const TxInputType *input);
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
 
-uint32_t tx_input_weight(const TxInputType *txinput);
+uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput);
 uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput);
+uint32_t tx_decred_witness_weight(const TxInputType *txinput);
 
 #endif
