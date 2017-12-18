@@ -110,13 +110,13 @@ bootloader.o: ../fastflash/bootloader.bin
 		$< $@
 
 coins_count.h: coins-gen.py coins.json
-	./$< count > $@
+	$(PYTHON) $< count > $@
 
 coins_array.h: coins-gen.py coins.json
-	./$< array > $@
+	$(PYTHON) $< array > $@
 
 nem_mosaics.c nem_mosaics.h: nem_mosaics.py nem_mosaics.json
-	./$<
+	$(PYTHON) $<
 
 clean::
 	rm -f coins_count.h coins_array.h
