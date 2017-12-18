@@ -29,9 +29,10 @@ matrix:
         - EMULATOR=1 HEADLESS=1
         - DEBUG_LINK=1
       before_script:
-        - sed -i '/hidapi/d' "vendor/python-trezor/requirements.txt"
-        - pip install --user --requirement "vendor/python-trezor/requirements.txt" rlp pytest requests[security]
-        - pip install --user --no-deps "vendor/python-trezor"
+        - pip install --user pytest
+        - pip install --user ecdsa mnemonic
+        - pip install --user rlp requests[security]
+        - pip install --user --no-deps git+https://github.com/trezor/python-trezor@master
       script:
         - script/cibuild
         - script/test

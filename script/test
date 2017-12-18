@@ -6,6 +6,10 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+if [ \! -d device_tests ]; then
+    curl -s -L https://github.com/trezor/python-trezor/archive/master.tar.gz | tar -xvz --strip-components=2 python-trezor-master/tests/device_tests
+fi
+
 # Kill jobs on exit
 trap "exit" INT TERM
 trap "kill 0" EXIT
@@ -14,7 +18,7 @@ if [ "$EMULATOR" = 1 ] && [ -z "$(pidof trezor.elf)" ]; then
     firmware/trezor.elf &
 fi
 
-TREZOR_TRANSPORT_V1=1 pytest "vendor/python-trezor/tests/device_tests" &
+TREZOR_TRANSPORT_V1=1 pytest "device_tests" &
 
 # Wait for either job to exit and kill the other
 wait -n
