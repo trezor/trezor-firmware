@@ -290,7 +290,7 @@ def dump_message(writer, msg):
 
             elif ftype is UnicodeType:
                 if not isinstance(svalue, bytes):
-                    svalue = svalue.encode()
+                    svalue = svalue.encode('utf-8')
 
                 dump_uvarint(writer, len(svalue))
                 writer.write(svalue)

@@ -632,7 +632,7 @@ class ProtocolMixin(object):
     def sign_message(self, coin_name, n, message, script_type=proto.InputScriptType.SPENDADDRESS):
         n = self._convert_prime(n)
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message).encode("utf-8")
+        message = normalize_nfc(message).encode('utf-8')
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message, script_type=script_type))
 
     @expect(proto.SignedIdentity)
@@ -786,7 +786,7 @@ class ProtocolMixin(object):
 
     def verify_message(self, coin_name, address, signature, message):
         # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message).encode("utf-8")
+        message = normalize_nfc(message).encode('utf-8')
         try:
             resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message, coin_name=coin_name))
         except CallException as e:
