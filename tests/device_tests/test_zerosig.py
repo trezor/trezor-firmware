@@ -25,13 +25,6 @@ import common
 
 from trezorlib import messages as proto
 
-if sys.version_info < (3,):
-    def byteindex(data, index):
-        return ord(data[index])
-else:
-    def byteindex(data, index):
-        return data[index]
-
 
 TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
@@ -63,7 +56,7 @@ class TestZeroSig(common.TrezorTest):
 
             tx = self.client.call(msg)
 
-            siglen = byteindex(tx.serialized_tx, 44)
+            siglen = tx.serialized_tx[44]
             print(siglen)
             if siglen < 67:
                 print("!!!!", n)
@@ -89,7 +82,7 @@ class TestZeroSig(common.TrezorTest):
         )
 
         (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
-        siglen = byteindex(serialized_tx, 44)
+        siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
         self.assertEqual(siglen, 67)
@@ -112,7 +105,7 @@ class TestZeroSig(common.TrezorTest):
         )
 
         (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
-        siglen = byteindex(serialized_tx, 44)
+        siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
         self.assertEqual(siglen, 66)
