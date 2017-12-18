@@ -23,6 +23,8 @@ def encode_length(l: int, is_list: bool) -> bytes:
 def encode(data) -> bytes:
     if isinstance(data, int):
         return encode(int_to_bytes(data))
+    if isinstance(data, bytearray):
+        data = bytes(data)
     if isinstance(data, bytes):
         if len(data) == 1 and ord(data) < 128:
             return data
@@ -34,4 +36,4 @@ def encode(data) -> bytes:
             output += encode(item)
         return encode_length(len(output), is_list=True) + output
     else:
-        raise TypeError('Invalid input')
+        raise TypeError('Invalid input of type ' + str(type(data)))
