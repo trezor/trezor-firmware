@@ -14,6 +14,7 @@ for coin in json.load(open('coins.json')):
     assert isinstance(coin['coin_name'], str)
     assert isinstance(coin['coin_shortcut'], str)
     assert isinstance(coin['coin_label'], str)
+    assert isinstance(coin['curve_name'], str)
     assert isinstance(coin['address_type'], int)
     assert isinstance(coin['address_type_p2sh'], int)
     assert coin['address_type'] != coin['address_type_p2sh']
@@ -26,6 +27,7 @@ for coin in json.load(open('coins.json')):
     assert is_hex(coin['xpub_magic'])
     assert isinstance(coin['bip44'], int)
     assert isinstance(coin['segwit'], bool)
+    assert isinstance(coin['decred'], bool)
     assert coin['forkid'] is None or isinstance(coin['forkid'], int)
     assert isinstance(coin['force_bip143'], bool)
     assert isinstance(coin['default_fee_b'], dict)
