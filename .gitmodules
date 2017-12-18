@@ -7,9 +7,6 @@
 [submodule "vendor/micropython"]
 	path = vendor/micropython
 	url = https://github.com/trezor/micropython.git
-[submodule "vendor/norcow"]
-	path = vendor/norcow
-	url = https://github.com/trezor/norcow.git
 [submodule "vendor/trezor-common"]
 	path = vendor/trezor-common
 	url = https://github.com/trezor/trezor-common.git
