@@ -1,4 +1,4 @@
-all: messages.pb.c storage.pb.c types.pb.c messages_map.h
+all: messages.pb.c types.pb.c messages_map.h
 
 %.pb.c: %.pb %.options
 	../../vendor/nanopb/generator/nanopb_generator.py $< -L '#include "%s"' -T

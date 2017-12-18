@@ -23,7 +23,6 @@
 #include <libopencm3/stm32/flash.h>
 
 #include "messages.pb.h"
-#include "storage.pb.h"
 
 #include "trezor.h"
 #include "sha2.h"
@@ -278,7 +277,7 @@ static void get_u2froot_callback(uint32_t iter, uint32_t total)
 	layoutProgress(_("Updating"), 1000 * iter / total);
 }
 
-static void storage_compute_u2froot(const char* mnemonic, HDNodeType *u2froot) {
+static void storage_compute_u2froot(const char* mnemonic, StorageHDNode *u2froot) {
 	static CONFIDENTIAL HDNode node;
 	char oldTiny = usbTiny(1);
 	mnemonic_to_seed(mnemonic, "", sessionSeed, get_u2froot_callback); // BIP-0039
@@ -312,11 +311,11 @@ static void storage_commit_locked(bool update)
 		storageUpdate.version = STORAGE_VERSION;
 		if (!storageUpdate.has_node && !storageUpdate.has_mnemonic) {
 			storageUpdate.has_node = storageRom->has_node;
-			memcpy(&storageUpdate.node, &storageRom->node, sizeof(HDNodeType));
+			memcpy(&storageUpdate.node, &storageRom->node, sizeof(StorageHDNode));
 			storageUpdate.has_mnemonic = storageRom->has_mnemonic;
 			strlcpy(storageUpdate.mnemonic, storageRom->mnemonic, sizeof(storageUpdate.mnemonic));
 			storageUpdate.has_u2froot = storageRom->has_u2froot;
-			memcpy(&storageUpdate.u2froot, &storageRom->u2froot, sizeof(HDNodeType));
+			memcpy(&storageUpdate.u2froot, &storageRom->u2froot, sizeof(StorageHDNode));
 		} else if (storageUpdate.has_mnemonic) {
 			storageUpdate.has_u2froot = true;
 			storage_compute_u2froot(storageUpdate.mnemonic, &storageUpdate.u2froot);
@@ -406,6 +405,38 @@ void storage_update(void)
 	storage_check_flash_errors();
 }
 
+static void storage_setNode(const HDNodeType *node) {
+	storageUpdate.node.depth = node->depth;
+	storageUpdate.node.fingerprint = node->fingerprint;
+	storageUpdate.node.child_num = node->child_num;
+
+	storageUpdate.node.chain_code.size = 32;
+	memcpy(storageUpdate.node.chain_code.bytes, node->chain_code.bytes, 32);
+
+	if (node->has_private_key) {
+		storageUpdate.node.has_private_key = true;
+		storageUpdate.node.private_key.size = 32;
+		memcpy(storageUpdate.node.private_key.bytes, node->private_key.bytes, 32);
+	}
+}
+
+#if DEBUG_LINK
+void storage_dumpNode(HDNodeType *node) {
+	node->depth = storageRom->node.depth;
+	node->fingerprint = storageRom->node.fingerprint;
+	node->child_num = storageRom->node.child_num;
+
+	node->chain_code.size = 32;
+	memcpy(node->chain_code.bytes, storageRom->node.chain_code.bytes, 32);
+
+	if (storageRom->node.has_private_key) {
+		node->has_private_key = true;
+		node->private_key.size = 32;
+		memcpy(node->private_key.bytes, storageRom->node.private_key.bytes, 32);
+	}
+}
+#endif
+
 void storage_loadDevice(LoadDevice *msg)
 {
 	session_clear(true);
@@ -419,7 +450,7 @@ void storage_loadDevice(LoadDevice *msg)
 	if (msg->has_node) {
 		storageUpdate.has_node = true;
 		storageUpdate.has_mnemonic = false;
-		memcpy(&storageUpdate.node, &(msg->node), sizeof(HDNodeType));
+		storage_setNode(&(msg->node));
 		sessionSeedCached = false;
 		memset(&sessionSeed, 0, sizeof(sessionSeed));
 	} else if (msg->has_mnemonic) {
@@ -526,10 +557,13 @@ const uint8_t *storage_getSeed(bool usePassphrase)
 	return NULL;
 }
 
+static bool storage_loadNode(const StorageHDNode *node, const char *curve, HDNode *out) {
+	return hdnode_from_xprv(node->depth, node->child_num, node->chain_code.bytes, node->private_key.bytes, curve, out);
+}
+
 bool storage_getU2FRoot(HDNode *node)
 {
-	return storageRom->has_u2froot
-		&& hdnode_from_xprv(storageRom->u2froot.depth, storageRom->u2froot.child_num, storageRom->u2froot.chain_code.bytes, storageRom->u2froot.private_key.bytes, NIST256P1_NAME, node);
+	return storageRom->has_u2froot && storage_loadNode(&storageRom->u2froot, NIST256P1_NAME, node);
 }
 
 bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
@@ -539,7 +573,7 @@ bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
 		if (!protectPassphrase()) {
 			return false;
 		}
-		if (hdnode_from_xprv(storageRom->node.depth, storageRom->node.child_num, storageRom->node.chain_code.bytes, storageRom->node.private_key.bytes, curve, node) == 0) {
+		if (!storage_loadNode(&storageRom->node, curve, node)) {
 			return false;
 		}
 		if (storageRom->has_passphrase_protection && storageRom->passphrase_protection && sessionPassphraseCached && strlen(sessionPassphrase) > 0) {
@@ -593,11 +627,6 @@ void storage_setMnemonic(const char *mnemonic)
 bool storage_hasNode(void)
 {
 	return storageRom->has_node;
-}
-
-const HDNode *storage_getNode(void)
-{
-	return storageRom->has_node ? (const HDNode *)&storageRom->node : 0;
 }
 
 bool storage_hasMnemonic(void)

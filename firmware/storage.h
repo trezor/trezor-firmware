@@ -21,9 +21,58 @@
 #define __STORAGE_H__
 
 #include "types.pb.h"
-#include "storage.pb.h"
 #include "messages.pb.h"
 #include "bip32.h"
+
+#define STORAGE_FIELD(TYPE, NAME) \
+    bool has_##NAME; \
+    TYPE NAME;
+
+#define STORAGE_STRING(NAME, SIZE) \
+    bool has_##NAME; \
+    char NAME[SIZE];
+
+#define STORAGE_BYTES(NAME, SIZE) \
+    bool has_##NAME; \
+    struct { \
+        size_t size; \
+        uint8_t bytes[SIZE]; \
+    } NAME;
+
+#define STORAGE_BOOL(NAME)   STORAGE_FIELD(bool,          NAME)
+#define STORAGE_NODE(NAME)   STORAGE_FIELD(StorageHDNode, NAME)
+#define STORAGE_UINT32(NAME) STORAGE_FIELD(uint32_t,      NAME)
+
+typedef struct {
+    uint32_t depth;
+    uint32_t fingerprint;
+    uint32_t child_num;
+    struct {
+        size_t size;
+        uint8_t bytes[32];
+    } chain_code;
+
+    STORAGE_BYTES(private_key, 32);
+    STORAGE_BYTES(public_key,  33);
+} StorageHDNode;
+
+typedef struct _Storage {
+    uint32_t version;
+
+    STORAGE_NODE   (node)
+    STORAGE_STRING (mnemonic, 241)
+    STORAGE_BOOL   (passphrase_protection)
+    STORAGE_UINT32 (pin_failed_attempts)
+    STORAGE_STRING (pin, 10)
+    STORAGE_STRING (language, 17)
+    STORAGE_STRING (label, 33)
+    STORAGE_BOOL   (imported)
+    STORAGE_BYTES  (homescreen, 1024)
+    STORAGE_UINT32 (u2f_counter)
+    STORAGE_BOOL   (needs_backup)
+    STORAGE_UINT32 (flags)
+    STORAGE_NODE   (u2froot)
+} Storage;
 
 extern Storage storageUpdate;
 
@@ -61,7 +110,9 @@ bool storage_hasMnemonic(void);
 const char *storage_getMnemonic(void);
 
 bool storage_hasNode(void);
-const HDNode *storage_getNode(void);
+#if DEBUG_LINK
+void storage_dumpNode(HDNodeType *node);
+#endif
 
 bool storage_containsPin(const char *pin);
 bool storage_hasPin(void);

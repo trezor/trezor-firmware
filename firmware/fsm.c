@@ -1627,7 +1627,7 @@ void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
 
 	if (storage_hasNode()) {
 		resp.has_node = true;
-		memcpy(&(resp.node), storage_getNode(), sizeof(HDNode));
+		storage_dumpNode(&(resp.node));
 	}
 
 	resp.has_passphrase_protection = true;
