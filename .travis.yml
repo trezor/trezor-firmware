@@ -8,10 +8,12 @@ addons:
       - build-essential
       - gcc-arm-none-eabi
       - libnewlib-arm-none-eabi
+      - python3-pip
 
 env:
   global:
     - MAKEFLAGS=-j2
+    - PYTHON=python3
     - PROTOBUF_VERSION=3.4.0
   matrix:
     - DEBUG_LINK=0 FASTFLASH=0
@@ -25,14 +27,15 @@ matrix:
         apt:
           packages:
             - gcc-multilib
+            - python3-pip
       env:
         - EMULATOR=1 HEADLESS=1
         - DEBUG_LINK=1
       before_script:
-        - pip install --user pytest
-        - pip install --user ecdsa mnemonic
-        - pip install --user rlp requests[security]
-        - pip install --user --no-deps git+https://github.com/trezor/python-trezor@master
+        - $PYTHON -m pip install --user pytest
+        - $PYTHON -m pip install --user ecdsa mnemonic
+        - $PYTHON -m pip install --user rlp
+        - $PYTHON -m pip install --user --no-deps git+https://github.com/trezor/python-trezor@master
       script:
         - script/cibuild
         - script/test
@@ -41,7 +44,7 @@ install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
   - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
   - export PATH="$(pwd)/protoc/bin:$PATH"
-  - pip2 install --user "protobuf==${PROTOBUF_VERSION}"
+  - $PYTHON -m pip install --user "protobuf==${PROTOBUF_VERSION}"
 
 script:
   - script/cibuild
