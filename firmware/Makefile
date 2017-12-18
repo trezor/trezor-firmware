@@ -75,9 +75,10 @@ OBJS += ../vendor/trezor-crypto/nem.o
 
 OBJS += ../vendor/trezor-qrenc/qr_encode.o
 
-# OBJS += protob/pb_common.o
-OBJS += protob/pb_decode.o
-OBJS += protob/pb_encode.o
+OBJS += ../vendor/nanopb/pb_common.o
+OBJS += ../vendor/nanopb/pb_decode.o
+OBJS += ../vendor/nanopb/pb_encode.o
+
 OBJS += protob/messages.pb.o
 OBJS += protob/types.pb.o
 
@@ -93,7 +94,7 @@ DEBUG_LINK ?= 0
 DEBUG_LOG  ?= 0
 
 CFLAGS += -Wno-sequence-point
-CFLAGS += -Iprotob -DPB_FIELD_16BIT=1
+CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1
 CFLAGS += -DQR_MAX_VERSION=0
 CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
 CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)

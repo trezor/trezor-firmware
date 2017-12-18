@@ -56,8 +56,18 @@
 
 static const uint8_t segwit_header[2] = {0,1};
 
-#define op_push_size(len) ((len) < 0x4c ? 1 : (len) < 0x100 ? 2 : \
-						   (len) < 0x10000 ? 3 : 5)
+static inline uint32_t op_push_size(uint32_t i) {
+	if (i < 0x4C) {
+		return 1;
+	}
+	if (i < 0x100) {
+		return 2;
+	}
+	if (i < 0x10000) {
+		return 3;
+	}
+	return 5;
+}
 
 uint32_t op_push(uint32_t i, uint8_t *out) {
 	if (i < 0x4C) {
