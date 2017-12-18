@@ -21,10 +21,7 @@ def combine_sig(R, sigs):
 def get_nonce(sk, data, ctr):
     h = ed25519raw.H(sk)
     b = ed25519raw.b
-    if sys.version_info.major < 3:
-        r = ed25519raw.Hint(''.join([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
-    else:
-        r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
+    r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
     R = ed25519raw.scalarmult(ed25519raw.B, r)
     return r, ed25519raw.encodepoint(R)
 
