@@ -32,13 +32,20 @@ from . import messages as proto
 
 PRIME_DERIVATION_FLAG = 0x80000000
 
+if sys.version_info < (3,):
+    def byteindex(data, index):
+        return ord(data[index])
+else:
+    def byteindex(data, index):
+        return data[index]
+
 
 def point_to_pubkey(point):
     order = SECP256k1.order
     x_str = number_to_string(point.x(), order)
     y_str = number_to_string(point.y(), order)
     vk = x_str + y_str
-    return struct.pack('B', vk[63] & 1 + 2) + vk[0:32]  # To compressed key
+    return struct.pack('B', (byteindex(vk, 63) & 1) + 2) + vk[0:32]  # To compressed key
 
 
 def sec_to_public_pair(pubkey):
@@ -145,7 +152,7 @@ def deserialize(xpub):
     node.chain_code = data[13:45]
 
     key = data[45:-4]
-    if key[0] == 0:
+    if byteindex(key, 0) == 0:
         node.private_key = key[1:]
     else:
         node.public_key = key
