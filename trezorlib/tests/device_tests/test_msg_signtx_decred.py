@@ -44,7 +44,7 @@ class TestMsgSigntxDecred(common.TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address='TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz',
+            address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
             amount=190000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
             decred_script_version=0,
@@ -66,4 +66,5 @@ class TestMsgSigntxDecred(common.TrezorTest):
             ])
             (signatures, serialized_tx) = self.client.sign_tx("Decred Testnet", [inp1], [out1])
 
+        # Accepted by network: 5e6e3500a333c53c02f523db5f1a9b17538a8850b4c2c24ecb9b7ba48059b970
         self.assertEqual(serialized_tx, binascii.unhexlify("0100000001edd579e9462ee0e80127a817e0500d4f942a4cf8f2d6530e0c0a9ab3f04862e10100000000ffffffff01802b530b0000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac000000000000000001000000000000000000000000ffffffff6b483045022100bad68486491e449a731513805c129201d7f65601d6f07c97fda0588453c97d22022013e9ef59657ae4f344ac4f0db2b7a23dbfcdb51ebeb85277146ac189e547d3f7012102f5a745afb96077c071e4d19911a5d3d024faa1314ee8688bc6eec39751d0818f"))
