@@ -9,10 +9,10 @@ sleep 1
 # run tests
 cd ../tests
 error=0
-if ! TREZOR_TRANSPORT_V1=0 ./run_tests_device.sh; then
+if ! TREZOR_TRANSPORT_V1=0 pytest -k 'not skip_t2' --pyargs trezorlib.tests.device_tests ; then
     error=1
 fi
-if ! TREZOR_TRANSPORT_V1=1 ./run_tests_device.sh; then
+if ! TREZOR_TRANSPORT_V1=1 pytest -k 'not skip_t2' --pyargs trezorlib.tests.device_tests ; then
     error=1
 fi
 kill $upy_pid
