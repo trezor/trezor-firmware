@@ -106,7 +106,7 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
     static const char *ping_req = "PINGPING";
     static const char *ping_resp = "PONGPONG";
     if (r == strlen(ping_req) && memcmp(ping_req, buf, strlen(ping_req)) == 0) {
-        (void)usb_hid_write(0, (const uint8_t *)ping_resp, strlen(ping_resp));
+        ensure(usb_hid_write(0, (const uint8_t *)ping_resp, strlen(ping_resp)), NULL);
         return 0;
     }
     return r;
