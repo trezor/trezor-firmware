@@ -29,6 +29,8 @@ setup(
         'trezorlib',
         'trezorlib.messages',
         'trezorlib.qt',
+        'trezorlib.tests.device_tests',
+        'trezorlib.tests.unit_tests',
     ],
     scripts=['trezorctl'],
     install_requires=install_requires,
