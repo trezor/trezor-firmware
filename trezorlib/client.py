@@ -51,8 +51,6 @@ except NameError:
 
 SCREENSHOT = False
 
-DEFAULT_CURVE = 'secp256k1'
-
 
 def getch():
     try:
@@ -499,10 +497,8 @@ class ProtocolMixin(object):
         return path
 
     @expect(proto.PublicKey)
-    def get_public_node(self, n, ecdsa_curve_name=DEFAULT_CURVE, show_display=False, coin_name=None):
+    def get_public_node(self, n, ecdsa_curve_name=None, show_display=False, coin_name=None):
         n = self._convert_prime(n)
-        if not ecdsa_curve_name:
-            ecdsa_curve_name = DEFAULT_CURVE
         return self.call(proto.GetPublicKey(address_n=n, ecdsa_curve_name=ecdsa_curve_name, show_display=show_display, coin_name=coin_name))
 
     @field('address')
@@ -636,11 +632,11 @@ class ProtocolMixin(object):
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message, script_type=script_type))
 
     @expect(proto.SignedIdentity)
-    def sign_identity(self, identity, challenge_hidden, challenge_visual, ecdsa_curve_name=DEFAULT_CURVE):
+    def sign_identity(self, identity, challenge_hidden, challenge_visual, ecdsa_curve_name=None):
         return self.call(proto.SignIdentity(identity=identity, challenge_hidden=challenge_hidden, challenge_visual=challenge_visual, ecdsa_curve_name=ecdsa_curve_name))
 
     @expect(proto.ECDHSessionKey)
-    def get_ecdh_session_key(self, identity, peer_public_key, ecdsa_curve_name=DEFAULT_CURVE):
+    def get_ecdh_session_key(self, identity, peer_public_key, ecdsa_curve_name=None):
         return self.call(proto.GetECDHSessionKey(identity=identity, peer_public_key=peer_public_key, ecdsa_curve_name=ecdsa_curve_name))
 
     @expect(proto.CosiCommitment)
