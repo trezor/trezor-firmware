@@ -95,6 +95,7 @@ class MessageType:
     def __init__(self, **kwargs):
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
+        self._fill_missing()
 
     def __eq__(self, rhs):
         return (self.__class__ is rhs.__class__ and
@@ -149,10 +150,12 @@ class MessageType:
 
     def _fill_missing(self):
         # fill missing fields
-        for tag in self.FIELDS:
-            field = self.FIELDS[tag]
-            if not hasattr(self, field[0]):
-                setattr(self, field[0], None)
+        for fname, ftype, fflags in self.FIELDS.values():
+            if not hasattr(self, fname):
+                if fflags & FLAG_REPEATED:
+                    setattr(self, fname, [])
+                else:
+                    setattr(self, fname, None)
 
     def CopyFrom(self, obj):
         self.__dict__ = obj.__dict__.copy()
@@ -242,12 +245,11 @@ def load_message(reader, msg_type):
             raise TypeError  # field type is unknown
 
         if fflags & FLAG_REPEATED:
-            pvalue = getattr(msg, fname, [])
+            pvalue = getattr(msg, fname)
             pvalue.append(fvalue)
             fvalue = pvalue
         setattr(msg, fname, fvalue)
 
-    msg._fill_missing()
     return msg
 
 
