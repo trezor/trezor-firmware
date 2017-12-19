@@ -16,12 +16,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 from trezorlib import tx_api
 from trezorlib.tx_api import TxApiBitcoin, TxApiTestnet
 
+tests_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 def test_txapi_gettx():
-    tx_api.cache_dir = '../txcache'
+    tx_api.cache_dir = os.path.join(tests_dir, '../txcache')
 
     TxApiBitcoin.get_tx('39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5')
     TxApiBitcoin.get_tx('54aa5680dea781f45ebb536e53dffc526d68c0eb5c00547e323b2c32382dfba3')
