@@ -38,7 +38,7 @@ matrix:
         - $PYTHON -m pip install --user --no-deps git+https://github.com/trezor/python-trezor@master
       script:
         - script/cibuild
-        - script/test
+        - script/test -k 'not test_send_decred'
 
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
