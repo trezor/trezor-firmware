@@ -411,9 +411,9 @@ def get_address(connect, coin, address, script_type, show_display):
     client = connect()
     address_n = client.expand_path(address)
     typemap = {
-        'address': proto.OutputScriptType.SPENDADDRESS,
-        'segwit': proto.OutputScriptType.SPENDWITNESS,
-        'p2shsegwit': proto.OutputScriptType.SPENDP2SHWITNESS,
+        'address': proto.InputScriptType.SPENDADDRESS,
+        'segwit': proto.InputScriptType.SPENDWITNESS,
+        'p2shsegwit': proto.InputScriptType.SPENDP2SHWITNESS,
     }
     script_type = typemap[script_type]
     return client.get_address(coin, address_n, show_display, script_type=script_type)
