@@ -20,12 +20,13 @@ from __future__ import print_function
 
 import unittest
 import hashlib
+import os
 
 from trezorlib.client import TrezorClient, TrezorClientDebugLink
 from trezorlib import tx_api
 
-
-tx_api.cache_dir = '../txcache'
+tests_dir = os.path.dirname(os.path.abspath(__file__))
+tx_api.cache_dir = os.path.join(tests_dir, '../txcache')
 
 
 try:
