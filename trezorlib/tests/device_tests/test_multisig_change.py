@@ -16,15 +16,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
 import binascii
-
+import pytest
 from trezorlib import messages as proto
 import trezorlib.ckd_public as bip32
 from trezorlib import tx_api
 
 
+@pytest.mark.skip_t2
 class TestMultisigChange(common.TrezorTest):
 
     def setUp(self):

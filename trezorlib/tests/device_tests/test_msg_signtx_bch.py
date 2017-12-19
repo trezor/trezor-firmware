@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
 import binascii
-
+import pytest
 from trezorlib import messages as proto
 from trezorlib.tx_api import TxApiInsight
 from trezorlib.ckd_public import deserialize
@@ -27,6 +26,7 @@ from trezorlib.client import CallException
 TxApiBitcoinCash = TxApiInsight(network='insight_bch', url='https://bch-bitcore2.trezor.io/api/')
 
 
+@pytest.mark.skip_t2
 class TestMsgSigntxBch(common.TrezorTest):
 
     def test_send_bch_change(self):

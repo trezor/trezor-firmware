@@ -18,7 +18,6 @@
 
 from __future__ import print_function
 
-import unittest
 import binascii
 import sys
 from . import common

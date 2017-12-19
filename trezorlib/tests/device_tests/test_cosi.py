@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
+import pytest
 import hashlib
 
 from trezorlib import ed25519raw, ed25519cosi
 
 
+@pytest.mark.skip_t2
 class TestCosi(common.TrezorTest):
 
     def test_cosi_commit(self):

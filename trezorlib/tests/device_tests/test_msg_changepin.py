@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
+import pytest
 
 from trezorlib import messages as proto
 
 
+@pytest.mark.skip_t2
 class TestMsgChangepin(common.TrezorTest):
 
     def test_set_pin(self):

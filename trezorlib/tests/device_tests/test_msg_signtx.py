@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
 import binascii
 
@@ -356,7 +355,7 @@ class TestMsgSigntx(common.TrezorTest):
     def test_lots_of_inputs(self):
         self.setup_mnemonic_nopin_nopassphrase()
         # Tests if device implements serialization of len(inputs) correctly
-        # tx 4a7b7e0403ae5607e473949cfa03f09f2cd8b0f404bf99ce10b7303d86280bf7 : 100 UTXO for spending for unittests
+        # tx 4a7b7e0403ae5607e473949cfa03f09f2cd8b0f404bf99ce10b7303d86280bf7 : 100 UTXO for spending for unit tests
         inputs = []
         for i in range(100):
             inputs.append( proto.TxInputType(address_n=[4], # 1NwN6UduuVkJi6sw3gSiKZaCY5rHgVXC2h

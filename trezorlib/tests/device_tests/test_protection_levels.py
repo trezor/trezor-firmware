@@ -16,16 +16,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
 import binascii
-
+import pytest
 from trezorlib import messages as proto
 
 
 TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
 
+@pytest.mark.skip_t2
 class TestProtectionLevels(common.TrezorTest):
 
     def test_initialize(self):

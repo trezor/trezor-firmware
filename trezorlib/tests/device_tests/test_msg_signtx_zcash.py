@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-import unittest
+
 from . import common
 import binascii
-
+import pytest
 from trezorlib import messages as proto
 from trezorlib.tx_api import TxApiZcash
 
@@ -28,6 +27,8 @@ from trezorlib.tx_api import TxApiZcash
 TXHASH_93373e = binascii.unhexlify('93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c')
 
 
+@pytest.mark.skip_t1
+@pytest.mark.skip_t2
 class TestMsgSigntxZcash(common.TrezorTest):
 
     def test_one_one_fee(self):
@@ -72,4 +73,3 @@ class TestMsgSigntxZcash(common.TrezorTest):
 
         # Accepted by network: tx dcc2a10894e0e8a785c2afd4de2d958207329b9acc2b987fd768a09c5efc4547
         self.assertEqual(binascii.hexlify(serialized_tx), b'01000000015c2f725c959f9b0c66db42f185a9ebb51b51d675d79a047d4a6c62cc633e3793000000006a4730440220670b2b63d749a7038f9aea6ddf0302fe63bdcad93dafa4a89a1f0e7300ae2484022002c50af43fd867490cea0c527273c5828ff1b9a5115678f155a1830737cf29390121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff0128c55b07000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac00000000')
-'''

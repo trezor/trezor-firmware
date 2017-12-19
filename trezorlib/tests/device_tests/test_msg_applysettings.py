@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
+import pytest
 
 from trezorlib import messages as proto
 
 
+@pytest.mark.skip_t2
 class TestMsgApplysettings(common.TrezorTest):
 
     def test_apply_settings(self):

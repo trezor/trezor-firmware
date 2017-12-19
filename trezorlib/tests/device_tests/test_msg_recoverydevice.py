@@ -18,12 +18,12 @@
 
 from __future__ import print_function
 
-import unittest
 from . import common
-
+import pytest
 from trezorlib import messages as proto
 
 
+@pytest.mark.skip_t2
 class TestMsgRecoverydevice(common.TrezorTest):
 
     def test_pin_passphrase(self):

@@ -18,10 +18,9 @@
 
 from __future__ import print_function
 
-import unittest
 from . import common
 import binascii
-
+import pytest
 from trezorlib import messages as proto
 import trezorlib.ckd_public as bip32
 from trezorlib.client import CallException
@@ -36,6 +35,7 @@ TXHASH_c6091a = binascii.unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954
 #
 
 
+@pytest.mark.skip_t2
 class TestMultisig(common.TrezorTest):
 
     def test_2_of_3(self):

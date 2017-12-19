@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
 import binascii
 import base64
+import pytest
 
 
+@pytest.mark.skip_t2
 class TestMsgVerifymessageSegwit(common.TrezorTest):
 
     def test_message_long(self):

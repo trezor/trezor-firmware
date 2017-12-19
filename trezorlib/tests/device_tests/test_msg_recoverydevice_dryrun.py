@@ -18,12 +18,12 @@
 
 from __future__ import print_function
 
-import unittest
 from . import common
-
+import pytest
 from trezorlib import messages as proto
 
 
+@pytest.mark.skip_t2
 class TestMsgRecoverydeviceDryrun(common.TrezorTest):
 
     def recovery_loop(self, mnemonic, result):

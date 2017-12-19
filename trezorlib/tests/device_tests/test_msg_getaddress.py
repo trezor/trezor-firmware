@@ -17,7 +17,6 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-import unittest
 from . import common
 from trezorlib import messages as proto
 import trezorlib.ckd_public as bip32
@@ -51,7 +50,7 @@ class TestMsgGetaddress(common.TrezorTest):
         self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/1")), '1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3')
         self.assertEqual(self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/1/0")), '1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE')
 
-    @pytest.mark.multisig
+    @pytest.mark.skip_t2
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []

@@ -19,15 +19,15 @@
 from __future__ import print_function
 
 import time
-import unittest
 from . import common
-
+import pytest
 from trezorlib import messages as proto
 from trezorlib.client import PinException, CallException
 
 # FIXME TODO Add passphrase tests
 
 
+@pytest.mark.skip_t2
 class TestProtectCall(common.TrezorTest):
 
     def _some_protected_call(self, button, pin, passphrase):

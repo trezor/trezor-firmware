@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 from . import common
 import binascii
+import pytest
 
 from trezorlib import messages as proto
 from trezorlib.tx_api import TxApiDecredTestnet
@@ -26,6 +26,8 @@ from trezorlib.tx_api import TxApiDecredTestnet
 TXHASH_e16248 = binascii.unhexlify("e16248f0b39a0a0c0e53d6f2f84c2a944f0d50e017a82701e8e02e46e979d5ed")
 
 
+@pytest.mark.skip_t1
+@pytest.mark.skip_t2
 class TestMsgSigntxDecred(common.TrezorTest):
 
     def test_send_decred(self):
