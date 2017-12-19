@@ -1,7 +1,6 @@
 from common import *
 
 from trezor.crypto import crc
-from ubinascii import unhexlify
 
 
 class TestCryptoCrc(unittest.TestCase):
