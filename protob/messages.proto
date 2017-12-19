@@ -100,16 +100,25 @@ enum MessageType {
 	MessageType_DebugLinkMemoryWrite = 112 [(wire_debug_in) = true];
 	MessageType_DebugLinkFlashErase = 113 [(wire_debug_in) = true];
 
+	// Lisk
+	MessageType_LiskGetAddress = 114 [(wire_in) = true];
+	MessageType_LiskAddress = 115 [(wire_out) = true];
+	MessageType_LiskSignTx = 116 [(wire_in) = true];
+	MessageType_LiskSignedTx = 117 [(wire_out) = true];
+	MessageType_LiskSignMessage = 118 [(wire_in) = true];
+	MessageType_LiskMessageSignature = 119 [(wire_out) = true];
+	MessageType_LiskVerifyMessage = 120 [(wire_in) = true];
+	MessageType_LiskGetPublicKey = 121 [(wire_in) = true];
+	MessageType_LiskPublicKey = 122 [(wire_out) = true];
+
 	// Stellar
 	MessageType_StellarGetPublicKey = 200 [(wire_in) = true];
 	MessageType_StellarPublicKey = 201 [(wire_out) = true];
-
 	MessageType_StellarSignTx = 202 [(wire_in) = true];
 	MessageType_StellarTxOpRequest = 203 [(wire_out) = true];
 	MessageType_StellarSignMessage = 204 [(wire_in) = true];
 	MessageType_StellarMessageSignature = 205 [(wire_out) = true];
 	MessageType_StellarVerifyMessage = 206 [(wire_in) = true];
-
 	MessageType_StellarCreateAccountOp = 210 [(wire_in) = true];
 	MessageType_StellarPaymentOp = 211 [(wire_in) = true];
 	MessageType_StellarPathPaymentOp = 212 [(wire_in) = true];
@@ -122,7 +131,6 @@ enum MessageType {
 	// Omitted: inflation is not a supported operation, would be 219
 	MessageType_StellarManageDataOp = 220 [(wire_in) = true];
 	MessageType_StellarBumpSequenceOp = 221 [(wire_in) = true];
-
 	MessageType_StellarSignedTx = 230 [(wire_out) = true];
 }
 
@@ -1264,6 +1272,93 @@ message StellarSignedTx {
 	optional bytes signature = 2;   // signature suitable for sending to the Stellar network
 }
 
+
+////////////////////
+// Lisk messages //
+//////////////////
+
+/**
+ * Request: Ask device for Lisk public key corresponding to address_n path
+ * @next LiskPublicKey
+*/
+message LiskGetPublicKey {
+	repeated uint32 address_n = 1; 			// BIP-32 path to derive the key from master node
+	optional bool show_display = 2;			// Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Lisk public key derived from device private seed
+ * @prev LiskGetPublicKey
+*/
+message LiskPublicKey {
+	optional bytes public_key = 1;		// Lisk public key
+}
+
+/**
+ * Request: Ask device for Lisk address corresponding to address_n path
+ * @next PassphraseRequest
+ * @next LiskAddress
+ * @next Failure
+ */
+ message LiskGetAddress {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional bool show_display = 2;			// Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Lisk address derived from device private seed
+ * @prev LiskGetAddress
+ */
+ message LiskAddress {
+	optional string address = 1;		// Lisk address
+}
+
+/**
+ * Request: Ask device to sign Lisk transaction
+ * @next LiskSignedTx
+ */
+ message LiskSignTx {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional LiskTransactionCommon transaction = 2; // Lisk transaction structure
+}
+
+/**
+* Response: Contains Lisk transaction signature
+* @prev LiskSignTx
+*/
+message LiskSignedTx {
+	optional bytes signature = 1;
+}
+
+/**
+* Request: Ask device to sign message
+* @next LiskMessageSignature
+* @next Failure
+*/
+message LiskSignMessage {
+	repeated uint32 address_n = 1;
+	optional bytes message = 2;
+}
+
+/**
+ * Response: Signed message
+ * @prev LiskSignMessage
+ */
+message LiskMessageSignature {
+	optional string address = 1;
+	optional bytes signature = 2;
+}
+
+/**
+ * Request: Ask device to verify message
+ * @next Success
+ * @next Failure
+ */
+message LiskVerifyMessage {
+	optional bytes signature = 1;
+	optional bytes public_key = 2;
+	optional bytes message = 3;
+}
 
 /////////////////////////////////////////////////////////////
 // Debug messages (only available if DebugLink is enabled) //
