@@ -24,7 +24,7 @@ from . import common
 from trezorlib import messages as proto
 
 
-class TestDeviceRecoveryDryRun(common.TrezorTest):
+class TestMsgRecoverydeviceDryrun(common.TrezorTest):
 
     def recovery_loop(self, mnemonic, result):
         ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,

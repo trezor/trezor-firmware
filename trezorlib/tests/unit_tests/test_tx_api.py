@@ -24,7 +24,7 @@ from trezorlib.tx_api import TxApiBitcoin, TxApiTestnet
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_txapi_gettx():
+def test_tx_api_gettx():
     tx_api.cache_dir = os.path.join(tests_dir, '../txcache')
 
     TxApiBitcoin.get_tx('39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5')

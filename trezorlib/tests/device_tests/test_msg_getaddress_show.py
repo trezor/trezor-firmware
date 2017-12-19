@@ -22,7 +22,7 @@ import trezorlib.ckd_public as bip32
 from trezorlib import messages as proto
 
 
-class TestMsgGetaddress(common.TrezorTest):
+class TestMsgGetaddressShow(common.TrezorTest):
 
     def test_show(self):
         self.setup_mnemonic_nopin_nopassphrase()

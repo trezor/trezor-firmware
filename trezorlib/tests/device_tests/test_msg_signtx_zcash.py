@@ -28,7 +28,7 @@ from trezorlib.tx_api import TxApiZcash
 TXHASH_93373e = binascii.unhexlify('93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c')
 
 
-class TestMsgSigntx(common.TrezorTest):
+class TestMsgSigntxZcash(common.TrezorTest):
 
     def test_one_one_fee(self):
         self.setup_mnemonic_allallall()

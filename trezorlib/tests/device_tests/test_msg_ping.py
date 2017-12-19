@@ -22,7 +22,7 @@ from . import common
 from trezorlib import messages as proto
 
 
-class TestPing(common.TrezorTest):
+class TestMsgPing(common.TrezorTest):
 
     def test_ping(self):
         self.setup_mnemonic_pin_passphrase()

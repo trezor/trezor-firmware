@@ -23,7 +23,7 @@ from trezorlib import messages as proto
 from mnemonic import Mnemonic
 
 
-class TestDeviceReset(common.TrezorTest):
+class TestMsgResetDevice(common.TrezorTest):
 
     def test_reset_device(self):
 

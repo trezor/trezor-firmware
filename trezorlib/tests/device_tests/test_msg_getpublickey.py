@@ -21,7 +21,7 @@ from . import common
 import trezorlib.ckd_public as bip32
 
 
-class TestMsgGetpublic_key(common.TrezorTest):
+class TestMsgGetpublickey(common.TrezorTest):
 
     def test_btc(self):
         self.setup_mnemonic_nopin_nopassphrase()

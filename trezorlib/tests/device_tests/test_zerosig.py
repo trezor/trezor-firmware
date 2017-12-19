@@ -31,7 +31,7 @@ TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd88
 
 # address_n = [177] < 68
 # address_n = [16518] < 66
-class TestZeroSig(common.TrezorTest):
+class TestZerosig(common.TrezorTest):
 
     '''
     def test_mine_zero_signature(self):

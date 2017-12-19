@@ -27,7 +27,7 @@ from trezorlib.client import CallException
 TxApiBitcoinCash = TxApiInsight(network='insight_bch', url='https://bch-bitcore2.trezor.io/api/')
 
 
-class TestMsgSigntxSegwit(common.TrezorTest):
+class TestMsgSigntxBch(common.TrezorTest):
 
     def test_send_bch_change(self):
         self.setup_mnemonic_allallall()

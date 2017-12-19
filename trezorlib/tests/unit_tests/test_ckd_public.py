@@ -19,7 +19,7 @@
 from trezorlib import ckd_public
 
 
-def test_ckd():
+def test_ckd_public():
     xpub1 = 'xpub661MyMwAqRbcEnKbXcCqD2GT1di5zQxVqoHPAgHNe8dv5JP8gWmDproS6kFHJnLZd23tWevhdn4urGJ6b264DfTGKr8zjmYDjyDTi9U7iyT'
     node1 = ckd_public.deserialize(xpub1)
     node2 = ckd_public.public_ckd(node1, [0])

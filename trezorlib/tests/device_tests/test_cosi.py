@@ -23,7 +23,7 @@ import hashlib
 from trezorlib import ed25519raw, ed25519cosi
 
 
-class TestDeviceCosi(common.TrezorTest):
+class TestCosi(common.TrezorTest):
 
     def test_cosi_commit(self):
         self.setup_mnemonic_pin_passphrase()

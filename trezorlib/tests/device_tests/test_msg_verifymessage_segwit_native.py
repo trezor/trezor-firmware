@@ -22,7 +22,7 @@ import binascii
 import base64
 
 
-class TestMsgVerifymessageSegwit(common.TrezorTest):
+class TestMsgVerifymessageSegwitNative(common.TrezorTest):
 
     def test_message_long(self):
         self.setup_mnemonic_nopin_nopassphrase()

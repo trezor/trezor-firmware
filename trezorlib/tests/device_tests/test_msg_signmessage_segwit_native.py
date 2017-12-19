@@ -23,7 +23,7 @@ import binascii
 from trezorlib import messages as proto
 
 
-class TestMsgSignmessage(common.TrezorTest):
+class TestMsgSignmessageSegwitNative(common.TrezorTest):
 
     def test_sign(self):
         self.setup_mnemonic_nopin_nopassphrase()

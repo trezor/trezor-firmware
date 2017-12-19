@@ -22,7 +22,7 @@ from . import common
 from trezorlib import messages as proto
 
 
-class TestDeviceWipe(common.TrezorTest):
+class TestMsgWipedevice(common.TrezorTest):
 
     def test_wipe_device(self):
         self.setup_mnemonic_pin_passphrase()

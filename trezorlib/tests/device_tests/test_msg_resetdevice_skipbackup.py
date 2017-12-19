@@ -23,7 +23,7 @@ from trezorlib import messages as proto
 from mnemonic import Mnemonic
 
 
-class TestDeviceResetSkipBackup(common.TrezorTest):
+class TestMsgResetDeviceSkipbackup(common.TrezorTest):
 
     def test_reset_device_skip_backup(self):
 

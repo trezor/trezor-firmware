@@ -22,7 +22,7 @@ from . import common
 from trezorlib import messages as proto
 
 
-class TestDebugLink(common.TrezorTest):
+class TestDebuglink(common.TrezorTest):
 
     def test_layout(self):
         layout = self.client.debug.read_layout()

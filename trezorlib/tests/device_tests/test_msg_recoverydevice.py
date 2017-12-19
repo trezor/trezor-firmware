@@ -24,7 +24,7 @@ from . import common
 from trezorlib import messages as proto
 
 
-class TestDeviceRecovery(common.TrezorTest):
+class TestMsgRecoverydevice(common.TrezorTest):
 
     def test_pin_passphrase(self):
         mnemonic = self.mnemonic12.split(' ')
