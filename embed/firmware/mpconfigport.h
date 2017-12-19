@@ -117,13 +117,13 @@
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
-#define MICROPY_PY_UZLIB            (1)
+#define MICROPY_PY_UZLIB            (0)
 #define MICROPY_PY_UJSON            (0)
 #define MICROPY_PY_URE              (0)
 #define MICROPY_PY_UHEAPQ           (0)
 #define MICROPY_PY_UHASHLIB         (0)
 #define MICROPY_PY_UBINASCII        (1)
-#define MICROPY_PY_UBINASCII_CRC32  (1)
+#define MICROPY_PY_UBINASCII_CRC32  (0)
 #define MICROPY_PY_URANDOM          (0)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
 #define MICROPY_PY_USELECT          (0)
