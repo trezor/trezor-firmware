@@ -559,6 +559,12 @@ static bool signing_check_input(TxInputType *txinput) {
 	tx_prevout_hash(&hashers[0], txinput);
 	tx_sequence_hash(&hashers[1], txinput);
 	if (coin->decred) {
+		if (txinput->decred_script_version > 0) {
+			fsm_sendFailure(FailureType_Failure_DataError, _("Decred v1+ scripts are not supported"));
+			signing_abort();
+			return false;
+		}
+
 		// serialize Decred prefix in Phase 1
 		resp.has_serialized = true;
 		resp.serialized.has_serialized_tx = true;
@@ -1034,6 +1040,11 @@ void signing_txack(TransactionType *tx)
 			if (idx2 == input.prev_index) {
 				if (to_spend + tx->bin_outputs[0].amount < to_spend) {
 					fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+					signing_abort();
+					return;
+				}
+				if (coin->decred && tx->bin_outputs[0].decred_script_version > 0) {
+					fsm_sendFailure(FailureType_Failure_DataError, _("Decred script version does not match previous output"));
 					signing_abort();
 					return;
 				}
