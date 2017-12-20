@@ -106,10 +106,10 @@ bool compute_address(const CoinInfo *coin,
 	size_t prelen;
 
 	if (has_multisig) {
-		if (cryptoMultisigPubkeyIndex(multisig, node->public_key) < 0) {
+		if (cryptoMultisigPubkeyIndex(coin, multisig, node->public_key) < 0) {
 			return 0;
 		}
-		if (compile_script_multisig_hash(multisig, coin->curve->hasher_type, digest) == 0) {
+		if (compile_script_multisig_hash(coin, multisig, digest) == 0) {
 			return 0;
 		}
 		if (script_type == InputScriptType_SPENDWITNESS) {
@@ -294,7 +294,7 @@ uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash, ui
 }
 
 // if out == NULL just compute the length
-uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t *out)
+uint32_t compile_script_multisig(const CoinInfo *coin, const MultisigRedeemScriptType *multisig, uint8_t *out)
 {
 	if (!multisig->has_m) return 0;
 	const uint32_t m = multisig->m;
@@ -306,7 +306,7 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 		out[r] = 0x50 + m; r++;
 		for (uint32_t i = 0; i < n; i++) {
 			out[r] = 33; r++; // OP_PUSH 33
-			const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
+			const uint8_t *pubkey = cryptoHDNodePathToPubkey(coin, &(multisig->pubkeys[i]));
 			if (!pubkey) return 0;
 			memcpy(out + r, pubkey, 33); r += 33;
 		}
@@ -318,7 +318,7 @@ uint32_t compile_script_multisig(const MultisigRedeemScriptType *multisig, uint8
 	return r;
 }
 
-uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, HasherType hasher_type, uint8_t *hash)
+uint32_t compile_script_multisig_hash(const CoinInfo *coin, const MultisigRedeemScriptType *multisig, uint8_t *hash)
 {
 	if (!multisig->has_m) return 0;
 	const uint32_t m = multisig->m;
@@ -327,13 +327,13 @@ uint32_t compile_script_multisig_hash(const MultisigRedeemScriptType *multisig, 
 	if (n < 1 || n > 15) return 0;
 
 	Hasher hasher;
-	hasher_Init(&hasher, hasher_type);
+	hasher_Init(&hasher, coin->curve->hasher_type);
 
 	uint8_t d[2];
 	d[0] = 0x50 + m; hasher_Update(&hasher, d, 1);
 	for (uint32_t i = 0; i < n; i++) {
 		d[0] = 33; hasher_Update(&hasher, d, 1); // OP_PUSH 33
-		const uint8_t *pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
+		const uint8_t *pubkey = cryptoHDNodePathToPubkey(coin, &(multisig->pubkeys[i]));
 		if (!pubkey) return 0;
 		hasher_Update(&hasher, pubkey, 33);
 	}
@@ -357,7 +357,7 @@ uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, 
 	return r;
 }
 
-uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uint8_t sighash, uint8_t *out)
+uint32_t serialize_script_multisig(const CoinInfo *coin, const MultisigRedeemScriptType *multisig, uint8_t sighash, uint8_t *out)
 {
 	uint32_t r = 0;
 	out[r] = 0x00; r++;
@@ -369,12 +369,12 @@ uint32_t serialize_script_multisig(const MultisigRedeemScriptType *multisig, uin
 		memcpy(out + r, multisig->signatures[i].bytes, multisig->signatures[i].size); r += multisig->signatures[i].size;
 		out[r] = sighash; r++;
 	}
-	uint32_t script_len = compile_script_multisig(multisig, 0);
+	uint32_t script_len = compile_script_multisig(coin, multisig, 0);
 	if (script_len == 0) {
 		return 0;
 	}
 	r += op_push(script_len, out + r);
-	r += compile_script_multisig(multisig, out + r);
+	r += compile_script_multisig(coin, multisig, out + r);
 	return r;
 }
 

@@ -460,7 +460,7 @@ bool compile_input_script_sig(TxInputType *tinput)
 	}
 	hdnode_fill_public_key(&node);
 	if (tinput->has_multisig) {
-		tinput->script_sig.size = compile_script_multisig(&(tinput->multisig), tinput->script_sig.bytes);
+		tinput->script_sig.size = compile_script_multisig(coin, &(tinput->multisig), tinput->script_sig.bytes);
 	} else { // SPENDADDRESS
 		uint8_t hash[20];
 		ecdsa_get_pubkeyhash(node.public_key, coin->curve->hasher_type, hash);
@@ -759,7 +759,7 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, 
 	resp.serialized.signature_index = idx1;
 	resp.serialized.has_signature = true;
 	resp.serialized.has_serialized_tx = true;
-	if (ecdsa_sign_digest(&secp256k1, private_key, hash, sig, NULL, NULL) != 0) {
+	if (ecdsa_sign_digest(coin->curve->params, private_key, hash, sig, NULL, NULL) != 0) {
 		fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
 		signing_abort();
 		return false;
@@ -769,7 +769,7 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, 
 	uint8_t sighash = signing_hash_type() & 0xff;
 	if (txinput->has_multisig) {
 		// fill in the signature
-		int pubkey_idx = cryptoMultisigPubkeyIndex(&(txinput->multisig), public_key);
+		int pubkey_idx = cryptoMultisigPubkeyIndex(coin, &(txinput->multisig), public_key);
 		if (pubkey_idx < 0) {
 			fsm_sendFailure(FailureType_Failure_DataError, _("Pubkey not found in multisig script"));
 			signing_abort();
@@ -777,7 +777,7 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, 
 		}
 		memcpy(txinput->multisig.signatures[pubkey_idx].bytes, resp.serialized.signature.bytes, resp.serialized.signature.size);
 		txinput->multisig.signatures[pubkey_idx].size = resp.serialized.signature.size;
-		txinput->script_sig.size = serialize_script_multisig(&(txinput->multisig), sighash, txinput->script_sig.bytes);
+		txinput->script_sig.size = serialize_script_multisig(coin, &(txinput->multisig), sighash, txinput->script_sig.bytes);
 		if (txinput->script_sig.size == 0) {
 			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to serialize multisig script"));
 			signing_abort();
@@ -845,9 +845,9 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 				txinput->multisig.signatures[i].bytes[txinput->multisig.signatures[i].size] = sighash;
 				r += tx_serialize_script(txinput->multisig.signatures[i].size + 1, txinput->multisig.signatures[i].bytes, resp.serialized.serialized_tx.bytes + r);
 			}
-			uint32_t script_len = compile_script_multisig(&txinput->multisig, 0);
+			uint32_t script_len = compile_script_multisig(coin, &txinput->multisig, 0);
 			r += ser_length(script_len, resp.serialized.serialized_tx.bytes + r);
-			r += compile_script_multisig(&txinput->multisig, resp.serialized.serialized_tx.bytes + r);
+			r += compile_script_multisig(coin, &txinput->multisig, resp.serialized.serialized_tx.bytes + r);
 			resp.serialized.serialized_tx.bytes[0] = nwitnesses;
 			resp.serialized.serialized_tx.size = r;
 		} else { // single signature
@@ -1207,7 +1207,7 @@ void signing_txack(TransactionType *tx)
 				tx->inputs[0].script_sig.bytes[1] = 0x00; // witness 0 script
 				tx->inputs[0].script_sig.bytes[2] = 0x20; // push 32 bytes (digest)
 				// compute digest of multisig script
-				if (!compile_script_multisig_hash(&tx->inputs[0].multisig, coin->curve->hasher_type, tx->inputs[0].script_sig.bytes + 3)) {
+				if (!compile_script_multisig_hash(coin, &tx->inputs[0].multisig, tx->inputs[0].script_sig.bytes + 3)) {
 					fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
 					signing_abort();
 					return;

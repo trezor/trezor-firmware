@@ -163,7 +163,7 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 
 	// check if signature verifies the digest and recover the public key
 	uint8_t pubkey[65];
-	if (ecdsa_verify_digest_recover(&secp256k1, pubkey, signature + 1, hash, recid) != 0) {
+	if (ecdsa_verify_digest_recover(coin->curve->params, pubkey, signature + 1, hash, recid) != 0) {
 		return 3;
 	}
 	// convert public key to compressed pubkey if necessary
@@ -327,11 +327,11 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_le
 }
 */
 
-uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
+uint8_t *cryptoHDNodePathToPubkey(const CoinInfo *coin, const HDNodePathType *hdnodepath)
 {
 	if (!hdnodepath->node.has_public_key || hdnodepath->node.public_key.size != 33) return 0;
 	static HDNode node;
-	if (hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, SECP256K1_NAME, &node) == 0) {
+	if (hdnode_from_xpub(hdnodepath->node.depth, hdnodepath->node.child_num, hdnodepath->node.chain_code.bytes, hdnodepath->node.public_key.bytes, coin->curve_name, &node) == 0) {
 		return 0;
 	}
 	layoutProgressUpdate(true);
@@ -344,10 +344,10 @@ uint8_t *cryptoHDNodePathToPubkey(const HDNodePathType *hdnodepath)
 	return node.public_key;
 }
 
-int cryptoMultisigPubkeyIndex(const MultisigRedeemScriptType *multisig, const uint8_t *pubkey)
+int cryptoMultisigPubkeyIndex(const CoinInfo *coin, const MultisigRedeemScriptType *multisig, const uint8_t *pubkey)
 {
 	for (size_t i = 0; i < multisig->pubkeys_count; i++) {
-		const uint8_t *node_pubkey = cryptoHDNodePathToPubkey(&(multisig->pubkeys[i]));
+		const uint8_t *node_pubkey = cryptoHDNodePathToPubkey(coin, &(multisig->pubkeys[i]));
 		if (node_pubkey && memcmp(node_pubkey, pubkey, 33) == 0) {
 			return i;
 		}
