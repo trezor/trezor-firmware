@@ -3,6 +3,7 @@ from trezor.utils import unimport
 from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.messages import ButtonRequestType
+from trezor.messages import FailureType
 from apps.common.confirm import confirm
 from trezor.ui.text import Text
 from trezor.crypto import rlp
@@ -15,16 +16,17 @@ MAX_CHAIN_ID = 2147483630
 
 @unimport
 async def ethereum_sign_tx(ctx, msg):
-    from ..common import seed
     from trezor.crypto.hashlib import sha3_256
-    from trezor.crypto.curve import secp256k1
 
+    print(msg)
     msg = sanitize(msg)
     check(msg)
 
+    data_total = msg.data_length
+
     # detect ERC - 20 token
     token = None
-    if len(msg.to) == 20 and len(msg.value) == 0 and msg.data_length == 68 and len(msg.data_initial_chunk) == 68 \
+    if len(msg.to) == 20 and len(msg.value) == 0 and data_total == 68 and len(msg.data_initial_chunk) == 68 \
             and msg.data_initial_chunk[:16] == b'a9059cbb000000000000000000000000': #todo x?
         token = tokens.token_by_chain_address(msg.chain_id, msg.to)
 
@@ -39,18 +41,43 @@ async def ethereum_sign_tx(ctx, msg):
 
     # todo layoutEthereumFee
 
-    # todo eip 155 replay protection
-    # if chain_id != 0:
-        # hash v=chain_id, r=0, s=0
-        # hash_rlp_number(chain_id)
-        # hash_rlp_length(0, 0)
-        # hash_rlp_length(0, 0)
+    data = bytearray()
+    data += msg.data_initial_chunk
+    data_left = data_total - len(msg.data_initial_chunk)
 
-    fields = [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value, msg.data_initial_chunk]
+    while data_left > 0:
+        resp = await send_request_chunk(ctx, data_left, data_total)
+        data += resp.data_chunk
+        data_left -= len(resp.data_chunk)
+        # todo stream
 
+    if msg.chain_id:
+        fields = [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value, data, msg.chain_id, 0, 0]
+    else:
+        fields = [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value, data]
     rlp_encoded = rlp.encode(fields)
-    sha256 = sha3_256(rlp_encoded)
+    sha256 = sha3_256()
+    sha256.update(rlp_encoded)
     digest = sha256.digest(True)
+
+    return await send_signature(ctx, msg, digest)
+
+
+async def send_request_chunk(ctx, data_left: int, data_total: int):
+    from trezor.messages.wire_types import EthereumTxAck
+    # todo layoutProgress ?
+    req = EthereumTxRequest()
+    if data_left <= 1024:
+        req.data_length = data_left
+    else:
+        req.data_length = 1024
+
+    return await ctx.call(req, EthereumTxAck)
+
+
+async def send_signature(ctx, msg: EthereumSignTx, digest):
+    from trezor.crypto.curve import secp256k1
+    from ..common import seed
 
     address_n = msg.address_n or ()
     node = await seed.get_root(ctx)
@@ -81,17 +108,17 @@ def check(msg: EthereumSignTx):
 
     if msg.data_length > 0:
         if not msg.data_initial_chunk:
-            raise ValueError(Failure.DataError, 'Data length provided, but no initial chunk')
+            raise ValueError(FailureType.DataError, 'Data length provided, but no initial chunk')
         # Our encoding only supports transactions up to 2^24 bytes. To
         # prevent exceeding the limit we use a stricter limit on data length.
         if msg.data_length > 16000000:
-            raise ValueError(Failure.DataError, 'Data length exceeds limit')
+            raise ValueError(FailureType.DataError, 'Data length exceeds limit')
         if len(msg.data_initial_chunk) > msg.data_length:
-            raise ValueError(Failure.DataError, 'Invalid size of initial chunk')
+            raise ValueError(FailureType.DataError, 'Invalid size of initial chunk')
 
     # safety checks
     if not check_gas(msg) or not check_to(msg):
-        raise ValueError(Failure.DataError, 'Safety check failed')
+        raise ValueError(FailureType.DataError, 'Safety check failed')
 
 
 def check_gas(msg: EthereumSignTx) -> bool:
@@ -104,7 +131,7 @@ def check_gas(msg: EthereumSignTx) -> bool:
 
 
 def check_to(msg: EthereumTxRequest) -> bool:
-    if msg.to == 0:
+    if msg.to == b'':
         if msg.data_length == 0:
             # sending transaction to address 0 (contract creation) without a data field
             return False
