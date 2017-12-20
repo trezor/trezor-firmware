@@ -4,26 +4,27 @@ TOOLCHAIN_DIR ?= $(TOP_DIR)vendor/libopencm3
 PYTHON ?= python
 
 ifeq ($(EMULATOR),1)
-CC      = gcc
-LD      = gcc
-OBJCOPY = objcopy
-OBJDUMP = objdump
-AR      = ar
-AS      = as
+CC       ?= gcc
+LD       := $(CC)
+OBJCOPY  := objcopy
+OBJDUMP  := objdump
+AR       := ar
+AS       := as
 
 OPTFLAGS ?= -O3
-DBGFLAGS ?= -g3
+DBGFLAGS ?= -g3 -ggdb3
 CPUFLAGS ?= -m32
+FPUFLAGS ?=
 else
-PREFIX ?= arm-none-eabi-
-CC      = $(PREFIX)gcc
-LD      = $(PREFIX)gcc
-OBJCOPY = $(PREFIX)objcopy
-OBJDUMP = $(PREFIX)objdump
-AR      = $(PREFIX)ar
-AS      = $(PREFIX)as
-FLASH   = st-flash
-OPENOCD = openocd
+PREFIX   ?= arm-none-eabi-
+CC       := $(PREFIX)gcc
+LD       := $(PREFIX)gcc
+OBJCOPY  := $(PREFIX)objcopy
+OBJDUMP  := $(PREFIX)objdump
+AR       := $(PREFIX)ar
+AS       := $(PREFIX)as
+FLASH    := st-flash
+OPENOCD  := openocd
 
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
@@ -70,6 +71,11 @@ CFLAGS   += $(OPTFLAGS) \
             -I$(TOP_DIR)vendor/trezor-crypto/ed25519-donna \
             -I$(TOP_DIR)vendor/trezor-qrenc
 
+LDFLAGS  += -L$(TOP_DIR) \
+            $(DBGFLAGS) \
+            $(CPUFLAGS) \
+            $(FPUFLAGS)
+
 ifeq ($(EMULATOR),1)
 CFLAGS   += -DEMULATOR=1
 
@@ -85,9 +91,7 @@ endif
 CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
 CFLAGS   += -include stdio.h
 
-LDFLAGS  += -L$(TOP_DIR) \
-            -L$(TOP_DIR)emulator \
-            $(CPUFLAGS)
+LDFLAGS  += -L$(TOP_DIR)emulator
 
 LDLIBS   += -ltrezor -lemulator
 LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
@@ -107,13 +111,10 @@ LDFLAGS  += --static \
             -lgcc \
             -lnosys \
             -Wl,--end-group \
-            -L$(TOP_DIR) \
             -L$(TOOLCHAIN_DIR)/lib \
             -T$(LDSCRIPT) \
             -nostartfiles \
-            -Wl,--gc-sections \
-            $(CPUFLAGS) \
-            $(FPUFLAGS)
+            -Wl,--gc-sections
 
 LDLIBS   += -ltrezor
 LIBDEPS  += $(TOP_DIR)/libtrezor.a
