@@ -232,8 +232,8 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 	addr_raw_len = base58_decode_check(in->address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
 	size_t prefix_len;
 	if (coin->has_address_type                                  // p2pkh
-		&& address_check_prefix(addr_raw, coin->address_type)
-		&& addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type))) {
+		&& addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type))
+		&& address_check_prefix(addr_raw, coin->address_type)) {
 		out->script_pubkey.bytes[0] = 0x76; // OP_DUP
 		out->script_pubkey.bytes[1] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[2] = 0x14; // pushing 20 bytes
@@ -242,8 +242,8 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		out->script_pubkey.bytes[24] = 0xAC; // OP_CHECKSIG
 		out->script_pubkey.size = 25;
 	} else if (coin->has_address_type_p2sh                      // p2sh
-			   && address_check_prefix(addr_raw, coin->address_type_p2sh)
-			   && addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type_p2sh))) {
+			   && addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type_p2sh))
+			   && address_check_prefix(addr_raw, coin->address_type_p2sh)) {
 		out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
 		out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
 		memcpy(out->script_pubkey.bytes + 2, addr_raw + prefix_len, 20);
