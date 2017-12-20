@@ -488,11 +488,13 @@ def sign_tx(connect, coin):
         prev_hash, prev_index = prev
         address_n = click.prompt('BIP-32 path to derive the key', type=client.expand_path)
         amount = click.prompt('Input amount (satoshis)', type=int, default=0)
+        script_type = click.prompt('Input type', type=CHOICE_INPUT_SCRIPT_TYPE, default='address')
         inputs.append(proto.TxInputType(
             address_n=address_n,
             prev_hash=prev_hash,
             prev_index=prev_index,
             amount=amount,
+            script_type=script_type,
         ))
 
     outputs = []
