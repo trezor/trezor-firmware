@@ -360,7 +360,10 @@ uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len, 
 uint32_t serialize_script_multisig(const CoinInfo *coin, const MultisigRedeemScriptType *multisig, uint8_t sighash, uint8_t *out)
 {
 	uint32_t r = 0;
-	out[r] = 0x00; r++;
+	if (!coin->decred) {
+		// Decred fixed the off-by-one bug
+		out[r] = 0x00; r++;
+	}
 	for (uint32_t i = 0; i < multisig->signatures_count; i++) {
 		if (multisig->signatures[i].size == 0) {
 			continue;
