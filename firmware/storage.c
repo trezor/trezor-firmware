@@ -46,12 +46,18 @@
 static const uint32_t storage_magic = 0x726f7473;   // 'stor' as uint32_t
 
 static uint32_t storage_uuid[12 / sizeof(uint32_t)];
+#ifndef __clang__
+// TODO: Fix this for Clang
 _Static_assert(((uint32_t)storage_uuid & 3) == 0, "uuid unaligned");
 _Static_assert((sizeof(storage_uuid) & 3) == 0, "uuid unaligned");
+#endif
 
 Storage CONFIDENTIAL storageUpdate;
+#ifndef __clang__
+// TODO: Fix this for Clang
 _Static_assert(((uint32_t)&storageUpdate & 3) == 0, "storage unaligned");
 _Static_assert((sizeof(storageUpdate) & 3) == 0, "storage unaligned");
+#endif
 
 #define STORAGE_ROM ((const Storage *)(FLASH_STORAGE_START + sizeof(storage_magic) + sizeof(storage_uuid)))
 
@@ -461,7 +467,7 @@ void storage_loadDevice(LoadDevice *msg)
 		memset(&sessionSeed, 0, sizeof(sessionSeed));
 	}
 
-	if (msg->has_language && msg->language) {
+	if (msg->has_language) {
 		storageUpdate.has_language = true;
 		strlcpy(storageUpdate.language, msg->language, sizeof(storageUpdate.language));
 	}
