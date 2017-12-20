@@ -33,6 +33,28 @@ from trezorlib import protobuf
 from trezorlib.coins import coins_txapi
 
 
+class ChoiceType(click.Choice):
+    def __init__(self, typemap):
+        super(ChoiceType, self).__init__(typemap.keys())
+        self.typemap = typemap
+
+    def convert(self, value, param, ctx):
+        value = super(ChoiceType, self).convert(value, param, ctx)
+        return self.typemap[value]
+
+
+CHOICE_RECOVERY_DEVICE_TYPE = ChoiceType({
+    'scrambled':  proto.RecoveryDeviceType.ScrambledWords,
+    'matrix':     proto.RecoveryDeviceType.Matrix,
+})
+
+CHOICE_INPUT_SCRIPT_TYPE = ChoiceType({
+    'address':    proto.InputScriptType.SPENDADDRESS,
+    'segwit':     proto.InputScriptType.SPENDWITNESS,
+    'p2shsegwit': proto.InputScriptType.SPENDP2SHWITNESS,
+})
+
+
 def get_transport_class_by_name(name):
 
     if name == 'usb':
@@ -290,21 +312,17 @@ def load_device(connect, mnemonic, expand, xprv, pin, passphrase_protection, lab
 @click.option('-p', '--pin-protection', is_flag=True)
 @click.option('-r', '--passphrase-protection', is_flag=True)
 @click.option('-l', '--label')
-@click.option('-t', '--type', 'rec_type', type=click.Choice(['scrambled', 'matrix']), default='scrambled')
+@click.option('-t', '--type', 'rec_type', type=CHOICE_RECOVERY_DEVICE_TYPE, default='scrambled')
 @click.option('-d', '--dry-run', is_flag=True)
 @click.pass_obj
 def recovery_device(connect, words, expand, pin_protection, passphrase_protection, label, rec_type, dry_run):
-    typemap = {
-        'scrambled': proto.RecoveryDeviceType.ScrambledWords,
-        'matrix':    proto.RecoveryDeviceType.Matrix
-    }
     return connect().recovery_device(
         int(words),
         passphrase_protection,
         pin_protection,
         label,
         'english',
-        typemap[rec_type],
+        rec_type,
         expand,
         dry_run
     )
@@ -404,18 +422,12 @@ def self_test(connect):
 @cli.command(help='Get address for specified path.')
 @click.option('-c', '--coin', default='Bitcoin')
 @click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
-@click.option('-t', '--script-type', type=click.Choice(['address', 'segwit', 'p2shsegwit']), default='address')
+@click.option('-t', '--script-type', type=CHOICE_INPUT_SCRIPT_TYPE, default='address')
 @click.option('-d', '--show-display', is_flag=True)
 @click.pass_obj
 def get_address(connect, coin, address, script_type, show_display):
     client = connect()
     address_n = client.expand_path(address)
-    typemap = {
-        'address': proto.InputScriptType.SPENDADDRESS,
-        'segwit': proto.InputScriptType.SPENDWITNESS,
-        'p2shsegwit': proto.InputScriptType.SPENDP2SHWITNESS,
-    }
-    script_type = typemap[script_type]
     return client.get_address(coin, address_n, show_display, script_type=script_type)
 
 
@@ -448,7 +460,7 @@ def get_public_node(connect, coin, address, curve, show_display):
 @cli.command(help='Sign transaction.')
 @click.option('-c', '--coin', default='Bitcoin')
 # @click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
-# @click.option('-t', '--script-type', type=click.Choice(['address', 'segwit', 'p2shsegwit']), default='address')
+# @click.option('-t', '--script-type', type=CHOICE_INPUT_SCRIPT_TYPE, default='address')
 # @click.option('-o', '--output', required=True, help='Transaction output')
 # @click.option('-f', '--fee', required=True, help='Transaction fee (sat/B)')
 @click.pass_obj
