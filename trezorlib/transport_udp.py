@@ -52,11 +52,11 @@ class UdpTransport(Transport):
         self.socket = None
 
     def __str__(self):
-        return self.device
+        return str(self.device)
 
     @staticmethod
     def enumerate():
-        raise NotImplementedError('This transport cannot enumerate devices')
+        return [UdpTransport()]
 
     @staticmethod
     def find_by_path(path=None):
