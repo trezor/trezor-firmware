@@ -45,22 +45,47 @@ async def ethereum_sign_tx(ctx, msg):
     data += msg.data_initial_chunk
     data_left = data_total - len(msg.data_initial_chunk)
 
+    total_length = get_total_length(msg, data_total)
+
+    sha = sha3_256()
+    sha.update(rlp.encode_length(total_length, True))  # total length
+
+    for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
+        sha.update(rlp.encode(field))
+
+    if data_left == 0:
+        sha.update(rlp.encode(data))
+    else:
+        sha.update(rlp.encode_length(data_total, False))
+        sha.update(rlp.encode(data, False))
+
     while data_left > 0:
         resp = await send_request_chunk(ctx, data_left, data_total)
-        data += resp.data_chunk
         data_left -= len(resp.data_chunk)
-        # todo stream
+        sha.update(resp.data_chunk)
 
+    # eip 155 replay protection
     if msg.chain_id:
-        fields = [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value, data, msg.chain_id, 0, 0]
-    else:
-        fields = [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value, data]
-    rlp_encoded = rlp.encode(fields)
-    sha256 = sha3_256()
-    sha256.update(rlp_encoded)
-    digest = sha256.digest(True)
+        sha.update(rlp.encode(msg.chain_id))
+        sha.update(rlp.encode(0))
+        sha.update(rlp.encode(0))
 
+    digest = sha.digest(True)
     return await send_signature(ctx, msg, digest)
+
+
+def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
+    length = 0
+    for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
+        length += rlp.field_length(len(field), field[:1])
+
+    if msg.chain_id:  # forks replay protection
+        length += rlp.field_length(1, [msg.chain_id])
+        length += rlp.field_length(0, 0)
+        length += rlp.field_length(0, 0)
+
+    length += rlp.field_length(data_total, msg.data_initial_chunk)
+    return length
 
 
 async def send_request_chunk(ctx, data_left: int, data_total: int):
