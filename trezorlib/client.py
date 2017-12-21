@@ -254,11 +254,11 @@ class TextUIMixin(object):
                 return proto.WordAck(word=character)
 
     def callback_PinMatrixRequest(self, msg):
-        if msg.type == proto.PinMatrixRequestType_Current:
+        if msg.type == proto.PinMatrixRequestType.Current:
             desc = 'current PIN'
-        elif msg.type == proto.PinMatrixRequestType_NewFirst:
+        elif msg.type == proto.PinMatrixRequestType.NewFirst:
             desc = 'new PIN'
-        elif msg.type == proto.PinMatrixRequestType_NewSecond:
+        elif msg.type == proto.PinMatrixRequestType.NewSecond:
             desc = 'new PIN again'
         else:
             desc = 'PIN'
