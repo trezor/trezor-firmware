@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import requests
 from google.protobuf import json_format
 
-from . import messages_pb2
+from . import messages
 from .transport import Transport, TransportException
 
 TREZORD_HOST = 'https://localback.net:21324'
@@ -112,7 +112,7 @@ class BridgeTransport(Transport):
     def read(self):
         if self.response is None:
             raise TransportException('No response stored')
-        msgtype = getattr(messages_pb2, self.response['type'])
+        msgtype = getattr(messages, self.response['type'])
         msg = msgtype()
         msg = json_format.ParseDict(self.response['message'], msg)
         self.response = None
