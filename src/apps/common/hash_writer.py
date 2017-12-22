@@ -12,5 +12,5 @@ class HashWriter:
         self.buf[0] = b
         self.ctx.update(self.buf)
 
-    def getvalue(self, *args) -> bytes:
+    def get_digest(self, *args) -> bytes:
         return self.ctx.digest(*args)

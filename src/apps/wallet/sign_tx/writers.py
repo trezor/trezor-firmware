@@ -106,7 +106,7 @@ def bytearray_with_cap(cap: int) -> bytearray:
 
 
 def get_tx_hash(w, double: bool, reverse: bool=False) -> bytes:
-    d = w.getvalue()
+    d = w.get_digest()
     if double:
         d = sha256(d).digest()
     if reverse:
