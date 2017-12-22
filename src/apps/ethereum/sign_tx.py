@@ -5,6 +5,7 @@ from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.messages import ButtonRequestType
 from trezor.messages import FailureType
 from apps.common.confirm import confirm
+from apps.common.hash_writer import HashWriter
 from trezor.ui.text import Text
 from trezor.crypto import rlp
 from apps.ethereum import tokens
@@ -18,7 +19,6 @@ MAX_CHAIN_ID = 2147483630
 async def ethereum_sign_tx(ctx, msg):
     from trezor.crypto.hashlib import sha3_256
 
-    print(msg)
     msg = sanitize(msg)
     check(msg)
 
@@ -47,30 +47,30 @@ async def ethereum_sign_tx(ctx, msg):
 
     total_length = get_total_length(msg, data_total)
 
-    sha = sha3_256()
-    sha.update(rlp.encode_length(total_length, True))  # total length
+    sha = HashWriter(sha3_256)
+    sha.extend(rlp.encode_length(total_length, True))  # total length
 
     for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
-        sha.update(rlp.encode(field))
+        sha.extend(rlp.encode(field))
 
     if data_left == 0:
-        sha.update(rlp.encode(data))
+        sha.extend(rlp.encode(data))
     else:
-        sha.update(rlp.encode_length(data_total, False))
-        sha.update(rlp.encode(data, False))
+        sha.extend(rlp.encode_length(data_total, False))
+        sha.extend(rlp.encode(data, False))
 
     while data_left > 0:
         resp = await send_request_chunk(ctx, data_left, data_total)
         data_left -= len(resp.data_chunk)
-        sha.update(resp.data_chunk)
+        sha.extend(resp.data_chunk)
 
     # eip 155 replay protection
     if msg.chain_id:
-        sha.update(rlp.encode(msg.chain_id))
-        sha.update(rlp.encode(0))
-        sha.update(rlp.encode(0))
+        sha.extend(rlp.encode(msg.chain_id))
+        sha.extend(rlp.encode(0))
+        sha.extend(rlp.encode(0))
 
-    digest = sha.digest(True)
+    digest = sha.getvalue()
     return await send_signature(ctx, msg, digest)
 
 
