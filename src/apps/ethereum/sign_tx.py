@@ -70,7 +70,7 @@ async def ethereum_sign_tx(ctx, msg):
         sha.extend(rlp.encode(0))
         sha.extend(rlp.encode(0))
 
-    digest = sha.getvalue()
+    digest = sha.getvalue(True)
     return await send_signature(ctx, msg, digest)
 
 
