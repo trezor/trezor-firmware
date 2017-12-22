@@ -3,6 +3,7 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, FailureType
 
 from apps.wallet.sign_tx.writers import *
+from apps.common.hash_writer import HashWriter
 
 
 class Bip143Error(ValueError):

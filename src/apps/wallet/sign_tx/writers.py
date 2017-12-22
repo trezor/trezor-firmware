@@ -112,20 +112,3 @@ def get_tx_hash(w, double: bool, reverse: bool=False) -> bytes:
     if reverse:
         d = bytes(reversed(d))
     return d
-
-
-class HashWriter:
-
-    def __init__(self, hashfunc):
-        self.ctx = hashfunc()
-        self.buf = bytearray(1)  # used in append()
-
-    def extend(self, buf: bytearray):
-        self.ctx.update(buf)
-
-    def append(self, b: int):
-        self.buf[0] = b
-        self.ctx.update(self.buf)
-
-    def getvalue(self) -> bytes:
-        return self.ctx.digest()

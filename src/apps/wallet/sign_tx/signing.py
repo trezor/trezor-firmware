@@ -16,6 +16,7 @@ from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.writers import *
 from apps.wallet.sign_tx.tx_weight_calculator import *
+from apps.common.hash_writer import HashWriter
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
