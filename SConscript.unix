@@ -25,7 +25,8 @@ CPPPATH_MOD += [
 CPPDEFINES_MOD += [
     'AES_128',
     'AES_192',
-    'USE_KECCAK',
+    ('USE_KECCAK', '1'),
+    ('USE_ETHEREUM', '1'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
