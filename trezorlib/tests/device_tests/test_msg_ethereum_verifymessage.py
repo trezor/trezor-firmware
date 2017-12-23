@@ -16,11 +16,9 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import common
-import pytest
 import binascii
 
 
-@pytest.mark.skip_t2
 class TestMsgEthereumVerifymessage(common.TrezorTest):
 
     def test_verify(self):
