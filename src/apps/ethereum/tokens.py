@@ -1,4 +1,3 @@
-
 def token_by_chain_address(chain_id, address):
     if not address:
         return 0

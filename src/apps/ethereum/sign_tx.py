@@ -8,7 +8,7 @@ from apps.common.confirm import confirm
 from apps.common.hash_writer import HashWriter
 from trezor.ui.text import Text
 from trezor.crypto import rlp
-from apps.ethereum import tokens
+from apps.ethereum import networks, tokens
 
 
 # maximum supported chain id
@@ -26,8 +26,11 @@ async def ethereum_sign_tx(ctx, msg):
 
     # detect ERC - 20 token
     token = None
-    if len(msg.to) == 20 and len(msg.value) == 0 and data_total == 68 and len(msg.data_initial_chunk) == 68 \
-            and msg.data_initial_chunk[:16] == b'a9059cbb000000000000000000000000': #todo x?
+    if len(msg.to) == 20 and \
+       len(msg.value) == 0 and \
+       data_total == 68 and \
+       len(msg.data_initial_chunk) == 68 and \
+       msg.data_initial_chunk[:16] == b'\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':
         token = tokens.token_by_chain_address(msg.chain_id, msg.to)
 
     if token is not None:
@@ -198,31 +201,10 @@ def format_amount(value, token, chain_id):
         suffix = token.ticker
         decimals = token.decimals
     elif value < 1e18:
-        suffix = " Wei"
+        suffix = 'Wei'
         decimals = 0
     else:
         decimals = 18
-        if chain_id == 1:
-            suffix = " ETH"  # Ethereum Mainnet
-        elif chain_id == 61:
-            suffix = " ETC"  # Ethereum Classic Mainnet
-        elif chain_id == 62:
-            suffix = " tETC"  # Ethereum Classic Testnet
-        elif chain_id == 30:
-            suffix = " RSK"  # Rootstock Mainnet
-        elif chain_id == 31:
-            suffix = " tRSK"  # Rootstock Testnet
-        elif chain_id == 3:
-            suffix = " tETH"  # Ethereum Testnet: Ropsten
-        elif chain_id == 4:
-            suffix = " tETH"  # Ethereum Testnet: Rinkeby
-        elif chain_id == 42:
-            suffix = " tETH"  # Ethereum Testnet: Kovan
-        elif chain_id == 2:
-            suffix = " EXP"  # Expanse
-        elif chain_id == 8:
-            suffix = " UBQ"  # UBIQ
-        else:
-            suffix = " UNKN"  # unknown chain
+        suffix = networks.suffix_by_chain_id(chain_id)
 
-    return '%s%s' % (value // 10**decimals, suffix)
+    return '%s %s' % (value // 10 ** decimals, suffix)
