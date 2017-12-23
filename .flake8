@@ -8,7 +8,7 @@ exclude =
     dist/,
     trezorlib/*_pb2.py
 ignore =
-    # F821 undefined name 'unicode',
+    # F821 undefined name 'unicode'
     F821,
     # F841 local variable is assigned to but never used
     F841,
@@ -16,6 +16,8 @@ ignore =
     F401,
     # F403: used import *
     F403,
+    # F405 'foo' may be undefined, or defined from star imports
+    F405,
     # E241: multiple spaces after ':'
     E241,
     # E402: module level import not at top of file
