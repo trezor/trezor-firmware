@@ -15,15 +15,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import pytest
-import binascii
+from .common import *
 
 
 @pytest.mark.skip_t2
-class TestMsgNEMGetaddress(common.TrezorTest):
+class TestMsgNEMGetaddress(TrezorTest):
 
     def test_nem_getaddress(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        self.assertEqual(self.client.nem_get_address(self.client.expand_path("m/44'/1'/0'/0'/0'"), 0x68), "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN")
-        self.assertEqual(self.client.nem_get_address(self.client.expand_path("m/44'/1'/0'/0'/0'"), 0x98), "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF")
+        assert self.client.nem_get_address(self.client.expand_path("m/44'/1'/0'/0'/0'"), 0x68) == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
+        assert self.client.nem_get_address(self.client.expand_path("m/44'/1'/0'/0'/0'"), 0x98) == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"

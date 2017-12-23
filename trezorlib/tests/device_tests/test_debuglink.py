@@ -16,35 +16,34 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import pytest
+from .common import *
 
 from trezorlib import messages as proto
 
 
 @pytest.mark.skip_t2
-class TestDebuglink(common.TrezorTest):
+class TestDebuglink(TrezorTest):
 
     def test_layout(self):
         layout = self.client.debug.read_layout()
-        self.assertEqual(len(layout), 1024)
+        assert len(layout) == 1024
 
     def test_mnemonic(self):
         self.setup_mnemonic_nopin_nopassphrase()
         mnemonic = self.client.debug.read_mnemonic()
-        self.assertEqual(mnemonic, self.mnemonic12)
+        assert mnemonic == self.mnemonic12
 
     def test_pin(self):
         self.setup_mnemonic_pin_passphrase()
 
         # Manually trigger PinMatrixRequest
         resp = self.client.call_raw(proto.Ping(message='test', pin_protection=True))
-        self.assertIsInstance(resp, proto.PinMatrixRequest)
+        assert isinstance(resp, proto.PinMatrixRequest)
 
         pin = self.client.debug.read_pin()
-        self.assertEqual(pin[0], '1234')
-        self.assertNotEqual(pin[1], '')
+        assert pin[0] == '1234'
+        assert pin[1] != ''
 
         pin_encoded = self.client.debug.read_pin_encoded()
         resp = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-        self.assertIsInstance(resp, proto.Success)
+        assert isinstance(resp, proto.Success)

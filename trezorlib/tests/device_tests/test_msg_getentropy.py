@@ -19,7 +19,7 @@
 from __future__ import print_function
 
 import math
-from . import common
+from .common import *
 
 import trezorlib.messages as proto
 
@@ -38,12 +38,12 @@ def entropy(data):
     return e
 
 
-class TestMsgGetentropy(common.TrezorTest):
+class TestMsgGetentropy(TrezorTest):
 
     def test_entropy(self):
         for l in [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 32, 33, 64, 65, 128, 129, 256, 257, 512, 513, 1024]:
             with self.client:
                 self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.Entropy()])
                 ent = self.client.get_entropy(l)
-                self.assertTrue(len(ent) == l)
+                assert len(ent) == l
                 print('entropy = ', entropy(ent))

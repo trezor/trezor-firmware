@@ -16,40 +16,40 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
+from .common import *
 
 
-class TestDeviceLoad(common.TrezorTest):
+class TestDeviceLoad(TrezorTest):
     def test_load_device_1(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         mnemonic = self.client.debug.read_mnemonic()
-        self.assertEqual(mnemonic, self.mnemonic12)
+        assert mnemonic == self.mnemonic12
 
         pin = self.client.debug.read_pin()[0]
-        self.assertEqual(pin, None)
+        assert pin is None
 
         passphrase_protection = self.client.debug.read_passphrase_protection()
-        self.assertEqual(passphrase_protection, False)
+        assert passphrase_protection is False
 
         address = self.client.get_address('Bitcoin', [])
-        self.assertEqual(address, '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK')
+        assert address == '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK'
 
     def test_load_device_2(self):
         self.setup_mnemonic_pin_passphrase()
         self.client.set_passphrase('passphrase')
 
         mnemonic = self.client.debug.read_mnemonic()
-        self.assertEqual(mnemonic, self.mnemonic12)
+        assert mnemonic == self.mnemonic12
 
         pin = self.client.debug.read_pin()[0]
-        self.assertEqual(pin, self.pin4)
+        assert pin == self.pin4
 
         passphrase_protection = self.client.debug.read_passphrase_protection()
-        self.assertEqual(passphrase_protection, True)
+        assert passphrase_protection is True
 
         address = self.client.get_address('Bitcoin', [])
-        self.assertEqual(address, '15fiTDFwZd2kauHYYseifGi9daH2wniDHH')
+        assert address == '15fiTDFwZd2kauHYYseifGi9daH2wniDHH'
 
     def test_load_device_utf(self):
         words_nfkd = u'Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a'
@@ -82,6 +82,6 @@ class TestDeviceLoad(common.TrezorTest):
         self.client.set_passphrase(passphrase_nfd)
         address_nfd = self.client.get_address('Bitcoin', [])
 
-        self.assertEqual(address_nfkd, address_nfc)
-        self.assertEqual(address_nfkd, address_nfkc)
-        self.assertEqual(address_nfkd, address_nfd)
+        assert address_nfkd == address_nfc
+        assert address_nfkd == address_nfkc
+        assert address_nfkd == address_nfd

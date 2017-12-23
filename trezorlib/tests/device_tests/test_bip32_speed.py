@@ -18,11 +18,11 @@
 
 from __future__ import print_function
 
-from . import common
+from .common import *
 import time
 
 
-class TestBip32Speed(common.TrezorTest):
+class TestBip32Speed(TrezorTest):
 
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -35,7 +35,7 @@ class TestBip32Speed(common.TrezorTest):
             delay = time.time() - start
             expected = (depth + 1) * 0.26
             print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
-            self.assertLessEqual(delay, expected)
+            assert delay <= expected
 
     def test_private_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -48,7 +48,7 @@ class TestBip32Speed(common.TrezorTest):
             delay = time.time() - start
             expected = (depth + 1) * 0.26
             print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
-            self.assertLessEqual(delay, expected)
+            assert delay <= expected
 
     def test_cache(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -67,4 +67,4 @@ class TestBip32Speed(common.TrezorTest):
         print("CACHED TIME", cache_time)
 
         # Cached time expected to be at least 2x faster
-        self.assertLessEqual(cache_time, nocache_time / 2.)
+        assert cache_time <= nocache_time / 2.

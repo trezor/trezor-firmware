@@ -18,8 +18,8 @@
 
 from __future__ import print_function
 
-import unittest
-import hashlib
+from binascii import hexlify, unhexlify
+import pytest
 import os
 
 from trezorlib.client import TrezorClient, TrezorClientDebugLink
@@ -85,9 +85,9 @@ elif UDP_ENABLED:
     print('Using Emulator (v2=udp)')
 
 
-class TrezorTest(unittest.TestCase):
+class TrezorTest(object):
 
-    def setUp(self):
+    def setup_method(self, method):
         wirelink, debuglink = get_transport()
         self.client = TrezorClientDebugLink(wirelink)
         self.client.set_debuglink(debuglink)
@@ -107,8 +107,9 @@ class TrezorTest(unittest.TestCase):
         self.client.wipe_device()
         self.client.transport.session_begin()
 
-        print("Setup finished")
-        print("--------------")
+    def teardown_method(self, method):
+        self.client.transport.session_end()
+        self.client.close()
 
     def setup_mnemonic_allallall(self):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic_all, pin='', passphrase_protection=False, label='test', language='english')
@@ -122,16 +123,14 @@ class TrezorTest(unittest.TestCase):
     def setup_mnemonic_pin_passphrase(self):
         self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=True, label='test', language='english')
 
-    def tearDown(self):
-        self.client.transport.session_end()
-        self.client.close()
-
 
 def generate_entropy(strength, internal_entropy, external_entropy):
     '''
     strength - length of produced seed. One of 128, 192, 256
     random - binary stream of random data from external HRNG
     '''
+    import hashlib
+
     if strength not in (128, 192, 256):
         raise ValueError("Invalid strength")
 

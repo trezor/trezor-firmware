@@ -16,20 +16,19 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import pytest
-import hashlib
+from .common import *
 
+from hashlib import sha256
 from trezorlib import ed25519raw, ed25519cosi
 
 
 @pytest.mark.skip_t2
-class TestCosi(common.TrezorTest):
+class TestCosi(TrezorTest):
 
     def test_cosi_commit(self):
         self.setup_mnemonic_pin_passphrase()
 
-        digest = hashlib.sha256(b'this is a message').digest()
+        digest = sha256(b'this is a message').digest()
 
         c0 = self.client.cosi_commit(self.client.expand_path("10018'/0'"), digest)
         c1 = self.client.cosi_commit(self.client.expand_path("10018'/1'"), digest)
@@ -43,7 +42,7 @@ class TestCosi(common.TrezorTest):
         assert c0.commitment != c2.commitment
         assert c1.commitment != c2.commitment
 
-        digestb = hashlib.sha256(b'this is a different message').digest()
+        digestb = sha256(b'this is a different message').digest()
 
         c0b = self.client.cosi_commit(self.client.expand_path("10018'/0'"), digestb)
         c1b = self.client.cosi_commit(self.client.expand_path("10018'/1'"), digestb)
@@ -60,7 +59,7 @@ class TestCosi(common.TrezorTest):
     def test_cosi_sign(self):
         self.setup_mnemonic_pin_passphrase()
 
-        digest = hashlib.sha256(b'this is a message').digest()
+        digest = sha256(b'this is a message').digest()
 
         c0 = self.client.cosi_commit(self.client.expand_path("10018'/0'"), digest)
         c1 = self.client.cosi_commit(self.client.expand_path("10018'/1'"), digest)

@@ -18,13 +18,12 @@
 
 from __future__ import print_function
 
-from . import common
-import pytest
+from .common import *
 from trezorlib import messages as proto
 
 
 @pytest.mark.skip_t2
-class TestMsgRecoverydeviceDryrun(common.TrezorTest):
+class TestMsgRecoverydeviceDryrun(TrezorTest):
 
     def recovery_loop(self, mnemonic, result):
         ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
@@ -37,7 +36,7 @@ class TestMsgRecoverydeviceDryrun(common.TrezorTest):
 
         fakes = 0
         for _ in range(int(12 * 2)):
-            self.assertIsInstance(ret, proto.WordRequest)
+            assert isinstance(ret, proto.WordRequest)
             (word, pos) = self.client.debug.read_recovery_word()
 
             if pos != 0:
@@ -49,11 +48,11 @@ class TestMsgRecoverydeviceDryrun(common.TrezorTest):
 
             print(mnemonic)
 
-        self.assertIsInstance(ret, proto.ButtonRequest)
+        assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
 
         ret = self.client.call_raw(proto.ButtonAck())
-        self.assertIsInstance(ret, result)
+        assert isinstance(ret, result)
 
     def test_correct_notsame(self):
         self.setup_mnemonic_nopin_nopassphrase()

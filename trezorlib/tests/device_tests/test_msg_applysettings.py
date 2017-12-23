@@ -16,18 +16,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import pytest
+from .common import *
 
 from trezorlib import messages as proto
 
 
 @pytest.mark.skip_t2
-class TestMsgApplysettings(common.TrezorTest):
+class TestMsgApplysettings(TrezorTest):
 
     def test_apply_settings(self):
         self.setup_mnemonic_pin_passphrase()
-        self.assertEqual(self.client.features.label, 'test')
+        assert self.client.features.label == 'test'
 
         with self.client:
             self.client.set_expected_responses([proto.PinMatrixRequest(),
@@ -36,11 +35,11 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.Features()])
             self.client.apply_settings(label='new label')
 
-        self.assertEqual(self.client.features.label, 'new label')
+        assert self.client.features.label == 'new label'
 
     def test_invalid_language(self):
         self.setup_mnemonic_pin_passphrase()
-        self.assertEqual(self.client.features.language, 'english')
+        assert self.client.features.language == 'english'
 
         with self.client:
             self.client.set_expected_responses([proto.PinMatrixRequest(),
@@ -49,12 +48,12 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.Features()])
             self.client.apply_settings(language='nonexistent')
 
-        self.assertEqual(self.client.features.language, 'english')
+        assert self.client.features.language == 'english'
 
     def test_apply_settings_passphrase(self):
         self.setup_mnemonic_pin_nopassphrase()
 
-        self.assertEqual(self.client.features.passphrase_protection, False)
+        assert self.client.features.passphrase_protection is False
 
         with self.client:
             self.client.set_expected_responses([proto.PinMatrixRequest(),
@@ -63,7 +62,7 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.Features()])
             self.client.apply_settings(use_passphrase=True)
 
-        self.assertEqual(self.client.features.passphrase_protection, True)
+        assert self.client.features.passphrase_protection is True
 
         with self.client:
             self.client.set_expected_responses([proto.ButtonRequest(),
@@ -71,7 +70,7 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.Features()])
             self.client.apply_settings(use_passphrase=False)
 
-        self.assertEqual(self.client.features.passphrase_protection, False)
+        assert self.client.features.passphrase_protection is False
 
         with self.client:
             self.client.set_expected_responses([proto.ButtonRequest(),
@@ -79,7 +78,7 @@ class TestMsgApplysettings(common.TrezorTest):
                                                 proto.Features()])
             self.client.apply_settings(use_passphrase=True)
 
-        self.assertEqual(self.client.features.passphrase_protection, True)
+        assert self.client.features.passphrase_protection is True
 
     def test_apply_homescreen(self):
         self.setup_mnemonic_pin_passphrase()

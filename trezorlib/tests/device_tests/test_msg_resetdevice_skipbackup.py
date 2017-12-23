@@ -16,14 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import pytest
+from .common import *
 from trezorlib import messages as proto
 from mnemonic import Mnemonic
 
 
 @pytest.mark.skip_t2
-class TestMsgResetDeviceSkipbackup(common.TrezorTest):
+class TestMsgResetDeviceSkipbackup(TrezorTest):
 
     def test_reset_device_skip_backup(self):
 
@@ -41,18 +40,18 @@ class TestMsgResetDeviceSkipbackup(common.TrezorTest):
         ))
 
         # Provide entropy
-        self.assertIsInstance(ret, proto.EntropyRequest)
+        assert isinstance(ret, proto.EntropyRequest)
         internal_entropy = self.client.debug.read_reset_entropy()
         ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
-        self.assertIsInstance(ret, proto.Success)
+        assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
-        self.assertTrue(resp.initialized)
-        self.assertTrue(resp.needs_backup)
+        assert resp.initialized is True
+        assert resp.needs_backup is True
 
         # Generate mnemonic locally
-        entropy = common.generate_entropy(strength, internal_entropy, external_entropy)
+        entropy = generate_entropy(strength, internal_entropy, external_entropy)
         expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
 
         # start Backup workflow
@@ -60,7 +59,7 @@ class TestMsgResetDeviceSkipbackup(common.TrezorTest):
 
         mnemonic = []
         for _ in range(strength // 32 * 3):
-            self.assertIsInstance(ret, proto.ButtonRequest)
+            assert isinstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_reset_word())
             self.client.debug.press_yes()
             self.client.call_raw(proto.ButtonAck())
@@ -68,25 +67,25 @@ class TestMsgResetDeviceSkipbackup(common.TrezorTest):
         mnemonic = ' '.join(mnemonic)
 
         # Compare that device generated proper mnemonic for given entropies
-        self.assertEqual(mnemonic, expected_mnemonic)
+        assert mnemonic == expected_mnemonic
 
         mnemonic = []
         for _ in range(strength // 32 * 3):
-            self.assertIsInstance(ret, proto.ButtonRequest)
+            assert isinstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_reset_word())
             self.client.debug.press_yes()
             resp = self.client.call_raw(proto.ButtonAck())
 
-        self.assertIsInstance(resp, proto.Success)
+        assert isinstance(resp, proto.Success)
 
         mnemonic = ' '.join(mnemonic)
 
         # Compare that second pass printed out the same mnemonic once again
-        self.assertEqual(mnemonic, expected_mnemonic)
+        assert mnemonic == expected_mnemonic
 
         # start backup again - should fail
         ret = self.client.call_raw(proto.BackupDevice())
-        self.assertIsInstance(ret, proto.Failure)
+        assert isinstance(ret, proto.Failure)
 
     def test_reset_device_skip_backup_break(self):
 
@@ -104,27 +103,27 @@ class TestMsgResetDeviceSkipbackup(common.TrezorTest):
         ))
 
         # Provide entropy
-        self.assertIsInstance(ret, proto.EntropyRequest)
+        assert isinstance(ret, proto.EntropyRequest)
         ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
-        self.assertIsInstance(ret, proto.Success)
+        assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
-        self.assertTrue(resp.initialized)
-        self.assertTrue(resp.needs_backup)
+        assert resp.initialized is True
+        assert resp.needs_backup is True
 
         # start Backup workflow
         ret = self.client.call_raw(proto.BackupDevice())
 
         # send Initialize -> break workflow
         ret = self.client.call_raw(proto.Initialize())
-        self.assertIsInstance(resp, proto.Features)
+        assert isinstance(resp, proto.Features)
 
         # start backup again - should fail
         ret = self.client.call_raw(proto.BackupDevice())
-        self.assertIsInstance(ret, proto.Failure)
+        assert isinstance(ret, proto.Failure)
 
     def test_initialized_device_backup_fail(self):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.call_raw(proto.BackupDevice())
-        self.assertIsInstance(ret, proto.Failure)
+        assert isinstance(ret, proto.Failure)

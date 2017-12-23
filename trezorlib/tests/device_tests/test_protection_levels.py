@@ -16,17 +16,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import binascii
-import pytest
+from .common import *
 from trezorlib import messages as proto
 
 
-TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d5f65e = unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
 
 @pytest.mark.skip_t2
-class TestProtectionLevels(common.TrezorTest):
+class TestProtectionLevels(TrezorTest):
 
     def test_initialize(self):
         with self.client:
@@ -116,8 +114,8 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.load_device_by_mnemonic('this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
 
         # This must fail, because device is already initialized
-        self.assertRaises(Exception, self.client.load_device_by_mnemonic,
-                          'this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
+        with pytest.raises(Exception):
+            self.client.load_device_by_mnemonic('this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
 
     def test_reset_device(self):
         with self.client:
@@ -125,7 +123,8 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.reset_device(False, 128, True, False, 'label', 'english')
 
         # This must fail, because device is already initialized
-        self.assertRaises(Exception, self.client.reset_device, False, 128, True, False, 'label', 'english')
+        with pytest.raises(Exception):
+            self.client.reset_device(False, 128, True, False, 'label', 'english')
 
     def test_recovery_device(self):
         with self.client:
@@ -134,7 +133,8 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.recovery_device(12, False, False, 'label', 'english')
 
         # This must fail, because device is already initialized
-        self.assertRaises(Exception, self.client.recovery_device, 12, False, False, 'label', 'english')
+        with pytest.raises(Exception):
+            self.client.recovery_device(12, False, False, 'label', 'english')
 
     def test_sign_message(self):
         with self.client:
@@ -154,7 +154,7 @@ class TestProtectionLevels(common.TrezorTest):
             self.client.verify_message(
                 'Bitcoin',
                 '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-                binascii.unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
+                unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
                 'This is an example of a signed message.')
 
     def test_signtx(self):

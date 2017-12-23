@@ -16,14 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import common
-import pytest
+from .common import *
 
 from trezorlib import messages as proto
 
 
 @pytest.mark.skip_t2
-class TestMsgClearsession(common.TrezorTest):
+class TestMsgClearsession(TrezorTest):
 
     def test_clearsession(self):
         self.setup_mnemonic_pin_passphrase()
@@ -31,13 +30,13 @@ class TestMsgClearsession(common.TrezorTest):
         with self.client:
             self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            self.assertEqual(res, 'random data')
+            assert res == 'random data'
 
         with self.client:
             # pin and passphrase are cached
             self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            self.assertEqual(res, 'random data')
+            assert res == 'random data'
 
         self.client.clear_session()
 
@@ -45,10 +44,10 @@ class TestMsgClearsession(common.TrezorTest):
         with self.client:
             self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            self.assertEqual(res, 'random data')
+            assert res == 'random data'
 
         with self.client:
             # pin and passphrase are cached
             self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.Success()])
             res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            self.assertEqual(res, 'random data')
+            assert res == 'random data'

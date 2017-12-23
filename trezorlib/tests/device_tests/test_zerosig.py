@@ -18,19 +18,18 @@
 
 from __future__ import print_function
 
-import binascii
 import sys
-from . import common
+from .common import *
 
 from trezorlib import messages as proto
 
 
-TXHASH_d5f65e = binascii.unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d5f65e = unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
 
 # address_n = [177] < 68
 # address_n = [16518] < 66
-class TestZerosig(common.TrezorTest):
+class TestZerosig(TrezorTest):
 
     '''
     def test_mine_zero_signature(self):
@@ -59,7 +58,7 @@ class TestZerosig(common.TrezorTest):
             print(siglen)
             if siglen < 67:
                 print("!!!!", n)
-                print(binascii.hexlify(tx.serialized_tx))
+                print(hexlify(tx.serialized_tx))
                 return
     '''
 
@@ -84,7 +83,7 @@ class TestZerosig(common.TrezorTest):
         siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
-        self.assertEqual(siglen, 67)
+        assert siglen == 67
 
     def test_two_zero_signature(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -107,4 +106,4 @@ class TestZerosig(common.TrezorTest):
         siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
-        self.assertEqual(siglen, 66)
+        assert siglen == 66
