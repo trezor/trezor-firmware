@@ -94,19 +94,29 @@ CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1
 
+define GENERATE_CODE
+# $(1) - Basename for script and output header file
+# $(2) - Dependencies
+# $(3) - Additional output files
+
+$(1).h $(3): $(1).py $(2)
+	$(PYTHON) $(1).py
+
+# Serialize build for parallel Make
+$(1).h: $(3)
+
+clean::
+	rm -f $(1).h $(3)
+endef
+
+$(eval $(call GENERATE_CODE,nem_mosaics,nem_mosaics.json,nem_mosaics.c))
+$(eval $(call GENERATE_CODE,bl_data,../bootloader/bootloader.bin))
+
 coins_count.h: coins-gen.py coins.json
 	$(PYTHON) $< count > $@
 
 coins_array.h: coins-gen.py coins.json
 	$(PYTHON) $< array > $@
 
-nem_mosaics.c nem_mosaics.h: nem_mosaics.py nem_mosaics.json
-	$(PYTHON) $<
-
-bl_data.h: bl_data-gen.py ../bootloader/bootloader.bin
-	$(PYTHON) $<
-
 clean::
 	rm -f coins_count.h coins_array.h
-	rm -f nem_mosaics.c nem_mosaics.h
-	rm -f bl_data.h
