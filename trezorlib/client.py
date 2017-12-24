@@ -247,7 +247,7 @@ class TextUIMixin(object):
                 return proto.WordAck(word='\x08')
 
             # ignore middle column if only 6 keys requested.
-            if msg.type == proto.WordRequestType_Matrix6 and character in ('2', '5', '8'):
+            if msg.type == proto.WordRequestType.Matrix6 and character in ('2', '5', '8'):
                 continue
 
             if character.isdigit():
@@ -285,8 +285,8 @@ class TextUIMixin(object):
             exit()
 
     def callback_WordRequest(self, msg):
-        if msg.type in (proto.WordRequestType_Matrix9,
-                        proto.WordRequestType_Matrix6):
+        if msg.type in (proto.WordRequestType.Matrix9,
+                        proto.WordRequestType.Matrix6):
             return self.callback_RecoveryMatrix(msg)
         log("Enter one word of mnemonic: ")
         word = input()
