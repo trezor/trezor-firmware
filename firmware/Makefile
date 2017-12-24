@@ -16,6 +16,7 @@ OBJS += trezor.o
 OBJS += pinmatrix.o
 OBJS += fsm.o
 OBJS += coins.o
+OBJS += coin_info.o
 OBJS += transaction.o
 OBJS += protect.o
 OBJS += layout2.o
@@ -109,14 +110,6 @@ clean::
 	rm -f $(1).h $(3)
 endef
 
+$(eval $(call GENERATE_CODE,coin_info,coins.json,coin_info.c))
 $(eval $(call GENERATE_CODE,nem_mosaics,nem_mosaics.json,nem_mosaics.c))
 $(eval $(call GENERATE_CODE,bl_data,../bootloader/bootloader.bin))
-
-coins_count.h: coins-gen.py coins.json
-	$(PYTHON) $< count > $@
-
-coins_array.h: coins-gen.py coins.json
-	$(PYTHON) $< array > $@
-
-clean::
-	rm -f coins_count.h coins_array.h

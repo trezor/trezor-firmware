@@ -1,6 +1,4 @@
-coins_array.h
-coins_count.h
-
+coin_info.[ch]
 nem_mosaics.[ch]
 
 bl_data.h

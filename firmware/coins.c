@@ -20,15 +20,8 @@
 #include <string.h>
 #include "coins.h"
 #include "address.h"
-#include "curves.h"
 #include "ecdsa.h"
 #include "base58.h"
-#include "secp256k1.h"
-
-// filled CoinInfo structure defined in coins.h
-const CoinInfo coins[COINS_COUNT] = {
-#include "coins_array.h"
-};
 
 const CoinInfo *coinByName(const char *name)
 {

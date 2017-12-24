@@ -24,7 +24,6 @@
 #include <stdbool.h>
 
 #include "bip32.h"
-#include "coins_count.h"
 #include "hasher.h"
 
 typedef struct _CoinInfo {
@@ -49,7 +48,7 @@ typedef struct _CoinInfo {
 	const curve_info *curve;
 } CoinInfo;
 
-extern const CoinInfo coins[COINS_COUNT];
+#include "coin_info.h"
 
 const CoinInfo *coinByName(const char *name);
 const CoinInfo *coinByAddressType(uint32_t address_type);
