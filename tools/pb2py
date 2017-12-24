@@ -9,7 +9,7 @@ import argparse
 
 
 def import_pb2(name):
-    return importlib.import_module("pb2.%s_pb2" % name)
+    return importlib.import_module("%s_pb2" % name)
 
 
 def create_message_import(name):
@@ -163,8 +163,8 @@ def write_to_file(genpath, t, out):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('module', type=import_pb2, help="Name of module to generate")
-    parser.add_argument('genpath', type=str, help="Directory for generated source code")
+    parser.add_argument('module', help="Name of module to generate")
+    parser.add_argument('genpath', help="Directory for generated source code")
     parser.add_argument('-P', '--protobuf-module', default="protobuf", help="Name of protobuf module")
     parser.add_argument('-i', '--indexfile', type=argparse.FileType('a'), help="Generate index file of wire types")
     parser.add_argument('-l', '--modlist', type=argparse.FileType('a'), help="Generate list of modules")
@@ -175,4 +175,7 @@ if __name__ == '__main__':
     if args.protopath:
         sys.path.append(args.protopath)
 
-    process_file(args.module.DESCRIPTOR, args.protobuf_module, args.genpath, args.indexfile, args.modlist, args.micropython)
+    # This must be done after sys.path.append
+    module = import_pb2(args.module)
+
+    process_file(module.DESCRIPTOR, args.protobuf_module, args.genpath, args.indexfile, args.modlist, args.micropython)
