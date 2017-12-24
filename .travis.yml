@@ -35,8 +35,7 @@ matrix:
         - $PYTHON -m pip install --user rlp
         - $PYTHON -m pip install --user --no-deps git+https://github.com/trezor/python-trezor@master
       script:
-        - script/cibuild
-        - script/test -k 'not skip_t1'
+        - script/cibuild && script/test -k 'not skip_t1'
 
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
