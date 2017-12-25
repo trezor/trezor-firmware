@@ -31,6 +31,7 @@ from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
 from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib.coins import coins_txapi
+from trezorlib.ckd_public import PRIME_DERIVATION_FLAG
 
 
 class ChoiceType(click.Choice):
@@ -52,6 +53,12 @@ CHOICE_INPUT_SCRIPT_TYPE = ChoiceType({
     'address':    proto.InputScriptType.SPENDADDRESS,
     'segwit':     proto.InputScriptType.SPENDWITNESS,
     'p2shsegwit': proto.InputScriptType.SPENDP2SHWITNESS,
+})
+
+CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
+    'address':    proto.OutputScriptType.PAYTOADDRESS,
+    'segwit':     proto.OutputScriptType.PAYTOWITNESS,
+    'p2shsegwit': proto.OutputScriptType.PAYTOP2SHWITNESS,
 })
 
 
@@ -475,6 +482,16 @@ def sign_tx(connect, coin):
 
     client.set_tx_api(txapi)
 
+    def default_script_type(address_n):
+        script_type = 'address'
+
+        if address_n is None:
+            pass
+        elif address_n[0] == (49 | PRIME_DERIVATION_FLAG):
+            script_type = 'p2shsegwit'
+
+        return script_type
+
     def outpoint(s):
         txid, vout = s.split(':')
         return binascii.unhexlify(txid), int(vout)
@@ -488,7 +505,7 @@ def sign_tx(connect, coin):
         prev_hash, prev_index = prev
         address_n = click.prompt('BIP-32 path to derive the key', type=client.expand_path)
         amount = click.prompt('Input amount (satoshis)', type=int, default=0)
-        script_type = click.prompt('Input type', type=CHOICE_INPUT_SCRIPT_TYPE, default='address')
+        script_type = click.prompt('Input type', type=CHOICE_INPUT_SCRIPT_TYPE, default=default_script_type(address_n))
         inputs.append(proto.TxInputType(
             address_n=address_n,
             prev_hash=prev_hash,
@@ -500,14 +517,20 @@ def sign_tx(connect, coin):
     outputs = []
     while True:
         click.echo()
-        address = click.prompt('Pay to address', default='')
-        if not address:
-            break
+        address = click.prompt('Output address (for non-change output)', default='')
+        if address:
+            address_n = None
+        else:
+            address_n = click.prompt('BIP-32 path (for change output)', type=client.expand_path, default='')
+            if not address_n:
+                break
         amount = click.prompt('Amount to spend (satoshis)', type=int)
+        script_type = click.prompt('Output type', type=CHOICE_OUTPUT_SCRIPT_TYPE, default=default_script_type(address_n))
         outputs.append(proto.TxOutputType(
+            address_n=address_n,
             address=address,
             amount=amount,
-            script_type=proto.OutputScriptType.PAYTOADDRESS,
+            script_type=script_type,
         ))
 
     (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs)
