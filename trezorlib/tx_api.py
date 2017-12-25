@@ -158,7 +158,7 @@ class TxApiBlockCypher(TxApi):
         t.lock_time = data['lock_time']
 
         for vin in data['inputs']:
-            i = t.inputs.add()
+            i = t._add_inputs()
             if 'prev_hash' not in vin:
                 i.prev_hash = b"\0" * 32
                 i.prev_index = 0xffffffff  # signed int -1
@@ -171,7 +171,7 @@ class TxApiBlockCypher(TxApi):
                 i.sequence = vin['sequence']
 
         for vout in data['outputs']:
-            o = t.bin_outputs.add()
+            o = t._add_bin_outputs()
             o.amount = int(str(vout['value']), 10)
             o.script_pubkey = binascii.unhexlify(vout['script'])
 
@@ -185,5 +185,7 @@ TxApiDash = TxApiInsight(network='insight_dash', url='https://dash-bitcore1.trez
 TxApiZcash = TxApiInsight(network='insight_zcash', url='https://zec-bitcore1.trezor.io/api/', zcash=True)
 TxApiBcash = TxApiInsight(network='insight_zcash', url='https://bch-bitcore2.trezor.io/api/')
 TxApiDecredTestnet = TxApiInsight(network='insight_decred_testnet', url='https://testnet.decred.org/api/')
+
+TxApiDogecoin = TxApiBlockCypher(network='blockcypher_dogecoin', url='http://api.blockcypher.com/v1/doge/main/')
 
 TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
