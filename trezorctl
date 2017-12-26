@@ -505,13 +505,16 @@ def sign_tx(connect, coin):
         prev_hash, prev_index = prev
         address_n = click.prompt('BIP-32 path to derive the key', type=client.expand_path)
         amount = click.prompt('Input amount (satoshis)', type=int, default=0)
+        sequence = click.prompt('Sequence Number to use (RBF opt-in enabled by default)', type=int, default=0xfffffffd)
         script_type = click.prompt('Input type', type=CHOICE_INPUT_SCRIPT_TYPE, default=default_script_type(address_n))
+        script_type = script_type if isinstance(script_type, int) else CHOICE_INPUT_SCRIPT_TYPE.typemap[script_type]
         inputs.append(proto.TxInputType(
             address_n=address_n,
             prev_hash=prev_hash,
             prev_index=prev_index,
             amount=amount,
             script_type=script_type,
+            sequence=sequence,
         ))
 
     outputs = []
@@ -526,6 +529,7 @@ def sign_tx(connect, coin):
                 break
         amount = click.prompt('Amount to spend (satoshis)', type=int)
         script_type = click.prompt('Output type', type=CHOICE_OUTPUT_SCRIPT_TYPE, default=default_script_type(address_n))
+        script_type = script_type if isinstance(script_type, int) else CHOICE_OUTPUT_SCRIPT_TYPE.typemap[script_type]
         outputs.append(proto.TxOutputType(
             address_n=address_n,
             address=address,
@@ -533,7 +537,10 @@ def sign_tx(connect, coin):
             script_type=script_type,
         ))
 
-    (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs)
+    tx_version = click.prompt('Transaction version', type=int, default=2)
+    tx_locktime = click.prompt('Transaction locktime', type=int, default=0)
+
+    (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs, tx_version, tx_locktime)
 
     client.close()
 
