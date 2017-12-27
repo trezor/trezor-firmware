@@ -1,15 +1,10 @@
-from trezor import wire, ui
 from trezor.utils import unimport
 from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
-from trezor.messages import ButtonRequestType
 from trezor.messages import FailureType
-from apps.common.confirm import confirm
 from apps.common.hash_writer import HashWriter
-from trezor.ui.text import Text
 from trezor.crypto import rlp
-from apps.ethereum import networks, tokens
-
+from apps.ethereum import tokens, layout
 
 # maximum supported chain id
 MAX_CHAIN_ID = 2147483630
@@ -33,16 +28,16 @@ async def ethereum_sign_tx(ctx, msg):
        msg.data_initial_chunk[:16] == b'\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':
         token = tokens.token_by_chain_address(msg.chain_id, msg.to)
 
-    if token is not None:
-        # todo: await layout_ethereum_confirm_tx(msg->data_initial_chunk.bytes + 16, 20, msg->data_initial_chunk.bytes + 36, 32, token);
-        await layout_ethereum_confirm_tx(ctx, msg.to, msg.value, msg.chain_id, token)
+    if token is None:
+        await layout.confirm_tx(ctx, msg.to, msg.value, msg.chain_id, token)
     else:
-        await layout_ethereum_confirm_tx(ctx, msg.to, msg.value, msg.chain_id, token)
+        # todo is this tested?
+        await layout.confirm_tx(ctx, msg.data_initial_chunk[16:36],  msg.data_initial_chunk.bytes[36:68], msg.chain_id, token)
 
-    # if token == None and msg.data_length > 0:
-    #     layoutEthereumData(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size, data_total);
+    if token is None and msg.data_length > 0:
+        await layout.confirm_data(ctx, msg.data_initial_chunk, data_total)
 
-    # todo layoutEthereumFee
+    await layout.confirm_fee(ctx, msg.value, msg.gas_price, msg.gas_limit, token)
 
     data = bytearray()
     data += msg.data_initial_chunk
@@ -63,7 +58,7 @@ async def ethereum_sign_tx(ctx, msg):
         sha.extend(rlp.encode(data, False))
 
     while data_left > 0:
-        resp = await send_request_chunk(ctx, data_left, data_total)
+        resp = await send_request_chunk(ctx, data_left)
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
 
@@ -73,7 +68,7 @@ async def ethereum_sign_tx(ctx, msg):
         sha.extend(rlp.encode(0))
         sha.extend(rlp.encode(0))
 
-    digest = sha.get_digest(True)
+    digest = sha.get_digest(True)  # True -> use keccak mode
     return await send_signature(ctx, msg, digest)
 
 
@@ -91,7 +86,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(ctx, data_left: int, data_total: int):
+async def send_request_chunk(ctx, data_left: int):
     from trezor.messages.wire_types import EthereumTxAck
     # todo layoutProgress ?
     req = EthereumTxRequest()
@@ -183,28 +178,3 @@ def sanitize(msg):
     if msg.chain_id is None:
         msg.chain_id = 0
     return msg
-
-
-@unimport
-async def layout_ethereum_confirm_tx(ctx, to, value, chain_id, token=None):
-    content = Text('Confirm transaction', ui.ICON_RESET,
-                   ui.BOLD, format_amount(value, token, chain_id),
-                   ui.NORMAL, 'to',
-                   ui.MONO, to)
-
-    return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
-
-
-def format_amount(value, token, chain_id):
-    value = int.from_bytes(value, 'little')
-    if token:
-        suffix = token.ticker
-        decimals = token.decimals
-    elif value < 1e18:
-        suffix = 'Wei'
-        decimals = 0
-    else:
-        decimals = 18
-        suffix = networks.suffix_by_chain_id(chain_id)
-
-    return '%s %s' % (value // 10 ** decimals, suffix)
