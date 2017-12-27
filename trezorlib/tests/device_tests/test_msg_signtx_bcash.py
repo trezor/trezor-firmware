@@ -17,11 +17,9 @@
 
 from .common import *
 from trezorlib import messages as proto
-from trezorlib.tx_api import TxApiInsight
+from trezorlib.tx_api import TxApiBcash
 from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
-
-TxApiBitcoinCash = TxApiInsight(network='insight_bch', url='https://bch-bitcore2.trezor.io/api/')
 
 
 @pytest.mark.skip_t2
@@ -29,7 +27,7 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinCash)
+        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=self.client.expand_path("44'/145'/0'/0/0"),
             # 1MH9KKcvdCTY44xVDC2k3fjBbX5Cz29N1q
@@ -66,7 +64,7 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_nochange(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinCash)
+        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=self.client.expand_path("44'/145'/0'/1/0"),
             # 1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE
@@ -106,7 +104,7 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_attack_amount(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinCash)
+        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=self.client.expand_path("44'/145'/0'/1/0"),
             # 1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE
@@ -167,7 +165,7 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinCash)
+        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=self.client.expand_path("44'/145'/1000'/0/0"),
             # 1MH9KKcvdCTY44xVDC2k3fjBbX5Cz29N1q
@@ -222,7 +220,7 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_multisig_wrongchange(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinCash)
+        self.client.set_tx_api(TxApiBcash)
         xpubs = []
         for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
@@ -275,7 +273,7 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_multisig_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinCash)
+        self.client.set_tx_api(TxApiBcash)
         xpubs = []
         for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
