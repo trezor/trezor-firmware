@@ -27,6 +27,7 @@ import hashlib
 import unicodedata
 import json
 import getpass
+import warnings
 
 from mnemonic import Mnemonic
 
@@ -42,6 +43,9 @@ try:
 except NameError:
     pass
 
+
+if sys.version_info.major < 3:
+    warnings.warn("Trezorlib will stop supporting Python2 in next versions.", DeprecationWarning)
 
 # try:
 #     from PIL import Image

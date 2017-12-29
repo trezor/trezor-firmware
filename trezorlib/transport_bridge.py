@@ -20,7 +20,6 @@
 from __future__ import absolute_import
 
 import requests
-from google.protobuf import json_format
 
 from . import messages
 from .transport import Transport, TransportException
@@ -99,9 +98,7 @@ class BridgeTransport(Transport):
 
     def write(self, msg):
         msgname = msg.__class__.__name__
-        msgjson = json_format.MessageToJson(
-            msg, preserving_proto_field_name=True)
-        payload = '{"type": "%s", "message": %s}' % (msgname, msgjson)
+        payload = json.dumps({"type": msgname, "message": msg.__dict__})
         r = self.conn.post(
             TREZORD_HOST + '/call/%s' % self.session, data=payload)
         if r.status_code != 200:
@@ -114,6 +111,6 @@ class BridgeTransport(Transport):
             raise TransportException('No response stored')
         msgtype = getattr(messages, self.response['type'])
         msg = msgtype()
-        msg = json_format.ParseDict(self.response['message'], msg)
+        msg = msg.__dict__.update(json.loads(self.response['message']))
         self.response = None
         return msg
