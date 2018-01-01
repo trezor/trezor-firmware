@@ -32,14 +32,16 @@ static void vcp_intr(void)
 
 static void vcp_puts(const char *s, size_t len)
 {
-    ensure(usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *) s, len, -1), NULL);
+    int r = usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *) s, len, -1);
+    (void)r;
 }
 
 static char vcp_getchar(void)
 {
     uint8_t c = 0;
-    ensure(usb_vcp_read_blocking(VCP_IFACE, &c, 1, -1), NULL);
-    return (char) c;
+    int r = usb_vcp_read_blocking(VCP_IFACE, &c, 1, -1);
+    (void)r;
+    return (char)c;
 }
 
 static void vcp_readline(char *buf, size_t len)

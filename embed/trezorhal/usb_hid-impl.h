@@ -182,7 +182,7 @@ int usb_hid_read_select(uint32_t timeout) {
     const uint32_t start = HAL_GetTick();
     for (;;) {
         for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-            if (usb_hid_can_read(i)) {
+            if (sectrue == usb_hid_can_read(i)) {
                 return i;
             }
         }
@@ -196,7 +196,7 @@ int usb_hid_read_select(uint32_t timeout) {
 
 int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int timeout) {
     const uint32_t start = HAL_GetTick();
-    while (!usb_hid_can_read(iface_num)) {
+    while (sectrue != usb_hid_can_read(iface_num)) {
         if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
             return 0; // Timeout
         }
@@ -207,7 +207,7 @@ int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int tim
 
 int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, int timeout) {
     const uint32_t start = HAL_GetTick();
-    while (!usb_hid_can_write(iface_num)) {
+    while (sectrue != usb_hid_can_write(iface_num)) {
         if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
             return 0; // Timeout
         }

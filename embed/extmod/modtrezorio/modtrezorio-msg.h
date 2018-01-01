@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t t
                 }
             } else
             if (mode == POLL_READ) {
-                if (usb_hid_can_read(iface)) {
+                if (sectrue == usb_hid_can_read(iface)) {
                     uint8_t buf[64];
                     int l = usb_hid_read(iface, buf, sizeof(buf));
                     if (l > 0) {
@@ -72,7 +72,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t t
                 }
             } else
             if (mode == POLL_WRITE) {
-                if (usb_hid_can_write(iface)) {
+                if (sectrue == usb_hid_can_write(iface)) {
                     ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
                     ret->items[1] = mp_const_none;
                     return mp_const_true;

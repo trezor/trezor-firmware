@@ -293,7 +293,7 @@ int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
 
 int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int timeout) {
     uint32_t start = HAL_GetTick();
-    while (!usb_vcp_can_read(iface_num)) {
+    while (sectrue != usb_vcp_can_read(iface_num)) {
         if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
             return 0; // Timeout
         }
@@ -304,7 +304,7 @@ int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len, int tim
 
 int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len, int timeout) {
     uint32_t start = HAL_GetTick();
-    while (!usb_vcp_can_write(iface_num)) {
+    while (sectrue != usb_vcp_can_write(iface_num)) {
         if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
             return 0; // Timeout
         }
