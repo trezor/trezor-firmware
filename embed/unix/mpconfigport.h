@@ -85,6 +85,7 @@
 #define MICROPY_PY_BUILTINS_POW3    (1)
 #define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
 #define MICROPY_PY_ALL_SPECIAL_METHODS (0)
+#define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
 #define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
 #define MICROPY_PY_BUILTINS_SLICE_ATTRS (1)
 #define MICROPY_PY_SYS_EXIT         (1)
@@ -153,7 +154,10 @@
 // names in exception messages (may require more RAM).
 #define MICROPY_ERROR_REPORTING     (MICROPY_ERROR_REPORTING_DETAILED)
 #define MICROPY_WARNINGS            (1)
+#define MICROPY_ERROR_PRINTER       (&mp_stderr_print)
 #define MICROPY_PY_STR_BYTES_CMP_WARN (1)
+
+extern const struct _mp_print_t mp_stderr_print;
 
 // Define to 1 to use undertested inefficient GC helper implementation
 // (if more efficient arch-specific one is not available).
@@ -170,14 +174,15 @@
 #define MICROPY_KBD_EXCEPTION       (1)
 #define MICROPY_ASYNC_KBD_INTR      (1)
 
-extern const struct _mp_obj_module_t mp_module_os;
-extern const struct _mp_obj_module_t mp_module_uos_vfs;
-extern const struct _mp_obj_module_t mp_module_uselect;
+// extern const struct _mp_obj_module_t mp_module_machine;
+// extern const struct _mp_obj_module_t mp_module_os;
+// extern const struct _mp_obj_module_t mp_module_uos_vfs;
+// extern const struct _mp_obj_module_t mp_module_uselect;
 extern const struct _mp_obj_module_t mp_module_time;
-extern const struct _mp_obj_module_t mp_module_termios;
-extern const struct _mp_obj_module_t mp_module_socket;
-extern const struct _mp_obj_module_t mp_module_ffi;
-extern const struct _mp_obj_module_t mp_module_jni;
+// extern const struct _mp_obj_module_t mp_module_termios;
+// extern const struct _mp_obj_module_t mp_module_socket;
+// extern const struct _mp_obj_module_t mp_module_ffi;
+// extern const struct _mp_obj_module_t mp_module_jni;
 
 extern const struct _mp_obj_module_t mp_module_trezorconfig;
 extern const struct _mp_obj_module_t mp_module_trezorcrypto;
@@ -252,7 +257,8 @@ extern const struct _mp_obj_module_t mp_module_trezorutils;
     MICROPY_PY_JNI_DEF \
     MICROPY_PY_UTIME_DEF \
     MICROPY_PY_SOCKET_DEF \
-    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) }, \
+    /* { MP_ROM_QSTR(MP_QSTR_umachine), MP_ROM_PTR(&mp_module_machine) }, */ \
+    /* { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) }, */ \
     MICROPY_PY_UOS_VFS_DEF \
     MICROPY_PY_USELECT_DEF \
     MICROPY_PY_TERMIOS_DEF \
