@@ -463,9 +463,11 @@ void display_text(int x, int y, const char *text, int textlen, uint8_t font, uin
 {
     x += DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
+#if TREZOR_FONT_PREFILL
     int w = display_text_width(text, textlen, font);
     int barwidth = max(w, minwidth);
     display_bar(x - 1, y - 18, barwidth + 2, 23, bgcolor);
+#endif
     display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
 }
 
@@ -474,8 +476,10 @@ void display_text_center(int x, int y, const char *text, int textlen, uint8_t fo
     x += DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
     int w = display_text_width(text, textlen, font);
+#if TREZOR_FONT_PREFILL
     int barwidth = max(w, minwidth);
     display_bar(x - barwidth / 2 - 1, y - 18, barwidth + 2, 23, bgcolor);
+#endif
     display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
@@ -484,8 +488,10 @@ void display_text_right(int x, int y, const char *text, int textlen, uint8_t fon
     x += DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
     int w = display_text_width(text, textlen, font);
+#if TREZOR_FONT_PREFILL
     int barwidth = max(w, minwidth);
     display_bar(x - barwidth - 1, y - 18, barwidth + 2, 23, bgcolor);
+#endif
     display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
 }
 

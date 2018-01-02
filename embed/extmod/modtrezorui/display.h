@@ -29,6 +29,9 @@
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #define FONT_BOLD   2
 #endif
+#ifndef TREZOR_FONT_PREFILL
+#define TREZOR_FONT_PREFILL 1
+#endif
 
 #define AVATAR_IMAGE_SIZE  144
 #define LOADER_ICON_SIZE   64

@@ -34,6 +34,7 @@ SOURCE_MOD += [
 # modtrezorui
 CPPDEFINES_MOD += [
     'TREZOR_FONT_BOLD_ENABLE',
+    ('TREZOR_FONT_PREFILL', '0'),
     ('QR_MAX_VERSION', '0'),
 ]
 SOURCE_MOD += [
