@@ -19,6 +19,7 @@
 #include "modtrezorcrypto-blake256.h"
 #include "modtrezorcrypto-blake2b.h"
 #include "modtrezorcrypto-blake2s.h"
+#include "modtrezorcrypto-chacha20poly1305.h"
 #include "modtrezorcrypto-crc.h"
 #include "modtrezorcrypto-curve25519.h"
 #include "modtrezorcrypto-ed25519.h"
@@ -42,6 +43,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_blake256), MP_ROM_PTR(&mod_trezorcrypto_Blake256_type) },
     { MP_ROM_QSTR(MP_QSTR_blake2b), MP_ROM_PTR(&mod_trezorcrypto_Blake2b_type) },
     { MP_ROM_QSTR(MP_QSTR_blake2s), MP_ROM_PTR(&mod_trezorcrypto_Blake2s_type) },
+    { MP_ROM_QSTR(MP_QSTR_chacha20poly1305), MP_ROM_PTR(&mod_trezorcrypto_ChaCha20Poly1305_type) },
     { MP_ROM_QSTR(MP_QSTR_crc), MP_ROM_PTR(&mod_trezorcrypto_crc_module) },
     { MP_ROM_QSTR(MP_QSTR_curve25519), MP_ROM_PTR(&mod_trezorcrypto_curve25519_module) },
     { MP_ROM_QSTR(MP_QSTR_ed25519), MP_ROM_PTR(&mod_trezorcrypto_ed25519_module) },
