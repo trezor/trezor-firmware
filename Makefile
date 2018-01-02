@@ -100,10 +100,10 @@ build_reflash: ## build reflash firmware + reflash image
 build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
-build_unix: ## build unix port
+build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS)
 
-build_unix_noui: ## build unix port without UI support
+build_unix_noui: res ## build unix port without UI support
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_NOUI=1
 
 build_cross: ## build mpy-cross port

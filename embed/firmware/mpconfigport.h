@@ -100,6 +100,7 @@
 #define MICROPY_PY_BUILTINS_HELP_MODULES (0)
 #define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
 #define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
+#define MICROPY_PY_COLLECTIONS        (0)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (0)
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (0)
 #define MICROPY_PY_CMATH            (0)
@@ -141,8 +142,7 @@
 #define MICROPY_PY_TREZORUTILS      (1)
 
 // extra built in names to add to the global namespace
-#define MICROPY_PORT_BUILTINS \
-    { MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mp_builtin_open_obj) },
+#define MICROPY_PORT_BUILTINS
 
 // extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t mp_module_utime;

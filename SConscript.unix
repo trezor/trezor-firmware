@@ -103,9 +103,9 @@ SOURCE_MOD += [
 ]
 
 # modutime
-# SOURCE_MOD += [
-#     'embed/firmware/modutime.c',
-# ]
+SOURCE_MOD += [
+    'vendor/micropython/ports/unix/modtime.c',
+]
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modubinascii.c',
@@ -114,7 +114,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/lib/mp-readline/readline.c',
-    'vendor/micropython/lib/timeutils/timeutils.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
     'vendor/micropython/py/asmbase.c',
@@ -141,16 +140,11 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/map.c',
     'vendor/micropython/py/modarray.c',
     'vendor/micropython/py/modbuiltins.c',
-    'vendor/micropython/py/modcmath.c',
-    'vendor/micropython/py/modcollections.c',
     'vendor/micropython/py/modgc.c',
-    'vendor/micropython/py/modio.c',
     'vendor/micropython/py/modmath.c',
     'vendor/micropython/py/modmicropython.c',
     'vendor/micropython/py/modstruct.c',
     'vendor/micropython/py/modsys.c',
-    'vendor/micropython/py/modthread.c',
-    'vendor/micropython/py/moduerrno.c',
     'vendor/micropython/py/mpprint.c',
     'vendor/micropython/py/mpstate.c',
     'vendor/micropython/py/mpz.c',
@@ -222,10 +216,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/main.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
-    'vendor/micropython/ports/unix/mpthreadport.c',
     'vendor/micropython/ports/unix/input.c',
-    'vendor/micropython/ports/unix/file.c',
-    'vendor/micropython/ports/unix/modtime.c',
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
     'embed/unix/flash.c',

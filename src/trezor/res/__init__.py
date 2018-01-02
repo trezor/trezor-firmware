@@ -8,10 +8,7 @@ def load(name):
     '''
     Loads resource of a given name as bytes.
     '''
-    if resdata and name in resdata:
-        return resdata[name]
-    with open(name, 'rb') as f:
-        return f.read()
+    return resdata[name]
 
 
 def gettext(message):

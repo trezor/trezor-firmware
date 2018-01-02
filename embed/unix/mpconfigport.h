@@ -94,15 +94,17 @@
 #else
     #define MICROPY_PY_SYS_PLATFORM  "linux"
 #endif
-#define MICROPY_PY_SYS_MAXSIZE      (1)
-#define MICROPY_PY_SYS_STDFILES     (1)
+#define MICROPY_PY_SYS_MAXSIZE      (0)
+#define MICROPY_PY_SYS_STDFILES     (0)
 #define MICROPY_PY_SYS_EXC_INFO     (1)
+#define MICROPY_PY_COLLECTIONS      (0)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (0)
 #ifndef MICROPY_PY_MATH_SPECIAL_FUNCTIONS
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (0)
 #endif
 #define MICROPY_PY_CMATH            (0)
-#define MICROPY_PY_IO_FILEIO        (1)
+#define MICROPY_PY_IO               (0)
+#define MICROPY_PY_IO_FILEIO        (0)
 #define MICROPY_PY_IO_RESOURCE_STREAM (0)
 #define MICROPY_PY_GC_COLLECT_RETVAL (1)
 #define MICROPY_MODULE_FROZEN_STR   (0)
@@ -330,8 +332,7 @@ void mp_unix_mark_exec(void);
 #endif
 #endif
 
-#define MICROPY_PORT_BUILTINS \
-    { MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mp_builtin_open_obj) },
+#define MICROPY_PORT_BUILTINS
 
 #define MP_STATE_PORT MP_STATE_VM
 
