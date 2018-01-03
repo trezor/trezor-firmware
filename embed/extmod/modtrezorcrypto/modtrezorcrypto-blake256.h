@@ -57,13 +57,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Blake256_update_obj, mod_trezo
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Blake256_digest(mp_obj_t self) {
     mp_obj_Blake256_t *o = MP_OBJ_TO_PTR(self);
-    vstr_t vstr;
-    vstr_init_len(&vstr, BLAKE256_DIGEST_LENGTH);
+    uint8_t hash[BLAKE256_DIGEST_LENGTH];
     BLAKE256_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(BLAKE256_CTX));
-    blake256_Final(&ctx, (uint8_t *)vstr.buf);
+    blake256_Final(&ctx, hash);
     memset(&ctx, 0, sizeof(BLAKE256_CTX));
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(hash, sizeof(hash));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake256_digest_obj, mod_trezorcrypto_Blake256_digest);
 

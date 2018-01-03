@@ -51,11 +51,10 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self, mp_obj_
     mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t in;
     mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
-    vstr_t vstr;
-    vstr_init_len(&vstr, in.len);
-    chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
+    uint8_t out[in.len];
+    chacha20poly1305_encrypt(&(o->ctx), in.buf, out, in.len);
     o->plen += in.len;
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj, mod_trezorcrypto_ChaCha20Poly1305_encrypt);
 
@@ -67,11 +66,10 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self, mp_obj_
     mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
     mp_buffer_info_t in;
     mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
-    vstr_t vstr;
-    vstr_init_len(&vstr, in.len);
-    chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
+    uint8_t out[in.len];
+    chacha20poly1305_decrypt(&(o->ctx), in.buf, out, in.len);
     o->plen += in.len;
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj, mod_trezorcrypto_ChaCha20Poly1305_decrypt);
 
@@ -97,10 +95,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj, mod
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_finish(mp_obj_t self) {
     mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-    vstr_t vstr;
-    vstr_init_len(&vstr, 16);
-    rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)vstr.buf);
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t out[16];
+    rfc7539_finish(&(o->ctx), o->alen, o->plen, out);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ChaCha20Poly1305_finish_obj, mod_trezorcrypto_ChaCha20Poly1305_finish);
 

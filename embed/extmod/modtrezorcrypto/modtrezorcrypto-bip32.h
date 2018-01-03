@@ -167,23 +167,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_path_obj, mod_tr
 
 STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public, uint32_t version) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-
-    vstr_t vstr;
-    vstr_init(&vstr, XPUB_MAXLEN);
-
+    char xpub[XPUB_MAXLEN];
     int written;
     if (use_public) {
         hdnode_fill_public_key(&o->hdnode);
-        written = hdnode_serialize_public(&o->hdnode, o->fingerprint, version, vstr.buf, vstr.alloc);
+        written = hdnode_serialize_public(&o->hdnode, o->fingerprint, version, xpub, XPUB_MAXLEN);
     } else {
-        written = hdnode_serialize_private(&o->hdnode, o->fingerprint, version, vstr.buf, vstr.alloc);
+        written = hdnode_serialize_private(&o->hdnode, o->fingerprint, version, xpub, XPUB_MAXLEN);
     }
     if (written <= 0) {
         mp_raise_ValueError("Failed to serialize");
     }
-    vstr.len = written - 1; // written includes 0 at the end
-
-    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+    return mp_obj_new_str(xpub, written - 1, false);  // written includes 0 at the end
 }
 
 /// def serialize_public(self, version: int) -> str:
@@ -256,7 +251,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_child_num_obj, mod_trez
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_HDNode_chain_code(mp_obj_t self) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-    return mp_obj_new_str_of_type(&mp_type_bytes, o->hdnode.chain_code, sizeof(o->hdnode.chain_code));
+    return mp_obj_new_bytes(o->hdnode.chain_code, sizeof(o->hdnode.chain_code));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_chain_code_obj, mod_trezorcrypto_HDNode_chain_code);
 
@@ -266,7 +261,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_chain_code_obj, mod_tre
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_HDNode_private_key(mp_obj_t self) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-    return mp_obj_new_str_of_type(&mp_type_bytes, o->hdnode.private_key, sizeof(o->hdnode.private_key));
+    return mp_obj_new_bytes(o->hdnode.private_key, sizeof(o->hdnode.private_key));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_obj, mod_trezorcrypto_HDNode_private_key);
 
@@ -277,7 +272,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_obj, mod_tr
 STATIC mp_obj_t mod_trezorcrypto_HDNode_public_key(mp_obj_t self) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
     hdnode_fill_public_key(&o->hdnode);
-    return mp_obj_new_str_of_type(&mp_type_bytes, o->hdnode.public_key, sizeof(o->hdnode.public_key));
+    return mp_obj_new_bytes(o->hdnode.public_key, sizeof(o->hdnode.public_key));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_public_key_obj, mod_trezorcrypto_HDNode_public_key);
 
@@ -289,12 +284,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self, mp_obj_t version)
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
     uint32_t v = mp_obj_get_int_truncated(version);
-    vstr_t vstr;
-    vstr_init(&vstr, ADDRESS_MAXLEN);
-
-    hdnode_get_address(&o->hdnode, v, vstr.buf, vstr.alloc);
-    vstr.len = strlen(vstr.buf);
-    return mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+    char address[ADDRESS_MAXLEN];
+    hdnode_get_address(&o->hdnode, v, address, ADDRESS_MAXLEN);
+    return mp_obj_new_str(address, strlen(address), false);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj, mod_trezorcrypto_HDNode_address);
 
@@ -305,11 +297,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj, mod_trezor
 STATIC mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
-    vstr_t vstr;
-    vstr_init_len(&vstr, 20);
-
-    hdnode_get_ethereum_pubkeyhash(&o->hdnode, (uint8_t *)vstr.buf);
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t pkh[20];
+    hdnode_get_ethereum_pubkeyhash(&o->hdnode, pkh);
+    return mp_obj_new_bytes(pkh, sizeof(pkh));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj, mod_trezorcrypto_HDNode_ethereum_pubkeyhash);
 

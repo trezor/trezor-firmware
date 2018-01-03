@@ -1,5 +1,4 @@
 import sys
-import uio
 
 __all__ = [
     'run_tests',
@@ -62,9 +61,7 @@ def report_test(name, test, result):
 
 
 def report_exception(exc):
-    sio = uio.StringIO()
-    sys.print_exception(exc, sio)
-    print(sio.getvalue())
+    sys.print_exception(exc)
 
 
 def report_total(total, ok, failed):

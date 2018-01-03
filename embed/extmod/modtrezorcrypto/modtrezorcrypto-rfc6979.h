@@ -45,10 +45,9 @@ STATIC mp_obj_t mod_trezorcrypto_Rfc6979_make_new(const mp_obj_type_t *type, siz
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Rfc6979_next(mp_obj_t self) {
     mp_obj_Rfc6979_t *o = MP_OBJ_TO_PTR(self);
-    vstr_t vstr;
-    vstr_init_len(&vstr, 32);
-    generate_rfc6979((uint8_t *)vstr.buf, &(o->rng));
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t out[32];
+    generate_rfc6979(out, &(o->rng));
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Rfc6979_next_obj, mod_trezorcrypto_Rfc6979_next);
 

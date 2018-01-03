@@ -78,7 +78,7 @@ STATIC mp_obj_t mod_trezorconfig_get(mp_obj_t app, mp_obj_t key) {
     if (sectrue != storage_get(appkey, &val, &len) || len == 0) {
         return mp_const_empty_bytes;
     }
-    return mp_obj_new_str_of_type(&mp_type_bytes, val, len);
+    return mp_obj_new_bytes(val, len);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_get_obj, mod_trezorconfig_get);
 

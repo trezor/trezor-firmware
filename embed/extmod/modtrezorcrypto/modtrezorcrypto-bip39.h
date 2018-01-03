@@ -22,7 +22,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_find_word(mp_obj_t prefix)
     }
     for (const char * const *w = mnemonic_wordlist(); *w != 0; w++) {
         if (strncmp(*w, pfx.buf, pfx.len) == 0) {
-            return mp_obj_new_str_of_type(&mp_type_str, (const byte *)*w, strlen(*w));
+            return mp_obj_new_str(*w, strlen(*w), false);
         }
     }
     return mp_const_none;
@@ -66,7 +66,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_generate(mp_obj_t strength) {
         mp_raise_ValueError("Invalid bit strength (only 128, 160, 192, 224 and 256 values are allowed)");
     }
     const char *mnemo = mnemonic_generate(bits);
-    return mp_obj_new_str_of_type(&mp_type_str, (uint8_t *)mnemo, strlen(mnemo));
+    return mp_obj_new_str(mnemo, strlen(mnemo), false);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_generate_obj, mod_trezorcrypto_bip39_generate);
 
@@ -81,7 +81,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_from_data(mp_obj_t data) {
         mp_raise_ValueError("Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)");
     }
     const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
-    return mp_obj_new_str_of_type(&mp_type_str, (uint8_t *)mnemo, strlen(mnemo));
+    return mp_obj_new_str(mnemo, strlen(mnemo), false);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_from_data_obj, mod_trezorcrypto_bip39_from_data);
 
@@ -105,12 +105,11 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_seed(mp_obj_t mnemonic, mp_obj_t passphra
     mp_buffer_info_t phrase;
     mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
     mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
-    vstr_t vstr;
-    vstr_init_len(&vstr, 64);
+    uint8_t seed[64];
     const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
     const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
-    mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t *)vstr.buf, NULL); // no callback for now
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    mnemonic_to_seed(pmnemonic, ppassphrase, seed, NULL); // no callback for now
+    return mp_obj_new_bytes(seed, sizeof(seed));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip39_seed_obj, mod_trezorcrypto_bip39_seed);
 

@@ -57,17 +57,16 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha3_512_update_obj, mod_trezo
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_digest(size_t n_args, const mp_obj_t *args) {
     mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(args[0]);
-    vstr_t vstr;
-    vstr_init_len(&vstr, SHA3_512_DIGEST_LENGTH);
+    uint8_t out[SHA3_512_DIGEST_LENGTH];
     SHA3_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
     if (n_args >= 1 && args[1] == mp_const_true) {
-        keccak_Final(&ctx, (uint8_t *)vstr.buf);
+        keccak_Final(&ctx, out);
     } else {
-        sha3_Final(&ctx, (uint8_t *)vstr.buf);
+        sha3_Final(&ctx, out);
     }
     memset(&ctx, 0, sizeof(SHA3_CTX));
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Sha3_512_digest_obj, 1, 2, mod_trezorcrypto_Sha3_512_digest);
 

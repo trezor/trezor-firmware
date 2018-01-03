@@ -63,10 +63,10 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t t
             if (mode == POLL_READ) {
                 if (sectrue == usb_hid_can_read(iface)) {
                     uint8_t buf[64];
-                    int l = usb_hid_read(iface, buf, sizeof(buf));
-                    if (l > 0) {
+                    int len = usb_hid_read(iface, buf, sizeof(buf));
+                    if (len > 0) {
                         ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-                        ret->items[1] = mp_obj_new_str_of_type(&mp_type_bytes, buf, l);
+                        ret->items[1] = mp_obj_new_bytes(buf, len);
                         return mp_const_true;
                     }
                 }

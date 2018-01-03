@@ -28,13 +28,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj, mod_trezor
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_random_bytes(mp_obj_t len) {
     uint32_t l = mp_obj_get_int(len);
-    if (l > 8192) {
-        mp_raise_ValueError("Maximum requested size is 8192");
+    if (l > 1024) {
+        mp_raise_ValueError("Maximum requested size is 1024");
     }
-    vstr_t vstr;
-    vstr_init_len(&vstr, l);
-    random_buffer((uint8_t *)vstr.buf, l);
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    uint8_t out[l];
+    random_buffer(out, l);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_bytes_obj, mod_trezorcrypto_random_bytes);
 

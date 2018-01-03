@@ -15,16 +15,15 @@
 ///     Generate secret key.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_generate_secret() {
-    vstr_t vstr;
-    vstr_init_len(&vstr, 32);
+    uint8_t out[32];
     for (;;) {
-        random_buffer((uint8_t *)vstr.buf, 32);
+        random_buffer(out, 32);
         // check whether secret > 0 && secret < curve_order
-        if (0 == memcmp(vstr.buf, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) continue;
-        if (0 <= memcmp(vstr.buf, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE\xBA\xAE\xDC\xE6\xAF\x48\xA0\x3B\xBF\xD2\x5E\x8C\xD0\x36\x41\x41", 32)) continue;
+        if (0 == memcmp(out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) continue;
+        if (0 <= memcmp(out, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE\xBA\xAE\xDC\xE6\xAF\x48\xA0\x3B\xBF\xD2\x5E\x8C\xD0\x36\x41\x41", 32)) continue;
         break;
     }
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_secp256k1_generate_secret_obj, mod_trezorcrypto_secp256k1_generate_secret);
 
@@ -39,15 +38,15 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_publickey(size_t n_args, const mp_obj
         mp_raise_ValueError("Invalid length of secret key");
     }
     bool compressed = n_args < 2 || args[1] == mp_const_true;
-    vstr_t vstr;
     if (compressed) {
-        vstr_init_len(&vstr, 33);
-        ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf, (uint8_t *)vstr.buf);
+        uint8_t out[33];
+        ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf, out);
+        return mp_obj_new_bytes(out, sizeof(out));
     } else {
-        vstr_init_len(&vstr, 65);
-        ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf, (uint8_t *)vstr.buf);
+        uint8_t out[65];
+        ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf, out);
+        return mp_obj_new_bytes(out, sizeof(out));
     }
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_publickey_obj, 1, 2, mod_trezorcrypto_secp256k1_publickey);
 
@@ -66,14 +65,12 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args, const mp_obj_t *a
     if (dig.len != 32) {
         mp_raise_ValueError("Invalid length of digest");
     }
-    vstr_t vstr;
-    vstr_init_len(&vstr, 65);
-    uint8_t pby;
-    if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, (uint8_t *)vstr.buf + 1, &pby, NULL)) {
+    uint8_t out[65], pby;
+    if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, out + 1, &pby, NULL)) {
         mp_raise_ValueError("Signing failed");
     }
-    vstr.buf[0] = 27 + pby + compressed * 4;
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    out[0] = 27 + pby + compressed * 4;
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_sign_obj, 2, 3, mod_trezorcrypto_secp256k1_sign);
 
@@ -122,14 +119,13 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature, mp
     }
     bool compressed = (recid >= 4);
     recid &= 3;
-    vstr_t vstr;
-    vstr_init_len(&vstr, 65);
-    if (0 == ecdsa_verify_digest_recover(&secp256k1, (uint8_t *)vstr.buf, (const uint8_t *)sig.buf + 1, (const uint8_t *)dig.buf, recid)) {
+    uint8_t out[65];
+    if (0 == ecdsa_verify_digest_recover(&secp256k1, out, (const uint8_t *)sig.buf + 1, (const uint8_t *)dig.buf, recid)) {
         if (compressed) {
-            vstr.buf[0] = 0x02 | (vstr.buf[64] & 1);
-            vstr.len = 33;
+            out[0] = 0x02 | (out[64] & 1);
+            return mp_obj_new_bytes(out, 33);
         }
-        return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+        return mp_obj_new_bytes(out, sizeof(out));
     } else {
         return mp_const_none;
     }
@@ -151,12 +147,11 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_multiply(mp_obj_t secret_key, mp_obj_
     if (pk.len != 33 && pk.len != 65) {
         mp_raise_ValueError("Invalid length of public key");
     }
-    vstr_t vstr;
-    vstr_init_len(&vstr, 65);
-    if (0 != ecdh_multiply(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf, (uint8_t *)vstr.buf)) {
+    uint8_t out[65];
+    if (0 != ecdh_multiply(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf, out)) {
         mp_raise_ValueError("Multiply failed");
     }
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_multiply_obj, mod_trezorcrypto_secp256k1_multiply);
 

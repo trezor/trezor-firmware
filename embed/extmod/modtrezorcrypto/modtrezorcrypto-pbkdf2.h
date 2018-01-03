@@ -89,22 +89,23 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj, mod_trezorc
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
-    vstr_t vstr;
     if (o->prf == 256) {
         PBKDF2_HMAC_SHA256_CTX ctx;
         memcpy(&ctx, &(o->ctx256), sizeof(PBKDF2_HMAC_SHA256_CTX));
-        vstr_init_len(&vstr, SHA256_DIGEST_LENGTH);
-        pbkdf2_hmac_sha256_Final(&ctx, (uint8_t *)vstr.buf);
+        uint8_t out[SHA256_DIGEST_LENGTH];
+        pbkdf2_hmac_sha256_Final(&ctx, out);
         memset(&ctx, 0, sizeof(PBKDF2_HMAC_SHA256_CTX));
+        return mp_obj_new_bytes(out, sizeof(out));
     }
     if (o->prf == 512) {
         PBKDF2_HMAC_SHA512_CTX ctx;
         memcpy(&ctx, &(o->ctx512), sizeof(PBKDF2_HMAC_SHA512_CTX));
-        vstr_init_len(&vstr, SHA512_DIGEST_LENGTH);
-        pbkdf2_hmac_sha512_Final(&ctx, (uint8_t *)vstr.buf);
+        uint8_t out[SHA512_DIGEST_LENGTH];
+        pbkdf2_hmac_sha512_Final(&ctx, out);
         memset(&ctx, 0, sizeof(PBKDF2_HMAC_SHA512_CTX));
+        return mp_obj_new_bytes(out, sizeof(out));
     }
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj, mod_trezorcrypto_Pbkdf2_key);
 

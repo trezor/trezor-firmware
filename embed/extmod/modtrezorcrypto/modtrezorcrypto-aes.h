@@ -98,11 +98,10 @@ STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type, size_t 
 STATIC mp_obj_t mod_trezorcrypto_AES_update(mp_obj_t self, mp_obj_t data) {
     mp_buffer_info_t buf;
     mp_get_buffer_raise(data, &buf, MP_BUFFER_READ);
-    vstr_t vstr;
-    vstr_init_len(&vstr, buf.len);
     if (buf.len == 0) {
-        return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+        return mp_const_empty_bytes;
     }
+    uint8_t out[buf.len];
     mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
     switch (o->mode & AESModeMask) {
         case ECB:
@@ -110,9 +109,9 @@ STATIC mp_obj_t mod_trezorcrypto_AES_update(mp_obj_t self, mp_obj_t data) {
                 mp_raise_ValueError("Invalid data length");
             }
             if ((o->mode & AESDirMask) == Encrypt) {
-                aes_ecb_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, &(o->ctx.encrypt_ctx));
+                aes_ecb_encrypt(buf.buf, out, buf.len, &(o->ctx.encrypt_ctx));
             } else {
-                aes_ecb_decrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, &(o->ctx.decrypt_ctx));
+                aes_ecb_decrypt(buf.buf, out, buf.len, &(o->ctx.decrypt_ctx));
             }
             break;
         case CBC:
@@ -120,26 +119,26 @@ STATIC mp_obj_t mod_trezorcrypto_AES_update(mp_obj_t self, mp_obj_t data) {
                 mp_raise_ValueError("Invalid data length");
             }
             if ((o->mode & AESDirMask) == Encrypt) {
-                aes_cbc_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
+                aes_cbc_encrypt(buf.buf, out, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             } else {
-                aes_cbc_decrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.decrypt_ctx));
+                aes_cbc_decrypt(buf.buf, out, buf.len, o->iv, &(o->ctx.decrypt_ctx));
             }
             break;
         case CFB:
             if ((o->mode & AESDirMask) == Encrypt) {
-                aes_cfb_encrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
+                aes_cfb_encrypt(buf.buf, out, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             } else {
-                aes_cfb_decrypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
+                aes_cfb_decrypt(buf.buf, out, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             }
             break;
         case OFB: // (encrypt == decrypt)
-            aes_ofb_crypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->iv, &(o->ctx.encrypt_ctx));
+            aes_ofb_crypt(buf.buf, out, buf.len, o->iv, &(o->ctx.encrypt_ctx));
             break;
         case CTR: // (encrypt == decrypt)
-            aes_ctr_crypt(buf.buf, (unsigned char *)vstr.buf, buf.len, o->ctr, aes_ctr_cbuf_inc, &(o->ctx.encrypt_ctx));
+            aes_ctr_crypt(buf.buf, out, buf.len, o->ctr, aes_ctr_cbuf_inc, &(o->ctx.encrypt_ctx));
             break;
     }
-    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+    return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_update_obj, mod_trezorcrypto_AES_update);
 

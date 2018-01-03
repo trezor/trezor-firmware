@@ -26,12 +26,13 @@ class TestCryptoRandom(unittest.TestCase):
 
     def test_bytes_uniform(self):
         for _ in range(100):
-            b = random.bytes(8000)
             c = {}
             for h in '0123456789abcdef':
                 c[h] = 0
-            for h in hexlify(b):
-                c[chr(h)] += 1
+            for _ in range(8):
+                b = random.bytes(1000)
+                for h in hexlify(b):
+                    c[chr(h)] += 1
             for h in '0123456789abcdef':
                 self.assertAlmostEqual(c[h], 1000, delta=150)
 
