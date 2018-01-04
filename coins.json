@@ -124,7 +124,7 @@
 	"xpub_magic": "043587cf",
 	"xpub_magic_segwit_p2sh": null,
 	"bech32_prefix": null,
-	"cashaddr_prefix": null,
+	"cashaddr_prefix": "bchtest",
 	"bip44": 1,
 	"segwit": false,
 	"decred": false,
