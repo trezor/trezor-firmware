@@ -44,6 +44,7 @@ typedef struct _CoinInfo {
 	uint32_t xprv_magic;
 	uint32_t forkid;
 	const char *bech32_prefix;
+	const char *cashaddr_prefix;
 	uint32_t coin_type;
 	const char *curve_name;
 	const curve_info *curve;

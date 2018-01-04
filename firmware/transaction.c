@@ -32,8 +32,13 @@
 #include "messages.pb.h"
 #include "types.pb.h"
 #include "segwit_addr.h"
+#include "cash_addr.h"
 
 #define SEGWIT_VERSION_0 0
+
+#define CASHADDR_P2KH (0)
+#define CASHADDR_P2SH (8)
+#define CASHADDR_160  (0)
 
 /* transaction input size (without script): 32 prevhash, 4 idx, 4 sequence */
 #define TXSIZE_INPUT 40
@@ -138,6 +143,12 @@ bool compute_address(const CoinInfo *coin,
 			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_base58, address, MAX_ADDR_SIZE)) {
 				return 0;
 			}
+		} else if (coin->cashaddr_prefix) {
+			raw[0] = CASHADDR_P2SH | CASHADDR_160;
+			ripemd160(digest, 32, raw + 1);
+			if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
+				return 0;
+			}
 		} else {
 			// non-segwit p2sh multisig
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
@@ -165,6 +176,11 @@ bool compute_address(const CoinInfo *coin,
 			return 0;
 		}
 		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, coin->curve->hasher_pubkey, coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
+	} else if (coin->cashaddr_prefix) {
+		ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160, coin->curve->hasher_type, raw);
+		if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
+			return 0;
+		}
 	} else {
 		ecdsa_get_address(node->public_key, coin->address_type, coin->curve->hasher_pubkey, coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
 	}
@@ -252,6 +268,28 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		memcpy(out->script_pubkey.bytes + 2, addr_raw + prefix_len, 20);
 		out->script_pubkey.bytes[22] = 0x87; // OP_EQUAL
 		out->script_pubkey.size = 23;
+	} else if (coin->cashaddr_prefix
+			   && cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix, in->address)) {
+		if (addr_raw_len == 21
+			&& addr_raw[0] == (CASHADDR_P2KH | CASHADDR_160)) {
+			out->script_pubkey.bytes[0] = 0x76; // OP_DUP
+			out->script_pubkey.bytes[1] = 0xA9; // OP_HASH_160
+			out->script_pubkey.bytes[2] = 0x14; // pushing 20 bytes
+			memcpy(out->script_pubkey.bytes + 3, addr_raw + 1, 20);
+			out->script_pubkey.bytes[23] = 0x88; // OP_EQUALVERIFY
+			out->script_pubkey.bytes[24] = 0xAC; // OP_CHECKSIG
+			out->script_pubkey.size = 25;
+
+		} else if (addr_raw_len == 21
+				   && addr_raw[0] == (CASHADDR_P2SH | CASHADDR_160)) {
+			out->script_pubkey.bytes[0] = 0xA9; // OP_HASH_160
+			out->script_pubkey.bytes[1] = 0x14; // pushing 20 bytes
+			memcpy(out->script_pubkey.bytes + 2, addr_raw + 1, 20);
+			out->script_pubkey.bytes[22] = 0x87; // OP_EQUAL
+			out->script_pubkey.size = 23;
+		} else {
+			return 0;
+		}
 	} else if (coin->bech32_prefix) {
 		int witver;
 		if (!segwit_addr_decode(&witver, addr_raw, &addr_raw_len, coin->bech32_prefix, in->address)) {
@@ -736,7 +774,16 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 		uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 		int witver;
 		size_t addr_raw_len;
-		if (coin->bech32_prefix
+		if (coin->cashaddr_prefix
+			&& cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix, txoutput->address)) {
+			if (addr_raw_len == 21
+				&& addr_raw[0] == (CASHADDR_P2KH | CASHADDR_160)) {
+				output_script_size = TXSIZE_P2PKHASH;
+			} else if (addr_raw_len == 21
+					   && addr_raw[0] == (CASHADDR_P2SH | CASHADDR_160)) {
+				output_script_size = TXSIZE_P2SCRIPT;
+			}
+		} else if (coin->bech32_prefix
 			&& segwit_addr_decode(&witver, addr_raw, &addr_raw_len, coin->bech32_prefix, txoutput->address)) {
 			output_script_size = 2 + addr_raw_len;
 		} else {

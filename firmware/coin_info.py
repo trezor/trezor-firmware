@@ -91,6 +91,7 @@ def coin_to_struct(coin):
         ("xprv_magic",            format_hex(coin["xprv_magic"])),
         ("forkid",                format_number(coin["forkid"])),
         ("bech32_prefix",         format_string(coin["bech32_prefix"])),
+        ("cashaddr_prefix",       format_string(coin["cashaddr_prefix"])),
         ("coin_type",             "({} | 0x80000000)".format(format_number(coin["bip44"]))),  # noqa: E501
         ("curve_name",            "{}_NAME".format(coin["curve_name"].upper())),              # noqa: E501
         ("curve",                 "&{}_info".format(coin["curve_name"])),
