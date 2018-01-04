@@ -1,42 +1,37 @@
+from apps.common.confirm import *
 from trezor import wire, ui
 from trezor.utils import unimport, chunks
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from apps.common.confirm import *
+from ubinascii import hexlify
 from . import networks
 
 
 @unimport
-async def confirm_tx(ctx, to, value, chain_id, token=None):
+async def confirm_tx(ctx, to, value, chain_id, token=None):  # todo wording
+    str_to = '0x' + hexlify(to).decode()  # todo use ethereum address format
     content = Text('Confirm transaction', ui.ICON_RESET,
                    ui.BOLD, format_amount(value, token, chain_id),
                    ui.NORMAL, 'to',
-                   ui.MONO, *split_address(to))  # todo no addres shown, why?
+                   ui.MONO, *split_address(str_to))
     return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
 @unimport
-async def confirm_fee(ctx, spending, fee, chain_id, token=None):
-    content = Text('Confirm transaction', ui.ICON_RESET,
+async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):  # todo wording
+    content = Text('Confirm fee', ui.ICON_RESET,
                    'Sending: %s' % format_amount(spending, token, chain_id),
-                   'Fee: %s' % format_amount(fee, token, chain_id))
+                   'Gas: %s' % format_amount(gas_price, token, chain_id),
+                   'Limit: %s' % format_amount(gas_limit, token, chain_id))
     return await hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 @unimport
-async def confirm_data(ctx, data, data_total):
-    content = Text('Confirm data', ui.ICON_RESET,
-                   ui.MONO, data[:16],  # todo nothing displayed?
-                   'of total: ', data_total)
-    return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
-
-
-@unimport
-async def confirm_fee(ctx, value, gas_price, gas_limit, token):
-    content = Text('Confirm fee', ui.ICON_RESET,
-                   'price:', ui.MONO, gas_price,  # todo wording
-                   'limit:', ui.MONO, gas_limit,
-                   'value: ', value)
+async def confirm_data(ctx, data, data_total):  # todo wording
+    str_data = hexlify(data[:8]).decode() + '..'
+    content = Text('Confirm data:', ui.ICON_RESET,
+                   ui.MONO, str_data,
+                   'Total: ', str(data_total) + 'B')
     return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
@@ -45,7 +40,7 @@ def split_address(address):
 
 
 def format_amount(value, token, chain_id):
-    value = int.from_bytes(value, 'little')
+    value = int.from_bytes(value, 'big')
     if token:
         suffix = token.ticker
         decimals = token.decimals

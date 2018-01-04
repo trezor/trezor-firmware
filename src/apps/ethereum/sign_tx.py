@@ -37,7 +37,7 @@ async def ethereum_sign_tx(ctx, msg):
     if token is None and msg.data_length > 0:
         await layout.confirm_data(ctx, msg.data_initial_chunk, data_total)
 
-    await layout.confirm_fee(ctx, msg.value, msg.gas_price, msg.gas_limit, token)
+    await layout.confirm_fee(ctx, msg.value, msg.gas_price, msg.gas_limit, msg.chain_id, token)
 
     data = bytearray()
     data += msg.data_initial_chunk
