@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
 
 # download and setup toolchain
 
-ENV TOOLCHAIN_SHORTVER=6-2017q2
-ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-6-2017-q2-update
+ENV TOOLCHAIN_SHORTVER=7-2017q4
+ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2017-q4-major
 RUN cd /opt && wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/$TOOLCHAIN_SHORTVER/$TOOLCHAIN_LONGVER-linux.tar.bz2 && tar xfj $TOOLCHAIN_LONGVER-linux.tar.bz2
 ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
