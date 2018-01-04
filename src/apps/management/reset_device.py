@@ -2,7 +2,7 @@ from micropython import const
 from trezor import wire, ui
 from trezor.ui.container import Container
 from trezor.utils import unimport, chunks
-import ubinascii
+from ubinascii import hexlify
 
 if __debug__:
     internal_entropy = None
@@ -37,8 +37,8 @@ async def layout_reset_device(ctx, msg):
     internal_entropy = random.bytes(32)
 
     if msg.display_random:
-        entropy_lines = chunks(ubinascii.hexlify(internal_entropy), 16)
-        entropy_content = Text('Internal entropy', ui.ICON_RESET, *entropy_lines)
+        entropy_lines = chunks(hexlify(internal_entropy).decode(), 16)
+        entropy_content = Text('Internal entropy', ui.ICON_RESET, ui.MONO, *entropy_lines)
         await require_confirm(ctx, entropy_content, ButtonRequestType.ResetDevice)
 
     if msg.pin_protection:

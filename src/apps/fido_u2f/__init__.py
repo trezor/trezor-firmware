@@ -401,7 +401,7 @@ class ConfirmContent(ui.Widget):
         self.boot()
 
     def boot(self) -> None:
-        import ubinascii
+        from ubinascii import hexlify
         from trezor import res
         from . import knownapps
 
@@ -418,7 +418,7 @@ class ConfirmContent(ui.Widget):
             except FileNotFoundError:
                 icon = res.load('apps/fido_u2f/res/u2f_generic.toif')
         else:
-            name = '%s...%s' % (ubinascii.hexlify(app_id[:4]), ubinascii.hexlify(app_id[-4:]))
+            name = '%s...%s' % (hexlify(app_id[:4]).decode(), hexlify(app_id[-4:]).decode())
             icon = res.load('apps/fido_u2f/res/u2f_generic.toif')
         self.app_name = name
         self.app_icon = icon
