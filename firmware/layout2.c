@@ -356,16 +356,22 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 	// known BIP44/49 path
 	static char path[100];
 	if (address_n_count == 5 &&
-		(address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49)) &&
+		(address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49) || address_n[0] == (0x80000000 + 84)) &&
 		(address_n[1] & 0x80000000) &&
 		(address_n[2] & 0x80000000) &&
 		(address_n[3] <= 1) &&
 		(address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
-			bool segwit = (address_n[0] == (0x80000000 + 49));
+			bool native_segwit = (address_n[0] == (0x80000000 + 84));
+			bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
 			bool legacy = false;
 			const CoinInfo *coin = coinByCoinType(address_n[1]);
 			const char *abbr = 0;
-			if (segwit) {
+			if (native_segwit) {
+				if (coin && coin->has_segwit && coin->bech32_prefix) {
+					abbr = coin->coin_shortcut + 1;
+				}
+			} else
+			if (p2sh_segwit) {
 				if (coin && coin->has_segwit && coin->has_address_type_p2sh) {
 					abbr = coin->coin_shortcut + 1;
 				}
@@ -383,8 +389,14 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 			if (abbr && accnum < 100) {
 				memset(path, 0, sizeof(path));
 				strlcpy(path, abbr, sizeof(path));
+				// TODO: how to name accounts?
+				// currently we have "legacy account", "account" and "segwit account"
+				// for BIP44/P2PKH, BIP49/P2SH-P2WPKH and BIP84/P2WPKH respectivelly
 				if (legacy) {
 					strlcat(path, " legacy", sizeof(path));
+				}
+				if (native_segwit) {
+					strlcat(path, " segwit", sizeof(path));
 				}
 				strlcat(path, " account #", sizeof(path));
 				char acc[3];

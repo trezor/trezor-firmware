@@ -686,7 +686,7 @@ static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg)
 	// m / purpose' / coin_type' / account' / change / address_index
 	if (msg->address_n[0] == (0x80000000 + 44)) {
 		mismatch |= (msg->script_type != InputScriptType_SPENDADDRESS);
-		mismatch |= (msg->address_n_count == 5);
+		mismatch |= (msg->address_n_count != 5);
 		mismatch |= (msg->address_n[1] != coin->coin_type);
 		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
 		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
@@ -698,18 +698,18 @@ static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg)
 	// m / purpose' / cosigner_index / change / address_index
 	if (msg->address_n[0] == (0x80000000 + 45)) {
 		mismatch |= (msg->script_type != InputScriptType_SPENDMULTISIG);
-		mismatch |= (msg->address_n_count == 4);
+		mismatch |= (msg->address_n_count != 4);
 		mismatch |= (msg->address_n[1] & 0x80000000) == 0x80000000;
 		mismatch |= (msg->address_n[2] & 0x80000000) == 0x80000000;
 		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
 		return mismatch;
 	}
 
-	// m/45' - BIP48 Copay Multisig P2SH
+	// m/48' - BIP48 Copay Multisig P2SH
 	// m / purpose' / coin_type' / account' / change / address_index
 	if (msg->address_n[0] == (0x80000000 + 48)) {
 		mismatch |= (msg->script_type != InputScriptType_SPENDMULTISIG);
-		mismatch |= (msg->address_n_count == 5);
+		mismatch |= (msg->address_n_count != 5);
 		mismatch |= (msg->address_n[1] != coin->coin_type);
 		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
 		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
@@ -723,7 +723,21 @@ static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg)
 		mismatch |= (msg->script_type != InputScriptType_SPENDP2SHWITNESS);
 		mismatch |= !coin->has_segwit;
 		mismatch |= !coin->has_address_type_p2sh;
-		mismatch |= (msg->address_n_count == 5);
+		mismatch |= (msg->address_n_count != 5);
+		mismatch |= (msg->address_n[1] != coin->coin_type);
+		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
+		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
+		mismatch |= (msg->address_n[4] & 0x80000000) == 0x80000000;
+		return mismatch;
+	}
+
+	// m/84' : BIP84 Native SegWit
+	// m / purpose' / coin_type' / account' / change / address_index
+	if (msg->address_n[0] == (0x80000000 + 84)) {
+		mismatch |= (msg->script_type != InputScriptType_SPENDWITNESS);
+		mismatch |= !coin->has_segwit;
+		mismatch |= !coin->bech32_prefix;
+		mismatch |= (msg->address_n_count != 5);
 		mismatch |= (msg->address_n[1] != coin->coin_type);
 		mismatch |= (msg->address_n[2] & 0x80000000) == 0;
 		mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
