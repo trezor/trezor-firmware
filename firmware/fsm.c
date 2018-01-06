@@ -210,6 +210,23 @@ static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n, 
 	return &node;
 }
 
+static bool fsm_layoutAddress(const char *address, const char *desc, bool ignorecase, const uint32_t *address_n, size_t address_n_count)
+{
+	bool qrcode = false;
+	for (;;) {
+		layoutAddress(address, desc, qrcode, ignorecase, address_n, address_n_count);
+		if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
+			return true;
+		}
+		if (protectAbortedByInitialize) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			layoutHome();
+			return false;
+		}
+		qrcode = !qrcode;
+	}
+}
+
 void fsm_msgInitialize(Initialize *msg)
 {
 	(void)msg;
@@ -795,13 +812,8 @@ void fsm_msgGetAddress(GetAddress *msg)
 			}
 		}
 
-		bool qrcode = false;
-		for (;;) {
-			layoutAddress(address, desc, qrcode, msg->script_type == InputScriptType_SPENDWITNESS, msg->address_n, msg->address_n_count);
-			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
-				break;
-			}
-			qrcode = !qrcode;
+		if (!fsm_layoutAddress(address, desc, msg->script_type == InputScriptType_SPENDWITNESS, msg->address_n, msg->address_n_count)) {
+			return;
 		}
 	}
 
@@ -833,13 +845,8 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 		char address[43] = { '0', 'x' };
 		ethereum_address_checksum(resp->address.bytes, address + 2);
 
-		bool qrcode = false;
-		for (;;) {
-			layoutAddress(address, desc, qrcode, false, msg->address_n, msg->address_n_count);
-			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
-				break;
-			}
-			qrcode = !qrcode;
+		if (!fsm_layoutAddress(address, desc, false, msg->address_n, msg->address_n_count)) {
+			return;
 		}
 	}
 
@@ -1256,13 +1263,8 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 		strlcpy(desc, network, sizeof(desc));
 		strlcat(desc, ":", sizeof(desc));
 
-		bool qrcode = false;
-		for (;;) {
-			layoutAddress(resp->address, desc, qrcode, true, msg->address_n, msg->address_n_count);
-			if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
-				break;
-			}
-			qrcode = !qrcode;
+		if (!fsm_layoutAddress(resp->address, desc, true, msg->address_n, msg->address_n_count)) {
+			return;
 		}
 	}
 
