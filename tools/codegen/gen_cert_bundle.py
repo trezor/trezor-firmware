@@ -4,7 +4,21 @@ from pyblake2 import blake2s
 import requests
 
 
-CERTDATA_TXT = 'https://hg.mozilla.org/releases/mozilla-beta/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt'
+CERTDATA      = 'https://hg.mozilla.org/releases/mozilla-beta'
+CERTDATA_HASH = CERTDATA + '/?cmd=lookup&key=tip'
+CERTDATA_TXT  = CERTDATA + '/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt'
+
+
+def fetch_certdata():
+    r = requests.get(CERTDATA_HASH)
+    assert(r.status_code == 200)
+    commithash = r.text.strip().split(' ')[1]
+
+    r = requests.get(CERTDATA_TXT)
+    assert(r.status_code == 200)
+    certdata = r.text
+
+    return commithash, certdata
 
 
 def process_certdata(data):
@@ -30,19 +44,21 @@ def process_certdata(data):
 
 
 def main():
-    r = requests.get(CERTDATA_TXT)
-    assert(r.status_code == 200)
+    commithash, certdata = fetch_certdata()
 
-    certs = process_certdata(r.text)
+    print('# fetched from %s (default branch)' % CERTDATA)
+    print('# commit %s' % commithash)
 
-    size = 0
+    certs = process_certdata(certdata)
+
+    size = sum([len(x) for x in certs.values()])
+    print('# certs: %d | digests size: %d | total size: %d' % (len(certs), len(certs) * 32, size))
+
     print('cert_bundle = [')
     for k, v in certs.items():
         print('  # %s' % k)
         print('  %s,' % blake2s(v).digest())
-        size += len(v)
     print(']')
-    print('# certs: %d | digests size: %d | total size: %d' % (len(certs), len(certs) * 32, size))
 
 
 if __name__ == '__main__':
