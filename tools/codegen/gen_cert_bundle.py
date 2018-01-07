@@ -35,12 +35,14 @@ def main():
 
     certs = process_certdata(r.text)
 
+    size = 0
     print('cert_bundle = [')
     for k, v in certs.items():
         print('  # %s' % k)
         print('  %s,' % blake2s(v).digest())
-
+        size += len(v)
     print(']')
+    print('# certs: %d | digests size: %d | total size: %d' % (len(certs), len(certs) * 32, size))
 
 
 if __name__ == '__main__':
