@@ -1,26 +1,47 @@
 #!/usr/bin/python3
-import pem
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
 
-bundle = '/var/lib/ca-certificates/ca-bundle.pem'
+from pyblake2 import blake2s
+import requests
 
-certs = pem.parse_file(bundle)
 
-def process_cert(cert):
-    cert = x509.load_pem_x509_certificate(cert.as_bytes(), default_backend())
-    i = cert.issuer
-    f = cert.fingerprint(hashes.BLAKE2s(32))
-    try:
-        i = i.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-    except:
-        i = i.get_attributes_for_oid(NameOID.ORGANIZATION_NAME)[0].value
-    print('  # %s' % i)
-    print('  %s,' % f)
+CERTDATA_TXT = 'https://hg.mozilla.org/releases/mozilla-beta/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt'
 
-print('cert_bundle = [')
-for c in certs:
-    process_cert(c)
-print(']')
+
+def process_certdata(data):
+    certs = {}
+    lines = [x.strip() for x in data.split('\n')]
+    label = None
+    value = None
+    for line in lines:
+        if line == 'END':
+            if label is not None and value is not None:
+                certs[label] = bytes([int(x, 8) for x in value.split('\\')[1:]])
+                label = None
+                value = None
+        elif line.startswith('CKA_LABEL UTF8 '):
+            label = line.split('"')[1]
+        elif line == 'CKA_VALUE MULTILINE_OCTAL':
+            assert(label is not None)
+            value = ''
+        elif value is not None:
+            assert(label is not None)
+            value += line
+    return certs
+
+
+def main():
+    r = requests.get(CERTDATA_TXT)
+    assert(r.status_code == 200)
+
+    certs = process_certdata(r.text)
+
+    print('cert_bundle = [')
+    for k, v in certs.items():
+        print('  # %s' % k)
+        print('  %s,' % blake2s(v).digest())
+
+    print(']')
+
+
+if __name__ == '__main__':
+    main()
