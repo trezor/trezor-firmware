@@ -405,9 +405,8 @@ class DebugLinkMixin(object):
                                     "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
             for field, value in expected.__dict__.items():
-                if getattr(expected, field) is None:
+                if value is None or value == []:
                     continue
-                print("EXPECTED", getattr(expected, field), getattr(msg, field), field, value)
                 if getattr(msg, field) != value:
                     raise CallException(proto.FailureType.UnexpectedMessage,
                                         "Expected %s, got %s" % (pprint(expected), pprint(msg)))

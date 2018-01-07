@@ -102,7 +102,12 @@ class MessageType:
                 self.__dict__ == rhs.__dict__)
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self.__dict__)
+        d = {}
+        for key, value in self.__dict__.items():
+            if value is None or value == []:
+                continue
+            d[key] = value
+        return '<%s: %s>' % (self.__class__.__name__, d)
 
     def __iter__(self):
         return self.__dict__.__iter__()
