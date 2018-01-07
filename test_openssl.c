@@ -24,9 +24,11 @@
 /* OpenSSL's SHA256_CTX/SHA512_CTX conflicts with our own */
 #define SHA256_CTX _openssl_SHA256_CTX
 #define SHA512_CTX _openssl_SHA512_CTX
+#include <openssl/bn.h>
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
 #include <openssl/sha.h>
+#include <openssl/opensslv.h>
 #undef SHA256_CTX
 #undef SHA512_CTX
 
@@ -103,8 +105,14 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 
 		// copy signature to the OpenSSL struct
 		ECDSA_SIG *signature = ECDSA_SIG_new();
+#if OPENSSL_VERSION_NUMBER  < 0x10100000L
 		BN_bin2bn(sig, 32, signature->r);
 		BN_bin2bn(sig + 32, 32, signature->s);
+#else
+		BIGNUM *R = BN_bin2bn(sig, 32, NULL);
+		BIGNUM *S = BN_bin2bn(sig + 32, 32, NULL);
+		ECDSA_SIG_set0(signature, R, S);
+#endif
 
 		// compute the digest of the message
 		// note: these are OpenSSL functions, not our own
@@ -113,8 +121,9 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 		SHA256_Final(hash, &sha256);
 
 		// verify all went well, i.e. we can decrypt our signature with OpenSSL
-		if (ECDSA_do_verify(hash, 32, signature, eckey) != 1) {
-			printf("OpenSSL verification failed\n");
+		int v = ECDSA_do_verify(hash, 32, signature, eckey);
+		if (v != 1) {
+			printf("OpenSSL verification failed (%d)\n", v);
 			return;
 		}
 
