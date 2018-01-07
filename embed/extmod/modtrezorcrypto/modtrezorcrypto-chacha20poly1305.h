@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self, mp_obj_
     vstr_init_len(&vstr, in.len);
     chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
     o->plen += in.len;
-    return mp_obj_new_bytes((uint8_t *)vstr.buf, vstr.len);
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj, mod_trezorcrypto_ChaCha20Poly1305_encrypt);
 
@@ -71,7 +71,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self, mp_obj_
     vstr_init_len(&vstr, in.len);
     chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
     o->plen += in.len;
-    return mp_obj_new_bytes((uint8_t *)vstr.buf, vstr.len);
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj, mod_trezorcrypto_ChaCha20Poly1305_decrypt);
 

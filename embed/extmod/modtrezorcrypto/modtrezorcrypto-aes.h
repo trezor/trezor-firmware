@@ -139,7 +139,7 @@ STATIC mp_obj_t mod_trezorcrypto_AES_update(mp_obj_t self, mp_obj_t data) {
             aes_ctr_crypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->ctr, aes_ctr_cbuf_inc, &(o->ctx.encrypt_ctx));
             break;
     }
-    return mp_obj_new_bytes((uint8_t *)vstr.buf, vstr.len);
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_update_obj, mod_trezorcrypto_AES_update);
 

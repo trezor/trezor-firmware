@@ -34,7 +34,7 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(mp_obj_t len) {
     vstr_t vstr;
     vstr_init_len(&vstr, l);
     random_buffer((uint8_t *)vstr.buf, l);
-    return mp_obj_new_bytes((uint8_t *)vstr.buf, vstr.len);
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_bytes_obj, mod_trezorcrypto_random_bytes);
 
