@@ -1,20 +1,20 @@
 #!/usr/bin/python3
 
-from pyblake2 import blake2s
+from base64 import b64decode
+from hashlib import sha256
+import pem
 import requests
 
 
-CERTDATA      = 'https://hg.mozilla.org/releases/mozilla-beta'
-CERTDATA_HASH = CERTDATA + '/?cmd=lookup&key=tip'
-CERTDATA_TXT  = CERTDATA + '/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt'
+REPO = 'certifi/python-certifi'
 
 
 def fetch_certdata():
-    r = requests.get(CERTDATA_HASH)
+    r = requests.get('https://api.github.com/repos/%s/git/refs/heads/master' % REPO)
     assert(r.status_code == 200)
-    commithash = r.text.strip().split(' ')[1]
+    commithash = r.json()['object']['sha']
 
-    r = requests.get(CERTDATA_TXT)
+    r = requests.get('https://raw.githubusercontent.com/%s/%s/certifi/cacert.pem' % (REPO, commithash))
     assert(r.status_code == 200)
     certdata = r.text
 
@@ -27,26 +27,30 @@ def process_certdata(data):
     label = None
     value = None
     for line in lines:
-        if line == 'END':
-            if label is not None and value is not None:
-                certs[label] = bytes([int(x, 8) for x in value.split('\\')[1:]])
-                label = None
-                value = None
-        elif line.startswith('CKA_LABEL UTF8 '):
+        if line.startswith('# Label: '):
+            assert(label is None)
+            assert(value is None)
             label = line.split('"')[1]
-        elif line == 'CKA_VALUE MULTILINE_OCTAL':
+        elif line == '-----BEGIN CERTIFICATE-----':
             assert(label is not None)
+            assert(value is None)
             value = ''
-        elif value is not None:
+        elif line == '-----END CERTIFICATE-----':
             assert(label is not None)
-            value += line
+            assert(value is not None)
+            certs[label] = b64decode(value)
+            label, value = None, None
+        else:
+            if value is not None:
+                value += line
+
     return certs
 
 
 def main():
     commithash, certdata = fetch_certdata()
 
-    print('# fetched from %s (default branch)' % CERTDATA)
+    print('# fetched from https://github.com/%s' % REPO)
     print('# commit %s' % commithash)
 
     certs = process_certdata(certdata)
@@ -56,8 +60,10 @@ def main():
 
     print('cert_bundle = [')
     for k, v in certs.items():
+        h = sha256(v)
         print('  # %s' % k)
-        print('  %s,' % blake2s(v).digest())
+        print('  # %s' % h.hexdigest())
+        print('  %s,' % h.digest())
     print(']')
 
 
