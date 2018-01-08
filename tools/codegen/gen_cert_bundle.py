@@ -2,7 +2,6 @@
 
 from base64 import b64decode
 from hashlib import sha256
-import pem
 import requests
 
 
