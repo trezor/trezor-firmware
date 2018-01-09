@@ -5,6 +5,13 @@ IMAGE=trezor-core-build
 TAG=${1:-master}
 
 docker build -t $IMAGE .
+
+# use the following line instead of the above line
+# if you want to compile ARM toolchain from source
+# warning: very long compilation time!
+
+# docker build -t $IMAGE -f Dockerfile.gcc_source .
+
 docker run -t -v $(pwd)/build-docker:/build:z $IMAGE /bin/sh -c "\
 	git clone https://github.com/trezor/trezor-core && \
 	cd trezor-core && \
