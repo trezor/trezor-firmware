@@ -122,19 +122,18 @@ static void usb_init_all(void)
     usb_start();
 }
 
+static void draw_border(int width, int padding)
+{
+    const int W = width, P = padding, RX = DISPLAY_RESX, RY = DISPLAY_RESY;
+    display_clear();
+    display_bar(P, P, RX - 2 * P, RY - 2 * P, 0xFFFF);
+    display_bar(P + W, P + W, RX - 2 * (P + W), RY - 2 * (P + W), 0x0000);
+    display_refresh();
+}
+
 static void test_border(void)
 {
-    enum {
-        W  = 2,
-        RX = DISPLAY_RESX,
-        RY = DISPLAY_RESY,
-    };
-    display_clear();
-    display_bar(0,    0,    RX, W,  0xFFFF);
-    display_bar(0,    RY-W, RX, W,  0xFFFF);
-    display_bar(0,    0,    W,  RY, 0xFFFF);
-    display_bar(RX-W, 0,    W,  RY, 0xFFFF);
-    display_refresh();
+    draw_border(2, 0);
     vcp_printf("OK");
 }
 
@@ -307,6 +306,7 @@ int main(void)
     usb_init_all();
 
     display_clear();
+    draw_border(1, 3);
 
     char dom[32];
     // format: TREZOR2-YYMMDD
