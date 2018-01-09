@@ -372,8 +372,9 @@ def backup_device(connect):
 @click.option('-u', '--url')
 @click.option('-v', '--version')
 @click.option('-s', '--skip-check', is_flag=True)
+@click.option('-e', '--erase', is_flag=True)
 @click.pass_obj
-def firmware_update(connect, filename, url, version, skip_check):
+def firmware_update(connect, filename, url, version, skip_check, erase):
     if filename:
         fp = open(filename, 'rb').read()
     elif url:
@@ -381,6 +382,8 @@ def firmware_update(connect, filename, url, version, skip_check):
         click.echo('Downloading from', url)
         r = requests.get(url)
         fp = r.content
+    elif erase:
+        fp = 32768 * b'\xFF'
     else:
         import requests
         r = requests.get('https://wallet.trezor.io/data/firmware/releases.json')
@@ -403,7 +406,7 @@ def firmware_update(connect, filename, url, version, skip_check):
         r = requests.get(url)
         fp = r.content
 
-    if not skip_check:
+    if not skip_check and not erase:
         if fp[:8] == b'54525a52' or fp[:8] == b'54525a56':
             fp = binascii.unhexlify(fp)
         if fp[:4] != b'TRZR' and fp[:4] != b'TRZV':
