@@ -16,6 +16,11 @@ def format_sigmask(sigmask):
     return '0x%02x = [%s]' % (sigmask, ' '.join(bits))
 
 
+def format_vtrust(vtrust):
+    bits = [str(b) if vtrust & (1 << b) == 0 else '.' for b in range(16)]
+    return '%d = [%s]' % (vtrust, ' '.join(bits))
+
+
 # bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
 IMAGE_HEADER_SIZE = 1024
@@ -199,7 +204,7 @@ class VendorHeader(object):
         print('  * expiry  :', self.expiry)
         print('  * version : %d.%d' % (self.vmajor, self.vminor))
         print('  * scheme  : %d out of %d' % (self.vsig_m, self.vsig_n))
-        print('  * trust   :', self.vtrust, '=', bin(self.vtrust))
+        print('  * trust   :', format_vtrust(self.vtrust))
         for i in range(self.vsig_n):
             print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode())
         print('  * vstr    :', self.vstr.decode())
