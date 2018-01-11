@@ -37,13 +37,13 @@ class Loader(ui.Widget):
             s = self.normal_style
         if s['icon'] is None:
             ui.display.loader(
-                progress, -8, s['fg-color'], s['bg-color'])
+                progress, -24, s['fg-color'], s['bg-color'])
         elif s['icon-fg-color'] is None:
             ui.display.loader(
-                progress, -8, s['fg-color'], s['bg-color'], res.load(s['icon']))
+                progress, -24, s['fg-color'], s['bg-color'], res.load(s['icon']))
         else:
             ui.display.loader(
-                progress, -8, s['fg-color'], s['bg-color'], res.load(s['icon']), s['icon-fg-color'])
+                progress, -24, s['fg-color'], s['bg-color'], res.load(s['icon']), s['icon-fg-color'])
 
     def __iter__(self):
         sleep = loop.sleep(1000000 // 60)  # 60 fps
