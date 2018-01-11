@@ -32,7 +32,6 @@ async def request_pin(code: int = None) -> str:
 
     while True:
         result = await dialog
-
         if result == CONFIRMED:
             return matrix.pin
         elif result != CONFIRMED and matrix.pin:
