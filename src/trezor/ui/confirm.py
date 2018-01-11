@@ -66,6 +66,7 @@ class HoldToConfirmDialog(Widget):
         button.touch(event, pos)
         is_started = button.state & BTN_STARTED and button.state & BTN_ACTIVE
         if is_started and not was_started:
+            ui.display.clear()
             self.loader.start()
             return _STARTED
         if was_started and not is_started:
