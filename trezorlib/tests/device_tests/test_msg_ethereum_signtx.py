@@ -27,7 +27,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(data_length=None),  # v,r,s checked with assert
             ])
@@ -46,7 +46,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(data_length=None),
             ])
@@ -67,8 +67,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(data_length=None),
             ])
@@ -87,8 +87,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(data_length=1024, signature_r=None, signature_s=None, signature_v=None),
                 proto.EthereumTxRequest(data_length=1024),
@@ -114,8 +114,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(data_length=1024, signature_r=None, signature_s=None, signature_v=None),
                 proto.EthereumTxRequest(data_length=1024),
@@ -152,8 +152,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(data_length=1024, signature_r=None, signature_s=None, signature_v=None),
                 proto.EthereumTxRequest(data_length=1024),
@@ -221,7 +221,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(),
             ])
@@ -255,8 +255,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses([
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.EthereumTxRequest(),
             ])
