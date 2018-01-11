@@ -15,6 +15,9 @@ BTN_ACTIVE = const(2)
 BTN_DIRTY = const(4)
 BTN_DISABLED = const(8)
 
+ICON = const(16)  # icon size in pixels
+BORDER = const(4)  # border size in pixels
+
 
 class Button(Widget):
 
@@ -25,9 +28,9 @@ class Button(Widget):
                  absolute=False):
         self.area = area
         self.content = content
-        self.normal_style = normal_style or ui.BTN_DEFAULT
-        self.active_style = active_style or ui.BTN_DEFAULT_ACTIVE
-        self.disabled_style = disabled_style or ui.BTN_DEFAULT_DISABLED
+        self.normal_style = normal_style or ui.BTN_KEY
+        self.active_style = active_style or ui.BTN_KEY_ACTIVE
+        self.disabled_style = disabled_style or ui.BTN_KEY_DISABLED
         self.absolute = absolute
         self.state = BTN_DIRTY
 
@@ -54,47 +57,66 @@ class Button(Widget):
         else:
             s = self.normal_style
         ax, ay, aw, ah = self.area
-        tx = ax + aw // 2
-        ty = ay + ah // 2 + 8
 
-        display.bar_radius(ax, ay, aw, ah,
-                           s['border-color'],
-                           ui.BG,
-                           s['radius'])
-        display.bar_radius(ax + 4, ay + 4, aw - 8, ah - 8,
-                           s['bg-color'],
-                           s['border-color'],
-                           s['radius'])
-
-        if isinstance(self.content, str):
-            display.text_center(tx, ty, self.content,
-                                s['text-style'],
-                                s['fg-color'],
-                                s['bg-color'])
-
-        else:
-            display.icon(tx - 8, ty - 16, self.content,
-                         s['fg-color'],
-                         s['bg-color'])
-
+        self.render_background(s, ax, ay, aw, ah)
+        self.render_content(s, ax, ay, aw, ah)
         self.state = state
 
+    def render_background(self, s, ax, ay, aw, ah):
+        radius = s['radius']
+        bg_color = s['bg-color']
+        border_color = s['border-color']
+        if border_color != bg_color:
+            # render border and background on top of it
+            display.bar_radius(ax, ay,
+                               aw, ah,
+                               border_color,
+                               ui.BG,
+                               radius)
+            display.bar_radius(ax + BORDER, ay + BORDER,
+                               aw - BORDER*2, ah - BORDER*2,
+                               bg_color,
+                               border_color,
+                               radius)
+        else:
+            # render only the background
+            display.bar_radius(ax, ay,
+                               aw, ah,
+                               bg_color,
+                               ui.BG,
+                               radius)
+
+    def render_content(self, s, ax, ay, aw, ah):
+        c = self.content
+        tx = ax + aw//2
+        ty = ay + ah//2 + 8
+        if isinstance(c, str):
+            display.text_center(
+                tx, ty, c, s['text-style'], s['fg-color'], s['bg-color'])
+        else:
+            display.icon(
+                tx - ICON//2, ty - ICON, c, s['fg-color'], s['bg-color'])
+
     def touch(self, event, pos):
-        if self.state & BTN_DISABLED:
+        state = self.state
+        if state & BTN_DISABLED:
             return
         if not self.absolute:
             pos = rotate(pos)
+
         if event == io.TOUCH_START:
             if contains(self.area, pos):
                 self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
-        elif event == io.TOUCH_MOVE and self.state & BTN_STARTED:
+
+        elif event == io.TOUCH_MOVE and state & BTN_STARTED:
             if contains(self.area, pos):
-                if not self.state & BTN_ACTIVE:
+                if not state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
             else:
-                if self.state & BTN_ACTIVE:
+                if state & BTN_ACTIVE:
                     self.state = BTN_STARTED | BTN_DIRTY
-        elif event == io.TOUCH_END and self.state & BTN_STARTED:
+
+        elif event == io.TOUCH_END and state & BTN_STARTED:
             self.state = BTN_DIRTY
             if contains(self.area, pos):
                 return BTN_CLICKED
