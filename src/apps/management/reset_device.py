@@ -11,6 +11,7 @@ if __debug__:
 
 @unimport
 async def layout_reset_device(ctx, msg):
+    from trezor import config
     from trezor.ui.text import Text
     from trezor.crypto import hashlib, random, bip39
     from trezor.messages.EntropyRequest import EntropyRequest
@@ -19,7 +20,7 @@ async def layout_reset_device(ctx, msg):
     from trezor.messages import ButtonRequestType
     from trezor.messages.wire_types import EntropyAck
 
-    from apps.common.request_pin import request_pin_twice
+    from apps.management.change_pin import request_pin_confirm
     from apps.common.confirm import require_confirm
     from apps.common import storage
 
@@ -42,9 +43,11 @@ async def layout_reset_device(ctx, msg):
         await require_confirm(ctx, entropy_content, ButtonRequestType.ResetDevice)
 
     if msg.pin_protection:
-        pin = await request_pin_twice(ctx)
+        curpin = ''
+        newpin = await request_pin_confirm(ctx)
     else:
-        pin = None
+        curpin = ''
+        newpin = ''
 
     external_entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
     ehash = hashlib.sha256()
@@ -55,11 +58,11 @@ async def layout_reset_device(ctx, msg):
 
     await show_mnemonic_by_word(ctx, mnemonic)
 
+    if curpin != newpin:
+        config.change_pin(curpin, newpin)
+    storage.load_settings(label=msg.label,
+                          use_passphrase=msg.passphrase_protection)
     storage.load_mnemonic(mnemonic)
-    storage.load_settings(pin=pin,
-                          passphrase_protection=msg.passphrase_protection,
-                          language=msg.language,
-                          label=msg.label)
 
     return Success(message='Initialized')
 
