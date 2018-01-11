@@ -85,7 +85,6 @@ class TestMsgEthereumSigntx(TrezorTest):
         assert hexlify(sig_r) == b'6da89ed8627a491bedc9e0382f37707ac4e5102e25e7a1234cb697cedb7cd2c0'
         assert hexlify(sig_s) == b'691f73b145647623e2d115b208a7c3455a6a8a83e3b4db5b9c6d9bc75825038a'
 
-
         with self.client:
             self.client.set_expected_responses([
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -220,7 +219,6 @@ class TestMsgEthereumSigntx(TrezorTest):
     def test_ethereum_signtx_nodata_eip155(self):
         self.setup_mnemonic_allallall()
 
-
         with self.client:
             self.client.set_expected_responses([
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -239,7 +237,6 @@ class TestMsgEthereumSigntx(TrezorTest):
         assert sig_v == 41
         assert hexlify(sig_r) == b'a90d0bc4f8d63be69453dd62f2bb5fff53c610000abf956672564d8a654d401a'
         assert hexlify(sig_s) == b'544a2e57bc8b4da18660a1e6036967ea581cc635f5137e3ba97a750867c27cf2'
-
 
         sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
             n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
