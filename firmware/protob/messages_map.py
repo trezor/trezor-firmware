@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from collections import defaultdict
 from messages_pb2 import MessageType
 from types_pb2 import wire_in, wire_out, wire_debug_in, wire_debug_out, wire_tiny, wire_bootloader
