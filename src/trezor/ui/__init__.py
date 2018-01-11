@@ -106,10 +106,36 @@ def layout(f):
     return inner
 
 
-def header(title: str, icon: bytes=ICON_RESET, fg: int=BG, bg: int=BG, ifg: int=BG):
+def header(title: str,
+           icon: bytes=ICON_RESET,
+           fg: int=BG,
+           bg: int=BG,
+           ifg: int=BG):
     if icon is not None:
-        display.icon(14, 14, res.load(icon), ifg, bg)
+        display.icon(14, 18, res.load(icon), ifg, bg)
     display.text(44, 35, title, BOLD, fg, bg)
+
+
+VIEWX = const(6)
+VIEWY = const(9)
+VIEW = const(228)  # SCREEN - 2 * VIEWX
+
+
+def grid(i: int,
+         n_x: int=3,
+         n_y: int=5,
+         start_x: int=VIEWX,
+         start_y: int=VIEWY,
+         end_x: int=(VIEWX + VIEW),
+         end_y: int=(VIEWY + VIEW),
+         cells_x: int=1,
+         cells_y: int=1,
+         spacing: int=0):
+    w = (end_x - start_x) // n_x
+    h = (end_y - start_y) // n_y
+    x = (i % n_x) * w
+    y = (i // n_x) * h
+    return (x + start_x, y + start_y, (w - spacing) * cells_x, (h - spacing) * cells_y)
 
 
 class Widget:

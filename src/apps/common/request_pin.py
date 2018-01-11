@@ -26,8 +26,8 @@ async def request_pin(code: int = None) -> str:
     matrix = PinMatrix(label, with_zero=True)
     matrix.onchange = onchange
     dialog = ConfirmDialog(matrix)
-    dialog.cancel.area = (0, 240 - 48, 80, 48)
-    dialog.confirm.area = (240 - 80, 240 - 48, 80, 48)
+    dialog.cancel.area = ui.grid(12)
+    dialog.confirm.area = ui.grid(14)
     matrix.onchange()
 
     while True:
