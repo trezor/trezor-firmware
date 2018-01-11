@@ -14,7 +14,7 @@ async def confirm_tx(ctx, to, value, chain_id, token=None):  # todo wording
                    ui.BOLD, format_amount(value, token, chain_id),
                    ui.NORMAL, 'to',
                    ui.MONO, *split_address(str_to))
-    return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+    return await confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
 @unimport
@@ -32,7 +32,7 @@ async def confirm_data(ctx, data, data_total):  # todo wording
     content = Text('Confirm data:', ui.ICON_RESET,
                    ui.MONO, str_data,
                    'Total: ', str(data_total) + 'B')
-    return await confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+    return await confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
 def split_address(address):
