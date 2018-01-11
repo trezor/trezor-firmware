@@ -24,8 +24,8 @@ def dispatch_WipeDevice(*args, **kwargs):
 
 @unimport
 def dispatch_RecoveryDevice(*args, **kwargs):
-    from .recovery_device import layout_recovery_device
-    return layout_recovery_device(*args, **kwargs)
+    from .recovery_device import recovery_device
+    return recovery_device(*args, **kwargs)
 
 
 @unimport
