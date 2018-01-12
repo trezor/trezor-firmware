@@ -36,7 +36,7 @@
 
 #include "options.h"
 
-#include "aes.h"
+#include "aes/aes.h"
 #include "bignum.h"
 #include "base32.h"
 #include "base58.h"
@@ -53,8 +53,8 @@
 #include "curves.h"
 #include "secp256k1.h"
 #include "nist256p1.h"
-#include "ed25519.h"
-#include "ed25519-keccak.h"
+#include "ed25519-donna/ed25519.h"
+#include "ed25519-donna/ed25519-keccak.h"
 #include "script.h"
 #include "rfc6979.h"
 #include "address.h"

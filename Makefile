@@ -24,9 +24,6 @@ CFLAGS   += $(OPTFLAGS) \
             -Werror
 
 CFLAGS += -I.
-CFLAGS += -Iaes
-CFLAGS += -Ichacha20poly1305
-CFLAGS += -Ied25519-donna
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_GRAPHENE=1
 CFLAGS += -DUSE_NEM=1
@@ -56,7 +53,7 @@ SRCS  += segwit_addr.c
 
 OBJS   = $(SRCS:.c=.o)
 
-TESTLIBS = $(shell pkg-config --libs check) -lrt -lpthread -lm
+TESTLIBS = $(shell pkg-config --libs check) -lpthread -lm
 TESTSSLLIBS = -lcrypto
 
 all: test_check test_openssl test_speed aes/aestst tools libtrezor-crypto.so
