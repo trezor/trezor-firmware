@@ -118,4 +118,3 @@ from .WipeDevice import *
 from .WordAck import *
 from .WordRequest import *
 from . import MessageType
-from .Storage import *
