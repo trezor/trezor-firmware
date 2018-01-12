@@ -1,7 +1,8 @@
 #!/bin/bash
 CURDIR=$(pwd)
-mkdir -p $CURDIR/pb2/
-touch $CURDIR/pb2/__init__.py
+PB2DIR=$CURDIR/pb2
+mkdir -p $PB2DIR
+touch $PB2DIR/__init__.py
 
 mkdir -p ../trezorlib/messages
 
@@ -14,7 +15,7 @@ echo '' >> $INDEX
 for i in types messages storage ; do
     # Compile .proto files to python2 modules using google protobuf library
     cd $CURDIR/../../trezor-common/protob
-    protoc --python_out=$CURDIR/pb2/ -I/usr/include -I. $i.proto
+    protoc --python_out=$PB2DIR -I/usr/include -I. $i.proto
 done
 
 # hack to make output python 3 compatible
@@ -27,4 +28,4 @@ for i in types messages storage ; do
     ./pb2py -p $CURDIR -l $INDEX $i ../trezorlib/messages/
 done
 
-rm -rf $CURDIR/pb2/
+rm -rf $PB2DIR

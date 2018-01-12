@@ -19,4 +19,5 @@ class Storage(p.MessageType):
         11: ('u2f_counter', p.UVarintType, 0),
         12: ('needs_backup', p.BoolType, 0),
         13: ('flags', p.UVarintType, 0),
+        14: ('u2froot', HDNodeType, 0),
     }

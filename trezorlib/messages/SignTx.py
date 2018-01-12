@@ -10,5 +10,6 @@ class SignTx(p.MessageType):
         3: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
         4: ('version', p.UVarintType, 0),  # default=1
         5: ('lock_time', p.UVarintType, 0),  # default=0
+        6: ('decred_expiry', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 15
