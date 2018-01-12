@@ -6,4 +6,5 @@ class TxOutputBinType(p.MessageType):
     FIELDS = {
         1: ('amount', p.UVarintType, 0),  # required
         2: ('script_pubkey', p.BytesType, 0),  # required
+        3: ('decred_script_version', p.UVarintType, 0),
     }

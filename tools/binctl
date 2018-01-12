@@ -247,7 +247,6 @@ class VendorHeader(object):
 
 def binopen(filename):
     data = open(filename, 'rb').read()
-    data = bytearray(data)  # python2/3 compatibility
     magic = data[:4]
     if magic == b'TRZB':
         return BootloaderImage(data)

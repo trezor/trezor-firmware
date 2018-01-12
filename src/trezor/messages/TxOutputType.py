@@ -11,4 +11,5 @@ class TxOutputType(p.MessageType):
         4: ('script_type', p.UVarintType, 0),  # required
         5: ('multisig', MultisigRedeemScriptType, 0),
         6: ('op_return_data', p.BytesType, 0),
+        7: ('decred_script_version', p.UVarintType, 0),
     }

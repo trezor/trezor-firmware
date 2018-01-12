@@ -12,8 +12,7 @@ from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 def process_type(t, cls, msg_id, indexfile, is_upy):
     print("  * type %s" % t)
 
-    imports = ['import protobuf as p']
-
+    imports = []
     out = ["", "", "class %s(p.MessageType):" % t, ]
 
     if cls.DESCRIPTOR.fields_by_name:
@@ -35,6 +34,10 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
             # TYPE_UINT32 = 13
             # TYPE_ENUM = 14
             type = 'p.UVarintType'
+
+        elif v.type in (17,):
+            # TYPE_SINT32 = 17
+            type = 'p.Sint32Type'
 
         elif v.type == 9:
             # TYPE_STRING = 9
@@ -93,6 +96,15 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
             else:
                 indexfile.write("%s = %d\n" % (t, msg_id))
 
+    # Remove duplicate imports
+    imports = sorted(list(set(imports)))
+
+    if is_upy:
+        imports = ['import protobuf as p'] + imports
+    else:
+        imports = ['from __future__ import absolute_import',
+                   'from .. import protobuf as p'] + imports
+
     return imports + out
 
 
@@ -130,7 +142,7 @@ def find_msg_type(msg_types, t):
             return v
 
 
-def process_module(mod, genpath, indexfile, is_upy):
+def process_module(mod, genpath, indexfile, modlist, is_upy):
 
     print("Processing module %s" % mod.__name__)
     types = dict([(name, cls)
@@ -146,6 +158,8 @@ def process_module(mod, genpath, indexfile, is_upy):
         out = process_type(t, cls, msg_id, indexfile, is_upy)
 
         write_to_file(genpath, t, out)
+        if modlist:
+            modlist.write("from .%s import *\n" % t)
 
     enums = dict([(name, cls) for name, cls in mod.__dict__.items()
                   if isinstance(cls, EnumTypeWrapper)])
@@ -153,6 +167,8 @@ def process_module(mod, genpath, indexfile, is_upy):
     for t, cls in enums.items():
         out = process_enum(t, cls, is_upy)
         write_to_file(genpath, t, out)
+        if modlist:
+            modlist.write("from . import %s\n" % t)
 
 
 def write_to_file(genpath, t, out):
@@ -171,6 +187,7 @@ if __name__ == '__main__':
     parser.add_argument('modulename', type=str, help="Name of module to generate")
     parser.add_argument('genpath', type=str, help="Directory for generated source code")
     parser.add_argument('-i', '--indexfile', type=str, help="[optional] Generate index file of wire types")
+    parser.add_argument('-l', '--modlist', type=str, help="[optional] Generate list of modules")
     parser.add_argument('-p', '--protopath', type=str, help="[optional] Path to search for pregenerated Google's python sources")
     parser.add_argument('-m', '--micropython', action='store_true', help="Use micropython-favoured source code")
     args = parser.parse_args()
@@ -180,6 +197,11 @@ if __name__ == '__main__':
     else:
         indexfile = None
 
+    if args.modlist:
+        modlist = open(args.modlist, 'a')
+    else:
+        modlist = None
+
     if args.protopath:
         sys.path.append(args.protopath)
 
@@ -187,4 +209,4 @@ if __name__ == '__main__':
     tmp = __import__('pb2', globals(), locals(), ['%s_pb2' % args.modulename])
     mod = getattr(tmp, "%s_pb2" % args.modulename)
 
-    process_module(mod, args.genpath, indexfile, args.micropython)
+    process_module(mod, args.genpath, indexfile, modlist, args.micropython)

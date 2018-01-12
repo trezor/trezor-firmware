@@ -16,4 +16,5 @@ class TransactionType(p.MessageType):
         7: ('outputs_cnt', p.UVarintType, 0),
         8: ('extra_data', p.BytesType, 0),
         9: ('extra_data_len', p.UVarintType, 0),
+        10: ('decred_expiry', p.UVarintType, 0),
     }
