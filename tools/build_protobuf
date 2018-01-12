@@ -4,6 +4,7 @@ PB2DIR=$CURDIR/pb2
 OUTDIR=../trezorlib/messages
 INDEX=$OUTDIR/__init__.py
 
+rm -f $OUTDIR/[A-Z]*.py
 mkdir -p $OUTDIR
 mkdir -p $PB2DIR
 touch $PB2DIR/__init__.py
