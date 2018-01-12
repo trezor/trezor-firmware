@@ -97,14 +97,13 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
                 indexfile.write("%s = %d\n" % (t, msg_id))
 
     # Remove duplicate imports
-    imports = list(set(imports))
+    imports = sorted(list(set(imports)))
 
     if is_upy:
         imports = ['import protobuf as p'] + imports
     else:
         imports = ['from __future__ import absolute_import',
                    'from .. import protobuf as p'] + imports
-
 
     return imports + out
 
