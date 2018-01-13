@@ -36,8 +36,6 @@
 #include "secp256k1.h"
 #include "memzero.h"
 
-#include "debug.h"
-
 #include "usb21_standard.h"
 #include "webusb.h"
 #include "winusb.h"
@@ -268,7 +266,6 @@ static void restore_metadata(const uint8_t *backup)
 
 static void rx_callback(usbd_device *dev, uint8_t ep)
 {
-	debugLog(0, "", "rx_callback start");
 	(void)ep;
 	static uint8_t buf[64] __attribute__((aligned(4)));
 	static uint8_t towrite[4] __attribute__((aligned(4)));
@@ -586,7 +583,6 @@ static void set_config(usbd_device *dev, uint16_t wValue)
 
 	usbd_ep_setup(dev, ENDPOINT_ADDRESS_IN,  USB_ENDPOINT_ATTR_INTERRUPT, 64, 0);
 	usbd_ep_setup(dev, ENDPOINT_ADDRESS_OUT, USB_ENDPOINT_ATTR_INTERRUPT, 64, rx_callback);
-	debugLog(0, "", "set_config done");
 }
 
 static usbd_device *usbd_dev;
@@ -605,7 +601,6 @@ static const struct usb_bos_descriptor bos_descriptor = {
 
 void usbInit(void)
 {
-	debugLog(0, "", "usb_init");
 	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, sizeof(usb_strings)/sizeof(const char *), usbd_control_buffer, sizeof(usbd_control_buffer));
 	usbd_register_set_config_callback(usbd_dev, set_config);
 	usb21_setup(usbd_dev, &bos_descriptor);
