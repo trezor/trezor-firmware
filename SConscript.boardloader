@@ -11,8 +11,6 @@ SOURCE_MOD = []
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-crypto/aes',
-    'vendor/trezor-crypto/ed25519-donna',
 ]
 CPPDEFINES_MOD += [
     'AES_128',

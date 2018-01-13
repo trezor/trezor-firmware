@@ -19,8 +19,6 @@ SOURCE_MOD += [
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-crypto/aes',
-    'vendor/trezor-crypto/ed25519-donna',
 ]
 CPPDEFINES_MOD += [
     'AES_128',
@@ -31,7 +29,6 @@ CPPDEFINES_MOD += [
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
     'embed/extmod/modtrezorcrypto/crc.c',
-    'embed/extmod/modtrezorcrypto/rand.c',
     'vendor/trezor-crypto/address.c',
     'vendor/trezor-crypto/aes/aescrypt.c',
     'vendor/trezor-crypto/aes/aeskey.c',
@@ -64,6 +61,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/hmac.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
+    'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/ripemd160.c',
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
