@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "rand.h"
+
+#ifndef RAND_PLATFORM_INDEPENDENT
+
 #include <stdio.h>
 #ifdef _WIN32
 #include <time.h>
@@ -28,64 +32,31 @@
 #include <assert.h>
 #endif
 
-#include "rand.h"
-
-#ifndef RAND_PLATFORM_INDEPENDANT
-
-static FILE *frand = NULL;
-
-int finalize_rand(void)
-{
-#ifdef _WIN32
-	return 0;
-#else
-	if (!frand) return 0;
-	int err = fclose(frand);
-	frand = NULL;
-	return err;
-#endif
-}
-
 uint32_t random32(void)
 {
 #ifdef _WIN32
-	srand((unsigned)time(NULL));
+	static int initialized = 0;
+	if (!initialized) {
+		srand((unsigned)time(NULL));
+		initialized = 1;
+	}
 	return ((rand() % 0xFF) | ((rand() % 0xFF) << 8) | ((rand() % 0xFF) << 16) | ((rand() % 0xFF) << 24));
 #else
-	uint32_t r;
-	size_t len = sizeof(r);
+	static FILE *frand = NULL;
 	if (!frand) {
 		frand = fopen("/dev/urandom", "r");
 	}
-	size_t len_read = fread(&r, 1, len, frand);
-	(void)len_read;
-	assert(len_read == len);
+	uint32_t r;
+	size_t len_read = fread(&r, 1, sizeof(r), frand);
+	assert(len_read == sizeof(r));
 	return r;
 #endif
 }
 
-void random_buffer(uint8_t *buf, size_t len)
-{
-#ifdef _WIN32
-	srand((unsigned)time(NULL));
-	size_t i;
-	for (i = 0; i < len; i++) {
-		buf[i] = rand() % 0xFF;
-	}
-#else
-	if (!frand) {
-		frand = fopen("/dev/urandom", "r");
-	}
-	size_t len_read = fread(buf, 1, len, frand);
-	(void)len_read;
-	assert(len_read == len);
-#endif
-}
-
-#endif /* RAND_PLATFORM_INDEPENDANT */
+#endif /* RAND_PLATFORM_INDEPENDENT */
 
 //
-// Following code should be platform independant
+// The following code is platform independent
 //
 
 uint32_t random_uniform(uint32_t n)
@@ -95,13 +66,22 @@ uint32_t random_uniform(uint32_t n)
 	return x / (max / n);
 }
 
+void random_buffer(uint8_t *buf, size_t len)
+{
+	uint32_t r = 0;
+	for (size_t i = 0; i < len; i++) {
+		if (i % 4 == 0) {
+			r = random32();
+		}
+		buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
+	}
+}
+
 void random_permute(char *str, size_t len)
 {
-	int i, j;
-	char t;
-	for (i = len - 1; i >= 1; i--) {
-		j = random_uniform(i + 1);
-		t = str[j];
+	for (int i = len - 1; i >= 1; i--) {
+		int j = random_uniform(i + 1);
+		char t = str[j];
 		str[j] = str[i];
 		str[i] = t;
 	}
