@@ -31,6 +31,10 @@
 
 uint32_t random32(void);
 
+#else
+
+extern uint32_t random32(void);
+
 #endif /* RAND_PLATFORM_INDEPENDENT */
 
 uint32_t random_uniform(uint32_t n);
