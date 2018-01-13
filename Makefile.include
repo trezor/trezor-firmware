@@ -63,12 +63,11 @@ CFLAGS   += $(OPTFLAGS) \
             $(FPUFLAGS) \
             -DSTM32F2 \
             -DCONFIDENTIAL='__attribute__((section("confidential")))' \
+            -DRAND_PLATFORM_INDEPENDENT=1 \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \
             -I$(TOP_DIR)vendor/trezor-crypto \
-            -I$(TOP_DIR)vendor/trezor-crypto/aes \
-            -I$(TOP_DIR)vendor/trezor-crypto/ed25519-donna \
             -I$(TOP_DIR)vendor/trezor-qrenc
 
 LDFLAGS  += -L$(TOP_DIR) \

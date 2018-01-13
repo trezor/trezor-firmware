@@ -26,7 +26,7 @@
 
 #include "trezor.h"
 #include "sha2.h"
-#include "aes.h"
+#include "aes/aes.h"
 #include "pbkdf2.h"
 #include "bip32.h"
 #include "bip39.h"

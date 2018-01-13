@@ -19,7 +19,7 @@
 
 #include "nem2.h"
 
-#include "aes.h"
+#include "aes/aes.h"
 #include "fsm.h"
 #include "gettext.h"
 #include "layout2.h"

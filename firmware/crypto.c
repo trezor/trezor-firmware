@@ -22,7 +22,7 @@
 #include "sha2.h"
 #include "ripemd160.h"
 #include "pbkdf2.h"
-#include "aes.h"
+#include "aes/aes.h"
 #include "hmac.h"
 #include "bip32.h"
 #include "layout.h"

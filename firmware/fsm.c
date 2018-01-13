@@ -42,7 +42,7 @@
 #include "usb.h"
 #include "util.h"
 #include "signing.h"
-#include "aes.h"
+#include "aes/aes.h"
 #include "hmac.h"
 #include "crypto.h"
 #include "base58.h"
