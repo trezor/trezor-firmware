@@ -11,7 +11,7 @@ PINKEY = 0x00
 
 def random_entry():
     while True:
-        appid, key = 1 + random.uniform(255), random.uniform(256)
+        appid, key = 1 + random.uniform(127), random.uniform(256)
         if appid != PINAPP or key != PINKEY:
             break
     return appid, key
@@ -55,6 +55,33 @@ class TestConfig(unittest.TestCase):
         config.init()
         config.wipe()
         self.assertEqual(config.change_pin(pin_to_int(''), pin_to_int('000'), None), False)
+
+    def test_public(self):
+        config.init()
+        config.wipe()
+        self.assertEqual(config.unlock(pin_to_int(''), None), True)
+
+        appid, key = random_entry()
+
+        value32 = random.bytes(32)
+        config.set(appid, key, value32)
+        value16 = random.bytes(16)
+        config.set(appid, key, value16, True)
+
+        v1 = config.get(appid, key)
+        v2 = config.get(appid, key, True)
+        self.assertNotEqual(v1, v2)
+        self.assertEqual(v1, value32)
+        self.assertEqual(v2, value16)
+
+        config.init()
+
+        v1 = config.get(appid, key)
+        v2 = config.get(appid, key, True)
+        self.assertNotEqual(v1, v2)
+        self.assertEqual(v1, bytes())
+        self.assertEqual(v2, value16)
+
 
     def test_change_pin(self):
         config.init()

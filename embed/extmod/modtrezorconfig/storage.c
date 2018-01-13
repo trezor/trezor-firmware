@@ -169,7 +169,13 @@ secbool storage_unlock(const uint32_t pin, mp_obj_t callback)
 
 secbool storage_get(uint16_t key, const void **val, uint16_t *len)
 {
-    if (sectrue != initialized || sectrue != unlocked || (key >> 8) == 0) {
+    const uint8_t app = key >> 8;
+    // APP == 0 is reserved for PIN related values
+    if (sectrue != initialized || app == 0) {
+        return secfalse;
+    }
+    // top bit of APP set indicates the value can be read from unlocked device
+    if (sectrue != unlocked && ((app & 0x80) == 0)) {
         return secfalse;
     }
     return norcow_get(key, val, len);
@@ -177,7 +183,9 @@ secbool storage_get(uint16_t key, const void **val, uint16_t *len)
 
 secbool storage_set(uint16_t key, const void *val, uint16_t len)
 {
-    if (sectrue != initialized || sectrue != unlocked || (key >> 8) == 0) {
+    const uint8_t app = key >> 8;
+    // APP == 0 is reserved for PIN related values
+    if (sectrue != initialized || sectrue != unlocked || app == 0) {
         return secfalse;
     }
     return norcow_set(key, val, len);

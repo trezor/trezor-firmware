@@ -65,14 +65,17 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin, mp_ob
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_change_pin_obj, mod_trezorconfig_change_pin);
 
-/// def get(app: int, key: int) -> bytes:
+/// def get(app: int, key: int, public: bool=False) -> bytes:
 ///     '''
 ///     Gets a value of given key for given app (or empty bytes if not set).
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_get(mp_obj_t app, mp_obj_t key) {
-    uint8_t a = mp_obj_get_int(app);
-    uint8_t k = mp_obj_get_int(key);
-    uint16_t appkey = a << 8 | k;
+STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
+    uint8_t app = mp_obj_get_int(args[0]) & 0x7F;
+    uint8_t key = mp_obj_get_int(args[1]);
+    if (n_args > 2 && args[2] == mp_const_true) {
+        app |= 0x80;
+    }
+    uint16_t appkey = (app << 8) | key;
     uint16_t len = 0;
     const void *val;
     if (sectrue != storage_get(appkey, &val, &len) || len == 0) {
@@ -80,24 +83,27 @@ STATIC mp_obj_t mod_trezorconfig_get(mp_obj_t app, mp_obj_t key) {
     }
     return mp_obj_new_bytes(val, len);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_get_obj, mod_trezorconfig_get);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3, mod_trezorconfig_get);
 
-/// def set(app: int, key: int, value: bytes) -> None:
+/// def set(app: int, key: int, value: bytes, public: bool=False) -> None:
 ///     '''
 ///     Sets a value of given key for given app.
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_set(mp_obj_t app, mp_obj_t key, mp_obj_t value) {
-    uint8_t a = mp_obj_get_int(app);
-    uint8_t k = mp_obj_get_int(key);
-    uint16_t appkey = a << 8 | k;
-    mp_buffer_info_t v;
-    mp_get_buffer_raise(value, &v, MP_BUFFER_READ);
-    if (sectrue != storage_set(appkey, v.buf, v.len)) {
+STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
+    uint8_t app = mp_obj_get_int(args[0]) & 0x7F;
+    uint8_t key = mp_obj_get_int(args[1]);
+    if (n_args > 3 && args[3] == mp_const_true) {
+        app |= 0x80;
+    }
+    uint16_t appkey = (app << 8) | key;
+    mp_buffer_info_t value;
+    mp_get_buffer_raise(args[2], &value, MP_BUFFER_READ);
+    if (sectrue != storage_set(appkey, value.buf, value.len)) {
         mp_raise_msg(&mp_type_RuntimeError, "Could not save value");
     }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_set_obj, mod_trezorconfig_set);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4, mod_trezorconfig_set);
 
 /// def wipe() -> None:
 ///     '''
