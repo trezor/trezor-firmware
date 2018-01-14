@@ -31,6 +31,7 @@ class TxApi(object):
     def __init__(self, network, url):
         self.network = network
         self.url = url
+        self.pushtx_url = url
 
     def get_url(self, resource, resourceid):
         url = '%s%s/%s' % (self.url, resource, resourceid)
@@ -68,6 +69,7 @@ class TxApiInsight(TxApi):
     def __init__(self, network, url, zcash=None):
         super(TxApiInsight, self).__init__(network, url)
         self.zcash = zcash
+        self.pushtx_url = url.replace('/api/', '/tx/send')
 
     def get_tx(self, txhash):
 
@@ -148,6 +150,10 @@ class TxApiSmartbit(TxApi):
 
 
 class TxApiBlockCypher(TxApi):
+
+    def __init__(self, network, url, zcash=None):
+        super(TxApiBlockCypher, self).__init__(network, url)
+        self.pushtx_url = url.replace('//api.', '//live.').replace('/v1/', '/').replace('/main/', '/pushtx/')
 
     def get_tx(self, txhash):
 

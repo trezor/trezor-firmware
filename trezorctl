@@ -552,7 +552,7 @@ def sign_tx(connect, coin):
     click.echo(binascii.hexlify(serialized_tx))
     click.echo()
     click.echo('Use the following form to broadcast it to the network:')
-    click.echo(txapi.url.replace('/api/', '/tx/send'))
+    click.echo(txapi.pushtx_url)
 
 
 #
