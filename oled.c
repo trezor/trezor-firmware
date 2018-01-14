@@ -245,7 +245,7 @@ void oledDrawChar(int x, int y, char c, int zoom)
 	int char_width = fontCharWidth(c);
 	const uint8_t *char_data = fontCharData(c);
 
-	if (x <= -char_width) {
+	if (x <= -char_width * zoom) {
 		return;
 	}
 
