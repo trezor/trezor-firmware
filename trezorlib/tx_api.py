@@ -155,7 +155,7 @@ class TxApiBlockCypher(TxApi):
 
         t = proto.TransactionType()
         t.version = data['ver']
-        t.lock_time = data['lock_time']
+        t.lock_time = data.get('lock_time', 0)
 
         for vin in data['inputs']:
             i = t._add_inputs()
@@ -185,5 +185,5 @@ TxApiDash = TxApiInsight(network='insight_dash', url='https://dash-bitcore1.trez
 TxApiZcash = TxApiInsight(network='insight_zcash', url='https://zec-bitcore1.trezor.io/api/', zcash=True)
 TxApiBcash = TxApiInsight(network='insight_bcash', url='https://bch-bitcore2.trezor.io/api/')
 TxApiDecredTestnet = TxApiInsight(network='insight_decred_testnet', url='https://testnet.decred.org/api/')
-TxApiDogecoin = TxApiBlockCypher(network='blockcypher_dogecoin', url='http://api.blockcypher.com/v1/doge/main/')
+TxApiDogecoin = TxApiBlockCypher(network='blockcypher_dogecoin', url='https://api.blockcypher.com/v1/doge/main/')
 TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
