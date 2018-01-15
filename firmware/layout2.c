@@ -126,8 +126,9 @@ void layoutHome(void)
 
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 {
-	char str_out[32];
-	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out));
+	char str_out[32 + 3];
+	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
+	strlcat(str_out, " to", sizeof(str_out));
 	static char lines[2][28];
 	const char *addr = out->address;
 	int addrlen = strlen(addr);

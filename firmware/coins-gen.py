@@ -14,7 +14,7 @@ if len(sys.argv) != 2 or sys.argv[1] not in ("count", "array"):
 def get_fields(coin):
     return [
         '"%s"' % coin['coin_name'] if coin['coin_name'] is not None else 'NULL',
-        '" %s to"' % coin['coin_shortcut'] if coin['coin_shortcut'] is not None else 'NULL',
+        '" %s"' % coin['coin_shortcut'] if coin['coin_shortcut'] is not None else 'NULL',
         '%d' % coin['maxfee_kb'] if coin['maxfee_kb'] is not None else '0',
         '"\\x%02x" "%s"' % (len(coin['signed_message_header']), coin['signed_message_header'].replace('\n', '\\n')) if coin['signed_message_header'] is not None else 'NULL',
         'true' if coin['address_type'] is not None else 'false',
