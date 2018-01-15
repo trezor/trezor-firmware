@@ -69,7 +69,7 @@ class Input(Button):
         if p:  # pending marker
             pw = display.text_width(t[-1:], text_style)
             px = tx + width - pw
-            display.bar(px, ty, pw + 2, 3, fg_color)
+            display.bar(px, ty + 2, pw + 1, 3, fg_color)
 
         if i:  # icon
             ix = ax + aw - ICON*2
