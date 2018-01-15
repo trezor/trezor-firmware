@@ -132,13 +132,13 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 	const char *addr = out->address;
 	int addrlen = strlen(addr);
 	int numlines = addrlen <= 34 ? 2 : 3;
-	strcpy(lines[0], _("to "));
-	int linelen = (addrlen + (numlines == 3 ? 3 : 0) - 1) / numlines + 1;
-	if (linelen > 27)
+	int linelen = (addrlen + 3) / numlines + 1;
+	if (linelen > 27) {
 		linelen = 27;
+	}
 	if (numlines == 3) {
-		strlcpy(lines[0] + 3, addr, linelen - 3 + 1);
-		addr += linelen - 3;
+		strlcpy(lines[0], addr, linelen + 1);
+		addr += linelen;
 	}
 	strlcpy(lines[1], addr, linelen + 1);
 	addr += linelen;
