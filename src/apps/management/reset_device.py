@@ -56,7 +56,10 @@ async def layout_reset_device(ctx, msg):
     entropy = ehash.digest()
     mnemonic = bip39.from_data(entropy[:msg.strength // 8])
 
-    await show_mnemonic_by_word(ctx, mnemonic)
+    warning_content = Text('Backup your seed', ui.ICON_NOCOPY, ui.NORMAL, 'Never make a digital', 'copy of your recovery', 'seed and never upload', 'it online!')
+    await require_confirm(ctx, warning_content, ButtonRequestType.ResetDevice)
+
+    await show_mnemonic(ctx, mnemonic)
 
     if curpin != newpin:
         config.change_pin(curpin, newpin)
@@ -96,7 +99,7 @@ async def show_mnemonic_by_word(ctx, mnemonic):
                       ConfirmWord, confirm='Next', cancel=None)
 
 
-async def show_mnemonic(mnemonic):
+async def show_mnemonic(ctx, mnemonic):
     from trezor.ui.scroll import paginate
 
     first_page = const(0)
@@ -111,7 +114,7 @@ async def show_mnemonic_page(page, page_count, mnemonic):
     from trezor.ui.scroll import render_scrollbar, animate_swipe
 
     ui.display.clear()
-    ui.header('Write down your seed', ui.ICON_RESET, ui.BG, ui.LIGHT_GREEN)
+    ui.header('Write down seed', ui.ICON_RESET, ui.FG, ui.BG)
     render_scrollbar(page, page_count)
 
     for pi, (wi, word) in enumerate(mnemonic[page]):
