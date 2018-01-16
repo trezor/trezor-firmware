@@ -16,17 +16,17 @@ class ConfirmDialog(Widget):
     def __init__(self, content, confirm=DEFAULT_CONFIRM, cancel=DEFAULT_CANCEL):
         self.content = content
         if cancel is not None:
-            self.confirm = Button((121, 240 - 48, 119, 48), confirm,
+            self.confirm = Button(ui.grid(8, n_x=2), confirm,
                                   normal_style=ui.BTN_CONFIRM,
                                   active_style=ui.BTN_CONFIRM_ACTIVE)
-            self.cancel = Button((0, 240 - 48, 119, 48), cancel,
+            self.cancel = Button(ui.grid(9, n_x=2), cancel,
                                  normal_style=ui.BTN_CANCEL,
                                  active_style=ui.BTN_CANCEL_ACTIVE)
         else:
-            self.cancel = None
-            self.confirm = Button((0, 240 - 48, 240, 48), confirm,
+            self.confirm = Button(ui.grid(4, n_x=1), confirm,
                                   normal_style=ui.BTN_CONFIRM,
                                   active_style=ui.BTN_CONFIRM_ACTIVE)
+            self.cancel = None
 
     def render(self):
         self.confirm.render()
@@ -52,7 +52,7 @@ class HoldToConfirmDialog(Widget):
 
     def __init__(self, content, hold='Hold to confirm', *args, **kwargs):
         self.content = content
-        self.button = Button((0, 240 - 48, 240, 48), hold,
+        self.button = Button(ui.grid(4, n_x=1), hold,
                              normal_style=ui.BTN_CONFIRM,
                              active_style=ui.BTN_CONFIRM_ACTIVE)
         self.loader = Loader(*args, **kwargs)
@@ -66,6 +66,7 @@ class HoldToConfirmDialog(Widget):
         button.touch(event, pos)
         is_started = button.state & BTN_STARTED and button.state & BTN_ACTIVE
         if is_started and not was_started:
+            ui.display.clear()
             self.loader.start()
             return _STARTED
         if was_started and not is_started:

@@ -1,26 +1,18 @@
 from trezor import ui, res, loop, io
 from trezor.crypto import bip39
 from trezor.ui import display
-from trezor.ui.button import Button, BTN_CLICKED
-
-
-def cell_area(i, n_x=3, n_y=3, start_x=0, start_y=40, end_x=240, end_y=240 - 48, spacing=0):
-    w = (end_x - start_x) // n_x
-    h = (end_y - start_y) // n_y
-    x = (i % n_x) * w
-    y = (i // n_x) * h
-    return (x + start_x, y + start_y, w - spacing, h - spacing)
+from trezor.ui.button import Button, BTN_CLICKED, ICON
 
 
 def key_buttons():
     keys = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
-    # keys = [' ', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
-    return [Button(cell_area(i), k,
+    return [Button(ui.grid(i + 3, n_y=4), k,
                    normal_style=ui.BTN_KEY,
-                   active_style=ui.BTN_KEY_ACTIVE) for i, k in enumerate(keys)]
+                   active_style=ui.BTN_KEY_ACTIVE,
+                   disabled_style=ui.BTN_KEY_DISABLED) for i, k in enumerate(keys)]
 
 
-def compute_mask(text):
+def compute_mask(text: str) -> int:
     mask = 0
     for c in text:
         shift = ord(c) - 97  # ord('a') == 97
@@ -30,199 +22,156 @@ def compute_mask(text):
     return mask
 
 
-class KeyboardMultiTap(ui.Widget):
+class Input(Button):
+    def __init__(self, area: tuple, content: str='', word: str=''):
+        super().__init__(area, content)
+        self.word = word
+        self.icon = None
+        self.pending = False
 
-    def __init__(self, content=''):
+    def edit(self, content: str, word: str, pending: bool):
         self.content = content
-        self.sugg_mask = 0xffffffff
-        self.sugg_word = None
-        self.pending_button = None
-        self.pending_index = 0
+        self.word = word
+        self.pending = pending
+        self.taint()
+        if content == word:  # confirm button
+            self.enable()
+            self.normal_style = ui.BTN_CONFIRM
+            self.active_style = ui.BTN_CONFIRM_ACTIVE
+            self.icon = ui.ICON_CONFIRM
+        elif word:  # auto-complete button
+            self.enable()
+            self.normal_style = ui.BTN_KEY
+            self.active_style = ui.BTN_KEY_ACTIVE
+            self.icon = ui.ICON_CLICK
+        else:  # disabled button
+            self.disable()
+            self.icon = None
 
-        self.key_buttons = key_buttons()
-        self.sugg_button = Button((5, 5, 240 - 35, 30), '')
-        self.bs_button = Button((240 - 35, 5, 30, 30),
-                                res.load('trezor/res/pin_close.toig'),
-                                normal_style=ui.BTN_CLEAR,
-                                active_style=ui.BTN_CLEAR_ACTIVE)
+    def render_content(self, s, ax, ay, aw, ah):
+        text_style = s['text-style']
+        fg_color = s['fg-color']
+        bg_color = s['bg-color']
+
+        p = self.pending  # should we draw the pending marker?
+        t = self.content  # input content
+        w = self.word[len(t):]  # suggested word
+        i = self.icon  # rendered icon
+
+        tx = ax + 24  # x-offset of the content
+        ty = ay + ah//2 + 8  # y-offset of the content
+
+        # input content and the suggested word
+        display.text(tx, ty, t, text_style, fg_color, bg_color)
+        width = display.text_width(t, text_style)
+        display.text(tx + width, ty, w, text_style, ui.GREY, bg_color)
+
+        if p:  # pending marker
+            pw = display.text_width(t[-1:], text_style)
+            px = tx + width - pw
+            display.bar(px, ty + 2, pw + 1, 3, fg_color)
+
+        if i:  # icon
+            ix = ax + aw - ICON*2
+            iy = ty - ICON
+            display.icon(ix, iy, res.load(i), fg_color, bg_color)
+
+
+class MnemonicKeyboard(ui.Widget):
+    def __init__(self, prompt: str=''):
+        self.prompt = prompt
+        self.input = Input(ui.grid(1, n_x=4, n_y=4, cells_x=3), '', '')
+        self.back = Button(ui.grid(0, n_x=4, n_y=4),
+                           res.load(ui.ICON_BACK),
+                           normal_style=ui.BTN_CLEAR,
+                           active_style=ui.BTN_CLEAR_ACTIVE)
+        self.keys = key_buttons()
+        self.pbutton = None  # pending key button
+        self.pindex = 0  # index of current pending char in pbutton
 
     def render(self):
-
-        # clear canvas under input line
-        display.bar(0, 0, 205, 40, ui.BG)
-
-        # input line
-        content_width = display.text_width(self.content, ui.BOLD)
-        display.text(20, 30, self.content, ui.BOLD, ui.FG, ui.BG)
-
-        # pending marker
-        if self.pending_button is not None:
-            pending_width = display.text_width(self.content[-1:], ui.BOLD)
-            pending_x = 20 + content_width - pending_width
-            display.bar(pending_x, 33, pending_width + 2, 3, ui.FG)
-
-        # auto-suggest
-        if self.sugg_word is not None:
-            sugg_rest = self.sugg_word[len(self.content):]
-            sugg_x = 20 + content_width
-            display.text(sugg_x, 30, sugg_rest, ui.BOLD, ui.GREY, ui.BG)
-
-        # render backspace button
-        if self.content:
-            self.bs_button.render()
+        if self.input.content:
+            # content button and backspace
+            self.input.render()
+            self.back.render()
         else:
-            display.bar(240 - 48, 0, 48, 42, ui.BG)
-
+            # prompt
+            display.bar(0, 8, 240, 60, ui.BG)
+            display.text(20, 40, self.prompt, ui.BOLD, ui.GREY, ui.BG)
         # key buttons
-        for btn in self.key_buttons:
+        for btn in self.keys:
             btn.render()
 
     def touch(self, event, pos):
-        if self.bs_button.touch(event, pos) == BTN_CLICKED:
-            self.content = self.content[:-1]
-            self.pending_button = None
-            self.pending_index = 0
-            self._update_suggestion()
-            self._update_buttons()
+        content = self.input.content
+        word = self.input.word
+
+        if self.back.touch(event, pos) == BTN_CLICKED:
+            # backspace, delete the last character of input
+            self.edit(content[:-1])
             return
-        if self.sugg_button.touch(event, pos) == BTN_CLICKED and self.sugg_word is not None:
-            self.content = self.sugg_word
-            self.pending_button = None
-            self.pending_index = 0
-            self._update_suggestion()
-            self._update_buttons()
-            return
-        for btn in self.key_buttons:
-            if btn.touch(event, pos) == BTN_CLICKED:
-                if self.pending_button is btn:
-                    self.pending_index = (
-                        self.pending_index + 1) % len(btn.content)
-                    self.content = self.content[:-1]
-                    self.content += btn.content[self.pending_index]
-                    self._update_suggestion()
-                else:
-                    self.content += btn.content[0]
-                    self._update_suggestion()
-                    self.pending_button = btn
-                    self.pending_index = 0
+
+        if self.input.touch(event, pos) == BTN_CLICKED:
+            # input press, either auto-complete or confirm
+            if content == word:
+                self.edit('')
+                return content
+            else:
+                self.edit(word)
                 return
 
-    def _update_suggestion(self):
-        if self.content:
-            self.sugg_word = bip39.find_word(self.content)
-            self.sugg_mask = bip39.complete_word(self.content)
-        else:
-            self.sugg_word = None
-            self.sugg_mask = 0xffffffff
+        for btn in self.keys:
+            if btn.touch(event, pos) == BTN_CLICKED:
+                # key press, add new char to input or cycle the pending button
+                if self.pbutton is btn:
+                    index = (self.pindex + 1) % len(btn.content)
+                    content = content[:-1] + btn.content[index]
+                else:
+                    index = 0
+                    content += btn.content[0]
+                self.edit(content, btn, index)
+                return
 
-    def _update_buttons(self):
-        for btn in self.key_buttons:
-            if compute_mask(btn.content) & self.sugg_mask:
+    def edit(self, content, button=None, index=0):
+        word = bip39.find_word(content) or ''
+        mask = bip39.complete_word(content)
+
+        self.pbutton = button
+        self.pindex = index
+        self.input.edit(content, word, button is not None)
+
+        # enable or disable key buttons
+        for btn in self.keys:
+            if btn is button or compute_mask(btn.content) & mask:
                 btn.enable()
             else:
                 btn.disable()
 
-    def __iter__(self):
+    async def __iter__(self):
         timeout = loop.sleep(1000 * 1000 * 1)
         touch = loop.select(io.TOUCH)
-        wait = loop.wait(touch, timeout)
-        while True:
+        wait_timeout = loop.wait(touch, timeout)
+        wait_touch = loop.wait(touch)
+        content = None
+
+        self.back.taint()
+        self.input.taint()
+
+        while content is None:
             self.render()
-            result = yield wait
-            if touch in wait.finished:
-                event, *pos = result
-                self.touch(event, pos)
+            if self.pbutton is not None:
+                wait = wait_timeout
             else:
-                self.pending_button = None
-                self.pending_index = 0
-                self._update_suggestion()
-                self._update_buttons()
-
-
-def zoom_buttons(keys, upper=False):
-    n_x = len(keys)
-    if upper:
-        keys = keys + keys.upper()
-        n_y = 2
-    else:
-        n_y = 1
-    return [Button(cell_area(i, n_x, n_y), key) for i, key in enumerate(keys)]
-
-
-class KeyboardZooming(ui.Widget):
-
-    def __init__(self, content='', uppercase=True):
-        self.content = content
-        self.uppercase = uppercase
-
-        self.zoom_buttons = None
-        self.key_buttons = key_buttons()
-        self.bs_button = Button((240 - 35, 5, 30, 30),
-                                res.load('trezor/res/pin_close.toig'),
-                                normal_style=ui.BTN_CLEAR,
-                                active_style=ui.BTN_CLEAR_ACTIVE)
-
-    def render(self):
-        self.render_input()
-        if self.zoom_buttons:
-            for btn in self.zoom_buttons:
-                btn.render()
-        else:
-            for btn in self.key_buttons:
-                btn.render()
-
-    def render_input(self):
-        if self.content:
-            display.bar(0, 0, 200, 40, ui.BG)
-        else:
-            display.bar(0, 0, 240, 40, ui.BG)
-        display.text(20, 30, self.content, ui.BOLD, ui.GREY, ui.BG)
-        if self.content:
-            self.bs_button.render()
-
-    def touch(self, event, pos):
-        if self.bs_button.touch(event, pos) == BTN_CLICKED:
-            self.content = self.content[:-1]
-            self.bs_button.taint()
-            return
-        if self.zoom_buttons:
-            return self.touch_zoom(event, pos)
-        else:
-            return self.touch_keyboard(event, pos)
-
-    def touch_zoom(self, event, pos):
-        for btn in self.zoom_buttons:
-            if btn.touch(event, pos) == BTN_CLICKED:
-                self.content += btn.content
-                self.zoom_buttons = None
-                for b in self.key_buttons:
-                    b.taint()
-                self.bs_button.taint()
-                break
-
-    def touch_keyboard(self, event, pos):
-        for btn in self.key_buttons:
-            if btn.touch(event, pos) == BTN_CLICKED:
-                self.zoom_buttons = zoom_buttons(btn.content, self.uppercase)
-                for b in self.zoom_buttons:
-                    b.taint()
-                self.bs_button.taint()
-                break
-
-    def __iter__(self):
-        timeout = loop.sleep(1000 * 1000 * 1)
-        touch = loop.select(io.TOUCH)
-        wait = loop.wait(touch, timeout)
-        while True:
-            self.render()
-            result = yield wait
+                wait = wait_touch
+            result = await wait
             if touch in wait.finished:
                 event, *pos = result
-                self.touch(event, pos)
-            elif self.zoom_buttons:
-                self.zoom_buttons = None
-                for btn in self.key_buttons:
-                    btn.taint()
-
-
-Keyboard = KeyboardMultiTap
+                content = self.touch(event, pos)
+            else:
+                if self.input.word:
+                    # just reset the pending state
+                    self.edit(self.input.content)
+                else:
+                    # invalid character, backspace it
+                    self.edit(self.input.content[:-1])
+        return content

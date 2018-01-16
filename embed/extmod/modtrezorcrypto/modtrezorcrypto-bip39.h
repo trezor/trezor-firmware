@@ -18,7 +18,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_find_word(mp_obj_t prefix)
     mp_buffer_info_t pfx;
     mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
     if (pfx.len == 0) {
-        mp_raise_ValueError("Invalid word prefix");
+        return mp_const_none;
     }
     for (const char * const *w = mnemonic_wordlist(); *w != 0; w++) {
         if (strncmp(*w, pfx.buf, pfx.len) == 0) {
@@ -39,7 +39,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_complete_word(mp_obj_t prefix)
     mp_buffer_info_t pfx;
     mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
     if (pfx.len == 0) {
-        mp_raise_ValueError("Invalid word prefix");
+        return mp_obj_new_int(0xFFFFFFFF);  // all letters
     }
     uint32_t res = 0;
     uint8_t bit;
