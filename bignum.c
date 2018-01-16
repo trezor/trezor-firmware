@@ -27,7 +27,6 @@
 #include <string.h>
 #include <assert.h>
 #include "bignum.h"
-#include "macros.h"
 
 /* big number library */
 
@@ -490,7 +489,7 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime)
 	uint32_t res[18] = {0};
 	bn_multiply_long(k, x, res);
 	bn_multiply_reduce(x, res, prime); 
-	MEMSET_BZERO(res, sizeof(res));
+	explicit_bzero(res, sizeof(res));
 }
 
 // partly reduce x modulo prime
@@ -552,8 +551,8 @@ void bn_sqrt(bignum256 *x, const bignum256 *prime)
 	}
 	bn_mod(&res, prime);
 	memcpy(x, &res, sizeof(bignum256));
-	MEMSET_BZERO(&res, sizeof(res));
-	MEMSET_BZERO(&p, sizeof(p));
+	explicit_bzero(&res, sizeof(res));
+	explicit_bzero(&p, sizeof(p));
 }
 
 #if ! USE_INVERSE_FAST
@@ -861,9 +860,9 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 	x->val[i] = temp32;
 
 	// let's wipe all temp buffers
-	MEMSET_BZERO(pp, sizeof(pp));
-	MEMSET_BZERO(&us, sizeof(us));
-	MEMSET_BZERO(&vr, sizeof(vr));
+	explicit_bzero(pp, sizeof(pp));
+	explicit_bzero(&us, sizeof(us));
+	explicit_bzero(&vr, sizeof(vr));
 }
 #endif
 

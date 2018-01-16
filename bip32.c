@@ -35,7 +35,6 @@
 #include "sha3.h"
 #include "ripemd160.h"
 #include "base58.h"
-#include "macros.h"
 #include "curves.h"
 #include "secp256k1.h"
 #include "nist256p1.h"
@@ -87,7 +86,7 @@ int hdnode_from_xpub(uint32_t depth, uint32_t child_num, const uint8_t *chain_co
 	out->depth = depth;
 	out->child_num = child_num;
 	memcpy(out->chain_code, chain_code, 32);
-	MEMSET_BZERO(out->private_key, 32);
+	explicit_bzero(out->private_key, 32);
 	memcpy(out->public_key, public_key, 33);
 	return 1;
 }
@@ -108,7 +107,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num, const uint8_t *chain_co
 				failed = true;
 			}
 		}
-		MEMSET_BZERO(&a, sizeof(a));
+		explicit_bzero(&a, sizeof(a));
 	}
 
 	if (failed) {
@@ -120,7 +119,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num, const uint8_t *chain_co
 	out->child_num = child_num;
 	memcpy(out->chain_code, chain_code, 32);
 	memcpy(out->private_key, private_key, 32);
-	MEMSET_BZERO(out->public_key, sizeof(out->public_key));
+	explicit_bzero(out->public_key, sizeof(out->public_key));
 	return 1;
 }
 
@@ -151,12 +150,12 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNod
 			hmac_sha512_Update(&ctx, I, sizeof(I));
 			hmac_sha512_Final(&ctx, I);
 		}
-		MEMSET_BZERO(&a, sizeof(a));
+		explicit_bzero(&a, sizeof(a));
 	}
 	memcpy(out->private_key, I, 32);
 	memcpy(out->chain_code, I + 32, 32);
-	MEMSET_BZERO(out->public_key, sizeof(out->public_key));
-	MEMSET_BZERO(I, sizeof(I));
+	explicit_bzero(out->public_key, sizeof(out->public_key));
+	explicit_bzero(I, sizeof(I));
 	return 1;
 }
 
@@ -169,7 +168,7 @@ uint32_t hdnode_fingerprint(HDNode *node)
 	hasher_Raw(node->curve->hasher_type, node->public_key, 33, digest);
 	ripemd160(digest, 32, digest);
 	fingerprint = (digest[0] << 24) + (digest[1] << 16) + (digest[2] << 8) + digest[3];
-	MEMSET_BZERO(digest, sizeof(digest));
+	explicit_bzero(digest, sizeof(digest));
 	return fingerprint;
 }
 
@@ -230,13 +229,13 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	memcpy(inout->chain_code, I + 32, 32);
 	inout->depth++;
 	inout->child_num = i;
-	MEMSET_BZERO(inout->public_key, sizeof(inout->public_key));
+	explicit_bzero(inout->public_key, sizeof(inout->public_key));
 
 	// making sure to wipe our memory
-	MEMSET_BZERO(&a, sizeof(a));
-	MEMSET_BZERO(&b, sizeof(b));
-	MEMSET_BZERO(I, sizeof(I));
-	MEMSET_BZERO(data, sizeof(data));
+	explicit_bzero(&a, sizeof(a));
+	explicit_bzero(&b, sizeof(b));
+	explicit_bzero(I, sizeof(I));
+	explicit_bzero(data, sizeof(data));
 	return 1;
 }
 
@@ -265,9 +264,9 @@ int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent, co
 				}
 
 				// Wipe all stack data.
-				MEMSET_BZERO(data, sizeof(data));
-				MEMSET_BZERO(I, sizeof(I));
-				MEMSET_BZERO(&c, sizeof(c));
+				explicit_bzero(data, sizeof(data));
+				explicit_bzero(I, sizeof(I));
+				explicit_bzero(&c, sizeof(c));
 				return 1;
 			}
 		}
@@ -287,15 +286,15 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i)
 	if (!hdnode_public_ckd_cp(inout->curve->params, &parent, inout->chain_code, i, &child, inout->chain_code)) {
 		return 0;
 	}
-	memset(inout->private_key, 0, 32);
+	explicit_bzero(inout->private_key, 32);
 	inout->depth++;
 	inout->child_num = i;
 	inout->public_key[0] = 0x02 | (child.y.val[0] & 0x01);
 	bn_write_be(&child.x, inout->public_key + 1);
 
 	// Wipe all stack data.
-	MEMSET_BZERO(&parent, sizeof(parent));
-	MEMSET_BZERO(&child, sizeof(child));
+	explicit_bzero(&parent, sizeof(parent));
+	explicit_bzero(&child, sizeof(child));
 
 	return 1;
 }
@@ -350,7 +349,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count, 
 	if (!private_ckd_cache_root_set || memcmp(&private_ckd_cache_root, inout, sizeof(HDNode)) != 0) {
 		// clear the cache
 		private_ckd_cache_index = 0;
-		memset(private_ckd_cache, 0, sizeof(private_ckd_cache));
+		explicit_bzero(private_ckd_cache, sizeof(private_ckd_cache));
 		// setup new root
 		memcpy(&private_ckd_cache_root, inout, sizeof(HDNode));
 		private_ckd_cache_root_set = true;
@@ -497,7 +496,7 @@ int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, 
 	aes_encrypt_ctx ctx;
 
 	int ret = aes_encrypt_key256(shared_key, &ctx);
-	MEMSET_BZERO(shared_key, sizeof(shared_key));
+	explicit_bzero(shared_key, sizeof(shared_key));
 
 	if (ret != EXIT_SUCCESS) {
 		return 0;
@@ -524,7 +523,7 @@ int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key, 
 	aes_decrypt_ctx ctx;
 
 	int ret = aes_decrypt_key256(shared_key, &ctx);
-	MEMSET_BZERO(shared_key, sizeof(shared_key));
+	explicit_bzero(shared_key, sizeof(shared_key));
 
 	if (ret != EXIT_SUCCESS) {
 		return 0;
@@ -610,7 +609,7 @@ static int hdnode_serialize(const HDNode *node, uint32_t fingerprint, uint32_t v
 		memcpy(node_data + 46, node->private_key, 32);
 	}
 	int ret = base58_encode_check(node_data, sizeof(node_data), node->curve->hasher_type, str, strsize);
-	MEMSET_BZERO(node_data, sizeof(node_data));
+	explicit_bzero(node_data, sizeof(node_data));
 	return ret;
 }
 
@@ -635,14 +634,14 @@ int hdnode_deserialize(const char *str, uint32_t version_public, uint32_t versio
 	}
 	uint32_t version = read_be(node_data);
 	if (version == version_public) {
-		MEMSET_BZERO(node->private_key, sizeof(node->private_key));
+		explicit_bzero(node->private_key, sizeof(node->private_key));
 		memcpy(node->public_key, node_data + 45, 33);
 	} else if (version == version_private) { // private node
 		if (node_data[45]) { // invalid data
 			return -2;
 		}
 		memcpy(node->private_key, node_data + 46, 32);
-		MEMSET_BZERO(node->public_key, sizeof(node->public_key));
+		explicit_bzero(node->public_key, sizeof(node->public_key));
 	} else {
 		return -3; // invalid version
 	}

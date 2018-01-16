@@ -48,8 +48,8 @@ void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *s
 	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 
-	MEMSET_BZERO(bx, sizeof(bx));
-	MEMSET_BZERO(buf, sizeof(buf));
+	explicit_bzero(bx, sizeof(bx));
+	explicit_bzero(buf, sizeof(buf));
 }
 
 // generate next number from deterministic random number generator
@@ -63,7 +63,7 @@ void generate_rfc6979(uint8_t rnd[32], rfc6979_state *state)
 	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 	memcpy(rnd, buf, 32);
-	MEMSET_BZERO(buf, sizeof(buf));
+	explicit_bzero(buf, sizeof(buf));
 }
 
 // generate K in a deterministic way, according to RFC6979
@@ -73,5 +73,5 @@ void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
 	uint8_t buf[32];
 	generate_rfc6979(buf, state);
 	bn_read_be(buf, k);
-	MEMSET_BZERO(buf, sizeof(buf));
+	explicit_bzero(buf, sizeof(buf));
 }

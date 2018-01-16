@@ -15,7 +15,6 @@
 
 #include <string.h>
 
-#include "macros.h"
 #include "blake2b.h"
 #include "blake2_common.h"
 
@@ -160,7 +159,7 @@ int blake2b_InitKey( blake2b_state *S, size_t outlen, const void *key, size_t ke
     memset( block, 0, BLAKE2B_BLOCKBYTES );
     memcpy( block, key, keylen );
     blake2b_Update( S, block, BLAKE2B_BLOCKBYTES );
-    MEMSET_BZERO( block, BLAKE2B_BLOCKBYTES ); /* Burn the key from stack */
+    explicit_bzero( block, BLAKE2B_BLOCKBYTES ); /* Burn the key from stack */
   }
   return 0;
 }
@@ -280,7 +279,7 @@ int blake2b_Final( blake2b_state *S, void *out, size_t outlen )
     store64( buffer + sizeof( S->h[i] ) * i, S->h[i] );
 
   memcpy( out, buffer, S->outlen );
-  MEMSET_BZERO(buffer, sizeof(buffer));
+  explicit_bzero(buffer, sizeof(buffer));
   return 0;
 }
 

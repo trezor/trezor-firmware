@@ -108,7 +108,6 @@ typedef uint64_t sha2_word64;	/* Exactly 8 bytes */
 	} \
 }
 
-#define MEMSET_BZERO(p,l)	memset((p), 0, (l))
 #define MEMCPY_BCOPY(d,s,l)	memcpy((d), (s), (l))
 
 /*** THE SIX LOGICAL FUNCTIONS ****************************************/
@@ -282,7 +281,7 @@ static const char *sha2_hex_digits = "0123456789abcdef";
 /*** SHA-1: ***********************************************************/
 void sha1_Init(SHA1_CTX* context) {
 	MEMCPY_BCOPY(context->state, sha1_initial_hash_value, SHA1_DIGEST_LENGTH);
-	MEMSET_BZERO(context->buffer, SHA1_BLOCK_LENGTH);
+	explicit_bzero(context->buffer, SHA1_BLOCK_LENGTH);
 	context->bitcount = 0;
 }
 
@@ -592,14 +591,14 @@ void sha1_Final(SHA1_CTX* context, sha2_byte digest[]) {
 		 * No digest buffer, so we can do nothing
 		 * except clean up and go home
 		 */
-		MEMSET_BZERO(context, sizeof(SHA1_CTX));
+		explicit_bzero(context, sizeof(SHA1_CTX));
 		return;
 	}
 
 	usedspace = (context->bitcount >> 3) % SHA1_BLOCK_LENGTH;
 	if (usedspace == 0) {
 		/* Set-up for the last transform: */
-		MEMSET_BZERO(context->buffer, SHA1_SHORT_BLOCK_LENGTH);
+		explicit_bzero(context->buffer, SHA1_SHORT_BLOCK_LENGTH);
 
 		/* Begin padding with a 1 bit: */
 		*context->buffer = 0x80;
@@ -609,16 +608,16 @@ void sha1_Final(SHA1_CTX* context, sha2_byte digest[]) {
 
 		if (usedspace <= 56) {
 			/* Set-up for the last transform: */
-			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, 56 - usedspace);
+			explicit_bzero(((uint8_t*)context->buffer) + usedspace, 56 - usedspace);
 		} else {
 			if (usedspace < 64) {
-				MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, 64 - usedspace);
+				explicit_bzero(((uint8_t*)context->buffer) + usedspace, 64 - usedspace);
 			}
 			/* Do second-to-last transform: */
 			sha1_Transform(context->state, context->buffer, context->state);
 
 			/* And set-up for the last transform: */
-			MEMSET_BZERO(context->buffer, 56);
+			explicit_bzero(context->buffer, 56);
 		}
 		/* Clean up: */
 		usedspace = 0;
@@ -649,7 +648,7 @@ void sha1_Final(SHA1_CTX* context, sha2_byte digest[]) {
 #endif
 
 	/* Clean up: */
-	MEMSET_BZERO(context, sizeof(SHA1_CTX));
+	explicit_bzero(context, sizeof(SHA1_CTX));
 }
 
 char *sha1_End(SHA1_CTX* context, char buffer[]) {
@@ -666,9 +665,9 @@ char *sha1_End(SHA1_CTX* context, char buffer[]) {
 		}
 		*buffer = (char)0;
 	} else {
-		MEMSET_BZERO(context, sizeof(SHA1_CTX));
+		explicit_bzero(context, sizeof(SHA1_CTX));
 	}
-	MEMSET_BZERO(digest, SHA1_DIGEST_LENGTH);
+	explicit_bzero(digest, SHA1_DIGEST_LENGTH);
 	return buffer;
 }
 
@@ -693,7 +692,7 @@ void sha256_Init(SHA256_CTX* context) {
 		return;
 	}
 	MEMCPY_BCOPY(context->state, sha256_initial_hash_value, SHA256_DIGEST_LENGTH);
-	MEMSET_BZERO(context->buffer, SHA256_BLOCK_LENGTH);
+	explicit_bzero(context->buffer, SHA256_BLOCK_LENGTH);
 	context->bitcount = 0;
 }
 
@@ -930,7 +929,7 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 		((uint8_t*)context->buffer)[usedspace++] = 0x80;
 		
 		if (usedspace > SHA256_SHORT_BLOCK_LENGTH) {
-			MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_BLOCK_LENGTH - usedspace);
+			explicit_bzero(((uint8_t*)context->buffer) + usedspace, SHA256_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 			/* Convert TO host byte order */
@@ -945,7 +944,7 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 			usedspace = 0;
 		}
 		/* Set-up for the last transform: */
-		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA256_SHORT_BLOCK_LENGTH - usedspace);
+		explicit_bzero(((uint8_t*)context->buffer) + usedspace, SHA256_SHORT_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
@@ -970,7 +969,7 @@ void sha256_Final(SHA256_CTX* context, sha2_byte digest[]) {
 	}
 
 	/* Clean up state data: */
-	MEMSET_BZERO(context, sizeof(SHA256_CTX));
+	explicit_bzero(context, sizeof(SHA256_CTX));
 	usedspace = 0;
 }
 
@@ -988,9 +987,9 @@ char *sha256_End(SHA256_CTX* context, char buffer[]) {
 		}
 		*buffer = (char)0;
 	} else {
-		MEMSET_BZERO(context, sizeof(SHA256_CTX));
+		explicit_bzero(context, sizeof(SHA256_CTX));
 	}
-	MEMSET_BZERO(digest, SHA256_DIGEST_LENGTH);
+	explicit_bzero(digest, SHA256_DIGEST_LENGTH);
 	return buffer;
 }
 
@@ -1016,7 +1015,7 @@ void sha512_Init(SHA512_CTX* context) {
 		return;
 	}
 	MEMCPY_BCOPY(context->state, sha512_initial_hash_value, SHA512_DIGEST_LENGTH);
-	MEMSET_BZERO(context->buffer, SHA512_BLOCK_LENGTH);
+	explicit_bzero(context->buffer, SHA512_BLOCK_LENGTH);
 	context->bitcount[0] = context->bitcount[1] =  0;
 }
 
@@ -1233,7 +1232,7 @@ static void sha512_Last(SHA512_CTX* context) {
 	((uint8_t*)context->buffer)[usedspace++] = 0x80;
 	
 	if (usedspace > SHA512_SHORT_BLOCK_LENGTH) {
-		MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_BLOCK_LENGTH - usedspace);
+		explicit_bzero(((uint8_t*)context->buffer) + usedspace, SHA512_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 		/* Convert TO host byte order */
@@ -1248,7 +1247,7 @@ static void sha512_Last(SHA512_CTX* context) {
 		usedspace = 0;
 	}
 	/* Set-up for the last transform: */
-	MEMSET_BZERO(((uint8_t*)context->buffer) + usedspace, SHA512_SHORT_BLOCK_LENGTH - usedspace);
+	explicit_bzero(((uint8_t*)context->buffer) + usedspace, SHA512_SHORT_BLOCK_LENGTH - usedspace);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 	/* Convert TO host byte order */
@@ -1280,7 +1279,7 @@ void sha512_Final(SHA512_CTX* context, sha2_byte digest[]) {
 	}
 
 	/* Zero out state data */
-	MEMSET_BZERO(context, sizeof(SHA512_CTX));
+	explicit_bzero(context, sizeof(SHA512_CTX));
 }
 
 char *sha512_End(SHA512_CTX* context, char buffer[]) {
@@ -1297,9 +1296,9 @@ char *sha512_End(SHA512_CTX* context, char buffer[]) {
 		}
 		*buffer = (char)0;
 	} else {
-		MEMSET_BZERO(context, sizeof(SHA512_CTX));
+		explicit_bzero(context, sizeof(SHA512_CTX));
 	}
-	MEMSET_BZERO(digest, SHA512_DIGEST_LENGTH);
+	explicit_bzero(digest, SHA512_DIGEST_LENGTH);
 	return buffer;
 }
 

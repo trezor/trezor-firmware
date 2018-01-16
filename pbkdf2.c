@@ -25,7 +25,6 @@
 #include "pbkdf2.h"
 #include "hmac.h"
 #include "sha2.h"
-#include "macros.h"
 
 void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen)
 {
@@ -75,7 +74,7 @@ void pbkdf2_hmac_sha256_Final(PBKDF2_HMAC_SHA256_CTX *pctx, uint8_t *key)
 	}
 #endif
 	memcpy(key, pctx->f, SHA256_DIGEST_LENGTH);
-	MEMSET_BZERO(pctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
+	explicit_bzero(pctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
 }
 
 void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)
@@ -135,7 +134,7 @@ void pbkdf2_hmac_sha512_Final(PBKDF2_HMAC_SHA512_CTX *pctx, uint8_t *key)
 	}
 #endif
 	memcpy(key, pctx->f, SHA512_DIGEST_LENGTH);
-	MEMSET_BZERO(pctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
+	explicit_bzero(pctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
 }
 
 void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key)

@@ -26,7 +26,6 @@
 
 #include "base32.h"
 #include "ed25519-donna/ed25519-keccak.h"
-#include "macros.h"
 #include "ripemd160.h"
 #include "sha3.h"
 
@@ -112,7 +111,7 @@ void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version, u
 	/* 5.  Concatenate output of step 3 and the checksum from step 4 */
 	memcpy(&address[1 + RIPEMD160_DIGEST_LENGTH], hash, 4);
 
-	MEMSET_BZERO(hash, sizeof(hash));
+	explicit_bzero(hash, sizeof(hash));
 }
 
 bool nem_get_address(const ed25519_public_key public_key, uint8_t version, char *address) {
@@ -122,7 +121,7 @@ bool nem_get_address(const ed25519_public_key public_key, uint8_t version, char 
 
 	char *ret = base32_encode(pubkeyhash, sizeof(pubkeyhash), address, NEM_ADDRESS_SIZE + 1, BASE32_ALPHABET_RFC4648);
 
-	MEMSET_BZERO(pubkeyhash, sizeof(pubkeyhash));
+	explicit_bzero(pubkeyhash, sizeof(pubkeyhash));
 	return (ret != NULL);
 }
 
@@ -136,7 +135,7 @@ bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
 	keccak_256(address, 1 + RIPEMD160_DIGEST_LENGTH, hash);
 	bool valid = (memcmp(&address[1 + RIPEMD160_DIGEST_LENGTH], hash, 4) == 0);
 
-	MEMSET_BZERO(hash, sizeof(hash));
+	explicit_bzero(hash, sizeof(hash));
 	return valid;
 }
 
@@ -150,7 +149,7 @@ bool nem_validate_address(const char *address, uint8_t network) {
 	uint8_t *ret = base32_decode(address, NEM_ADDRESS_SIZE, pubkeyhash, sizeof(pubkeyhash), BASE32_ALPHABET_RFC4648);
 	bool valid = (ret != NULL) && nem_validate_address_raw(pubkeyhash, network);
 
-	MEMSET_BZERO(pubkeyhash, sizeof(pubkeyhash));
+	explicit_bzero(pubkeyhash, sizeof(pubkeyhash));
 	return valid;
 }
 
