@@ -75,7 +75,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake2s_digest_obj, mod_trezor
 
 STATIC mp_obj_t mod_trezorcrypto_Blake2s___del__(mp_obj_t self) {
     mp_obj_Blake2s_t *o = MP_OBJ_TO_PTR(self);
-    memset(&(o->ctx), 0, sizeof(BLAKE2S_CTX));
+    explicit_bzero(&(o->ctx), sizeof(BLAKE2S_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake2s___del___obj, mod_trezorcrypto_Blake2s___del__);

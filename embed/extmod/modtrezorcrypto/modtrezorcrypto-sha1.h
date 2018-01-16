@@ -68,7 +68,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha1_digest_obj, mod_trezorcry
 
 STATIC mp_obj_t mod_trezorcrypto_Sha1___del__(mp_obj_t self) {
     mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
-    memset(&(o->ctx), 0, sizeof(SHA1_CTX));
+    explicit_bzero(&(o->ctx), sizeof(SHA1_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha1___del___obj, mod_trezorcrypto_Sha1___del__);

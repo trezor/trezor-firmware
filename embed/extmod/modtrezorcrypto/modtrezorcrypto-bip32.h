@@ -93,17 +93,17 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size
     if (NULL != chain_code.buf && 32 == chain_code.len) {
         memcpy(o->hdnode.chain_code, chain_code.buf, 32);
     } else {
-        memset(o->hdnode.chain_code, 0, 32);
+        explicit_bzero(o->hdnode.chain_code, 32);
     }
     if (NULL != private_key.buf && 32 == private_key.len) {
         memcpy(o->hdnode.private_key, private_key.buf, 32);
     } else {
-        memset(o->hdnode.private_key, 0, 32);
+        explicit_bzero(o->hdnode.private_key, 32);
     }
     if (NULL != public_key.buf && 33 == public_key.len) {
         memcpy(o->hdnode.public_key, public_key.buf, 33);
     } else {
-        memset(o->hdnode.public_key, 0, 33);
+        explicit_bzero(o->hdnode.public_key, 33);
     }
     o->hdnode.curve = curve;
 
@@ -120,7 +120,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive(mp_obj_t self, mp_obj_t index) {
     uint32_t fp = hdnode_fingerprint(&o->hdnode);
 
     if (!hdnode_private_ckd(&o->hdnode, i)) {
-        memset(&o->hdnode, 0, sizeof(o->hdnode));
+        explicit_bzero(&o->hdnode, sizeof(o->hdnode));
         mp_raise_ValueError("Failed to derive");
     }
     o->fingerprint = fp;
@@ -157,7 +157,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
     if (!hdnode_private_ckd_cached(&o->hdnode, pints, plen, &o->fingerprint)) {
         // derivation failed, reset the state and raise
         o->fingerprint = 0;
-        memset(&o->hdnode, 0, sizeof(o->hdnode));
+        explicit_bzero(&o->hdnode, sizeof(o->hdnode));
         mp_raise_ValueError("Failed to derive path");
     }
 

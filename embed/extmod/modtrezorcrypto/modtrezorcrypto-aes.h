@@ -145,7 +145,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_update_obj, mod_trezorcryp
 
 STATIC mp_obj_t mod_trezorcrypto_AES___del__(mp_obj_t self) {
     mp_obj_AES_t *o = MP_OBJ_TO_PTR(self);
-    memset(&(o->ctx), 0, sizeof(aes_encrypt_ctx));
+    explicit_bzero(&(o->ctx), sizeof(aes_encrypt_ctx));
+    explicit_bzero(o->iv, AES_BLOCK_SIZE);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_AES___del___obj, mod_trezorcrypto_AES___del__);

@@ -111,8 +111,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj, mod_trezorcryp
 
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2___del__(mp_obj_t self) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
-    memset(&(o->ctx256), 0, sizeof(PBKDF2_HMAC_SHA256_CTX));
-    memset(&(o->ctx512), 0, sizeof(PBKDF2_HMAC_SHA512_CTX));
+    explicit_bzero(&(o->ctx256), sizeof(PBKDF2_HMAC_SHA256_CTX));
+    explicit_bzero(&(o->ctx512), sizeof(PBKDF2_HMAC_SHA512_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2___del___obj, mod_trezorcrypto_Pbkdf2___del__);
