@@ -142,7 +142,7 @@ static void recovery_done(void) {
 		if (!dry_run) {
 			// Update mnemonic on storage.
 			storage_setMnemonic(new_mnemonic);
-			memset(new_mnemonic, 0, sizeof(new_mnemonic));
+			explicit_bzero(new_mnemonic, sizeof(new_mnemonic));
 			if (!enforce_wordlist) {
 				// not enforcing => mark storage as imported
 				storage_setImported(true);
@@ -152,7 +152,7 @@ static void recovery_done(void) {
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
 			bool match = (storage_isInitialized() && storage_containsMnemonic(new_mnemonic));
-			memset(new_mnemonic, 0, sizeof(new_mnemonic));
+			explicit_bzero(new_mnemonic, sizeof(new_mnemonic));
 			if (match) {
 				layoutDialog(&bmp_icon_ok, NULL, _("Confirm"), NULL,
 					_("The seed is valid"),
@@ -172,7 +172,7 @@ static void recovery_done(void) {
 		}
 	} else {
 		// New mnemonic is invalid.
-		memset(new_mnemonic, 0, sizeof(new_mnemonic));
+		explicit_bzero(new_mnemonic, sizeof(new_mnemonic));
 		if (!dry_run) {
 			session_clear(true);
 		} else {

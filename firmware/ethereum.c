@@ -193,7 +193,7 @@ static void send_signature(void)
 		return;
 	}
 
-	memset(privkey, 0, sizeof(privkey));
+	explicit_bzero(privkey, sizeof(privkey));
 
 	/* Send back the result */
 	msg_tx_request.has_data_length = false;
@@ -592,7 +592,7 @@ void ethereum_signing_txack(EthereumTxAck *tx)
 void ethereum_signing_abort(void)
 {
 	if (ethereum_signing) {
-		memset(privkey, 0, sizeof(privkey));
+		explicit_bzero(privkey, sizeof(privkey));
 		layoutHome();
 		ethereum_signing = false;
 	}

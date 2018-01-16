@@ -29,7 +29,6 @@
 #include "curves.h"
 #include "secp256k1.h"
 #include "address.h"
-#include "macros.h"
 #include "coins.h"
 #include "base58.h"
 #include "segwit_addr.h"

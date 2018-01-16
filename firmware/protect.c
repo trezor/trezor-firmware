@@ -231,7 +231,7 @@ bool protectChangePin(void)
 		storage_update();
 	}
 
-	memset(pin_compare, 0, sizeof(pin_compare));
+	explicit_bzero(pin_compare, sizeof(pin_compare));
 
 	return result;
 }

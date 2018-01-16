@@ -262,9 +262,9 @@ void storage_generate_uuid(void)
 void session_clear(bool clear_pin)
 {
 	sessionSeedCached = false;
-	memset(&sessionSeed, 0, sizeof(sessionSeed));
+	explicit_bzero(&sessionSeed, sizeof(sessionSeed));
 	sessionPassphraseCached = false;
-	memset(&sessionPassphrase, 0, sizeof(sessionPassphrase));
+	explicit_bzero(&sessionPassphrase, sizeof(sessionPassphrase));
 	if (clear_pin) {
 		sessionPinCached = false;
 	}
@@ -297,7 +297,7 @@ static void storage_compute_u2froot(const char* mnemonic, StorageHDNode *u2froot
 	u2froot->has_private_key = true;
 	u2froot->private_key.size = sizeof(node.private_key);
 	memcpy(u2froot->private_key.bytes, node.private_key, sizeof(node.private_key));
-	memset(&node, 0, sizeof(node));
+	explicit_bzero(&node, sizeof(node));
 	session_clear(false); // invalidate seed cache
 }
 
@@ -399,7 +399,7 @@ static void storage_commit_locked(bool update)
 
 void storage_clear_update(void)
 {
-	memset(&storageUpdate, 0, sizeof(storageUpdate));
+	explicit_bzero(&storageUpdate, sizeof(storageUpdate));
 }
 
 void storage_update(void)
