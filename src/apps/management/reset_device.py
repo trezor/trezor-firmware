@@ -12,13 +12,13 @@ if __debug__:
 async def layout_reset_device(ctx, msg):
     from trezor import config
     from trezor.ui.text import Text
-    from trezor.crypto import hashlib, random, bip39
+    from trezor.crypto import hashlib, random, bip39, random
+    from trezor.ui.keyboard import MnemonicKeyboard
     from trezor.messages.EntropyRequest import EntropyRequest
     from trezor.messages.Success import Success
     from trezor.messages import FailureType
     from trezor.messages import ButtonRequestType
     from trezor.messages.wire_types import EntropyAck
-
     from apps.management.change_pin import request_pin_confirm
     from apps.common.confirm import require_confirm
     from apps.common import storage
@@ -61,11 +61,27 @@ async def layout_reset_device(ctx, msg):
                            'copy of your recovery',
                            'seed and never upload',
                            'it online!')
-
     await require_confirm(ctx, warning_content, ButtonRequestType.ResetDevice)
 
+    # ask to write down mnemonic
     await show_mnemonic(mnemonic)
 
+    # ask for random number to check correctness
+    words = list(enumerate(mnemonic.split()))
+    index = random.uniform(len(words))
+    word = words[index]
+    board = MnemonicKeyboard()
+    board.prompt = ('Type %s. word' % (index + 1))
+    res = await board
+    # TBD
+    if res is not word:
+        fail_content = Text('Failed!', ui.ICON_NOCOPY, ui.NORMAL,
+                            'You have entered',
+                            'wrong seed word.',
+                            'Please, reconnect',
+                            'device and try again.')
+        await require_confirm(ctx, fail_content, ButtonRequestType.ResetDevice)
+    
     if curpin != newpin:
         config.change_pin(curpin, newpin)
     storage.load_settings(label=msg.label,
@@ -123,15 +139,13 @@ async def show_mnemonic_page(page, page_count, mnemonic):
     for pi, (wi, word) in enumerate(mnemonic[page]):
         pos = wi + 1
         lines.append(str('%d. %s' % (pos, word)))
-        
     ui.display.clear()
     scroll_page = Scrollpage(Text('Recovery seed setup', ui.ICON_RESET, ui.MONO, lines), page, page_count)
     scroll_page.render()
-
     if page + 1 == page_count:
         await Button(
             (0, 240 - 48, 240, 48),
-            'Finish',
+            'Finalize',
             normal_style=ui.BTN_CONFIRM,
             active_style=ui.BTN_CONFIRM_ACTIVE)
     else:
