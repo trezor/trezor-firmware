@@ -22,10 +22,8 @@
 #include <libopencm3/usb/usbd.h>
 
 /* USB 3.1 Descriptor Types - Table 9-6 */
-#define USB_DT_BOS				15
+#define USB_DT_BOS						15
 #define USB_DT_DEVICE_CAPABILITY		16
-#define USB_DT_SUPERSPEED_USB_ENDPOINT_COMPANION 48
-#define USB_DT_SUPERSPEEDPLUS_ISOCHRONOUS_ENDPOINT_COMPANION 49
 
 struct usb_device_capability_descriptor {
 	uint8_t bLength;
@@ -45,18 +43,7 @@ struct usb_bos_descriptor {
 #define USB_DT_BOS_SIZE 5
 
 /* USB Device Capability Types - USB 3.1 Table 9-14 */
-#define USB_DC_WIRELESS_USB			1
-#define USB_DC_USB_2_0_EXTENSION		2
-#define USB_DC_SUPERSPEED_USB			3
-#define USB_DC_CONTAINER_ID			4
-#define USB_DC_PLATFORM				5
-#define USB_DC_POWER_DELIVERY_CAPABILITY	6
-#define USB_DC_BATTERY_INFO_CAPABILITY		7
-#define USB_DC_PD_CONSUMER_PORT_CAPABILITY	8
-#define USB_DC_PD_PROVIDER_PORT_CAPABILITY	9
-#define USB_DC_SUPERSPEED_PLUS			10
-#define USB_DC_PRECISION_TIME_MEASUREMENT	11
-#define USB_DC_WIRELESS_USB_EXT			12
+#define USB_DC_PLATFORM					5
 
 extern void usb21_setup(usbd_device* usbd_dev, const struct usb_bos_descriptor* binary_object_store);
 
