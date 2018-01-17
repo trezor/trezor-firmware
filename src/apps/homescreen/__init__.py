@@ -1,3 +1,4 @@
+from trezor import config
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
 from trezor.messages.wire_types import Initialize, GetFeatures, Ping
@@ -22,7 +23,7 @@ async def respond_Features(ctx, msg):
     f.label = storage.get_label()
     f.initialized = storage.is_initialized()
     f.passphrase_protection = storage.has_passphrase()
-    f.pin_protection = False
+    f.pin_protection = config.has_pin()
     f.language = 'english'
 
     return f
