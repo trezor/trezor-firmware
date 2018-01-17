@@ -1,5 +1,5 @@
 from micropython import const
-from trezor import loop, ui
+from trezor import loop, ui, res
 from .swipe import Swipe, SWIPE_UP, SWIPE_DOWN, SWIPE_VERTICAL
 
 
@@ -37,17 +37,15 @@ async def animate_swipe():
     sleep = loop.sleep(time_delay)
     for t in ui.pulse(draw_delay):
         fg = ui.blend(ui.GREY, ui.DARK_GREY, t)
-        ui.display.bar_radius(102, 214, 36, 4, fg, ui.BG, 2)
-        ui.display.bar_radius(106, 222, 28, 4, fg, ui.BG, 2)
-        ui.display.bar_radius(110, 230, 20, 4, fg, ui.BG, 2)
+        ui.display.icon(110, 210, res.load(ui.ICON_SWIPE), fg, ui.BG)
         await sleep
 
 
 def render_scrollbar(page, page_count):
     bbox = const(220)
-    size = const(10)
+    size = const(8)
 
-    padding = 18
+    padding = 14
     if page_count * padding > bbox:
         padding = bbox // page_count
 
@@ -62,11 +60,16 @@ def render_scrollbar(page, page_count):
                           size, ui.FG, ui.BG, 4)
 
 
-class Scrollbar(ui.Widget):
+class Scrollpage(ui.Widget):
 
-    def __init__(self, page, page_count):
+    def __init__(self, content, page, page_count):
+        self.content = content
         self.page = page
         self.page_count = page_count
 
     def render(self):
+        self.content.render()
         render_scrollbar(self.page, self.page_count)
+
+    async def __iter__(self):
+        return await loop.wait(super().__iter__(), self.content)

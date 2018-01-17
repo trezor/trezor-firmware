@@ -8,7 +8,6 @@ if __debug__:
     internal_entropy = None
     current_word = None
 
-
 @unimport
 async def layout_reset_device(ctx, msg):
     from trezor import config
@@ -56,10 +55,16 @@ async def layout_reset_device(ctx, msg):
     entropy = ehash.digest()
     mnemonic = bip39.from_data(entropy[:msg.strength // 8])
 
-    warning_content = Text('Backup your seed', ui.ICON_NOCOPY, ui.NORMAL, 'Never make a digital', 'copy of your recovery', 'seed and never upload', 'it online!')
+    # seed-copy warning
+    warning_content = Text('Backup your seed', ui.ICON_NOCOPY, ui.NORMAL,
+                           'Never make a digital',
+                           'copy of your recovery',
+                           'seed and never upload',
+                           'it online!')
+
     await require_confirm(ctx, warning_content, ButtonRequestType.ResetDevice)
 
-    await show_mnemonic(ctx, mnemonic)
+    await show_mnemonic(mnemonic)
 
     if curpin != newpin:
         config.change_pin(curpin, newpin)
@@ -99,7 +104,7 @@ async def show_mnemonic_by_word(ctx, mnemonic):
                       ConfirmWord, confirm='Next', cancel=None)
 
 
-async def show_mnemonic(ctx, mnemonic):
+async def show_mnemonic(mnemonic):
     from trezor.ui.scroll import paginate
 
     first_page = const(0)
@@ -111,20 +116,17 @@ async def show_mnemonic(ctx, mnemonic):
 
 async def show_mnemonic_page(page, page_count, mnemonic):
     from trezor.ui.button import Button
-    from trezor.ui.scroll import render_scrollbar, animate_swipe
+    from trezor.ui.text import Text
+    from trezor.ui.scroll import Scrollpage, animate_swipe
 
-    ui.display.clear()
-    ui.header('Write down seed', ui.ICON_RESET, ui.FG, ui.BG)
-    render_scrollbar(page, page_count)
-
+    lines = []
     for pi, (wi, word) in enumerate(mnemonic[page]):
-        top = pi * 35 + 68
         pos = wi + 1
-        offset = 0
-        if pos > 9:
-            offset += 12
-        ui.display.text(10, top, '%d.' % pos, ui.BOLD, ui.LIGHT_GREEN, ui.BG)
-        ui.display.text(30 + offset, top, '%s' % word, ui.BOLD, ui.FG, ui.BG)
+        lines.append(str('%d. %s' % (pos, word)))
+        
+    ui.display.clear()
+    scroll_page = Scrollpage(Text('Recovery seed setup', ui.ICON_RESET, ui.MONO, lines), page, page_count)
+    scroll_page.render()
 
     if page + 1 == page_count:
         await Button(

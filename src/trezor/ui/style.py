@@ -56,6 +56,7 @@ ICON_SEND     = 'trezor/res/send.toig'
 ICON_CLICK    = 'trezor/res/click.toig'
 ICON_BACK     = 'trezor/res/left.toig'
 ICON_NOCOPY   = 'trezor/res/nocopy.toig'
+ICON_SWIPE    = 'trezor/res/swipedown.toig'
 
 # buttons
 BTN_DEFAULT = {
