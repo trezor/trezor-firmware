@@ -10,9 +10,9 @@
 #define USB_DESC_TYPE_HID        0x21
 #define USB_DESC_TYPE_REPORT     0x22
 
-#define USB_HID_REQ_SET_PROTOCOL 0x0b
+#define USB_HID_REQ_SET_PROTOCOL 0x0B
 #define USB_HID_REQ_GET_PROTOCOL 0x03
-#define USB_HID_REQ_SET_IDLE     0x0a
+#define USB_HID_REQ_SET_IDLE     0x0A
 #define USB_HID_REQ_GET_IDLE     0x02
 
 /* usb_hid_add adds and configures new USB HID interface according to

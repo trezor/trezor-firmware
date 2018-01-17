@@ -18,6 +18,11 @@ void mp_hal_set_vcp_iface(int iface_num);
 #define POLL_READ  (0x0000)
 #define POLL_WRITE (0x0100)
 
+#define CHECK_PARAM_RANGE(value, minimum, maximum) \
+    if (value < minimum || value > maximum) { \
+        mp_raise_ValueError(#value " is out of range"); \
+    }
+
 /// def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
 ///     '''
 ///     Wait until one of `ifaces` is ready to read or write (using masks
@@ -139,27 +144,13 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type, size_t n_ar
     if (report_desc.buf == NULL || report_desc.len == 0 || report_desc.len > 255) {
         mp_raise_ValueError("report_desc is invalid");
     }
-    if (iface_num < 0 || iface_num > 32) {
-        mp_raise_ValueError("iface_num is invalid");
-    }
-    if (ep_in < 0 || ep_in > 255) {
-        mp_raise_ValueError("ep_in is invalid");
-    }
-    if (ep_out < 0 || ep_out > 255) {
-        mp_raise_ValueError("ep_out is invalid");
-    }
-    if (subclass < 0 || subclass > 255) {
-        mp_raise_ValueError("subclass is invalid");
-    }
-    if (protocol < 0 || protocol > 255) {
-        mp_raise_ValueError("protocol is invalid");
-    }
-    if (polling_interval < 1 || polling_interval > 255) {
-        mp_raise_ValueError("polling_interval is invalid");
-    }
-    if (max_packet_len != 64) {
-        mp_raise_ValueError("max_packet_len is invalid");
-    }
+    CHECK_PARAM_RANGE(iface_num, 0, 32)
+    CHECK_PARAM_RANGE(ep_in, 0, 255)
+    CHECK_PARAM_RANGE(ep_out, 0, 255)
+    CHECK_PARAM_RANGE(subclass, 0, 255)
+    CHECK_PARAM_RANGE(protocol, 0, 255)
+    CHECK_PARAM_RANGE(polling_interval, 1, 255)
+    CHECK_PARAM_RANGE(max_packet_len, 64, 64)
 
     mp_obj_HID_t *o = m_new_obj(mp_obj_HID_t);
     o->base.type = type;
@@ -249,21 +240,11 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type, size_t n_ar
     const mp_int_t ep_out         = vals[3].u_int;
     const mp_int_t ep_cmd         = vals[4].u_int;
 
-    if (iface_num < 0 || iface_num > 32) {
-        mp_raise_ValueError("iface_num is invalid");
-    }
-    if (data_iface_num < 0 || data_iface_num > 32) {
-        mp_raise_ValueError("iface_num is invalid");
-    }
-    if (ep_in < 0 || ep_in > 255) {
-        mp_raise_ValueError("ep_in is invalid");
-    }
-    if (ep_out < 0 || ep_out > 255) {
-        mp_raise_ValueError("ep_out is invalid");
-    }
-    if (ep_cmd < 0 || ep_cmd > 255) {
-        mp_raise_ValueError("ep_cmd is invalid");
-    }
+    CHECK_PARAM_RANGE(iface_num, 0, 32)
+    CHECK_PARAM_RANGE(data_iface_num, 0, 32)
+    CHECK_PARAM_RANGE(ep_in, 0, 255)
+    CHECK_PARAM_RANGE(ep_out, 0, 255)
+    CHECK_PARAM_RANGE(ep_cmd, 0, 255)
 
     const size_t vcp_buffer_len = 1024;
     const size_t vcp_packet_len = 64;
@@ -371,12 +352,8 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     const char *product       = get_0str(vals[4].u_obj, 0, 32);
     const char *serial_number = get_0str(vals[5].u_obj, 0, 32);
 
-    if (vendor_id < 0 || vendor_id > 65535) {
-        mp_raise_ValueError("vendor_id is invalid");
-    }
-    if (product_id < 0 || product_id > 65535) {
-        mp_raise_ValueError("product_id is invalid");
-    }
+    CHECK_PARAM_RANGE(vendor_id, 0, 65535)
+    CHECK_PARAM_RANGE(product_id, 0, 65535)
     if (manufacturer == NULL) {
         mp_raise_ValueError("manufacturer is invalid");
     }

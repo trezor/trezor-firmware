@@ -22,17 +22,6 @@ typedef struct __attribute__((packed)) {
     usb_endpoint_descriptor_t ep_out;
 } usb_hid_descriptor_block_t;
 
-typedef enum {
-    USB_HID_SUBCLASS_NONE = 0,
-    USB_HID_SUBCLASS_BOOT = 1,
-} usb_hid_subclass_t;
-
-typedef enum {
-    USB_HID_PROTOCOL_NONE = 0,
-    USB_HID_PROTOCOL_KEYBOARD = 1,
-    USB_HID_PROTOCOL_MOUSE = 2,
-} usb_hid_protocol_t;
-
 /* usb_hid_info_t contains all information for setting up a HID interface.  All
  * passed pointers need to live at least until the interface is disabled
  * (usb_stop is called). */
