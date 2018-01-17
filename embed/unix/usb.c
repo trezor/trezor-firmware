@@ -105,8 +105,10 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
     slen = sl;
     static const char *ping_req = "PINGPING";
     static const char *ping_resp = "PONGPONG";
-    if (r == strlen(ping_req) && memcmp(ping_req, buf, strlen(ping_req)) == 0) {
-        ensure(usb_hid_write(0, (const uint8_t *)ping_resp, strlen(ping_resp)), "usb_hid_write");
+    if (r == strlen(ping_req) && 0 == memcmp(ping_req, buf, strlen(ping_req))) {
+        if (slen > 0) {
+            sendto(sock, ping_resp, strlen(ping_resp), MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);
+        }
         return 0;
     }
     return r;
