@@ -109,34 +109,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/lib/embed/abort_.c',
-    'vendor/micropython/lib/libc/string0.c',
-    'vendor/micropython/lib/libm/acoshf.c',
-    'vendor/micropython/lib/libm/asinfacosf.c',
-    'vendor/micropython/lib/libm/asinhf.c',
-    'vendor/micropython/lib/libm/atan2f.c',
-    'vendor/micropython/lib/libm/atanf.c',
-    'vendor/micropython/lib/libm/atanhf.c',
-    'vendor/micropython/lib/libm/ef_rem_pio2.c',
-    'vendor/micropython/lib/libm/erf_lgamma.c',
-    'vendor/micropython/lib/libm/fmodf.c',
-    'vendor/micropython/lib/libm/kf_cos.c',
-    'vendor/micropython/lib/libm/kf_rem_pio2.c',
-    'vendor/micropython/lib/libm/kf_sin.c',
-    'vendor/micropython/lib/libm/kf_tan.c',
-    'vendor/micropython/lib/libm/log1pf.c',
-    'vendor/micropython/lib/libm/math.c',
-    'vendor/micropython/lib/libm/nearbyintf.c',
-    'vendor/micropython/lib/libm/roundf.c',
-    'vendor/micropython/lib/libm/sf_cos.c',
-    'vendor/micropython/lib/libm/sf_erf.c',
-    'vendor/micropython/lib/libm/sf_frexp.c',
-    'vendor/micropython/lib/libm/sf_ldexp.c',
-    'vendor/micropython/lib/libm/sf_modf.c',
-    'vendor/micropython/lib/libm/sf_sin.c',
-    'vendor/micropython/lib/libm/sf_tan.c',
-    'vendor/micropython/lib/libm/thumb_vfp_sqrtf.c',
-    'vendor/micropython/lib/libm/wf_lgamma.c',
-    'vendor/micropython/lib/libm/wf_tgamma.c',
     'vendor/micropython/lib/mp-readline/readline.c',
     'vendor/micropython/lib/utils/interrupt_char.c',
     'vendor/micropython/lib/utils/printf.c',
@@ -335,6 +307,7 @@ env.Replace(
     '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -fno-common '
     '-mthumb -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-ffreestanding '
     '-fstack-protector-all '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
@@ -435,7 +408,7 @@ program_elf = env.Command(
     target='firmware.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
+    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libm.a` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
 )
 
 program_bin = env.Command(

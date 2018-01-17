@@ -169,7 +169,7 @@ program_elf = env.Command(
     target='bootloader.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a`',
+    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
 )
 
 program_bin = env.Command(
