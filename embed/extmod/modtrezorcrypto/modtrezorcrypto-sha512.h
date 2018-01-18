@@ -8,6 +8,7 @@
 #include "py/objstr.h"
 
 #include "sha2.h"
+#include "memzero.h"
 
 /// class Sha512:
 ///     '''
@@ -67,7 +68,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha512_digest_obj, mod_trezorc
 
 STATIC mp_obj_t mod_trezorcrypto_Sha512___del__(mp_obj_t self) {
     mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
-    explicit_bzero(&(o->ctx), sizeof(SHA512_CTX));
+    memzero(&(o->ctx), sizeof(SHA512_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha512___del___obj, mod_trezorcrypto_Sha512___del__);

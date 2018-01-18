@@ -8,6 +8,7 @@
 #include "py/objstr.h"
 
 #include "blake256.h"
+#include "memzero.h"
 
 /// class Blake256:
 ///     '''
@@ -68,7 +69,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake256_digest_obj, mod_trezo
 
 STATIC mp_obj_t mod_trezorcrypto_Blake256___del__(mp_obj_t self) {
     mp_obj_Blake256_t *o = MP_OBJ_TO_PTR(self);
-    explicit_bzero(&(o->ctx), sizeof(BLAKE256_CTX));
+    memzero(&(o->ctx), sizeof(BLAKE256_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake256___del___obj, mod_trezorcrypto_Blake256___del__);

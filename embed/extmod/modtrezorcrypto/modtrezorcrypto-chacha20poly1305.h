@@ -8,6 +8,7 @@
 #include "py/objstr.h"
 
 #include "chacha20poly1305/rfc7539.h"
+#include "memzero.h"
 
 /// class ChaCha20Poly1305:
 ///     '''
@@ -105,7 +106,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ChaCha20Poly1305_finish_obj, m
 
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305___del__(mp_obj_t self) {
     mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-    explicit_bzero(&(o->ctx), sizeof(chacha20poly1305_ctx));
+    memzero(&(o->ctx), sizeof(chacha20poly1305_ctx));
     o->alen = 0;
     o->plen = 0;
     return mp_const_none;

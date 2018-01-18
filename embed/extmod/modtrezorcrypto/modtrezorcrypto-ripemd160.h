@@ -8,6 +8,7 @@
 #include "py/objstr.h"
 
 #include "ripemd160.h"
+#include "memzero.h"
 
 /// class Ripemd160:
 ///     '''
@@ -68,7 +69,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160_digest_obj, mod_trez
 
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160___del__(mp_obj_t self) {
     mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
-    explicit_bzero(&(o->ctx), sizeof(RIPEMD160_CTX));
+    memzero(&(o->ctx), sizeof(RIPEMD160_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160___del___obj, mod_trezorcrypto_Ripemd160___del__);

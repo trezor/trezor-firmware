@@ -8,6 +8,7 @@
 #include "py/objstr.h"
 
 #include "sha3.h"
+#include "memzero.h"
 
 /// class Sha3_512:
 ///     '''
@@ -72,7 +73,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Sha3_512_digest_obj,
 
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512___del__(mp_obj_t self) {
     mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(self);
-    explicit_bzero(&(o->ctx), sizeof(SHA3_CTX));
+    memzero(&(o->ctx), sizeof(SHA3_CTX));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_512___del___obj, mod_trezorcrypto_Sha3_512___del__);
