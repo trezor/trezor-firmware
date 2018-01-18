@@ -35,6 +35,7 @@
 #include "sha2.h"
 #include "ecdsa.h"
 #include "secp256k1.h"
+#include "memzero.h"
 
 #define FIRMWARE_MAGIC "TRZR"
 
@@ -402,7 +403,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			// restore metadata from backup
 			erase_metadata_sectors();
 			restore_metadata(meta_backup);
-			explicit_bzero(meta_backup, sizeof(meta_backup));
+			memzero(meta_backup, sizeof(meta_backup));
 
 			// compare against known hash computed via the following Python3 script:
 			// hashlib.sha256(binascii.unhexlify('0F5A693C' * 8192)).hexdigest()
@@ -599,7 +600,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		// 2) firmware restore flag isn't set
 		// 3) signatures are not ok
 		if (old_was_unsigned || (flags & 0x01) == 0 || !signatures_ok(NULL)) {
-			explicit_bzero(meta_backup, sizeof(meta_backup));
+			memzero(meta_backup, sizeof(meta_backup));
 		}
 		// copy new firmware header
 		memcpy(meta_backup, (void *)FLASH_META_START, FLASH_META_DESC_LEN);
@@ -607,12 +608,12 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		if (hash_check_ok) {
 			memcpy(meta_backup, FIRMWARE_MAGIC, 4);
 		} else {
-			explicit_bzero(meta_backup, 4);
+			memzero(meta_backup, 4);
 		}
 
 		// no need to erase, because we are not changing any already flashed byte.
 		restore_metadata(meta_backup);
-		explicit_bzero(meta_backup, sizeof(meta_backup));
+		memzero(meta_backup, sizeof(meta_backup));
 
 		flash_state = STATE_END;
 		if (hash_check_ok) {

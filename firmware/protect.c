@@ -29,6 +29,7 @@
 #include "util.h"
 #include "debug.h"
 #include "gettext.h"
+#include "memzero.h"
 
 #define MAX_WRONG_PINS 15
 
@@ -231,7 +232,7 @@ bool protectChangePin(void)
 		storage_update();
 	}
 
-	explicit_bzero(pin_compare, sizeof(pin_compare));
+	memzero(pin_compare, sizeof(pin_compare));
 
 	return result;
 }

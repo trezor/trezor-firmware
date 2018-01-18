@@ -41,6 +41,7 @@
 #include "usb.h"
 #include "gettext.h"
 #include "u2f.h"
+#include "memzero.h"
 
 /* magic constant to check validity of storage block */
 static const uint32_t storage_magic = 0x726f7473;   // 'stor' as uint32_t
@@ -262,9 +263,9 @@ void storage_generate_uuid(void)
 void session_clear(bool clear_pin)
 {
 	sessionSeedCached = false;
-	explicit_bzero(&sessionSeed, sizeof(sessionSeed));
+	memzero(&sessionSeed, sizeof(sessionSeed));
 	sessionPassphraseCached = false;
-	explicit_bzero(&sessionPassphrase, sizeof(sessionPassphrase));
+	memzero(&sessionPassphrase, sizeof(sessionPassphrase));
 	if (clear_pin) {
 		sessionPinCached = false;
 	}
@@ -297,7 +298,7 @@ static void storage_compute_u2froot(const char* mnemonic, StorageHDNode *u2froot
 	u2froot->has_private_key = true;
 	u2froot->private_key.size = sizeof(node.private_key);
 	memcpy(u2froot->private_key.bytes, node.private_key, sizeof(node.private_key));
-	explicit_bzero(&node, sizeof(node));
+	memzero(&node, sizeof(node));
 	session_clear(false); // invalidate seed cache
 }
 
@@ -399,7 +400,7 @@ static void storage_commit_locked(bool update)
 
 void storage_clear_update(void)
 {
-	explicit_bzero(&storageUpdate, sizeof(storageUpdate));
+	memzero(&storageUpdate, sizeof(storageUpdate));
 }
 
 void storage_update(void)
