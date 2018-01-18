@@ -251,8 +251,8 @@ class wait(Syscall):
         self.children = children
         self.wait_for = wait_for
         self.exit_others = exit_others
-        self.scheduled = None
-        self.finished = None
+        self.scheduled = None  # list of scheduled wrapper tasks
+        self.finished = None  # list of children that finished
         self.callback = None
 
     def handle(self, task):
@@ -263,9 +263,8 @@ class wait(Syscall):
             schedule(ct)
 
     def exit(self):
-        for task in self.scheduled:
-            if task not in self.finished:
-                close(task)
+        for ct in self.scheduled:
+            close(ct)
 
     async def _wait(self, child):
         try:
@@ -278,14 +277,14 @@ class wait(Syscall):
     def _finish(self, child, result):
         self.finished.append(child)
         if self.wait_for == len(self.finished) or isinstance(result, Exception):
+            schedule(self.callback, result)
             if self.exit_others:
                 self.exit()
-            schedule(self.callback, result)
 
     def __iter__(self):
         try:
             return (yield self)
-        except Exception:
+        except:
             # exception was raised on the waiting task externally with
             # close() or throw(), kill the children tasks and re-raise
             self.exit()
