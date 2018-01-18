@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "ripemd160.h"
+#include "memzero.h"
 
 /*
  * 32-bit integer manipulation macros (little endian)
@@ -327,7 +328,7 @@ void ripemd160_Final( RIPEMD160_CTX *ctx, uint8_t output[RIPEMD160_DIGEST_LENGTH
     PUT_UINT32_LE( ctx->state[3], output, 12 );
     PUT_UINT32_LE( ctx->state[4], output, 16 );
 
-    explicit_bzero(ctx, sizeof(RIPEMD160_CTX));
+    memzero(ctx, sizeof(RIPEMD160_CTX));
 }
 
 /*

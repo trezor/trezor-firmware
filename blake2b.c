@@ -17,6 +17,7 @@
 
 #include "blake2b.h"
 #include "blake2_common.h"
+#include "memzero.h"
 
 typedef struct blake2b_param__
 {
@@ -159,7 +160,7 @@ int blake2b_InitKey( blake2b_state *S, size_t outlen, const void *key, size_t ke
     memset( block, 0, BLAKE2B_BLOCKBYTES );
     memcpy( block, key, keylen );
     blake2b_Update( S, block, BLAKE2B_BLOCKBYTES );
-    explicit_bzero( block, BLAKE2B_BLOCKBYTES ); /* Burn the key from stack */
+    memzero( block, BLAKE2B_BLOCKBYTES ); /* Burn the key from stack */
   }
   return 0;
 }
@@ -279,7 +280,7 @@ int blake2b_Final( blake2b_state *S, void *out, size_t outlen )
     store64( buffer + sizeof( S->h[i] ) * i, S->h[i] );
 
   memcpy( out, buffer, S->outlen );
-  explicit_bzero(buffer, sizeof(buffer));
+  memzero(buffer, sizeof(buffer));
   return 0;
 }
 

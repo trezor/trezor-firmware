@@ -27,6 +27,7 @@
 #include "base58.h"
 #include "sha2.h"
 #include "ripemd160.h"
+#include "memzero.h"
 
 static const int8_t b58digits_map[] = {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -199,7 +200,7 @@ int base58_encode_check(const uint8_t *data, int datalen, HasherType hasher_type
 	hasher_Raw(hasher_type, hash, 32, hash);
 	size_t res = strsize;
 	bool success = b58enc(str, &res, buf, datalen + 4);
-	explicit_bzero(buf, sizeof(buf));
+	memzero(buf, sizeof(buf));
 	return success ? res : 0;
 }
 
@@ -253,7 +254,7 @@ int base58gph_encode_check(const uint8_t *data, int datalen, char *str, int strs
 	ripemd160(data, datalen, hash);  // No double SHA256, but a single RIPEMD160
 	size_t res = strsize;
 	bool success = b58enc(str, &res, buf, datalen + 4);
-	explicit_bzero(buf, sizeof(buf));
+	memzero(buf, sizeof(buf));
 	return success ? res : 0;
 }
 

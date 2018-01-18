@@ -31,6 +31,7 @@
 #include "pbkdf2.h"
 #include "bip39_english.h"
 #include "options.h"
+#include "memzero.h"
 
 #if USE_BIP39_CACHE
 
@@ -53,7 +54,7 @@ const char *mnemonic_generate(int strength)
 	uint8_t data[32];
 	random_buffer(data, 32);
 	const char *r = mnemonic_from_data(data, strength / 8);
-	explicit_bzero(data, sizeof(data));
+	memzero(data, sizeof(data));
 	return r;
 }
 
@@ -65,7 +66,7 @@ const uint16_t *mnemonic_generate_indexes(int strength)
 	uint8_t data[32];
 	random_buffer(data, 32);
 	const uint16_t *r = mnemonic_from_data_indexes(data, strength / 8);
-	explicit_bzero(data, sizeof(data));
+	memzero(data, sizeof(data));
 	return r;
 }
 
@@ -99,7 +100,7 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 		*p = (i < mlen - 1) ? ' ' : 0;
 		p++;
 	}
-	explicit_bzero(bits, sizeof(bits));
+	memzero(bits, sizeof(bits));
 
 	return mnemo;
 }
@@ -130,7 +131,7 @@ const uint16_t *mnemonic_from_data_indexes(const uint8_t *data, int len)
 		}
 		mnemo[i] = idx;
 	}
-	explicit_bzero(bits, sizeof(bits));
+	memzero(bits, sizeof(bits));
 
 	return mnemo;
 }
@@ -160,7 +161,7 @@ int mnemonic_check(const char *mnemonic)
 	uint32_t j, k, ki, bi;
 	uint8_t bits[32 + 1];
 
-	explicit_bzero(bits, sizeof(bits));
+	memzero(bits, sizeof(bits));
 	i = 0; bi = 0;
 	while (mnemonic[i]) {
 		j = 0;
@@ -240,7 +241,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 		}
 	}
 	pbkdf2_hmac_sha512_Final(&pctx, seed);
-	explicit_bzero(salt, sizeof(salt));
+	memzero(salt, sizeof(salt));
 #if USE_BIP39_CACHE
 	// store to cache
 	if (mnemoniclen < 256 && passphraselen < 64) {

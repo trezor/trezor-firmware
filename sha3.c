@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "sha3.h"
+#include "memzero.h"
 
 #define I64(x) x##LL
 #define ROTL64(qword, n) ((qword) << (n) ^ ((qword) >> (64 - (n))))
@@ -330,7 +331,7 @@ void sha3_Final(SHA3_CTX *ctx, unsigned char* result)
 
 	assert(block_size > digest_length);
 	if (result) me64_to_le_str(result, ctx->hash, digest_length);
-	explicit_bzero(ctx, sizeof(SHA3_CTX));
+	memzero(ctx, sizeof(SHA3_CTX));
 }
 
 #if USE_KECCAK
@@ -359,7 +360,7 @@ void keccak_Final(SHA3_CTX *ctx, unsigned char* result)
 
 	assert(block_size > digest_length);
 	if (result) me64_to_le_str(result, ctx->hash, digest_length);
-	explicit_bzero(ctx, sizeof(SHA3_CTX));
+	memzero(ctx, sizeof(SHA3_CTX));
 }
 
 void keccak_256(const unsigned char* data, size_t len, unsigned char* digest)

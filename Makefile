@@ -50,6 +50,7 @@ SRCS  += chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c ch
 SRCS  += rc4.c
 SRCS  += nem.c
 SRCS  += segwit_addr.c
+SRCS  += memzero.c
 
 OBJS   = $(SRCS:.c=.o)
 

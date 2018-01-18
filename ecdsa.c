@@ -37,6 +37,7 @@
 #include "base58.h"
 #include "secp256k1.h"
 #include "rfc6979.h"
+#include "memzero.h"
 
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2)
@@ -541,8 +542,8 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k, const curve_po
 	}
 	conditional_negate(sign, &jres.z, prime);
 	jacobian_to_curve(&jres, res, prime);
-	explicit_bzero(&a, sizeof(a));
-	explicit_bzero(&jres, sizeof(jres));
+	memzero(&a, sizeof(a));
+	memzero(&jres, sizeof(jres));
 }
 
 #if USE_PRECOMPUTED_CP
@@ -629,8 +630,8 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k, curve_point *
 	}
 	conditional_negate(((a.val[0] >> 4) & 1) - 1, &jres.y, prime);
 	jacobian_to_curve(&jres, res, prime);
-	explicit_bzero(&a, sizeof(a));
-	explicit_bzero(&jres, sizeof(jres));
+	memzero(&a, sizeof(a));
+	memzero(&jres, sizeof(jres));
 }
 
 #else
@@ -652,12 +653,12 @@ int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8
 	bignum256 k;
 	bn_read_be(priv_key, &k);
 	point_multiply(curve, &k, &point, &point);
-	explicit_bzero(&k, sizeof(k));
+	memzero(&k, sizeof(k));
 
 	session_key[0] = 0x04;
 	bn_write_be(&point.x, session_key + 1);
 	bn_write_be(&point.y, session_key + 33);
-	explicit_bzero(&point, sizeof(point));
+	memzero(&point, sizeof(point));
 
 	return 0;
 }
@@ -684,8 +685,8 @@ void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *s
 	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 
-	explicit_bzero(bx, sizeof(bx));
-	explicit_bzero(buf, sizeof(buf));
+	memzero(bx, sizeof(bx));
+	memzero(buf, sizeof(buf));
 }
 
 // generate next number from deterministic random number generator
@@ -699,7 +700,7 @@ void generate_rfc6979(uint8_t rnd[32], rfc6979_state *state)
 	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
 	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 	memcpy(rnd, buf, 32);
-	explicit_bzero(buf, sizeof(buf));
+	memzero(buf, sizeof(buf));
 }
 
 // generate K in a deterministic way, according to RFC6979
@@ -709,7 +710,7 @@ void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
 	uint8_t buf[32];
 	generate_rfc6979(buf, state);
 	bn_read_be(buf, k);
-	explicit_bzero(buf, sizeof(buf));
+	memzero(buf, sizeof(buf));
 }
 
 // msg is a data to be signed
@@ -719,7 +720,7 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_type, const uint8_t *
 	uint8_t hash[32];
 	hasher_Raw(hasher_type, msg, msg_len, hash);
 	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
-	explicit_bzero(hash, sizeof(hash));
+	memzero(hash, sizeof(hash));
 	return res;
 
 }
@@ -732,7 +733,7 @@ int ecdsa_sign_double(const ecdsa_curve *curve, HasherType hasher_type, const ui
 	hasher_Raw(hasher_type, msg, msg_len, hash);
 	hasher_Raw(hasher_type, hash, 32, hash);
 	int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
-	explicit_bzero(hash, sizeof(hash));
+	memzero(hash, sizeof(hash));
 	return res;
 }
 
@@ -817,20 +818,20 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key, const u
 			*pby = by;
 		}
 
-		explicit_bzero(&k, sizeof(k));
-		explicit_bzero(&randk, sizeof(randk));
+		memzero(&k, sizeof(k));
+		memzero(&randk, sizeof(randk));
 #if USE_RFC6979
-		explicit_bzero(&rng, sizeof(rng));
+		memzero(&rng, sizeof(rng));
 #endif
 		return 0;
 	}
 
 	// Too many retries without a valid signature
 	// -> fail with an error
-	explicit_bzero(&k, sizeof(k));
-	explicit_bzero(&randk, sizeof(randk));
+	memzero(&k, sizeof(k));
+	memzero(&randk, sizeof(randk));
 #if USE_RFC6979
-	explicit_bzero(&rng, sizeof(rng));
+	memzero(&rng, sizeof(rng));
 #endif
 	return -1;
 }
@@ -845,8 +846,8 @@ void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key, u
 	scalar_multiply(curve, &k, &R);
 	pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
 	bn_write_be(&R.x, pub_key + 1);
-	explicit_bzero(&R, sizeof(R));
-	explicit_bzero(&k, sizeof(k));
+	memzero(&R, sizeof(R));
+	memzero(&k, sizeof(k));
 }
 
 void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, uint8_t *pub_key)
@@ -860,8 +861,8 @@ void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, u
 	pub_key[0] = 0x04;
 	bn_write_be(&R.x, pub_key + 1);
 	bn_write_be(&R.y, pub_key + 33);
-	explicit_bzero(&R, sizeof(R));
-	explicit_bzero(&k, sizeof(k));
+	memzero(&R, sizeof(R));
+	memzero(&k, sizeof(k));
 }
 
 int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key, uint8_t *uncompressed)
@@ -890,7 +891,7 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, HasherType hasher_type, uint8_
 		hasher_Raw(hasher_type, pub_key, 33, h);
 	}
 	ripemd160(h, HASHER_DIGEST_LENGTH, pubkeyhash);
-	explicit_bzero(h, sizeof(h));
+	memzero(h, sizeof(h));
 }
 
 void ecdsa_get_address_raw(const uint8_t *pub_key, uint32_t version, HasherType hasher_type, uint8_t *addr_raw)
@@ -907,7 +908,7 @@ void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, HasherType hash
 	ecdsa_get_address_raw(pub_key, version, hasher_type, raw);
 	base58_encode_check(raw, 20 + prefix_len, hasher_type, addr, addrsize);
 	// not as important to clear this one, but we might as well
-	explicit_bzero(raw, sizeof(raw));
+	memzero(raw, sizeof(raw));
 }
 
 void ecdsa_get_address_segwit_p2sh_raw(const uint8_t *pub_key, uint32_t version, HasherType hasher_type, uint8_t *addr_raw)
@@ -928,7 +929,7 @@ void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version, Has
 	size_t prefix_len = address_prefix_bytes_len(version);
 	ecdsa_get_address_segwit_p2sh_raw(pub_key, version, hasher_type, raw);
 	base58_encode_check(raw, prefix_len + 20, hasher_type, addr, addrsize);
-	explicit_bzero(raw, sizeof(raw));
+	memzero(raw, sizeof(raw));
 }
 
 void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, HasherType hasher_type, char *wif, int wifsize)
@@ -940,7 +941,7 @@ void ecdsa_get_wif(const uint8_t *priv_key, uint32_t version, HasherType hasher_
 	wif_raw[prefix_len + 32] = 0x01;
 	base58_encode_check(wif_raw, prefix_len + 32 + 1, hasher_type, wif, wifsize);
 	// private keys running around our stack can cause trouble
-	explicit_bzero(wif_raw, sizeof(wif_raw));
+	memzero(wif_raw, sizeof(wif_raw));
 }
 
 int ecdsa_address_decode(const char *addr, uint32_t version, HasherType hasher_type, uint8_t *out)
@@ -1033,7 +1034,7 @@ int ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_type, const uint8_t
 	uint8_t hash[32];
 	hasher_Raw(hasher_type, msg, msg_len, hash);
 	int res = ecdsa_verify_digest(curve, pub_key, sig, hash);
-	explicit_bzero(hash, sizeof(hash));
+	memzero(hash, sizeof(hash));
 	return res;
 }
 
@@ -1043,7 +1044,7 @@ int ecdsa_verify_double(const ecdsa_curve *curve, HasherType hasher_type, const 
 	hasher_Raw(hasher_type, msg, msg_len, hash);
 	hasher_Raw(hasher_type, hash, 32, hash);
 	int res = ecdsa_verify_digest(curve, pub_key, sig, hash);
-	explicit_bzero(hash, sizeof(hash));
+	memzero(hash, sizeof(hash));
 	return res;
 }
 
@@ -1142,11 +1143,11 @@ int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key, const 
 		}
 	}
 
-	explicit_bzero(&pub, sizeof(pub));
-	explicit_bzero(&res, sizeof(res));
-	explicit_bzero(&r, sizeof(r));
-	explicit_bzero(&s, sizeof(s));
-	explicit_bzero(&z, sizeof(z));
+	memzero(&pub, sizeof(pub));
+	memzero(&res, sizeof(res));
+	memzero(&r, sizeof(r));
+	memzero(&s, sizeof(s));
+	memzero(&z, sizeof(z));
 
 	// all OK
 	return result;
