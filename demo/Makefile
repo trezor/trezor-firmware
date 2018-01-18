@@ -13,5 +13,6 @@ OBJS += ../vendor/trezor-crypto/secp256k1.o
 OBJS += ../vendor/trezor-crypto/sha2.o
 OBJS += ../vendor/trezor-crypto/bip39.o
 OBJS += ../vendor/trezor-crypto/pbkdf2.o
+OBJS += ../vendor/trezor-crypto/memzero.o
 
 include ../Makefile.include
