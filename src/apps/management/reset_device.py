@@ -69,24 +69,32 @@ async def layout_reset_device(ctx, msg):
     # ask for random number to check correctness
     words = list(enumerate(mnemonic.split()))
     index = random.uniform(len(words))
-    word = words[index]
+    word = words[index][1]
     board = MnemonicKeyboard()
     board.prompt = ('Type %s. word' % (index + 1))
     res = await board
-    # TBD
-    if res is not word:
-        fail_content = Text('Failed!', ui.ICON_NOCOPY, ui.NORMAL,
+    if res != word:
+        fail_content = Text('Wrong entry!', ui.ICON_CLEAR, ui.NORMAL,
                             'You have entered',
                             'wrong seed word.',
                             'Please, reconnect',
-                            'device and try again.')
+                            'device and try again.', icon_color=ui.RED)
+        # todo redesign dialog to single cancel button with text 'Reconnect' or something else (no icon)
         await require_confirm(ctx, fail_content, ButtonRequestType.ResetDevice)
-    
+
     if curpin != newpin:
         config.change_pin(curpin, newpin)
     storage.load_settings(label=msg.label,
                           use_passphrase=msg.passphrase_protection)
     storage.load_mnemonic(mnemonic)
+
+    fail_content = Text('Backup is done!', ui.ICON_CONFIRM, ui.NORMAL,
+                        'Never make a digital',
+                        'copy of your recovery',
+                        'seed and never upload',
+                        'it online!', icon_color=ui.GREEN)
+    # todo redesign dialog to single cancel button with text 'Finish?' or something else (no icon)
+    await require_confirm(ctx, fail_content, ButtonRequestType.ResetDevice)
 
     return Success(message='Initialized')
 
@@ -148,5 +156,6 @@ async def show_mnemonic_page(page, page_count, mnemonic):
             'Finalize',
             normal_style=ui.BTN_CONFIRM,
             active_style=ui.BTN_CONFIRM_ACTIVE)
+        ui.display.clear()
     else:
         await animate_swipe()
