@@ -53,8 +53,8 @@ void usb_init(const usb_dev_info_t *dev_info) {
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
-    usb_dev_desc.bcdUSB             = 0x0200;
-    usb_dev_desc.bDeviceClass       = 0xef;                  // Composite Device Class
+    usb_dev_desc.bcdUSB             = 0x0200;                // USB 2.0
+    usb_dev_desc.bDeviceClass       = 0xEF;                  // Composite Device Class
     usb_dev_desc.bDeviceSubClass    = 0x02;                  // Common Class
     usb_dev_desc.bDeviceProtocol    = 0x01;                  // Interface Association Descriptor
     usb_dev_desc.bMaxPacketSize0    = USB_MAX_EP0_SIZE;
@@ -74,6 +74,8 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_str_table.manufacturer  = dev_info->manufacturer;
     usb_str_table.product       = dev_info->product;
     usb_str_table.serial_number = dev_info->serial_number;
+    usb_str_table.configuration = dev_info->configuration;
+    usb_str_table.interface     = dev_info->interface;
 
     // Configuration descriptor
     usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
@@ -81,9 +83,9 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_config_desc->wTotalLength        = sizeof(usb_config_descriptor_t);
     usb_config_desc->bNumInterfaces      = 0;
     usb_config_desc->bConfigurationValue = 0x01;
-    usb_config_desc->iConfiguration      = 0;
-    usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xc0 = self powered
-    usb_config_desc->bMaxPower           = 0xfa; // Maximum Power Consumption in 2mA units
+    usb_config_desc->iConfiguration      = USBD_IDX_CONFIG_STR;
+    usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xC0 = self powered
+    usb_config_desc->bMaxPower           = 0xFA; // Maximum Power Consumption in 2mA units
 
     // Pointer to interface descriptor data
     usb_next_iface_desc = (usb_interface_descriptor_t *)(usb_config_buf + usb_config_desc->wTotalLength);
@@ -174,27 +176,27 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
 }
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.manufacturer), usb_str_buf, length);
+    USBD_GetString(usb_str_table.manufacturer, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.product), usb_str_buf, length);
+    USBD_GetString(usb_str_table.product, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(usb_str_table.serial_number), usb_str_buf, length);
+    USBD_GetString(usb_str_table.serial_number, usb_str_buf, length);
     return usb_str_buf;
 }
 
-static uint8_t *usb_get_config_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(""), usb_str_buf, length);
+static uint8_t *usb_get_configuration_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    USBD_GetString(usb_str_table.configuration, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(UNCONST(""), usb_str_buf, length);
+    USBD_GetString(usb_str_table.interface, usb_str_buf, length);
     return usb_str_buf;
 }
 
@@ -204,7 +206,7 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
     .GetManufacturerStrDescriptor  = usb_get_manufacturer_str_descriptor,
     .GetProductStrDescriptor       = usb_get_product_str_descriptor,
     .GetSerialStrDescriptor        = usb_get_serial_str_descriptor,
-    .GetConfigurationStrDescriptor = usb_get_config_str_descriptor,
+    .GetConfigurationStrDescriptor = usb_get_configuration_str_descriptor,
     .GetInterfaceStrDescriptor     = usb_get_interface_str_descriptor,
 };
 
@@ -231,14 +233,14 @@ static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
-        case USB_IFACE_TYPE_HID:
-            usb_hid_class_deinit(dev, &usb_ifaces[i].hid, cfg_idx);
-            break;
-        case USB_IFACE_TYPE_VCP:
-            usb_vcp_class_deinit(dev, &usb_ifaces[i].vcp, cfg_idx);
-            break;
-        default:
-            break;
+            case USB_IFACE_TYPE_HID:
+                usb_hid_class_deinit(dev, &usb_ifaces[i].hid, cfg_idx);
+                break;
+            case USB_IFACE_TYPE_VCP:
+                usb_vcp_class_deinit(dev, &usb_ifaces[i].vcp, cfg_idx);
+                break;
+            default:
+                break;
         }
     }
     return USBD_OK;
@@ -253,26 +255,26 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
         return USBD_FAIL;
     }
     switch (usb_ifaces[req->wIndex].type) {
-    case USB_IFACE_TYPE_HID:
-        return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
-    case USB_IFACE_TYPE_VCP:
-        return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
-    default:
-        return USBD_FAIL;
+        case USB_IFACE_TYPE_HID:
+            return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
+        case USB_IFACE_TYPE_VCP:
+            return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
+        default:
+            return USBD_FAIL;
     }
 }
 
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
-        case USB_IFACE_TYPE_HID:
-            usb_hid_class_data_in(dev, &usb_ifaces[i].hid, ep_num);
-            break;
-        case USB_IFACE_TYPE_VCP:
-            usb_vcp_class_data_in(dev, &usb_ifaces[i].vcp, ep_num);
-            break;
-        default:
-            break;
+            case USB_IFACE_TYPE_HID:
+                usb_hid_class_data_in(dev, &usb_ifaces[i].hid, ep_num);
+                break;
+            case USB_IFACE_TYPE_VCP:
+                usb_vcp_class_data_in(dev, &usb_ifaces[i].vcp, ep_num);
+                break;
+            default:
+                break;
         }
     }
     return USBD_OK;
@@ -281,14 +283,14 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
-        case USB_IFACE_TYPE_HID:
-            usb_hid_class_data_out(dev, &usb_ifaces[i].hid, ep_num);
-            break;
-        case USB_IFACE_TYPE_VCP:
-            usb_vcp_class_data_out(dev, &usb_ifaces[i].vcp, ep_num);
-            break;
-        default:
-            break;
+            case USB_IFACE_TYPE_HID:
+                usb_hid_class_data_out(dev, &usb_ifaces[i].hid, ep_num);
+                break;
+            case USB_IFACE_TYPE_VCP:
+                usb_vcp_class_data_out(dev, &usb_ifaces[i].vcp, ep_num);
+                break;
+            default:
+                break;
         }
     }
     return USBD_OK;
@@ -297,11 +299,11 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
-        case USB_IFACE_TYPE_VCP:
-            usb_vcp_class_sof(dev, &usb_ifaces[i].vcp);
-            break;
-        default:
-            break;
+            case USB_IFACE_TYPE_VCP:
+                usb_vcp_class_sof(dev, &usb_ifaces[i].vcp);
+                break;
+            default:
+                break;
         }
     }
     return USBD_OK;

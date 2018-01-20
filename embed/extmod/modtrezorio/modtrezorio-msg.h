@@ -327,9 +327,11 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 ///              vendor_id: int,
 ///              product_id: int,
 ///              release_num: int,
-///              manufacturer: str,
-///              product: str,
-///              serial_number: str) -> None:
+///              manufacturer: str='',
+///              product: str='',
+///              serial_number: str='',
+///              configuration: str='',
+///              interface: str='') -> None:
 ///     '''
 ///     '''
 STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
@@ -338,9 +340,11 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_vendor_id,     MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_product_id,    MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_release_num,   MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_manufacturer,  MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_product,       MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
-        { MP_QSTR_serial_number, MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_manufacturer,                    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_product,                         MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_serial_number,                   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_configuration,                   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_interface,                       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
     };
     mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
@@ -351,9 +355,12 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     const char *manufacturer  = get_0str(vals[3].u_obj, 0, 32);
     const char *product       = get_0str(vals[4].u_obj, 0, 32);
     const char *serial_number = get_0str(vals[5].u_obj, 0, 32);
+    const char *configuration = get_0str(vals[6].u_obj, 0, 32);
+    const char *interface     = get_0str(vals[7].u_obj, 0, 32);
 
     CHECK_PARAM_RANGE(vendor_id, 0, 65535)
     CHECK_PARAM_RANGE(product_id, 0, 65535)
+    CHECK_PARAM_RANGE(release_num, 0, 65535)
     if (manufacturer == NULL) {
         mp_raise_ValueError("manufacturer is invalid");
     }
@@ -362,6 +369,12 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     }
     if (serial_number == NULL) {
         mp_raise_ValueError("serial_number is invalid");
+    }
+    if (configuration == NULL) {
+        mp_raise_ValueError("configuration is invalid");
+    }
+    if (interface == NULL) {
+        mp_raise_ValueError("interface is invalid");
     }
 
     mp_obj_USB_t *o = m_new_obj(mp_obj_USB_t);
@@ -375,6 +388,8 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     o->info.manufacturer  = (const uint8_t *)(manufacturer);
     o->info.product       = (const uint8_t *)(product);
     o->info.serial_number = (const uint8_t *)(serial_number);
+    o->info.configuration = (const uint8_t *)(configuration);
+    o->info.interface     = (const uint8_t *)(interface);
     mp_obj_list_init(&o->ifaces, 0);
 
     return MP_OBJ_FROM_PTR(o);

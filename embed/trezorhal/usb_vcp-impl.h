@@ -18,7 +18,7 @@
 #define USB_CDC_PROTOCOL_AT 0x01
 
 // Descriptor Types (bDescriptorType)
-#define USB_DESC_TYPE_ASSOCIATION 0x0b
+#define USB_DESC_TYPE_ASSOCIATION 0x0B
 #define USB_DESC_TYPE_CS_INTERACE 0x24
 
 // Descriptor SubTypes (bDescriptorSubtype)
@@ -106,7 +106,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
     d->iface_cdc.bInterfaceClass    = USB_CLASS_CDC;
     d->iface_cdc.bInterfaceSubClass = USB_CDC_SUBCLASS_ACM;
     d->iface_cdc.bInterfaceProtocol = USB_CDC_PROTOCOL_AT;
-    d->iface_cdc.iInterface         = 0;
+    d->iface_cdc.iInterface         = USBD_IDX_INTERFACE_STR;
 
     // Header Functional Descriptor
     d->fheader.bFunctionLength    = sizeof(usb_vcp_header_descriptor_t);
@@ -155,7 +155,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
     d->iface_data.bInterfaceClass    = USB_CLASS_DATA;
     d->iface_data.bInterfaceSubClass = 0;
     d->iface_data.bInterfaceProtocol = 0;
-    d->iface_data.iInterface         = 0;
+    d->iface_data.iInterface         = USBD_IDX_INTERFACE_STR;
 
     // OUT endpoint (receiving)
     d->ep_out.bLength          = sizeof(usb_endpoint_descriptor_t);
@@ -357,21 +357,21 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
     }
 
     switch (req->bmRequest & USB_REQ_DIR_MASK) {
-    case USB_D2H:
-        switch (req->bRequest) {
-        case USB_CDC_GET_LINE_CODING:
-            USBD_CtlSendData(dev, (uint8_t *)(&line_coding), MIN(req->wLength, sizeof(line_coding)));
+        case USB_D2H:
+            switch (req->bRequest) {
+                case USB_CDC_GET_LINE_CODING:
+                    USBD_CtlSendData(dev, (uint8_t *)(&line_coding), MIN(req->wLength, sizeof(line_coding)));
+                    break;
+                default:
+                    USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+                    break;
+                }
             break;
-        default:
-            USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+        case USB_H2D:
+            if (req->wLength > 0) {
+                USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+            }
             break;
-        }
-        break;
-    case USB_H2D:
-        if (req->wLength > 0) {
-            USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
-        }
-        break;
     }
 
     return USBD_OK;

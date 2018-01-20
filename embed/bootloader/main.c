@@ -134,6 +134,8 @@ static void usb_init_all(void) {
         .manufacturer  = (const uint8_t *)"SatoshiLabs",
         .product       = (const uint8_t *)"TREZOR Bootloader",
         .serial_number = (const uint8_t *)"",
+        .configuration = (const uint8_t *)"",
+        .interface     = (const uint8_t *)"TREZOR Interface",
     };
     static uint8_t hid_rx_buffer[USB_PACKET_SIZE];
     static const uint8_t hid_report_desc[] = {

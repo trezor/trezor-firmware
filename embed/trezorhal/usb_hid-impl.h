@@ -56,12 +56,12 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
     d->iface.bInterfaceClass    = USB_CLASS_HID;
     d->iface.bInterfaceSubClass = info->subclass;
     d->iface.bInterfaceProtocol = info->protocol;
-    d->iface.iInterface         = 0;
+    d->iface.iInterface         = USBD_IDX_INTERFACE_STR;
 
     // HID descriptor
     d->hid.bLength                 = sizeof(usb_hid_descriptor_t);
     d->hid.bDescriptorType         = USB_DESC_TYPE_HID;
-    d->hid.bcdHID                  = 0x1101; // HID Class Spec release number
+    d->hid.bcdHID                  = 0x0111; // HID Class Spec release number (1.11)
     d->hid.bCountryCode            = 0;      // Hardware target country
     d->hid.bNumDescriptors         = 1;      // Number of HID class descriptors
     d->hid.bReportDescriptorType   = USB_DESC_TYPE_REPORT;
@@ -244,58 +244,58 @@ static void usb_hid_class_deinit(USBD_HandleTypeDef *dev, usb_hid_state_t *state
 static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, USBD_SetupReqTypedef *req) {
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
 
-    // Class request
-    case USB_REQ_TYPE_CLASS:
-        switch (req->bRequest) {
+        // Class request
+        case USB_REQ_TYPE_CLASS:
+            switch (req->bRequest) {
 
-        case USB_HID_REQ_SET_PROTOCOL:
-            state->protocol = req->wValue;
-            break;
-
-        case USB_HID_REQ_GET_PROTOCOL:
-            USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
-            break;
-
-        case USB_HID_REQ_SET_IDLE:
-            state->idle_rate = req->wValue >> 8;
-            break;
-
-        case USB_HID_REQ_GET_IDLE:
-            USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
-            break;
-
-        default:
-            USBD_CtlError(dev, req);
-            return USBD_FAIL;
-        }
-        break;
-
-    // Interface & Endpoint request
-    case USB_REQ_TYPE_STANDARD:
-        switch (req->bRequest) {
-
-        case USB_REQ_SET_INTERFACE:
-            state->alt_setting = req->wValue;
-            break;
-
-        case USB_REQ_GET_INTERFACE:
-            USBD_CtlSendData(dev, &state->alt_setting, sizeof(state->alt_setting));
-            break;
-
-        case USB_REQ_GET_DESCRIPTOR:
-            switch (req->wValue >> 8) {
-
-            case USB_DESC_TYPE_HID:
-                USBD_CtlSendData(dev, (uint8_t *)&state->desc_block->hid, MIN(req->wLength, sizeof(state->desc_block->hid)));
+            case USB_HID_REQ_SET_PROTOCOL:
+                state->protocol = req->wValue;
                 break;
 
-            case USB_DESC_TYPE_REPORT:
-                USBD_CtlSendData(dev, UNCONST(state->report_desc), MIN(req->wLength, state->report_desc_len));
+            case USB_HID_REQ_GET_PROTOCOL:
+                USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
                 break;
+
+            case USB_HID_REQ_SET_IDLE:
+                state->idle_rate = req->wValue >> 8;
+                break;
+
+            case USB_HID_REQ_GET_IDLE:
+                USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
+                break;
+
+            default:
+                USBD_CtlError(dev, req);
+                return USBD_FAIL;
             }
             break;
-        }
-        break;
+
+        // Interface & Endpoint request
+        case USB_REQ_TYPE_STANDARD:
+            switch (req->bRequest) {
+
+                case USB_REQ_SET_INTERFACE:
+                    state->alt_setting = req->wValue;
+                    break;
+
+                case USB_REQ_GET_INTERFACE:
+                    USBD_CtlSendData(dev, &state->alt_setting, sizeof(state->alt_setting));
+                    break;
+
+                case USB_REQ_GET_DESCRIPTOR:
+                    switch (req->wValue >> 8) {
+
+                        case USB_DESC_TYPE_HID:
+                            USBD_CtlSendData(dev, (uint8_t *)&state->desc_block->hid, MIN(req->wLength, sizeof(state->desc_block->hid)));
+                            break;
+
+                        case USB_DESC_TYPE_REPORT:
+                            USBD_CtlSendData(dev, UNCONST(state->report_desc), MIN(req->wLength, state->report_desc_len));
+                            break;
+                    }
+                    break;
+            }
+            break;
     }
 
     return USBD_OK;
