@@ -9,36 +9,14 @@ from trezor import workflow
 log.level = log.DEBUG
 
 # initialize the USB stack
-usb_wire = io.HID(
-    iface_num=0x00,
-    ep_in=0x81,
-    ep_out=0x01,
-    report_desc=bytes([
-        0x06, 0x00, 0xff,  # USAGE_PAGE (Vendor Defined)
-        0x09, 0x01,        # USAGE (1)
-        0xa1, 0x01,        # COLLECTION (Application)
-        0x09, 0x20,        # USAGE (Input Report Data)
-        0x15, 0x00,        # LOGICAL_MINIMUM (0)
-        0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-        0x75, 0x08,        # REPORT_SIZE (8)
-        0x95, 0x40,        # REPORT_COUNT (64)
-        0x81, 0x02,        # INPUT (Data,Var,Abs)
-        0x09, 0x21,        # USAGE (Output Report Data)
-        0x15, 0x00,        # LOGICAL_MINIMUM (0)
-        0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-        0x75, 0x08,        # REPORT_SIZE (8)
-        0x95, 0x40,        # REPORT_COUNT (64)
-        0x91, 0x02,        # OUTPUT (Data,Var,Abs)
-        0xc0,              # END_COLLECTION
-    ]),
-)
-if __debug__:
-    usb_debug = io.HID(
-        iface_num=0x04,
-        ep_in=0x85,
-        ep_out=0x04,
+
+if True:
+    usb_wire = io.HID(
+        iface_num=0,
+        ep_in=0x81,
+        ep_out=0x01,
         report_desc=bytes([
-            0x06, 0x01, 0xff,  # USAGE_PAGE (Vendor Defined)
+            0x06, 0x00, 0xff,  # USAGE_PAGE (Vendor Defined)
             0x09, 0x01,        # USAGE (1)
             0xa1, 0x01,        # COLLECTION (Application)
             0x09, 0x20,        # USAGE (Input Report Data)
@@ -56,15 +34,9 @@ if __debug__:
             0xc0,              # END_COLLECTION
         ]),
     )
-usb_vcp = io.VCP(
-    iface_num=0x01,
-    data_iface_num=0x02,
-    ep_in=0x82,
-    ep_out=0x02,
-    ep_cmd=0x83,
-)
+
 usb_u2f = io.HID(
-    iface_num=0x03,
+    iface_num=3,
     ep_in=0x84,
     ep_out=0x03,
     report_desc=bytes([
@@ -86,6 +58,40 @@ usb_u2f = io.HID(
         0xc0,              # END_COLLECTION
     ]),
 )
+
+if __debug__:
+    if True:
+        usb_debug = io.HID(
+            iface_num=4,
+            ep_in=0x85,
+            ep_out=0x04,
+            report_desc=bytes([
+                0x06, 0x01, 0xff,  # USAGE_PAGE (Vendor Defined)
+                0x09, 0x01,        # USAGE (1)
+                0xa1, 0x01,        # COLLECTION (Application)
+                0x09, 0x20,        # USAGE (Input Report Data)
+                0x15, 0x00,        # LOGICAL_MINIMUM (0)
+                0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
+                0x75, 0x08,        # REPORT_SIZE (8)
+                0x95, 0x40,        # REPORT_COUNT (64)
+                0x81, 0x02,        # INPUT (Data,Var,Abs)
+                0x09, 0x21,        # USAGE (Output Report Data)
+                0x15, 0x00,        # LOGICAL_MINIMUM (0)
+                0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
+                0x75, 0x08,        # REPORT_SIZE (8)
+                0x95, 0x40,        # REPORT_COUNT (64)
+                0x91, 0x02,        # OUTPUT (Data,Var,Abs)
+                0xc0,              # END_COLLECTION
+            ]),
+        )
+    usb_vcp = io.VCP(
+        iface_num=1,
+        data_iface_num=2,
+        ep_in=0x82,
+        ep_out=0x02,
+        ep_cmd=0x83,
+    )
+
 usb = io.USB(
     vendor_id=0x1209,
     product_id=0x53C1,
@@ -94,11 +100,12 @@ usb = io.USB(
     product="TREZOR",
     serial_number="000000000000000000000000",
 )
+
 usb.add(usb_wire)
+usb.add(usb_u2f)
 if __debug__:
     usb.add(usb_debug)
-usb.add(usb_vcp)
-usb.add(usb_u2f)
+    usb.add(usb_vcp)
 
 # load applications
 if __debug__:
