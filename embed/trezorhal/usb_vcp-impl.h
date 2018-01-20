@@ -365,7 +365,7 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
                 default:
                     USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
                     break;
-                }
+            }
             break;
         case USB_H2D:
             if (req->wLength > 0) {
