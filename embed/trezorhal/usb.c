@@ -53,7 +53,7 @@ void usb_init(const usb_dev_info_t *dev_info) {
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
-    usb_dev_desc.bcdUSB             = 0x0200;                // USB 2.0
+    usb_dev_desc.bcdUSB             = 0x0210;                // USB 2.1
     usb_dev_desc.bDeviceClass       = 0xEF;                  // Composite Device Class
     usb_dev_desc.bDeviceSubClass    = 0x02;                  // Common Class
     usb_dev_desc.bDeviceProtocol    = 0x01;                  // Interface Association Descriptor
@@ -157,6 +157,7 @@ static uint8_t usb_ep_clear_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 
 #include "usb_hid-impl.h"
 #include "usb_vcp-impl.h"
+#include "usb_webusb-impl.h"
 
 /*
  * USB configuration (device & string descriptors)
@@ -202,6 +203,29 @@ static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16
     return usb_str_buf;
 }
 
+static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
+    static const uint8_t bos[] = {
+        // usb_bos_descriptor {
+        0x05,               // uint8_t  bLength
+        USB_DESC_TYPE_BOS,  // uint8_t  bDescriptorType
+        0x1d, 0x0,          // uint16_t wTotalLength
+        0x01,               // uint8_t  bNumDeviceCaps
+        // }
+        // usb_device_capability_descriptor {
+        0x18,                             // uint8_t  bLength
+        USB_DESC_TYPE_DEVICE_CAPABILITY,  // uint8_t  bDescriptorType
+        USB_DEVICE_CAPABILITY_PLATFORM,   // uint8_t  bDevCapabilityType
+        0x00,                             // uint8_t  bReserved
+        0x38, 0xb6, 0x08, 0x34, 0xa9, 0x09, 0xa0, 0x47, 0x8b, 0xfd, 0xa0, 0x76, 0x88, 0x15, 0xb6, 0x65,  // uint128_t platformCompatibilityUUID
+        0x00, 0x01,                       // uint16_t bcdVersion
+        USB_WEBUSB_VENDOR_CODE,           // uint8_t  bVendorCode
+        USB_WEBUSB_LANDING_PAGE,          // uint8_t  iLandingPage
+        // }
+    };
+    *length = sizeof(bos);
+    return UNCONST(bos);
+}
+
 static const USBD_DescriptorsTypeDef usb_descriptors = {
     .GetDeviceDescriptor           = usb_get_dev_descriptor,
     .GetLangIDStrDescriptor        = usb_get_langid_str_descriptor,
@@ -210,6 +234,7 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
     .GetSerialStrDescriptor        = usb_get_serial_str_descriptor,
     .GetConfigurationStrDescriptor = usb_get_configuration_str_descriptor,
     .GetInterfaceStrDescriptor     = usb_get_interface_str_descriptor,
+    .GetBOSDescriptor              = usb_get_bos_descriptor,
 };
 
 /*
@@ -224,6 +249,9 @@ static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
                 break;
             case USB_IFACE_TYPE_VCP:
                 usb_vcp_class_init(dev, &usb_ifaces[i].vcp, cfg_idx);
+                break;
+            case USB_IFACE_TYPE_WEBUSB:
+                usb_webusb_class_init(dev, &usb_ifaces[i].webusb, cfg_idx);
                 break;
             default:
                 break;
@@ -240,6 +268,9 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
                 break;
             case USB_IFACE_TYPE_VCP:
                 usb_vcp_class_deinit(dev, &usb_ifaces[i].vcp, cfg_idx);
+                break;
+            case USB_IFACE_TYPE_WEBUSB:
+                usb_webusb_class_deinit(dev, &usb_ifaces[i].webusb, cfg_idx);
                 break;
             default:
                 break;
@@ -261,6 +292,8 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
             return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
         case USB_IFACE_TYPE_VCP:
             return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
+        case USB_IFACE_TYPE_WEBUSB:
+            return usb_webusb_class_setup(dev, &usb_ifaces[req->wIndex].webusb, req);
         default:
             return USBD_FAIL;
     }
@@ -274,6 +307,9 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
                 break;
             case USB_IFACE_TYPE_VCP:
                 usb_vcp_class_data_in(dev, &usb_ifaces[i].vcp, ep_num);
+                break;
+            case USB_IFACE_TYPE_WEBUSB:
+                usb_webusb_class_data_in(dev, &usb_ifaces[i].webusb, ep_num);
                 break;
             default:
                 break;
@@ -290,6 +326,9 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
                 break;
             case USB_IFACE_TYPE_VCP:
                 usb_vcp_class_data_out(dev, &usb_ifaces[i].vcp, ep_num);
+                break;
+            case USB_IFACE_TYPE_WEBUSB:
+                usb_webusb_class_data_out(dev, &usb_ifaces[i].webusb, ep_num);
                 break;
             default:
                 break;

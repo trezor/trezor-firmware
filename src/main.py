@@ -6,11 +6,19 @@ from trezor import loop
 from trezor import wire
 from trezor import workflow
 
+USE_WEBUSB = False
+
 log.level = log.DEBUG
 
 # initialize the USB stack
 
-if True:
+if USE_WEBUSB:
+    usb_wire = io.WebUSB(
+        iface_num=0,
+        ep_in=0x81,
+        ep_out=0x01,
+    )
+else:
     usb_wire = io.HID(
         iface_num=0,
         ep_in=0x81,
@@ -60,7 +68,13 @@ usb_u2f = io.HID(
 )
 
 if __debug__:
-    if True:
+    if USE_WEBUSB:
+        usb_debug = io.WebUSB(
+            iface_num=4,
+            ep_in=0x85,
+            ep_out=0x04,
+        )
+    else:
         usb_debug = io.HID(
             iface_num=4,
             ep_in=0x85,
@@ -84,6 +98,7 @@ if __debug__:
                 0xc0,              # END_COLLECTION
             ]),
         )
+
     usb_vcp = io.VCP(
         iface_num=1,
         data_iface_num=2,
@@ -95,10 +110,11 @@ if __debug__:
 usb = io.USB(
     vendor_id=0x1209,
     product_id=0x53C1,
-    release_num=0x0002,
+    release_num=0x0200,
     manufacturer="SatoshiLabs",
     product="TREZOR",
-    serial_number="000000000000000000000000",
+    serial_number="44DD6B2C788D760538A78ECA",
+    interface="TREZOR Interface",
 )
 
 usb.add(usb_wire)

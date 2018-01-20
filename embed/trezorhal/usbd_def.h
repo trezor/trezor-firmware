@@ -99,7 +99,10 @@
 #define  USB_DESC_TYPE_ENDPOINT                            5
 #define  USB_DESC_TYPE_DEVICE_QUALIFIER                    6
 #define  USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION           7
-#define  USB_DESC_TYPE_BOS                                 0x0F
+#define  USB_DESC_TYPE_BOS                                 15
+#define  USB_DESC_TYPE_DEVICE_CAPABILITY                   16
+
+#define  USB_DEVICE_CAPABILITY_PLATFORM                    5
 
 #define USB_CONFIG_REMOTE_WAKEUP                           2
 #define USB_CONFIG_SELF_POWERED                            1
@@ -107,8 +110,6 @@
 #define USB_FEATURE_EP_HALT                                0
 #define USB_FEATURE_REMOTE_WAKEUP                          1
 #define USB_FEATURE_TEST_MODE                              2
-
-#define USB_DEVICE_CAPABILITY_TYPE                         0x10
 
 #define USB_HS_MAX_PACKET_SIZE                            512
 #define USB_FS_MAX_PACKET_SIZE                            64

@@ -108,15 +108,18 @@ typedef enum {
     USB_IFACE_TYPE_DISABLED = 0,
     USB_IFACE_TYPE_VCP      = 1,
     USB_IFACE_TYPE_HID      = 2,
+    USB_IFACE_TYPE_WEBUSB   = 3,
 } usb_iface_type_t;
 
 #include "usb_hid-defs.h"
 #include "usb_vcp-defs.h"
+#include "usb_webusb-defs.h"
 
 typedef struct {
     union {
         usb_hid_state_t hid;
         usb_vcp_state_t vcp;
+        usb_webusb_state_t webusb;
     };
     usb_iface_type_t type;
 } usb_iface_t;
