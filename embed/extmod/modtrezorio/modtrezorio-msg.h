@@ -282,7 +282,7 @@ STATIC mp_obj_t mod_trezorio_VCP_iface_num(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_VCP_iface_num_obj, mod_trezorio_VCP_iface_num);
 
 STATIC const mp_rom_map_elem_t mod_trezorio_VCP_locals_dict_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_iface_num), MP_ROM_PTR(&mod_trezorio_HID_iface_num_obj) },
+    { MP_ROM_QSTR(MP_QSTR_iface_num), MP_ROM_PTR(&mod_trezorio_VCP_iface_num_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_VCP_locals_dict, mod_trezorio_VCP_locals_dict_table);
 
