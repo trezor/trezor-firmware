@@ -39,8 +39,6 @@ typedef struct {
     uint8_t ep_out;
     uint8_t max_packet_len;
 
-    uint8_t protocol;      // For SET_PROTOCOL/GET_PROTOCOL setup reqs
-    uint8_t idle_rate;     // For SET_IDLE/GET_IDLE setup reqs
     uint8_t alt_setting;   // For SET_INTERFACE/GET_INTERFACE setup reqs
     uint8_t last_read_len; // Length of data read into rx_buffer
     uint8_t ep_in_is_idle; // Set to 1 after IN endpoint gets idle

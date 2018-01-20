@@ -83,8 +83,6 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
     iface->webusb.ep_in           = info->ep_in;
     iface->webusb.ep_out          = info->ep_out;
     iface->webusb.max_packet_len  = info->max_packet_len;
-    iface->webusb.protocol        = 0;
-    iface->webusb.idle_rate       = 0;
     iface->webusb.alt_setting     = 0;
     iface->webusb.last_read_len   = 0;
     iface->webusb.ep_in_is_idle   = 1;
@@ -210,8 +208,6 @@ static void usb_webusb_class_init(USBD_HandleTypeDef *dev, usb_webusb_state_t *s
     USBD_LL_OpenEP(dev, state->ep_out, USBD_EP_TYPE_INTR, state->max_packet_len);
 
     // Reset the state
-    state->protocol = 0;
-    state->idle_rate = 0;
     state->alt_setting = 0;
     state->last_read_len = 0;
     state->ep_in_is_idle = 1;
@@ -240,21 +236,9 @@ static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *s
 
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
 
-        case USB_REQ_TYPE_CLASS:            // Class request
+        case USB_REQ_TYPE_VENDOR:           // Vendor request
 
             switch (req->bRequest) {
-                case USB_WEBUSB_REQ_SET_PROTOCOL:
-                    state->protocol = req->wValue;
-                    break;
-                case USB_WEBUSB_REQ_GET_PROTOCOL:
-                    USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
-                    break;
-                case USB_WEBUSB_REQ_SET_IDLE:
-                    state->idle_rate = req->wValue >> 8;
-                    break;
-                case USB_WEBUSB_REQ_GET_IDLE:
-                    USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
-                    break;
                 case USB_WEBUSB_VENDOR_CODE:
                     switch (req->wIndex) {
                         case USB_WEBUSB_REQ_GET_URL:
