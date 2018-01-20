@@ -70,6 +70,8 @@ void usb_init(const usb_dev_info_t *dev_info) {
     ensure(check_desc_str(dev_info->manufacturer), NULL);
     ensure(check_desc_str(dev_info->product), NULL);
     ensure(check_desc_str(dev_info->serial_number), NULL);
+    ensure(check_desc_str(dev_info->configuration), NULL);
+    ensure(check_desc_str(dev_info->interface), NULL);
 
     usb_str_table.manufacturer  = dev_info->manufacturer;
     usb_str_table.product       = dev_info->product;
