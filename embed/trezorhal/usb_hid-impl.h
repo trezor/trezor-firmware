@@ -248,25 +248,25 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
         case USB_REQ_TYPE_CLASS:
             switch (req->bRequest) {
 
-            case USB_HID_REQ_SET_PROTOCOL:
-                state->protocol = req->wValue;
-                break;
+                case USB_HID_REQ_SET_PROTOCOL:
+                    state->protocol = req->wValue;
+                    break;
 
-            case USB_HID_REQ_GET_PROTOCOL:
-                USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
-                break;
+                case USB_HID_REQ_GET_PROTOCOL:
+                    USBD_CtlSendData(dev, &state->protocol, sizeof(state->protocol));
+                    break;
 
-            case USB_HID_REQ_SET_IDLE:
-                state->idle_rate = req->wValue >> 8;
-                break;
+                case USB_HID_REQ_SET_IDLE:
+                    state->idle_rate = req->wValue >> 8;
+                    break;
 
-            case USB_HID_REQ_GET_IDLE:
-                USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
-                break;
+                case USB_HID_REQ_GET_IDLE:
+                    USBD_CtlSendData(dev, &state->idle_rate, sizeof(state->idle_rate));
+                    break;
 
-            default:
-                USBD_CtlError(dev, req);
-                return USBD_FAIL;
+                default:
+                    USBD_CtlError(dev, req);
+                    return USBD_FAIL;
             }
             break;
 

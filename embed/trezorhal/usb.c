@@ -217,14 +217,14 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
 static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
-        case USB_IFACE_TYPE_HID:
-            usb_hid_class_init(dev, &usb_ifaces[i].hid, cfg_idx);
-            break;
-        case USB_IFACE_TYPE_VCP:
-            usb_vcp_class_init(dev, &usb_ifaces[i].vcp, cfg_idx);
-            break;
-        default:
-            break;
+            case USB_IFACE_TYPE_HID:
+                usb_hid_class_init(dev, &usb_ifaces[i].hid, cfg_idx);
+                break;
+            case USB_IFACE_TYPE_VCP:
+                usb_vcp_class_init(dev, &usb_ifaces[i].vcp, cfg_idx);
+                break;
+            default:
+                break;
         }
     }
     return USBD_OK;
