@@ -175,7 +175,7 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
         .wData           = USB_LANGID_ENGLISH_US,
     };
     *length = sizeof(usb_langid_str_desc);
-    return (uint8_t *)(&usb_langid_str_desc);
+    return UNCONST(&usb_langid_str_desc);
 }
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
@@ -281,7 +281,8 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 
 static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *req) {
     if (((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) &&
-        ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD)) {
+        ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) &&
+        ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_VENDOR)) {
         return USBD_OK;
     }
     if (req->wIndex >= USBD_MAX_NUM_INTERFACES) {

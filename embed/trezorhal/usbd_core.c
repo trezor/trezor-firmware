@@ -268,24 +268,37 @@ USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef *pdev, uint8_t *psetup)
   pdev->ep0_state = USBD_EP0_SETUP;
   pdev->ep0_data_len = pdev->request.wLength;
 
-  switch (pdev->request.bmRequest & 0x1F)
+  switch (pdev->request.bmRequest & USB_REQ_TYPE_MASK)
   {
-  case USB_REQ_RECIPIENT_DEVICE:
-    USBD_StdDevReq (pdev, &pdev->request);
-    break;
+    case USB_REQ_TYPE_STANDARD:
+      switch (pdev->request.bmRequest & USB_REQ_RECIPIENT_MASK)
+      {
+        case USB_REQ_RECIPIENT_DEVICE:
+          USBD_StdDevReq(pdev, &pdev->request);
+          break;
+        case USB_REQ_RECIPIENT_INTERFACE:
+          USBD_StdItfReq(pdev, &pdev->request);
+          break;
+        case USB_REQ_RECIPIENT_ENDPOINT:
+          USBD_StdEPReq(pdev, &pdev->request);
+          break;
+        default:
+          USBD_LL_StallEP(pdev, pdev->request.bmRequest & 0x80);
+          break;
+      }
+      break;
 
-  case USB_REQ_RECIPIENT_INTERFACE:
-    USBD_StdItfReq(pdev, &pdev->request);
-    break;
-
-  case USB_REQ_RECIPIENT_ENDPOINT:
-    USBD_StdEPReq(pdev, &pdev->request);
-    break;
-
-  default:
-    USBD_LL_StallEP(pdev , pdev->request.bmRequest & 0x80);
-    break;
+    case USB_REQ_TYPE_CLASS:
+    case USB_REQ_TYPE_VENDOR:
+      if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+        if (pdev->pClass->Setup != NULL)
+            pdev->pClass->Setup(pdev, &pdev->request);
+      } else {
+          USBD_CtlError(pdev, &pdev->request);
+      }
+      break;
   }
+
   return USBD_OK;
 }
 

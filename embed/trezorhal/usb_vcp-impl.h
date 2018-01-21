@@ -360,7 +360,7 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
         case USB_D2H:
             switch (req->bRequest) {
                 case USB_CDC_GET_LINE_CODING:
-                    USBD_CtlSendData(dev, (uint8_t *)(&line_coding), MIN(req->wLength, sizeof(line_coding)));
+                    USBD_CtlSendData(dev, UNCONST(&line_coding), MIN(req->wLength, sizeof(line_coding)));
                     break;
                 default:
                     USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));

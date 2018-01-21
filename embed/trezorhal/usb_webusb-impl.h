@@ -244,7 +244,7 @@ static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *s
                         case USB_WEBUSB_REQ_GET_URL:
                             // we should check whether req->wValue == USB_WEBUSB_LANDING_PAGE,
                             // but let's return always the same url for all indexes
-                            USBD_CtlSendData(dev, (uint8_t *)url, sizeof(url));
+                            USBD_CtlSendData(dev, UNCONST(url), sizeof(url));
                             break;
                         default:
                             USBD_CtlError(dev, req);
