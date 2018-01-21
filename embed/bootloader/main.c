@@ -127,6 +127,7 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 };
 
 static void usb_init_all(void) {
+
     static const usb_dev_info_t dev_info = {
         .vendor_id     = 0x1209,
         .product_id    = 0x53C0,
@@ -137,7 +138,21 @@ static void usb_init_all(void) {
         .configuration = (const uint8_t *)"",
         .interface     = (const uint8_t *)"TREZOR Interface",
     };
-    static uint8_t hid_rx_buffer[USB_PACKET_SIZE];
+
+    static uint8_t rx_buffer[USB_PACKET_SIZE];
+
+#if USE_WEBUSB
+    static const usb_webusb_info_t webusb_info = {
+        .iface_num        = USB_IFACE_NUM,
+        .ep_in            = USB_EP_DIR_IN | 0x01,
+        .ep_out           = USB_EP_DIR_OUT | 0x01,
+        .subclass         = 0,
+        .protocol         = 0,
+        .max_packet_len   = sizeof(rx_buffer),
+        .rx_buffer        = rx_buffer,
+        .polling_interval = 1,
+    };
+#else
     static const uint8_t hid_report_desc[] = {
         0x06, 0x00, 0xff,  // USAGE_PAGE (Vendor Defined)
         0x09, 0x01,        // USAGE (1)
@@ -162,15 +177,22 @@ static void usb_init_all(void) {
         .ep_out           = USB_EP_DIR_OUT | 0x01,
         .subclass         = 0,
         .protocol         = 0,
-        .max_packet_len   = sizeof(hid_rx_buffer),
-        .rx_buffer        = hid_rx_buffer,
+        .max_packet_len   = sizeof(rx_buffer),
+        .rx_buffer        = rx_buffer,
         .polling_interval = 1,
         .report_desc_len  = sizeof(hid_report_desc),
         .report_desc      = hid_report_desc,
     };
+#endif
 
     usb_init(&dev_info);
+
+#if USE_WEBUSB
+    ensure(usb_webusb_add(&webusb_info), NULL);
+#else
     ensure(usb_hid_add(&hid_info), NULL);
+#endif
+
     usb_start();
 }
 
@@ -183,7 +205,11 @@ static secbool bootloader_loop(secbool firmware_present)
     uint8_t buf[USB_PACKET_SIZE];
 
     for (;;) {
-        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, 100);
+#if USE_WEBUSB
+        int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
+#else
+        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
+#endif
         ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
         uint16_t msg_id;
         uint32_t msg_size;

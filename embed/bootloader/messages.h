@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "secbool.h"
 
+#define USE_WEBUSB        0
+
+#define USB_TIMEOUT       100
 #define USB_PACKET_SIZE   64
 #define USB_IFACE_NUM     0
 
