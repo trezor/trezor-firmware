@@ -25,32 +25,27 @@
 
 #ifndef RAND_PLATFORM_INDEPENDENT
 
+
+#pragma message("NOT SUITABLE FOR PRODUCTION USE!")
+
+// The following code is not supposed to be used in a production environment.
+// It's included only to make the library testable.
+// The message above tries to prevent any accidental use outside of the test environment.
+//
+// You are supposed to replace the random32() function with your own secure code.
+// There is also a possibility to replace the random_buffer() function as it is defined as a weak symbol.
+
 #include <stdio.h>
-#ifdef _WIN32
 #include <time.h>
-#else
-#include <assert.h>
-#endif
 
 uint32_t random32(void)
 {
-#ifdef _WIN32
 	static int initialized = 0;
 	if (!initialized) {
 		srand((unsigned)time(NULL));
 		initialized = 1;
 	}
 	return ((rand() % 0xFF) | ((rand() % 0xFF) << 8) | ((rand() % 0xFF) << 16) | ((rand() % 0xFF) << 24));
-#else
-	static FILE *frand = NULL;
-	if (!frand) {
-		frand = fopen("/dev/urandom", "r");
-	}
-	uint32_t r;
-	size_t len_read = fread(&r, 1, sizeof(r), frand);
-	assert(len_read == sizeof(r));
-	return r;
-#endif
 }
 
 #endif /* RAND_PLATFORM_INDEPENDENT */
@@ -58,13 +53,6 @@ uint32_t random32(void)
 //
 // The following code is platform independent
 //
-
-uint32_t random_uniform(uint32_t n)
-{
-	uint32_t x, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
-	while ((x = random32()) >= max);
-	return x / (max / n);
-}
 
 void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len)
 {
@@ -75,6 +63,13 @@ void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len)
 		}
 		buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
 	}
+}
+
+uint32_t random_uniform(uint32_t n)
+{
+	uint32_t x, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
+	while ((x = random32()) >= max);
+	return x / (max / n);
 }
 
 void random_permute(char *str, size_t len)
