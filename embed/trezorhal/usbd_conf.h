@@ -65,7 +65,7 @@
 #define USB_PHY_HS_ID                         1
 #define USBD_MAX_NUM_INTERFACES               8
 #define USBD_MAX_NUM_CONFIGURATION            1
-#define USBD_SUPPORT_USER_STRING              0
+#define USBD_SUPPORT_USER_STRING              1
 #define USBD_SELF_POWERED                     0
 #define USBD_DEBUG_LEVEL                      0
 #define USBD_LPM_ENABLED                      1

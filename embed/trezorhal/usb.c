@@ -356,6 +356,22 @@ static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
     return usb_config_buf;
 }
 
+static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev, uint8_t index, uint16_t *length) {
+#if USE_WINUSB
+    static const uint8_t winusb_string_descriptor[] = {
+        0x14,                   // bLength
+        USB_DESC_TYPE_STRING,   // bDescriptorType
+        USB_WINUSB_EXTRA_STRING // wData
+    };
+    if (index == USB_WINUSB_EXTRA_STRING_INDEX) {
+        *length = sizeof(winusb_string_descriptor);
+        return UNCONST(winusb_string_descriptor);
+    }
+#endif
+    *length = 0;
+    return 0;
+}
+
 static const USBD_ClassTypeDef usb_class = {
     .Init                          = usb_class_init,
     .DeInit                        = usb_class_deinit,
@@ -371,4 +387,5 @@ static const USBD_ClassTypeDef usb_class = {
     .GetFSConfigDescriptor         = usb_class_get_cfg_desc,
     .GetOtherSpeedConfigDescriptor = usb_class_get_cfg_desc,
     .GetDeviceQualifierDescriptor  = NULL,
+    .GetUsrStrDescriptor           = usb_class_get_usrstr_desc,
 };

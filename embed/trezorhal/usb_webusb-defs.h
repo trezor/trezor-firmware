@@ -8,6 +8,14 @@
 #define USB_WEBUSB_VENDOR_CODE   0x01  // arbitrary
 #define USB_WEBUSB_LANDING_PAGE  0x01  // arbitrary
 
+#define USE_WINUSB 1
+
+#if USE_WINUSB
+#define USB_WINUSB_VENDOR_CODE  '!'  // arbitrary, but must be equivalent to the last character in extra string
+#define USB_WINUSB_EXTRA_STRING 'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, USB_WINUSB_VENDOR_CODE , 0x00, 0x00, 0x00  // MSFT100!
+#define USB_WINUSB_EXTRA_STRING_INDEX 0xEE
+#endif
+
 typedef struct __attribute__((packed)) {
     usb_interface_descriptor_t iface;
     usb_endpoint_descriptor_t ep_in;

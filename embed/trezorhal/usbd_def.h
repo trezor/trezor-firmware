@@ -78,7 +78,7 @@
 #define  USB_REQ_RECIPIENT_DEVICE                       0x00
 #define  USB_REQ_RECIPIENT_INTERFACE                    0x01
 #define  USB_REQ_RECIPIENT_ENDPOINT                     0x02
-#define  USB_REQ_RECIPIENT_MASK                         0x03
+#define  USB_REQ_RECIPIENT_MASK                         0x1F
 
 #define  USB_REQ_GET_STATUS                             0x00
 #define  USB_REQ_CLEAR_FEATURE                          0x01
