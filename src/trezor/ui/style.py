@@ -55,6 +55,8 @@ ICON_LOCK     = 'trezor/res/lock.toig'
 ICON_SEND     = 'trezor/res/send.toig'
 ICON_CLICK    = 'trezor/res/click.toig'
 ICON_BACK     = 'trezor/res/left.toig'
+ICON_NOCOPY   = 'trezor/res/nocopy.toig'
+ICON_SWIPE    = 'trezor/res/swipedown.toig'
 
 # buttons
 BTN_DEFAULT = {
@@ -153,5 +155,5 @@ LDR_DEFAULT_ACTIVE = {
     'bg-color': BG,
     'fg-color': GREEN,
     'icon': ICON_SEND,
-    'icon-fg-color': GREEN,
+    'icon-fg-color': WHITE,
 }

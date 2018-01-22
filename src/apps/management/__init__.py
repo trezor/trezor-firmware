@@ -12,8 +12,8 @@ def dispatch_LoadDevice(*args, **kwargs):
 
 @unimport
 def dispatch_ResetDevice(*args, **kwargs):
-    from .reset_device import layout_reset_device
-    return layout_reset_device(*args, **kwargs)
+    from .reset_device import reset_device
+    return reset_device(*args, **kwargs)
 
 
 @unimport

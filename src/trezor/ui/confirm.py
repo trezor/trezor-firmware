@@ -16,10 +16,10 @@ class ConfirmDialog(Widget):
     def __init__(self, content, confirm=DEFAULT_CONFIRM, cancel=DEFAULT_CANCEL):
         self.content = content
         if cancel is not None:
-            self.confirm = Button(ui.grid(8, n_x=2), confirm,
+            self.confirm = Button(ui.grid(9, n_x=2), confirm,
                                   normal_style=ui.BTN_CONFIRM,
                                   active_style=ui.BTN_CONFIRM_ACTIVE)
-            self.cancel = Button(ui.grid(9, n_x=2), cancel,
+            self.cancel = Button(ui.grid(8, n_x=2), cancel,
                                  normal_style=ui.BTN_CANCEL,
                                  active_style=ui.BTN_CANCEL_ACTIVE)
         else:
