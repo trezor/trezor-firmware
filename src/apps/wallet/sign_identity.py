@@ -86,6 +86,9 @@ async def layout_sign_identity(ctx, msg):
     from ..common import coins
     from ..common import seed
 
+    if msg.ecdsa_curve_name is None:
+        msg.ecdsa_curve_name = 'secp256k1'
+
     identity = serialize_identity(msg.identity)
     display_identity(identity, msg.challenge_visual)
 
