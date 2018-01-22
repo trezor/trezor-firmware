@@ -37,37 +37,17 @@ def schedule(task, value=None, deadline=None):
     _queue.push(deadline, task, value)
 
 
-def unschedule(task):
-    '''
-    Remove task from the time queue.  Cancels previous `schedule`.
-    '''
-    global _queue
-    task_entry = [0, 0, 0]  # deadline, task, value
-    queue_copy = utimeq.utimeq(_QUEUE_SIZE)
-    while _queue:
-        _queue.pop(task_entry)
-        d, t, v = task_entry
-        if t is not task:
-            queue_copy.push(d, t, v)
-    _queue = queue_copy
-
-
 def pause(task, iface):
     tasks = _paused.get(iface, None)
     if tasks is None:
-        tasks = _paused[iface] = []
-    tasks.append(task)
-
-
-def unpause(task):
-    for iface in _paused:
-        if task in _paused[iface]:
-            _paused[iface].remove(task)
+        tasks = _paused[iface] = set()
+    tasks.add(task)
 
 
 def close(task):
-    unschedule(task)
-    unpause(task)
+    for iface in _paused:
+        _paused[iface].discard(task)
+    _queue.discard(task)
     task.close()
 
 
