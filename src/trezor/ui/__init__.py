@@ -112,7 +112,7 @@ def header(title: str,
            bg: int=BG,
            ifg: int=BG):
     if icon is not None:
-        display.icon(14, 16, res.load(icon), ifg, bg)
+        display.icon(14, 17, res.load(icon), ifg, bg)
     display.text(44, 35, title, BOLD, fg, bg)
 
 

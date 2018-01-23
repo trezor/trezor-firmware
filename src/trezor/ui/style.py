@@ -52,11 +52,11 @@ ICON_CLEAR    = 'trezor/res/cross2.toig'
 ICON_CONFIRM  = 'trezor/res/confirm2.toig'
 ICON_CONFIRM2 = 'trezor/res/confirm.toig'
 ICON_LOCK     = 'trezor/res/lock.toig'
-ICON_SEND     = 'trezor/res/send.toig'
 ICON_CLICK    = 'trezor/res/click.toig'
 ICON_BACK     = 'trezor/res/left.toig'
 ICON_NOCOPY   = 'trezor/res/nocopy.toig'
 ICON_SWIPE    = 'trezor/res/swipedown.toig'
+ICON_CHECK    = 'trezor/res/check.toig'
 
 # buttons
 BTN_DEFAULT = {
@@ -190,7 +190,7 @@ LDR_DEFAULT = {
     'active': {
         'bg-color': BG,
         'fg-color': GREEN,
-        'icon': ICON_SEND,
+        'icon': ICON_CHECK,
         'icon-fg-color': WHITE,
     }
 }
@@ -205,7 +205,7 @@ LDR_DANGER = {
     'active': {
         'bg-color': BG,
         'fg-color': RED,
-        'icon': ICON_SEND,
+        'icon': ICON_CHECK,
         'icon-fg-color': WHITE,
     }
 }
