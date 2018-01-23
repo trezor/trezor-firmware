@@ -7,11 +7,11 @@ from trezor import res
 
 class Loader(ui.Widget):
 
-    def __init__(self, target_ms=1000, normal_style=None, active_style=None):
+    def __init__(self, target_ms=1000, style=ui.LDR_DEFAULT):
         self.target_ms = target_ms
         self.start_ticks_ms = None
-        self.normal_style = normal_style or ui.LDR_DEFAULT
-        self.active_style = active_style or ui.LDR_DEFAULT_ACTIVE
+        self.normal_style = style['normal'] or ui.LDR_DEFAULT['normal']
+        self.active_style = style['active'] or ui.LDR_DEFAULT['active']
 
     def start(self):
         self.start_ticks_ms = utime.ticks_ms()

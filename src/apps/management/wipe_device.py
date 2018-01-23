@@ -8,10 +8,13 @@ async def layout_wipe_device(ctx, msg):
     from ..common import storage
 
     await hold_to_confirm(ctx, Text(
-        'WIPE DEVICE',
+        'Wipe device',
         ui.ICON_WIPE,
         ui.NORMAL, 'Do you really want to', 'wipe the device?',
-        ui.NORMAL, '', 'All data will be lost.'))
+        ui.NORMAL, '', 'All data will be lost.',
+        icon_color=ui.RED),
+        button_style=ui.BTN_CANCEL,
+        loader_style=ui.LDR_DANGER)
 
     storage.wipe()
 

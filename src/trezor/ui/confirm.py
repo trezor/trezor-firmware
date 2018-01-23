@@ -1,8 +1,7 @@
 from micropython import const
-from trezor import loop
-from trezor import ui, res
+from trezor import loop, res, ui
 from trezor.ui import Widget
-from trezor.ui.button import Button, BTN_CLICKED, BTN_STARTED, BTN_ACTIVE
+from trezor.ui.button import BTN_ACTIVE, BTN_CLICKED, BTN_STARTED, Button
 from trezor.ui.loader import Loader
 
 CONFIRMED = const(1)
@@ -16,16 +15,13 @@ class ConfirmDialog(Widget):
     def __init__(self, content, confirm=DEFAULT_CONFIRM, cancel=DEFAULT_CANCEL):
         self.content = content
         if cancel is not None:
-            self.confirm = Button(ui.grid(9, n_x=2), confirm,
-                                  normal_style=ui.BTN_CONFIRM,
-                                  active_style=ui.BTN_CONFIRM_ACTIVE)
-            self.cancel = Button(ui.grid(8, n_x=2), cancel,
-                                 normal_style=ui.BTN_CANCEL,
-                                 active_style=ui.BTN_CANCEL_ACTIVE)
+            self.confirm = Button(
+                ui.grid(9, n_x=2), confirm, style=ui.BTN_CONFIRM)
+            self.cancel = Button(
+                ui.grid(8, n_x=2), cancel, style=ui.BTN_CANCEL)
         else:
-            self.confirm = Button(ui.grid(4, n_x=1), confirm,
-                                  normal_style=ui.BTN_CONFIRM,
-                                  active_style=ui.BTN_CONFIRM_ACTIVE)
+            self.confirm = Button(
+                ui.grid(4, n_x=1), confirm, style=ui.BTN_CONFIRM)
             self.cancel = None
 
     def render(self):
@@ -50,12 +46,14 @@ _STOPPED = const(-2)
 
 class HoldToConfirmDialog(Widget):
 
-    def __init__(self, content, hold='Hold to confirm', *args, **kwargs):
+    def __init__(self,
+                 content,
+                 hold='Hold to confirm',
+                 button_style=ui.BTN_CONFIRM,
+                 loader_style=ui.LDR_DEFAULT):
         self.content = content
-        self.button = Button(ui.grid(4, n_x=1), hold,
-                             normal_style=ui.BTN_CONFIRM,
-                             active_style=ui.BTN_CONFIRM_ACTIVE)
-        self.loader = Loader(*args, **kwargs)
+        self.button = Button(ui.grid(4, n_x=1), hold, style=button_style)
+        self.loader = Loader(style=loader_style)
 
     def render(self):
         self.button.render()

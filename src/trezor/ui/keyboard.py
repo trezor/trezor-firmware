@@ -6,10 +6,10 @@ from trezor.ui.button import Button, BTN_CLICKED, ICON
 
 def key_buttons():
     keys = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
-    return [Button(ui.grid(i + 3, n_y=4), k,
-                   normal_style=ui.BTN_KEY,
-                   active_style=ui.BTN_KEY_ACTIVE,
-                   disabled_style=ui.BTN_KEY_DISABLED) for i, k in enumerate(keys)]
+    return [
+        Button(ui.grid(i + 3, n_y=4), k, style=ui.BTN_KEY)
+        for i, k in enumerate(keys)
+    ]
 
 
 def compute_mask(text: str) -> int:
@@ -30,19 +30,19 @@ class Input(Button):
         self.pending = False
 
     def edit(self, content: str, word: str, pending: bool):
-        self.content = content
         self.word = word
+        self.content = content
         self.pending = pending
         self.taint()
         if content == word:  # confirm button
             self.enable()
-            self.normal_style = ui.BTN_CONFIRM
-            self.active_style = ui.BTN_CONFIRM_ACTIVE
+            self.normal_style = ui.BTN_CONFIRM['normal']
+            self.active_style = ui.BTN_CONFIRM['active']
             self.icon = ui.ICON_CONFIRM
         elif word:  # auto-complete button
             self.enable()
-            self.normal_style = ui.BTN_KEY
-            self.active_style = ui.BTN_KEY_ACTIVE
+            self.normal_style = ui.BTN_KEY['normal']
+            self.active_style = ui.BTN_KEY['active']
             self.icon = ui.ICON_CLICK
         else:  # disabled button
             self.disable()
@@ -83,8 +83,7 @@ class MnemonicKeyboard(ui.Widget):
         self.input = Input(ui.grid(1, n_x=4, n_y=4, cells_x=3), '', '')
         self.back = Button(ui.grid(0, n_x=4, n_y=4),
                            res.load(ui.ICON_BACK),
-                           normal_style=ui.BTN_CLEAR,
-                           active_style=ui.BTN_CLEAR_ACTIVE)
+                           style=ui.BTN_CLEAR)
         self.keys = key_buttons()
         self.pbutton = None  # pending key button
         self.pindex = 0  # index of current pending char in pbutton

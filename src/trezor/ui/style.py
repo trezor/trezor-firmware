@@ -60,100 +60,152 @@ ICON_SWIPE    = 'trezor/res/swipedown.toig'
 
 # buttons
 BTN_DEFAULT = {
-    'bg-color': BG,
-    'fg-color': FG,
-    'text-style': NORMAL,
-    'border-color': BG,
-    'radius': RADIUS,
+    'normal': {
+        'bg-color': BG,
+        'fg-color': FG,
+        'text-style': NORMAL,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'active': {
+        'bg-color': FG,
+        'fg-color': BG,
+        'text-style': BOLD,
+        'border-color': FG,
+        'radius': RADIUS,
+    },
+    'disabled': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': NORMAL,
+        'border-color': BG,
+        'radius': RADIUS,
+    }
 }
-BTN_DEFAULT_ACTIVE = {
-    'bg-color': FG,
-    'fg-color': BG,
-    'text-style': BOLD,
-    'border-color': FG,
-    'radius': RADIUS,
-}
-BTN_DEFAULT_DISABLED = {
-    'bg-color': BG,
-    'fg-color': GREY,
-    'text-style': NORMAL,
-    'border-color': BG,
-    'radius': RADIUS,
-}
+
 BTN_CANCEL = {
-    'bg-color': RED,
-    'fg-color': FG,
-    'text-style': BOLD,
-    'border-color': BG,
-    'radius': RADIUS,
+    'normal': {
+        'bg-color': RED,
+        'fg-color': FG,
+        'text-style': BOLD,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'active': {
+        'bg-color': FG,
+        'fg-color': RED,
+        'text-style': BOLD,
+        'border-color': FG,
+        'radius': RADIUS,
+    },
+    'disabled': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': NORMAL,
+        'border-color': BG,
+        'radius': RADIUS,
+    }
 }
-BTN_CANCEL_ACTIVE = {
-    'bg-color': FG,
-    'fg-color': RED,
-    'text-style': BOLD,
-    'border-color': FG,
-    'radius': RADIUS,
-}
+
 BTN_CONFIRM = {
-    'bg-color': GREEN,
-    'fg-color': FG,
-    'text-style': BOLD,
-    'border-color': BG,
-    'radius': RADIUS,
+    'normal': {
+        'bg-color': GREEN,
+        'fg-color': FG,
+        'text-style': BOLD,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'active': {
+        'bg-color': FG,
+        'fg-color': GREEN,
+        'text-style': BOLD,
+        'border-color': FG,
+        'radius': RADIUS,
+    },
+    'disabled': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': NORMAL,
+        'border-color': BG,
+        'radius': RADIUS,
+    }
 }
-BTN_CONFIRM_ACTIVE = {
-    'bg-color': FG,
-    'fg-color': GREEN,
-    'text-style': BOLD,
-    'border-color': FG,
-    'radius': RADIUS,
-}
+
 BTN_CLEAR = {
-    'bg-color': ORANGE,
-    'fg-color': FG,
-    'text-style': NORMAL,
-    'border-color': BG,
-    'radius': RADIUS,
+    'normal': {
+        'bg-color': ORANGE,
+        'fg-color': FG,
+        'text-style': NORMAL,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'active': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': NORMAL,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'disabled': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': MONO,
+        'border-color': BG,
+        'radius': RADIUS,
+    }
 }
-BTN_CLEAR_ACTIVE = {
-    'bg-color': BG,
-    'fg-color': GREY,
-    'text-style': NORMAL,
-    'border-color': BG,
-    'radius': RADIUS,
-}
+
 BTN_KEY = {
-    'bg-color': BLACKISH,
-    'fg-color': FG,
-    'text-style': MONO,
-    'border-color': BG,
-    'radius': RADIUS,
-}
-BTN_KEY_ACTIVE = {
-    'bg-color': FG,
-    'fg-color': BLACKISH,
-    'text-style': MONO,
-    'border-color': FG,
-    'radius': RADIUS,
-}
-BTN_KEY_DISABLED = {
-    'bg-color': BG,
-    'fg-color': GREY,
-    'text-style': MONO,
-    'border-color': BG,
-    'radius': RADIUS,
+    'normal': {
+        'bg-color': BLACKISH,
+        'fg-color': FG,
+        'text-style': MONO,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'active': {
+        'bg-color': FG,
+        'fg-color': BLACKISH,
+        'text-style': MONO,
+        'border-color': FG,
+        'radius': RADIUS,
+    },
+    'disabled': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': MONO,
+        'border-color': BG,
+        'radius': RADIUS,
+    }
 }
 
 # loader
 LDR_DEFAULT = {
-    'bg-color': BG,
-    'fg-color': GREEN,
-    'icon': None,
-    'icon-fg-color': None,
+    'normal': {
+        'bg-color': BG,
+        'fg-color': GREEN,
+        'icon': None,
+        'icon-fg-color': None,
+    },
+    'active': {
+        'bg-color': BG,
+        'fg-color': GREEN,
+        'icon': ICON_SEND,
+        'icon-fg-color': WHITE,
+    }
 }
-LDR_DEFAULT_ACTIVE = {
-    'bg-color': BG,
-    'fg-color': GREEN,
-    'icon': ICON_SEND,
-    'icon-fg-color': WHITE,
+
+LDR_DANGER = {
+    'normal': {
+        'bg-color': BG,
+        'fg-color': RED,
+        'icon': None,
+        'icon-fg-color': None,
+    },
+    'active': {
+        'bg-color': BG,
+        'fg-color': RED,
+        'icon': ICON_SEND,
+        'icon-fg-color': WHITE,
+    }
 }

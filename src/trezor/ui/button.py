@@ -21,16 +21,12 @@ BORDER = const(4)  # border size in pixels
 
 class Button(Widget):
 
-    def __init__(self, area, content,
-                 normal_style=None,
-                 active_style=None,
-                 disabled_style=None,
-                 absolute=False):
+    def __init__(self, area, content, style=ui.BTN_KEY, absolute=False):
         self.area = area
         self.content = content
-        self.normal_style = normal_style or ui.BTN_KEY
-        self.active_style = active_style or ui.BTN_KEY_ACTIVE
-        self.disabled_style = disabled_style or ui.BTN_KEY_DISABLED
+        self.normal_style = style['normal'] or ui.BTN_KEY['normal']
+        self.active_style = style['active'] or ui.BTN_KEY['active']
+        self.disabled_style = style['disabled'] or ui.BTN_KEY['disabled']
         self.absolute = absolute
         self.state = BTN_DIRTY
 
