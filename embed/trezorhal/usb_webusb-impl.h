@@ -7,16 +7,6 @@
 
 #define USB_CLASS_WEBUSB                0xFF
 
-#define USB_WEBUSB_REQ_SET_PROTOCOL     0x0B
-#define USB_WEBUSB_REQ_GET_PROTOCOL     0x03
-#define USB_WEBUSB_REQ_SET_IDLE         0x0A
-#define USB_WEBUSB_REQ_GET_IDLE         0x02
-
-#define USB_WEBUSB_REQ_GET_URL          0x02
-#define USB_WEBUSB_DESCRIPTOR_TYPE_URL  0x03
-#define USB_WEBUSB_URL_SCHEME_HTTP      0
-#define USB_WEBUSB_URL_SCHEME_HTTPS     1
-
 /* usb_webusb_add adds and configures new USB WebUSB interface according to
  * configuration options passed in `info`. */
 secbool usb_webusb_add(const usb_webusb_info_t *info) {
@@ -227,66 +217,16 @@ static void usb_webusb_class_deinit(USBD_HandleTypeDef *dev, usb_webusb_state_t 
 
 static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *state, USBD_SetupReqTypedef *req) {
 
-#if USE_WINUSB
-    static uint8_t winusb_wcid[] = {
-        // header
-        0x28, 0x00, 0x00, 0x00, // dwLength
-        0x00, 0x01,             // bcdVersion
-        0x04, 0x00,             // wIndex
-        0x01,                   // bNumSections
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved
-        // functions
-        0x00,                   // bInterfaceNumber - will get overriden below
-        0x01,                   // reserved
-        'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,       // compatibleId
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // subCompatibleId
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // reserved
-    };
-    static const uint8_t winusb_guid[] = {
-        // header
-        0x92, 0x00, 0x00, 0x00, // dwLength
-        0x00, 0x01,             // bcdVersion
-        0x05, 0x00,             // wIndex
-        0x01, 0x00,             // wNumFeatures
-        // features
-        0x88, 0x00, 0x00, 0x00, // dwLength
-        0x07, 0x00, 0x00, 0x00, // dwPropertyDataType
-        0x2A, 0x00,             // wNameLength
-        'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00, 'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00, 'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00, 'D', 0x00, 's', 0x00, 0x00, 0x00, // .name
-        0x50, 0x00, 0x00, 0x00, // dwPropertyDataLength
-        '{', 0x00, 'c', 0x00, '6', 0x00, 'c', 0x00, '3', 0x00, '7', 0x00, '4', 0x00, 'a', 0x00, '6', 0x00, '-', 0x00, '2', 0x00, '2', 0x00, '8', 0x00, '5', 0x00, '-', 0x00, '4', 0x00, 'c', 0x00, 'b', 0x00, '8', 0x00, '-', 0x00, 'a', 0x00, 'b', 0x00, '4', 0x00, '3', 0x00, '-', 0x00, '1', 0x00, '7', 0x00, '6', 0x00, '4', 0x00, '7', 0x00, 'c', 0x00, 'e', 0x00, 'a', 0x00, '5', 0x00, '0', 0x00, '3', 0x00, 'd', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00,  // propertyData
-    };
-#endif
-
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
 
-#if USE_WINUSB
-        case USB_REQ_TYPE_VENDOR:           // Vendor request
+        // Interface & Endpoint request
+        case USB_REQ_TYPE_STANDARD:
             switch (req->bRequest) {
-                case USB_WINUSB_VENDOR_CODE:
-                    switch (req->bmRequest & USB_REQ_RECIPIENT_MASK) {
-                        case USB_REQ_RECIPIENT_DEVICE:
-                            winusb_wcid[16] = state->desc_block->iface.bInterfaceNumber;
-                            USBD_CtlSendData(dev, UNCONST(winusb_wcid), sizeof(winusb_wcid));
-                            break;
-                        case USB_REQ_RECIPIENT_INTERFACE:
-                            USBD_CtlSendData(dev, UNCONST(winusb_guid), sizeof(winusb_guid));
-                            break;
-                    }
-                    break;
-                default:
-                    USBD_CtlError(dev, req);
-                    return USBD_FAIL;
-            }
-            break;
-#endif
 
-        case USB_REQ_TYPE_STANDARD:         // Interface & Endpoint request
-
-            switch (req->bRequest) {
                 case USB_REQ_SET_INTERFACE:
                     state->alt_setting = req->wValue;
                     break;
+
                 case USB_REQ_GET_INTERFACE:
                     USBD_CtlSendData(dev, &state->alt_setting, sizeof(state->alt_setting));
                     break;

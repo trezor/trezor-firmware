@@ -11,7 +11,7 @@
 #include "usb.h"
 #include "usbd_core.h"
 
-#define UNCONST(X) ((uint8_t *)(X))
+#define USE_WINUSB 1
 
 #define USB_MAX_CONFIG_DESC_SIZE    256
 #define USB_MAX_STR_SIZE            62
@@ -24,6 +24,16 @@
 #else
 #error Unable to determine proper USB_PHY_ID to use
 #endif
+
+#if USE_WINUSB
+#define USB_WINUSB_VENDOR_CODE          '!'  // arbitrary, but must be equivalent to the last character in extra string
+#define USB_WINUSB_EXTRA_STRING         'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, '1', 0x00, '0', 0x00, '0', 0x00, USB_WINUSB_VENDOR_CODE , 0x00  // MSFT100!
+#define USB_WINUSB_EXTRA_STRING_INDEX   0xEE
+#define USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR             0x04
+#define USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR    0x05
+#endif
+
+#define UNCONST(X) ((uint8_t *)(X))
 
 static usb_device_descriptor_t usb_dev_desc;
 
@@ -279,6 +289,11 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
     return USBD_OK;
 }
 
+#define USB_WEBUSB_REQ_GET_URL          0x02
+#define USB_WEBUSB_DESCRIPTOR_TYPE_URL  0x03
+#define USB_WEBUSB_URL_SCHEME_HTTP      0
+#define USB_WEBUSB_URL_SCHEME_HTTPS     1
+
 static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *req) {
     if (((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) &&
         ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) &&
@@ -286,19 +301,69 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
         return USBD_OK;
     }
     if ((req->bmRequest & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR) {
-        if (req->bRequest == USB_WEBUSB_VENDOR_CODE) {
-            if (req->wIndex == USB_WEBUSB_REQ_GET_URL && req->wValue == USB_WEBUSB_LANDING_PAGE) {
-                static const char webusb_url[] = {
-                    3 + 15,                             // uint8_t bLength
-                    USB_WEBUSB_DESCRIPTOR_TYPE_URL,     // uint8_t bDescriptorType
-                    USB_WEBUSB_URL_SCHEME_HTTPS,        // uint8_t bScheme
-                    't', 'r', 'e', 'z', 'o', 'r', '.', 'i', 'o', '/', 's', 't', 'a', 'r', 't',  // char URL[]
-                };
-                USBD_CtlSendData(dev, UNCONST(webusb_url), sizeof(webusb_url));
-            } else {
-                return USBD_FAIL;
+        if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_DEVICE) {
+            if (req->bRequest == USB_WEBUSB_VENDOR_CODE) {
+                if (req->wIndex == USB_WEBUSB_REQ_GET_URL && req->wValue == USB_WEBUSB_LANDING_PAGE) {
+                    static const char webusb_url[] = {
+                        3 + 15,                             // uint8_t bLength
+                        USB_WEBUSB_DESCRIPTOR_TYPE_URL,     // uint8_t bDescriptorType
+                        USB_WEBUSB_URL_SCHEME_HTTPS,        // uint8_t bScheme
+                        't', 'r', 'e', 'z', 'o', 'r', '.', 'i', 'o', '/', 's', 't', 'a', 'r', 't',  // char URL[]
+                    };
+                    USBD_CtlSendData(dev, UNCONST(webusb_url), sizeof(webusb_url));
+                } else {
+                    return USBD_FAIL;
+                }
+            }
+#if USE_WINUSB
+            if (req->bRequest == USB_WINUSB_VENDOR_CODE) {
+                if (req->wIndex == USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
+                    static const uint8_t winusb_wcid[] = {
+                        // header
+                        0x28, 0x00, 0x00, 0x00, // dwLength
+                        0x00, 0x01,             // bcdVersion
+                        0x04, 0x00,             // wIndex
+                        0x01,                   // bNumSections
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved
+                        // functions
+                        0x00,                   // bInterfaceNumber - HACK: we present only interface 0 as WinUSB
+                        0x01,                   // reserved
+                        'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,       // compatibleId
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // subCompatibleId
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // reserved
+                    };
+                    USBD_CtlSendData(dev, UNCONST(winusb_wcid), sizeof(winusb_wcid));
+                } else {
+                    return USBD_FAIL;
+                }
+            }
+#endif
+        }
+#if USE_WINUSB
+        if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_INTERFACE) {
+            if (req->bRequest == USB_WINUSB_VENDOR_CODE) {
+                if (req->wIndex == USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR) {
+                    static const uint8_t winusb_guid[] = {
+                        // header
+                        0x92, 0x00, 0x00, 0x00, // dwLength
+                        0x00, 0x01,             // bcdVersion
+                        0x05, 0x00,             // wIndex
+                        0x01, 0x00,             // wNumFeatures
+                        // features
+                        0x88, 0x00, 0x00, 0x00, // dwLength
+                        0x07, 0x00, 0x00, 0x00, // dwPropertyDataType
+                        0x2A, 0x00,             // wNameLength
+                        'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00, 'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00, 'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00, 'D', 0x00, 's', 0x00, 0x00, 0x00, // .name
+                        0x50, 0x00, 0x00, 0x00, // dwPropertyDataLength
+                        '{', 0x00, 'c', 0x00, '6', 0x00, 'c', 0x00, '3', 0x00, '7', 0x00, '4', 0x00, 'a', 0x00, '6', 0x00, '-', 0x00, '2', 0x00, '2', 0x00, '8', 0x00, '5', 0x00, '-', 0x00, '4', 0x00, 'c', 0x00, 'b', 0x00, '8', 0x00, '-', 0x00, 'a', 0x00, 'b', 0x00, '4', 0x00, '3', 0x00, '-', 0x00, '1', 0x00, '7', 0x00, '6', 0x00, '4', 0x00, '7', 0x00, 'c', 0x00, 'e', 0x00, 'a', 0x00, '5', 0x00, '0', 0x00, '3', 0x00, 'd', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00,  // propertyData
+                    };
+                    USBD_CtlSendData(dev, UNCONST(winusb_guid), sizeof(winusb_guid));
+                } else {
+                    return USBD_FAIL;
+                }
             }
         }
+#endif
     }
     if (req->wIndex >= USBD_MAX_NUM_INTERFACES) {
         return USBD_FAIL;
@@ -374,7 +439,7 @@ static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
 static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev, uint8_t index, uint16_t *length) {
 #if USE_WINUSB
     static const uint8_t winusb_string_descriptor[] = {
-        0x14,                   // bLength
+        0x12,                   // bLength
         USB_DESC_TYPE_STRING,   // bDescriptorType
         USB_WINUSB_EXTRA_STRING // wData
     };
