@@ -92,8 +92,8 @@ void usb_init(const usb_dev_info_t *dev_info) {
     // Configuration descriptor
     usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
     usb_config_desc->bDescriptorType     = USB_DESC_TYPE_CONFIGURATION;
-    usb_config_desc->wTotalLength        = sizeof(usb_config_descriptor_t);
-    usb_config_desc->bNumInterfaces      = 0;
+    usb_config_desc->wTotalLength        = sizeof(usb_config_descriptor_t); // will be updated later via usb_desc_add_iface()
+    usb_config_desc->bNumInterfaces      = 0;                               // will be updated later via usb_desc_add_iface()
     usb_config_desc->bConfigurationValue = 0x01;
     usb_config_desc->iConfiguration      = USBD_IDX_CONFIG_STR;
     usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xC0 = self powered
@@ -342,7 +342,8 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
 #if USE_WINUSB
         if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_INTERFACE) {
             if (req->bRequest == USB_WINUSB_VENDOR_CODE) {
-                if (req->wIndex == USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR) {
+                if (req->wIndex == USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR &&
+                    (req->wValue & 0xFF) == 0) {    // reply only if interface is 0
                     static const uint8_t winusb_guid[] = {
                         // header
                         0x92, 0x00, 0x00, 0x00, // dwLength
