@@ -210,7 +210,9 @@ static secbool bootloader_loop(secbool firmware_present)
 #else
         int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
 #endif
-        ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+        if (r != USB_PACKET_SIZE) {
+            continue;
+        }
         uint16_t msg_id;
         uint32_t msg_size;
         if (sectrue != msg_parse_header(buf, &msg_id, &msg_size)) {
