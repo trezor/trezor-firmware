@@ -15,17 +15,13 @@ class WordSelector(Widget):
     def __init__(self, content):
         self.content = content
         self.w12 = Button(ui.grid(8, n_y=4, n_x=4, cells_x=2), str(_W12),
-                          normal_style=ui.BTN_KEY,
-                          active_style=ui.BTN_KEY_ACTIVE)
+                          style=ui.BTN_KEY)
         self.w15 = Button(ui.grid(10, n_y=4, n_x=4, cells_x=2), str(_W15),
-                          normal_style=ui.BTN_KEY,
-                          active_style=ui.BTN_KEY_ACTIVE)
+                          style=ui.BTN_KEY)
         self.w18 = Button(ui.grid(12, n_y=4, n_x=4, cells_x=2), str(_W18),
-                          normal_style=ui.BTN_KEY,
-                          active_style=ui.BTN_KEY_ACTIVE)
+                          style=ui.BTN_KEY)
         self.w24 = Button(ui.grid(14, n_y=4, n_x=4, cells_x=2), str(_W24),
-                          normal_style=ui.BTN_KEY,
-                          active_style=ui.BTN_KEY_ACTIVE)
+                          style=ui.BTN_KEY)
 
     def render(self):
         self.w12.render()
