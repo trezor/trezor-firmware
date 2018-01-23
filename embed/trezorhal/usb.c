@@ -285,6 +285,21 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
         ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_VENDOR)) {
         return USBD_OK;
     }
+    if ((req->bmRequest & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR) {
+        if (req->bRequest == USB_WEBUSB_VENDOR_CODE) {
+            if (req->wIndex == USB_WEBUSB_REQ_GET_URL && req->wValue == USB_WEBUSB_LANDING_PAGE) {
+                static const char webusb_url[] = {
+                    3 + 15,                             // uint8_t bLength
+                    USB_WEBUSB_DESCRIPTOR_TYPE_URL,     // uint8_t bDescriptorType
+                    USB_WEBUSB_URL_SCHEME_HTTPS,        // uint8_t bScheme
+                    't', 'r', 'e', 'z', 'o', 'r', '.', 'i', 'o', '/', 's', 't', 'a', 'r', 't',  // char URL[]
+                };
+                USBD_CtlSendData(dev, UNCONST(webusb_url), sizeof(webusb_url));
+            } else {
+                return USBD_FAIL;
+            }
+        }
+    }
     if (req->wIndex >= USBD_MAX_NUM_INTERFACES) {
         return USBD_FAIL;
     }

@@ -227,13 +227,6 @@ static void usb_webusb_class_deinit(USBD_HandleTypeDef *dev, usb_webusb_state_t 
 
 static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *state, USBD_SetupReqTypedef *req) {
 
-    static const char webusb_url[] = {
-        3 + 15,                             // uint8_t bLength
-        USB_WEBUSB_DESCRIPTOR_TYPE_URL,     // uint8_t bDescriptorType
-        USB_WEBUSB_URL_SCHEME_HTTPS,        // uint8_t bScheme
-        't', 'r', 'e', 'z', 'o', 'r', '.', 'i', 'o', '/', 's', 't', 'a', 'r', 't',  // char URL[]
-    };
-
 #if USE_WINUSB
     static uint8_t winusb_wcid[] = {
         // header
@@ -267,22 +260,9 @@ static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *s
 
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
 
-        case USB_REQ_TYPE_VENDOR:           // Vendor request
-
-            switch (req->bRequest) {
-                case USB_WEBUSB_VENDOR_CODE:
-                    switch (req->wIndex) {
-                        case USB_WEBUSB_REQ_GET_URL:
-                            // we should check whether req->wValue == USB_WEBUSB_LANDING_PAGE,
-                            // but let's return always the same url for all indexes
-                            USBD_CtlSendData(dev, UNCONST(webusb_url), sizeof(webusb_url));
-                            break;
-                        default:
-                            USBD_CtlError(dev, req);
-                            return USBD_FAIL;
-                    }
-                    break;
 #if USE_WINUSB
+        case USB_REQ_TYPE_VENDOR:           // Vendor request
+            switch (req->bRequest) {
                 case USB_WINUSB_VENDOR_CODE:
                     switch (req->bmRequest & USB_REQ_RECIPIENT_MASK) {
                         case USB_REQ_RECIPIENT_DEVICE:
@@ -294,12 +274,12 @@ static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *s
                             break;
                     }
                     break;
-#endif
                 default:
                     USBD_CtlError(dev, req);
                     return USBD_FAIL;
             }
             break;
+#endif
 
         case USB_REQ_TYPE_STANDARD:         // Interface & Endpoint request
 
