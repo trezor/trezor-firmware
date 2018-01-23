@@ -28,14 +28,17 @@
 #define WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR 0x05
 #define WINUSB_BCD_VERSION 0x0100
 
-#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_C (sizeof(u"DeviceInterfaceGUIDs"))
-#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U (sizeof("DeviceInterfaceGUIDs"))
-#define WINUSB_EXTENDED_PROPERTIES_RANDOM_GUID u"{0263b512-88cb-4136-9613-5c8e109d8ef5}\0"
-// double null is intentional - it's an array of guids with 1 item
+// Apparently using DeviceInterfaceGUID does not always work on Windows 7.
+// DeviceInterfaceGUIDs does seem to work.
+#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME        u"DeviceInterfaceGUIDs"
+#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_C sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_NAME)
+#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U (sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_NAME) / 2)
 
-#define WINUSB_EXTENDED_PROPERTIES_GUIDS_SIZE_C sizeof(WINUSB_EXTENDED_PROPERTIES_RANDOM_GUID)
-#define WINUSB_EXTENDED_PROPERTIES_GUIDS_SIZE_U (sizeof(WINUSB_EXTENDED_PROPERTIES_RANDOM_GUID) / 2)
-#define WINUSB_EXTENDED_PROPERTIES_MULTISZ_DATA_TYPE 7
+// extra null is intentional - it's an array of GUIDs with 1 item
+#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA        u"{0263b512-88cb-4136-9613-5c8e109d8ef5}\x00"
+#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_C sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_DATA)
+#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_U (sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_DATA) / 2)
+#define WINUSB_EXTENDED_PROPERTIES_MULTISZ_DATA_TYPE  7
 
 #define WINUSB_EXTRA_STRING_INDEX 0xee
 
@@ -68,7 +71,7 @@ struct winusb_extended_properties_feature_descriptor {
 	uint16_t wNameLength;
 	uint16_t name[WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U];
 	uint32_t dwPropertyDataLength;
-	uint16_t propertyData[WINUSB_EXTENDED_PROPERTIES_GUIDS_SIZE_U];
+	uint16_t propertyData[WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_U];
 } __attribute__((packed));
 
 struct winusb_extended_properties_descriptor_header {

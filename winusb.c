@@ -67,10 +67,10 @@ static const struct winusb_extended_properties_descriptor guid = {
 		{
 			.dwLength = sizeof(struct winusb_extended_properties_feature_descriptor),
 			.dwPropertyDataType = WINUSB_EXTENDED_PROPERTIES_MULTISZ_DATA_TYPE,
-			.wNameLength = sizeof(u"DeviceInterfaceGUIDs"),
-			.name = u"DeviceInterfaceGUIDs",
-			.dwPropertyDataLength = (WINUSB_EXTENDED_PROPERTIES_GUIDS_SIZE_C),
-			.propertyData = WINUSB_EXTENDED_PROPERTIES_RANDOM_GUID,
+			.wNameLength = WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_C,
+			.name = WINUSB_EXTENDED_PROPERTIES_GUID_NAME,
+			.dwPropertyDataLength = WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_C,
+			.propertyData = WINUSB_EXTENDED_PROPERTIES_GUID_DATA,
 		},
 	}
 };
