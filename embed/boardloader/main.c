@@ -125,7 +125,7 @@ static secbool copy_sdcard(void)
     for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
         ensure(sdcard_read_blocks(buf, i, 1), NULL);
         for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            ensure(flash_write_word(BOOTLOADER_START + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]), NULL);
+            ensure(flash_write_word(FLASH_SECTOR_BOOTLOADER, i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]), NULL);
         }
     }
 

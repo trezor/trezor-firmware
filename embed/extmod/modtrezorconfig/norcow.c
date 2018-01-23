@@ -38,17 +38,17 @@ static secbool norcow_write(uint8_t sector, uint32_t offset, uint32_t prefix, co
     ensure(flash_unlock(), NULL);
 
     // write prefix
-    ensure(flash_write_word_rel(norcow_sectors[sector], offset, prefix), NULL);
+    ensure(flash_write_word(norcow_sectors[sector], offset, prefix), NULL);
 
     if (len > 0) {
         offset += sizeof(uint32_t);
         // write data
         for (uint16_t i = 0; i < len; i++, offset++) {
-            ensure(flash_write_byte_rel(norcow_sectors[sector], offset, data[i]), NULL);
+            ensure(flash_write_byte(norcow_sectors[sector], offset, data[i]), NULL);
         }
         // pad with zeroes
         for (; offset % 4; offset++) {
-            ensure(flash_write_byte_rel(norcow_sectors[sector], offset, 0x00), NULL);
+            ensure(flash_write_byte(norcow_sectors[sector], offset, 0x00), NULL);
         }
     }
     ensure(flash_lock(), NULL);
@@ -287,7 +287,7 @@ secbool norcow_update(uint16_t key, uint16_t offset, uint32_t value)
     }
     uint32_t sector_offset = (const uint8_t*) ptr - (const uint8_t *)norcow_ptr(norcow_active_sector, 0, NORCOW_SECTOR_SIZE) + offset;
     ensure(flash_unlock(), NULL);
-    ensure(flash_write_word_rel(norcow_sectors[norcow_active_sector], sector_offset, value), NULL);
+    ensure(flash_write_word(norcow_sectors[norcow_active_sector], sector_offset, value), NULL);
     ensure(flash_lock(), NULL);
     return sectrue;
 }

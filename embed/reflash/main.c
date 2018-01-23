@@ -26,7 +26,7 @@ static void progress_callback(int pos, int len)
     display_printf(".");
 }
 
-static void flash_from_sdcard(uint32_t target, uint32_t source, uint32_t length)
+static void flash_from_sdcard(uint8_t sector, uint32_t source, uint32_t length)
 {
     static uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
 
@@ -45,7 +45,7 @@ static void flash_from_sdcard(uint32_t target, uint32_t source, uint32_t length)
             "sdcard_read_blocks");
 
         for (uint32_t j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
-            ensure(flash_write_word(target + i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]), NULL);
+            ensure(flash_write_word(sector, i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t), buf[j]), NULL);
         }
     }
 }
@@ -78,13 +78,16 @@ int main(void)
 
     ensure(flash_unlock(), NULL);
 
-    sdcard_power_on();
+    ensure(sdcard_power_on(), NULL);
 
-#define BOARDLOADER_SIZE (3 * 16 * 1024)
-#define BOOTLOADER_SIZE  (128 * 1024)
+#define BOARDLOADER_CHUNK_SIZE  (16 * 1024)
+#define BOARDLOADER_TOTAL_SIZE  (3 * BOARDLOADER_CHUNK_SIZE)
+#define BOOTLOADER_TOTAL_SIZE   (128 * 1024)
 
-    flash_from_sdcard(BOARDLOADER_START, 0, BOARDLOADER_SIZE);
-    flash_from_sdcard(BOOTLOADER_START, BOARDLOADER_SIZE, BOOTLOADER_SIZE);
+    flash_from_sdcard(FLASH_SECTOR_BOARDLOADER_START,   0 * BOARDLOADER_CHUNK_SIZE, BOARDLOADER_CHUNK_SIZE);
+    flash_from_sdcard(1,                                1 * BOARDLOADER_CHUNK_SIZE, BOARDLOADER_CHUNK_SIZE);
+    flash_from_sdcard(FLASH_SECTOR_BOARDLOADER_END,     2 * BOARDLOADER_CHUNK_SIZE, BOARDLOADER_CHUNK_SIZE);
+    flash_from_sdcard(FLASH_SECTOR_BOOTLOADER,          BOARDLOADER_TOTAL_SIZE,     BOOTLOADER_TOTAL_SIZE);
 
     display_printf("done\n");
     sdcard_power_off();

@@ -105,27 +105,25 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
     return sectrue;
 }
 
-secbool flash_write_byte(uint32_t address, uint8_t data)
+secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
 {
+    uint32_t address = (uint32_t)flash_get_address(sector, offset, 1);
+    if (address == 0) {
+        return secfalse;
+    }
     return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data));
 }
 
-secbool flash_write_word(uint32_t address, uint32_t data)
+secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
 {
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
-}
-
-secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
-{
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_SECTOR_TABLE[sector] + offset, data));
-}
-
-secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
-{
+    uint32_t address = (uint32_t)flash_get_address(sector, offset, 4);
+    if (address == 0) {
+        return secfalse;
+    }
     if (offset % 4 != 0) {
         return secfalse;
     }
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_SECTOR_TABLE[sector] + offset, data));
+    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
 }
 
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
@@ -149,7 +147,8 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint
     ensure(flash_unlock(), NULL);
     secbool ret = secfalse;
     for (uint8_t i = 0; i < datalen; i++) {
-        ensure(flash_write_byte(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i, data[i]), NULL);
+        uint32_t address = FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
+        ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data[i])), NULL);
     }
     ensure(flash_lock(), NULL);
     return ret;

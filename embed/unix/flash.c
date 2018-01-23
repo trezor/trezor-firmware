@@ -132,7 +132,7 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
     return sectrue;
 }
 
-secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
+secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
 {
     uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, sizeof(data));
     if (!flash) {
@@ -145,7 +145,7 @@ secbool flash_write_byte_rel(uint8_t sector, uint32_t offset, uint8_t data)
     return sectrue;
 }
 
-secbool flash_write_word_rel(uint8_t sector, uint32_t offset, uint32_t data)
+secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
 {
     if (offset % 4) {  // we write only at 4-byte boundary
         return secfalse;

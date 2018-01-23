@@ -440,7 +440,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
     const uint32_t * const src = (const uint32_t * const)chunk_buffer;
     for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
-        ensure(flash_write_word_rel(firmware_sectors[firmware_block], i * sizeof(uint32_t), src[i]), NULL);
+        ensure(flash_write_word(firmware_sectors[firmware_block], i * sizeof(uint32_t), src[i]), NULL);
     }
 
     ensure(flash_lock(), NULL);
