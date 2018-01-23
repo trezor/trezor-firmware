@@ -362,23 +362,8 @@ int main(void)
         load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr),
         "invalid firmware header");
 
-    const uint8_t sectors[] = {
-        FLASH_SECTOR_FIRMWARE_START,
-        7,
-        8,
-        9,
-        10,
-        FLASH_SECTOR_FIRMWARE_END,
-        FLASH_SECTOR_FIRMWARE_EXTRA_START,
-        18,
-        19,
-        20,
-        21,
-        22,
-        FLASH_SECTOR_FIRMWARE_EXTRA_END,
-    };
     ensure(
-        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, sectors, 13),
+        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, firmware_sectors, FIRMWARE_SECTORS_COUNT),
         "invalid firmware hash");
 
     // if all VTRUST flags are unset = ultimate trust => skip the procedure
