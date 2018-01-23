@@ -6,39 +6,39 @@
  */
 
 // Communications Device Class Code (bFunctionClass, bInterfaceClass)
-#define USB_CLASS_CDC 0x02
+#define USB_CLASS_CDC                   0x02
 
 // Data Interface Class Code (bInterfaceClass)
-#define USB_CLASS_DATA 0x0A
+#define USB_CLASS_DATA                  0x0A
 
 // Class Subclass Code (bFunctionSubClass, bInterfaceSubClass)
-#define USB_CDC_SUBCLASS_ACM 0x02
+#define USB_CDC_SUBCLASS_ACM            0x02
 
 // Communications Interface Class Control Protocol Codes (bFunctionProtocol, bInterfaceProtocol)
-#define USB_CDC_PROTOCOL_AT 0x01
+#define USB_CDC_PROTOCOL_AT             0x01
 
 // Descriptor Types (bDescriptorType)
-#define USB_DESC_TYPE_ASSOCIATION 0x0B
-#define USB_DESC_TYPE_CS_INTERACE 0x24
+#define USB_DESC_TYPE_ASSOCIATION       0x0B
+#define USB_DESC_TYPE_CS_INTERACE       0x24
 
 // Descriptor SubTypes (bDescriptorSubtype)
-#define USB_DESC_TYPE_HEADER 0x00
-#define USB_DESC_TYPE_CM     0x01
-#define USB_DESC_TYPE_ACM    0x02
-#define USB_DESC_TYPE_UNION  0x06
+#define USB_DESC_TYPE_HEADER            0x00
+#define USB_DESC_TYPE_CM                0x01
+#define USB_DESC_TYPE_ACM               0x02
+#define USB_DESC_TYPE_UNION             0x06
 
 // Data Phase Transfer Direction (bmRequest)
-#define USB_REQ_DIR_MASK     0x80
-#define USB_H2D              0x00
-#define USB_D2H              0x80
+#define USB_REQ_DIR_MASK                0x80
+#define USB_REQ_DIR_H2D                 0x00
+#define USB_REQ_DIR_D2H                 0x80
 
 // Class-Specific Request Codes for PSTN subclasses
-#define USB_CDC_SET_LINE_CODING        0x20
-#define USB_CDC_GET_LINE_CODING        0x21
-#define USB_CDC_SET_CONTROL_LINE_STATE 0x22
+#define USB_CDC_SET_LINE_CODING         0x20
+#define USB_CDC_GET_LINE_CODING         0x21
+#define USB_CDC_SET_CONTROL_LINE_STATE  0x22
 
 // Maximal length of packets on IN CMD EP
-#define USB_CDC_MAX_CMD_PACKET_LEN 0x08
+#define USB_CDC_MAX_CMD_PACKET_LEN      0x08
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
@@ -59,13 +59,13 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
         return secfalse; // Not enough space in the configuration descriptor
     }
 
-    if ((info->ep_cmd & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
+    if ((info->ep_cmd & USB_EP_DIR_MASK) != USB_EP_DIR_IN) {
         return secfalse; // IN CMD EP is invalid
     }
-    if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
+    if ((info->ep_in & USB_EP_DIR_MASK) != USB_EP_DIR_IN) {
         return secfalse; // IN EP is invalid
     }
-    if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
+    if ((info->ep_out & USB_EP_DIR_MASK) != USB_EP_DIR_OUT) {
         return secfalse; // OUT EP is invalid
     }
     if ((info->rx_buffer_len == 0) || (info->rx_buffer_len & (info->rx_buffer_len - 1)) != 0) {
@@ -357,7 +357,7 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
     }
 
     switch (req->bmRequest & USB_REQ_DIR_MASK) {
-        case USB_D2H:
+        case USB_REQ_DIR_D2H:
             switch (req->bRequest) {
                 case USB_CDC_GET_LINE_CODING:
                     USBD_CtlSendData(dev, UNCONST(&line_coding), MIN(req->wLength, sizeof(line_coding)));
@@ -367,7 +367,7 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
                     break;
             }
             break;
-        case USB_H2D:
+        case USB_REQ_DIR_H2D:
             if (req->wLength > 0) {
                 USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
             }

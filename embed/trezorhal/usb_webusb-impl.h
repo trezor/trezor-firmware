@@ -5,12 +5,12 @@
  * see LICENSE file for details
  */
 
-#define USB_CLASS_WEBUSB         0xFF
+#define USB_CLASS_WEBUSB                0xFF
 
-#define USB_WEBUSB_REQ_SET_PROTOCOL 0x0B
-#define USB_WEBUSB_REQ_GET_PROTOCOL 0x03
-#define USB_WEBUSB_REQ_SET_IDLE     0x0A
-#define USB_WEBUSB_REQ_GET_IDLE     0x02
+#define USB_WEBUSB_REQ_SET_PROTOCOL     0x0B
+#define USB_WEBUSB_REQ_GET_PROTOCOL     0x03
+#define USB_WEBUSB_REQ_SET_IDLE         0x0A
+#define USB_WEBUSB_REQ_GET_IDLE         0x02
 
 #define USB_WEBUSB_REQ_GET_URL          0x02
 #define USB_WEBUSB_DESCRIPTOR_TYPE_URL  0x03
@@ -36,10 +36,10 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
         return secfalse; // Not enough space in the configuration descriptor
     }
 
-    if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
+    if ((info->ep_in & USB_EP_DIR_MASK) != USB_EP_DIR_IN) {
         return secfalse; // IN EP is invalid
     }
-    if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
+    if ((info->ep_out & USB_EP_DIR_MASK) != USB_EP_DIR_OUT) {
         return secfalse; // OUT EP is invalid
     }
     if (info->rx_buffer == NULL) {

@@ -5,15 +5,15 @@
  * see LICENSE file for details
  */
 
-#define USB_CLASS_HID            0x03
+#define USB_CLASS_HID               0x03
 
-#define USB_DESC_TYPE_HID        0x21
-#define USB_DESC_TYPE_REPORT     0x22
+#define USB_DESC_TYPE_HID           0x21
+#define USB_DESC_TYPE_REPORT        0x22
 
-#define USB_HID_REQ_SET_PROTOCOL 0x0B
-#define USB_HID_REQ_GET_PROTOCOL 0x03
-#define USB_HID_REQ_SET_IDLE     0x0A
-#define USB_HID_REQ_GET_IDLE     0x02
+#define USB_HID_REQ_SET_PROTOCOL    0x0B
+#define USB_HID_REQ_GET_PROTOCOL    0x03
+#define USB_HID_REQ_SET_IDLE        0x0A
+#define USB_HID_REQ_GET_IDLE        0x02
 
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
@@ -34,10 +34,10 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
         return secfalse; // Not enough space in the configuration descriptor
     }
 
-    if ((info->ep_in & USB_EP_DIR_MSK) != USB_EP_DIR_IN) {
+    if ((info->ep_in & USB_EP_DIR_MASK) != USB_EP_DIR_IN) {
         return secfalse; // IN EP is invalid
     }
-    if ((info->ep_out & USB_EP_DIR_MSK) != USB_EP_DIR_OUT) {
+    if ((info->ep_out & USB_EP_DIR_MASK) != USB_EP_DIR_OUT) {
         return secfalse; // OUT EP is invalid
     }
     if (info->rx_buffer == NULL) {

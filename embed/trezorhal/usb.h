@@ -11,9 +11,9 @@
 #include <stdint.h>
 #include "secbool.h"
 
-#define USB_EP_DIR_OUT 0x00
-#define USB_EP_DIR_IN  0x80
-#define USB_EP_DIR_MSK 0x80
+#define USB_EP_DIR_MASK     0x80
+#define USB_EP_DIR_OUT      0x00
+#define USB_EP_DIR_IN       0x80
 
 typedef struct __attribute__((packed)) {
     uint8_t bLength;
