@@ -115,7 +115,8 @@ static int winusb_control_vendor_request(usbd_device *usbd_dev,
 		status = USBD_REQ_HANDLED;
 
 	} else if (((req->bmRequestType & USB_REQ_TYPE_RECIPIENT) == USB_REQ_TYPE_INTERFACE) &&
-		(req->wIndex == WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR)) {
+		(req->wIndex == WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR) &&
+		(usb_descriptor_index(req->wValue) == winusb_wcid.functions[0].bInterfaceNumber)) {
 
 		*buf = (uint8_t*)(&guid);
 		*len = MIN(*len, guid.header.dwLength);
