@@ -49,8 +49,8 @@ static struct winusb_compatible_id_descriptor winusb_wcid = {
 	}
 };
 
-static struct usb_string_descriptor winusb_string_descriptor = {
-	.bLength = sizeof(WINUSB_EXTRA_STRING) + sizeof(struct usb_string_descriptor),
+static const struct usb_string_descriptor winusb_string_descriptor = {
+	.bLength = sizeof(struct usb_string_descriptor) + sizeof(WINUSB_EXTRA_STRING),
 	.bDescriptorType = USB_DT_STRING,
 	.wData = WINUSB_EXTRA_STRING
 };
