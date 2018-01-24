@@ -216,6 +216,7 @@ static void check_bootloader_version(void)
 
 int main(void)
 {
+main_start:
 #if PRODUCTION
     check_bootloader_version();
 #endif
@@ -246,7 +247,23 @@ int main(void)
     const image_header * const phdr = (sectrue == firmware_present) ? &hdr : NULL;
 
     if (touched || firmware_present != sectrue) {
-        ui_screen_info(pvhdr, phdr);
+        ui_screen_info(sectrue, pvhdr, phdr);
+        for (;;) {
+            uint32_t evt = touch_click();
+            uint16_t x = touch_get_x(evt);
+            uint16_t y = touch_get_y(evt);
+            // clicked on cancel button
+            if (x >= 9 && x < 9 + 108 && y > 184 && y < 184 + 50) {
+                ui_fadeout();
+                goto main_start;
+            }
+            // clicked on confirm button
+            if (x >= 123 && x < 123 + 108 && y > 184 && y < 184 + 50) {
+                ui_fadeout();
+                break;
+            }
+        }
+        ui_screen_info(secfalse, pvhdr, phdr);
         if (bootloader_usb_loop(pvhdr, phdr) != sectrue) {
             return 1;
         }

@@ -6,8 +6,9 @@
 #include "bootui.h"
 #include "version.h"
 
+#include "icon_cancel.h"
+#include "icon_confirm.h"
 #include "icon_info.h"
-
 #include "icon_done.h"
 #include "icon_fail.h"
 #include "icon_install.h"
@@ -66,7 +67,7 @@ void ui_screen_boot_click(void) {
 
 // info UI
 
-void ui_screen_info(const vendor_header * const vhdr, const image_header * const hdr)
+void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
     display_backlight(0);
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
@@ -92,6 +93,15 @@ void ui_screen_info(const vendor_header * const vhdr, const image_header * const
         display_text(55, 120, (const char *)vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
     } else {
         display_text(55, 95, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+    }
+
+    if (sectrue == buttons) {
+        display_text_center(120, 164, "Connect to host?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
+        display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
+        display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
+        display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+    } else {
         display_text_center(120, 213, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
     ui_fadein();
