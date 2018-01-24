@@ -13,6 +13,18 @@
 #include "secbool.h"
 #include "touch.h"
 
+#define TOUCH_ADDRESS       (0x38U << 1) // the HAL requires the 7-bit address to be shifted by one bit
+#define TOUCH_PACKET_SIZE   7U
+#define EVENT_PRESS_DOWN    0x00U
+#define EVENT_CONTACT       0x80U
+#define EVENT_LIFT_UP       0x40U
+#define EVENT_NO_EVENT      0xC0U
+#define GESTURE_NO_GESTURE  0x00U
+#define X_POS_MSB (touch_data[3] & 0x0FU)
+#define X_POS_LSB (touch_data[4])
+#define Y_POS_MSB (touch_data[5] & 0x0FU)
+#define Y_POS_LSB (touch_data[6])
+
 static I2C_HandleTypeDef i2c_handle;
 
 void touch_init(void)
@@ -91,14 +103,14 @@ uint32_t touch_read(void)
 
     const uint32_t number_of_touch_points = touch_data[2] & 0x0F; // valid values are 0, 1, 2 (invalid 0xF before first touch) (tested with FT6206)
     const uint32_t event_flag = touch_data[3] & 0xC0;
-
     if (touch_data[1] == GESTURE_NO_GESTURE) {
+        uint32_t xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB, (Y_POS_MSB << 8) | Y_POS_LSB);
         if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
-            return TOUCH_START | X_Y_POS;
+            return TOUCH_START | xy;
         } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
-            return TOUCH_MOVE | X_Y_POS;
+            return TOUCH_MOVE | xy;
         } else if ((number_of_touch_points == 0) && (event_flag == EVENT_LIFT_UP)) {
-            return TOUCH_END | X_Y_POS;
+            return TOUCH_END | xy;
         }
     }
 

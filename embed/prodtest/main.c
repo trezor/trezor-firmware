@@ -194,8 +194,8 @@ static void test_touch(const char *args)
 
     uint32_t evt = 0;
     if (touch_click_timeout(&evt, timeout * 1000)) {
-        uint32_t x = (evt >> 12) & 0xFFF;
-        uint32_t y = (evt >> 0) & 0xFFF;
+        uint16_t x = touch_get_x(evt);
+        uint16_t y = touch_get_y(evt);
         vcp_printf("OK %d %d", x, y);
     } else {
         vcp_printf("ERROR TIMEOUT");

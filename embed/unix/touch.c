@@ -31,16 +31,16 @@ uint32_t touch_read(void)
                 if (x < 0 || y < 0 || x >= DISPLAY_RESX || y >= DISPLAY_RESY) break;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
-                        return TOUCH_START | (x << 12) | y;
+                        return TOUCH_START | touch_pack_xy(x, y);
                     case SDL_MOUSEMOTION:
                         // remove other SDL_MOUSEMOTION events from queue
                         SDL_FlushEvent(SDL_MOUSEMOTION);
                         if (event.motion.state) {
-                            return TOUCH_MOVE | (x << 12) | y;
+                            return TOUCH_MOVE | touch_pack_xy(x, y);
                         }
                         break;
                     case SDL_MOUSEBUTTONUP:
-                        return TOUCH_END | (x << 12) | y;
+                        return TOUCH_END | touch_pack_xy(x, y);
                 }
                 break;
             case SDL_KEYUP:
