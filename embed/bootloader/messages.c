@@ -231,6 +231,14 @@ static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, con
 #define MSG_RECV_CALLBACK(FIELD, CALLBACK) { msg_recv.FIELD.funcs.decode = &CALLBACK; }
 #define MSG_RECV(TYPE) _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv)
 
+void send_user_abort(uint8_t iface_num, const char *msg)
+{
+    MSG_SEND_INIT(Failure);
+    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ActionCancelled);
+    MSG_SEND_ASSIGN_STRING(message, msg);
+    MSG_SEND(Failure);
+}
+
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr)
 {
     MSG_RECV_INIT(Initialize);

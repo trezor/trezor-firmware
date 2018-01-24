@@ -119,6 +119,7 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
             // invalid header -> discard
             continue;
         }
+        secbool response;
         switch (msg_id) {
             case 0: // Initialize
                 process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
@@ -127,6 +128,13 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                 process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 5: // WipeDevice
+                ui_screen_wipe_confirm();
+                response = ui_button_response();
+                if (sectrue != response) {
+                    ui_screen_info(secfalse, vhdr, hdr);
+                    send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
+                    break;
+                }
                 ui_screen_wipe();
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
@@ -142,6 +150,13 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                 }
                 break;
             case 6: // FirmwareErase
+                ui_screen_install_confirm();
+                response = ui_button_response();
+                if (sectrue != response) {
+                    ui_screen_info(secfalse, vhdr, hdr);
+                    send_user_abort(USB_IFACE_NUM, "Firmware install cancelled");
+                    break;
+                }
                 ui_screen_install();
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
@@ -248,20 +263,10 @@ main_start:
 
     if (touched || firmware_present != sectrue) {
         ui_screen_info(sectrue, pvhdr, phdr);
-        for (;;) {
-            uint32_t evt = touch_click();
-            uint16_t x = touch_get_x(evt);
-            uint16_t y = touch_get_y(evt);
-            // clicked on cancel button
-            if (x >= 9 && x < 9 + 108 && y > 184 && y < 184 + 50) {
-                ui_fadeout();
-                goto main_start;
-            }
-            // clicked on confirm button
-            if (x >= 123 && x < 123 + 108 && y > 184 && y < 184 + 50) {
-                ui_fadeout();
-                break;
-            }
+        secbool response = ui_button_response();
+        ui_fadeout();
+        if (sectrue != response) {
+            goto main_start;
         }
         ui_screen_info(secfalse, pvhdr, phdr);
         if (bootloader_usb_loop(pvhdr, phdr) != sectrue) {

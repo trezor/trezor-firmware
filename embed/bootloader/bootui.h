@@ -10,10 +10,12 @@ void ui_screen_boot_click(void);
 
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr);
 
+void ui_screen_install_confirm(void);
 void ui_screen_install(void);
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);
 
+void ui_screen_wipe_confirm(void);
 void ui_screen_wipe(void);
 void ui_screen_wipe_progress(int pos, int len);
 
@@ -23,5 +25,7 @@ void ui_screen_fail(void);
 
 void ui_fadein(void);
 void ui_fadeout(void);
+
+secbool ui_button_response(void);
 
 #endif

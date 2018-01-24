@@ -4,6 +4,7 @@
 #include "mini_printf.h"
 
 #include "bootui.h"
+#include "touch.h"
 #include "version.h"
 
 #include "icon_cancel.h"
@@ -109,6 +110,21 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
 
 // install UI
 
+void ui_screen_install_confirm(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    display_text(16, 32, "Firmware update", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
+    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
+    display_text(55, 70, "Do you want to", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(55, 95, "update the firmware?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+
+    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
+    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
+    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
+    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+}
+
 void ui_screen_install(void)
 {
     display_fade(BACKLIGHT_NORMAL, 0, 100);
@@ -129,6 +145,23 @@ void ui_screen_install_progress_upload(int pos)
 }
 
 // wipe UI
+
+void ui_screen_wipe_confirm(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    display_text(16, 32, "Wipe device", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
+    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
+    display_text(55, 70, "Do you want to", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(55, 95, "wipe the device?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+
+    display_text_center(120, 164, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
+
+    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
+    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
+    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
+    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+}
 
 void ui_screen_wipe(void)
 {
@@ -181,4 +214,21 @@ void ui_fadeout(void)
 {
     display_fade(BACKLIGHT_NORMAL, 0, 500);
     display_clear();
+}
+
+secbool ui_button_response(void)
+{
+    for (;;) {
+        uint32_t evt = touch_click();
+        uint16_t x = touch_get_x(evt);
+        uint16_t y = touch_get_y(evt);
+        // clicked on cancel button
+        if (x >= 9 && x < 9 + 108 && y > 184 && y < 184 + 50) {
+            return secfalse;
+        }
+        // clicked on confirm button
+        if (x >= 123 && x < 123 + 108 && y > 184 && y < 184 + 50) {
+            return sectrue;
+        }
+    }
 }
