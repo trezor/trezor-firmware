@@ -28,7 +28,7 @@ def get_address(script_type: InputScriptType, coin: CoinType, node) -> str:
         return address_p2wpkh(node.public_key(), coin.bech32_prefix)
 
     elif script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
-        if not coin.segwit or not coin.address_type_p2sh:
+        if not coin.segwit or coin.address_type_p2sh is None:
             raise AddressError(FailureType.ProcessError,
                                'Segwit not enabled on this coin')
         return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
@@ -38,14 +38,22 @@ def get_address(script_type: InputScriptType, coin: CoinType, node) -> str:
                            'Invalid script type')
 
 
-def address_p2wpkh_in_p2sh(pubkey: bytes, addrtype: int) -> str:
+def address_p2sh(redeem_script_hash: bytes, addrtype: int) -> str:
     s = bytearray(21)
     s[0] = addrtype
-    s[1:21] = address_p2wpkh_in_p2sh_raw(pubkey)
+    s[1:21] = redeem_script_hash
     return base58.encode_check(bytes(s))
 
 
-def address_p2wpkh_in_p2sh_raw(pubkey: bytes) -> bytes:
+# P2WPKH nested in P2SH. The P2SH redeem script hash is created using the
+# `raw` function
+def address_p2wpkh_in_p2sh(pubkey: bytes, addrtype: int) -> str:
+    redeem_script_hash = address_p2wpkh_in_p2sh_script(pubkey)
+    return address_p2sh(redeem_script_hash, addrtype)
+
+
+# Generates a P2SH redeem script based on a public key hash in a P2WPKH manner
+def address_p2wpkh_in_p2sh_script(pubkey: bytes) -> bytes:
     s = bytearray(22)
     s[0] = 0x00  # OP_0
     s[1] = 0x14  # pushing 20 bytes
@@ -55,9 +63,37 @@ def address_p2wpkh_in_p2sh_raw(pubkey: bytes) -> bytes:
     return h
 
 
+# P2WSH nested in P2SH. The P2SH redeem script hash is created using the
+# `raw` function
+def address_p2wsh_in_p2sh(witness_script_hash: bytes, addrtype: int) -> str:
+    redeem_script_hash = address_p2wsh_in_p2sh_script(witness_script_hash)
+    return address_p2sh(redeem_script_hash, addrtype)
+
+
+# Generates a P2SH redeem script based on a hash of a witness redeem script hash
+def address_p2wsh_in_p2sh_script(script_hash: bytes) -> bytes:
+    s = bytearray(34)
+    s[0] = 0x00  # OP_0
+    s[1] = 0x20  # pushing 32 bytes
+    s[2:34] = script_hash
+    h = sha256(s).digest()
+    h = ripemd160(h).digest()
+    return h
+
+
+# Native Bech32 P2WPKH
 def address_p2wpkh(pubkey: bytes, hrp: str) -> str:
     pubkeyhash = ecdsa_hash_pubkey(pubkey)
     address = bech32.encode(hrp, _BECH32_WITVER, pubkeyhash)
+    if address is None:
+        raise AddressError(FailureType.ProcessError,
+                           'Invalid address')
+    return address
+
+
+# Native Bech32 P2WSH, script_hash is 32-byte SHA256(script)
+def address_p2wsh(script_hash: bytes, hrp: str) -> str:
+    address = bech32.encode(hrp, _BECH32_WITVER, script_hash)
     if address is None:
         raise AddressError(FailureType.ProcessError,
                            'Invalid address')
