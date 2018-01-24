@@ -15,6 +15,10 @@
 #include "icon_install.h"
 #include "icon_wipe.h"
 
+#include "icon_logo.h"
+#include "icon_safeplace.h"
+#include "icon_welcome.h"
+
 #define BACKLIGHT_NORMAL 150
 
 #define COLOR_BL_FAIL     RGB16(0xFF, 0x00, 0x00)  // red
@@ -50,7 +54,6 @@ void ui_screen_boot(const vendor_header *vhdr, const image_header *hdr)
         (int)((fw_version >> 24) & 0xFF)
     );
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, background, 0);
-    ui_fadein();
 }
 
 void ui_screen_boot_wait(int delay)
@@ -68,9 +71,26 @@ void ui_screen_boot_click(void) {
 
 // info UI
 
+void ui_screen_first(void)
+{
+    display_icon(0, 0, 240, 240, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12, COLOR_BLACK, COLOR_WHITE);
+}
+
+void ui_screen_second(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    display_icon((DISPLAY_RESX - 200) / 2, (DISPLAY_RESY - 60) / 2, 200, 60, toi_icon_safeplace + 12, sizeof(toi_icon_safeplace) - 12, COLOR_BLACK, COLOR_WHITE);
+}
+
+void ui_screen_third(void)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2, 180, 30, toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12, COLOR_BLACK, COLOR_WHITE);
+    display_text_center(120, 213, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+}
+
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
-    display_backlight(0);
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
     display_text(16, 32, "Bootloader mode", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
@@ -103,9 +123,8 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
         display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
         display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
     } else {
-        display_text_center(120, 213, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text_center(120, 213, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
-    ui_fadein();
 }
 
 // install UI
@@ -117,7 +136,7 @@ void ui_screen_install_confirm(void)
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text(55, 70, "Do you want to", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    display_text(55, 95, "update the firmware?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(55, 95, "update firmware?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 
     display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
     display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);

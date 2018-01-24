@@ -150,12 +150,15 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                 }
                 break;
             case 6: // FirmwareErase
-                ui_screen_install_confirm();
-                response = ui_button_response();
-                if (sectrue != response) {
-                    ui_screen_info(secfalse, vhdr, hdr);
-                    send_user_abort(USB_IFACE_NUM, "Firmware install cancelled");
-                    break;
+                // skip confirmation when no firmware is present
+                if (vhdr && hdr) {
+                    ui_screen_install_confirm();
+                    response = ui_button_response();
+                    if (sectrue != response) {
+                        ui_screen_info(secfalse, vhdr, hdr);
+                        send_user_abort(USB_IFACE_NUM, "Firmware install cancelled");
+                        break;
+                    }
                 }
                 ui_screen_install();
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
@@ -258,18 +261,35 @@ main_start:
         firmware_present = load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
     }
 
-    const vendor_header * const pvhdr = (sectrue == firmware_present) ? &vhdr : NULL;
-    const image_header * const phdr = (sectrue == firmware_present) ? &hdr : NULL;
+    if (firmware_present != sectrue) {
+        ui_screen_first();
+        ui_fadein();
+        hal_delay(1000);
+        ui_fadeout();
 
-    if (touched || firmware_present != sectrue) {
-        ui_screen_info(sectrue, pvhdr, phdr);
+        ui_screen_second();
+        ui_fadein();
+        hal_delay(1000);
+        ui_fadeout();
+
+        ui_screen_third();
+        ui_fadein();
+
+        if (bootloader_usb_loop(NULL, NULL) != sectrue) {
+            return 1;
+        }
+    } else
+    if (touched) {
+        ui_screen_info(sectrue, &vhdr, &hdr);
+        ui_fadein();
         secbool response = ui_button_response();
         ui_fadeout();
         if (sectrue != response) {
             goto main_start;
         }
-        ui_screen_info(secfalse, pvhdr, phdr);
-        if (bootloader_usb_loop(pvhdr, phdr) != sectrue) {
+        ui_screen_info(secfalse, &vhdr, &hdr);
+        ui_fadein();
+        if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
             return 1;
         }
     }
@@ -295,6 +315,7 @@ main_start:
     if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
 
         ui_screen_boot(&vhdr, &hdr);
+        ui_fadein();
 
         int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
         while (delay > 0) {

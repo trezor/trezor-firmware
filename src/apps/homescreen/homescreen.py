@@ -21,7 +21,7 @@ async def display_homescreen():
     from apps.common import storage
 
     if not storage.is_initialized():
-        label = 'Go to trezor.io/start'
+        label = 'Open trezor.io/start'
         image = None
     else:
         label = storage.get_label() or 'My TREZOR'

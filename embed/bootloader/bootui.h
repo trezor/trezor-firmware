@@ -8,6 +8,9 @@ void ui_screen_boot(const vendor_header * const vhdr, const image_header * const
 void ui_screen_boot_wait(int delay);
 void ui_screen_boot_click(void);
 
+void ui_screen_first(void);
+void ui_screen_second(void);
+void ui_screen_third(void);
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr);
 
 void ui_screen_install_confirm(void);
