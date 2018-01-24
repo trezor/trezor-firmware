@@ -1,4 +1,6 @@
+from apps.wallet.sign_tx.multisig import *
 from apps.wallet.sign_tx.writers import *
+from apps.common.hash_writer import HashWriter
 
 
 # TX Scripts
@@ -95,6 +97,24 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
 
 # output script consists of 00 20 <32-byte-key-hash>
 # same as output_script_native_p2wpkh_or_p2wsh (only different length)
+
+# =============== Multisig ===============
+
+def multisig_script(pubkeys, m) -> HashWriter:
+    n = len(pubkeys)
+    if n < 1 or n > 15:
+        raise Exception
+    if m < 1 or m > 15:
+        raise Exception
+
+    h = HashWriter(sha256)
+    h.append(0x50 + m)
+    for p in pubkeys:
+        h.append(len(p))  # OP_PUSH length (33 for compressed)
+        write_bytes(h, p)
+    h.append(0x50 + n)
+    h.append(0xAE)  # OP_CHECKMULTISIG
+    return h
 
 
 # -------------------------- Others --------------------------
