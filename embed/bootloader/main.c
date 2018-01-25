@@ -34,11 +34,11 @@ static void usb_init_all(void) {
         .vendor_id     = 0x1209,
         .product_id    = 0x53C0,
         .release_num   = 0x0002,
-        .manufacturer  = (const uint8_t *)"SatoshiLabs",
-        .product       = (const uint8_t *)"TREZOR Bootloader",
-        .serial_number = (const uint8_t *)"",
-        .configuration = (const uint8_t *)"",
-        .interface     = (const uint8_t *)"TREZOR Interface",
+        .manufacturer  = "SatoshiLabs",
+        .product       = "TREZOR Bootloader",
+        .serial_number = "",
+        .configuration = "",
+        .interface     = "TREZOR Interface",
     };
 
     static uint8_t rx_buffer[USB_PACKET_SIZE];

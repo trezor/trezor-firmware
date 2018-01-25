@@ -52,9 +52,9 @@ static USBD_HandleTypeDef usb_dev_handle;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
 
-static secbool __wur check_desc_str(const uint8_t *s) {
+static secbool __wur check_desc_str(const char *s) {
     if (NULL == s) return secfalse;
-    if (strlen((const char *)s) > USB_MAX_STR_SIZE) return secfalse;
+    if (strlen(s) > USB_MAX_STR_SIZE) return secfalse;
     return sectrue;
 }
 
@@ -189,27 +189,27 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
 }
 
 static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.manufacturer, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.manufacturer, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.product, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.product, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.serial_number, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.serial_number, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_configuration_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.configuration, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.configuration, usb_str_buf, length);
     return usb_str_buf;
 }
 
 static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString(usb_str_table.interface, usb_str_buf, length);
+    USBD_GetString((uint8_t *)usb_str_table.interface, usb_str_buf, length);
     return usb_str_buf;
 }
 

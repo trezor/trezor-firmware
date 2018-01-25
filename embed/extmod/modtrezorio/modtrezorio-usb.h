@@ -92,11 +92,11 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     o->info.vendor_id     = (uint16_t)(vendor_id);
     o->info.product_id    = (uint16_t)(product_id);
     o->info.release_num   = (uint16_t)(release_num);
-    o->info.manufacturer  = (const uint8_t *)(manufacturer);
-    o->info.product       = (const uint8_t *)(product);
-    o->info.serial_number = (const uint8_t *)(serial_number);
-    o->info.configuration = (const uint8_t *)(configuration);
-    o->info.interface     = (const uint8_t *)(interface);
+    o->info.manufacturer  = manufacturer;
+    o->info.product       = product;
+    o->info.serial_number = serial_number;
+    o->info.configuration = configuration;
+    o->info.interface     = interface;
     mp_obj_list_init(&o->ifaces, 0);
 
     return MP_OBJ_FROM_PTR(o);
