@@ -103,7 +103,7 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
     );
     display_text(16, 32, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
-    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
+    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BL_GRAY, COLOR_WHITE);
     if (vhdr && hdr) {
         mini_snprintf(ver_str, sizeof(ver_str), "Firmware %d.%d.%d.%d",
             (int)(hdr->version & 0xFF),
@@ -111,11 +111,11 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
             (int)((hdr->version >> 16) & 0xFF),
             (int)((hdr->version >> 24) & 0xFF)
         );
-        display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-        display_text(55, 95, "by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-        display_text(55, 120, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+        display_text(55, 95, "by", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+        display_text(55, 120, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
     } else {
-        display_text(55, 70, "No Firmware", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text(55, 70, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
     }
 
     if (sectrue == buttons) {
