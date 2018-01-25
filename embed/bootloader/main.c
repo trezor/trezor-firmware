@@ -135,7 +135,9 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                     send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
                     break;
                 }
+                ui_fadeout();
                 ui_screen_wipe();
+                ui_fadein();
                 r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
                 if (r < 0) { // error
                     ui_screen_fail();
@@ -160,7 +162,9 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                         break;
                     }
                 }
+                ui_fadeout();
                 ui_screen_install();
+                ui_fadein();
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
@@ -255,40 +259,58 @@ main_start:
     image_header hdr;
     secbool firmware_present;
 
-    // start the bootloader if user touched the screen or no firmware installed
+    // detect whether the devices contains a firmware
+
     firmware_present = load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
     if (sectrue == firmware_present) {
         firmware_present = load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
     }
 
+    // start the bootloader if no firmware found ...
     if (firmware_present != sectrue) {
+        // show intro animation
+
+        // no ui_fadeout(); - we already start from black screen
         ui_screen_first();
         ui_fadein();
-        hal_delay(1000);
-        ui_fadeout();
 
+        hal_delay(1000);
+
+        ui_fadeout();
         ui_screen_second();
         ui_fadein();
-        hal_delay(1000);
-        ui_fadeout();
 
+        hal_delay(1000);
+
+        ui_fadeout();
         ui_screen_third();
         ui_fadein();
 
+        // and start the usb loop
         if (bootloader_usb_loop(NULL, NULL) != sectrue) {
             return 1;
         }
     } else
+    // ... or if user touched the screen on start
     if (touched) {
+        // show firmware info with connect buttons
+
+        // no ui_fadeout(); - we already start from black screen
         ui_screen_info(sectrue, &vhdr, &hdr);
         ui_fadein();
+
         secbool response = ui_button_response();
+
         ui_fadeout();
+        // if cancel was pressed -> restart
         if (sectrue != response) {
             goto main_start;
         }
+        // show firmware info without connect buttons
         ui_screen_info(secfalse, &vhdr, &hdr);
         ui_fadein();
+
+        // and start the usb loop
         if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
             return 1;
         }
@@ -314,6 +336,7 @@ main_start:
 
     if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
 
+        // ui_fadeout();  // no fadeout - we start from black screen
         ui_screen_boot(&vhdr, &hdr);
         ui_fadein();
 

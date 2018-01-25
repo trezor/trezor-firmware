@@ -146,11 +146,9 @@ void ui_screen_install_confirm(void)
 
 void ui_screen_install(void)
 {
-    display_fade(BACKLIGHT_NORMAL, 0, 100);
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
     display_loader(1000, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Installing firmware", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    display_fade(0, BACKLIGHT_NORMAL, 100);
 }
 
 void ui_screen_install_progress_erase(int pos, int len)
@@ -184,11 +182,9 @@ void ui_screen_wipe_confirm(void)
 
 void ui_screen_wipe(void)
 {
-    display_fade(BACKLIGHT_NORMAL, 0, 100);
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
     display_loader(1000, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping Device", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    display_fade(0, BACKLIGHT_NORMAL, 100);
 }
 
 void ui_screen_wipe_progress(int pos, int len)
