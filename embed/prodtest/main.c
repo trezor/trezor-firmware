@@ -88,7 +88,7 @@ static void usb_init_all(void)
     static const usb_dev_info_t dev_info = {
         .vendor_id     = 0x1209,
         .product_id    = 0x53C1,
-        .release_num   = 0x0002,
+        .release_num   = 0x0200,
         .manufacturer  = "SatoshiLabs",
         .product       = "TREZOR",
         .serial_number = "000000000000",
