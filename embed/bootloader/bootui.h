@@ -11,7 +11,9 @@ void ui_screen_boot_click(void);
 void ui_screen_first(void);
 void ui_screen_second(void);
 void ui_screen_third(void);
+
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr);
+void ui_screen_info_fingerprint(const image_header * const hdr);
 
 void ui_screen_install_confirm(void);
 void ui_screen_install(void);
@@ -29,6 +31,10 @@ void ui_screen_fail(void);
 void ui_fadein(void);
 void ui_fadeout(void);
 
-secbool ui_button_response(void);
+#define INPUT_CANCEL        0x01    // Cancel button
+#define INPUT_CONFIRM       0x02    // Confirm button
+#define INPUT_LONG_CONFIRM  0x04    // Long Confirm button
+#define INPUT_INFO          0x08    // Info icon
+int ui_user_input(int zones);
 
 #endif

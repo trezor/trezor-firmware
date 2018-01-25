@@ -119,7 +119,6 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
             // invalid header -> discard
             continue;
         }
-        secbool response;
         switch (msg_id) {
             case 0: // Initialize
                 process_msg_Initialize(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
@@ -131,8 +130,8 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                 ui_fadeout();
                 ui_screen_wipe_confirm();
                 ui_fadein();
-                response = ui_button_response();
-                if (sectrue != response) {
+                int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
+                if (INPUT_CANCEL == response) {
                     ui_fadeout();
                     ui_screen_info(secfalse, vhdr, hdr);
                     ui_fadein();
@@ -165,8 +164,8 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                     ui_fadeout();
                     ui_screen_install_confirm();
                     ui_fadein();
-                    response = ui_button_response();
-                    if (sectrue != response) {
+                    int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
+                    if (INPUT_CANCEL == response) {
                         ui_fadeout();
                         ui_screen_info(secfalse, vhdr, hdr);
                         ui_fadein();
@@ -319,16 +318,34 @@ main_start:
         ui_screen_info(sectrue, &vhdr, &hdr);
         ui_fadein();
 
-        secbool response = ui_button_response();
+        for (;;) {
+            int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL | INPUT_INFO);
+            ui_fadeout();
 
-        ui_fadeout();
-        // if cancel was pressed -> restart
-        if (sectrue != response) {
-            goto main_start;
+            // if cancel was pressed -> restart
+            if (INPUT_CANCEL == response) {
+                goto main_start;
+            }
+
+            // if confirm was pressed -> jump out
+            if (INPUT_CONFIRM == response) {
+                // show firmware info without connect buttons
+                ui_screen_info(secfalse, &vhdr, &hdr);
+                ui_fadein();
+                break;
+            }
+
+            // if info icon was pressed -> show fingerprint
+            if (INPUT_INFO == response) {
+                // show fingerprint
+                ui_screen_info_fingerprint(&hdr);
+                ui_fadein();
+                while (INPUT_LONG_CONFIRM != ui_user_input(INPUT_LONG_CONFIRM)) { }
+                ui_fadeout();
+                ui_screen_info(sectrue, &vhdr, &hdr);
+                ui_fadein();
+            }
         }
-        // show firmware info without connect buttons
-        ui_screen_info(secfalse, &vhdr, &hdr);
-        ui_fadein();
 
         // and start the usb loop
         if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {

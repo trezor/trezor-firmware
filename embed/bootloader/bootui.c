@@ -69,7 +69,7 @@ void ui_screen_boot_click(void) {
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, "click to continue ...", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_BLACK, 0);
 }
 
-// info UI
+// welcome UI
 
 void ui_screen_first(void)
 {
@@ -88,6 +88,8 @@ void ui_screen_third(void)
     display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2, 180, 30, toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text_center(120, 213, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
+
+// info UI
 
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
@@ -125,6 +127,26 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
     } else {
         display_text_center(120, 213, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
+}
+
+void ui_screen_info_fingerprint(const image_header * const hdr)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    display_text(16, 32, "Firmware fingerprint", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
+
+    static const char *hexdigits = "0123456789abcdef";
+    char fingerprint_str[64];
+    for (int i = 0; i < 32; i++) {
+        fingerprint_str[i * 2    ] = hexdigits[(hdr->fingerprint[i] >> 4) & 0xF];
+        fingerprint_str[i * 2 + 1] = hexdigits[hdr->fingerprint[i] & 0xF];
+    }
+    for (int i = 0; i < 4; i++) {
+        display_text_center(120, 70 + i * 25, fingerprint_str + i * 16, 16, FONT_MONO, COLOR_BLACK, COLOR_WHITE, 0);
+    }
+
+    display_bar_radius(9, 184, 222, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
+    display_icon(9 + (222 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
 }
 
 // install UI
@@ -231,19 +253,27 @@ void ui_fadeout(void)
     display_clear();
 }
 
-secbool ui_button_response(void)
+int ui_user_input(int zones)
 {
     for (;;) {
         uint32_t evt = touch_click();
         uint16_t x = touch_get_x(evt);
         uint16_t y = touch_get_y(evt);
-        // clicked on cancel button
-        if (x >= 9 && x < 9 + 108 && y > 184 && y < 184 + 50) {
-            return secfalse;
+        // clicked on Cancel button
+        if ((zones & INPUT_CANCEL) && x >= 9 && x < 9 + 108 && y > 184 && y < 184 + 50) {
+            return INPUT_CANCEL;
         }
-        // clicked on confirm button
-        if (x >= 123 && x < 123 + 108 && y > 184 && y < 184 + 50) {
-            return sectrue;
+        // clicked on Confirm button
+        if ((zones & INPUT_CONFIRM) && x >= 123 && x < 123 + 108 && y > 184 && y < 184 + 50) {
+            return INPUT_CONFIRM;
+        }
+        // clicked on Long Confirm button
+        if ((zones & INPUT_LONG_CONFIRM) && x >= 9 && x < 9 + 222 && y > 184 && y < 184 + 50) {
+            return INPUT_LONG_CONFIRM;
+        }
+        // clicked on Info icon
+        if ((zones & INPUT_INFO) && x >= 16 && x < 16 + 32 && y > 54 && y < 54 + 32) {
+            return INPUT_INFO;
         }
     }
 }
