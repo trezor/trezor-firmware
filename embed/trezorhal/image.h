@@ -53,7 +53,7 @@ typedef struct {
     // uint8_t reserved[14];
     const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
     uint8_t vstr_len;
-    const uint8_t *vstr;
+    const char *vstr;
     const uint8_t *vimg;
     uint8_t sigmask;
     uint8_t sig[64];

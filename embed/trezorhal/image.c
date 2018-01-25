@@ -103,7 +103,7 @@ secbool load_vendor_header(const uint8_t * const data, uint8_t key_m, uint8_t ke
 
     memcpy(&vhdr->vstr_len, data + 32 + vhdr->vsig_n * 32, 1);
 
-    vhdr->vstr = data + 32 + vhdr->vsig_n * 32 + 1;
+    vhdr->vstr = (const char *)(data + 32 + vhdr->vsig_n * 32 + 1);
 
     vhdr->vimg = data + 32 + vhdr->vsig_n * 32 + 1 + vhdr->vstr_len;
     // align to 4 bytes

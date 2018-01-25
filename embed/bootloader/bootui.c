@@ -31,7 +31,7 @@
 void ui_screen_boot(const vendor_header *vhdr, const image_header *hdr)
 {
     const uint8_t *vimg = vhdr->vimg;
-    const char *vstr = ((vhdr->vtrust & VTRUST_STRING) == 0) ? (const char *)vhdr->vstr : 0;
+    const char *vstr = ((vhdr->vtrust & VTRUST_STRING) == 0) ? vhdr->vstr : 0;
     const uint32_t vstr_len = ((vhdr->vtrust & VTRUST_STRING) == 0) ? vhdr->vstr_len : 0;
     const uint32_t fw_version = hdr->version;
     const uint16_t background = ((vhdr->vtrust & VTRUST_RED) == 0) ? RGB16(0xFF, 0x00, 0x00) : COLOR_BLACK;
@@ -86,7 +86,7 @@ void ui_screen_third(void)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
     display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2, 180, 30, toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12, COLOR_BLACK, COLOR_WHITE);
-    display_text_center(120, 213, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 
 // info UI
@@ -94,9 +94,6 @@ void ui_screen_third(void)
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    display_text(16, 32, "Bootloader mode", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
-    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BL_GRAY, COLOR_WHITE);
     char ver_str[32];
     mini_snprintf(ver_str, sizeof(ver_str), "Bootloader %d.%d.%d.%d",
         VERSION_MAJOR,
@@ -104,28 +101,31 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
         VERSION_PATCH,
         VERSION_BUILD
     );
-    display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+    display_text(16, 32, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
+    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     if (vhdr && hdr) {
-        display_text(55, 105, (const char *)vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
         mini_snprintf(ver_str, sizeof(ver_str), "Firmware %d.%d.%d.%d",
             (int)(hdr->version & 0xFF),
             (int)((hdr->version >> 8) & 0xFF),
             (int)((hdr->version >> 16) & 0xFF),
             (int)((hdr->version >> 24) & 0xFF)
         );
-        display_text(55, 130, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+        display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text(55, 95, "by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text(55, 120, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     } else {
-        display_text(55, 105, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+        display_text(55, 70, "No Firmware", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
 
     if (sectrue == buttons) {
-        display_text_center(120, 164, "Connect to host?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text_center(120, 170, "Connect to host?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
         display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
         display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
         display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
         display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
     } else {
-        display_text_center(120, 213, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
 }
 
@@ -194,7 +194,7 @@ void ui_screen_wipe_confirm(void)
     display_text(55, 70, "Do you want to", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text(55, 95, "wipe the device?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 
-    display_text_center(120, 164, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
+    display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
 
     display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
     display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
