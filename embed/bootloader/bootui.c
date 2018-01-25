@@ -106,16 +106,16 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
     );
     display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
     if (vhdr && hdr) {
+        display_text(55, 105, (const char *)vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
         mini_snprintf(ver_str, sizeof(ver_str), "Firmware %d.%d.%d.%d",
             (int)(hdr->version & 0xFF),
             (int)((hdr->version >> 8) & 0xFF),
             (int)((hdr->version >> 16) & 0xFF),
             (int)((hdr->version >> 24) & 0xFF)
         );
-        display_text(55, 95, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
-        display_text(55, 120, (const char *)vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+        display_text(55, 130, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
     } else {
-        display_text(55, 95, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
+        display_text(55, 105, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
     }
 
     if (sectrue == buttons) {
@@ -169,7 +169,7 @@ void ui_screen_install_confirm(void)
 void ui_screen_install(void)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    display_loader(1000, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
+    display_loader(0, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Installing firmware", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 
@@ -205,8 +205,8 @@ void ui_screen_wipe_confirm(void)
 void ui_screen_wipe(void)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    display_loader(1000, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping Device", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_loader(0, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping device", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 
 void ui_screen_wipe_progress(int pos, int len)
@@ -216,18 +216,23 @@ void ui_screen_wipe_progress(int pos, int len)
 
 // done UI
 
-void ui_screen_done(int restart_seconds)
+void ui_screen_done(int restart_seconds, secbool full_redraw)
 {
     const char *str;
     if (restart_seconds >= 1) {
         char count_str[24];
-        mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %ds", restart_seconds);
+        mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %d s", restart_seconds);
         str = count_str;
     } else {
         str = "Done! Unplug the device.";
     }
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    if (sectrue == full_redraw) {
+        display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    }
     display_loader(1000, -20, COLOR_BL_DONE, COLOR_WHITE, toi_icon_done, sizeof(toi_icon_done), COLOR_BLACK);
+    if (secfalse == full_redraw) {
+        display_bar(0, DISPLAY_RESY - 24 - 18, 240, 23, COLOR_WHITE);
+    }
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 

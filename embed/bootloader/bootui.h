@@ -24,7 +24,7 @@ void ui_screen_wipe_confirm(void);
 void ui_screen_wipe(void);
 void ui_screen_wipe_progress(int pos, int len);
 
-void ui_screen_done(int restart_seconds);
+void ui_screen_done(int restart_seconds, secbool full_redraw);
 
 void ui_screen_fail(void);
 

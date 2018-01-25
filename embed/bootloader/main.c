@@ -151,7 +151,7 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                     return secfalse; // shutdown
                 } else { // success
                     ui_fadeout();
-                    ui_screen_done(0);
+                    ui_screen_done(0, sectrue);
                     ui_fadein();
                     usb_stop();
                     usb_deinit();
@@ -190,13 +190,13 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                 } else
                 if (r == 0) { // last chunk received
                     ui_fadeout();
-                    ui_screen_done(4);
+                    ui_screen_done(4, sectrue);
                     ui_fadein();
-                    ui_screen_done(3);
+                    ui_screen_done(3, secfalse);
                     hal_delay(1000);
-                    ui_screen_done(2);
+                    ui_screen_done(2, secfalse);
                     hal_delay(1000);
-                    ui_screen_done(1);
+                    ui_screen_done(1, secfalse);
                     hal_delay(1000);
                     usb_stop();
                     usb_deinit();
