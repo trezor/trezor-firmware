@@ -56,10 +56,10 @@ void ui_screen_boot(const vendor_header *vhdr, const image_header *hdr)
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, background, 0);
 }
 
-void ui_screen_boot_wait(int delay)
+void ui_screen_boot_wait(int wait_seconds)
 {
     char wait_str[16];
-    mini_snprintf(wait_str, sizeof(wait_str), "waiting for %ds", delay);
+    mini_snprintf(wait_str, sizeof(wait_str), "waiting for %ds", wait_seconds);
     display_bar(0, DISPLAY_RESY - 2 - 18, DISPLAY_RESX, 2 + 18, COLOR_BLACK);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, wait_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_BLACK, 0);
 }
@@ -194,12 +194,12 @@ void ui_screen_wipe_progress(int pos, int len)
 
 // done UI
 
-void ui_screen_done(int restart)
+void ui_screen_done(int restart_seconds)
 {
     const char *str;
-    if (restart <= 3 && restart >= 1) {
+    if (restart_seconds >= 1) {
         char count_str[24];
-        mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %ds", restart);
+        mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %ds", restart_seconds);
         str = count_str;
     } else {
         str = "Done! Unplug the device.";

@@ -5,7 +5,7 @@
 #include "image.h"
 
 void ui_screen_boot(const vendor_header * const vhdr, const image_header * const hdr);
-void ui_screen_boot_wait(int delay);
+void ui_screen_boot_wait(int wait_seconds);
 void ui_screen_boot_click(void);
 
 void ui_screen_first(void);
@@ -22,7 +22,7 @@ void ui_screen_wipe_confirm(void);
 void ui_screen_wipe(void);
 void ui_screen_wipe_progress(int pos, int len);
 
-void ui_screen_done(int restart);
+void ui_screen_done(int restart_seconds);
 
 void ui_screen_fail(void);
 
