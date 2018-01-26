@@ -636,7 +636,7 @@ def ethereum_verify_message(connect, address, signature, message):
 def encrypt_keyvalue(connect, address, key, value):
     client = connect()
     address_n = client.expand_path(address)
-    res = client.encrypt_keyvalue(address_n, key, value)
+    res = client.encrypt_keyvalue(address_n, key, value.encode())
     return binascii.hexlify(res)
 
 
@@ -648,7 +648,7 @@ def encrypt_keyvalue(connect, address, key, value):
 def decrypt_keyvalue(connect, address, key, value):
     client = connect()
     address_n = client.expand_path(address)
-    return client.decrypt_keyvalue(address_n, key, value.decode('hex'))
+    return client.decrypt_keyvalue(address_n, key, binascii.unhexlify(value))
 
 
 @cli.command(help='Encrypt message.')
