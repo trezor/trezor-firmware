@@ -232,11 +232,8 @@ class VendorHeader(object):
         return header
 
     def sign(self, sigmask, signature):
-        if sigmask >= (1 << self.vsig_n):
-            raise Exception('signature index is higher than vsig_n (%d)' % self.vsig_n)
-        if bin(sigmask).count('1') != self.vsig_m:
-            raise Exception('invalid number of indexes (vsig_m expected %d, got %d)' % (self.vsig_m, bin(sigmask).count('1')))
-        # sign
+        header = self.serialize_header(sig=False)
+        assert len(header) == self.hdrlen
         self.sigmask = sigmask
         self.sig = signature
 

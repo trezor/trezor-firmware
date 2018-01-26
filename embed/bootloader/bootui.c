@@ -182,7 +182,7 @@ void ui_screen_install_confirm_upgrade(const vendor_header * const vhdr, const i
 void ui_screen_install_confirm_newvendor(const vendor_header * const vhdr, const image_header * const hdr)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    display_text(16, 32, "Re-install firmware", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(16, 32, "Vendor change", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text(55, 70, "Install firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
