@@ -38,7 +38,7 @@ class PinMatrix(ui.Widget):
 
     def render(self):
         # clear canvas under input line
-        display.bar(0, 0, 205, 48, ui.BG)
+        display.bar(0, 0, 240, 45, ui.BG)
 
         # input line with a header
         header = '*' * len(self.pin) if self.pin else self.label
