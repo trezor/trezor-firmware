@@ -315,14 +315,9 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
     chunk_size = stream->bytes_left;
 
     while (stream->bytes_left) {
-        // update loader
-        if (firmware_block == 0) {
-            // first chunk is 0 - 200
-            // followed by erase 200 - 400
-            ui_screen_install_progress_upload(200 * chunk_written / chunk_size);
-        } else {
-            // remaining chunks are 400 - 1000
-            ui_screen_install_progress_upload(400 + 600 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
+        // update loader but skip first block
+        if (firmware_block > 0) {
+            ui_screen_install_progress_upload(250 + 750 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
         }
         // read data
         if (!pb_read(stream, (pb_byte_t *)(chunk_buffer + chunk_written), (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
@@ -354,26 +349,28 @@ static int version_compare(uint32_t vera, uint32_t verb)
     return a - b;
 }
 
-static secbool is_legit_upgrade(const vendor_header * const new_vhdr, const image_header * const new_hdr)
+static void detect_installation(vendor_header *current_vhdr, image_header *current_hdr, const vendor_header * const new_vhdr, const image_header * const new_hdr, secbool *is_new, secbool *is_upgrade)
 {
-    vendor_header current_vhdr;
-    if (sectrue != load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
-        return secfalse;
+    *is_new = secfalse;
+    *is_upgrade = secfalse;
+    if (sectrue != load_vendor_header_keys((const uint8_t *)FIRMWARE_START, current_vhdr)) {
+        *is_new = sectrue;
+        return;
+    }
+    if (sectrue != load_image_header((const uint8_t *)FIRMWARE_START + current_vhdr->hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, current_vhdr->vsig_m, current_vhdr->vsig_n, current_vhdr->vpub, current_hdr)) {
+        *is_new = sectrue;
+        return;
     }
     uint8_t hash1[32], hash2[32];
     vendor_keys_hash(new_vhdr, hash1);
-    vendor_keys_hash(&current_vhdr, hash2);
+    vendor_keys_hash(current_vhdr, hash2);
     if (0 != memcmp(hash1, hash2, 32)) {
-        return secfalse;
+        return;
     }
-    image_header current_hdr;
-    if (sectrue != load_image_header((const uint8_t *)FIRMWARE_START + current_vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, current_vhdr.vsig_m, current_vhdr.vsig_n, current_vhdr.vpub, &current_hdr)) {
-        return secfalse;
+    if (version_compare(new_hdr->version, current_hdr->fix_version) < 0) {
+        return;
     }
-    if (version_compare(new_hdr->version, current_hdr.fix_version) < 0) {
-        return secfalse;
-    }
-    return sectrue;
+    *is_upgrade = sectrue;
 }
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
@@ -410,7 +407,44 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             return -3;
         }
 
-        if (sectrue != is_legit_upgrade(&vhdr, &hdr)) {
+        vendor_header current_vhdr;
+        image_header current_hdr;
+        secbool is_new = secfalse, is_upgrade = secfalse;
+        detect_installation(&current_vhdr, &current_hdr, &vhdr, &hdr, &is_new, &is_upgrade);
+
+        int response = INPUT_CANCEL;
+        if (sectrue == is_new) {
+            // new installation - auto confirm
+            response = INPUT_CONFIRM;
+        } else
+        if (sectrue == is_upgrade) {
+            // firmware upgrade
+            ui_fadeout();
+            ui_screen_install_confirm_upgrade(&vhdr, &hdr);
+            ui_fadein();
+            response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
+        } else {
+            // new firmware vendor
+            ui_fadeout();
+            ui_screen_install_confirm_newvendor(&vhdr, &hdr);
+            ui_fadein();
+            response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
+        }
+
+        if (INPUT_CANCEL == response) {
+            ui_fadeout();
+            ui_screen_info(secfalse, &current_vhdr, &current_hdr);
+            ui_fadein();
+            send_user_abort(USB_IFACE_NUM, "Firmware install cancelled");
+            return -4;
+        }
+
+        ui_fadeout();
+        ui_screen_install();
+        ui_fadein();
+
+        // if firmware is not upgrade, erase storage
+        if (sectrue != is_upgrade) {
             const uint8_t sectors_storage[] = {
                 FLASH_SECTOR_STORAGE_1,
                 FLASH_SECTOR_STORAGE_2,
@@ -428,7 +462,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Firmware too big");
         MSG_SEND(Failure);
-        return -3;
+        return -5;
     }
 
     if (sectrue != check_single_hash(hdr.hashes + firmware_block * 32, chunk_buffer + firstskip, chunk_size - firstskip)) {
@@ -436,7 +470,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid chunk hash");
         MSG_SEND(Failure);
-        return -4;
+        return -6;
     }
 
     ensure(flash_unlock(), NULL);

@@ -89,7 +89,19 @@ void ui_screen_third(void)
     display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 
+// buttons
+
+static void ui_confirm_cancel_buttons(void)
+{
+    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
+    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
+    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
+    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+}
+
 // info UI
+
+
 
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
@@ -120,10 +132,7 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
 
     if (sectrue == buttons) {
         display_text_center(120, 170, "Connect to host?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-        display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
-        display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
-        display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
-        display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+        ui_confirm_cancel_buttons();
     } else {
         display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
@@ -151,19 +160,43 @@ void ui_screen_info_fingerprint(const image_header * const hdr)
 
 // install UI
 
-void ui_screen_install_confirm(void)
+void ui_screen_install_confirm_upgrade(const vendor_header * const vhdr, const image_header * const hdr)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
     display_text(16, 32, "Firmware update", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
-    display_text(55, 70, "Do you want to", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    display_text(55, 95, "update firmware?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(55, 70, "Update firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    char ver_str[32];
+    mini_snprintf(ver_str, sizeof(ver_str), "to version %d.%d.%d.%d?",
+        (int)(hdr->version & 0xFF),
+        (int)((hdr->version >> 8) & 0xFF),
+        (int)((hdr->version >> 16) & 0xFF),
+        (int)((hdr->version >> 24) & 0xFF)
+    );
+    display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    ui_confirm_cancel_buttons();
+}
 
-    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
-    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
-    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
-    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+void ui_screen_install_confirm_newvendor(const vendor_header * const vhdr, const image_header * const hdr)
+{
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
+    display_text(16, 32, "Re-install firmware", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
+    display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
+    display_text(55, 70, "Install firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    char ver_str[32];
+    mini_snprintf(ver_str, sizeof(ver_str), "(version %d.%d.%d.%d)?",
+        (int)(hdr->version & 0xFF),
+        (int)((hdr->version >> 8) & 0xFF),
+        (int)((hdr->version >> 16) & 0xFF),
+        (int)((hdr->version >> 24) & 0xFF)
+    );
+    display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
+    ui_confirm_cancel_buttons();
 }
 
 void ui_screen_install(void)
@@ -175,7 +208,7 @@ void ui_screen_install(void)
 
 void ui_screen_install_progress_erase(int pos, int len)
 {
-    display_loader(200 + 200 * pos / len, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
+    display_loader(250 * pos / len, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
 }
 
 void ui_screen_install_progress_upload(int pos)
@@ -195,11 +228,7 @@ void ui_screen_wipe_confirm(void)
     display_text(55, 95, "wipe the device?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 
     display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
-
-    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
-    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
-    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
-    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+    ui_confirm_cancel_buttons();
 }
 
 void ui_screen_wipe(void)

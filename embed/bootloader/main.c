@@ -159,28 +159,11 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                 }
                 break;
             case 6: // FirmwareErase
-                // skip confirmation when no firmware is present
-                if (vhdr && hdr) {
-                    ui_fadeout();
-                    ui_screen_install_confirm();
-                    ui_fadein();
-                    int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
-                    if (INPUT_CANCEL == response) {
-                        ui_fadeout();
-                        ui_screen_info(secfalse, vhdr, hdr);
-                        ui_fadein();
-                        send_user_abort(USB_IFACE_NUM, "Firmware install cancelled");
-                        break;
-                    }
-                }
-                ui_fadeout();
-                ui_screen_install();
-                ui_fadein();
                 process_msg_FirmwareErase(USB_IFACE_NUM, msg_size, buf);
                 break;
             case 7: // FirmwareUpload
                 r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
-                if (r < 0) { // error
+                if (r < 0 && r != -4) { // error, but not user abort (-4)
                     ui_fadeout();
                     ui_screen_fail();
                     ui_fadein();
