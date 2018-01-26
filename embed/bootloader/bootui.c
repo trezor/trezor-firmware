@@ -26,6 +26,28 @@
 #define COLOR_BL_PROCESS  RGB16(0x4A, 0x90, 0xE2)  // blue
 #define COLOR_BL_GRAY     RGB16(0x99, 0x99, 0x99)  // gray
 
+// common shared functions
+
+static void ui_confirm_cancel_buttons(void)
+{
+    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
+    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
+    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
+    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
+}
+
+static const char *format_ver(const char *format, uint32_t version)
+{
+    static char ver_str[64];
+    mini_snprintf(ver_str, sizeof(ver_str), format,
+        (int)(version & 0xFF),
+        (int)((version >> 8) & 0xFF),
+        (int)((version >> 16) & 0xFF),
+        (int)((version >> 24) & 0xFF)
+    );
+    return ver_str;
+}
+
 // boot UI
 
 void ui_screen_boot(const vendor_header *vhdr, const image_header *hdr)
@@ -46,13 +68,7 @@ void ui_screen_boot(const vendor_header *vhdr, const image_header *hdr)
     if (vstr && vstr_len) {
         display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_NORMAL, COLOR_WHITE, background, 0);
     }
-    char ver_str[32];
-    mini_snprintf(ver_str, sizeof(ver_str), "%d.%d.%d.%d",
-        (int)(fw_version & 0xFF),
-        (int)((fw_version >> 8) & 0xFF),
-        (int)((fw_version >> 16) & 0xFF),
-        (int)((fw_version >> 24) & 0xFF)
-    );
+    const char *ver_str = format_ver("%d.%d.%d.%d", fw_version);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, background, 0);
 }
 
@@ -89,40 +105,17 @@ void ui_screen_third(void)
     display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 
-// buttons
-
-static void ui_confirm_cancel_buttons(void)
-{
-    display_bar_radius(9, 184, 108, 50, COLOR_BL_FAIL, COLOR_WHITE, 4);
-    display_icon(9 + (108 - 16) / 2, 184 + (50 - 16) / 2, 16, 16, toi_icon_cancel + 12, sizeof(toi_icon_cancel) - 12, COLOR_WHITE, COLOR_BL_FAIL);
-    display_bar_radius(123, 184, 108, 50, COLOR_BL_DONE, COLOR_WHITE, 4);
-    display_icon(123 + (108 - 19) / 2, 184 + (50 - 16) / 2, 20, 16, toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12, COLOR_WHITE, COLOR_BL_DONE);
-}
-
 // info UI
-
-
 
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    char ver_str[32];
-    mini_snprintf(ver_str, sizeof(ver_str), "Bootloader %d.%d.%d.%d",
-        VERSION_MAJOR,
-        VERSION_MINOR,
-        VERSION_PATCH,
-        VERSION_BUILD
-    );
+    const char *ver_str = format_ver("Bootloader %d.%d.%d.%d", VERSION_UINT32);
     display_text(16, 32, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BL_GRAY, COLOR_WHITE);
     if (vhdr && hdr) {
-        mini_snprintf(ver_str, sizeof(ver_str), "Firmware %d.%d.%d.%d",
-            (int)(hdr->version & 0xFF),
-            (int)((hdr->version >> 8) & 0xFF),
-            (int)((hdr->version >> 16) & 0xFF),
-            (int)((hdr->version >> 24) & 0xFF)
-        );
+        ver_str = format_ver("Firmware %d.%d.%d.%d", (hdr->version));
         display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
         display_text(55, 95, "by", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
         display_text(55, 120, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
@@ -168,13 +161,7 @@ void ui_screen_install_confirm_upgrade(const vendor_header * const vhdr, const i
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text(55, 70, "Update firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    char ver_str[32];
-    mini_snprintf(ver_str, sizeof(ver_str), "to version %d.%d.%d.%d?",
-        (int)(hdr->version & 0xFF),
-        (int)((hdr->version >> 8) & 0xFF),
-        (int)((hdr->version >> 16) & 0xFF),
-        (int)((hdr->version >> 24) & 0xFF)
-    );
+    const char *ver_str = format_ver("to version %d.%d.%d.%d?", hdr->version);
     display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     ui_confirm_cancel_buttons();
 }
@@ -187,13 +174,7 @@ void ui_screen_install_confirm_newvendor(const vendor_header * const vhdr, const
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text(55, 70, "Install firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    char ver_str[32];
-    mini_snprintf(ver_str, sizeof(ver_str), "(version %d.%d.%d.%d)?",
-        (int)(hdr->version & 0xFF),
-        (int)((hdr->version >> 8) & 0xFF),
-        (int)((hdr->version >> 16) & 0xFF),
-        (int)((hdr->version >> 24) & 0xFF)
-    );
+    const char *ver_str = format_ver("(version %d.%d.%d.%d)?", hdr->version);
     display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
     ui_confirm_cancel_buttons();
@@ -248,8 +229,8 @@ void ui_screen_wipe_progress(int pos, int len)
 void ui_screen_done(int restart_seconds, secbool full_redraw)
 {
     const char *str;
+    char count_str[24];
     if (restart_seconds >= 1) {
-        char count_str[24];
         mini_snprintf(count_str, sizeof(count_str), "Done! Restarting in %d s", restart_seconds);
         str = count_str;
     } else {
