@@ -1,6 +1,15 @@
 from typing import *
 
 # extmod/modtrezorutils/modtrezorutils.c
+def consteq(sec: bytes, pub: bytes) -> bool:
+    '''
+    Compares the private information in `sec` with public, user-provided
+    information in `pub`.  Runs in constant time, corresponding to a length
+    of `pub`.  Can access memory behind valid length of `sec`, caller is
+    expected to avoid any invalid memory access.
+    '''
+
+# extmod/modtrezorutils/modtrezorutils.c
 def memcpy(dst: bytearray, dst_ofs: int,
            src: bytearray, src_ofs: int,
            n: int) -> int:

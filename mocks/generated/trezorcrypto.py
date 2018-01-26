@@ -22,7 +22,18 @@ class HDNode:
     BIP0032 HD node structure.
     '''
 
-    def derive(self, index: int) -> None:
+    def __init__(self,
+                 depth: int,
+                 fingerprint: int,
+                 child_num: int,
+                 chain_code: bytes,
+                 private_key: bytes = None,
+                 public_key: bytes = None,
+                 curve_name: str = None) -> None:
+        '''
+        '''
+
+    def derive(self, index: int, public: bool=False) -> None:
         '''
         Derive a BIP0032 child node in place.
         '''
@@ -82,13 +93,9 @@ class HDNode:
         Compute a base58-encoded address string from the HD node.
         '''
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-class Bip32:
-    '''
-    '''
-
-    def __init__(self):
+    def ethereum_pubkeyhash(self) -> bytes:
         '''
+        Compute an Ethereum pubkeyhash (aka address) from the HD node.
         '''
 
     def deserialize(self, value: str, version_public: int, version_private: int) -> HDNode:
@@ -96,49 +103,67 @@ class Bip32:
         Construct a BIP0032 HD node from a base58-serialized value.
         '''
 
-    def from_seed(self, seed: bytes, curve_name: str) -> HDNode:
+    def from_seed(seed: bytes, curve_name: str) -> HDNode:
         '''
         Construct a BIP0032 HD node from a BIP0039 seed value.
         '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
-class Bip39:
+def find_word(prefix: str) -> Optional[str]:
     '''
+    Return the first word from the wordlist starting with prefix.
     '''
 
-    def __init__(self):
+# extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def complete_word(prefix: str) -> int:
+    '''
+    Return possible 1-letter suffixes for given word prefix.
+    Result is a bitmask, with 'a' on the lowest bit, 'b' on the second lowest, etc.
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def generate(strength: int) -> str:
+    '''
+    Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits).
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def from_data(data: bytes) -> str:
+    '''
+    Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes).
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def check(mnemonic: str) -> bool:
+    '''
+    Check whether given mnemonic is valid.
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
+def seed(mnemonic: str, passphrase: str) -> bytes:
+    '''
+    Generate seed from mnemonic and passphrase.
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-blake256.h
+class Blake256:
+    '''
+    Blake256 context.
+    '''
+
+    def __init__(self, data: bytes = None) -> None:
         '''
+        Creates a hash context object.
         '''
 
-    def find_word(self, prefix: str) -> Optional[str]:
+    def update(self, data: bytes) -> None:
         '''
-        Return the first word from the wordlist starting with prefix.
-        '''
-
-    def complete_word(self, prefix: str) -> int:
-        '''
-        Return possible 1-letter suffixes for given word prefix.
-        Result is a bitmask, with 'a' on the lowest bit, 'b' on the second lowest, etc.
+        Update the hash context with hashed data.
         '''
 
-    def generate(self, strength: int) -> str:
+    def digest(self) -> bytes:
         '''
-        Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits).
-        '''
-
-    def from_data(self, data: bytes) -> str:
-        '''
-        Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes).
-        '''
-
-    def check(self, mnemonic: str) -> bool:
-        '''
-        Check whether given mnemonic is valid.
-        '''
-
-    def seed(self, mnemonic: str, passphrase: str) -> bytes:
-        '''
-        Generate seed from mnemonic and passphrase.
+        Returns the digest of hashed data.
         '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-blake2b.h
@@ -183,117 +208,140 @@ class Blake2s:
         Returns the digest of hashed data.
         '''
 
+# extmod/modtrezorcrypto/modtrezorcrypto-chacha20poly1305.h
+class ChaCha20Poly1305:
+    '''
+    ChaCha20Poly1305 context.
+    '''
+
+    def __init__(self, key: bytes, nonce: bytes) -> None:
+        '''
+        Initialize the ChaCha20 + Poly1305 context for encryption or decryption
+        using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
+        '''
+
+    def encrypt(self, data: bytes) -> bytes:
+        '''
+        Encrypt data (length of data must be divisible by 64 except for the final value).
+        '''
+
+    def decrypt(self, data: bytes) -> bytes:
+        '''
+        Decrypt data (length of data must be divisible by 64 except for the final value).
+        '''
+
+    def auth(self, data: bytes) -> None:
+        '''
+        Include authenticated data in the Poly1305 MAC using the RFC 7539
+        style with 16 byte padding. This must only be called once and prior
+        to encryption or decryption.
+        '''
+
+    def finish(self) -> bytes:
+        '''
+        Compute RFC 7539-style Poly1305 MAC.
+        '''
+
 # extmod/modtrezorcrypto/modtrezorcrypto-curve25519.h
-class Curve25519:
+def generate_secret() -> bytes:
     '''
+    Generate secret key.
     '''
 
-    def __init__(self) -> None:
-        '''
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-curve25519.h
+def publickey(secret_key: bytes) -> bytes:
+    '''
+    Computes public key from secret key.
+    '''
 
-    def generate_secret(self) -> bytes:
-        '''
-        Generate secret key.
-        '''
-
-    def publickey(self, secret_key: bytes) -> bytes:
-        '''
-        Computes public key from secret key.
-        '''
-
-    def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
-        '''
-        Multiplies point defined by public_key with scalar defined by secret_key.
-        Useful for ECDH.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-curve25519.h
+def multiply(secret_key: bytes, public_key: bytes) -> bytes:
+    '''
+    Multiplies point defined by public_key with scalar defined by secret_key.
+    Useful for ECDH.
+    '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-class Ed25519:
+def generate_secret() -> bytes:
     '''
+    Generate secret key.
     '''
 
-    def __init__(self) -> None:
-        '''
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def publickey(secret_key: bytes) -> bytes:
+    '''
+    Computes public key from secret key.
+    '''
 
-    def generate_secret(self) -> bytes:
-        '''
-        Generate secret key.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def sign(secret_key: bytes, message: bytes) -> bytes:
+    '''
+    Uses secret key to produce the signature of message.
+    '''
 
-    def publickey(self, secret_key: bytes) -> bytes:
-        '''
-        Computes public key from secret key.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
+    '''
+    Uses public key to verify the signature of the message.
+    Returns True on success.
+    '''
 
-    def sign(self, secret_key: bytes, message: bytes) -> bytes:
-        '''
-        Uses secret key to produce the signature of message.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def cosi_combine_publickeys(public_keys: List[bytes]) -> bytes:
+    '''
+    Combines a list of public keys used in COSI cosigning scheme.
+    '''
 
-    def verify(self, public_key: bytes, signature: bytes, message: bytes) -> bool:
-        '''
-        Uses public key to verify the signature of the message.
-        Returns True on success.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def cosi_combine_signatures(R: bytes, signatures: List[bytes]) -> bytes:
+    '''
+    Combines a list of signatures used in COSI cosigning scheme.
+    '''
 
-    def cosi_combine_publickeys(self, public_keys: List[bytes]) -> bytes:
-        '''
-        Combines a list of public keys used in COSI cosigning scheme.
-        '''
-
-    def cosi_combine_signatures(self, R: bytes, signatures: List[bytes]) -> bytes:
-        '''
-        Combines a list of signatures used in COSI cosigning scheme.
-        '''
-
-    def cosi_sign(self, secret_key: bytes, message: bytes, nonce: bytes, sigR: bytes, combined_pubkey: bytes) -> bytes:
-        '''
-        Produce signature of message using COSI cosigning scheme.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def cosi_sign(secret_key: bytes, message: bytes, nonce: bytes, sigR: bytes, combined_pubkey: bytes) -> bytes:
+    '''
+    Produce signature of message using COSI cosigning scheme.
+    '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-class Nist256p1:
+def generate_secret() -> bytes:
     '''
+    Generate secret key.
     '''
 
-    def __init__(self) -> None:
-        '''
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
+def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
+    '''
+    Computes public key from secret key.
+    '''
 
-    def generate_secret(self) -> bytes:
-        '''
-        Generate secret key.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
+def sign(secret_key: bytes, digest: bytes, compressed: bool = True) -> bytes:
+    '''
+    Uses secret key to produce the signature of the digest.
+    '''
 
-    def publickey(self, secret_key: bytes, compressed: bool = True) -> bytes:
-        '''
-        Computes public key from secret key.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
+def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+    '''
+    Uses public key to verify the signature of the digest.
+    Returns True on success.
+    '''
 
-    def sign(self, secret_key: bytes, digest: bytes, compressed: bool = True) -> bytes:
-        '''
-        Uses secret key to produce the signature of the digest.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
+def verify_recover(signature: bytes, digest: bytes) -> bytes:
+    '''
+    Uses signature of the digest to verify the digest and recover the public key.
+    Returns public key on success, None on failure.
+    '''
 
-    def verify(self, public_key: bytes, signature: bytes, digest: bytes) -> bool:
-        '''
-        Uses public key to verify the signature of the digest.
-        Returns True on success.
-        '''
-
-    def verify_recover(self, signature: bytes, digest: bytes) -> bytes:
-        '''
-        Uses signature of the digest to verify the digest and recover the public key.
-        Returns public key on success, None on failure.
-        '''
-
-    def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
-        '''
-        Multiplies point defined by public_key with scalar defined by secret_key
-        Useful for ECDH
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
+def multiply(secret_key: bytes, public_key: bytes) -> bytes:
+    '''
+    Multiplies point defined by public_key with scalar defined by secret_key.
+    Useful for ECDH.
+    '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 class Pbkdf2:
@@ -317,28 +365,22 @@ class Pbkdf2:
         '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-random.h
-class Random:
+def uniform(n: int) -> int:
     '''
+    Compute uniform random number from interval 0 ... n - 1.
     '''
 
-    def __init__(self) -> None:
-        '''
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-random.h
+def bytes(len: int) -> bytes:
+    '''
+    Generate random bytes sequence of length len.
+    '''
 
-    def uniform(self, n: int) -> int:
-        '''
-        Compute uniform random number from interval 0 ... n - 1
-        '''
-
-    def bytes(self, len: int) -> bytes:
-        '''
-        Generate random bytes sequence of length len
-        '''
-
-    def shuffle(self, data: list) -> None:
-        '''
-        Shuffles items of given list (in-place)
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-random.h
+def shuffle(data: list) -> None:
+    '''
+    Shuffles items of given list (in-place).
+    '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-rfc6979.h
 class Rfc6979:
@@ -378,46 +420,43 @@ class Ripemd160:
         '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-class Secp256k1:
+def generate_secret() -> bytes:
     '''
+    Generate secret key.
     '''
 
-    def __init__(self) -> None:
-        '''
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
+def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
+    '''
+    Computes public key from secret key.
+    '''
 
-    def generate_secret(self, ) -> bytes:
-        '''
-        Generate secret key.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
+def sign(secret_key: bytes, digest: bytes, compressed: bool = True) -> bytes:
+    '''
+    Uses secret key to produce the signature of the digest.
+    '''
 
-    def publickey(self, secret_key: bytes, compressed: bool = True) -> bytes:
-        '''
-        Computes public key from secret key.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
+def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+    '''
+    Uses public key to verify the signature of the digest.
+    Returns True on success.
+    '''
 
-    def sign(self, secret_key: bytes, digest: bytes, compressed: bool = True) -> bytes:
-        '''
-        Uses secret key to produce the signature of the digest.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
+def verify_recover(signature: bytes, digest: bytes) -> bytes:
+    '''
+    Uses signature of the digest to verify the digest and recover the public key.
+    Returns public key on success, None on failure.
+    '''
 
-    def verify(self, public_key: bytes, signature: bytes, digest: bytes) -> bool:
-        '''
-        Uses public key to verify the signature of the digest.
-        Returns True on success.
-        '''
-
-    def verify_recover(self, signature: bytes, digest: bytes) -> bytes:
-        '''
-        Uses signature of the digest to verify the digest and recover the public key.
-        Returns public key on success, None on failure.
-        '''
-
-    def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
-        '''
-        Multiplies point defined by public_key with scalar defined by secret_key.
-        Useful for ECDH.
-        '''
+# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
+def multiply(secret_key: bytes, public_key: bytes) -> bytes:
+    '''
+    Multiplies point defined by public_key with scalar defined by secret_key.
+    Useful for ECDH.
+    '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-sha1.h
 class Sha1:
@@ -522,23 +561,4 @@ class Sha512:
     def digest(self) -> bytes:
         '''
         Returns the digest of hashed data.
-        '''
-
-# extmod/modtrezorcrypto/modtrezorcrypto-ssss.h
-class SSSS:
-    '''
-    '''
-
-    def __init__(self) -> None:
-        '''
-        '''
-
-    def split(self, m: int, n: int, secret: bytes) -> tuple:
-        '''
-        Split secret to (M of N) shares using Shamir's Secret Sharing Scheme.
-        '''
-
-    def combine(self, shares: tuple) -> bytes:
-        '''
-        Combine M shares of Shamir's Secret Sharing Scheme into secret.
         '''
