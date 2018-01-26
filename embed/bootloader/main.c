@@ -189,6 +189,7 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                     return secfalse; // shutdown
                 } else
                 if (r == 0) { // last chunk received
+                    ui_screen_install_progress_upload(1000);
                     ui_fadeout();
                     ui_screen_done(4, sectrue);
                     ui_fadein();

@@ -175,7 +175,7 @@ void ui_screen_install(void)
 
 void ui_screen_install_progress_erase(int pos, int len)
 {
-    display_loader(250 * pos / len, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
+    display_loader(200 + 200 * pos / len, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
 }
 
 void ui_screen_install_progress_upload(int pos)

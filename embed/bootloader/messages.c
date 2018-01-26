@@ -279,14 +279,6 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
     firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
     if ((firmware_remaining > 0) && ((firmware_remaining % 4) == 0) && (firmware_remaining <= (FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE))) {
-        // erase flash
-        if (sectrue != flash_erase_sectors(firmware_sectors, FIRMWARE_SECTORS_COUNT, ui_screen_install_progress_erase)) {
-            MSG_SEND_INIT(Failure);
-            MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
-            MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
-            MSG_SEND(Failure);
-            return;
-        }
         // request new firmware
         chunk_requested = (firmware_remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);
@@ -294,6 +286,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
         MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
         MSG_SEND(FirmwareRequest);
     } else {
+        // invalid firmware size
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
         MSG_SEND_ASSIGN_STRING(message, "Wrong firmware size");
@@ -323,7 +316,14 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field, void **
 
     while (stream->bytes_left) {
         // update loader
-        ui_screen_install_progress_upload(250 + 750 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
+        if (firmware_block == 0) {
+            // first chunk is 0 - 200
+            // followed by erase 200 - 400
+            ui_screen_install_progress_upload(200 * chunk_written / chunk_size);
+        } else {
+            // remaining chunks are 400 - 1000
+            ui_screen_install_progress_upload(400 + 600 * (firmware_block * IMAGE_CHUNK_SIZE + chunk_written) / (firmware_block * IMAGE_CHUNK_SIZE + firmware_remaining));
+        }
         // read data
         if (!pb_read(stream, (pb_byte_t *)(chunk_buffer + chunk_written), (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
             chunk_size = 0;
@@ -417,6 +417,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
             };
             ensure(flash_erase_sectors(sectors_storage, sizeof(sectors_storage), NULL), NULL);
         }
+        ensure(flash_erase_sectors(firmware_sectors, FIRMWARE_SECTORS_COUNT, ui_screen_install_progress_erase), NULL);
 
         firstskip = IMAGE_HEADER_SIZE + vhdr.hdrlen;
     }
