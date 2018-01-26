@@ -84,8 +84,8 @@ def build_module(mod_file, dest):
 
 def build_directory(dir, dest):
     print("Building mocks for", dir, "to", dest)
-    for pkg in os.listdir(dir):
-        for mod in os.listdir(os.path.join(dir, pkg)):
+    for pkg in sorted(os.listdir(dir)):
+        for mod in sorted(os.listdir(os.path.join(dir, pkg))):
             build_module(os.path.join(dir, pkg, mod), dest)
 
 
