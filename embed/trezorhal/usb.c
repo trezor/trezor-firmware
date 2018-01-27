@@ -80,13 +80,11 @@ void usb_init(const usb_dev_info_t *dev_info) {
     ensure(check_desc_str(dev_info->manufacturer), NULL);
     ensure(check_desc_str(dev_info->product), NULL);
     ensure(check_desc_str(dev_info->serial_number), NULL);
-    ensure(check_desc_str(dev_info->configuration), NULL);
     ensure(check_desc_str(dev_info->interface), NULL);
 
     usb_str_table.manufacturer  = dev_info->manufacturer;
     usb_str_table.product       = dev_info->product;
     usb_str_table.serial_number = dev_info->serial_number;
-    usb_str_table.configuration = dev_info->configuration;
     usb_str_table.interface     = dev_info->interface;
 
     // Configuration descriptor
@@ -95,7 +93,7 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_config_desc->wTotalLength        = sizeof(usb_config_descriptor_t); // will be updated later via usb_desc_add_iface()
     usb_config_desc->bNumInterfaces      = 0;                               // will be updated later via usb_desc_add_iface()
     usb_config_desc->bConfigurationValue = 0x01;
-    usb_config_desc->iConfiguration      = USBD_IDX_CONFIG_STR;
+    usb_config_desc->iConfiguration      = 0;
     usb_config_desc->bmAttributes        = 0x80; // 0x80 = bus powered; 0xC0 = self powered
     usb_config_desc->bMaxPower           = 0x32; // Maximum Power Consumption in 2mA units
 
@@ -204,7 +202,7 @@ static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed, uint16_t 
 }
 
 static uint8_t *usb_get_configuration_str_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    USBD_GetString((uint8_t *)usb_str_table.configuration, usb_str_buf, length);
+    USBD_GetString((uint8_t *)"", usb_str_buf, length);
     return usb_str_buf;
 }
 

@@ -92,7 +92,6 @@ static void usb_init_all(void)
         .manufacturer  = "SatoshiLabs",
         .product       = "TREZOR",
         .serial_number = "000000000000",
-        .configuration = "",
         .interface     = "TREZOR Interface",
     };
 

@@ -89,7 +89,6 @@ typedef struct {
     const char *manufacturer;
     const char *product;
     const char *serial_number;
-    const char *configuration;
     const char *interface;
 } usb_dev_string_table_t;
 
@@ -100,7 +99,6 @@ typedef struct {
     const char *manufacturer;
     const char *product;
     const char *serial_number;
-    const char *configuration;
     const char *interface;
 } usb_dev_info_t;
 
