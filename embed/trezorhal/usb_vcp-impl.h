@@ -356,22 +356,16 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
         return USBD_OK;
     }
 
-    switch (req->bmRequest & USB_REQ_DIR_MASK) {
-        case USB_REQ_DIR_D2H:
-            switch (req->bRequest) {
-                case USB_CDC_GET_LINE_CODING:
-                    USBD_CtlSendData(dev, UNCONST(&line_coding), MIN(req->wLength, sizeof(line_coding)));
-                    break;
-                default:
-                    USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
-                    break;
-            }
-            break;
-        case USB_REQ_DIR_H2D:
-            if (req->wLength > 0) {
-                USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
-            }
-            break;
+    if ((req->bmRequest & USB_REQ_DIR_MASK) == USB_REQ_DIR_D2H) {
+        if (req->bRequest == USB_CDC_GET_LINE_CODING) {
+            USBD_CtlSendData(dev, UNCONST(&line_coding), MIN(req->wLength, sizeof(line_coding)));
+        } else {
+            USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+        }
+    } else { // USB_REQ_DIR_H2D
+        if (req->wLength > 0) {
+            USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+        }
     }
 
     return USBD_OK;

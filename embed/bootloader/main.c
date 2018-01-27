@@ -35,7 +35,7 @@ static void usb_init_all(void) {
         .product_id    = 0x53C0,
         .release_num   = 0x0200,
         .manufacturer  = "SatoshiLabs",
-        .product       = "TREZOR Bootloader",
+        .product       = "TREZOR",
         .serial_number = "",
         .configuration = "",
         .interface     = "TREZOR Interface",
