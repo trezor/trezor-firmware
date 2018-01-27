@@ -102,7 +102,7 @@ void ui_screen_third(void)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
     display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2, 180, 30, toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12, COLOR_BLACK, COLOR_WHITE);
-    display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+    display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
 }
 
 // info UI
@@ -127,7 +127,7 @@ void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const ima
         display_text_center(120, 170, "Connect to host?", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
         ui_confirm_cancel_buttons();
     } else {
-        display_text_center(120, 220, "Open trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
+        display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     }
 }
 
