@@ -64,9 +64,9 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
     usb_dev_desc.bcdUSB             = 0x0210;                // USB 2.1
-    usb_dev_desc.bDeviceClass       = 0xEF;                  // Composite Device Class
-    usb_dev_desc.bDeviceSubClass    = 0x02;                  // Common Class
-    usb_dev_desc.bDeviceProtocol    = 0x01;                  // Interface Association Descriptor
+    usb_dev_desc.bDeviceClass       = 0x00;                  // Use class code info from Interface Descriptors
+    usb_dev_desc.bDeviceSubClass    = 0x00;
+    usb_dev_desc.bDeviceProtocol    = 0x00;
     usb_dev_desc.bMaxPacketSize0    = USB_MAX_EP0_SIZE;
     usb_dev_desc.idVendor           = dev_info->vendor_id;
     usb_dev_desc.idProduct          = dev_info->product_id;
@@ -309,7 +309,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                         USB_WEBUSB_URL_SCHEME_HTTPS,        // uint8_t bScheme
                         't', 'r', 'e', 'z', 'o', 'r', '.', 'i', 'o', '/', 's', 't', 'a', 'r', 't',  // char URL[]
                     };
-                    USBD_CtlSendData(dev, UNCONST(webusb_url), sizeof(webusb_url));
+                    USBD_CtlSendData(dev, UNCONST(webusb_url), MIN(req->wLength, sizeof(webusb_url)));
                     return USBD_OK;
                 } else {
                     USBD_CtlError(dev, req);
@@ -334,7 +334,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // subCompatibleId
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // reserved
                     };
-                    USBD_CtlSendData(dev, UNCONST(winusb_wcid), sizeof(winusb_wcid));
+                    USBD_CtlSendData(dev, UNCONST(winusb_wcid), MIN(req->wLength, sizeof(winusb_wcid)));
                     return USBD_OK;
                 } else {
                     USBD_CtlError(dev, req);
@@ -362,7 +362,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                         0x50, 0x00, 0x00, 0x00, // dwPropertyDataLength
                         '{', 0x00, 'c', 0x00, '6', 0x00, 'c', 0x00, '3', 0x00, '7', 0x00, '4', 0x00, 'a', 0x00, '6', 0x00, '-', 0x00, '2', 0x00, '2', 0x00, '8', 0x00, '5', 0x00, '-', 0x00, '4', 0x00, 'c', 0x00, 'b', 0x00, '8', 0x00, '-', 0x00, 'a', 0x00, 'b', 0x00, '4', 0x00, '3', 0x00, '-', 0x00, '1', 0x00, '7', 0x00, '6', 0x00, '4', 0x00, '7', 0x00, 'c', 0x00, 'e', 0x00, 'a', 0x00, '5', 0x00, '0', 0x00, '3', 0x00, 'd', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00,  // propertyData
                     };
-                    USBD_CtlSendData(dev, UNCONST(winusb_guid), sizeof(winusb_guid));
+                    USBD_CtlSendData(dev, UNCONST(winusb_guid), MIN(req->wLength, sizeof(winusb_guid)));
                     return USBD_OK;
                 } else {
                     USBD_CtlError(dev, req);
