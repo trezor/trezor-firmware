@@ -73,14 +73,14 @@ static const struct usb_endpoint_descriptor endpoints[2] = {{
 	.bEndpointAddress = ENDPOINT_ADDRESS_IN,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 64,
-	.bInterval = 2,
+	.bInterval = 1,
 }, {
 	.bLength = USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = ENDPOINT_ADDRESS_OUT,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 64,
-	.bInterval = 2,
+	.bInterval = 1,
 }};
 
 static const struct usb_interface_descriptor iface[] = {{

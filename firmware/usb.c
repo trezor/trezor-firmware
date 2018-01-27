@@ -136,14 +136,14 @@ static const struct usb_endpoint_descriptor hid_endpoints_u2f[2] = {{
 	.bEndpointAddress = ENDPOINT_ADDRESS_U2F_IN,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 64,
-	.bInterval = 2,
+	.bInterval = 1,
 }, {
 	.bLength = USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = ENDPOINT_ADDRESS_U2F_OUT,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 64,
-	.bInterval = 2,
+	.bInterval = 1,
 }};
 
 static const struct usb_interface_descriptor hid_iface_u2f[] = {{
@@ -201,14 +201,14 @@ static const struct usb_endpoint_descriptor webusb_endpoints_main[2] = {{
 	.bEndpointAddress = ENDPOINT_ADDRESS_MAIN_IN,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 64,
-	.bInterval = 2,
+	.bInterval = 1,
 }, {
 	.bLength = USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType = USB_DT_ENDPOINT,
 	.bEndpointAddress = ENDPOINT_ADDRESS_MAIN_OUT,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 64,
-	.bInterval = 2,
+	.bInterval = 1,
 }};
 
 static const struct usb_interface_descriptor webusb_iface_main[] = {{
