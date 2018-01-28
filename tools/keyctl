@@ -3,6 +3,7 @@
 import binascii
 import click
 import pyblake2
+import struct
 
 from trezorlib import ed25519raw, ed25519cosi
 
@@ -22,6 +23,18 @@ def get_trezor():
         return TrezorClient(devices[0])
     else:
         raise Exception('No TREZOR found')
+
+
+def header_to_sign(index, data):
+    z = bytes(65 * [0x00])
+    if index == 0:    # bootloader
+        return data[:0x03BF] + z
+    elif index == 1:  # vendorheader
+        return data[:-65] + z
+    elif index == 2:  # firmware
+        vlen = struct.unpack('<I', data[4:8])
+        vlen = vlen[0]
+        return data[vlen:vlen + 0x03BF] + z
 
 
 @click.group()
@@ -46,6 +59,7 @@ def getkey(index):
 def commit(index, filename, seckey):
     index = indexmap[index]
     data = open(filename, 'rb').read()
+    data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
     ctr = 0
     if seckey:
@@ -85,6 +99,7 @@ def global_commit(commits):
 def sign(index, filename, global_commit, seckey):
     index = indexmap[index]
     data = open(filename, 'rb').read()
+    data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
     global_pk, global_R = [binascii.unhexlify(x) for x in global_commit.split('+')]
     ctr = 0
@@ -106,11 +121,13 @@ def sign(index, filename, global_commit, seckey):
 
 
 @cli.command(help='')
+@click.argument('index', type=click.Choice(indexmap.keys()))
 @click.argument('filename')
 @click.argument('global_commit')
 @click.argument('signatures', nargs=-1)
-def global_sign(filename, global_commit, signatures):
+def global_sign(index, filename, global_commit, signatures):
     data = open(filename, 'rb').read()
+    data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
     global_pk, global_R = [binascii.unhexlify(x) for x in global_commit.split('+')]
     signatures = [binascii.unhexlify(x) for x in signatures]

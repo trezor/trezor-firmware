@@ -24,4 +24,4 @@ for seckey in $SECKEYS; do
     SIGS="$SIGS $sig"
 done
 
-$TOOLDIR/keyctl global_sign $FILE $global_commit $SIGS
+$TOOLDIR/keyctl global_sign $TYPE $FILE $global_commit $SIGS
