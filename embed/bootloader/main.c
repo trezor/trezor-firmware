@@ -361,10 +361,14 @@ main_start:
         ui_fadein();
 
         int delay = (vhdr.vtrust & VTRUST_WAIT) ^ VTRUST_WAIT;
-        while (delay > 0) {
-            ui_screen_boot_wait(delay);
+        if (delay > 1) {
+            while (delay > 0) {
+                ui_screen_boot_wait(delay);
+                hal_delay(1000);
+                delay--;
+            }
+        } else if (delay == 1) {
             hal_delay(1000);
-            delay--;
         }
 
         if ((vhdr.vtrust & VTRUST_CLICK) == 0) {

@@ -50,39 +50,48 @@ static const char *format_ver(const char *format, uint32_t version)
 
 // boot UI
 
-void ui_screen_boot(const vendor_header *vhdr, const image_header *hdr)
-{
-    const uint8_t *vimg = vhdr->vimg;
-    const char *vstr = ((vhdr->vtrust & VTRUST_STRING) == 0) ? vhdr->vstr : 0;
-    const uint32_t vstr_len = ((vhdr->vtrust & VTRUST_STRING) == 0) ? vhdr->vstr_len : 0;
-    const uint32_t fw_version = hdr->version;
-    const uint16_t background = ((vhdr->vtrust & VTRUST_RED) == 0) ? RGB16(0xFF, 0x00, 0x00) : COLOR_BLACK;
+static uint16_t boot_background;
 
-    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, background);
+void ui_screen_boot(const vendor_header * const vhdr, const image_header * const hdr)
+{
+    const int show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
+    if ((vhdr->vtrust & VTRUST_RED) == 0) {
+        boot_background = COLOR_BL_FAIL;
+    } else {
+        boot_background = COLOR_BLACK;
+    }
+
+    const uint8_t *vimg = vhdr->vimg;
+    const uint32_t fw_version = hdr->version;
+
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, boot_background);
+
+    int image_top = show_string ? 30 : (DISPLAY_RESY - 120) / 2;
+
     // check whether vendor image is 120x120
-    if (memcmp(vimg, "TOIf\x78\x00\x78\x00", 4) != 0) {
-        return;
+    if (memcmp(vimg, "TOIf\x78\x00\x78\x00", 4) == 0) {
+        uint32_t datalen = *(uint32_t *)(vimg + 8);
+        display_image((DISPLAY_RESX - 120) / 2, image_top, 120, 120, vimg + 12, datalen);
     }
-    uint32_t datalen = *(uint32_t *)(vimg + 8);
-    display_image((DISPLAY_RESX - 120) / 2, 32, 120, 120, vimg + 12, datalen);
-    if (vstr && vstr_len) {
-        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 48, vstr, vstr_len, FONT_NORMAL, COLOR_WHITE, background, 0);
+
+    if (show_string) {
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 50, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_WHITE, boot_background, 0);
+        const char *ver_str = format_ver("%d.%d.%d.%d", fw_version);
+        display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 25, ver_str, -1, FONT_NORMAL, COLOR_WHITE, boot_background, 0);
     }
-    const char *ver_str = format_ver("%d.%d.%d.%d", fw_version);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 25, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, background, 0);
 }
 
 void ui_screen_boot_wait(int wait_seconds)
 {
     char wait_str[16];
-    mini_snprintf(wait_str, sizeof(wait_str), "waiting for %ds", wait_seconds);
-    display_bar(0, DISPLAY_RESY - 2 - 18, DISPLAY_RESX, 2 + 18, COLOR_BLACK);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, wait_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_BLACK, 0);
+    mini_snprintf(wait_str, sizeof(wait_str), "starting in %d s", wait_seconds);
+    display_bar(0, DISPLAY_RESY - 5 - 20, DISPLAY_RESX, 5 + 20, boot_background);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5, wait_str, -1, FONT_NORMAL, COLOR_WHITE, boot_background, 0);
 }
 
 void ui_screen_boot_click(void) {
-    display_bar(0, DISPLAY_RESY - 2 - 18, DISPLAY_RESX, 2 + 18, COLOR_BLACK);
-    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 2, "click to continue ...", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_BLACK, 0);
+    display_bar(0, DISPLAY_RESY - 5 - 20, DISPLAY_RESX, 5 + 20, boot_background);
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5, "click to continue ...", -1, FONT_NORMAL, COLOR_WHITE, boot_background, 0);
 }
 
 // welcome UI
