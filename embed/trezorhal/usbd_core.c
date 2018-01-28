@@ -289,8 +289,16 @@ USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef *pdev, uint8_t *psetup)
       break;
 
     case USB_REQ_TYPE_CLASS:
-    case USB_REQ_TYPE_VENDOR:
       if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+        if (pdev->pClass->Setup != NULL)
+            pdev->pClass->Setup(pdev, &pdev->request);
+      } else {
+          USBD_CtlError(pdev, &pdev->request);
+      }
+      break;
+
+    case USB_REQ_TYPE_VENDOR:
+      if (pdev->dev_state == USBD_STATE_CONFIGURED || pdev->dev_state == USBD_STATE_ADDRESSED) {
         if (pdev->pClass->Setup != NULL)
             pdev->pClass->Setup(pdev, &pdev->request);
       } else {
