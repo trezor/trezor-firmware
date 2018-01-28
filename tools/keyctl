@@ -31,6 +31,16 @@ def cli():
 
 @cli.command(help='')
 @click.argument('index', type=click.Choice(indexmap.keys()))
+def getkey(index):
+    index = indexmap[index]
+    t = get_trezor()
+    path = "10018'/%d'" % index
+    node = t.get_public_node(t.expand_path(path), ecdsa_curve_name='ed25519').node
+    print('%s' % (binascii.hexlify(node.public_key[1:]).decode()))
+
+
+@cli.command(help='')
+@click.argument('index', type=click.Choice(indexmap.keys()))
 @click.argument('filename')
 @click.argument('seckey', required=False)
 def commit(index, filename, seckey):
