@@ -126,6 +126,7 @@ def sign(index, filename, global_commit, seckey):
 @click.argument('global_commit')
 @click.argument('signatures', nargs=-1)
 def global_sign(index, filename, global_commit, signatures):
+    index = indexmap[index]
     data = open(filename, 'rb').read()
     data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
