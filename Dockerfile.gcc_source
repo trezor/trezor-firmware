@@ -6,7 +6,8 @@ FROM debian:9
 
 RUN apt-get update && apt-get install -y \
     build-essential wget git python3-pip gcc-multilib \
-    autoconf autogen bison dejagnu flex flip gawk git gperf gzip nsis openssh-client p7zip-full perl python-dev libisl-dev tcl tofrodos zip
+    autoconf autogen bison dejagnu flex flip gawk git gperf gzip nsis openssh-client p7zip-full perl python-dev libisl-dev tcl tofrodos zip \
+    texinfo texlive texlive-extra-utils
 
 # download toolchain
 
