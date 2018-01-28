@@ -21,8 +21,8 @@ RUN cd /opt && wget $TOOLCHAIN_URL && tar xfj $TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAV
 
 # build toolchain
 
-RUN cd /opt/$TOOLCHAIN_LONGVER && ./install-sources.sh --skip_steps=mingw32,manual
-RUN cd /opt/$TOOLCHAIN_LONGVER && ./build-prerequisites.sh  --skip_steps=mingw32,manual
+RUN cd /opt/$TOOLCHAIN_LONGVER && ./install-sources.sh --skip_steps=mingw32
+RUN cd /opt/$TOOLCHAIN_LONGVER && ./build-prerequisites.sh  --skip_steps=mingw32
 RUN cd /opt/$TOOLCHAIN_LONGVER && ./build-toolchain.sh  --skip_steps=mingw32,manual
 
 # setup toolchain
