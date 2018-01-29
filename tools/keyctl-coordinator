@@ -3,8 +3,11 @@ import binascii
 import struct
 import click
 import pyblake2
+import Pyro4
+import serpent
 from trezorlib import ed25519raw, ed25519cosi
 
+PORT = 5001
 indexmap = {
     'bootloader': 0,
     'vendorheader': 1,
@@ -35,16 +38,23 @@ def cli():
 @cli.command(help='')
 @click.argument('index', type=click.Choice(indexmap.keys()))
 @click.argument('filename')
-@click.argument('seckeys', nargs=-1)
-def sign(index, filename, seckeys):
+@click.argument('participants', nargs=-1)
+def sign(index, filename, participants):
     # compute header digest
     digest = header_digest(index, filename)
+    # create participant proxies
+    if len(participants) < 1:
+        raise ValueError('Not enough participants')
+    print('connecting to %d participants:' % len(participants))
+    proxy = []
+    for p in participants:
+        uri = 'PYRO:keyctl@%s:%d' % (p, PORT)
+        proxy.append(Pyro4.Proxy(uri))
     # collect commits
     pks, Rs = [], []
-    for ctr, seckey in enumerate(seckeys):
-        sk = binascii.unhexlify(seckey)
-        pk = ed25519raw.publickey(sk)
-        _, R = ed25519cosi.get_nonce(sk, digest, ctr)
+    for p in proxy:
+        pk, R = p.get_commit(index, digest)
+        pk, R = serpent.tobytes(pk), serpent.tobytes(R)
         pks.append(pk)
         Rs.append(R)
     # compute global commit
@@ -52,14 +62,9 @@ def sign(index, filename, seckeys):
     global_R = ed25519cosi.combine_keys(Rs)
     # collect signatures
     sigs = []
-    for ctr, seckey in enumerate(seckeys):
-        sk = binascii.unhexlify(seckey)
-        r, _ = ed25519cosi.get_nonce(sk, digest, ctr)
-        h = ed25519raw.H(sk)
-        b = ed25519raw.b
-        a = 2 ** (b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
-        S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
-        sig = ed25519raw.encodeint(S)
+    for p in proxy:
+        sig = p.get_signature(index, digest, global_R, global_pk)
+        sig = serpent.tobytes(sig)
         sigs.append(sig)
     # compute global signature
     sig = ed25519cosi.combine_sig(global_R, sigs)

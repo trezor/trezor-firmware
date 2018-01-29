@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+import binascii
+import sys
+import netifaces
+import Pyro4
+import serpent
+
+PORT = 5001
+indexmap = {
+    'bootloader': 0,
+    'vendorheader': 1,
+    'firmware': 2,
+}
+
+
+def get_trezor():
+    from trezorlib.client import TrezorClient
+    from trezorlib.transport_hid import HidTransport
+    devices = HidTransport.enumerate()
+    if len(devices) > 0:
+        return TrezorClient(devices[0])
+    else:
+        raise Exception('No TREZOR found')
+
+
+def get_path(index):
+    return "10018'/%d'" % indexmap[index]
+
+
+@Pyro4.expose
+class KeyctlProxy(object):
+
+    def __init__(self):
+        super(KeyctlProxy, self).__init__()
+
+    def get_commit(self, index, digest):
+        digest = serpent.tobytes(digest)
+        t = get_trezor()
+        path = get_path(index)
+        print('commiting to hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
+        commit = t.cosi_commit(t.expand_path(path), digest)
+        pk = commit.pubkey
+        R = commit.commitment
+        return (pk, R)
+
+    def get_signature(self, index, digest, global_R, global_pk):
+        digest, global_R, global_pk = serpent.tobytes(digest), serpent.tobytes(global_R), serpent.tobytes(global_pk)
+        t = get_trezor()
+        path = get_path(index)
+        print('signing hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
+        signature = t.cosi_sign(t.expand_path(path), digest, global_R, global_pk)
+        sig = signature.signature
+        return sig
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        iface = sys.argv[1]
+    else:
+        print('Usage: keyctl-proxy interface')
+        sys.exit(1)
+    host = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
+    daemon = Pyro4.Daemon(host=host, port=PORT)
+    proxy = KeyctlProxy()
+    uri = daemon.register(proxy, 'keyctl')
+    print('keyctl-proxy running at URI: "%s"' % uri)
+    daemon.requestLoop()

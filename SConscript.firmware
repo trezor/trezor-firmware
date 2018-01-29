@@ -336,7 +336,7 @@ env.Replace(
 
 env.Replace(
     BINCTL='tools/binctl',
-    COMBINE_SIGN='tools/combine_sign',
+    KEYCTL='tools/keyctl',
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
@@ -418,5 +418,5 @@ program_bin = env.Command(
     action=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
         '$BINCTL $TARGET -h',
-        '$BINCTL $TARGET -s 1:2 `$COMBINE_SIGN firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
+        '$BINCTL $TARGET -s 1:2 `$KEYCTL sign firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
     ], )
