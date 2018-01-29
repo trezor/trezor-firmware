@@ -45,7 +45,6 @@ class SigningError(ValueError):
 # - ask for confirmations
 # - check fee
 async def check_tx_fee(tx: SignTx, root):
-
     coin = coins.by_name(tx.coin_name)
 
     # h_first is used to make sure the inputs and outputs streamed in Phase 1
@@ -97,7 +96,7 @@ async def check_tx_fee(tx: SignTx, root):
             segwit[i] = True
             segwit_in += txi.amount
             total_in += txi.amount
-        elif txi.script_type == InputScriptType.SPENDADDRESS:
+        elif txi.script_type in [InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG]:
             segwit[i] = False
             total_in += await get_prevtx_output_value(
                 tx_req, txi.prev_hash, txi.prev_index)
@@ -142,7 +141,6 @@ async def check_tx_fee(tx: SignTx, root):
 
 
 async def sign_tx(tx: SignTx, root):
-
     tx = sanitize_sign_tx(tx)
 
     # Phase 1
@@ -239,8 +237,16 @@ async def sign_tx(tx: SignTx, root):
                     txi_sign = txi
                     key_sign = node_derive(root, txi.address_n)
                     key_sign_pub = key_sign.public_key()
-                    txi_sign.script_sig = output_script_p2pkh(
-                        ecdsa_hash_pubkey(key_sign_pub))
+                    # for the signing process the script_sig is equal
+                    # to the scriptPubKey (P2PKH) or a redeem script (P2SH)
+                    if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
+                        txi_sign.script_sig = script_multisig(multisig_get_pubkeys(txi_sign.multisig), txi_sign.multisig.m)
+                    elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
+                        txi_sign.script_sig = output_script_p2pkh(
+                            ecdsa_hash_pubkey(key_sign_pub))
+                    else:
+                        raise SigningError(FailureType.ProcessError,
+                                           'Unknown transaction type')
                 else:
                     txi.script_sig = bytes()
                 write_tx_input(h_sign, txi)
@@ -405,7 +411,8 @@ def get_tx_header(tx: SignTx, segwit=False):
 def get_p2wpkh_witness(coin: CoinType, signature: bytes, pubkey: bytes):
     w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    append_signature_and_pubkey(w, pubkey, signature, get_hash_type(coin))
+    append_signature(w, signature, get_hash_type(coin))
+    append_pubkey(w, pubkey)
     return w
 
 
@@ -414,7 +421,6 @@ def get_p2wpkh_witness(coin: CoinType, signature: bytes, pubkey: bytes):
 
 
 def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
-
     if o.script_type == OutputScriptType.PAYTOOPRETURN:
         if o.amount != 0:
             raise SigningError(FailureType.DataError,
@@ -486,6 +492,9 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
     elif i.script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or p2wsh
         return input_script_native_p2wpkh_or_p2wsh()
+    # mutlisig
+    elif i.script_type == InputScriptType.SPENDMULTISIG:
+        return input_script_multisig(signature, i.multisig.signatures, multisig_get_pubkeys(i.multisig), i.multisig.m)
     else:
         raise SigningError(FailureType.ProcessError, 'Invalid script type')
 

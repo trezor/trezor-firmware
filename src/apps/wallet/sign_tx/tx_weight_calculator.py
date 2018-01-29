@@ -55,7 +55,7 @@ class TxWeightCalculator:
         if i.multisig:
             multisig_script_size = (
                 _TXSIZE_MULTISIGSCRIPT +
-                i.multisig.pubkeys_count * (1 + _TXSIZE_PUBKEY))
+                len(i.multisig.pubkeys) * (1 + _TXSIZE_PUBKEY))
             input_script_size = (
                 1 +  # the OP_FALSE bug in multisig
                 i.multisig.m * (1 + _TXSIZE_SIGNATURE) +

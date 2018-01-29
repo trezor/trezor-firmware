@@ -2,6 +2,7 @@ from apps.wallet.sign_tx.multisig import *
 from apps.wallet.sign_tx.writers import *
 from apps.common.hash_writer import HashWriter
 
+from trezor.crypto.hashlib import sha256, ripemd160
 
 # TX Scripts
 # ===
@@ -16,7 +17,8 @@ from apps.common.hash_writer import HashWriter
 
 def input_script_p2pkh_or_p2sh(pubkey: bytes, signature: bytes, sighash: int) -> bytearray:
     w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
-    append_signature_and_pubkey(w, pubkey, signature, sighash)
+    append_signature(w, signature, sighash)
+    append_pubkey(w, pubkey)
     return w
 
 
@@ -100,21 +102,55 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
 
 # =============== Multisig ===============
 
-def multisig_script(pubkeys, m) -> HashWriter:
+def input_script_multisig(current_signature, other_signatures, pubkeys, m: int):
+    w = bytearray()
+    # starts with OP_FALSE because of an old OP_CHECKMULTISIG bug,
+    # which consumes one additional item on the stack
+    # see https://bitcoin.org/en/developer-guide#standard-transactions
+    w.append(0x00)
+    for s in other_signatures:
+        if len(s):
+            append_signature(w, s)
+
+    append_signature(w, current_signature)
+
+    # redeem script
+    redeem_script = script_multisig(pubkeys, m)
+    write_op_push(w, len(redeem_script))
+    write_bytes(w, script_multisig(pubkeys, m))
+    return w
+
+
+# returns a ripedm(sha256()) hash of a multisig script used in P2SH
+def output_script_multisig_p2sh(pubkeys, m) -> HashWriter:
+    script = script_multisig(pubkeys, m)
+    h = sha256(script).digest()
+    return ripemd160(h).digest()
+
+
+# returns a sha256() hash of a multisig script used in native P2WSH
+def output_script_multisig_p2wsh(pubkeys, m) -> HashWriter:
+    for pubkey in pubkeys:
+        if len(pubkey) != 33:
+            raise Exception  # only compressed public keys are allowed for P2WSH
+    script = script_multisig(pubkeys, m)
+    return sha256(script).digest()
+
+
+def script_multisig(pubkeys, m) -> bytes:
     n = len(pubkeys)
     if n < 1 or n > 15:
         raise Exception
     if m < 1 or m > 15:
         raise Exception
 
-    h = HashWriter(sha256)
-    h.append(0x50 + m)
+    w = bytearray()
+    w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
     for p in pubkeys:
-        h.append(len(p))  # OP_PUSH length (33 for compressed)
-        write_bytes(h, p)
-    h.append(0x50 + n)
-    h.append(0xAE)  # OP_CHECKMULTISIG
-    return h
+        append_pubkey(w, p)
+    w.append(0x50 + n)
+    w.append(0xAE)  # OP_CHECKMULTISIG
+    return w
 
 
 # -------------------------- Others --------------------------
@@ -131,10 +167,14 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 
 # === helpers
 
-def append_signature_and_pubkey(w: bytearray, pubkey: bytes, signature: bytes, sighash: int) -> bytearray:
+def append_signature(w: bytearray, signature: bytes, sighash: int) -> bytearray:
     write_op_push(w, len(signature) + 1)
     write_bytes(w, signature)
     w.append(sighash)
+    return w
+
+
+def append_pubkey(w: bytearray, pubkey: bytes) -> bytearray:
     write_op_push(w, len(pubkey))
     write_bytes(w, pubkey)
     return w
