@@ -32,9 +32,8 @@ def header_to_sign(index, data):
     elif index == 1:  # vendorheader
         return data[:-65] + z
     elif index == 2:  # firmware
-        vlen = struct.unpack('<I', data[4:8])
-        vlen = vlen[0]
-        return data[vlen:vlen + 0x03BF] + z
+        vhdrlen = struct.unpack('<I', data[4:8])[0]
+        return data[vhdrlen:vhdrlen + 0x03BF] + z
 
 
 @click.group()
