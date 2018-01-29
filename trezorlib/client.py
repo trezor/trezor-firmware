@@ -279,8 +279,8 @@ class TextUIMixin(object):
 
     def callback_PassphraseRequest(self, msg):
         if os.getenv("PASSPHRASE") is not None:
+            log("Passphrase required. Using PASSPHRASE environment variable.")
             passphrase = Mnemonic.normalize_string(os.getenv("PASSPHRASE"))
-            log("Passphrase required. Using '%s'" % passphrase)
             return proto.PassphraseAck(passphrase=passphrase)
 
         log("Passphrase required: ")
