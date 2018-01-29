@@ -187,6 +187,9 @@ vendorheader: ## construct and sign the default vendor header
 vendorheader_sl: ## construct SatoshiLabs vendor header
 	./tools/build_vendorheader 47fbdc84d8abef44fe6abde8f87b6ead821b7082ec63b9f7cc33dc53bf6c708d:9af22a52ab47a93091403612b3d6731a2dfef8a33383048ed7556a20e8b03c81:2218c25f8ba70c82eba8ed6a321df209c0a7643d014f33bf9317846f62923830 2 0.0 ....... SatoshiLabs assets/vendor_satoshilabs.toif embed/firmware/vendorheader_sl.bin
 
+vendorheader_sl_signed: ## apply signed SatoshiLabs vendor header
+	cp embed/firmware/vendorheader_sl_signed.bin embed/firmware/vendorheader.bin
+
 binctl: ## print info about binary files
 	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 	./tools/binctl embed/firmware/vendorheader.bin
