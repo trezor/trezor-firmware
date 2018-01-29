@@ -145,13 +145,12 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint
         return secfalse;
     }
     ensure(flash_unlock(), NULL);
-    secbool ret = secfalse;
     for (uint8_t i = 0; i < datalen; i++) {
         uint32_t address = FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
         ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data[i])), NULL);
     }
     ensure(flash_lock(), NULL);
-    return ret;
+    return sectrue;
 }
 
 secbool flash_otp_lock(uint8_t block)
