@@ -27,13 +27,19 @@ def get_trezor():
 
 def header_to_sign(index, data):
     z = bytes(65 * [0x00])
-    if index == 0:    # bootloader
+    if index == 'bootloader':
         return data[:0x03BF] + z
-    elif index == 1:  # vendorheader
+    elif index == 'vendorheader':
         return data[:-65] + z
-    elif index == 2:  # firmware
+    elif index == 'firmware':
         vhdrlen = struct.unpack('<I', data[4:8])[0]
         return data[vhdrlen:vhdrlen + 0x03BF] + z
+    else:
+        raise ValueError('Unknown index "%s"' % index)
+
+
+def get_path(index):
+    return "10018'/%d'" % indexmap[index]
 
 
 @click.group()
@@ -44,9 +50,8 @@ def cli():
 @cli.command(help='')
 @click.argument('index', type=click.Choice(indexmap.keys()))
 def getkey(index):
-    index = indexmap[index]
     t = get_trezor()
-    path = "10018'/%d'" % index
+    path = get_path(index)
     node = t.get_public_node(t.expand_path(path), ecdsa_curve_name='ed25519').node
     print('%s' % (binascii.hexlify(node.public_key[1:]).decode()))
 
@@ -56,7 +61,6 @@ def getkey(index):
 @click.argument('filename')
 @click.argument('seckey', required=False)
 def commit(index, filename, seckey):
-    index = indexmap[index]
     data = open(filename, 'rb').read()
     data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
@@ -67,7 +71,7 @@ def commit(index, filename, seckey):
         _, R = ed25519cosi.get_nonce(sk, digest, ctr)
     else:
         t = get_trezor()
-        path = "10018'/%d'" % index
+        path = get_path(index)
         print('commiting to hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
         commit = t.cosi_commit(t.expand_path(path), digest)
         pk = commit.pubkey
@@ -96,7 +100,6 @@ def global_commit(commits):
 @click.argument('global_commit')
 @click.argument('seckey', required=False)
 def sign(index, filename, global_commit, seckey):
-    index = indexmap[index]
     data = open(filename, 'rb').read()
     data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
@@ -112,7 +115,7 @@ def sign(index, filename, global_commit, seckey):
         sig = ed25519raw.encodeint(S)
     else:
         t = get_trezor()
-        path = "10018'/%d'" % index
+        path = get_path(index)
         print('signing hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
         signature = t.cosi_sign(t.expand_path(path), digest, global_R, global_pk)
         sig = signature.signature
@@ -125,7 +128,6 @@ def sign(index, filename, global_commit, seckey):
 @click.argument('global_commit')
 @click.argument('signatures', nargs=-1)
 def global_sign(index, filename, global_commit, signatures):
-    index = indexmap[index]
     data = open(filename, 'rb').read()
     data = header_to_sign(index, data)
     digest = pyblake2.blake2s(data).digest()
