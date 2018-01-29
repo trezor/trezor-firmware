@@ -30,26 +30,37 @@ def get_path(index):
 @Pyro4.expose
 class KeyctlProxy(object):
 
-    def __init__(self):
-        super(KeyctlProxy, self).__init__()
-
     def get_commit(self, index, digest):
         digest = serpent.tobytes(digest)
-        t = get_trezor()
         path = get_path(index)
-        print('commiting to hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
-        commit = t.cosi_commit(t.expand_path(path), digest)
+        commit = None
+        while commit is None:
+            try:
+                t = get_trezor()
+                print('\n\n\nCommiting to hash %s with path %s:' % (binascii.hexlify(digest).decode(), path))
+                commit = t.cosi_commit(t.expand_path(path), digest)
+            except Exception as e:
+                print(e)
+                print('Trying again ...')
         pk = commit.pubkey
         R = commit.commitment
+        print('Commitment sent!')
         return (pk, R)
 
     def get_signature(self, index, digest, global_R, global_pk):
         digest, global_R, global_pk = serpent.tobytes(digest), serpent.tobytes(global_R), serpent.tobytes(global_pk)
-        t = get_trezor()
         path = get_path(index)
-        print('signing hash %s with path %s' % (binascii.hexlify(digest).decode(), path))
-        signature = t.cosi_sign(t.expand_path(path), digest, global_R, global_pk)
+        signature = None
+        while signature is None:
+            try:
+                t = get_trezor()
+                print('\n\n\nSigning hash %s with path %s:' % (binascii.hexlify(digest).decode(), path))
+                signature = t.cosi_sign(t.expand_path(path), digest, global_R, global_pk)
+            except Exception as e:
+                print(e)
+                print('Trying again ...')
         sig = signature.signature
+        print('Signature sent!')
         return sig
 
 
