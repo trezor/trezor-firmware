@@ -2,7 +2,14 @@ from trezor import ui, res, loop, io
 from trezor.crypto import bip39
 from trezor.ui import display
 from trezor.ui.button import Button, BTN_CLICKED, ICON
+from .swipe import Swipe, SWIPE_LEFT, SWIPE_RIGHT, SWIPE_HORIZONTAL
 
+KEYBOARD = {
+    '0': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+    '1': ['_', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz', '*#'],
+    '2': ['_', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ', '*#'],
+    '3': ['_', '.', '/', '!', '+', '-', '?', ',', ';', '$']
+}
 
 def key_buttons():
     keys = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
@@ -11,6 +18,24 @@ def key_buttons():
         for i, k in enumerate(keys)
     ]
 
+def render_scrollbar(page):
+    bbox = const(240)
+    size = const(8)
+    padding = 12
+    page_count = len(KEYBOARD)
+
+    if page_count * padding > bbox:
+        padding = bbox // page_count
+
+    x = (bbox // 2) - (page_count // 2) * padding
+    y = 44
+
+    for i in range(0, page_count):
+        if i != page:
+            ui.display.bar_radius(x + i * padding, y, size,
+                                  size, ui.DARK_GREY, ui.BG, size // 2)
+    ui.display.bar_radius(x + page * padding, y, size,
+                          size, ui.FG, ui.BG, size // 2)
 
 def compute_mask(text: str) -> int:
     mask = 0
@@ -21,6 +46,14 @@ def compute_mask(text: str) -> int:
         mask |= 1 << shift
     return mask
 
+def digit_area(i):
+    if i == 9:  # 0-position
+        i = 10  # display it in the middle
+    return ui.grid(i + 3)  # skip the first line
+
+def generate_keyboard(index):
+    digits = list(range(0, 10))  # 0-9
+    return digits
 
 class Input(Button):
     def __init__(self, area: tuple, content: str='', word: str=''):
@@ -75,6 +108,41 @@ class Input(Button):
             ix = ax + aw - ICON * 2
             iy = ty - ICON
             display.icon(ix, iy, res.load(i), fg_color, bg_color)
+
+class PassphraseKeyboard(ui.Widget):
+    def __init__(self, label):
+        self.label = label
+        self.passphrase = ''
+        self.index = 1
+        self.keyboard_type = 1
+        self.keys = KEYBOARD[str(self.keyboard_type)]
+
+        self.key_buttons = [Button(digit_area(i), d)
+                            for i, d in enumerate(self.keys)]
+        self.onchange = None
+
+    def render(self):
+        # clear canvas under input line
+        display.bar(0, 0, 240, 45, ui.BG)
+
+        # input line with a header
+        header = self.passphrase if self.passphrase else self.label
+        display.text_center(120, 32, header, ui.BOLD, ui.GREY, ui.BG)
+        render_scrollbar(self.keyboard_type)
+        # pin matrix buttons
+        for btn in self.key_buttons:
+            btn.render()
+
+    def touch(self, event, pos):
+        for btn in self.key_buttons:
+            if btn.touch(event, pos) == BTN_CLICKED:
+                self.change(self.passphrase + btn.content)
+                break
+
+    def change(self, passphrase):
+        self.passphrase = passphrase
+        if self.onchange:
+            self.onchange()
 
 
 class MnemonicKeyboard(ui.Widget):
