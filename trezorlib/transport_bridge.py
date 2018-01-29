@@ -20,12 +20,16 @@
 from __future__ import absolute_import
 
 import requests
+import binascii
+from io import BytesIO
+import struct
 
+from . import mapping
 from . import messages
+from . import protobuf
 from .transport import Transport, TransportException
 
-TREZORD_HOST = 'https://localback.net:21324'
-CONFIG_URL = 'https://wallet.trezor.io/data/config_signed.bin'
+TREZORD_HOST = 'http://127.0.0.1:21325'
 
 
 def get_error(resp):
@@ -36,8 +40,6 @@ class BridgeTransport(Transport):
     '''
     BridgeTransport implements transport through TREZOR Bridge (aka trezord).
     '''
-
-    configured = False
 
     def __init__(self, device):
         super(BridgeTransport, self).__init__()
@@ -51,26 +53,10 @@ class BridgeTransport(Transport):
         return self.device['path']
 
     @staticmethod
-    def configure():
-        if BridgeTransport.configured:
-            return
-        r = requests.get(CONFIG_URL, verify=False)
-        if r.status_code != 200:
-            raise TransportException(
-                'Could not fetch config from %s' % CONFIG_URL)
-        r = requests.post(TREZORD_HOST + '/configure', data=r.text)
-        if r.status_code != 200:
-            raise TransportException('trezord: Could not configure' +
-                                     get_error(r))
-        BridgeTransport.configured = True
-
-    @staticmethod
     def enumerate():
-        BridgeTransport.configure()
-        r = requests.get(TREZORD_HOST + '/enumerate')
+        r = requests.post(TREZORD_HOST + '/enumerate')
         if r.status_code != 200:
-            raise TransportException('trezord: Could not enumerate devices' +
-                                     get_error(r))
+            raise TransportException('trezord: Could not enumerate devices' + get_error(r))
         return [BridgeTransport(dev) for dev in r.json()]
 
     @staticmethod
@@ -81,10 +67,9 @@ class BridgeTransport(Transport):
         raise TransportException('Bridge device not found')
 
     def open(self):
-        r = self.conn.post(TREZORD_HOST + '/acquire/%s' % self.device['path'])
+        r = self.conn.post(TREZORD_HOST + '/acquire/%s/null' % self.device['path'])
         if r.status_code != 200:
-            raise TransportException('trezord: Could not acquire session' +
-                                     get_error(r))
+            raise TransportException('trezord: Could not acquire session' + get_error(r))
         self.session = r.json()['session']
 
     def close(self):
@@ -92,25 +77,28 @@ class BridgeTransport(Transport):
             return
         r = self.conn.post(TREZORD_HOST + '/release/%s' % self.session)
         if r.status_code != 200:
-            raise TransportException('trezord: Could not release session' +
-                                     get_error(r))
+            raise TransportException('trezord: Could not release session' + get_error(r))
         self.session = None
 
     def write(self, msg):
-        msgname = msg.__class__.__name__
-        payload = json.dumps({"type": msgname, "message": msg.__dict__})
+        data = BytesIO()
+        protobuf.dump_message(data, msg)
+        ser = data.getvalue()
+        header = struct.pack(">HL", mapping.get_type(msg), len(ser))
+        data = binascii.hexlify(header + ser).decode()
         r = self.conn.post(
-            TREZORD_HOST + '/call/%s' % self.session, data=payload)
+            TREZORD_HOST + '/call/%s' % self.session, data=data)
         if r.status_code != 200:
-            raise TransportException('trezord: Could not write message' +
-                                     get_error(r))
-        self.response = r.json()
+            raise TransportException('trezord: Could not write message' + get_error(r))
+        self.response = r.text
 
     def read(self):
         if self.response is None:
             raise TransportException('No response stored')
-        msgtype = getattr(messages, self.response['type'])
-        msg = msgtype()
-        msg = msg.__dict__.update(json.loads(self.response['message']))
+        data = binascii.unhexlify(self.response)
+        headerlen = struct.calcsize('>HL')
+        (msg_type, datalen) = struct.unpack('>HL', data[:headerlen])
+        data = BytesIO(data[headerlen:headerlen + datalen])
+        msg = protobuf.load_message(data, mapping.get_class(msg_type))
         self.response = None
         return msg
