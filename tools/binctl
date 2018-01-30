@@ -134,7 +134,7 @@ class BinImage(object):
         return header
 
     def fingerprint(self):
-        return pyblake2.blake2s(self.serialize_header(False)).hexdigest()
+        return pyblake2.blake2s(self.serialize_header(sig=False)).hexdigest()
 
     def sign(self, sigmask, signature):
         header = self.serialize_header(sig=False)
@@ -222,6 +222,7 @@ class VendorHeader(object):
         print('  * vimg    : (%d bytes)' % len(self.vimg))
         print('  * sigmask :', format_sigmask(self.sigmask))
         print('  * sig     :', binascii.hexlify(self.sig).decode())
+        print('  * fngprnt :', self.fingerprint())
         print()
 
     def serialize_header(self, sig=True):
@@ -241,6 +242,9 @@ class VendorHeader(object):
             header += IMAGE_SIG_SIZE * b'\x00'
         assert len(header) == self.hdrlen
         return header
+
+    def fingerprint(self):
+        return pyblake2.blake2s(self.serialize_header(sig=False)).hexdigest()
 
     def sign(self, sigmask, signature):
         header = self.serialize_header(sig=False)
