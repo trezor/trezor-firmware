@@ -87,12 +87,12 @@ async def backlight_slide(val: int, delay: int=20000, step: int=1):
     current = display.backlight()
     for i in range(current, val, -step if current > val else step):
         display.backlight(i)
-        await sleep
+        yield sleep
 
 
 def layout(f):
-    delay = const(1000)
-    step = const(3)
+    delay = const(35000)  # 35ms
+    step = const(20)
 
     async def inner(*args, **kwargs):
         await backlight_slide(BACKLIGHT_DIM, delay, step)
