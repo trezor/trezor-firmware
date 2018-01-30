@@ -35,10 +35,11 @@ async def animate_swipe():
     draw_delay = const(200000)
 
     sleep = loop.sleep(time_delay)
+    icon = res.load(ui.ICON_SWIPE)
     for t in ui.pulse(draw_delay):
         fg = ui.blend(ui.GREY, ui.DARK_GREY, t)
-        ui.display.icon(110, 210, res.load(ui.ICON_SWIPE), fg, ui.BG)
-        await sleep
+        ui.display.icon(110, 210, icon, fg, ui.BG)
+        yield sleep
 
 
 def render_scrollbar(page, page_count):

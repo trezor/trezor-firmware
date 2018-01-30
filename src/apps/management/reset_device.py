@@ -1,63 +1,94 @@
 from micropython import const
-from trezor import config, ui, wire
-from trezor.utils import unimport, chunks
 from ubinascii import hexlify
+
+from trezor import config, ui, wire
+from trezor.crypto import bip39, hashlib, random
+from trezor.messages import ButtonRequestType, FailureType, wire_types
+from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages.EntropyRequest import EntropyRequest
+from trezor.messages.Success import Success
+from trezor.ui.confirm import ConfirmDialog
+from trezor.ui.keyboard import MnemonicKeyboard
+from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
+from trezor.ui.text import Text
+from trezor.utils import chunks
+
+from apps.common import storage
+from apps.common.confirm import require_confirm
+from apps.management.change_pin import request_pin_confirm
 
 if __debug__:
     internal_entropy = None
     current_word = None
 
 
+@ui.layout
 async def reset_device(ctx, msg):
-    from trezor.ui.text import Text
-    from trezor.crypto import hashlib, random, bip39
-    from trezor.ui.keyboard import MnemonicKeyboard
-    from trezor.messages.EntropyRequest import EntropyRequest
-    from trezor.messages.Success import Success
-    from trezor.messages import FailureType
-    from trezor.messages import ButtonRequestType
-    from trezor.messages.wire_types import EntropyAck
-    from apps.management.change_pin import request_pin_confirm
-    from apps.common.confirm import require_confirm
-    from apps.common import storage
-
     if __debug__:
         global internal_entropy
 
+    # validate parameters and device state
     if msg.strength not in (128, 192, 256):
         raise wire.FailureError(
-            FailureType.ProcessError, 'Invalid strength (has to be 128, 192 or 256 bits)')
-
+            FailureType.ProcessError,
+            'Invalid strength (has to be 128, 192 or 256 bits)')
     if storage.is_initialized():
         raise wire.FailureError(
-            FailureType.UnexpectedMessage, 'Already initialized')
+            FailureType.UnexpectedMessage,
+            'Already initialized')
 
+    # generate and display internal entropy
     internal_entropy = random.bytes(32)
-
-    # display internal entropy
     if msg.display_random:
-        entropy_lines = chunks(hexlify(internal_entropy).decode(), 16)
-        entropy_content = Text('Internal entropy', ui.ICON_RESET, ui.MONO, *entropy_lines)
-        await require_confirm(ctx, entropy_content, ButtonRequestType.ResetDevice)
+        await show_entropy(ctx, internal_entropy)
 
     # request new PIN
     if msg.pin_protection:
-        curpin = ''
         newpin = await request_pin_confirm(ctx)
     else:
-        curpin = ''
         newpin = ''
 
     # request external entropy and compute mnemonic
-    external_entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
-    ehash = hashlib.sha256()
-    ehash.update(internal_entropy)
-    ehash.update(external_entropy_ack.entropy)
-    entropy = ehash.digest()
-    mnemonic = bip39.from_data(entropy[:msg.strength // 8])
+    ext_ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
+    mnemonic = generate_mnemonic(
+        msg.strength,
+        internal_entropy,
+        ext_ack.entropy)
 
-    # mnemonic safety warning
-    warning_content = Text(
+    # show warning, mnemonic, and confirm a random word
+    await show_warning(ctx)
+    await show_mnemonic(ctx, mnemonic)
+    await check_mnemonic(mnemonic)
+
+    # write PIN into storage
+    if not config.change_pin('', newpin):
+        raise wire.FailureError(
+            FailureType.ProcessError, 'Could not change PIN')
+
+    # write settings and mnemonic into storage
+    storage.load_settings(
+        label=msg.label, use_passphrase=msg.passphrase_protection)
+    storage.load_mnemonic(mnemonic)
+
+    # show success message
+    await show_success(ctx)
+
+    return Success(message='Initialized')
+
+
+def generate_mnemonic(strength: int,
+                      int_entropy: bytes,
+                      ext_entropy: bytes) -> bytes:
+    ehash = hashlib.sha256()
+    ehash.update(int_entropy)
+    ehash.update(ext_entropy)
+    entropy = ehash.digest()
+    mnemonic = bip39.from_data(entropy[:strength // 8])
+    return mnemonic
+
+
+async def show_warning(ctx):
+    content = Text(
         'Backup your seed', ui.ICON_NOCOPY, ui.NORMAL,
         'Never make a digital',
         'copy of your recovery',
@@ -65,37 +96,13 @@ async def reset_device(ctx, msg):
         'it online!')
     await require_confirm(
         ctx,
-        warning_content,
+        content,
         ButtonRequestType.ResetDevice,
         confirm='I understand',
         cancel=None)
 
-    # ask to write down mnemonic
-    await show_mnemonic(mnemonic)
 
-    # ask for random word to check correctness
-    words = mnemonic.split()
-    index = random.uniform(len(words))
-    res = await MnemonicKeyboard('Type %s. word' % (index + 1))
-    if res != words[index]:
-        content = Text(
-            'Wrong entry!', ui.ICON_CLEAR,
-            'You have entered',
-            'wrong seed word.',
-            'Please, reconnect',
-            'the device and try again.', icon_color=ui.RED)
-        ui.display.clear()
-        await content
-        raise wire.FailureError(FailureType.DataError, 'Wrong entry')
-
-    # write into storage
-    if curpin != newpin:
-        config.change_pin(curpin, newpin)
-    storage.load_settings(
-        label=msg.label, use_passphrase=msg.passphrase_protection)
-    storage.load_mnemonic(mnemonic)
-
-    # show success message
+async def show_success(ctx):
     content = Text(
         'Backup is done!', ui.ICON_CONFIRM,
         'Never make a digital',
@@ -109,12 +116,20 @@ async def reset_device(ctx, msg):
         confirm='Finish setup',
         cancel=None)
 
-    return Success(message='Initialized')
+
+async def show_entropy(ctx, entropy: int):
+    estr = hexlify(entropy).decode()
+    lines = chunks(estr, 16)
+    content = Text('Internal entropy', ui.ICON_RESET, ui.MONO, *lines)
+    await require_confirm(
+        ctx,
+        content,
+        ButtonRequestType.ResetDevice)
 
 
-async def show_mnemonic(mnemonic):
-    from trezor.ui.scroll import paginate
-
+async def show_mnemonic(ctx, mnemonic: str):
+    await ctx.call(
+        ButtonRequest(code=ButtonRequestType.ResetDevice), wire_types.ButtonAck)
     first_page = const(0)
     words_per_page = const(4)
     words = list(enumerate(mnemonic.split()))
@@ -122,25 +137,37 @@ async def show_mnemonic(mnemonic):
     await paginate(show_mnemonic_page, len(pages), first_page, pages)
 
 
-async def show_mnemonic_page(page, page_count, mnemonic):
-    from trezor.ui.button import Button
-    from trezor.ui.text import Text
-    from trezor.ui.scroll import Scrollpage, animate_swipe
-
-    lines = ['%d. %s' % (wi + 1, word) for wi, word in mnemonic[page]]
-    scroll_page = Scrollpage(
-        Text('Recovery seed setup', ui.ICON_RESET, ui.MONO, lines),
-        page,
-        page_count)
+@ui.layout
+async def show_mnemonic_page(page: int, page_count: int, pages: list):
+    lines = ['%d. %s' % (wi + 1, word) for wi, word in pages[page]]
+    content = Text('Recovery seed', ui.ICON_RESET, ui.MONO, *lines)
+    content = Scrollpage(content, page, page_count)
     ui.display.clear()
-    scroll_page.render()
 
     if page + 1 == page_count:
-        await Button(
-            ui.grid(4, n_x=1),
-            "I'm done",
-            normal_style=ui.BTN_CONFIRM,
-            active_style=ui.BTN_CONFIRM_ACTIVE)
-        ui.display.clear()
+        await ConfirmDialog(
+            content,
+            confirm="I'm done",
+            cancel=None)
     else:
+        content.render()
         await animate_swipe()
+
+
+async def check_mnemonic(mnemonic: str):
+    words = mnemonic.split()
+    index = random.uniform(len(words))
+    result = await MnemonicKeyboard('Type %s. word' % (index + 1))
+
+    if result != words[index]:
+        content = Text(
+            'Wrong entry!', ui.ICON_CLEAR,
+            'You have entered',
+            'wrong seed word.',
+            'Please, reconnect',
+            'the device and try again.', icon_color=ui.RED)
+        ui.display.clear()
+        content.render()
+        ui.display.refresh()
+        while True:
+            pass
