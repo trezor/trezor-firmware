@@ -22,20 +22,11 @@ class Text(ui.Widget):
         bg = ui.BG
         ui.header(self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, self.icon_color)
 
-        def process(eitem):
-            nonlocal offset_y
-            nonlocal style
-            nonlocal fg
-            if isinstance(eitem, str):
-                ui.display.text(offset_x, offset_y, eitem, style, fg, bg)
-                offset_y += TEXT_LINE_HEIGHT
-            elif isinstance(eitem, (tuple, list, dict, set)):
-                for i in eitem:
-                    process(i)
-            elif eitem == ui.MONO or eitem == ui.NORMAL or eitem == ui.BOLD:
-                style = eitem
-            else:
-                fg = eitem
-
         for item in self.content:
-            process(item)
+            if isinstance(item, str):
+                ui.display.text(offset_x, offset_y, item, style, fg, bg)
+                offset_y += TEXT_LINE_HEIGHT
+            elif item == ui.MONO or item == ui.NORMAL or item == ui.BOLD:
+                style = item
+            else:
+                fg = item
