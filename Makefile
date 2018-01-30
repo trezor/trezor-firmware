@@ -90,15 +90,15 @@ build_bootloader: ## build bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 
 build_prodtest: ## build production test firmware
-	$(SCONS) CFLAGS="$(CFLAGS)" $(PRODTEST_BUILD_DIR)/prodtest.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 build_reflash: ## build reflash firmware + reflash image
-	$(SCONS) CFLAGS="$(CFLAGS)" $(REFLASH_BUILD_DIR)/reflash.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(REFLASH_BUILD_DIR)/reflash.bin
 	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_firmware: res build_cross ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS)
@@ -186,9 +186,6 @@ vendorheader: ## construct and sign the default vendor header
 
 vendorheader_sl: ## construct SatoshiLabs vendor header
 	./tools/build_vendorheader 47fbdc84d8abef44fe6abde8f87b6ead821b7082ec63b9f7cc33dc53bf6c708d:9af22a52ab47a93091403612b3d6731a2dfef8a33383048ed7556a20e8b03c81:2218c25f8ba70c82eba8ed6a321df209c0a7643d014f33bf9317846f62923830 2 0.0 ....... SatoshiLabs assets/vendor_satoshilabs.toif embed/firmware/vendorheader_sl.bin
-
-vendorheader_sl_signed: ## apply signed SatoshiLabs vendor header
-	cp embed/firmware/vendorheader_sl_signed.bin embed/firmware/vendorheader.bin
 
 binctl: ## print info about binary files
 	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin

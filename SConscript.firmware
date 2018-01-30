@@ -398,7 +398,7 @@ obj_program.extend(env.Object(source=source_mpyc))
 obj_program.extend(
     env.Command(
         target='embed/firmware/vendorheader.o',
-        source='embed/firmware/vendorheader.bin',
+        source='embed/firmware/vendorheader.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'embed/firmware/vendorheader_sl_signed.bin',
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
@@ -418,5 +418,5 @@ program_bin = env.Command(
     action=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE $TARGET',
         '$BINCTL $TARGET -h',
-        '$BINCTL $TARGET -s 1:2 `$KEYCTL sign firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`',
+        '$BINCTL $TARGET -s 1:2 `$KEYCTL sign firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`' if ARGUMENTS.get('PRODUCTION', '0') == '0' else '',
     ], )
