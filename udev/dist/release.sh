@@ -4,7 +4,7 @@ set -e
 
 cd $(dirname $0)
 
-VERSION="1"
+VERSION="2"
 
 install -D -m 0644 ./trezor.rules    ./lib/udev/rules.d/52-trezor-extension.rules
 
