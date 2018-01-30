@@ -53,6 +53,14 @@ class UVarintType:
     WIRE_TYPE = 0
 
 
+class Sint32Type:
+    WIRE_TYPE = 0
+
+
+class Sint64Type:
+    WIRE_TYPE = 0
+
+
 class BoolType:
     WIRE_TYPE = 0
 
@@ -143,6 +151,10 @@ async def load_message(reader, msg_type):
 
         if ftype is UVarintType:
             fvalue = ivalue
+        elif ftype is Sint32Type:
+            fvalue = (ivalue >> 1) ^ ((ivalue << 31) & 0xffffffff)
+        elif ftype is Sint64Type:
+            fvalue = (ivalue >> 1) ^ ((ivalue << 63) & 0xffffffffffffffff)
         elif ftype is BoolType:
             fvalue = bool(ivalue)
         elif ftype is BytesType:
@@ -198,6 +210,12 @@ async def dump_message(writer, msg):
 
             if ftype is UVarintType:
                 await dump_uvarint(writer, svalue)
+
+            elif ftype is Sint32Type:
+                await dump_uvarint(writer, ((svalue << 1) & 0xffffffff) ^ (svalue >> 31))
+
+            elif ftype is Sint64Type:
+                await dump_uvarint(writer, ((svalue << 1) & 0xffffffffffffffff) ^ (svalue >> 63))
 
             elif ftype is BoolType:
                 await dump_uvarint(writer, int(svalue))
