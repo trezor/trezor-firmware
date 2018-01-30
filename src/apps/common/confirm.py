@@ -1,5 +1,4 @@
 from trezor import wire, ui, loop
-from trezor.utils import unimport
 
 # used to confirm/cancel the dialogs from outside of this module (i.e.
 # through debug link)
@@ -8,7 +7,6 @@ if __debug__:
 
 
 @ui.layout
-@unimport
 async def confirm(ctx, content, code=None, *args, **kwargs):
     from trezor.ui.confirm import ConfirmDialog, CONFIRMED
     from trezor.messages.ButtonRequest import ButtonRequest
@@ -31,7 +29,6 @@ async def confirm(ctx, content, code=None, *args, **kwargs):
 
 
 @ui.layout
-@unimport
 async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
     from trezor.ui.confirm import HoldToConfirmDialog, CONFIRMED
     from trezor.messages.ButtonRequest import ButtonRequest
@@ -53,7 +50,6 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
     return await waiter == CONFIRMED
 
 
-@unimport
 async def require_confirm(*args, **kwargs):
     from trezor.messages.FailureType import ActionCancelled
 

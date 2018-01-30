@@ -1,9 +1,7 @@
 from trezor import wire, ui, config
 from trezor.pin import pin_to_int
-from trezor.utils import unimport
 
 
-@unimport
 async def layout_load_device(ctx, msg):
     from trezor.crypto import bip39
     from trezor.messages.Success import Success

@@ -1,8 +1,6 @@
 from trezor import ui, wire
-from trezor.utils import unimport
 
 
-@unimport
 async def layout_apply_settings(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import ProcessError

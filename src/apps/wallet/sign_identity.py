@@ -1,5 +1,4 @@
 from trezor import ui
-from trezor.utils import unimport
 
 
 def serialize_identity(identity):
@@ -80,7 +79,6 @@ def sign_challenge(seckey: bytes,
     return signature
 
 
-@unimport
 async def layout_sign_identity(ctx, msg):
     from trezor.messages.SignedIdentity import SignedIdentity
     from ..common import coins

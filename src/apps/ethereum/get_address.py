@@ -1,8 +1,6 @@
 from trezor import wire, ui
-from trezor.utils import unimport
 
 
-@unimport
 async def layout_ethereum_get_address(ctx, msg):
     from trezor.messages.EthereumAddress import EthereumAddress
     from trezor.crypto.curve import secp256k1

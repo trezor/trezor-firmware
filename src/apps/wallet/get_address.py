@@ -1,8 +1,6 @@
 from trezor import wire, ui
-from trezor.utils import unimport
 
 
-@unimport
 async def layout_get_address(ctx, msg):
     from trezor.messages.Address import Address
     from trezor.messages.FailureType import ProcessError

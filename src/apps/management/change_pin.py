@@ -1,7 +1,6 @@
 from trezor import ui
 from trezor import config
 from trezor.pin import pin_to_int, show_pin_timeout
-from trezor.utils import unimport
 
 
 async def request_pin(ctx):
@@ -48,7 +47,6 @@ def confirm_change_pin(ctx, msg):
             'set new PIN?'))
 
 
-@unimport
 async def layout_change_pin(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.messages.Failure import Failure

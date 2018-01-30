@@ -1,4 +1,3 @@
-from trezor.utils import unimport
 from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.messages import FailureType
@@ -10,7 +9,6 @@ from apps.ethereum import tokens, layout
 MAX_CHAIN_ID = 2147483630
 
 
-@unimport
 async def ethereum_sign_tx(ctx, msg):
     from trezor.crypto.hashlib import sha3_256
 

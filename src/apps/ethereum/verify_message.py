@@ -1,7 +1,4 @@
-from trezor.utils import unimport
 
-
-@unimport
 async def ethereum_verify_message(ctx, msg):
     from .sign_message import message_digest
     from trezor.crypto.curve import secp256k1

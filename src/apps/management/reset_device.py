@@ -8,7 +8,6 @@ if __debug__:
     current_word = None
 
 
-@unimport
 async def reset_device(ctx, msg):
     from trezor.ui.text import Text
     from trezor.crypto import hashlib, random, bip39

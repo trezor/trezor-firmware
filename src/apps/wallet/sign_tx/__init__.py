@@ -1,8 +1,6 @@
-from trezor.utils import unimport
 from trezor import wire
 
 
-@unimport
 async def sign_tx(ctx, msg):
     from trezor.messages.RequestType import TXFINISHED
     from trezor.messages.wire_types import TxAck

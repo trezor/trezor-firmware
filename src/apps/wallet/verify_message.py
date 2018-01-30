@@ -1,8 +1,6 @@
 from trezor import ui
-from trezor.utils import unimport
 
 
-@unimport
 async def layout_verify_message(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.crypto.curve import secp256k1

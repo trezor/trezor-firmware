@@ -1,5 +1,4 @@
 from trezor import ui
-from trezor.utils import unimport
 
 
 def cipher_key_value(msg, seckey: bytes) -> bytes:
@@ -25,7 +24,6 @@ def cipher_key_value(msg, seckey: bytes) -> bytes:
     return aes.update(msg.value)
 
 
-@unimport
 async def layout_cipher_key_value(ctx, msg):
     from trezor.messages.CipheredKeyValue import CipheredKeyValue
     from ..common import seed

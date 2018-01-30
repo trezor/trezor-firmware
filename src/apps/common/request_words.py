@@ -1,5 +1,4 @@
 from trezor import wire, ui, loop
-from trezor.utils import unimport
 
 # used to confirm/cancel the dialogs from outside of this module (i.e.
 # through debug link)
@@ -8,7 +7,6 @@ if __debug__:
 
 
 @ui.layout
-@unimport
 async def request_words(ctx, content, code=None, *args, **kwargs):
     from trezor.ui.word_select import WordSelector
     from trezor.messages.ButtonRequest import ButtonRequest

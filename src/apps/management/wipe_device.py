@@ -1,8 +1,6 @@
 from trezor import ui
-from trezor.utils import unimport
 
 
-@unimport
 async def layout_wipe_device(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.ui.text import Text

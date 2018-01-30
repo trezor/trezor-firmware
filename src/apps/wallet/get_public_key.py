@@ -1,7 +1,4 @@
-from trezor.utils import unimport
 
-
-@unimport
 async def layout_get_public_key(ctx, msg):
     from trezor.messages.HDNodeType import HDNodeType
     from trezor.messages.PublicKey import PublicKey

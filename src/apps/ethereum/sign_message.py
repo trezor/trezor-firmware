@@ -1,5 +1,3 @@
-from trezor.utils import unimport
-
 
 def message_digest(message):
     from apps.wallet.sign_tx.signing import write_varint
@@ -16,7 +14,6 @@ def message_digest(message):
     return h.get_digest(True)
 
 
-@unimport
 async def ethereum_sign_message(ctx, msg):
     from trezor.messages.EthereumMessageSignature import EthereumMessageSignature
     from trezor.crypto.curve import secp256k1

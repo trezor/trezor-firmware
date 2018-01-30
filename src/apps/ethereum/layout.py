@@ -1,13 +1,12 @@
 from apps.common.confirm import *
 from trezor import wire, ui
-from trezor.utils import unimport, chunks
+from trezor.utils import chunks
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from ubinascii import hexlify
 from . import networks
 
 
-@unimport
 async def confirm_tx(ctx, to, value, chain_id, token=None):  # todo wording
     str_to = '0x' + hexlify(to).decode()  # todo use ethereum address format
     content = Text('Confirm transaction', ui.ICON_RESET,
@@ -17,7 +16,6 @@ async def confirm_tx(ctx, to, value, chain_id, token=None):  # todo wording
     return await confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
-@unimport
 async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):  # todo wording
     content = Text('Confirm fee', ui.ICON_RESET,
                    'Sending: %s' % format_amount(spending, token, chain_id),
@@ -26,7 +24,6 @@ async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None)
     return await hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
-@unimport
 async def confirm_data(ctx, data, data_total):  # todo wording
     str_data = hexlify(data[:8]).decode() + '..'
     content = Text('Confirm data:', ui.ICON_RESET,

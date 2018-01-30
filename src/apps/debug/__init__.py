@@ -1,17 +1,20 @@
 from trezor import log
 from trezor import loop
+from trezor.utils import unimport
 from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import \
     DebugLinkDecision, DebugLinkGetState, DebugLinkStop, \
     DebugLinkMemoryRead, DebugLinkMemoryWrite, DebugLinkFlashErase
 
 
+@unimport
 async def dispatch_DebugLinkDecision(ctx, msg):
     from trezor.ui.confirm import CONFIRMED, CANCELLED
     from apps.common.confirm import signal
     signal.send(CONFIRMED if msg.yes_no else CANCELLED)
 
 
+@unimport
 async def dispatch_DebugLinkGetState(ctx, msg):
     from trezor.messages.DebugLinkState import DebugLinkState
     from apps.common import storage
@@ -26,10 +29,12 @@ async def dispatch_DebugLinkGetState(ctx, msg):
     return m
 
 
+@unimport
 async def dispatch_DebugLinkStop(ctx, msg):
     pass
 
 
+@unimport
 async def dispatch_DebugLinkMemoryRead(ctx, msg):
     from trezor.messages.DebugLinkMemory import DebugLinkMemory
     from uctypes import bytes_at
@@ -38,6 +43,7 @@ async def dispatch_DebugLinkMemoryRead(ctx, msg):
     return m
 
 
+@unimport
 async def dispatch_DebugLinkMemoryWrite(ctx, msg):
     from uctypes import bytearray_at
     l = len(msg.memory)
@@ -45,6 +51,7 @@ async def dispatch_DebugLinkMemoryWrite(ctx, msg):
     data[0:l] = msg.memory
 
 
+@unimport
 async def dispatch_DebugLinkFlashErase(ctx, msg):
     # TODO: erase(msg.sector)
     pass
