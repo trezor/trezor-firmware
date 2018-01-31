@@ -86,13 +86,16 @@ static void usb_init_all(void)
     };
 
     static const usb_dev_info_t dev_info = {
-        .vendor_id     = 0x1209,
-        .product_id    = 0x53C1,
-        .release_num   = 0x0200,
-        .manufacturer  = "SatoshiLabs",
-        .product       = "TREZOR",
-        .serial_number = "000000000000",
-        .interface     = "TREZOR Interface",
+        .device_class    = 0xEF,    // Composite Device Class
+        .device_subclass = 0x02,    // Common Class
+        .device_protocol = 0x01,    // Interface Association Descriptor
+        .vendor_id       = 0x1209,
+        .product_id      = 0x53C1,
+        .release_num     = 0x0200,
+        .manufacturer    = "SatoshiLabs",
+        .product         = "TREZOR",
+        .serial_number   = "000000000000",
+        .interface       = "TREZOR Interface",
     };
 
     static uint8_t tx_packet[VCP_PACKET_LEN];

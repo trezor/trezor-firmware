@@ -93,6 +93,9 @@ typedef struct {
 } usb_dev_string_table_t;
 
 typedef struct {
+    uint8_t device_class;
+    uint8_t device_subclass;
+    uint8_t device_protocol;
     uint16_t vendor_id;
     uint16_t product_id;
     uint16_t release_num;

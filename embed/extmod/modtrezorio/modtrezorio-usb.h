@@ -31,6 +31,9 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 }
 
 /// def __init__(self,
+///              device_class: int=0,
+///              device_subclass: int=0,
+///              device_protocol: int=0,
 ///              vendor_id: int,
 ///              product_id: int,
 ///              release_num: int,
@@ -43,6 +46,9 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_device_class,                    MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_device_subclass,                 MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_device_protocol,                 MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_vendor_id,     MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_product_id,    MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_release_num,   MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
@@ -54,14 +60,20 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
 
-    const mp_int_t vendor_id      = vals[0].u_int;
-    const mp_int_t product_id     = vals[1].u_int;
-    const mp_int_t release_num    = vals[2].u_int;
-    const char *manufacturer  = get_0str(vals[3].u_obj, 0, 32);
-    const char *product       = get_0str(vals[4].u_obj, 0, 32);
-    const char *serial_number = get_0str(vals[5].u_obj, 0, 32);
-    const char *interface     = get_0str(vals[6].u_obj, 0, 32);
+    const mp_int_t device_class     = vals[0].u_int;
+    const mp_int_t device_subclass  = vals[1].u_int;
+    const mp_int_t device_protocol  = vals[2].u_int;
+    const mp_int_t vendor_id        = vals[3].u_int;
+    const mp_int_t product_id       = vals[4].u_int;
+    const mp_int_t release_num      = vals[5].u_int;
+    const char *manufacturer        = get_0str(vals[6].u_obj, 0, 32);
+    const char *product             = get_0str(vals[7].u_obj, 0, 32);
+    const char *serial_number       = get_0str(vals[8].u_obj, 0, 32);
+    const char *interface           = get_0str(vals[9].u_obj, 0, 32);
 
+    CHECK_PARAM_RANGE(device_class, 0, 255)
+    CHECK_PARAM_RANGE(device_subclass, 0, 255)
+    CHECK_PARAM_RANGE(device_protocol, 0, 255)
     CHECK_PARAM_RANGE(vendor_id, 0, 65535)
     CHECK_PARAM_RANGE(product_id, 0, 65535)
     CHECK_PARAM_RANGE(release_num, 0, 65535)
@@ -83,13 +95,16 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
 
     o->state = USB_CLOSED;
 
-    o->info.vendor_id     = (uint16_t)(vendor_id);
-    o->info.product_id    = (uint16_t)(product_id);
-    o->info.release_num   = (uint16_t)(release_num);
-    o->info.manufacturer  = manufacturer;
-    o->info.product       = product;
-    o->info.serial_number = serial_number;
-    o->info.interface     = interface;
+    o->info.device_class    = (uint8_t)(device_class);
+    o->info.device_subclass = (uint8_t)(device_subclass);
+    o->info.device_protocol = (uint8_t)(device_protocol);
+    o->info.vendor_id       = (uint16_t)(vendor_id);
+    o->info.product_id      = (uint16_t)(product_id);
+    o->info.release_num     = (uint16_t)(release_num);
+    o->info.manufacturer    = manufacturer;
+    o->info.product         = product;
+    o->info.serial_number   = serial_number;
+    o->info.interface       = interface;
     mp_obj_list_init(&o->ifaces, 0);
 
     return MP_OBJ_FROM_PTR(o);

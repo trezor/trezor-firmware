@@ -64,9 +64,9 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
     usb_dev_desc.bcdUSB             = 0x0210;                // USB 2.1
-    usb_dev_desc.bDeviceClass       = 0x00;                  // Use class code info from Interface Descriptors
-    usb_dev_desc.bDeviceSubClass    = 0x00;
-    usb_dev_desc.bDeviceProtocol    = 0x00;
+    usb_dev_desc.bDeviceClass       = dev_info->device_class;
+    usb_dev_desc.bDeviceSubClass    = dev_info->device_subclass;
+    usb_dev_desc.bDeviceProtocol    = dev_info->device_protocol;
     usb_dev_desc.bMaxPacketSize0    = USB_MAX_EP0_SIZE;
     usb_dev_desc.idVendor           = dev_info->vendor_id;
     usb_dev_desc.idProduct          = dev_info->product_id;
