@@ -771,15 +771,15 @@ void fsm_msgGetAddress(GetAddress *msg)
 	}
 
 	if (msg->has_show_display && msg->show_display) {
-		char desc[16];
+		char desc[20];
 		if (msg->has_multisig) {
-			strlcpy(desc, "Msig __ of __:", sizeof(desc));
+			strlcpy(desc, "Multisig __ of __:", sizeof(desc));
 			const uint32_t m = msg->multisig.m;
 			const uint32_t n = msg->multisig.pubkeys_count;
-			desc[5] = (m < 10) ? ' ': ('0' + (m / 10));
-			desc[6] = '0' + (m % 10);
-			desc[11] = (n < 10) ? ' ': ('0' + (n / 10));
-			desc[12] = '0' + (n % 10);
+			desc[9] = (m < 10) ? ' ': ('0' + (m / 10));
+			desc[10] = '0' + (m % 10);
+			desc[15] = (n < 10) ? ' ': ('0' + (n / 10));
+			desc[16] = '0' + (n % 10);
 		} else {
 			strlcpy(desc, _("Address:"), sizeof(desc));
 		}
