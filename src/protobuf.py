@@ -86,11 +86,10 @@ class MessageType:
                 self.__dict__ == rhs.__dict__)
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__, self.__dict__)
+        return '<%s>' % self.__class__.__name__
 
 
 class LimitedReader:
-
     def __init__(self, reader, limit):
         self.reader = reader
         self.limit = limit
@@ -105,7 +104,6 @@ class LimitedReader:
 
 
 class CountingWriter:
-
     def __init__(self):
         self.size = 0
 
