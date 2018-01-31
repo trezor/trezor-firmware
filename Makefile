@@ -182,7 +182,6 @@ gdb_firmware: $(FIRMWARE_BUILD_DIR)/firmware.elf ## start remote gdb session to 
 
 binctl: ## print info about binary files
 	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
-	./tools/binctl $(PRODTEST_BUILD_DIR)/prodtest.bin
 	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 bloaty: ## run bloaty size profiler
