@@ -133,10 +133,12 @@ obj_program += env.Object(source=SOURCE_REFLASH)
 obj_program += env.Object(source=SOURCE_STMHAL)
 obj_program += env.Object(source=SOURCE_TREZORHAL)
 
+VENDORHEADER = 'embed/vendorheader/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
+
 obj_program.extend(
     env.Command(
         target='embed/reflash/vendorheader.o',
-        source='embed/firmware/vendorheader.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'embed/firmware/vendorheader_sl_signed.bin',
+        source=VENDORHEADER,
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))

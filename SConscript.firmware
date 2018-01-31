@@ -286,7 +286,7 @@ SOURCE_PY.extend(Glob('src/*/*/*/*.py'))
 SOURCE_PY.extend(Glob('src/*/*/*/*/*.py'))
 SOURCE_PY_DIR = 'src/'
 
-env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
 env.Tool('micropython')
 
@@ -395,10 +395,12 @@ obj_program.extend(env.Object(source=SOURCE_STMHAL))
 obj_program.extend(env.Object(source=SOURCE_TREZORHAL))
 obj_program.extend(env.Object(source=source_mpyc))
 
+VENDORHEADER = 'embed/vendorheader/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
+
 obj_program.extend(
     env.Command(
         target='embed/firmware/vendorheader.o',
-        source='embed/firmware/vendorheader.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'embed/firmware/vendorheader_sl_signed.bin',
+        source=VENDORHEADER,
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
