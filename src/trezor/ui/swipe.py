@@ -1,7 +1,6 @@
-import utime
 from micropython import const
 from trezor import io, ui
-from . import contains, rotate
+from trezor.ui import contains, rotate
 
 SWIPE_UP = const(0x01)
 SWIPE_DOWN = const(0x02)

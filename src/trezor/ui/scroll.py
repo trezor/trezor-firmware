@@ -50,13 +50,13 @@ def render_scrollbar(page, page_count):
     if page_count * padding > bbox:
         padding = bbox // page_count
 
-    x = const(225)
+    x = const(220)
     y = (bbox // 2) - (page_count // 2) * padding
 
     for i in range(0, page_count):
         if i != page:
             ui.display.bar_radius(x, y + i * padding, size,
-                                  size, ui.DARK_GREY, ui.BG, 4)
+                                  size, ui.GREY, ui.BG, 4)
     ui.display.bar_radius(x, y + page * padding, size,
                           size, ui.FG, ui.BG, 4)
 
