@@ -24,4 +24,10 @@ done
 echo
 echo 'Summary:'
 printf '%s\n' "${results[@]}"
+echo '-------------------'
+if [ $error == 0 ]; then
+    echo 'ALL OK'
+else
+    echo 'FAIL at least one error occurred'
+fi
 exit $error
