@@ -6,6 +6,13 @@ from trezor.messages.HDNodePathType import HDNodePathType
 from apps.wallet.sign_tx.writers import *
 
 
+def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> int:
+    for i, hd in enumerate(multisig.pubkeys):
+        if multisig_get_pubkey(hd) == pubkey:
+            return i
+    return -1
+
+
 def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
     p = hd.address_n
     n = hd.node

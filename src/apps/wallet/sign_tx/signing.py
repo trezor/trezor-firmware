@@ -238,9 +238,10 @@ async def sign_tx(tx: SignTx, root):
                     key_sign = node_derive(root, txi.address_n)
                     key_sign_pub = key_sign.public_key()
                     # for the signing process the script_sig is equal
-                    # to the scriptPubKey (P2PKH) or a redeem script (P2SH)
+                    # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
                     if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
-                        txi_sign.script_sig = script_multisig(multisig_get_pubkeys(txi_sign.multisig), txi_sign.multisig.m)
+                        txi_sign.script_sig = script_multisig(multisig_get_pubkeys(txi_sign.multisig),
+                                                              txi_sign.multisig.m)
                     elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
                         txi_sign.script_sig = output_script_p2pkh(
                             ecdsa_hash_pubkey(key_sign_pub))
@@ -269,6 +270,13 @@ async def sign_tx(tx: SignTx, root):
             if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
                 raise SigningError(FailureType.ProcessError,
                                    'Transaction has changed during signing')
+
+            # if multisig, check if singing with a key that is included in multisig
+            if txi_sign.multisig:
+                pubkey_idx = multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
+                if pubkey_idx < 0:
+                    raise SigningError(FailureType.DataError,
+                                       'Pubkey not found in multisig script')
 
             # compute the signature from the tx digest
             signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, True))
