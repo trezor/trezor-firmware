@@ -19,7 +19,7 @@ class AddressError(Exception):
     pass
 
 
-def get_address(script_type: InputScriptType, coin: CoinType, node) -> str:
+def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=None) -> str:
 
     if script_type == InputScriptType.SPENDADDRESS:  # p2pkh
         return node.address(coin.address_type)
@@ -35,6 +35,21 @@ def get_address(script_type: InputScriptType, coin: CoinType, node) -> str:
             raise AddressError(FailureType.ProcessError,
                                'Segwit not enabled on this coin')
         return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
+
+    elif script_type == InputScriptType.SPENDMULTISIG:  # multisig
+        if multisig is None:
+            raise AddressError(FailureType.ProcessError,
+                               'Multisig details required')
+        pubkey = node.public_key()
+        index = multisig_pubkey_index(multisig, pubkey)
+        if index is None:
+            raise AddressError(FailureType.ProcessError,
+                               'Public key not found')
+        if coin.address_type_p2sh is None:
+            raise AddressError(FailureType.ProcessError,
+                               'Multisig not enabled on this coin')
+
+        return address_multisig_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
 
     else:
         raise AddressError(FailureType.ProcessError,

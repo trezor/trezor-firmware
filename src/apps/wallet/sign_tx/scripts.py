@@ -122,14 +122,14 @@ def input_script_multisig(current_signature, other_signatures, pubkeys, m: int):
 
 
 # returns a ripedm(sha256()) hash of a multisig script used in P2SH
-def output_script_multisig_p2sh(pubkeys, m) -> HashWriter:
+def output_script_multisig_p2sh(pubkeys, m) -> bytes:
     script = script_multisig(pubkeys, m)
     h = sha256(script).digest()
     return ripemd160(h).digest()
 
 
 # returns a sha256() hash of a multisig script used in native P2WSH
-def output_script_multisig_p2wsh(pubkeys, m) -> HashWriter:
+def output_script_multisig_p2wsh(pubkeys, m) -> bytes:
     for pubkey in pubkeys:
         if len(pubkey) != 33:
             raise Exception  # only compressed public keys are allowed for P2WSH
@@ -137,7 +137,7 @@ def output_script_multisig_p2wsh(pubkeys, m) -> HashWriter:
     return sha256(script).digest()
 
 
-def script_multisig(pubkeys, m) -> bytes:
+def script_multisig(pubkeys, m) -> bytearray:
     n = len(pubkeys)
     if n < 1 or n > 15:
         raise Exception

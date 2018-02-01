@@ -438,6 +438,10 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
     if o.address_n:  # change output
         if o.address:
             raise SigningError(FailureType.DataError, 'Address in change output')
+        if o.multisig:
+            if not check_address_n_against_pubkeys(o.multisig, o.address_n):
+                raise AddressError(FailureType.ProcessError,
+                                   'address_n must match one of the address_n in the MultisigRedeemScriptType pubkeys')
         o.address = get_address_for_change(o, coin, root)
     else:
         if not o.address:
@@ -471,7 +475,7 @@ def get_address_for_change(o: TxOutputType, coin: CoinType, root):
         input_script_type = InputScriptType.SPENDP2SHWITNESS
     else:
         raise SigningError(FailureType.DataError, 'Invalid script type')
-    return get_address(input_script_type, coin, node_derive(root, o.address_n))
+    return get_address(input_script_type, coin, node_derive(root, o.address_n), o.multisig)
 
 
 def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool:
