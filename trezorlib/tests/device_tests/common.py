@@ -37,6 +37,13 @@ except ImportError as e:
     HID_ENABLED = False
 
 try:
+    from trezorlib.transport_webusb import WebUsbTransport
+    WEBUSB_ENABLED = True
+except ImportError as e:
+    print('WebUsb transport disabled:', e)
+    WEBUSB_ENABLED = False
+
+try:
     from trezorlib.transport_pipe import PipeTransport
     PIPE_ENABLED = True
 except ImportError as e:
@@ -66,6 +73,11 @@ def get_transport():
         wirelink = devices[0]
         debuglink = devices[0].find_debug()
 
+    elif WEBUSB_ENABLED and WebUsbTransport.enumerate():
+        devices = WebUsbTransport.enumerate()
+        wirelink = devices[0]
+        debuglink = devices[0].find_debug()
+
     elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
         wirelink = PipeTransport('/tmp/pipe.trezor', False)
         debuglink = PipeTransport('/tmp/pipe.trezor_debug', False)
@@ -79,6 +91,8 @@ def get_transport():
 
 if HID_ENABLED and HidTransport.enumerate():
     print('Using TREZOR')
+elif WEBUSB_ENABLED and WebUsbTransport.enumerate():
+    print('Using TREZOR via WebUSB')
 elif PIPE_ENABLED and pipe_exists('/tmp/pipe.trezor.to'):
     print('Using Emulator (v1=pipe)')
 elif UDP_ENABLED:

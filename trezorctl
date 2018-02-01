@@ -68,6 +68,10 @@ def get_transport_class_by_name(name):
         from trezorlib.transport_hid import HidTransport
         return HidTransport
 
+    if name == 'webusb':
+        from trezorlib.transport_webusb import WebUsbTransport
+        return WebUsbTransport
+
     if name == 'udp':
         from trezorlib.transport_udp import UdpTransport
         return UdpTransport
@@ -90,7 +94,7 @@ def get_transport(transport_name, path):
 
 
 @click.group()
-@click.option('-t', '--transport', type=click.Choice(['usb', 'udp', 'pipe', 'bridge']), default='usb', help='Select transport used for communication.')
+@click.option('-t', '--transport', type=click.Choice(['usb', 'webusb', 'udp', 'pipe', 'bridge']), default='usb', help='Select transport used for communication.')
 @click.option('-p', '--path', help='Select device by transport-specific path.')
 @click.option('-v', '--verbose', is_flag=True, help='Show communication messages.')
 @click.option('-j', '--json', 'is_json', is_flag=True, help='Print result as JSON object')
