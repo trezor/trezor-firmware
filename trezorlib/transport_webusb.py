@@ -70,7 +70,7 @@ class WebUsbHandle(object):
 
 class WebUsbTransport(Transport):
     '''
-    HidTransport implements transport over USB HID interface.
+    WebUsbTransport implements transport over WebUSB interface.
     '''
 
     def __init__(self, device, protocol=None, handle=None, debug=False):
@@ -109,12 +109,12 @@ class WebUsbTransport(Transport):
         for transport in WebUsbTransport.enumerate():
             if path is None or dev_to_str(transport.device) == path:
                 return transport
-        raise TransportException('HID device not found')
+        raise TransportException('WebUSB device not found')
 
     def find_debug(self):
         if isinstance(self.protocol, ProtocolV2):
             # TODO test this
-            # For v2 protocol, lets use the same HID interface, but with a different session
+            # For v2 protocol, lets use the same WebUSB interface, but with a different session
             protocol = ProtocolV2()
             debug = WebUsbTransport(self.device, protocol, self.handle)
             return debug
@@ -123,7 +123,7 @@ class WebUsbTransport(Transport):
             protocol = ProtocolV1()
             debug = WebUsbTransport(self.device, protocol, None, True)
             return debug
-        raise TransportException('Debug HID device not found')
+        raise TransportException('Debug WebUSB device not found')
 
     def open(self):
         interface = DEBUG_INTERFACE if self.debug else INTERFACE

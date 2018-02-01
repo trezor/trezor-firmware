@@ -40,7 +40,7 @@ try:
     from trezorlib.transport_webusb import WebUsbTransport
     WEBUSB_ENABLED = True
 except ImportError as e:
-    print('WebUsb transport disabled:', e)
+    print('WebUSB transport disabled:', e)
     WEBUSB_ENABLED = False
 
 try:

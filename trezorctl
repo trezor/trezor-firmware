@@ -64,7 +64,7 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
 
 def get_transport_class_by_name(name):
 
-    if name == 'usb':
+    if name == 'hid':
         from trezorlib.transport_hid import HidTransport
         return HidTransport
 
@@ -94,7 +94,7 @@ def get_transport(transport_name, path):
 
 
 @click.group()
-@click.option('-t', '--transport', type=click.Choice(['usb', 'webusb', 'udp', 'pipe', 'bridge']), default='usb', help='Select transport used for communication.')
+@click.option('-t', '--transport', type=click.Choice(['hid', 'webusb', 'udp', 'pipe', 'bridge']), default='hid', help='Select transport used for communication.')
 @click.option('-p', '--path', help='Select device by transport-specific path.')
 @click.option('-v', '--verbose', is_flag=True, help='Show communication messages.')
 @click.option('-j', '--json', 'is_json', is_flag=True, help='Print result as JSON object')
