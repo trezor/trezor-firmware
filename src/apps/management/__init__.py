@@ -41,7 +41,9 @@ def dispatch_ChangePin(*args, **kwargs):
 
 
 def boot():
-    register(LoadDevice, protobuf_workflow, dispatch_LoadDevice)
+    # only enable LoadDevice in debug builds
+    if __debug__:
+        register(LoadDevice, protobuf_workflow, dispatch_LoadDevice)
     register(ResetDevice, protobuf_workflow, dispatch_ResetDevice)
     register(WipeDevice, protobuf_workflow, dispatch_WipeDevice)
     register(RecoveryDevice, protobuf_workflow, dispatch_RecoveryDevice)
