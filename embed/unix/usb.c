@@ -24,45 +24,59 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
 // and emulates HID/WebUSB interface TREZOR_UDP_IFACE
 // gracefully ignores all other USB interfaces
 
-#define TREZOR_UDP_IFACE  0
-#define TREZOR_UDP_PORT   21324
+#define USBD_MAX_NUM_INTERFACES     8
+#define TREZOR_UDP_PORT             21324
 
-static usb_iface_type_t emulator_usb_iface_type = USB_IFACE_TYPE_DISABLED;
-
-static int sock = -1;
-static struct sockaddr_in si_me, si_other;
-static socklen_t slen = 0;
+static struct {
+    usb_iface_type_t type;
+    int sock;
+    struct sockaddr_in si_me, si_other;
+    socklen_t slen;
+} usb_ifaces[USBD_MAX_NUM_INTERFACES];
 
 void usb_init(const usb_dev_info_t *dev_info) {
     (void)dev_info;
+    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+        usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
+        usb_ifaces[i].sock = -1;
+        memset(&usb_ifaces[i].si_me, 0, sizeof(struct sockaddr_in));
+        memset(&usb_ifaces[i].si_other, 0, sizeof(struct sockaddr_in));
+        usb_ifaces[i].slen = 0;
+    }
 }
 
 void usb_deinit(void) {
 }
 
 void usb_start(void) {
-    // start server only if interface 0 is either HID or WebUSB
-    if (emulator_usb_iface_type == USB_IFACE_TYPE_HID || emulator_usb_iface_type == USB_IFACE_TYPE_WEBUSB) {
-        sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        ensure(sectrue * (sock >= 0), NULL);
+    const char *ip = getenv("TREZOR_UDP_IP");
+    const char *port = getenv("TREZOR_UDP_PORT");
 
-        fcntl(sock, F_SETFL, O_NONBLOCK);
+    // iterate interfaces
+    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
+        // skip if not HID or WebUSB interface
+        if (usb_ifaces[i].type != USB_IFACE_TYPE_HID && usb_ifaces[i].type != USB_IFACE_TYPE_WEBUSB) {
+            continue;
+        }
 
-        si_me.sin_family = AF_INET;
-        const char *ip = getenv("TREZOR_UDP_IP");
+        usb_ifaces[i].sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        ensure(sectrue * (usb_ifaces[i].sock >= 0), NULL);
+
+        fcntl(usb_ifaces[i].sock, F_SETFL, O_NONBLOCK);
+
+        usb_ifaces[i].si_me.sin_family = AF_INET;
         if (ip) {
-            si_me.sin_addr.s_addr = inet_addr(ip);
+            usb_ifaces[i].si_me.sin_addr.s_addr = inet_addr(ip);
         } else {
-            si_me.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+            usb_ifaces[i].si_me.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         }
-        const char *port = getenv("TREZOR_UDP_PORT");
         if (port) {
-            si_me.sin_port = htons(atoi(port));
+            usb_ifaces[i].si_me.sin_port = htons(atoi(port) + i);
         } else {
-            si_me.sin_port = htons(TREZOR_UDP_PORT);
+            usb_ifaces[i].si_me.sin_port = htons(TREZOR_UDP_PORT + i);
         }
 
-        ensure(sectrue * (0 == bind(sock, (struct sockaddr*)&si_me, sizeof(si_me))), NULL);
+        ensure(sectrue * (0 == bind(usb_ifaces[i].sock, (struct sockaddr*)&usb_ifaces[i].si_me, sizeof(struct sockaddr_in))), NULL);
     }
 }
 
@@ -70,121 +84,114 @@ void usb_stop(void) {
 }
 
 secbool usb_hid_add(const usb_hid_info_t *info) {
-    // store iface type if it is the emulated iface
-    if (info->iface_num == TREZOR_UDP_IFACE) {
-        emulator_usb_iface_type = USB_IFACE_TYPE_HID;
+    if (info->iface_num < USBD_MAX_NUM_INTERFACES && usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
+        usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_HID;
     }
     return sectrue;
 }
 
 secbool usb_webusb_add(const usb_webusb_info_t *info) {
-    // store iface type if it is the emulated iface
-    if (info->iface_num == TREZOR_UDP_IFACE) {
-        emulator_usb_iface_type = USB_IFACE_TYPE_WEBUSB;
+    if (info->iface_num < USBD_MAX_NUM_INTERFACES && usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
+        usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_WEBUSB;
     }
     return sectrue;
 }
 
 secbool usb_vcp_add(const usb_vcp_info_t *info) {
+    if (info->iface_num < USBD_MAX_NUM_INTERFACES && usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
+        usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_VCP;
+    }
     return sectrue;
 }
 
-static secbool usb_emulated_can_read(uint8_t iface_num) {
+static secbool usb_emulated_poll(uint8_t iface_num, short dir) {
     struct pollfd fds[] = {
-        { sock, POLLIN, 0 },
+        { usb_ifaces[iface_num].sock, dir, 0 },
     };
     int r = poll(fds, 1, 0);
     return sectrue * (r > 0);
-}
-
-secbool usb_hid_can_read(uint8_t iface_num) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_HID) {
-        return secfalse;
-    }
-    return usb_emulated_can_read(iface_num);
-}
-
-secbool usb_webusb_can_read(uint8_t iface_num) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_WEBUSB) {
-        return secfalse;
-    }
-    return usb_emulated_can_read(iface_num);
-}
-
-static secbool usb_emulated_can_write(uint8_t iface_num) {
-    struct pollfd fds[] = {
-        { sock, POLLOUT, 0 },
-    };
-    int r = poll(fds, 1, 0);
-    return sectrue * (r > 0);
-}
-
-secbool usb_hid_can_write(uint8_t iface_num) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_HID) {
-        return secfalse;
-    }
-    return usb_emulated_can_write(iface_num);
-}
-
-secbool usb_webusb_can_write(uint8_t iface_num) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_WEBUSB) {
-        return secfalse;
-    }
-    return usb_emulated_can_write(iface_num);
 }
 
 static int usb_emulated_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
     struct sockaddr_in si;
     socklen_t sl = sizeof(si);
-    ssize_t r = recvfrom(sock, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
+    ssize_t r = recvfrom(usb_ifaces[iface_num].sock, buf, len, MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
     if (r < 0) {
         return r;
     }
-    si_other = si;
-    slen = sl;
+    usb_ifaces[iface_num].si_other = si;
+    usb_ifaces[iface_num].slen = sl;
     static const char *ping_req = "PINGPING";
     static const char *ping_resp = "PONGPONG";
     if (r == strlen(ping_req) && 0 == memcmp(ping_req, buf, strlen(ping_req))) {
-        if (slen > 0) {
-            sendto(sock, ping_resp, strlen(ping_resp), MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);
+        if (usb_ifaces[iface_num].slen > 0) {
+            sendto(usb_ifaces[iface_num].sock, ping_resp, strlen(ping_resp), MSG_DONTWAIT, (const struct sockaddr *)&usb_ifaces[iface_num].si_other, usb_ifaces[iface_num].slen);
         }
         return 0;
     }
     return r;
 }
 
+static int usb_emulated_write(uint8_t iface_num, const uint8_t *buf, uint32_t len)
+{
+    ssize_t r = len;
+    if (usb_ifaces[iface_num].slen > 0) {
+        r = sendto(usb_ifaces[iface_num].sock, buf, len, MSG_DONTWAIT, (const struct sockaddr *)&usb_ifaces[iface_num].si_other, usb_ifaces[iface_num].slen);
+    }
+    return r;
+}
+
+secbool usb_hid_can_read(uint8_t iface_num) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
+        return secfalse;
+    }
+    return usb_emulated_poll(iface_num, POLLIN);
+}
+
+secbool usb_webusb_can_read(uint8_t iface_num) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
+        return secfalse;
+    }
+    return usb_emulated_poll(iface_num, POLLIN);
+}
+
+secbool usb_hid_can_write(uint8_t iface_num) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
+        return secfalse;
+    }
+    return usb_emulated_poll(iface_num, POLLOUT);
+}
+
+secbool usb_webusb_can_write(uint8_t iface_num) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
+        return secfalse;
+    }
+    return usb_emulated_poll(iface_num, POLLOUT);
+}
+
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_HID) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
         return 0;
     }
     return usb_emulated_read(iface_num, buf, len);
 }
 
 int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_WEBUSB) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
         return 0;
     }
     return usb_emulated_read(iface_num, buf, len);
 }
 
-static int usb_emulated_write(uint8_t iface_num, const uint8_t *buf, uint32_t len)
-{
-    ssize_t r = len;
-    if (slen > 0) {
-        r = sendto(sock, buf, len, MSG_DONTWAIT, (const struct sockaddr *)&si_other, slen);
-    }
-    return r;
-}
-
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_HID) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
         return 0;
     }
     return usb_emulated_write(iface_num, buf, len);
 }
 
 int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-    if (iface_num != TREZOR_UDP_IFACE || emulator_usb_iface_type != USB_IFACE_TYPE_WEBUSB) {
+    if (iface_num >= USBD_MAX_NUM_INTERFACES || usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
         return 0;
     }
     return usb_emulated_write(iface_num, buf, len);
