@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import print_function
 
 '''
@@ -16,7 +16,7 @@ import hashlib
 import binascii
 
 from trezorlib.client import TrezorClient
-from trezorlib.transport_hid import HidTransport
+from trezorlib.device import TrezorDevice
 
 # Python2 vs Python3
 try:
@@ -26,11 +26,11 @@ except NameError:
 
 
 def wait_for_devices():
-    devices = HidTransport.enumerate()
+    devices = TrezorDevice.enumerate()
     while not len(devices):
         sys.stderr.write("Please connect TREZOR to computer and press Enter...")
         input()
-        devices = HidTransport.enumerate()
+        devices = TrezorDevice.enumerate()
 
     return devices
 

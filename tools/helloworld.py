@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import print_function
 
 from trezorlib.client import TrezorClient
-from trezorlib.transport_hid import HidTransport
+from trezorlib.device import TrezorDevice
 
 
 def main():
-    # List all connected TREZORs on USB
-    devices = HidTransport.enumerate()
+    # List all connected TREZORs on USB/UDP
+    devices = TrezorDevice.enumerate()
 
     # Check whether we found any
     if len(devices) == 0:
