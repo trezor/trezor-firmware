@@ -340,6 +340,9 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev ,
 #if (USBD_LPM_ENABLED == 1)
   case USB_DESC_TYPE_BOS:
     pbuf = pdev->pDesc->GetBOSDescriptor(pdev->dev_speed, &len);
+    if (!pbuf) {
+      USBD_CtlError(pdev , req);
+    }
     break;
 #endif
   case USB_DESC_TYPE_DEVICE:

@@ -64,7 +64,7 @@ void usb_init(const usb_dev_info_t *dev_info) {
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
-    usb_dev_desc.bcdUSB             = (sectrue == usb21_enabled) ? 0x0210 : 0x2000;  // USB 2.1 or USB 2.0
+    usb_dev_desc.bcdUSB             = (sectrue == usb21_enabled) ? 0x0210 : 0x0200;  // USB 2.1 or USB 2.0
     usb_dev_desc.bDeviceClass       = dev_info->device_class;
     usb_dev_desc.bDeviceSubClass    = dev_info->device_subclass;
     usb_dev_desc.bDeviceProtocol    = dev_info->device_protocol;

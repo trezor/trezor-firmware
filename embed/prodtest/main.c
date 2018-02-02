@@ -91,7 +91,7 @@ static void usb_init_all(void)
         .device_protocol = 0x01,    // Interface Association Descriptor
         .vendor_id       = 0x1209,
         .product_id      = 0x53C1,
-        .release_num     = 0x0300,
+        .release_num     = 0x0400,
         .manufacturer    = "SatoshiLabs",
         .product         = "TREZOR",
         .serial_number   = "000000000000",
