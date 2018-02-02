@@ -103,7 +103,6 @@ class HidTransport(Transport):
         path = path.replace(b'%s:' % cls.PATH_PREFIX.encode(), b'')
 
         for transport in HidTransport.enumerate():
-            print(path, transport.device['path'])
             if path is None or transport.device['path'] == path:
                 return transport
         raise TransportException('HID device not found')
