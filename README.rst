@@ -18,15 +18,15 @@ Linux requirements:
 
 .. code::
 
-  sudo apt-get install python-dev cython libusb-1.0-0-dev libudev-dev git
+  sudo apt-get install python3-dev cython3 libusb-1.0-0-dev libudev-dev git
 
 Linux & Mac Python requirements:
 
 .. code::
 
-  sudo -H pip install setuptools
-  sudo -H pip install -r requirements.txt
-  sudo -H pip install trezor
+  sudo -H pip3 install setuptools
+  sudo -H pip3 install -r requirements.txt
+  sudo -H pip3 install trezor
 
 On FreeBSD you can install the packages:
 
