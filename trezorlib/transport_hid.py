@@ -98,8 +98,12 @@ class HidTransport(Transport):
 
     @classmethod
     def find_by_path(cls, path=None):
-        path = path.replace('%s:' % cls.PATH_PREFIX, '').encode() # Remove prefix from __str__()
+        if isinstance(path, str):
+            path = path.encode()
+        path = path.replace(b'%s:' % cls.PATH_PREFIX.encode(), b'')
+
         for transport in HidTransport.enumerate():
+            print(path, transport.device['path'])
             if path is None or transport.device['path'] == path:
                 return transport
         raise TransportException('HID device not found')

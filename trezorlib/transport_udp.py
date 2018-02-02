@@ -70,7 +70,10 @@ class UdpTransport(Transport):
 
     @classmethod
     def find_by_path(cls, path=None):
-        path = path.replace('%s:' % cls.PATH_PREFIX , '') # Remove prefix from __str__()
+        if isinstance(path, str):
+            path = path.encode()
+
+        path = path.replace(b'%s:' % cls.PATH_PREFIX.encode(), b'')
         return UdpTransport(path)
 
     def open(self):

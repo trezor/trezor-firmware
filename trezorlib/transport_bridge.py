@@ -66,7 +66,10 @@ class BridgeTransport(Transport):
 
     @classmethod
     def find_by_path(cls, path):
+        if isinstance(path, bytes):
+            path = path.decode()
         path = path.replace('%s:' % cls.PATH_PREFIX, '')
+
         for transport in BridgeTransport.enumerate():
             if path is None or transport.device['path'] == path:
                 return transport
