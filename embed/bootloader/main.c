@@ -41,7 +41,7 @@ static void usb_init_all(void) {
         .product         = "TREZOR",
         .serial_number   = "000000000000000000000000",
         .interface       = "TREZOR Interface",
-        .winusb_enabled  = sectrue,
+        .usb21_enabled   = sectrue,
     };
 
     static uint8_t rx_buffer[USB_PACKET_SIZE];

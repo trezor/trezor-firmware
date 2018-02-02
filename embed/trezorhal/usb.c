@@ -48,7 +48,7 @@ static USBD_HandleTypeDef usb_dev_handle;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
 
-static secbool usb_winusb_enabled = secfalse;
+static secbool usb21_enabled = secfalse;
 
 static secbool __wur check_desc_str(const char *s) {
     if (NULL == s) return secfalse;
@@ -58,10 +58,13 @@ static secbool __wur check_desc_str(const char *s) {
 
 void usb_init(const usb_dev_info_t *dev_info) {
 
+    // enable/disable USB 2.1 features
+    usb21_enabled = dev_info->usb21_enabled;
+
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
     usb_dev_desc.bDescriptorType    = USB_DESC_TYPE_DEVICE;
-    usb_dev_desc.bcdUSB             = 0x0210;                // USB 2.1
+    usb_dev_desc.bcdUSB             = (sectrue == usb21_enabled) ? 0x0210 : 0x2000;  // USB 2.1 or USB 2.0
     usb_dev_desc.bDeviceClass       = dev_info->device_class;
     usb_dev_desc.bDeviceSubClass    = dev_info->device_subclass;
     usb_dev_desc.bDeviceProtocol    = dev_info->device_protocol;
@@ -84,9 +87,6 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_str_table.product       = dev_info->product;
     usb_str_table.serial_number = dev_info->serial_number;
     usb_str_table.interface     = dev_info->interface;
-
-    // enable/disable WinUSB
-    usb_winusb_enabled = dev_info->winusb_enabled;
 
     // Configuration descriptor
     usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
@@ -213,26 +213,31 @@ static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16
 }
 
 static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
-    static const uint8_t bos[] = {
-        // usb_bos_descriptor {
-        0x05,               // uint8_t  bLength
-        USB_DESC_TYPE_BOS,  // uint8_t  bDescriptorType
-        0x1d, 0x0,          // uint16_t wTotalLength
-        0x01,               // uint8_t  bNumDeviceCaps
-        // }
-        // usb_device_capability_descriptor {
-        0x18,                             // uint8_t  bLength
-        USB_DESC_TYPE_DEVICE_CAPABILITY,  // uint8_t  bDescriptorType
-        USB_DEVICE_CAPABILITY_PLATFORM,   // uint8_t  bDevCapabilityType
-        0x00,                             // uint8_t  bReserved
-        0x38, 0xb6, 0x08, 0x34, 0xa9, 0x09, 0xa0, 0x47, 0x8b, 0xfd, 0xa0, 0x76, 0x88, 0x15, 0xb6, 0x65,  // uint128_t platformCompatibilityUUID
-        0x00, 0x01,                       // uint16_t bcdVersion
-        USB_WEBUSB_VENDOR_CODE,           // uint8_t  bVendorCode
-        USB_WEBUSB_LANDING_PAGE,          // uint8_t  iLandingPage
-        // }
-    };
-    *length = sizeof(bos);
-    return UNCONST(bos);
+    if (sectrue == usb21_enabled) {
+        static const uint8_t bos[] = {
+            // usb_bos_descriptor {
+            0x05,               // uint8_t  bLength
+            USB_DESC_TYPE_BOS,  // uint8_t  bDescriptorType
+            0x1d, 0x0,          // uint16_t wTotalLength
+            0x01,               // uint8_t  bNumDeviceCaps
+            // }
+            // usb_device_capability_descriptor {
+            0x18,                             // uint8_t  bLength
+            USB_DESC_TYPE_DEVICE_CAPABILITY,  // uint8_t  bDescriptorType
+            USB_DEVICE_CAPABILITY_PLATFORM,   // uint8_t  bDevCapabilityType
+            0x00,                             // uint8_t  bReserved
+            0x38, 0xb6, 0x08, 0x34, 0xa9, 0x09, 0xa0, 0x47, 0x8b, 0xfd, 0xa0, 0x76, 0x88, 0x15, 0xb6, 0x65,  // uint128_t platformCompatibilityUUID
+            0x00, 0x01,                       // uint16_t bcdVersion
+            USB_WEBUSB_VENDOR_CODE,           // uint8_t  bVendorCode
+            USB_WEBUSB_LANDING_PAGE,          // uint8_t  iLandingPage
+            // }
+        };
+        *length = sizeof(bos);
+        return UNCONST(bos);
+    } else {
+        *length = 0;
+        return NULL;
+    }
 }
 
 static const USBD_DescriptorsTypeDef usb_descriptors = {
@@ -302,7 +307,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
 
     if ((req->bmRequest & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR) {
         if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_DEVICE) {
-            if (req->bRequest == USB_WEBUSB_VENDOR_CODE) {
+            if (sectrue == usb21_enabled && req->bRequest == USB_WEBUSB_VENDOR_CODE) {
                 if (req->wIndex == USB_WEBUSB_REQ_GET_URL && req->wValue == USB_WEBUSB_LANDING_PAGE) {
                     static const char webusb_url[] = {
                         3 + 15,                             // uint8_t bLength
@@ -318,7 +323,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                 }
             }
             else
-            if (sectrue == usb_winusb_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
+            if (sectrue == usb21_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
                 if (req->wIndex == USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
                     static const uint8_t winusb_wcid[] = {
                         // header
@@ -343,7 +348,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
             }
         }
         if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_INTERFACE) {
-            if (sectrue == usb_winusb_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
+            if (sectrue == usb21_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
                 if (req->wIndex == USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR &&
                     (req->wValue & 0xFF) == 0) {    // reply only if interface is 0
                     static const uint8_t winusb_guid[] = {
@@ -442,7 +447,7 @@ static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
 }
 
 static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev, uint8_t index, uint16_t *length) {
-    if (sectrue == usb_winusb_enabled && index == USB_WINUSB_EXTRA_STRING_INDEX) {
+    if (sectrue == usb21_enabled && index == USB_WINUSB_EXTRA_STRING_INDEX) {
         static const uint8_t winusb_string_descriptor[] = {
             0x12,                   // bLength
             USB_DESC_TYPE_STRING,   // bDescriptorType
@@ -452,7 +457,7 @@ static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev, uint8_t index
         return UNCONST(winusb_string_descriptor);
     } else {
         *length = 0;
-        return 0;
+        return NULL;
     }
 }
 
