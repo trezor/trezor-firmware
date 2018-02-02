@@ -73,6 +73,8 @@ class WebUsbTransport(Transport):
     WebUsbTransport implements transport over WebUSB interface.
     '''
 
+    PATH_PREFIX = 'webusb'
+
     def __init__(self, device, protocol=None, handle=None, debug=False):
         super(WebUsbTransport, self).__init__()
 
@@ -93,7 +95,7 @@ class WebUsbTransport(Transport):
         self.debug = debug
 
     def __str__(self):
-        return dev_to_str(self.device)
+        return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
 
     @staticmethod
     def enumerate():
@@ -104,8 +106,9 @@ class WebUsbTransport(Transport):
             devices.append(WebUsbTransport(dev))
         return devices
 
-    @staticmethod
-    def find_by_path(path=None):
+    @classmethod
+    def find_by_path(cls, path=None):
+        path = path.replace('%s:' % cls.PATH_PREFIX, '') # Remove prefix from __str__()        
         for transport in WebUsbTransport.enumerate():
             if path is None or dev_to_str(transport.device) == path:
                 return transport

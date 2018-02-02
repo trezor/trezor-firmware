@@ -28,6 +28,7 @@ import json
 import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
+from trezorlib.device import TrezorDevice
 from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib.coins import coins_txapi
@@ -62,55 +63,21 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
 })
 
 
-def get_transport_class_by_name(name):
-
-    if name == 'hid':
-        from trezorlib.transport_hid import HidTransport
-        return HidTransport
-
-    if name == 'webusb':
-        from trezorlib.transport_webusb import WebUsbTransport
-        return WebUsbTransport
-
-    if name == 'udp':
-        from trezorlib.transport_udp import UdpTransport
-        return UdpTransport
-
-    if name == 'pipe':
-        from trezorlib.transport_pipe import PipeTransport
-        return PipeTransport
-
-    if name == 'bridge':
-        from trezorlib.transport_bridge import BridgeTransport
-        return BridgeTransport
-
-    raise NotImplementedError('Unknown transport: "%s"' % name)
-
-
-def get_transport(transport_name, path):
-    transport = get_transport_class_by_name(transport_name)
-    dev = transport.find_by_path(path)
-    return dev
-
-
 @click.group()
-@click.option('-t', '--transport', type=click.Choice(['hid', 'webusb', 'udp', 'pipe', 'bridge']), default='hid', help='Select transport used for communication.')
-@click.option('-p', '--path', help='Select device by transport-specific path.')
+@click.option('-p', '--path', help='Select device by specific path.')
 @click.option('-v', '--verbose', is_flag=True, help='Show communication messages.')
 @click.option('-j', '--json', 'is_json', is_flag=True, help='Print result as JSON object')
 @click.pass_context
-def cli(ctx, transport, path, verbose, is_json):
-    if ctx.invoked_subcommand == 'list':
-        ctx.obj = transport
-    else:
+def cli(ctx, path, verbose, is_json):
+    if ctx.invoked_subcommand != 'list':
         if verbose:
-            ctx.obj = lambda: TrezorClientVerbose(get_transport(transport, path))
+            ctx.obj = lambda: TrezorClientVerbose(TrezorDevice.find_by_path(path))
         else:
-            ctx.obj = lambda: TrezorClient(get_transport(transport, path))
+            ctx.obj = lambda: TrezorClient(TrezorDevice.find_by_path(path))
 
 
 @cli.resultcallback()
-def print_result(res, transport, path, verbose, is_json):
+def print_result(res, path, verbose, is_json):
     if is_json:
         if issubclass(res.__class__, protobuf.MessageType):
             click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
@@ -137,11 +104,8 @@ def print_result(res, transport, path, verbose, is_json):
 
 
 @cli.command(name='list', help='List connected TREZOR devices.')
-@click.pass_obj
-def ls(transport_name):
-    transport_class = get_transport_class_by_name(transport_name)
-    devices = transport_class.enumerate()
-    return devices
+def ls():
+    return TrezorDevice.enumerate()
 
 
 @cli.command(help='Show version of trezorctl/trezorlib.')

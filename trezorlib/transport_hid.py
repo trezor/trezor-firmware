@@ -57,6 +57,8 @@ class HidTransport(Transport):
     HidTransport implements transport over USB HID interface.
     '''
 
+    PATH_PREFIX = 'HID'
+
     def __init__(self, device, protocol=None, hid_handle=None):
         super(HidTransport, self).__init__()
 
@@ -77,7 +79,7 @@ class HidTransport(Transport):
         self.hid_version = None
 
     def __str__(self):
-        return self.device['path'].decode()
+        return "%s:%s" % (self.PATH_PREFIX, self.device['path'].decode())
 
     @staticmethod
     def enumerate(debug=False):
@@ -94,8 +96,9 @@ class HidTransport(Transport):
             devices.append(HidTransport(dev))
         return devices
 
-    @staticmethod
-    def find_by_path(path=None):
+    @classmethod
+    def find_by_path(cls, path=None):
+        path = path.replace('%s:' % cls.PATH_PREFIX, '').encode() # Remove prefix from __str__()
         for transport in HidTransport.enumerate():
             if path is None or transport.device['path'] == path:
                 return transport

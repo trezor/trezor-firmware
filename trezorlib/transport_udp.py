@@ -30,6 +30,7 @@ class UdpTransport(Transport):
 
     DEFAULT_HOST = '127.0.0.1'
     DEFAULT_PORT = 21324
+    PATH_PREFIX = 'UDP'
 
     def __init__(self, device=None, protocol=None):
         super(UdpTransport, self).__init__()
@@ -42,24 +43,34 @@ class UdpTransport(Transport):
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
         if not protocol:
+            '''
             force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
             if not int(force_v1):
                 protocol = ProtocolV2()
             else:
                 protocol = ProtocolV1()
+            '''
+            protocol = ProtocolV1()
         self.device = (host, port)
         self.protocol = protocol
         self.socket = None
 
     def __str__(self):
-        return str(self.device)
+        return "%s:%s:%s" % (self.PATH_PREFIX, *self.device)
 
     @staticmethod
     def enumerate():
-        return [UdpTransport()]
+        devices = []
+        d = UdpTransport("%s:%d" % (UdpTransport.DEFAULT_HOST, UdpTransport.DEFAULT_PORT))
+        d.open()
+        if d._ping():
+            devices.append(d)
+        d.close()
+        return devices
 
-    @staticmethod
-    def find_by_path(path=None):
+    @classmethod
+    def find_by_path(cls, path=None):
+        path = path.replace('%s:' % cls.PATH_PREFIX , '') # Remove prefix from __str__()
         return UdpTransport(path)
 
     def open(self):
@@ -73,6 +84,16 @@ class UdpTransport(Transport):
             self.protocol.session_end(self)
             self.socket.close()
             self.socket = None
+
+    def _ping(self):
+        '''Test if the device is listening.'''
+        resp = None
+        try:
+            self.socket.sendall(b'PINGPING')
+            resp = self.socket.recv(8)
+        except:
+            pass
+        return resp == b'PONGPONG'
 
     def read(self):
         return self.protocol.read(self)
