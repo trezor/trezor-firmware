@@ -55,10 +55,15 @@ async def reset_device(ctx, msg):
         internal_entropy,
         ext_ack.entropy)
 
-    # show warning, mnemonic, and confirm a random word
+    # warn user about mnemonic safety
     await show_warning(ctx)
-    await show_mnemonic(ctx, mnemonic)
-    await check_mnemonic(mnemonic)
+    while True:
+        # show mnemonic and make user to confirm a random word
+        await show_mnemonic(ctx, mnemonic)
+        if await check_mnemonic(ctx, mnemonic):
+            break
+        await show_wrong_entry(ctx)
+
 
     # write PIN into storage
     if not config.change_pin('', newpin):
@@ -89,7 +94,7 @@ def generate_mnemonic(strength: int,
 
 async def show_warning(ctx):
     content = Text(
-        'Backup your seed', ui.ICON_NOCOPY, ui.NORMAL,
+        'Backup your seed', ui.ICON_NOCOPY,
         'Never make a digital',
         'copy of your recovery',
         'seed and never upload',
@@ -99,6 +104,20 @@ async def show_warning(ctx):
         content,
         ButtonRequestType.ResetDevice,
         confirm='I understand',
+        cancel=None)
+
+
+async def show_wrong_entry(ctx):
+    content = Text(
+        'Wrong entry!', ui.ICON_CLEAR,
+        'You have entered',
+        'wrong seed word.',
+        'Please check again.', icon_color=ui.RED)
+    await require_confirm(
+        ctx,
+        content,
+        ButtonRequestType.ResetDevice,
+        confirm='Check again',
         cancel=None)
 
 
@@ -154,20 +173,9 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
         await animate_swipe()
 
 
-async def check_mnemonic(mnemonic: str):
+@ui.layout
+async def check_mnemonic(ctx, mnemonic: str):
     words = mnemonic.split()
     index = random.uniform(len(words))
     result = await MnemonicKeyboard('Type %s. word' % (index + 1))
-
-    if result != words[index]:
-        content = Text(
-            'Wrong entry!', ui.ICON_CLEAR,
-            'You have entered',
-            'wrong seed word.',
-            'Please, reconnect',
-            'the device and try again.', icon_color=ui.RED)
-        ui.display.clear()
-        content.render()
-        ui.display.refresh()
-        while True:
-            pass
+    return result == words[index]
