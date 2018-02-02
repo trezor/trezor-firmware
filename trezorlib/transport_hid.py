@@ -57,7 +57,7 @@ class HidTransport(Transport):
     HidTransport implements transport over USB HID interface.
     '''
 
-    PATH_PREFIX = 'HID'
+    PATH_PREFIX = 'hid'
 
     def __init__(self, device, protocol=None, hid_handle=None):
         super(HidTransport, self).__init__()

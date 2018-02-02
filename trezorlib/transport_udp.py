@@ -30,7 +30,7 @@ class UdpTransport(Transport):
 
     DEFAULT_HOST = '127.0.0.1'
     DEFAULT_PORT = 21324
-    PATH_PREFIX = 'UDP'
+    PATH_PREFIX = 'udp'
 
     def __init__(self, device=None, protocol=None):
         super(UdpTransport, self).__init__()
