@@ -271,6 +271,7 @@ USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef *pdev, uint8_t *psetup)
   switch (pdev->request.bmRequest & USB_REQ_TYPE_MASK)
   {
     case USB_REQ_TYPE_STANDARD:
+    case USB_REQ_TYPE_CLASS:
       switch (pdev->request.bmRequest & USB_REQ_RECIPIENT_MASK)
       {
         case USB_REQ_RECIPIENT_DEVICE:
@@ -285,15 +286,6 @@ USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef *pdev, uint8_t *psetup)
         default:
           USBD_LL_StallEP(pdev, pdev->request.bmRequest & 0x80);
           break;
-      }
-      break;
-
-    case USB_REQ_TYPE_CLASS:
-      if (pdev->dev_state == USBD_STATE_CONFIGURED) {
-        if (pdev->pClass->Setup != NULL)
-            pdev->pClass->Setup(pdev, &pdev->request);
-      } else {
-          USBD_CtlError(pdev, &pdev->request);
       }
       break;
 

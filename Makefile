@@ -81,7 +81,7 @@ style: ## run code style check on application sources and tests
 
 ## build commands:
 
-build: build_boardloader build_bootloader build_prodtest build_firmware build_unix build_cross ## build all
+build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
 
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
