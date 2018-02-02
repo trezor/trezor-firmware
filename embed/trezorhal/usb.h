@@ -103,6 +103,7 @@ typedef struct {
     const char *product;
     const char *serial_number;
     const char *interface;
+    secbool winusb_enabled;
 } usb_dev_info_t;
 
 typedef enum {

@@ -11,8 +11,6 @@
 #include "usb.h"
 #include "usbd_core.h"
 
-#define USE_WINUSB 1
-
 #define USB_MAX_CONFIG_DESC_SIZE    256
 #define USB_MAX_STR_SIZE            62
 #define USB_MAX_STR_DESC_SIZE       (USB_MAX_STR_SIZE * 2 + 2)
@@ -25,13 +23,11 @@
 #error Unable to determine proper USB_PHY_ID to use
 #endif
 
-#if USE_WINUSB
 #define USB_WINUSB_VENDOR_CODE          '!'  // arbitrary, but must be equivalent to the last character in extra string
 #define USB_WINUSB_EXTRA_STRING         'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, '1', 0x00, '0', 0x00, '0', 0x00, USB_WINUSB_VENDOR_CODE , 0x00  // MSFT100!
 #define USB_WINUSB_EXTRA_STRING_INDEX   0xEE
 #define USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR             0x04
 #define USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR    0x05
-#endif
 
 #define UNCONST(X) ((uint8_t *)(X))
 
@@ -51,6 +47,8 @@ static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
 static USBD_HandleTypeDef usb_dev_handle;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
+
+static secbool usb_winusb_enabled = secfalse;
 
 static secbool __wur check_desc_str(const char *s) {
     if (NULL == s) return secfalse;
@@ -86,6 +84,9 @@ void usb_init(const usb_dev_info_t *dev_info) {
     usb_str_table.product       = dev_info->product;
     usb_str_table.serial_number = dev_info->serial_number;
     usb_str_table.interface     = dev_info->interface;
+
+    // enable/disable WinUSB
+    usb_winusb_enabled = dev_info->winusb_enabled;
 
     // Configuration descriptor
     usb_config_desc->bLength             = sizeof(usb_config_descriptor_t);
@@ -316,9 +317,8 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                     return USBD_FAIL;
                 }
             }
-#if USE_WINUSB
             else
-            if (req->bRequest == USB_WINUSB_VENDOR_CODE) {
+            if (sectrue == usb_winusb_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
                 if (req->wIndex == USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
                     static const uint8_t winusb_wcid[] = {
                         // header
@@ -341,11 +341,9 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                     return USBD_FAIL;
                 }
             }
-#endif
         }
-#if USE_WINUSB
         if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_INTERFACE) {
-            if (req->bRequest == USB_WINUSB_VENDOR_CODE) {
+            if (sectrue == usb_winusb_enabled && req->bRequest == USB_WINUSB_VENDOR_CODE) {
                 if (req->wIndex == USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR &&
                     (req->wValue & 0xFF) == 0) {    // reply only if interface is 0
                     static const uint8_t winusb_guid[] = {
@@ -370,7 +368,6 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                 }
             }
         }
-#endif
     } else if (req->wIndex >= USBD_MAX_NUM_INTERFACES) {
         USBD_CtlError(dev, req);
         return USBD_FAIL;
@@ -445,19 +442,18 @@ static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
 }
 
 static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev, uint8_t index, uint16_t *length) {
-#if USE_WINUSB
-    static const uint8_t winusb_string_descriptor[] = {
-        0x12,                   // bLength
-        USB_DESC_TYPE_STRING,   // bDescriptorType
-        USB_WINUSB_EXTRA_STRING // wData
-    };
-    if (index == USB_WINUSB_EXTRA_STRING_INDEX) {
+    if (sectrue == usb_winusb_enabled && index == USB_WINUSB_EXTRA_STRING_INDEX) {
+        static const uint8_t winusb_string_descriptor[] = {
+            0x12,                   // bLength
+            USB_DESC_TYPE_STRING,   // bDescriptorType
+            USB_WINUSB_EXTRA_STRING // wData
+        };
         *length = sizeof(winusb_string_descriptor);
         return UNCONST(winusb_string_descriptor);
+    } else {
+        *length = 0;
+        return 0;
     }
-#endif
-    *length = 0;
-    return 0;
 }
 
 static const USBD_ClassTypeDef usb_class = {

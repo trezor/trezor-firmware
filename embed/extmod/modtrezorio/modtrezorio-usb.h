@@ -40,7 +40,8 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 ///              manufacturer: str='',
 ///              product: str='',
 ///              serial_number: str='',
-///              interface: str='') -> None:
+///              interface: str='',
+///              winusb_enabled: bool=True) -> None:
 ///     '''
 ///     '''
 STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
@@ -56,6 +57,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
         { MP_QSTR_product,                         MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
         { MP_QSTR_serial_number,                   MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
         { MP_QSTR_interface,                       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_winusb_enabled,                  MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
@@ -70,6 +72,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     const char *product             = get_0str(vals[7].u_obj, 0, 32);
     const char *serial_number       = get_0str(vals[8].u_obj, 0, 32);
     const char *interface           = get_0str(vals[9].u_obj, 0, 32);
+    const secbool winusb_enabled    = vals[10].u_bool ? sectrue : secfalse;
 
     CHECK_PARAM_RANGE(device_class, 0, 255)
     CHECK_PARAM_RANGE(device_subclass, 0, 255)
@@ -105,6 +108,8 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type, size_t n_ar
     o->info.product         = product;
     o->info.serial_number   = serial_number;
     o->info.interface       = interface;
+    o->info.winusb_enabled  = winusb_enabled;
+
     mp_obj_list_init(&o->ifaces, 0);
 
     return MP_OBJ_FROM_PTR(o);

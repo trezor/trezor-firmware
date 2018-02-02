@@ -96,6 +96,7 @@ static void usb_init_all(void)
         .product         = "TREZOR",
         .serial_number   = "000000000000",
         .interface       = "TREZOR Interface",
+        .winusb_enabled  = secfalse,
     };
 
     static uint8_t tx_packet[VCP_PACKET_LEN];
