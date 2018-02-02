@@ -17,6 +17,7 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from .transport_bridge import BridgeTransport
 from .transport_hid import HidTransport
 from .transport_udp import UdpTransport
 from .transport_webusb import WebUsbTransport
@@ -26,6 +27,9 @@ class TrezorDevice(object):
     @classmethod
     def enumerate(cls):
         devices = []
+
+        for d in BridgeTransport.enumerate():
+            devices.append(d)
 
         for d in UdpTransport.enumerate():
             devices.append(d)
@@ -46,8 +50,10 @@ class TrezorDevice(object):
             except IndexError:
                 raise Exception("No TREZOR device found")
 
-
         prefix = path.split(':')[0]
+
+        if prefix == BridgeTransport.PATH_PREFIX:
+            return BridgeTransport.find_by_path(path)
 
         if prefix == UdpTransport.PATH_PREFIX:
             return UdpTransport.find_by_path(path)

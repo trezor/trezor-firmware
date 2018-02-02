@@ -41,6 +41,8 @@ class BridgeTransport(Transport):
     BridgeTransport implements transport through TREZOR Bridge (aka trezord).
     '''
 
+    PATH_PREFIX = 'bridge'
+
     def __init__(self, device):
         super(BridgeTransport, self).__init__()
 
@@ -50,17 +52,21 @@ class BridgeTransport(Transport):
         self.response = None
 
     def __str__(self):
-        return self.device['path']
+        return '%s:%s' % (self.PATH_PREFIX, self.device['path'])
 
     @staticmethod
     def enumerate():
-        r = requests.post(TREZORD_HOST + '/enumerate')
-        if r.status_code != 200:
-            raise TransportException('trezord: Could not enumerate devices' + get_error(r))
-        return [BridgeTransport(dev) for dev in r.json()]
+        try:
+            r = requests.post(TREZORD_HOST + '/enumerate')
+            if r.status_code != 200:
+                raise TransportException('trezord: Could not enumerate devices' + get_error(r))
+            return [BridgeTransport(dev) for dev in r.json()]
+        except:
+            return []
 
-    @staticmethod
-    def find_by_path(path):
+    @classmethod
+    def find_by_path(cls, path):
+        path = path.replace('%s:' % cls.PATH_PREFIX, '')
         for transport in BridgeTransport.enumerate():
             if path is None or transport.device['path'] == path:
                 return transport
