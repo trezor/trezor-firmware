@@ -103,6 +103,8 @@ class WebUsbTransport(Transport):
         for dev in context.getDeviceIterator(skip_on_error=True):
             if not (is_trezor1(dev) or is_trezor2(dev) or is_trezor2_bl(dev)):
                 continue
+            if not is_vendor_class(dev):
+                continue
             devices.append(WebUsbTransport(dev))
         return devices
 
@@ -175,6 +177,10 @@ def is_trezor2(dev):
 def is_trezor2_bl(dev):
     return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR2_BL
 
+def is_vendor_class(dev):
+    configurationId = 0
+    altSettingId = 0
+    return dev[configurationId][INTERFACE][altSettingId].getClass() == usb1.libusb1.LIBUSB_CLASS_VENDOR_SPEC
 
 def dev_to_str(dev):
     return ':'.join(str(x) for x in ['%03i' % (dev.getBusNumber(), )]  + dev.getPortNumberList())
