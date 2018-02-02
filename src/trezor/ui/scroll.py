@@ -38,7 +38,8 @@ async def animate_swipe():
     icon = res.load(ui.ICON_SWIPE)
     for t in ui.pulse(draw_delay):
         fg = ui.blend(ui.GREY, ui.DARK_GREY, t)
-        ui.display.icon(110, 210, icon, fg, ui.BG)
+        ui.display.icon(70, 205, icon, fg, ui.BG)
+        ui.display.text_center(130,220, 'Swipe', ui.BOLD, fg, ui.BG)
         yield sleep
 
 

@@ -26,7 +26,7 @@ def degrees(swipe: int) -> int:
 
 class Swipe(ui.Widget):
 
-    def __init__(self, area=None, absolute=False, directions=SWIPE_ALL, treshold=80):
+    def __init__(self, area=None, absolute=False, directions=SWIPE_ALL, treshold=30):
         self.area = area or (0, 0, ui.SCREEN, ui.SCREEN)
         self.absolute = absolute
         self.directions = directions
