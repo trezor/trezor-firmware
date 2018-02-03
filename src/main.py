@@ -6,42 +6,15 @@ from trezor import loop
 from trezor import wire
 from trezor import workflow
 
-USE_WEBUSB = False
-
 log.level = log.DEBUG
 
 # initialize the USB stack
 
-if USE_WEBUSB:
-    usb_wire = io.WebUSB(
-        iface_num=0,
-        ep_in=0x81,
-        ep_out=0x01,
-    )
-else:
-    usb_wire = io.HID(
-        iface_num=0,
-        ep_in=0x81,
-        ep_out=0x01,
-        report_desc=bytes([
-            0x06, 0x00, 0xff,  # USAGE_PAGE (Vendor Defined)
-            0x09, 0x01,        # USAGE (1)
-            0xa1, 0x01,        # COLLECTION (Application)
-            0x09, 0x20,        # USAGE (Input Report Data)
-            0x15, 0x00,        # LOGICAL_MINIMUM (0)
-            0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-            0x75, 0x08,        # REPORT_SIZE (8)
-            0x95, 0x40,        # REPORT_COUNT (64)
-            0x81, 0x02,        # INPUT (Data,Var,Abs)
-            0x09, 0x21,        # USAGE (Output Report Data)
-            0x15, 0x00,        # LOGICAL_MINIMUM (0)
-            0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-            0x75, 0x08,        # REPORT_SIZE (8)
-            0x95, 0x40,        # REPORT_COUNT (64)
-            0x91, 0x02,        # OUTPUT (Data,Var,Abs)
-            0xc0,              # END_COLLECTION
-        ]),
-    )
+usb_wire = io.WebUSB(
+    iface_num=0,
+    ep_in=0x81,
+    ep_out=0x01,
+)
 
 usb_u2f = io.HID(
     iface_num=3,
@@ -68,37 +41,11 @@ usb_u2f = io.HID(
 )
 
 if __debug__:
-    if USE_WEBUSB:
-        usb_debug = io.WebUSB(
-            iface_num=4,
-            ep_in=0x85,
-            ep_out=0x04,
-        )
-    else:
-        usb_debug = io.HID(
-            iface_num=4,
-            ep_in=0x85,
-            ep_out=0x04,
-            report_desc=bytes([
-                0x06, 0x01, 0xff,  # USAGE_PAGE (Vendor Defined)
-                0x09, 0x01,        # USAGE (1)
-                0xa1, 0x01,        # COLLECTION (Application)
-                0x09, 0x20,        # USAGE (Input Report Data)
-                0x15, 0x00,        # LOGICAL_MINIMUM (0)
-                0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-                0x75, 0x08,        # REPORT_SIZE (8)
-                0x95, 0x40,        # REPORT_COUNT (64)
-                0x81, 0x02,        # INPUT (Data,Var,Abs)
-                0x09, 0x21,        # USAGE (Output Report Data)
-                0x15, 0x00,        # LOGICAL_MINIMUM (0)
-                0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-                0x75, 0x08,        # REPORT_SIZE (8)
-                0x95, 0x40,        # REPORT_COUNT (64)
-                0x91, 0x02,        # OUTPUT (Data,Var,Abs)
-                0xc0,              # END_COLLECTION
-            ]),
-        )
-
+    usb_debug = io.WebUSB(
+        iface_num=4,
+        ep_in=0x85,
+        ep_out=0x04,
+    )
     usb_vcp = io.VCP(
         iface_num=1,
         data_iface_num=2,
