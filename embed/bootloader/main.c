@@ -46,7 +46,6 @@ static void usb_init_all(void) {
 
     static uint8_t rx_buffer[USB_PACKET_SIZE];
 
-#if USE_WEBUSB
     static const usb_webusb_info_t webusb_info = {
         .iface_num        = USB_IFACE_NUM,
         .ep_in            = USB_EP_DIR_IN | 0x01,
@@ -57,46 +56,10 @@ static void usb_init_all(void) {
         .rx_buffer        = rx_buffer,
         .polling_interval = 1,
     };
-#else
-    static const uint8_t hid_report_desc[] = {
-        0x06, 0x00, 0xff,  // USAGE_PAGE (Vendor Defined)
-        0x09, 0x01,        // USAGE (1)
-        0xa1, 0x01,        // COLLECTION (Application)
-        0x09, 0x20,        // USAGE (Input Report Data)
-        0x15, 0x00,        // LOGICAL_MINIMUM (0)
-        0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
-        0x75, 0x08,        // REPORT_SIZE (8)
-        0x95, 0x40,        // REPORT_COUNT (64)
-        0x81, 0x02,        // INPUT (Data,Var,Abs)
-        0x09, 0x21,        // USAGE (Output Report Data)
-        0x15, 0x00,        // LOGICAL_MINIMUM (0)
-        0x26, 0xff, 0x00,  // LOGICAL_MAXIMUM (255)
-        0x75, 0x08,        // REPORT_SIZE (8)
-        0x95, 0x40,        // REPORT_COUNT (64)
-        0x91, 0x02,        // OUTPUT (Data,Var,Abs)
-        0xc0               // END_COLLECTION
-    };
-    static const usb_hid_info_t hid_info = {
-        .iface_num        = USB_IFACE_NUM,
-        .ep_in            = USB_EP_DIR_IN | 0x01,
-        .ep_out           = USB_EP_DIR_OUT | 0x01,
-        .subclass         = 0,
-        .protocol         = 0,
-        .max_packet_len   = sizeof(rx_buffer),
-        .rx_buffer        = rx_buffer,
-        .polling_interval = 1,
-        .report_desc_len  = sizeof(hid_report_desc),
-        .report_desc      = hid_report_desc,
-    };
-#endif
 
     usb_init(&dev_info);
 
-#if USE_WEBUSB
     ensure(usb_webusb_add(&webusb_info), NULL);
-#else
-    ensure(usb_hid_add(&hid_info), NULL);
-#endif
 
     usb_start();
 }
@@ -108,11 +71,7 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
     uint8_t buf[USB_PACKET_SIZE];
 
     for (;;) {
-#if USE_WEBUSB
         int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#else
-        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#endif
         if (r != USB_PACKET_SIZE) {
             continue;
         }

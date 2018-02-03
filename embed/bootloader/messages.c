@@ -73,11 +73,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
             memcpy(state->buf + state->packet_pos, buf + written, USB_PACKET_SIZE - state->packet_pos);
             written += USB_PACKET_SIZE - state->packet_pos;
             // send packet
-#if USE_WEBUSB
             int r = usb_webusb_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#else
-            int r = usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#endif
             ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
             // prepare new packet
             state->packet_index++;
@@ -98,11 +94,7 @@ static void _usb_write_flush(usb_write_state *state)
         memset(state->buf + state->packet_pos, 0, USB_PACKET_SIZE - state->packet_pos);
     }
     // send packet
-#if USE_WEBUSB
     int r = usb_webusb_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#else
-    int r = usb_hid_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#endif
     ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
 }
 
@@ -182,11 +174,7 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count)
             memcpy(buf + read, state->buf + state->packet_pos, USB_PACKET_SIZE - state->packet_pos);
             read += USB_PACKET_SIZE - state->packet_pos;
             // read next packet
-#if USE_WEBUSB
             int r = usb_webusb_read_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#else
-            int r = usb_hid_read_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#endif
             ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
             // prepare next packet
             state->packet_index++;
@@ -540,11 +528,7 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
     // consume remaining message
     int remaining_chunks = (msg_size - (USB_PACKET_SIZE - MSG_HEADER1_LEN)) / (USB_PACKET_SIZE - MSG_HEADER2_LEN);
     for (int i = 0; i < remaining_chunks; i++) {
-#if USE_WEBUSB
         int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#else
-        int r = usb_hid_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
-#endif
         ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
     }
 
