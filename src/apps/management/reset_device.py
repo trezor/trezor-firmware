@@ -7,7 +7,7 @@ from trezor.messages import ButtonRequestType, FailureType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
-from trezor.ui.confirm import ConfirmDialog
+from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.keyboard import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
@@ -160,20 +160,17 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
     lines = ['%d. %s' % (wi + 1, word) for wi, word in pages[page]]
     content = Text('Recovery seed', ui.ICON_RESET, ui.MONO, *lines)
     content = Scrollpage(content, page, page_count)
-    ui.display.clear()
 
     if page + 1 == page_count:
-        await ConfirmDialog(
-            content,
-            confirm="I'm done",
-            cancel=None)
+        await HoldToConfirmDialog(content)
     else:
+        ui.display.clear()
         content.render()
         await animate_swipe()
 
 
 @ui.layout
-async def check_mnemonic(ctx, mnemonic: str):
+async def check_mnemonic(ctx, mnemonic: str) -> bool:
     words = mnemonic.split()
     index = random.uniform(len(words))
     result = await MnemonicKeyboard('Type %s. word' % (index + 1))
