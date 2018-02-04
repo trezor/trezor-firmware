@@ -56,7 +56,7 @@ class UdpTransport(Transport):
         self.socket = None
 
     def __str__(self):
-        return "%s:%s:%s" % (self.PATH_PREFIX, *self.device)
+        return "%s:%s:%s" % ((self.PATH_PREFIX,) + self.device)
 
     @staticmethod
     def enumerate():
