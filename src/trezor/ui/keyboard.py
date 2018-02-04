@@ -59,7 +59,7 @@ class Input(Button):
         i = self.icon  # rendered icon
 
         tx = ax + 24  # x-offset of the content
-        ty = ay + ah//2 + 8  # y-offset of the content
+        ty = ay + ah // 2 + 8  # y-offset of the content
 
         # input content and the suggested word
         display.text(tx, ty, t, text_style, fg_color, bg_color)
@@ -72,7 +72,7 @@ class Input(Button):
             display.bar(px, ty + 2, pw + 1, 3, fg_color)
 
         if i:  # icon
-            ix = ax + aw - ICON*2
+            ix = ax + aw - ICON * 2
             iy = ty - ICON
             display.icon(ix, iy, res.load(i), fg_color, bg_color)
 

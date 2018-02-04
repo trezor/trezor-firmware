@@ -64,7 +64,6 @@ async def reset_device(ctx, msg):
             break
         await show_wrong_entry(ctx)
 
-
     # write PIN into storage
     if not config.change_pin('', newpin):
         raise wire.FailureError(

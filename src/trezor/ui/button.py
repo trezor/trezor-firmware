@@ -70,7 +70,7 @@ class Button(Widget):
                                ui.BG,
                                radius)
             display.bar_radius(ax + BORDER, ay + BORDER,
-                               aw - BORDER*2, ah - BORDER*2,
+                               aw - BORDER * 2, ah - BORDER * 2,
                                bg_color,
                                border_color,
                                radius)
@@ -84,14 +84,14 @@ class Button(Widget):
 
     def render_content(self, s, ax, ay, aw, ah):
         c = self.content
-        tx = ax + aw//2
-        ty = ay + ah//2 + 8
+        tx = ax + aw // 2
+        ty = ay + ah // 2 + 8
         if isinstance(c, str):
             display.text_center(
                 tx, ty, c, s['text-style'], s['fg-color'], s['bg-color'])
         else:
             display.icon(
-                tx - ICON//2, ty - ICON, c, s['fg-color'], s['bg-color'])
+                tx - ICON // 2, ty - ICON, c, s['fg-color'], s['bg-color'])
 
     def touch(self, event, pos):
         state = self.state
