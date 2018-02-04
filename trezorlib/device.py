@@ -22,6 +22,7 @@ from .transport_hid import HidTransport
 from .transport_udp import UdpTransport
 from .transport_webusb import WebUsbTransport
 
+
 class TrezorDevice(object):
 
     @classmethod
@@ -44,7 +45,7 @@ class TrezorDevice(object):
 
     @classmethod
     def find_by_path(cls, path):
-        if path == None:
+        if path is None:
             try:
                 return cls.enumerate()[0]
             except IndexError:
@@ -61,7 +62,7 @@ class TrezorDevice(object):
         if prefix == WebUsbTransport.PATH_PREFIX:
             return WebUsbTransport.find_by_path(path)
 
-        if prefix ==HidTransport.PATH_PREFIX:
+        if prefix == HidTransport.PATH_PREFIX:
             return HidTransport.find_by_path(path)
 
         raise Exception("Unknown path prefix '%s'" % prefix)
