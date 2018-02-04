@@ -23,7 +23,7 @@ import socket
 
 from .protocol_v1 import ProtocolV1
 from .protocol_v2 import ProtocolV2
-from .transport import Transport
+from .transport import Transport, TransportException
 
 
 class UdpTransport(Transport):
