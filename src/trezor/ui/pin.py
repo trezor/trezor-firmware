@@ -40,9 +40,19 @@ class PinMatrix(ui.Widget):
         # clear canvas under input line
         display.bar(0, 0, 240, 45, ui.BG)
 
-        # input line with a header
-        header = '*' * len(self.pin) if self.pin else self.label
-        display.text_center(120, 36, header, ui.BOLD, ui.GREY, ui.BG)
+        if self.pin:
+            # input line with pin
+            l = len(self.pin)
+            y = const(20)
+            size = const(10)
+            padding = const(14)
+            box_w = const(240)
+            x = (box_w - l * padding) // 2
+            for i in range(0, l):
+                ui.display.bar_radius(x + i * padding, y, size, size, ui.GREY, ui.BG, 4)
+        else:
+            # input line with header label
+            display.text_center(120, 36, self.label, ui.BOLD, ui.GREY, ui.BG)
 
         # pin matrix buttons
         for btn in self.pin_buttons:
