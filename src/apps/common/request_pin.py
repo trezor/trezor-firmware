@@ -16,8 +16,10 @@ async def request_pin(code: int = None) -> str:
     def onchange():
         c = dialog.cancel
         if matrix.pin:
-            c.content = res.load(ui.ICON_CLEAR)
+            c.normal_style = ui.BTN_CLEAR['normal']
+            c.content = res.load(ui.ICON_BACK)
         else:
+            c.normal_style = ui.BTN_CANCEL['normal']
             c.content = res.load(ui.ICON_LOCK)
         c.taint()
         c.render()

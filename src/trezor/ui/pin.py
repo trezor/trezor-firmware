@@ -67,5 +67,10 @@ class PinMatrix(ui.Widget):
 
     def change(self, pin):
         self.pin = pin
+        for btn in self.pin_buttons:
+            if len(self.pin) == self.maxlength:
+                btn.disable()
+            else:
+                btn.enable()
         if self.onchange:
             self.onchange()
