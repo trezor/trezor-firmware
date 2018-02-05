@@ -196,10 +196,7 @@ secbool storage_has_pin(void)
     if (sectrue != initialized) {
         return secfalse;
     }
-    const void *spin = NULL;
-    uint16_t spinlen = 0;
-    norcow_get(PIN_KEY, &spin, &spinlen);
-    return sectrue * (0 != spinlen);
+    return sectrue == pin_cmp(1) ? secfalse : sectrue;
 }
 
 secbool storage_change_pin(const uint32_t pin, const uint32_t newpin, mp_obj_t callback)
