@@ -12,12 +12,8 @@ class EntrySelector(Widget):
 
     def __init__(self, content):
         self.content = content
-        self.device = Button(ui.grid(8, n_y=4, n_x=4, cells_x=4), 'Device',
-                          normal_style=ui.BTN_KEY,
-                          active_style=ui.BTN_KEY_ACTIVE)
-        self.host = Button(ui.grid(12, n_y=4, n_x=4, cells_x=4), 'Host',
-                          normal_style=ui.BTN_KEY,
-                          active_style=ui.BTN_KEY_ACTIVE)
+        self.device = Button(ui.grid(8, n_y=4, n_x=4, cells_x=4), 'Device')
+        self.host = Button(ui.grid(12, n_y=4, n_x=4, cells_x=4), 'Host')
 
     def render(self):
         self.device.render()
