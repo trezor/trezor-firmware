@@ -82,6 +82,19 @@ async def alert(count: int=3):
     display.backlight(current)
 
 
+async def click() -> tuple:
+    touch = loop.select(io.TOUCH)
+    while True:
+        ev, *pos = yield touch
+        if ev == io.TOUCH_START:
+            break
+    while True:
+        ev, *pos = yield touch
+        if ev == io.TOUCH_END:
+            break
+    return pos
+
+
 async def backlight_slide(val: int, delay: int=20000, step: int=1):
     sleep = loop.sleep(delay)
     current = display.backlight()
