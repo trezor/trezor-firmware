@@ -24,9 +24,10 @@ async def layout_load_device(ctx, msg):
         ui.BOLD, 'Loading private seed', 'is not recommended.',
         ui.NORMAL, 'Continue only if you', 'know what you are doing!'))
 
-    storage.load_mnemonic(msg.mnemonic)
-    storage.load_settings(use_passphrase=msg.passphrase_protection,
-                          label=msg.label)
+    storage.load_mnemonic(
+        mnemonic=msg.mnemonic, needs_backup=True)
+    storage.load_settings(
+        use_passphrase=msg.passphrase_protection, label=msg.label)
     if msg.pin:
         config.change_pin(pin_to_int(''), pin_to_int(msg.pin), None)
 
