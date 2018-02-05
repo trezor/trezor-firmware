@@ -37,10 +37,11 @@ async def reset_device(ctx, msg):
             FailureType.UnexpectedMessage,
             'Already initialized')
 
-    # request new PIN
     if msg.pin_protection:
+        # request new PIN
         newpin = await request_pin_confirm(ctx)
     else:
+        # new PIN is empty
         newpin = ''
 
     # generate and display internal entropy
@@ -49,20 +50,22 @@ async def reset_device(ctx, msg):
         await show_entropy(ctx, internal_entropy)
 
     # request external entropy and compute mnemonic
-    ext_ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
+    ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
     mnemonic = generate_mnemonic(
-        msg.strength,
-        internal_entropy,
-        ext_ack.entropy)
+        msg.strength, internal_entropy, ack.entropy)
 
-    # warn user about mnemonic safety
-    await show_warning(ctx)
-    while True:
-        # show mnemonic and make user to confirm a random word
-        await show_mnemonic(ctx, mnemonic)
-        if await check_mnemonic(ctx, mnemonic):
-            break
-        await show_wrong_entry(ctx)
+    if msg.skip_backup:
+        # let user backup the mnemonic later
+        pass
+    else:
+        # warn user about mnemonic safety
+        await show_warning(ctx)
+        while True:
+            # show mnemonic and require confirmation of a random word
+            await show_mnemonic(ctx, mnemonic)
+            if await check_mnemonic(ctx, mnemonic):
+                break
+            await show_wrong_entry(ctx)
 
     # write PIN into storage
     if not config.change_pin('', newpin):
@@ -72,7 +75,8 @@ async def reset_device(ctx, msg):
     # write settings and mnemonic into storage
     storage.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection)
-    storage.load_mnemonic(mnemonic)
+    storage.load_mnemonic(
+        mnemonic=mnemonic, needs_backup=msg.skip_backup)
 
     # show success message
     await show_success(ctx)

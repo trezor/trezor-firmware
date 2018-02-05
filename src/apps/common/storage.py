@@ -12,6 +12,7 @@ _LANGUAGE       = const(0x03)  # str
 _LABEL          = const(0x04)  # str
 _USE_PASSPHRASE = const(0x05)  # 0x01 or empty
 _HOMESCREEN     = const(0x06)  # bytes
+_NEEDS_BACKUP   = const(0x07)  # 0x01 or empty
 
 
 def get_device_id() -> str:
@@ -42,9 +43,13 @@ def get_homescreen() -> bytes:
     return config.get(_APP, _HOMESCREEN, True)  # public
 
 
-def load_mnemonic(mnemonic: str):
-    config.set(_APP, _VERSION, _STORAGE_VERSION)
+def load_mnemonic(mnemonic: str, needs_backup: bool):
     config.set(_APP, _MNEMONIC, mnemonic.encode())
+    config.set(_APP, _VERSION, _STORAGE_VERSION)
+    if needs_backup:
+        config.set(_APP, _NEEDS_BACKUP, b'\x01')
+    else:
+        config.set(_APP, _NEEDS_BACKUP, b'')
 
 
 def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None):
