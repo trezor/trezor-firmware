@@ -37,16 +37,16 @@ async def reset_device(ctx, msg):
             FailureType.UnexpectedMessage,
             'Already initialized')
 
-    # generate and display internal entropy
-    internal_entropy = random.bytes(32)
-    if msg.display_random:
-        await show_entropy(ctx, internal_entropy)
-
     # request new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx)
     else:
         newpin = ''
+
+    # generate and display internal entropy
+    internal_entropy = random.bytes(32)
+    if msg.display_random:
+        await show_entropy(ctx, internal_entropy)
 
     # request external entropy and compute mnemonic
     ext_ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
@@ -160,11 +160,11 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
     lines = ['%d. %s' % (wi + 1, word) for wi, word in pages[page]]
     content = Text('Recovery seed', ui.ICON_RESET, ui.MONO, *lines)
     content = Scrollpage(content, page, page_count)
+    ui.display.clear()
 
     if page + 1 == page_count:
         await HoldToConfirmDialog(content)
     else:
-        ui.display.clear()
         content.render()
         await animate_swipe()
 
