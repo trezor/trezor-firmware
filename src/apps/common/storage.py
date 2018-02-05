@@ -27,7 +27,7 @@ def is_initialized() -> bool:
 
 
 def get_label() -> str:
-    return config.get(_APP, _LABEL).decode()
+    return config.get(_APP, _LABEL, True).decode()  # public
 
 
 def get_mnemonic() -> str:
@@ -39,7 +39,7 @@ def has_passphrase() -> bool:
 
 
 def get_homescreen() -> bytes:
-    return config.get(_APP, _HOMESCREEN)
+    return config.get(_APP, _HOMESCREEN, True)  # public
 
 
 def load_mnemonic(mnemonic: str):
@@ -49,16 +49,16 @@ def load_mnemonic(mnemonic: str):
 
 def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None):
     if label is not None:
-        config.set(_APP, _LABEL, label.encode())
+        config.set(_APP, _LABEL, label.encode(), True)  # public
     if use_passphrase is True:
         config.set(_APP, _USE_PASSPHRASE, b'\x01')
     if use_passphrase is False:
         config.set(_APP, _USE_PASSPHRASE, b'')
     if homescreen is not None:
         if homescreen[:8] == b'TOIf\x90\x00\x90\x00':
-            config.set(_APP, _HOMESCREEN, homescreen)
+            config.set(_APP, _HOMESCREEN, homescreen, True)  # public
         else:
-            config.set(_APP, _HOMESCREEN, b'')
+            config.set(_APP, _HOMESCREEN, b'', True)  # public
 
 
 def wipe():
