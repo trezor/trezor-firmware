@@ -7,6 +7,7 @@ from trezor.messages import ButtonRequestType, FailureType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
+from trezor.pin import pin_to_int
 from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.keyboard import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
@@ -68,7 +69,7 @@ async def reset_device(ctx, msg):
             await show_wrong_entry(ctx)
 
     # write PIN into storage
-    if not config.change_pin('', newpin):
+    if not config.change_pin(pin_to_int(''), pin_to_int(newpin), None):
         raise wire.FailureError(
             FailureType.ProcessError, 'Could not change PIN')
 
