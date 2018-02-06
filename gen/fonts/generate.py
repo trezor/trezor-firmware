@@ -19,17 +19,22 @@ class Img(object):
             return None
         raise Exception('Unknown color', p)
 
-img = Img('font.png')
-cur = ''
 
-for i in range(256):
-    x = (i % 16) * 10
-    y = (i // 16) * 10
+def convert(imgfile, outfile):
+    img = Img(imgfile)
     cur = ''
-    while img.pixel(x, y) != None:
-        val = ''.join(img.pixel(x, y + j) for j in range(8))
-        x += 1
-        cur += '\\x%02x' % int(val, 2)
-    cur = '\\x%02x' % (len(cur) // 4) + cur
-    ch = chr(i) if i >= 32 and i <= 126 else '_'
-    print('\t/* 0x%02x %c */ (uint8_t *)"%s",' % (i, ch , cur))
+    with open(outfile, 'w') as f:
+        for i in range(128):
+            x = (i % 16) * 10
+            y = (i // 16) * 10
+            cur = ''
+            while img.pixel(x, y) != None:
+                val = ''.join(img.pixel(x, y + j) for j in range(8))
+                x += 1
+                cur += '\\x%02x' % int(val, 2)
+            cur = '\\x%02x' % (len(cur) // 4) + cur
+            ch = chr(i) if i >= 32 and i <= 126 else '_'
+            f.write('\t/* 0x%02x %c */ (uint8_t *)"%s",\n' % (i, ch , cur))
+
+convert('fonts/fontfixed.png', 'fontfixed.inc')
+convert('fonts/font.png', 'font.inc')

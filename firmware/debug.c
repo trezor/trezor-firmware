@@ -35,8 +35,8 @@ void oledDebug(const char *line)
 	oledClear();
 	for (int i = 0; i < 8; i++) {
 		if (lines[i]) {
-			oledDrawChar(0, i * 8, '0' + (id + i) % 10, 1);
-			oledDrawString(8, i * 8, lines[i]);
+			oledDrawChar(0, i * 8, '0' + (id + i) % 10, FONT_STANDARD);
+			oledDrawString(8, i * 8, lines[i], FONT_STANDARD);
 		}
 	}
 	oledRefresh();

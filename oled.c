@@ -236,14 +236,15 @@ void oledSetBuffer(uint8_t *buf)
 	memcpy(_oledbuffer, buf, sizeof(_oledbuffer));
 }
 
-void oledDrawChar(int x, int y, char c, int zoom)
+void oledDrawChar(int x, int y, char c, int font)
 {
 	if (x >= OLED_WIDTH || y >= OLED_HEIGHT || y <= -FONT_HEIGHT) {
 		return;
 	}
 
-	int char_width = fontCharWidth(c);
-	const uint8_t *char_data = fontCharData(c);
+	int zoom = (font & FONT_DOUBLE ? 2 : 1);
+	int char_width = fontCharWidth(font & 0x7f, c);
+	const uint8_t *char_data = fontCharData(font & 0x7f, c);
 
 	if (x <= -char_width * zoom) {
 		return;
@@ -272,41 +273,43 @@ char oledConvertChar(const char c) {
 	return 0;
 }
 
-int oledStringWidth(const char *text) {
+int oledStringWidth(const char *text, int font) {
 	if (!text) return 0;
+	int size = (font & FONT_DOUBLE ? 2 : 1);
 	int l = 0;
 	for (; *text; text++) {
 		char c = oledConvertChar(*text);
 		if (c) {
-			l += fontCharWidth(c) + 1;
+			l += size * (fontCharWidth(font & 0x7f, c) + 1);
 		}
 	}
 	return l;
 }
 
-void oledDrawStringSize(int x, int y, const char* text, int size)
+void oledDrawString(int x, int y, const char* text, int font)
 {
 	if (!text) return;
 	int l = 0;
+	int size = (font & FONT_DOUBLE ? 2 : 1);
 	for (; *text; text++) {
 		char c = oledConvertChar(*text);
 		if (c) {
-			oledDrawChar(x + l, y, c, size);
-			l += size * (fontCharWidth(c) + 1);
+			oledDrawChar(x + l, y, c, font);
+			l += size * (fontCharWidth(font & 0x7f, c) + 1);
 		}
 	}
 }
 
-void oledDrawStringCenter(int y, const char* text)
+void oledDrawStringCenter(int y, const char* text, int font)
 {
-	int x = ( OLED_WIDTH - oledStringWidth(text) ) / 2;
-	oledDrawString(x, y, text);
+	int x = ( OLED_WIDTH - oledStringWidth(text, font) ) / 2;
+	oledDrawString(x, y, text, font);
 }
 
-void oledDrawStringRight(int x, int y, const char* text)
+void oledDrawStringRight(int x, int y, const char* text, int font)
 {
-	x -= oledStringWidth(text);
-	oledDrawString(x, y, text);
+	x -= oledStringWidth(text, font);
+	oledDrawString(x, y, text, font);
 }
 
 void oledDrawBitmap(int x, int y, const BITMAP *bmp)

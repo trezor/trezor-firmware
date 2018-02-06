@@ -260,7 +260,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 			int x = twoColumn ? 64 * col + 32 : 42 * col + 22;
 			int choice = word_matrix[nColumns*row + col];
 			const char *text = choice < num ? choices[choice] : "-";
-			oledDrawString(x - oledStringWidth(text)/2, y, text);
+			oledDrawString(x - oledStringWidth(text, FONT_STANDARD)/2, y, text, FONT_STANDARD);
 			if (twoColumn) {
 				oledInvert(x - 32 + 1, y - 1, x - 32 + 63 - 1, y + 8);
 			} else {

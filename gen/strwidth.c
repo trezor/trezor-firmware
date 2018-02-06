@@ -17,6 +17,7 @@ static inline char convert(char c) {
 
 int main(int argc, char **argv) {
 	char *line;
+	int font = FONT_STANDARD;
 	while ((line = readline(NULL)) != NULL) {
 		size_t length = strlen(line);
 		if (length) {
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
 
 		size_t width = 0;
 		for (size_t i = 0; i < length; i++) {
-			width += fontCharWidth(convert(line[i])) + 1;
+			width += fontCharWidth(font, convert(line[i])) + 1;
 		}
 
 		printf("%zu\n", width);

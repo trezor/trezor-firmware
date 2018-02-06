@@ -105,18 +105,18 @@ void bootloader_loop(void)
 	oledClear();
 	oledDrawBitmap(0, 0, &bmp_logo64);
 	if (firmware_present()) {
-		oledDrawString(52, 0, "TREZOR");
+		oledDrawString(52, 0, "TREZOR", FONT_STANDARD);
 		static char serial[25];
 		fill_serialno_fixed(serial);
-		oledDrawString(52, 20, "Serial No.");
-		oledDrawString(52, 40, serial + 12); // second part of serial
+		oledDrawString(52, 20, "Serial No.", FONT_STANDARD);
+		oledDrawString(52, 40, serial + 12, FONT_STANDARD); // second part of serial
 		serial[12] = 0;
-		oledDrawString(52, 30, serial);      // first part of serial
-		oledDrawStringRight(OLED_WIDTH - 1, OLED_HEIGHT - 8, "Loader " VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH));
+		oledDrawString(52, 30, serial, FONT_STANDARD);      // first part of serial
+		oledDrawStringRight(OLED_WIDTH - 1, OLED_HEIGHT - 8, "Loader " VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH), FONT_STANDARD);
 	} else {
-		oledDrawString(52, 10, "Welcome!");
-		oledDrawString(52, 30, "Please visit");
-		oledDrawString(52, 50, "trezor.io/start");
+		oledDrawString(52, 10, "Welcome!", FONT_STANDARD);
+		oledDrawString(52, 30, "Please visit", FONT_STANDARD);
+		oledDrawString(52, 50, "trezor.io/start", FONT_STANDARD);
 	}
 	oledRefresh();
 
