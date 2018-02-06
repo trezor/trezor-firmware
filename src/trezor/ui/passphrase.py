@@ -7,8 +7,8 @@ from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 
 KEYBOARD_KEYS = (
     ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0'),
-    ('_', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz', '*#'),
-    ('_', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ', '*#'),
+    (' ', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz', '*#'),
+    (' ', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ', '*#'),
     ('_', '.', '/', '!', '+', '-', '?', ',', ';', '$'))
 
 
@@ -19,7 +19,7 @@ def digit_area(i):
 
 
 def key_buttons(keys):
-    return [Button(digit_area(i), str(k)) for i, k in enumerate(keys)]
+    return [Button(digit_area(i), k) for i, k in enumerate(keys)]
 
 
 def render_scrollbar(page):
@@ -66,12 +66,16 @@ class Input(Button):
 
         # input content
         display.text(tx, ty, t, text_style, fg_color, bg_color)
+        width = display.text_width(t, text_style)
 
         if p:  # pending marker
-            width = display.text_width(t, text_style)
             pw = display.text_width(t[-1:], text_style)
-            px = tx + width - pw
-            display.bar(px, ty + 2, pw + 1, 3, fg_color)
+            display.bar(tx + width - pw, ty + 2, pw + 1, 3, fg_color)
+        else:  # cursor
+            display.bar(tx + width + 1, ty - 18, 2, 22, fg_color)
+
+
+CANCELLED = const(0)
 
 
 class PassphraseKeyboard(ui.Widget):
@@ -79,38 +83,39 @@ class PassphraseKeyboard(ui.Widget):
         self.prompt = prompt
         self.page = page
         self.input = Input(ui.grid(0, n_x=1, n_y=6), '')
-        self.back = Button(ui.grid(12),
-                           res.load(ui.ICON_BACK),
-                           style=ui.BTN_CLEAR)
+        self.back = Button(ui.grid(12), res.load(ui.ICON_BACK), style=ui.BTN_CLEAR)
+        self.done = Button(ui.grid(14), res.load(ui.ICON_CONFIRM), style=ui.BTN_CONFIRM)
         self.keys = key_buttons(KEYBOARD_KEYS[self.page])
         self.pbutton = None  # pending key button
         self.pindex = 0  # index of current pending char in pbutton
-        self.onchange = None
 
     def render(self):
+        # passphrase or prompt
         if self.input.content:
-            # content and backspace
             self.input.render()
-            self.back.render()
         else:
-            # prompt
             display.bar(0, 0, 240, 48, ui.BG)
             display.text_center(ui.SCREEN // 2, 32, self.prompt, ui.BOLD, ui.GREY, ui.BG)
-
-        # key buttons
+        render_scrollbar(self.page)
+        # buttons
+        self.back.render()
+        self.done.render()
         for btn in self.keys:
             btn.render()
 
-        render_scrollbar(self.page)
-
     def touch(self, event, pos):
         content = self.input.content
-
         if self.back.touch(event, pos) == BTN_CLICKED:
-            # backspace, delete the last character of input
-            self.edit(content[:-1])
-            return
-
+            if content:
+                # backspace, delete the last character of input
+                self.edit(content[:-1])
+                return
+            else:
+                # cancel
+                return CANCELLED
+        if self.done.touch(event, pos) == BTN_CLICKED:
+            # confirm button, return the content
+            return content
         for btn in self.keys:
             if btn.touch(event, pos) == BTN_CLICKED:
                 # key press, add new char to input or cycle the pending button
@@ -124,37 +129,35 @@ class PassphraseKeyboard(ui.Widget):
                 return
 
     def edit(self, content, button=None, index=0):
+        if button and len(button.content) == 1:
+            # one-letter buttons are never pending
+            button = None
+            index = 0
         self.pbutton = button
         self.pindex = index
         self.input.edit(content, button is not None)
-        if self.onchange:
-            self.onchange()
+        if content:
+            self.back.enable()
+        else:
+            self.back.disable()
 
     async def __iter__(self):
+        self.edit(self.input.content)  # init button state
         while True:
-            swipe = Swipe(directions=SWIPE_HORIZONTAL)
-            wait = loop.wait(swipe, self.show_page())
+            change = self.change_page()
+            enter = self.enter_text()
+            wait = loop.wait(change, enter)
             result = await wait
-            if swipe in wait.finished:
-                if result == SWIPE_LEFT:
-                    self.page = (self.page + 1) % len(KEYBOARD_KEYS)
-                else:
-                    self.page = (self.page - 1) % len(KEYBOARD_KEYS)
-                self.keys = key_buttons(KEYBOARD_KEYS[self.page])
-            else:
+            if enter in wait.finished:
                 return result
 
     @ui.layout
-    async def show_page(self):
+    async def enter_text(self):
         timeout = loop.sleep(1000 * 1000 * 1)
         touch = loop.select(io.TOUCH)
         wait_timeout = loop.wait(touch, timeout)
         wait_touch = loop.wait(touch)
         content = None
-
-        self.back.taint()
-        self.input.taint()
-
         while content is None:
             self.render()
             if self.pbutton is not None:
@@ -166,5 +169,14 @@ class PassphraseKeyboard(ui.Widget):
                 event, *pos = result
                 content = self.touch(event, pos)
             else:
+                # disable the pending buttons
                 self.edit(self.input.content)
         return content
+
+    async def change_page(self):
+        swipe = await Swipe(directions=SWIPE_HORIZONTAL)
+        if swipe == SWIPE_LEFT:
+            self.page = (self.page + 1) % len(KEYBOARD_KEYS)
+        else:
+            self.page = (self.page - 1) % len(KEYBOARD_KEYS)
+        self.keys = key_buttons(KEYBOARD_KEYS[self.page])

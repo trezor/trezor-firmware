@@ -3,18 +3,13 @@ from trezor import res, ui, wire
 
 async def request_passphrase_on_display(ctx):
     from trezor.messages.FailureType import ActionCancelled
-    from trezor.ui.confirm import ConfirmDialog, CONFIRMED
-    from trezor.ui.passphrase import PassphraseKeyboard
+    from trezor.ui.passphrase import PassphraseKeyboard, CANCELLED
 
     ui.display.clear()
-    keyboard = PassphraseKeyboard('Enter passphrase')
-
-    while True:
-        result = await keyboard
-        if result:
-            print(result)
-        else:
-            raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
+    passphrase = await PassphraseKeyboard('Enter passphrase')
+    if passphrase == CANCELLED:
+        raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
+    return passphrase
 
 
 async def request_passphrase_on_host(ctx):
