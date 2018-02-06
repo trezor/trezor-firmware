@@ -894,7 +894,7 @@ class ProtocolMixin(object):
 
             # If there's some part of signed transaction, let's add it
             if res.serialized and res.serialized.serialized_tx:
-                #log("RECEIVED PART OF SERIALIZED TX (%d BYTES)" % len(res.serialized.serialized_tx))
+                # log("RECEIVED PART OF SERIALIZED TX (%d BYTES)" % len(res.serialized.serialized_tx))
                 serialized_tx += res.serialized.serialized_tx
 
             if res.serialized and res.serialized.signature_index is not None:
@@ -963,7 +963,7 @@ class ProtocolMixin(object):
         if None in signatures:
             raise RuntimeError("Some signatures are missing!")
 
-        #log("SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" %
+        # log("SIGNED IN %.03f SECONDS, CALLED %d MESSAGES, %d BYTES" %
         #    (time.time() - start, counter, len(serialized_tx)))
 
         return (signatures, serialized_tx)
