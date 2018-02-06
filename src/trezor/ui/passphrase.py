@@ -63,10 +63,13 @@ class Input(Button):
 
         tx = ax + 24  # x-offset of the content
         ty = ay + ah // 2 + 8  # y-offset of the content
+        maxlen = const(14)  # maximum text length
 
         # input content
-        display.text(tx, ty, t, text_style, fg_color, bg_color)
+        if len(t) > maxlen:
+            t = '<' + t[-maxlen:]  # too long, align to the right
         width = display.text_width(t, text_style)
+        display.text(tx, ty, t, text_style, fg_color, bg_color)
 
         if p:  # pending marker
             pw = display.text_width(t[-1:], text_style)
