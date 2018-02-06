@@ -37,9 +37,6 @@
 #define USB_CDC_GET_LINE_CODING         0x21
 #define USB_CDC_SET_CONTROL_LINE_STATE  0x22
 
-// Maximal length of packets on IN CMD EP
-#define USB_CDC_MAX_CMD_PACKET_LEN      0x08
-
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
 secbool usb_vcp_add(const usb_vcp_info_t *info) {
@@ -349,9 +346,6 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
         .bDataBits   = 8,
     };
 
-    // TODO: make cmd buffer part of interface state
-    static uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
-
     if ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) {
         return USBD_OK;
     }
@@ -360,11 +354,11 @@ static int usb_vcp_class_setup(USBD_HandleTypeDef *dev, usb_vcp_state_t *state, 
         if (req->bRequest == USB_CDC_GET_LINE_CODING) {
             USBD_CtlSendData(dev, UNCONST(&line_coding), MIN(req->wLength, sizeof(line_coding)));
         } else {
-            USBD_CtlSendData(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+            USBD_CtlSendData(dev, state->cmd_buffer, MIN(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
         }
     } else { // USB_REQ_DIR_H2D
         if (req->wLength > 0) {
-            USBD_CtlPrepareRx(dev, cmd_buffer, MIN(req->wLength, sizeof(cmd_buffer)));
+            USBD_CtlPrepareRx(dev, state->cmd_buffer, MIN(req->wLength, USB_CDC_MAX_CMD_PACKET_LEN));
         }
     }
 

@@ -100,6 +100,9 @@ typedef struct {
     uint8_t *buf;
 } usb_rbuf_t;
 
+// Maximal length of packets on IN CMD EP
+#define USB_CDC_MAX_CMD_PACKET_LEN      0x08
+
 /* usb_vcp_state_t encapsulates all state used by enabled VCP interface.  It
  * needs to be completely initialized in usb_vcp_add and reset in
  * usb_vcp_class_init.  See usb_vcp_info_t for details of the configuration
@@ -117,6 +120,7 @@ typedef struct {
     uint8_t ep_out;
     uint8_t max_packet_len;
     uint8_t ep_in_is_idle; // Set to 1 after IN endpoint gets idle
+    uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
 } usb_vcp_state_t;
 
 secbool __wur usb_vcp_add(const usb_vcp_info_t *vcp_info);
