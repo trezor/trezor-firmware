@@ -42,8 +42,8 @@ static const char *format_ver(const char *format, uint32_t version)
     mini_snprintf(ver_str, sizeof(ver_str), format,
         (int)(version & 0xFF),
         (int)((version >> 8) & 0xFF),
-        (int)((version >> 16) & 0xFF),
-        (int)((version >> 24) & 0xFF)
+        (int)((version >> 16) & 0xFF)
+        // ignore build field (int)((version >> 24) & 0xFF)
     );
     return ver_str;
 }
@@ -76,7 +76,7 @@ void ui_screen_boot(const vendor_header * const vhdr, const image_header * const
 
     if (show_string) {
         display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 50, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_WHITE, boot_background, 0);
-        const char *ver_str = format_ver("%d.%d.%d.%d", fw_version);
+        const char *ver_str = format_ver("%d.%d.%d", fw_version);
         display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 25, ver_str, -1, FONT_NORMAL, COLOR_WHITE, boot_background, 0);
     }
 }
@@ -119,12 +119,12 @@ void ui_screen_third(void)
 void ui_screen_info(secbool buttons, const vendor_header * const vhdr, const image_header * const hdr)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    const char *ver_str = format_ver("Bootloader %d.%d.%d.%d", VERSION_UINT32);
+    const char *ver_str = format_ver("Bootloader %d.%d.%d", VERSION_UINT32);
     display_text(16, 32, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BL_GRAY, COLOR_WHITE);
     if (vhdr && hdr) {
-        ver_str = format_ver("Firmware %d.%d.%d.%d", (hdr->version));
+        ver_str = format_ver("Firmware %d.%d.%d", (hdr->version));
         display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
         display_text(55, 95, "by", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
         display_text(55, 120, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE, 0);
@@ -170,7 +170,7 @@ void ui_screen_install_confirm_upgrade(const vendor_header * const vhdr, const i
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text(55, 70, "Update firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    const char *ver_str = format_ver("to version %d.%d.%d.%d?", hdr->version);
+    const char *ver_str = format_ver("to version %d.%d.%d?", hdr->version);
     display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     ui_confirm_cancel_buttons();
 }
@@ -183,7 +183,7 @@ void ui_screen_install_confirm_newvendor(const vendor_header * const vhdr, const
     display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text(55, 70, "Install firmware by", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
-    const char *ver_str = format_ver("(version %d.%d.%d.%d)?", hdr->version);
+    const char *ver_str = format_ver("(version %d.%d.%d)?", hdr->version);
     display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE, 0);
     display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL, COLOR_BL_FAIL, COLOR_WHITE, 0);
     ui_confirm_cancel_buttons();
