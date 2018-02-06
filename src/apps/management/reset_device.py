@@ -177,6 +177,10 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
 @ui.layout
 async def check_mnemonic(ctx, mnemonic: str) -> bool:
     words = mnemonic.split()
-    index = random.uniform(len(words))
+    index = random.uniform(len(words) // 2)  # first half
+    result = await MnemonicKeyboard('Type %s. word' % (index + 1))
+    if result != words[index]:
+        return False
+    index = len(words) // 2 + random.uniform(len(words) // 2)  # second half
     result = await MnemonicKeyboard('Type %s. word' % (index + 1))
     return result == words[index]
