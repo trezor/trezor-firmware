@@ -7,8 +7,8 @@ from ubinascii import hexlify
 from . import networks
 
 
-async def confirm_tx(ctx, to, value, chain_id, token=None):  # todo wording
-    str_to = '0x' + hexlify(to).decode()  # todo use ethereum address format
+async def confirm_tx(ctx, to, value, chain_id, token=None):  # TODO: wording
+    str_to = '0x' + hexlify(to).decode()  # TODO: use ethereum address format
     content = Text('Confirm transaction', ui.ICON_RESET,
                    ui.BOLD, format_amount(value, token, chain_id),
                    ui.NORMAL, 'to',
@@ -16,7 +16,7 @@ async def confirm_tx(ctx, to, value, chain_id, token=None):  # todo wording
     return await confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
-async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):  # todo wording
+async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):  # TODO: wording
     content = Text('Confirm fee', ui.ICON_RESET,
                    'Sending: %s' % format_amount(spending, token, chain_id),
                    'Gas: %s' % format_amount(gas_price, token, chain_id),
@@ -24,7 +24,7 @@ async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None)
     return await hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
-async def confirm_data(ctx, data, data_total):  # todo wording
+async def confirm_data(ctx, data, data_total):  # TODO: wording
     str_data = hexlify(data[:8]).decode() + '..'
     content = Text('Confirm data:', ui.ICON_RESET,
                    ui.MONO, str_data,
