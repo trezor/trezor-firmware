@@ -140,9 +140,13 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
     return sectrue;
 }
 
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; }
 #define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; memset(msg_send.FIELD, 0, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); }
+#define MSG_SEND_ASSIGN_STRING_LEN(FIELD, VALUE, LEN) { msg_send.has_##FIELD = true; memset(msg_send.FIELD, 0, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, MIN(LEN, sizeof(msg_send.FIELD) - 1)); }
+#define MSG_SEND_ASSIGN_BYTES(FIELD, VALUE, LEN) { msg_send.has_##FIELD = true; memset(msg_send.FIELD.bytes, 0, sizeof(msg_send.FIELD.bytes)); memcpy(msg_send.FIELD.bytes, VALUE, MIN(LEN, sizeof(msg_send.FIELD.bytes))); msg_send.FIELD.size = MIN(LEN, sizeof(msg_send.FIELD.bytes)); }
 #define MSG_SEND(TYPE) _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send)
 
 typedef struct {
@@ -227,21 +231,44 @@ void send_user_abort(uint8_t iface_num, const char *msg)
     MSG_SEND(Failure);
 }
 
-void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr)
+static void send_msg_features(uint8_t iface_num, const vendor_header * const vhdr, const image_header * const hdr)
 {
-    MSG_RECV_INIT(Initialize);
-    MSG_RECV(Initialize);
-
     MSG_SEND_INIT(Features);
     MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
     MSG_SEND_ASSIGN_VALUE(major_version, VERSION_MAJOR);
     MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
     MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
     MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
-    MSG_SEND_ASSIGN_VALUE(firmware_present, (vhdr && hdr));
     MSG_SEND_ASSIGN_STRING(model, "T");
+    if (vhdr && hdr) {
+        MSG_SEND_ASSIGN_VALUE(firmware_present, true);
+        MSG_SEND_ASSIGN_VALUE(fw_major, (hdr->version & 0xFF));
+        MSG_SEND_ASSIGN_VALUE(fw_minor, ((hdr->version >> 8) & 0xFF));
+        MSG_SEND_ASSIGN_VALUE(fw_patch, ((hdr->version >> 16) & 0xFF));
+        MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, vhdr->vstr, vhdr->vstr_len);
+        uint8_t hash[32];
+        vendor_keys_hash(vhdr, hash);
+        MSG_SEND_ASSIGN_BYTES(fw_vendor_keys, hash, 32);
+    } else {
+        MSG_SEND_ASSIGN_VALUE(firmware_present, false);
+    }
+
     // TODO: pass info about installed firmware (vendor, version, etc.)
     MSG_SEND(Features);
+}
+
+void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr)
+{
+    MSG_RECV_INIT(Initialize);
+    MSG_RECV(Initialize);
+    send_msg_features(iface_num, vhdr, hdr);
+}
+
+void process_msg_GetFeatures(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr)
+{
+    MSG_RECV_INIT(GetFeatures);
+    MSG_RECV(GetFeatures);
+    send_msg_features(iface_num, vhdr, hdr);
 }
 
 void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)

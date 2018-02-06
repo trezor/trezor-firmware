@@ -150,6 +150,9 @@ static secbool bootloader_usb_loop(const vendor_header * const vhdr, const image
                     return sectrue; // jump to firmware
                 }
                 break;
+            case 55: // GetFeatures
+                process_msg_GetFeatures(USB_IFACE_NUM, msg_size, buf, vhdr, hdr);
+                break;
             default:
                 process_msg_unknown(USB_IFACE_NUM, msg_size, buf);
                 break;

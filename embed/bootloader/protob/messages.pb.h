@@ -67,7 +67,7 @@ typedef struct _Failure {
 } Failure;
 
 typedef PB_BYTES_ARRAY_T(20) Features_revision_t;
-typedef PB_BYTES_ARRAY_T(32) Features_bootloader_hash_t;
+typedef PB_BYTES_ARRAY_T(32) Features_fw_vendor_keys_t;
 typedef struct _Features {
     bool has_vendor;
     char vendor[33];
@@ -81,10 +81,6 @@ typedef struct _Features {
     bool bootloader_mode;
     bool has_device_id;
     char device_id[25];
-    bool has_pin_protection;
-    bool pin_protection;
-    bool has_passphrase_protection;
-    bool passphrase_protection;
     bool has_language;
     char language[17];
     bool has_label;
@@ -93,18 +89,20 @@ typedef struct _Features {
     bool initialized;
     bool has_revision;
     Features_revision_t revision;
-    bool has_bootloader_hash;
-    Features_bootloader_hash_t bootloader_hash;
-    bool has_imported;
-    bool imported;
-    bool has_pin_cached;
-    bool pin_cached;
-    bool has_passphrase_cached;
-    bool passphrase_cached;
     bool has_firmware_present;
     bool firmware_present;
     bool has_model;
     char model[17];
+    bool has_fw_major;
+    uint32_t fw_major;
+    bool has_fw_minor;
+    uint32_t fw_minor;
+    bool has_fw_patch;
+    uint32_t fw_patch;
+    bool has_fw_vendor;
+    char fw_vendor[256];
+    bool has_fw_vendor_keys;
+    Features_fw_vendor_keys_t fw_vendor_keys;
 /* @@protoc_insertion_point(struct:Features) */
 } Features;
 
@@ -153,7 +151,7 @@ typedef struct _Success {
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, ""}
+#define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, {0, {0}}}
 #define Ping_init_default                        {false, "", false, 0, false, 0, false, 0}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, (FailureType)0, false, ""}
@@ -164,7 +162,7 @@ typedef struct _Success {
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, 0, false, 0, false, "", false, "", false, 0, false, {0, {0}}, false, {0, {0}}, false, 0, false, 0, false, 0, false, 0, false, ""}
+#define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, {0, {0}}}
 #define Ping_init_zero                           {false, "", false, 0, false, 0, false, 0}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, (FailureType)0, false, ""}
@@ -185,18 +183,17 @@ typedef struct _Success {
 #define Features_patch_version_tag               4
 #define Features_bootloader_mode_tag             5
 #define Features_device_id_tag                   6
-#define Features_pin_protection_tag              7
-#define Features_passphrase_protection_tag       8
 #define Features_language_tag                    9
 #define Features_label_tag                       10
 #define Features_initialized_tag                 12
 #define Features_revision_tag                    13
-#define Features_bootloader_hash_tag             14
-#define Features_imported_tag                    15
-#define Features_pin_cached_tag                  16
-#define Features_passphrase_cached_tag           17
 #define Features_firmware_present_tag            18
 #define Features_model_tag                       21
+#define Features_fw_major_tag                    22
+#define Features_fw_minor_tag                    23
+#define Features_fw_patch_tag                    24
+#define Features_fw_vendor_tag                   25
+#define Features_fw_vendor_keys_tag              26
 #define FirmwareErase_length_tag                 1
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
@@ -211,7 +208,7 @@ typedef struct _Success {
 /* Struct field encoding specification for nanopb */
 extern const pb_field_t Initialize_fields[1];
 extern const pb_field_t GetFeatures_fields[1];
-extern const pb_field_t Features_fields[19];
+extern const pb_field_t Features_fields[18];
 extern const pb_field_t Ping_fields[5];
 extern const pb_field_t Success_fields[2];
 extern const pb_field_t Failure_fields[3];
@@ -224,7 +221,7 @@ extern const pb_field_t FirmwareUpload_fields[3];
 /* Maximum encoded size of messages (where known) */
 #define Initialize_size                          0
 #define GetFeatures_size                         0
-#define Features_size                            229
+#define Features_size                            499
 #define Ping_size                                265
 #define Success_size                             259
 #define Failure_size                             270

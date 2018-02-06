@@ -219,6 +219,7 @@ class VendorHeader(object):
         for i in range(self.vsig_n):
             print('  * vpub #%d :' % (i + 1), binascii.hexlify(self.vpub[i]).decode())
         print('  * vstr    :', self.vstr.decode())
+        print('  * vhash   :', binascii.hexlify(self.vhash()).decode())
         print('  * vimg    : (%d bytes)' % len(self.vimg))
         print('  * sigmask :', format_sigmask(self.sigmask))
         print('  * sig     :', binascii.hexlify(self.sig).decode())
@@ -245,6 +246,16 @@ class VendorHeader(object):
 
     def fingerprint(self):
         return pyblake2.blake2s(self.serialize_header(sig=False)).hexdigest()
+
+    def vhash(self):
+        h = pyblake2.blake2s()
+        h.update(struct.pack('<BB', self.vsig_m, self.vsig_n))
+        for i in range(8):
+            if i < self.vsig_n:
+                h.update(self.vpub[i])
+            else:
+                h.update(b'\x00' * 32)
+        return h.digest()
 
     def sign(self, sigmask, signature):
         header = self.serialize_header(sig=False)

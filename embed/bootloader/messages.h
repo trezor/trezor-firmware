@@ -17,6 +17,7 @@ secbool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_siz
 void send_user_abort(uint8_t iface_num, const char *msg);
 
 void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr);
+void process_msg_GetFeatures(uint8_t iface_num, uint32_t msg_size, uint8_t *buf, const vendor_header * const vhdr, const image_header * const hdr);
 void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf);

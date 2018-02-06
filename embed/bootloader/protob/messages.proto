@@ -37,27 +37,32 @@ message GetFeatures {
  * @prev GetFeatures
  */
 message Features {
-	optional string vendor = 1;			// name of the manufacturer, e.g. "bitcointrezor.com"
-	optional uint32 major_version = 2;		// major version of the device, e.g. 1
-	optional uint32 minor_version = 3;		// minor version of the device, e.g. 0
-	optional uint32 patch_version = 4;		// patch version of the device, e.g. 0
+	optional string vendor = 1;			// name of the manufacturer, e.g. "trezor.io"
+	optional uint32 major_version = 2;		// major version of the firmware/bootloader, e.g. 1
+	optional uint32 minor_version = 3;		// minor version of the firmware/bootloader, e.g. 0
+	optional uint32 patch_version = 4;		// patch version of the firmware/bootloader, e.g. 0
 	optional bool bootloader_mode = 5;		// is device in bootloader mode?
 	optional string device_id = 6;			// device's unique identifier
-	optional bool pin_protection = 7;		// is device protected by PIN?
-	optional bool passphrase_protection = 8;	// is node/mnemonic encrypted using passphrase?
+//	optional bool pin_protection = 7;		// is device protected by PIN?
+//	optional bool passphrase_protection = 8;	// is node/mnemonic encrypted using passphrase?
 	optional string language = 9;			// device language
 	optional string label = 10;			// device description label
 //	repeated CoinType coins = 11;			// supported coins
 	optional bool initialized = 12;			// does device contain seed?
 	optional bytes revision = 13;			// SCM revision of firmware
-	optional bytes bootloader_hash = 14;		// hash of the bootloader
-	optional bool imported = 15;			// was storage imported from an external source?
-	optional bool pin_cached = 16;			// is PIN already cached in session?
-	optional bool passphrase_cached = 17;		// is passphrase already cached in session?
+//	optional bytes bootloader_hash = 14;		// hash of the bootloader
+//	optional bool imported = 15;			// was storage imported from an external source?
+//	optional bool pin_cached = 16;			// is PIN already cached in session?
+//	optional bool passphrase_cached = 17;		// is passphrase already cached in session?
 	optional bool firmware_present = 18;		// is valid firmware loaded?
 //	optional bool needs_backup = 19;		// does storage need backup? (equals to Storage.needs_backup)
 //	optional uint32 flags = 20;			// device flags (equals to Storage.flags)
 	optional string model = 21;			// device hardware model
+	optional uint32 fw_major = 22;			// reported firmware version if in bootloader mode
+	optional uint32 fw_minor = 23;			// reported firmware version if in bootloader mode
+	optional uint32 fw_patch = 24;			// reported firmware version if in bootloader mode
+	optional string fw_vendor = 25;			// reported firmware vendor if in bootloader mode
+	optional bytes fw_vendor_keys = 26;		// reported firmware vendor keys (their hash)
 }
 
 /**
