@@ -196,7 +196,12 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
     mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
-    display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor, minwidth);
+    // prefill start
+    int w = display_text_width(text.buf, text.len, font);
+    int barwidth = MAX(w, minwidth);
+    display_bar(x - 1, y - 18, barwidth + 2, 23, bgcolor);
+    // prefill end
+    display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 8, mod_trezorui_Display_text);
@@ -215,7 +220,12 @@ STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args, const mp_obj_t *
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
     mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
-    display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor, minwidth);
+    // prefill start
+    int w = display_text_width(text.buf, text.len, font);
+    int barwidth = MAX(w, minwidth);
+    display_bar(x - barwidth / 2 - 1, y - 18, barwidth + 2, 23, bgcolor);
+    // prefill end
+    display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj, 7, 8, mod_trezorui_Display_text_center);
@@ -234,7 +244,12 @@ STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args, const mp_obj_t *a
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
     mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
-    display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor, minwidth);
+    // prefill start
+    int w = display_text_width(text.buf, text.len, font);
+    int barwidth = MAX(w, minwidth);
+    display_bar(x - barwidth - 1, y - 18, barwidth + 2, 23, bgcolor);
+    // prefill end
+    display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj, 7, 8, mod_trezorui_Display_text_right);

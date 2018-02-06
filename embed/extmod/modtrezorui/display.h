@@ -29,9 +29,6 @@
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #define FONT_BOLD   2
 #endif
-#ifndef TREZOR_FONT_PREFILL
-#define TREZOR_FONT_PREFILL 1
-#endif
 
 #define AVATAR_IMAGE_SIZE  144
 #define LOADER_ICON_SIZE   64
@@ -64,9 +61,9 @@ void display_print(const char *text, int textlen);
 void display_printf(const char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 #endif
 
-void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth);
-void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth);
-void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth);
+void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
 int display_text_width(const char *text, int textlen, uint8_t font);
 
 void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale);

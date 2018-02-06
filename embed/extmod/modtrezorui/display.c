@@ -37,6 +37,9 @@ static int DISPLAY_OFFSET[2] = {0, 0};
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 // common display functions
 
 static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1, uint8_t step)
@@ -57,8 +60,6 @@ static inline void set_color_table(uint16_t colortable[16], uint16_t fgcolor, ui
 
 static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0, int *x1, int *y1)
 {
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
     *x0 = MAX(x, 0);
     *y0 = MAX(y, 0);
     *x1 = MIN(x + w - 1, DISPLAY_RESX - 1);
@@ -457,41 +458,26 @@ static void display_text_render(int x, int y, const char *text, int textlen, uin
     }
 }
 
-#define max(x, y) (((x) > (y)) ? (x) : (y))
-
-void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth)
+void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
     x += DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
-#if TREZOR_FONT_PREFILL
-    int w = display_text_width(text, textlen, font);
-    int barwidth = max(w, minwidth);
-    display_bar(x - 1, y - 18, barwidth + 2, 23, bgcolor);
-#endif
     display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth)
+void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
     x += DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
     int w = display_text_width(text, textlen, font);
-#if TREZOR_FONT_PREFILL
-    int barwidth = max(w, minwidth);
-    display_bar(x - barwidth / 2 - 1, y - 18, barwidth + 2, 23, bgcolor);
-#endif
     display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor, int minwidth)
+void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
     x += DISPLAY_OFFSET[0];
     y += DISPLAY_OFFSET[1];
     int w = display_text_width(text, textlen, font);
-#if TREZOR_FONT_PREFILL
-    int barwidth = max(w, minwidth);
-    display_bar(x - barwidth - 1, y - 18, barwidth + 2, 23, bgcolor);
-#endif
     display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
 }
 
