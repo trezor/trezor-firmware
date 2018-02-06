@@ -9,7 +9,8 @@ async def sign_tx(ctx, msg):
     from . import signing
     from . import layout
 
-    root = await seed.get_root(ctx)
+    # TODO: rework this so we don't have to pass root to signing.sign_tx
+    root = await seed.derive_node(ctx, [])
 
     signer = signing.sign_tx(msg, root)
     res = None

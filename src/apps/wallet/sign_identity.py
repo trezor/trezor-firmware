@@ -91,8 +91,7 @@ async def layout_sign_identity(ctx, msg):
     display_identity(identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
-    node = await seed.get_root(ctx, msg.ecdsa_curve_name)
-    node.derive_path(address_n)
+    node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
 
     coin = coins.by_name('Bitcoin')
     if msg.ecdsa_curve_name == 'secp256k1':

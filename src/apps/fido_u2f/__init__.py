@@ -521,8 +521,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     nodepath = [_U2F_KEY_PATH] + keypath
 
     # prepare signing key from random path, compute decompressed public key
-    node = seed.get_root_without_passphrase('nist256p1')
-    node.derive_path(nodepath)
+    node = seed.derive_node_without_passphrase(nodepath, 'nist256p1')
     pubkey = nist256p1.publickey(node.private_key(), False)
 
     # first half of keyhandle is keypath
@@ -642,8 +641,7 @@ def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes):
 
     # derive the signing key
     nodepath = [_U2F_KEY_PATH] + list(keypath)
-    node = seed.get_root_without_passphrase('nist256p1')
-    node.derive_path(nodepath)
+    node = seed.derive_node_without_passphrase(nodepath, 'nist256p1')
 
     # second half of keyhandle is a hmac of app_id and keypath
     keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)

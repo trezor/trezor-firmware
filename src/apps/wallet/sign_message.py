@@ -15,8 +15,7 @@ async def sign_message(ctx, msg):
 
     await confirm_sign_message(ctx, message)
 
-    node = await seed.get_root(ctx)
-    node.derive_path(address_n)
+    node = await seed.derive_node(ctx, address_n)
     seckey = node.private_key()
 
     address = node.address(coin.address_type)

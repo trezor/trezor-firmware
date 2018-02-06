@@ -8,8 +8,7 @@ async def layout_get_public_key(ctx, msg):
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
 
-    node = await seed.get_root(ctx)
-    node.derive_path(address_n)
+    node = await seed.derive_node(ctx, address_n)
     coin = coins.by_name(coin_name)
 
     node_xpub = node.serialize_public(coin.xpub_magic)

@@ -20,8 +20,7 @@ async def ethereum_sign_message(ctx, msg):
     from ..common import seed
 
     address_n = msg.address_n or ()
-    node = await seed.get_root(ctx)
-    node.derive_path(address_n)
+    node = await seed.derive_node(ctx, address_n)
 
     signature = secp256k1.sign(node.private_key(), message_digest(msg.message), False)
 

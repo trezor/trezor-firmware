@@ -9,8 +9,7 @@ async def layout_ethereum_get_address(ctx, msg):
 
     address_n = msg.address_n or ()
 
-    node = await seed.get_root(ctx)
-    node.derive_path(address_n)
+    node = await seed.derive_node(ctx, address_n)
 
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False)  # uncompressed
