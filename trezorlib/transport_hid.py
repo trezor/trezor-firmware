@@ -79,6 +79,9 @@ class HidTransport(Transport):
         self.hid_version = None
 
     def __str__(self):
+        return self.get_path()
+
+    def get_path(self):
         return "%s:%s" % (self.PATH_PREFIX, self.device['path'].decode())
 
     @staticmethod

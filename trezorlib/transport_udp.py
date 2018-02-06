@@ -56,6 +56,9 @@ class UdpTransport(Transport):
         self.socket = None
 
     def __str__(self):
+        return self.get_path()
+
+    def get_path(self):
         return "%s:%s:%s" % ((self.PATH_PREFIX,) + self.device)
 
     @staticmethod
