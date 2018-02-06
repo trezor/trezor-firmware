@@ -26,3 +26,11 @@ def chunks(items, size):
 def ensure(cond):
     if not cond:
         raise AssertionError()
+
+
+def format_amount(amount, decimals):
+    d = pow(10, decimals)
+    amount = ('%d.%0*d' % (amount // d, decimals, amount % d)).rstrip('0')
+    if amount.endswith('.'):
+        amount += '0'
+    return amount
