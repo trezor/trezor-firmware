@@ -48,4 +48,8 @@ def format_amount(value, token, chain_id):
         decimals = 18
         suffix = networks.suffix_by_chain_id(chain_id)
 
-    return '%s %s' % (value // 10 ** decimals, suffix)
+    d = pow(10, decimals)
+    value = ('%d.%0*d' % (value // d , decimals, value % d)).rstrip('0')
+    if value.endswith('.'):
+        value += '0'
+    return '%s %s' % (value, suffix)
