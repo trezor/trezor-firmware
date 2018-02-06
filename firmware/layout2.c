@@ -320,9 +320,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledDrawString(left, 2 * 9, word_pos < 10 ? index_str + 1 : index_str, FONT_STANDARD);
 	oledDrawString(left, 3 * 9, word, FONT_STANDARD | FONT_DOUBLE);
 	oledHLine(OLED_HEIGHT - 13);
-	oledDrawString(OLED_WIDTH - fontCharWidth(FONT_STANDARD, '\x06') - 1, OLED_HEIGHT - 8, "\x06", FONT_STANDARD);
-	oledDrawStringRight(OLED_WIDTH - fontCharWidth(FONT_STANDARD, '\x06') - 3, OLED_HEIGHT - 8, btnYes, FONT_STANDARD);
-	oledInvert(OLED_WIDTH - oledStringWidth(btnYes, FONT_STANDARD) - fontCharWidth(FONT_STANDARD, '\x06') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+	layoutButtonYes(btnYes);
 	oledRefresh();
 }
 
@@ -500,16 +498,10 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 	}
 
 	if (!qrcode) {
-		static const char *btnNo = _("QR Code");
-		oledDrawString(2, OLED_HEIGHT - 8, btnNo, FONT_STANDARD);
-		oledInvert(0, OLED_HEIGHT - 9, oledStringWidth(btnNo, FONT_STANDARD) + 3, OLED_HEIGHT - 1);
+		layoutButtonNo(_("QR Code"));
 	}
 
-	static const char *btnYes = _("Continue");
-	oledDrawString(OLED_WIDTH - fontCharWidth(FONT_STANDARD, '\x06') - 1, OLED_HEIGHT - 8, "\x06", FONT_STANDARD);
-	oledDrawStringRight(OLED_WIDTH - fontCharWidth(FONT_STANDARD, '\x06') - 3, OLED_HEIGHT - 8, btnYes, FONT_STANDARD);
-	oledInvert(OLED_WIDTH - oledStringWidth(btnYes, FONT_STANDARD) - fontCharWidth(FONT_STANDARD, '\x06') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
-
+	layoutButtonYes(_("Continue"));
 	oledRefresh();
 }
 
