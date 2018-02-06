@@ -27,5 +27,9 @@ class Features(p.MessageType):
         19: ('needs_backup', p.BoolType, 0),
         20: ('flags', p.UVarintType, 0),
         21: ('model', p.UnicodeType, 0),
+        22: ('fw_major', p.UVarintType, 0),
+        23: ('fw_minor', p.UVarintType, 0),
+        24: ('fw_patch', p.UVarintType, 0),
+        25: ('fw_vendor', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 17
