@@ -97,7 +97,7 @@ class HidTransport(Transport):
         return devices
 
     @classmethod
-    def find_by_path(cls, path=None):
+    def find_by_path(cls, path):
         if isinstance(path, str):
             path = path.encode()
         path = path.replace(b'%s:' % cls.PATH_PREFIX.encode(), b'')

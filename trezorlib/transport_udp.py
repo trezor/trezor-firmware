@@ -69,11 +69,8 @@ class UdpTransport(Transport):
         return devices
 
     @classmethod
-    def find_by_path(cls, path=None):
-        if isinstance(path, str):
-            path = path.encode()
-
-        path = path.replace(b'%s:' % cls.PATH_PREFIX.encode(), b'')
+    def find_by_path(cls, path):
+        path = path.replace('%s:' % cls.PATH_PREFIX, '')
         return UdpTransport(path)
 
     def open(self):

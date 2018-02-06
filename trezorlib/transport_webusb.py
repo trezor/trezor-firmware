@@ -106,7 +106,7 @@ class WebUsbTransport(Transport):
         return devices
 
     @classmethod
-    def find_by_path(cls, path=None):
+    def find_by_path(cls, path):
         path = path.replace('%s:' % cls.PATH_PREFIX, '')  # Remove prefix from __str__()
         for transport in WebUsbTransport.enumerate():
             if path is None or dev_to_str(transport.device) == path:
