@@ -129,31 +129,31 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 	char str_out[32 + 3];
 	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
 	strlcat(str_out, " to", sizeof(str_out));
-	static char lines[2][28];
 	const char *addr = out->address;
 	int addrlen = strlen(addr);
-	int numlines = addrlen <= 34 ? 2 : 3;
-	int linelen = (addrlen + 3) / numlines + 1;
-	if (linelen > 27) {
-		linelen = 27;
+	int numlines = addrlen <= 42 ? 2 : 3;
+	int linelen = (addrlen - 1) / numlines + 1;
+	if (linelen > 21) {
+		linelen = 21;
 	}
-	if (numlines == 3) {
-		strlcpy(lines[0], addr, linelen + 1);
-		addr += linelen;
+	const char **str = split_message((const uint8_t *)addr, addrlen, linelen);
+	layoutLast = layoutDialogSwipe;
+	layoutSwipe();
+	oledClear();
+	oledDrawBitmap(0, 0, &bmp_icon_question);
+	oledDrawString(20, 0 * 9, _("Confirm sending"), FONT_STANDARD);
+	oledDrawString(20, 1 * 9, str_out, FONT_STANDARD);
+	int left = linelen > 18 ? 0 : 20;
+	oledDrawString(left, 2 * 9, str[0], FONT_FIXED);
+	oledDrawString(left, 3 * 9, str[1], FONT_FIXED);
+	oledDrawString(left, 4 * 9, str[2], FONT_FIXED);
+	oledDrawString(left, 5 * 9, str[3], FONT_FIXED);
+	if (!str[3][0]) {
+		oledHLine(OLED_HEIGHT - 13);
 	}
-	strlcpy(lines[1], addr, linelen + 1);
-	addr += linelen;
-	layoutDialogSwipe(&bmp_icon_question,
-		_("Cancel"),
-		_("Confirm"),
-		NULL,
-		_("Confirm sending"),
-		str_out,
-		lines[0],
-		lines[1],
-		addr,
-		NULL
-	);
+	layoutButtonNo(_("Cancel"));
+	layoutButtonYes(_("Confirm"));
+	oledRefresh();
 }
 
 void layoutConfirmOpReturn(const uint8_t *data, uint32_t size)
