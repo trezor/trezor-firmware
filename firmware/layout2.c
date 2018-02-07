@@ -250,6 +250,16 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
 	strlcat(str_out, " to", sizeof(str_out));
 	const char *addr = out->address;
+	if (coin->cashaddr_prefix) {
+		/* If this is a cashaddr address, remove the prefix from the
+		 * string presented to the user
+		 */
+		int prefix_len = strlen(coin->cashaddr_prefix);
+		if (strncmp(addr, coin->cashaddr_prefix, prefix_len) == 0
+			&& addr[prefix_len] == ':') {
+			addr += prefix_len + 1;
+		}
+	}
 	int addrlen = strlen(addr);
 	int numlines = addrlen <= 42 ? 2 : 3;
 	int linelen = (addrlen - 1) / numlines + 1;

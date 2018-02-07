@@ -217,11 +217,15 @@ static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n, 
 	return &node;
 }
 
-static bool fsm_layoutAddress(const char *address, const char *desc, bool ignorecase, const uint32_t *address_n, size_t address_n_count)
+static bool fsm_layoutAddress(const char *address, const char *desc, bool ignorecase, size_t prefixlen, const uint32_t *address_n, size_t address_n_count)
 {
 	bool qrcode = false;
 	for (;;) {
-		layoutAddress(address, desc, qrcode, ignorecase, address_n, address_n_count);
+		const char* display_addr = address;
+		if (prefixlen && !qrcode) {
+			display_addr += prefixlen;
+		}
+		layoutAddress(display_addr, desc, qrcode, ignorecase, address_n, address_n_count);
 		if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 			return true;
 		}
@@ -835,7 +839,9 @@ void fsm_msgGetAddress(GetAddress *msg)
 			}
 		}
 
-		if (!fsm_layoutAddress(address, desc, msg->script_type == InputScriptType_SPENDWITNESS, msg->address_n, msg->address_n_count)) {
+		bool is_cashaddr = coin->cashaddr_prefix != NULL;
+		bool is_bech32 = msg->script_type == InputScriptType_SPENDWITNESS;
+		if (!fsm_layoutAddress(address, desc, is_cashaddr || is_bech32, is_cashaddr ? strlen(coin->cashaddr_prefix) + 1 : 0, msg->address_n, msg->address_n_count)) {
 			return;
 		}
 	}
@@ -868,7 +874,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 		char address[43] = { '0', 'x' };
 		ethereum_address_checksum(resp->address.bytes, address + 2);
 
-		if (!fsm_layoutAddress(address, desc, false, msg->address_n, msg->address_n_count)) {
+		if (!fsm_layoutAddress(address, desc, false, 0, msg->address_n, msg->address_n_count)) {
 			return;
 		}
 	}
@@ -1293,7 +1299,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg)
 		strlcpy(desc, network, sizeof(desc));
 		strlcat(desc, ":", sizeof(desc));
 
-		if (!fsm_layoutAddress(resp->address, desc, true, msg->address_n, msg->address_n_count)) {
+		if (!fsm_layoutAddress(resp->address, desc, true, 0, msg->address_n, msg->address_n_count)) {
 			return;
 		}
 	}
