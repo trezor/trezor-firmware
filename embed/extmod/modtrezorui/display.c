@@ -422,25 +422,29 @@ static void display_text_render(int x, int y, const char *text, int textlen, uin
     uint16_t colortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
 
+    // we compute coordinates with 8x subpixel precision
+    x *= 8;
+    y *= 8;
+
     // render glyphs
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
-        const int8_t w = g[0]; // width
-        const int8_t h = g[1]; // height
-        const int8_t adv = g[2]; // advance
-        const int8_t bearX = g[3]; // bearingX
-        const int8_t bearY = g[4]; // bearingY
+        const uint8_t w = g[0]; // width
+        const uint8_t h = g[1]; // height
+        const uint8_t adv = g[2]; // advance
+        const uint8_t bearX = g[3]; // bearingX
+        const uint8_t bearY = g[4]; // bearingY
         if (w && h) {
             const int sx = x + bearX;
             const int sy = y - bearY;
             int x0, y0, x1, y1;
-            clamp_coords(sx, sy, w, h, &x0, &y0, &x1, &y1);
+            clamp_coords(sx / 8, sy / 8, w, h, &x0, &y0, &x1, &y1);
             display_set_window(x0, y0, x1, y1);
             for (int j = y0; j <= y1; j++) {
                 for (int i = x0; i <= x1; i++) {
-                    const int rx = i - sx;
-                    const int ry = j - sy;
+                    const int rx = i - sx / 8;
+                    const int ry = j - sy / 8;
                     const int a = rx + ry * w;
                     #if FONT_BPP == 2
                     const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
@@ -484,7 +488,7 @@ void display_text_right(int x, int y, const char *text, int textlen, uint8_t fon
 // compute the width of the text (in pixels)
 int display_text_width(const char *text, int textlen, uint8_t font)
 {
-    int w = 0;
+    int width = 0;
     // determine text length if not provided
     if (textlen < 0) {
         textlen = strlen(text);
@@ -492,10 +496,20 @@ int display_text_width(const char *text, int textlen, uint8_t font)
     for (int i = 0; i < textlen; i++) {
         const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
         if (!g) continue;
-        const int8_t adv = g[2]; // advance
-        w += adv;
+        const uint8_t adv = g[2]; // advance
+        width += adv;
+        /*
+        if (i != textlen - 1) {
+            const uint8_t adv = g[2]; // advance
+            width += adv;
+        } else { // last character
+            const uint8_t w = g[0]; // width
+            const uint8_t bearX = g[3]; // bearingX
+            width += (bearX + w);
+        }
+        */
     }
-    return w;
+    return width / 8;
 }
 
 void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)

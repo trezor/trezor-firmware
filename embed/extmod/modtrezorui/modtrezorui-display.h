@@ -199,7 +199,7 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
     // prefill start
     int w = display_text_width(text.buf, text.len, font);
     int barwidth = MAX(w, minwidth);
-    display_bar(x - 1, y - 18, barwidth + 2, 23, bgcolor);
+    display_bar(x, y - 18, barwidth, 23, bgcolor);
     // prefill end
     display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
@@ -223,7 +223,7 @@ STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args, const mp_obj_t *
     // prefill start
     int w = display_text_width(text.buf, text.len, font);
     int barwidth = MAX(w, minwidth);
-    display_bar(x - barwidth / 2 - 1, y - 18, barwidth + 2, 23, bgcolor);
+    display_bar(x - barwidth / 2, y - 18, barwidth, 23, bgcolor);
     // prefill end
     display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
@@ -247,7 +247,7 @@ STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args, const mp_obj_t *a
     // prefill start
     int w = display_text_width(text.buf, text.len, font);
     int barwidth = MAX(w, minwidth);
-    display_bar(x - barwidth - 1, y - 18, barwidth + 2, 23, bgcolor);
+    display_bar(x - barwidth, y - 18, barwidth, 23, bgcolor);
     // prefill end
     display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
     return mp_const_none;
