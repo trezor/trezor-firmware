@@ -179,6 +179,30 @@ BTN_KEY = {
     }
 }
 
+BTN_KEY_CONFIRM = {
+    'normal': {
+        'bg-color': GREEN,
+        'fg-color': FG,
+        'text-style': MONO,
+        'border-color': BG,
+        'radius': RADIUS,
+    },
+    'active': {
+        'bg-color': FG,
+        'fg-color': GREEN,
+        'text-style': MONO,
+        'border-color': FG,
+        'radius': RADIUS,
+    },
+    'disabled': {
+        'bg-color': BG,
+        'fg-color': GREY,
+        'text-style': MONO,
+        'border-color': BG,
+        'radius': RADIUS,
+    }
+}
+
 # loader
 LDR_DEFAULT = {
     'normal': {

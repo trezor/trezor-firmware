@@ -34,8 +34,8 @@ class Input(Button):
         self.taint()
         if content == word:  # confirm button
             self.enable()
-            self.normal_style = ui.BTN_CONFIRM['normal']
-            self.active_style = ui.BTN_CONFIRM['active']
+            self.normal_style = ui.BTN_KEY_CONFIRM['normal']
+            self.active_style = ui.BTN_KEY_CONFIRM['active']
             self.icon = ui.ICON_CONFIRM
         elif word:  # auto-complete button
             self.enable()
