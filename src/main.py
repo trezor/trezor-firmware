@@ -19,9 +19,9 @@ usb_wire = io.WebUSB(
 )
 
 usb_u2f = io.HID(
-    iface_num=3,
-    ep_in=0x84,
-    ep_out=0x03,
+    iface_num=1,
+    ep_in=0x82,
+    ep_out=0x02,
     report_desc=bytes([
         0x06, 0xd0, 0xf1,  # USAGE_PAGE (FIDO Alliance)
         0x09, 0x01,        # USAGE (U2F HID Authenticator Device)
@@ -44,16 +44,16 @@ usb_u2f = io.HID(
 
 if __debug__:
     usb_debug = io.WebUSB(
-        iface_num=4,
+        iface_num=2,
         ep_in=0x85,
-        ep_out=0x04,
+        ep_out=0x05,
     )
     usb_vcp = io.VCP(
-        iface_num=1,
-        data_iface_num=2,
-        ep_in=0x82,
-        ep_out=0x02,
-        ep_cmd=0x83,
+        iface_num=3,
+        data_iface_num=4,
+        ep_in=0x83,
+        ep_out=0x03,
+        ep_cmd=0x84,
     )
 
 usb = io.USB(
