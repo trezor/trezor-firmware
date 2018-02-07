@@ -20,7 +20,7 @@ def display_homescreen():
         image = storage.get_homescreen()
 
     if not image:
-        image = res.load('apps/homescreen/res/homescreen.toif')
+        image = res.load('apps/homescreen/res/bg.toif')
 
     ui.display.bar(0, 0, ui.SCREEN, ui.SCREEN, ui.BG)
     ui.display.avatar((ui.SCREEN - 144) // 2, (ui.SCREEN - 144) // 2 - 10, image, ui.WHITE, ui.BLACK)
