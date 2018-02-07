@@ -16,10 +16,10 @@ _NEEDS_BACKUP   = const(0x07)  # 0x01 or empty
 
 
 def get_device_id() -> str:
-    dev_id = config.get(_APP, _DEVICE_ID).decode()
+    dev_id = config.get(_APP, _DEVICE_ID, True).decode()  # public
     if not dev_id:
         dev_id = new_device_id()
-        config.set(_APP, _DEVICE_ID, dev_id.encode())
+        config.set(_APP, _DEVICE_ID, dev_id.encode(), True)  # public
     return dev_id
 
 

@@ -6,6 +6,8 @@ from trezor import loop
 from trezor import wire
 from trezor import workflow
 
+from apps.common.storage import get_device_id
+
 log.level = log.DEBUG
 
 # initialize the USB stack
@@ -60,7 +62,7 @@ usb = io.USB(
     release_num=0x0200,
     manufacturer="SatoshiLabs",
     product="TREZOR",
-    serial_number="44DD6B2C788D760538A78ECA",
+    serial_number=get_device_id(),
     interface="TREZOR Interface",
 )
 
