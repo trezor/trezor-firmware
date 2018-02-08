@@ -7,6 +7,8 @@ CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
 
+PYOPT = '1'
+
 # modtrezorconfig
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
@@ -286,7 +288,7 @@ SOURCE_PY.extend(Glob('src/*/*/*/*.py'))
 SOURCE_PY.extend(Glob('src/*/*/*/*/*.py'))
 SOURCE_PY_DIR = 'src/'
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT))
 
 env.Tool('micropython')
 
@@ -341,7 +343,7 @@ env.Replace(
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross',
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT
 )
 
 #
