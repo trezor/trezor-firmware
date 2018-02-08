@@ -12,9 +12,9 @@ from apps.wallet.sign_tx.writers import *
 
 # =============== P2PKH ===============
 
-def input_script_p2pkh_or_p2sh(pubkey: bytes, signature: bytes) -> bytearray:
+def input_script_p2pkh_or_p2sh(pubkey: bytes, signature: bytes, sighash: int) -> bytearray:
     w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
-    append_signature_and_pubkey(w, pubkey, signature)
+    append_signature_and_pubkey(w, pubkey, signature, sighash)
     return w
 
 
@@ -111,10 +111,10 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 
 # === helpers
 
-def append_signature_and_pubkey(w: bytearray, pubkey: bytes, signature: bytes) -> bytearray:
+def append_signature_and_pubkey(w: bytearray, pubkey: bytes, signature: bytes, sighash: int) -> bytearray:
     write_op_push(w, len(signature) + 1)
     write_bytes(w, signature)
-    w.append(0x01)  # SIGHASH_ALL
+    w.append(sighash)
     write_op_push(w, len(pubkey))
     write_bytes(w, pubkey)
     return w

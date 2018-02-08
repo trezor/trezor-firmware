@@ -21,22 +21,22 @@ class Bip143:
         write_bytes_rev(self.h_prevouts, txi.prev_hash)
         write_uint32(self.h_prevouts, txi.prev_index)
 
-    def get_prevouts_hash(self) -> bytes:
-        return get_tx_hash(self.h_prevouts, True)
-
     def add_sequence(self, txi: TxInputType):
         write_uint32(self.h_sequence, txi.sequence)
-
-    def get_sequence_hash(self) -> bytes:
-        return get_tx_hash(self.h_sequence, True)
 
     def add_output(self, txo_bin: TxOutputBinType):
         write_tx_output(self.h_outputs, txo_bin)
 
+    def get_prevouts_hash(self) -> bytes:
+        return get_tx_hash(self.h_prevouts, True)
+
+    def get_sequence_hash(self) -> bytes:
+        return get_tx_hash(self.h_sequence, True)
+
     def get_outputs_hash(self) -> bytes:
         return get_tx_hash(self.h_outputs, True)
 
-    def preimage_hash(self, tx: SignTx, txi: TxInputType, pubkeyhash) -> bytes:
+    def preimage_hash(self, tx: SignTx, txi: TxInputType, pubkeyhash: bytes, sighash: int) -> bytes:
         h_preimage = HashWriter(sha256)
 
         write_uint32(h_preimage, tx.version)  # nVersion
@@ -54,7 +54,7 @@ class Bip143:
 
         write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # hashOutputs
         write_uint32(h_preimage, tx.lock_time)  # nLockTime
-        write_uint32(h_preimage, 0x00000001)  # nHashType - only SIGHASH_ALL currently
+        write_uint32(h_preimage, sighash)  # nHashType
 
         return get_tx_hash(h_preimage, True)
 
@@ -62,9 +62,10 @@ class Bip143:
     # for P2WPKH this is always 0x1976a914{20-byte-pubkey-hash}88ac
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
         # p2wpkh in p2sh or native p2wpkh
-        is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
-                     txi.script_type == InputScriptType.SPENDP2SHWITNESS)
-        if is_segwit:
+        p2pkh = (txi.script_type == InputScriptType.SPENDWITNESS or
+                 txi.script_type == InputScriptType.SPENDP2SHWITNESS or
+                 txi.script_type == InputScriptType.SPENDADDRESS)
+        if p2pkh:
             s = bytearray(25)
             s[0] = 0x76  # OP_DUP
             s[1] = 0xA9  # OP_HASH_160

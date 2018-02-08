@@ -76,7 +76,18 @@ async def check_tx_fee(tx: SignTx, root):
         bip143.add_sequence(txi)
         is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
                      txi.script_type == InputScriptType.SPENDP2SHWITNESS)
-        if is_segwit:
+        if coin.force_bip143:
+            is_bip143 = (txi.script_type == InputScriptType.SPENDADDRESS)
+            if not is_bip143:
+                raise SigningError(FailureType.DataError,
+                                   'Wrong input script type')
+            if not txi.amount:
+                raise SigningError(FailureType.DataError,
+                                   'BIP 143 input without amount')
+            segwit[i] = False
+            segwit_in += txi.amount
+            total_in += txi.amount
+        elif is_segwit:
             if not coin.segwit:
                 raise SigningError(FailureType.DataError,
                                    'Segwit not enabled on this coin')
@@ -155,7 +166,39 @@ async def sign_tx(tx: SignTx, root):
         key_sign = None
         key_sign_pub = None
 
-        if segwit[i_sign]:
+        if coin.force_bip143:
+            # STAGE_REQUEST_SEGWIT_INPUT
+            txi_sign = await request_tx_input(tx_req, i_sign)
+            input_check_wallet_path(txi_sign, wallet_path)
+
+            is_bip143 = (txi_sign.script_type == InputScriptType.SPENDADDRESS)
+            if not is_bip143 or txi_sign.amount > authorized_in:
+                raise SigningError(FailureType.ProcessError,
+                                   'Transaction has changed during signing')
+            authorized_in -= txi_sign.amount
+
+            key_sign = node_derive(root, txi_sign.address_n)
+            key_sign_pub = key_sign.public_key()
+            bip143_hash = bip143.preimage_hash(
+                tx, txi_sign, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
+
+            signature = ecdsa_sign(key_sign, bip143_hash)
+            tx_ser.signature_index = i_sign
+            tx_ser.signature = signature
+
+            # serialize input with correct signature
+            txi_sign.script_sig = input_derive_script(
+                coin, txi_sign, key_sign_pub, signature)
+            w_txi_sign = bytearray_with_cap(
+                5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
+            if i_sign == 0:  # serializing first input => prepend headers
+                write_bytes(w_txi_sign, get_tx_header(tx))
+            write_tx_input(w_txi_sign, txi_sign)
+            tx_ser.serialized_tx = w_txi_sign
+
+            tx_req.serialized = tx_ser
+
+        elif segwit[i_sign]:
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await request_tx_input(tx_req, i_sign)
 
@@ -168,7 +211,8 @@ async def sign_tx(tx: SignTx, root):
 
             key_sign = node_derive(root, txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
-            txi_sign.script_sig = input_derive_script(txi_sign, key_sign_pub)
+            txi_sign.script_sig = input_derive_script(coin, txi_sign, key_sign_pub)
+
             w_txi = bytearray_with_cap(
                 7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
             if i_sign == 0:  # serializing first input => prepend headers
@@ -213,7 +257,7 @@ async def sign_tx(tx: SignTx, root):
 
             write_uint32(h_sign, tx.lock_time)
 
-            write_uint32(h_sign, 0x00000001)  # SIGHASH_ALL hash_type
+            write_uint32(h_sign, get_hash_type(coin))
 
             # check the control digests
             if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
@@ -227,7 +271,7 @@ async def sign_tx(tx: SignTx, root):
 
             # serialize input with correct signature
             txi_sign.script_sig = input_derive_script(
-                txi_sign, key_sign_pub, signature)
+                coin, txi_sign, key_sign_pub, signature)
             w_txi_sign = bytearray_with_cap(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
             if i_sign == 0:  # serializing first input => prepend headers
@@ -273,7 +317,8 @@ async def sign_tx(tx: SignTx, root):
 
             key_sign = node_derive(root, txi.address_n)
             key_sign_pub = key_sign.public_key()
-            bip143_hash = bip143.preimage_hash(tx, txi, ecdsa_hash_pubkey(key_sign_pub))
+            bip143_hash = bip143.preimage_hash(
+                tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             signature = ecdsa_sign(key_sign, bip143_hash)
             witness = get_p2wpkh_witness(signature, key_sign_pub)
@@ -336,6 +381,15 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
 
 # TX Helpers
 # ===
+
+
+def get_hash_type(coin: CoinType) -> int:
+    SIGHASH_FORKID = const(0x40)
+    SIGHASH_ALL = const(0x01)
+    hashtype = SIGHASH_ALL
+    if coin.forkid is not None:
+        hashtype |= (coin.forkid << 8) | SIGHASH_FORKID
+    return hashtype
 
 
 def get_tx_header(tx: SignTx, segwit=False):
@@ -425,9 +479,9 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
 # ===
 
 
-def input_derive_script(i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
+def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
     if i.script_type == InputScriptType.SPENDADDRESS:
-        return input_script_p2pkh_or_p2sh(pubkey, signature)  # p2pkh or p2sh
+        return input_script_p2pkh_or_p2sh(pubkey, signature, get_hash_type(coin))  # p2pkh or p2sh
     if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
     elif i.script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or p2wsh
