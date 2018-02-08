@@ -33,7 +33,6 @@ TXHASH_c6091a = unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9
 #
 
 
-@pytest.mark.skip_t2
 class TestMultisig(TrezorTest):
 
     def test_2_of_3(self):
