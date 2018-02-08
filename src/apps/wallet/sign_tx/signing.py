@@ -71,7 +71,7 @@ async def check_tx_fee(tx: SignTx, root):
         wallet_path = input_extract_wallet_path(txi, wallet_path)
         write_tx_input_check(h_first, txi)
         weight.add_input(txi)
-        bip143.add_prevouts(txi)
+        bip143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         bip143.add_sequence(txi)
         is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
                      txi.script_type == InputScriptType.SPENDP2SHWITNESS)
