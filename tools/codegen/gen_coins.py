@@ -17,6 +17,7 @@ fields = [
     'bip44',
     'segwit',
     'forkid',
+    'force_bip143',
     'default_fee_b',
     'dust_limit',
     'blocktime_minutes',
