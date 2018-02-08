@@ -28,31 +28,30 @@ def process_face(name, style, size):
         f.write('// rest is packed 4-bit glyph data\n\n')
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
-            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL | freetype.FT_LOAD_NO_HINTING)
+            face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
             bitmap = face.glyph.bitmap
             metrics = face.glyph.metrics
-            # assert metrics.width // 64 == bitmap.width
-            # assert metrics.height // 64 == bitmap.rows
-            # assert metrics.width % 64 == 0
-            # assert metrics.height % 64 == 0
-            # assert metrics.horiAdvance % 64 == 0
-            # assert metrics.horiBearingX % 64 == 0
-            # assert metrics.horiBearingY % 64 == 0
+            assert metrics.width // 64 == bitmap.width
+            assert metrics.height // 64 == bitmap.rows
+            assert metrics.width % 64 == 0
+            assert metrics.height % 64 == 0
+            assert metrics.horiAdvance % 64 == 0
+            assert metrics.horiBearingX % 64 == 0
+            assert metrics.horiBearingY % 64 == 0
             assert bitmap.width == bitmap.pitch
             assert len(bitmap.buffer) == bitmap.pitch * bitmap.rows
             width = bitmap.width
             rows = bitmap.rows
-            advance = (metrics.horiAdvance + 7) // 8
-            assert advance >= 0 and advance <= 255
-            bearingX = (metrics.horiBearingX + 7) // 8
-            # the following code is here just for the letters 'j' and '/'
-            # not using negative bearingX makes life so much easier
-            # add it to advance instead
-            if c in 'j/' and bearingX < 0:
+            advance = metrics.horiAdvance // 64
+            bearingX = metrics.horiBearingX // 64
+            # the following code is here just for some letters (listed below)
+            # not using negative bearingX makes life so much easier; add it to advance instead
+            if c in 'jy}),/' and bearingX < 0:
                 advance += -bearingX
                 bearingX = 0
+            bearingY = metrics.horiBearingY // 64
+            assert advance >= 0 and advance <= 255
             assert bearingX >= 0 and bearingX <= 255
-            bearingY = (metrics.horiBearingY + 7) // 8
             assert bearingY >= 0 and bearingY <= 255
             print('Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)' % (c, bitmap.width, bitmap.rows, bitmap.num_grays, len(bitmap.buffer), advance, bearingX, bearingY))
             f.write('/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d' % (c, name, style, size, i, width, rows, advance, bearingX, bearingY))
