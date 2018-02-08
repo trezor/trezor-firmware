@@ -64,6 +64,8 @@ async def check_tx_fee(tx: SignTx, root):
     change_out = 0  # change output amount
     wallet_path = []  # common prefix of input paths
     segwit = {}  # dict of booleans stating if input is segwit
+    multisig_fp = bytes()  # multisig fingerprint
+    multisig_fp_mismatch = False  # flag if multisig input fingerprints are equal
 
     for i in range(tx.inputs_count):
         # STAGE_REQUEST_1_INPUT
@@ -73,8 +75,7 @@ async def check_tx_fee(tx: SignTx, root):
         weight.add_input(txi)
         bip143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         bip143.add_sequence(txi)
-        is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
-                     txi.script_type == InputScriptType.SPENDP2SHWITNESS)
+
         if coin.force_bip143:
             is_bip143 = (txi.script_type == InputScriptType.SPENDADDRESS)
             if not is_bip143:
@@ -86,7 +87,8 @@ async def check_tx_fee(tx: SignTx, root):
             segwit[i] = False
             segwit_in += txi.amount
             total_in += txi.amount
-        elif is_segwit:
+
+        elif txi.script_type in [InputScriptType.SPENDWITNESS, InputScriptType.SPENDP2SHWITNESS]:
             if not coin.segwit:
                 raise SigningError(FailureType.DataError,
                                    'Segwit not enabled on this coin')
@@ -96,10 +98,18 @@ async def check_tx_fee(tx: SignTx, root):
             segwit[i] = True
             segwit_in += txi.amount
             total_in += txi.amount
+
         elif txi.script_type in [InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG]:
             segwit[i] = False
             total_in += await get_prevtx_output_value(
                 tx_req, txi.prev_hash, txi.prev_index)
+            if txi.script_type == InputScriptType.SPENDMULTISIG:
+                fp = multisig_fingerprint(txi.multisig)
+                if not len(multisig_fp):
+                    multisig_fp = fp
+                elif multisig_fp != fp:
+                    multisig_fp_mismatch = True
+
         else:
             raise SigningError(FailureType.DataError,
                                'Wrong input script type')
@@ -110,7 +120,7 @@ async def check_tx_fee(tx: SignTx, root):
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         weight.add_output(txo_bin.script_pubkey)
-        if output_is_change(txo, wallet_path, segwit_in):
+        if is_change(txo, wallet_path, segwit_in, multisig_fp, multisig_fp_mismatch):
             if change_out != 0:
                 raise SigningError(FailureType.ProcessError,
                                    'Only one change output is valid')
@@ -438,10 +448,6 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
     if o.address_n:  # change output
         if o.address:
             raise SigningError(FailureType.DataError, 'Address in change output')
-        if o.multisig:
-            if not check_address_n_against_pubkeys(o.multisig, o.address_n):
-                raise AddressError(FailureType.ProcessError,
-                                   'address_n must match one of the address_n in the MultisigRedeemScriptType pubkeys')
         o.address = get_address_for_change(o, coin, root)
     else:
         if not o.address:
@@ -543,3 +549,10 @@ def ecdsa_sign(node, digest: bytes) -> bytes:
     sig = secp256k1.sign(node.private_key(), digest)
     sigder = der.encode_seq((sig[1:33], sig[33:65]))
     return sigder
+
+
+def is_change(txo: TxOutputType, wallet_path, segwit_in: int, multisig_fp: bytes, multisig_fp_mismatch: bool) -> bool:
+    if txo.multisig:
+        if multisig_fp_mismatch or (multisig_fp != multisig_fingerprint(txo.multisig)):
+            return False
+    return output_is_change(txo, wallet_path, segwit_in)
