@@ -1,6 +1,4 @@
-from apps.wallet.sign_tx.multisig import *
 from apps.wallet.sign_tx.writers import *
-from apps.common.hash_writer import HashWriter
 
 from trezor.crypto.hashlib import sha256, ripemd160
 
@@ -102,7 +100,7 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
 
 # =============== Multisig ===============
 
-def input_script_multisig(current_signature, other_signatures, pubkeys, m: int):
+def input_script_multisig(current_signature, other_signatures, pubkeys, m: int, sighash: int):
     w = bytearray()
     # starts with OP_FALSE because of an old OP_CHECKMULTISIG bug,
     # which consumes one additional item on the stack
@@ -110,9 +108,9 @@ def input_script_multisig(current_signature, other_signatures, pubkeys, m: int):
     w.append(0x00)
     for s in other_signatures:
         if len(s):
-            append_signature(w, s)
+            append_signature(w, s, sighash)
 
-    append_signature(w, current_signature)
+    append_signature(w, current_signature, sighash)
 
     # redeem script
     redeem_script = script_multisig(pubkeys, m)

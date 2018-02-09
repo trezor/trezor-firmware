@@ -512,7 +512,8 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
         return input_script_native_p2wpkh_or_p2wsh()
     # mutlisig
     elif i.script_type == InputScriptType.SPENDMULTISIG:
-        return input_script_multisig(signature, i.multisig.signatures, multisig_get_pubkeys(i.multisig), i.multisig.m)
+        return input_script_multisig(signature, i.multisig.signatures, multisig_get_pubkeys(i.multisig), i.multisig.m,
+                                     get_hash_type(coin))
     else:
         raise SigningError(FailureType.ProcessError, 'Invalid script type')
 
