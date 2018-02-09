@@ -15,9 +15,10 @@ async def derive_node(ctx: wire.Context, path=[], curve_name=_DEFAULT_CURVE):
 
 async def _get_seed(ctx: wire.Context) -> bytes:
     from . import cache
-    if cache.seed is None:
-        cache.seed = await _compute_seed(ctx)
-    return cache.seed
+    if cache.get_seed() is None:
+        seed = await _compute_seed(ctx)
+        cache.set_seed(seed)
+    return cache.get_seed()
 
 
 async def _compute_seed(ctx: wire.Context) -> bytes:
