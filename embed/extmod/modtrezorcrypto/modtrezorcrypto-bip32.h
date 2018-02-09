@@ -88,9 +88,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size
     mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
     o->base.type = type;
 
-    o->fingerprint = (uint32_t)fingerprint;
-    o->hdnode.depth = (uint32_t)depth;
-    o->hdnode.child_num = (uint32_t)child_num;
+    o->fingerprint = fingerprint;
+    o->hdnode.depth = depth;
+    o->hdnode.child_num = child_num;
     if (NULL != chain_code.buf && 32 == chain_code.len) {
         memcpy(o->hdnode.chain_code, chain_code.buf, 32);
     } else {
@@ -149,9 +149,6 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
     uint32_t pi;
     uint32_t pints[plen];
     for (pi = 0; pi < plen; pi++) {
-        if (!MP_OBJ_IS_INT(pitems[pi])) {
-            mp_raise_TypeError("Index has to be int");
-        }
         pints[pi] = mp_obj_get_int_truncated(pitems[pi]);
     }
 
