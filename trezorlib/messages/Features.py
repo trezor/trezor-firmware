@@ -32,5 +32,6 @@ class Features(p.MessageType):
         24: ('fw_patch', p.UVarintType, 0),
         25: ('fw_vendor', p.UnicodeType, 0),
         26: ('fw_vendor_keys', p.BytesType, 0),
+        27: ('state', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 17
