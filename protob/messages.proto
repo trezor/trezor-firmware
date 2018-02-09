@@ -108,6 +108,7 @@ enum MessageType {
  * @next Features
  */
 message Initialize {
+	optional bytes state = 1;			// assumed device state
 }
 
 /**
@@ -149,6 +150,7 @@ message Features {
 	optional uint32 fw_patch = 24;			// reported firmware version if in bootloader mode
 	optional string fw_vendor = 25;			// reported firmware vendor if in bootloader mode
 	optional bytes fw_vendor_keys = 26;		// reported firmware vendor keys (their hash)
+	optional bytes state = 27;			// current device state
 }
 
 /**
