@@ -1,8 +1,11 @@
 #!/bin/bash
 
+MICROPYTHON=../build/unix/micropython
+PYOPT=0
+
 # run emulator
 cd ../src
-../build/unix/micropython -O0 main.py >/dev/null &
+$MICROPYTHON -O$PYOPT main.py >/dev/null &
 upy_pid=$!
 sleep 1
 

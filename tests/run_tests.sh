@@ -1,6 +1,7 @@
 #!/bin/bash
 
 MICROPYTHON=../build/unix/micropython
+PYOPT=1
 
 results=()
 error=0
@@ -13,7 +14,7 @@ fi
 
 for i in $list; do
     echo
-    if $MICROPYTHON $i; then
+    if $MICROPYTHON -O$PYOPT $i; then
         results+=("OK   $i")
     else
         results+=("FAIL $i")

@@ -3,7 +3,7 @@
 source emu.config 2>/dev/null
 
 EXE=build/unix/micropython
-OPTLEVEL="${OPTLEVEL:-0}"
+OPTLEVEL="${OPTLEVEL:-1}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"
 if file $EXE | grep -q 80386 ; then
