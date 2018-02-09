@@ -32,5 +32,5 @@ def format_amount(amount, decimals):
     d = pow(10, decimals)
     amount = ('%d.%0*d' % (amount // d, decimals, amount % d)).rstrip('0')
     if amount.endswith('.'):
-        amount += '0'
+        amount = amount[:-1]
     return amount
