@@ -3,6 +3,7 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, FailureType
 
 from apps.wallet.sign_tx.writers import *
+from apps.wallet.sign_tx.scripts import output_script_p2pkh
 from apps.common.hash_writer import HashWriter
 
 
@@ -58,22 +59,21 @@ class Bip143:
 
         return get_tx_hash(h_preimage, True)
 
-    # this not redeemScript nor scriptPubKey
-    # for P2WPKH this is always 0x1976a914{20-byte-pubkey-hash}88ac
+    # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
+    # item 5 for details
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
-        # p2wpkh in p2sh or native p2wpkh
+        # p2wsh multisig to be implemented
+        if txi.multisig:
+            raise Bip143Error(FailureType.DataError, 'Bip143 multisig support to be implemented')
+
         p2pkh = (txi.script_type == InputScriptType.SPENDWITNESS or
                  txi.script_type == InputScriptType.SPENDP2SHWITNESS or
                  txi.script_type == InputScriptType.SPENDADDRESS)
         if p2pkh:
-            s = bytearray(25)
-            s[0] = 0x76  # OP_DUP
-            s[1] = 0xA9  # OP_HASH_160
-            s[2] = 0x14  # pushing 20 bytes
-            s[3:23] = pubkeyhash
-            s[23] = 0x88  # OP_EQUALVERIFY
-            s[24] = 0xAC  # OP_CHECKSIG
-            return s
+            # for p2wpkh in p2sh or native p2wpkh
+            # the scriptCode is a classic p2pkh
+            return output_script_p2pkh(pubkeyhash)
+
         else:
             raise Bip143Error(FailureType.DataError,
                               'Unknown input script type for bip143 script code')
