@@ -1,13 +1,17 @@
 from trezor import config
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
-from trezor.messages.wire_types import Initialize, GetFeatures, Ping
+from trezor.messages.wire_types import Initialize, GetFeatures, Ping, ClearSession
 
 
 @unimport
 async def respond_Features(ctx, msg):
-    from apps.common import storage, coins
+    from apps.common import storage, coins, cache
     from trezor.messages.Features import Features
+
+    if msg.__qualname__ == 'Initialize':
+        if not hasattr(msg, 'state') or msg.state != cache.get_state():
+            cache.clear()
 
     f = Features()
     f.vendor = 'trezor.io'
@@ -25,6 +29,8 @@ async def respond_Features(ctx, msg):
     f.passphrase_protection = storage.has_passphrase()
     f.pin_protection = config.has_pin()
     f.language = 'english'
+
+    f.state = cache.get_state()
 
     return f
 
@@ -50,7 +56,16 @@ async def respond_Pong(ctx, msg):
     return s
 
 
+@unimport
+async def respond_ClearSession(ctx, msg):
+    from apps.common import cache
+    from trezor.messages.Success import Success
+    cache.clear()
+    return Success(message='Session cleared')
+
+
 def boot():
     register(Initialize, protobuf_workflow, respond_Features)
     register(GetFeatures, protobuf_workflow, respond_Features)
     register(Ping, protobuf_workflow, respond_Pong)
+    register(ClearSession, protobuf_workflow, respond_ClearSession)
