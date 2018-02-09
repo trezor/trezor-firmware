@@ -321,7 +321,7 @@ async def sign_tx(tx: SignTx, root):
                 tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             signature = ecdsa_sign(key_sign, bip143_hash)
-            witness = get_p2wpkh_witness(signature, key_sign_pub)
+            witness = get_p2wpkh_witness(coin, signature, key_sign_pub)
 
             tx_ser.serialized_tx = witness
             tx_ser.signature_index = i
@@ -402,10 +402,10 @@ def get_tx_header(tx: SignTx, segwit=False):
     return w_txi
 
 
-def get_p2wpkh_witness(signature: bytes, pubkey: bytes):
+def get_p2wpkh_witness(coin: CoinType, signature: bytes, pubkey: bytes):
     w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    append_signature_and_pubkey(w, pubkey, signature)
+    append_signature_and_pubkey(w, pubkey, signature, get_hash_type(coin))
     return w
 
 
