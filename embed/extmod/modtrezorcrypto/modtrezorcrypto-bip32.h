@@ -39,9 +39,9 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
 
     STATIC const mp_arg_t allowed_args[] = {
-        { MP_QSTR_depth,        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_fingerprint,  MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_child_num,    MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_depth,        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_fingerprint,  MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_child_num,    MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_chain_code,   MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
         { MP_QSTR_private_key,                    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
         { MP_QSTR_public_key,                     MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
@@ -54,9 +54,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size
     mp_buffer_info_t private_key;
     mp_buffer_info_t public_key;
     mp_buffer_info_t curve_name;
-    const mp_int_t depth      = vals[0].u_int;
-    const mp_int_t fingerprint = vals[1].u_int;
-    const mp_int_t child_num  = vals[2].u_int;
+    const uint32_t depth       = mp_obj_get_int_truncated(vals[0].u_obj);
+    const uint32_t fingerprint = mp_obj_get_int_truncated(vals[1].u_obj);
+    const uint32_t child_num   = mp_obj_get_int_truncated(vals[2].u_obj);
     mp_get_buffer_raise(vals[3].u_obj, &chain_code, MP_BUFFER_READ);
     mp_get_buffer_raise(vals[4].u_obj, &private_key, MP_BUFFER_READ);
     mp_get_buffer_raise(vals[5].u_obj, &public_key, MP_BUFFER_READ);
