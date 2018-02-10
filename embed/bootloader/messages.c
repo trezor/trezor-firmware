@@ -553,9 +553,15 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     // consume remaining message
-    int remaining_chunks = (msg_size - (USB_PACKET_SIZE - MSG_HEADER1_LEN)) / (USB_PACKET_SIZE - MSG_HEADER2_LEN);
+    int remaining_chunks = 0;
+
+    if (msg_size > (USB_PACKET_SIZE - MSG_HEADER1_LEN)) {
+        // calculate how many blocks need to be read to drain the message (rounded up to not leave any behind)
+        remaining_chunks = (msg_size - (USB_PACKET_SIZE - MSG_HEADER1_LEN) + ((USB_PACKET_SIZE - MSG_HEADER2_LEN) - 1)) / (USB_PACKET_SIZE - MSG_HEADER2_LEN);
+    }
+
     for (int i = 0; i < remaining_chunks; i++) {
-        int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE, USB_TIMEOUT);
+        int r = usb_webusb_read_blocking(iface_num, buf, USB_PACKET_SIZE, USB_TIMEOUT);
         ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
     }
 
