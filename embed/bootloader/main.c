@@ -227,14 +227,20 @@ main_start:
     image_header hdr;
     secbool firmware_present;
 
-    // detect whether the devices contains a firmware
+    // detect whether the devices contains a valid firmware
 
     firmware_present = load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
     if (sectrue == firmware_present) {
+        firmware_present = check_vendor_keys_lock(&vhdr);
+    }
+    if (sectrue == firmware_present) {
         firmware_present = load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
     }
+    if (sectrue == firmware_present) {
+        firmware_present = check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, firmware_sectors, FIRMWARE_SECTORS_COUNT);
+    }
 
-    // start the bootloader if no firmware found ...
+    // start the bootloader if no or broken firmware found ...
     if (firmware_present != sectrue) {
         // show intro animation
 
