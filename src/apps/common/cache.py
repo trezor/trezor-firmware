@@ -22,4 +22,4 @@ def set_seed(seed):
 
 def clear():
     global _seed, _state
-    _seed, _state = None
+    _seed, _state = None, None
