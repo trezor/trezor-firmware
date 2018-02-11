@@ -4,11 +4,12 @@ from trezor.ui import display
 from trezor.ui.button import BTN_CLICKED, ICON, Button
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 
+SPACE = res.load(ui.ICON_SPACE)
 
 KEYBOARD_KEYS = (
     ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0'),
-    (' ', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz', '*#'),
-    (' ', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ', '*#'),
+    (SPACE, 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz', '*#'),
+    (SPACE, 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ', '*#'),
     ('_', '.', '/', '!', '+', '-', '?', ',', ';', '$'))
 
 
@@ -127,7 +128,10 @@ class PassphraseKeyboard(ui.Widget):
                     content = content[:-1] + btn.content[index]
                 else:
                     index = 0
-                    content += btn.content[0]
+                    if isinstance(btn.content[0], str):
+                        content += btn.content[0]
+                    else:
+                        content += ' '
                 self.edit(content, btn, index)
                 return
 

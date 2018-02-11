@@ -57,6 +57,7 @@ ICON_BACK     = 'trezor/res/left.toig'
 ICON_NOCOPY   = 'trezor/res/nocopy.toig'
 ICON_SWIPE    = 'trezor/res/swipedown.toig'
 ICON_CHECK    = 'trezor/res/check.toig'
+ICON_SPACE    = 'trezor/res/space.toig'
 
 # buttons
 BTN_DEFAULT = {
