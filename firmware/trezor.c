@@ -102,6 +102,11 @@ int main(void)
 	}
 #endif
 
+#ifdef APPVER
+	// enable MPU (Memory Protection Unit)
+	mpu_config();
+#endif
+
 	timer_init();
 
 #if DEBUG_LINK

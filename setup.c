@@ -17,15 +17,31 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libopencm3/cm3/mpu.h>
+#include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
-#include <libopencm3/stm32/f2/rng.h>
+#include <libopencm3/stm32/rng.h>
 
 #include "rng.h"
 #include "layout.h"
+#include "memory.h"
 #include "util.h"
+
+#define MPU_RASR_SIZE_32B   (0x04UL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_32KB  (0x0EUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_64KB  (0x0FUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_128KB (0x10UL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_256KB (0x11UL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_512KB (0x12UL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_512MB (0x1CUL << MPU_RASR_SIZE_LSB)
+
+// http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
+#define MPU_RASR_ATTR_FLASH  (MPU_RASR_ATTR_C)
+#define MPU_RASR_ATTR_SRAM   (MPU_RASR_ATTR_S | MPU_RASR_ATTR_C)
+#define MPU_RASR_ATTR_PERIPH (MPU_RASR_ATTR_S | MPU_RASR_ATTR_B)
 
 uint32_t __stack_chk_guard;
 
@@ -44,6 +60,14 @@ void nmi_handler(void)
 	if ((RCC_CIR & RCC_CIR_CSSF) != 0) {
 		fault_handler("Clock instability");
 	}
+}
+
+void hard_fault_handler(void) {
+	fault_handler("Hard fault");
+}
+
+void mem_manage_handler(void) {
+	fault_handler("Memory fault");
 }
 
 void setup(void)
@@ -129,4 +153,44 @@ void setupApp(void)
 
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
+}
+
+// Never use in bootloader! Disables access to PPB (including MPU, NVIC, SCB)
+void mpu_config(void)
+{
+	// Enable memory fault handler
+	SCB_SHCSR |= SCB_SHCSR_MEMFAULTENA;
+
+	// Disable MPU
+	MPU_CTRL = 0;
+
+	// Bootloader (read-only, execute never)
+	MPU_RBAR = 0x08000000  | MPU_RBAR_VALID | (0 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH  | MPU_RASR_SIZE_32KB  | MPU_RASR_ATTR_AP_PRO_URO | MPU_RASR_ATTR_XN;
+
+	// Metadata (read-write, execute never)
+	MPU_RBAR = 0x08008000  | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH  | MPU_RASR_SIZE_32KB  | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+
+	// Firmware (read-only)
+	MPU_RBAR = 0x08010000  | MPU_RBAR_VALID | (2 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH  | MPU_RASR_SIZE_64KB  | MPU_RASR_ATTR_AP_PRO_URO;
+	MPU_RBAR = 0x08020000  | MPU_RBAR_VALID | (3 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH  | MPU_RASR_SIZE_128KB | MPU_RASR_ATTR_AP_PRO_URO;
+	MPU_RBAR = 0x08040000  | MPU_RBAR_VALID | (4 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH  | MPU_RASR_SIZE_256KB | MPU_RASR_ATTR_AP_PRO_URO;
+
+	// SRAM (read-write, execute never)
+	MPU_RBAR = 0x20000000  | MPU_RBAR_VALID | (5 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_SRAM   | MPU_RASR_SIZE_128KB | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+
+	// Peripherals (read-write, execute never)
+	MPU_RBAR = PERIPH_BASE | MPU_RBAR_VALID | (6 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_PERIPH | MPU_RASR_SIZE_512MB | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+
+	// Enable MPU
+	MPU_CTRL = MPU_CTRL_ENABLE;
+
+	__asm__ volatile("dsb");
+	__asm__ volatile("isb");
 }
