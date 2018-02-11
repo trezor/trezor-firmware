@@ -29,18 +29,20 @@
 
 uint32_t __stack_chk_guard;
 
-void __attribute__((noreturn)) __stack_chk_fail(void)
-{
-	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Stack smashing", "detected.", NULL, "Please unplug", "the device.", NULL);
+static inline void __attribute__((noreturn)) fault_handler(const char *line1) {
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, "detected.", NULL, "Unplug your TREZOR", "contact our support.", NULL);
 	for (;;) {} // loop forever
+}
+
+void __attribute__((noreturn)) __stack_chk_fail(void) {
+	fault_handler("Stack smashing");
 }
 
 void nmi_handler(void)
 {
 	// Clock Security System triggered NMI
 	if ((RCC_CIR & RCC_CIR_CSSF) != 0) {
-		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Clock instability", "detected.", NULL, "Please unplug", "the device.", NULL);
-		for (;;) {} // loop forever
+		fault_handler("Clock instability");
 	}
 }
 
