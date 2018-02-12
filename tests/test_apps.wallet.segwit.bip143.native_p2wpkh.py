@@ -19,21 +19,25 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
                        prev_index=0,
                        amount=625000000,  # 6.25 btc
                        script_type=InputScriptType.SPENDWITNESS,
+                       multisig=None,
                        sequence=0xffffffee)
     inp2 = TxInputType(address_n=[1],
                        # Trezor expects hash in reversed format
                        prev_hash=unhexlify('8ac60eb9575db5b2d987e29f301b5b819ea83a5c6579d282d189cc04b8e151ef'),
                        prev_index=1,
+                       multisig=None,
                        amount=600000000,  # 6 btc
                        script_type=InputScriptType.SPENDWITNESS,
                        sequence=0xffffffff)
     out1 = TxOutputType(address='1Cu32FVupVCgHkMMRJdYJugxwo2Aprgk7H',  # derived
                         amount=0x0000000006b22c20,
                         script_type=OutputScriptType.PAYTOADDRESS,
+                        multisig=None,
                         address_n=None)
     out2 = TxOutputType(address='16TZ8J6Q5iZKBWizWzFAYnrsaox5Z5aBRV',  # derived
                         amount=0x000000000d519390,
                         script_type=OutputScriptType.PAYTOADDRESS,
+                        multisig=None,
                         address_n=None)
 
     def test_prevouts(self):

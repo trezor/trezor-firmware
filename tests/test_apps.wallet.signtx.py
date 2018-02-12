@@ -53,7 +53,8 @@ class TestSignTx(unittest.TestCase):
         out1 = TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 10000,
                             script_type=OutputScriptType.PAYTOADDRESS,
-                            address_n=None)
+                            address_n=None,
+                            multisig=None)
         tx = SignTx(coin_name=None, version=None, lock_time=None, inputs_count=1, outputs_count=1)
 
         messages = [
