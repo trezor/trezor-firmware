@@ -110,7 +110,7 @@ void ui_screen_second(void)
 void ui_screen_third(void)
 {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-    display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2, 180, 30, toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12, COLOR_BLACK, COLOR_WHITE);
+    display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2 - 5, 180, 30, toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12, COLOR_BLACK, COLOR_WHITE);
     display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
 }
 
