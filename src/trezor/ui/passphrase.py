@@ -122,16 +122,18 @@ class PassphraseKeyboard(ui.Widget):
             return content
         for btn in self.keys:
             if btn.touch(event, pos) == BTN_CLICKED:
-                # key press, add new char to input or cycle the pending button
-                if self.pbutton is btn:
-                    index = (self.pindex + 1) % len(btn.content)
-                    content = content[:-1] + btn.content[index]
+                if isinstance(btn.content[0], str):
+                    # key press, add new char to input or cycle the pending button
+                    if self.pbutton is btn:
+                        index = (self.pindex + 1) % len(btn.content)
+                        content = content[:-1] + btn.content[index]
+                    else:
+                        index = 0
+                        content += btn.content[0]
                 else:
                     index = 0
-                    if isinstance(btn.content[0], str):
-                        content += btn.content[0]
-                    else:
-                        content += ' '
+                    content += ' '
+
                 self.edit(content, btn, index)
                 return
 
