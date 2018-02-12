@@ -3,20 +3,22 @@ from trezor import config
 from trezor.pin import pin_to_int, show_pin_timeout
 
 
-async def request_pin(ctx):
+async def request_pin(ctx, code: int = None):
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.messages.wire_types import ButtonAck
     from apps.common.request_pin import request_pin
 
     await ctx.call(ButtonRequest(), ButtonAck)
 
-    return await request_pin()
+    return await request_pin(code)
 
 
 async def request_pin_confirm(ctx):
+    from trezor.messages import PinMatrixRequestType
+
     while True:
-        pin1 = await request_pin(ctx)
-        pin2 = await request_pin(ctx)
+        pin1 = await request_pin(ctx, PinMatrixRequestType.NewFirst)
+        pin2 = await request_pin(ctx, PinMatrixRequestType.NewSecond)
         if pin1 == pin2:
             return pin1
         # TODO: display a message and wait
@@ -50,12 +52,11 @@ def confirm_change_pin(ctx, msg):
 async def layout_change_pin(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.messages.Failure import Failure
-    from trezor.messages.FailureType import PinInvalid
+    from trezor.messages import FailureType, PinMatrixRequestType
 
     await confirm_change_pin(ctx, msg)
-
     if config.has_pin():
-        curr_pin = await request_pin(ctx)
+        curr_pin = await request_pin(ctx, PinMatrixRequestType.Current)
     else:
         curr_pin = ''
     if msg.remove:
@@ -69,4 +70,4 @@ async def layout_change_pin(ctx, msg):
         else:
             return Success(message='PIN removed')
     else:
-        return Failure(code=PinInvalid, message='PIN invalid')
+        return Failure(code=FailureType.PinInvalid, message='PIN invalid')
