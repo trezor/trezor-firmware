@@ -217,37 +217,25 @@ static void usb_webusb_class_deinit(USBD_HandleTypeDef *dev, usb_webusb_state_t 
 
 static int usb_webusb_class_setup(USBD_HandleTypeDef *dev, usb_webusb_state_t *state, USBD_SetupReqTypedef *req) {
 
-    switch (req->bmRequest & USB_REQ_TYPE_MASK) {
-
-        // Class request
-        case USB_REQ_TYPE_CLASS:
-            switch (req->bRequest) {
-                default:
-                    USBD_CtlError(dev, req);
-                    return USBD_FAIL;
-            }
-            break;
-
-        // Interface & Endpoint request
-        case USB_REQ_TYPE_STANDARD:
-            switch (req->bRequest) {
-
-                case USB_REQ_SET_INTERFACE:
-                    state->alt_setting = req->wValue;
-                    USBD_CtlSendStatus(dev);
-                    return USBD_OK;
-
-                case USB_REQ_GET_INTERFACE:
-                    USBD_CtlSendData(dev, &state->alt_setting, sizeof(state->alt_setting));
-                    return USBD_OK;
-                default:
-                    USBD_CtlError(dev, req);
-                    return USBD_FAIL;
-            }
-            break;
+    if ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) {
+        return USBD_OK;
     }
 
-    return USBD_OK;
+    switch (req->bRequest) {
+
+        case USB_REQ_SET_INTERFACE:
+            state->alt_setting = req->wValue;
+            USBD_CtlSendStatus(dev);
+            return USBD_OK;
+
+        case USB_REQ_GET_INTERFACE:
+            USBD_CtlSendData(dev, &state->alt_setting, sizeof(state->alt_setting));
+            return USBD_OK;
+
+        default:
+            USBD_CtlError(dev, req);
+            return USBD_FAIL;
+    }
 }
 
 static void usb_webusb_class_data_in(USBD_HandleTypeDef *dev, usb_webusb_state_t *state, uint8_t ep_num) {

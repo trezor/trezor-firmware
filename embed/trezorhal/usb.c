@@ -373,21 +373,25 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                 }
             }
         }
-    } else if (req->wIndex >= USBD_MAX_NUM_INTERFACES) {
-        USBD_CtlError(dev, req);
-        return USBD_FAIL;
-    }
-    switch (usb_ifaces[req->wIndex].type) {
-        case USB_IFACE_TYPE_HID:
-            return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
-        case USB_IFACE_TYPE_VCP:
-            return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
-        case USB_IFACE_TYPE_WEBUSB:
-            return usb_webusb_class_setup(dev, &usb_ifaces[req->wIndex].webusb, req);
-        default:
+    } else
+    if ((req->bmRequest & USB_REQ_RECIPIENT_MASK) == USB_REQ_RECIPIENT_INTERFACE) {
+        if (req->wIndex >= USBD_MAX_NUM_INTERFACES) {
             USBD_CtlError(dev, req);
             return USBD_FAIL;
+        }
+        switch (usb_ifaces[req->wIndex].type) {
+            case USB_IFACE_TYPE_HID:
+                return usb_hid_class_setup(dev, &usb_ifaces[req->wIndex].hid, req);
+            case USB_IFACE_TYPE_VCP:
+                return usb_vcp_class_setup(dev, &usb_ifaces[req->wIndex].vcp, req);
+            case USB_IFACE_TYPE_WEBUSB:
+                return usb_webusb_class_setup(dev, &usb_ifaces[req->wIndex].webusb, req);
+            default:
+                USBD_CtlError(dev, req);
+                return USBD_FAIL;
+        }
     }
+    return USBD_OK;
 }
 
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
