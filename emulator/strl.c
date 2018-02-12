@@ -23,19 +23,22 @@
 
 size_t strlcpy(char *dst, const char *src, size_t size) {
 	if (size == 0) {
-		return 0;
+		return strlen(src);
 	}
 
-	for (size_t i = 0; i < size - 1; i++) {
+	size_t i;
+	for (i = 0; i < size - 1; i++) {
 		dst[i] = src[i];
 
 		if (src[i] == '\0') {
-			return i;
+			return i - 1;
 		}
 	}
 
 	dst[size - 1] = '\0';
-	return size - 2;
+
+	while (src[i++] != '\0');
+	return i - 1;
 }
 
 size_t strlcat(char *dst, const char *src, size_t size) {
