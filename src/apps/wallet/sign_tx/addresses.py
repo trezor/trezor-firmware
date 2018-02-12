@@ -24,21 +24,26 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
     if script_type == InputScriptType.SPENDADDRESS:  # p2pkh
         return node.address(coin.address_type)
 
-    elif script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh
+    elif script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or native p2wsh
         if not coin.segwit or not coin.bech32_prefix:
             raise AddressError(FailureType.ProcessError,
                                'Segwit not enabled on this coin')
+        # native p2wsh multisig
+        if multisig is not None:
+            return address_multisig_p2wsh(multisig_get_pubkeys(multisig), multisig.m, coin.bech32_prefix)
+
+        # native p2wpkh
         return address_p2wpkh(node.public_key(), coin.bech32_prefix)
 
-    elif script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh or p2wsh using p2sh
+    elif script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh or p2wsh nested in p2sh
         if not coin.segwit or coin.address_type_p2sh is None:
             raise AddressError(FailureType.ProcessError,
                                'Segwit not enabled on this coin')
-        # p2wsh multisig
+        # p2wsh multisig nested in p2sh
         if multisig is not None:
             return address_multisig_p2wsh_in_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
 
-        # p2wpkh
+        # p2wpkh nested in p2sh
         return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
 
     elif script_type == InputScriptType.SPENDMULTISIG:  # p2sh multisig
@@ -77,12 +82,9 @@ def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, addrtype):
     return address_p2wsh_in_p2sh(digest, addrtype)
 
 
-def address_multisig_p2wsh(pubkeys: bytes, m: int, addrtype):
+def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
     digest = output_script_multisig_p2wsh(pubkeys, m)
-    if addrtype is None:
-        raise AddressError(FailureType.ProcessError,
-                           'Multisig not enabled on this coin')
-    return address_p2sh(digest, addrtype)
+    return address_p2wsh(digest, hrp)
 
 
 def address_p2sh(redeem_script_hash: bytes, addrtype: int) -> str:
