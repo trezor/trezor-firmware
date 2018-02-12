@@ -1,6 +1,7 @@
 from apps.wallet.sign_tx.writers import *
 
 from trezor.crypto.hashlib import sha256, ripemd160
+from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 
 # TX Scripts
 # ===
@@ -69,7 +70,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
     return w
 
 
-# =============== Native P2WPKH nested in P2SH ===============
+# =============== P2WPKH nested in P2SH ===============
 # P2WPKH is nested in P2SH to be backwards compatible
 # see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
 
@@ -77,7 +78,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
 # signature is moved to the witness
 def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
     w = bytearray_with_cap(3 + len(pubkeyhash))
-    w.append(0x16)  # 0x16 - length of the redeemScript
+    w.append(0x16)  # length of the data
     w.append(0x00)  # witness version byte
     w.append(0x14)  # P2WPKH witness program (pub key hash length)
     write_bytes(w, pubkeyhash)  # pub key hash
@@ -98,7 +99,63 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
 # output script consists of 00 20 <32-byte-key-hash>
 # same as output_script_native_p2wpkh_or_p2wsh (only different length)
 
-# =============== Multisig ===============
+
+# =============== P2WSH nested in P2SH ===============
+# P2WSH is nested in P2SH to be backwards compatible
+# see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wsh-nested-in-bip16-p2sh
+
+# input script (scriptSig) is 22 00 20 <redeem script hash>
+# P2WSH script hash is always equal to 32 bytes (Ox20)
+# signature is moved to the witness
+def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
+    if len(script_hash) != 32:
+        raise Exception('Redeem script hash should be 32 bytes long')
+
+    w = bytearray_with_cap(3 + len(script_hash))
+    w.append(0x22)  # length of the data
+    w.append(0x00)  # witness version byte
+    w.append(0x20)  # P2WSH witness program (redeem script hash length)
+    write_bytes(w, script_hash)
+    return w
+
+# output script (scriptPubKey) is A9 14 <scripthash> 87
+# which is same as the output_script_p2sh
+
+
+# =============== SegWit Witness getters ===============
+
+def get_p2wpkh_witness(signature: bytes, pubkey: bytes, sighash: int):
+    w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
+    write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
+    append_signature(w, signature, sighash)
+    append_pubkey(w, pubkey)
+    return w
+
+
+def get_p2wsh_witness(multisig: MultisigRedeemScriptType, current_signature: bytes, other_signatures, sighash: int):
+    # filter empty
+    other_signatures = [s for s in other_signatures if len(s) > 0]
+
+    # witness program + other signatures + current signature + redeem script
+    num_of_witness_items = 1 + len(other_signatures) + 1 + 1
+
+    w = bytearray()
+    write_varint(w, num_of_witness_items)
+    write_varint(w, 0)  # version 0 witness program
+
+    for s in other_signatures:
+        append_signature(w, s, sighash)  # size of the witness included
+
+    append_signature(w, current_signature, sighash)
+
+    redeem_script = script_multisig(multisig_get_pubkeys(multisig), multisig.m)
+
+    write_varint(w, len(redeem_script))
+    write_bytes(w, redeem_script)
+    return w
+
+
+# -------------------------- Multisig --------------------------
 
 def input_script_multisig(current_signature, other_signatures, pubkeys, m: int, sighash: int):
     w = bytearray()
@@ -126,7 +183,7 @@ def output_script_multisig_p2sh(pubkeys, m) -> bytes:
     return ripemd160(h).digest()
 
 
-# returns a sha256() hash of a multisig script used in native P2WSH
+# returns a sha256() hash of a multisig script used in P2WSH
 def output_script_multisig_p2wsh(pubkeys, m) -> bytes:
     for pubkey in pubkeys:
         if len(pubkey) != 33:

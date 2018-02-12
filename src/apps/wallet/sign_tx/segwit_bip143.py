@@ -3,7 +3,8 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, FailureType
 
 from apps.wallet.sign_tx.writers import *
-from apps.wallet.sign_tx.scripts import output_script_p2pkh
+from apps.wallet.sign_tx.scripts import output_script_p2pkh, script_multisig
+from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.common.hash_writer import HashWriter
 
 
@@ -62,9 +63,9 @@ class Bip143:
     # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
     # item 5 for details
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
-        # p2wsh multisig to be implemented
+
         if txi.multisig:
-            raise Bip143Error(FailureType.DataError, 'Bip143 multisig support to be implemented')
+            return script_multisig(multisig_get_pubkeys(txi.multisig), txi.multisig.m)
 
         p2pkh = (txi.script_type == InputScriptType.SPENDWITNESS or
                  txi.script_type == InputScriptType.SPENDP2SHWITNESS or

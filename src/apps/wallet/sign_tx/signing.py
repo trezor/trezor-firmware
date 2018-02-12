@@ -103,7 +103,7 @@ async def check_tx_fee(tx: SignTx, root):
             segwit[i] = False
             total_in += await get_prevtx_output_value(
                 tx_req, txi.prev_hash, txi.prev_index)
-            if txi.script_type == InputScriptType.SPENDMULTISIG:
+            if txi.multisig:
                 fp = multisig_fingerprint(txi.multisig)
                 if not len(multisig_fp):
                     multisig_fp = fp
@@ -345,7 +345,10 @@ async def sign_tx(tx: SignTx, root):
                 tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             signature = ecdsa_sign(key_sign, bip143_hash)
-            witness = get_p2wpkh_witness(coin, signature, key_sign_pub)
+            if txi.multisig:
+                witness = get_p2wsh_witness(txi.multisig, signature, txi.multisig.signatures, get_hash_type(coin))
+            else:
+                witness = get_p2wpkh_witness(signature, key_sign_pub, get_hash_type(coin))
 
             tx_ser.serialized_tx = witness
             tx_ser.signature_index = i
@@ -426,14 +429,6 @@ def get_tx_header(tx: SignTx, segwit=False):
     return w_txi
 
 
-def get_p2wpkh_witness(coin: CoinType, signature: bytes, pubkey: bytes):
-    w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
-    write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    append_signature(w, signature, get_hash_type(coin))
-    append_pubkey(w, pubkey)
-    return w
-
-
 # TX Outputs
 # ===
 
@@ -506,10 +501,17 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
 def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
     if i.script_type == InputScriptType.SPENDADDRESS:
         return input_script_p2pkh_or_p2sh(pubkey, signature, get_hash_type(coin))  # p2pkh or p2sh
-    if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
+
+    if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh or p2wsh using p2sh
+        if i.multisig:  # p2wsh in p2sh
+            return input_script_p2wsh_in_p2sh(output_script_multisig_p2wsh(multisig_get_pubkeys(i.multisig),
+                                                                           i.multisig.m))
+        # p2wpkh in p2sh
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
+
     elif i.script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or p2wsh
         return input_script_native_p2wpkh_or_p2wsh()
+
     # mutlisig
     elif i.script_type == InputScriptType.SPENDMULTISIG:
         return input_script_multisig(signature, i.multisig.signatures, multisig_get_pubkeys(i.multisig), i.multisig.m,
