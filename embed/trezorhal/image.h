@@ -16,8 +16,7 @@
 #define BOOTLOADER_IMAGE_MAXSIZE (1 * IMAGE_CHUNK_SIZE)
 
 #define FIRMWARE_IMAGE_MAGIC     0x465A5254 // TRZF
-#define FIRMWARE_IMAGE_MAXSIZE   (6 * IMAGE_CHUNK_SIZE)
-// TODO: change above limitation to 13 blocks after fixing writing to non-continuous area
+#define FIRMWARE_IMAGE_MAXSIZE   (13 * IMAGE_CHUNK_SIZE)
 
 typedef struct {
     uint32_t magic;

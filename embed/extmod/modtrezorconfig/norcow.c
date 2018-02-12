@@ -196,10 +196,7 @@ static void compact()
 
         // copy the last item
         uint32_t posw;
-        r = write_item(norcow_next_sector, offsetw, k, v, l, &posw);
-        if (sectrue != r) {
-            // TODO: error
-        }
+        ensure(write_item(norcow_next_sector, offsetw, k, v, l, &posw), "compaction write failed");
         offsetw = posw;
     }
 

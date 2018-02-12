@@ -252,8 +252,6 @@ static void send_msg_features(uint8_t iface_num, const vendor_header * const vhd
     } else {
         MSG_SEND_ASSIGN_VALUE(firmware_present, false);
     }
-
-    // TODO: pass info about installed firmware (vendor, version, etc.)
     MSG_SEND(Features);
 }
 
