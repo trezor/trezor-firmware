@@ -122,6 +122,9 @@ class TestAddress(unittest.TestCase):
         address = address_multisig_p2wsh_in_p2sh(pubkeys, 2, coin.address_type_p2sh)
         self.assertEqual(address, '2MsZ2fpGKUydzY62v6trPHR8eCx5JTy1Dpa')
 
+    # def test_multisig_address_p2wsh(self):
+    # todo couldn't find test data
+
 
 if __name__ == '__main__':
     unittest.main()
