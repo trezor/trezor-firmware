@@ -3,6 +3,11 @@ from apps.wallet.sign_tx.writers import *
 from trezor.crypto.hashlib import sha256, ripemd160
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 
+
+class ScriptsError(ValueError):
+    pass
+
+
 # TX Scripts
 # ===
 
@@ -109,7 +114,7 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
 # signature is moved to the witness
 def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
     if len(script_hash) != 32:
-        raise Exception('Redeem script hash should be 32 bytes long')
+        raise ScriptsError('Redeem script hash should be 32 bytes long')
 
     w = bytearray_with_cap(3 + len(script_hash))
     w.append(0x22)  # length of the data
@@ -187,7 +192,7 @@ def output_script_multisig_p2sh(pubkeys, m) -> bytes:
 def output_script_multisig_p2wsh(pubkeys, m) -> bytes:
     for pubkey in pubkeys:
         if len(pubkey) != 33:
-            raise Exception  # only compressed public keys are allowed for P2WSH
+            raise ScriptsError('Only compressed public keys are allowed for P2WSH')
     script = script_multisig(pubkeys, m)
     return sha256(script).digest()
 
@@ -195,9 +200,9 @@ def output_script_multisig_p2wsh(pubkeys, m) -> bytes:
 def script_multisig(pubkeys, m) -> bytearray:
     n = len(pubkeys)
     if n < 1 or n > 15:
-        raise Exception
+        raise ScriptsError('Multisig n must be between 1 and 15')
     if m < 1 or m > 15:
-        raise Exception
+        raise ScriptsError('Multisig m must be between 1 and 15')
 
     w = bytearray()
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
