@@ -1,24 +1,20 @@
 from micropython import const
-from trezor import wire, ui
+from trezor import ui
 
 
 async def layout_get_address(ctx, msg):
     from trezor.messages.Address import Address
     from trezor.messages.InputScriptType import SPENDWITNESS
-    from trezor.messages.FailureType import ProcessError
     from ..common import coins
     from ..common import seed
     from ..wallet.sign_tx import addresses
-
-    if msg.multisig:
-        raise wire.FailureError(ProcessError, 'GetAddress.multisig is unsupported')
 
     address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
     node = await seed.derive_node(ctx, address_n)
-    address = addresses.get_address(msg.script_type, coin, node)
+    address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
 
     if msg.show_display:
         while True:

@@ -30,13 +30,18 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
                                'Segwit not enabled on this coin')
         return address_p2wpkh(node.public_key(), coin.bech32_prefix)
 
-    elif script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
+    elif script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh or p2wsh using p2sh
         if not coin.segwit or coin.address_type_p2sh is None:
             raise AddressError(FailureType.ProcessError,
                                'Segwit not enabled on this coin')
+        # p2wsh multisig
+        if multisig is not None:
+            return address_multisig_p2wsh_in_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
+
+        # p2wpkh
         return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
 
-    elif script_type == InputScriptType.SPENDMULTISIG:  # multisig
+    elif script_type == InputScriptType.SPENDMULTISIG:  # p2sh multisig
         if multisig is None:
             raise AddressError(FailureType.ProcessError,
                                'Multisig details required')
