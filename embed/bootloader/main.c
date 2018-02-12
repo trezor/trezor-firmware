@@ -28,6 +28,8 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 #endif
 };
 
+#define USB_IFACE_NUM   0
+
 static void usb_init_all(void) {
 
     static const usb_dev_info_t dev_info = {

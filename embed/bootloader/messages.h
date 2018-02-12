@@ -7,7 +7,6 @@
 
 #define USB_TIMEOUT       100
 #define USB_PACKET_SIZE   64
-#define USB_IFACE_NUM     0
 
 #define FIRMWARE_SECTORS_COUNT 13
 extern const uint8_t firmware_sectors[FIRMWARE_SECTORS_COUNT];
