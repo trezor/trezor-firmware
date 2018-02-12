@@ -22,6 +22,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
     def test_over_fee_threshold(self):
         coin_bitcoin = coins.by_name('Bitcoin')
+        coin_bitcoin.maxfee_kb = 500000
 
         ptx1 = TransactionType(version=1, lock_time=0, inputs_cnt=2, outputs_cnt=1, extra_data_len=0)
         pinp1 = TxInputType(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
