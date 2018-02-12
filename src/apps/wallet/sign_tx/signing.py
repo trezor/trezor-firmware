@@ -512,7 +512,7 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
     elif i.script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or p2wsh
         return input_script_native_p2wpkh_or_p2wsh()
 
-    # mutlisig
+    # multisig
     elif i.script_type == InputScriptType.SPENDMULTISIG:
         return input_script_multisig(signature, i.multisig.signatures, multisig_get_pubkeys(i.multisig), i.multisig.m,
                                      get_hash_type(coin))
