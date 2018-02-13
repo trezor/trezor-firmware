@@ -53,8 +53,4 @@ void mpu_config(void)
 
     // Enable MPU
     HAL_MPU_Enable(0);
-
-    // Switch to unprivileged mode
-    // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
-    __asm__ volatile("msr control, %0" :: "r" (0x1));
 }

@@ -354,7 +354,9 @@ main_start:
         ui_fadeout();
     }
 
-    mpu_config();
+    // mpu_config();
+    // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+
     jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
     return 0;
