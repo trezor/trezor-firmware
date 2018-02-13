@@ -23,8 +23,7 @@ OBJCOPY  := $(PREFIX)objcopy
 OBJDUMP  := $(PREFIX)objdump
 AR       := $(PREFIX)ar
 AS       := $(PREFIX)as
-FLASH    := st-flash
-OPENOCD  := openocd
+OPENOCD  := openocd -f interface/stlink-v2.cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
 
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
@@ -137,16 +136,7 @@ endif
 all: $(NAME).bin
 
 flash: $(NAME).bin
-	$(FLASH) write $(NAME).bin 0x8000000
-
-flash2: $(NAME).hex
-	$(OPENOCD) -f board/stm32f4discovery.cfg \
-		-c "init" \
-		-c "reset init" \
-		-c "stm32f2x mass_erase 0" \
-		-c "flash write_image $(NAME).hex" \
-		-c "reset" \
-		-c "shutdown"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $(NAME).bin 0x8000000; exit"
 
 upload: sign
 	trezorctl firmware_update -f $(NAME).bin
