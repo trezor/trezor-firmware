@@ -137,6 +137,7 @@ def get_p2wpkh_witness(signature: bytes, pubkey: bytes, sighash: int):
     return w
 
 
+# p2wsh is a generic mechanism but is currently used for multisig only
 def get_p2wsh_witness(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
 
     signatures = multisig.signatures  # other signatures
