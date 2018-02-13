@@ -102,12 +102,12 @@ int main(void)
 	}
 #endif
 
+	timer_init();
+
 #ifdef APPVER
 	// enable MPU (Memory Protection Unit)
 	mpu_config();
 #endif
-
-	timer_init();
 
 #if DEBUG_LINK
 	oledSetDebugLink(1);

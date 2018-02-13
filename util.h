@@ -66,6 +66,12 @@ static inline void __attribute__((noreturn)) load_vector_table(const vector_tabl
 	// Prevent compiler from generating stack protector code (which causes CPU fault because the stack is moved)
 	for (;;);
 }
+
+static inline void set_mode_unprivileged(void)
+{
+	// http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
+	__asm__ volatile("msr control, %0" :: "r" (0x1));
+}
 #endif
 
 #endif

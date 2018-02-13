@@ -193,4 +193,7 @@ void mpu_config(void)
 
 	__asm__ volatile("dsb");
 	__asm__ volatile("isb");
+
+	// Switch to unprivileged software execution to prevent access to MPU
+	set_mode_unprivileged();
 }
