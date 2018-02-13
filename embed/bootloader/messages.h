@@ -5,7 +5,7 @@
 #include "image.h"
 #include "secbool.h"
 
-#define USB_TIMEOUT       100
+#define USB_TIMEOUT       500
 #define USB_PACKET_SIZE   64
 
 #define FIRMWARE_SECTORS_COUNT 13
