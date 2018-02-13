@@ -13,6 +13,7 @@
 
 #include "bootui.h"
 #include "messages.h"
+#include "mpu.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
@@ -353,6 +354,7 @@ main_start:
         ui_fadeout();
     }
 
+    mpu_config();
     jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
     return 0;
