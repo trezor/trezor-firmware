@@ -346,7 +346,9 @@ async def sign_tx(tx: SignTx, root):
 
             signature = ecdsa_sign(key_sign, bip143_hash)
             if txi.multisig:
-                witness = get_p2wsh_witness(txi.multisig, signature, txi.multisig.signatures, get_hash_type(coin))
+                # place of our signature based on the pubkey
+                signature_index = multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
+                witness = get_p2wsh_witness(txi.multisig, signature, signature_index, get_hash_type(coin))
             else:
                 witness = get_p2wpkh_witness(signature, key_sign_pub, get_hash_type(coin))
 

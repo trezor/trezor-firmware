@@ -137,21 +137,25 @@ def get_p2wpkh_witness(signature: bytes, pubkey: bytes, sighash: int):
     return w
 
 
-def get_p2wsh_witness(multisig: MultisigRedeemScriptType, current_signature: bytes, other_signatures, sighash: int):
-    # filter empty
-    other_signatures = [s for s in other_signatures if len(s) > 0]
+def get_p2wsh_witness(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
 
-    # witness program + other signatures + current signature + redeem script
-    num_of_witness_items = 1 + len(other_signatures) + 1 + 1
+    signatures = multisig.signatures  # other signatures
+    if len(signatures[signature_index]) > 0:
+        raise ScriptsError('One of the multisig signatures occupies the current signature\'s spot')
+    signatures[signature_index] = signature  # our signature
+
+    # filter empty
+    signatures = [s for s in multisig.signatures if len(s) > 0]
+
+    # witness program + signatures + redeem script
+    num_of_witness_items = 1 + len(signatures) + 1
 
     w = bytearray()
     write_varint(w, num_of_witness_items)
     write_varint(w, 0)  # version 0 witness program
 
-    for s in other_signatures:
+    for s in signatures:
         append_signature(w, s, sighash)  # size of the witness included
-
-    append_signature(w, current_signature, sighash)
 
     redeem_script = script_multisig(multisig_get_pubkeys(multisig), multisig.m)
 
