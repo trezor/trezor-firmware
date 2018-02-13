@@ -46,7 +46,7 @@
 uint32_t __stack_chk_guard;
 
 static inline void __attribute__((noreturn)) fault_handler(const char *line1) {
-	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, "detected.", NULL, "Unplug your TREZOR", "contact our support.", NULL);
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, "detected.", NULL, "Please unplug", "the device.", NULL);
 	for (;;) {} // loop forever
 }
 
