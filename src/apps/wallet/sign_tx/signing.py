@@ -76,6 +76,13 @@ async def check_tx_fee(tx: SignTx, root):
         bip143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         bip143.add_sequence(txi)
 
+        if txi.multisig:
+            fp = multisig_fingerprint(txi.multisig)
+            if not len(multisig_fp):
+                multisig_fp = fp
+            elif multisig_fp != fp:
+                multisig_fp_mismatch = True
+
         if coin.force_bip143:
             is_bip143 = (txi.script_type == InputScriptType.SPENDADDRESS)
             if not is_bip143:
@@ -103,12 +110,6 @@ async def check_tx_fee(tx: SignTx, root):
             segwit[i] = False
             total_in += await get_prevtx_output_value(
                 tx_req, txi.prev_hash, txi.prev_index)
-            if txi.multisig:
-                fp = multisig_fingerprint(txi.multisig)
-                if not len(multisig_fp):
-                    multisig_fp = fp
-                elif multisig_fp != fp:
-                    multisig_fp_mismatch = True
 
         else:
             raise SigningError(FailureType.DataError,
