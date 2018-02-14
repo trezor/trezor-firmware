@@ -278,6 +278,9 @@ class TextUIMixin(object):
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
+        if msg.on_device is True:
+            return proto.PassphraseAck()
+
         if os.getenv("PASSPHRASE") is not None:
             log("Passphrase required. Using PASSPHRASE environment variable.")
             passphrase = Mnemonic.normalize_string(os.getenv("PASSPHRASE"))
