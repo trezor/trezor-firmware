@@ -108,7 +108,7 @@ enum MessageType {
  * @next Features
  */
 message Initialize {
-	optional bytes state = 1;			// assumed device state
+	optional bytes state = 1;			// assumed device state, clear session if set and different
 }
 
 /**
@@ -267,6 +267,7 @@ message Cancel {
  * @next Cancel
  */
 message PassphraseRequest {
+	optional bool on_device = 1;		// passphrase is being entered on the device
 }
 
 /**
@@ -275,6 +276,7 @@ message PassphraseRequest {
  */
 message PassphraseAck {
 	required string passphrase = 1;
+	optional bytes state = 2;		// assumed device state, throw error if set and different
 }
 
 /**
