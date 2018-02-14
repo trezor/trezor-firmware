@@ -3,4 +3,7 @@ import protobuf as p
 
 
 class PassphraseRequest(p.MessageType):
+    FIELDS = {
+        1: ('on_device', p.BoolType, 0),
+    }
     MESSAGE_WIRE_TYPE = 41
