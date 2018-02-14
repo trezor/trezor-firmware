@@ -1,5 +1,6 @@
 from trezor import res, ui, wire
 
+
 async def request_passphrase(ctx):
     from trezor.ui.text import Text
     from trezor.ui.entry_select import EntrySelector
@@ -11,7 +12,7 @@ async def request_passphrase(ctx):
     entry = EntrySelector(text)
     entry_type = await entry
 
-    on_device = on_device=(entry_type == 0)
+    on_device = (entry_type == 0)
 
     from trezor.messages.FailureType import ActionCancelled, ProcessError
     from trezor.messages.PassphraseRequest import PassphraseRequest
@@ -49,6 +50,7 @@ async def request_passphrase(ctx):
     # TODO: process ack.state and check against the current device state, throw error if different
 
     return passphrase
+
 
 async def protect_by_passphrase(ctx):
     from apps.common import storage
