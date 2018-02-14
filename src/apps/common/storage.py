@@ -13,6 +13,7 @@ _LABEL          = const(0x04)  # str
 _USE_PASSPHRASE = const(0x05)  # 0x01 or empty
 _HOMESCREEN     = const(0x06)  # bytes
 _NEEDS_BACKUP   = const(0x07)  # 0x01 or empty
+_FLAGS          = const(0x08)  # int
 
 
 def get_device_id() -> str:
@@ -43,7 +44,7 @@ def get_homescreen() -> bytes:
     return config.get(_APP, _HOMESCREEN, True)  # public
 
 
-def load_mnemonic(mnemonic: str, needs_backup: bool):
+def load_mnemonic(mnemonic: str, needs_backup: bool) -> None:
     config.set(_APP, _MNEMONIC, mnemonic.encode())
     config.set(_APP, _VERSION, _STORAGE_VERSION)
     if needs_backup:
@@ -52,7 +53,7 @@ def load_mnemonic(mnemonic: str, needs_backup: bool):
         config.set(_APP, _NEEDS_BACKUP, b'')
 
 
-def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None):
+def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public
     if use_passphrase is True:
@@ -64,6 +65,25 @@ def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=
             config.set(_APP, _HOMESCREEN, homescreen, True)  # public
         else:
             config.set(_APP, _HOMESCREEN, b'', True)  # public
+
+
+def get_flags() -> int:
+    b = config.get(_APP, _FLAGS)
+    if b is None:
+        return 0
+    else:
+        return int.from_bytes(b, 'big')
+
+
+def set_flags(flags: int) -> None:
+    b = config.get(_APP, _FLAGS)
+    if b is None:
+        b = 0
+    else:
+        b = int.from_bytes(b, 'big')
+    flags = (flags | b) & 0xFFFFFFFF
+    if flags != b:
+        config.set(_APP, _FLAGS, flags.to_bytes(4, 'big'))
 
 
 def wipe():

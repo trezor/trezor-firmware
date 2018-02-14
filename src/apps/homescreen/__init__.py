@@ -28,6 +28,7 @@ async def respond_Features(ctx, msg):
     f.initialized = storage.is_initialized()
     f.passphrase_protection = storage.has_passphrase()
     f.pin_protection = config.has_pin()
+    f.flags = storage.get_flags()
     f.language = 'english'
 
     f.state = cache.get_state()
