@@ -19,8 +19,9 @@
 #define DISPLAY_MEMORY_BASE  0x60000000
 #define DISPLAY_MEMORY_PIN   16
 
-#define CMD(X)  (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE))) = (X))
-#define DATA(X) (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE | (1 << DISPLAY_MEMORY_PIN)))) = (X))
+#define CMD(X)          (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE))) = (X))
+#define DATA(X)         (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE | (1 << DISPLAY_MEMORY_PIN)))) = (X))
+#define PIXELDATA(X)    DATA((X) >> 8); DATA((X) & 0xFF)
 
 #define LED_PWM_TIM_PERIOD (10000)
 

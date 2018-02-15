@@ -15,27 +15,23 @@
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE;
-static int DATAODD;
 static int POSX, POSY, SX, SY, EX, EY;
 
-void DATA(uint8_t x) {
+void PIXELDATA(uint16_t c) {
     if (!RENDERER) {
         display_init();
     }
     if (POSX <= EX && POSY <= EY) {
-        ((uint8_t *)BUFFER->pixels)[POSX * 2 + POSY * BUFFER->pitch + (DATAODD ^ 1)] = x;
+        ((uint16_t *)BUFFER->pixels)[POSX + POSY * BUFFER->pitch / sizeof(uint16_t)] = c;
     }
-    DATAODD = !DATAODD;
-    if (DATAODD == 0) {
-        POSX++;
-        if (POSX > EX) {
-            POSX = SX;
-            POSY++;
-        }
+    POSX++;
+    if (POSX > EX) {
+        POSX = SX;
+        POSY++;
     }
 }
 #else
-#define DATA(X) (void)(X);
+#define PIXELDATA(X) (void)(X)
 #endif
 
 void display_init(void)
@@ -78,7 +74,6 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
     SX = x0; SY = y0;
     EX = x1; EY = y1;
     POSX = SX; POSY = SY;
-    DATAODD = 0;
 #endif
 }
 

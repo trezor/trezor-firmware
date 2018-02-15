@@ -72,7 +72,7 @@ void display_clear(void)
     display_orientation(0); // set MADCTL first so that we can set the window correctly next
     display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1); // address the complete frame memory
     for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
-        DATA(0x00); DATA(0x00); // 2 bytes per pixel because we're using RGB 5-6-5 format
+        PIXELDATA(0x0000); // 2 bytes per pixel because we're using RGB 5-6-5 format
     }
     display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1); // go back to restricted window
     display_orientation(saved_orientation); // if valid, go back to the saved orientation
@@ -86,8 +86,7 @@ void display_bar(int x, int y, int w, int h, uint16_t c)
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
     for (int i = 0; i < (x1 - x0 + 1) * (y1 - y0 + 1); i++) {
-        DATA(c >> 8);
-        DATA(c & 0xFF);
+        PIXELDATA(c);
     }
 }
 
@@ -132,26 +131,21 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
             int ry = j - y;
             if (rx < CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
                 uint8_t c = cornertable[rx * r + ry * r * CORNER_RADIUS];
-                DATA(colortable[c] >> 8);
-                DATA(colortable[c] & 0xFF);
+                PIXELDATA(colortable[c]);
             } else
             if (rx < CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
                 uint8_t c = cornertable[rx * r + (h - 1 - ry) * r * CORNER_RADIUS];
-                DATA(colortable[c] >> 8);
-                DATA(colortable[c] & 0xFF);
+                PIXELDATA(colortable[c]);
             } else
             if (rx >= w - CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
                 uint8_t c = cornertable[(w - 1 - rx) * r + ry * r * CORNER_RADIUS];
-                DATA(colortable[c] >> 8);
-                DATA(colortable[c] & 0xFF);
+                PIXELDATA(colortable[c]);
             } else
             if (rx >= w - CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
                 uint8_t c = cornertable[(w - 1 - rx) * r + (h - 1 - ry) * r * CORNER_RADIUS];
-                DATA(colortable[c] >> 8);
-                DATA(colortable[c] & 0xFF);
+                PIXELDATA(colortable[c]);
             } else {
-                DATA(c >> 8);
-                DATA(c & 0xFF);
+                PIXELDATA(c);
             }
         }
     }
@@ -172,8 +166,7 @@ static void inflate_callback_image(uint8_t byte1, uint32_t pos, void *userdata)
     const int px = (pos / 2) % w;
     const int py = (pos / 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-        DATA(byte0);
-        DATA(byte1);
+        PIXELDATA((byte0 << 8) | byte1);
     }
 }
 
@@ -212,13 +205,11 @@ static void inflate_callback_avatar(uint8_t byte1, uint32_t pos, void *userdata)
         int d = (px - w / 2) * (px - w / 2) + (py - w / 2) * (py - w / 2);
         // inside border area
         if (d < AVATAR_BORDER_LOW) {
-            DATA(byte0);
-            DATA(byte1);
+            PIXELDATA((byte0 << 8) | byte1);
         } else
         // outside border area
         if (d > AVATAR_BORDER_HIGH) {
-            DATA(bgcolor >> 8);
-            DATA(bgcolor & 0xFF);
+            PIXELDATA(bgcolor);
         // border area
         } else {
 #if AVATAR_ANTIALIAS
@@ -229,11 +220,9 @@ static void inflate_callback_avatar(uint8_t byte1, uint32_t pos, void *userdata)
             } else {
                 c = interpolate_color(fgcolor, (byte0 << 8) | byte1 , d);
             }
-            DATA(c >> 8);
-            DATA(c & 0xFF);
+            PIXELDATA(c);
 #else
-            DATA(fgcolor >> 8);
-            DATA(fgcolor & 0xFF);
+            PIXELDATA(fgcolor);
 #endif
         }
     }
@@ -261,10 +250,8 @@ static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
     const int px = (pos * 2) % w;
     const int py = (pos * 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-        DATA(colortable[byte >> 4] >> 8);
-        DATA(colortable[byte >> 4] & 0xFF);
-        DATA(colortable[byte & 0x0F] >> 8);
-        DATA(colortable[byte & 0x0F] & 0xFF);
+        PIXELDATA(colortable[byte >> 4]);
+        PIXELDATA(colortable[byte & 0x0F]);
     }
 }
 
@@ -378,11 +365,9 @@ void display_print(const char *text, int textlen)
         if (c < ' ') c = ' ';
         const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
         if (k < 5 && (g[k] & (1 << j))) {
-            DATA(display_print_fgcolor >> 8);
-            DATA(display_print_fgcolor & 0xFF);
+            PIXELDATA(display_print_fgcolor);
         } else {
-            DATA(display_print_bgcolor >> 8);
-            DATA(display_print_bgcolor & 0xFF);
+            PIXELDATA(display_print_bgcolor);
         }
     }
     display_refresh();
@@ -449,8 +434,7 @@ static void display_text_render(int x, int y, const char *text, int textlen, uin
                     #else
                     #error Unsupported FONT_BPP value
                     #endif
-                    DATA(colortable[c] >> 8);
-                    DATA(colortable[c] & 0xFF);
+                    PIXELDATA(colortable[c]);
                 }
             }
         }
@@ -524,14 +508,14 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
             int ry = (j - y) / scale - 1;
             // 1px border
             if (rx < 0 || ry < 0 || rx >= side || ry >= side) {
-                DATA(0xFF); DATA(0xFF);
+                PIXELDATA(0xFFFF);
                 continue;
             }
             int a = rx * side + ry;
             if (bitdata[a / 8] & (1 << (7 - a % 8))) {
-                DATA(0x00); DATA(0x00);
+                PIXELDATA(0x0000);
             } else {
-                DATA(0xFF); DATA(0xFF);
+                PIXELDATA(0xFFFF);
             }
         }
     }
@@ -593,8 +577,7 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
                 } else {
                     c = (icon[i / 2] & 0xF0) >> 4;
                 }
-                DATA(iconcolortable[c] >> 8);
-                DATA(iconcolortable[c] & 0xFF);
+                PIXELDATA(iconcolortable[c]);
             } else {
                 uint8_t c;
                 if (progress > a) {
@@ -602,8 +585,7 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
                 } else {
                     c = img_loader[my][mx] & 0x000F;
                 }
-                DATA(colortable[c] >> 8);
-                DATA(colortable[c] & 0xFF);
+                PIXELDATA(colortable[c]);
             }
         }
     }
