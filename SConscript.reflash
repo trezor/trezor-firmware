@@ -83,7 +83,7 @@ env.Replace(
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
     CC='arm-none-eabi-gcc',
-    LINK='arm-none-eabi-ld',
+    LINK='arm-none-eabi-gcc',
     SIZE='arm-none-eabi-size',
     STRIP='arm-none-eabi-strip',
     OBJCOPY='arm-none-eabi-objcopy', )
@@ -99,7 +99,7 @@ env.Replace(
     '-fstack-protector-all '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-nostdlib -T embed/reflash/memory.ld --gc-sections -Map=build/reflash/reflash.map --warn-common',
+    LINKFLAGS='-T embed/reflash/memory.ld -Wl,--gc-sections -Wl,-Map=build/reflash/reflash.map -Wl,--warn-common',
     CPPPATH=[
         'embed/reflash',
         'embed/trezorhal',
@@ -147,7 +147,7 @@ program_elf = env.Command(
     target='reflash.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
 )
 
 program_bin = env.Command(

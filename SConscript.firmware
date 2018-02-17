@@ -297,7 +297,7 @@ env.Replace(
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
     CC='arm-none-eabi-gcc',
-    LINK='arm-none-eabi-ld',
+    LINK='arm-none-eabi-gcc',
     SIZE='arm-none-eabi-size',
     STRIP='arm-none-eabi-strip',
     OBJCOPY='arm-none-eabi-objcopy', )
@@ -314,7 +314,7 @@ env.Replace(
     '-fstack-protector-all '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-nostdlib -T embed/firmware/memory.ld --gc-sections -Map=build/firmware/firmware.map --warn-common',
+    LINKFLAGS='-T embed/firmware/memory.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common',
     CPPPATH=[
         '.',
         'embed/firmware',
@@ -413,7 +413,7 @@ program_elf = env.Command(
     target='firmware.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $LINKFLAGS $SOURCES `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libc_nano.a` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-file-name=libm.a` `$CC $CFLAGS $CCFLAGS $_CCCOMCOM -print-libgcc-file-name`',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
 )
 
 program_bin = env.Command(
