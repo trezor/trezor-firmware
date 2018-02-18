@@ -77,6 +77,14 @@ LDFLAGS  += -L$(TOP_DIR) \
 ifeq ($(EMULATOR),1)
 CFLAGS   += -DEMULATOR=1
 
+CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
+CFLAGS   += -include stdio.h
+
+LDFLAGS  += -L$(TOP_DIR)emulator
+
+LDLIBS   += -ltrezor -lemulator
+LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
+
 ifeq ($(HEADLESS),1)
 CFLAGS   += -DHEADLESS=1
 else
@@ -86,13 +94,6 @@ CFLAGS   += $(shell pkg-config --cflags sdl2)
 LDLIBS   += $(shell pkg-config --libs sdl2)
 endif
 
-CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
-CFLAGS   += -include stdio.h
-
-LDFLAGS  += -L$(TOP_DIR)emulator
-
-LDLIBS   += -ltrezor -lemulator
-LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
 else
 ifdef APPVER
 CFLAGS   += -DAPPVER=$(APPVER)
