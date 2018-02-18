@@ -43,15 +43,15 @@ static void display_unsleep(void)
 #endif
 }
 
-static uint16_t BUFFER_OFFSET_X = 0, BUFFER_OFFSET_Y = 0;
+static struct {
+    uint16_t x, y;
+} BUFFER_OFFSET;
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
 #if DISPLAY_ILI9341V || DISPLAY_ST7789V
-    x0 += BUFFER_OFFSET_X;
-    x1 += BUFFER_OFFSET_X;
-    y0 += BUFFER_OFFSET_Y;
-    y1 += BUFFER_OFFSET_Y;
+    x0 += BUFFER_OFFSET.x; x1 += BUFFER_OFFSET.x;
+    y0 += BUFFER_OFFSET.y; y1 += BUFFER_OFFSET.y;
     CMD(0x2A); DATA(x0 >> 8); DATA(x0 & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
     CMD(0x2B); DATA(y0 >> 8); DATA(y0 & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
     CMD(0x2C);
@@ -66,8 +66,8 @@ void display_set_orientation(int degrees)
     #define MY  (1 << 7)
     // MADCTL: Memory Data Access Control
     // reference section 9.3 in the ILI9341 manual; 8.12 in the ST7789V manual
-    BUFFER_OFFSET_X = 0;
-    BUFFER_OFFSET_Y = 0;
+    BUFFER_OFFSET.x = 0;
+    BUFFER_OFFSET.y = 0;
     uint8_t display_command_parameter = 0;
     switch (degrees) {
         case 0:
@@ -78,11 +78,11 @@ void display_set_orientation(int degrees)
             break;
         case 180:
             display_command_parameter = MX | MY;
-            BUFFER_OFFSET_Y = MAX_DISPLAY_RESY - DISPLAY_RESY;
+            BUFFER_OFFSET.y = MAX_DISPLAY_RESY - DISPLAY_RESY;
             break;
         case 270:
             display_command_parameter = MV | MY;
-            BUFFER_OFFSET_X = MAX_DISPLAY_RESY - DISPLAY_RESX;
+            BUFFER_OFFSET.x = MAX_DISPLAY_RESY - DISPLAY_RESX;
             break;
     }
     CMD(0x36); DATA(display_command_parameter);

@@ -15,19 +15,30 @@
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE;
-static int POSX, POSY, SX, SY, EX, EY;
+
+static struct {
+    struct {
+        uint16_t x, y;
+    } start;
+    struct {
+        uint16_t x, y;
+    } end;
+    struct {
+        uint16_t x, y;
+    } pos;
+} PIXELWINDOW;
 
 void PIXELDATA(uint16_t c) {
     if (!RENDERER) {
         display_init();
     }
-    if (POSX <= EX && POSY <= EY) {
-        ((uint16_t *)BUFFER->pixels)[POSX + POSY * BUFFER->pitch / sizeof(uint16_t)] = c;
+    if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x && PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
+        ((uint16_t *)BUFFER->pixels)[PIXELWINDOW.pos.x + PIXELWINDOW.pos.y * BUFFER->pitch / sizeof(uint16_t)] = c;
     }
-    POSX++;
-    if (POSX > EX) {
-        POSX = SX;
-        POSY++;
+    PIXELWINDOW.pos.x++;
+    if (PIXELWINDOW.pos.x > PIXELWINDOW.end.x) {
+        PIXELWINDOW.pos.x = PIXELWINDOW.start.x;
+        PIXELWINDOW.pos.y++;
     }
 }
 #else
@@ -71,9 +82,9 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
     if (!RENDERER) {
         display_init();
     }
-    SX = x0; SY = y0;
-    EX = x1; EY = y1;
-    POSX = SX; POSY = SY;
+    PIXELWINDOW.start.x = x0; PIXELWINDOW.start.y = y0;
+    PIXELWINDOW.end.x = x1; PIXELWINDOW.end.y = y1;
+    PIXELWINDOW.pos.x = x0; PIXELWINDOW.pos.y = y0;
 #endif
 }
 
