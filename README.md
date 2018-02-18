@@ -13,6 +13,15 @@ https://trezor.io/
 
 This creates file `build/trezor-TAG.bin` and prints its fingerprint and size at the end of the build log.
 
+## How to build TREZOR emulator for Linux?
+
+1. [Install Docker](https://docs.docker.com/engine/installation/)
+2. `git clone https://github.com/trezor/trezor-mcu.git`
+3. `cd trezor-mcu`
+4. `./build-emulator.sh TAG` (where TAG is v1.5.0 for example, if left blank the script builds latest commit in master branch)
+
+This creates binary file `build/trezor-emulator-TAG`, which can be run and works as a trezor emulator. (Use `TREZOR_OLED_SCALE` env. variable to make screen bigger.)
+
 ## How to build TREZOR bootloader?
 
 1. [Install Docker](https://docs.docker.com/engine/installation/)
