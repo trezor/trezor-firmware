@@ -23,8 +23,8 @@ def display_homescreen():
         image = res.load('apps/homescreen/res/bg.toif')
 
     ui.display.bar(0, 0, ui.SCREEN, ui.SCREEN, ui.BG)
-    ui.display.avatar((ui.SCREEN - 144) // 2, (ui.SCREEN - 144) // 2 - 10, image, ui.WHITE, ui.BLACK)
-    ui.display.text_center(ui.SCREEN // 2, ui.SCREEN - 20, label, ui.BOLD, ui.FG, ui.BG)
+    ui.display.avatar(48, 48 - 10, image, ui.WHITE, ui.BLACK)
+    ui.display.text_center(120, 220, label, ui.BOLD, ui.FG, ui.BG)
 
 
 @unimport
