@@ -1,11 +1,36 @@
-from trezor import ui
+from trezor import ui, wire
+from trezor.crypto import hmac
+from trezor.crypto.aes import AES_CBC_Decrypt, AES_CBC_Encrypt
+from trezor.crypto.hashlib import sha512
+from trezor.messages.CipheredKeyValue import CipheredKeyValue
+from trezor.messages.FailureType import DataError
+from trezor.ui.text import Text
+from apps.common import seed
+from apps.common.confirm import require_confirm
+
+from ubinascii import hexlify
 
 
-def cipher_key_value(msg, seckey: bytes) -> bytes:
-    from trezor.crypto.hashlib import sha512
-    from trezor.crypto import hmac
-    from trezor.crypto.aes import AES_CBC_Encrypt, AES_CBC_Decrypt
+async def cipher_key_value(ctx, msg):
+    if len(msg.value) % 16 > 0:
+        raise wire.FailureError(
+            DataError, 'Value length must be a multiple of 16')
 
+    encrypt = msg.encrypt
+    decrypt = not msg.encrypt
+    if (encrypt and msg.ask_on_encrypt) or (decrypt and msg.ask_on_decrypt):
+        if encrypt:
+            title = 'Encrypt value'
+        else:
+            title = 'Decrypt value'
+        await require_confirm(ctx, Text(title, ui.ICON_DEFAULT, msg.key))
+
+    node = await seed.derive_node(ctx, msg.address_n)
+    value = compute_cipher_key_value(msg, node.private_key())
+    return CipheredKeyValue(value=value)
+
+
+def compute_cipher_key_value(msg, seckey: bytes) -> bytes:
     data = msg.key
     data += 'E1' if msg.ask_on_encrypt else 'E0'
     data += 'D1' if msg.ask_on_decrypt else 'D0'
@@ -22,22 +47,3 @@ def cipher_key_value(msg, seckey: bytes) -> bytes:
         aes = AES_CBC_Decrypt(key=key, iv=iv)
 
     return aes.update(msg.value)
-
-
-async def layout_cipher_key_value(ctx, msg):
-    from trezor.messages.CipheredKeyValue import CipheredKeyValue
-    from ..common import seed
-
-    if len(msg.value) % 16 > 0:
-        raise ValueError('Value length must be a multiple of 16')
-
-    ui.display.clear()
-    ui.display.text(10, 30, 'CipherKeyValue',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
-    ui.display.text(10, 60, msg.key, ui.MONO, ui.FG, ui.BG)
-
-    node = await seed.derive_node(ctx, msg.address_n)
-
-    value = cipher_key_value(msg, node.private_key())
-
-    return CipheredKeyValue(value=value)

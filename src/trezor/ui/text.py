@@ -1,6 +1,8 @@
 from micropython import const
 from trezor import ui
+from trezor.ui import display
 
+DISPLAY_WIDTH = const(240)
 TEXT_HEADER_HEIGHT = const(48)
 TEXT_LINE_HEIGHT = const(26)
 TEXT_MARGIN_LEFT = const(14)
