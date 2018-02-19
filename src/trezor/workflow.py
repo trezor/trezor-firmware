@@ -5,20 +5,16 @@ from trezor import ui
 started = []
 default = None
 default_handler = None
+layouts = []
 
 
 def onstart(w):
-    closedefault()
     started.append(w)
-    ui.display.backlight(ui.BACKLIGHT_NORMAL)
-    log.debug(__name__, 'onstart: %s', w)
 
 
 def onclose(w):
     started.remove(w)
-    log.debug(__name__, 'onclose: %s', w)
-
-    if not started and default_handler:
+    if not started and not layouts and default_handler:
         startdefault(default_handler)
 
 
@@ -28,7 +24,6 @@ def closedefault():
     if default:
         loop.close(default)
         default = None
-        log.debug(__name__, 'closedefault')
 
 
 def startdefault(handler):
@@ -39,5 +34,12 @@ def startdefault(handler):
         default_handler = handler
         default = handler()
         loop.schedule(default)
-        ui.display.backlight(ui.BACKLIGHT_NORMAL)
-        log.debug(__name__, 'startdefault')
+
+
+def onlayoutstart(l):
+    closedefault()
+    layouts.append(l)
+
+
+def onlayoutclose(l):
+    layouts.remove(l)

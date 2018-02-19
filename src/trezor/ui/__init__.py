@@ -9,6 +9,7 @@ from trezorui import Display
 from trezor import io
 from trezor import loop
 from trezor import res
+from trezor import workflow
 
 display = Display()
 
@@ -95,7 +96,7 @@ async def click() -> tuple:
     return pos
 
 
-async def backlight_slide(val: int, delay: int=20000, step: int=1):
+async def backlight_slide(val: int, delay: int=35000, step: int=20):
     sleep = loop.sleep(delay)
     current = display.backlight()
     for i in range(current, val, -step if current > val else step):
@@ -104,17 +105,17 @@ async def backlight_slide(val: int, delay: int=20000, step: int=1):
 
 
 def layout(f):
-    delay = const(35000)  # 35ms
-    step = const(20)
-
     async def inner(*args, **kwargs):
-        await backlight_slide(BACKLIGHT_DIM, delay, step)
-        slide = backlight_slide(BACKLIGHT_NORMAL, delay, step)
+        await backlight_slide(BACKLIGHT_DIM)
+        slide = backlight_slide(BACKLIGHT_NORMAL)
         try:
+            layout = f(*args, **kwargs)
+            workflow.onlayoutstart(layout)
             loop.schedule(slide)
-            return await f(*args, **kwargs)
+            return await layout
         finally:
             loop.close(slide)
+            workflow.onlayoutclose(layout)
 
     return inner
 
