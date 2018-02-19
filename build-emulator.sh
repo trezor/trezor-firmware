@@ -11,7 +11,6 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	cd trezor-mcu && \
 	git checkout $TAG && \
 	git submodule update --init && \
-	make -C vendor/libopencm3 && \
 	make -C vendor/nanopb/generator/proto && \
 	make -C firmware/protob && \
 	EMULATOR=1 make && \
