@@ -27,9 +27,9 @@ async def ethereum_sign_tx(ctx, msg):
         token = tokens.token_by_chain_address(msg.chain_id, msg.to)
 
     if token is None:
-        await layout.confirm_tx(ctx, msg.to, msg.value, msg.chain_id, token)
+        await layout.confirm_tx(ctx, msg.to, msg.value, msg.chain_id)
     else:
-        await layout.confirm_tx(ctx, msg.data_initial_chunk[16:36],  msg.data_initial_chunk.bytes[36:68], msg.chain_id, token)
+        await layout.confirm_tx(ctx, msg.data_initial_chunk[16:36],  msg.data_initial_chunk[36:68], msg.chain_id, token)
 
     if token is None and msg.data_length > 0:
         await layout.confirm_data(ctx, msg.data_initial_chunk, data_total)
