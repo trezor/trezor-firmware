@@ -4,7 +4,8 @@ FROM debian:9
 
 # install build tools and dependencies
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
     build-essential curl unzip git python3 python3-pip gcc-arm-none-eabi libnewlib-arm-none-eabi
 
 ENV PROTOBUF_VERSION=3.4.0
