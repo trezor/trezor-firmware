@@ -16,13 +16,19 @@ async def request_pin(code: int = None) -> str:
     def onchange():
         c = dialog.cancel
         if matrix.pin:
-            c.normal_style = ui.BTN_CLEAR['normal']
-            c.content = res.load(ui.ICON_BACK)
+            back = res.load(ui.ICON_BACK)
+            if c.content is not back:
+                c.normal_style = ui.BTN_CLEAR['normal']
+                c.content = back
+                c.taint()
+                c.render()
         else:
-            c.normal_style = ui.BTN_CANCEL['normal']
-            c.content = res.load(ui.ICON_LOCK)
-        c.taint()
-        c.render()
+            lock = res.load(ui.ICON_LOCK)
+            if c.content is not lock:
+                c.normal_style = ui.BTN_CANCEL['normal']
+                c.content = lock
+                c.taint()
+                c.render()
 
     ui.display.clear()
     matrix = PinMatrix(label, with_zero=True)
