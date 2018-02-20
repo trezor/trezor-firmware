@@ -60,7 +60,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	}
 
 	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
 		layoutHome();
 		return;
 	}

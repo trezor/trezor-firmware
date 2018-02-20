@@ -415,7 +415,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 
 	if (!dry_run) {
 		if (pin_protection && !protectChangePin()) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
 			layoutHome();
 			return;
 		}

@@ -155,6 +155,9 @@ void fsm_sendFailure(FailureType code, const char *text)
 			case FailureType_Failure_NotInitialized:
 				text = _("Device not initialized");
 				break;
+			case FailureType_Failure_PinMismatch:
+				text = _("PIN mismatch");
+				break;
 			case FailureType_Failure_FirmwareError:
 				text = _("Firmware error");
 				break;
@@ -366,7 +369,7 @@ void fsm_msgChangePin(ChangePin *msg)
 		if (protectChangePin()) {
 			fsm_sendSuccess(_("PIN changed"));
 		} else {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
 		}
 	}
 	layoutHome();
