@@ -389,7 +389,7 @@ bool check_change_bip32_path(const TxOutputType *toutput)
 			&& count == in_address_n_count
 			&& 0 == memcmp(in_address_n, toutput->address_n,
 						   (count - BIP32_WALLET_DEPTH) * sizeof(uint32_t))
-			&& toutput->address_n[count - 2] == BIP32_CHANGE_CHAIN
+			&& toutput->address_n[count - 2] <= BIP32_CHANGE_CHAIN
 			&& toutput->address_n[count - 1] <= BIP32_MAX_LAST_ELEMENT);
 }
 
@@ -565,9 +565,8 @@ static bool signing_check_output(TxOutputType *txoutput) {
 		if (change_spend == 0) { // not set
 			change_spend = txoutput->amount;
 		} else {
-			fsm_sendFailure(FailureType_Failure_DataError, _("Only one change output allowed"));
-			signing_abort();
-			return false;
+			/* We only skip confirmation for the first change output */
+			is_change = false;
 		}
 	}
 
