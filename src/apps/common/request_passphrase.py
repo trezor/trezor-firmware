@@ -1,45 +1,50 @@
 from trezor import res, ui, wire
+from trezor.messages import ButtonRequestType, wire_types
+from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages.FailureType import ActionCancelled, ProcessError
+from trezor.messages.PassphraseRequest import PassphraseRequest
+from trezor.ui.entry_select import DEVICE, HOST, EntrySelector
+from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
+from trezor.ui.text import Text
+from apps.common import storage
 from apps.common.cache import get_state
 
 
-async def request_passphrase(ctx):
-    from trezor.ui.text import Text
-    from trezor.ui.entry_select import EntrySelector
-
+async def request_passphrase_entry(ctx):
     ui.display.clear()
     text = Text(
         'Enter passphrase', ui.ICON_RESET,
         'Where to enter your', 'passphrase?')
-    entry = EntrySelector(text)
-    entry_type = await entry
+    text.render()
 
-    on_device = (entry_type == 0)
+    ack = await ctx.call(
+        ButtonRequest(code=ButtonRequestType.Other),
+        wire_types.ButtonAck,
+        wire_types.Cancel)
+    if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
+        raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
 
-    from trezor.messages.FailureType import ActionCancelled, ProcessError
-    from trezor.messages.PassphraseRequest import PassphraseRequest
-    from trezor.messages.wire_types import PassphraseAck, Cancel
+    return await EntrySelector(text)
 
-    ui.display.clear()
 
-    pass_req = PassphraseRequest()
+async def request_passphrase(ctx):
+    on_device = await request_passphrase_entry(ctx) == DEVICE
 
-    if on_device:
-        pass_req.on_device = True
-    else:
-        from trezor.ui.text import Text
+    if not on_device:
+        ui.display.clear()
         text = Text(
             'Passphrase entry', ui.ICON_RESET,
             'Please, type passphrase', 'on connected host.')
         text.render()
 
-    ack = await ctx.call(pass_req, PassphraseAck, Cancel)
-    if ack.MESSAGE_WIRE_TYPE == Cancel:
+    req = PassphraseRequest(on_device=on_device)
+    ack = await ctx.call(req, wire_types.PassphraseAck, wire_types.Cancel)
+    if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
         raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
 
     if on_device:
         if ack.passphrase is not None:
             raise wire.FailureError(ProcessError, 'Passphrase provided when it should not be')
-        from trezor.ui.passphrase import PassphraseKeyboard, CANCELLED
         passphrase = await PassphraseKeyboard('Enter passphrase')
         if passphrase == CANCELLED:
             raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
@@ -56,8 +61,6 @@ async def request_passphrase(ctx):
 
 
 async def protect_by_passphrase(ctx):
-    from apps.common import storage
-
     if storage.has_passphrase():
         return await request_passphrase(ctx)
     else:

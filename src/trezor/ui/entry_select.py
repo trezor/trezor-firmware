@@ -4,8 +4,8 @@ from trezor import ui
 from trezor.ui import Widget
 from trezor.ui.button import Button, BTN_CLICKED
 
-_DEVICE = const(0)
-_HOST = const(1)
+DEVICE = const(0)
+HOST = const(1)
 
 
 class EntrySelector(Widget):
@@ -21,9 +21,9 @@ class EntrySelector(Widget):
 
     def touch(self, event, pos):
         if self.device.touch(event, pos) == BTN_CLICKED:
-            return _DEVICE
+            return DEVICE
         if self.host.touch(event, pos) == BTN_CLICKED:
-            return _HOST
+            return HOST
 
     async def __iter__(self):
         return await loop.wait(super().__iter__(), self.content)
