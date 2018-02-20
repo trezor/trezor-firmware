@@ -1,3 +1,9 @@
+Version 1.7.0
+* Stable release, optional update
+* Use fixed-width font for addresses
+* Enable WebUSB
+* Lots of under-the-hood improvements
+
 Version 1.6.0
 * Stable release, optional update
 * Native SegWit (Bech32) address support
