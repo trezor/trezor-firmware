@@ -41,6 +41,7 @@ enum FailureType {
 	Failure_ProcessError = 9;
 	Failure_NotEnoughFunds = 10;
 	Failure_NotInitialized = 11;
+	Failure_PinMismatch = 12;
 	Failure_FirmwareError = 99;
 }
 
