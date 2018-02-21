@@ -1,9 +1,10 @@
 from trezor import wire, ui, loop
+from apps.common import cache
 
 # used to confirm/cancel the dialogs from outside of this module (i.e.
 # through debug link)
 if __debug__:
-    signal = loop.signal()
+    signal = cache.memory.setdefault('confirm_signal', loop.signal())
 
 
 @ui.layout

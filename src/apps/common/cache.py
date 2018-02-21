@@ -1,4 +1,6 @@
-_seed, _state = None, None
+memory = {}
+_seed = None
+_state = None
 
 
 def get_state():
