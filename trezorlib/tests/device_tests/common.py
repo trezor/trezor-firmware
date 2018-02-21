@@ -83,8 +83,8 @@ def get_transport():
         debuglink = PipeTransport('/tmp/pipe.trezor_debug', False)
 
     elif UDP_ENABLED:
-        wirelink = UdpTransport()
-        debuglink = UdpTransport()
+        wirelink = UdpTransport('127.0.0.1:21324')
+        debuglink = UdpTransport('127.0.0.1:21325')
 
     return wirelink, debuglink
 

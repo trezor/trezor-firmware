@@ -43,13 +43,6 @@ class UdpTransport(Transport):
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
         if not protocol:
-            '''
-            force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
-            if not int(force_v1):
-                protocol = ProtocolV2()
-            else:
-                protocol = ProtocolV1()
-            '''
             protocol = ProtocolV1()
         self.device = (host, port)
         self.protocol = protocol
