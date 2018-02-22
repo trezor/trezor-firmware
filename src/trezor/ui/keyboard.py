@@ -110,7 +110,7 @@ class MnemonicKeyboard(ui.Widget):
 
         if self.input.touch(event, pos) == BTN_CLICKED:
             # input press, either auto-complete or confirm
-            if content == word:
+            if word and content == word:
                 self.edit('')
                 return content
             else:
