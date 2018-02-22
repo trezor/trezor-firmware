@@ -140,8 +140,6 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
     return sectrue;
 }
 
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; }
 #define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; memset(msg_send.FIELD, 0, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); }

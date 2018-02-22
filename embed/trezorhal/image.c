@@ -153,8 +153,6 @@ secbool check_single_hash(const uint8_t * const hash, const uint8_t * const data
     return sectrue * (0 == memcmp(h, hash, BLAKE2S_DIGEST_LENGTH));
 }
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-
 secbool check_image_contents(const image_header * const hdr, uint32_t firstskip, const uint8_t *sectors, int blocks)
 {
     if (0 == sectors || blocks < 1) {

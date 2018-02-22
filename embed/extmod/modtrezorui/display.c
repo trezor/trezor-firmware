@@ -40,9 +40,6 @@ static struct {
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
 #endif
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-
 // common display functions
 
 static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1, uint8_t step)
