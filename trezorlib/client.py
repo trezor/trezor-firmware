@@ -107,6 +107,11 @@ class CallException(Exception):
         self.args = [code, message]
 
 
+class AssertionException(Exception):
+    def __init__(self, code, message):
+        self.args = [code, message]
+
+
 class PinException(CallException):
     pass
 
@@ -405,19 +410,19 @@ class DebugLinkMixin(object):
             try:
                 expected = self.expected_responses.pop(0)
             except IndexError:
-                raise CallException(proto.FailureType.UnexpectedMessage,
-                                    "Got %s, but no message has been expected" % pprint(msg))
+                raise AssertionException(proto.FailureType.UnexpectedMessage,
+                                         "Got %s, but no message has been expected" % pprint(msg))
 
             if msg.__class__ != expected.__class__:
-                raise CallException(proto.FailureType.UnexpectedMessage,
-                                    "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                raise AssertionException(proto.FailureType.UnexpectedMessage,
+                                         "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
             for field, value in expected.__dict__.items():
                 if value is None or value == []:
                     continue
                 if getattr(msg, field) != value:
-                    raise CallException(proto.FailureType.UnexpectedMessage,
-                                        "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                    raise AssertionException(proto.FailureType.UnexpectedMessage,
+                                            "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
     def callback_ButtonRequest(self, msg):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
