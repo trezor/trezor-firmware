@@ -28,6 +28,8 @@ int main(void)
     sdcard_init();
     touch_init();
 
+    display_clear();
+
     printf("CORE: Preparing stack\n");
     // Stack limit should be less than real stack size, so we have a chance
     // to recover from limit hit.
