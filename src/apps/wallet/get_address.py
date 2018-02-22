@@ -32,11 +32,10 @@ async def layout_get_address(ctx, msg):
 async def _show_address(ctx, address):
     from trezor.messages.ButtonRequestType import Address
     from trezor.ui.text import Text
-    from trezor.ui.container import Container
     from ..common.confirm import confirm
 
     lines = _split_address(address)
-    content = Container(Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines))
+    content = Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines)
     return await confirm(ctx, content, code=Address, cancel='QR', cancel_style=ui.BTN_KEY)
 
 
