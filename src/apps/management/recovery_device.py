@@ -1,4 +1,16 @@
-from trezor import ui, wire
+from trezor import config, ui, wire
+from trezor.crypto import bip39
+from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages.ButtonRequestType import Other
+from trezor.messages.FailureType import ProcessError, UnexpectedMessage
+from trezor.messages.Success import Success
+from trezor.messages.wire_types import ButtonAck
+from trezor.pin import pin_to_int
+from trezor.ui.keyboard import MnemonicKeyboard
+from trezor.ui.text import Text
+from trezor.ui.word_select import WordSelector
+from apps.common import storage
+from apps.management.change_pin import request_pin_confirm
 
 
 async def recovery_device(ctx, msg):
@@ -11,44 +23,56 @@ async def recovery_device(ctx, msg):
     4. Optionally ask for the PIN, with confirmation.
     5. Save into storage.
     '''
-    from trezor import config
-    from trezor.crypto import bip39
-    from trezor.messages.FailureType import UnexpectedMessage, ProcessError
-    from trezor.messages.Success import Success
-    from trezor.ui.text import Text
-    from apps.common import storage
-    from apps.common.request_pin import request_pin
-    from apps.common.request_words import request_words
-
     if storage.is_initialized():
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')
 
-    wordcount = await request_words(ctx,
-                                    Text('Device recovery', ui.ICON_RECOVERY,
-                                         'Number of words?'))
-    mnemonic = await request_mnemonic(wordcount, 'Type %s. word')
+    # ask for the number of words
+    wordcount = await request_wordcount(ctx)
 
-    if msg.enforce_wordlist and not bip39.check(mnemonic):
-        raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
+    # ask for mnemonic words one by one
+    mnemonic = await request_mnemonic(ctx, wordcount)
 
+    # check mnemonic validity
+    if msg.enforce_wordlist:
+        if not bip39.check(mnemonic):
+            raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
+
+    # ask for pin repeatedly
     if msg.pin_protection:
-        curpin = ''
-        newpin = await request_pin(ctx)
-        config.change_pin(curpin, newpin)
+        newpin = await request_pin_confirm(ctx, cancellable=False)
 
-    storage.load_settings(label=msg.label,
-                          use_passphrase=msg.passphrase_protection)
-    storage.load_mnemonic(mnemonic)
+    # save into storage
+    if not msg.dry_run:
+        if msg.pin_protection:
+            config.change_pin(pin_to_int(''), pin_to_int(newpin), None)
+        storage.load_settings(
+            label=msg.label, use_passphrase=msg.passphrase_protection)
+        storage.load_mnemonic(
+            mnemonic=mnemonic, needs_backup=False)
+
     return Success()
 
 
-async def request_mnemonic(count: int, prompt: str) -> str:
-    from trezor.ui.keyboard import MnemonicKeyboard
+@ui.layout
+async def request_wordcount(ctx):
+    await ctx.call(ButtonRequest(code=Other), ButtonAck)
+
+    ui.display.clear()
+    content = Text('Device recovery', ui.ICON_RECOVERY, 'Number of words?')
+    select = WordSelector(content)
+    count = await select
+
+    return count
+
+
+@ui.layout
+async def request_mnemonic(ctx, count: int) -> str:
+    await ctx.call(ButtonRequest(code=Other), ButtonAck)
 
     words = []
     board = MnemonicKeyboard()
     for i in range(0, count):
-        board.prompt = prompt % (i + 1)
+        board.prompt = 'Type %s. word' % (i + 1)
         word = await board
         words.append(word)
 
