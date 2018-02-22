@@ -4,6 +4,7 @@ from trezor import wire, ui
 
 async def layout_get_address(ctx, msg):
     from trezor.messages.Address import Address
+    from trezor.messages.InputScriptType import SPENDWITNESS
     from trezor.messages.FailureType import ProcessError
     from ..common import coins
     from ..common import seed
@@ -23,7 +24,7 @@ async def layout_get_address(ctx, msg):
         while True:
             if await _show_address(ctx, address):
                 break
-            if await _show_qr(ctx, address):
+            if await _show_qr(ctx, address if msg.script_type != SPENDWITNESS else address.upper()):
                 break
 
     return Address(address=address)
