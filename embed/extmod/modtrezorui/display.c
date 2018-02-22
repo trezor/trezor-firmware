@@ -27,7 +27,10 @@
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
-static int DISPLAY_OFFSET[2] = {0, 0};
+
+static struct {
+    int x, y;
+} DISPLAY_OFFSET;
 
 #if defined TREZOR_STM32
 #include "display-stm32.h"
@@ -80,8 +83,8 @@ void display_clear(void)
 
 void display_bar(int x, int y, int w, int h, uint16_t c)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -120,8 +123,8 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
     }
     uint16_t colortable[16];
     set_color_table(colortable, c, b);
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -172,8 +175,8 @@ static void inflate_callback_image(uint8_t byte1, uint32_t pos, void *userdata)
 
 void display_image(int x, int y, int w, int h, const void *data, int datalen)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -230,8 +233,8 @@ static void inflate_callback_avatar(uint8_t byte1, uint32_t pos, void *userdata)
 
 void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     int x0, y0, x1, y1;
     clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -257,8 +260,8 @@ static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
 
 void display_icon(int x, int y, int w, int h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     x &= ~1; // cannot draw at odd coordinate
     int x0, y0, x1, y1;
     clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
@@ -444,23 +447,23 @@ static void display_text_render(int x, int y, const char *text, int textlen, uin
 
 void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
 }
 
 void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     int w = display_text_width(text, textlen, font);
     display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
 void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
 {
-    x += DISPLAY_OFFSET[0];
-    y += DISPLAY_OFFSET[1];
+    x += DISPLAY_OFFSET.x;
+    y += DISPLAY_OFFSET.y;
     int w = display_text_width(text, textlen, font);
     display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
 }
@@ -497,8 +500,8 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
     if (scale < 1 || scale > 10) return;
     uint8_t bitdata[QR_MAX_BITDATA];
     int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
-    x += DISPLAY_OFFSET[0] - (side + 2) * scale / 2;
-    y += DISPLAY_OFFSET[1] - (side + 2) * scale / 2;
+    x += DISPLAY_OFFSET.x - (side + 2) * scale / 2;
+    y += DISPLAY_OFFSET.y - (side + 2) * scale / 2;
     int x0, y0, x1, y1;
     clamp_coords(x, y, (side + 2) * scale, (side + 2) * scale, &x0, &y0, &x1, &y1);
     display_set_window(x0, y0, x1, y1);
@@ -591,13 +594,14 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
     }
 }
 
-int *display_offset(int xy[2])
+void display_offset(int set_xy[2], int *get_x, int *get_y)
 {
-    if (xy) {
-        DISPLAY_OFFSET[0] = xy[0];
-        DISPLAY_OFFSET[1] = xy[1];
+    if (set_xy) {
+        DISPLAY_OFFSET.x = set_xy[0];
+        DISPLAY_OFFSET.y = set_xy[1];
     }
-    return DISPLAY_OFFSET;
+    *get_x = DISPLAY_OFFSET.x;
+    *get_y = DISPLAY_OFFSET.y;
 }
 
 int display_orientation(int degrees)

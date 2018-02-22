@@ -377,7 +377,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj, 1
 ///     Call without the xy parameter to just perform the read of the value.
 ///     '''
 STATIC mp_obj_t mod_trezorui_Display_offset(size_t n_args, const mp_obj_t *args) {
-    int xy[2], *ret;
+    int xy[2], x, y;
     if (n_args > 1) {
         size_t xy_cnt;
         mp_obj_t *xy_obj;
@@ -391,15 +391,14 @@ STATIC mp_obj_t mod_trezorui_Display_offset(size_t n_args, const mp_obj_t *args)
         }
         xy[0] = mp_obj_get_int(xy_obj[0]);
         xy[1] = mp_obj_get_int(xy_obj[1]);
-        ret = display_offset(xy);
+        display_offset(xy, &x, &y);
     } else {
-        ret = display_offset(0);
+        display_offset(0, &x, &y);
     }
     mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-    tuple->items[0] = MP_OBJ_NEW_SMALL_INT(ret[0]);
-    tuple->items[1] = MP_OBJ_NEW_SMALL_INT(ret[1]);
+    tuple->items[0] = MP_OBJ_NEW_SMALL_INT(x);
+    tuple->items[1] = MP_OBJ_NEW_SMALL_INT(y);
     return MP_OBJ_FROM_PTR(tuple);
-
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_offset_obj, 1, 2, mod_trezorui_Display_offset);
 

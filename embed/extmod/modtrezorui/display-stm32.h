@@ -49,9 +49,9 @@ static struct {
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     x0 += BUFFER_OFFSET.x; x1 += BUFFER_OFFSET.x;
     y0 += BUFFER_OFFSET.y; y1 += BUFFER_OFFSET.y;
+#if DISPLAY_ILI9341V || DISPLAY_ST7789V
     CMD(0x2A); DATA(x0 >> 8); DATA(x0 & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
     CMD(0x2B); DATA(y0 >> 8); DATA(y0 & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
     CMD(0x2C);

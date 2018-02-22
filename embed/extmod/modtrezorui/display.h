@@ -69,7 +69,7 @@ int display_text_width(const char *text, int textlen, uint8_t font);
 void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale);
 void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor);
 
-int *display_offset(int xy[2]);
+void display_offset(int set_xy[2], int *get_x, int *get_y);
 int display_orientation(int degrees);
 int display_backlight(int val);
 void display_fade(int start, int end, int delay);
