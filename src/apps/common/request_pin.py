@@ -7,7 +7,7 @@ class PinCancelled(Exception):
 
 
 @ui.layout
-async def request_pin(code: int = None) -> str:
+async def request_pin(code: int = None, cancellable: bool = True) -> str:
     from trezor.ui.confirm import ConfirmDialog, CONFIRMED
     from trezor.ui.pin import PinMatrix
 
@@ -24,7 +24,7 @@ async def request_pin(code: int = None) -> str:
                 c.render()
         else:
             lock = res.load(ui.ICON_LOCK)
-            if c.content is not lock:
+            if c.content is not lock and cancellable:
                 c.normal_style = ui.BTN_CANCEL['normal']
                 c.content = lock
                 c.taint()
@@ -37,6 +37,9 @@ async def request_pin(code: int = None) -> str:
     dialog.cancel.area = ui.grid(12)
     dialog.confirm.area = ui.grid(14)
     matrix.onchange()
+    if not cancellable:
+        dialog.cancel.content = ''
+        dialog.cancel.disable()
 
     while True:
         result = await dialog
