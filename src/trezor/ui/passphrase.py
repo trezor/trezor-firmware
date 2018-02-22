@@ -99,7 +99,7 @@ class PassphraseKeyboard(ui.Widget):
             self.input.render()
         else:
             display.bar(0, 0, 240, 48, ui.BG)
-            display.text_center(ui.SCREEN // 2, 32, self.prompt, ui.BOLD, ui.GREY, ui.BG)
+            display.text_center(ui.WIDTH // 2, 32, self.prompt, ui.BOLD, ui.GREY, ui.BG)
         render_scrollbar(self.page)
         # buttons
         self.back.render()

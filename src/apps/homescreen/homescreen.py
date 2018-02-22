@@ -22,7 +22,7 @@ def display_homescreen():
     if not image:
         image = res.load('apps/homescreen/res/bg.toif')
 
-    ui.display.bar(0, 0, ui.SCREEN, ui.SCREEN, ui.BG)
+    ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
     ui.display.avatar(48, 48 - 10, image, ui.WHITE, ui.BLACK)
     ui.display.text_center(120, 220, label, ui.BOLD, ui.FG, ui.BG)
 

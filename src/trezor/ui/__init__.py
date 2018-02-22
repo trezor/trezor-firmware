@@ -23,7 +23,8 @@ SIZE = Display.FONT_SIZE
 NORMAL = Display.FONT_NORMAL
 BOLD = Display.FONT_BOLD
 MONO = Display.FONT_MONO
-SCREEN = Display.WIDTH  # used also for height as we have square display
+WIDTH = Display.WIDTH
+HEIGHT = Display.HEIGHT
 
 
 def lerpi(a: int, b: int, t: float) -> int:
@@ -132,7 +133,6 @@ def header(title: str,
 
 VIEWX = const(6)
 VIEWY = const(9)
-VIEW = const(228)  # SCREEN - 2 * VIEWX
 
 
 def grid(i: int,
@@ -140,8 +140,8 @@ def grid(i: int,
          n_y: int=5,
          start_x: int=VIEWX,
          start_y: int=VIEWY,
-         end_x: int=(VIEWX + VIEW),
-         end_y: int=(VIEWY + VIEW),
+         end_x: int=(WIDTH - VIEWX),
+         end_y: int=(HEIGHT - VIEWY),
          cells_x: int=1,
          cells_y: int=1,
          spacing: int=0):
