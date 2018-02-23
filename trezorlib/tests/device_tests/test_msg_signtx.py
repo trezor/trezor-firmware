@@ -785,7 +785,7 @@ class TestMsgSigntx(TrezorTest):
             with pytest.raises(CallException):
                 self.client.sign_tx('Testnet', [inp1, ], [out1, out_change1, out_change2])
 
-    def test_change_on_main_chain_disallowed(self):
+    def test_change_on_main_chain_allowed(self):
         self.setup_mnemonic_allallall()
         # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
@@ -804,7 +804,7 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        # change on main chain not allowed => not treated as change
+        # change on main chain is allowed => treated as a change
         out_change = proto.TxOutputType(
             address_n=self.client.expand_path("44'/1'/0'/0/0"),
             amount=900000,
@@ -823,7 +823,6 @@ class TestMsgSigntx(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
 
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
