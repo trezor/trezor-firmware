@@ -15,11 +15,11 @@ async def respond_Features(ctx, msg):
 
     f = Features()
     f.vendor = 'trezor.io'
-    f.revision = '0123456789'
-    f.bootloader_hash = '0123456789'
+    # TODO: f.revision = '0123456789'
+    # TODO: f.bootloader_hash = '0123456789'
     f.major_version = 2
     f.minor_version = 0
-    f.patch_version = 0
+    f.patch_version = 1
     f.model = 'T'
     f.coins = coins.COINS
 
