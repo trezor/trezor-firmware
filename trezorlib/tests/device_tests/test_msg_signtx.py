@@ -652,7 +652,6 @@ class TestMsgSigntx(TrezorTest):
         run_attack = True
 
         def attack_processor(req, msg):
-            import sys
             global run_attack
 
             if req.details.tx_hash is not None:

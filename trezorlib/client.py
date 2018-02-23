@@ -937,9 +937,13 @@ class ProtocolMixin(object):
                 msg = proto.TransactionType()
                 msg._extend_inputs([current_tx.inputs[res.details.request_index], ])
                 if debug_processor is not None:
+                    # msg needs to be deep copied so when it's modified
+                    # the other messages stay intact
+                    from copy import deepcopy
+                    msg = deepcopy(msg)
                     # If debug_processor function is provided,
                     # pass thru it the request and prepared response.
-                    # This is useful for unit tests, see test_msg_signtx
+                    # This is useful for tests, see test_msg_signtx
                     msg = debug_processor(res, msg)
 
                 res = self.call(proto.TxAck(tx=msg))
@@ -953,9 +957,13 @@ class ProtocolMixin(object):
                     msg._extend_outputs([current_tx.outputs[res.details.request_index], ])
 
                 if debug_processor is not None:
+                    # msg needs to be deep copied so when it's modified
+                    # the other messages stay intact
+                    from copy import deepcopy
+                    msg = deepcopy(msg)
                     # If debug_processor function is provided,
                     # pass thru it the request and prepared response.
-                    # This is useful for unit tests, see test_msg_signtx
+                    # This is useful for tests, see test_msg_signtx
                     msg = debug_processor(res, msg)
 
                 res = self.call(proto.TxAck(tx=msg))
