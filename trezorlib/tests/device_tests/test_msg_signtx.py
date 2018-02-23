@@ -784,3 +784,55 @@ class TestMsgSigntx(TrezorTest):
 
             with pytest.raises(CallException):
                 self.client.sign_tx('Testnet', [inp1, ], [out1, out_change1, out_change2])
+
+    def test_change_on_main_chain_disallowed(self):
+        self.setup_mnemonic_allallall()
+        # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
+
+        # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
+        # input 0: 0.31 BTC
+        inp1 = proto.TxInputType(
+            address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            # amount=31000000,
+            prev_hash=TXHASH_e5040e,
+            prev_index=0,
+        )
+
+        out1 = proto.TxOutputType(
+            address='msj42CCGruhRsFrGATiUuh25dtxYtnpbTx',
+            amount=30090000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        # change on main chain not allowed => not treated as change
+        out_change = proto.TxOutputType(
+            address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            amount=900000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with self.client:
+            self.client.set_tx_api(TxApiTestnet)
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_e5040e)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_e5040e)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_e5040e)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_e5040e)),
+
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            ])
+
+            self.client.sign_tx('Testnet', [inp1, ], [out1, out_change])
