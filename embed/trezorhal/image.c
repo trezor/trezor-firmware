@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include <string.h>
 
 #include "blake2s.h"

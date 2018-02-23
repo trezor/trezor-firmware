@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include STM32_HAL_H
 
 #include "common.h"
