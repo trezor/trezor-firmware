@@ -211,7 +211,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/ports/stm32/gccollect.c',
     'vendor/micropython/ports/stm32/gchelper.s',
     'vendor/micropython/ports/stm32/pendsv.c',
-    'vendor/micropython/ports/stm32/systick.c',
 ]
 
 SOURCE_MICROPYTHON_SPEED = [
@@ -269,6 +268,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/sbu.c',
     'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32.c',
+    'embed/trezorhal/systick.c',
     'embed/trezorhal/touch.c',
     'embed/trezorhal/usb.c',
     'embed/trezorhal/usbd_conf.c',
