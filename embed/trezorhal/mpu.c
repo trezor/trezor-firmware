@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Pavol Rusnak, SatoshiLabs
+ *
+ * Licensed under TREZOR License
+ * see LICENSE file for details
+ */
+
 #include STM32_HAL_H
 #include "stm32f4xx_ll_cortex.h"
 
@@ -42,7 +49,7 @@ void mpu_config(void)
     MPU->RBAR = CCMDATARAM_BASE | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER5;
     MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_SRAM | LL_MPU_REGION_SIZE_64KB | LL_MPU_REGION_FULL_ACCESS | MPU_RASR_XN_Msk;
 
-    // SRAM (0x20000000 - 0x2002FFFF, read-write, execute never)
+    // SRAM (0x20000000 - 0x2002FFFF, 192 KiB = 256 KiB except 2/8 at end, read-write, execute never)
     MPU->RBAR = SRAM_BASE | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER6;
     MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_SRAM | LL_MPU_REGION_SIZE_256KB | LL_MPU_REGION_FULL_ACCESS | MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0xC0);
 

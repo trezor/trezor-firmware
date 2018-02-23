@@ -17,12 +17,16 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "mpu.h"
 #include "rng.h"
 #include "sdcard.h"
 #include "touch.h"
 
 int main(void)
 {
+    // Enable MPU
+    mpu_config();
+
     // Init peripherals
     pendsv_init();
     sdcard_init();

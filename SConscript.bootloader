@@ -84,7 +84,6 @@ SOURCE_BOOTLOADER = [
     'embed/bootloader/bootui.c',
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',
-    'embed/bootloader/mpu.c',
     'embed/bootloader/nanopb/pb_common.c',
     'embed/bootloader/nanopb/pb_decode.c',
     'embed/bootloader/nanopb/pb_encode.c',

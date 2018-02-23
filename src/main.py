@@ -3,6 +3,7 @@ import boot
 from trezor import io
 from trezor import log
 from trezor import loop
+from trezor import utils
 from trezor import wire
 from trezor import workflow
 
@@ -98,6 +99,8 @@ wire.setup(usb_wire)
 if __debug__:
     wire.setup(usb_debug)
 usb.open()
+
+# utils.set_mode_unprivileged()
 
 # load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
