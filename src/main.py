@@ -100,7 +100,7 @@ if __debug__:
     wire.setup(usb_debug)
 usb.open()
 
-# utils.set_mode_unprivileged()
+utils.set_mode_unprivileged()
 
 # load default homescreen
 from apps.homescreen.homescreen import layout_homescreen
