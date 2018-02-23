@@ -777,13 +777,21 @@ class TestMsgSigntx(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=2)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
 
-                # error should occur
-                proto.Failure(code=proto.FailureType.ProcessError, message='Only one change output is valid'),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=2)),
+
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=2)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
 
-            with pytest.raises(CallException):
-                self.client.sign_tx('Testnet', [inp1, ], [out1, out_change1, out_change2])
+            self.client.sign_tx('Testnet', [inp1, ], [out1, out_change1, out_change2])
 
     def test_change_on_main_chain_allowed(self):
         self.setup_mnemonic_allallall()
