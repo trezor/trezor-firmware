@@ -1,6 +1,6 @@
 from trezor import config
 from trezor.wire import register, protobuf_workflow
-from trezor.utils import unimport
+from trezor.utils import unimport, symbol
 from trezor.messages.wire_types import Initialize, GetFeatures, Ping, ClearSession
 
 
@@ -15,11 +15,10 @@ async def respond_Features(ctx, msg):
 
     f = Features()
     f.vendor = 'trezor.io'
-    # TODO: f.revision = '0123456789'
-    # TODO: f.bootloader_hash = '0123456789'
-    f.major_version = 2
-    f.minor_version = 0
-    f.patch_version = 1
+    f.revision = symbol('GITREV')
+    f.major_version = symbol('VERSION_MAJOR')
+    f.minor_version = symbol('VERSION_MINOR')
+    f.patch_version = symbol('VERSION_PATCH')
     f.model = 'T'
     f.coins = coins.COINS
 
