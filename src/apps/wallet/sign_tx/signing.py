@@ -281,7 +281,7 @@ async def sign_tx(tx: SignTx, root):
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
                 pubkey_idx = multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
-                if pubkey_idx < 0:
+                if pubkey_idx is None:
                     raise SigningError(FailureType.DataError,
                                        'Pubkey not found in multisig script')
 

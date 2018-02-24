@@ -66,7 +66,7 @@ def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> 
     for i, hd in enumerate(multisig.pubkeys):
         if multisig_get_pubkey(hd) == pubkey:
             return i
-    return -1
+    return None
 
 
 def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
@@ -85,10 +85,3 @@ def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
 
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType):
     return [multisig_get_pubkey(hd) for hd in multisig.pubkeys]
-
-
-def check_address_n_against_pubkeys(multisig: MultisigRedeemScriptType, address_n) -> bool:
-    for p in multisig.pubkeys:
-        if p.address_n == address_n:
-            return True
-    return False
