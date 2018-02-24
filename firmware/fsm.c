@@ -232,10 +232,15 @@ static bool fsm_layoutAddress(const char *address, const char *desc, bool ignore
 
 void fsm_msgInitialize(Initialize *msg)
 {
-	(void)msg;
 	recovery_abort();
 	signing_abort();
-	session_clear(false); // do not clear PIN
+	if (msg->has_state && msg->state.size == 64) {
+		if (!session_compareState(msg->state.bytes)) {
+			session_clear(false); // do not clear PIN
+		}
+	} else {
+		session_clear(false); // do not clear PIN
+	}
 	layoutHome();
 	fsm_msgGetFeatures(0);
 }
@@ -301,6 +306,8 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 	resp->has_needs_backup = true; resp->needs_backup = storage_needsBackup();
 	resp->has_flags = true; resp->flags = storage_getFlags();
 	resp->has_model = true; strlcpy(resp->model, "1", sizeof(resp->model));
+	resp->has_state = true; resp->state.size = 64; session_getState(NULL, resp->state.bytes);
+
 	msg_write(MessageType_MessageType_Features, resp);
 }
 

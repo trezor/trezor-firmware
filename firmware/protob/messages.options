@@ -1,4 +1,4 @@
-Initialize.state			max_size:32
+Initialize.state			max_size:64
 
 Features.vendor				max_size:33
 Features.device_id			max_size:25
@@ -10,7 +10,7 @@ Features.bootloader_hash		max_size:32
 Features.model				max_size:17
 Features.fw_vendor			max_size:256
 Features.fw_vendor_keys			max_size:32
-Features.state				max_size:32
+Features.state				max_size:64
 
 ApplySettings.language			max_size:17
 ApplySettings.label			max_size:33
@@ -27,7 +27,7 @@ ButtonRequest.data			max_size:256
 PinMatrixAck.pin			max_size:10
 
 PassphraseAck.passphrase		max_size:51
-PassphraseAck.state			max_size:32
+PassphraseAck.state			max_size:64
 
 Entropy.entropy				max_size:1024
 

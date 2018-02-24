@@ -103,6 +103,8 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size);
 
 void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
+void session_getState(const uint8_t *salt, uint8_t *state);
+bool session_compareState(const uint8_t *state);
 
 void storage_setMnemonic(const char *mnemonic);
 bool storage_containsMnemonic(const char *mnemonic);
