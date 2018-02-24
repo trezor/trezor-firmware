@@ -352,9 +352,9 @@ async def sign_tx(tx: SignTx, root):
                 if signature_index is None:
                     raise SigningError(FailureType.DataError,
                                        'Pubkey not found in multisig script')
-                witness = get_p2wsh_witness(txi.multisig, signature, signature_index, get_hash_type(coin))
+                witness = witness_p2wsh(txi.multisig, signature, signature_index, get_hash_type(coin))
             else:
-                witness = get_p2wpkh_witness(signature, key_sign_pub, get_hash_type(coin))
+                witness = witness_p2wpkh(signature, key_sign_pub, get_hash_type(coin))
 
             tx_ser.serialized_tx = witness
             tx_ser.signature_index = i

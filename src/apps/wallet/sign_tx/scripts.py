@@ -1,23 +1,16 @@
-from apps.wallet.sign_tx.writers import *
-
-from trezor.crypto.hashlib import sha256, ripemd160
+from trezor.crypto.hashlib import ripemd160, sha256
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
+from apps.wallet.sign_tx.writers import *
 
 
 class ScriptsError(ValueError):
     pass
 
 
-# TX Scripts
+# P2PKH, P2SH
 # ===
+# https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki
 
-# -------------------------- First gen --------------------------
-
-# =============== P2PK ===============
-# obsolete
-
-
-# =============== P2PKH ===============
 
 def input_script_p2pkh_or_p2sh(pubkey: bytes, signature: bytes, sighash: int) -> bytearray:
     w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
@@ -37,13 +30,9 @@ def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
     return s
 
 
-# =============== P2SH ===============
-# see https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki
-
-# input script (scriptSig) is the same as input_script_p2pkh_or_p2sh
-
-# output script (scriptPubKey) is A9 14 <scripthash> 87
 def output_script_p2sh(scripthash: bytes) -> bytearray:
+    # A9 14 <scripthash> 87
+
     s = bytearray(23)
     s[0] = 0xA9  # OP_HASH_160
     s[1] = 0x14  # pushing 20 bytes
@@ -52,22 +41,28 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
     return s
 
 
-# -------------------------- SegWit --------------------------
+# SegWit: Native P2WPKH or P2WSH
+# ===
+# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wpkh
+# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wsh
+#
+# P2WPKH (Pay-to-Witness-Public-Key-Hash) is the segwit native P2PKH.
+# Not backwards compatible.
+#
+# P2WSH (Pay-to-Witness-Script-Hash) is segwit native P2SH.
+# Not backwards compatible.
 
-# =============== Native P2WPKH ===============
-# see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wpkh
-# P2WPKH (Pay-to-Witness-Public-Key-Hash) is the segwit native P2PKH
-# not backwards compatible
 
-# input script is completely replaced by the witness and therefore empty
 def input_script_native_p2wpkh_or_p2wsh() -> bytearray:
+    # Completely replaced by the witness and therefore empty.
     return bytearray(0)
 
 
-# output script is either:
-# 00 14 <20-byte-key-hash>
-# 00 20 <32-byte-script-hash>
 def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
+    # Either:
+    # 00 14 <20-byte-key-hash>
+    # 00 20 <32-byte-script-hash>
+
     w = bytearray_with_cap(3 + len(witprog))
     w.append(0x00)  # witness version byte
     w.append(len(witprog))  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
@@ -75,13 +70,18 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
     return w
 
 
-# =============== P2WPKH nested in P2SH ===============
-# P2WPKH is nested in P2SH to be backwards compatible
-# see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+# SegWit: P2WPKH nested in P2SH
+# ===
+# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+#
+# P2WPKH is nested in P2SH to be backwards compatible.
+# Uses normal P2SH output scripts.
 
-# input script (scriptSig) is 16 00 14 <pubkeyhash>
-# signature is moved to the witness
+
 def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
+    # 16 00 14 <pubkeyhash>
+    # Signature is moved to the witness.
+
     w = bytearray_with_cap(3 + len(pubkeyhash))
     w.append(0x16)  # length of the data
     w.append(0x00)  # witness version byte
@@ -89,30 +89,19 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
     write_bytes(w, pubkeyhash)  # pub key hash
     return w
 
-# output script (scriptPubKey) is A9 14 <scripthash> 87
-# which is same as the output_script_p2sh
+
+# SegWit: P2WSH nested in P2SH
+# ===
+# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wsh-nested-in-bip16-p2sh
+#
+# P2WSH is nested in P2SH to be backwards compatible.
+# Uses normal P2SH output scripts.
 
 
-# =============== Native P2WSH ===============
-# see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wsh
-# P2WSH (Pay-to-Witness-Script-Hash) is segwit native P2SH
-# not backwards compatible
-
-# input script is completely replaced by the witness and therefore empty
-# same as input_script_native_p2wpkh_or_p2wsh
-
-# output script consists of 00 20 <32-byte-key-hash>
-# same as output_script_native_p2wpkh_or_p2wsh (only different length)
-
-
-# =============== P2WSH nested in P2SH ===============
-# P2WSH is nested in P2SH to be backwards compatible
-# see https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wsh-nested-in-bip16-p2sh
-
-# input script (scriptSig) is 22 00 20 <redeem script hash>
-# P2WSH script hash is always equal to 32 bytes (Ox20)
-# signature is moved to the witness
 def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
+    # 22 00 20 <redeem script hash>
+    # Signature is moved to the witness.
+
     if len(script_hash) != 32:
         raise ScriptsError('Redeem script hash should be 32 bytes long')
 
@@ -123,13 +112,12 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
     write_bytes(w, script_hash)
     return w
 
-# output script (scriptPubKey) is A9 14 <scripthash> 87
-# which is same as the output_script_p2sh
+
+# SegWit: Witness getters
+# ===
 
 
-# =============== SegWit Witness getters ===============
-
-def get_p2wpkh_witness(signature: bytes, pubkey: bytes, sighash: int):
+def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int):
     w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
     append_signature(w, signature, sighash)
@@ -137,12 +125,10 @@ def get_p2wpkh_witness(signature: bytes, pubkey: bytes, sighash: int):
     return w
 
 
-# p2wsh is a generic mechanism but is currently used for multisig only
-def get_p2wsh_witness(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
-
+def witness_p2wsh(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
-        raise ScriptsError('One of the multisig signatures occupies the current signature\'s spot')
+        raise ScriptsError('Invalid multisig parameters')
     signatures[signature_index] = signature  # our signature
 
     # filter empty
@@ -166,19 +152,22 @@ def get_p2wsh_witness(multisig: MultisigRedeemScriptType, signature: bytes, sign
     return w
 
 
-# -------------------------- Multisig --------------------------
+# Multisig
+# ===
+#
+# Used either as P2SH, P2WSH, or P2WSH nested in P2SH.
+
 
 def input_script_multisig(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
-
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
-        raise ScriptsError('One of the multisig signatures occupies the current signature\'s spot')
+        raise ScriptsError('Invalid multisig parameters')
     signatures[signature_index] = signature  # our signature
 
     w = bytearray()
-    # starts with OP_FALSE because of an old OP_CHECKMULTISIG bug,
-    # which consumes one additional item on the stack
-    # see https://bitcoin.org/en/developer-guide#standard-transactions
+    # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
+    # consumes one additional item on the stack:
+    # https://bitcoin.org/en/developer-guide#standard-transactions
     w.append(0x00)
 
     for s in signatures:
@@ -211,10 +200,8 @@ def output_script_multisig_p2wsh(pubkeys, m) -> bytes:
 
 def script_multisig(pubkeys, m) -> bytearray:
     n = len(pubkeys)
-    if n < 1 or n > 15:
-        raise ScriptsError('Multisig n must be between 1 and 15')
-    if m < 1 or m > 15:
-        raise ScriptsError('Multisig m must be between 1 and 15')
+    if n < 1 or n > 15 or m < 1 or m > 15:
+        raise ScriptsError('Invalid multisig parameters')
 
     w = bytearray()
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
@@ -225,9 +212,9 @@ def script_multisig(pubkeys, m) -> bytearray:
     return w
 
 
-# -------------------------- Others --------------------------
+# OP_RETURN
+# ===
 
-# === OP_RETURN script
 
 def output_script_paytoopreturn(data: bytes) -> bytearray:
     w = bytearray_with_cap(1 + 5 + len(data))
@@ -237,7 +224,9 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
     return w
 
 
-# === helpers
+# Helpers
+# ===
+
 
 def append_signature(w: bytearray, signature: bytes, sighash: int) -> bytearray:
     write_op_push(w, len(signature) + 1)
