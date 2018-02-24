@@ -64,12 +64,11 @@ void display_init(void)
         SDL_DestroyWindow(win);
         ensure(secfalse, "SDL_CreateRenderer error");
     }
-    SDL_SetRenderDrawColor(RENDERER, DISPLAY_BACKLIGHT, DISPLAY_BACKLIGHT, DISPLAY_BACKLIGHT, 255);
+    SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
     SDL_RenderClear(RENDERER);
     BUFFER = SDL_CreateRGBSurface(0, MAX_DISPLAY_RESX, MAX_DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
-    SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_NONE);
-    SDL_SetTextureAlphaMod(TEXTURE, 0);
+    SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_BLEND);
 
     DISPLAY_BACKLIGHT = 0;
     DISPLAY_ORIENTATION = 0;
@@ -96,6 +95,8 @@ void display_refresh(void)
     }
     SDL_RenderClear(RENDERER);
     SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
+#define BACKLIGHT_NORMAL 150
+    SDL_SetTextureAlphaMod(TEXTURE, MIN(255, 255 * DISPLAY_BACKLIGHT / BACKLIGHT_NORMAL));
     const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
@@ -104,16 +105,12 @@ void display_refresh(void)
 
 static void display_set_orientation(int degrees)
 {
+    display_refresh();
 }
 
 static void display_set_backlight(int val)
 {
-#ifndef TREZOR_NOUI
-    if (!RENDERER) {
-        display_init();
-    }
-    SDL_SetRenderDrawColor(RENDERER, val, val, val, 255);
-#endif
+    display_refresh();
 }
 
 void display_save(const char *filename)
