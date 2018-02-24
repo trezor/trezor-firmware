@@ -21,7 +21,23 @@ class AddressError(Exception):
 
 def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=None) -> str:
 
-    if script_type == InputScriptType.SPENDADDRESS:  # p2pkh
+    if script_type == InputScriptType.SPENDADDRESS or script_type == InputScriptType.SPENDMULTISIG:
+        if multisig:  # p2sh multisig
+            pubkey = node.public_key()
+            index = multisig_pubkey_index(multisig, pubkey)
+            if index is None:
+                raise AddressError(FailureType.ProcessError,
+                                   'Public key not found')
+            if coin.address_type_p2sh is None:
+                raise AddressError(FailureType.ProcessError,
+                                   'Multisig not enabled on this coin')
+
+            return address_multisig_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
+        if script_type == InputScriptType.SPENDMULTISIG:
+            raise AddressError(FailureType.ProcessError,
+                               'Multisig details required')
+
+        # p2pkh
         return node.address(coin.address_type)
 
     elif script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or native p2wsh
@@ -45,21 +61,6 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
 
         # p2wpkh nested in p2sh
         return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
-
-    elif script_type == InputScriptType.SPENDMULTISIG:  # p2sh multisig
-        if multisig is None:
-            raise AddressError(FailureType.ProcessError,
-                               'Multisig details required')
-        pubkey = node.public_key()
-        index = multisig_pubkey_index(multisig, pubkey)
-        if index is None:
-            raise AddressError(FailureType.ProcessError,
-                               'Public key not found')
-        if coin.address_type_p2sh is None:
-            raise AddressError(FailureType.ProcessError,
-                               'Multisig not enabled on this coin')
-
-        return address_multisig_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
 
     else:
         raise AddressError(FailureType.ProcessError,
