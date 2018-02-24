@@ -16,12 +16,6 @@ class TestAddress(unittest.TestCase):
         )
         self.assertEqual(address, '2Mww8dCYPUpKHofjgcXcBCEGmniw9CoaiD2')
 
-    def test_p2wpkh_in_p2sh_script_address(self):
-        raw = address_p2wpkh_in_p2sh_script(
-            unhexlify('03a1af804ac108a8a51782198c2d034b28bf90c8803f5a53f76276fa69a4eae77f')
-        )
-        self.assertEqual(raw, unhexlify('336caa13e08b96080a32b5d818d59b4ab3b36742'))
-
     def test_p2wpkh_in_p2sh_node_derive_address(self):
         coin = coins.by_name('Testnet')
         seed = bip39.seed(' '.join(['all'] * 12), '')
@@ -84,23 +78,18 @@ class TestAddress(unittest.TestCase):
         )
         self.assertEqual(address, '3Dwz1MXhM6EfFoJChHCxh1jWHb8GQqRenG')
 
-    def test_p2wsh_in_p2sh_script_address(self):
-        raw = address_p2wsh_in_p2sh_script(
-            unhexlify('1863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262')
-        )
-        self.assertEqual(raw, unhexlify('e4300531190587e3880d4c3004f5355d88ff928d'))
-
     def test_multisig_address_p2sh(self):
-        # test data from
-        # http://www.soroushjp.com/2014/12/20/bitcoin-multisig-the-hard-way-understanding-raw-multisignature-bitcoin-transactions/
-        coin = coins.by_name('Bitcoin')
-        pubkeys = [
-            unhexlify('04a882d414e478039cd5b52a92ffb13dd5e6bd4515497439dffd691a0f12af9575fa349b5694ed3155b136f09e63975a1700c9f4d4df849323dac06cf3bd6458cd'),
-            unhexlify('046ce31db9bdd543e72fe3039a1f1c047dab87037c36a669ff90e28da1848f640de68c2fe913d363a51154a0c62d7adea1b822d05035077418267b1a1379790187'),
-            unhexlify('0411ffd36c70776538d079fbae117dc38effafb33304af83ce4894589747aee1ef992f63280567f52f5ba870678b4ab4ff6c8ea600bd217870a8b4f1f09f3a8e83'),
-        ]
-        address = address_multisig_p2sh(pubkeys, 2, coin.address_type_p2sh)
-        self.assertEqual(address, '347N1Thc213QqfYCz3PZkjoJpNv5b14kBd')
+        # # test data from
+        # # http://www.soroushjp.com/2014/12/20/bitcoin-multisig-the-hard-way-understanding-raw-multisignature-bitcoin-transactions/
+        # # commented out because uncompressed public keys are not supported
+        # coin = coins.by_name('Bitcoin')
+        # pubkeys = [
+        #     unhexlify('04a882d414e478039cd5b52a92ffb13dd5e6bd4515497439dffd691a0f12af9575fa349b5694ed3155b136f09e63975a1700c9f4d4df849323dac06cf3bd6458cd'),
+        #     unhexlify('046ce31db9bdd543e72fe3039a1f1c047dab87037c36a669ff90e28da1848f640de68c2fe913d363a51154a0c62d7adea1b822d05035077418267b1a1379790187'),
+        #     unhexlify('0411ffd36c70776538d079fbae117dc38effafb33304af83ce4894589747aee1ef992f63280567f52f5ba870678b4ab4ff6c8ea600bd217870a8b4f1f09f3a8e83'),
+        # ]
+        # address = address_multisig_p2sh(pubkeys, 2, coin.address_type_p2sh)
+        # self.assertEqual(address, '347N1Thc213QqfYCz3PZkjoJpNv5b14kBd')
 
         coin = coins.by_name('Bitcoin')
         pubkeys = [

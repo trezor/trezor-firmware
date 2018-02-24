@@ -32,7 +32,8 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
                 raise AddressError(FailureType.ProcessError,
                                    'Multisig not enabled on this coin')
 
-            return address_multisig_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
+            pubkeys = multisig_get_pubkeys(multisig)
+            return address_multisig_p2sh(pubkeys, multisig.m, coin.address_type_p2sh)
         if script_type == InputScriptType.SPENDMULTISIG:
             raise AddressError(FailureType.ProcessError,
                                'Multisig details required')
@@ -46,7 +47,8 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
                                'Segwit not enabled on this coin')
         # native p2wsh multisig
         if multisig is not None:
-            return address_multisig_p2wsh(multisig_get_pubkeys(multisig), multisig.m, coin.bech32_prefix)
+            pubkeys = multisig_get_pubkeys(multisig)
+            return address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
 
         # native p2wpkh
         return address_p2wpkh(node.public_key(), coin.bech32_prefix)
@@ -57,7 +59,8 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
                                'Segwit not enabled on this coin')
         # p2wsh multisig nested in p2sh
         if multisig is not None:
-            return address_multisig_p2wsh_in_p2sh(multisig_get_pubkeys(multisig), multisig.m, coin.address_type_p2sh)
+            pubkeys = multisig_get_pubkeys(multisig)
+            return address_multisig_p2wsh_in_p2sh(pubkeys, multisig.m, coin.address_type_p2sh)
 
         # p2wpkh nested in p2sh
         return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
@@ -67,25 +70,31 @@ def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=Non
                            'Invalid script type')
 
 
-def address_multisig_p2sh(pubkeys: bytes, m: int, addrtype):
-    digest = output_script_multisig_p2sh(pubkeys, m)
+def address_multisig_p2sh(pubkeys: bytes, m: int, addrtype: int):
     if addrtype is None:
         raise AddressError(FailureType.ProcessError,
                            'Multisig not enabled on this coin')
-    return address_p2sh(digest, addrtype)
+    redeem_script = output_script_multisig(pubkeys, m)
+    redeem_script_hash = sha256_ripemd160_digest(redeem_script)
+    return address_p2sh(redeem_script_hash, addrtype)
 
 
-def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, addrtype):
-    digest = output_script_multisig_p2wsh(pubkeys, m)
+def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, addrtype: int):
     if addrtype is None:
         raise AddressError(FailureType.ProcessError,
                            'Multisig not enabled on this coin')
-    return address_p2wsh_in_p2sh(digest, addrtype)
+    witness_script = output_script_multisig(pubkeys, m)
+    witness_script_hash = sha256(witness_script).digest()
+    return address_p2wsh_in_p2sh(witness_script_hash, addrtype)
 
 
 def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
-    digest = output_script_multisig_p2wsh(pubkeys, m)
-    return address_p2wsh(digest, hrp)
+    if not hrp:
+        raise AddressError(FailureType.ProcessError,
+                           'Multisig not enabled on this coin')
+    witness_script = output_script_multisig(pubkeys, m)
+    witness_script_hash = sha256(witness_script).digest()
+    return address_p2wsh(witness_script_hash, hrp)
 
 
 def address_p2sh(redeem_script_hash: bytes, addrtype: int) -> str:
@@ -95,43 +104,19 @@ def address_p2sh(redeem_script_hash: bytes, addrtype: int) -> str:
     return base58.encode_check(bytes(s))
 
 
-# P2WPKH nested in P2SH. The P2SH redeem script hash is created using the
-# `raw` function
 def address_p2wpkh_in_p2sh(pubkey: bytes, addrtype: int) -> str:
-    redeem_script_hash = address_p2wpkh_in_p2sh_script(pubkey)
+    pubkey_hash = ecdsa_hash_pubkey(pubkey)
+    redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
+    redeem_script_hash = sha256_ripemd160_digest(redeem_script)
     return address_p2sh(redeem_script_hash, addrtype)
 
 
-# Generates a P2SH redeem script based on a public key hash in a P2WPKH manner
-def address_p2wpkh_in_p2sh_script(pubkey: bytes) -> bytes:
-    s = bytearray(22)
-    s[0] = 0x00  # OP_0
-    s[1] = 0x14  # pushing 20 bytes
-    s[2:22] = ecdsa_hash_pubkey(pubkey)
-    h = sha256(s).digest()
-    h = ripemd160(h).digest()
-    return h
-
-
-# P2WSH nested in P2SH. The P2SH redeem script hash is created using the
-# `raw` function
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, addrtype: int) -> str:
-    redeem_script_hash = address_p2wsh_in_p2sh_script(witness_script_hash)
+    redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
+    redeem_script_hash = sha256_ripemd160_digest(redeem_script)
     return address_p2sh(redeem_script_hash, addrtype)
 
 
-# Generates a P2SH redeem script based on a hash of a witness redeem script hash
-def address_p2wsh_in_p2sh_script(script_hash: bytes) -> bytes:
-    s = bytearray(34)
-    s[0] = 0x00  # OP_0
-    s[1] = 0x20  # pushing 32 bytes
-    s[2:34] = script_hash
-    h = sha256(s).digest()
-    h = ripemd160(h).digest()
-    return h
-
-
-# Native Bech32 P2WPKH
 def address_p2wpkh(pubkey: bytes, hrp: str) -> str:
     pubkeyhash = ecdsa_hash_pubkey(pubkey)
     address = bech32.encode(hrp, _BECH32_WITVER, pubkeyhash)
@@ -141,9 +126,8 @@ def address_p2wpkh(pubkey: bytes, hrp: str) -> str:
     return address
 
 
-# Native Bech32 P2WSH, script_hash is 32-byte SHA256(script)
-def address_p2wsh(script_hash: bytes, hrp: str) -> str:
-    address = bech32.encode(hrp, _BECH32_WITVER, script_hash)
+def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
+    address = bech32.encode(hrp, _BECH32_WITVER, witness_script_hash)
     if address is None:
         raise AddressError(FailureType.ProcessError,
                            'Invalid address')

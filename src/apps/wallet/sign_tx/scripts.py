@@ -146,7 +146,7 @@ def witness_p2wsh(multisig: MultisigRedeemScriptType, signature: bytes, signatur
 
     # redeem script
     pubkeys = multisig_get_pubkeys(multisig)
-    redeem_script = script_multisig(pubkeys, multisig.m)
+    redeem_script = output_script_multisig(pubkeys, multisig.m)
     write_varint(w, len(redeem_script))
     write_bytes(w, redeem_script)
     return w
@@ -176,32 +176,20 @@ def input_script_multisig(multisig: MultisigRedeemScriptType, signature: bytes, 
 
     # redeem script
     pubkeys = multisig_get_pubkeys(multisig)
-    redeem_script = script_multisig(pubkeys, multisig.m)
+    redeem_script = output_script_multisig(pubkeys, multisig.m)
     write_op_push(w, len(redeem_script))
     write_bytes(w, redeem_script)
+
     return w
 
 
-# returns a ripedm(sha256()) hash of a multisig script used in P2SH
-def output_script_multisig_p2sh(pubkeys, m) -> bytes:
-    script = script_multisig(pubkeys, m)
-    h = sha256(script).digest()
-    return ripemd160(h).digest()
-
-
-# returns a sha256() hash of a multisig script used in P2WSH
-def output_script_multisig_p2wsh(pubkeys, m) -> bytes:
-    for pubkey in pubkeys:
-        if len(pubkey) != 33:
-            raise ScriptsError('Only compressed public keys are allowed for P2WSH')
-    script = script_multisig(pubkeys, m)
-    return sha256(script).digest()
-
-
-def script_multisig(pubkeys, m) -> bytearray:
+def output_script_multisig(pubkeys, m: int) -> bytearray:
     n = len(pubkeys)
     if n < 1 or n > 15 or m < 1 or m > 15:
         raise ScriptsError('Invalid multisig parameters')
+    for pubkey in pubkeys:
+        if len(pubkey) != 33:
+            raise ScriptsError('Invalid multisig parameters')
 
     w = bytearray()
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
@@ -239,3 +227,9 @@ def append_pubkey(w: bytearray, pubkey: bytes) -> bytearray:
     write_op_push(w, len(pubkey))
     write_bytes(w, pubkey)
     return w
+
+
+def sha256_ripemd160_digest(b: bytes) -> bytes:
+    h = sha256(b).digest()
+    h = ripemd160(h).digest()
+    return h

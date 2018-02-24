@@ -3,7 +3,7 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, FailureType
 
 from apps.wallet.sign_tx.writers import *
-from apps.wallet.sign_tx.scripts import output_script_p2pkh, script_multisig
+from apps.wallet.sign_tx.scripts import output_script_p2pkh, output_script_multisig
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.common.hash_writer import HashWriter
 
@@ -65,7 +65,7 @@ class Bip143:
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
         if txi.multisig:
-            return script_multisig(multisig_get_pubkeys(txi.multisig), txi.multisig.m)
+            return output_script_multisig(multisig_get_pubkeys(txi.multisig), txi.multisig.m)
 
         p2pkh = (txi.script_type == InputScriptType.SPENDWITNESS or
                  txi.script_type == InputScriptType.SPENDP2SHWITNESS or

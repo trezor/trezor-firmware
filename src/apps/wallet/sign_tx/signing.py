@@ -250,7 +250,7 @@ async def sign_tx(tx: SignTx, root):
                     # for the signing process the script_sig is equal
                     # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
                     if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
-                        txi_sign.script_sig = script_multisig(
+                        txi_sign.script_sig = output_script_multisig(
                             multisig_get_pubkeys(txi_sign.multisig),
                             txi_sign.multisig.m)
                     elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
@@ -512,8 +512,10 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
     if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh or p2wsh using p2sh
         if i.multisig:  # p2wsh in p2sh
             pubkeys = multisig_get_pubkeys(i.multisig)
-            script_hash = output_script_multisig_p2wsh(pubkeys, i.multisig.m)
-            return input_script_p2wsh_in_p2sh(script_hash)
+            witness_script = output_script_multisig(pubkeys, i.multisig.m)
+            witness_script_hash = sha256(witness_script).digest()
+            return input_script_p2wsh_in_p2sh(witness_script_hash)
+
         # p2wpkh in p2sh
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
 
