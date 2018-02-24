@@ -35,14 +35,14 @@ def dispatch_SignTx(*args, **kwargs):
 
 @unimport
 def dispatch_SignMessage(*args, **kwargs):
-    from .sign_message import layout_sign_message
-    return layout_sign_message(*args, **kwargs)
+    from .sign_message import sign_message
+    return sign_message(*args, **kwargs)
 
 
 @unimport
 def dispatch_VerifyMessage(*args, **kwargs):
-    from .verify_message import layout_verify_message
-    return layout_verify_message(*args, **kwargs)
+    from .verify_message import verify_message
+    return verify_message(*args, **kwargs)
 
 
 @unimport
