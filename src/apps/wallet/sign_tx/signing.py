@@ -79,20 +79,8 @@ async def check_tx_fee(tx: SignTx, root):
         if txi.multisig:
             multifp.add(txi.multisig)
 
-        if coin.force_bip143:
-            is_bip143 = (txi.script_type == InputScriptType.SPENDADDRESS)
-            if not is_bip143:
-                raise SigningError(FailureType.DataError,
-                                   'Wrong input script type')
-            if not txi.amount:
-                raise SigningError(FailureType.DataError,
-                                   'BIP 143 input without amount')
-            segwit[i] = False
-            segwit_in += txi.amount
-            total_in += txi.amount
-
-        elif txi.script_type in (InputScriptType.SPENDWITNESS,
-                                 InputScriptType.SPENDP2SHWITNESS):
+        if txi.script_type in (InputScriptType.SPENDWITNESS,
+                               InputScriptType.SPENDP2SHWITNESS):
             if not coin.segwit:
                 raise SigningError(FailureType.DataError,
                                    'Segwit not enabled on this coin')
@@ -105,9 +93,17 @@ async def check_tx_fee(tx: SignTx, root):
 
         elif txi.script_type in (InputScriptType.SPENDADDRESS,
                                  InputScriptType.SPENDMULTISIG):
-            segwit[i] = False
-            total_in += await get_prevtx_output_value(
-                tx_req, txi.prev_hash, txi.prev_index)
+            if coin.force_bip143:
+                if not txi.amount:
+                    raise SigningError(FailureType.DataError,
+                                       'BIP 143 input without amount')
+                segwit[i] = False
+                segwit_in += txi.amount
+                total_in += txi.amount
+            else:
+                segwit[i] = False
+                total_in += await get_prevtx_output_value(
+                    tx_req, txi.prev_hash, txi.prev_index)
 
         else:
             raise SigningError(FailureType.DataError,
@@ -175,7 +171,8 @@ async def sign_tx(tx: SignTx, root):
             txi_sign = await request_tx_input(tx_req, i_sign)
             input_check_wallet_path(txi_sign, wallet_path)
 
-            is_bip143 = (txi_sign.script_type == InputScriptType.SPENDADDRESS)
+            is_bip143 = (txi_sign.script_type == InputScriptType.SPENDADDRESS or
+                         txi_sign.script_type == InputScriptType.SPENDMULTISIG)
             if not is_bip143 or txi_sign.amount > authorized_in:
                 raise SigningError(FailureType.ProcessError,
                                    'Transaction has changed during signing')
@@ -185,6 +182,13 @@ async def sign_tx(tx: SignTx, root):
             key_sign_pub = key_sign.public_key()
             bip143_hash = bip143.preimage_hash(
                 tx, txi_sign, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
+
+            # if multisig, check if singing with a key that is included in multisig
+            if txi_sign.multisig:
+                pubkey_idx = multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
+                if pubkey_idx is None:
+                    raise SigningError(FailureType.DataError,
+                                       'Pubkey not found in multisig script')
 
             signature = ecdsa_sign(key_sign, bip143_hash)
             tx_ser.signature_index = i_sign
@@ -345,6 +349,9 @@ async def sign_tx(tx: SignTx, root):
             if txi.multisig:
                 # find out place of our signature based on the pubkey
                 signature_index = multisig_pubkey_index(txi.multisig, key_sign_pub)
+                if signature_index is None:
+                    raise SigningError(FailureType.DataError,
+                                       'Pubkey not found in multisig script')
                 witness = get_p2wsh_witness(txi.multisig, signature, signature_index, get_hash_type(coin))
             else:
                 witness = get_p2wpkh_witness(signature, key_sign_pub, get_hash_type(coin))
