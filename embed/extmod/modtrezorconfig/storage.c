@@ -136,11 +136,23 @@ static secbool pin_check(uint32_t pin, mp_obj_t callback)
     pin_fails_check_max(ctr);
 
     // Sleep for ~ctr seconds before checking the PIN.
+    uint32_t progress;
     for (uint32_t wait = ~ctr; wait > 0; wait--) {
-        if (mp_obj_is_callable(callback)) {
-            mp_call_function_2(callback, mp_obj_new_int(wait), mp_obj_new_int(~ctr));
+        for (int i = 0; i < 10; i++) {
+            if (mp_obj_is_callable(callback)) {
+                if ((~ctr) > 1000000) {  // precise enough
+                    progress = (~ctr - wait) / ((~ctr) / 1000);
+                } else {
+                    progress = ((~ctr - wait) * 10 + i) * 100 / (~ctr);
+                }
+                mp_call_function_2(callback, mp_obj_new_int(wait), mp_obj_new_int(progress));
+            }
+            hal_delay(100);
         }
-        hal_delay(1000);
+    }
+    // Show last frame if we were waiting
+    if ((~ctr > 0) && mp_obj_is_callable(callback)) {
+        mp_call_function_2(callback, mp_obj_new_int(0), mp_obj_new_int(1000));
     }
 
     // First, we increase PIN fail counter in storage, even before checking the
