@@ -182,6 +182,7 @@ class VendorHeader(object):
         self.vsig_n, \
         self.vtrust = header
         assert self.magic == b'TRZV'
+        data = data[:self.hdrlen]  # strip remaining data (firmware)
         assert self.vsig_m > 0 and self.vsig_m <= self.vsig_n
         assert self.vsig_n > 0 and self.vsig_n <= 8
         p = 32
@@ -277,6 +278,7 @@ def binopen(filename):
         vheader = VendorHeader(data)
         if len(data) == vheader.hdrlen:
             return vheader
+        vheader.print()
         subdata = data[vheader.hdrlen:]
         if subdata[:4] == b'TRZF':
             firmware = FirmwareImage(data, vheader.hdrlen)
@@ -316,7 +318,6 @@ def main():
             sigmask = 1 << (int(sys.argv[3]) - 1)
         signature = binascii.unhexlify(sys.argv[4])
         b.sign(sigmask, signature)
-        print()
         b.write(fn)
     if rehash:
         b.update_hashes()
