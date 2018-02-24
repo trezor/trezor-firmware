@@ -1,4 +1,5 @@
 from trezor import res, ui, wire
+from apps.common.cache import get_state
 
 
 async def request_passphrase(ctx):
@@ -47,7 +48,9 @@ async def request_passphrase(ctx):
             raise wire.FailureError(ProcessError, 'Passphrase not provided')
         passphrase = ack.passphrase
 
-    # TODO: process ack.state and check against the current device state, throw error if different
+    if ack.state is not None:
+        if ack.state != get_state(salt=ack.state[:32], passphrase=passphrase):
+            raise wire.FailureError(ProcessError, 'Passphrase mismatch')
 
     return passphrase
 

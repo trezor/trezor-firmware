@@ -16,12 +16,12 @@ async def derive_node(ctx: wire.Context, path=[], curve_name=_DEFAULT_CURVE):
 async def _get_seed(ctx: wire.Context) -> bytes:
     from . import cache
     if cache.get_seed() is None:
-        seed = await _compute_seed(ctx)
-        cache.set_seed(seed)
+        seed, passphrase = await _compute_seed(ctx)
+        cache.set_seed(seed, passphrase)
     return cache.get_seed()
 
 
-async def _compute_seed(ctx: wire.Context) -> bytes:
+async def _compute_seed(ctx: wire.Context) -> (bytes, str):
     from trezor.messages.FailureType import ProcessError
     from .request_passphrase import protect_by_passphrase
     from . import storage
@@ -30,7 +30,7 @@ async def _compute_seed(ctx: wire.Context) -> bytes:
         raise wire.FailureError(ProcessError, 'Device is not initialized')
 
     passphrase = await protect_by_passphrase(ctx)
-    return bip39.seed(storage.get_mnemonic(), passphrase)
+    return bip39.seed(storage.get_mnemonic(), passphrase), passphrase
 
 
 def derive_node_without_passphrase(path, curve_name=_DEFAULT_CURVE):

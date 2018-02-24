@@ -10,7 +10,7 @@ async def respond_Features(ctx, msg):
     from trezor.messages.Features import Features
 
     if msg.__qualname__ == 'Initialize':
-        if msg.state is None or msg.state != cache.get_state():
+        if msg.state is None or msg.state != cache.get_state(salt=msg.state[:32]):
             cache.clear()
 
     f = Features()
