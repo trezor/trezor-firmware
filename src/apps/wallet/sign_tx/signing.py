@@ -504,8 +504,9 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
 
     if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh or p2wsh using p2sh
         if i.multisig:  # p2wsh in p2sh
-            return input_script_p2wsh_in_p2sh(output_script_multisig_p2wsh(multisig_get_pubkeys(i.multisig),
-                                                                           i.multisig.m))
+            pubkeys = multisig_get_pubkeys(i.multisig)
+            script_hash = output_script_multisig_p2wsh(pubkeys, i.multisig.m)
+            return input_script_p2wsh_in_p2sh(script_hash)
         # p2wpkh in p2sh
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
 
@@ -514,8 +515,12 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
 
     # multisig
     elif i.script_type == InputScriptType.SPENDMULTISIG:
-        return input_script_multisig(signature, i.multisig.signatures, multisig_get_pubkeys(i.multisig), i.multisig.m,
-                                     get_hash_type(coin))
+        signature_index = multisig_pubkey_index(i.multisig, pubkey)
+        if signature_index is None:
+            raise SigningError(FailureType.DataError,
+                               'Pubkey not found in multisig script')
+        return input_script_multisig(
+            i.multisig, signature, signature_index, get_hash_type(coin))
     else:
         raise SigningError(FailureType.ProcessError, 'Invalid script type')
 

@@ -158,8 +158,9 @@ def get_p2wsh_witness(multisig: MultisigRedeemScriptType, signature: bytes, sign
     for s in signatures:
         append_signature(w, s, sighash)  # size of the witness included
 
-    redeem_script = script_multisig(multisig_get_pubkeys(multisig), multisig.m)
-
+    # redeem script
+    pubkeys = multisig_get_pubkeys(multisig)
+    redeem_script = script_multisig(pubkeys, multisig.m)
     write_varint(w, len(redeem_script))
     write_bytes(w, redeem_script)
     return w
@@ -167,22 +168,28 @@ def get_p2wsh_witness(multisig: MultisigRedeemScriptType, signature: bytes, sign
 
 # -------------------------- Multisig --------------------------
 
-def input_script_multisig(current_signature, other_signatures, pubkeys, m: int, sighash: int):
+def input_script_multisig(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
+
+    signatures = multisig.signatures  # other signatures
+    if len(signatures[signature_index]) > 0:
+        raise ScriptsError('One of the multisig signatures occupies the current signature\'s spot')
+    signatures[signature_index] = signature  # our signature
+
     w = bytearray()
     # starts with OP_FALSE because of an old OP_CHECKMULTISIG bug,
     # which consumes one additional item on the stack
     # see https://bitcoin.org/en/developer-guide#standard-transactions
     w.append(0x00)
-    for s in other_signatures:
+
+    for s in signatures:
         if len(s):
             append_signature(w, s, sighash)
 
-    append_signature(w, current_signature, sighash)
-
     # redeem script
-    redeem_script = script_multisig(pubkeys, m)
+    pubkeys = multisig_get_pubkeys(multisig)
+    redeem_script = script_multisig(pubkeys, multisig.m)
     write_op_push(w, len(redeem_script))
-    write_bytes(w, script_multisig(pubkeys, m))
+    write_bytes(w, redeem_script)
     return w
 
 
