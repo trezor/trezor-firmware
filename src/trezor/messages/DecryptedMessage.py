@@ -8,3 +8,13 @@ class DecryptedMessage(p.MessageType):
         2: ('address', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 52
+
+    def __init__(
+        self,
+        message: bytes = None,
+        address: str = None,
+        **kwargs,
+    ):
+        self.message = message
+        self.address = address
+        p.MessageType.__init__(self, **kwargs)

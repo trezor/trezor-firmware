@@ -7,3 +7,11 @@ class WordRequest(p.MessageType):
         1: ('type', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 46
+
+    def __init__(
+        self,
+        type: int = None,
+        **kwargs,
+    ):
+        self.type = type
+        p.MessageType.__init__(self, **kwargs)

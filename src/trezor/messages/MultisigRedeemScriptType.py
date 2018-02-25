@@ -9,3 +9,15 @@ class MultisigRedeemScriptType(p.MessageType):
         2: ('signatures', p.BytesType, p.FLAG_REPEATED),
         3: ('m', p.UVarintType, 0),
     }
+
+    def __init__(
+        self,
+        pubkeys: list = [],
+        signatures: list = [],
+        m: int = None,
+        **kwargs,
+    ):
+        self.pubkeys = pubkeys
+        self.signatures = signatures
+        self.m = m
+        p.MessageType.__init__(self, **kwargs)

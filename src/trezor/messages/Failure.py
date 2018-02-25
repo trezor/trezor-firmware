@@ -8,3 +8,13 @@ class Failure(p.MessageType):
         2: ('message', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 3
+
+    def __init__(
+        self,
+        code: int = None,
+        message: str = None,
+        **kwargs,
+    ):
+        self.code = code
+        self.message = message
+        p.MessageType.__init__(self, **kwargs)

@@ -7,3 +7,11 @@ class ChangePin(p.MessageType):
         1: ('remove', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 4
+
+    def __init__(
+        self,
+        remove: bool = None,
+        **kwargs,
+    ):
+        self.remove = remove
+        p.MessageType.__init__(self, **kwargs)

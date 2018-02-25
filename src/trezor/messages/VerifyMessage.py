@@ -10,3 +10,17 @@ class VerifyMessage(p.MessageType):
         4: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
     }
     MESSAGE_WIRE_TYPE = 39
+
+    def __init__(
+        self,
+        address: str = None,
+        signature: bytes = None,
+        message: bytes = None,
+        coin_name: str = None,
+        **kwargs,
+    ):
+        self.address = address
+        self.signature = signature
+        self.message = message
+        self.coin_name = coin_name
+        p.MessageType.__init__(self, **kwargs)

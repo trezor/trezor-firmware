@@ -7,3 +7,11 @@ class SetU2FCounter(p.MessageType):
         1: ('u2f_counter', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 63
+
+    def __init__(
+        self,
+        u2f_counter: int = None,
+        **kwargs,
+    ):
+        self.u2f_counter = u2f_counter
+        p.MessageType.__init__(self, **kwargs)

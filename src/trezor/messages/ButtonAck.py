@@ -4,3 +4,9 @@ import protobuf as p
 
 class ButtonAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 27
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        p.MessageType.__init__(self, **kwargs)

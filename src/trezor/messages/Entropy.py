@@ -7,3 +7,11 @@ class Entropy(p.MessageType):
         1: ('entropy', p.BytesType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 10
+
+    def __init__(
+        self,
+        entropy: bytes = None,
+        **kwargs,
+    ):
+        self.entropy = entropy
+        p.MessageType.__init__(self, **kwargs)

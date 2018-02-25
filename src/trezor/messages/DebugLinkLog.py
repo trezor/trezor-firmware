@@ -9,3 +9,15 @@ class DebugLinkLog(p.MessageType):
         3: ('text', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 104
+
+    def __init__(
+        self,
+        level: int = None,
+        bucket: str = None,
+        text: str = None,
+        **kwargs,
+    ):
+        self.level = level
+        self.bucket = bucket
+        self.text = text
+        p.MessageType.__init__(self, **kwargs)

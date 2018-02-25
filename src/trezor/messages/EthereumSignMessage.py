@@ -8,3 +8,13 @@ class EthereumSignMessage(p.MessageType):
         2: ('message', p.BytesType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 64
+
+    def __init__(
+        self,
+        address_n: list = [],
+        message: bytes = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.message = message
+        p.MessageType.__init__(self, **kwargs)

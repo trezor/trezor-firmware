@@ -7,3 +7,11 @@ class ApplyFlags(p.MessageType):
         1: ('flags', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 28
+
+    def __init__(
+        self,
+        flags: int = None,
+        **kwargs,
+    ):
+        self.flags = flags
+        p.MessageType.__init__(self, **kwargs)

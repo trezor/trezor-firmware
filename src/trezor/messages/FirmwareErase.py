@@ -7,3 +7,11 @@ class FirmwareErase(p.MessageType):
         1: ('length', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 6
+
+    def __init__(
+        self,
+        length: int = None,
+        **kwargs,
+    ):
+        self.length = length
+        p.MessageType.__init__(self, **kwargs)

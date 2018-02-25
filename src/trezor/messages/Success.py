@@ -7,3 +7,11 @@ class Success(p.MessageType):
         1: ('message', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 2
+
+    def __init__(
+        self,
+        message: str = None,
+        **kwargs,
+    ):
+        self.message = message
+        p.MessageType.__init__(self, **kwargs)

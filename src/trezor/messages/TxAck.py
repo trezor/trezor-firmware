@@ -8,3 +8,11 @@ class TxAck(p.MessageType):
         1: ('tx', TransactionType, 0),
     }
     MESSAGE_WIRE_TYPE = 22
+
+    def __init__(
+        self,
+        tx: TransactionType = None,
+        **kwargs,
+    ):
+        self.tx = tx
+        p.MessageType.__init__(self, **kwargs)

@@ -7,3 +7,11 @@ class EthereumAddress(p.MessageType):
         1: ('address', p.BytesType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 57
+
+    def __init__(
+        self,
+        address: bytes = None,
+        **kwargs,
+    ):
+        self.address = address
+        p.MessageType.__init__(self, **kwargs)

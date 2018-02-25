@@ -7,3 +7,11 @@ class DebugLinkMemory(p.MessageType):
         1: ('memory', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 111
+
+    def __init__(
+        self,
+        memory: bytes = None,
+        **kwargs,
+    ):
+        self.memory = memory
+        p.MessageType.__init__(self, **kwargs)

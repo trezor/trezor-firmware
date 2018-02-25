@@ -9,3 +9,15 @@ class DebugLinkMemoryWrite(p.MessageType):
         3: ('flash', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 112
+
+    def __init__(
+        self,
+        address: int = None,
+        memory: bytes = None,
+        flash: bool = None,
+        **kwargs,
+    ):
+        self.address = address
+        self.memory = memory
+        self.flash = flash
+        p.MessageType.__init__(self, **kwargs)

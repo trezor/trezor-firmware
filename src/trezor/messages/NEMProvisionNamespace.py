@@ -9,3 +9,17 @@ class NEMProvisionNamespace(p.MessageType):
         3: ('sink', p.UnicodeType, 0),
         4: ('fee', p.UVarintType, 0),
     }
+
+    def __init__(
+        self,
+        namespace: str = None,
+        parent: str = None,
+        sink: str = None,
+        fee: int = None,
+        **kwargs,
+    ):
+        self.namespace = namespace
+        self.parent = parent
+        self.sink = sink
+        self.fee = fee
+        p.MessageType.__init__(self, **kwargs)

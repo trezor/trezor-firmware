@@ -14,6 +14,8 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
 
     imports = []
     out = ["", "", "class %s(p.MessageType):" % t, ]
+    args = []
+    assigns = []
 
     if cls.DESCRIPTOR.fields_by_name:
         out.append("    FIELDS = {")
@@ -34,30 +36,37 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
             # TYPE_UINT32 = 13
             # TYPE_ENUM = 14
             type = 'p.UVarintType'
+            pytype = 'int'
 
         elif v.type in (17,):
             # TYPE_SINT32 = 17
             type = 'p.Sint32Type'
+            pytype = 'int'
 
         elif v.type in (18,):
             # TYPE_SINT64 = 18
             type = 'p.Sint64Type'
+            pytype = 'int'
 
         elif v.type == 9:
             # TYPE_STRING = 9
             type = 'p.UnicodeType'
+            pytype = 'str'
 
         elif v.type == 8:
             # TYPE_BOOL = 8
             type = 'p.BoolType'
+            pytype = 'bool'
 
         elif v.type == 12:
             # TYPE_BYTES = 12
             type = 'p.BytesType'
+            pytype = 'bytes'
 
         elif v.type == 11:
             # TYPE_MESSAGE = 1
             type = v.message_type.name
+            pytype = v.message_type.name
             imports.append("from .%s import %s" %
                            (v.message_type.name, v.message_type.name))
 
@@ -74,11 +83,18 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
 
         if repeated:
             flags = 'p.FLAG_REPEATED'
+            pytype = "list"
+            value = []
         else:
             flags = '0'
+            value = None
 
         out.append("        %d: ('%s', %s, %s),%s" %
                    (number, fieldname, type, flags, comment))
+
+        args.append("        %s: %s = %s," % (fieldname, pytype, value))
+
+        assigns.append("        self.%s = %s" % (fieldname, fieldname))
 
         # print fieldname, number, type, repeated, comment
         # print v.__dict__
@@ -109,7 +125,12 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
         imports = ['from __future__ import absolute_import',
                    'from .. import protobuf as p'] + imports
 
-    return imports + out
+    args.append("        **kwargs,")
+    assigns.append("        p.MessageType.__init__(self, **kwargs)")
+
+    init = ["", "    def __init__(", "        self,"] + args + ["    ):"] + assigns
+
+    return imports + out + init
 
 
 def process_enum(t, cls, is_upy):

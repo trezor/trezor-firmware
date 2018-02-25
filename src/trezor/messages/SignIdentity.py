@@ -11,3 +11,17 @@ class SignIdentity(p.MessageType):
         4: ('ecdsa_curve_name', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 53
+
+    def __init__(
+        self,
+        identity: IdentityType = None,
+        challenge_hidden: bytes = None,
+        challenge_visual: str = None,
+        ecdsa_curve_name: str = None,
+        **kwargs,
+    ):
+        self.identity = identity
+        self.challenge_hidden = challenge_hidden
+        self.challenge_visual = challenge_visual
+        self.ecdsa_curve_name = ecdsa_curve_name
+        p.MessageType.__init__(self, **kwargs)

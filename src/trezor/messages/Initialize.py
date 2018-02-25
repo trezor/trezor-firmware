@@ -3,7 +3,10 @@ import protobuf as p
 
 
 class Initialize(p.MessageType):
-    FIELDS = {
-        1: ('state', p.BytesType, 0),
-    }
     MESSAGE_WIRE_TYPE = 0
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        p.MessageType.__init__(self, **kwargs)

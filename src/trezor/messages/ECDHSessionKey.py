@@ -7,3 +7,11 @@ class ECDHSessionKey(p.MessageType):
         1: ('session_key', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 62
+
+    def __init__(
+        self,
+        session_key: bytes = None,
+        **kwargs,
+    ):
+        self.session_key = session_key
+        p.MessageType.__init__(self, **kwargs)

@@ -7,3 +7,11 @@ class GetEntropy(p.MessageType):
         1: ('size', p.UVarintType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 9
+
+    def __init__(
+        self,
+        size: int = None,
+        **kwargs,
+    ):
+        self.size = size
+        p.MessageType.__init__(self, **kwargs)

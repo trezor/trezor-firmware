@@ -7,3 +7,11 @@ class DebugLinkFlashErase(p.MessageType):
         1: ('sector', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 113
+
+    def __init__(
+        self,
+        sector: int = None,
+        **kwargs,
+    ):
+        self.sector = sector
+        p.MessageType.__init__(self, **kwargs)

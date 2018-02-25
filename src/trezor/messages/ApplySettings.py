@@ -10,3 +10,17 @@ class ApplySettings(p.MessageType):
         4: ('homescreen', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 25
+
+    def __init__(
+        self,
+        language: str = None,
+        label: str = None,
+        use_passphrase: bool = None,
+        homescreen: bytes = None,
+        **kwargs,
+    ):
+        self.language = language
+        self.label = label
+        self.use_passphrase = use_passphrase
+        self.homescreen = homescreen
+        p.MessageType.__init__(self, **kwargs)

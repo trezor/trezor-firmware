@@ -7,3 +7,11 @@ class PinMatrixAck(p.MessageType):
         1: ('pin', p.UnicodeType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 19
+
+    def __init__(
+        self,
+        pin: str = None,
+        **kwargs,
+    ):
+        self.pin = pin
+        p.MessageType.__init__(self, **kwargs)

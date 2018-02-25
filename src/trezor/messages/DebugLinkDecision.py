@@ -7,3 +7,11 @@ class DebugLinkDecision(p.MessageType):
         1: ('yes_no', p.BoolType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 100
+
+    def __init__(
+        self,
+        yes_no: bool = None,
+        **kwargs,
+    ):
+        self.yes_no = yes_no
+        p.MessageType.__init__(self, **kwargs)

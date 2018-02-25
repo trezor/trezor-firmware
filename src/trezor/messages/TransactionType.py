@@ -16,5 +16,28 @@ class TransactionType(p.MessageType):
         7: ('outputs_cnt', p.UVarintType, 0),
         8: ('extra_data', p.BytesType, 0),
         9: ('extra_data_len', p.UVarintType, 0),
-        10: ('decred_expiry', p.UVarintType, 0),
     }
+
+    def __init__(
+        self,
+        version: int = None,
+        inputs: list = [],
+        bin_outputs: list = [],
+        lock_time: int = None,
+        outputs: list = [],
+        inputs_cnt: int = None,
+        outputs_cnt: int = None,
+        extra_data: bytes = None,
+        extra_data_len: int = None,
+        **kwargs,
+    ):
+        self.version = version
+        self.inputs = inputs
+        self.bin_outputs = bin_outputs
+        self.lock_time = lock_time
+        self.outputs = outputs
+        self.inputs_cnt = inputs_cnt
+        self.outputs_cnt = outputs_cnt
+        self.extra_data = extra_data
+        self.extra_data_len = extra_data_len
+        p.MessageType.__init__(self, **kwargs)

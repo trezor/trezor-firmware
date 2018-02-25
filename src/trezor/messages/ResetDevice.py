@@ -14,3 +14,25 @@ class ResetDevice(p.MessageType):
         8: ('skip_backup', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 14
+
+    def __init__(
+        self,
+        display_random: bool = None,
+        strength: int = None,
+        passphrase_protection: bool = None,
+        pin_protection: bool = None,
+        language: str = None,
+        label: str = None,
+        u2f_counter: int = None,
+        skip_backup: bool = None,
+        **kwargs,
+    ):
+        self.display_random = display_random
+        self.strength = strength
+        self.passphrase_protection = passphrase_protection
+        self.pin_protection = pin_protection
+        self.language = language
+        self.label = label
+        self.u2f_counter = u2f_counter
+        self.skip_backup = skip_backup
+        p.MessageType.__init__(self, **kwargs)
