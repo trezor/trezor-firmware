@@ -9,6 +9,7 @@ from trezor.pin import pin_to_int
 from trezor.ui.keyboard import MnemonicKeyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
+from trezor.utils import format_ordinal
 from apps.common import storage
 from apps.management.change_pin import request_pin_confirm
 
@@ -71,8 +72,8 @@ async def request_mnemonic(ctx, count: int) -> str:
 
     words = []
     board = MnemonicKeyboard()
-    for i in range(0, count):
-        board.prompt = 'Type %s. word' % (i + 1)
+    for i in range(count):
+        board.prompt = 'Type the %s word:' % format_ordinal(i + 1)
         word = await board
         words.append(word)
 

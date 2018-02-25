@@ -34,3 +34,7 @@ def format_amount(amount, decimals):
     if amount.endswith('.'):
         amount = amount[:-1]
     return amount
+
+
+def format_ordinal(number):
+    return str(number) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= number % 100 < 20 else number % 10, 'th')

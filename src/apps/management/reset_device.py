@@ -12,7 +12,7 @@ from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.keyboard import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
-from trezor.utils import chunks
+from trezor.utils import chunks, format_ordinal
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
@@ -178,9 +178,9 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
 async def check_mnemonic(ctx, mnemonic: str) -> bool:
     words = mnemonic.split()
     index = random.uniform(len(words) // 2)  # first half
-    result = await MnemonicKeyboard('Type %s. word' % (index + 1))
+    result = await MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
     if result != words[index]:
         return False
     index = len(words) // 2 + random.uniform(len(words) // 2)  # second half
-    result = await MnemonicKeyboard('Type %s. word' % (index + 1))
+    result = await MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
     return result == words[index]
