@@ -185,10 +185,7 @@ async def sign_tx(tx: SignTx, root):
 
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
-                pubkey_idx = multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
-                if pubkey_idx is None:
-                    raise SigningError(FailureType.DataError,
-                                       'Pubkey not found in multisig script')
+                multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
             signature = ecdsa_sign(key_sign, bip143_hash)
             tx_ser.signature_index = i_sign
@@ -285,9 +282,6 @@ async def sign_tx(tx: SignTx, root):
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
                 pubkey_idx = multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
-                if pubkey_idx is None:
-                    raise SigningError(FailureType.DataError,
-                                       'Pubkey not found in multisig script')
 
             # compute the signature from the tx digest
             signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, True))
@@ -349,9 +343,6 @@ async def sign_tx(tx: SignTx, root):
             if txi.multisig:
                 # find out place of our signature based on the pubkey
                 signature_index = multisig_pubkey_index(txi.multisig, key_sign_pub)
-                if signature_index is None:
-                    raise SigningError(FailureType.DataError,
-                                       'Pubkey not found in multisig script')
                 witness = witness_p2wsh(txi.multisig, signature, signature_index, get_hash_type(coin))
             else:
                 witness = witness_p2wpkh(signature, key_sign_pub, get_hash_type(coin))
@@ -525,9 +516,6 @@ def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature
     # multisig
     elif i.script_type == InputScriptType.SPENDMULTISIG:
         signature_index = multisig_pubkey_index(i.multisig, pubkey)
-        if signature_index is None:
-            raise SigningError(FailureType.DataError,
-                               'Pubkey not found in multisig script')
         return input_script_multisig(
             i.multisig, signature, signature_index, get_hash_type(coin))
     else:

@@ -66,7 +66,8 @@ def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> 
     for i, hd in enumerate(multisig.pubkeys):
         if multisig_get_pubkey(hd) == pubkey:
             return i
-    return None
+    raise SigningError(FailureType.DataError,
+                       'Pubkey not found in multisig script')
 
 
 def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
