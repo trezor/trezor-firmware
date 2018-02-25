@@ -10,11 +10,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#define DISPLAY_BORDER 16
-
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
-static SDL_Texture *TEXTURE;
+static SDL_Texture *TEXTURE, *BACKGROUND;
 
 static struct {
     struct {
@@ -53,7 +51,7 @@ void display_init(void)
         ensure(secfalse, "SDL_Init error");
     }
     atexit(SDL_Quit);
-    SDL_Window *win = SDL_CreateWindow("TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DISPLAY_RESX + 2 * DISPLAY_BORDER, DISPLAY_RESY + 2 * DISPLAY_BORDER, SDL_WINDOW_SHOWN);
+    SDL_Window *win = SDL_CreateWindow("TREZOR Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!win) {
         printf("%s\n", SDL_GetError());
         ensure(secfalse, "SDL_CreateWindow error");
@@ -69,7 +67,11 @@ void display_init(void)
     BUFFER = SDL_CreateRGBSurface(0, MAX_DISPLAY_RESX, MAX_DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_BLEND);
-
+    // TODO: find better way how to embed/distribute background image
+    BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background.jpg");
+    if (BACKGROUND) {
+        SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
+    }
     DISPLAY_BACKLIGHT = 0;
     DISPLAY_ORIENTATION = 0;
 #endif
@@ -93,11 +95,15 @@ void display_refresh(void)
     if (!RENDERER) {
         display_init();
     }
-    SDL_RenderClear(RENDERER);
+    if (BACKGROUND) {
+        SDL_RenderCopy(RENDERER, BACKGROUND, NULL, NULL);
+    } else {
+        SDL_RenderClear(RENDERER);
+    }
     SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
 #define BACKLIGHT_NORMAL 150
     SDL_SetTextureAlphaMod(TEXTURE, MIN(255, 255 * DISPLAY_BACKLIGHT / BACKLIGHT_NORMAL));
-    const SDL_Rect r = {DISPLAY_BORDER, DISPLAY_BORDER, DISPLAY_RESX, DISPLAY_RESY};
+    const SDL_Rect r = {DISPLAY_TOUCH_OFFSET_X, DISPLAY_TOUCH_OFFSET_Y, DISPLAY_RESX, DISPLAY_RESY};
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
     SDL_RenderPresent(RENDERER);
 #endif

@@ -26,8 +26,8 @@ uint32_t touch_read(void)
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:
             case SDL_MOUSEBUTTONUP:
-                x = event.button.x - DISPLAY_BORDER;
-                y = event.button.y - DISPLAY_BORDER;
+                x = event.button.x - DISPLAY_TOUCH_OFFSET_X;
+                y = event.button.y - DISPLAY_TOUCH_OFFSET_Y;
                 if (x < 0 || y < 0 || x >= DISPLAY_RESX || y >= DISPLAY_RESY) break;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
