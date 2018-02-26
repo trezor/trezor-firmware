@@ -2,16 +2,16 @@
 import protobuf as p
 
 
-class PassphraseRequest(p.MessageType):
+class NEMDecryptedMessage(p.MessageType):
     FIELDS = {
-        1: ('on_device', p.BoolType, 0),
+        1: ('payload', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 41
+    MESSAGE_WIRE_TYPE = 76
 
     def __init__(
         self,
-        on_device: bool = None,
+        payload: bytes = None,
         **kwargs,
     ):
-        self.on_device = on_device
+        self.payload = payload
         p.MessageType.__init__(self, **kwargs)

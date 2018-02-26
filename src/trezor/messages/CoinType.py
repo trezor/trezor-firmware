@@ -14,6 +14,7 @@ class CoinType(p.MessageType):
         10: ('xprv_magic', p.UVarintType, 0),  # default=76066276
         11: ('segwit', p.BoolType, 0),
         12: ('forkid', p.UVarintType, 0),
+        13: ('force_bip143', p.BoolType, 0),
     }
 
     def __init__(
@@ -28,6 +29,7 @@ class CoinType(p.MessageType):
         xprv_magic: int = None,
         segwit: bool = None,
         forkid: int = None,
+        force_bip143: bool = None,
         **kwargs,
     ):
         self.coin_name = coin_name
@@ -40,4 +42,5 @@ class CoinType(p.MessageType):
         self.xprv_magic = xprv_magic
         self.segwit = segwit
         self.forkid = forkid
+        self.force_bip143 = force_bip143
         p.MessageType.__init__(self, **kwargs)

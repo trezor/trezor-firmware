@@ -25,6 +25,13 @@ class Features(p.MessageType):
         18: ('firmware_present', p.BoolType, 0),
         19: ('needs_backup', p.BoolType, 0),
         20: ('flags', p.UVarintType, 0),
+        21: ('model', p.UnicodeType, 0),
+        22: ('fw_major', p.UVarintType, 0),
+        23: ('fw_minor', p.UVarintType, 0),
+        24: ('fw_patch', p.UVarintType, 0),
+        25: ('fw_vendor', p.UnicodeType, 0),
+        26: ('fw_vendor_keys', p.BytesType, 0),
+        27: ('state', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 17
 
@@ -50,6 +57,13 @@ class Features(p.MessageType):
         firmware_present: bool = None,
         needs_backup: bool = None,
         flags: int = None,
+        model: str = None,
+        fw_major: int = None,
+        fw_minor: int = None,
+        fw_patch: int = None,
+        fw_vendor: str = None,
+        fw_vendor_keys: bytes = None,
+        state: bytes = None,
         **kwargs,
     ):
         self.vendor = vendor
@@ -72,4 +86,11 @@ class Features(p.MessageType):
         self.firmware_present = firmware_present
         self.needs_backup = needs_backup
         self.flags = flags
+        self.model = model
+        self.fw_major = fw_major
+        self.fw_minor = fw_minor
+        self.fw_patch = fw_patch
+        self.fw_vendor = fw_vendor
+        self.fw_vendor_keys = fw_vendor_keys
+        self.state = state
         p.MessageType.__init__(self, **kwargs)

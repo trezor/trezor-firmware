@@ -13,6 +13,8 @@ class TxInputType(p.MessageType):
         6: ('script_type', p.UVarintType, 0),  # default=0
         7: ('multisig', MultisigRedeemScriptType, 0),
         8: ('amount', p.UVarintType, 0),
+        9: ('decred_tree', p.UVarintType, 0),
+        10: ('decred_script_version', p.UVarintType, 0),
     }
 
     def __init__(
@@ -25,6 +27,8 @@ class TxInputType(p.MessageType):
         script_type: int = None,
         multisig: MultisigRedeemScriptType = None,
         amount: int = None,
+        decred_tree: int = None,
+        decred_script_version: int = None,
         **kwargs,
     ):
         self.address_n = address_n
@@ -35,4 +39,6 @@ class TxInputType(p.MessageType):
         self.script_type = script_type
         self.multisig = multisig
         self.amount = amount
+        self.decred_tree = decred_tree
+        self.decred_script_version = decred_script_version
         p.MessageType.__init__(self, **kwargs)

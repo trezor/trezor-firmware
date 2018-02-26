@@ -9,6 +9,7 @@ class SignTx(p.MessageType):
         3: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
         4: ('version', p.UVarintType, 0),  # default=1
         5: ('lock_time', p.UVarintType, 0),  # default=0
+        6: ('decred_expiry', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 15
 
@@ -19,6 +20,7 @@ class SignTx(p.MessageType):
         coin_name: str = None,
         version: int = None,
         lock_time: int = None,
+        decred_expiry: int = None,
         **kwargs,
     ):
         self.outputs_count = outputs_count
@@ -26,4 +28,5 @@ class SignTx(p.MessageType):
         self.coin_name = coin_name
         self.version = version
         self.lock_time = lock_time
+        self.decred_expiry = decred_expiry
         p.MessageType.__init__(self, **kwargs)
