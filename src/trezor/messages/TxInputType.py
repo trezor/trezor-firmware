@@ -19,7 +19,7 @@ class TxInputType(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         prev_hash: bytes = None,
         prev_index: int = None,
         script_sig: bytes = None,
@@ -31,7 +31,7 @@ class TxInputType(p.MessageType):
         decred_script_version: int = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.prev_hash = prev_hash
         self.prev_index = prev_index
         self.script_sig = script_sig

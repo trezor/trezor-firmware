@@ -16,7 +16,7 @@ class CipherKeyValue(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         key: str = None,
         value: bytes = None,
         encrypt: bool = None,
@@ -25,7 +25,7 @@ class CipherKeyValue(p.MessageType):
         iv: bytes = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.key = key
         self.value = value
         self.encrypt = encrypt

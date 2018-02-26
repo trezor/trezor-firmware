@@ -13,13 +13,13 @@ class GetPublicKey(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         ecdsa_curve_name: str = None,
         show_display: bool = None,
         coin_name: str = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.ecdsa_curve_name = ecdsa_curve_name
         self.show_display = show_display
         self.coin_name = coin_name

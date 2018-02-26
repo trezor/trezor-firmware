@@ -17,7 +17,7 @@ class TxOutputType(p.MessageType):
     def __init__(
         self,
         address: str = None,
-        address_n: list = [],
+        address_n: list = None,
         amount: int = None,
         script_type: int = None,
         multisig: MultisigRedeemScriptType = None,
@@ -26,7 +26,7 @@ class TxOutputType(p.MessageType):
         **kwargs,
     ):
         self.address = address
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.amount = amount
         self.script_type = script_type
         self.multisig = multisig

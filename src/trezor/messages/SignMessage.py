@@ -13,13 +13,13 @@ class SignMessage(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         message: bytes = None,
         coin_name: str = None,
         script_type: int = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.message = message
         self.coin_name = coin_name
         self.script_type = script_type

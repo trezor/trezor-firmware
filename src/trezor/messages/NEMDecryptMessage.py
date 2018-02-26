@@ -13,13 +13,13 @@ class NEMDecryptMessage(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         network: int = None,
         public_key: bytes = None,
         payload: bytes = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.network = network
         self.public_key = public_key
         self.payload = payload

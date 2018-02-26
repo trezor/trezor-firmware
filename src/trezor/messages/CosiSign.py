@@ -13,13 +13,13 @@ class CosiSign(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         data: bytes = None,
         global_commitment: bytes = None,
         global_pubkey: bytes = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.data = data
         self.global_commitment = global_commitment
         self.global_pubkey = global_pubkey

@@ -47,7 +47,7 @@ class Features(p.MessageType):
         passphrase_protection: bool = None,
         language: str = None,
         label: str = None,
-        coins: list = [],
+        coins: list = None,
         initialized: bool = None,
         revision: bytes = None,
         bootloader_hash: bytes = None,
@@ -76,7 +76,7 @@ class Features(p.MessageType):
         self.passphrase_protection = passphrase_protection
         self.language = language
         self.label = label
-        self.coins = coins
+        self.coins = [] if coins is None else coins
         self.initialized = initialized
         self.revision = revision
         self.bootloader_hash = bootloader_hash

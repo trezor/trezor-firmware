@@ -18,12 +18,12 @@ class NEMTransfer(p.MessageType):
         amount: int = None,
         payload: bytes = None,
         public_key: bytes = None,
-        mosaics: list = [],
+        mosaics: list = None,
         **kwargs,
     ):
         self.recipient = recipient
         self.amount = amount
         self.payload = payload
         self.public_key = public_key
-        self.mosaics = mosaics
+        self.mosaics = [] if mosaics is None else mosaics
         p.MessageType.__init__(self, **kwargs)

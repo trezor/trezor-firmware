@@ -11,10 +11,10 @@ class EthereumSignMessage(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         message: bytes = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.message = message
         p.MessageType.__init__(self, **kwargs)

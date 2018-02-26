@@ -12,12 +12,12 @@ class MultisigRedeemScriptType(p.MessageType):
 
     def __init__(
         self,
-        pubkeys: list = [],
-        signatures: list = [],
+        pubkeys: list = None,
+        signatures: list = None,
         m: int = None,
         **kwargs,
     ):
-        self.pubkeys = pubkeys
-        self.signatures = signatures
+        self.pubkeys = [] if pubkeys is None else pubkeys
+        self.signatures = [] if signatures is None else signatures
         self.m = m
         p.MessageType.__init__(self, **kwargs)

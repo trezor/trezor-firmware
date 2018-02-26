@@ -37,7 +37,7 @@ class NEMMosaicDefinition(p.MessageType):
         mutable_supply: bool = None,
         transferable: bool = None,
         description: str = None,
-        networks: list = [],
+        networks: list = None,
         **kwargs,
     ):
         self.name = name
@@ -54,5 +54,5 @@ class NEMMosaicDefinition(p.MessageType):
         self.mutable_supply = mutable_supply
         self.transferable = transferable
         self.description = description
-        self.networks = networks
+        self.networks = [] if networks is None else networks
         p.MessageType.__init__(self, **kwargs)

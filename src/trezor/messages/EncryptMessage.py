@@ -17,13 +17,13 @@ class EncryptMessage(p.MessageType):
         pubkey: bytes = None,
         message: bytes = None,
         display_only: bool = None,
-        address_n: list = [],
+        address_n: list = None,
         coin_name: str = None,
         **kwargs,
     ):
         self.pubkey = pubkey
         self.message = message
         self.display_only = display_only
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.coin_name = coin_name
         p.MessageType.__init__(self, **kwargs)

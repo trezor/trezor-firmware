@@ -11,10 +11,10 @@ class NEMAggregateModification(p.MessageType):
 
     def __init__(
         self,
-        modifications: list = [],
+        modifications: list = None,
         relative_change: int = None,
         **kwargs,
     ):
-        self.modifications = modifications
+        self.modifications = [] if modifications is None else modifications
         self.relative_change = relative_change
         p.MessageType.__init__(self, **kwargs)

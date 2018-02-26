@@ -22,10 +22,10 @@ class TransactionType(p.MessageType):
     def __init__(
         self,
         version: int = None,
-        inputs: list = [],
-        bin_outputs: list = [],
+        inputs: list = None,
+        bin_outputs: list = None,
         lock_time: int = None,
-        outputs: list = [],
+        outputs: list = None,
         inputs_cnt: int = None,
         outputs_cnt: int = None,
         extra_data: bytes = None,
@@ -34,10 +34,10 @@ class TransactionType(p.MessageType):
         **kwargs,
     ):
         self.version = version
-        self.inputs = inputs
-        self.bin_outputs = bin_outputs
+        self.inputs = [] if inputs is None else inputs
+        self.bin_outputs = [] if bin_outputs is None else bin_outputs
         self.lock_time = lock_time
-        self.outputs = outputs
+        self.outputs = [] if outputs is None else outputs
         self.inputs_cnt = inputs_cnt
         self.outputs_cnt = outputs_cnt
         self.extra_data = extra_data

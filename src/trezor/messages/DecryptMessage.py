@@ -13,13 +13,13 @@ class DecryptMessage(p.MessageType):
 
     def __init__(
         self,
-        address_n: list = [],
+        address_n: list = None,
         nonce: bytes = None,
         message: bytes = None,
         hmac: bytes = None,
         **kwargs,
     ):
-        self.address_n = address_n
+        self.address_n = [] if address_n is None else address_n
         self.nonce = nonce
         self.message = message
         self.hmac = hmac
