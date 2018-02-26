@@ -22,9 +22,20 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#define DISPLAY_EMULATOR_BORDER 16
+
+#define DISPLAY_TOUCH_OFFSET_X 180
+#define DISPLAY_TOUCH_OFFSET_Y 120
+
+#define WINDOW_WIDTH 600
+#define WINDOW_HEIGHT 800
+
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE, *BACKGROUND;
+
+int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESX;
+int sdl_touch_offset_x, sdl_touch_offset_y;
 
 static struct {
     struct {
@@ -83,6 +94,12 @@ void display_init(void)
     BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background.jpg");
     if (BACKGROUND) {
         SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
+        sdl_touch_offset_x = DISPLAY_TOUCH_OFFSET_X;
+        sdl_touch_offset_y = DISPLAY_TOUCH_OFFSET_Y;
+    } else {
+        SDL_SetWindowSize(win, DISPLAY_RESX + 2 * DISPLAY_EMULATOR_BORDER, DISPLAY_RESY + 2 * DISPLAY_EMULATOR_BORDER);
+        sdl_touch_offset_x = DISPLAY_EMULATOR_BORDER;
+        sdl_touch_offset_y = DISPLAY_EMULATOR_BORDER;
     }
     DISPLAY_BACKLIGHT = 0;
     DISPLAY_ORIENTATION = 0;
@@ -115,8 +132,13 @@ void display_refresh(void)
     SDL_UpdateTexture(TEXTURE, NULL, BUFFER->pixels, BUFFER->pitch);
 #define BACKLIGHT_NORMAL 150
     SDL_SetTextureAlphaMod(TEXTURE, MIN(255, 255 * DISPLAY_BACKLIGHT / BACKLIGHT_NORMAL));
-    const SDL_Rect r = {DISPLAY_TOUCH_OFFSET_X, DISPLAY_TOUCH_OFFSET_Y, DISPLAY_RESX, DISPLAY_RESY};
-    SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
+    if (BACKGROUND) {
+        const SDL_Rect r = {DISPLAY_TOUCH_OFFSET_X, DISPLAY_TOUCH_OFFSET_Y, DISPLAY_RESX, DISPLAY_RESY};
+        SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
+    } else {
+        const SDL_Rect r = {DISPLAY_EMULATOR_BORDER, DISPLAY_EMULATOR_BORDER, DISPLAY_RESX, DISPLAY_RESY};
+        SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
+    }
     SDL_RenderPresent(RENDERER);
 #endif
 }

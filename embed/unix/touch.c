@@ -22,10 +22,12 @@
 #include <SDL2/SDL.h>
 #endif
 
-#include "options.h"
 #include "touch.h"
 
-void __shutdown(void);
+extern int sdl_display_res_x, sdl_display_res_y;
+extern int sdl_touch_offset_x, sdl_touch_offset_y;
+
+extern void __shutdown(void);
 
 uint32_t touch_read(void)
 {
@@ -38,9 +40,9 @@ uint32_t touch_read(void)
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:
             case SDL_MOUSEBUTTONUP:
-                x = event.button.x - DISPLAY_TOUCH_OFFSET_X;
-                y = event.button.y - DISPLAY_TOUCH_OFFSET_Y;
-                if (x < 0 || y < 0 || x >= DISPLAY_RESX || y >= DISPLAY_RESY) break;
+                x = event.button.x - sdl_touch_offset_x;
+                y = event.button.y - sdl_touch_offset_y;
+                if (x < 0 || y < 0 || x >= sdl_display_res_x || y >= sdl_display_res_y) break;
                 switch (event.type) {
                     case SDL_MOUSEBUTTONDOWN:
                         return TOUCH_START | touch_pack_xy(x, y);

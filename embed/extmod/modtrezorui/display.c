@@ -32,7 +32,6 @@
 #include "trezor-qrenc/qr_encode.h"
 
 #include "common.h"
-#include "options.h"
 #include "display.h"
 
 #include <string.h>
