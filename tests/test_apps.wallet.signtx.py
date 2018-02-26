@@ -40,7 +40,7 @@ class TestSignTx(unittest.TestCase):
                             sequence=None)
         pout1 = TxOutputBinType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
                                 amount=390000,
-                                address_n=None)
+                                address_n=[])
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
@@ -53,7 +53,8 @@ class TestSignTx(unittest.TestCase):
         out1 = TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 10000,
                             script_type=OutputScriptType.PAYTOADDRESS,
-                            address_n=None)
+                            address_n=[],
+                            multisig=None)
         tx = SignTx(coin_name=None, version=None, lock_time=None, inputs_count=1, outputs_count=1)
 
         messages = [

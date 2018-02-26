@@ -15,3 +15,25 @@ class LoadDevice(p.MessageType):
         8: ('u2f_counter', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 13
+
+    def __init__(
+        self,
+        mnemonic: str = None,
+        node: HDNodeType = None,
+        pin: str = None,
+        passphrase_protection: bool = None,
+        language: str = None,
+        label: str = None,
+        skip_checksum: bool = None,
+        u2f_counter: int = None,
+        **kwargs,
+    ):
+        self.mnemonic = mnemonic
+        self.node = node
+        self.pin = pin
+        self.passphrase_protection = passphrase_protection
+        self.language = language
+        self.label = label
+        self.skip_checksum = skip_checksum
+        self.u2f_counter = u2f_counter
+        p.MessageType.__init__(self, **kwargs)

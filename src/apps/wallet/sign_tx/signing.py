@@ -1,22 +1,21 @@
 from micropython import const
 
-from trezor.crypto.hashlib import sha256
+from trezor.crypto import base58, bip32, der
 from trezor.crypto.curve import secp256k1
-from trezor.crypto import base58, der
+from trezor.crypto.hashlib import sha256
 
-from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
-from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages import OutputScriptType
+from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
+from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
-from apps.common import address_type
-from apps.common import coins
+from apps.common import address_type, coins
+from apps.common.hash_writer import HashWriter
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
-from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.scripts import *
-from apps.wallet.sign_tx.writers import *
+from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.tx_weight_calculator import *
-from apps.common.hash_writer import HashWriter
+from apps.wallet.sign_tx.writers import *
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
@@ -44,20 +43,17 @@ class SigningError(ValueError):
 # - check inputs, previous transactions, and outputs
 # - ask for confirmations
 # - check fee
-async def check_tx_fee(tx: SignTx, root):
-
+async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     coin = coins.by_name(tx.coin_name)
 
     # h_first is used to make sure the inputs and outputs streamed in Phase 1
     # are the same as in Phase 2.  it is thus not required to fully hash the
     # tx, as the SignTx info is streamed only once
     h_first = HashWriter(sha256)  # not a real tx hash
-    bip143 = Bip143()
-    weight = TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
-    txo_bin = TxOutputBinType()
-    tx_req = TxRequest()
-    tx_req.details = TxRequestDetailsType()
+    bip143 = Bip143()  # bip143 transaction hashing
+    multifp = MultisigFingerprint()  # control checksum of multisig inputs
+    weight = TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
     total_in = 0  # sum of input amounts
     segwit_in = 0  # sum of segwit input amounts
@@ -66,28 +62,25 @@ async def check_tx_fee(tx: SignTx, root):
     wallet_path = []  # common prefix of input paths
     segwit = {}  # dict of booleans stating if input is segwit
 
+    # output structures
+    txo_bin = TxOutputBinType()
+    tx_req = TxRequest()
+    tx_req.details = TxRequestDetailsType()
+
     for i in range(tx.inputs_count):
         # STAGE_REQUEST_1_INPUT
         txi = await request_tx_input(tx_req, i)
         wallet_path = input_extract_wallet_path(txi, wallet_path)
         write_tx_input_check(h_first, txi)
         weight.add_input(txi)
-        bip143.add_prevouts(txi)
+        bip143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         bip143.add_sequence(txi)
-        is_segwit = (txi.script_type == InputScriptType.SPENDWITNESS or
-                     txi.script_type == InputScriptType.SPENDP2SHWITNESS)
-        if coin.force_bip143:
-            is_bip143 = (txi.script_type == InputScriptType.SPENDADDRESS)
-            if not is_bip143:
-                raise SigningError(FailureType.DataError,
-                                   'Wrong input script type')
-            if not txi.amount:
-                raise SigningError(FailureType.DataError,
-                                   'BIP 143 input without amount')
-            segwit[i] = False
-            segwit_in += txi.amount
-            total_in += txi.amount
-        elif is_segwit:
+
+        if txi.multisig:
+            multifp.add(txi.multisig)
+
+        if txi.script_type in (InputScriptType.SPENDWITNESS,
+                               InputScriptType.SPENDP2SHWITNESS):
             if not coin.segwit:
                 raise SigningError(FailureType.DataError,
                                    'Segwit not enabled on this coin')
@@ -97,10 +90,21 @@ async def check_tx_fee(tx: SignTx, root):
             segwit[i] = True
             segwit_in += txi.amount
             total_in += txi.amount
-        elif txi.script_type == InputScriptType.SPENDADDRESS:
-            segwit[i] = False
-            total_in += await get_prevtx_output_value(
-                tx_req, txi.prev_hash, txi.prev_index)
+
+        elif txi.script_type in (InputScriptType.SPENDADDRESS,
+                                 InputScriptType.SPENDMULTISIG):
+            if coin.force_bip143:
+                if not txi.amount:
+                    raise SigningError(FailureType.DataError,
+                                       'BIP 143 input without amount')
+                segwit[i] = False
+                segwit_in += txi.amount
+                total_in += txi.amount
+            else:
+                segwit[i] = False
+                total_in += await get_prevtx_output_value(
+                    tx_req, txi.prev_hash, txi.prev_index)
+
         else:
             raise SigningError(FailureType.DataError,
                                'Wrong input script type')
@@ -111,14 +115,14 @@ async def check_tx_fee(tx: SignTx, root):
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         weight.add_output(txo_bin.script_pubkey)
-        if output_is_change(txo, wallet_path, segwit_in):
-            if change_out != 0:
-                raise SigningError(FailureType.ProcessError,
-                                   'Only one change output is valid')
+
+        if change_out == 0 and is_change(txo, wallet_path, segwit_in, multifp):
+            # output is change and does not need confirmation
             change_out = txo.amount
         elif not await confirm_output(txo, coin):
             raise SigningError(FailureType.ActionCancelled,
                                'Output cancelled')
+
         write_tx_output(h_first, txo_bin)
         bip143.add_output(txo_bin)
         total_out += txo_bin.amount
@@ -141,8 +145,7 @@ async def check_tx_fee(tx: SignTx, root):
     return h_first, bip143, segwit, total_in, wallet_path
 
 
-async def sign_tx(tx: SignTx, root):
-
+async def sign_tx(tx: SignTx, root: bip32.HDNode):
     tx = sanitize_sign_tx(tx)
 
     # Phase 1
@@ -171,7 +174,8 @@ async def sign_tx(tx: SignTx, root):
             txi_sign = await request_tx_input(tx_req, i_sign)
             input_check_wallet_path(txi_sign, wallet_path)
 
-            is_bip143 = (txi_sign.script_type == InputScriptType.SPENDADDRESS)
+            is_bip143 = (txi_sign.script_type == InputScriptType.SPENDADDRESS or
+                         txi_sign.script_type == InputScriptType.SPENDMULTISIG)
             if not is_bip143 or txi_sign.amount > authorized_in:
                 raise SigningError(FailureType.ProcessError,
                                    'Transaction has changed during signing')
@@ -181,6 +185,10 @@ async def sign_tx(tx: SignTx, root):
             key_sign_pub = key_sign.public_key()
             bip143_hash = bip143.preimage_hash(
                 tx, txi_sign, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
+
+            # if multisig, check if singing with a key that is included in multisig
+            if txi_sign.multisig:
+                multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
             signature = ecdsa_sign(key_sign, bip143_hash)
             tx_ser.signature_index = i_sign
@@ -239,8 +247,18 @@ async def sign_tx(tx: SignTx, root):
                     txi_sign = txi
                     key_sign = node_derive(root, txi.address_n)
                     key_sign_pub = key_sign.public_key()
-                    txi_sign.script_sig = output_script_p2pkh(
-                        ecdsa_hash_pubkey(key_sign_pub))
+                    # for the signing process the script_sig is equal
+                    # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
+                    if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
+                        txi_sign.script_sig = output_script_multisig(
+                            multisig_get_pubkeys(txi_sign.multisig),
+                            txi_sign.multisig.m)
+                    elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
+                        txi_sign.script_sig = output_script_p2pkh(
+                            ecdsa_hash_pubkey(key_sign_pub))
+                    else:
+                        raise SigningError(FailureType.ProcessError,
+                                           'Unknown transaction type')
                 else:
                     txi.script_sig = bytes()
                 write_tx_input(h_sign, txi)
@@ -263,6 +281,10 @@ async def sign_tx(tx: SignTx, root):
             if get_tx_hash(h_first, False) != get_tx_hash(h_second, False):
                 raise SigningError(FailureType.ProcessError,
                                    'Transaction has changed during signing')
+
+            # if multisig, check if singing with a key that is included in multisig
+            if txi_sign.multisig:
+                multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
             # compute the signature from the tx digest
             signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, True))
@@ -321,7 +343,12 @@ async def sign_tx(tx: SignTx, root):
                 tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             signature = ecdsa_sign(key_sign, bip143_hash)
-            witness = get_p2wpkh_witness(coin, signature, key_sign_pub)
+            if txi.multisig:
+                # find out place of our signature based on the pubkey
+                signature_index = multisig_pubkey_index(txi.multisig, key_sign_pub)
+                witness = witness_p2wsh(txi.multisig, signature, signature_index, get_hash_type(coin))
+            else:
+                witness = witness_p2wpkh(signature, key_sign_pub, get_hash_type(coin))
 
             tx_ser.serialized_tx = witness
             tx_ser.signature_index = i
@@ -392,7 +419,7 @@ def get_hash_type(coin: CoinType) -> int:
     return hashtype
 
 
-def get_tx_header(tx: SignTx, segwit=False):
+def get_tx_header(tx: SignTx, segwit: bool = False):
     w_txi = bytearray()
     write_uint32(w_txi, tx.version)
     if segwit:
@@ -402,26 +429,21 @@ def get_tx_header(tx: SignTx, segwit=False):
     return w_txi
 
 
-def get_p2wpkh_witness(coin: CoinType, signature: bytes, pubkey: bytes):
-    w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
-    write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    append_signature_and_pubkey(w, pubkey, signature, get_hash_type(coin))
-    return w
-
-
 # TX Outputs
 # ===
 
 
-def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
+def output_derive_script(o: TxOutputType, coin: CoinType, root: bip32.HDNode) -> bytes:
 
     if o.script_type == OutputScriptType.PAYTOOPRETURN:
+        # op_return output
         if o.amount != 0:
             raise SigningError(FailureType.DataError,
                                'OP_RETURN output with non-zero amount')
         return output_script_paytoopreturn(o.op_return_data)
 
-    if o.address_n:  # change output
+    if o.address_n:
+        # change output
         if o.address:
             raise SigningError(FailureType.DataError, 'Address in change output')
         o.address = get_address_for_change(o, coin, root)
@@ -429,24 +451,27 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root) -> bytes:
         if not o.address:
             raise SigningError(FailureType.DataError, 'Missing address')
 
-    if coin.bech32_prefix and o.address.startswith(coin.bech32_prefix):  # p2wpkh or p2wsh
+    if coin.bech32_prefix and o.address.startswith(coin.bech32_prefix):
+        # p2wpkh or p2wsh
         witprog = decode_bech32_address(coin.bech32_prefix, o.address)
         return output_script_native_p2wpkh_or_p2wsh(witprog)
 
     raw_address = base58.decode_check(o.address)
 
-    if address_type.check(coin.address_type, raw_address):  # p2pkh
+    if address_type.check(coin.address_type, raw_address):
+        # p2pkh
         pubkeyhash = address_type.strip(coin.address_type, raw_address)
         return output_script_p2pkh(pubkeyhash)
 
-    elif address_type.check(coin.address_type_p2sh, raw_address):  # p2sh
+    elif address_type.check(coin.address_type_p2sh, raw_address):
+        # p2sh
         scripthash = address_type.strip(coin.address_type_p2sh, raw_address)
         return output_script_p2sh(scripthash)
 
     raise SigningError(FailureType.DataError, 'Invalid address type')
 
 
-def get_address_for_change(o: TxOutputType, coin: CoinType, root):
+def get_address_for_change(o: TxOutputType, coin: CoinType, root: bip32.HDNode):
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         input_script_type = InputScriptType.SPENDADDRESS
     elif o.script_type == OutputScriptType.PAYTOMULTISIG:
@@ -457,11 +482,10 @@ def get_address_for_change(o: TxOutputType, coin: CoinType, root):
         input_script_type = InputScriptType.SPENDP2SHWITNESS
     else:
         raise SigningError(FailureType.DataError, 'Invalid script type')
-    return get_address(input_script_type, coin, node_derive(root, o.address_n))
+    return get_address(input_script_type, coin, node_derive(root, o.address_n), o.multisig)
 
 
 def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool:
-    address_n = o.address_n
     is_segwit = (o.script_type == OutputScriptType.PAYTOWITNESS or
                  o.script_type == OutputScriptType.PAYTOP2SHWITNESS)
     if is_segwit and o.amount > segwit_in:
@@ -469,10 +493,10 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
         # segwit inputs paid.  this is to prevent user being tricked into
         # creating ANYONECANSPEND outputs before full segwit activation.
         return False
-    return (address_n is not None and wallet_path is not None and
-            wallet_path == address_n[:-_BIP32_WALLET_DEPTH] and
-            address_n[-2] == _BIP32_CHANGE_CHAIN and
-            address_n[-1] <= _BIP32_MAX_LAST_ELEMENT)
+    return (wallet_path is not None and
+            wallet_path == o.address_n[:-_BIP32_WALLET_DEPTH] and
+            o.address_n[-2] <= _BIP32_CHANGE_CHAIN and
+            o.address_n[-1] <= _BIP32_MAX_LAST_ELEMENT)
 
 
 # Tx Inputs
@@ -481,11 +505,33 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
 
 def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
     if i.script_type == InputScriptType.SPENDADDRESS:
-        return input_script_p2pkh_or_p2sh(pubkey, signature, get_hash_type(coin))  # p2pkh or p2sh
-    if i.script_type == InputScriptType.SPENDP2SHWITNESS:  # p2wpkh using p2sh
+        # p2pkh or p2sh
+        return input_script_p2pkh_or_p2sh(
+            pubkey, signature, get_hash_type(coin))
+
+    if i.script_type == InputScriptType.SPENDP2SHWITNESS:
+        # p2wpkh or p2wsh using p2sh
+
+        if i.multisig:
+            # p2wsh in p2sh
+            pubkeys = multisig_get_pubkeys(i.multisig)
+            witness_script = output_script_multisig(pubkeys, i.multisig.m)
+            witness_script_hash = sha256(witness_script).digest()
+            return input_script_p2wsh_in_p2sh(witness_script_hash)
+
+        # p2wpkh in p2sh
         return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey))
-    elif i.script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or p2wsh
+
+    elif i.script_type == InputScriptType.SPENDWITNESS:
+        # native p2wpkh or p2wsh
         return input_script_native_p2wpkh_or_p2wsh()
+
+    elif i.script_type == InputScriptType.SPENDMULTISIG:
+        # p2sh multisig
+        signature_index = multisig_pubkey_index(i.multisig, pubkey)
+        return input_script_multisig(
+            i.multisig, signature, signature_index, get_hash_type(coin))
+
     else:
         raise SigningError(FailureType.ProcessError, 'Invalid script type')
 
@@ -512,13 +558,24 @@ def input_check_wallet_path(txi: TxInputType, wallet_path: list) -> list:
                            'Transaction has changed during signing')
 
 
-def node_derive(root, address_n: list):
+def node_derive(root: bip32.HDNode, address_n: list):
     node = root.clone()
     node.derive_path(address_n)
     return node
 
 
-def ecdsa_sign(node, digest: bytes) -> bytes:
+def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     sig = secp256k1.sign(node.private_key(), digest)
     sigder = der.encode_seq((sig[1:33], sig[33:65]))
     return sigder
+
+
+def is_change(
+        txo: TxOutputType,
+        wallet_path: list,
+        segwit_in: int,
+        multifp: MultisigFingerprint) -> bool:
+    if txo.multisig:
+        if not multifp.matches(txo.multisig):
+            return False
+    return output_is_change(txo, wallet_path, segwit_in)

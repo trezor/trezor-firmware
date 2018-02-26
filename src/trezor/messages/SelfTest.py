@@ -7,3 +7,11 @@ class SelfTest(p.MessageType):
         1: ('payload', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 32
+
+    def __init__(
+        self,
+        payload: bytes = None,
+        **kwargs,
+    ):
+        self.payload = payload
+        p.MessageType.__init__(self, **kwargs)

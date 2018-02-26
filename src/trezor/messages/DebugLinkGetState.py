@@ -4,3 +4,9 @@ import protobuf as p
 
 class DebugLinkGetState(p.MessageType):
     MESSAGE_WIRE_TYPE = 101
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        p.MessageType.__init__(self, **kwargs)

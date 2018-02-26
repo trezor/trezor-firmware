@@ -8,3 +8,13 @@ class FirmwareRequest(p.MessageType):
         2: ('length', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 8
+
+    def __init__(
+        self,
+        offset: int = None,
+        length: int = None,
+        **kwargs,
+    ):
+        self.offset = offset
+        self.length = length
+        p.MessageType.__init__(self, **kwargs)

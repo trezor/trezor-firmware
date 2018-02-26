@@ -9,3 +9,13 @@ class PublicKey(p.MessageType):
         2: ('xpub', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 12
+
+    def __init__(
+        self,
+        node: HDNodeType = None,
+        xpub: str = None,
+        **kwargs,
+    ):
+        self.node = node
+        self.xpub = xpub
+        p.MessageType.__init__(self, **kwargs)

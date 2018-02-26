@@ -7,3 +7,11 @@ class WordAck(p.MessageType):
         1: ('word', p.UnicodeType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 47
+
+    def __init__(
+        self,
+        word: str = None,
+        **kwargs,
+    ):
+        self.word = word
+        p.MessageType.__init__(self, **kwargs)

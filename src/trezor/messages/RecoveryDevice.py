@@ -15,3 +15,27 @@ class RecoveryDevice(p.MessageType):
         10: ('dry_run', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 45
+
+    def __init__(
+        self,
+        word_count: int = None,
+        passphrase_protection: bool = None,
+        pin_protection: bool = None,
+        language: str = None,
+        label: str = None,
+        enforce_wordlist: bool = None,
+        type: int = None,
+        u2f_counter: int = None,
+        dry_run: bool = None,
+        **kwargs,
+    ):
+        self.word_count = word_count
+        self.passphrase_protection = passphrase_protection
+        self.pin_protection = pin_protection
+        self.language = language
+        self.label = label
+        self.enforce_wordlist = enforce_wordlist
+        self.type = type
+        self.u2f_counter = u2f_counter
+        self.dry_run = dry_run
+        p.MessageType.__init__(self, **kwargs)

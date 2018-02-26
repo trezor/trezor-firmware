@@ -15,3 +15,21 @@ class SimpleSignTx(p.MessageType):
         6: ('lock_time', p.UVarintType, 0),  # default=0
     }
     MESSAGE_WIRE_TYPE = 16
+
+    def __init__(
+        self,
+        inputs: list = [],
+        outputs: list = [],
+        transactions: list = [],
+        coin_name: str = None,
+        version: int = None,
+        lock_time: int = None,
+        **kwargs,
+    ):
+        self.inputs = inputs
+        self.outputs = outputs
+        self.transactions = transactions
+        self.coin_name = coin_name
+        self.version = version
+        self.lock_time = lock_time
+        p.MessageType.__init__(self, **kwargs)

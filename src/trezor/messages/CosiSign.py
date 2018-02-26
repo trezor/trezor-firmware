@@ -10,3 +10,17 @@ class CosiSign(p.MessageType):
         4: ('global_pubkey', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 73
+
+    def __init__(
+        self,
+        address_n: list = [],
+        data: bytes = None,
+        global_commitment: bytes = None,
+        global_pubkey: bytes = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.data = data
+        self.global_commitment = global_commitment
+        self.global_pubkey = global_pubkey
+        p.MessageType.__init__(self, **kwargs)

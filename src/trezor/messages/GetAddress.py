@@ -12,3 +12,19 @@ class GetAddress(p.MessageType):
         5: ('script_type', p.UVarintType, 0),  # default=0
     }
     MESSAGE_WIRE_TYPE = 29
+
+    def __init__(
+        self,
+        address_n: list = [],
+        coin_name: str = None,
+        show_display: bool = None,
+        multisig: MultisigRedeemScriptType = None,
+        script_type: int = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.coin_name = coin_name
+        self.show_display = show_display
+        self.multisig = multisig
+        self.script_type = script_type
+        p.MessageType.__init__(self, **kwargs)

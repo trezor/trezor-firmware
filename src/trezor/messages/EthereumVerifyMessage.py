@@ -9,3 +9,15 @@ class EthereumVerifyMessage(p.MessageType):
         3: ('message', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 65
+
+    def __init__(
+        self,
+        address: bytes = None,
+        signature: bytes = None,
+        message: bytes = None,
+        **kwargs,
+    ):
+        self.address = address
+        self.signature = signature
+        self.message = message
+        p.MessageType.__init__(self, **kwargs)

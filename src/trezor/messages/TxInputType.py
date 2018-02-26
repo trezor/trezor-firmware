@@ -13,6 +13,26 @@ class TxInputType(p.MessageType):
         6: ('script_type', p.UVarintType, 0),  # default=0
         7: ('multisig', MultisigRedeemScriptType, 0),
         8: ('amount', p.UVarintType, 0),
-        9: ('decred_tree', p.UVarintType, 0),
-        10: ('decred_script_version', p.UVarintType, 0),
     }
+
+    def __init__(
+        self,
+        address_n: list = [],
+        prev_hash: bytes = None,
+        prev_index: int = None,
+        script_sig: bytes = None,
+        sequence: int = None,
+        script_type: int = None,
+        multisig: MultisigRedeemScriptType = None,
+        amount: int = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.prev_hash = prev_hash
+        self.prev_index = prev_index
+        self.script_sig = script_sig
+        self.sequence = sequence
+        self.script_type = script_type
+        self.multisig = multisig
+        self.amount = amount
+        p.MessageType.__init__(self, **kwargs)

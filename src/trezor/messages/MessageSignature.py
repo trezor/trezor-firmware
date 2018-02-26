@@ -8,3 +8,13 @@ class MessageSignature(p.MessageType):
         2: ('signature', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 40
+
+    def __init__(
+        self,
+        address: str = None,
+        signature: bytes = None,
+        **kwargs,
+    ):
+        self.address = address
+        self.signature = signature
+        p.MessageType.__init__(self, **kwargs)

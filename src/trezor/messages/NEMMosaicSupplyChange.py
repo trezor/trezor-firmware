@@ -9,3 +9,17 @@ class NEMMosaicSupplyChange(p.MessageType):
         3: ('type', p.UVarintType, 0),
         4: ('delta', p.UVarintType, 0),
     }
+
+    def __init__(
+        self,
+        namespace: str = None,
+        mosaic: str = None,
+        type: int = None,
+        delta: int = None,
+        **kwargs,
+    ):
+        self.namespace = namespace
+        self.mosaic = mosaic
+        self.type = type
+        self.delta = delta
+        p.MessageType.__init__(self, **kwargs)

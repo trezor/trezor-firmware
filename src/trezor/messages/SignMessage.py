@@ -10,3 +10,17 @@ class SignMessage(p.MessageType):
         4: ('script_type', p.UVarintType, 0),  # default=0
     }
     MESSAGE_WIRE_TYPE = 38
+
+    def __init__(
+        self,
+        address_n: list = [],
+        message: bytes = None,
+        coin_name: str = None,
+        script_type: int = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.message = message
+        self.coin_name = coin_name
+        self.script_type = script_type
+        p.MessageType.__init__(self, **kwargs)

@@ -11,3 +11,15 @@ class TxRequest(p.MessageType):
         3: ('serialized', TxRequestSerializedType, 0),
     }
     MESSAGE_WIRE_TYPE = 21
+
+    def __init__(
+        self,
+        request_type: int = None,
+        details: TxRequestDetailsType = None,
+        serialized: TxRequestSerializedType = None,
+        **kwargs,
+    ):
+        self.request_type = request_type
+        self.details = details
+        self.serialized = serialized
+        p.MessageType.__init__(self, **kwargs)

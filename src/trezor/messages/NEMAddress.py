@@ -7,3 +7,11 @@ class NEMAddress(p.MessageType):
         1: ('address', p.UnicodeType, 0),  # required
     }
     MESSAGE_WIRE_TYPE = 68
+
+    def __init__(
+        self,
+        address: str = None,
+        **kwargs,
+    ):
+        self.address = address
+        p.MessageType.__init__(self, **kwargs)

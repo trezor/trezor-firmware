@@ -11,3 +11,19 @@ class EncryptMessage(p.MessageType):
         5: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
     }
     MESSAGE_WIRE_TYPE = 49
+
+    def __init__(
+        self,
+        pubkey: bytes = None,
+        message: bytes = None,
+        display_only: bool = None,
+        address_n: list = [],
+        coin_name: str = None,
+        **kwargs,
+    ):
+        self.pubkey = pubkey
+        self.message = message
+        self.display_only = display_only
+        self.address_n = address_n
+        self.coin_name = coin_name
+        p.MessageType.__init__(self, **kwargs)

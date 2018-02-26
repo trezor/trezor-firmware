@@ -8,3 +8,13 @@ class FirmwareUpload(p.MessageType):
         2: ('hash', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 7
+
+    def __init__(
+        self,
+        payload: bytes = None,
+        hash: bytes = None,
+        **kwargs,
+    ):
+        self.payload = payload
+        self.hash = hash
+        p.MessageType.__init__(self, **kwargs)

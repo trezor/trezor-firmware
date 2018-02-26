@@ -21,6 +21,10 @@ async def sign_tx(ctx, msg):
             raise wire.FailureError(*e.args)
         except signing.AddressError as e:
             raise wire.FailureError(*e.args)
+        except signing.ScriptsError as e:
+            raise wire.FailureError(*e.args)
+        except signing.Bip143Error as e:
+            raise wire.FailureError(*e.args)
         if req.__qualname__ == 'TxRequest':
             if req.request_type == TXFINISHED:
                 break

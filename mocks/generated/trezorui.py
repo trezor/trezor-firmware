@@ -38,10 +38,17 @@ class Display:
         The image needs to be in TREZOR Optimized Image Format (TOIF) - full-color mode.
         '''
 
+    def avatar(self, x: int, y: int, image: bytes, fgcolor: int, bgcolor: int) -> None:
+        '''
+        Renders an avatar at position (x,y).
+        The image needs to be in TREZOR Optimized Image Format (TOIF) - full-color mode.
+        Image needs to be of exactly AVATAR_IMAGE_SIZE x AVATAR_IMAGE_SIZE pixels size.
+        '''
+
     def icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) -> None:
         '''
         Renders an icon at position (x,y), fgcolor is used as foreground color, bgcolor as background.
-        The image needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
+        The icon needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
         '''
 
     def print(self, text: str) -> None:
@@ -49,19 +56,19 @@ class Display:
         Renders text using 5x8 bitmap font (using special text mode).
         '''
 
-    def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
+    def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
         '''
         Renders left-aligned text at position (x,y) where x is left position and y is baseline.
         Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
         '''
 
-    def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
+    def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
         '''
         Renders text centered at position (x,y) where x is text center and y is baseline.
         Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
         '''
 
-    def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int) -> None:
+    def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
         '''
         Renders right-aligned text at position (x,y) where x is right position and y is baseline.
         Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.

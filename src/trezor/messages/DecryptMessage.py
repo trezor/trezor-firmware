@@ -10,3 +10,17 @@ class DecryptMessage(p.MessageType):
         4: ('hmac', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 51
+
+    def __init__(
+        self,
+        address_n: list = [],
+        nonce: bytes = None,
+        message: bytes = None,
+        hmac: bytes = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.nonce = nonce
+        self.message = message
+        self.hmac = hmac
+        p.MessageType.__init__(self, **kwargs)

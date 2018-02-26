@@ -25,12 +25,51 @@ class Features(p.MessageType):
         18: ('firmware_present', p.BoolType, 0),
         19: ('needs_backup', p.BoolType, 0),
         20: ('flags', p.UVarintType, 0),
-        21: ('model', p.UnicodeType, 0),
-        22: ('fw_major', p.UVarintType, 0),
-        23: ('fw_minor', p.UVarintType, 0),
-        24: ('fw_patch', p.UVarintType, 0),
-        25: ('fw_vendor', p.UnicodeType, 0),
-        26: ('fw_vendor_keys', p.BytesType, 0),
-        27: ('state', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 17
+
+    def __init__(
+        self,
+        vendor: str = None,
+        major_version: int = None,
+        minor_version: int = None,
+        patch_version: int = None,
+        bootloader_mode: bool = None,
+        device_id: str = None,
+        pin_protection: bool = None,
+        passphrase_protection: bool = None,
+        language: str = None,
+        label: str = None,
+        coins: list = [],
+        initialized: bool = None,
+        revision: bytes = None,
+        bootloader_hash: bytes = None,
+        imported: bool = None,
+        pin_cached: bool = None,
+        passphrase_cached: bool = None,
+        firmware_present: bool = None,
+        needs_backup: bool = None,
+        flags: int = None,
+        **kwargs,
+    ):
+        self.vendor = vendor
+        self.major_version = major_version
+        self.minor_version = minor_version
+        self.patch_version = patch_version
+        self.bootloader_mode = bootloader_mode
+        self.device_id = device_id
+        self.pin_protection = pin_protection
+        self.passphrase_protection = passphrase_protection
+        self.language = language
+        self.label = label
+        self.coins = coins
+        self.initialized = initialized
+        self.revision = revision
+        self.bootloader_hash = bootloader_hash
+        self.imported = imported
+        self.pin_cached = pin_cached
+        self.passphrase_cached = passphrase_cached
+        self.firmware_present = firmware_present
+        self.needs_backup = needs_backup
+        self.flags = flags
+        p.MessageType.__init__(self, **kwargs)

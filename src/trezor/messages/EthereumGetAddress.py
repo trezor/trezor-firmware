@@ -8,3 +8,13 @@ class EthereumGetAddress(p.MessageType):
         2: ('show_display', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 56
+
+    def __init__(
+        self,
+        address_n: list = [],
+        show_display: bool = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.show_display = show_display
+        p.MessageType.__init__(self, **kwargs)

@@ -9,3 +9,15 @@ class NEMGetAddress(p.MessageType):
         3: ('show_display', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 67
+
+    def __init__(
+        self,
+        address_n: list = [],
+        network: int = None,
+        show_display: bool = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.network = network
+        self.show_display = show_display
+        p.MessageType.__init__(self, **kwargs)

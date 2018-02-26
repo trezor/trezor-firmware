@@ -14,5 +14,30 @@ class CoinType(p.MessageType):
         10: ('xprv_magic', p.UVarintType, 0),  # default=76066276
         11: ('segwit', p.BoolType, 0),
         12: ('forkid', p.UVarintType, 0),
-        13: ('force_bip143', p.BoolType, 0),
     }
+
+    def __init__(
+        self,
+        coin_name: str = None,
+        coin_shortcut: str = None,
+        address_type: int = None,
+        maxfee_kb: int = None,
+        address_type_p2sh: int = None,
+        signed_message_header: str = None,
+        xpub_magic: int = None,
+        xprv_magic: int = None,
+        segwit: bool = None,
+        forkid: int = None,
+        **kwargs,
+    ):
+        self.coin_name = coin_name
+        self.coin_shortcut = coin_shortcut
+        self.address_type = address_type
+        self.maxfee_kb = maxfee_kb
+        self.address_type_p2sh = address_type_p2sh
+        self.signed_message_header = signed_message_header
+        self.xpub_magic = xpub_magic
+        self.xprv_magic = xprv_magic
+        self.segwit = segwit
+        self.forkid = forkid
+        p.MessageType.__init__(self, **kwargs)

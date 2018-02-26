@@ -10,3 +10,17 @@ class GetPublicKey(p.MessageType):
         4: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
     }
     MESSAGE_WIRE_TYPE = 11
+
+    def __init__(
+        self,
+        address_n: list = [],
+        ecdsa_curve_name: str = None,
+        show_display: bool = None,
+        coin_name: str = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.ecdsa_curve_name = ecdsa_curve_name
+        self.show_display = show_display
+        self.coin_name = coin_name
+        p.MessageType.__init__(self, **kwargs)

@@ -9,3 +9,15 @@ class EncryptedMessage(p.MessageType):
         3: ('hmac', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 50
+
+    def __init__(
+        self,
+        nonce: bytes = None,
+        message: bytes = None,
+        hmac: bytes = None,
+        **kwargs,
+    ):
+        self.nonce = nonce
+        self.message = message
+        self.hmac = hmac
+        p.MessageType.__init__(self, **kwargs)

@@ -7,3 +7,11 @@ class EthereumTxAck(p.MessageType):
         1: ('data_chunk', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 60
+
+    def __init__(
+        self,
+        data_chunk: bytes = None,
+        **kwargs,
+    ):
+        self.data_chunk = data_chunk
+        p.MessageType.__init__(self, **kwargs)

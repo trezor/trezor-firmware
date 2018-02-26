@@ -4,6 +4,8 @@ PB2DIR=$CURDIR/pb2
 OUTDIR=../src/trezor/messages
 INDEX=$OUTDIR/wire_types.py
 
+set -x
+
 rm -f $OUTDIR/[A-Z]*.py
 mkdir -p $OUTDIR
 mkdir -p $PB2DIR
@@ -21,7 +23,7 @@ for i in types messages ; do
 done
 
 # hack to make output python 3 compatible
-sed -i 's/^import types_pb2/from . import types_pb2/g' $CURDIR/pb2/messages_pb2.py
+sed -i '' 's/^import types_pb2/from . import types_pb2/g' $CURDIR/pb2/messages_pb2.py
 
 for i in types messages ; do
     # Convert google protobuf library to trezor's internal format

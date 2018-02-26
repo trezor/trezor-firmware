@@ -9,3 +9,15 @@ class SignedIdentity(p.MessageType):
         3: ('signature', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 54
+
+    def __init__(
+        self,
+        address: str = None,
+        public_key: bytes = None,
+        signature: bytes = None,
+        **kwargs,
+    ):
+        self.address = address
+        self.public_key = public_key
+        self.signature = signature
+        p.MessageType.__init__(self, **kwargs)

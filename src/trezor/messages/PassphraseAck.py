@@ -5,6 +5,13 @@ import protobuf as p
 class PassphraseAck(p.MessageType):
     FIELDS = {
         1: ('passphrase', p.UnicodeType, 0),  # required
-        2: ('state', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 42
+
+    def __init__(
+        self,
+        passphrase: str = None,
+        **kwargs,
+    ):
+        self.passphrase = passphrase
+        p.MessageType.__init__(self, **kwargs)

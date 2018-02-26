@@ -17,17 +17,20 @@ class TestSegwitBip143(unittest.TestCase):
                        # Trezor expects hash in reversed format
                        prev_hash=unhexlify('77541aeb3c4dac9260b68f74f44c973081a9d4cb2ebe8038b2d70faa201b6bdb'),
                        prev_index=1,
+                       multisig=None,
                        amount=1000000000,  # 10 btc
                        script_type=InputScriptType.SPENDP2SHWITNESS,  # TODO: is this correct?
                        sequence=0xfffffffe)
     out1 = TxOutputType(address='1Fyxts6r24DpEieygQiNnWxUdb18ANa5p7',
                         amount=0x000000000bebb4b8,
                         script_type=OutputScriptType.PAYTOADDRESS,
-                        address_n=None)
+                        multisig=None,
+                        address_n=[])
     out2 = TxOutputType(address='1Q5YjKVj5yQWHBBsyEBamkfph3cA6G9KK8',
                         amount=0x000000002faf0800,
                         script_type=OutputScriptType.PAYTOADDRESS,
-                        address_n=None)
+                        multisig=None,
+                        address_n=[])
 
     def test_bip143_prevouts(self):
 

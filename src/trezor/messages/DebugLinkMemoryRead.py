@@ -8,3 +8,13 @@ class DebugLinkMemoryRead(p.MessageType):
         2: ('length', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 110
+
+    def __init__(
+        self,
+        address: int = None,
+        length: int = None,
+        **kwargs,
+    ):
+        self.address = address
+        self.length = length
+        p.MessageType.__init__(self, **kwargs)

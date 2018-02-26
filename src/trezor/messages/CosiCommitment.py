@@ -8,3 +8,13 @@ class CosiCommitment(p.MessageType):
         2: ('pubkey', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 72
+
+    def __init__(
+        self,
+        commitment: bytes = None,
+        pubkey: bytes = None,
+        **kwargs,
+    ):
+        self.commitment = commitment
+        self.pubkey = pubkey
+        p.MessageType.__init__(self, **kwargs)

@@ -13,3 +13,23 @@ class CipherKeyValue(p.MessageType):
         7: ('iv', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 23
+
+    def __init__(
+        self,
+        address_n: list = [],
+        key: str = None,
+        value: bytes = None,
+        encrypt: bool = None,
+        ask_on_encrypt: bool = None,
+        ask_on_decrypt: bool = None,
+        iv: bytes = None,
+        **kwargs,
+    ):
+        self.address_n = address_n
+        self.key = key
+        self.value = value
+        self.encrypt = encrypt
+        self.ask_on_encrypt = ask_on_encrypt
+        self.ask_on_decrypt = ask_on_decrypt
+        self.iv = iv
+        p.MessageType.__init__(self, **kwargs)

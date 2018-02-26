@@ -22,3 +22,27 @@ class NEMSignTx(p.MessageType):
         9: ('importance_transfer', NEMImportanceTransfer, 0),
     }
     MESSAGE_WIRE_TYPE = 69
+
+    def __init__(
+        self,
+        transaction: NEMTransactionCommon = None,
+        multisig: NEMTransactionCommon = None,
+        transfer: NEMTransfer = None,
+        cosigning: bool = None,
+        provision_namespace: NEMProvisionNamespace = None,
+        mosaic_creation: NEMMosaicCreation = None,
+        supply_change: NEMMosaicSupplyChange = None,
+        aggregate_modification: NEMAggregateModification = None,
+        importance_transfer: NEMImportanceTransfer = None,
+        **kwargs,
+    ):
+        self.transaction = transaction
+        self.multisig = multisig
+        self.transfer = transfer
+        self.cosigning = cosigning
+        self.provision_namespace = provision_namespace
+        self.mosaic_creation = mosaic_creation
+        self.supply_change = supply_change
+        self.aggregate_modification = aggregate_modification
+        self.importance_transfer = importance_transfer
+        p.MessageType.__init__(self, **kwargs)
