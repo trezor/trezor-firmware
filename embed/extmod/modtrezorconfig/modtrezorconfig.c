@@ -41,6 +41,19 @@ STATIC mp_obj_t mod_trezorconfig_init(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_init);
 
+/// def check_pin(pin: int, waitcallback: (int, int -> None)) -> bool:
+///     '''
+///     Check the given PIN. Returns True on success, False on failure.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin, mp_obj_t waitcallback) {
+    uint32_t pin_i = mp_obj_get_int(pin);
+    if (sectrue != storage_check_pin(pin_i, waitcallback)) {
+        return mp_const_false;
+    }
+    return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_check_pin_obj, mod_trezorconfig_check_pin);
+
 /// def unlock(pin: int, waitcallback: (int, int -> None)) -> bool:
 ///     '''
 ///     Attempts to unlock the storage with given PIN.  Returns True on
@@ -134,6 +147,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj, mod_trezorconfig_wip
 STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorconfig) },
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&mod_trezorconfig_init_obj) },
+    { MP_ROM_QSTR(MP_QSTR_check_pin), MP_ROM_PTR(&mod_trezorconfig_check_pin_obj) },
     { MP_ROM_QSTR(MP_QSTR_unlock), MP_ROM_PTR(&mod_trezorconfig_unlock_obj) },
     { MP_ROM_QSTR(MP_QSTR_has_pin), MP_ROM_PTR(&mod_trezorconfig_has_pin_obj) },
     { MP_ROM_QSTR(MP_QSTR_change_pin), MP_ROM_PTR(&mod_trezorconfig_change_pin_obj) },

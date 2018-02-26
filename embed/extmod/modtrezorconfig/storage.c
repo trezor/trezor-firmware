@@ -131,7 +131,7 @@ static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs)
     return sectrue;
 }
 
-static secbool pin_check(uint32_t pin, mp_obj_t callback)
+secbool storage_check_pin(uint32_t pin, mp_obj_t callback)
 {
     const uint32_t *pinfail = NULL;
     uint32_t ofs;
@@ -185,7 +185,7 @@ static secbool pin_check(uint32_t pin, mp_obj_t callback)
 secbool storage_unlock(const uint32_t pin, mp_obj_t callback)
 {
     unlocked = secfalse;
-    if (sectrue == initialized && sectrue == pin_check(pin, callback)) {
+    if (sectrue == initialized && sectrue == storage_check_pin(pin, callback)) {
         unlocked = sectrue;
     }
     return unlocked;
@@ -228,7 +228,7 @@ secbool storage_change_pin(const uint32_t pin, const uint32_t newpin, mp_obj_t c
     if (sectrue != initialized || sectrue != unlocked) {
         return secfalse;
     }
-    if (sectrue != pin_check(pin, callback)) {
+    if (sectrue != storage_check_pin(pin, callback)) {
         return secfalse;
     }
     return norcow_set(PIN_KEY, &newpin, sizeof(uint32_t));

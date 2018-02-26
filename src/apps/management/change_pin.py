@@ -1,5 +1,4 @@
-from trezor import ui
-from trezor import config
+from trezor import config, loop, ui
 from trezor.pin import pin_to_int, show_pin_timeout
 
 
@@ -13,6 +12,21 @@ async def request_pin(ctx, *args, **kwargs):
     return await request_pin(*args, **kwargs)
 
 
+@ui.layout
+async def pin_mismatch():
+    from trezor.ui.text import Text
+
+    text = Text(
+        'PIN mismatch', ui.ICON_DEFAULT,
+        'Entered PINs do not',
+        'match each other.',
+        '',
+        'Please, try again...',
+    )
+    text.render()
+    await loop.sleep(3 * 1000 * 1000)
+
+
 async def request_pin_confirm(ctx, *args, **kwargs):
     from trezor.messages import PinMatrixRequestType
 
@@ -23,7 +37,7 @@ async def request_pin_confirm(ctx, *args, **kwargs):
             ctx, code=PinMatrixRequestType.NewSecond, *args, **kwargs)
         if pin1 == pin2:
             return pin1
-        # TODO: display a message and wait
+        await pin_mismatch()
 
 
 def confirm_change_pin(ctx, msg):
@@ -59,6 +73,8 @@ async def layout_change_pin(ctx, msg):
     await confirm_change_pin(ctx, msg)
     if config.has_pin():
         curr_pin = await request_pin(ctx, PinMatrixRequestType.Current)
+        if not config.check_pin(pin_to_int(curr_pin), show_pin_timeout):
+            return Failure(code=FailureType.PinInvalid, message='PIN invalid')
     else:
         curr_pin = ''
     if msg.remove:
