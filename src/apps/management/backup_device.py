@@ -5,7 +5,6 @@ from apps.common import storage
 from apps.management.reset_device import show_warning, show_mnemonic, check_mnemonic, show_wrong_entry
 
 
-@ui.layout
 async def backup_device(ctx, msg):
 
     if not storage.is_initialized():
