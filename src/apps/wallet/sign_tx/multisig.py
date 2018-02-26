@@ -71,7 +71,7 @@ def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> 
 
 
 def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
-    p = hd.address_n or []
+    p = hd.address_n
     n = hd.node
     node = bip32.HDNode(
         depth=n.depth,

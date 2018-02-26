@@ -33,12 +33,12 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
                         amount=0x0000000006b22c20,
                         script_type=OutputScriptType.PAYTOADDRESS,
                         multisig=None,
-                        address_n=None)
+                        address_n=[])
     out2 = TxOutputType(address='16TZ8J6Q5iZKBWizWzFAYnrsaox5Z5aBRV',  # derived
                         amount=0x000000000d519390,
                         script_type=OutputScriptType.PAYTOADDRESS,
                         multisig=None,
-                        address_n=None)
+                        address_n=[])
 
     def test_prevouts(self):
 

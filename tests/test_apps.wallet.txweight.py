@@ -30,7 +30,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         out1 = TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 10000,
                             script_type=OutputScriptType.PAYTOADDRESS,
-                            address_n=None,
+                            address_n=[],
                             multisig=None)
 
         calculator = TxWeightCalculator(1, 1)
@@ -63,14 +63,14 @@ class TestCalculateTxWeight(unittest.TestCase):
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
             amount=12300000,
             script_type=OutputScriptType.PAYTOADDRESS,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
         out2 = TxOutputType(
             address='2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=123456789 - 11000 - 12300000,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
 
@@ -105,14 +105,14 @@ class TestCalculateTxWeight(unittest.TestCase):
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp',
             amount=5000000,
             script_type=OutputScriptType.PAYTOADDRESS,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
         out2 = TxOutputType(
             address='tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
 

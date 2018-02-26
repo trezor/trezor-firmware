@@ -122,8 +122,6 @@ def sanitize_tx_input(tx: TransactionType) -> TxInputType:
         txi.script_type = InputScriptType.SPENDADDRESS
     if txi.sequence is None:
         txi.sequence = 0xffffffff
-    if getattr(txi, 'address_n', None) is None:
-        txi.address_n = []
     return txi
 
 

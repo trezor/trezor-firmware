@@ -40,7 +40,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         pout1 = TxOutputBinType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
                                 amount=390000,
                                 multisig=None,
-                                address_n=None)
+                                address_n=[])
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
@@ -54,7 +54,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
                             amount=390000 - 100000,  # fee increased to 100000 => too high
                             multisig=None,
                             script_type=OutputScriptType.PAYTOADDRESS,
-                            address_n=None)
+                            address_n=[])
         tx = SignTx(coin_name=None, version=None, lock_time=None, inputs_count=1, outputs_count=1)
 
         messages = [
@@ -106,7 +106,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         pout1 = TxOutputBinType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
                                 amount=390000,
                                 multisig=None,
-                                address_n=None)
+                                address_n=[])
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
@@ -120,7 +120,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
                             amount=390000 - 90000,  # fee increased to 90000, slightly less than the threshold
                             script_type=OutputScriptType.PAYTOADDRESS,
                             multisig=None,
-                            address_n=None)
+                            address_n=[])
         tx = SignTx(coin_name=None, version=None, lock_time=None, inputs_count=1, outputs_count=1)
 
         messages = [

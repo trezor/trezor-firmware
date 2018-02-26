@@ -482,12 +482,10 @@ def get_address_for_change(o: TxOutputType, coin: CoinType, root: bip32.HDNode):
         input_script_type = InputScriptType.SPENDP2SHWITNESS
     else:
         raise SigningError(FailureType.DataError, 'Invalid script type')
-    address_n = o.address_n or []
-    return get_address(input_script_type, coin, node_derive(root, address_n), o.multisig)
+    return get_address(input_script_type, coin, node_derive(root, o.address_n), o.multisig)
 
 
 def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool:
-    address_n = o.address_n or []
     is_segwit = (o.script_type == OutputScriptType.PAYTOWITNESS or
                  o.script_type == OutputScriptType.PAYTOP2SHWITNESS)
     if is_segwit and o.amount > segwit_in:
@@ -496,9 +494,9 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
         # creating ANYONECANSPEND outputs before full segwit activation.
         return False
     return (wallet_path is not None and
-            wallet_path == address_n[:-_BIP32_WALLET_DEPTH] and
-            address_n[-2] <= _BIP32_CHANGE_CHAIN and
-            address_n[-1] <= _BIP32_MAX_LAST_ELEMENT)
+            wallet_path == o.address_n[:-_BIP32_WALLET_DEPTH] and
+            o.address_n[-2] <= _BIP32_CHANGE_CHAIN and
+            o.address_n[-1] <= _BIP32_MAX_LAST_ELEMENT)
 
 
 # Tx Inputs

@@ -42,14 +42,14 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
             amount=12300000,
             script_type=OutputScriptType.PAYTOADDRESS,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
         out2 = TxOutputType(
             address='2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=123456789 - 11000 - 12300000,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
         tx = SignTx(coin_name='Testnet', version=None, lock_time=None, inputs_count=1, outputs_count=2)
@@ -137,7 +137,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
             amount=12300000,
             script_type=OutputScriptType.PAYTOADDRESS,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
         out2 = TxOutputType(
@@ -252,7 +252,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
             amount=8,
             script_type=OutputScriptType.PAYTOADDRESS,
-            address_n=None,
+            address_n=[],
             multisig=None,
         )
         out2 = TxOutputType(
