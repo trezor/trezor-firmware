@@ -229,7 +229,7 @@ class Cmd:
 async def read_cmd(iface: io.HID) -> Cmd:
     desc_init = frame_init()
     desc_cont = frame_cont()
-    read = loop.select(iface.iface_num())
+    read = loop.select(iface.iface_num() | io.POLL_READ)
 
     buf = await read
     # log.debug(__name__, 'read init %s', buf)
@@ -267,14 +267,14 @@ async def read_cmd(iface: io.HID) -> Cmd:
         if cfrm.cid != ifrm.cid:
             # cont frame for a different channel, reply with BUSY and skip
             log.warning(__name__, '_ERR_CHANNEL_BUSY')
-            send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+            await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
             continue
 
         if cfrm.seq != seq:
             # cont frame for this channel, but incorrect seq number, abort
             # current msg
             log.warning(__name__, '_ERR_INVALID_SEQ')
-            send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
+            await send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
             return None
 
         datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
@@ -283,7 +283,7 @@ async def read_cmd(iface: io.HID) -> Cmd:
     return Cmd(ifrm.cid, ifrm.cmd, data)
 
 
-def send_cmd(cmd: Cmd, iface: io.HID) -> None:
+async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
     init_desc = frame_init()
     cont_desc = frame_cont()
     offset = 0
@@ -302,11 +302,14 @@ def send_cmd(cmd: Cmd, iface: io.HID) -> None:
     if offset < datalen:
         frm = overlay_struct(buf, cont_desc)
 
+    write = loop.select(iface.iface_num() | io.POLL_WRITE)
     while offset < datalen:
         frm.seq = seq
         offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
-        utime.sleep_ms(1)  # FIXME: async write
-        iface.write(buf)
+        while True:
+            await write
+            if iface.write(buf) > 0:
+                break
         # log.debug(__name__, 'send cont %s', buf)
         seq += 1
 
@@ -322,7 +325,7 @@ async def handle_reports(iface: io.HID):
             if req is None:
                 continue
             resp = dispatch_cmd(req)
-            send_cmd(resp, iface)
+            await send_cmd(resp, iface)
         except Exception as e:
             log.exception(__name__, e)
 
