@@ -123,7 +123,7 @@ def layout(f):
 
 
 def header(title: str,
-           icon: bytes=ICON_RESET,
+           icon: bytes=ICON_DEFAULT,
            fg: int=BG,
            bg: int=BG,
            ifg: int=BG):

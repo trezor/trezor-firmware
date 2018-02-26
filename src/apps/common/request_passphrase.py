@@ -13,7 +13,7 @@ from apps.common.cache import get_state
 @ui.layout
 async def request_passphrase_entry(ctx):
     text = Text(
-        'Enter passphrase', ui.ICON_RESET,
+        'Enter passphrase', ui.ICON_DEFAULT,
         'Where to enter your', 'passphrase?')
     text.render()
 
@@ -31,7 +31,7 @@ async def request_passphrase_entry(ctx):
 async def request_passphrase_ack(ctx, on_device):
     if not on_device:
         text = Text(
-            'Passphrase entry', ui.ICON_RESET,
+            'Passphrase entry', ui.ICON_DEFAULT,
             'Please, type passphrase', 'on connected host.')
         text.render()
 

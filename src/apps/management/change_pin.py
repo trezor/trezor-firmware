@@ -34,19 +34,19 @@ def confirm_change_pin(ctx, msg):
 
     if msg.remove and has_pin:  # removing pin
         return require_confirm(ctx, Text(
-            'Remove PIN', ui.ICON_RESET,
+            'Remove PIN', ui.ICON_DEFAULT,
             'Do you really want to', ui.BOLD,
             'remove current PIN?'))
 
     if not msg.remove and has_pin:  # changing pin
         return require_confirm(ctx, Text(
-            'Change PIN', ui.ICON_RESET,
+            'Change PIN', ui.ICON_DEFAULT,
             'Do you really want to', ui.BOLD,
             'change current PIN?'))
 
     if not msg.remove and not has_pin:  # setting new pin
         return require_confirm(ctx, Text(
-            'Change PIN', ui.ICON_RESET,
+            'Change PIN', ui.ICON_DEFAULT,
             'Do you really want to', ui.BOLD,
             'set new PIN?'))
 

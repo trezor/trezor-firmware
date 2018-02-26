@@ -47,7 +47,7 @@ async def respond_Pong(ctx, msg):
         from trezor.messages.ButtonRequestType import ProtectCall
         from trezor.ui.text import Text
         from trezor import ui
-        await require_confirm(ctx, Text('Confirm', ui.ICON_RESET), ProtectCall)
+        await require_confirm(ctx, Text('Confirm', ui.ICON_DEFAULT), ProtectCall)
 
     if msg.passphrase_protection:
         from apps.common.request_passphrase import protect_by_passphrase

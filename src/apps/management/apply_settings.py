@@ -13,25 +13,25 @@ async def layout_apply_settings(ctx, msg):
 
     if msg.homescreen is not None:
         await require_confirm(ctx, Text(
-            'Change homescreen', ui.ICON_RESET,
+            'Change homescreen', ui.ICON_DEFAULT,
             'Do you really want to', 'change homescreen?'))
 
     if msg.label is not None:
         await require_confirm(ctx, Text(
-            'Change label', ui.ICON_RESET,
+            'Change label', ui.ICON_DEFAULT,
             'Do you really want to', 'change label to',
             ui.BOLD, '%s?' % msg.label))  # TODO: split label (bold) and '?' (normal) once we support mixed styles on one line
 
     if msg.language is not None:
         await require_confirm(ctx, Text(
-            'Change language', ui.ICON_RESET,
+            'Change language', ui.ICON_DEFAULT,
             'Do you really want to', 'change language to',
             ui.BOLD, '%s?' % msg.language))  # TODO: split lang (bold) and '?' (normal) once we support mixed styles on one line
 
     if msg.use_passphrase is not None:
         await require_confirm(ctx, Text(
             'Enable passphrase' if msg.use_passphrase else 'Disable passphrase',
-            ui.ICON_RESET,
+            ui.ICON_DEFAULT,
             'Do you really want to',
             'enable passphrase' if msg.use_passphrase else 'disable passphrase',
             'encryption?'))

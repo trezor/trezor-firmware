@@ -20,7 +20,7 @@ async def layout_load_device(ctx, msg):
         raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
 
     await require_confirm(ctx, Text(
-        'Loading seed', ui.ICON_RESET,
+        'Loading seed', ui.ICON_DEFAULT,
         ui.BOLD, 'Loading private seed', 'is not recommended.',
         ui.NORMAL, 'Continue only if you', 'know what you are doing!'))
 

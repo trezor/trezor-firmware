@@ -20,7 +20,7 @@ async def confirm_output(ctx, output, coin):
         address = 'OP_RETURN'  # TODO: handle OP_RETURN correctly
     else:
         address = output.address
-    content = Text('Confirm output', ui.ICON_RESET,
+    content = Text('Confirm output', ui.ICON_DEFAULT,
                    ui.BOLD, format_coin_amount(output.amount, coin),
                    ui.NORMAL, 'to',
                    ui.MONO, *split_address(address))
@@ -28,13 +28,13 @@ async def confirm_output(ctx, output, coin):
 
 
 async def confirm_total(ctx, spending, fee, coin):
-    content = Text('Confirm transaction', ui.ICON_RESET,
+    content = Text('Confirm transaction', ui.ICON_DEFAULT,
                    'Sending: %s' % format_coin_amount(spending, coin),
                    'Fee: %s' % format_coin_amount(fee, coin))
     return await hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def confirm_feeoverthreshold(ctx, fee, coin):
-    content = Text('Confirm high fee:', ui.ICON_RESET,
+    content = Text('Confirm high fee:', ui.ICON_DEFAULT,
                    ui.BOLD, format_coin_amount(fee, coin))
     return await confirm(ctx, content, ButtonRequestType.FeeOverThreshold)

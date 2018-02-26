@@ -45,6 +45,7 @@ BG = BLACK
 FG = WHITE
 
 # icons
+ICON_DEFAULT  = 'trezor/res/header_icons/reset.toig'
 ICON_RESET    = 'trezor/res/header_icons/reset.toig'
 ICON_WIPE     = 'trezor/res/header_icons/wipe.toig'
 ICON_RECOVERY = 'trezor/res/recovery.toig'

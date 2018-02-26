@@ -32,7 +32,7 @@ async def _show_address(ctx, address):
     lines = _split_address(address)
     content = Container(
         Qr(address, (120, 135), 3),
-        Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines))
+        Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines))
     await require_confirm(ctx, content, code=Address)
 
 

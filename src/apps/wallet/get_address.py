@@ -32,7 +32,7 @@ async def _show_address(ctx, address):
     from ..common.confirm import confirm
 
     lines = _split_address(address)
-    content = Text('Confirm address', ui.ICON_RESET, ui.MONO, *lines)
+    content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
     return await confirm(ctx, content, code=Address, cancel='QR', cancel_style=ui.BTN_KEY)
 
 
@@ -49,7 +49,7 @@ async def _show_qr(ctx, address):
 
     content = Container(
         Qr(address, (qr_x, qr_y), qr_coef),
-        Text('Confirm address', ui.ICON_RESET, ui.MONO))
+        Text('Confirm address', ui.ICON_DEFAULT, ui.MONO))
     return await confirm(ctx, content, code=Address, cancel='Address', cancel_style=ui.BTN_KEY)
 
 
