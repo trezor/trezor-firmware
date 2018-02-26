@@ -21,34 +21,20 @@ from .common import *
 from trezorlib import messages
 
 
-class TestBasic(TrezorTest):
+class TestBasicState(TrezorTest):
 
-    def test_features(self):
-        f0 = self.client.features
-        f1 = self.client.call(messages.Initialize())
-        del f0.state
-        del f1.state
-        assert f0 == f1
-
-    def test_ping(self):
-        ping = self.client.call(messages.Ping(message='ahoj!'))
-        assert ping == messages.Success(message='ahoj!')
-
-    def test_device_id_same(self):
-        id1 = self.client.get_device_id()
-        self.client.init_device()
-        id2 = self.client.get_device_id()
-
-        # ID must be at least 12 characters
-        assert len(id1) >= 12
-
-        # Every resulf of UUID must be the same
-        assert id1 == id2
-
-    def test_device_id_different(self):
-        id1 = self.client.get_device_id()
+    def test_state_uninitialized(self):
         self.client.wipe_device()
-        id2 = self.client.get_device_id()
+        f0 = self.client.call(messages.Initialize())
+        f1 = self.client.call(messages.Initialize())
+        assert f0.state != f1.state
+        f2 = self.client.call(messages.Initialize(state=f1.state))
+        assert f1.state == f2.state
 
-        # Device ID must be fresh after every reset
-        assert id1 != id2
+    def test_state_initialized(self):
+        self.setup_mnemonic_nopin_passphrase()
+        f0 = self.client.call(messages.Initialize())
+        f1 = self.client.call(messages.Initialize())
+        assert f0.state != f1.state
+        f2 = self.client.call(messages.Initialize(state=f1.state))
+        assert f1.state == f2.state
