@@ -469,13 +469,13 @@ class ConfirmState:
 
     @ui.layout
     async def confirm_layout(self) -> None:
-        from trezor.ui.confirm import HoldToConfirmDialog
+        from trezor.ui.confirm import HoldToConfirmDialog, CONFIRMED
 
         content = ConfirmContent(self.action, self.app_id)
         dialog = HoldToConfirmDialog(content)
         ui.display.clear()
 
-        return await dialog
+        return await dialog == CONFIRMED
 
 
 
