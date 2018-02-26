@@ -1,7 +1,7 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
 from trezor.messages.wire_types import \
-    LoadDevice, ResetDevice, WipeDevice, RecoveryDevice, ApplySettings, ApplyFlags, ChangePin
+    LoadDevice, ResetDevice, BackupDevice, WipeDevice, RecoveryDevice, ApplySettings, ApplyFlags, ChangePin
 
 
 @unimport
@@ -14,6 +14,12 @@ def dispatch_LoadDevice(*args, **kwargs):
 def dispatch_ResetDevice(*args, **kwargs):
     from .reset_device import reset_device
     return reset_device(*args, **kwargs)
+
+
+@unimport
+def dispatch_BackupDevice(*args, **kwargs):
+    from .backup_device import backup_device
+    return backup_device(*args, **kwargs)
 
 
 @unimport
@@ -51,6 +57,7 @@ def boot():
     if __debug__:
         register(LoadDevice, protobuf_workflow, dispatch_LoadDevice)
     register(ResetDevice, protobuf_workflow, dispatch_ResetDevice)
+    register(BackupDevice, protobuf_workflow, dispatch_BackupDevice)
     register(WipeDevice, protobuf_workflow, dispatch_WipeDevice)
     register(RecoveryDevice, protobuf_workflow, dispatch_RecoveryDevice)
     register(ApplySettings, protobuf_workflow, dispatch_ApplySettings)

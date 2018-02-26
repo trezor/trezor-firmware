@@ -53,6 +53,14 @@ def load_mnemonic(mnemonic: str, needs_backup: bool) -> None:
         config.set(_APP, _NEEDS_BACKUP, b'')
 
 
+def needs_backup() -> bool:
+    return bool(config.get(_APP, _NEEDS_BACKUP))
+
+
+def set_backed_up() -> None:
+    config.set(_APP, _NEEDS_BACKUP, b'')
+
+
 def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public

@@ -22,7 +22,12 @@ def display_homescreen():
     if not image:
         image = res.load('apps/homescreen/res/bg.toif')
 
-    ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+    if storage.is_initialized() and storage.needs_backup():
+        ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
+        ui.display.text_center(120, 22, 'NEEDS BACKUP!', ui.BOLD, ui.BLACK, ui.YELLOW)
+        ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
+    else:
+        ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
     ui.display.avatar(48, 48 - 10, image, ui.WHITE, ui.BLACK)
     ui.display.text_center(120, 220, label, ui.BOLD, ui.FG, ui.BG)
 

@@ -80,7 +80,8 @@ async def reset_device(ctx, msg):
         mnemonic=mnemonic, needs_backup=msg.skip_backup)
 
     # show success message
-    await show_success(ctx)
+    if not msg.skip_backup:
+        await show_success(ctx)
 
     return Success(message='Initialized')
 
