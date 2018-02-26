@@ -84,7 +84,7 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
         if repeated:
             flags = 'p.FLAG_REPEATED'
             pytype = "list"
-            value = []
+            value = None
         else:
             flags = '0'
             value = None
@@ -94,7 +94,10 @@ def process_type(t, cls, msg_id, indexfile, is_upy):
 
         args.append("        %s: %s = %s," % (fieldname, pytype, value))
 
-        assigns.append("        self.%s = %s" % (fieldname, fieldname))
+        if repeated:
+            assigns.append("        self.%s = [] if %s is None else %s" % (fieldname, fieldname, fieldname))
+        else:
+            assigns.append("        self.%s = %s" % (fieldname, fieldname))
 
         # print fieldname, number, type, repeated, comment
         # print v.__dict__
