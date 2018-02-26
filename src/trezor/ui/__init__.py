@@ -113,6 +113,7 @@ def layout(f):
             layout = f(*args, **kwargs)
             workflow.onlayoutstart(layout)
             loop.schedule(slide)
+            display.clear()
             return await layout
         finally:
             loop.close(slide)

@@ -30,7 +30,6 @@ async def request_pin(code: int = None, cancellable: bool = True) -> str:
                 c.taint()
                 c.render()
 
-    ui.display.clear()
     matrix = PinMatrix(label, with_zero=True)
     matrix.onchange = onchange
     dialog = ConfirmDialog(matrix)

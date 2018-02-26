@@ -10,8 +10,8 @@ from apps.common import storage
 from apps.common.cache import get_state
 
 
+@ui.layout
 async def request_passphrase_entry(ctx):
-    ui.display.clear()
     text = Text(
         'Enter passphrase', ui.ICON_RESET,
         'Where to enter your', 'passphrase?')
@@ -27,11 +27,9 @@ async def request_passphrase_entry(ctx):
     return await EntrySelector(text)
 
 
-async def request_passphrase(ctx):
-    on_device = await request_passphrase_entry(ctx) == DEVICE
-
+@ui.layout
+async def request_passphrase_ack(ctx, on_device):
     if not on_device:
-        ui.display.clear()
         text = Text(
             'Passphrase entry', ui.ICON_RESET,
             'Please, type passphrase', 'on connected host.')
@@ -53,10 +51,15 @@ async def request_passphrase(ctx):
             raise wire.FailureError(ProcessError, 'Passphrase not provided')
         passphrase = ack.passphrase
 
-    if ack.state is not None:
-        if ack.state != get_state(salt=ack.state[:32], passphrase=passphrase):
-            raise wire.FailureError(ProcessError, 'Passphrase mismatch')
+    return ack.state, passphrase
 
+
+async def request_passphrase(ctx):
+    on_device = await request_passphrase_entry(ctx) == DEVICE
+    state, passphrase = await request_passphrase_ack(ctx, on_device)
+    if state is not None:
+        if state != get_state(salt=state[:32], passphrase=passphrase):
+            raise wire.FailureError(ProcessError, 'Passphrase mismatch')
     return passphrase
 
 

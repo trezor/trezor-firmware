@@ -14,13 +14,11 @@ async def confirm(ctx, content, code=None, *args, **kwargs):
     from trezor.messages.ButtonRequestType import Other
     from trezor.messages.wire_types import ButtonAck
 
-    ui.display.clear()
-    dialog = ConfirmDialog(content, *args, **kwargs)
-    dialog.render()
-
     if code is None:
         code = Other
     await ctx.call(ButtonRequest(code=code), ButtonAck)
+
+    dialog = ConfirmDialog(content, *args, **kwargs)
 
     if __debug__:
         waiter = loop.wait(signal, dialog)
@@ -36,13 +34,11 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
     from trezor.messages.ButtonRequestType import Other
     from trezor.messages.wire_types import ButtonAck
 
-    ui.display.clear()
-
-    dialog = HoldToConfirmDialog(content, 'Hold to confirm', *args, **kwargs)
-
     if code is None:
         code = Other
     await ctx.call(ButtonRequest(code=code), ButtonAck)
+
+    dialog = HoldToConfirmDialog(content, 'Hold to confirm', *args, **kwargs)
 
     if __debug__:
         waiter = loop.wait(signal, dialog)
