@@ -413,7 +413,7 @@ class ConfirmContent(ui.Widget):
         if app_id == _BOGUS_APPID:
             # TODO: display a warning dialog for bogus app ids
             name = 'Another U2F device'
-            icon = ui.ICON_RESET  # TODO: warning icon
+            icon = res.load('apps/fido_u2f/res/u2f_generic.toif')  # TODO: warning icon
         elif app_id in knownapps.knownapps:
             name = knownapps.knownapps[app_id]
             try:
@@ -431,7 +431,7 @@ class ConfirmContent(ui.Widget):
             header = 'U2F Register'
         else:
             header = 'U2F Authenticate'
-        ui.header(header, ui.ICON_RESET, ui.GREEN, ui.BG)
+        ui.header(header, ui.ICON_RESET, ui.GREEN, ui.BG, ui.GREEN)
         ui.display.image((240 - 64) // 2, 90, self.app_icon)
         ui.display.text_center(120, 185, self.app_name, ui.MONO, ui.FG, ui.BG)
 
