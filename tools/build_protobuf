@@ -18,7 +18,7 @@ echo '' >> $INDEX
 
 for i in types messages ; do
     # Compile .proto files to python2 modules using google protobuf library
-    cd $CURDIR/../../trezor-common/protob
+    cd $CURDIR/../vendor/trezor-common/protob
     protoc --python_out=$PB2DIR -I/usr/include -I. $i.proto
 done
 
