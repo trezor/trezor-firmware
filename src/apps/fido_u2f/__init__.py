@@ -477,7 +477,6 @@ class ConfirmState:
         return await dialog == CONFIRMED
 
 
-
 _state = None  # type: Optional[ConfirmState]  # state for msg_register and msg_authenticate
 _lastreq = None  # type: Optional[Msg]  # last received register/authenticate request
 

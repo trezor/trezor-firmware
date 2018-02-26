@@ -82,7 +82,6 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(v1, bytes())
         self.assertEqual(v2, value16)
 
-
     def test_change_pin(self):
         config.init()
         config.wipe()

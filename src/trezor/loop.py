@@ -264,7 +264,7 @@ class wait(Syscall):
     def __iter__(self):
         try:
             return (yield self)
-        except:
+        except:  # noqa: E722
             # exception was raised on the waiting task externally with
             # close() or throw(), kill the children tasks and re-raise
             self.exit()

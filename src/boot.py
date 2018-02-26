@@ -14,7 +14,7 @@ async def bootscreen():
                 pin = await request_pin()
                 if config.unlock(pin_to_int(pin), show_pin_timeout):
                     return
-        except:
+        except:  # noqa: E722
             pass
 
 
