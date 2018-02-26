@@ -31,5 +31,6 @@ def dispatch_EthereumVerifyMessage(*args, **kwargs):
 def boot():
     register(EthereumGetAddress, protobuf_workflow, dispatch_EthereumGetAddress)
     register(EthereumSignTx, protobuf_workflow, dispatch_EthereumSignTx)
-    register(EthereumSignMessage, protobuf_workflow, dispatch_EthereumSignMessage)
-    register(EthereumVerifyMessage, protobuf_workflow, dispatch_EthereumVerifyMessage)
+    # TODO: re-enable once https://github.com/ethereum/EIPs/pull/712 is accepted/implemented
+    # register(EthereumSignMessage, protobuf_workflow, dispatch_EthereumSignMessage)
+    # register(EthereumVerifyMessage, protobuf_workflow, dispatch_EthereumVerifyMessage)
