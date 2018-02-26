@@ -473,7 +473,6 @@ class ConfirmState:
 
         content = ConfirmContent(self.action, self.app_id)
         dialog = HoldToConfirmDialog(content)
-        ui.display.clear()
 
         return await dialog == CONFIRMED
 

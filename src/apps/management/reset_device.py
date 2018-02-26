@@ -165,7 +165,6 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
     lines = ['%2d. %s' % (wi + 1, word) for wi, word in pages[page]]
     content = Text('Recovery seed', ui.ICON_RESET, ui.MONO, *lines)
     content = Scrollpage(content, page, page_count)
-    ui.display.clear()
 
     if page + 1 == page_count:
         await HoldToConfirmDialog(content)
