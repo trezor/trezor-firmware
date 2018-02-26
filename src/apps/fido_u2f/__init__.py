@@ -456,16 +456,27 @@ class ConfirmState:
 
     def kill(self) -> None:
         if self.task is not None:
-            workflow.onclose(self.task)
             loop.close(self.task)
             self.task = None
 
     async def confirm(self) -> None:
+        confirmed = False
+        try:
+            confirmed = await self.confirm_layout()
+        finally:
+            self.confirmed = confirmed
+            workflow.onclose(self.task)
+
+    @ui.layout
+    async def confirm_layout(self) -> None:
         from trezor.ui.confirm import HoldToConfirmDialog
+
         content = ConfirmContent(self.action, self.app_id)
         dialog = HoldToConfirmDialog(content)
         ui.display.clear()
-        self.confirmed = await dialog
+
+        return await dialog
+
 
 
 _state = None  # type: Optional[ConfirmState]  # state for msg_register and msg_authenticate
