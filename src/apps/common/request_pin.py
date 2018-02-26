@@ -58,7 +58,7 @@ def _get_label(code: int):
     if code == PinMatrixRequestType.NewFirst:
         label = 'Enter new PIN'
     elif code == PinMatrixRequestType.NewSecond:
-        label = 'Enter PIN again'
+        label = 'Re-enter new PIN'
     else:  # PinMatrixRequestType.Current
-        label = 'Enter PIN'
+        label = 'Enter your PIN'
     return label
