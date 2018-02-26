@@ -20,15 +20,13 @@ async def layout_apply_settings(ctx, msg):
         await require_confirm(ctx, Text(
             'Change label', ui.ICON_RESET,
             'Do you really want to', 'change label to',
-            ui.BOLD, '%s' % msg.label,
-            ui.NORMAL, '?'))
+            ui.BOLD, '%s?' % msg.label))  # TODO: split label (bold) and '?' (normal) once we support mixed styles on one line
 
     if msg.language is not None:
         await require_confirm(ctx, Text(
             'Change language', ui.ICON_RESET,
             'Do you really want to', 'change language to',
-            ui.BOLD, '%s' % msg.language,
-            ui.NORMAL, '?'))
+            ui.BOLD, '%s?' % msg.language))  # TODO: split lang (bold) and '?' (normal) once we support mixed styles on one line
 
     if msg.use_passphrase is not None:
         await require_confirm(ctx, Text(
