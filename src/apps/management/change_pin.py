@@ -1,51 +1,46 @@
 from trezor import config, loop, ui
+from trezor.messages import FailureType, PinMatrixRequestType
+from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages.ButtonRequestType import Other
+from trezor.messages.Failure import Failure
+from trezor.messages.Success import Success
+from trezor.messages import wire_types
 from trezor.pin import pin_to_int, show_pin_timeout
+from trezor.ui.text import Text
+from apps.common.confirm import require_confirm
+from apps.common.request_pin import request_pin
 
 
-async def request_pin(ctx, code=None, *args, **kwargs):
-    from trezor.messages.ButtonRequest import ButtonRequest
-    from trezor.messages.ButtonRequestType import Other
-    from trezor.messages.wire_types import ButtonAck
-    from apps.common.request_pin import request_pin
+async def change_pin(ctx, msg):
 
-    if code is None:
-        code = Other
-    await ctx.call(ButtonRequest(code=code), ButtonAck)
+    # confirm that user wants to change the pin
+    await confirm_change_pin(ctx, msg)
 
-    return await request_pin(*args, **kwargs)
+    # get current pin, return failure if invalid
+    if config.has_pin():
+        curpin = await request_pin_ack(ctx, PinMatrixRequestType.Current)
+        if not config.check_pin(pin_to_int(curpin), show_pin_timeout):
+            return Failure(code=FailureType.PinInvalid, message='PIN invalid')
+    else:
+        curpin = ''
 
+    # get new pin
+    if not msg.remove:
+        newpin = await request_pin_confirm(ctx)
+    else:
+        newpin = ''
 
-@ui.layout
-async def pin_mismatch():
-    from trezor.ui.text import Text
-
-    text = Text(
-        'PIN mismatch', ui.ICON_DEFAULT,
-        'Entered PINs do not',
-        'match each other.',
-        '',
-        'Please, try again...')
-    text.render()
-    await loop.sleep(3 * 1000 * 1000)
-
-
-async def request_pin_confirm(ctx, *args, **kwargs):
-    from trezor.messages import PinMatrixRequestType
-
-    while True:
-        pin1 = await request_pin(
-            ctx, code=PinMatrixRequestType.NewFirst, *args, **kwargs)
-        pin2 = await request_pin(
-            ctx, code=PinMatrixRequestType.NewSecond, *args, **kwargs)
-        if pin1 == pin2:
-            return pin1
-        await pin_mismatch()
+    # write into storage
+    if config.change_pin(pin_to_int(curpin), pin_to_int(newpin), show_pin_timeout):
+        if newpin:
+            return Success(message='PIN changed')
+        else:
+            return Success(message='PIN removed')
+    else:
+        return Failure(code=FailureType.PinInvalid, message='PIN invalid')
 
 
 def confirm_change_pin(ctx, msg):
-    from apps.common.confirm import require_confirm
-    from trezor.ui.text import Text
-
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
@@ -67,27 +62,31 @@ def confirm_change_pin(ctx, msg):
             'set new PIN?'))
 
 
-async def change_pin(ctx, msg):
-    from trezor.messages.Success import Success
-    from trezor.messages.Failure import Failure
-    from trezor.messages import FailureType, PinMatrixRequestType
+async def request_pin_ack(ctx, code=None, *args, **kwargs):
+    if code is None:
+        code = Other
+    await ctx.call(ButtonRequest(code=code), wire_types.ButtonAck)
+    return await request_pin(*args, **kwargs)
 
-    await confirm_change_pin(ctx, msg)
-    if config.has_pin():
-        curr_pin = await request_pin(ctx, PinMatrixRequestType.Current)
-        if not config.check_pin(pin_to_int(curr_pin), show_pin_timeout):
-            return Failure(code=FailureType.PinInvalid, message='PIN invalid')
-    else:
-        curr_pin = ''
-    if msg.remove:
-        new_pin = ''
-    else:
-        new_pin = await request_pin_confirm(ctx)
 
-    if config.change_pin(pin_to_int(curr_pin), pin_to_int(new_pin), show_pin_timeout):
-        if new_pin:
-            return Success(message='PIN changed')
-        else:
-            return Success(message='PIN removed')
-    else:
-        return Failure(code=FailureType.PinInvalid, message='PIN invalid')
+async def request_pin_confirm(ctx, *args, **kwargs):
+    while True:
+        pin1 = await request_pin_ack(
+            ctx, code=PinMatrixRequestType.NewFirst, *args, **kwargs)
+        pin2 = await request_pin_ack(
+            ctx, code=PinMatrixRequestType.NewSecond, *args, **kwargs)
+        if pin1 == pin2:
+            return pin1
+        await pin_mismatch()
+
+
+@ui.layout
+async def pin_mismatch():
+    text = Text(
+        'PIN mismatch', ui.ICON_DEFAULT,
+        'Entered PINs do not',
+        'match each other.',
+        '',
+        'Please, try again...')
+    text.render()
+    await loop.sleep(3 * 1000 * 1000)

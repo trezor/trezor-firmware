@@ -103,8 +103,8 @@ usb.open()
 utils.set_mode_unprivileged()
 
 # load default homescreen
-from apps.homescreen.homescreen import layout_homescreen
+from apps.homescreen.homescreen import homescreen
 
 # run main even loop and specify which screen is default
-workflow.startdefault(layout_homescreen)
+workflow.startdefault(homescreen)
 loop.run()

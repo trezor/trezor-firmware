@@ -1,13 +1,14 @@
 from trezor import config
-from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport, symbol
-from trezor.messages.wire_types import Initialize, GetFeatures, Ping, ClearSession
+from trezor.wire import register, protobuf_workflow
+from trezor.messages import wire_types
+from trezor.messages.Features import Features
+from trezor.messages.Success import Success
+
+from apps.common import storage, coins, cache
 
 
-@unimport
 async def respond_Features(ctx, msg):
-    from apps.common import storage, coins, cache
-    from trezor.messages.Features import Features
 
     if msg.__qualname__ == 'Initialize':
         if msg.state is None or msg.state != cache.get_state(salt=msg.state[:32]):
@@ -35,12 +36,13 @@ async def respond_Features(ctx, msg):
     return f
 
 
+async def respond_ClearSession(ctx, msg):
+    cache.clear()
+    return Success(message='Session cleared')
+
+
 @unimport
 async def respond_Pong(ctx, msg):
-    from trezor.messages.Success import Success
-
-    s = Success()
-    s.message = msg.message
 
     if msg.button_protection:
         from apps.common.confirm import require_confirm
@@ -53,19 +55,11 @@ async def respond_Pong(ctx, msg):
         from apps.common.request_passphrase import protect_by_passphrase
         await protect_by_passphrase(ctx)
 
-    return s
-
-
-@unimport
-async def respond_ClearSession(ctx, msg):
-    from apps.common import cache
-    from trezor.messages.Success import Success
-    cache.clear()
-    return Success(message='Session cleared')
+    return Success(messge=msg.message)
 
 
 def boot():
-    register(Initialize, protobuf_workflow, respond_Features)
-    register(GetFeatures, protobuf_workflow, respond_Features)
-    register(Ping, protobuf_workflow, respond_Pong)
-    register(ClearSession, protobuf_workflow, respond_ClearSession)
+    register(wire_types.Initialize, protobuf_workflow, respond_Features)
+    register(wire_types.GetFeatures, protobuf_workflow, respond_Features)
+    register(wire_types.ClearSession, protobuf_workflow, respond_ClearSession)
+    register(wire_types.Ping, protobuf_workflow, respond_Pong)

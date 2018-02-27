@@ -1,4 +1,42 @@
 from trezor import ui
+from trezor.crypto.hashlib import sha256
+from trezor.messages.SignedIdentity import SignedIdentity
+from ustruct import pack, unpack
+
+from ..common import coins, seed
+
+
+async def sign_identity(ctx, msg):
+    if msg.ecdsa_curve_name is None:
+        msg.ecdsa_curve_name = 'secp256k1'
+
+    identity = serialize_identity(msg.identity)
+    display_identity(identity, msg.challenge_visual)
+
+    address_n = get_identity_path(identity, msg.identity.index or 0)
+    node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
+
+    coin = coins.by_name('Bitcoin')
+    if msg.ecdsa_curve_name == 'secp256k1':
+        address = node.address(coin.address_type)  # hardcoded bitcoin address type
+    else:
+        address = None
+    pubkey = node.public_key()
+    if pubkey[0] == 0x01:
+        pubkey = b'\x00' + pubkey[1:]
+    seckey = node.private_key()
+
+    if msg.identity.proto == 'gpg':
+        signature = sign_challenge(
+            seckey, msg.challenge_hidden, msg.challenge_visual, 'gpg', msg.ecdsa_curve_name)
+    elif msg.identity.proto == 'ssh':
+        signature = sign_challenge(
+            seckey, msg.challenge_hidden, msg.challenge_visual, 'ssh', msg.ecdsa_curve_name)
+    else:
+        signature = sign_challenge(
+            seckey, msg.challenge_hidden, msg.challenge_visual, coin, msg.ecdsa_curve_name)
+
+    return SignedIdentity(address=address, public_key=pubkey, signature=signature)
 
 
 def serialize_identity(identity):
@@ -25,9 +63,6 @@ def display_identity(identity: str, challenge_visual: str):
 
 
 def get_identity_path(identity: str, index: int):
-    from ustruct import pack, unpack
-    from trezor.crypto.hashlib import sha256
-
     identity_hash = sha256(pack('<I', index) + identity).digest()
 
     address_n = (13, ) + unpack('<IIII', identity_hash[:16])
@@ -77,40 +112,3 @@ def sign_challenge(seckey: bytes,
         signature = b'\x00' + signature[1:]
 
     return signature
-
-
-async def sign_identity(ctx, msg):
-    from trezor.messages.SignedIdentity import SignedIdentity
-    from ..common import coins
-    from ..common import seed
-
-    if msg.ecdsa_curve_name is None:
-        msg.ecdsa_curve_name = 'secp256k1'
-
-    identity = serialize_identity(msg.identity)
-    display_identity(identity, msg.challenge_visual)
-
-    address_n = get_identity_path(identity, msg.identity.index or 0)
-    node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
-
-    coin = coins.by_name('Bitcoin')
-    if msg.ecdsa_curve_name == 'secp256k1':
-        address = node.address(coin.address_type)  # hardcoded bitcoin address type
-    else:
-        address = None
-    pubkey = node.public_key()
-    if pubkey[0] == 0x01:
-        pubkey = b'\x00' + pubkey[1:]
-    seckey = node.private_key()
-
-    if msg.identity.proto == 'gpg':
-        signature = sign_challenge(
-            seckey, msg.challenge_hidden, msg.challenge_visual, 'gpg', msg.ecdsa_curve_name)
-    elif msg.identity.proto == 'ssh':
-        signature = sign_challenge(
-            seckey, msg.challenge_hidden, msg.challenge_visual, 'ssh', msg.ecdsa_curve_name)
-    else:
-        signature = sign_challenge(
-            seckey, msg.challenge_hidden, msg.challenge_visual, coin, msg.ecdsa_curve_name)
-
-    return SignedIdentity(address=address, public_key=pubkey, signature=signature)

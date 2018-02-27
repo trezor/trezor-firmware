@@ -1,6 +1,4 @@
 from micropython import const
-from ubinascii import hexlify
-
 from trezor import config, ui, wire
 from trezor.crypto import bip39, hashlib, random
 from trezor.messages import ButtonRequestType, FailureType, wire_types
@@ -13,7 +11,7 @@ from trezor.ui.keyboard import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_ordinal
-
+from ubinascii import hexlify
 from apps.common import storage
 from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm
@@ -23,7 +21,6 @@ if __debug__:
     current_word = None
 
 
-@ui.layout
 async def reset_device(ctx, msg):
     if __debug__:
         global internal_entropy

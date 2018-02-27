@@ -1,6 +1,5 @@
-from trezor.crypto import random, hashlib, hmac
-from apps.common.storage import get_device_id
-
+from trezor.crypto import hashlib, hmac, random
+from apps.common import storage
 
 memory = {}
 _seed = None
@@ -23,7 +22,7 @@ def get_state(salt: bytes=None, passphrase: str=None):
         key = _passphrase if _passphrase is not None else ''
     else:
         key = passphrase
-    msg = _state_salt + get_device_id().encode()
+    msg = _state_salt + storage.get_device_id().encode()
     state = hmac.new(key.encode(), msg, hashlib.sha256).digest()
 
     return _state_salt + state

@@ -1,14 +1,14 @@
-from trezor import wire, ui, config
+from trezor import config, ui, wire
+from trezor.crypto import bip39
+from trezor.messages.FailureType import ProcessError, UnexpectedMessage
+from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
+from trezor.ui.text import Text
+from apps.common import storage
+from apps.common.confirm import require_confirm
 
 
 async def load_device(ctx, msg):
-    from trezor.crypto import bip39
-    from trezor.messages.Success import Success
-    from trezor.messages.FailureType import UnexpectedMessage, ProcessError
-    from trezor.ui.text import Text
-    from ..common.confirm import require_confirm
-    from ..common import storage
 
     if storage.is_initialized():
         raise wire.FailureError(UnexpectedMessage, 'Already initialized')

@@ -1,58 +1,62 @@
 from micropython import const
 from trezor import ui
+from trezor.messages import ButtonRequestType, InputScriptType
+from trezor.messages.Address import Address
+from trezor.ui.container import Container
+from trezor.ui.qr import Qr
+from trezor.ui.text import Text
+from trezor.utils import chunks
+from apps.common import coins, seed
+from apps.common.confirm import confirm
+from apps.wallet.sign_tx import addresses
 
 
 async def get_address(ctx, msg):
-    from trezor.messages.Address import Address
-    from trezor.messages.InputScriptType import SPENDWITNESS
-    from ..common import coins
-    from ..common import seed
-    from ..wallet.sign_tx import addresses
-
-    address_n = msg.address_n or ()
     coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
-    node = await seed.derive_node(ctx, address_n)
+    node = await seed.derive_node(ctx, msg.address_n)
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
 
     if msg.show_display:
         while True:
             if await _show_address(ctx, address):
                 break
-            if await _show_qr(ctx, address if msg.script_type != SPENDWITNESS else address.upper()):
+            if await _show_qr(ctx, address, msg.script_type):
                 break
 
     return Address(address=address)
 
 
-async def _show_address(ctx, address):
-    from trezor.messages.ButtonRequestType import Address
-    from trezor.ui.text import Text
-    from ..common.confirm import confirm
-
+async def _show_address(ctx, address: str):
     lines = _split_address(address)
     content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
-    return await confirm(ctx, content, code=Address, cancel='QR', cancel_style=ui.BTN_KEY)
+    return await confirm(
+        ctx,
+        content,
+        code=ButtonRequestType.Address,
+        cancel='QR',
+        cancel_style=ui.BTN_KEY)
 
 
-async def _show_qr(ctx, address):
-    from trezor.messages.ButtonRequestType import Address
-    from trezor.ui.text import Text
-    from trezor.ui.qr import Qr
-    from trezor.ui.container import Container
-    from ..common.confirm import confirm
-
+async def _show_qr(ctx, address: str, script_type: int):
     qr_x = const(120)
     qr_y = const(115)
     qr_coef = const(4)
 
+    if script_type == InputScriptType.SPENDWITNESS:
+        address = address.upper()
+
     content = Container(
         Qr(address, (qr_x, qr_y), qr_coef),
         Text('Confirm address', ui.ICON_DEFAULT, ui.MONO))
-    return await confirm(ctx, content, code=Address, cancel='Address', cancel_style=ui.BTN_KEY)
+    return await confirm(
+        ctx,
+        content,
+        code=ButtonRequestType.Address,
+        cancel='Address',
+        cancel_style=ui.BTN_KEY)
 
 
-def _split_address(address):
-    from trezor.utils import chunks
+def _split_address(address: str):
     return chunks(address, 17)

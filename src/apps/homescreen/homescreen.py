@@ -1,17 +1,17 @@
 from trezor import ui, res
-from trezor.utils import unimport
+from trezor.ui.swipe import Swipe, degrees
+from apps.common import storage
 
 
-async def swipe_to_rotate():
-    from trezor.ui.swipe import Swipe, degrees
-
-    swipe = await Swipe(absolute=True)
-    ui.display.orientation(degrees(swipe))
+async def homescreen():
+    while True:
+        await ui.backlight_slide(ui.BACKLIGHT_DIM)
+        display_homescreen()
+        await ui.backlight_slide(ui.BACKLIGHT_NORMAL)
+        await swipe_to_rotate()
 
 
 def display_homescreen():
-    from apps.common import storage
-
     if not storage.is_initialized():
         label = 'Go to trezor.io/start'
         image = None
@@ -32,10 +32,6 @@ def display_homescreen():
     ui.display.text_center(120, 220, label, ui.BOLD, ui.FG, ui.BG)
 
 
-@unimport
-async def layout_homescreen():
-    while True:
-        await ui.backlight_slide(ui.BACKLIGHT_DIM)
-        display_homescreen()
-        await ui.backlight_slide(ui.BACKLIGHT_NORMAL)
-        await swipe_to_rotate()
+async def swipe_to_rotate():
+    swipe = await Swipe(absolute=True)
+    ui.display.orientation(degrees(swipe))

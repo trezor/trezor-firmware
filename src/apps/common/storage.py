@@ -1,6 +1,8 @@
 from micropython import const
-
+from ubinascii import hexlify
 from trezor import config
+from trezor.crypto import random
+from apps.common import cache
 
 _STORAGE_VERSION = b'\x01'
 
@@ -95,12 +97,9 @@ def set_flags(flags: int) -> None:
 
 
 def wipe():
-    from . import cache
     config.wipe()
     cache.clear()
 
 
 def new_device_id() -> str:
-    from ubinascii import hexlify
-    from trezor.crypto import random
     return hexlify(random.bytes(12)).decode().upper()
