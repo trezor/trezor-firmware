@@ -10,6 +10,8 @@ from trezor.loop import select
 from trezor.utils import chunks
 from trezor.wire import codec_v2
 
+from ubinascii import unhexlify
+
 
 class MockHID:
 
