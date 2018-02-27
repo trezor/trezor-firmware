@@ -3,11 +3,10 @@ import sys
 sys.path.append('../src')
 
 from utest import *
-from ustruct import pack, unpack
-from ubinascii import hexlify, unhexlify
+from ustruct import pack
 
 from trezor import io
-from trezor.loop import select, Syscall
+from trezor.loop import select
 from trezor.utils import chunks
 from trezor.wire import codec_v2
 

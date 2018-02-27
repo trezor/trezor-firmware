@@ -1,9 +1,9 @@
-from trezor import res, ui, wire
+from trezor import ui, wire
 from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.FailureType import ActionCancelled, ProcessError
 from trezor.messages.PassphraseRequest import PassphraseRequest
-from trezor.ui.entry_select import DEVICE, HOST, EntrySelector
+from trezor.ui.entry_select import DEVICE, EntrySelector
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
 from apps.common import storage

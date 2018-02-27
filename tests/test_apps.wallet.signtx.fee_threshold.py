@@ -9,7 +9,7 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxAck import TxAck
 from trezor.messages.TransactionType import TransactionType
-from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXFINISHED
+from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages import OutputScriptType
 

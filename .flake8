@@ -4,8 +4,6 @@ ignore =
     E221,
     # E241: multiple spaces after comma
     E241,
-    # F401: module imported but unused
-    F401,
     # E402: module level import not at top of file
     E402,
     # E501: line too long

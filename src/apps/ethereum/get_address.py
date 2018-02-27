@@ -1,4 +1,4 @@
-from trezor import wire, ui
+from trezor import ui
 
 
 async def layout_ethereum_get_address(ctx, msg):

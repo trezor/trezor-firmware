@@ -1,2 +1,2 @@
-import trezorconfig as config
-import trezorio as io
+import trezorconfig as config  # noqa: F401
+import trezorio as io          # noqa: F401

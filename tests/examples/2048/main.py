@@ -9,7 +9,7 @@ from trezor import ui
 from trezor import loop
 from trezor import workflow
 from trezor.crypto import random
-from trezor.ui.swipe import Swipe, SWIPE_DOWN, SWIPE_UP, SWIPE_LEFT, SWIPE_RIGHT
+from trezor.ui.swipe import Swipe, SWIPE_DOWN, SWIPE_UP, SWIPE_LEFT
 
 color_bg = ui.rgb(0xbb, 0xad, 0xa0)
 color_empty = ui.rgb(0xcc, 0xc0, 0xb3)

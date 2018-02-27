@@ -1,7 +1,7 @@
 import sys
 import gc
 
-from trezorutils import halt, memcpy, set_mode_unprivileged, symbol
+from trezorutils import halt, memcpy, set_mode_unprivileged, symbol  # noqa: F401
 
 
 def unimport(genfunc):

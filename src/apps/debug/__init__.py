@@ -2,9 +2,7 @@ import micropython
 import gc
 from uctypes import bytes_at, bytearray_at
 
-from trezor import log
 from trezor import loop
-from trezor.utils import unimport
 from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import \
     DebugLinkDecision, DebugLinkGetState, DebugLinkStop, \

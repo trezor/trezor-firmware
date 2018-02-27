@@ -1,4 +1,4 @@
-from trezor import ui, wire
+from trezor import wire
 from trezor.messages.FailureType import ProcessError
 from trezor.messages.Success import Success
 from apps.common import storage

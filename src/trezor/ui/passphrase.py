@@ -1,8 +1,8 @@
 from micropython import const
 from trezor import io, loop, ui, res
 from trezor.ui import display
-from trezor.ui.button import BTN_CLICKED, ICON, Button
-from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
+from trezor.ui.button import BTN_CLICKED, Button
+from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
 
 SPACE = res.load(ui.ICON_SPACE)
 

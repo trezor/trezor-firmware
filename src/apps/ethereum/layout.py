@@ -1,5 +1,5 @@
 from apps.common.confirm import *
-from trezor import wire, ui
+from trezor import ui
 from trezor.utils import chunks, format_amount
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text

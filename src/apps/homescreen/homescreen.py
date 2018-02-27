@@ -1,4 +1,4 @@
-from trezor import ui, loop, res
+from trezor import ui, res
 from trezor.utils import unimport
 
 

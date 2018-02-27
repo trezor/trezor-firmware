@@ -1,4 +1,4 @@
-from trezor import wire, ui
+from trezor import ui
 
 
 async def layout_get_entropy(ctx, msg):
@@ -15,7 +15,6 @@ async def layout_get_entropy(ctx, msg):
 async def _show_entropy(ctx):
     from trezor.messages.ButtonRequestType import ProtectCall
     from trezor.ui.text import Text
-    from trezor.ui.container import Container
     from ..common.confirm import require_confirm
 
     await require_confirm(ctx, Text(

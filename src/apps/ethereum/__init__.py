@@ -1,7 +1,7 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
-from trezor.messages.wire_types import \
-    EthereumGetAddress, EthereumSignTx, EthereumSignMessage, EthereumVerifyMessage
+from trezor.messages.wire_types import EthereumGetAddress, EthereumSignTx
+# from trezor.messages.wire_types import EthereumSignMessage, EthereumVerifyMessage
 
 
 @unimport

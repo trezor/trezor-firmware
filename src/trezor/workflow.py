@@ -1,6 +1,4 @@
-from trezor import log
 from trezor import loop
-from trezor import ui
 
 started = []
 default = None

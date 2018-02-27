@@ -1,4 +1,4 @@
-import boot
+import boot  # noqa: F401
 
 from trezor import io
 from trezor import log

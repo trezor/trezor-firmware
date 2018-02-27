@@ -1,5 +1,4 @@
 from ubinascii import hexlify
-from micropython import const
 from trezor.crypto.hashlib import sha256
 from trezor.utils import chunks, split_words
 from apps.common.hash_writer import HashWriter
