@@ -98,6 +98,9 @@ enum ButtonRequestType {
 	ButtonRequest_FirmwareCheck = 9;
 	ButtonRequest_Address = 10;
 	ButtonRequest_PublicKey = 11;
+	ButtonRequest_MnemonicWordCount = 12;
+	ButtonRequest_MnemonicInput = 13;
+	ButtonRequest_PassphraseType = 14;
 }
 
 /**
