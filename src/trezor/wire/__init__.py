@@ -6,7 +6,6 @@ from trezor import messages
 from trezor import workflow
 
 from . import codec_v1
-from . import codec_v2
 
 workflow_handlers = {}
 
@@ -20,9 +19,11 @@ def register(mtype, handler, *args):
 
 def setup(iface):
     '''Initialize the wire stack on passed USB interface.'''
-    session_supervisor = codec_v2.SesssionSupervisor(iface, session_handler)
-    session_supervisor.open(codec_v1.SESSION_ID)
-    loop.schedule(session_supervisor.listen())
+    # session_supervisor = codec_v2.SesssionSupervisor(iface, session_handler)
+    # session_supervisor.open(codec_v1.SESSION_ID)
+    # loop.schedule(session_supervisor.listen())
+    handler = session_handler(iface, codec_v1.SESSION_ID)
+    loop.schedule(handler)
 
 
 class Context:
@@ -81,16 +82,10 @@ class Context:
         await writer.aclose()
 
     def getreader(self):
-        if self.sid == codec_v1.SESSION_ID:
-            return codec_v1.Reader(self.iface)
-        else:
-            return codec_v2.Reader(self.iface, self.sid)
+        return codec_v1.Reader(self.iface)
 
     def getwriter(self):
-        if self.sid == codec_v1.SESSION_ID:
-            return codec_v1.Writer(self.iface)
-        else:
-            return codec_v2.Writer(self.iface, self.sid)
+        return codec_v1.Writer(self.iface)
 
 
 class UnexpectedMessageError(Exception):
