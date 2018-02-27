@@ -1,4 +1,4 @@
-from trezor import ui
+from apps.wallet.get_address import _show_address, _show_qr
 
 
 async def ethereum_get_address(ctx, msg):
@@ -16,29 +16,14 @@ async def ethereum_get_address(ctx, msg):
     address = sha3_256(public_key[1:]).digest(True)[12:]  # Keccak
 
     if msg.show_display:
-        await _show_address(ctx, address)
+        hex_addr = _ethereum_address_hex(address)
+        while True:
+            if await _show_address(ctx, hex_addr):
+                break
+            if await _show_qr(ctx, hex_addr):
+                break
 
     return EthereumAddress(address=address)
-
-
-async def _show_address(ctx, address):
-    from trezor.messages.ButtonRequestType import Address
-    from trezor.ui.text import Text
-    from trezor.ui.qr import Qr
-    from trezor.ui.container import Container
-    from ..common.confirm import require_confirm
-
-    address = _ethereum_address_hex(address)
-    lines = _split_address(address)
-    content = Container(
-        Qr(address, (120, 135), 3),
-        Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines))
-    await require_confirm(ctx, content, code=Address)
-
-
-def _split_address(address):
-    from trezor.utils import chunks
-    return chunks(address, 21)
 
 
 def _ethereum_address_hex(address):

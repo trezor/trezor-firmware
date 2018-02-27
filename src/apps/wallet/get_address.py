@@ -22,7 +22,7 @@ async def get_address(ctx, msg):
         while True:
             if await _show_address(ctx, address):
                 break
-            if await _show_qr(ctx, address, msg.script_type):
+            if await _show_qr(ctx, address.upper() if msg.script_type == InputScriptType.SPENDWITNESS else address):
                 break
 
     return Address(address=address)
@@ -39,13 +39,10 @@ async def _show_address(ctx, address: str):
         cancel_style=ui.BTN_KEY)
 
 
-async def _show_qr(ctx, address: str, script_type: int):
+async def _show_qr(ctx, address: str):
     qr_x = const(120)
     qr_y = const(115)
     qr_coef = const(4)
-
-    if script_type == InputScriptType.SPENDWITNESS:
-        address = address.upper()
 
     content = Container(
         Qr(address, (qr_x, qr_y), qr_coef),
