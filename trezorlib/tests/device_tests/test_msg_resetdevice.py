@@ -22,6 +22,7 @@ from trezorlib import messages as proto
 from mnemonic import Mnemonic
 
 
+@pytest.mark.skip_t2
 class TestMsgResetDevice(TrezorTest):
 
     def test_reset_device(self):

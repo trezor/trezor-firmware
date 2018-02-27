@@ -22,7 +22,6 @@ from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
 
 
-@pytest.mark.skip_t2
 class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_change(self):

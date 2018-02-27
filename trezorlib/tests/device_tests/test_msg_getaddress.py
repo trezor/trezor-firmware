@@ -49,7 +49,6 @@ class TestMsgGetaddress(TrezorTest):
         assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/1")) == '1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3'
         assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/1/0")) == '1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE'
 
-    @pytest.mark.skip_t2
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []

@@ -19,6 +19,7 @@
 from .common import *
 
 
+@pytest.mark.skip_t2
 class TestDeviceLoad(TrezorTest):
     def test_load_device_1(self):
         self.setup_mnemonic_nopin_nopassphrase()

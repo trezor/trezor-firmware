@@ -21,7 +21,6 @@ import trezorlib.ckd_public as bip32
 from trezorlib import messages as proto
 
 
-@pytest.mark.skip_t2
 class TestMsgGetaddressShow(TrezorTest):
 
     def test_show(self):
