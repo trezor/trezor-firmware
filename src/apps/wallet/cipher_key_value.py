@@ -8,8 +8,6 @@ from trezor.ui.text import Text
 from apps.common import seed
 from apps.common.confirm import require_confirm
 
-from ubinascii import hexlify
-
 
 async def cipher_key_value(ctx, msg):
     if len(msg.value) % 16 > 0:

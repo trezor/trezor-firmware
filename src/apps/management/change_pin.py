@@ -2,12 +2,15 @@ from trezor import config, loop, ui
 from trezor.pin import pin_to_int, show_pin_timeout
 
 
-async def request_pin(ctx, *args, **kwargs):
+async def request_pin(ctx, code=None, *args, **kwargs):
     from trezor.messages.ButtonRequest import ButtonRequest
+    from trezor.messages.ButtonRequestType import Other
     from trezor.messages.wire_types import ButtonAck
     from apps.common.request_pin import request_pin
 
-    await ctx.call(ButtonRequest(), ButtonAck)
+    if code is None:
+        code = Other
+    await ctx.call(ButtonRequest(code=code), ButtonAck)
 
     return await request_pin(*args, **kwargs)
 
@@ -21,8 +24,7 @@ async def pin_mismatch():
         'Entered PINs do not',
         'match each other.',
         '',
-        'Please, try again...',
-    )
+        'Please, try again...')
     text.render()
     await loop.sleep(3 * 1000 * 1000)
 
