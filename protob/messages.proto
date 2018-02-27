@@ -275,7 +275,7 @@ message PassphraseRequest {
  * @prev PassphraseRequest
  */
 message PassphraseAck {
-	required string passphrase = 1;
+	optional string passphrase = 1;
 	optional bytes state = 2;		// assumed device state, throw error if set and different
 }
 
