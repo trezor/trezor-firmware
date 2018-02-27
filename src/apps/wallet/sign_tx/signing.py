@@ -16,6 +16,8 @@ from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.tx_weight_calculator import *
 from apps.wallet.sign_tx.writers import *
+from apps.wallet.sign_tx import progress
+
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
@@ -68,6 +70,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     tx_req.details = TxRequestDetailsType()
 
     for i in range(tx.inputs_count):
+        progress.advance()
         # STAGE_REQUEST_1_INPUT
         txi = await request_tx_input(tx_req, i)
         wallet_path = input_extract_wallet_path(txi, wallet_path)
@@ -110,6 +113,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
                                'Wrong input script type')
 
     for o in range(tx.outputs_count):
+        progress.advance()
         # STAGE_REQUEST_3_OUTPUT
         txo = await request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
@@ -148,6 +152,8 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
 async def sign_tx(tx: SignTx, root: bip32.HDNode):
     tx = sanitize_sign_tx(tx)
 
+    progress.init(tx.inputs_count, tx.outputs_count)
+
     # Phase 1
 
     h_first, bip143, segwit, authorized_in, wallet_path = await check_tx_fee(tx, root)
@@ -165,6 +171,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
     tx_req.serialized = None
 
     for i_sign in range(tx.inputs_count):
+        progress.advance()
         txi_sign = None
         key_sign = None
         key_sign_pub = None
@@ -304,6 +311,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             tx_req.serialized = tx_ser
 
     for o in range(tx.outputs_count):
+        progress.advance()
         # STAGE_REQUEST_5_OUTPUT
         txo = await request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
@@ -325,6 +333,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
     any_segwit = True in segwit.values()
 
     for i in range(tx.inputs_count):
+        progress.advance()
         if segwit[i]:
             # STAGE_REQUEST_SEGWIT_WITNESS
             txi = await request_tx_input(tx_req, i)
