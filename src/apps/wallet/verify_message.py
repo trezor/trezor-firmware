@@ -1,12 +1,10 @@
 from trezor import ui, wire
-from trezor.crypto import base58
 from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import ripemd160, sha256
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.FailureType import ProcessError
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
-from apps.common import address_type, coins
+from apps.common import coins
 from apps.common.confirm import require_confirm
 from apps.common.signverify import message_digest, split_message
 from apps.wallet.sign_tx.addresses import address_pkh, address_p2wpkh_in_p2sh, address_p2wpkh
