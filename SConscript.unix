@@ -212,13 +212,13 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
-    'vendor/micropython/ports/unix/main.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
     'embed/unix/flash.c',
+    'embed/unix/main.c',
     'embed/unix/rng.c',
     'embed/unix/sdcard.c',
     'embed/unix/sbu.c',
