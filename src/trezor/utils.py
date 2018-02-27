@@ -31,13 +31,21 @@ def chunks(items, size):
 def split_words(sentence, width, metric=len):
     line = []
     for w in sentence.split(' '):
+        # empty word  -> skip
         if not w:
             continue
+        # new word will not fit -> break the line
         if metric(' '.join(line + [w])) >= width:
             yield ' '.join(line)
-            line = [w]
-        else:
-            line.append(w)
+            line = []
+        # word is too wide -> split the word
+        while metric(w) >= width:
+            for i in range(1, len(w) + 1):
+                if metric(w[:-i]) < width:
+                    yield w[:-i] + '-'
+                    w = w[-i:]
+                    break
+        line.append(w)
     yield ' '.join(line)
 
 
