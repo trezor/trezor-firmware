@@ -4,7 +4,8 @@ from trezor.crypto.aes import AES_CBC_Decrypt, AES_CBC_Encrypt
 from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.messages.FailureType import DataError
-from trezor.ui.text import Text
+from trezor.ui.text import Text, TEXT_MARGIN_LEFT
+from trezor.utils import split_words
 from apps.common import seed
 from apps.common.confirm import require_confirm
 
@@ -21,7 +22,8 @@ async def cipher_key_value(ctx, msg):
             title = 'Encrypt value'
         else:
             title = 'Decrypt value'
-        await require_confirm(ctx, Text(title, ui.ICON_DEFAULT, msg.key))
+        lines = split_words(msg.key, ui.WIDTH - 2 * TEXT_MARGIN_LEFT, metric=lambda x: ui.display.text_width(x, ui.NORMAL))
+        await require_confirm(ctx, Text(title, ui.ICON_DEFAULT, *lines))
 
     node = await seed.derive_node(ctx, msg.address_n)
     value = compute_cipher_key_value(msg, node.private_key())

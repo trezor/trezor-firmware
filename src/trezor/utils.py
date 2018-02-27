@@ -29,19 +29,16 @@ def chunks(items, size):
 
 
 def split_words(sentence, width, metric=len):
-    line = ''
-    for c in sentence:
-        line += c
-        if metric(line) >= width:
-            c = line[-1]
-            if c == ' ':
-                yield line
-                line = ''
-            else:
-                yield line[:-1] + '-'
-                line = c
-    if line != '':
-        yield line
+    line = []
+    for w in sentence.split(' '):
+        if not w:
+            continue
+        if metric(' '.join(line + [w])) >= width:
+            yield ' '.join(line)
+            line = [w]
+        else:
+            line.append(w)
+    yield ' '.join(line)
 
 
 def format_amount(amount, decimals):

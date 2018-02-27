@@ -1,5 +1,7 @@
 from ubinascii import hexlify
 from trezor.crypto.hashlib import sha256
+from trezor import ui
+from trezor.ui.text import TEXT_MARGIN_LEFT
 from trezor.utils import chunks, split_words
 from apps.common.hash_writer import HashWriter
 from apps.wallet.sign_tx.signing import write_varint
@@ -17,7 +19,7 @@ def message_digest(coin, message):
 def split_message(message):
     try:
         m = bytes(message).decode()
-        lines = split_words(m, 18)
+        lines = split_words(m, ui.WIDTH - 2 * TEXT_MARGIN_LEFT, metric=lambda x: ui.display.text_width(x, ui.NORMAL))
     except UnicodeError:
         m = hexlify(message)
         lines = chunks(m, 16)
