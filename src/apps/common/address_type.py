@@ -9,6 +9,17 @@ def length(address_type):
     return 4
 
 
+def addrtype_bytes(address_type: int):
+    if address_type <= 0xFF:
+        return bytes([address_type])
+    if address_type <= 0xFFFF:
+        return bytes([(address_type >> 8), (address_type & 0xFF)])
+    if address_type <= 0xFFFFFF:
+        return bytes([(address_type >> 16), (address_type >> 8), (address_type & 0xFF)])
+    # else
+    return bytes([(address_type >> 24), (address_type >> 16), (address_type >> 8), (address_type & 0xFF)])
+
+
 def check(address_type, raw_address):
     if address_type <= 0xFF:
         return address_type == raw_address[0]

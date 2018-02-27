@@ -8,6 +8,7 @@ from trezor.messages.CoinType import CoinType
 from trezor.messages import FailureType
 from trezor.messages import InputScriptType
 
+from apps.common.address_type import addrtype_bytes
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.multisig import *
 
@@ -97,10 +98,13 @@ def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
     return address_p2wsh(witness_script_hash, hrp)
 
 
+def address_pkh(pubkey: bytes, addrtype: int) -> str:
+    s = addrtype_bytes(addrtype) + sha256_ripemd160_digest(pubkey)
+    return base58.encode_check(bytes(s))
+
+
 def address_p2sh(redeem_script_hash: bytes, addrtype: int) -> str:
-    s = bytearray(21)
-    s[0] = addrtype
-    s[1:21] = redeem_script_hash
+    s = addrtype_bytes(addrtype) + redeem_script_hash
     return base58.encode_check(bytes(s))
 
 
