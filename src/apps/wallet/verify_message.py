@@ -37,5 +37,5 @@ async def verify_message(ctx, msg):
 
 async def confirm_verify_message(ctx, message):
     message = split_message(message)
-    content = Text('Verify message', ui.ICON_CONFIRM, ui.MONO, *message)
+    content = Text('Verify message', ui.ICON_DEFAULT, max_lines=5, *message)
     await require_confirm(ctx, content)

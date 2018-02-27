@@ -23,7 +23,7 @@ async def cipher_key_value(ctx, msg):
         else:
             title = 'Decrypt value'
         lines = split_words(msg.key, ui.WIDTH - 2 * TEXT_MARGIN_LEFT, metric=lambda x: ui.display.text_width(x, ui.NORMAL))
-        await require_confirm(ctx, Text(title, ui.ICON_DEFAULT, *lines))
+        await require_confirm(ctx, Text(title, ui.ICON_DEFAULT, max_lines=5, *lines))
 
     node = await seed.derive_node(ctx, msg.address_n)
     value = compute_cipher_key_value(msg, node.private_key())
