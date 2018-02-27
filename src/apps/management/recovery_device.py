@@ -1,7 +1,7 @@
 from trezor import config, ui, wire
 from trezor.crypto import bip39
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages.ButtonRequestType import Other
+from trezor.messages.ButtonRequestType import MnemonicWordCount, MnemonicInput
 from trezor.messages.FailureType import ProcessError, UnexpectedMessage
 from trezor.messages.Success import Success
 from trezor.messages.wire_types import ButtonAck
@@ -56,7 +56,7 @@ async def recovery_device(ctx, msg):
 
 @ui.layout
 async def request_wordcount(ctx):
-    await ctx.call(ButtonRequest(code=Other), ButtonAck)
+    await ctx.call(ButtonRequest(code=MnemonicWordCount), ButtonAck)
 
     content = Text('Device recovery', ui.ICON_RECOVERY, 'Number of words?')
     select = WordSelector(content)
@@ -67,7 +67,7 @@ async def request_wordcount(ctx):
 
 @ui.layout
 async def request_mnemonic(ctx, count: int) -> str:
-    await ctx.call(ButtonRequest(code=Other), ButtonAck)
+    await ctx.call(ButtonRequest(code=MnemonicInput), ButtonAck)
 
     words = []
     board = MnemonicKeyboard()

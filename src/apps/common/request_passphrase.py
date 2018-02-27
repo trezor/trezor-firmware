@@ -18,7 +18,7 @@ async def request_passphrase_entry(ctx):
     text.render()
 
     ack = await ctx.call(
-        ButtonRequest(code=ButtonRequestType.Other),
+        ButtonRequest(code=ButtonRequestType.PassphraseType),
         wire_types.ButtonAck,
         wire_types.Cancel)
     if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
