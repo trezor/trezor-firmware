@@ -22,17 +22,6 @@ import binascii
 import struct
 import sys
 
-if sys.version_info < (3,):
-    def byteindex(data, index):
-        return ord(data[index])
-
-    def iterbytes(data):
-        return (ord(char) for char in data)
-else:
-    def byteindex(data, index):
-        return data[index]
-    iterbytes = iter
-
 
 def Hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
@@ -52,8 +41,8 @@ def hash_160_to_bc_address(h160, address_type):
 
 
 def compress_pubkey(public_key):
-    if byteindex(public_key, 0) == 4:
-        return bytes((byteindex(public_key, 64) & 1) + 2) + public_key[1:33]
+    if public_key[0] == 4:
+        return bytes((public_key[64] & 1) + 2) + public_key[1:33]
     raise ValueError("Pubkey is already compressed")
 
 

@@ -38,15 +38,9 @@ from .coins import coins_slip44
 from .debuglink import DebugLink
 from .protobuf import MessageType
 
-# Python2 vs Python3
-try:
-    input = raw_input
-except NameError:
-    pass
-
 
 if sys.version_info.major < 3:
-    warnings.warn("Trezorlib will stop supporting Python2 in next versions.", DeprecationWarning)
+    raise Exception("Trezorlib does not support Python 2 anymore.")
 
 # try:
 #     from PIL import Image
@@ -194,17 +188,11 @@ def session(f):
 
 
 def normalize_nfc(txt):
-    if sys.version_info[0] < 3:
-        if isinstance(txt, unicode):
-            return unicodedata.normalize('NFC', txt)
-        if isinstance(txt, str):
-            return unicodedata.normalize('NFC', txt.decode('utf-8'))
-    else:
-        if isinstance(txt, bytes):
-            return unicodedata.normalize('NFC', txt.decode('utf-8'))
-        if isinstance(txt, str):
-            return unicodedata.normalize('NFC', txt)
-    raise ValueError('unicode/str or bytes/str expected')
+    if isinstance(txt, bytes):
+        return unicodedata.normalize('NFC', txt.decode('utf-8'))
+    if isinstance(txt, str):
+        return unicodedata.normalize('NFC', txt)
+    raise ValueError('expected str or bytes argument')
 
 
 class BaseClient(object):
