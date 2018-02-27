@@ -414,15 +414,15 @@ STATIC mp_obj_t mod_trezorui_Display_offset(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_offset_obj, 1, 2, mod_trezorui_Display_offset);
 
-/// def save(self, filename: str) -> None:
+/// def save(self, prefix: str) -> None:
 ///     '''
-///     Saves current display contents to file filename.
+///     Saves current display contents to PNG file with given prefix.
 ///     '''
-STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t filename) {
-    mp_buffer_info_t fn;
-    mp_get_buffer_raise(filename, &fn, MP_BUFFER_READ);
-    if (fn.len > 0) {
-        display_save(fn.buf);
+STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
+    mp_buffer_info_t pfx;
+    mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
+    if (pfx.len > 0) {
+        display_save(pfx.buf);
     }
     return mp_const_none;
 }

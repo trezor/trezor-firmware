@@ -153,12 +153,16 @@ static void display_set_backlight(int val)
     display_refresh();
 }
 
-void display_save(const char *filename)
+void display_save(const char *prefix)
 {
 #ifndef TREZOR_NOUI
     if (!RENDERER) {
         display_init();
     }
-    IMG_SavePNG(BUFFER, filename);
+    static uint32_t cnt = 0;
+    char fname[256];
+    snprintf(fname, sizeof(fname), "%s%08d.png", prefix, cnt);
+    IMG_SavePNG(BUFFER, fname);
+    cnt++;
 #endif
 }
