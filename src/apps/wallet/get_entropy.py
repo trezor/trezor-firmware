@@ -1,7 +1,7 @@
 from trezor import ui
 
 
-async def layout_get_entropy(ctx, msg):
+async def get_entropy(ctx, msg):
     from trezor.messages.Entropy import Entropy
     from trezor.crypto import random
 

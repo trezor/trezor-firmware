@@ -1,5 +1,5 @@
 
-async def layout_get_public_key(ctx, msg):
+async def get_public_key(ctx, msg):
     from trezor.messages.HDNodeType import HDNodeType
     from trezor.messages.PublicKey import PublicKey
     from ..common import coins

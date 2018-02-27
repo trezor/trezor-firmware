@@ -11,20 +11,20 @@ from trezor.messages.wire_types import \
 
 @unimport
 def dispatch_GetPublicKey(*args, **kwargs):
-    from .get_public_key import layout_get_public_key
-    return layout_get_public_key(*args, **kwargs)
+    from .get_public_key import get_public_key
+    return get_public_key(*args, **kwargs)
 
 
 @unimport
 def dispatch_GetAddress(*args, **kwargs):
-    from .get_address import layout_get_address
-    return layout_get_address(*args, **kwargs)
+    from .get_address import get_address
+    return get_address(*args, **kwargs)
 
 
 @unimport
 def dispatch_GetEntropy(*args, **kwargs):
-    from .get_entropy import layout_get_entropy
-    return layout_get_entropy(*args, **kwargs)
+    from .get_entropy import get_entropy
+    return get_entropy(*args, **kwargs)
 
 
 @unimport
@@ -47,8 +47,8 @@ def dispatch_VerifyMessage(*args, **kwargs):
 
 @unimport
 def dispatch_SignIdentity(*args, **kwargs):
-    from .sign_identity import layout_sign_identity
-    return layout_sign_identity(*args, **kwargs)
+    from .sign_identity import sign_identity
+    return sign_identity(*args, **kwargs)
 
 
 @unimport

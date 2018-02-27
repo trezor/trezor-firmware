@@ -2,7 +2,7 @@ from trezor import wire, ui, config
 from trezor.pin import pin_to_int
 
 
-async def layout_load_device(ctx, msg):
+async def load_device(ctx, msg):
     from trezor.crypto import bip39
     from trezor.messages.Success import Success
     from trezor.messages.FailureType import UnexpectedMessage, ProcessError

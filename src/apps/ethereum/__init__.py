@@ -6,8 +6,8 @@ from trezor.messages.wire_types import EthereumGetAddress, EthereumSignTx
 
 @unimport
 def dispatch_EthereumGetAddress(*args, **kwargs):
-    from .get_address import layout_ethereum_get_address
-    return layout_ethereum_get_address(*args, **kwargs)
+    from .get_address import ethereum_get_address
+    return ethereum_get_address(*args, **kwargs)
 
 
 @unimport

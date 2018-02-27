@@ -6,7 +6,7 @@ from apps.common import storage
 from apps.common.confirm import hold_to_confirm
 
 
-async def layout_wipe_device(ctx, msg):
+async def wipe_device(ctx, msg):
 
     await hold_to_confirm(ctx, Text(
         'Wipe device',

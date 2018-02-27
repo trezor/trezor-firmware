@@ -79,7 +79,7 @@ def sign_challenge(seckey: bytes,
     return signature
 
 
-async def layout_sign_identity(ctx, msg):
+async def sign_identity(ctx, msg):
     from trezor.messages.SignedIdentity import SignedIdentity
     from ..common import coins
     from ..common import seed

@@ -1,7 +1,7 @@
 from trezor import ui, wire
 
 
-async def layout_apply_settings(ctx, msg):
+async def apply_settings(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.messages import ButtonRequestType, FailureType
     from trezor.ui.text import Text

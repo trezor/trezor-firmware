@@ -67,7 +67,7 @@ def confirm_change_pin(ctx, msg):
             'set new PIN?'))
 
 
-async def layout_change_pin(ctx, msg):
+async def change_pin(ctx, msg):
     from trezor.messages.Success import Success
     from trezor.messages.Failure import Failure
     from trezor.messages import FailureType, PinMatrixRequestType

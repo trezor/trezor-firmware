@@ -1,7 +1,7 @@
 from trezor import ui
 
 
-async def layout_ethereum_get_address(ctx, msg):
+async def ethereum_get_address(ctx, msg):
     from trezor.messages.EthereumAddress import EthereumAddress
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256

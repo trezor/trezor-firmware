@@ -2,7 +2,7 @@ from micropython import const
 from trezor import ui
 
 
-async def layout_get_address(ctx, msg):
+async def get_address(ctx, msg):
     from trezor.messages.Address import Address
     from trezor.messages.InputScriptType import SPENDWITNESS
     from ..common import coins
