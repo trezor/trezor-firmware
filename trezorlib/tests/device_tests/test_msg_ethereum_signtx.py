@@ -22,6 +22,40 @@ from trezorlib import messages as proto
 
 class TestMsgEthereumSigntx(TrezorTest):
 
+    def test_ethereum_signtx_erc20_token(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            self.client.set_expected_responses([
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.EthereumTxRequest(data_length=None),
+            ])
+
+            data = bytearray()
+            # method id signalizing `transfer(address _to, uint256 _value)` function
+            data.extend(unhexlify('a9059cbb'))
+            # 1st function argument (to - the receiver)
+            data.extend(unhexlify('000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b'))
+            # 2nd function argument (value - amount to be transferred)
+            data.extend(unhexlify('0000000000000000000000000000000000000000000000000000000000000123'))
+
+            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+                n=[0, 0],
+                nonce=0,
+                gas_price=20,
+                gas_limit=20,
+                # ALTS token address
+                to=b'\x63\x8a\xc1\x49\xea\x8e\xf9\xa1\x28\x6c\x41\xb9\x77\x01\x7a\xa7\x35\x9e\x6c\xfa',
+                chain_id=1,
+                # value needs to be 0, token value is set in the contract (data)
+                value=0,
+                data=data)
+
+            # taken from T1 might not be 100% correct but still better than nothing
+            assert hexlify(sig_r) == b'28bf1b621be9a85d2905fa36511dfbd52ec4b67ba4ad6cb2bd08753c72b93b77'
+            assert hexlify(sig_s) == b'2fa605244f80a56cb438df55eb9835489288ec2c0ac0280ada2ccaccfe2b7e38'
+
     def test_ethereum_signtx_nodata(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
