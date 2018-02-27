@@ -16,21 +16,22 @@ async def respond_Features(ctx, msg):
 
     f = Features()
     f.vendor = 'trezor.io'
-    f.revision = symbol('GITREV')
     f.major_version = symbol('VERSION_MAJOR')
     f.minor_version = symbol('VERSION_MINOR')
     f.patch_version = symbol('VERSION_PATCH')
-    f.model = 'T'
-    f.coins = coins.COINS
-
     f.device_id = storage.get_device_id()
-    f.label = storage.get_label()
-    f.initialized = storage.is_initialized()
-    f.passphrase_protection = storage.has_passphrase()
     f.pin_protection = config.has_pin()
-    f.flags = storage.get_flags()
+    f.passphrase_protection = storage.has_passphrase()
     f.language = 'english'
-
+    f.label = storage.get_label()
+    f.coins = coins.COINS
+    f.initialized = storage.is_initialized()
+    f.revision = symbol('GITREV')
+    f.pin_cached = config.has_pin()
+    f.passphrase_cached = cache.has_passphrase()
+    f.needs_backup = storage.needs_backup()
+    f.flags = storage.get_flags()
+    f.model = 'T'
     f.state = cache.get_state()
 
     return f

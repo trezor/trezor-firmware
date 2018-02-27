@@ -38,6 +38,11 @@ def set_seed(seed, passphrase):
     _seed, _passphrase = seed, _passphrase
 
 
+def has_passphrase():
+    global _passphrase
+    return _passphrase is not None
+
+
 def clear():
     global _seed, _passphrase
     global _state_salt
