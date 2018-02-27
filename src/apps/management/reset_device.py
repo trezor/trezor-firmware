@@ -111,7 +111,7 @@ async def show_warning(ctx):
 
 async def show_wrong_entry(ctx):
     content = Text(
-        'Wrong entry!', ui.ICON_CLEAR,
+        'Wrong entry!', ui.ICON_WRONG,
         'You have entered',
         'wrong seed word.',
         'Please check again.', icon_color=ui.RED)

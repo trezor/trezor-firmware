@@ -7,7 +7,7 @@ from trezor.ui.loader import Loader
 CONFIRMED = const(1)
 CANCELLED = const(2)
 DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
-DEFAULT_CANCEL = res.load(ui.ICON_CLEAR)
+DEFAULT_CANCEL = res.load(ui.ICON_CANCEL)
 
 
 class ConfirmDialog(Widget):

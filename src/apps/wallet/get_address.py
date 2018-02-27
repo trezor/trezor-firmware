@@ -30,7 +30,7 @@ async def get_address(ctx, msg):
 
 async def _show_address(ctx, address: str):
     lines = _split_address(address)
-    content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
+    content = Text('Confirm address', ui.ICON_RECEIVE, ui.MONO, *lines, icon_color=ui.GREEN)
     return await confirm(
         ctx,
         content,
@@ -49,7 +49,7 @@ async def _show_qr(ctx, address: str, script_type: int):
 
     content = Container(
         Qr(address, (qr_x, qr_y), qr_coef),
-        Text('Confirm address', ui.ICON_DEFAULT, ui.MONO))
+        Text('Confirm address', ui.ICON_RECEIVE, ui.MONO, icon_color=ui.GREEN))
     return await confirm(
         ctx,
         content,

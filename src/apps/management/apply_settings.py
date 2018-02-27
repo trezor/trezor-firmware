@@ -12,20 +12,20 @@ async def apply_settings(ctx, msg):
 
     if msg.homescreen is not None:
         await require_confirm(ctx, Text(
-            'Change homescreen', ui.ICON_DEFAULT,
+            'Change homescreen', ui.ICON_CONFIG,
             'Do you really want to', 'change homescreen?'),
             code=ButtonRequestType.ProtectCall)
 
     if msg.label is not None:
         await require_confirm(ctx, Text(
-            'Change label', ui.ICON_DEFAULT,
+            'Change label', ui.ICON_CONFIG,
             'Do you really want to', 'change label to',
             ui.BOLD, '%s?' % msg.label),  # TODO: split label (bold) and '?' (normal) once we support mixed styles on one line
             code=ButtonRequestType.ProtectCall)
 
     if msg.language is not None:
         await require_confirm(ctx, Text(
-            'Change language', ui.ICON_DEFAULT,
+            'Change language', ui.ICON_CONFIG,
             'Do you really want to', 'change language to',
             ui.BOLD, '%s?' % msg.language),  # TODO: split lang (bold) and '?' (normal) once we support mixed styles on one line
             code=ButtonRequestType.ProtectCall)
@@ -33,7 +33,7 @@ async def apply_settings(ctx, msg):
     if msg.use_passphrase is not None:
         await require_confirm(ctx, Text(
             'Enable passphrase' if msg.use_passphrase else 'Disable passphrase',
-            ui.ICON_DEFAULT,
+            ui.ICON_CONFIG,
             'Do you really want to',
             'enable passphrase' if msg.use_passphrase else 'disable passphrase',
             'encryption?'),
