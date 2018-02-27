@@ -189,3 +189,5 @@ class PassphraseKeyboard(ui.Widget):
         else:
             self.page = (self.page - 1) % len(KEYBOARD_KEYS)
         self.keys = key_buttons(KEYBOARD_KEYS[self.page])
+        self.back.taint()
+        self.done.taint()

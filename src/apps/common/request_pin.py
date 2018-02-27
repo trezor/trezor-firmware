@@ -9,7 +9,7 @@ class PinCancelled(Exception):
 
 
 @ui.layout
-async def request_pin(code: int = None, cancellable: bool = True) -> str:
+async def request_pin(code = None, cancellable: bool = True) -> str:
 
     def onchange():
         c = dialog.cancel
@@ -18,15 +18,20 @@ async def request_pin(code: int = None, cancellable: bool = True) -> str:
             if c.content is not back:
                 c.normal_style = ui.BTN_CLEAR['normal']
                 c.content = back
+                c.enable()
                 c.taint()
-                c.render()
         else:
             lock = res.load(ui.ICON_LOCK)
-            if c.content is not lock and cancellable:
+            if not cancellable and c.content:
+                c.content = ''
+                c.disable()
+                c.taint()
+            elif c.content is not lock:
                 c.normal_style = ui.BTN_CANCEL['normal']
                 c.content = lock
+                c.enable()
                 c.taint()
-                c.render()
+        c.render()
 
     label = _get_label(code)
     matrix = PinMatrix(label, with_zero=True)
@@ -35,9 +40,6 @@ async def request_pin(code: int = None, cancellable: bool = True) -> str:
     dialog.cancel.area = ui.grid(12)
     dialog.confirm.area = ui.grid(14)
     matrix.onchange()
-    if not cancellable:
-        dialog.cancel.content = ''
-        dialog.cancel.disable()
 
     while True:
         result = await dialog
@@ -50,7 +52,9 @@ async def request_pin(code: int = None, cancellable: bool = True) -> str:
             raise PinCancelled()
 
 
-def _get_label(code: int):
+def _get_label(code):
+    if isinstance(code, str):
+        return code
     if code is None:
         code = PinMatrixRequestType.Current
     if code == PinMatrixRequestType.NewFirst:

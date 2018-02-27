@@ -7,7 +7,7 @@ from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.confirm import HoldToConfirmDialog
-from trezor.ui.keyboard import MnemonicKeyboard
+from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_ordinal

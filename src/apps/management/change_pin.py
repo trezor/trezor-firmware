@@ -1,4 +1,4 @@
-from trezor import config, loop, ui
+from trezor import config, loop, ui, wire
 from trezor.messages import FailureType, PinMatrixRequestType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.ButtonRequestType import Other
@@ -8,7 +8,7 @@ from trezor.messages import wire_types
 from trezor.pin import pin_to_int, show_pin_timeout
 from trezor.ui.text import Text
 from apps.common.confirm import require_confirm
-from apps.common.request_pin import request_pin
+from apps.common.request_pin import request_pin, PinCancelled
 
 
 async def change_pin(ctx, msg):
@@ -62,11 +62,13 @@ def confirm_change_pin(ctx, msg):
             'set new PIN?'))
 
 
-async def request_pin_ack(ctx, code=None, *args, **kwargs):
-    if code is None:
-        code = Other
-    await ctx.call(ButtonRequest(code=code), wire_types.ButtonAck)
-    return await request_pin(*args, **kwargs)
+async def request_pin_ack(ctx, *args, **kwargs):
+    # TODO: send PinMatrixRequest here, with specific code?
+    await ctx.call(ButtonRequest(code=Other), wire_types.ButtonAck)
+    try:
+        return await request_pin(*args, **kwargs)
+    except PinCancelled:
+        raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
 
 
 async def request_pin_confirm(ctx, *args, **kwargs):

@@ -4,6 +4,7 @@ from apps.common.request_pin import request_pin
 
 
 async def bootscreen():
+    label = None
     while True:
         try:
             if not config.has_pin():
@@ -11,9 +12,11 @@ async def bootscreen():
                 return
             await lockscreen()
             while True:
-                pin = await request_pin()
+                pin = await request_pin(label)
                 if config.unlock(pin_to_int(pin), show_pin_timeout):
                     return
+                else:
+                    label = 'Wrong PIN, enter again'
         except:  # noqa: E722
             pass
 
