@@ -1,5 +1,8 @@
 from trezor import ui
+from trezor.wire import FailureError
 from trezor.crypto.curve import secp256k1
+from trezor.messages.InputScriptType import SPENDADDRESS
+from trezor.messages.FailureType import ProcessError
 from trezor.messages.MessageSignature import MessageSignature
 from trezor.ui.text import Text
 from apps.common import coins, seed
@@ -11,7 +14,11 @@ async def sign_message(ctx, msg):
     message = msg.message
     address_n = msg.address_n
     coin_name = msg.coin_name or 'Bitcoin'
+    script_type = msg.script_type or 0
     coin = coins.by_name(coin_name)
+
+    if script_type != SPENDADDRESS:
+        raise FailureError(ProcessError, 'Unsupported script type')
 
     await confirm_sign_message(ctx, message)
 

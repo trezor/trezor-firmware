@@ -18,14 +18,30 @@ def unimport(genfunc):
     return inner
 
 
+def ensure(cond):
+    if not cond:
+        raise AssertionError()
+
+
 def chunks(items, size):
     for i in range(0, len(items), size):
         yield items[i:i + size]
 
 
-def ensure(cond):
-    if not cond:
-        raise AssertionError()
+def split_words(sentence, width, metric=len):
+    line = ''
+    for c in sentence:
+        line += c
+        if metric(line) >= width:
+            c = line[-1]
+            if c == ' ':
+                yield line
+                line = ''
+            else:
+                yield line[:-1] + '-'
+                line = c
+    if line != '':
+        yield line
 
 
 def format_amount(amount, decimals):
