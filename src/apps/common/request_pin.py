@@ -9,7 +9,7 @@ class PinCancelled(Exception):
 
 
 @ui.layout
-async def request_pin(code = None, cancellable: bool = True) -> str:
+async def request_pin(code=None, cancellable: bool=True) -> str:
 
     def onchange():
         c = dialog.cancel
