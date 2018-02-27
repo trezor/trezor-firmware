@@ -10,4 +10,5 @@ InvalidSignature = 8
 ProcessError = 9
 NotEnoughFunds = 10
 NotInitialized = 11
+PinMismatch = 12
 FirmwareError = 99

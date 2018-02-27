@@ -10,3 +10,6 @@ SignTx = 8
 FirmwareCheck = 9
 Address = 10
 PublicKey = 11
+MnemonicWordCount = 12
+MnemonicInput = 13
+PassphraseType = 14
