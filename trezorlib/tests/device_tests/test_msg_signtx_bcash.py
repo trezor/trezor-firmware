@@ -108,7 +108,7 @@ class TestMsgSigntxBch(TrezorTest):
         inp1 = proto.TxInputType(
             address_n=self.client.expand_path("44'/145'/0'/1/0"),
             # 1HADRPJpgqBzThepERpVXNi6qRgiLQRNoE
-            amount=1896050 - 1,
+            amount=300,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
             prev_index=0,
             script_type=proto.InputScriptType.SPENDADDRESS,
@@ -116,14 +116,14 @@ class TestMsgSigntxBch(TrezorTest):
         inp2 = proto.TxInputType(
             address_n=self.client.expand_path("44'/145'/0'/0/1"),
             # 1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3
-            amount=73452,
+            amount=70,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
             prev_index=1,
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         out1 = proto.TxOutputType(
             address='15pnEDZJo3ycPUamqP3tEDnEju1oW5fBCz',
-            amount=1934960,
+            amount=200,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
@@ -131,7 +131,6 @@ class TestMsgSigntxBch(TrezorTest):
         run_attack = True
 
         def attack_processor(req, msg):
-            import sys
             global run_attack
 
             if req.details.tx_hash is not None:
@@ -146,10 +145,14 @@ class TestMsgSigntxBch(TrezorTest):
             if not run_attack:
                 return msg
 
-            msg.inputs[0].amount = 1896050
+            # 300 is lowered to 280 at the first run
+            # the user confirms 280 but the transaction
+            # is spending 300 => larger fee without the user knowing
+            msg.inputs[0].amount = 280
             run_attack = False
             return msg
 
+        # test if passes without modifications
         with self.client:
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
@@ -158,10 +161,33 @@ class TestMsgSigntxBch(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            ])
+            self.client.sign_tx('Bcash', [inp1, inp2], [out1])
+
+        # now fails
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
                 proto.Failure(code=proto.FailureType.ProcessError),
             ])
-            with pytest.raises(CallException):
+
+            try:
                 self.client.sign_tx('Bcash', [inp1, inp2], [out1], debug_processor=attack_processor)
+            except CallException as exc:
+                assert exc.args[0] == proto.FailureType.ProcessError
+                assert exc.args[1] == 'Transaction has changed during signing'
+            else:
+                assert False  # exception expected
+
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
