@@ -66,7 +66,8 @@ class HidTransport(Transport):
             hid_handle = HidHandle(device['path'])
 
         if protocol is None:
-            force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
+            # force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
+            force_v1 = True
 
             if is_trezor2(device) and not int(force_v1):
                 protocol = ProtocolV2()
