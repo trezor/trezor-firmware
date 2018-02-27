@@ -19,6 +19,8 @@ async def sign_tx(ctx, msg):
             req = signer.send(res)
         except signing.SigningError as e:
             raise wire.FailureError(*e.args)
+        except signing.MultisigError as e:
+            raise wire.FailureError(*e.args)
         except signing.AddressError as e:
             raise wire.FailureError(*e.args)
         except signing.ScriptsError as e:
