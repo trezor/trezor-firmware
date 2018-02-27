@@ -79,12 +79,27 @@ class Input(Button):
             display.bar(tx + width + 1, ty - 18, 2, 22, fg_color)
 
 
+class Prompt:
+    def __init__(self, text):
+        self.text = text
+        self.dirty = True
+
+    def taint(self):
+        self.dirty = True
+
+    def render(self):
+        if self.dirty:
+            display.bar(0, 0, 240, 48, ui.BG)
+            display.text_center(ui.WIDTH // 2, 32, self.text, ui.BOLD, ui.GREY, ui.BG)
+            self.dirty = False
+
+
 CANCELLED = const(0)
 
 
 class PassphraseKeyboard(ui.Widget):
     def __init__(self, prompt, page=1):
-        self.prompt = prompt
+        self.prompt = Prompt(prompt)
         self.page = page
         self.input = Input(ui.grid(0, n_x=1, n_y=6), '')
         self.back = Button(ui.grid(12), res.load(ui.ICON_BACK), style=ui.BTN_CLEAR)
@@ -98,8 +113,7 @@ class PassphraseKeyboard(ui.Widget):
         if self.input.content:
             self.input.render()
         else:
-            display.bar(0, 0, 240, 48, ui.BG)
-            display.text_center(ui.WIDTH // 2, 32, self.prompt, ui.BOLD, ui.GREY, ui.BG)
+            self.prompt.render()
         render_scrollbar(self.page)
         # buttons
         self.back.render()
@@ -191,3 +205,5 @@ class PassphraseKeyboard(ui.Widget):
         self.keys = key_buttons(KEYBOARD_KEYS[self.page])
         self.back.taint()
         self.done.taint()
+        self.input.taint()
+        self.prompt.taint()
