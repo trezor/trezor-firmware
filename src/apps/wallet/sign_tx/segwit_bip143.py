@@ -1,11 +1,11 @@
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, FailureType
+from trezor.utils import HashWriter
 
 from apps.wallet.sign_tx.writers import *
 from apps.wallet.sign_tx.scripts import output_script_p2pkh, output_script_multisig
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
-from apps.common.hash_writer import HashWriter
 
 
 class Bip143Error(ValueError):

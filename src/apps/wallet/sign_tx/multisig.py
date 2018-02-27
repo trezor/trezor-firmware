@@ -1,12 +1,12 @@
 from trezor.crypto.hashlib import sha256
 from trezor.crypto import bip32
+from trezor.utils import HashWriter
 
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.messages.HDNodePathType import HDNodePathType
 from trezor.messages import FailureType
 
 from apps.wallet.sign_tx.writers import *
-from apps.common.hash_writer import *
 
 
 class MultisigError(ValueError):

@@ -59,3 +59,20 @@ def format_amount(amount, decimals):
 
 def format_ordinal(number):
     return str(number) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= number % 100 < 20 else number % 10, 'th')
+
+
+class HashWriter:
+
+    def __init__(self, hashfunc):
+        self.ctx = hashfunc()
+        self.buf = bytearray(1)  # used in append()
+
+    def extend(self, buf: bytearray):
+        self.ctx.update(buf)
+
+    def append(self, b: int):
+        self.buf[0] = b
+        self.ctx.update(self.buf)
+
+    def get_digest(self, *args) -> bytes:
+        return self.ctx.digest(*args)

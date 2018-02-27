@@ -3,13 +3,13 @@ from micropython import const
 from trezor.crypto import base58, bip32, der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
+from trezor.utils import HashWriter
 
 from trezor.messages import OutputScriptType
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
 from apps.common import address_type, coins
-from apps.common.hash_writer import HashWriter
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
 from apps.wallet.sign_tx.scripts import *

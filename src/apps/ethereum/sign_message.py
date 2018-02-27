@@ -2,7 +2,7 @@
 def message_digest(message):
     from apps.wallet.sign_tx.signing import write_varint
     from trezor.crypto.hashlib import sha3_256
-    from apps.common.hash_writer import HashWriter
+    from trezor.utils import HashWriter
 
     h = HashWriter(sha3_256)
     signed_message_header = 'Ethereum Signed Message:\n'

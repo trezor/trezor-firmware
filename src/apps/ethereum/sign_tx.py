@@ -1,7 +1,7 @@
 from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.messages import FailureType
-from apps.common.hash_writer import HashWriter
+from trezor.utils import HashWriter
 from trezor.crypto import rlp
 from apps.ethereum import tokens, layout
 
