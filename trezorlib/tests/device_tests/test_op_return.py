@@ -89,12 +89,6 @@ class TestOpReturn(TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
-            amount=390000 - 10000 - 10000,
-            script_type=proto.OutputScriptType.PAYTOADDRESS,
-        )
-
-        out1 = proto.TxOutputType(
             op_return_data=b'test of the op_return data',
             amount=10000,
             script_type=proto.OutputScriptType.PAYTOOPRETURN,
@@ -110,5 +104,11 @@ class TestOpReturn(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.Failure()
             ])
-            with pytest.raises(CallException):
-                self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+
+            try:
+                self.client.sign_tx('Bitcoin', [inp1], [out1])
+            except CallException as exc:
+                assert exc.args[0] == proto.FailureType.DataError
+                assert exc.args[1] == 'OP_RETURN output with non-zero amount'
+            else:
+                assert False  # exception expected

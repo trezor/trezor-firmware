@@ -249,7 +249,10 @@ class TestMultisig(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        with self.client:
-            # It should throw Failure 'Pubkey not found in multisig script'
-            with pytest.raises(CallException):
-                self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        try:
+            self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        except CallException as exc:
+            assert exc.args[0] == proto.FailureType.DataError
+            assert exc.args[1] == 'Pubkey not found in multisig script'
+        else:
+            assert False  # exception expected
