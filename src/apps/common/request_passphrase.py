@@ -3,6 +3,7 @@ from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.FailureType import ActionCancelled, ProcessError
 from trezor.messages.PassphraseRequest import PassphraseRequest
+from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
 from trezor.ui.entry_select import DEVICE, EntrySelector
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
@@ -53,15 +54,15 @@ async def request_passphrase_ack(ctx, on_device):
             raise wire.FailureError(ProcessError, 'Passphrase not provided')
         passphrase = ack.passphrase
 
-    return ack.state, passphrase
+    req = PassphraseStateRequest(state=get_state(state=ack.state, passphrase=passphrase))
+    ack = await ctx.call(req, wire_types.PassphraseStateAck, wire_types.Cancel)
+
+    return passphrase
 
 
 async def request_passphrase(ctx):
     on_device = await request_passphrase_entry(ctx) == DEVICE
-    state, passphrase = await request_passphrase_ack(ctx, on_device)
-    if state is not None:
-        if state != get_state(salt=state[:32], passphrase=passphrase):
-            raise wire.FailureError(ProcessError, 'Passphrase mismatch')
+    passphrase = await request_passphrase_ack(ctx, on_device)
     return passphrase
 
 
