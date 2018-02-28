@@ -96,6 +96,8 @@ from .NEMSignTx import *
 from .NEMSignedTx import *
 from .PassphraseAck import *
 from .PassphraseRequest import *
+from .PassphraseStateAck import *
+from .PassphraseStateRequest import *
 from .PinMatrixAck import *
 from .PinMatrixRequest import *
 from .Ping import *
