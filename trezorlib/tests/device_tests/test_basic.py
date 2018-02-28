@@ -26,8 +26,6 @@ class TestBasic(TrezorTest):
     def test_features(self):
         f0 = self.client.features
         f1 = self.client.call(messages.Initialize())
-        del f0.state
-        del f1.state
         assert f0 == f1
 
     def test_ping(self):
