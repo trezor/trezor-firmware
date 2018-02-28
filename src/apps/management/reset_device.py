@@ -185,6 +185,7 @@ async def check_mnemonic(ctx, mnemonic: str) -> bool:
     if not await check_word(ctx, words, index):
         return False
 
+    return True
 
 @ui.layout
 async def check_word(ctx, words: list, index: int):
