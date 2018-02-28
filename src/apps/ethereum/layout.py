@@ -54,8 +54,8 @@ def split_address(address):
 def format_ethereum_amount(value, token, chain_id):
     value = int.from_bytes(value, 'big')
     if token:
-        suffix = token['symbol']
-        decimals = token['decimal']
+        suffix = token[2]
+        decimals = token[3]
     else:
         suffix = networks.suffix_by_chain_id(chain_id)
         decimals = 18
