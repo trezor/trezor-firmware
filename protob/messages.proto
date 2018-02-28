@@ -54,6 +54,8 @@ enum MessageType {
 	MessageType_MessageSignature = 40 [(wire_out) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
 	MessageType_PassphraseAck = 42 [(wire_in) = true, (wire_tiny) = true];
+	MessageType_PassphraseStateRequest = 77 [(wire_out) = true];
+	MessageType_PassphraseStateAck = 78 [(wire_in) = true, (wire_tiny) = true];
 	MessageType_EstimateTxSize = 43 [(wire_in) = true, deprecated = true];
 	MessageType_TxSize = 44 [(wire_out) = true, deprecated = true];
 	MessageType_RecoveryDevice = 45 [(wire_in) = true];
