@@ -108,7 +108,7 @@ def next_u2f_counter() -> int:
 
 
 def set_u2f_counter(cntr: int):
-    config.set(_APP, _FLAGS, cntr.to_bytes(4, 'big'))
+    config.set(_APP, _U2F_COUNTER, cntr.to_bytes(4, 'big'))
 
 
 def wipe():
