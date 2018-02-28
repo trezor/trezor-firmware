@@ -105,11 +105,14 @@ def format_protobuf(pb, indent=0, sep=' '*4):
             for key, val in sorted(value.items()):
                 if val is None or val == []:
                     continue
-                lines.append(leadin + key + ': ' + pformat_value(val, indent + 1) + ',')
+                if key == 'address_n' and isinstance(val, list):
+                    lines.append(leadin + key + ': ' + repr(val) + ',')
+                else:
+                    lines.append(leadin + key + ': ' + pformat_value(val, indent + 1) + ',')
             lines.append(level + '}')
             return '\n'.join(lines)
-        if isinstance(value, bytes) or isinstance(value, bytearray):
-            return '{type}(0x{hex})'.format(type=type(value).__name__, hex=value.hex())
+        if isinstance(value, bytearray):
+            return 'bytearray(0x{})'.format(value.hex())
 
         return repr(value)
 
