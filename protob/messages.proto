@@ -278,6 +278,7 @@ message PassphraseRequest {
  */
 message PassphraseAck {
 	optional string passphrase = 1;
+	optional bytes state = 2;		// expected device state
 }
 
 /**
@@ -285,7 +286,7 @@ message PassphraseAck {
  * @next PassphraseStateAck
  */
 message PassphraseStateRequest {
-	optional bytes state = 1;		// device state
+	optional bytes state = 1;		// actual device state
 }
 
 /**
