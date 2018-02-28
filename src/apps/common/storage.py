@@ -16,6 +16,7 @@ _USE_PASSPHRASE = const(0x05)  # 0x01 or empty
 _HOMESCREEN     = const(0x06)  # bytes
 _NEEDS_BACKUP   = const(0x07)  # 0x01 or empty
 _FLAGS          = const(0x08)  # int
+_U2F_COUNTER    = const(0x09)  # int
 
 
 def get_device_id() -> str:
@@ -94,6 +95,20 @@ def set_flags(flags: int) -> None:
     flags = (flags | b) & 0xFFFFFFFF
     if flags != b:
         config.set(_APP, _FLAGS, flags.to_bytes(4, 'big'))
+
+
+def next_u2f_counter() -> int:
+    b = config.get(_APP, _U2F_COUNTER)
+    if b is None:
+        b = 0
+    else:
+        b = int.from_bytes(b, 'big') + 1
+    set_u2f_counter(b)
+    return b
+
+
+def set_u2f_counter(cntr: int):
+    config.set(_APP, _FLAGS, cntr.to_bytes(4, 'big'))
 
 
 def wipe():

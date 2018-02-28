@@ -1,7 +1,7 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.utils import unimport
 from trezor.messages.wire_types import \
-    LoadDevice, ResetDevice, BackupDevice, WipeDevice, RecoveryDevice, ApplySettings, ApplyFlags, ChangePin
+    LoadDevice, ResetDevice, BackupDevice, WipeDevice, RecoveryDevice, ApplySettings, ApplyFlags, ChangePin, SetU2FCounter
 
 
 @unimport
@@ -52,6 +52,12 @@ def dispatch_ChangePin(*args, **kwargs):
     return change_pin(*args, **kwargs)
 
 
+@unimport
+def dispatch_SetU2FCounter(*args, **kwargs):
+    from .set_u2f_counter import set_u2f_counter
+    return set_u2f_counter(*args, **kwargs)
+
+
 def boot():
     # only enable LoadDevice in debug builds
     if __debug__:
@@ -63,3 +69,4 @@ def boot():
     register(ApplySettings, protobuf_workflow, dispatch_ApplySettings)
     register(ApplyFlags, protobuf_workflow, dispatch_ApplyFlags)
     register(ChangePin, protobuf_workflow, dispatch_ChangePin)
+    register(SetU2FCounter, protobuf_workflow, dispatch_SetU2FCounter)
