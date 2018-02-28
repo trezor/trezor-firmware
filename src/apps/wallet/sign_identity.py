@@ -2,6 +2,9 @@ from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
 from ustruct import pack, unpack
+from trezor.utils import chunks
+from apps.common.confirm import require_confirm
+from trezor.ui.text import Text
 
 from ..common import coins, seed
 
@@ -11,7 +14,8 @@ async def sign_identity(ctx, msg):
         msg.ecdsa_curve_name = 'secp256k1'
 
     identity = serialize_identity(msg.identity)
-    display_identity(identity, msg.challenge_visual)
+
+    await confirm_sign_identity(ctx, identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
     node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
@@ -39,6 +43,14 @@ async def sign_identity(ctx, msg):
     return SignedIdentity(address=address, public_key=pubkey, signature=signature)
 
 
+async def confirm_sign_identity(ctx, identity, challenge_visual):
+    lines = chunks(identity, 18)
+    content = Text('Sign identity', ui.ICON_DEFAULT,
+                    challenge_visual,
+                    ui.MONO, *lines, max_lines=5)
+    await require_confirm(ctx, content)
+
+
 def serialize_identity(identity):
     s = ''
     if identity.proto:
@@ -52,14 +64,6 @@ def serialize_identity(identity):
     if identity.path:
         s += identity.path
     return s
-
-
-def display_identity(identity: str, challenge_visual: str):
-    ui.display.clear()
-    ui.display.text(10, 30, 'Identity:',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
-    ui.display.text(10, 60, challenge_visual, ui.MONO, ui.FG, ui.BG)
-    ui.display.text(10, 80, identity, ui.MONO, ui.FG, ui.BG)
 
 
 def get_identity_path(identity: str, index: int):
