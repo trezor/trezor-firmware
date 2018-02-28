@@ -56,7 +56,7 @@ async def respond_Pong(ctx, msg):
         from apps.common.request_passphrase import protect_by_passphrase
         await protect_by_passphrase(ctx)
 
-    return Success(messge=msg.message)
+    return Success(message=msg.message)
 
 
 def boot():
