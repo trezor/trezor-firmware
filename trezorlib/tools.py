@@ -62,7 +62,7 @@ def b58encode(v):
     """ encode v, which is a string of bytes, to base58."""
 
     long_value = 0
-    for c in iterbytes(v):
+    for c in v:
         long_value = long_value * 256 + c
 
     result = ''
@@ -75,7 +75,7 @@ def b58encode(v):
     # Bitcoin does a little leading-zero-compression:
     # leading 0-bytes in the input become leading-1s
     nPad = 0
-    for c in iterbytes(v):
+    for c in v:
         if c == 0:
             nPad += 1
         else:
