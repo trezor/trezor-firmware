@@ -3,6 +3,7 @@ from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.messages import FailureType
 from trezor.utils import HashWriter
 from trezor.crypto import rlp
+from trezor import wire
 from apps.ethereum import tokens, layout
 
 # maximum supported chain id
@@ -27,14 +28,22 @@ async def ethereum_sign_tx(ctx, msg):
         token = tokens.token_by_chain_address(msg.chain_id, msg.to)
 
     if token is None:
-        await layout.confirm_tx(ctx, msg.to, msg.value, msg.chain_id)
+        confirmed = await layout.confirm_tx(ctx, msg.to, msg.value, msg.chain_id)
+        if not confirmed:
+            raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
     else:
-        await layout.confirm_tx(ctx, msg.data_initial_chunk[16:36],  msg.data_initial_chunk[36:68], msg.chain_id, token)
+        confirmed = await layout.confirm_tx(ctx, msg.data_initial_chunk[16:36],  msg.data_initial_chunk[36:68], msg.chain_id, token)
+        if not confirmed:
+            raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
 
     if token is None and msg.data_length > 0:
-        await layout.confirm_data(ctx, msg.data_initial_chunk, data_total)
+        confirmed = await layout.confirm_data(ctx, msg.data_initial_chunk, data_total)
+        if not confirmed:
+            raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
 
-    await layout.confirm_fee(ctx, msg.value, msg.gas_price, msg.gas_limit, msg.chain_id, token)
+    confirmed = await layout.confirm_fee(ctx, msg.value, msg.gas_price, msg.gas_limit, msg.chain_id, token)
+    if not confirmed:
+        raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
 
     data = bytearray()
     data += msg.data_initial_chunk
