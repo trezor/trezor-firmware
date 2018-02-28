@@ -25,6 +25,7 @@ import binascii
 import click
 import functools
 import json
+import os
 import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
@@ -63,8 +64,8 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
 })
 
 
-@click.group()
-@click.option('-p', '--path', help='Select device by specific path.')
+@click.group(context_settings={'max_content_width': 400})
+@click.option('-p', '--path', help='Select device by specific path.', default=os.environ.get('TREZOR_PATH'))
 @click.option('-v', '--verbose', is_flag=True, help='Show communication messages.')
 @click.option('-j', '--json', 'is_json', is_flag=True, help='Print result as JSON object')
 @click.pass_context
