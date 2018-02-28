@@ -113,7 +113,6 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
                                'Wrong input script type')
 
     for o in range(tx.outputs_count):
-        progress.advance()
         # STAGE_REQUEST_3_OUTPUT
         txo = await request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
