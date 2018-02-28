@@ -301,6 +301,9 @@ class TextUIMixin(object):
             log("Passphrase did not match! ")
             exit()
 
+    def callback_PassphraseStateRequest(self, msg):
+        return proto.PassphraseStateAck()
+
     def callback_WordRequest(self, msg):
         if msg.type in (proto.WordRequestType.Matrix9,
                         proto.WordRequestType.Matrix6):
@@ -444,6 +447,9 @@ class DebugLinkMixin(object):
     def callback_PassphraseRequest(self, msg):
         log("Provided passphrase: '%s'" % self.passphrase)
         return proto.PassphraseAck(passphrase=self.passphrase)
+
+    def callback_PassphraseStateRequest(self, msg):
+        return proto.PassphraseStateAck()
 
     def callback_WordRequest(self, msg):
         (word, pos) = self.debug.read_recovery_word()
