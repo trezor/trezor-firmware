@@ -122,8 +122,9 @@ def format_protobuf(pb, indent=0, sep=' '*4):
 def pprint(msg):
     msg_class = msg.__class__.__name__
     msg_size = msg.ByteSize()
-    if isinstance(msg, proto.FirmwareUpload) or isinstance(msg, proto.SelfTest):
-        return "<%s> (%d bytes):\n" % (msg_class, msg_size)
+    if isinstance(msg, proto.FirmwareUpload) or isinstance(msg, proto.SelfTest) \
+            or isinstance(msg, proto.Features):
+        return "<%s> (%d bytes)" % (msg_class, msg_size)
     else:
         return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, format_protobuf(msg))
 
