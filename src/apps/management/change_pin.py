@@ -14,7 +14,7 @@ from apps.common.request_pin import request_pin, PinCancelled
 async def change_pin(ctx, msg):
 
     # confirm that user wants to change the pin
-    await confirm_change_pin(ctx, msg)
+    await require_confirm_change_pin(ctx, msg)
 
     # get current pin, return failure if invalid
     if config.has_pin():
@@ -40,7 +40,7 @@ async def change_pin(ctx, msg):
         return Failure(code=FailureType.PinInvalid, message='PIN invalid')
 
 
-def confirm_change_pin(ctx, msg):
+def require_confirm_change_pin(ctx, msg):
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin

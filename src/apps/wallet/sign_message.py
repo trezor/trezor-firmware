@@ -18,7 +18,7 @@ async def sign_message(ctx, msg):
     script_type = msg.script_type or 0
     coin = coins.by_name(coin_name)
 
-    await confirm_sign_message(ctx, message)
+    await require_confirm_sign_message(ctx, message)
 
     node = await seed.derive_node(ctx, address_n)
     seckey = node.private_key()
@@ -39,7 +39,7 @@ async def sign_message(ctx, msg):
     return MessageSignature(address=address, signature=signature)
 
 
-async def confirm_sign_message(ctx, message):
+async def require_confirm_sign_message(ctx, message):
     message = split_message(message)
     content = Text('Sign message', ui.ICON_DEFAULT, max_lines=5, *message)
     await require_confirm(ctx, content)

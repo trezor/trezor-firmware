@@ -44,3 +44,9 @@ async def require_confirm(*args, **kwargs):
     confirmed = await confirm(*args, **kwargs)
     if not confirmed:
         raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
+
+
+async def require_hold_to_confirm(*args, **kwargs):
+    confirmed = await hold_to_confirm(*args, **kwargs)
+    if not confirmed:
+        raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')

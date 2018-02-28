@@ -3,12 +3,12 @@ from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 from apps.common import storage
-from apps.common.confirm import hold_to_confirm
+from apps.common.confirm import require_hold_to_confirm
 
 
 async def wipe_device(ctx, msg):
 
-    await hold_to_confirm(ctx, Text(
+    await require_hold_to_confirm(ctx, Text(
         'Wipe device',
         ui.ICON_WIPE,
         ui.NORMAL, 'Do you really want to', 'wipe the device?',

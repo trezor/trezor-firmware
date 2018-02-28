@@ -15,7 +15,7 @@ async def sign_identity(ctx, msg):
 
     identity = serialize_identity(msg.identity)
 
-    await confirm_sign_identity(ctx, identity, msg.challenge_visual)
+    await require_confirm_sign_identity(ctx, identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
     node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
@@ -43,7 +43,7 @@ async def sign_identity(ctx, msg):
     return SignedIdentity(address=address, public_key=pubkey, signature=signature)
 
 
-async def confirm_sign_identity(ctx, identity, challenge_visual):
+async def require_confirm_sign_identity(ctx, identity, challenge_visual):
     lines = chunks(identity, 18)
     content = Text('Sign identity', ui.ICON_DEFAULT,
                    challenge_visual,

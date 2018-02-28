@@ -50,12 +50,12 @@ async def verify_message(ctx, msg):
     if addr != address:
         raise wire.FailureError(ProcessError, 'Invalid signature')
 
-    await confirm_verify_message(ctx, address, message)
+    await require_confirm_verify_message(ctx, address, message)
 
     return Success(message='Message verified')
 
 
-async def confirm_verify_message(ctx, address, message):
+async def require_confirm_verify_message(ctx, address, message):
     lines = _split_address(address)
     content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
     await require_confirm(ctx, content)

@@ -8,7 +8,7 @@ from . import networks
 from .get_address import _ethereum_address_hex
 
 
-async def confirm_tx(ctx, to, value, chain_id, token=None):
+async def require_confirm_tx(ctx, to, value, chain_id, token=None):
     if to:
         str_to = _ethereum_address_hex(to)
     else:
@@ -18,10 +18,10 @@ async def confirm_tx(ctx, to, value, chain_id, token=None):
                    ui.NORMAL, 'to',
                    ui.MONO, *split_address(str_to),
                    icon_color=ui.GREEN)
-    return await confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
-async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):
+async def require_confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):
     content = Text('Confirm transaction', ui.ICON_SEND,
                    ui.BOLD, format_ethereum_amount(spending, token, chain_id),
                    ui.NORMAL, 'Gas:',
@@ -29,14 +29,14 @@ async def confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None)
                    ui.NORMAL, 'Limit:',
                    ui.BOLD, format_ethereum_amount(gas_limit, token, chain_id),
                    icon_color=ui.GREEN)
-    return await hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 def split_data(data):
     return chunks(data, 18)
 
 
-async def confirm_data(ctx, data, data_total):
+async def require_confirm_data(ctx, data, data_total):
     str_data = hexlify(data[:36]).decode()
     if data_total > 36:
         str_data = str_data[:-2] + '..'
@@ -44,7 +44,7 @@ async def confirm_data(ctx, data, data_total):
                    ui.BOLD, 'Size: %d bytes' % data_total,
                    ui.MONO, *split_data(str_data),
                    icon_color=ui.GREEN)
-    return await confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
 def split_address(address):
