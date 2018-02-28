@@ -155,7 +155,8 @@ async def show_mnemonic(ctx, mnemonic: str):
     words_per_page = const(4)
     words = list(enumerate(mnemonic.split()))
     pages = list(chunks(words, words_per_page))
-    await paginate(show_mnemonic_page, len(pages), first_page, pages)
+    paginator = paginate(show_mnemonic_page, len(pages), first_page, pages)
+    await ctx.wait(paginator)
 
 
 @ui.layout
@@ -171,13 +172,22 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
         await animate_swipe()
 
 
-@ui.layout
 async def check_mnemonic(ctx, mnemonic: str) -> bool:
     words = mnemonic.split()
-    index = random.uniform(len(words) // 2)  # first half
-    result = await MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
-    if result != words[index]:
+
+    # check a word from the first half
+    index = random.uniform(len(words) // 2)
+    if not await check_word(ctx, words, index):
         return False
-    index = len(words) // 2 + random.uniform(len(words) // 2)  # second half
-    result = await MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
+
+    # check a word from the second half
+    index = random.uniform(len(words) // 2) + len(words) // 2
+    if not await check_word(ctx, words, index):
+        return False
+
+
+@ui.layout
+async def check_word(ctx, words: list, index: int):
+    keyboard = MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
+    result = await ctx.wait(keyboard)
     return result == words[index]

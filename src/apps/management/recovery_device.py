@@ -60,7 +60,7 @@ async def request_wordcount(ctx):
 
     content = Text('Device recovery', ui.ICON_RECOVERY, 'Number of words?')
     select = WordSelector(content)
-    count = await select
+    count = await ctx.wait(select)
 
     return count
 
@@ -73,7 +73,7 @@ async def request_mnemonic(ctx, count: int) -> str:
     board = MnemonicKeyboard()
     for i in range(count):
         board.prompt = 'Type the %s word:' % format_ordinal(i + 1)
-        word = await board
+        word = await ctx.wait(board)
         words.append(word)
 
     return ' '.join(words)

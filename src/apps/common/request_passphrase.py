@@ -1,4 +1,4 @@
-from trezor import ui, wire
+from trezor import loop, ui, wire
 from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.FailureType import ActionCancelled, ProcessError
@@ -24,7 +24,8 @@ async def request_passphrase_entry(ctx):
     if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
         raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
 
-    return await EntrySelector(text)
+    selector = EntrySelector(text)
+    return await ctx.wait(selector)
 
 
 @ui.layout
@@ -43,7 +44,8 @@ async def request_passphrase_ack(ctx, on_device):
     if on_device:
         if ack.passphrase is not None:
             raise wire.FailureError(ProcessError, 'Passphrase provided when it should not be')
-        passphrase = await PassphraseKeyboard('Enter passphrase')
+        keyboard = PassphraseKeyboard('Enter passphrase')
+        passphrase = await ctx.wait(keyboard)
         if passphrase == CANCELLED:
             raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
     else:

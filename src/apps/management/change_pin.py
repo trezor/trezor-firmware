@@ -66,7 +66,7 @@ async def request_pin_ack(ctx, *args, **kwargs):
     # TODO: send PinMatrixRequest here, with specific code?
     await ctx.call(ButtonRequest(code=Other), wire_types.ButtonAck)
     try:
-        return await request_pin(*args, **kwargs)
+        return await ctx.wait(request_pin(*args, **kwargs))
     except PinCancelled:
         raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
 
