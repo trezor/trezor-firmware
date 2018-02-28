@@ -150,7 +150,6 @@ message Features {
 	optional uint32 fw_patch = 24;			// reported firmware version if in bootloader mode
 	optional string fw_vendor = 25;			// reported firmware vendor if in bootloader mode
 	optional bytes fw_vendor_keys = 26;		// reported firmware vendor keys (their hash)
-	optional bytes state = 27;			// current device state
 }
 
 /**
@@ -273,10 +272,24 @@ message PassphraseRequest {
 /**
  * Request: Send passphrase back
  * @prev PassphraseRequest
+ * @next PassphraseStateRequest
  */
 message PassphraseAck {
 	optional string passphrase = 1;
-	optional bytes state = 2;		// assumed device state, throw error if set and different
+}
+
+/**
+ * @prev PassphraseAck
+ * @next PassphraseStateAck
+ */
+message PassphraseStateRequest {
+	optional bytes state = 1;		// device state
+}
+
+/**
+ * @prev PassphraseStateRequest
+ */
+message PassphraseStateAck {
 }
 
 /**
