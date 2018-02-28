@@ -28,7 +28,7 @@ import json
 import os
 import sys
 
-from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
+from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException, format_protobuf
 from trezorlib.device import TrezorDevice
 from trezorlib import messages as proto
 from trezorlib import protobuf
@@ -80,7 +80,7 @@ def cli(ctx, path, verbose, is_json):
 @cli.resultcallback()
 def print_result(res, path, verbose, is_json):
     if is_json:
-        if issubclass(res.__class__, protobuf.MessageType):
+        if isinstance(res, protobuf.MessageType):
             click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
@@ -95,6 +95,8 @@ def print_result(res, path, verbose, is_json):
                         click.echo('%s.%s: %s' % (k, kk, vv))
                 else:
                     click.echo('%s: %s' % (k, v))
+        elif isinstance(res, protobuf.MessageType):
+            click.echo(format_protobuf(res))
         else:
             click.echo(res)
 

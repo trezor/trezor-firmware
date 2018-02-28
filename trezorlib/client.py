@@ -36,6 +36,7 @@ from . import tools
 from . import mapping
 from .coins import coins_slip44
 from .debuglink import DebugLink
+from .protobuf import MessageType
 
 # Python2 vs Python3
 try:
@@ -86,13 +87,42 @@ def get_buttonrequest_value(code):
     return [k for k in dir(proto.ButtonRequestType) if getattr(proto.ButtonRequestType, k) == code][0]
 
 
+def format_protobuf(pb, indent=0, sep=' '*4):
+    def pformat_value(value, indent):
+        level  = sep * indent
+        leadin = sep * (indent + 1)
+        if isinstance(value, MessageType):
+            return format_protobuf(value, indent, sep)
+        if isinstance(value, list):
+            lines = []
+            lines.append('[')
+            lines += [leadin + pformat_value(x, indent + 1) + ',' for x in value]
+            lines.append(level + ']')
+            return '\n'.join(lines)
+        if isinstance(value, dict):
+            lines = []
+            lines.append('{')
+            for key, val in sorted(value.items()):
+                if val is None or val == []:
+                    continue
+                lines.append(leadin + key + ': ' + pformat_value(val, indent + 1) + ',')
+            lines.append(level + '}')
+            return '\n'.join(lines)
+        if isinstance(value, bytes) or isinstance(value, bytearray):
+            return '{type}(0x{hex})'.format(type=type(value).__name__, hex=value.hex())
+
+        return repr(value)
+
+    return pb.__class__.__name__ + ' ' + pformat_value(pb.__dict__, indent)
+
+
 def pprint(msg):
     msg_class = msg.__class__.__name__
     msg_size = msg.ByteSize()
     if isinstance(msg, proto.FirmwareUpload) or isinstance(msg, proto.SelfTest):
         return "<%s> (%d bytes):\n" % (msg_class, msg_size)
     else:
-        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, msg)
+        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, format_protobuf(msg))
 
 
 def log(msg):
