@@ -1,7 +1,7 @@
 from micropython import const
 import ustruct
 
-from trezor import io
+from trezor import io, ui
 from trezor import loop
 from trezor import utils
 
@@ -134,8 +134,11 @@ class Writer:
 
             if self.ofs == _REP_LEN:
                 # we are at the end of the report, flush it
-                await write
-                self.iface.write(self.data)
+                while True:
+                    await write
+                    n = self.iface.write(self.data)
+                    if n == len(self.data):
+                        break
                 self.ofs = _REP_CONT_DATA
 
         return nwritten
@@ -149,5 +152,9 @@ class Writer:
                 self.data[self.ofs] = 0x00
                 self.ofs += 1
 
-            await loop.select(self.iface.iface_num() | io.POLL_WRITE)
-            self.iface.write(self.data)
+            write = loop.select(self.iface.iface_num() | io.POLL_WRITE)
+            while True:
+                await write
+                n = self.iface.write(self.data)
+                if n == len(self.data):
+                    break
