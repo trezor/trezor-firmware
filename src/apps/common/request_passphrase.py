@@ -1,4 +1,4 @@
-from trezor import loop, ui, wire
+from trezor import ui, wire
 from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.FailureType import ActionCancelled, ProcessError

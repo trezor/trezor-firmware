@@ -187,6 +187,7 @@ async def check_mnemonic(ctx, mnemonic: str) -> bool:
 
     return True
 
+
 @ui.layout
 async def check_word(ctx, words: list, index: int):
     keyboard = MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))

@@ -1,7 +1,7 @@
 from micropython import const
 import ustruct
 
-from trezor import io, ui
+from trezor import io
 from trezor import loop
 from trezor import utils
 
