@@ -124,9 +124,9 @@ def layout(f):
 
 def header(title: str,
            icon: bytes=ICON_DEFAULT,
-           fg: int=BG,
+           fg: int=FG,
            bg: int=BG,
-           ifg: int=BG):
+           ifg: int=GREEN):
     if icon is not None:
         display.icon(14, 15, res.load(icon), ifg, bg)
     display.text(44, 35, title, BOLD, fg, bg)
