@@ -8,6 +8,7 @@ install_requires = [
     'requests>=2.4.0',
     'click>=6.2',
     'pyblake2>=0.9.3',
+    'rlp>=0.6.0',
 ]
 
 import sys
