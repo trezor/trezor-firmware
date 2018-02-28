@@ -7,6 +7,10 @@
 
 This is the source code for 2nd generation of TREZOR called TREZOR model T.
 
+It runs both inside of the device and also in the TREZOR Emulator.
+
+![emulator](docs/emulator.jpg)
+
 ## Documentation
 
 * [API](docs/api.md)
