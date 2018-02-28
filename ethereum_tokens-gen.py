@@ -20,9 +20,9 @@ def print_tokens(ipfs_hash, chain, chain_id, python=False):
         address, name, symbol, decimal = t['address'], t['name'], t['symbol'], int(t['decimals'])
         address = '\\x'.join([address[i:i + 2] for i in range(0, len(address), 2)])[2:].lower()
         if python:
-            print("    {'chain_id': %2d, 'address': b'%s', 'symbol': '%s', 'decimal': %d},  # %s " % (chain_id, address, symbol, decimal, name))
+            print("    (%d, b'%s', '%s', %d),  # %s" % (chain_id, address, symbol, decimal, name))
         else:
-            print('\t{%2d, "%s", " %s", %d}, // %s ' % (chain_id, address, symbol, decimal, name))
+            print('\t{%2d, "%s", " %s", %d}, // %s' % (chain_id, address, symbol, decimal, name))
 
     return len(tokens)
 
