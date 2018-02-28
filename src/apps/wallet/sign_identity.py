@@ -46,8 +46,8 @@ async def sign_identity(ctx, msg):
 async def confirm_sign_identity(ctx, identity, challenge_visual):
     lines = chunks(identity, 18)
     content = Text('Sign identity', ui.ICON_DEFAULT,
-                    challenge_visual,
-                    ui.MONO, *lines, max_lines=5)
+                   challenge_visual,
+                   ui.MONO, *lines, max_lines=5)
     await require_confirm(ctx, content)
 
 
