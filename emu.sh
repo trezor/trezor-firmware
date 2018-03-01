@@ -6,11 +6,7 @@ EXE=build/unix/micropython
 OPTLEVEL="${OPTLEVEL:-1}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"
-if file $EXE | grep -q 80386 ; then
-HEAPSIZE="${HEAPSIZE:-170K}"
-else
-HEAPSIZE="${HEAPSIZE:-340K}"
-fi
+HEAPSIZE="${HEAPSIZE:-800K}"
 
 ARGS="-O${OPTLEVEL} -X heapsize=${HEAPSIZE}"
 
