@@ -42,6 +42,7 @@ class BridgeTransport(Transport):
     '''
 
     PATH_PREFIX = 'bridge'
+    HEADERS = {'Origin': 'https://python.trezor.io'}
 
     def __init__(self, device):
         super(BridgeTransport, self).__init__()
@@ -57,10 +58,10 @@ class BridgeTransport(Transport):
     def get_path(self):
         return '%s:%s' % (self.PATH_PREFIX, self.device['path'])
 
-    @staticmethod
-    def enumerate():
+    @classmethod
+    def enumerate(cls):
         try:
-            r = requests.post(TREZORD_HOST + '/enumerate')
+            r = requests.post(TREZORD_HOST + '/enumerate', headers=cls.HEADERS)
             if r.status_code != 200:
                 raise TransportException('trezord: Could not enumerate devices' + get_error(r))
             return [BridgeTransport(dev) for dev in r.json()]
@@ -79,7 +80,7 @@ class BridgeTransport(Transport):
         raise TransportException('Bridge device not found')
 
     def open(self):
-        r = self.conn.post(TREZORD_HOST + '/acquire/%s/null' % self.device['path'])
+        r = self.conn.post(TREZORD_HOST + '/acquire/%s/null' % self.device['path'], headers=self.HEADERS)
         if r.status_code != 200:
             raise TransportException('trezord: Could not acquire session' + get_error(r))
         self.session = r.json()['session']
@@ -87,7 +88,7 @@ class BridgeTransport(Transport):
     def close(self):
         if not self.session:
             return
-        r = self.conn.post(TREZORD_HOST + '/release/%s' % self.session)
+        r = self.conn.post(TREZORD_HOST + '/release/%s' % self.session, headers=self.HEADERS)
         if r.status_code != 200:
             raise TransportException('trezord: Could not release session' + get_error(r))
         self.session = None
@@ -99,7 +100,7 @@ class BridgeTransport(Transport):
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
         data = binascii.hexlify(header + ser).decode()
         r = self.conn.post(
-            TREZORD_HOST + '/call/%s' % self.session, data=data)
+            TREZORD_HOST + '/call/%s' % self.session, data=data, headers=self.HEADERS)
         if r.status_code != 200:
             raise TransportException('trezord: Could not write message' + get_error(r))
         self.response = r.text
