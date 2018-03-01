@@ -35,8 +35,8 @@ def startdefault(layout):
 
 
 def restartdefault():
-    global default_handler
-    d = default_handler
+    global default_layout
+    d = default_layout
     closedefault()
     startdefault(d)
 
