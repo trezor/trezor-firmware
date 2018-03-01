@@ -34,6 +34,13 @@ def startdefault(handler):
         loop.schedule(default)
 
 
+def restartdefault():
+    global default_handler
+    d = default_handler
+    closedefault()
+    startdefault(d)
+
+
 def onlayoutstart(l):
     closedefault()
     layouts.append(l)

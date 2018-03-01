@@ -5,6 +5,7 @@ from trezor.messages import ButtonRequestType, FailureType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
+from trezor import workflow
 from trezor.pin import pin_to_int
 from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.mnemonic import MnemonicKeyboard
@@ -79,6 +80,9 @@ async def reset_device(ctx, msg):
     # show success message
     if not msg.skip_backup:
         await show_success(ctx)
+    else:
+        # trigger reload of homescreen
+        workflow.restartdefault()
 
     return Success(message='Initialized')
 
