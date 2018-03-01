@@ -333,76 +333,6 @@ async def handle_reports(iface: io.HID):
             log.exception(__name__, e)
 
 
-def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
-    if req.cmd == _CMD_MSG:
-        m = req.to_msg()
-
-        if m.cla != 0:
-            if __debug__:
-                log.warning(__name__, '_SW_CLA_NOT_SUPPORTED')
-            return msg_error(req.cid, _SW_CLA_NOT_SUPPORTED)
-
-        if m.lc + _APDU_DATA > len(req.data):
-            if __debug__:
-                log.warning(__name__, '_SW_WRONG_LENGTH')
-            return msg_error(req.cid, _SW_WRONG_LENGTH)
-
-        if m.ins == _MSG_REGISTER:
-            if __debug__:
-                log.debug(__name__, '_MSG_REGISTER')
-            return msg_register(m, state)
-        elif m.ins == _MSG_AUTHENTICATE:
-            if __debug__:
-                log.debug(__name__, '_MSG_AUTHENTICATE')
-            return msg_authenticate(m, state)
-        elif m.ins == _MSG_VERSION:
-            if __debug__:
-                log.debug(__name__, '_MSG_VERSION')
-            return msg_version(m)
-        else:
-            if __debug__:
-                log.warning(__name__, '_SW_INS_NOT_SUPPORTED: %d', m.ins)
-            return msg_error(req.cid, _SW_INS_NOT_SUPPORTED)
-
-    elif req.cmd == _CMD_INIT:
-        if __debug__:
-            log.debug(__name__, '_CMD_INIT')
-        return cmd_init(req)
-    elif req.cmd == _CMD_PING:
-        if __debug__:
-            log.debug(__name__, '_CMD_PING')
-        return req
-    elif req.cmd == _CMD_WINK:
-        if __debug__:
-            log.debug(__name__, '_CMD_WINK')
-        return req
-    else:
-        if __debug__:
-            log.warning(__name__, '_ERR_INVALID_CMD: %d', req.cmd)
-        return cmd_error(req.cid, _ERR_INVALID_CMD)
-
-
-def cmd_init(req: Cmd) -> Cmd:
-    if req.cid == 0:
-        return cmd_error(req.cid, _ERR_INVALID_CID)
-    elif req.cid == _CID_BROADCAST:
-        # uint32_t except 0 and 0xffffffff
-        resp_cid = random.uniform(0xfffffffe) + 1
-    else:
-        resp_cid = req.cid
-
-    buf, resp = make_struct(resp_cmd_init())
-    utils.memcpy(resp.nonce, 0, req.data, 0, len(req.data))
-    resp.cid = resp_cid
-    resp.versionInterface = _U2FHID_IF_VERSION
-    resp.versionMajor = 2
-    resp.versionMinor = 0
-    resp.versionBuild = 0
-    resp.capFlags = _CAPFLAG_WINK
-
-    return Cmd(req.cid, req.cmd, buf)
-
-
 _CONFIRM_REGISTER = const(0)
 _CONFIRM_AUTHENTICATE = const(1)
 _CONFIRM_TIMEOUT_MS = const(10 * 1000)
@@ -516,6 +446,76 @@ class ConfirmContent(ui.Widget):
         ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
         ui.display.image((ui.WIDTH - 64) // 2, 64, self.app_icon)
         ui.display.text_center(ui.WIDTH // 2, 168, self.app_name, ui.MONO, ui.FG, ui.BG)
+
+
+def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
+    if req.cmd == _CMD_MSG:
+        m = req.to_msg()
+
+        if m.cla != 0:
+            if __debug__:
+                log.warning(__name__, '_SW_CLA_NOT_SUPPORTED')
+            return msg_error(req.cid, _SW_CLA_NOT_SUPPORTED)
+
+        if m.lc + _APDU_DATA > len(req.data):
+            if __debug__:
+                log.warning(__name__, '_SW_WRONG_LENGTH')
+            return msg_error(req.cid, _SW_WRONG_LENGTH)
+
+        if m.ins == _MSG_REGISTER:
+            if __debug__:
+                log.debug(__name__, '_MSG_REGISTER')
+            return msg_register(m, state)
+        elif m.ins == _MSG_AUTHENTICATE:
+            if __debug__:
+                log.debug(__name__, '_MSG_AUTHENTICATE')
+            return msg_authenticate(m, state)
+        elif m.ins == _MSG_VERSION:
+            if __debug__:
+                log.debug(__name__, '_MSG_VERSION')
+            return msg_version(m)
+        else:
+            if __debug__:
+                log.warning(__name__, '_SW_INS_NOT_SUPPORTED: %d', m.ins)
+            return msg_error(req.cid, _SW_INS_NOT_SUPPORTED)
+
+    elif req.cmd == _CMD_INIT:
+        if __debug__:
+            log.debug(__name__, '_CMD_INIT')
+        return cmd_init(req)
+    elif req.cmd == _CMD_PING:
+        if __debug__:
+            log.debug(__name__, '_CMD_PING')
+        return req
+    elif req.cmd == _CMD_WINK:
+        if __debug__:
+            log.debug(__name__, '_CMD_WINK')
+        return req
+    else:
+        if __debug__:
+            log.warning(__name__, '_ERR_INVALID_CMD: %d', req.cmd)
+        return cmd_error(req.cid, _ERR_INVALID_CMD)
+
+
+def cmd_init(req: Cmd) -> Cmd:
+    if req.cid == 0:
+        return cmd_error(req.cid, _ERR_INVALID_CID)
+    elif req.cid == _CID_BROADCAST:
+        # uint32_t except 0 and 0xffffffff
+        resp_cid = random.uniform(0xfffffffe) + 1
+    else:
+        resp_cid = req.cid
+
+    buf, resp = make_struct(resp_cmd_init())
+    utils.memcpy(resp.nonce, 0, req.data, 0, len(req.data))
+    resp.cid = resp_cid
+    resp.versionInterface = _U2FHID_IF_VERSION
+    resp.versionMajor = 2
+    resp.versionMinor = 0
+    resp.versionBuild = 0
+    resp.capFlags = _CAPFLAG_WINK
+
+    return Cmd(req.cid, req.cmd, buf)
 
 
 def msg_register(req: Msg, state: ConfirmState) -> Cmd:
