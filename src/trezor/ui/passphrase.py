@@ -163,6 +163,7 @@ class PassphraseKeyboard(ui.Widget):
             self.back.enable()
         else:
             self.back.disable()
+            self.prompt.taint()
 
     async def __iter__(self):
         self.edit(self.input.content)  # init button state
