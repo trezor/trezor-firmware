@@ -11,7 +11,7 @@ from apps.common import storage, coins, cache
 async def respond_Features(ctx, msg):
 
     if msg.__qualname__ == 'Initialize':
-        if msg.state is None or msg.state != cache.get_state(state=msg.state):
+        if msg.state is None or bytes(msg.state) != cache.get_state(state=bytes(msg.state)):
             cache.clear()
 
     f = Features()

@@ -33,7 +33,7 @@ def get_seed():
 
 def set_seed(seed, passphrase):
     global _seed, _passphrase
-    _seed, _passphrase = seed, _passphrase
+    _seed, _passphrase = seed, passphrase
 
 
 def has_passphrase():
