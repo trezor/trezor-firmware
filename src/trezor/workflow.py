@@ -1,19 +1,19 @@
 from trezor import loop
 
-started = []
-default = None
-default_handler = None
+workflows = []
 layouts = []
+default = None
+default_layout = None
 
 
 def onstart(w):
-    started.append(w)
+    workflows.append(w)
 
 
 def onclose(w):
-    started.remove(w)
-    if not started and not layouts and default_handler:
-        startdefault(default_handler)
+    workflows.remove(w)
+    if not layouts and default_layout:
+        startdefault(default_layout)
 
 
 def closedefault():
@@ -24,13 +24,13 @@ def closedefault():
         default = None
 
 
-def startdefault(handler):
+def startdefault(layout):
     global default
-    global default_handler
+    global default_layout
 
     if not default:
-        default_handler = handler
-        default = handler()
+        default_layout = layout
+        default = layout()
         loop.schedule(default)
 
 
@@ -47,4 +47,5 @@ def onlayoutstart(l):
 
 
 def onlayoutclose(l):
-    layouts.remove(l)
+    if l in layouts:
+        layouts.remove(l)
