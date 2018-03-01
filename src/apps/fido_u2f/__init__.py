@@ -458,10 +458,22 @@ class ConfirmState:
     @ui.layout
     async def confirm_layout(self) -> None:
         from trezor.ui.confirm import ConfirmDialog, CONFIRMED
+        from trezor.ui.text import Text
 
-        content = ConfirmContent(self.action, self.app_id)
-        dialog = ConfirmDialog(content, )
-        self.confirmed = await dialog == CONFIRMED
+        if bytes(self.app_id) == _BOGUS_APPID:
+            text = Text(
+                'U2F mismatch', ui.ICON_WRONG,
+                'Another U2F device',
+                'was used to register',
+                'in this application.',
+                icon_color=ui.RED)
+            text.render()
+            await loop.sleep(3 * 1000 * 1000)
+            self.confirmed = True
+        else:
+            content = ConfirmContent(self.action, self.app_id)
+            dialog = ConfirmDialog(content, )
+            self.confirmed = await dialog == CONFIRMED
 
 
 class ConfirmContent(ui.Widget):
