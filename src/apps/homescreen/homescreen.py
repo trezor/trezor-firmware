@@ -24,12 +24,12 @@ def display_homescreen():
 
     if storage.is_initialized() and storage.needs_backup():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
-        ui.display.text_center(120, 22, 'NEEDS BACKUP!', ui.BOLD, ui.BLACK, ui.YELLOW)
+        ui.display.text_center(ui.WIDTH // 2, 22, 'NEEDS BACKUP!', ui.BOLD, ui.BLACK, ui.YELLOW)
         ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
     else:
         ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
     ui.display.avatar(48, 48 - 10, image, ui.WHITE, ui.BLACK)
-    ui.display.text_center(120, 220, label, ui.BOLD, ui.FG, ui.BG)
+    ui.display.text_center(ui.WIDTH // 2, 220, label, ui.BOLD, ui.FG, ui.BG)
 
 
 async def swipe_to_rotate():

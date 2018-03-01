@@ -57,11 +57,11 @@ def rotate(pos: tuple) -> tuple:
         return pos
     x, y = pos
     if r == 90:
-        return (y, 240 - x)
+        return (y, WIDTH - x)
     if r == 180:
-        return (240 - x, 240 - y)
+        return (WIDTH - x, HEIGHT - y)
     if r == 270:
-        return (240 - y, x)
+        return (HEIGHT - y, x)
 
 
 def pulse(delay: int):

@@ -35,13 +35,13 @@ async def lockscreen():
 
     ui.display.clear()
     ui.display.avatar(48, 48, image, ui.TITLE_GREY, ui.BG)
-    ui.display.text_center(120, 35, label, ui.BOLD, ui.TITLE_GREY, ui.BG)
+    ui.display.text_center(ui.WIDTH // 2, 35, label, ui.BOLD, ui.TITLE_GREY, ui.BG)
 
     ui.display.bar_radius(40, 100, 160, 40, ui.TITLE_GREY, ui.BG, 4)
     ui.display.bar_radius(42, 102, 156, 36, ui.BG, ui.TITLE_GREY, 4)
-    ui.display.text_center(120, 128, 'Locked', ui.BOLD, ui.TITLE_GREY, ui.BG)
+    ui.display.text_center(ui.WIDTH // 2, 128, 'Locked', ui.BOLD, ui.TITLE_GREY, ui.BG)
 
-    ui.display.text_center(130, 220, 'Tap to unlock', ui.BOLD, ui.TITLE_GREY, ui.BG)
+    ui.display.text_center(ui.WIDTH // 2 + 10, 220, 'Tap to unlock', ui.BOLD, ui.TITLE_GREY, ui.BG)
     ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
 
     await ui.backlight_slide(ui.BACKLIGHT_NORMAL)

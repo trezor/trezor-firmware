@@ -89,7 +89,7 @@ class Prompt:
 
     def render(self):
         if self.dirty:
-            display.bar(0, 0, 240, 48, ui.BG)
+            display.bar(0, 0, ui.WIDTH, 48, ui.BG)
             display.text_center(ui.WIDTH // 2, 32, self.text, ui.BOLD, ui.GREY, ui.BG)
             self.dirty = False
 

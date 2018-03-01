@@ -58,8 +58,8 @@ class Loader(ui.Widget):
 
     def __iter__(self):
         sleep = loop.sleep(1000000 // 30)  # 30 fps
-        ui.display.bar(0, 32, 240, 240 - 83, ui.BG)  # clear
+        ui.display.bar(0, 32, ui.WIDTH, ui.HEIGHT - 83, ui.BG)  # clear
         while self.is_active():
             self.render()
             yield sleep
-        ui.display.bar(0, 32, 240, 240 - 83, ui.BG)  # clear
+        ui.display.bar(0, 32, ui.WIDTH, ui.HEIGHT - 83, ui.BG)  # clear
