@@ -305,16 +305,17 @@ def recovery_device(connect, words, expand, pin_protection, passphrase_protectio
 
 
 @cli.command(help='Perform device setup and generate new seed.')
+@click.option('-e', '--entropy', is_flag=True)
 @click.option('-t', '--strength', type=click.Choice(['128', '192', '256']), default='256')
-@click.option('-p', '--pin-protection', is_flag=True)
 @click.option('-r', '--passphrase-protection', is_flag=True)
+@click.option('-p', '--pin-protection', is_flag=True)
 @click.option('-l', '--label')
 @click.option('-u', '--u2f-counter', default=0)
 @click.option('-s', '--skip-backup', is_flag=True)
 @click.pass_obj
-def reset_device(connect, strength, pin_protection, passphrase_protection, label, u2f_counter, skip_backup):
+def reset_device(connect, entropy, strength, passphrase_protection, pin_protection, label, u2f_counter, skip_backup):
     return connect().reset_device(
-        True,
+        entropy,
         int(strength),
         passphrase_protection,
         pin_protection,
