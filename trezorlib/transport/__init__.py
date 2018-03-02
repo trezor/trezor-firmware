@@ -53,7 +53,7 @@ class Transport(object):
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls, path, prefix_search = True):
+    def find_by_path(cls, path, prefix_search=False):
         for device in cls.enumerate():
             if path is None or device.get_path() == path \
                     or (prefix_search and device.get_path().startswith(path)):

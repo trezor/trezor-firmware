@@ -53,15 +53,34 @@ class UdpTransport(Transport):
         host, port = self.device
         return UdpTransport('{}:{}'.format(host, port+1), self.protocol)
 
-    @staticmethod
-    def enumerate():
+    @classmethod
+    def _try_path(cls, path):
+        d = cls(path)
+        try:
+            d.open()
+            if d._ping():
+                return d
+            else:
+                raise TransportException('No TREZOR device found at address {}'.format(path))
+        finally:
+            d.close()
+
+    @classmethod
+    def enumerate(cls):
         devices = []
-        d = UdpTransport("%s:%d" % (UdpTransport.DEFAULT_HOST, UdpTransport.DEFAULT_PORT))
-        d.open()
-        if d._ping():
-            devices.append(d)
-        d.close()
-        return devices
+        default_path = '{}:{}'.format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
+        try:
+            return [cls._try_path(default_path)]
+        except TransportException:
+            return []
+
+    @classmethod
+    def find_by_path(cls, path, prefix_search=False):
+        if prefix_search:
+            return super().find_by_path(path, prefix_search)
+        else:
+            path = path.replace('{}:'.format(cls.PATH_PREFIX), '')
+            return cls._try_path(path)
 
     def open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
