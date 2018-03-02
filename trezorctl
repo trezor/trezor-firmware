@@ -29,7 +29,7 @@ import os
 import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
-from trezorlib.device import TrezorDevice
+from trezorlib.transport import get_transport, enumerate_devices, TransportException
 from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib.coins import coins_txapi
@@ -72,9 +72,24 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
 def cli(ctx, path, verbose, is_json):
     if ctx.invoked_subcommand != 'list':
         if verbose:
-            ctx.obj = lambda: TrezorClientVerbose(TrezorDevice.find_by_path(path))
+            cls = TrezorClientVerbose
         else:
-            ctx.obj = lambda: TrezorClient(TrezorDevice.find_by_path(path))
+            cls = TrezorClient
+
+        def get_device():
+            try:
+                device = get_transport(path, prefix_search=False)
+            except:
+                try:
+                    device = get_transport(path, prefix_search=True)
+                except:
+                    click.echo("Failed to find a TREZOR device.")
+                    if path is not None:
+                        click.echo("Using path: {}".format(path))
+                    sys.exit(1)
+            return cls(device)
+
+        ctx.obj = get_device
 
 
 @cli.resultcallback()
@@ -106,7 +121,7 @@ def print_result(res, path, verbose, is_json):
 
 @cli.command(name='list', help='List connected TREZOR devices.')
 def ls():
-    return TrezorDevice.enumerate()
+    return enumerate_devices()
 
 
 @cli.command(help='Show version of trezorctl/trezorlib.')
