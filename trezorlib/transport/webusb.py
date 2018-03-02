@@ -16,16 +16,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 import time
 import os
 import atexit
 import usb1
 
-from .protocol_v1 import ProtocolV1
-from .protocol_v2 import ProtocolV2
-from .transport import Transport, TransportException
+from ..protocol_v1 import ProtocolV1
+from ..protocol_v2 import ProtocolV2
+from . import Transport, TransportException
 
 DEV_TREZOR1 = (0x534c, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53c1)
@@ -37,7 +35,7 @@ DEBUG_INTERFACE = 1
 DEBUG_ENDPOINT = 2
 
 
-class WebUsbHandle(object):
+class WebUsbHandle:
 
     def __init__(self, device):
         self.device = device
@@ -88,9 +86,6 @@ class WebUsbTransport(Transport):
         self.handle = handle
         self.debug = debug
 
-    def __str__(self):
-        return self.get_path()
-
     def get_path(self):
         return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
 
@@ -108,14 +103,6 @@ class WebUsbTransport(Transport):
                 continue
             devices.append(WebUsbTransport(dev))
         return devices
-
-    @classmethod
-    def find_by_path(cls, path):
-        path = path.replace('%s:' % cls.PATH_PREFIX, '')  # Remove prefix from __str__()
-        for transport in WebUsbTransport.enumerate():
-            if path is None or dev_to_str(transport.device) == path:
-                return transport
-        raise TransportException('WebUSB device not found')
 
     def find_debug(self):
         if isinstance(self.protocol, ProtocolV2):

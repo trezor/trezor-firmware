@@ -17,9 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
-
 class TransportException(Exception):
     pass
 
@@ -28,6 +25,12 @@ class Transport(object):
 
     def __init__(self):
         self.session_counter = 0
+
+    def __str__(self):
+        return self.get_path()
+
+    def get_path(self):
+        return '{}:{}'.format(self.PATH_PREFIX, self.device)
 
     def session_begin(self):
         if self.session_counter == 0:
@@ -44,3 +47,16 @@ class Transport(object):
 
     def close(self):
         raise NotImplementedError
+
+    @classmethod
+    def enumerate(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def find_by_path(cls, path, prefix_search = True):
+        for device in cls.enumerate():
+            if path is None or device.get_path() == path \
+                    or (prefix_search and device.get_path().startswith(path)):
+                return device
+
+        raise TransportException('{} device not found: {}'.format(cls.PATH_PREFIX, path))

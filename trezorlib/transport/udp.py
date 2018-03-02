@@ -16,14 +16,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 import os
 import socket
 
-from .protocol_v1 import ProtocolV1
-from .protocol_v2 import ProtocolV2
-from .transport import Transport, TransportException
+from ..protocol_v1 import ProtocolV1
+from ..protocol_v2 import ProtocolV2
+from . import Transport, TransportException
 
 
 class UdpTransport(Transport):
@@ -48,11 +46,12 @@ class UdpTransport(Transport):
         self.protocol = protocol
         self.socket = None
 
-    def __str__(self):
-        return self.get_path()
-
     def get_path(self):
         return "%s:%s:%s" % ((self.PATH_PREFIX,) + self.device)
+
+    def find_debug(self):
+        host, port = self.device
+        return UdpTransport('{}:{}'.format(host, port+1), self.protocol)
 
     @staticmethod
     def enumerate():
@@ -63,11 +62,6 @@ class UdpTransport(Transport):
             devices.append(d)
         d.close()
         return devices
-
-    @classmethod
-    def find_by_path(cls, path):
-        path = path.replace('%s:' % cls.PATH_PREFIX, '')
-        return UdpTransport(path)
 
     def open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
