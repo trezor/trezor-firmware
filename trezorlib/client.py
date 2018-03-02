@@ -425,7 +425,7 @@ class DebugLinkMixin(object):
                     continue
                 if getattr(msg, field) != value:
                     raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                            "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
 
     def callback_ButtonRequest(self, msg):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
