@@ -60,3 +60,37 @@ class Transport(object):
                 return device
 
         raise TransportException('{} device not found: {}'.format(cls.PATH_PREFIX, path))
+
+
+def all_transports():
+    from .bridge import BridgeTransport
+    from .hid import HidTransport
+    from .udp import UdpTransport
+    from .webusb import WebUsbTransport
+    return (BridgeTransport, HidTransport, UdpTransport, WebUsbTransport)
+
+
+def enumerate_devices():
+    return [device
+            for transport in all_transports()
+            for device in transport.enumerate()]
+
+
+def get_transport(path=None, prefix_search=False):
+    if path is None:
+        try:
+            return enumerate_devices()[0]
+        except IndexError:
+            raise Exception("No TREZOR device found")
+
+    # Find whether B is prefix of A (transport name is part of the path)
+    # or A is prefix of B (path is a prefix, or a name, of transport).
+    # This naively expects that no two transports have a common prefix.
+    def match_prefix(a,b):
+        return a.startswith(b) or b.startswith(a)
+
+    transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+    if transports:
+        return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+    raise Exception("Unknown path prefix '%s'" % prefix)
