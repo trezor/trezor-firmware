@@ -36,6 +36,122 @@
 
 #define BITCOIN_DIVISIBILITY (8)
 
+static const char *slip44_extras(uint32_t coin_type)
+{
+	if ((coin_type & 0x80000000) == 0) {
+		return 0;
+	}
+	switch (coin_type & 0x7fffffff) {
+		case    40: return "EXP";  // Expanse
+		case    43: return "NEM";  // NEM
+		case    60: return "ETH";  // Ethereum Mainnet
+		case    61: return "ETC";  // Ethereum Classic Mainnet
+		case   108: return "UBQ";  // UBIQ
+		case   137: return "RSK";  // Rootstock Mainnet
+		case 37310: return "tRSK"; // Rootstock Testnet
+	}
+	return 0;
+}
+
+#define BIP32_MAX_LAST_ELEMENT 1000000
+
+static const char *address_n_str(const uint32_t *address_n, size_t address_n_count)
+{
+	if (address_n_count > 8) {
+		return _("Unknown long path");
+	}
+	if (address_n_count == 0) {
+		return _("Path: m");
+	}
+
+	// known BIP44/49 path
+	static char path[100];
+	if (address_n_count == 5 &&
+		(address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49) || address_n[0] == (0x80000000 + 84)) &&
+		(address_n[1] & 0x80000000) &&
+		(address_n[2] & 0x80000000) &&
+		(address_n[3] <= 1) &&
+		(address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
+			bool native_segwit = (address_n[0] == (0x80000000 + 84));
+			bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
+			bool legacy = false;
+			const CoinInfo *coin = coinByCoinType(address_n[1]);
+			const char *abbr = 0;
+			if (native_segwit) {
+				if (coin && coin->has_segwit && coin->bech32_prefix) {
+					abbr = coin->coin_shortcut + 1;
+				}
+			} else
+			if (p2sh_segwit) {
+				if (coin && coin->has_segwit && coin->has_address_type_p2sh) {
+					abbr = coin->coin_shortcut + 1;
+				}
+			} else {
+				if (coin) {
+					if (coin->has_segwit && coin->has_address_type_p2sh) {
+						legacy = true;
+					}
+					abbr = coin->coin_shortcut + 1;
+				} else {
+					abbr = slip44_extras(address_n[1]);
+				}
+			}
+			uint32_t accnum = (address_n[2] & 0x7fffffff) + 1;
+			if (abbr && accnum < 100) {
+				memset(path, 0, sizeof(path));
+				strlcpy(path, abbr, sizeof(path));
+				// TODO: how to name accounts?
+				// currently we have "legacy account", "account" and "segwit account"
+				// for BIP44/P2PKH, BIP49/P2SH-P2WPKH and BIP84/P2WPKH respectivelly
+				if (legacy) {
+					strlcat(path, " legacy", sizeof(path));
+				}
+				if (native_segwit) {
+					strlcat(path, " segwit", sizeof(path));
+				}
+				strlcat(path, " account #", sizeof(path));
+				char acc[3];
+				memset(acc, 0, sizeof(acc));
+				if (accnum < 10) {
+					acc[0] = '0' + accnum;
+				} else {
+					acc[0] = '0' + (accnum / 10);
+					acc[1] = '0' + (accnum % 10);
+				}
+				strlcat(path, acc, sizeof(path));
+				return path;
+			}
+	}
+
+	//                  "Path: m"    /   i   '
+	static char address_str[7 + 8 * (1 + 9 + 1) + 1];
+	char *c = address_str + sizeof(address_str) - 1;
+
+	*c = 0; c--;
+
+	for (int n = (int)address_n_count - 1; n >= 0; n--) {
+		uint32_t i = address_n[n];
+		if (i & 0x80000000) {
+			*c = '\''; c--;
+		}
+		i = i & 0x7fffffff;
+		do {
+			*c = '0' + (i % 10); c--;
+			i /= 10;
+		} while (i > 0);
+		*c = '/'; c--;
+	}
+	*c = 'm'; c--;
+	*c = ' '; c--;
+	*c = ':'; c--;
+	*c = 'h'; c--;
+	*c = 't'; c--;
+	*c = 'a'; c--;
+	*c = 'P';
+
+	return c;
+}
+
 // split longer string into 4 rows, rowlen chars each
 static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 {
@@ -149,7 +265,11 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 	oledDrawString(left, 4 * 9, str[2], FONT_FIXED);
 	oledDrawString(left, 5 * 9, str[3], FONT_FIXED);
 	if (!str[3][0]) {
-		oledHLine(OLED_HEIGHT - 13);
+		if (out->address_n_count > 0) {
+			oledDrawString(0, 5*9, address_n_str(out->address_n, out->address_n_count), FONT_STANDARD);
+		} else {
+			oledHLine(OLED_HEIGHT - 13);
+		}
 	}
 	layoutButtonNo(_("Cancel"));
 	layoutButtonYes(_("Confirm"));
@@ -322,122 +442,6 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledHLine(OLED_HEIGHT - 13);
 	layoutButtonYes(btnYes);
 	oledRefresh();
-}
-
-static const char *slip44_extras(uint32_t coin_type)
-{
-	if ((coin_type & 0x80000000) == 0) {
-		return 0;
-	}
-	switch (coin_type & 0x7fffffff) {
-		case    40: return "EXP";  // Expanse
-		case    43: return "NEM";  // NEM
-		case    60: return "ETH";  // Ethereum Mainnet
-		case    61: return "ETC";  // Ethereum Classic Mainnet
-		case   108: return "UBQ";  // UBIQ
-		case   137: return "RSK";  // Rootstock Mainnet
-		case 37310: return "tRSK"; // Rootstock Testnet
-	}
-	return 0;
-}
-
-#define BIP32_MAX_LAST_ELEMENT 1000000
-
-static const char *address_n_str(const uint32_t *address_n, size_t address_n_count)
-{
-	if (address_n_count > 8) {
-		return _("Unknown long path");
-	}
-	if (address_n_count == 0) {
-		return _("Path: m");
-	}
-
-	// known BIP44/49 path
-	static char path[100];
-	if (address_n_count == 5 &&
-		(address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49) || address_n[0] == (0x80000000 + 84)) &&
-		(address_n[1] & 0x80000000) &&
-		(address_n[2] & 0x80000000) &&
-		(address_n[3] <= 1) &&
-		(address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
-			bool native_segwit = (address_n[0] == (0x80000000 + 84));
-			bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
-			bool legacy = false;
-			const CoinInfo *coin = coinByCoinType(address_n[1]);
-			const char *abbr = 0;
-			if (native_segwit) {
-				if (coin && coin->has_segwit && coin->bech32_prefix) {
-					abbr = coin->coin_shortcut + 1;
-				}
-			} else
-			if (p2sh_segwit) {
-				if (coin && coin->has_segwit && coin->has_address_type_p2sh) {
-					abbr = coin->coin_shortcut + 1;
-				}
-			} else {
-				if (coin) {
-					if (coin->has_segwit && coin->has_address_type_p2sh) {
-						legacy = true;
-					}
-					abbr = coin->coin_shortcut + 1;
-				} else {
-					abbr = slip44_extras(address_n[1]);
-				}
-			}
-			uint32_t accnum = (address_n[2] & 0x7fffffff) + 1;
-			if (abbr && accnum < 100) {
-				memset(path, 0, sizeof(path));
-				strlcpy(path, abbr, sizeof(path));
-				// TODO: how to name accounts?
-				// currently we have "legacy account", "account" and "segwit account"
-				// for BIP44/P2PKH, BIP49/P2SH-P2WPKH and BIP84/P2WPKH respectivelly
-				if (legacy) {
-					strlcat(path, " legacy", sizeof(path));
-				}
-				if (native_segwit) {
-					strlcat(path, " segwit", sizeof(path));
-				}
-				strlcat(path, " account #", sizeof(path));
-				char acc[3];
-				memset(acc, 0, sizeof(acc));
-				if (accnum < 10) {
-					acc[0] = '0' + accnum;
-				} else {
-					acc[0] = '0' + (accnum / 10);
-					acc[1] = '0' + (accnum % 10);
-				}
-				strlcat(path, acc, sizeof(path));
-				return path;
-			}
-	}
-
-	//                  "Path: m"    /   i   '
-	static char address_str[7 + 8 * (1 + 9 + 1) + 1];
-	char *c = address_str + sizeof(address_str) - 1;
-
-	*c = 0; c--;
-
-	for (int n = (int)address_n_count - 1; n >= 0; n--) {
-		uint32_t i = address_n[n];
-		if (i & 0x80000000) {
-			*c = '\''; c--;
-		}
-		i = i & 0x7fffffff;
-		do {
-			*c = '0' + (i % 10); c--;
-			i /= 10;
-		} while (i > 0);
-		*c = '/'; c--;
-	}
-	*c = 'm'; c--;
-	*c = ' '; c--;
-	*c = ':'; c--;
-	*c = 'h'; c--;
-	*c = 't'; c--;
-	*c = 'a'; c--;
-	*c = 'P';
-
-	return c;
 }
 
 void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count)
