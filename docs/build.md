@@ -9,6 +9,12 @@ git clone --recursive https://github.com/trezor/trezor-core.git
 cd trezor-core
 ```
 
+If are building the already cloned the project, don't forget to use the following to refresh the submodules:
+
+```sh
+git submodule update --init --recursive
+```
+
 ### Linux
 
 #### Debian/Ubuntu
