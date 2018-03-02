@@ -14,10 +14,11 @@ async def backup_device(ctx, msg):
 
     mnemonic = storage.get_mnemonic()
 
-    storage.set_backed_up()
-
     # warn user about mnemonic safety
     await show_warning(ctx)
+
+    storage.set_backed_up()
+
     while True:
         # show mnemonic and require confirmation of a random word
         await show_mnemonic(ctx, mnemonic)
