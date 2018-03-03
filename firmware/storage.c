@@ -125,9 +125,6 @@ static bool sessionPinCached;
 static bool sessionPassphraseCached;
 static char CONFIDENTIAL sessionPassphrase[51];
 
-static bool sessionStateSaltSet;
-static uint8_t sessionStateSalt[32];
-
 #define STORAGE_VERSION 9
 
 void storage_show_error(void)
@@ -270,8 +267,6 @@ void session_clear(bool clear_pin)
 	memzero(&sessionSeed, sizeof(sessionSeed));
 	sessionPassphraseCached = false;
 	memzero(&sessionPassphrase, sizeof(sessionPassphrase));
-	sessionStateSaltSet = false;
-	memzero(&sessionStateSalt, sizeof(sessionStateSalt));
 	if (clear_pin) {
 		sessionPinCached = false;
 	}
@@ -715,45 +710,31 @@ bool session_isPassphraseCached(void)
 	return sessionPassphraseCached;
 }
 
-void session_getState(const uint8_t *salt, uint8_t *state)
+bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphrase)
 {
-	if (!salt) {
-		if (!sessionStateSaltSet) {
-			// generate a random salt if not provided and not already cached
-			random_buffer(sessionStateSalt, 32);
-		}
+	if (!passphrase && !sessionPassphraseCached) {
+		return false;
 	} else {
-		// otherwise copy provided salt to cached salt
-		memcpy(sessionStateSalt, salt, 32);
+		passphrase = sessionPassphrase;
 	}
-
-	sessionStateSaltSet = true;
-
+	if (!salt) {
+		// if salt is not provided fill the first half of the state with random data
+		random_buffer(state, 32);
+	} else {
+		// if salt is provided fill the first half of the state with salt
+		memcpy(state, salt, 32);
+	}
 	// state[0:32] = salt
-	memcpy(state, sessionStateSalt, 32);
-
 	// state[32:64] = HMAC(passphrase, salt || device_id)
 	HMAC_SHA256_CTX ctx;
-	if (sessionPassphraseCached) {
-		hmac_sha256_Init(&ctx, (const uint8_t *)sessionPassphrase, strlen(sessionPassphrase));
-	} else {
-		hmac_sha256_Init(&ctx, (const uint8_t *)"", 0);
-	}
-	hmac_sha256_Update(&ctx, sessionStateSalt, 32);
+	hmac_sha256_Init(&ctx, (const uint8_t *)passphrase, strlen(passphrase));
+	hmac_sha256_Update(&ctx, state, 32);
 	hmac_sha256_Update(&ctx, (const uint8_t *)storage_uuid, sizeof(storage_uuid));
 	hmac_sha256_Final(&ctx, state + 32);
 
 	memzero(&ctx, sizeof(ctx));
-}
 
-bool session_compareState(const uint8_t *state)
-{
-	if (!state) {
-		return false;
-	}
-	uint8_t istate[64];
-	session_getState(state, istate);
-	return 0 == memcmp(state, istate, 64);
+	return true;
 }
 
 void session_cachePin(void)
