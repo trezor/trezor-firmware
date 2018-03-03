@@ -60,7 +60,7 @@ def format_ethereum_amount(value, token, chain_id):
         suffix = networks.suffix_by_chain_id(chain_id)
         decimals = 18
 
-    if value < 1e18:
+    if value <= 1e9:
         suffix = 'Wei ' + suffix
         decimals = 0
 

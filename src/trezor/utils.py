@@ -18,9 +18,12 @@ def unimport(genfunc):
     return inner
 
 
-def ensure(cond):
+def ensure(cond, msg=None):
     if not cond:
-        raise AssertionError()
+        if msg is None:
+            raise AssertionError()
+        else:
+            raise AssertionError(msg)
 
 
 def chunks(items, size):

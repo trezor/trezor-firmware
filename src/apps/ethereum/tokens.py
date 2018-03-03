@@ -1,6 +1,6 @@
 def token_by_chain_address(chain_id, address):
     if not address:
-        return 0
+        return None
     for token in tokens:
         if chain_id == token[0] and address == token[1]:
             return token
