@@ -261,7 +261,7 @@ env.Replace(
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         'UNIX',
-        'TREZOR_UNIX',
+        'TREZOR_MODEL_EMU',
         'MICROPY_USE_READLINE',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,

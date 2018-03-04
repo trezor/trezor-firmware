@@ -33,7 +33,7 @@ STATIC mp_obj_t mod_trezorio_SDCard_make_new(const mp_obj_type_t *type, size_t n
     mp_arg_check_num(n_args, n_kw, 0, 0, false);
     mp_obj_SDCard_t *o = m_new_obj(mp_obj_SDCard_t);
     o->base.type = type;
-#if defined TREZOR_UNIX
+#if defined TREZOR_MODEL_EMU
     sdcard_init();
 #endif
     return MP_OBJ_FROM_PTR(o);

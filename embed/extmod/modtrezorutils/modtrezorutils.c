@@ -113,7 +113,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1, mod_t
 ///     Set unprivileged mode.
 ///     '''
 STATIC mp_obj_t mod_trezorutils_set_mode_unprivileged(void) {
-#if defined TREZOR_STM32
+#if defined TREZOR_MODEL_T
     __asm__ volatile("msr control, %0" :: "r" (0x1));
     __asm__ volatile("isb");
 #endif
@@ -146,6 +146,21 @@ STATIC mp_obj_t mod_trezorutils_symbol(mp_obj_t name) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_symbol_obj, mod_trezorutils_symbol);
 
+/// def model() -> str:
+///     '''
+///     Return which hardware model we are running on.
+///     '''
+STATIC mp_obj_t mod_trezorutils_model(void) {
+    const char *model = NULL;
+#if defined TREZOR_MODEL_T
+    model = "T";
+#elif defined TREZOR_MODEL_EMU
+    model = "EMU";
+#endif
+    return model ? mp_obj_new_str(model, strlen(model), false) : mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_model_obj, mod_trezorutils_model);
+
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils) },
     { MP_ROM_QSTR(MP_QSTR_consteq), MP_ROM_PTR(&mod_trezorutils_consteq_obj) },
@@ -153,6 +168,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_mode_unprivileged), MP_ROM_PTR(&mod_trezorutils_set_mode_unprivileged_obj) },
     { MP_ROM_QSTR(MP_QSTR_symbol), MP_ROM_PTR(&mod_trezorutils_symbol_obj) },
+    { MP_ROM_QSTR(MP_QSTR_model), MP_ROM_PTR(&mod_trezorutils_model_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorutils_globals, mp_module_trezorutils_globals_table);

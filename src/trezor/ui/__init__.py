@@ -1,6 +1,5 @@
 from micropython import const
 
-import sys
 import math
 import utime
 
@@ -10,11 +9,12 @@ from trezor import io
 from trezor import loop
 from trezor import res
 from trezor import workflow
+from trezor.utils import model
 
 display = Display()
 
 # for desktop platforms, we need to refresh the display after each frame
-if sys.platform != 'trezor':
+if model() == 'EMU':
     loop.after_step_hook = display.refresh
 
 # import constants from modtrezorui

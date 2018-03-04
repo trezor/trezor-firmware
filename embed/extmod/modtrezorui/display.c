@@ -44,9 +44,9 @@ static struct {
     int x, y;
 } DISPLAY_OFFSET;
 
-#if defined TREZOR_STM32
+#if defined TREZOR_MODEL_T
 #include "display-stm32.h"
-#elif defined TREZOR_UNIX
+#elif defined TREZOR_MODEL_EMU
 #include "display-unix.h"
 #else
 #error Unsupported TREZOR port. Only STM32 and UNIX ports are supported.
@@ -385,7 +385,7 @@ void display_print(const char *text, int textlen)
     display_refresh();
 }
 
-#ifdef TREZOR_UNIX
+#ifdef TREZOR_MODEL_EMU
 #define mini_vsnprintf vsnprintf
 #include <stdio.h>
 #else

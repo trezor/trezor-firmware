@@ -1,5 +1,5 @@
 from trezor import config
-from trezor.utils import unimport, symbol
+from trezor.utils import unimport, symbol, model
 from trezor.wire import register, protobuf_workflow
 from trezor.messages import wire_types
 from trezor.messages.Features import Features
@@ -31,7 +31,8 @@ async def respond_Features(ctx, msg):
     f.passphrase_cached = cache.has_passphrase()
     f.needs_backup = storage.needs_backup()
     f.flags = storage.get_flags()
-    f.model = 'T'
+    if model() in ['T', 'EMU']:  # emulator currently emulates model T
+        f.model = 'T'
 
     return f
 

@@ -1,5 +1,6 @@
 from trezor.utils import ensure
 
+
 class SkipTest(Exception):
     pass
 
