@@ -82,7 +82,7 @@ def get_transport(path=None, prefix_search=False):
         try:
             return enumerate_devices()[0]
         except IndexError:
-            raise Exception("No TREZOR device found")
+            raise Exception("No TREZOR device found") from None
 
     # Find whether B is prefix of A (transport name is part of the path)
     # or A is prefix of B (path is a prefix, or a name, of transport).
