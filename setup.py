@@ -40,6 +40,7 @@ setup(
     ],
     scripts=['trezorctl'],
     install_requires=install_requires,
+    python_requires='>=3.3',
     include_package_data=True,
     zip_safe=False,
     classifiers=[
@@ -47,5 +48,6 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
+        'Programming Language :: Python :: 3 :: Only',
     ],
 )
