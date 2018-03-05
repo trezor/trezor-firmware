@@ -51,7 +51,7 @@ class UdpTransport(Transport):
 
     def find_debug(self):
         host, port = self.device
-        return UdpTransport('{}:{}'.format(host, port+1), self.protocol)
+        return UdpTransport('{}:{}'.format(host, port + 1), self.protocol)
 
     @classmethod
     def _try_path(cls, path):

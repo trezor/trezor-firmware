@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class TransportException(Exception):
     pass
 
@@ -86,7 +87,7 @@ def get_transport(path=None, prefix_search=False):
     # Find whether B is prefix of A (transport name is part of the path)
     # or A is prefix of B (path is a prefix, or a name, of transport).
     # This naively expects that no two transports have a common prefix.
-    def match_prefix(a,b):
+    def match_prefix(a, b):
         return a.startswith(b) or b.startswith(a)
 
     transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
