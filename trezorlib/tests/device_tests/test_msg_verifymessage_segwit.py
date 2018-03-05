@@ -20,7 +20,6 @@ from .common import *
 import base64
 
 
-@pytest.mark.skip_t2
 class TestMsgVerifymessageSegwit(TrezorTest):
 
     def test_message_long(self):

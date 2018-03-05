@@ -11,9 +11,11 @@ from urllib.parse import urlparse
 from trezorlib.client import TrezorClient
 from trezorlib.transport import get_transport
 
+
 # Return path by BIP-32
 def getPath(client):
     return client.expand_path("10016'/0")
+
 
 # Deriving master key
 def getMasterKey(client):
@@ -29,13 +31,15 @@ def getMasterKey(client):
     ))
     return key
 
+
 # Deriving file name and encryption key
 def getFileEncKey(key):
-    filekey, enckey = key[:len(key) // 2], key[len(key) //2:]
+    filekey, enckey = key[:len(key) // 2], key[len(key) // 2:]
     FILENAME_MESS = b'5f91add3fa1c3c76e90c90a3bd0999e2bd7833d06a483fe884ee60397aca277a'
     digest = hmac.new(filekey, FILENAME_MESS, hashlib.sha256).hexdigest()
     filename = digest + '.pswd'
     return [filename, filekey, enckey]
+
 
 # File level decryption and file reading
 def decryptStorage(path, key):
@@ -57,6 +61,7 @@ def decryptStorage(path, key):
         data = data + decryptor.finalize().decode()
     return json.loads(data)
 
+
 def decryptEntryValue(nonce, val):
     cipherkey = unhexlify(nonce)
     iv = val[:12]
@@ -76,6 +81,7 @@ def decryptEntryValue(nonce, val):
     data = data + decryptor.finalize().decode()
     return json.loads(data)
 
+
 # Decrypt give entry nonce
 def getDecryptedNonce(client, entry):
     print()
@@ -92,7 +98,7 @@ def getDecryptedNonce(client, entry):
 
     ENC_KEY = 'Unlock %s for user %s?' % (item, entry['username'])
     ENC_VALUE = entry['nonce']
-    decrypted_nonce =  hexlify(client.decrypt_keyvalue(
+    decrypted_nonce = hexlify(client.decrypt_keyvalue(
         getPath(client),
         ENC_KEY,
         unhexlify(ENC_VALUE),
@@ -100,6 +106,7 @@ def getDecryptedNonce(client, entry):
         True
     ))
     return decrypted_nonce
+
 
 # Pretty print of list
 def printEntries(entries):
@@ -110,7 +117,8 @@ def printEntries(entries):
         print('Entry id: #%s' % k)
         print('-------------')
         for kk, vv in v.items():
-            if kk in ['nonce', 'safe_note', 'password']: continue # skip these fields
+            if kk in ['nonce', 'safe_note', 'password']:
+                continue  # skip these fields
             print('*', kk, ': ', vv)
         print()
     return
@@ -154,14 +162,15 @@ def main():
     plain_nonce = getDecryptedNonce(client, entries[entry_id])
 
     pwdArr = entries[entry_id]['password']['data']
-    pwdHex = ''.join([ hex(x)[2:].zfill(2) for x in pwdArr ])
+    pwdHex = ''.join([hex(x)[2:].zfill(2) for x in pwdArr])
     print('password: ', decryptEntryValue(plain_nonce, unhexlify(pwdHex)))
 
     safeNoteArr = entries[entry_id]['safe_note']['data']
-    safeNoteHex = ''.join([ hex(x)[2:].zfill(2) for x in safeNoteArr ])
+    safeNoteHex = ''.join([hex(x)[2:].zfill(2) for x in safeNoteArr])
     print('safe_note:', decryptEntryValue(plain_nonce, unhexlify(safeNoteHex)))
 
     return
+
 
 if __name__ == '__main__':
     main()

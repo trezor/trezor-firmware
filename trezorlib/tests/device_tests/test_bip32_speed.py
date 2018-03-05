@@ -50,6 +50,7 @@ class TestBip32Speed(TrezorTest):
             print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
             assert delay <= expected
 
+    @pytest.mark.skip_t2
     def test_cache(self):
         self.setup_mnemonic_nopin_nopassphrase()
 

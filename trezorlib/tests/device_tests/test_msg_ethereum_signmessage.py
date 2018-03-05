@@ -18,6 +18,7 @@
 from .common import *
 
 
+@pytest.mark.skip_t2
 class TestMsgEthereumSignmessage(TrezorTest):
 
     def test_sign(self):

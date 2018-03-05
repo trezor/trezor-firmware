@@ -21,7 +21,6 @@ from .common import *
 from trezorlib import messages as proto
 
 
-@pytest.mark.skip_t2
 class TestMsgApplysettings(TrezorTest):
 
     def test_apply_settings(self):
@@ -33,10 +32,13 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
+            if self.client.features.major_version >= 2:
+                self.client.expected_responses.pop(0)  # skip PinMatrixRequest
             self.client.apply_settings(label='new label')
 
         assert self.client.features.label == 'new label'
 
+    @pytest.mark.skip_t2
     def test_invalid_language(self):
         self.setup_mnemonic_pin_passphrase()
         assert self.client.features.language == 'english'
@@ -60,6 +62,8 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
+            if self.client.features.major_version >= 2:
+                self.client.expected_responses.pop(0)  # skip PinMatrixRequest
             self.client.apply_settings(use_passphrase=True)
 
         assert self.client.features.passphrase_protection is True
@@ -80,6 +84,7 @@ class TestMsgApplysettings(TrezorTest):
 
         assert self.client.features.passphrase_protection is True
 
+    @pytest.mark.skip_t2
     def test_apply_homescreen(self):
         self.setup_mnemonic_pin_passphrase()
 

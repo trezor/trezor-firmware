@@ -187,7 +187,6 @@ class TestMsgSigntxBch(TrezorTest):
             else:
                 assert False  # exception expected
 
-
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)

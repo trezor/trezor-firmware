@@ -28,7 +28,7 @@ import json
 import os
 import sys
 
-from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
+from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException, format_protobuf
 from trezorlib.transport import get_transport, enumerate_devices, TransportException
 from trezorlib import messages as proto
 from trezorlib import protobuf
@@ -95,7 +95,7 @@ def cli(ctx, path, verbose, is_json):
 @cli.resultcallback()
 def print_result(res, path, verbose, is_json):
     if is_json:
-        if issubclass(res.__class__, protobuf.MessageType):
+        if isinstance(res, protobuf.MessageType):
             click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
@@ -110,6 +110,8 @@ def print_result(res, path, verbose, is_json):
                         click.echo('%s.%s: %s' % (k, kk, vv))
                 else:
                     click.echo('%s: %s' % (k, v))
+        elif isinstance(res, protobuf.MessageType):
+            click.echo(format_protobuf(res))
         else:
             click.echo(res)
 
@@ -597,9 +599,9 @@ def ethereum_sign_message(connect, address, message):
 
 def ethereum_decode_hex(value):
     if value.startswith('0x') or value.startswith('0X'):
-        return value[2:].decode('hex')
+        return binascii.unhexlify(value[2:])
     else:
-        return value.decode('hex')
+        return binascii.unhexlify(value)
 
 
 @cli.command(help='Verify message signed with Ethereum address.')
@@ -746,7 +748,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
 
     client = connect()
     address_n = client.expand_path(address)
-    address = '0x%s' % (binascii.hexlify(client.ethereum_get_address(address_n)),)
+    address = '0x%s' % (binascii.hexlify(client.ethereum_get_address(address_n)).decode())
 
     if gas_price is None or gas_limit is None or nonce is None:
         host, port = host.split(':')
@@ -764,7 +766,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
             to_address=to,
             from_address=address,
             value=('0x%x' % value),
-            data='0x' + data)
+            data='0x%s' % (binascii.hexlify(data).decode()))
 
     if nonce is None:
         nonce = eth.eth_getTransactionCount(address)
@@ -781,7 +783,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
 
     transaction = rlp.encode(
         (nonce, gas_price, gas_limit, to_address, value, data) + sig)
-    tx_hex = '0x%s' % binascii.hexlify(transaction)
+    tx_hex = '0x%s' % binascii.hexlify(transaction).decode()
 
     if publish:
         tx_hash = eth.eth_sendRawTransaction(tx_hex)
