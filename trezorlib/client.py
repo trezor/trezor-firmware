@@ -87,9 +87,9 @@ def get_buttonrequest_value(code):
     return [k for k in dir(proto.ButtonRequestType) if getattr(proto.ButtonRequestType, k) == code][0]
 
 
-def format_protobuf(pb, indent=0, sep=' '*4):
+def format_protobuf(pb, indent=0, sep=' ' * 4):
     def pformat_value(value, indent):
-        level  = sep * indent
+        level = sep * indent
         leadin = sep * (indent + 1)
         if isinstance(value, MessageType):
             return format_protobuf(value, indent, sep)
