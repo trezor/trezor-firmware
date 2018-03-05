@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
 import binascii
 import hashlib
 import mnemonic
@@ -15,12 +14,6 @@ __doc__ = '''
     highly secured computer (ideally live linux distribution
     without an internet connection).
 '''
-
-# Python2 vs Python3
-try:
-    input = raw_input
-except NameError:
-    pass
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):

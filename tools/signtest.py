@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 import binascii
 import os
 import random
@@ -12,8 +11,7 @@ import hashlib
 from trezorlib.client import TrezorClient
 from trezorlib.tx_api import TxApiTestnet
 from trezorlib.tx_api import TxApiBitcoin
-from trezorlib.transport_hid import HidTransport
-from trezorlib.transport_bridge import BridgeTransport
+from trezorlib.transport import get_transport
 
 
 def hash160(x):
@@ -152,16 +150,13 @@ def main():
     numinputs = 100
     sizeinputtx = 10
 
-    # List all connected TREZORs on USB
-    devices = HidTransport.enumerate()
-
-    # Check whether we found any
-    if len(devices) == 0:
-        print('No TREZOR found')
+    # Use first connected device
+    try:
+        transport = get_transport()
+    except Exception as e:
+        print(e)
         return
 
-    # Use first connected device
-    transport = devices[0]
     print(transport)
 
     txstore = MyTxApiBitcoin()

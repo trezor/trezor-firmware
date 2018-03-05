@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-
-from __future__ import print_function
-
 from binascii import hexlify, unhexlify
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -9,14 +6,10 @@ import hmac
 import hashlib
 import json
 import os
-try:
-    from urllib.parse import urlparse
-except:
-    from urlparse import urlparse
-    input = raw_input
+from urllib.parse import urlparse
 
 from trezorlib.client import TrezorClient
-from trezorlib.transport_hid import HidTransport
+from trezorlib.transport import get_transport
 
 # Return path by BIP-32
 def getPath(client):
@@ -124,12 +117,13 @@ def printEntries(entries):
 
 
 def main():
-    devices = HidTransport.enumerate()
-    if not devices:
-        print('TREZOR is not plugged in. Please, connect TREZOR and retry.')
+    try:
+        transport = get_transport()
+    except Exception as e:
+        print(e)
         return
 
-    client = TrezorClient(devices[0])
+    client = TrezorClient(transport)
 
     print()
     print('Confirm operation on TREZOR')

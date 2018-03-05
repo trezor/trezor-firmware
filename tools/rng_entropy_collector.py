@@ -8,21 +8,14 @@ from __future__ import print_function
 import io
 import sys
 from trezorlib.client import TrezorClient
-from trezorlib.device import TrezorDevice
-
-
-def get_client():
-    devices = TrezorDevice.enumerate()    # list all connected TREZORs on USB
-    if len(devices) == 0:                 # check whether we found any
-        return None
-    transport = devices[0]                # use first connected device
-    return TrezorClient(transport)        # creates object for communicating with TREZOR
+from trezorlib.transport import get_transport
 
 
 def main():
-    client = get_client()
-    if not client:
-        print('No TREZOR connected')
+    try:
+        client = TrezorClient(get_transport())
+    except Exception as e:
+        print(e)
         return
 
     arg1 = sys.argv[1]                     # output file
