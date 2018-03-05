@@ -7,7 +7,7 @@ from apps.common.confirm import require_confirm
 
 
 async def apply_settings(ctx, msg):
-    if msg.homescreen is None and msg.label is None and msg.language is None and msg.use_passphrase is None:
+    if msg.homescreen is None and msg.label is None and msg.use_passphrase is None:
         raise wire.FailureError(FailureType.ProcessError, 'No setting provided')
 
     if msg.homescreen is not None:
@@ -16,18 +16,12 @@ async def apply_settings(ctx, msg):
             'Do you really want to', 'change homescreen?'),
             code=ButtonRequestType.ProtectCall)
 
+    # TODO: split label (bold) and '?' (normal) once we support mixed styles on one line
     if msg.label is not None:
         await require_confirm(ctx, Text(
             'Change label', ui.ICON_CONFIG,
             'Do you really want to', 'change label to',
-            ui.BOLD, '%s?' % msg.label),  # TODO: split label (bold) and '?' (normal) once we support mixed styles on one line
-            code=ButtonRequestType.ProtectCall)
-
-    if msg.language is not None:
-        await require_confirm(ctx, Text(
-            'Change language', ui.ICON_CONFIG,
-            'Do you really want to', 'change language to',
-            ui.BOLD, '%s?' % msg.language),  # TODO: split lang (bold) and '?' (normal) once we support mixed styles on one line
+            ui.BOLD, '%s?' % msg.label),
             code=ButtonRequestType.ProtectCall)
 
     if msg.use_passphrase is not None:
