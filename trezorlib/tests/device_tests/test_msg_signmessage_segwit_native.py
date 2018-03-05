@@ -20,7 +20,6 @@ from .common import *
 from trezorlib import messages as proto
 
 
-@pytest.mark.skip_t2
 class TestMsgSignmessageSegwitNative(TrezorTest):
 
     def test_sign(self):
