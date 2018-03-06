@@ -188,11 +188,13 @@ def session(f):
 
 
 def normalize_nfc(txt):
+    '''
+    Normalize message to NFC and return bytes suitable for protobuf.
+    This seems to be bitcoin-qt standard of doing things.
+    '''
     if isinstance(txt, bytes):
-        return unicodedata.normalize('NFC', txt.decode('utf-8'))
-    if isinstance(txt, str):
-        return unicodedata.normalize('NFC', txt)
-    raise ValueError('expected str or bytes argument')
+        txt = txt.decode('utf-8')
+    return unicodedata.normalize('NFC', txt).encode('utf-8')
 
 
 class BaseClient(object):
@@ -602,13 +604,11 @@ class ProtocolMixin(object):
     @expect(proto.EthereumMessageSignature)
     def ethereum_sign_message(self, n, message):
         n = self._convert_prime(n)
-        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message).encode('utf-8')
+        message = normalize_nfc(message)
         return self.call(proto.EthereumSignMessage(address_n=n, message=message))
 
     def ethereum_verify_message(self, address, signature, message):
-        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message).encode('utf-8')
+        message = normalize_nfc(message)
         try:
             resp = self.call(proto.EthereumVerifyMessage(address=address, signature=signature, message=message))
         except CallException as e:
@@ -673,8 +673,7 @@ class ProtocolMixin(object):
     @expect(proto.MessageSignature)
     def sign_message(self, coin_name, n, message, script_type=proto.InputScriptType.SPENDADDRESS):
         n = self._convert_prime(n)
-        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message).encode('utf-8')
+        message = normalize_nfc(message)
         return self.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message, script_type=script_type))
 
     @expect(proto.SignedIdentity)
@@ -827,8 +826,7 @@ class ProtocolMixin(object):
         return self.call(msg)
 
     def verify_message(self, coin_name, address, signature, message):
-        # Convert message to UTF8 NFC (seems to be a bitcoin-qt standard)
-        message = normalize_nfc(message).encode('utf-8')
+        message = normalize_nfc(message)
         try:
             resp = self.call(proto.VerifyMessage(address=address, signature=signature, message=message, coin_name=coin_name))
         except CallException as e:
