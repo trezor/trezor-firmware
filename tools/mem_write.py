@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 from trezorlib.debuglink import DebugLink
 from trezorlib.client import TrezorClient
-from trezorlib.transport_hid import HidTransport
+from trezorlib.transport import enumerate_devices
 import binascii
 import sys
 
 
 def main():
-    # List all connected TREZORs on USB
-    devices = HidTransport.enumerate()
+    # List all debuggable TREZORs
+    devices = [device for device in enumerate_devices() if hasattr(device, 'find_debug')]
 
     # Check whether we found any
     if len(devices) == 0:

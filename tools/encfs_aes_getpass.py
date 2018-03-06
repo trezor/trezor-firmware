@@ -16,21 +16,15 @@ import hashlib
 import binascii
 
 from trezorlib.client import TrezorClient
-from trezorlib.device import TrezorDevice
-
-# Python2 vs Python3
-try:
-    input = raw_input
-except NameError:
-    pass
+from trezorlib.transport import enumerate_devices
 
 
 def wait_for_devices():
-    devices = TrezorDevice.enumerate()
+    devices = enumerate_devices()
     while not len(devices):
         sys.stderr.write("Please connect TREZOR to computer and press Enter...")
         input()
-        devices = TrezorDevice.enumerate()
+        devices = enumerate_devices()
 
     return devices
 

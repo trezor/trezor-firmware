@@ -33,6 +33,7 @@ setup(
     url='https://github.com/trezor/python-trezor',
     packages=[
         'trezorlib',
+        'trezorlib.transport',
         'trezorlib.messages',
         'trezorlib.qt',
         'trezorlib.tests.device_tests',

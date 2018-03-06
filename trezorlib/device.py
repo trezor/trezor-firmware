@@ -16,53 +16,24 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+import warnings
 
-from .transport_bridge import BridgeTransport
-from .transport_hid import HidTransport
-from .transport_udp import UdpTransport
-from .transport_webusb import WebUsbTransport
+from .transport import enumerate_devices, get_transport
 
 
-class TrezorDevice(object):
+class TrezorDevice:
+    '''
+    This class is deprecated. (There is no reason for it to exist in the first
+    place, it is nothing but a collection of two functions.)
+    Instead, please use functions from the ``trezorlib.transport`` module.
+    '''
 
     @classmethod
     def enumerate(cls):
-        devices = []
-
-        for d in BridgeTransport.enumerate():
-            devices.append(d)
-
-        for d in UdpTransport.enumerate():
-            devices.append(d)
-
-        for d in HidTransport.enumerate():
-            devices.append(d)
-
-        for d in WebUsbTransport.enumerate():
-            devices.append(d)
-
-        return devices
+        warnings.warn('TrezorDevice is deprecated.', DeprecationWarning)
+        return enumerate_devices()
 
     @classmethod
     def find_by_path(cls, path):
-        if path is None:
-            try:
-                return cls.enumerate()[0]
-            except IndexError:
-                raise Exception("No TREZOR device found")
-
-        prefix = path.split(':')[0]
-
-        if prefix == BridgeTransport.PATH_PREFIX:
-            return BridgeTransport.find_by_path(path)
-
-        if prefix == UdpTransport.PATH_PREFIX:
-            return UdpTransport.find_by_path(path)
-
-        if prefix == WebUsbTransport.PATH_PREFIX:
-            return WebUsbTransport.find_by_path(path)
-
-        if prefix == HidTransport.PATH_PREFIX:
-            return HidTransport.find_by_path(path)
-
-        raise Exception("Unknown path prefix '%s'" % prefix)
+        warnings.warn('TrezorDevice is deprecated.', DeprecationWarning)
+        return get_transport(path, prefix_search=False)

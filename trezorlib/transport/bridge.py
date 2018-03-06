@@ -17,17 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 import requests
 import binascii
 from io import BytesIO
 import struct
 
-from . import mapping
-from . import messages
-from . import protobuf
-from .transport import Transport, TransportException
+from .. import mapping
+from .. import messages
+from .. import protobuf
+from . import Transport, TransportException
 
 TREZORD_HOST = 'http://127.0.0.1:21325'
 
@@ -45,15 +43,12 @@ class BridgeTransport(Transport):
     HEADERS = {'Origin': 'https://python.trezor.io'}
 
     def __init__(self, device):
-        super(BridgeTransport, self).__init__()
+        super().__init__()
 
         self.device = device
         self.conn = requests.Session()
         self.session = None
         self.response = None
-
-    def __str__(self):
-        return self.get_path()
 
     def get_path(self):
         return '%s:%s' % (self.PATH_PREFIX, self.device['path'])
@@ -67,17 +62,6 @@ class BridgeTransport(Transport):
             return [BridgeTransport(dev) for dev in r.json()]
         except:
             return []
-
-    @classmethod
-    def find_by_path(cls, path):
-        if isinstance(path, bytes):
-            path = path.decode()
-        path = path.replace('%s:' % cls.PATH_PREFIX, '')
-
-        for transport in BridgeTransport.enumerate():
-            if path is None or transport.device['path'] == path:
-                return transport
-        raise TransportException('Bridge device not found')
 
     def open(self):
         r = self.conn.post(TREZORD_HOST + '/acquire/%s/null' % self.device['path'], headers=self.HEADERS)

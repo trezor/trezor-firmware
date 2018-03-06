@@ -16,22 +16,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 import time
 import hid
 import os
 
-from .protocol_v1 import ProtocolV1
-from .protocol_v2 import ProtocolV2
-from .transport import Transport, TransportException
+from ..protocol_v1 import ProtocolV1
+from ..protocol_v2 import ProtocolV2
+from . import Transport, TransportException
 
 DEV_TREZOR1 = (0x534c, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53c1)
 DEV_TREZOR2_BL = (0x1209, 0x53c0)
 
 
-class HidHandle(object):
+class HidHandle:
 
     def __init__(self, path):
         self.path = path
@@ -79,9 +77,6 @@ class HidTransport(Transport):
         self.hid = hid_handle
         self.hid_version = None
 
-    def __str__(self):
-        return self.get_path()
-
     def get_path(self):
         return "%s:%s" % (self.PATH_PREFIX, self.device['path'].decode())
 
@@ -99,17 +94,6 @@ class HidTransport(Transport):
                     continue
             devices.append(HidTransport(dev))
         return devices
-
-    @classmethod
-    def find_by_path(cls, path):
-        if isinstance(path, str):
-            path = path.encode()
-        path = path.replace(b'%s:' % cls.PATH_PREFIX.encode(), b'')
-
-        for transport in HidTransport.enumerate():
-            if path is None or transport.device['path'] == path:
-                return transport
-        raise TransportException('HID device not found')
 
     def find_debug(self):
         if isinstance(self.protocol, ProtocolV2):

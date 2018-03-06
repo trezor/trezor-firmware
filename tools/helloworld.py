@@ -1,21 +1,11 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 from trezorlib.client import TrezorClient
-from trezorlib.device import TrezorDevice
+from trezorlib.transport import get_transport
 
 
 def main():
-    # List all connected TREZORs on USB/UDP
-    devices = TrezorDevice.enumerate()
-
-    # Check whether we found any
-    if len(devices) == 0:
-        print('No TREZOR found')
-        return
-
     # Use first connected device
-    transport = devices[0]
+    transport = get_transport()
 
     # Creates object for manipulating TREZOR
     client = TrezorClient(transport)

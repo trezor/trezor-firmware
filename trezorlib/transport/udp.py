@@ -16,14 +16,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 import os
 import socket
 
-from .protocol_v1 import ProtocolV1
-from .protocol_v2 import ProtocolV2
-from .transport import Transport, TransportException
+from ..protocol_v1 import ProtocolV1
+from ..protocol_v2 import ProtocolV2
+from . import Transport, TransportException
 
 
 class UdpTransport(Transport):
@@ -48,26 +46,41 @@ class UdpTransport(Transport):
         self.protocol = protocol
         self.socket = None
 
-    def __str__(self):
-        return self.get_path()
-
     def get_path(self):
         return "%s:%s:%s" % ((self.PATH_PREFIX,) + self.device)
 
-    @staticmethod
-    def enumerate():
-        devices = []
-        d = UdpTransport("%s:%d" % (UdpTransport.DEFAULT_HOST, UdpTransport.DEFAULT_PORT))
-        d.open()
-        if d._ping():
-            devices.append(d)
-        d.close()
-        return devices
+    def find_debug(self):
+        host, port = self.device
+        return UdpTransport('{}:{}'.format(host, port + 1), self.protocol)
 
     @classmethod
-    def find_by_path(cls, path):
-        path = path.replace('%s:' % cls.PATH_PREFIX, '')
-        return UdpTransport(path)
+    def _try_path(cls, path):
+        d = cls(path)
+        try:
+            d.open()
+            if d._ping():
+                return d
+            else:
+                raise TransportException('No TREZOR device found at address {}'.format(path))
+        finally:
+            d.close()
+
+    @classmethod
+    def enumerate(cls):
+        devices = []
+        default_path = '{}:{}'.format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
+        try:
+            return [cls._try_path(default_path)]
+        except TransportException:
+            return []
+
+    @classmethod
+    def find_by_path(cls, path, prefix_search=False):
+        if prefix_search:
+            return super().find_by_path(path, prefix_search)
+        else:
+            path = path.replace('{}:'.format(cls.PATH_PREFIX), '')
+            return cls._try_path(path)
 
     def open(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
