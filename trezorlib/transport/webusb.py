@@ -101,7 +101,16 @@ class WebUsbTransport(Transport):
                 continue
             if not is_vendor_class(dev):
                 continue
-            devices.append(WebUsbTransport(dev))
+            try:
+                # workaround for issue #223:
+                # on certain combinations of Windows USB drivers and libusb versions,
+                # Trezor is returned twice (possibly because Windows know it as both
+                # a HID and a WebUSB device), and one of the returned devices is
+                # non-functional.
+                dev.getProduct()
+                devices.append(WebUsbTransport(dev))
+            except usb1.USBErrorNotSupported:
+                pass
         return devices
 
     def find_debug(self):
