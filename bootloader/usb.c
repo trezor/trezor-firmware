@@ -292,6 +292,10 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 			flash_state = STATE_OPEN;
 			return;
 		}
+		if (msg_id == 0x0037) {		// GetFeatures message (id 55)
+			send_msg_features(dev);
+			return;
+		}
 		if (msg_id == 0x0001) {		// Ping message (id 1)
 			send_msg_success(dev);
 			return;
