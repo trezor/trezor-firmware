@@ -51,19 +51,14 @@ if sys.version_info.major < 3:
 SCREENSHOT = False
 
 
-def getch():
-    try:
-        import termios
-    except ImportError:
-        # Non-POSIX. Return msvcrt's (Windows') getch.
-        import msvcrt
-        return msvcrt.getch()
-
+# make a getch function
+try:
+    import termios
+    import sys, tty
     # POSIX system. Create and return a getch that manipulates the tty.
-    import sys
-    import tty
+    # On Windows, termios will fail to import.
 
-    def _getch():
+    def getch():
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         try:
@@ -73,7 +68,19 @@ def getch():
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
 
-    return _getch()
+except ImportError:
+    # Windows system.
+    # Use msvcrt's getch function.
+    import msvcrt
+
+    def getch():
+        while True:
+            key = msvcrt.getch()
+            if key in (0x00, 0xe0):
+                # skip special keys: read the scancode and repeat
+                msvcrt.getch()
+                continue
+            return key.decode('latin1')
 
 
 def get_buttonrequest_value(code):
