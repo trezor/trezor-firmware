@@ -18,6 +18,7 @@
 
 from .common import *
 import trezorlib.ckd_public as bip32
+from trezorlib.client import CallException
 
 
 class TestMsgGetpublickeyCurve(TrezorTest):
@@ -39,5 +40,9 @@ class TestMsgGetpublickeyCurve(TrezorTest):
 
     def test_ed25519_curve(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        assert hexlify(self.client.get_public_node([0x80000000 | 111, 42], ecdsa_curve_name='ed25519').node.public_key).decode() == '001d9a1e56f69828d44ec96dad345678411976d3ea6d290fe3ae8032c47699ce15'
+        # ed25519 curve does not support public derivation, so test only private derivation paths
         assert hexlify(self.client.get_public_node([0x80000000 | 111, 0x80000000 | 42], ecdsa_curve_name='ed25519').node.public_key).decode() == '0069a14b478e508eab6e93303f4e6f5c50b8136627830f2ed5c3a835fc6c0ea2b7'
+        assert hexlify(self.client.get_public_node([0x80000000 | 111, 0x80000000 | 65535], ecdsa_curve_name='ed25519').node.public_key).decode() == '00514f73a05184458611b14c348fee4fd988d36cf3aee7207737861bac611de991'
+        # test failure when using public derivation
+        with pytest.raises(CallException):
+            self.client.get_public_node([0x80000000 | 111, 42], ecdsa_curve_name='ed25519')
