@@ -54,7 +54,7 @@ SCREENSHOT = False
 # make a getch function
 try:
     import termios
-    import sys, tty
+    import tty
     # POSIX system. Create and return a getch that manipulates the tty.
     # On Windows, termios will fail to import.
 
