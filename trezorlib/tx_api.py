@@ -190,6 +190,7 @@ TxApiLitecoin = TxApiInsight(network='insight_litecoin', url='https://ltc-bitcor
 TxApiDash = TxApiInsight(network='insight_dash', url='https://dash-bitcore1.trezor.io/api/')
 TxApiZcash = TxApiInsight(network='insight_zcash', url='https://zec-bitcore1.trezor.io/api/', zcash=True)
 TxApiBcash = TxApiInsight(network='insight_bcash', url='https://bch-bitcore2.trezor.io/api/')
+TxApiBitcoinGold = TxApiInsight(network='insight_bitcoin_gold', url='https://btg-bitcore2.trezor.io/api/')
 TxApiDecredTestnet = TxApiInsight(network='insight_decred_testnet', url='https://testnet.decred.org/api/')
 TxApiDogecoin = TxApiBlockCypher(network='blockcypher_dogecoin', url='https://api.blockcypher.com/v1/doge/main/')
 TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
