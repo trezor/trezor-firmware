@@ -20,15 +20,18 @@ async def get_public_key(ctx, msg):
     coin = coins.by_name(coin_name)
 
     node_xpub = node.serialize_public(coin.xpub_magic)
+    pubkey = node.public_key()
+    if pubkey[0] == 1:
+        pubkey = b'\x00' + pubkey[1:]
     node_type = HDNodeType(
         depth=node.depth(),
         child_num=node.child_num(),
         fingerprint=node.fingerprint(),
         chain_code=node.chain_code(),
-        public_key=node.public_key())
+        public_key=pubkey)
 
     if msg.show_display:
-        await _show_pubkey(ctx, node.public_key())
+        await _show_pubkey(ctx, pubkey)
 
     return PublicKey(node=node_type, xpub=node_xpub)
 
