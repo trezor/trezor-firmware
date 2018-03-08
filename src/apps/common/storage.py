@@ -4,6 +4,8 @@ from trezor import config
 from trezor.crypto import random
 from apps.common import cache
 
+HOMESCREEN_MAXSIZE = 16384
+
 _STORAGE_VERSION = b'\x01'
 
 _APP            = const(0x01)  # app namespace
@@ -73,7 +75,8 @@ def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=
         config.set(_APP, _USE_PASSPHRASE, b'')
     if homescreen is not None:
         if homescreen[:8] == b'TOIf\x90\x00\x90\x00':
-            config.set(_APP, _HOMESCREEN, homescreen, True)  # public
+            if len(homescreen) <= HOMESCREEN_MAXSIZE:
+                config.set(_APP, _HOMESCREEN, homescreen, True)  # public
         else:
             config.set(_APP, _HOMESCREEN, b'', True)  # public
 

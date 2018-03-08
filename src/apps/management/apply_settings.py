@@ -11,6 +11,8 @@ async def apply_settings(ctx, msg):
         raise wire.FailureError(FailureType.ProcessError, 'No setting provided')
 
     if msg.homescreen is not None:
+        if len(msg.homescreen) > storage.HOMESCREEN_MAXSIZE:
+            raise wire.FailureError(FailureType.DataError, 'Homescreen is too complex')
         await require_confirm(ctx, Text(
             'Change homescreen', ui.ICON_CONFIG,
             'Do you really want to', 'change homescreen?'),
