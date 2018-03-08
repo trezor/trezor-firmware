@@ -175,7 +175,30 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
         key_sign = None
         key_sign_pub = None
 
-        if coin.force_bip143:
+        if segwit[i_sign]:
+            # STAGE_REQUEST_SEGWIT_INPUT
+            txi_sign = await request_tx_input(tx_req, i_sign)
+
+            is_segwit = (txi_sign.script_type == InputScriptType.SPENDWITNESS or
+                         txi_sign.script_type == InputScriptType.SPENDP2SHWITNESS)
+            if not is_segwit:
+                raise SigningError(FailureType.ProcessError,
+                                   'Transaction has changed during signing')
+            input_check_wallet_path(txi_sign, wallet_path)
+
+            key_sign = node_derive(root, txi_sign.address_n)
+            key_sign_pub = key_sign.public_key()
+            txi_sign.script_sig = input_derive_script(coin, txi_sign, key_sign_pub)
+
+            w_txi = bytearray_with_cap(
+                7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
+            if i_sign == 0:  # serializing first input => prepend headers
+                write_bytes(w_txi, get_tx_header(tx, True))
+            write_tx_input(w_txi, txi_sign)
+            tx_ser.serialized_tx = w_txi
+            tx_req.serialized = tx_ser
+
+        elif coin.force_bip143:
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await request_tx_input(tx_req, i_sign)
             input_check_wallet_path(txi_sign, wallet_path)
@@ -210,29 +233,6 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
-            tx_req.serialized = tx_ser
-
-        elif segwit[i_sign]:
-            # STAGE_REQUEST_SEGWIT_INPUT
-            txi_sign = await request_tx_input(tx_req, i_sign)
-
-            is_segwit = (txi_sign.script_type == InputScriptType.SPENDWITNESS or
-                         txi_sign.script_type == InputScriptType.SPENDP2SHWITNESS)
-            if not is_segwit:
-                raise SigningError(FailureType.ProcessError,
-                                   'Transaction has changed during signing')
-            input_check_wallet_path(txi_sign, wallet_path)
-
-            key_sign = node_derive(root, txi_sign.address_n)
-            key_sign_pub = key_sign.public_key()
-            txi_sign.script_sig = input_derive_script(coin, txi_sign, key_sign_pub)
-
-            w_txi = bytearray_with_cap(
-                7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
-            if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi, get_tx_header(tx, True))
-            write_tx_input(w_txi, txi_sign)
-            tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
 
         else:
