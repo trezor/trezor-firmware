@@ -232,3 +232,133 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
         assert hexlify(signatures1[0]) == b'3044022006da8dbd14e6656ac8dcb956f4c0498574e88680eaeceb2cbafd8d2b2329d8cc02200972d076d444c5ff8f2ab18e14d8249ab661cb9c53335039bedcde037a40d747'
         assert hexlify(serialized_tx) == b'010000000185c9dd4ae1071affd77d90b9d03c1b5fdd7c62cf30a9bb8230ad766cf06b522500000000fdfd0000473044022006da8dbd14e6656ac8dcb956f4c0498574e88680eaeceb2cbafd8d2b2329d8cc02200972d076d444c5ff8f2ab18e14d8249ab661cb9c53335039bedcde037a40d74741483045022100b1594f3b186d0dedbf61e53a1c407b1e0747098b7375941df85af045040f578e022013ba1893eb9e2fd854dd07073a83b261cf4beba76f66b07742e462b4088a7e4a414c69522102290e6649574d17938c1ecb959ae92954f9ee48e1bd5b73f35ea931a3ab8a6087210379e0107b173e2c143426760627128c5eea3f862e8df92f3c2558eeeae4e347842103ff1746ca7dcf9e5c2eea9a73779b7c5bafed549f45cf3638a94cdf1e89c7f28f53aeffffffff02c05d0000000000001976a914ea5f904d195079a350b534db4446433b3cec222e88acc05d00000000000017a91445e917e46815d2b38d3f1cf072e63dd4f3b7a7e38700000000'
+
+    def test_send_p2sh(self):
+        self.setup_mnemonic_allallall()
+        self.client.set_tx_api(TxApiBitcoinGold)
+        inp1 = proto.TxInputType(
+            address_n=self.client.expand_path("49'/156'/0'/1/0"),
+            amount=123456789,
+            prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
+            prev_index=0,
+            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        )
+        out1 = proto.TxOutputType(
+            address='GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe',
+            amount=12300000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        out2 = proto.TxOutputType(
+            address='GZFLExxrvWFuFT1xRzhfwQWSE2bPDedBfn',
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+            amount=123456789 - 11000 - 12300000,
+        )
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            ])
+            (signatures, serialized_tx) = self.client.sign_tx('Bitcoin Gold', [inp1], [out1, out2])
+
+        assert hexlify(serialized_tx) == b'0100000000010185c9dd4ae1071affd77d90b9d03c1b5fdd7c62cf30a9bb8230ad766cf06b52250000000017160014b5355d001e720d8f4513da00ff2bba4dcf9d39fcffffffff02e0aebb00000000001976a914ea5f904d195079a350b534db4446433b3cec222e88ac3df39f06000000001976a914a8f757819ec6779409f45788f7b4a0e8f51ec50488ac02473044022073fcbf2876f073f78923ab427f14de5b2a0fbeb313a9b2b650b3567061f242a702202f45fc22c501108ff6222afe3aca7da9d8c7dc860f9cda335bef31fa184e7bef412102ecea08b559fc5abd009acf77cfae13fa8a3b1933e3e031956c65c12cec8ca3e300000000'
+
+    def test_send_p2sh_witness_change(self):
+        self.setup_mnemonic_allallall()
+        self.client.set_tx_api(TxApiBitcoinGold)
+        inp1 = proto.TxInputType(
+            address_n=self.client.expand_path("49'/156'/0'/1/0"),
+            amount=123456789,
+            prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
+            prev_index=0,
+            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        )
+        out1 = proto.TxOutputType(
+            address='GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe',
+            amount=12300000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        out2 = proto.TxOutputType(
+            address_n=self.client.expand_path("49'/156'/0'/1/0"),
+            script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+            amount=123456789 - 11000 - 12300000,
+        )
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            ])
+            (signatures, serialized_tx) = self.client.sign_tx('Bitcoin Gold', [inp1], [out1, out2])
+
+        # print(hexlify(serialized_tx))
+        # assert False
+        assert hexlify(serialized_tx) == b'0100000000010185c9dd4ae1071affd77d90b9d03c1b5fdd7c62cf30a9bb8230ad766cf06b52250000000017160014b5355d001e720d8f4513da00ff2bba4dcf9d39fcffffffff02e0aebb00000000001976a914ea5f904d195079a350b534db4446433b3cec222e88ac3df39f060000000017a9140cd03822b799a452c106d1b3771844a067b17f118702483045022100d79b33384c686d8dd40ad5f84f46691d30994992c1cb42e934c2a625d86cb2f902206859805a9a98ba140b71a9d4b9a6b8df94a9424f9c40f3bd804149fd6e278d63412102ecea08b559fc5abd009acf77cfae13fa8a3b1933e3e031956c65c12cec8ca3e300000000'
+
+    def test_send_multisig_1(self):
+        self.setup_mnemonic_allallall()
+        self.client.set_tx_api(TxApiBitcoinGold)
+        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        multisig = proto.MultisigRedeemScriptType(
+            pubkeys=list(map(lambda n: proto.HDNodePathType(node=deserialize(n.xpub), address_n=[2, 0]), nodes)),
+            signatures=[b'', b'', b''],
+            m=2,
+        )
+
+        inp1 = proto.TxInputType(
+            address_n=self.client.expand_path("999'/1'/1'/2/0"),
+            prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
+            prev_index=1,
+            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            multisig=multisig,
+            amount=1610436
+        )
+
+        out1 = proto.TxOutputType(address='GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe',
+                                  amount=1605000,
+                                  script_type=proto.OutputScriptType.PAYTOADDRESS)
+
+        with self.client:
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            ])
+            (signatures1, _) = self.client.sign_tx('Bitcoin Gold', [inp1], [out1])
+            # store signature
+            inp1.multisig.signatures[0] = signatures1[0]
+            # sign with third key
+            inp1.address_n[2] = 0x80000003
+            self.client.set_expected_responses([
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
+                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            ])
+            (signatures2, serialized_tx) = self.client.sign_tx('Bitcoin Gold', [inp1], [out1])
+
+        assert hexlify(serialized_tx) == b'0100000000010185c9dd4ae1071affd77d90b9d03c1b5fdd7c62cf30a9bb8230ad766cf06b522501000000232200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a1ffffffff01887d1800000000001976a914ea5f904d195079a350b534db4446433b3cec222e88ac0400483045022100e728485c8337f9a09ebbf36edc0fef10f8bcf5c1ba601b7d8ba43a9250a898f002206b9e3401c297f9ab9afb7f1be59bb342db53b5b65aff7c557e3109679697df0f41473044022062ea69ecdc07d0dadc1971fbda50a629a56dd30f431db26327428f4992601ce602204a1c8ab9c7d81c36cb6f819109a26f9baaa9607b8d37bff5e24eee6fab4a04e441695221038e81669c085a5846e68e03875113ddb339ecbb7cb11376d4163bca5dc2e2a0c1210348c5c3be9f0e6cf1954ded1c0475beccc4d26aaa9d0cce2dd902538ff1018a112103931140ebe0fbbb7df0be04ed032a54e9589e30339ba7bbb8b0b71b15df1294da53ae00000000'
