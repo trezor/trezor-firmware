@@ -2,7 +2,7 @@
 Extremely minimal streaming codec for a subset of protobuf.  Supports uint32,
 bytes, string, embedded message and repeated fields.
 
-For de-sererializing (loading) protobuf types, object with `AsyncReader`
+For de-serializing (loading) protobuf types, object with `AsyncReader`
 interface is required:
 
 >>> class AsyncReader:
