@@ -22,7 +22,7 @@ def encode_length(l: int, is_list: bool) -> bytes:
 
 def encode(data, include_length=True) -> bytes:
     if isinstance(data, int):
-        return encode(int_to_bytes(data))
+        data = int_to_bytes(data)
     if isinstance(data, bytearray):
         data = bytes(data)
     if isinstance(data, bytes):

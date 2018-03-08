@@ -24,10 +24,10 @@ async def require_confirm_tx(ctx, to, value, chain_id, token=None):
 async def require_confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):
     content = Text('Confirm transaction', ui.ICON_SEND,
                    ui.BOLD, format_ethereum_amount(spending, token, chain_id),
-                   ui.NORMAL, 'Gas:',
-                   ui.BOLD, format_ethereum_amount(gas_price, token, chain_id),
-                   ui.NORMAL, 'Limit:',
-                   ui.BOLD, format_ethereum_amount(gas_limit, token, chain_id),
+                   ui.NORMAL, 'Gas price:',
+                   ui.BOLD, format_ethereum_amount(gas_price, None, chain_id),
+                   ui.NORMAL, 'Maximum fee:',
+                   ui.BOLD, format_ethereum_amount(gas_price * gas_limit, None, chain_id),
                    icon_color=ui.GREEN)
     await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
@@ -52,7 +52,6 @@ def split_address(address):
 
 
 def format_ethereum_amount(value, token, chain_id):
-    value = int.from_bytes(value, 'big')
     if token:
         suffix = token[2]
         decimals = token[3]

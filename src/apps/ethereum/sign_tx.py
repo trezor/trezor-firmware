@@ -20,22 +20,22 @@ async def ethereum_sign_tx(ctx, msg):
 
     # detect ERC - 20 token
     token = None
+    recipient = msg.to
+    value = int.from_bytes(msg.value, 'big')
     if len(msg.to) == 20 and \
        len(msg.value) == 0 and \
        data_total == 68 and \
        len(msg.data_initial_chunk) == 68 and \
        msg.data_initial_chunk[:16] == b'\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':
         token = tokens.token_by_chain_address(msg.chain_id, msg.to)
+        recipient = msg.data_initial_chunk[16:36]
+        value = int.from_bytes(msg.data_initial_chunk[36:68], 'big')
 
-    if token is None:
-        await require_confirm_tx(ctx, msg.to, msg.value, msg.chain_id)
-    else:
-        await require_confirm_tx(ctx, msg.data_initial_chunk[16:36],  msg.data_initial_chunk[36:68], msg.chain_id, token)
-
+    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token)
     if token is None and msg.data_length > 0:
         await require_confirm_data(ctx, msg.data_initial_chunk, data_total)
 
-    await require_confirm_fee(ctx, msg.value, msg.gas_price, msg.gas_limit, msg.chain_id, token)
+    await require_confirm_fee(ctx, value, int.from_bytes(msg.gas_price, 'big'), int.from_bytes(msg.gas_limit, 'big'), msg.chain_id, token)
 
     data = bytearray()
     data += msg.data_initial_chunk
