@@ -9,6 +9,8 @@ $MICROPYTHON -O$PYOPT main.py >/dev/null &
 upy_pid=$!
 sleep 1
 
+export TREZOR_PATH=udp:127.0.0.1:21324
+
 # run tests
 cd ../tests
 error=0
