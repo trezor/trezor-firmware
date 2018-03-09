@@ -12,7 +12,7 @@ sleep 1
 # run tests
 cd ../tests
 error=0
-if ! pytest -k 'not skip_t2' --pyargs trezorlib.tests.device_tests ; then
+if ! pytest -k 'not skip_t2' --pyargs trezorlib.tests.device_tests "$@"; then
     error=1
 fi
 kill $upy_pid
