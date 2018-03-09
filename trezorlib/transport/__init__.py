@@ -64,11 +64,32 @@ class Transport(object):
 
 
 def all_transports():
-    from .bridge import BridgeTransport
-    from .hid import HidTransport
-    from .udp import UdpTransport
-    from .webusb import WebUsbTransport
-    return (BridgeTransport, HidTransport, UdpTransport, WebUsbTransport)
+    transports = []
+    try:
+        from .bridge import BridgeTransport
+        transports.append(BridgeTransport)
+    except:
+        pass
+
+    try:
+        from .hid import HidTransport
+        transports.append(HidTransport)
+    except:
+        pass
+
+    try:
+        from .udp import UdpTransport
+        transports.append(UdpTransport)
+    except:
+        pass
+
+    try:
+        from .webusb import WebUsbTransport
+        transports.append(WebUsbTransport)
+    except:
+        pass
+
+    return transports
 
 
 def enumerate_devices():
