@@ -39,6 +39,7 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
 #define XPUB_MAXLEN 128
 #define ADDRESS_MAXLEN 36
+#define NEM_ADDRESS_SIZE 40
 
 /// def __init__(self,
 ///              depth: int,
@@ -313,6 +314,20 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self, mp_obj_t version)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj, mod_trezorcrypto_HDNode_address);
 
+/// def nem_address(self, network: int) -> str:
+///     '''
+///     Compute a NEM address string from the HD node.
+///     '''
+STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self, mp_obj_t network) {
+    mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+
+    uint8_t n = mp_obj_get_int_truncated(network);
+    char address[NEM_ADDRESS_SIZE];
+    hdnode_get_nem_address(&o->hdnode, n, address);
+    return mp_obj_new_str(address, strlen(address), false);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj, mod_trezorcrypto_HDNode_nem_address);
+
 /// def ethereum_pubkeyhash(self) -> bytes:
 ///     '''
 ///     Compute an Ethereum pubkeyhash (aka address) from the HD node.
@@ -340,6 +355,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_private_key), MP_ROM_PTR(&mod_trezorcrypto_HDNode_private_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_public_key), MP_ROM_PTR(&mod_trezorcrypto_HDNode_public_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_address), MP_ROM_PTR(&mod_trezorcrypto_HDNode_address_obj) },
+    { MP_ROM_QSTR(MP_QSTR_nem_address), MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_address_obj) },
     { MP_ROM_QSTR(MP_QSTR_ethereum_pubkeyhash), MP_ROM_PTR(&mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_HDNode_locals_dict, mod_trezorcrypto_HDNode_locals_dict_table);

@@ -128,14 +128,17 @@ class USB:
     '''
 
     def __init__(self,
+                 device_class: int=0,
+                 device_subclass: int=0,
+                 device_protocol: int=0,
                  vendor_id: int,
                  product_id: int,
                  release_num: int,
                  manufacturer: str='',
                  product: str='',
                  serial_number: str='',
-                 configuration: str='',
-                 interface: str='') -> None:
+                 interface: str='',
+                 usb21_enabled: bool=True) -> None:
         '''
         '''
 

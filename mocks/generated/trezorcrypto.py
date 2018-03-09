@@ -93,6 +93,11 @@ class HDNode:
         Compute a base58-encoded address string from the HD node.
         '''
 
+    def nem_address(self, network: int) -> str:
+        '''
+        Compute a NEM address string from the HD node.
+        '''
+
     def ethereum_pubkeyhash(self) -> bytes:
         '''
         Compute an Ethereum pubkeyhash (aka address) from the HD node.

@@ -24,3 +24,21 @@ def halt(msg: str = None) -> None:
     '''
     Halts execution.
     '''
+
+# extmod/modtrezorutils/modtrezorutils.c
+def set_mode_unprivileged() -> None:
+    '''
+    Set unprivileged mode.
+    '''
+
+# extmod/modtrezorutils/modtrezorutils.c
+def symbol(name: str) -> str/int/None:
+    '''
+    Retrieve internal symbol.
+    '''
+
+# extmod/modtrezorutils/modtrezorutils.c
+def model() -> str:
+    '''
+    Return which hardware model we are running on.
+    '''

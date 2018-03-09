@@ -8,6 +8,12 @@ def init() -> None:
     '''
 
 # extmod/modtrezorconfig/modtrezorconfig.c
+def check_pin(pin: int, waitcallback: (int, int -> None)) -> bool:
+    '''
+    Check the given PIN. Returns True on success, False on failure.
+    '''
+
+# extmod/modtrezorconfig/modtrezorconfig.c
 def unlock(pin: int, waitcallback: (int, int -> None)) -> bool:
     '''
     Attempts to unlock the storage with given PIN.  Returns True on
