@@ -36,7 +36,7 @@ install:
     - pip3 install --user flake8
     - pip3 install --user pytest
     - pip3 install --user ecdsa mnemonic requests
-    - pip3 install --user click pyblake2
+    - pip3 install --user click pyblake2 rlp
     - pip3 install --user --no-deps git+https://github.com/trezor/python-trezor@master
 
 before_script:
