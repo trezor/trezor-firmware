@@ -113,7 +113,7 @@ def format_protobuf(pb, indent=0, sep=' ' * 4):
             lines.append(level + '}')
             return '\n'.join(lines)
         if isinstance(value, bytearray):
-            return 'bytearray(0x{})'.format(value.hex())
+            return 'bytearray(0x{})'.format(binascii.hexlify(value).decode('ascii'))
 
         return repr(value)
 
