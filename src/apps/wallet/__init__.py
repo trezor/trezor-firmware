@@ -6,6 +6,7 @@ from trezor.messages.wire_types import \
     SignTx, \
     SignMessage, VerifyMessage, \
     SignIdentity, \
+    GetECDHSessionKey, \
     CipherKeyValue
 
 
@@ -52,6 +53,12 @@ def dispatch_SignIdentity(*args, **kwargs):
 
 
 @unimport
+def dispatch_GetECDHSessionKey(*args, **kwargs):
+    from .ecdh import get_ecdh_session_key
+    return get_ecdh_session_key(*args, **kwargs)
+
+
+@unimport
 def dispatch_CipherKeyValue(*args, **kwargs):
     from .cipher_key_value import cipher_key_value
     return cipher_key_value(*args, **kwargs)
@@ -65,4 +72,5 @@ def boot():
     register(SignMessage, protobuf_workflow, dispatch_SignMessage)
     register(VerifyMessage, protobuf_workflow, dispatch_VerifyMessage)
     register(SignIdentity, protobuf_workflow, dispatch_SignIdentity)
+    register(GetECDHSessionKey, protobuf_workflow, dispatch_GetECDHSessionKey)
     register(CipherKeyValue, protobuf_workflow, dispatch_CipherKeyValue)
