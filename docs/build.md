@@ -89,7 +89,7 @@ sudo pip3 install --no-deps git+https://github.com/trezor/python-trezor.git@mast
 
 sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
 
-make vendorheader build_boardloader build_bootloader build_firmware
+make vendor build_boardloader build_bootloader build_firmware
 ```
 
 ### OS X
@@ -97,4 +97,4 @@ make vendorheader build_boardloader build_bootloader build_firmware
 1. Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install OpenOCD, run `brew install open-ocd`
-4. Run `make vendorheader build_boardloader build_bootloader build_firmware`
+4. Run `make vendor build_boardloader build_bootloader build_firmware`
