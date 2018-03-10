@@ -1,5 +1,6 @@
 from trezor import ui
 from trezor.crypto.hashlib import sha256
+from trezor.messages.IdentityType import IdentityType
 from trezor.messages.SignedIdentity import SignedIdentity
 from ustruct import pack, unpack
 from trezor.utils import chunks
@@ -15,7 +16,7 @@ async def sign_identity(ctx, msg):
 
     identity = serialize_identity(msg.identity)
 
-    await require_confirm_sign_identity(ctx, identity, msg.challenge_visual)
+    await require_confirm_sign_identity(ctx, msg.identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
     node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
@@ -44,10 +45,16 @@ async def sign_identity(ctx, msg):
 
 
 async def require_confirm_sign_identity(ctx, identity, challenge_visual):
-    lines = chunks(identity, 18)
-    content = Text('Sign identity', ui.ICON_DEFAULT,
-                   challenge_visual,
-                   ui.MONO, *lines, max_lines=5)
+    lines = []
+    if challenge_visual:
+        lines.append(challenge_visual)
+
+    lines.append(ui.MONO)
+    lines.extend(chunks(serialize_identity_without_proto(identity), 18))
+
+    proto = identity.proto.upper() if identity.proto else 'identity'
+    header = 'Sign %s' % (proto,)
+    content = Text(header, ui.ICON_DEFAULT, *lines, max_lines=5)
     await require_confirm(ctx, content)
 
 
@@ -63,6 +70,14 @@ def serialize_identity(identity):
         s += ':' + identity.port
     if identity.path:
         s += identity.path
+    return s
+
+
+def serialize_identity_without_proto(identity):
+    proto = identity.proto
+    identity.proto = None  # simplify serialized identity string
+    s = serialize_identity(identity)
+    identity.proto = proto
     return s
 
 

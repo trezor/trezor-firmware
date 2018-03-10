@@ -4,7 +4,7 @@ from trezor.messages.ECDHSessionKey import ECDHSessionKey
 from ustruct import pack, unpack
 from trezor.utils import chunks
 from apps.common.confirm import require_confirm
-from apps.wallet.sign_identity import serialize_identity
+from apps.wallet.sign_identity import serialize_identity, serialize_identity_without_proto
 from trezor.ui.text import Text
 
 from ..common import seed
@@ -16,7 +16,7 @@ async def get_ecdh_session_key(ctx, msg):
 
     identity = serialize_identity(msg.identity)
 
-    await require_confirm_ecdh_session_key(ctx, identity)
+    await require_confirm_ecdh_session_key(ctx, msg.identity)
 
     address_n = get_ecdh_path(identity, msg.identity.index or 0)
     node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
@@ -28,8 +28,10 @@ async def get_ecdh_session_key(ctx, msg):
 
 
 async def require_confirm_ecdh_session_key(ctx, identity):
-    lines = chunks(identity, 18)
-    content = Text('Decrypt', ui.ICON_DEFAULT, ui.MONO, *lines, max_lines=5)
+    lines = chunks(serialize_identity_without_proto(identity), 18)
+    proto = identity.proto.upper() if identity.proto else 'identity'
+    header = 'Decrypt %s' % (proto,)
+    content = Text(header, ui.ICON_DEFAULT, ui.MONO, *lines, max_lines=5)
     await require_confirm(ctx, content)
 
 
