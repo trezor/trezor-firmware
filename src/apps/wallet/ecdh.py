@@ -40,6 +40,7 @@ def get_ecdh_path(identity: str, index: int):
 
     return address_n
 
+
 def ecdh(seckey: bytes, peer_public_key: bytes, curve: str) -> bytes:
     if curve == 'secp256k1':
         from trezor.crypto.curve import secp256k1
