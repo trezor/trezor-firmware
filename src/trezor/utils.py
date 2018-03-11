@@ -64,21 +64,6 @@ def format_ordinal(number):
     return str(number) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= number % 100 < 20 else number % 10, 'th')
 
 
-def serialize_identity(identity):
-    s = ''
-    if identity.proto:
-        s += identity.proto + '://'
-    if identity.user:
-        s += identity.user + '@'
-    if identity.host:
-        s += identity.host
-    if identity.port:
-        s += ':' + identity.port
-    if identity.path:
-        s += identity.path
-    return s
-
-
 class HashWriter:
 
     def __init__(self, hashfunc):

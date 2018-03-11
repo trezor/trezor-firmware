@@ -2,7 +2,7 @@ from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
 from ustruct import pack, unpack
-from trezor.utils import chunks, serialize_identity
+from trezor.utils import chunks
 from apps.common.confirm import require_confirm
 from trezor.ui.text import Text
 
@@ -49,6 +49,21 @@ async def require_confirm_sign_identity(ctx, identity, challenge_visual):
                    challenge_visual,
                    ui.MONO, *lines, max_lines=5)
     await require_confirm(ctx, content)
+
+
+def serialize_identity(identity):
+    s = ''
+    if identity.proto:
+        s += identity.proto + '://'
+    if identity.user:
+        s += identity.user + '@'
+    if identity.host:
+        s += identity.host
+    if identity.port:
+        s += ':' + identity.port
+    if identity.path:
+        s += identity.path
+    return s
 
 
 def get_identity_path(identity: str, index: int):
