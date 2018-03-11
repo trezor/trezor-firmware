@@ -2,8 +2,9 @@ from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
 from ustruct import pack, unpack
-from trezor.utils import chunks, serialize_identity
+from trezor.utils import chunks
 from apps.common.confirm import require_confirm
+from apps.wallet.sign_identity import serialize_identity
 from trezor.ui.text import Text
 
 from ..common import seed
