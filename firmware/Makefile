@@ -13,6 +13,7 @@ else
 OBJS += usb.o
 endif
 
+OBJS += bl_check.o
 OBJS += u2f.o
 OBJS += messages.o
 OBJS += storage.o
@@ -120,6 +121,10 @@ coins_array.h: coins-gen.py coins.json
 nem_mosaics.c nem_mosaics.h: nem_mosaics.py nem_mosaics.json
 	$(PYTHON) $<
 
+bl_data.h: bl_data-gen.py ../bootloader/bootloader.bin
+	$(PYTHON) $<
+
 clean::
 	rm -f coins_count.h coins_array.h
 	rm -f nem_mosaics.c nem_mosaics.h
+	rm -f bl_data.h

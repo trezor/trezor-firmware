@@ -30,6 +30,7 @@
 #include "timer.h"
 #include "buttons.h"
 #include "gettext.h"
+#include "bl_check.h"
 #include "fastflash.h"
 
 /* Screen timeout */
@@ -91,6 +92,7 @@ int main(void)
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
 	oledInit();
 #else
+	check_bootloader();
 	setupApp();
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
 #endif

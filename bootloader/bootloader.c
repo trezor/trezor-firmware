@@ -78,12 +78,10 @@ void show_unofficial_warning(const uint8_t *hash)
 
 void __attribute__((noreturn)) load_app(int signed_firmware)
 {
-	(void)signed_firmware;
-
 	// zero out SRAM
 	memset_reg(_ram_start, _ram_end, 0);
 
-	load_vector_table((const vector_table_t *) FLASH_APP_START);
+	jump_to_firmware((const vector_table_t *) FLASH_APP_START, signed_firmware);
 }
 
 bool firmware_present(void)

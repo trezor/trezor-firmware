@@ -21,6 +21,7 @@
 #define __UTIL_H_
 
 #include <stdint.h>
+#include <setup.h>
 
 #if !EMULATOR
 #include <libopencm3/cm3/scb.h>
@@ -52,10 +53,16 @@ extern uint8_t _ram_start[], _ram_end[];
 // defined in startup.s
 extern void memset_reg(void *start, void *stop, uint32_t val);
 
-static inline void __attribute__((noreturn)) load_vector_table(const vector_table_t *vector_table)
+#define FW_SIGNED       0x5A3CA5C3
+#define FW_UNTRUSTED    0x00000000
+
+static inline void __attribute__((noreturn)) jump_to_firmware(const vector_table_t *vector_table, int trust)
 {
-	// Relocate vector table
-	SCB_VTOR = (uint32_t)vector_table;
+	if (FW_SIGNED == trust) {                 // trusted signed firmware
+		SCB_VTOR = (uint32_t)vector_table;    // * relocate vector table
+	} else {                                  // untrusted firmware
+		mpu_config();                         // * configure MPU
+	}
 
 	// Set stack pointer
 	__asm__ volatile("msr msp, %0" :: "r" (vector_table->initial_sp_value));

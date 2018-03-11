@@ -49,7 +49,25 @@ void memory_protect(void)
 #endif
 }
 
+// Remove write-protection on all flash sectors.
+//
+// This is an undocumented feature/bug of STM32F205/F405 microcontrollers,
+// where flash controller reads its write protection bits from FLASH_OPTCR
+// register not from OPTION_BYTES, rendering write protection useless.
+// This behaviour is fixed in future designs of flash controller used for
+// example in STM32F427, where the protection bits are read correctly
+// from OPTION_BYTES and not form FLASH_OPCTR register.
+//
+// Read protection is unaffected and always stays locked to the desired value.
+void memory_write_unlock(void)
+{
+	flash_unlock_option_bytes();
+	flash_program_option_bytes(0x0FFFCCEC);
+	flash_lock_option_bytes();
+}
+
 int memory_bootloader_hash(uint8_t *hash)
+
 {
 	sha256_Raw((const uint8_t *)FLASH_BOOT_START, FLASH_BOOT_LEN, hash);
 	sha256_Raw(hash, 32, hash);

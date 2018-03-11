@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project, https://trezor.io/
  *
- * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
+ * Copyright (C) 2018 Pavol Rusnak <stick@satoshilabs.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,25 +17,9 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "fastflash.h"
-#include "util.h"
+#ifndef __BL_CHECK_H__
+#define __BL_CHECK_H__
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+void check_bootloader(void);
 
-#define bootloader_vec ((vector_table_t *) 0x20000000)
-
-void __attribute__((noreturn)) run_bootloader(void)
-{
-	extern uint8_t __bootloader_start__[];
-	extern uint8_t __bootloader_size__[];
-
-	// zero out SRAM
-	memset_reg(_ram_start, _ram_end, 0);
-
-	// copy bootloader
-	memcpy(bootloader_vec, __bootloader_start__, (size_t) __bootloader_size__);
-
-	jump_to_firmware(bootloader_vec, FW_TRUSTED);
-}
+#endif
