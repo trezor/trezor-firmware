@@ -28,6 +28,7 @@
 
 #include "sha2.h"
 #include "blake256.h"
+#include "groestl.h"
 
 #define HASHER_DIGEST_LENGTH 32
 
@@ -37,6 +38,8 @@ typedef enum {
 
     HASHER_SHA2D,
     HASHER_BLAKED,
+
+    HASHER_GROESTL,
 } HasherType;
 
 typedef struct {
@@ -45,6 +48,7 @@ typedef struct {
     union {
         SHA256_CTX sha2;
         BLAKE256_CTX blake;
+        GROESTL512_CTX groestl;
     } ctx;
 } Hasher;
 

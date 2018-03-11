@@ -10,8 +10,6 @@ CFLAGS   += $(OPTFLAGS) \
             -Wimplicit-function-declaration \
             -Wredundant-decls \
             -Wstrict-prototypes \
-            -Wundef \
-            -Wshadow \
             -Wpointer-arith \
             -Wformat \
             -Wreturn-type \
@@ -21,7 +19,6 @@ CFLAGS   += $(OPTFLAGS) \
             -Winit-self \
             -Wuninitialized \
             -Wformat-security \
-            -Werror
 
 CFLAGS += -I.
 CFLAGS += -DUSE_ETHEREUM=1
@@ -47,6 +44,7 @@ SRCS  += ed25519-donna/ed25519-donna-basepoint-table.c ed25519-donna/ed25519-don
 SRCS  += ed25519-donna/ed25519.c ed25519-donna/curve25519-donna-scalarmult-base.c ed25519-donna/ed25519-sha3.c ed25519-donna/ed25519-keccak.c
 SRCS  += blake256.c
 SRCS  += blake2b.c blake2s.c
+SRCS  += groestl.c
 SRCS  += chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
 SRCS  += rc4.c
 SRCS  += nem.c
