@@ -24,7 +24,7 @@ def display_homescreen():
 
     if storage.is_initialized() and storage.unfinished_backup():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.RED)
-        ui.display.text_center(ui.WIDTH // 2, 22, 'BROKEN BACKUP!', ui.BOLD, ui.WHITE, ui.RED)
+        ui.display.text_center(ui.WIDTH // 2, 22, 'BACKUP INTERRUPTED!', ui.BOLD, ui.WHITE, ui.RED)
         ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
     elif storage.is_initialized() and storage.needs_backup():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
