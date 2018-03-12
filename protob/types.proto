@@ -284,6 +284,16 @@ message IdentityType {
 }
 
 /**
+ * Structure representing passphrase source
+ * @used_in ApplySettings
+ */
+enum PassphraseSourceType {
+	ASK = 0;
+	DEVICE = 1;
+	HOST = 2;
+}
+
+/**
  * Structure representing the common part for NEM transactions
  * @used_in NEMSignTx
  */
