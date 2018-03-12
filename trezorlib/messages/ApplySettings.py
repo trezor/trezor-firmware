@@ -9,5 +9,6 @@ class ApplySettings(p.MessageType):
         2: ('label', p.UnicodeType, 0),
         3: ('use_passphrase', p.BoolType, 0),
         4: ('homescreen', p.BytesType, 0),
+        5: ('passphrase_source', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 25

@@ -30,6 +30,7 @@ from . import ButtonRequestType
 from . import PinMatrixRequestType
 from . import RecoveryDeviceType
 from . import WordRequestType
+from . import PassphraseSourceType
 from . import NEMMosaicLevy
 from . import NEMSupplyChangeType
 from . import NEMModificationType

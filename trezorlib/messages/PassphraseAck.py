@@ -6,5 +6,6 @@ from .. import protobuf as p
 class PassphraseAck(p.MessageType):
     FIELDS = {
         1: ('passphrase', p.UnicodeType, 0),
+        2: ('state', p.BytesType, 0),
     }
     MESSAGE_WIRE_TYPE = 42
