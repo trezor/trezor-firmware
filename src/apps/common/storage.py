@@ -8,17 +8,18 @@ HOMESCREEN_MAXSIZE = 16384
 
 _STORAGE_VERSION = b'\x01'
 
-_APP            = const(0x01)  # app namespace
-_DEVICE_ID      = const(0x00)  # bytes
-_VERSION        = const(0x01)  # int
-_MNEMONIC       = const(0x02)  # str
-_LANGUAGE       = const(0x03)  # str
-_LABEL          = const(0x04)  # str
-_USE_PASSPHRASE = const(0x05)  # 0x01 or empty
-_HOMESCREEN     = const(0x06)  # bytes
-_NEEDS_BACKUP   = const(0x07)  # 0x01 or empty
-_FLAGS          = const(0x08)  # int
-_U2F_COUNTER    = const(0x09)  # int
+_APP                = const(0x01)  # app namespace
+_DEVICE_ID          = const(0x00)  # bytes
+_VERSION            = const(0x01)  # int
+_MNEMONIC           = const(0x02)  # str
+_LANGUAGE           = const(0x03)  # str
+_LABEL              = const(0x04)  # str
+_USE_PASSPHRASE     = const(0x05)  # 0x01 or empty
+_HOMESCREEN         = const(0x06)  # bytes
+_NEEDS_BACKUP       = const(0x07)  # 0x01 or empty
+_FLAGS              = const(0x08)  # int
+_U2F_COUNTER        = const(0x09)  # int
+_PASSPHRASE_SOURCE  = const(0x0A)  # int
 
 
 def _new_device_id() -> str:
@@ -70,7 +71,17 @@ def set_backed_up() -> None:
     config.set(_APP, _NEEDS_BACKUP, b'')
 
 
-def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None) -> None:
+def get_passphrase_source() -> int:
+    b = config.get(_APP, _PASSPHRASE_SOURCE)
+    if b == b'\x01':
+        return 1
+    elif b == b'\x02':
+        return 2
+    else:
+        return 0
+
+
+def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=None, passphrase_source: int=None) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public
     if use_passphrase is True:
@@ -83,6 +94,9 @@ def load_settings(label: str=None, use_passphrase: bool=None, homescreen: bytes=
                 config.set(_APP, _HOMESCREEN, homescreen, True)  # public
         else:
             config.set(_APP, _HOMESCREEN, b'', True)  # public
+    if passphrase_source is not None:
+        if passphrase_source in [0, 1, 2]:
+            config.set(_APP, _PASSPHRASE_SOURCE, bytes([passphrase_source]))
 
 
 def get_flags() -> int:

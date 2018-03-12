@@ -2,6 +2,7 @@ from trezor import ui, wire
 from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.FailureType import ActionCancelled, ProcessError
+from trezor.messages import PassphraseSourceType
 from trezor.messages.PassphraseRequest import PassphraseRequest
 from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
 from trezor.ui.entry_select import DEVICE, EntrySelector
@@ -61,7 +62,10 @@ async def request_passphrase_ack(ctx, on_device):
 
 
 async def request_passphrase(ctx):
-    on_device = await request_passphrase_entry(ctx) == DEVICE
+    if storage.get_passphrase_source() == PassphraseSourceType.ASK:
+        on_device = await request_passphrase_entry(ctx) == DEVICE
+    else:
+        on_device = storage.get_passphrase_source() == PassphraseSourceType.DEVICE
     passphrase = await request_passphrase_ack(ctx, on_device)
     return passphrase
 

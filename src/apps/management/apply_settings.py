@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, FailureType
+from trezor.messages import ButtonRequestType, FailureType, PassphraseSourceType
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 from apps.common import storage
@@ -7,7 +7,7 @@ from apps.common.confirm import require_confirm
 
 
 async def apply_settings(ctx, msg):
-    if msg.homescreen is None and msg.label is None and msg.use_passphrase is None:
+    if msg.homescreen is None and msg.label is None and msg.use_passphrase is None and msg.passphrase_source is None:
         raise wire.FailureError(FailureType.ProcessError, 'No setting provided')
 
     if msg.homescreen is not None:
@@ -35,8 +35,22 @@ async def apply_settings(ctx, msg):
             'encryption?'),
             code=ButtonRequestType.ProtectCall)
 
+    if msg.passphrase_source is not None:
+        if msg.passphrase_source == PassphraseSourceType.DEVICE:
+            desc = 'ON DEVICE'
+        elif msg.passphrase_source == PassphraseSourceType.HOST:
+            desc = 'ON HOST'
+        else:
+            desc = 'ASK'
+        await require_confirm(ctx, Text(
+            'Passphrase source', ui.ICON_CONFIG,
+            'Do you really want to', 'change the passphrase', 'source to',
+            ui.BOLD, 'ALWAYS %s?' % desc),
+            code=ButtonRequestType.ProtectCall)
+
     storage.load_settings(label=msg.label,
                           use_passphrase=msg.use_passphrase,
-                          homescreen=msg.homescreen)
+                          homescreen=msg.homescreen,
+                          passphrase_source=msg.passphrase_source)
 
     return Success(message='Settings applied')
