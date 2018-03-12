@@ -203,6 +203,13 @@ def set_label(connect, label):
     return connect().apply_settings(label=label)
 
 
+@cli.command(help='Set passphrase source.')
+@click.argument('source', type=int)
+@click.pass_obj
+def set_passphrase_source(connect, source):
+    return connect().apply_settings(passphrase_source=source)
+
+
 @cli.command(help='Set device flags.')
 @click.argument('flags')
 @click.pass_obj
