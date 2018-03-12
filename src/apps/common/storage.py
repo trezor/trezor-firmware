@@ -14,12 +14,13 @@ _VERSION            = const(0x01)  # int
 _MNEMONIC           = const(0x02)  # str
 _LANGUAGE           = const(0x03)  # str
 _LABEL              = const(0x04)  # str
-_USE_PASSPHRASE     = const(0x05)  # 0x01 or empty
+_USE_PASSPHRASE     = const(0x05)  # bool (0x01 or empty)
 _HOMESCREEN         = const(0x06)  # bytes
-_NEEDS_BACKUP       = const(0x07)  # 0x01 or empty
+_NEEDS_BACKUP       = const(0x07)  # bool (0x01 or empty)
 _FLAGS              = const(0x08)  # int
 _U2F_COUNTER        = const(0x09)  # int
 _PASSPHRASE_SOURCE  = const(0x0A)  # int
+_UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
 
 
 def _new_device_id() -> str:
@@ -69,6 +70,17 @@ def needs_backup() -> bool:
 
 def set_backed_up() -> None:
     config.set(_APP, _NEEDS_BACKUP, b'')
+
+
+def unfinished_backup() -> bool:
+    return bool(config.get(_APP, _UNFINISHED_BACKUP))
+
+
+def set_unfinished_backup(state: bool) -> None:
+    if state:
+        config.set(_APP, _UNFINISHED_BACKUP, b'\x01')
+    else:
+        config.set(_APP, _UNFINISHED_BACKUP, b'')
 
 
 def get_passphrase_source() -> int:

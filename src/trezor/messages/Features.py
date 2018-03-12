@@ -31,6 +31,7 @@ class Features(p.MessageType):
         24: ('fw_patch', p.UVarintType, 0),
         25: ('fw_vendor', p.UnicodeType, 0),
         26: ('fw_vendor_keys', p.BytesType, 0),
+        27: ('unfinished_backup', p.BoolType, 0),
     }
     MESSAGE_WIRE_TYPE = 17
 
@@ -62,6 +63,7 @@ class Features(p.MessageType):
         fw_patch: int = None,
         fw_vendor: str = None,
         fw_vendor_keys: bytes = None,
+        unfinished_backup: bool = None,
         **kwargs,
     ):
         self.vendor = vendor
@@ -90,4 +92,5 @@ class Features(p.MessageType):
         self.fw_patch = fw_patch
         self.fw_vendor = fw_vendor
         self.fw_vendor_keys = fw_vendor_keys
+        self.unfinished_backup = unfinished_backup
         p.MessageType.__init__(self, **kwargs)

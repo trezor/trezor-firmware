@@ -17,6 +17,7 @@ async def backup_device(ctx, msg):
     # warn user about mnemonic safety
     await show_warning(ctx)
 
+    storage.set_unfinished_backup(True)
     storage.set_backed_up()
 
     while True:
@@ -25,5 +26,7 @@ async def backup_device(ctx, msg):
         if await check_mnemonic(ctx, mnemonic):
             break
         await show_wrong_entry(ctx)
+
+    storage.set_unfinished_backup(False)
 
     return Success(message='Seed successfully backed up')

@@ -33,6 +33,7 @@ async def respond_Features(ctx, msg):
     f.flags = storage.get_flags()
     if model() in ['T', 'EMU']:  # emulator currently emulates model T
         f.model = 'T'
+    f.unfinished_backup = storage.unfinished_backup()
 
     return f
 
