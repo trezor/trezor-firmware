@@ -21,10 +21,14 @@ _FLAGS          = const(0x08)  # int
 _U2F_COUNTER    = const(0x09)  # int
 
 
+def _new_device_id() -> str:
+    return hexlify(random.bytes(12)).decode().upper()
+
+
 def get_device_id() -> str:
     dev_id = config.get(_APP, _DEVICE_ID, True).decode()  # public
     if not dev_id:
-        dev_id = new_device_id()
+        dev_id = _new_device_id()
         config.set(_APP, _DEVICE_ID, dev_id.encode(), True)  # public
     return dev_id
 
@@ -117,7 +121,3 @@ def set_u2f_counter(cntr: int):
 def wipe():
     config.wipe()
     cache.clear()
-
-
-def new_device_id() -> str:
-    return hexlify(random.bytes(12)).decode().upper()
