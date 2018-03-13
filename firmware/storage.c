@@ -160,7 +160,7 @@ bool storage_from_flash(void)
 	// version 6: since 1.3.6
 	// version 7: since 1.5.1
 	// version 8: since 1.5.2
-	// version 9: since 1.6.1
+	// version 9: since 1.7.0
 	if (version > STORAGE_VERSION) {
 		// downgrade -> clear storage
 		return false;
