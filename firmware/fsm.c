@@ -635,7 +635,8 @@ void fsm_msgClearSession(ClearSession *msg)
 
 void fsm_msgApplySettings(ApplySettings *msg)
 {
-	CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase || msg->has_homescreen, _("No setting provided"));
+	CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase || msg->has_homescreen || msg->has_auto_lock_delay_ms,
+				_("No setting provided"));
 
 	CHECK_PIN
 
@@ -672,6 +673,15 @@ void fsm_msgApplySettings(ApplySettings *msg)
 		}
 	}
 
+	if (msg->has_auto_lock_delay_ms) {
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("change auto-lock"), _("delay?"), NULL, NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			layoutHome();
+			return;
+		}
+	}
+
 	if (msg->has_label) {
 		storage_setLabel(msg->label);
 	}
@@ -683,6 +693,9 @@ void fsm_msgApplySettings(ApplySettings *msg)
 	}
 	if (msg->has_homescreen) {
 		storage_setHomescreen(msg->homescreen.bytes, msg->homescreen.size);
+	}
+	if (msg->has_auto_lock_delay_ms) {
+		storage_setAutoLockDelayMs(msg->auto_lock_delay_ms);
 	}
 	storage_update();
 	fsm_sendSuccess(_("Settings applied"));
