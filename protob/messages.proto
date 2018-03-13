@@ -175,6 +175,7 @@ message ApplySettings {
 	optional bool use_passphrase = 3;
 	optional bytes homescreen = 4;
 	optional PassphraseSourceType passphrase_source = 5;
+	optional uint32 auto_lock_delay_ms = 6;
 }
 
 /**

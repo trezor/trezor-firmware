@@ -29,4 +29,5 @@ message Storage {
 	optional uint32 flags = 13;			// device flags
 	optional HDNodeType u2froot = 14;		// U2F root node
 	optional bool unfinished_backup = 15;		// seed was improperly backed up
+	optional uint32 auto_lock_delay_ms = 16;	// configurable auto-lock delay (in milliseconds)
 }
