@@ -643,7 +643,7 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def apply_settings(self, label=None, language=None, use_passphrase=None, homescreen=None, passphrase_source=None):
+    def apply_settings(self, label=None, language=None, use_passphrase=None, homescreen=None, passphrase_source=None, auto_lock_delay_ms=None):
         settings = proto.ApplySettings()
         if label is not None:
             settings.label = label
@@ -655,6 +655,8 @@ class ProtocolMixin(object):
             settings.homescreen = homescreen
         if passphrase_source is not None:
             settings.passphrase_source = passphrase_source
+        if auto_lock_delay_ms is not None:
+            settings.auto_lock_delay_ms = auto_lock_delay_ms
 
         out = self.call(settings)
         self.init_device()  # Reload Features

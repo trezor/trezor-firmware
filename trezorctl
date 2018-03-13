@@ -210,6 +210,23 @@ def set_passphrase_source(connect, source):
     return connect().apply_settings(passphrase_source=source)
 
 
+@cli.command(help='Set auto-lock delay (in seconds).')
+@click.argument('delay', type=str)
+@click.pass_obj
+def set_auto_lock_delay(connect, delay):
+    value, unit = delay[:-1], delay[-1:]
+    units = {
+        's': 1,
+        'm': 60,
+        'h': 3600,
+    }
+    if unit in units:
+        seconds = float(value) * units[unit]
+    else:
+        seconds = float(delay)  # assume seconds if no unit is specified
+    return connect().apply_settings(auto_lock_delay_ms=int(seconds * 1000))
+
+
 @cli.command(help='Set device flags.')
 @click.argument('flags')
 @click.pass_obj
