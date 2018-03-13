@@ -173,8 +173,8 @@ bool storage_from_flash(void)
 		// added flags and needsBackup
 		old_storage_size = OLD_STORAGE_SIZE(flags);
 	} else if (version <= 9) {
-		// added u2froot
-		old_storage_size = OLD_STORAGE_SIZE(u2froot);
+		// added u2froot and auto_lock_delay_ms
+		old_storage_size = OLD_STORAGE_SIZE(auto_lock_delay_ms);
 	}
 
 	// erase newly added fields
@@ -866,6 +866,18 @@ void storage_setU2FCounter(uint32_t u2fcounter)
 {
 	storageUpdate.has_u2f_counter = true;
 	storageUpdate.u2f_counter = u2fcounter - storage_u2f_offset;
+}
+
+uint32_t storage_getAutoLockDelayMs()
+{
+	return storageRom->has_auto_lock_delay_ms ? storageRom->auto_lock_delay_ms : (10*60*1000U);
+}
+
+void storage_setAutoLockDelayMs(uint32_t auto_lock_delay_ms)
+{
+	storageUpdate.has_auto_lock_delay_ms = true;
+	auto_lock_delay_ms = MAX(auto_lock_delay_ms, 60*1000U);
+	storageUpdate.auto_lock_delay_ms = auto_lock_delay_ms;
 }
 
 void storage_wipe(void)

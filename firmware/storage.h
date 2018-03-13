@@ -72,6 +72,7 @@ typedef struct _Storage {
     STORAGE_BOOL   (needs_backup)
     STORAGE_UINT32 (flags)
     STORAGE_NODE   (u2froot)
+    STORAGE_UINT32 (auto_lock_delay_ms)
 } Storage;
 
 extern Storage storageUpdate;
@@ -140,6 +141,9 @@ void storage_setNeedsBackup(bool needs_backup);
 
 void storage_applyFlags(uint32_t flags);
 uint32_t storage_getFlags(void);
+
+uint32_t storage_getAutoLockDelayMs(void);
+void storage_setAutoLockDelayMs(uint32_t auto_lock_delay_ms);
 
 void storage_wipe(void);
 
