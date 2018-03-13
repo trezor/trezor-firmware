@@ -76,8 +76,10 @@ void show_unofficial_warning(const uint8_t *hash)
 	// everything is OK, user pressed 2x Continue -> continue program
 }
 
-void __attribute__((noreturn)) load_app(void)
+void __attribute__((noreturn)) load_app(int signed_firmware)
 {
+	(void)signed_firmware;
+
 	// zero out SRAM
 	memset_reg(_ram_start, _ram_end, 0);
 
@@ -146,13 +148,14 @@ int main(void)
 		oledRefresh();
 
 		uint8_t hash[32];
-		if (!signatures_ok(hash)) {
+		int signed_firmware = signatures_ok(hash);
+		if (SIG_OK != signed_firmware) {
 			show_unofficial_warning(hash);
 		}
 
 		delay(100000);
 
-		load_app();
+		load_app(signed_firmware);
 	}
 #endif
 

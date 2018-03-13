@@ -51,23 +51,23 @@ int signatures_ok(uint8_t *store_hash)
 		memcpy(store_hash, hash, 32);
 	}
 
-	if (sigindex1 < 1 || sigindex1 > PUBKEYS) return 0; // invalid index
-	if (sigindex2 < 1 || sigindex2 > PUBKEYS) return 0; // invalid index
-	if (sigindex3 < 1 || sigindex3 > PUBKEYS) return 0; // invalid index
+	if (sigindex1 < 1 || sigindex1 > PUBKEYS) return SIG_FAIL; // invalid index
+	if (sigindex2 < 1 || sigindex2 > PUBKEYS) return SIG_FAIL; // invalid index
+	if (sigindex3 < 1 || sigindex3 > PUBKEYS) return SIG_FAIL; // invalid index
 
-	if (sigindex1 == sigindex2) return 0; // duplicate use
-	if (sigindex1 == sigindex3) return 0; // duplicate use
-	if (sigindex2 == sigindex3) return 0; // duplicate use
+	if (sigindex1 == sigindex2) return SIG_FAIL; // duplicate use
+	if (sigindex1 == sigindex3) return SIG_FAIL; // duplicate use
+	if (sigindex2 == sigindex3) return SIG_FAIL; // duplicate use
 
-	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex1 - 1], (const uint8_t *)FLASH_META_SIG1, hash) != 0) { // failure
-		return 0;
+	if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex1 - 1], (const uint8_t *)FLASH_META_SIG1, hash)) { // failure
+		return SIG_FAIL;
 	}
-	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex2 - 1], (const uint8_t *)FLASH_META_SIG2, hash) != 0) { // failure
-		return 0;
+	if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex2 - 1], (const uint8_t *)FLASH_META_SIG2, hash)) { // failure
+		return SIG_FAIL;
 	}
-	if (ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1], (const uint8_t *)FLASH_META_SIG3, hash) != 0) { // failture
-		return 0;
+	if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1], (const uint8_t *)FLASH_META_SIG3, hash)) { // failture
+		return SIG_FAIL;
 	}
 
-	return 1;
+	return SIG_OK;
 }
