@@ -1,6 +1,5 @@
 from trezor import ui
 from trezor.crypto.hashlib import sha256
-from trezor.messages.IdentityType import IdentityType
 from trezor.messages.SignedIdentity import SignedIdentity
 from ustruct import pack, unpack
 from trezor.utils import chunks
@@ -53,7 +52,7 @@ async def require_confirm_sign_identity(ctx, identity, challenge_visual):
     lines.extend(chunks(serialize_identity_without_proto(identity), 18))
 
     proto = identity.proto.upper() if identity.proto else 'identity'
-    header = 'Sign %s' % (proto,)
+    header = 'Sign %s' % proto
     content = Text(header, ui.ICON_DEFAULT, *lines, max_lines=5)
     await require_confirm(ctx, content)
 
