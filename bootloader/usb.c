@@ -351,6 +351,38 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			send_msg_success(dev);
 			return;
 		}
+		if (msg_id == 0x0005) {		// WipeDevice message (id 5)
+			layoutDialog(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
+			do {
+				delay(100000);
+				buttonUpdate();
+			} while (!button.YesUp && !button.NoUp);
+			if (button.YesUp) {
+				flash_wait_for_last_operation();
+				flash_clear_status_flags();
+				flash_unlock();
+				// erase metadata area
+				for (int i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
+					layoutProgress("ERASING ... Please wait", 1000 * (i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
+					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+				}
+				// erase code area
+				for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
+					layoutProgress("ERASING ... Please wait", 1000 * (i - FLASH_META_SECTOR_FIRST) / (FLASH_CODE_SECTOR_LAST - FLASH_META_SECTOR_FIRST));
+					flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+				}
+				flash_wait_for_last_operation();
+				flash_lock();
+				flash_state = STATE_END;
+				layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "Device", "successfully wiped.", NULL, "You may now", "unplug your TREZOR.", NULL);
+				send_msg_success(dev);
+			} else {
+				flash_state = STATE_END;
+				layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Device wipe", "aborted.", NULL, "You may now", "unplug your TREZOR.", NULL);
+				send_msg_failure(dev);
+			}
+			return;
+		}
 		if (msg_id == 0x0020) {		// SelfTest message (id 32)
 
 			// USB TEST
