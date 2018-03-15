@@ -25,7 +25,6 @@ import time
 import binascii
 import hashlib
 import unicodedata
-import json
 import getpass
 import warnings
 
@@ -34,6 +33,7 @@ from mnemonic import Mnemonic
 from . import messages as proto
 from . import tools
 from . import mapping
+from . import nem
 from .coins import coins_slip44
 from .debuglink import DebugLink
 from .protobuf import MessageType
@@ -718,120 +718,12 @@ class ProtocolMixin(object):
     @expect(proto.NEMSignedTx)
     def nem_sign_tx(self, n, transaction):
         n = self._convert_prime(n)
+        try:
+            msg = nem.create_sign_tx(transaction)
+        except ValueError as e:
+            raise CallException(e.message)
 
-        def common_to_proto(common):
-            msg = proto.NEMTransactionCommon()
-            msg.network = (common["version"] >> 24) & 0xFF
-            msg.timestamp = common["timeStamp"]
-            msg.fee = common["fee"]
-            msg.deadline = common["deadline"]
-
-            if "signed" in common:
-                msg.signer = binascii.unhexlify(common["signer"])
-
-            return msg
-
-        def transfer_to_proto(transfer):
-            msg = proto.NEMTransfer()
-            msg.recipient = transfer["recipient"]
-            msg.amount = transfer["amount"]
-
-            if "payload" in transfer["message"]:
-                msg.payload = binascii.unhexlify(transfer["message"]["payload"])
-
-                if transfer["message"]["type"] == 0x02:
-                    msg.public_key = binascii.unhexlify(transfer["message"]["publicKey"])
-
-            if "mosaics" in transfer:
-                msg._extend_mosaics(proto.NEMMosaic(
-                    namespace=mosaic["mosaicId"]["namespaceId"],
-                    mosaic=mosaic["mosaicId"]["name"],
-                    quantity=mosaic["quantity"],
-                ) for mosaic in transfer["mosaics"])
-            return msg
-
-        def aggregate_modification_to_proto(aggregate_modification, msg):
-            msg._extend_modifications(proto.NEMCosignatoryModification(
-                type=modification["modificationType"],
-                public_key=binascii.unhexlify(modification["cosignatoryAccount"]),
-            ) for modification in aggregate_modification["modifications"])
-
-            if "minCosignatories" in aggregate_modification:
-                msg.relative_change = aggregate_modification["minCosignatories"]["relativeChange"]
-
-        def provision_namespace_to_proto(provision_namespace, msg):
-            msg.namespace = provision_namespace["newPart"]
-
-            if provision_namespace["parent"]:
-                msg.parent = provision_namespace["parent"]
-
-            msg.sink = provision_namespace["rentalFeeSink"]
-            msg.fee = provision_namespace["rentalFee"]
-
-        def mosaic_creation_to_proto(mosaic_creation):
-            msg = proto.NEMMosaicCreation()
-            msg.definition.namespace = mosaic_creation["mosaicDefinition"]["id"]["namespaceId"]
-            msg.definition.mosaic = mosaic_creation["mosaicDefinition"]["id"]["name"]
-
-            if mosaic_creation["mosaicDefinition"]["levy"]:
-                msg.definition.levy = mosaic_creation["mosaicDefinition"]["levy"]["type"]
-                msg.definition.fee = mosaic_creation["mosaicDefinition"]["levy"]["fee"]
-                msg.definition.levy_address = mosaic_creation["mosaicDefinition"]["levy"]["recipient"]
-                msg.definition.levy_namespace = mosaic_creation["mosaicDefinition"]["levy"]["mosaicId"]["namespaceId"]
-                msg.definition.levy_mosaic = mosaic_creation["mosaicDefinition"]["levy"]["mosaicId"]["name"]
-
-            msg.definition.description = mosaic_creation["mosaicDefinition"]["description"]
-
-            for property in mosaic_creation["mosaicDefinition"]["properties"]:
-                name = property["name"]
-                value = json.loads(property["value"])
-
-                if name == "divisibility":
-                    msg.definition.divisibility = value
-                elif name == "initialSupply":
-                    msg.definition.supply = value
-                elif name == "supplyMutable":
-                    msg.definition.mutable_supply = value
-                elif name == "transferable":
-                    msg.definition.transferable = value
-
-            msg.sink = mosaic_creation["creationFeeSink"]
-            msg.fee = mosaic_creation["creationFee"]
-            return msg
-
-        def mosaic_supply_change_to_proto(mosaic_supply_change):
-            msg = proto.NEMMosaicSupplyChange()
-            msg.namespace = mosaic_supply_change["mosaicId"]["namespaceId"]
-            msg.mosaic = mosaic_supply_change["mosaicId"]["name"]
-            msg.type = mosaic_supply_change["supplyType"]
-            msg.delta = mosaic_supply_change["delta"]
-            return msg
-
-        msg = proto.NEMSignTx()
-
-        msg.transaction = common_to_proto(transaction)
-        msg.transaction._extend_address_n(n)
-        msg.cosigning = (transaction["type"] == 0x1002)
-
-        if msg.cosigning or transaction["type"] == 0x1004:
-            transaction = transaction["otherTrans"]
-            msg.multisig = common_to_proto(transaction)
-        elif "otherTrans" in transaction:
-            raise CallException("Transaction does not support inner transaction")
-
-        if transaction["type"] == 0x0101:
-            msg.transfer = transfer_to_proto(transaction)
-        elif transaction["type"] == 0x1001:
-            aggregate_modification_to_proto(transaction, msg.aggregate_modification)
-        elif transaction["type"] == 0x2001:
-            provision_namespace_to_proto(transaction, msg.provision_namespace)
-        elif transaction["type"] == 0x4001:
-            msg = mosaic_creation_to_proto(transaction)
-        elif transaction["type"] == 0x4002:
-            msg.mosaic_supply_change = mosaic_supply_change_to_proto(transaction)
-        else:
-            raise CallException("Unknown transaction type")
-
+        msg.address_n = n
         return self.call(msg)
 
     def verify_message(self, coin_name, address, signature, message):
