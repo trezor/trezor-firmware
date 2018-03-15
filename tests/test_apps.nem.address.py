@@ -6,8 +6,8 @@ from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_CURVE
 
 class TestNemAddress(unittest.TestCase):
 
-    # test vectors from https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/1.test-keys.dat
     def test_addresses(self):
+        # test vectors from https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/1.test-keys.dat
         # private key, public key, address
         test_cases = [
             ('575dbb3062267eff57c970a336ebbc8fbcfe12c5bd3ed7bc11eb0481d7704ced',
@@ -87,6 +87,150 @@ class TestNemAddress(unittest.TestCase):
             self.assertEqual(node.nem_address(NEM_NETWORK_MAINNET), test[2])
             # public key is prepended with 1, removing
             self.assertEqual(node.public_key()[1:], unhexlify(test[1]))
+
+    def test_encryption(self):
+        # test vectors from https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/4.test-cipher.dat
+        # private key, transfer public key, salt, iv, plain text, cipher text
+        test_cases = [
+            {'private': '3140f94c79f249787d1ec75a97a885980eb8f0a7d9b7aa03e7200296e422b2b6',
+             'public': '57a70eb553a7b3fd621f0dba6abf51312ea2e2a2a1e19d0305516730f4bcbd21',
+             'salt': '83616c67f076d356fd1288a6e0fd7a60488ba312a3adf0088b1b33c7655c3e6a',
+             'iv': 'a73ff5c32f8fd055b09775817a6a3f95',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': '70815da779b1b954d7a7f00c16940e9917a0412a06a444b539bf147603eef87f'},
+            {'private': '3140f94c79f249787d1ec75a97a885980eb8f0a7d9b7aa03e7200296e422b2b6',
+             'public': '57a70eb553a7b3fd621f0dba6abf51312ea2e2a2a1e19d0305516730f4bcbd21',
+             'salt': '703ce0b1d276b10eef35672df03234385a903460db18ba9d4e05b3ad31abb284',
+             'iv': '91246c2d5493867c4fa3e78f85963677',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': '564b2f40d42c0efc1bd6f057115a5abd1564cae36d7ccacf5d825d38401aa894'},
+            {'private': '3140f94c79f249787d1ec75a97a885980eb8f0a7d9b7aa03e7200296e422b2b6',
+             'public': '57a70eb553a7b3fd621f0dba6abf51312ea2e2a2a1e19d0305516730f4bcbd21',
+             'salt': 'b22e8e8e7373ac31ca7f0f6eb8b93130aba5266772a658593f3a11792e7e8d92',
+             'iv': '9f8e33d82374dad6aac0e3dbe7aea704',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': '7cab88d00a3fc656002eccbbd966e1d5d14a3090d92cf502cdbf843515625dcf'},
+            {'private': '3140f94c79f249787d1ec75a97a885980eb8f0a7d9b7aa03e7200296e422b2b6',
+             'public': '57a70eb553a7b3fd621f0dba6abf51312ea2e2a2a1e19d0305516730f4bcbd21',
+             'salt': 'af646c54cd153dffe453b60efbceeb85c1e95a414ea0036c4da94afb3366f5d9',
+             'iv': '6acdf8e01acc8074ddc807281b6af888',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': 'aa70543a485b63a4dd141bb7fd78019092ac6fad731e914280a287c7467bae1a'},
+            {'private': '3140f94c79f249787d1ec75a97a885980eb8f0a7d9b7aa03e7200296e422b2b6',
+             'public': '57a70eb553a7b3fd621f0dba6abf51312ea2e2a2a1e19d0305516730f4bcbd21',
+             'salt': 'd9c0d386636c8a024935c024589f9cd39e820a16485b14951e690a967830e269',
+             'iv': 'f2e9f18aeb374965f54d2f4e31189a8f',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': '33d97c216ea6498dfddabf94c2e2403d73efc495e9b284d9d90aaff840217d25'},
+            {'private': 'd5c0762ecea2cd6b5c56751b58debcb32713aab348f4a59c493e38beb3244f3a',
+             'public': '66a35941d615b5644d19c2a602c363ada8b1a8a0dac3682623852dcab4afac04',
+             'salt': '06c227baac1ae3b0b1dc583f4850f13f9ba5d53be4a98fa5c3ea16217847530d',
+             'iv': '3735123e78c44895df6ea33fa57e9a72',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': 'd5b5d66ba8cee0eb7ecf95b143fa77a46d6de13749e12eff40f5a7e649167ccb'},
+            {'private': 'd5c0762ecea2cd6b5c56751b58debcb32713aab348f4a59c493e38beb3244f3a',
+             'public': '66a35941d615b5644d19c2a602c363ada8b1a8a0dac3682623852dcab4afac04',
+             'salt': '92f55ba5bc6fc2f23e3eedc299357c71518e36ba2447a4da7a9dfe9dfeb107b5',
+             'iv': '1cbc4982e53e370052af97ab088fa942',
+             'input': '86ddb9e713a8ebf67a51830eff03b837e147c20d75e67b2a54aa29e98c',
+             'output': 'd48ef1ef526d805656cfc932aff259eadb17aa3391dde1877a722cba31d935b2'},
+            {'private': 'd5c0762ecea2cd6b5c56751b58debcb32713aab348f4a59c493e38beb3244f3a',
+             'public': '66a35941d615b5644d19c2a602c363ada8b1a8a0dac3682623852dcab4afac04',
+             'salt': '10f15a39ba49866292a43b7781bc71ca8bbd4889f1616461caf056bcb91b0158',
+             'iv': 'c40d531d92bfee969dce91417346c892',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': 'e6d75afdb542785669b42198577c5b358d95397d71ec6f5835dca46d332cc08dbf73ea790b7bcb169a65719c0d55054c'},
+            {'private': 'd5c0762ecea2cd6b5c56751b58debcb32713aab348f4a59c493e38beb3244f3a',
+             'public': '66a35941d615b5644d19c2a602c363ada8b1a8a0dac3682623852dcab4afac04',
+             'salt': '9c01ed42b219b3bbe1a43ae9d7af5c1dd09363baacfdba8f4d03d1046915e26e',
+             'iv': '059a35d5f83249e632790015ed6518b9',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': '5ef11aadff2eccee8b712dab968fa842eb770818ec0e6663ed242ea8b6bbc1c66d6285ee5b5f03d55dfee382fb4fa25d'},
+            {'private': 'd5c0762ecea2cd6b5c56751b58debcb32713aab348f4a59c493e38beb3244f3a',
+             'public': '66a35941d615b5644d19c2a602c363ada8b1a8a0dac3682623852dcab4afac04',
+             'salt': 'bc1067e2a7415ea45ff1ca9894338c591ff15f2e57ae2789ae31b9d5bea0f11e',
+             'iv': '8c73f0d6613898daeefa3cf8b0686d37',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': '6d220213b1878cd40a458f2a1e6e3b48040455fdf504dcd857f4f2ca1ad642e3a44fc401d04e339d302f66a9fad3d919'},
+            {'private': '9ef87ba8aa2e664bdfdb978b98bc30fb61773d9298e7b8c72911683eeff41921',
+             'public': '441e76d7e53be0a967181076a842f69c20fd8c0e3f0ce3aa421b490b059fe094',
+             'salt': 'cf4a21cb790552165827b678ca9695fcaf77566d382325112ff79483455de667',
+             'iv': 'bfbf5482e06f55b88bdd9e053b7eee6e',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': '1198a78c29c215d5c450f7b8513ead253160bc9fde80d9cc8e6bee2efe9713cf5a09d6293c41033271c9e8c22036a28b'},
+            {'private': '9ef87ba8aa2e664bdfdb978b98bc30fb61773d9298e7b8c72911683eeff41921',
+             'public': '441e76d7e53be0a967181076a842f69c20fd8c0e3f0ce3aa421b490b059fe094',
+             'salt': 'eba5eae8aef79114082c3e70baef95bb02edf13b3897e8be7a70272962ef8838',
+             'iv': 'af9a56da3da18e2fbd2948a16332532b',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': '1062ab5fbbdee9042ad35bdadfd3047c0a2127fe0f001da1be1b0582185edfc9687be8d68f85795833bb04af9cedd3bb'},
+            {'private': '9ef87ba8aa2e664bdfdb978b98bc30fb61773d9298e7b8c72911683eeff41921',
+             'public': '441e76d7e53be0a967181076a842f69c20fd8c0e3f0ce3aa421b490b059fe094',
+             'salt': '518f8dfd0c138f1ffb4ea8029db15441d70abd893c3d767dc668f23ba7770e27',
+             'iv': '42d28307974a1b2a2d921d270cfce03b',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': '005e49fb7c5da540a84b034c853fc9f78a6b901ea495aed0c2abd4f08f1a96f9ffefc6a57f1ac09e0aea95ca0f03ffd8'},
+            {'private': '9ef87ba8aa2e664bdfdb978b98bc30fb61773d9298e7b8c72911683eeff41921',
+             'public': '441e76d7e53be0a967181076a842f69c20fd8c0e3f0ce3aa421b490b059fe094',
+             'salt': '582fdf58b53715c26e10ba809e8f2ab70502e5a3d4e9a81100b7227732ab0bbc',
+             'iv': '91f2aad3189bb2edc93bc891e73911ba',
+             'input': '49de3cd5890e0cd0559f143807ff688ff62789b7236a332b7d7255ec0b4e73e6b3a4',
+             'output': '821a69cb16c57f0cb866e590b38069e35faec3ae18f158bb067db83a11237d29ab1e6b868b3147236a0958f15c2e2167'},
+            {'private': '9ef87ba8aa2e664bdfdb978b98bc30fb61773d9298e7b8c72911683eeff41921',
+             'public': '441e76d7e53be0a967181076a842f69c20fd8c0e3f0ce3aa421b490b059fe094',
+             'salt': 'a415b4c006118fb72fc37b2746ef288e23ac45c8ff7ade5f368a31557b6ac93a',
+             'iv': '2b7c5f75606c0b8106c6489ea5657a9e',
+             'input': '24512b714aefd5cbc4bcc4ef44ce6c67ffc447c65460a6c6e4a92e85',
+             'output': '2781d5ee8ef1cb1596f8902b33dfae5045f84a987ca58173af5830dbce386062'},
+            {'private': 'ed93c5a101ab53382ceee4f7e6b5aa112621d3bb9d18891509b1834ede235bcc',
+             'public': '5a5e14c633d7d269302849d739d80344ff14db51d7bcda86045723f05c4e4541',
+             'salt': '47e73ec362ea82d3a7c5d55532ad51d2cdf5316b981b2b2bd542b0efa027e8ea',
+             'iv': 'b2193f59030c8d05a7d3577b7f64dd33',
+             'input': '24512b714aefd5cbc4bcc4ef44ce6c67ffc447c65460a6c6e4a92e85',
+             'output': '3f43912db8dd6672b9996e5272e18c4b88fec9d7e8372db9c5f4709a4af1d86f'},
+            {'private': 'ed93c5a101ab53382ceee4f7e6b5aa112621d3bb9d18891509b1834ede235bcc',
+             'public': '5a5e14c633d7d269302849d739d80344ff14db51d7bcda86045723f05c4e4541',
+             'salt': 'aaa006c57b6d1e402650577fe9787d8d285f4bacd7c01f998be49c766f8860c7',
+             'iv': '130304ddb9adc8870cf56bcae9487b7f',
+             'input': '24512b714aefd5cbc4bcc4ef44ce6c67ffc447c65460a6c6e4a92e85',
+             'output': '878cc7d8c0ef8dac0182a78eedc8080a402f59d8062a6b4ca8f4a74f3c3b3de7'},
+            {'private': 'ed93c5a101ab53382ceee4f7e6b5aa112621d3bb9d18891509b1834ede235bcc',
+             'public': '5a5e14c633d7d269302849d739d80344ff14db51d7bcda86045723f05c4e4541',
+             'salt': '28dc7ccd6c2a939eef64b8be7b9ae248295e7fcd8471c22fa2f98733fea97611',
+             'iv': 'cb13890d3a11bc0a7433738263006710',
+             'input': '24512b714aefd5cbc4bcc4ef44ce6c67ffc447c65460a6c6e4a92e85',
+             'output': 'e74ded846bebfa912fa1720e4c1415e6e5df7e7a1a7fedb5665d68f1763209a4'},
+            {'private': 'ed93c5a101ab53382ceee4f7e6b5aa112621d3bb9d18891509b1834ede235bcc',
+             'public': '5a5e14c633d7d269302849d739d80344ff14db51d7bcda86045723f05c4e4541',
+             'salt': '79974fa2cad95154d0873902c153ccc3e7d54b17f2eeb3f29b6344cad9365a9a',
+             'iv': '22123357979d20f44cc8eb0263d84e0e',
+             'input': '24512b714aefd5cbc4bcc4ef44ce6c67ffc447c65460a6c6e4a92e85',
+             'output': 'eb14dec7b8b64d81a2ee4db07b0adf144d4f79a519bbf332b823583fa2d45405'},
+            {'private': 'ed93c5a101ab53382ceee4f7e6b5aa112621d3bb9d18891509b1834ede235bcc',
+             'public': '5a5e14c633d7d269302849d739d80344ff14db51d7bcda86045723f05c4e4541',
+             'salt': '3409a6f8c4dcd9bd04144eb67e55a98696b674735b01bf1196191f29871ef966',
+             'iv': 'a823a0965969380ea1f8659ea5fd8fdd',
+             'input': '24512b714aefd5cbc4bcc4ef44ce6c67ffc447c65460a6c6e4a92e85',
+             'output': '00a7eb708eae745847173f8217efb05be13059710aee632e3f471ac3c6202b51'},
+        ]
+
+        for test in test_cases:
+            private_key = bytearray(reversed(unhexlify(test['private'])))
+            node = bip32.HDNode(
+                depth=0,
+                fingerprint=0,
+                child_num=0,
+                chain_code=bytearray(32),
+                private_key=private_key,
+                curve_name=NEM_CURVE
+            )
+
+            encrypted = node.nem_encrypt(unhexlify(test['public']),
+                             unhexlify(test['iv']),
+                             unhexlify(test['salt']),
+                             unhexlify(test['input']))
+
+            self.assertEqual(encrypted, unhexlify(test['output']))
 
 
 if __name__ == '__main__':

@@ -24,6 +24,7 @@
 #include "bip32.h"
 #include "curves.h"
 #include "memzero.h"
+#include "nem.h"
 
 /// class HDNode:
 ///     '''
@@ -328,6 +329,43 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self, mp_obj_t netw
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj, mod_trezorcrypto_HDNode_nem_address);
 
+/// def nem_encrypt(self, transfer_public_key: bytes, iv: bytes, salt: bytes, payload: bytes) -> bytes:
+///     '''
+///     Encrypts payload using the transfer's public key
+///     '''
+STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args, const mp_obj_t *args) {
+    mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(args[0]);
+
+    mp_buffer_info_t transfer_pk;
+    mp_get_buffer_raise(args[1], &transfer_pk, MP_BUFFER_READ);
+    if (transfer_pk.len != 32) {
+        mp_raise_ValueError("transfer_public_key has invalid length");
+    }
+
+    mp_buffer_info_t iv;
+    mp_get_buffer_raise(args[2], &iv, MP_BUFFER_READ);
+    if (iv.len != 16) {
+        mp_raise_ValueError("IV has invalid length");
+    }
+    mp_buffer_info_t salt;
+    mp_get_buffer_raise(args[3], &salt, MP_BUFFER_READ);
+    if (salt.len != NEM_SALT_SIZE) {
+        mp_raise_ValueError("Salt has invalid length");
+    }
+    mp_buffer_info_t payload;
+    mp_get_buffer_raise(args[4], &payload, MP_BUFFER_READ);
+    if (payload.len == 0) {
+        mp_raise_ValueError("Payload is empty");
+    }
+
+    uint8_t buffer[NEM_ENCRYPTED_SIZE(payload.len)];
+
+    hdnode_nem_encrypt(&o->hdnode, *(const ed25519_public_key *)transfer_pk.buf, iv.buf, salt.buf, payload.buf, payload.len, buffer);
+    return mp_obj_new_bytes(buffer, sizeof(buffer));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_HDNode_nem_encrypt_obj, 5, 5, mod_trezorcrypto_HDNode_nem_encrypt);
+
+
 /// def ethereum_pubkeyhash(self) -> bytes:
 ///     '''
 ///     Compute an Ethereum pubkeyhash (aka address) from the HD node.
@@ -356,6 +394,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_public_key), MP_ROM_PTR(&mod_trezorcrypto_HDNode_public_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_address), MP_ROM_PTR(&mod_trezorcrypto_HDNode_address_obj) },
     { MP_ROM_QSTR(MP_QSTR_nem_address), MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_address_obj) },
+    { MP_ROM_QSTR(MP_QSTR_nem_encrypt), MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_encrypt_obj) },
     { MP_ROM_QSTR(MP_QSTR_ethereum_pubkeyhash), MP_ROM_PTR(&mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_HDNode_locals_dict, mod_trezorcrypto_HDNode_locals_dict_table);

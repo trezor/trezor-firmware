@@ -98,6 +98,11 @@ class HDNode:
         Compute a NEM address string from the HD node.
         '''
 
+    def nem_encrypt(self, transfer_public_key: bytes, iv: bytes, salt: bytes, payload: bytes) -> bytes:
+        '''
+        Encrypts payload using the transfer's public key
+        '''
+
     def ethereum_pubkeyhash(self) -> bytes:
         '''
         Compute an Ethereum pubkeyhash (aka address) from the HD node.
