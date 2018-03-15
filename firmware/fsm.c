@@ -1678,7 +1678,7 @@ void fsm_msgDebugLinkMemoryRead(DebugLinkMemoryRead *msg)
 	if (msg->has_length && msg->length < length)
 		length = msg->length;
 	resp->has_memory = true;
-	memcpy(resp->memory.bytes, (void*) msg->address, length);
+	memcpy(resp->memory.bytes, FLASH_PTR(msg->address), length);
 	resp->memory.size = length;
 	msg_debug_write(MessageType_MessageType_DebugLinkMemory, resp);
 }
@@ -1696,7 +1696,9 @@ void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
 		}
 		flash_lock();
 	} else {
+#if !EMULATOR
 		memcpy((void *) msg->address, msg->memory.bytes, length);
+#endif
 	}
 }
 

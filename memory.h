@@ -20,6 +20,8 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
+#include <stdint.h>
+
 /*
 
  flash memory layout:
@@ -62,10 +64,13 @@
 
  */
 
-#if EMULATOR
-#define FLASH_ORIGIN            ((uint32_t) emulator_flash_base)
-#else
 #define FLASH_ORIGIN		(0x08000000)
+
+#if EMULATOR
+extern uint8_t *emulator_flash_base;
+#define FLASH_PTR(x)		(emulator_flash_base + (x - FLASH_ORIGIN))
+#else
+#define FLASH_PTR(x)		(const uint8_t*) (x)
 #endif
 
 #define FLASH_TOTAL_SIZE	(512 * 1024)

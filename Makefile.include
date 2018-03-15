@@ -13,7 +13,7 @@ AS       := as
 
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g3 -ggdb3
-CPUFLAGS ?= -m32
+CPUFLAGS ?=
 FPUFLAGS ?=
 else
 PREFIX   ?= arm-none-eabi-

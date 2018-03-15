@@ -34,7 +34,7 @@
 
 #define EMULATOR_FLASH_FILE "emulator.img"
 
-void *emulator_flash_base = NULL;
+uint8_t *emulator_flash_base = NULL;
 
 uint32_t __stack_chk_guard;
 

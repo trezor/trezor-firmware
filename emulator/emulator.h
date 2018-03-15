@@ -26,8 +26,6 @@
 
 #include <stddef.h>
 
-extern void *emulator_flash_base;
-
 void emulatorPoll(void);
 void emulatorRandom(void *buffer, size_t size);
 

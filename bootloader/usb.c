@@ -302,7 +302,7 @@ static void erase_metadata_sectors(void)
 
 static void backup_metadata(uint8_t *backup)
 {
-	memcpy(backup, (void *)FLASH_META_START, FLASH_META_LEN);
+	memcpy(backup, FLASH_PTR(FLASH_META_START), FLASH_META_LEN);
 }
 
 static void restore_metadata(const uint8_t *backup)
@@ -434,7 +434,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 
 			// compute hash of written test pattern
 			uint8_t hash[32];
-			sha256_Raw((unsigned char *)FLASH_META_START, FLASH_META_LEN, hash);
+			sha256_Raw(FLASH_PTR(FLASH_META_START), FLASH_META_LEN, hash);
 
 			// restore metadata from backup
 			erase_metadata_sectors();
@@ -504,7 +504,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				// flash status register should show now error and
 				// the config block should contain only \xff.
 				uint8_t hash[32];
-				sha256_Raw((unsigned char *)FLASH_META_START, FLASH_META_LEN, hash);
+				sha256_Raw(FLASH_PTR(FLASH_META_START), FLASH_META_LEN, hash);
 				if ((FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) != 0
 					|| memcmp(hash, "\x2d\x86\x4c\x0b\x78\x9a\x43\x21\x4e\xee\x85\x24\xd3\x18\x20\x75\x12\x5e\x5c\xa2\xcd\x52\x7f\x35\x82\xec\x87\xff\xd9\x40\x76\xbc", 32) != 0) {
 					send_msg_failure(dev);
@@ -619,7 +619,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 				return;
 			}
 			uint8_t hash[32];
-			sha256_Raw((unsigned char *)FLASH_APP_START, flash_len - FLASH_META_DESC_LEN, hash);
+			sha256_Raw(FLASH_PTR(FLASH_APP_START), flash_len - FLASH_META_DESC_LEN, hash);
 			layoutFirmwareHash(hash);
 			do {
 				delay(100000);
@@ -630,7 +630,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		bool hash_check_ok = brand_new_firmware || button.YesUp;
 
 		layoutProgress("INSTALLING ... Please wait", 1000);
-		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
+		uint8_t flags = *FLASH_PTR(FLASH_META_FLAGS);
 		// wipe storage if:
 		// 0) there was no firmware
 		// 1) old firmware was unsigned
