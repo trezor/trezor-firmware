@@ -476,7 +476,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 			}
 			if (brand_new_firmware || button.YesUp) {
 				// check whether current firmware is signed
-				if (SIG_OK == signatures_ok(NULL)) {
+				if (!brand_new_firmware && SIG_OK == signatures_ok(NULL)) {
 					old_was_unsigned = false;
 					// backup metadata
 					backup_metadata(meta_backup);
@@ -632,10 +632,11 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		layoutProgress("INSTALLING ... Please wait", 1000);
 		uint8_t flags = *((uint8_t *)FLASH_META_FLAGS);
 		// wipe storage if:
+		// 0) there was no firmware
 		// 1) old firmware was unsigned
 		// 2) firmware restore flag isn't set
 		// 3) signatures are not ok
-		if (old_was_unsigned || (flags & 0x01) == 0 || SIG_OK != signatures_ok(NULL)) {
+		if (brand_new_firmware || old_was_unsigned || (flags & 0x01) == 0 || SIG_OK != signatures_ok(NULL)) {
 			memzero(meta_backup, sizeof(meta_backup));
 		}
 		// copy new firmware header
