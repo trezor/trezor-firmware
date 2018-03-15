@@ -136,7 +136,7 @@ def process_file(descriptor, protobuf_module, genpath, indexfile, modlist, is_up
 
     msg_types = import_pb2('messages').MessageType
 
-    for name, message_descriptor in descriptor.message_types_by_name.items():
+    for name, message_descriptor in sorted(descriptor.message_types_by_name.items()):
         # Find message type for given class
         try:
             msg_id = msg_types.Value("MessageType_%s" % name)
