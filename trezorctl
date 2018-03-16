@@ -521,6 +521,7 @@ def sign_tx(connect, coin):
         if address:
             address_n = None
         else:
+            address = None
             address_n = click.prompt('BIP-32 path (for change output)', type=client.expand_path, default='')
             if not address_n:
                 break
