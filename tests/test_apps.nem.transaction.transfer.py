@@ -4,7 +4,7 @@ from apps.nem.sign_tx import *
 from trezor.crypto import hashlib
 
 
-class TestNemTransfer(unittest.TestCase):
+class TestNemTransactionTransfer(unittest.TestCase):
 
     def test_create_transfer(self):
 
