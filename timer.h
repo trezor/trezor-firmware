@@ -21,18 +21,14 @@
 #define __TIMER_H__
 
 #include <stdint.h>
+#include "supervise.h"
 
 void timer_init(void);
 
 #if EMULATOR
 uint32_t timer_ms(void);
 #else
-static inline uint32_t timer_ms(void) {
-        /* 1 tick = 1 ms */
-        extern volatile uint32_t system_millis;
-
-        return system_millis;
-}
+#define timer_ms svc_timer_ms
 #endif
 
 #endif

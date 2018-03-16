@@ -14,6 +14,7 @@ endif
 
 OBJS += util.o
 OBJS += memory.o
+OBJS += supervise.o
 
 ifneq ($(EMULATOR),1)
 OBJS += timer.o

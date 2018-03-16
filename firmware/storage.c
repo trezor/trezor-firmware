@@ -43,6 +43,7 @@
 #include "gettext.h"
 #include "u2f.h"
 #include "memzero.h"
+#include "supervise.h"
 
 /* magic constant to check validity of storage block */
 static const uint32_t storage_magic = 0x726f7473;   // 'stor' as uint32_t
@@ -119,11 +120,11 @@ void storage_show_error(void)
 	shutdown();
 }
 
-void storage_check_flash_errors(void)
+void storage_check_flash_errors(uint32_t status)
 {
 #if !EMULATOR
 	// flash operation failed
-	if (FLASH_SR & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
+	if (status & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
 		storage_show_error();
 	}
 #endif
@@ -180,13 +181,12 @@ bool storage_from_flash(void)
 
 	// erase newly added fields
 	if (old_storage_size != sizeof(Storage)) {
-		flash_clear_status_flags();
-		flash_unlock();
+		svc_flash_unlock();
+		svc_flash_program(FLASH_CR_PROGRAM_X32);
 		for (uint32_t offset = old_storage_size; offset < sizeof(Storage); offset += sizeof(uint32_t)) {
-			flash_program_word(FLASH_STORAGE_START + sizeof(storage_magic) + sizeof(storage_uuid) + offset, 0);
+			flash_write32(FLASH_STORAGE_START + sizeof(storage_magic) + sizeof(storage_uuid) + offset, 0);
 		}
-		flash_lock();
-		storage_check_flash_errors();
+		storage_check_flash_errors(svc_flash_lock());
 	}
 
 	if (version <= 5) {
@@ -195,17 +195,14 @@ bool storage_from_flash(void)
 		if (pinctr > 31) {
 			pinctr = 31;
 		}
-		flash_clear_status_flags();
-		flash_unlock();
+		svc_flash_unlock();
 		// erase extra storage sector
-		flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
-		flash_program_word(FLASH_STORAGE_PINAREA, 0xffffffff << pinctr);
-		// erase storageRom.has_pin_failed_attempts and storageRom.pin_failed_attempts
-		_Static_assert(((FLASH_STORAGE + offsetof(Storage, pin_failed_attempts)) & 3) == 0, "storage.pin_failed_attempts unaligned");
-		flash_program_byte(FLASH_STORAGE + offsetof(Storage, has_pin_failed_attempts), 0);
-		flash_program_word(FLASH_STORAGE + offsetof(Storage, pin_failed_attempts), 0);
-		flash_lock();
-		storage_check_flash_errors();
+		svc_flash_erase_sector(FLASH_META_SECTOR_LAST);
+		svc_flash_program(FLASH_CR_PROGRAM_X32);
+		flash_write32(FLASH_STORAGE_PINAREA, 0xffffffff << pinctr);
+		// storageRom.has_pin_failed_attempts and storageRom.pin_failed_attempts
+		// are erased by storage_update below
+		storage_check_flash_errors(svc_flash_lock());
 	}
 	const uint32_t *u2fptr = (const uint32_t*) FLASH_PTR(FLASH_STORAGE_U2FAREA);
 	while (*u2fptr == 0) {
@@ -257,7 +254,7 @@ void session_clear(bool clear_pin)
 
 static uint32_t storage_flash_words(uint32_t addr, const uint32_t *src, int nwords) {
 	for (int i = 0; i < nwords; i++) {
-		flash_program_word(addr, *src++);
+		flash_write32(addr, *src++);
 		addr += sizeof(uint32_t);
 	}
 	return addr;
@@ -360,7 +357,8 @@ static void storage_commit_locked(bool update)
 	memcpy(meta_backup, FLASH_PTR(FLASH_META_START), FLASH_META_DESC_LEN);
 
 	// erase storage
-	flash_erase_sector(FLASH_META_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+	svc_flash_erase_sector(FLASH_META_SECTOR_FIRST);
+	svc_flash_program(FLASH_CR_PROGRAM_X32);
 
 	// copy meta back
 	uint32_t flash = FLASH_META_START;
@@ -377,7 +375,7 @@ static void storage_commit_locked(bool update)
 
 	// fill remainder with zero for future extensions
 	while (flash < FLASH_STORAGE_PINAREA) {
-		flash_program_word(flash, 0);
+		flash_write32(flash, 0);
 		flash += sizeof(uint32_t);
 	}
 }
@@ -389,11 +387,9 @@ void storage_clear_update(void)
 
 void storage_update(void)
 {
-	flash_clear_status_flags();
-	flash_unlock();
+	svc_flash_unlock();
 	storage_commit_locked(true);
-	flash_lock();
-	storage_check_flash_errors();
+	storage_check_flash_errors(svc_flash_lock());
 }
 
 static void storage_setNode(const HDNodeType *node) {
@@ -732,11 +728,9 @@ bool session_isPinCached(void)
 
 void storage_clearPinArea(void)
 {
-	flash_clear_status_flags();
-	flash_unlock();
-	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
-	flash_lock();
-	storage_check_flash_errors();
+	svc_flash_unlock();
+	svc_flash_erase_sector(FLASH_META_SECTOR_LAST);
+	storage_check_flash_errors(svc_flash_lock());
 	storage_u2f_offset = 0;
 }
 
@@ -745,39 +739,38 @@ static void storage_area_recycle(uint32_t new_pinfails)
 {
 	// first clear storage marker.  In case of a failure below it is better
 	// to clear the storage than to allow restarting with zero PIN failures
-	flash_program_word(FLASH_STORAGE_START, 0);
+	svc_flash_program(FLASH_CR_PROGRAM_X32);
+	flash_write32(FLASH_STORAGE_START, 0);
 	if (*(const uint32_t *)FLASH_PTR(FLASH_STORAGE_START) != 0) {
 		storage_show_error();
 	}
 
-	// erase storage sector
-	flash_erase_sector(FLASH_META_SECTOR_LAST, FLASH_CR_PROGRAM_X32);
-	flash_program_word(FLASH_STORAGE_PINAREA, new_pinfails);
-	if (*(const uint32_t *)FLASH_PTR(FLASH_STORAGE_PINAREA) != new_pinfails) {
+	// erase pinarea/u2f sector
+	svc_flash_erase_sector(FLASH_META_SECTOR_LAST);
+	flash_write32(FLASH_STORAGE_PINAREA, new_pinfails);
+	if (*(const volatile uint32_t *)FLASH_PTR(FLASH_STORAGE_PINAREA) != new_pinfails) {
 		storage_show_error();
 	}
 
-	if (storage_u2f_offset > 0) {
-		storageUpdate.has_u2f_counter = true;
-		storageUpdate.u2f_counter += storage_u2f_offset;
-		storage_u2f_offset = 0;
-		storage_commit_locked(true);
-	}
+	// restore storage sector
+	storageUpdate.has_u2f_counter = true;
+	storageUpdate.u2f_counter += storage_u2f_offset;
+	storage_u2f_offset = 0;
+	storage_commit_locked(true);
 }
 
 void storage_resetPinFails(uint32_t flash_pinfails)
 {
-	flash_clear_status_flags();
-	flash_unlock();
+	svc_flash_unlock();
 	if (flash_pinfails + sizeof(uint32_t)
 		>= FLASH_STORAGE_PINAREA + FLASH_STORAGE_PINAREA_LEN) {
 		// recycle extra storage sector
 		storage_area_recycle(0xffffffff);
 	} else {
-		flash_program_word(flash_pinfails, 0);
+		svc_flash_program(FLASH_CR_PROGRAM_X32);
+		flash_write32(flash_pinfails, 0);
 	}
-	flash_lock();
-	storage_check_flash_errors();
+	storage_check_flash_errors(svc_flash_lock());
 }
 
 bool storage_increasePinFails(uint32_t flash_pinfails)
@@ -788,11 +781,10 @@ bool storage_increasePinFails(uint32_t flash_pinfails)
 	if (!newctr)
 		return true;
 
-	flash_clear_status_flags();
-	flash_unlock();
-	flash_program_word(flash_pinfails, newctr);
-	flash_lock();
-	storage_check_flash_errors();
+	svc_flash_unlock();
+	svc_flash_program(FLASH_CR_PROGRAM_X32);
+	flash_write32(flash_pinfails, newctr);
+	storage_check_flash_errors(svc_flash_lock());
 
 	return *(const uint32_t*)FLASH_PTR(flash_pinfails) == newctr;
 }
@@ -860,16 +852,15 @@ uint32_t storage_nextU2FCounter(void)
 		sizeof(uint32_t) * (storage_u2f_offset / 32);
 	uint32_t newval = 0xfffffffe << (storage_u2f_offset & 31);
 
-	flash_clear_status_flags();
-	flash_unlock();
-	flash_program_word(flash_u2f_offset, newval);
+	svc_flash_unlock();
+	svc_flash_program(FLASH_CR_PROGRAM_X32);
+	flash_write32(flash_u2f_offset, newval);
 	storage_u2f_offset++;
 	if (storage_u2f_offset >= 8 * FLASH_STORAGE_U2FAREA_LEN) {
 		storage_area_recycle(*(const uint32_t*)
 							 FLASH_PTR(storage_getPinFailsOffset()));
 	}
-	flash_lock();
-	storage_check_flash_errors();
+	storage_check_flash_errors(svc_flash_lock());
 	return storageRom->u2f_counter + storage_u2f_offset;
 }
 
@@ -884,11 +875,9 @@ void storage_wipe(void)
 	session_clear(true);
 	storage_generate_uuid();
 
-	flash_clear_status_flags();
-	flash_unlock();
+	svc_flash_unlock();
 	storage_commit_locked(false);
-	flash_lock();
-	storage_check_flash_errors();
+	storage_check_flash_errors(svc_flash_lock());
 
 	storage_clearPinArea();
 }

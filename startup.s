@@ -60,4 +60,16 @@ shutdown:
   bl memset_reg
   b . // loop forever
 
+  .ltorg // dump literal pool (for the ldr ...,=... commands above)
+
+  .global sv_call_handler
+  .type sv_call_handler, STT_FUNC
+
+sv_call_handler:
+  tst lr, #4
+  ite eq
+  mrseq r0, msp
+  mrsne r0, psp
+  b svc_handler_main
+
   .end
