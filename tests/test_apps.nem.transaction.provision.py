@@ -1,6 +1,6 @@
 from common import *
 
-from apps.nem.sign_tx import *
+from apps.nem.transaction import *
 from trezor.crypto import hashlib
 
 
