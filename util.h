@@ -43,15 +43,13 @@ void data2hex(const void *data, uint32_t len, char *str);
 // read protobuf integer and advance pointer
 uint32_t readprotobufint(uint8_t **ptr);
 
-// halt execution (or do an endless loop)
-void __attribute__((noreturn)) system_halt(void);
-
 #if !EMULATOR
 // defined in memory.ld
 extern uint8_t _ram_start[], _ram_end[];
 
 // defined in startup.s
 extern void memset_reg(void *start, void *stop, uint32_t val);
+extern void __attribute__((noreturn)) shutdown(void);
 
 #define FW_SIGNED       0x5A3CA5C3
 #define FW_UNTRUSTED    0x00000000

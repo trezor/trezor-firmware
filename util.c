@@ -66,8 +66,3 @@ uint32_t readprotobufint(uint8_t **ptr)
 	(*ptr)++;
 	return result;
 }
-
-void __attribute__((noreturn)) system_halt(void)
-{
-	for (;;) {} // loop forever
-}

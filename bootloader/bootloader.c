@@ -46,7 +46,7 @@ void layoutFirmwareHash(const uint8_t *hash)
 void show_halt(void)
 {
 	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR", "contact our support.", NULL);
-	system_halt();
+	shutdown();
 }
 
 void show_unofficial_warning(const uint8_t *hash)
