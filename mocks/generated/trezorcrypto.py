@@ -284,7 +284,7 @@ def publickey(secret_key: bytes) -> bytes:
     '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def sign(secret_key: bytes, message: bytes) -> bytes:
+def sign(secret_key: bytes, message: bytes, hasher: str='') -> bytes:
     '''
     Uses secret key to produce the signature of message.
     '''
