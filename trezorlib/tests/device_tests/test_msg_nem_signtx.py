@@ -47,7 +47,7 @@ class TestMsgNEMSigntx(TrezorTest):
                 proto.NEMSignedTx(signature=SIGNATURE_TESTNET_SIMPLE),
             ])
 
-            self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
                 "timeStamp": 74649215,
                 "amount": 2000000,
                 "fee": 2000000,
@@ -60,6 +60,9 @@ class TestMsgNEMSigntx(TrezorTest):
                 },
                 "version": (0x98 << 24),
             })
+
+            assert hexlify(tx.data) == b'01010000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572'
+            assert hexlify(tx.signature) == b'9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f'
 
     def test_nem_signtx_xem_as_mosaic(self):
         self.setup_mnemonic_nopin_nopassphrase()
