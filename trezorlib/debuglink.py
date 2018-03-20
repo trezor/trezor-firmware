@@ -98,6 +98,10 @@ class DebugLink(object):
         obj = self._call(proto.DebugLinkGetState())
         return obj.reset_word
 
+    def read_reset_word_pos(self):
+        obj = self._call(proto.DebugLinkGetState())
+        return obj.reset_word_pos
+
     def read_reset_entropy(self):
         obj = self._call(proto.DebugLinkGetState())
         return obj.reset_entropy
@@ -116,6 +120,19 @@ class DebugLink(object):
 
     def press_no(self):
         self.press_button(False)
+
+    def swipe(self, up_down):
+        print("Swiping", up_down)
+        self._call(proto.DebugLinkDecision(up_down=up_down), nowait=True)
+
+    def swipe_up(self):
+        self.swipe(True)
+
+    def swipe_down(self):
+        self.swipe(False)
+
+    def input(self, text):
+        self._call(proto.DebugLinkDecision(input=text), nowait=True)
 
     def stop(self):
         self._call(proto.DebugLinkStop(), nowait=True)
