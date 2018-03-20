@@ -314,7 +314,16 @@ const uint8_t *msg_debug_out_data(void)
 
 #endif
 
-CONFIDENTIAL uint8_t msg_tiny[64];
+CONFIDENTIAL uint8_t msg_tiny[128];
+_Static_assert(sizeof(msg_tiny) >= sizeof(Cancel), "msg_tiny too tiny");
+_Static_assert(sizeof(msg_tiny) >= sizeof(Initialize), "msg_tiny too tiny");
+_Static_assert(sizeof(msg_tiny) >= sizeof(PassphraseAck), "msg_tiny too tiny");
+_Static_assert(sizeof(msg_tiny) >= sizeof(ButtonAck), "msg_tiny too tiny");
+_Static_assert(sizeof(msg_tiny) >= sizeof(PinMatrixAck), "msg_tiny too tiny");
+#if DEBUG_LINK
+_Static_assert(sizeof(msg_tiny) >= sizeof(DebugLinkDecision), "msg_tiny too tiny");
+_Static_assert(sizeof(msg_tiny) >= sizeof(DebugLinkGetState), "msg_tiny too tiny");
+#endif
 uint16_t msg_tiny_id = 0xFFFF;
 
 void msg_read_tiny(const uint8_t *buf, int len)
