@@ -11,22 +11,19 @@ def digit_area(i):
     return ui.grid(i + 3)  # skip the first line
 
 
-def generate_digits(with_zero):
-    if with_zero:
-        digits = list(range(0, 10))  # 0-9
-    else:
-        digits = list(range(1, 10))  # 1-9
+def generate_digits():
+    digits = list(range(0, 10))  # 0-9
     random.shuffle(digits)
     return digits
 
 
 class PinMatrix(ui.Widget):
 
-    def __init__(self, label, pin='', maxlength=9, with_zero=False):
+    def __init__(self, label, pin='', maxlength=9):
         self.label = label
         self.pin = pin
         self.maxlength = maxlength
-        self.digits = generate_digits(with_zero)
+        self.digits = generate_digits()
 
         # we lay out the buttons top-left to bottom-right, but the order of the
         # digits is defined as bottom-left to top-right (on numpad)

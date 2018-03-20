@@ -1,5 +1,4 @@
 from trezor import loop, res, ui
-from trezor.messages import PinMatrixRequestType
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog
 from trezor.ui.pin import PinMatrix
 
@@ -12,7 +11,7 @@ class PinCancelled(Exception):
 
 
 @ui.layout
-async def request_pin(code=None, cancellable: bool=True) -> str:
+async def request_pin(label=None, cancellable: bool=True) -> str:
 
     def onchange():
         c = dialog.cancel
@@ -36,8 +35,9 @@ async def request_pin(code=None, cancellable: bool=True) -> str:
                 c.taint()
         c.render()
 
-    label = _get_label(code)
-    matrix = PinMatrix(label, with_zero=True)
+    if label is None:
+        label = 'Enter your PIN'
+    matrix = PinMatrix(label)
     matrix.onchange = onchange
     dialog = ConfirmDialog(matrix)
     dialog.cancel.area = ui.grid(12)
@@ -58,17 +58,3 @@ async def request_pin(code=None, cancellable: bool=True) -> str:
             continue
         else:  # cancel
             raise PinCancelled()
-
-
-def _get_label(code):
-    if isinstance(code, str):
-        return code
-    if code is None:
-        code = PinMatrixRequestType.Current
-    if code == PinMatrixRequestType.NewFirst:
-        label = 'Enter new PIN'
-    elif code == PinMatrixRequestType.NewSecond:
-        label = 'Re-enter new PIN'
-    else:  # PinMatrixRequestType.Current
-        label = 'Enter your PIN'
-    return label
