@@ -201,6 +201,13 @@ class signal(Syscall):
             self.task = None
             self.value = _NO_VALUE
 
+    def __iter__(self):
+        try:
+            return (yield self)
+        except:
+            self.task = None
+            raise
+
 
 class wait(Syscall):
     '''
