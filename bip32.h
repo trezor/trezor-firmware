@@ -81,7 +81,7 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash);
 #if USE_NEM
 int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address);
 int hdnode_get_nem_shared_key(const HDNode *node, const ed25519_public_key peer_public_key, const uint8_t *salt, ed25519_public_key mul, uint8_t *shared_key);
-int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer);
+int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, const uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer);
 int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key, uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer);
 #endif
 

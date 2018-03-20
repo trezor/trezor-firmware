@@ -490,7 +490,7 @@ int hdnode_get_nem_shared_key(const HDNode *node, const ed25519_public_key peer_
 	return 1;
 }
 
-int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer) {
+int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, const uint8_t *iv_immut, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer) {
 	uint8_t last_block[AES_BLOCK_SIZE];
 	uint8_t remainder = size % AES_BLOCK_SIZE;
 
@@ -500,6 +500,10 @@ int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, 
 	memcpy(last_block, &payload[size], remainder);
 	// Pad new last block with number of missing bytes
 	memset(&last_block[remainder], AES_BLOCK_SIZE - remainder, AES_BLOCK_SIZE - remainder);
+
+	// the IV gets mutated, so we make a copy not to touch the original
+	uint8_t iv[AES_BLOCK_SIZE];
+	memcpy(iv, iv_immut, AES_BLOCK_SIZE);
 
 	uint8_t shared_key[SHA3_256_DIGEST_LENGTH];
 	if (!hdnode_get_nem_shared_key(node, public_key, salt, NULL, shared_key)) {
