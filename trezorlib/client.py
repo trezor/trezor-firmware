@@ -773,26 +773,26 @@ class ProtocolMixin(object):
                                               ask_on_decrypt=ask_on_decrypt,
                                               iv=iv))
 
-    def _prepare_sign_tx(self, coin_name, inputs, outputs):
+    def _prepare_sign_tx(self, inputs, outputs):
         tx = proto.TransactionType()
-        tx._extend_inputs(inputs)
-        tx._extend_outputs(outputs)
-        tx._fill_missing()
+        tx.inputs = inputs
+        tx.outputs = outputs
 
-        txes = {}
-        txes[None] = tx
+        txes = { None: tx }
 
-        known_hashes = []
         for inp in inputs:
-            if inp.prev_hash in known_hashes:
+            if inp.prev_hash in txes:
                 continue
 
-            if self.tx_api:
-                txes[inp.prev_hash] = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode('utf-8'))
-                txes[inp.prev_hash]._fill_missing()
-            else:
+            if inp.script_type in (proto.InputScriptType.SPENDP2SHWITNESS,
+                    proto.InputScriptType.SPENDWITNESS):
+                continue
+
+            if not self.tx_api:
                 raise RuntimeError('TX_API not defined')
-            known_hashes.append(inp.prev_hash)
+
+            prev_tx = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode('utf-8'))
+            txes[inp.prev_hash] = prev_tx
 
         return txes
 
@@ -800,7 +800,7 @@ class ProtocolMixin(object):
     def sign_tx(self, coin_name, inputs, outputs, version=None, lock_time=None, debug_processor=None):
 
         start = time.time()
-        txes = self._prepare_sign_tx(coin_name, inputs, outputs)
+        txes = self._prepare_sign_tx(inputs, outputs)
 
         # Prepare and send initial message
         tx = proto.SignTx()
@@ -862,7 +862,7 @@ class ProtocolMixin(object):
 
             elif res.request_type == proto.RequestType.TXINPUT:
                 msg = proto.TransactionType()
-                msg._extend_inputs([current_tx.inputs[res.details.request_index], ])
+                msg.inputs = [current_tx.inputs[res.details.request_index]]
                 if debug_processor is not None:
                     # msg needs to be deep copied so when it's modified
                     # the other messages stay intact
@@ -879,9 +879,9 @@ class ProtocolMixin(object):
             elif res.request_type == proto.RequestType.TXOUTPUT:
                 msg = proto.TransactionType()
                 if res.details.tx_hash:
-                    msg._extend_bin_outputs([current_tx.bin_outputs[res.details.request_index], ])
+                    msg.bin_outputs = [current_tx.bin_outputs[res.details.request_index]]
                 else:
-                    msg._extend_outputs([current_tx.outputs[res.details.request_index], ])
+                    msg.outputs = [current_tx.outputs[res.details.request_index]]
 
                 if debug_processor is not None:
                     # msg needs to be deep copied so when it's modified
