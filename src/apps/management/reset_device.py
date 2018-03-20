@@ -18,14 +18,10 @@ from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm
 
 if __debug__:
-    internal_entropy = None
-    current_word = None
+    from apps import debug
 
 
 async def reset_device(ctx, msg):
-    if __debug__:
-        global internal_entropy
-
     # validate parameters and device state
     if msg.strength not in (128, 192, 256):
         raise wire.FailureError(
@@ -36,31 +32,29 @@ async def reset_device(ctx, msg):
             FailureType.UnexpectedMessage,
             'Already initialized')
 
+    # request new PIN
     if msg.pin_protection:
-        # request new PIN
         newpin = await request_pin_confirm(ctx)
     else:
-        # new PIN is empty
         newpin = ''
 
     # generate and display internal entropy
-    internal_entropy = random.bytes(32)
+    internal_ent = random.bytes(32)
+    if __debug__:
+        debug.reset_internal_entropy = internal_ent
     if msg.display_random:
-        await show_entropy(ctx, internal_entropy)
+        await show_entropy(ctx, internal_ent)
 
     # request external entropy and compute mnemonic
-    ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
-    mnemonic = generate_mnemonic(
-        msg.strength, internal_entropy, ack.entropy)
+    ent_ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
+    mnemonic = generate_mnemonic(msg.strength, internal_ent, ent_ack.entropy)
 
-    if msg.skip_backup:
-        # let user backup the mnemonic later
-        pass
-    else:
-        # warn user about mnemonic safety
+    if not msg.skip_backup:
+        # require confirmation of the mnemonic safety
         await show_warning(ctx)
+
+        # show mnemonic and require confirmation of a random word
         while True:
-            # show mnemonic and require confirmation of a random word
             await show_mnemonic(ctx, mnemonic)
             if await check_mnemonic(ctx, mnemonic):
                 break
@@ -77,11 +71,11 @@ async def reset_device(ctx, msg):
     storage.load_mnemonic(
         mnemonic=mnemonic, needs_backup=msg.skip_backup)
 
-    # show success message
+    # show success message.  if we skipped backup, it's possible that homescreen
+    # is still running, uninterrupted.  restart it to pick up new label.
     if not msg.skip_backup:
         await show_success(ctx)
     else:
-        # trigger reload of homescreen
         workflow.restartdefault()
 
     return Success(message='Initialized')
@@ -142,7 +136,7 @@ async def show_success(ctx):
         cancel=None)
 
 
-async def show_entropy(ctx, entropy: int):
+async def show_entropy(ctx, entropy: bytes):
     estr = hexlify(entropy).decode()
     lines = chunks(estr, 16)
     content = Text('Internal entropy', ui.ICON_RESET, ui.MONO, *lines)
@@ -165,6 +159,9 @@ async def show_mnemonic(ctx, mnemonic: str):
 
 @ui.layout
 async def show_mnemonic_page(page: int, page_count: int, pages: list):
+    if __debug__:
+        debug.reset_current_words = [word for _, word in pages[page]]
+
     lines = ['%2d. %s' % (wi + 1, word) for wi, word in pages[page]]
     content = Text('Recovery seed', ui.ICON_RESET, ui.MONO, *lines)
     content = Scrollpage(content, page, page_count)
@@ -194,6 +191,9 @@ async def check_mnemonic(ctx, mnemonic: str) -> bool:
 
 @ui.layout
 async def check_word(ctx, words: list, index: int):
+    if __debug__:
+        debug.reset_word_index = index
+
     keyboard = MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
     result = await ctx.wait(keyboard)
     return result == words[index]

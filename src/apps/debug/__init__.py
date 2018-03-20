@@ -1,69 +1,42 @@
-import micropython
-import gc
-from uctypes import bytes_at, bytearray_at
-
-from trezor import loop
-from trezor.wire import register, protobuf_workflow
-from trezor.messages.wire_types import \
-    DebugLinkDecision, DebugLinkGetState, DebugLinkStop, \
-    DebugLinkMemoryRead, DebugLinkMemoryWrite, DebugLinkFlashErase
-from trezor.messages.DebugLinkMemory import DebugLinkMemory
+from trezor import loop, utils
+from trezor.messages import wire_types
 from trezor.messages.DebugLinkState import DebugLinkState
-from trezor.ui.confirm import CONFIRMED, CANCELLED
-
-from apps.common.confirm import signal
+from trezor.ui import confirm, swipe
+from trezor.wire import register, protobuf_workflow
 from apps.common import storage
-from apps.management import reset_device
+
+if not __debug__:
+    utils.halt("debug mode inactive")
+
+reset_internal_entropy = None
+reset_current_words = None
+reset_word_index = None
+
+confirm_signal = loop.signal()
+swipe_signal = loop.signal()
+input_signal = loop.signal()
 
 
 async def dispatch_DebugLinkDecision(ctx, msg):
-    signal.send(CONFIRMED if msg.yes_no else CANCELLED)
+    if msg.yes_no is not None:
+        confirm_signal.send(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
+    if msg.up_down is not None:
+        swipe_signal.send(swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP)
+    if msg.input is not None:
+        input_signal.send(msg.input)
 
 
 async def dispatch_DebugLinkGetState(ctx, msg):
     m = DebugLinkState()
     m.mnemonic = storage.get_mnemonic()
     m.passphrase_protection = storage.has_passphrase()
-    m.reset_entropy = reset_device.internal_entropy
-    m.reset_word = reset_device.current_word
+    m.reset_word_pos = reset_word_index
+    m.reset_entropy = reset_internal_entropy
+    if reset_current_words:
+        m.reset_word = ' '.join(reset_current_words)
     return m
-
-
-async def dispatch_DebugLinkStop(ctx, msg):
-    pass
-
-
-async def dispatch_DebugLinkMemoryRead(ctx, msg):
-    m = DebugLinkMemory()
-    m.memory = bytes_at(msg.address, msg.length)
-    return m
-
-
-async def dispatch_DebugLinkMemoryWrite(ctx, msg):
-    l = len(msg.memory)
-    data = bytearray_at(msg.address, l)
-    data[0:l] = msg.memory
-
-
-async def dispatch_DebugLinkFlashErase(ctx, msg):
-    # TODO: erase(msg.sector)
-    pass
-
-
-async def memory_stats(interval):
-    sleep = loop.sleep(interval * 1000 * 1000)
-    while True:
-        micropython.mem_info()
-        gc.collect()
-        await sleep
 
 
 def boot():
-    register(DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
-    register(DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)
-    register(DebugLinkStop, protobuf_workflow, dispatch_DebugLinkStop)
-    register(DebugLinkMemoryRead, protobuf_workflow, dispatch_DebugLinkMemoryRead)
-    register(DebugLinkMemoryWrite, protobuf_workflow, dispatch_DebugLinkMemoryWrite)
-    register(DebugLinkFlashErase, protobuf_workflow, dispatch_DebugLinkFlashErase)
-
-    # loop.schedule(memory_stats(10))
+    register(wire_types.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
+    register(wire_types.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)

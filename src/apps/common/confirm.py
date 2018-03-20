@@ -1,13 +1,7 @@
-from trezor import loop, ui, wire
+from trezor import ui, wire
 from trezor.messages import ButtonRequestType, FailureType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog, HoldToConfirmDialog
-from apps.common import cache
-
-# used to confirm/cancel the dialogs from outside of this module (i.e.
-# through debug link)
-if __debug__:
-    signal = cache.memory.setdefault('confirm_signal', loop.signal())
 
 
 @ui.layout
@@ -18,11 +12,7 @@ async def confirm(ctx, content, code=None, *args, **kwargs):
 
     dialog = ConfirmDialog(content, *args, **kwargs)
 
-    if __debug__:
-        waiter = ctx.wait(signal, dialog)
-    else:
-        waiter = ctx.wait(dialog)
-    return await waiter == CONFIRMED
+    return await ctx.wait(dialog) == CONFIRMED
 
 
 @ui.layout
@@ -33,11 +23,7 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
 
     dialog = HoldToConfirmDialog(content, 'Hold to confirm', *args, **kwargs)
 
-    if __debug__:
-        waiter = ctx.wait(signal, dialog)
-    else:
-        waiter = ctx.wait(dialog)
-    return await waiter == CONFIRMED
+    return await ctx.wait(dialog) == CONFIRMED
 
 
 async def require_confirm(*args, **kwargs):

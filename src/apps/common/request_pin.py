@@ -1,7 +1,10 @@
-from trezor import res, ui
+from trezor import loop, res, ui
 from trezor.messages import PinMatrixRequestType
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog
 from trezor.ui.pin import PinMatrix
+
+if __debug__:
+    from apps.debug import input_signal
 
 
 class PinCancelled(Exception):
@@ -42,13 +45,18 @@ async def request_pin(code=None, cancellable: bool=True) -> str:
     matrix.onchange()
 
     while True:
-        result = await dialog
+        if __debug__:
+            result = await loop.wait(dialog, input_signal)
+            if isinstance(result, str):
+                return result
+        else:
+            result = await dialog
         if result == CONFIRMED:
             return matrix.pin
-        elif result != CONFIRMED and matrix.pin:
+        elif matrix.pin:  # reset
             matrix.change('')
             continue
-        else:
+        else:  # cancel
             raise PinCancelled()
 
 

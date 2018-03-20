@@ -1,6 +1,9 @@
 from micropython import const
 from trezor import loop, ui, res
-from .swipe import Swipe, SWIPE_UP, SWIPE_DOWN, SWIPE_VERTICAL
+from trezor.ui.swipe import Swipe, SWIPE_UP, SWIPE_DOWN, SWIPE_VERTICAL
+
+if __debug__:
+    from apps.debug import swipe_signal
 
 
 async def change_page(page, page_count):
@@ -11,7 +14,11 @@ async def change_page(page, page_count):
             d = SWIPE_DOWN
         else:
             d = SWIPE_VERTICAL
-        s = await Swipe(directions=d)
+        swipe = Swipe(directions=d)
+        if __debug__:
+            s = await loop.wait(swipe, swipe_signal)
+        else:
+            s = await swipe
         if s == SWIPE_UP:
             return page + 1  # scroll down
         elif s == SWIPE_DOWN:

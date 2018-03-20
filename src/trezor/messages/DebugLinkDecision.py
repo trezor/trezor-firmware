@@ -4,14 +4,20 @@ import protobuf as p
 
 class DebugLinkDecision(p.MessageType):
     FIELDS = {
-        1: ('yes_no', p.BoolType, 0),  # required
+        1: ('yes_no', p.BoolType, 0),
+        2: ('up_down', p.BoolType, 0),
+        3: ('input', p.UnicodeType, 0),
     }
     MESSAGE_WIRE_TYPE = 100
 
     def __init__(
         self,
         yes_no: bool = None,
+        up_down: bool = None,
+        input: str = None,
         **kwargs,
     ):
         self.yes_no = yes_no
+        self.up_down = up_down
+        self.input = input
         p.MessageType.__init__(self, **kwargs)

@@ -4,6 +4,9 @@ from trezor.ui import Widget
 from trezor.ui.button import BTN_ACTIVE, BTN_CLICKED, BTN_STARTED, Button
 from trezor.ui.loader import Loader
 
+if __debug__:
+    from apps.debug import confirm_signal
+
 CONFIRMED = const(1)
 CANCELLED = const(2)
 DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
@@ -11,8 +14,12 @@ DEFAULT_CANCEL = res.load(ui.ICON_CANCEL)
 
 
 class ConfirmDialog(Widget):
-
-    def __init__(self, content, confirm=DEFAULT_CONFIRM, cancel=DEFAULT_CANCEL, confirm_style=ui.BTN_CONFIRM, cancel_style=ui.BTN_CANCEL):
+    def __init__(self,
+                 content,
+                 confirm=DEFAULT_CONFIRM,
+                 cancel=DEFAULT_CANCEL,
+                 confirm_style=ui.BTN_CONFIRM,
+                 cancel_style=ui.BTN_CANCEL):
         self.content = content
         if cancel is not None:
             self.confirm = Button(
@@ -37,7 +44,10 @@ class ConfirmDialog(Widget):
                 return CANCELLED
 
     async def __iter__(self):
-        return await loop.wait(super().__iter__(), self.content)
+        if __debug__:
+            return await loop.wait(super().__iter__(), self.content, confirm_signal)
+        else:
+            return await loop.wait(super().__iter__(), self.content)
 
 
 _STARTED = const(-1)
@@ -81,5 +91,8 @@ class HoldToConfirmDialog(Widget):
             else:
                 content_loop = self.content
             confirm_loop = super().__iter__()  # default loop (render on touch)
-            result = await loop.wait(content_loop, confirm_loop)
+            if __debug__:
+                result = await loop.wait(content_loop, confirm_loop, confirm_signal)
+            else:
+                result = await loop.wait(content_loop, confirm_loop)
         return result

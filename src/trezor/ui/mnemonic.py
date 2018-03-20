@@ -3,6 +3,9 @@ from trezor.crypto import bip39
 from trezor.ui import display
 from trezor.ui.button import BTN_CLICKED, ICON, Button
 
+if __debug__:
+    from apps.debug import input_signal
+
 MNEMONIC_KEYS = ('abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz')
 
 
@@ -145,6 +148,12 @@ class MnemonicKeyboard(ui.Widget):
                 btn.disable()
 
     async def __iter__(self):
+        if __debug__:
+            return await loop.wait(self.edit_loop(), input_signal)
+        else:
+            return await self.edit_loop()
+
+    async def edit_loop(self):
         timeout = loop.sleep(1000 * 1000 * 1)
         touch = loop.select(io.TOUCH)
         wait_timeout = loop.wait(touch, timeout)
