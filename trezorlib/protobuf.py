@@ -244,12 +244,13 @@ def load_message(reader, msg_type):
         elif ftype is BoolType:
             fvalue = bool(ivalue)
         elif ftype is BytesType:
-            fvalue = bytearray(ivalue)
-            reader.readinto(fvalue)
+            buf = bytearray(ivalue)
+            reader.readinto(buf)
+            fvalue = bytes(buf)
         elif ftype is UnicodeType:
-            fvalue = bytearray(ivalue)
-            reader.readinto(fvalue)
-            fvalue = fvalue.decode()
+            buf = bytearray(ivalue)
+            reader.readinto(buf)
+            fvalue = buf.decode()
         elif issubclass(ftype, MessageType):
             fvalue = load_message(LimitedReader(reader, ivalue), ftype)
         else:
@@ -270,10 +271,7 @@ def dump_message(writer, msg):
     fields = mtype.FIELDS
 
     for ftag in fields:
-        field = fields[ftag]
-        fname = field[0]
-        ftype = field[1]
-        fflags = field[2]
+        fname, ftype, fflags = fields[ftag]
 
         fvalue = getattr(msg, fname, None)
         if fvalue is None:
