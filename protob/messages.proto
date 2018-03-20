@@ -976,7 +976,9 @@ message CosiSignature {
  * @next Success
  */
 message DebugLinkDecision {
-	required bool yes_no = 1;			// true for "Confirm", false for "Cancel"
+	optional bool yes_no = 1;			// true for "Confirm", false for "Cancel"
+	optional bool up_down = 2;			// true for scroll up, false for scroll down
+	optional string input = 3;			// keyboard input
 }
 
 /**
@@ -1001,6 +1003,7 @@ message DebugLinkState {
 	optional bytes reset_entropy = 8;		// current entropy during ResetDevice workflow
 	optional string recovery_fake_word = 9;		// (fake) word on display during RecoveryDevice workflow
 	optional uint32 recovery_word_pos = 10;		// index of mnemonic word the device is expecting during RecoveryDevice workflow
+	optional uint32 reset_word_pos = 11;		// index of mnemonic word the device is expecting during ResetDevice workflow
 }
 
 /**
