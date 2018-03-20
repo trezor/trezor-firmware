@@ -778,14 +778,14 @@ class ProtocolMixin(object):
         tx.inputs = inputs
         tx.outputs = outputs
 
-        txes = { None: tx }
+        txes = {None: tx}
 
         for inp in inputs:
             if inp.prev_hash in txes:
                 continue
 
             if inp.script_type in (proto.InputScriptType.SPENDP2SHWITNESS,
-                    proto.InputScriptType.SPENDWITNESS):
+                                   proto.InputScriptType.SPENDWITNESS):
                 continue
 
             if not self.tx_api:
