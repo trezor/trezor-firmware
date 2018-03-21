@@ -24,6 +24,12 @@ async def require_confirm_fee(ctx, value, fee):
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-async def require_confirm_action(ctx):
-    content = Text('Send unencrypted transaction?', ui.ICON_SEND)
+async def require_confirm_action(ctx, payload, encrypt=False):
+    if encrypt:
+        content = Text("Send payload encrypted?", ui.ICON_SEND,
+                       ui.NORMAL, payload)
+    else:
+        content = Text("Send payload unencrypted?", ui.ICON_SEND,
+                       ui.NORMAL, payload,
+                       icon_color=ui.RED)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)

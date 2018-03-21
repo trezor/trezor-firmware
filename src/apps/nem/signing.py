@@ -40,8 +40,7 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
         nem_transaction_write_mosaic(tx, mosaic.namespace, mosaic.mosaic, mosaic.quantity)
 
     if payload:  # confirm unencrypted
-        # todo encrypted vs unencrypted
-        await require_confirm_action(ctx)  # todo
+        await require_confirm_action(ctx, msg.transfer.payload, encrypted)
 
     await require_confirm_fee(ctx, msg.transfer.amount, msg.transaction.fee)  # todo
     await require_confirm_tx(ctx, msg.transfer.recipient, msg.transfer.amount)  # todo
