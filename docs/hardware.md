@@ -2,20 +2,17 @@
 
 ## TREZOR v2 Open Source Hardware Reference Documentation
 
-### Photo Front
-TODO
+### Photo
 
-### Photo Back
-TODO
+![Photo Front](hardware/photo-front.jpg)
 
 ### Bill of Materials / BOM
-TODO
 
-### Eagle Schematic
-TODO
+[BOM](hardware/bom.txt)
 
-### Eagle Board
-TODO
+### Schematic
+
+![Schematic](hardware/schematic.png)
 
 ## Developer Kit
 
@@ -114,5 +111,5 @@ Minimum MCU requirements:
 
 #### Clock Tree
 
-![Clock Tree](clock-tree.png)
+![Clock Tree](hardware/clock-tree.png)
 
