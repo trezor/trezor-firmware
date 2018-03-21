@@ -2,6 +2,7 @@ Version 1.6.1
 * Stable release, optional update
 * Use fixed-width font for addresses
 * Lots of under-the-hood improvements
+* Fixed issue with write-protection settings
 
 Version 1.6.0
 * Stable release, optional update
