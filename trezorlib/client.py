@@ -723,7 +723,8 @@ class ProtocolMixin(object):
         except ValueError as e:
             raise CallException(e.message)
 
-        msg.address_n = n
+        assert msg.transaction is not None
+        msg.transaction.address_n = n
         return self.call(msg)
 
     def verify_message(self, coin_name, address, signature, message):
