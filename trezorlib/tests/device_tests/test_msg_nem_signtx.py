@@ -67,7 +67,7 @@ class TestMsgNEMSigntx(TrezorTest):
             self.client.set_expected_responses([
                 # Confirm transfer and network fee
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                # Unencrypted message
+                # Ask for encryption
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
