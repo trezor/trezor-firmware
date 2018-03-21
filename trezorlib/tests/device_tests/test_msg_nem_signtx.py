@@ -30,6 +30,7 @@ SIGNATURE_TESTNET_XEM_AS_MOSAIC = unhexlify(
 )
 
 
+# assertion data from T1
 @pytest.mark.skip_t2
 class TestMsgNEMSigntx(TrezorTest):
 
@@ -63,6 +64,43 @@ class TestMsgNEMSigntx(TrezorTest):
 
             assert hexlify(tx.data) == b'01010000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572'
             assert hexlify(tx.signature) == b'9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f'
+
+    def test_nem_signtx_encrypted_payload(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            self.client.set_expected_responses([
+                # Confirm transfer and network fee
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                # Unencrypted message
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                # Confirm recipient
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.NEMSignedTx(),
+            ])
+
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+                "timeStamp": 74649215,
+                "amount": 2000000,
+                "fee": 2000000,
+                "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+                "type": 257,
+                "deadline": 74735615,
+                "message": {
+                    # plain text is 32B long => cipher text is 48B
+                    # as per PKCS#7 another block containing padding is added
+                    "payload": hexlify(b"this message should be encrypted"),
+                    "publicKey": "5a5e14c633d7d269302849d739d80344ff14db51d7bcda86045723f05c4e4541",
+                    "type": 2,
+                },
+                "version": (0x98 << 24),
+            })
+
+            assert hexlify(tx.data[:124]) == b'01010000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e0000000000680000000200000060000000'
+            # after 124th byte comes iv (16B) salt (32B) and encrypted payload (48B)
+            assert len(tx.data[124:]) == 16 + 32 + 48
+            # because IV and salt are random (therefore the encrypted payload as well) those data can't be asserted
+            assert len(tx.signature) == 64
 
     def test_nem_signtx_xem_as_mosaic(self):
         self.setup_mnemonic_nopin_nopassphrase()
