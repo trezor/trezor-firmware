@@ -1,6 +1,7 @@
 
 from .helpers import *
 from .writers import *
+from ubinascii import hexlify
 
 
 def nem_transaction_create_transfer(network: int, timestamp: int, signer_public_key: bytes, fee: int, deadline: int,
