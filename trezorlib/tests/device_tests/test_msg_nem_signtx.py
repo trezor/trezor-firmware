@@ -19,22 +19,17 @@ from .common import *
 
 from trezorlib import messages as proto
 
-# tx hash: 209368053ac61969b6838ceb7e31badeb622ed6aa42d6c58365c42ad1a11e19d
-SIGNATURE_TESTNET_SIMPLE = unhexlify(
-    "9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f"
-)
-
-# tx hash: 9f8741194576a090bc71a3f43a03855950f94278fa121e99203e45967e19a7d0
-SIGNATURE_TESTNET_XEM_AS_MOSAIC = unhexlify(
-    "1bca7b1b9ffb16d2c2adffa665be072bd2d7a0eafe4a9911dc473500c272905edf3d626274deb52aa490137a276d1fca67ee487079ebf9c09f9faa414f8e7c02"
-)
-
 
 # assertion data from T1
 @pytest.mark.skip_t2
 class TestMsgNEMSigntx(TrezorTest):
 
     def test_nem_signtx_simple(self):
+        # tx hash: 209368053ac61969b6838ceb7e31badeb622ed6aa42d6c58365c42ad1a11e19d
+        signature = unhexlify(
+            "9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f"
+        )
+
         self.setup_mnemonic_nopin_nopassphrase()
 
         with self.client:
@@ -45,7 +40,7 @@ class TestMsgNEMSigntx(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.NEMSignedTx(signature=SIGNATURE_TESTNET_SIMPLE),
+                proto.NEMSignedTx(signature=signature),
             ])
 
             tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
@@ -63,7 +58,7 @@ class TestMsgNEMSigntx(TrezorTest):
             })
 
             assert hexlify(tx.data) == b'01010000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572'
-            assert hexlify(tx.signature) == b'9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f'
+            assert tx.signature == signature
 
     def test_nem_signtx_encrypted_payload(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -103,6 +98,11 @@ class TestMsgNEMSigntx(TrezorTest):
             assert len(tx.signature) == 64
 
     def test_nem_signtx_xem_as_mosaic(self):
+        # tx hash: 9f8741194576a090bc71a3f43a03855950f94278fa121e99203e45967e19a7d0
+        signature = unhexlify(
+            "1bca7b1b9ffb16d2c2adffa665be072bd2d7a0eafe4a9911dc473500c272905edf3d626274deb52aa490137a276d1fca67ee487079ebf9c09f9faa414f8e7c02"
+        )
+
         self.setup_mnemonic_nopin_nopassphrase()
 
         with self.client:
@@ -111,10 +111,10 @@ class TestMsgNEMSigntx(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.NEMSignedTx(signature=SIGNATURE_TESTNET_XEM_AS_MOSAIC),
+                proto.NEMSignedTx(signature=signature),
             ])
 
-            self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
                 "timeStamp": 76809215,
                 "amount": 1000000,
                 "fee": 1000000,
@@ -134,3 +134,6 @@ class TestMsgNEMSigntx(TrezorTest):
                     },
                 ],
             })
+
+            assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000010000001a0000000e000000030000006e656d0300000078656d40420f0000000000'
+            assert tx.signature == signature
