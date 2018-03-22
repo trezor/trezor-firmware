@@ -161,7 +161,7 @@ bool protectPin(bool use_cached)
 		return true;
 	}
 	uint32_t fails = storage_getPinFailsOffset();
-	uint32_t wait = ~*(const uint32_t*)FLASH_PTR(fails);
+	uint32_t wait = storage_getPinWait(fails);
 	protectCheckMaxTry(wait);
 	usbTiny(1);
 	while (wait > 0) {
@@ -206,7 +206,7 @@ bool protectPin(bool use_cached)
 		storage_resetPinFails(fails);
 		return true;
 	} else {
-		protectCheckMaxTry(~*(const uint32_t*)FLASH_PTR(fails));
+		protectCheckMaxTry(storage_getPinWait(fails));
 		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
 		return false;
 	}

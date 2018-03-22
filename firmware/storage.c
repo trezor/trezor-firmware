@@ -797,6 +797,13 @@ bool storage_increasePinFails(uint32_t flash_pinfails)
 	return *(const uint32_t*)FLASH_PTR(flash_pinfails) == newctr;
 }
 
+uint32_t storage_getPinWait(uint32_t flash_pinfails)
+{
+	// The pin failure word is the inverted wait time in seconds.
+	// It's inverted because flash allows changing 1 to 0 but not vice versa.
+	return ~*(const uint32_t*)FLASH_PTR(flash_pinfails);
+}
+
 uint32_t storage_getPinFailsOffset(void)
 {
 	uint32_t flash_pinfails = FLASH_STORAGE_PINAREA;
