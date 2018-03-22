@@ -35,7 +35,7 @@
 #define STORAGE_BYTES(NAME, SIZE) \
     bool has_##NAME; \
     struct { \
-        size_t size; \
+        uint32_t size; \
         uint8_t bytes[SIZE]; \
     } NAME;
 
@@ -48,7 +48,7 @@ typedef struct {
     uint32_t fingerprint;
     uint32_t child_num;
     struct {
-        size_t size;
+        uint32_t size;
         uint8_t bytes[32];
     } chain_code;
 
