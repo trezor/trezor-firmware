@@ -114,8 +114,13 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58)
 	binu = bin;
 	for (i = 0; i < binsz; ++i)
 	{
-		if (binu[i])
+		if (binu[i]) {
+			if (zerocount > i) {
+				/* result too large */
+				return false;
+			}
 			break;
+		}
 		--*binszp;
 	}
 	*binszp += zerocount;
