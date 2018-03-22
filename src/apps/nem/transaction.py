@@ -1,7 +1,6 @@
 
 from .helpers import *
 from .writers import *
-from ubinascii import hexlify
 
 
 def nem_transaction_create_transfer(network: int, timestamp: int, signer_public_key: bytes, fee: int, deadline: int,
@@ -124,6 +123,31 @@ def nem_transaction_create_mosaic_supply_change(network: int, timestamp: int, si
     write_uint64(w, delta)
 
     return w
+
+
+def nem_transaction_create_aggregate_modification(network: int, timestamp: int, signer_public_key: bytes, fee: int,
+                                                  deadline: int, modifications: int, relative_change: bool):
+
+    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
+                                      _nem_get_version(network, relative_change),
+                                      timestamp,
+                                      signer_public_key,
+                                      fee,
+                                      deadline)
+    write_uint32(w, modifications)
+    return w
+
+
+def nem_transaction_write_cosignatory_modification(w: bytearray, type: int, cosignatory: bytes):
+    write_uint32(w, 4 + 4 + len(cosignatory))
+    write_uint32(w, type)
+    write_bytes_with_length(w, bytearray(cosignatory))
+    return w
+
+
+def nem_transaction_write_minimum_cosignatories(w: bytearray, relative_change: int):
+    write_uint32(w, 4)
+    write_uint32(w, relative_change)
 
 
 def nem_write_mosaic(w: bytearray, name: str, value):
