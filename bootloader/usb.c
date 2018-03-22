@@ -334,7 +334,7 @@ static void hid_rx_callback(usbd_device *dev, uint8_t ep)
 		}
 		// struct.unpack(">HL") => msg, size
 		msg_id = (buf[3] << 8) + buf[4];
-		msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
+		msg_size = ((uint32_t) buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
 	}
 
 	if (flash_state == STATE_READY || flash_state == STATE_OPEN) {

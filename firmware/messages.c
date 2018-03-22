@@ -259,7 +259,7 @@ void msg_read_common(char type, const uint8_t *buf, int len)
 			return;
 		}
 		msg_id = (buf[3] << 8) + buf[4];
-		msg_size = (buf[5] << 24)+ (buf[6] << 16) + (buf[7] << 8) + buf[8];
+		msg_size = ((uint32_t) buf[5] << 24)+ (buf[6] << 16) + (buf[7] << 8) + buf[8];
 
 		fields = MessageFields(type, 'i', msg_id);
 		if (!fields) { // unknown message
@@ -333,7 +333,7 @@ void msg_read_tiny(const uint8_t *buf, int len)
 		return;
 	}
 	uint16_t msg_id = (buf[3] << 8) + buf[4];
-	uint32_t msg_size = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
+	uint32_t msg_size = ((uint32_t) buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
 	if (msg_size > 64 || len - msg_size < 9) {
 		return;
 	}

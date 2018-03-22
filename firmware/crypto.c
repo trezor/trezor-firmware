@@ -82,7 +82,7 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out)
 		return 1 + 2;
 	}
 	if (in[0] == 254) {
-		*out = in[1] + (in[2] << 8) + (in[3] << 16) + (in[4] << 24);
+		*out = in[1] + (in[2] << 8) + (in[3] << 16) + ((uint32_t) in[4] << 24);
 		return 1 + 4;
 	}
 	*out = 0; // ignore 64 bit
