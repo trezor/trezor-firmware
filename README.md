@@ -34,7 +34,7 @@ This creates file `build/bootloader-TAG.bin` and prints its fingerprint and size
 ## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
 1. Pick version of firmware binary listed on https://wallet.trezor.io/data/firmware/1/releases.json
-2. Download it: `wget -O trezor.signed.bin https://wallet.trezor.io/data/firmware/trezor-1.3.6.bin`
+2. Download it: `wget -O trezor.signed.bin https://wallet.trezor.io/data/firmware/1/trezor-1.6.1.bin`
 3. Compute fingerprint: `tail -c +257 trezor.signed.bin | sha256sum`
 
 Step 3 should produce the same sha256 fingerprint like your local build (for the same version tag). Firmware has a special header (of length 256 bytes) holding signatures themselves, which must be avoided while calculating the fingerprint, that's why tail command has to be used.
