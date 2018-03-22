@@ -1,8 +1,11 @@
 from micropython import const
-from trezor import loop
-from trezor import ui
+from trezor import loop, ui
 from trezor.ui import Widget
-from trezor.ui.button import Button, BTN_CLICKED
+from trezor.ui.button import BTN_CLICKED, Button
+
+if __debug__:
+    from apps.debug import input_signal
+
 
 _W12 = const(12)
 _W18 = const(18)
@@ -34,4 +37,11 @@ class WordSelector(Widget):
             return _W24
 
     async def __iter__(self):
-        return await loop.wait(super().__iter__(), self.content)
+        if __debug__:
+            result = await loop.wait(super().__iter__(), self.content, input_signal)
+            if isinstance(result, str):
+                return int(result)
+            else:
+                return result
+        else:
+            return await loop.wait(super().__iter__(), self.content)
