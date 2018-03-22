@@ -48,6 +48,10 @@ void setup(void) {
 	setup_flash();
 }
 
+void __attribute__((noreturn)) shutdown(void) {
+	for(;;);
+}
+
 void emulatorRandom(void *buffer, size_t size) {
 	ssize_t n = read(urandom, buffer, size);
 	if (n < 0 || ((size_t) n) != size) {

@@ -19,6 +19,7 @@ if [ "$FASTFLASH" = 1 ]; then
     make -C fastflash
 fi
 
+make -C bootloader
 make -C vendor/nanopb/generator/proto
 make -C firmware/protob
 
