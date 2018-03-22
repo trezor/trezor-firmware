@@ -105,6 +105,27 @@ def nem_transaction_create_mosaic_creation(network: int, timestamp: int, signer_
     return w
 
 
+def nem_transaction_create_mosaic_supply_change(network: int, timestamp: int, signer_public_key: bytes,	fee: int,
+                                                deadline: int, namespace: str, mosaic: str, type: int, delta: int):
+
+    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE,
+                                      _nem_get_version(network),
+                                      timestamp,
+                                      signer_public_key,
+                                      fee,
+                                      deadline)
+
+    identifier_length = 4 + len(namespace) + 4 + len(mosaic)
+    write_uint32(w, identifier_length)
+    write_bytes_with_length(w, bytearray(namespace))
+    write_bytes_with_length(w, bytearray(mosaic))
+
+    write_uint32(w, type)
+    write_uint64(w, delta)
+
+    return w
+
+
 def nem_write_mosaic(w: bytearray, name: str, value):
     if type(value) == bool:
         if value:
