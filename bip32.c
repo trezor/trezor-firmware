@@ -168,7 +168,7 @@ uint32_t hdnode_fingerprint(HDNode *node)
 	hdnode_fill_public_key(node);
 	hasher_Raw(node->curve->hasher_type, node->public_key, 33, digest);
 	ripemd160(digest, 32, digest);
-	fingerprint = (digest[0] << 24) + (digest[1] << 16) + (digest[2] << 8) + digest[3];
+	fingerprint = ((uint32_t) digest[0] << 24) + (digest[1] << 16) + (digest[2] << 8) + digest[3];
 	memzero(digest, sizeof(digest));
 	return fingerprint;
 }

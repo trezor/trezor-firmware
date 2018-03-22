@@ -3028,7 +3028,7 @@ static void test_codepoints_curve(const ecdsa_curve *curve) {
 	for (i = 0; i < 64; i++) {
 		for (j = 0; j < 8; j++) {
 			bn_zero(&a);
-			a.val[(4*i)/30] = (2*j+1) << (4*i % 30);
+			a.val[(4*i)/30] = (uint32_t) (2*j+1) << (4*i % 30);
 			bn_normalize(&a);
 			// note that this is not a trivial test.  We add 64 curve
 			// points in the table to get that particular curve point.

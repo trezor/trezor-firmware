@@ -45,12 +45,12 @@ bool address_check_prefix(const uint8_t *addr, uint32_t address_type)
 		return address_type == (uint32_t)(addr[0]);
 	}
 	if (address_type <= 0xFFFF) {
-		return address_type == ((uint32_t)(addr[0] << 8) | (uint32_t)(addr[1]));
+		return address_type == (((uint32_t) addr[0] << 8) | ((uint32_t) addr[1]));
 	}
 	if (address_type <= 0xFFFFFF) {
-		return address_type == ((uint32_t)(addr[0] << 16) | (uint32_t)(addr[1] << 8) | (uint32_t)(addr[2]));
+		return address_type == (((uint32_t) addr[0] << 16) | ((uint32_t) addr[1] << 8) | ((uint32_t) addr[2]));
 	}
-	return address_type == ((uint32_t)(addr[0] << 24) | (uint32_t)(addr[1] << 16) | (uint32_t)(addr[2] << 8) | (uint32_t)(addr[3]));
+	return address_type == (((uint32_t) addr[0] << 24) | ((uint32_t) addr[1] << 16) | ((uint32_t) addr[2] << 8) | ((uint32_t) addr[3]));
 }
 
 #if USE_ETHEREUM

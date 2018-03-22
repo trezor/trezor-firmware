@@ -111,13 +111,13 @@ void bn_read_be(const uint8_t *in_number, bignum256 *out_number)
 void bn_write_be(const bignum256 *in_number, uint8_t *out_number)
 {
 	int i;
-	uint32_t temp = in_number->val[8] << 16;
+	uint32_t temp = in_number->val[8];
 	for (i = 0; i < 8; i++) {
-		// invariant: temp = (in_number >> 30*(8-i)) << (16 + 2i)
+		// invariant: temp = (in_number >> 30*(8-i))
 		uint32_t limb = in_number->val[7 - i];
-		temp |= limb >> (14 - 2*i);
+		temp = (temp << (16 + 2*i)) | (limb >> (14 - 2*i));
 		write_be(out_number + i * 4, temp);
-		temp = limb << (18 + 2*i);
+		temp = limb;
 	}
 }
 
@@ -146,13 +146,13 @@ void bn_read_le(const uint8_t *in_number, bignum256 *out_number)
 void bn_write_le(const bignum256 *in_number, uint8_t *out_number)
 {
 	int i;
-	uint32_t temp = in_number->val[8] << 16;
+	uint32_t temp = in_number->val[8];
 	for (i = 0; i < 8; i++) {
-		// invariant: temp = (in_number >> 30*(8-i)) << (16 + 2i)
+		// invariant: temp = (in_number >> 30*(8-i))
 		uint32_t limb = in_number->val[7 - i];
-		temp |= limb >> (14 - 2*i);
+		temp = (temp << (16 + 2*i)) | (limb >> (14 - 2*i));
 		write_le(out_number + (7 - i) * 4, temp);
-		temp = limb << (18 + 2*i);
+		temp = limb;
 	}
 }
 
@@ -840,7 +840,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		//   s + factor*prime mod 2^k == 0
 		// i.e. factor = s * -1/prime mod 2^k.
 		// Then compute s + factor*prime and shift right by k bits.
-		uint32_t mask = (1 << k) - 1;
+		uint32_t mask = (1u << k) - 1;
 		uint32_t factor = (inverse * us.a[8]) & mask;
 		temp = (us.a[8] + (uint64_t) pp[0] * factor) >> k;
 		assert(((us.a[8] + pp[0] * factor) & mask) == 0);

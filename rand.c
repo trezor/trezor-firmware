@@ -45,7 +45,7 @@ uint32_t random32(void)
 		srand((unsigned)time(NULL));
 		initialized = 1;
 	}
-	return ((rand() % 0xFF) | ((rand() % 0xFF) << 8) | ((rand() % 0xFF) << 16) | ((rand() % 0xFF) << 24));
+	return ((rand() & 0xFF) | ((rand() & 0xFF) << 8) | ((rand() & 0xFF) << 16) | ((uint32_t) (rand() & 0xFF) << 24));
 }
 
 #endif /* RAND_PLATFORM_INDEPENDENT */
