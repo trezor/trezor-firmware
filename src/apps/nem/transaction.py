@@ -125,6 +125,20 @@ def nem_transaction_create_mosaic_supply_change(network: int, timestamp: int, si
     return w
 
 
+def nem_transaction_create_importance_transfer(network: int, timestamp: int, signer_public_key: bytes, fee: int,
+                                               deadline: int, mode: int, remote: bytes):
+
+    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
+                                      _nem_get_version(network),
+                                      timestamp,
+                                      signer_public_key,
+                                      fee,
+                                      deadline)
+
+    write_uint32(w, mode)
+    write_bytes_with_length(w, bytearray(remote))
+
+
 def nem_transaction_create_aggregate_modification(network: int, timestamp: int, signer_public_key: bytes, fee: int,
                                                   deadline: int, modifications: int, relative_change: bool):
 
