@@ -16,10 +16,8 @@ env:
     - PYTHON=python3
     - PROTOBUF_VERSION=3.4.0
   matrix:
-    - DEBUG_LINK=0 FASTFLASH=0
-    - DEBUG_LINK=1 FASTFLASH=0
-    - DEBUG_LINK=0 FASTFLASH=1
-    - DEBUG_LINK=1 FASTFLASH=1
+    - DEBUG_LINK=0
+    - DEBUG_LINK=1
 
 matrix:
   include:

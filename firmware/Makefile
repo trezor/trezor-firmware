@@ -1,10 +1,5 @@
 APPVER = 1.0.0
 
-ifeq ($(FASTFLASH),1)
-OBJS += fastflash.o
-OBJS += bootloader.o
-endif
-
 NAME  = trezor
 
 ifeq ($(EMULATOR),1)
@@ -87,12 +82,6 @@ OBJS += protob/types.pb.o
 
 include ../Makefile.include
 
-ifeq ($(FASTFLASH),1)
-CFLAGS += -DFASTFLASH=1
-else
-CFLAGS += -DFASTFLASH=0
-endif
-
 DEBUG_LINK ?= 0
 DEBUG_LOG  ?= 0
 
@@ -104,13 +93,6 @@ CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1
-
-bootloader.o: ../fastflash/bootloader.bin
-	$(OBJCOPY) -I binary -O elf32-littlearm -B arm \
-		--redefine-sym _binary_$(shell echo -n "$<" | tr -c "[:alnum:]" "_")_start=__bootloader_start__ \
-		--redefine-sym _binary_$(shell echo -n "$<" | tr -c "[:alnum:]" "_")_size=__bootloader_size__ \
-		--rename-section .data=.rodata \
-		$< $@
 
 coins_count.h: coins-gen.py coins.json
 	$(PYTHON) $< count > $@

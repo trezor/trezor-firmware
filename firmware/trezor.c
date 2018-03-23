@@ -31,7 +31,6 @@
 #include "buttons.h"
 #include "gettext.h"
 #include "bl_check.h"
-#include "fastflash.h"
 
 /* Screen timeout */
 uint32_t system_millis_lock_start;
@@ -95,13 +94,6 @@ int main(void)
 	check_bootloader();
 	setupApp();
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
-#endif
-
-#if FASTFLASH
-	uint16_t state = gpio_port_read(BTN_PORT);
-	if ((state & BTN_PIN_NO) == 0) {
-		run_bootloader();
-	}
 #endif
 
 	timer_init();
