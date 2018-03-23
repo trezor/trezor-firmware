@@ -16,6 +16,7 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	make -C vendor/nanopb/generator/proto && \
 	make -C firmware/protob && \
 	make && \
+	make -C bootloader && \
 	make -C firmware sign && \
 	cp firmware/trezor.bin /$BINFILE && \
 	cp firmware/trezor.elf /$ELFFILE"
