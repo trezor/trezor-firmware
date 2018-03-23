@@ -69,7 +69,7 @@ void pinmatrix_done(char *pin)
 		}
 		i++;
 	}
-	memset(pinmatrix_perm, 'X', sizeof(pinmatrix_perm));
+	memset(pinmatrix_perm, 'X', sizeof(pinmatrix_perm) - 1);
 }
 
 #if DEBUG_LINK
