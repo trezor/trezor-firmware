@@ -49,7 +49,7 @@ void setup(void) {
 }
 
 void __attribute__((noreturn)) shutdown(void) {
-	for(;;);
+	for(;;) pause();
 }
 
 void emulatorRandom(void *buffer, size_t size) {
