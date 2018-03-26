@@ -13,9 +13,9 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
 
     payload, encrypted = _get_payload(msg, node)
+    public_key = _get_public_key(node)
 
-    # 0x01 prefix is not part of the actual public key, hence removed
-    public_key = node.public_key()[1:]
+    _validate_network(msg.transaction.network)
 
     tx = nem_transaction_create_transfer(
         msg.transaction.network,
@@ -59,8 +59,18 @@ def _get_payload(msg: NEMSignTx, node) -> [bytes, bool]:
     return payload, encrypted
 
 
+def _get_public_key(node) -> bytes:
+    # 0x01 prefix is not part of the actual public key, hence removed
+    return node.public_key()[1:]
+
+
 def _nem_encrypt(node, public_key: bytes, payload: bytes) -> bytes:
     salt = random.bytes(helpers.NEM_SALT_SIZE)
     iv = random.bytes(helpers.AES_BLOCK_SIZE)
     encrypted = node.nem_encrypt(public_key, iv, salt, payload)
     return iv + salt + encrypted
+
+
+def _validate_network(network):
+    if network not in [NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN]:
+        raise ValueError('Invalid NEM network')
