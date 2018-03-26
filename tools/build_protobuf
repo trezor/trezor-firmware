@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 GENPATH="../trezorlib/messages"
 INDEX="$GENPATH/__init__.py"
-PROTO_PATH="../../trezor-common/protob"
+PROTO_PATH="../vendor/trezor-common/protob"
 PROTO_FILES="types messages"
 PB2_OUT="pb2"
 
