@@ -48,6 +48,7 @@ extern void __attribute__((noreturn)) shutdown(void);
 #if !EMULATOR
 // defined in memory.ld
 extern uint8_t _ram_start[], _ram_end[];
+extern uint8_t _stack[];
 
 // defined in startup.s
 extern void memset_reg(void *start, void *stop, uint32_t val);
@@ -59,12 +60,12 @@ static inline void __attribute__((noreturn)) jump_to_firmware(const vector_table
 {
 	if (FW_SIGNED == trust) {                 // trusted signed firmware
 		SCB_VTOR = (uint32_t)vector_table;    // * relocate vector table
+		// Set stack pointer
+		__asm__ volatile("msr msp, %0" :: "r" (vector_table->initial_sp_value));
 	} else {                                  // untrusted firmware
 		mpu_config();                         // * configure MPU
+		__asm__ volatile("msr msp, %0" :: "r" (_stack));
 	}
-
-	// Set stack pointer
-	__asm__ volatile("msr msp, %0" :: "r" (vector_table->initial_sp_value));
 
 	// Jump to address
 	vector_table->reset();
