@@ -1,5 +1,5 @@
-from apps.nem.transaction import *
 from apps.nem.layout import *
+from apps.nem.transaction import *
 from apps.nem import helpers
 from apps.common import seed
 from trezor.messages.NEMSignTx import NEMSignTx
@@ -12,13 +12,7 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
 
     node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
 
-    payload = msg.transfer.payload
-    encrypted = False
-    if msg.transfer.public_key is not None:
-        if payload is None:
-            raise ValueError("Public key provided but no payload to encrypt")
-        payload = _nem_encrypt(node, msg.transfer.public_key, msg.transfer.payload)
-        encrypted = True
+    payload, encrypted = _get_payload(msg, node)
 
     # 0x01 prefix is not part of the actual public key, hence removed
     public_key = node.public_key()[1:]
@@ -51,6 +45,18 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     resp.data = tx
     resp.signature = signature
     return resp
+
+
+def _get_payload(msg: NEMSignTx, node) -> [bytes, bool]:
+    payload = msg.transfer.payload
+    encrypted = False
+    if msg.transfer.public_key is not None:
+        if payload is None:
+            raise ValueError("Public key provided but no payload to encrypt")
+        payload = _nem_encrypt(node, msg.transfer.public_key, msg.transfer.payload)
+        encrypted = True
+
+    return payload, encrypted
 
 
 def _nem_encrypt(node, public_key: bytes, payload: bytes) -> bytes:
