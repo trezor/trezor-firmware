@@ -33,6 +33,7 @@
 #include "layout.h"
 #include "serialno.h"
 #include "rng.h"
+#include "timer.h"
 
 void layoutFirmwareHash(const uint8_t *hash)
 {
@@ -149,9 +150,8 @@ int main(void)
 		int signed_firmware = signatures_ok(hash);
 		if (SIG_OK != signed_firmware) {
 			show_unofficial_warning(hash);
+			timer_init();
 		}
-
-		delay(100000);
 
 		load_app(signed_firmware);
 	}
