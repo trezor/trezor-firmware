@@ -7,12 +7,12 @@ def nem_transaction_create_transfer(network: int, timestamp: int, signer_public_
                                     recipient: str, amount: int, payload: bytearray = None, encrypted: bool = False,
                                     mosaics: int = 0) -> bytearray:
 
-    tx = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_TRANSFER,
-                                       _nem_get_version(network, mosaics),
-                                       timestamp,
-                                       signer_public_key,
-                                       fee,
-                                       deadline)
+    tx = nem_transaction_write_common(NEM_TRANSACTION_TYPE_TRANSFER,
+                                      nem_get_version(network, mosaics),
+                                      timestamp,
+                                      signer_public_key,
+                                      fee,
+                                      deadline)
 
     write_bytes_with_length(tx, bytearray(recipient))
     write_uint64(tx, amount)
@@ -38,12 +38,12 @@ def nem_transaction_create_provision_namespace(network: int, timestamp: int, sig
                                                deadline: int, namespace: str, parent: str, rental_sink: str,
                                                rental_fee: int) -> bytearray:
 
-    tx = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE,
-                                       _nem_get_version(network),
-                                       timestamp,
-                                       signer_public_key,
-                                       fee,
-                                       deadline)
+    tx = nem_transaction_write_common(NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE,
+                                      nem_get_version(network),
+                                      timestamp,
+                                      signer_public_key,
+                                      fee,
+                                      deadline)
 
     write_bytes_with_length(tx, bytearray(rental_sink))
     write_uint64(tx, rental_fee)
@@ -62,12 +62,12 @@ def nem_transaction_create_mosaic_creation(network: int, timestamp: int, signer_
                                            levy_type: int, levy_fee: int, levy_address: str, levy_namespace: str,
                                            levy_mosaic: str, creation_sink: str, creation_fee: int):
 
-    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
-                                       _nem_get_version(network),
-                                       timestamp,
-                                       signer_public_key,
-                                       fee,
-                                       deadline)
+    w = nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
+                                     nem_get_version(network),
+                                     timestamp,
+                                     signer_public_key,
+                                     fee,
+                                     deadline)
 
     mosaics_w = bytearray()
     write_bytes_with_length(mosaics_w, bytearray(signer_public_key))
@@ -107,12 +107,12 @@ def nem_transaction_create_mosaic_creation(network: int, timestamp: int, signer_
 def nem_transaction_create_mosaic_supply_change(network: int, timestamp: int, signer_public_key: bytes,	fee: int,
                                                 deadline: int, namespace: str, mosaic: str, type: int, delta: int):
 
-    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE,
-                                      _nem_get_version(network),
-                                      timestamp,
-                                      signer_public_key,
-                                      fee,
-                                      deadline)
+    w = nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE,
+                                     nem_get_version(network),
+                                     timestamp,
+                                     signer_public_key,
+                                     fee,
+                                     deadline)
 
     identifier_length = 4 + len(namespace) + 4 + len(mosaic)
     write_uint32(w, identifier_length)
@@ -128,12 +128,12 @@ def nem_transaction_create_mosaic_supply_change(network: int, timestamp: int, si
 def nem_transaction_create_importance_transfer(network: int, timestamp: int, signer_public_key: bytes, fee: int,
                                                deadline: int, mode: int, remote: bytes):
 
-    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
-                                      _nem_get_version(network),
-                                      timestamp,
-                                      signer_public_key,
-                                      fee,
-                                      deadline)
+    w = nem_transaction_write_common(NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
+                                     nem_get_version(network),
+                                     timestamp,
+                                     signer_public_key,
+                                     fee,
+                                     deadline)
 
     write_uint32(w, mode)
     write_bytes_with_length(w, bytearray(remote))
@@ -142,12 +142,12 @@ def nem_transaction_create_importance_transfer(network: int, timestamp: int, sig
 def nem_transaction_create_aggregate_modification(network: int, timestamp: int, signer_public_key: bytes, fee: int,
                                                   deadline: int, modifications: int, relative_change: bool):
 
-    w = _nem_transaction_write_common(NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
-                                      _nem_get_version(network, relative_change),
-                                      timestamp,
-                                      signer_public_key,
-                                      fee,
-                                      deadline)
+    w = nem_transaction_write_common(NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
+                                     nem_get_version(network, relative_change),
+                                     timestamp,
+                                     signer_public_key,
+                                     fee,
+                                     deadline)
     write_uint32(w, modifications)
     return w
 
@@ -188,23 +188,3 @@ def nem_transaction_write_mosaic(w: bytearray, namespace: str, mosaic: str, quan
     write_bytes_with_length(w, bytearray(namespace))
     write_bytes_with_length(w, bytearray(mosaic))
     write_uint64(w, quantity)
-
-
-def _nem_transaction_write_common(tx_type: int, version: int, timestamp: int, signer: bytes, fee: int, deadline: int)\
-        -> bytearray:
-    ret = bytearray()
-    write_uint32(ret, tx_type)
-    write_uint32(ret, version)
-    write_uint32(ret, timestamp)
-
-    write_bytes_with_length(ret, bytearray(signer))
-    write_uint64(ret, fee)
-    write_uint32(ret, deadline)
-
-    return ret
-
-
-def _nem_get_version(network, mosaics=None) -> int:
-    if mosaics:
-        return network << 24 | 2
-    return network << 24 | 1
