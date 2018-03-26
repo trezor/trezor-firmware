@@ -1,3 +1,5 @@
 recursive-include bash_completion.d *.sh
 include trezorlib/tests/txcache/*.json
+include vendor/trezor-common/coins.json
+include vendor/trezor-common/protob/*.proto
 include COPYING
