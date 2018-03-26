@@ -40,8 +40,6 @@ static const uint8_t * const pubkey[PUBKEYS] = {
 
 int signatures_ok(uint8_t *store_hash)
 {
-	if (!firmware_present()) return SIG_FAIL; // no firmware present
-
 	const uint32_t codelen = *((const uint32_t *)FLASH_META_CODELEN);
 	const uint8_t sigindex1 = *((const uint8_t *)FLASH_META_SIGINDEX1);
 	const uint8_t sigindex2 = *((const uint8_t *)FLASH_META_SIGINDEX2);
