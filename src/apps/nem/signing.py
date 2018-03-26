@@ -36,8 +36,8 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     if payload:  # confirm unencrypted
         await require_confirm_action(ctx, msg.transfer.payload, encrypted)
 
-    await require_confirm_fee(ctx, msg.transfer.amount, msg.transaction.fee)  # todo
-    await require_confirm_tx(ctx, msg.transfer.recipient, msg.transfer.amount)  # todo
+    await require_confirm_fee(ctx, msg.transaction.fee)
+    await require_confirm_tx(ctx, msg.transfer.recipient, msg.transfer.amount)
 
     signature = ed25519.sign(node.private_key(), tx, helpers.NEM_HASH_ALG)
 
