@@ -15,14 +15,10 @@ NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE = const(0x2001)
 NEM_TRANSACTION_TYPE_MOSAIC_CREATION = const(0x4001)
 NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE = const(0x4002)
 
+NEM_MAX_DIVISIBILITY = const(6)
+NEM_MAX_SUPPLY = const(9000000000)
+
 NEM_SALT_SIZE = const(32)
 AES_BLOCK_SIZE = const(16)
 NEM_HASH_ALG = 'keccak'
-
-
-def nem_validate_network(network):
-    if network in (NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN):
-        return network
-    if network is None:
-        return NEM_NETWORK_MAINNET
-    raise ValueError('Invalid NEM network')
+NEM_PUBLIC_KEY_SIZE = const(32)  # ed25519 public key

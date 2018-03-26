@@ -1,11 +1,11 @@
 from apps.wallet.get_address import _show_address
 from apps.common import seed
 from trezor.messages.NEMAddress import NEMAddress
-from .helpers import *
+from .validators import *
 
 
 async def nem_get_address(ctx, msg):
-    network = nem_validate_network(msg.network)
+    network = validate_network(msg.network)
     node = await seed.derive_node(ctx, msg.address_n, NEM_CURVE)
     address = node.nem_address(network)
 
@@ -15,4 +15,3 @@ async def nem_get_address(ctx, msg):
                 break
 
     return NEMAddress(address=address)
-

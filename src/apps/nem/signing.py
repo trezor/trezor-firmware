@@ -1,5 +1,6 @@
 from apps.nem.layout import *
 from apps.nem.transaction import *
+from apps.nem.validators import validate
 from apps.nem import helpers
 from apps.common import seed
 from trezor.messages.NEMSignTx import NEMSignTx
@@ -10,12 +11,11 @@ from trezor.crypto import random
 
 async def nem_sign_tx(ctx, msg: NEMSignTx):
 
-    node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
+    validate(msg)
 
+    node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
     payload, encrypted = _get_payload(msg, node)
     public_key = _get_public_key(node)
-
-    _validate_network(msg.transaction.network)
 
     tx = nem_transaction_create_transfer(
         msg.transaction.network,
@@ -69,8 +69,3 @@ def _nem_encrypt(node, public_key: bytes, payload: bytes) -> bytes:
     iv = random.bytes(helpers.AES_BLOCK_SIZE)
     encrypted = node.nem_encrypt(public_key, iv, salt, payload)
     return iv + salt + encrypted
-
-
-def _validate_network(network):
-    if network not in [NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN]:
-        raise ValueError('Invalid NEM network')
