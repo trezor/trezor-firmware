@@ -122,12 +122,10 @@ void storage_show_error(void)
 
 void storage_check_flash_errors(uint32_t status)
 {
-#if !EMULATOR
 	// flash operation failed
 	if (status & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) {
 		storage_show_error();
 	}
-#endif
 }
 
 bool storage_from_flash(void)

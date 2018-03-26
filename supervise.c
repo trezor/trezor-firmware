@@ -22,6 +22,8 @@
 #include "supervise.h"
 #include "memory.h"
 
+#if !EMULATOR
+
 static void svhandler_flash_unlock(void) {
 	flash_clear_status_flags();
 	flash_unlock();
@@ -86,3 +88,5 @@ void svc_handler_main(uint32_t *stack) {
 		break;
 	}
 }
+
+#endif

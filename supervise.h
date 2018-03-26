@@ -20,6 +20,8 @@
 #ifndef __SUPERVISE_H__
 #define __SUPERVISE_H__
 
+#if !EMULATOR
+
 #define SVC_FLASH_UNLOCK  0
 #define SVC_FLASH_ERASE   1
 #define SVC_FLASH_PROGRAM 2
@@ -67,11 +69,14 @@ inline uint32_t svc_timer_ms(void) {
 	return r0;
 }
 
-inline void flash_write32(uint32_t addr, uint32_t word) {
-	*((volatile uint32_t *) addr) = word;
-}
-inline void flash_write8(uint32_t addr, uint8_t byte) {
-	*((volatile uint8_t *) addr) = byte;
-}
+#else
+
+extern void svc_flash_unlock(void);
+extern void svc_flash_program(uint32_t program_size);
+extern void svc_flash_erase_sector(uint16_t sector);
+extern uint32_t svc_flash_lock(void);
+extern uint32_t svc_timer_ms(void);
+
+#endif
 
 #endif
