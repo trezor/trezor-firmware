@@ -68,6 +68,7 @@ def create_provision_namespace(transaction):
 
     msg.sink = transaction["rentalFeeSink"]
     msg.fee = transaction["rentalFee"]
+    return msg
 
 
 def create_mosaic_creation(transaction):
