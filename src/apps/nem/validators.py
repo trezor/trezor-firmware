@@ -18,7 +18,7 @@ def validate(msg: NEMSignTx):
 
     if msg.provision_namespace or msg.mosaic_creation or msg.supply_change or msg.aggregate_modification \
             or msg.importance_transfer:
-        raise ValueError('Not yet implemented')
+        raise ValueError('Not yet implemented')  # todo
 
     _validate_single_tx(msg)
     _validate_common(msg.transaction)
