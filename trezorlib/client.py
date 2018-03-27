@@ -496,8 +496,9 @@ class ProtocolMixin(object):
     PRIME_DERIVATION_FLAG = 0x80000000
     VENDORS = ('bitcointrezor.com', 'trezor.io')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, state=None, *args, **kwargs):
         super(ProtocolMixin, self).__init__(*args, **kwargs)
+        self.state = state
         self.init_device()
         self.tx_api = None
 
@@ -505,7 +506,10 @@ class ProtocolMixin(object):
         self.tx_api = tx_api
 
     def init_device(self):
-        self.features = expect(proto.Features)(self.call)(proto.Initialize())
+        init_msg = proto.Initialize()
+        if self.state is not None:
+            init_msg.state = self.state
+        self.features = expect(proto.Features)(self.call)(init_msg)
         if str(self.features.vendor) not in self.VENDORS:
             raise RuntimeError("Unsupported device")
 

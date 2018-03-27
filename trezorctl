@@ -87,7 +87,7 @@ def cli(ctx, path, verbose, is_json):
                     if path is not None:
                         click.echo("Using path: {}".format(path))
                     sys.exit(1)
-            return cls(device)
+            return cls(transport=device)
 
         ctx.obj = get_device
 
