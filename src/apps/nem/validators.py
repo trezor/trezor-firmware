@@ -16,6 +16,10 @@ def validate(msg: NEMSignTx):
     if msg.transaction is None:
         raise ValueError('No common provided')
 
+    if msg.provision_namespace or msg.mosaic_creation or msg.supply_change or msg.aggregate_modification \
+            or msg.importance_transfer:
+        raise ValueError('Not yet implemented')
+
     _validate_single_tx(msg)
     _validate_common(msg.transaction)
 
