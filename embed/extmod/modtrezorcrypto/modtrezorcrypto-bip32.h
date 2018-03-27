@@ -323,8 +323,10 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self, mp_obj_t netw
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
     uint8_t n = mp_obj_get_int_truncated(network);
-    char address[NEM_ADDRESS_SIZE];
-    hdnode_get_nem_address(&o->hdnode, n, address);
+    char address[NEM_ADDRESS_SIZE + 1];
+    if (!hdnode_get_nem_address(&o->hdnode, n, address)) {
+        mp_raise_ValueError("Failed to compute a NEM address");
+    }
     return mp_obj_new_str(address, strlen(address), false);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj, mod_trezorcrypto_HDNode_nem_address);
@@ -360,7 +362,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args, const mp_obj_
 
     uint8_t buffer[NEM_ENCRYPTED_SIZE(payload.len)];
 
-    hdnode_nem_encrypt(&o->hdnode, *(const ed25519_public_key *)transfer_pk.buf, iv.buf, salt.buf, payload.buf, payload.len, buffer);
+    if (!hdnode_nem_encrypt(&o->hdnode, *(const ed25519_public_key *)transfer_pk.buf, iv.buf, salt.buf, payload.buf, payload.len, buffer)) {
+        mp_raise_ValueError("HDNode nem encrypt failed");
+    }
     return mp_obj_new_bytes(buffer, sizeof(buffer));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_HDNode_nem_encrypt_obj, 5, 5, mod_trezorcrypto_HDNode_nem_encrypt);
