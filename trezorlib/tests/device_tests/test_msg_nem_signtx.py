@@ -19,6 +19,8 @@ from .common import *
 
 from trezorlib import messages as proto
 
+NEM_TRANSACTION_TYPE_TRANSFER = 0x0101
+
 
 # assertion data from T1
 @pytest.mark.skip_t2
@@ -48,7 +50,7 @@ class TestMsgNEMSigntx(TrezorTest):
                 "amount": 2000000,
                 "fee": 2000000,
                 "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
-                "type": 257,
+                "type": NEM_TRANSACTION_TYPE_TRANSFER,
                 "deadline": 74735615,
                 "message": {
                     "payload": hexlify(b"test_nem_transaction_transfer"),
@@ -79,7 +81,7 @@ class TestMsgNEMSigntx(TrezorTest):
                 "amount": 2000000,
                 "fee": 2000000,
                 "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
-                "type": 257,
+                "type": NEM_TRANSACTION_TYPE_TRANSFER,
                 "deadline": 74735615,
                 "message": {
                     # plain text is 32B long => cipher text is 48B
@@ -119,7 +121,7 @@ class TestMsgNEMSigntx(TrezorTest):
                 "amount": 1000000,
                 "fee": 1000000,
                 "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
-                "type": 257,
+                "type": NEM_TRANSACTION_TYPE_TRANSFER,
                 "deadline": 76895615,
                 "version": (0x98 << 24),
                 "message": {
