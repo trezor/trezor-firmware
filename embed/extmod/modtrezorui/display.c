@@ -523,7 +523,7 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
                 PIXELDATA(0xFFFF);
                 continue;
             }
-            int a = rx * side + ry;
+            int a = ry * side + rx;
             if (bitdata[a / 8] & (1 << (7 - a % 8))) {
                 PIXELDATA(0x0000);
             } else {
