@@ -22,6 +22,7 @@ from trezorlib import messages as proto
 NEM_TRANSACTION_TYPE_TRANSFER = 0x0101
 NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE = 0x2001
 NEM_TRANSACTION_TYPE_MOSAIC_CREATION = 0x4001
+TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
 
 
 # assertion data from T1
@@ -173,23 +174,11 @@ class TestMsgNEMSigntx(TrezorTest):
             assert hexlify(tx.signature) == b'f047ae7987cd3a60c0d5ad123aba211185cb6266a7469dfb0491a0df6b5cd9c92b2e2b9f396cc2a3146ee185ba02df4f9e7fb238fe479917b3d274d97336640d'
 
     def test_nem_signtx_mosaic_creation(self):
-        # todo test levy, properties
+        # todo test levy
         self.setup_mnemonic_nopin_nopassphrase()
 
         with self.client:
-            self.client.set_expected_responses([
-                # Confirm mosaic
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                # Confirm mosaic description
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                # Confirm mosaic immutable supply
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                # err in mcu:
-                # proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                # Confirm final with fee
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.NEMSignedTx(),
-            ])
+            # todo assert responses, swipe down
 
             tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
                 "timeStamp": 74649215,
@@ -214,3 +203,49 @@ class TestMsgNEMSigntx(TrezorTest):
 
             assert hexlify(tx.data) == b'01400000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f7404c100000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f73616963050000006c6f72656d04000000150000000c00000064697669736962696c6974790100000030160000000d000000696e697469616c537570706c7901000000301a0000000d000000737570706c794d757461626c650500000066616c7365190000000c0000007472616e7366657261626c650500000066616c7365000000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000'
             assert hexlify(tx.signature) == b'537adf4fd9bd5b46e204b2db0a435257a951ed26008305e0aa9e1201dafa4c306d7601a8dbacabf36b5137724386124958d53202015ab31fb3d0849dfed2df0e'
+
+    def test_nem_signtx_mosaic_creation_properties(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            # todo assert responses, swipe down
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+                "timeStamp": 74649215,
+                "fee": 2000000,
+                "type": NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
+                "deadline": 74735615,
+                "message": {
+                },
+                "mosaicDefinition": {
+                    "id": {
+                        "namespaceId": "hellom",
+                        "name": "Hello mosaic"
+                    },
+                    "levy": {},
+                    "properties": [
+                        {
+                            "name": "divisibility",
+                            "value": "4"
+                        },
+                        {
+                            "name": "initialSupply",
+                            "value": "200"
+                        },
+                        {
+                            "name": "supplyMutable",
+                            "value": "false"
+                        },
+                        {
+                            "name": "transferable",
+                            "value": "true"
+                        }
+                    ],
+                    "description": "lorem"
+                },
+                "version": (0x98 << 24),
+                "creationFeeSink": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+                "creationFee": 1500,
+            })
+
+            assert hexlify(tx.data) == b'01400000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f7404c200000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f73616963050000006c6f72656d04000000150000000c00000064697669736962696c6974790100000034180000000d000000696e697469616c537570706c79030000003230301a0000000d000000737570706c794d757461626c650500000066616c7365180000000c0000007472616e7366657261626c650400000074727565000000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000'
+            assert hexlify(tx.signature) == b'f17c859710060f2ea9a0ab740ef427431cf36bdc7d263570ca282bd66032e9f5737a921be9839429732e663be2bb74ccc16f34f5157ff2ef00a65796b54e800e'
