@@ -1106,12 +1106,15 @@ class ProtocolMixin(object):
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
-    pass
+    def __init__(self, transport, *args, **kwargs):
+        super().__init__(transport=transport, *args, **kwargs)
 
 
 class TrezorClientVerbose(ProtocolMixin, TextUIMixin, VerboseWireMixin, BaseClient):
-    pass
+    def __init__(self, transport, *args, **kwargs):
+        super().__init__(transport=transport, *args, **kwargs)
 
 
 class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, VerboseWireMixin, BaseClient):
-    pass
+    def __init__(self, transport, *args, **kwargs):
+        super().__init__(transport=transport, *args, **kwargs)
