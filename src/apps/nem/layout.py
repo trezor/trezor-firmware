@@ -23,7 +23,14 @@ async def require_confirm_fee(ctx, fee):
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-async def require_confirm_action(ctx, payload: bytes, encrypt=False):
+async def require_confirm_final(ctx, action: str):
+    content = Text('Confirm sending', ui.ICON_SEND,
+                   ui.NORMAL, *split_words(action, 18),
+                   icon_color=ui.GREEN)
+    await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
+
+
+async def require_confirm_payload(ctx, payload: bytes, encrypt=False):
     payload = str(payload, 'utf-8')
     if encrypt:
         content = Text('Send encrypted?', ui.ICON_SEND,
