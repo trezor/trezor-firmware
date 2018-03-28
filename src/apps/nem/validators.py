@@ -68,11 +68,11 @@ def _validate_common(common: NEMTransactionCommon, inner: bool=False):
     common.network = validate_network(common.network)
 
     err = None
-    if not common.timestamp:
+    if common.timestamp is None:
         err = 'timestamp'
-    if not common.fee:
+    if common.fee is None:
         err = 'fee'
-    if not common.deadline:
+    if common.deadline is None:
         err = 'deadline'
 
     is_signer = common.signer is not None
@@ -99,7 +99,7 @@ def _validate_public_key(public_key: bytes, err_msg):
 
 
 def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
-    if not importance_transfer.mode:
+    if importance_transfer.mode is None:
         raise ValueError('No mode provided')
     _validate_public_key(importance_transfer.public_key, 'Invalid remote account public key provided')
 
@@ -118,58 +118,58 @@ def _validate_aggregate_modification(aggregate_modification: NEMAggregateModific
 
 
 def _validate_supply_change(supply_change: NEMMosaicSupplyChange):
-    if not supply_change.namespace:
+    if supply_change.namespace is None:
         raise ValueError('No namespace provided')
-    if not supply_change.mosaic:
+    if supply_change.mosaic is None:
         raise ValueError('No mosaic provided')
-    if not supply_change.type:
+    if supply_change.type is None:
         raise ValueError('No type provided')
-    if not supply_change.delta:
+    if supply_change.delta is None:
         raise ValueError('No delta provided')
 
 
 def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
-    if not mosaic_creation.definition:
+    if mosaic_creation.definition is None:
         raise ValueError('No mosaic definition provided')
-    if not mosaic_creation.sink:
+    if mosaic_creation.sink is None:
         raise ValueError('No creation sink provided')
-    if not mosaic_creation.fee:
+    if mosaic_creation.fee is None:
         raise ValueError('No creation sink fee provided')
 
     if not nem.validate_address(mosaic_creation.sink, network):
         raise ValueError('Invalid creation sink address')
 
-    if mosaic_creation.definition.name:
+    if mosaic_creation.definition.name is not None:
         raise ValueError('Name not allowed in mosaic creation transactions')
-    if mosaic_creation.definition.ticker:
+    if mosaic_creation.definition.ticker is not None:
         raise ValueError('Ticker not allowed in mosaic creation transactions')
     if len(mosaic_creation.definition.networks):
         raise ValueError('Networks not allowed in mosaic creation transactions')
 
-    if not mosaic_creation.definition.namespace:
+    if mosaic_creation.definition.namespace is None:
         raise ValueError('No mosaic namespace provided')
-    if not mosaic_creation.definition.mosaic:
+    if mosaic_creation.definition.mosaic is None:
         raise ValueError('No mosaic name provided')
 
-    if mosaic_creation.definition.levy:
-        if not mosaic_creation.definition.fee:
+    if mosaic_creation.definition.levy is not None:
+        if mosaic_creation.definition.fee is None:
             raise ValueError('No levy fee provided')
-        if not mosaic_creation.definition.levy_address:
+        if mosaic_creation.definition.levy_address is None:
             raise ValueError('No levy address provided')
-        if not mosaic_creation.definition.levy_namespace:
+        if mosaic_creation.definition.levy_namespace is None:
             raise ValueError('No levy namespace provided')
-        if not mosaic_creation.definition.levy_mosaic:
+        if mosaic_creation.definition.levy_mosaic is None:
             raise ValueError('No levy mosaic name provided')
 
-        if not mosaic_creation.definition.divisibility:
+        if mosaic_creation.definition.divisibility is None:
             raise ValueError('No divisibility provided')
-        if not mosaic_creation.definition.supply:
+        if mosaic_creation.definition.supply is None:
             raise ValueError('No supply provided')
-        if not mosaic_creation.definition.mutable_supply:
+        if mosaic_creation.definition.mutable_supply is None:
             raise ValueError('No supply mutability provided')
-        if not mosaic_creation.definition.transferable:
+        if mosaic_creation.definition.transferable is None:
             raise ValueError('No mosaic transferability provided')
-        if not mosaic_creation.definition.description:
+        if mosaic_creation.definition.description is None:
             raise ValueError('No description provided')
 
         if mosaic_creation.definition.divisibility > NEM_MAX_DIVISIBILITY:
@@ -182,11 +182,11 @@ def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
 
 
 def _validate_provision_namespace(provision_namespace: NEMProvisionNamespace, network: int):
-    if not provision_namespace.namespace:
+    if provision_namespace.namespace is None:
         raise ValueError('No namespace provided')
-    if not provision_namespace.sink:
+    if provision_namespace.sink is None:
         raise ValueError('No rental sink provided')
-    if not provision_namespace.fee:
+    if provision_namespace.fee is None:
         raise ValueError('No rental sink fee provided')
 
     if not nem.validate_address(provision_namespace.sink, network):
@@ -206,9 +206,9 @@ def _validate_transfer(transfer: NEMTransfer, network: int):
         raise ValueError('Invalid recipient address')
 
     for m in transfer.mosaics:
-        if not m.namespace:
+        if m.namespace is None:
             raise ValueError('No mosaic namespace provided')
-        if not m.mosaic:
+        if m.mosaic is None:
             raise ValueError('No mosaic name provided')
-        if not m.quantity:
+        if m.quantity is None:
             raise ValueError('No mosaic quantity provided')
