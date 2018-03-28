@@ -15,17 +15,18 @@ async def require_confirm_tx(ctx, recipient, value):
     await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
-async def require_confirm_fee(ctx, fee):
-    content = Text('Confirm fee', ui.ICON_SEND,
-                   'Pay ', ui.BOLD, format_amount(fee, NEM_MAX_DIVISIBILITY) + ' NEM',
-                   ui.NORMAL, 'for transaction fee?',
+async def require_confirm_action(ctx, action: str):
+    content = Text('Confirm sending', ui.ICON_SEND,
+                   ui.NORMAL, *split_words(action, 18),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-async def require_confirm_final(ctx, action: str):
+async def require_confirm_final(ctx, action: str, fee: int):
     content = Text('Confirm sending', ui.ICON_SEND,
-                   ui.NORMAL, *split_words(action, 18),
+                   ui.NORMAL, 'Create ', action,
+                   ui.BOLD, 'paying ' + format_amount(fee, NEM_MAX_DIVISIBILITY) + ' NEM',
+                   ui.NORMAL, 'for transaction fee?',
                    icon_color=ui.GREEN)
     await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 

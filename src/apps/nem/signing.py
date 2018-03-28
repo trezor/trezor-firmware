@@ -21,6 +21,9 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     elif msg.provision_namespace:  # todo are those disjunctive?
         tx = await _provision_namespace(ctx, node, msg)
 
+    elif msg.mosaic_creation:
+        tx = await _mosaic_creation(ctx, node, msg)
+
     signature = ed25519.sign(node.private_key(), tx, helpers.NEM_HASH_ALG)
 
     resp = NEMSignedTx()
@@ -29,9 +32,43 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     return resp
 
 
+async def _mosaic_creation(ctx, node, msg: NEMSignTx) -> bytearray:
+    await require_confirm_action(ctx, 'Create mosaic "' + msg.mosaic_creation.definition.mosaic + '" under  namespace "'
+                                 + msg.mosaic_creation.definition.namespace + '"?')
+    if msg.mosaic_creation.definition.description:
+        await require_confirm_action(ctx, 'Create mosaic with description: '
+                                     + msg.mosaic_creation.definition.description)
+    if msg.mosaic_creation.definition.mutable_supply:
+        await require_confirm_action(ctx, 'Create mosaic with mutable supply')
+    else:
+        await require_confirm_action(ctx, 'Create mosaic with immutable supply')
+    await require_confirm_final(ctx, 'mosaic', msg.transaction.fee)
+
+    return nem_transaction_create_mosaic_creation(
+        msg.transaction.network,
+        msg.transaction.timestamp,
+        _get_public_key(node),
+        msg.transaction.fee,
+        msg.transaction.deadline,
+        msg.mosaic_creation.definition.namespace,
+        msg.mosaic_creation.definition.mosaic,
+        msg.mosaic_creation.definition.description,
+        msg.mosaic_creation.definition.divisibility,
+        msg.mosaic_creation.definition.supply,
+        msg.mosaic_creation.definition.mutable_supply,
+        msg.mosaic_creation.definition.transferable,
+        msg.mosaic_creation.definition.levy,
+        msg.mosaic_creation.definition.fee,
+        msg.mosaic_creation.definition.levy_address,
+        msg.mosaic_creation.definition.levy_namespace,
+        msg.mosaic_creation.definition.levy_mosaic,
+        msg.mosaic_creation.sink,
+        msg.mosaic_creation.fee)
+
+
 async def _provision_namespace(ctx, node, msg: NEMSignTx) -> bytearray:
-    await require_confirm_fee(ctx, msg.transaction.fee)
-    await require_confirm_final(ctx, 'Create provision namespace "' + msg.provision_namespace.namespace + '"?')
+    await require_confirm_action(ctx, 'Create provision namespace "' + msg.provision_namespace.namespace + '"?')
+    await require_confirm_final(ctx, 'provision namespace', msg.transaction.fee)
     return nem_transaction_create_provision_namespace(
         msg.transaction.network,
         msg.transaction.timestamp,
@@ -65,7 +102,7 @@ async def _transfer(ctx, node, msg: NEMSignTx) -> bytes:
     if payload:  # confirm unencrypted
         await require_confirm_payload(ctx, msg.transfer.payload, encrypted)
 
-    await require_confirm_fee(ctx, msg.transaction.fee)
+    await require_confirm_action(ctx, 'todo')  # todo!
     await require_confirm_tx(ctx, msg.transfer.recipient, msg.transfer.amount)
 
     return tx

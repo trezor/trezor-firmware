@@ -165,13 +165,17 @@ def nem_transaction_write_minimum_cosignatories(w: bytearray, relative_change: i
 
 
 def nem_write_mosaic(w: bytearray, name: str, value):
+    if value is None:
+        if name in ['divisibility', 'initialSupply']:
+            value = 0
+        elif name in ['supplyMutable', 'transferable']:
+            value = False
     if type(value) == bool:
         if value:
             value = "true"
         else:
             value = "false"
     elif type(value) == int:
-        # todo might need more formatting
         value = str(value)
     elif type(value) != str:
         raise ValueError('Incompatible value type')
