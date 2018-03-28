@@ -87,7 +87,7 @@ def _validate_common(common: NEMTransactionCommon, inner: bool=False):
         else:
             raise ValueError('No ' + err + ' provided')
 
-    if common.signer:
+    if common.signer is not None:
         _validate_public_key(common.signer, 'Invalid signer public key in inner transaction')
 
 
@@ -151,6 +151,11 @@ def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
     if mosaic_creation.definition.mosaic is None:
         raise ValueError('No mosaic name provided')
 
+    if mosaic_creation.definition.supply is not None and mosaic_creation.definition.divisibility is None:
+            raise ValueError('Definition divisibility needs to be provided when supply is')
+    if mosaic_creation.definition.supply is None and mosaic_creation.definition.divisibility is not None:
+            raise ValueError('Definition supply needs to be provided when divisibility is')
+
     if mosaic_creation.definition.levy is not None:
         if mosaic_creation.definition.fee is None:
             raise ValueError('No levy fee provided')
@@ -199,7 +204,7 @@ def _validate_transfer(transfer: NEMTransfer, network: int):
     if transfer.amount is None:
         raise ValueError('No amount provided')
 
-    if transfer.public_key:
+    if transfer.public_key is not None:
         _validate_public_key(transfer.public_key, 'Invalid recipient public key')
 
     if not nem.validate_address(transfer.recipient, network):

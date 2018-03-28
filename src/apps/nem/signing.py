@@ -35,13 +35,7 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
 async def _mosaic_creation(ctx, node, msg: NEMSignTx) -> bytearray:
     await require_confirm_action(ctx, 'Create mosaic "' + msg.mosaic_creation.definition.mosaic + '" under  namespace "'
                                  + msg.mosaic_creation.definition.namespace + '"?')
-    if msg.mosaic_creation.definition.description:
-        await require_confirm_action(ctx, 'Create mosaic with description: '
-                                     + msg.mosaic_creation.definition.description)
-    if msg.mosaic_creation.definition.mutable_supply:
-        await require_confirm_action(ctx, 'Create mosaic with mutable supply')
-    else:
-        await require_confirm_action(ctx, 'Create mosaic with immutable supply')
+    await require_confirm_properties(ctx, msg.mosaic_creation.definition)
     await require_confirm_final(ctx, 'mosaic', msg.transaction.fee)
 
     return nem_transaction_create_mosaic_creation(
