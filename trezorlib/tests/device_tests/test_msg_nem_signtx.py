@@ -20,6 +20,7 @@ from .common import *
 from trezorlib import messages as proto
 
 NEM_TRANSACTION_TYPE_TRANSFER = 0x0101
+NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE = 0x2001
 
 
 # assertion data from T1
@@ -139,3 +140,33 @@ class TestMsgNEMSigntx(TrezorTest):
 
             assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000010000001a0000000e000000030000006e656d0300000078656d40420f0000000000'
             assert tx.signature == signature
+
+    def test_nem_signtx_provision_namespace(self):
+
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            self.client.set_expected_responses([
+                # Confirm provision namespace
+                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                # Confirm fee
+                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                proto.NEMSignedTx(),
+            ])
+
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+                "timeStamp": 74649215,
+                "fee": 2000000,
+                "type": NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE,
+                "deadline": 74735615,
+                "message": {
+                },
+                "newPart": "ABCDE",
+                "rentalFeeSink": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+                "rentalFee": 1500,
+                "parent": None,
+                "version": (0x98 << 24),
+            })
+
+            assert hexlify(tx.data) == b'01200000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000050000004142434445ffffffff'
+            assert hexlify(tx.signature) == b'f047ae7987cd3a60c0d5ad123aba211185cb6266a7469dfb0491a0df6b5cd9c92b2e2b9f396cc2a3146ee185ba02df4f9e7fb238fe479917b3d274d97336640d'
