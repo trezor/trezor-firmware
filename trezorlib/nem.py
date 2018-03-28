@@ -2,13 +2,13 @@ import binascii
 import json
 from . import messages as proto
 
-TYPE_MOSAIC_TRANSFER = 0x0101
+TYPE_TRANSACTION_TRANSFER = 0x0101
 TYPE_IMPORTANCE_TRANSFER = 0x0801
-TYPE_MULTISIG_CHANGE = 0x1001
-TYPE_MULTISIG_SIGN = 0x1002
-TYPE_MULTISIG_TX = 0x1004
+TYPE_AGGREGATE_MODIFICATION = 0x1001
+TYPE_MULTISIG_SIGNATURE = 0x1002
+TYPE_MULTISIG = 0x1004
 TYPE_PROVISION_NAMESPACE = 0x2001
-TYPE_MOSAIC_DEFINITION_CREATION = 0x4001
+TYPE_MOSAIC_CREATION = 0x4001
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
 
 
@@ -117,24 +117,24 @@ def create_supply_change(transaction):
 def create_sign_tx(transaction):
     msg = proto.NEMSignTx()
     msg.transaction = create_transaction_common(transaction)
-    msg.cosigning = (transaction["type"] == TYPE_MULTISIG_SIGN)
+    msg.cosigning = (transaction["type"] == TYPE_MULTISIG_SIGNATURE)
 
-    if transaction["type"] in (TYPE_MULTISIG_SIGN, TYPE_MULTISIG_TX):
+    if transaction["type"] in (TYPE_MULTISIG_SIGNATURE, TYPE_MULTISIG):
         transaction = transaction["otherTrans"]
         msg.multisig = create_transaction_common(transaction)
     elif "otherTrans" in transaction:
         raise ValueError("Transaction does not support inner transaction")
 
-    if transaction["type"] == TYPE_MOSAIC_TRANSFER:
+    if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
-    elif transaction["type"] == TYPE_MULTISIG_CHANGE:
+    elif transaction["type"] == TYPE_AGGREGATE_MODIFICATION:
         msg.aggregate_modification = create_aggregate_modification(transaction)
     elif transaction["type"] == TYPE_PROVISION_NAMESPACE:
         msg.provision_namespace = create_provision_namespace(transaction)
-    elif transaction["type"] == TYPE_MOSAIC_DEFINITION_CREATION:
+    elif transaction["type"] == TYPE_MOSAIC_CREATION:
         msg.mosaic_creation = create_mosaic_creation(transaction)
     elif transaction["type"] == TYPE_MOSAIC_SUPPLY_CHANGE:
-        msg.mosaic_supply_change = create_supply_change(transaction)
+        msg.supply_change = create_supply_change(transaction)
     else:
         raise ValueError("Unknown transaction type")
 

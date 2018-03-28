@@ -8,7 +8,7 @@ def test_nem_basic():
         "amount": 1000000,
         "fee": 1000000,
         "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
-        "type": nem.TYPE_MOSAIC_TRANSFER,
+        "type": nem.TYPE_TRANSACTION_TRANSFER,
         "deadline": 76895615,
         "version": (0x98 << 24),
         "message": {
