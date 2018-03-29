@@ -290,24 +290,11 @@ void sha1_Init(SHA1_CTX* context) {
 
 /* Unrolled SHA-1 round macros: */
 
-#if BYTE_ORDER == LITTLE_ENDIAN
-
-#define ROUND1_0_TO_15(a,b,c,d,e)				\
-	REVERSE32(*data++, W1[j]);				\
-	(e) = ROTL32(5, (a)) + Ch((b), (c), (d)) + (e) +	\
-	     K1_0_TO_19 + W1[j];	\
-	(b) = ROTL32(30, (b));		\
-	j++;
-
-#else /* BYTE_ORDER == LITTLE_ENDIAN */
-
 #define ROUND1_0_TO_15(a,b,c,d,e)				\
 	(e) = ROTL32(5, (a)) + Ch((b), (c), (d)) + (e) +	\
 	     K1_0_TO_19 + ( W1[j] = *data++ );		\
 	(b) = ROTL32(30, (b));	\
 	j++;
-
-#endif /* BYTE_ORDER == LITTLE_ENDIAN */
 
 #define ROUND1_16_TO_19(a,b,c,d,e)	\
 	T1 = W1[(j+13)&0x0f] ^ W1[(j+8)&0x0f] ^ W1[(j+2)&0x0f] ^ W1[j&0x0f];	\
@@ -465,14 +452,7 @@ void sha1_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2_w
 	e = state_in[4];
 	j = 0;
 	do {
-#if BYTE_ORDER == LITTLE_ENDIAN
-		T1 = data[j];
-		/* Copy data while converting to host byte order */
-		REVERSE32(*data++, W1[j]);
-		T1 = ROTL32(5, a) + Ch(b, c, d) + e + K1_0_TO_19 + W1[j];
-#else /* BYTE_ORDER == LITTLE_ENDIAN */
 		T1 = ROTL32(5, a) + Ch(b, c, d) + e + K1_0_TO_19 + (W1[j] = *data++);
-#endif /* BYTE_ORDER == LITTLE_ENDIAN */
 		e = d;
 		d = c;
 		c = ROTL32(30, b);
@@ -541,6 +521,7 @@ void sha1_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2_w
 
 void sha1_Update(SHA1_CTX* context, const sha2_byte *data, size_t len) {
 	unsigned int	freespace, usedspace;
+
 	if (len == 0) {
 		/* Calling with no data is valid - we do nothing */
 		return;
@@ -557,6 +538,12 @@ void sha1_Update(SHA1_CTX* context, const sha2_byte *data, size_t len) {
 			context->bitcount += freespace << 3;
 			len -= freespace;
 			data += freespace;
+#if BYTE_ORDER == LITTLE_ENDIAN
+			/* Convert TO host byte order */
+			for (int j = 0; j < 16; j++) {
+				REVERSE32(context->buffer[j],context->buffer[j]);
+			}
+#endif
 			sha1_Transform(context->state, context->buffer, context->state);
 		} else {
 			/* The buffer is not yet full */
@@ -569,7 +556,14 @@ void sha1_Update(SHA1_CTX* context, const sha2_byte *data, size_t len) {
 	}
 	while (len >= SHA1_BLOCK_LENGTH) {
 		/* Process as many complete blocks as we can */
-		sha1_Transform(context->state, (sha2_word32*)data, context->state);
+		MEMCPY_BCOPY(context->buffer, data, SHA1_BLOCK_LENGTH);
+#if BYTE_ORDER == LITTLE_ENDIAN
+		/* Convert TO host byte order */
+		for (int j = 0; j < 16; j++) {
+			REVERSE32(context->buffer[j],context->buffer[j]);
+		}
+#endif
+		sha1_Transform(context->state, context->buffer, context->state);
 		context->bitcount += SHA1_BLOCK_LENGTH << 3;
 		len -= SHA1_BLOCK_LENGTH;
 		data += SHA1_BLOCK_LENGTH;
@@ -584,72 +578,57 @@ void sha1_Update(SHA1_CTX* context, const sha2_byte *data, size_t len) {
 }
 
 void sha1_Final(SHA1_CTX* context, sha2_byte digest[]) {
-	sha2_word32	*d = (sha2_word32*)digest;
 	unsigned int	usedspace;
 
-	if (digest == (sha2_byte*)0) {
-		/*
-		 * No digest buffer, so we can do nothing
-		 * except clean up and go home
-		 */
-		memzero(context, sizeof(SHA1_CTX));
-		return;
-	}
-
-	usedspace = (context->bitcount >> 3) % SHA1_BLOCK_LENGTH;
-	if (usedspace == 0) {
-		/* Set-up for the last transform: */
-		memzero(context->buffer, SHA1_SHORT_BLOCK_LENGTH);
-
-		/* Begin padding with a 1 bit: */
-		*context->buffer = 0x80;
-	} else {
+	/* If no digest buffer is passed, we don't bother doing this: */
+	if (digest != (sha2_byte*)0) {
+		usedspace = (context->bitcount >> 3) % SHA1_BLOCK_LENGTH;
 		/* Begin padding with a 1 bit: */
 		((uint8_t*)context->buffer)[usedspace++] = 0x80;
 
-		if (usedspace <= 56) {
-			/* Set-up for the last transform: */
-			memzero(((uint8_t*)context->buffer) + usedspace, 56 - usedspace);
-		} else {
-			if (usedspace < 64) {
-				memzero(((uint8_t*)context->buffer) + usedspace, 64 - usedspace);
+		if (usedspace > SHA1_SHORT_BLOCK_LENGTH) {
+			memzero(((uint8_t*)context->buffer) + usedspace, SHA1_BLOCK_LENGTH - usedspace);
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+			/* Convert TO host byte order */
+			for (int j = 0; j < 16; j++) {
+				REVERSE32(context->buffer[j],context->buffer[j]);
 			}
+#endif
 			/* Do second-to-last transform: */
 			sha1_Transform(context->state, context->buffer, context->state);
 
-			/* And set-up for the last transform: */
-			memzero(context->buffer, 56);
+			/* And prepare the last transform: */
+			usedspace = 0;
 		}
-		/* Clean up: */
-		usedspace = 0;
-	}
-	/* Set the bit count: */
-#if BYTE_ORDER == LITTLE_ENDIAN
-	/* Convert FROM host byte order */
-	REVERSE64(context->bitcount,context->bitcount);
-#endif
-	context->buffer[SHA1_SHORT_BLOCK_LENGTH >> 2]     = context->bitcount << 32;
-	context->buffer[SHA1_SHORT_BLOCK_LENGTH >> 2 | 1] = context->bitcount >> 32;
+		/* Set-up for the last transform: */
+		memzero(((uint8_t*)context->buffer) + usedspace, SHA1_SHORT_BLOCK_LENGTH - usedspace);
 
-	/* Final transform: */
-	sha1_Transform(context->state, context->buffer, context->state);
-
-	/* Save the hash data for output: */
 #if BYTE_ORDER == LITTLE_ENDIAN
-	{
 		/* Convert TO host byte order */
-		int	j;
-		for (j = 0; j < (SHA1_DIGEST_LENGTH >> 2); j++) {
-			REVERSE32(context->state[j],context->state[j]);
-			*d++ = context->state[j];
+		for (int j = 0; j < 14; j++) {
+			REVERSE32(context->buffer[j],context->buffer[j]);
 		}
-	}
-#else
-	MEMCPY_BCOPY(d, context->state, SHA1_DIGEST_LENGTH);
 #endif
+		/* Set the bit count: */
+		context->buffer[14] = context->bitcount >> 32;
+		context->buffer[15] = context->bitcount & 0xffffffff;
 
-	/* Clean up: */
+		/* Final transform: */
+		sha1_Transform(context->state, context->buffer, context->state);
+
+#if BYTE_ORDER == LITTLE_ENDIAN
+		/* Convert FROM host byte order */
+		for (int j = 0; j < 5; j++) {
+			REVERSE32(context->state[j],context->state[j]);
+		}
+#endif
+		MEMCPY_BCOPY(digest, context->state, SHA1_DIGEST_LENGTH);
+	}
+
+	/* Clean up state data: */
 	memzero(context, sizeof(SHA1_CTX));
+	usedspace = 0;
 }
 
 char *sha1_End(SHA1_CTX* context, char buffer[]) {
@@ -701,27 +680,12 @@ void sha256_Init(SHA256_CTX* context) {
 
 /* Unrolled SHA-256 round macros: */
 
-#if BYTE_ORDER == LITTLE_ENDIAN
-
-#define ROUND256_0_TO_15(a,b,c,d,e,f,g,h)	\
-	W256[j] = *data++; \
-	T1 = (h) + Sigma1_256(e) + Ch((e), (f), (g)) + \
-             K256[j] + W256[j]; \
-	(d) += T1; \
-	(h) = T1 + Sigma0_256(a) + Maj((a), (b), (c)); \
-	j++
-
-
-#else /* BYTE_ORDER == LITTLE_ENDIAN */
-
 #define ROUND256_0_TO_15(a,b,c,d,e,f,g,h)	\
 	T1 = (h) + Sigma1_256(e) + Ch((e), (f), (g)) + \
 	     K256[j] + (W256[j] = *data++); \
 	(d) += T1; \
 	(h) = T1 + Sigma0_256(a) + Maj((a), (b), (c)); \
 	j++
-
-#endif /* BYTE_ORDER == LITTLE_ENDIAN */
 
 #define ROUND256(a,b,c,d,e,f,g,h)	\
 	s0 = W256[(j+1)&0x0f]; \
