@@ -137,6 +137,7 @@ def nem_transaction_create_importance_transfer(network: int, timestamp: int, sig
 
     write_uint32(w, mode)
     write_bytes_with_length(w, bytearray(remote))
+    return w
 
 
 def nem_transaction_create_aggregate_modification(network: int, timestamp: int, signer_public_key: bytes, fee: int,

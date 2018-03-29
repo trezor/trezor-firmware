@@ -12,7 +12,6 @@ from trezor.crypto import random
 async def nem_sign_tx(ctx, msg: NEMSignTx):
     validate(msg)
     node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
-    tx = bytearray()
 
     if msg.transfer:
         tx = await _transfer(ctx, node, msg)
@@ -25,6 +24,10 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
         tx = await _supply_change(ctx, node, msg)
     elif msg.aggregate_modification:
         tx = await _aggregate_modification(ctx, node, msg)
+    elif msg.importance_transfer:
+        tx = await _importance_transfer(ctx, node, msg)
+    else:
+        raise ValueError('No transaction provided')
 
     signature = ed25519.sign(node.private_key(), tx, helpers.NEM_HASH_ALG)
 
@@ -32,6 +35,20 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     resp.data = tx
     resp.signature = signature
     return resp
+
+
+async def _importance_transfer(ctx, node, msg: NEMSignTx):
+    # todo confirms!
+    w = nem_transaction_create_importance_transfer(
+        msg.transaction.network,
+        msg.transaction.timestamp,
+        _get_public_key(node),
+        msg.transaction.fee,
+        msg.transaction.deadline,
+        msg.importance_transfer.mode,
+        msg.importance_transfer.public_key
+    )
+    return w
 
 
 async def _aggregate_modification(ctx, node, msg: NEMSignTx):

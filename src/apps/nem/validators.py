@@ -16,9 +16,6 @@ def validate(msg: NEMSignTx):
     if msg.transaction is None:
         raise ValueError('No common provided')
 
-    if msg.importance_transfer:
-        raise ValueError('Not yet implemented')  # todo
-
     _validate_single_tx(msg)
     _validate_common(msg.transaction)
 
