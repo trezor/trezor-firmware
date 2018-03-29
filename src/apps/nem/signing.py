@@ -17,15 +17,14 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     if msg.transfer:
         tx = await _transfer(ctx, node, msg)
         # todo msg.transfer.mosaics = canonicalize_mosaics(msg.transfer.mosaics)
-
-    elif msg.provision_namespace:  # todo are those disjunctive?
+    elif msg.provision_namespace:
         tx = await _provision_namespace(ctx, node, msg)
-
     elif msg.mosaic_creation:
         tx = await _mosaic_creation(ctx, node, msg)
-
     elif msg.supply_change:
         tx = await _supply_change(ctx, node, msg)
+    elif msg.aggregate_modification:
+        tx = await _aggregate_modification(ctx, node, msg)
 
     signature = ed25519.sign(node.private_key(), tx, helpers.NEM_HASH_ALG)
 
@@ -33,6 +32,27 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     resp.data = tx
     resp.signature = signature
     return resp
+
+
+async def _aggregate_modification(ctx, node, msg: NEMSignTx):
+    # todo confirms!
+    w = nem_transaction_create_aggregate_modification(
+        msg.transaction.network,
+        msg.transaction.timestamp,
+        _get_public_key(node),
+        msg.transaction.fee,
+        msg.transaction.deadline,
+        len(msg.aggregate_modification.modifications),
+        msg.aggregate_modification.relative_change
+    )
+
+    for m in msg.aggregate_modification.modifications:
+        nem_transaction_write_cosignatory_modification(w, m.type, m.public_key)
+
+    if msg.aggregate_modification.relative_change:
+        nem_transaction_write_minimum_cosignatories(w, msg.aggregate_modification.relative_change)
+
+    return w
 
 
 async def _supply_change(ctx, node, msg: NEMSignTx):

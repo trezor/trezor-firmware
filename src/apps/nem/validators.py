@@ -1,5 +1,5 @@
 from apps.nem.helpers import *
-from trezor.messages.NEMModificationType import CosignatoryModification_Delete
+from trezor.messages import NEMModificationType
 from trezor.messages.NEMSignTx import NEMAggregateModification
 from trezor.messages.NEMSignTx import NEMImportanceTransfer
 from trezor.messages.NEMSignTx import NEMMosaicCreation
@@ -16,8 +16,7 @@ def validate(msg: NEMSignTx):
     if msg.transaction is None:
         raise ValueError('No common provided')
 
-    if msg.aggregate_modification \
-            or msg.importance_transfer:
+    if msg.importance_transfer:
         raise ValueError('Not yet implemented')  # todo
 
     _validate_single_tx(msg)
@@ -32,7 +31,7 @@ def validate(msg: NEMSignTx):
     if msg.supply_change:
         _validate_supply_change(msg.supply_change)
     if msg.aggregate_modification:
-        _validate_aggregate_modification(msg.aggregate_modification, not len(msg.multisig))
+        _validate_aggregate_modification(msg.aggregate_modification, msg.multisig is not None)
     if msg.importance_transfer:
         _validate_importance_transfer(msg.importance_transfer)
 
@@ -112,7 +111,12 @@ def _validate_aggregate_modification(aggregate_modification: NEMAggregateModific
     for m in aggregate_modification.modifications:
         if not m.type:
             raise ValueError('No modification type provided')
-        if creation and m.type == CosignatoryModification_Delete:
+        if m.type not in [
+            NEMModificationType.CosignatoryModification_Add,
+            NEMModificationType.CosignatoryModification_Delete
+        ]:
+            raise ValueError('Unknown aggregate modification ')
+        if creation and m.type == NEMModificationType.CosignatoryModification_Delete:
             raise ValueError('Cannot remove cosignatory when converting account')
         _validate_public_key(m.public_key, 'Invalid cosignatory public key provided')
 
