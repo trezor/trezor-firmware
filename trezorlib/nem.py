@@ -114,6 +114,13 @@ def create_supply_change(transaction):
     return msg
 
 
+def create_importance_transfer(transaction):
+    msg = proto.NEMImportanceTransfer()
+    msg.mode = transaction["importanceTransfer"]["mode"]
+    msg.public_key = binascii.unhexlify(transaction["importanceTransfer"]["publicKey"])
+    return msg
+
+
 def create_sign_tx(transaction):
     msg = proto.NEMSignTx()
     msg.transaction = create_transaction_common(transaction)
@@ -135,6 +142,8 @@ def create_sign_tx(transaction):
         msg.mosaic_creation = create_mosaic_creation(transaction)
     elif transaction["type"] == TYPE_MOSAIC_SUPPLY_CHANGE:
         msg.supply_change = create_supply_change(transaction)
+    elif transaction["type"] == TYPE_IMPORTANCE_TRANSFER:
+        msg.importance_transfer = create_importance_transfer(transaction)
     else:
         raise ValueError("Unknown transaction type")
 

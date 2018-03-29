@@ -347,3 +347,24 @@ class TestMsgNEMSigntx(TrezorTest):
 
             assert hexlify(tx.data) == b'01100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f740401000000280000000100000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844'
             assert hexlify(tx.signature) == b'ed074a4b877e575786785e6e499e428edea28498a06bdaed6557ccdfbfe69087acd6f4b63e9faa6a849e49d405374c12762df2f27d55e4b35c1901850f83650f'
+
+    def test_nem_signtx_importance_transfer(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+                "timeStamp": 12349215,
+                "fee": 9900,
+                "type": nem.TYPE_IMPORTANCE_TRANSFER,
+                "deadline": 99,
+                "message": {
+                },
+                "importanceTransfer": {
+                    "mode": 1,
+                    "publicKey": "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844",
+                },
+                "version": (0x98 << 24),
+            })
+
+            assert hexlify(tx.data) == b'01080000010000981f6fbc0020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b4062084ac26000000000000630000000100000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844'
+            assert hexlify(tx.signature) == b'b6d9434ec5df80e65e6e45d7f0f3c579b4adfe8567c42d981b06e8ac368b1aad2b24eebecd5efd41f4497051fca8ea8a5e77636a79afc46ee1a8e0fe9e3ba90b'
