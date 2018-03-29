@@ -324,19 +324,19 @@ void bn_rshift(bignum256 *a)
 // sets bit in bignum
 void bn_setbit(bignum256 *a, uint8_t bit)
 {
-	a->val[bit / 30] |= (1 << (bit % 30));
+	a->val[bit / 30] |= (1u << (bit % 30));
 }
 
 // clears bit in bignum
 void bn_clearbit(bignum256 *a, uint8_t bit)
 {
-	a->val[bit / 30] &= ~(1 << (bit % 30));
+	a->val[bit / 30] &= ~(1u << (bit % 30));
 }
 
 // tests bit in bignum
 uint32_t bn_testbit(bignum256 *a, uint8_t bit)
 {
-	return a->val[bit / 30] & (1 << (bit % 30));
+	return a->val[bit / 30] & (1u << (bit % 30));
 }
 
 // a = b ^ c
@@ -694,7 +694,7 @@ void bn_inverse(bignum256 *x, const bignum256 *prime)
 		}
 		// count up to 32 zero bits of even->a.
 		j = 0;
-		while ((even->a[0] & (1 << j)) == 0) {
+		while ((even->a[0] & (1u << j)) == 0) {
 			j++;
 		}
 		if (j > 0) {
