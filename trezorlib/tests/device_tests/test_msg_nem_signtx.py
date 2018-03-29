@@ -20,11 +20,6 @@ from .common import *
 from trezorlib import messages as proto
 from trezorlib import nem
 
-NEM_TRANSACTION_TYPE_TRANSFER = 0x0101
-NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE = 0x2001
-NEM_TRANSACTION_TYPE_MOSAIC_CREATION = 0x4001
-TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
-
 
 # assertion data from T1
 @pytest.mark.skip_t2
@@ -329,3 +324,26 @@ class TestMsgNEMSigntx(TrezorTest):
 
             assert hexlify(tx.data) == b'02400000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74041a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f73616963010000000100000000000000'
             assert hexlify(tx.signature) == b'928b03c4a69fff35ecf0912066ea705895b3028fad141197d7ea2b56f1eef2a2516455e6f35d318f6fa39e2bb40492ac4ae603260790f7ebc7ea69feb4ca4c0a'
+
+    def test_nem_signtx_aggregate_modification(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+                "timeStamp": 74649215,
+                "fee": 2000000,
+                "type": nem.TYPE_AGGREGATE_MODIFICATION,
+                "deadline": 74735615,
+                "message": {
+                },
+                "modifications": [
+                    {
+                        "modificationType": 1,  # Add
+                        "cosignatoryAccount": "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844"
+                    },
+                ],
+                "version": (0x98 << 24),
+            })
+
+            assert hexlify(tx.data) == b'01100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f740401000000280000000100000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844'
+            assert hexlify(tx.signature) == b'ed074a4b877e575786785e6e499e428edea28498a06bdaed6557ccdfbfe69087acd6f4b63e9faa6a849e49d405374c12762df2f27d55e4b35c1901850f83650f'
