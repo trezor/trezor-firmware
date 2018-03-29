@@ -24,6 +24,9 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     elif msg.mosaic_creation:
         tx = await _mosaic_creation(ctx, node, msg)
 
+    elif msg.supply_change:
+        tx = await _supply_change(ctx, node, msg)
+
     signature = ed25519.sign(node.private_key(), tx, helpers.NEM_HASH_ALG)
 
     resp = NEMSignedTx()
@@ -32,9 +35,25 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     return resp
 
 
+async def _supply_change(ctx, node, msg: NEMSignTx):
+    # todo confirms!
+    return nem_transaction_create_mosaic_supply_change(
+        msg.transaction.network,
+        msg.transaction.timestamp,
+        _get_public_key(node),
+        msg.transaction.fee,
+        msg.transaction.deadline,
+        msg.supply_change.namespace,
+        msg.supply_change.mosaic,
+        msg.supply_change.type,
+        msg.supply_change.delta
+    )
+
+
 async def _mosaic_creation(ctx, node, msg: NEMSignTx) -> bytearray:
     await require_confirm_action(ctx, 'Create mosaic "' + msg.mosaic_creation.definition.mosaic + '" under  namespace "'
                                  + msg.mosaic_creation.definition.namespace + '"?')
+    # todo confirm levy!
     await require_confirm_properties(ctx, msg.mosaic_creation.definition)
     await require_confirm_final(ctx, 'mosaic', msg.transaction.fee)
 

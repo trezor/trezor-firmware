@@ -16,7 +16,7 @@ def validate(msg: NEMSignTx):
     if msg.transaction is None:
         raise ValueError('No common provided')
 
-    if msg.supply_change or msg.aggregate_modification \
+    if msg.aggregate_modification \
             or msg.importance_transfer:
         raise ValueError('Not yet implemented')  # todo
 
