@@ -1,6 +1,7 @@
 
 from .helpers import *
 from .writers import *
+from trezor.messages.NEMMosaic import NEMMosaic
 
 
 def nem_transaction_create_mosaic_creation(network: int, timestamp: int, signer_public_key: bytes, fee:int,
@@ -100,3 +101,35 @@ def nem_transaction_write_mosaic(w: bytearray, namespace: str, mosaic: str, quan
     write_bytes_with_length(w, bytearray(namespace))
     write_bytes_with_length(w, bytearray(mosaic))
     write_uint64(w, quantity)
+
+
+def nem_canonicalize_mosaics(mosaics: list):
+    if len(mosaics) <= 1:
+        return mosaics
+    mosaics = nem_merge_mosaics(mosaics)
+    return nem_sort_mosaics(mosaics)
+
+
+def are_mosaics_equal(a: NEMMosaic, b: NEMMosaic) -> bool:
+    if a.namespace == b.namespace and a.mosaic == b.mosaic:
+        return True
+    return False
+
+
+def nem_merge_mosaics(mosaics: list) -> list:
+    if not len(mosaics):
+        return list()
+    ret = list()
+    for i in mosaics:
+        found = False
+        for k, y in enumerate(ret):
+            if are_mosaics_equal(i, y):
+                ret[k].quantity += i.quantity
+                found = True
+        if not found:
+            ret.append(i)
+    return ret
+
+
+def nem_sort_mosaics(mosaics: list) -> list:
+    return sorted(mosaics, key=lambda m: (m.namespace, m.mosaic))

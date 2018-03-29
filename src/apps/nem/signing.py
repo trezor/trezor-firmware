@@ -15,8 +15,8 @@ async def nem_sign_tx(ctx, msg: NEMSignTx):
     node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
 
     if msg.transfer:
+        msg.transfer.mosaics = nem_canonicalize_mosaics(msg.transfer.mosaics)
         tx = await _transfer(ctx, node, msg)
-        # todo msg.transfer.mosaics = canonicalize_mosaics(msg.transfer.mosaics)
     elif msg.provision_namespace:
         tx = await _provision_namespace(ctx, node, msg)
     elif msg.mosaic_creation:
