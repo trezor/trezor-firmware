@@ -1,6 +1,6 @@
 from common import *
 
-from apps.nem.transaction import *
+from apps.nem.mosaic import *
 from trezor.crypto import hashlib
 
 

@@ -1,5 +1,6 @@
 from apps.nem.layout import *
 from apps.nem.transaction import *
+from apps.nem.mosaic import *
 from apps.nem.validators import validate
 from apps.nem import helpers
 from apps.common import seed
