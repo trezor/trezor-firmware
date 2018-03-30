@@ -79,7 +79,7 @@ void display_init(void)
         printf("%s\n", SDL_GetError());
         ensure(secfalse, "SDL_CreateWindow error");
     }
-    RENDERER = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+    RENDERER = SDL_CreateRenderer(win, -1, 0);
     if (!RENDERER) {
         printf("%s\n", SDL_GetError());
         SDL_DestroyWindow(win);
