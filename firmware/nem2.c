@@ -436,7 +436,7 @@ bool nem_askMosaicCreation(const NEMTransactionCommon *common, const NEMMosaicCr
 	}
 
 	layoutNEMNetworkFee(desc, true, _("Confirm creation fee"), mosaic_creation->fee, _("and network fee of"), common->fee);
-	if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
 		return false;
 	}
 
