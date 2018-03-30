@@ -20,6 +20,7 @@ import time
 import os
 import atexit
 import usb1
+import sys
 
 from ..protocol_v1 import ProtocolV1
 from ..protocol_v2 import ProtocolV2
@@ -46,7 +47,11 @@ class WebUsbHandle:
         if self.count == 0:
             self.handle = self.device.open()
             if self.handle is None:
-                raise Exception('Cannot open device')
+                if sys.platform.startswith('linux'):
+                    args = ('Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules', )
+                else:
+                    args = ()
+                raise IOError('Cannot open device', *args)
             self.handle.claimInterface(interface)
             self.count += 1
 
