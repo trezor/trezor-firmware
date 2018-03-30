@@ -67,7 +67,7 @@ void oledInit(void) {
 		exit(1);
 	}
 
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1, 0);
 	if (!renderer) {
 		fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
 		exit(1);
