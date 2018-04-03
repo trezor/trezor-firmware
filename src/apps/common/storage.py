@@ -21,6 +21,7 @@ _FLAGS              = const(0x08)  # int
 _U2F_COUNTER        = const(0x09)  # int
 _PASSPHRASE_SOURCE  = const(0x0A)  # int
 _UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
+_AUTOLOCK_DELAY_MS  = const(0x0C)  # int
 
 
 def _new_device_id() -> str:
@@ -128,6 +129,20 @@ def set_flags(flags: int) -> None:
     flags = (flags | b) & 0xFFFFFFFF
     if flags != b:
         config.set(_APP, _FLAGS, flags.to_bytes(4, 'big'))
+
+
+def get_autolock_delay_ms() -> int:
+    b = config.get(_APP, _AUTOLOCK_DELAY_MS)
+    if b is None:
+        return 10 * 60 * 1000
+    else:
+        return int.from_bytes(b, 'big')
+
+
+def set_autolock_delay_ms(delay_ms: int) -> None:
+    if delay_ms < 60 * 1000:
+        delay_ms = 60 * 1000
+    config.set(_APP, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, 'big'))
 
 
 def next_u2f_counter() -> int:
