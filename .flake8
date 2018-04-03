@@ -2,7 +2,7 @@
 ignore =
     # E221: multiple spaces before operator
     E221,
-    # E241: multiple spaces after comma
+    # E241: multiple spaces after ':'
     E241,
     # E402: module level import not at top of file
     E402,

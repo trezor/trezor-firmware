@@ -204,7 +204,7 @@ class signal(Syscall):
     def __iter__(self):
         try:
             return (yield self)
-        except:
+        except:  # noqa: E722
             self.task = None
             raise
 
