@@ -131,11 +131,11 @@ bool compute_address(const CoinInfo *coin,
 			raw[0] = 0; // push version
 			raw[1] = 32; // push 32 bytes
 			memcpy(raw+2, digest, 32); // push hash
-			hasher_Raw(coin->curve->hasher_type, raw, 34, digest);
+			hasher_Raw(coin->curve->hasher_pubkey, raw, 34, digest);
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
 			address_write_prefix_bytes(coin->address_type_p2sh, raw);
 			ripemd160(digest, 32, raw + prelen);
-			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_type, address, MAX_ADDR_SIZE)) {
+			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_base58, address, MAX_ADDR_SIZE)) {
 				return 0;
 			}
 		} else {
@@ -143,7 +143,7 @@ bool compute_address(const CoinInfo *coin,
 			prelen = address_prefix_bytes_len(coin->address_type_p2sh);
 			address_write_prefix_bytes(coin->address_type_p2sh, raw);
 			ripemd160(digest, 32, raw + prelen);
-			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_type, address, MAX_ADDR_SIZE)) {
+			if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_base58, address, MAX_ADDR_SIZE)) {
 				return 0;
 			}
 		}
@@ -152,7 +152,7 @@ bool compute_address(const CoinInfo *coin,
 		if (!coin->has_segwit || !coin->bech32_prefix) {
 			return 0;
 		}
-		ecdsa_get_pubkeyhash(node->public_key, coin->curve->hasher_type, digest);
+		ecdsa_get_pubkeyhash(node->public_key, coin->curve->hasher_pubkey, digest);
 		if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_0, digest, 20)) {
 			return 0;
 		}
@@ -164,9 +164,9 @@ bool compute_address(const CoinInfo *coin,
 		if (!coin->has_address_type_p2sh) {
 			return 0;
 		}
-		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, coin->curve->hasher_type, address, MAX_ADDR_SIZE);
+		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, coin->curve->hasher_pubkey, coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
 	} else {
-		ecdsa_get_address(node->public_key, coin->address_type, coin->curve->hasher_type, address, MAX_ADDR_SIZE);
+		ecdsa_get_address(node->public_key, coin->address_type, coin->curve->hasher_pubkey, coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
 	}
 	return 1;
 }
@@ -232,7 +232,7 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 		return 0; // failed to compile output
 	}
 
-	addr_raw_len = base58_decode_check(in->address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
+	addr_raw_len = base58_decode_check(in->address, coin->curve->hasher_base58, addr_raw, MAX_ADDR_RAW_SIZE);
 	size_t prefix_len;
 	if (coin->has_address_type                                  // p2pkh
 		&& addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(coin->address_type))
@@ -327,7 +327,7 @@ uint32_t compile_script_multisig_hash(const CoinInfo *coin, const MultisigRedeem
 	if (n < 1 || n > 15) return 0;
 
 	Hasher hasher;
-	hasher_Init(&hasher, coin->curve->hasher_type);
+	hasher_Init(&hasher, coin->curve->hasher_pubkey);
 
 	uint8_t d[2];
 	d[0] = 0x50 + m; hasher_Update(&hasher, d, 1);
@@ -650,7 +650,7 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 	return datalen;
 }
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t extra_data_len, HasherType hasher_type)
+void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t extra_data_len, HasherType hasher_sign)
 {
 	tx->inputs_len = inputs_len;
 	tx->outputs_len = outputs_len;
@@ -664,16 +664,12 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->is_segwit = false;
 	tx->is_decred = false;
 	tx->decred_expiry = 0;
-	hasher_Init(&(tx->hasher), hasher_type);
+	hasher_Init(&(tx->hasher), hasher_sign);
 }
 
 void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 {
-	if (t->is_decred) {
-		hasher_Final(&(t->hasher), hash);
-	} else {
-		hasher_Double(&(t->hasher), hash);
-	}
+	hasher_Final(&(t->hasher), hash);
 	if (!reverse) return;
 	for (uint8_t i = 0; i < 16; i++) {
 		uint8_t k = hash[31 - i];
@@ -744,7 +740,7 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 			&& segwit_addr_decode(&witver, addr_raw, &addr_raw_len, coin->bech32_prefix, txoutput->address)) {
 			output_script_size = 2 + addr_raw_len;
 		} else {
-			addr_raw_len = base58_decode_check(txoutput->address, coin->curve->hasher_type, addr_raw, MAX_ADDR_RAW_SIZE);
+			addr_raw_len = base58_decode_check(txoutput->address, coin->curve->hasher_base58, addr_raw, MAX_ADDR_RAW_SIZE);
 			if (coin->has_address_type
 				&& address_check_prefix(addr_raw, coin->address_type)) {
 				output_script_size = TXSIZE_P2PKHASH;
