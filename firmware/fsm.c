@@ -706,6 +706,7 @@ void fsm_msgApplyFlags(ApplyFlags *msg)
 {
 	if (msg->has_flags) {
 		storage_applyFlags(msg->flags);
+		storage_update();
 	}
 	fsm_sendSuccess(_("Flags applied"));
 }
