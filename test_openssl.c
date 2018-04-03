@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "ecdsa.h"
 #include "rand.h"
@@ -44,7 +45,7 @@
 
 void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 {
-	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], buffer[1000], hash[32], *p;
+	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], hash[32];
 	struct SHA256state_st sha256;
 	EC_GROUP *ecgroup;
 
@@ -64,24 +65,10 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 		// generate the key
 		EC_KEY_generate_key(eckey);
 		// copy key to buffer
-		p = buffer;
-		i2d_ECPrivateKey(eckey, &p);
-
-		// size of the key is in buffer[8] and the key begins right after that
-		int s = buffer[8];
-		// extract key data
-		if (s > 32) {
-			for (int j = 0; j < 32; j++) {
-				priv_key[j] = buffer[j + s - 23];
-			}
-		} else {
-			for (int j = 0; j < 32 - s; j++) {
-				priv_key[j] = 0;
-			}
-			for (int j = 0; j < s; j++) {
-				priv_key[j + 32 - s] = buffer[j + 9];
-			}
-		}
+		const BIGNUM *K = EC_KEY_get0_private_key(eckey);
+		int bn_off = sizeof(priv_key) - BN_num_bytes(K);
+		memset(priv_key, 0, bn_off);
+		BN_bn2bin(K, priv_key + bn_off);
 
 		// use our ECDSA signer to sign the message with the key
 		if (ecdsa_sign(curve, HASHER_SHA2, priv_key, msg, msg_len, sig, NULL, NULL) != 0) {

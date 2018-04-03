@@ -27,6 +27,7 @@ CFLAGS += -I.
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_GRAPHENE=1
 CFLAGS += -DUSE_NEM=1
+CFLAGS += $(shell pkg-config --cflags openssl)
 
 # disable certain optimizations and features when small footprint is required
 ifdef SMALL
@@ -55,7 +56,7 @@ SRCS  += memzero.c
 OBJS   = $(SRCS:.c=.o)
 
 TESTLIBS = $(shell pkg-config --libs check) -lpthread -lm
-TESTSSLLIBS = -lcrypto
+TESTSSLLIBS = $(shell pkg-config --libs openssl)
 
 all: test_check test_openssl test_speed aes/aestst tools libtrezor-crypto.so
 
