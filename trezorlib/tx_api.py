@@ -115,40 +115,6 @@ class TxApiInsight(TxApi):
         return t
 
 
-class TxApiSmartbit(TxApi):
-
-    def get_tx(self, txhash):
-
-        data = self.fetch_json('tx', txhash)
-
-        data = data['transaction']
-
-        t = proto.TransactionType()
-        t.version = int(data['version'])
-        t.lock_time = data['locktime']
-
-        for vin in data['inputs']:
-            i = t.inputs.add()
-            if 'coinbase' in vin.keys():
-                i.prev_hash = b"\0" * 32
-                i.prev_index = 0xffffffff  # signed int -1
-                i.script_sig = binascii.unhexlify(vin['coinbase'])
-                i.sequence = vin['sequence']
-
-            else:
-                i.prev_hash = binascii.unhexlify(vin['txid'])
-                i.prev_index = vin['vout']
-                i.script_sig = binascii.unhexlify(vin['script_sig']['hex'])
-                i.sequence = vin['sequence']
-
-        for vout in data['outputs']:
-            o = t.bin_outputs.add()
-            o.amount = int(Decimal(vout['value']) * 100000000)
-            o.script_pubkey = binascii.unhexlify(vout['script_pub_key']['hex'])
-
-        return t
-
-
 class TxApiBlockCypher(TxApi):
 
     def __init__(self, network, url, zcash=None):
@@ -193,5 +159,4 @@ TxApiBcash = TxApiInsight(network='insight_bcash', url='https://bch-bitcore2.tre
 TxApiBitcoinGold = TxApiInsight(network='insight_bitcoin_gold', url='https://btg-bitcore2.trezor.io/api/')
 TxApiDecredTestnet = TxApiInsight(network='insight_decred_testnet', url='https://testnet.decred.org/api/')
 TxApiDogecoin = TxApiBlockCypher(network='blockcypher_dogecoin', url='https://api.blockcypher.com/v1/doge/main/')
-TxApiSegnet = TxApiSmartbit(network='smartbit_segnet', url='https://segnet-api.smartbit.com.au/v1/blockchain/')
 TxApiMonacoin = TxApiInsight(network='insight_monacoin', url='https://mona.insight.monaco-ex.org/insight-api-monacoin/')
