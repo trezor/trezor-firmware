@@ -421,6 +421,8 @@ void hdnode_fill_public_key(HDNode *node)
 {
 	if (node->public_key[0] != 0)
 		return;
+
+#if USE_BIP32_25519_CURVES
 	if (node->curve->params) {
 		ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
 	} else {
@@ -437,6 +439,10 @@ void hdnode_fill_public_key(HDNode *node)
 			curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
 		}
 	}
+#else
+
+    ecdsa_get_public_key33(node->curve->params, node->private_key, node->public_key);
+#endif
 }
 
 #if USE_ETHEREUM
