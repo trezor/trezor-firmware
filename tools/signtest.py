@@ -111,7 +111,7 @@ class MyTxApiBitcoin(object):
 
             txser = self.serialize_tx(t)
             txhash = tools.Hash(txser)[::-1]
-            outi = self.inputs.append(
+            self.inputs.append(
                 proto_types.TxInputType(
                     address_n=self.client.expand_path("44'/0'/0'/0/%d" % idx),
                     script_type=(
@@ -178,42 +178,42 @@ def main():
     # Get the first address of first BIP44 account
     # (should be the same address as shown in wallet.trezor.io)
 
-    outputs = [
-        proto_types.TxOutputType(
-            amount=0,
-            script_type=proto_types.PAYTOADDRESS,
-            address='p2xtZoXeX5X8BP8JfFhQK2nD3emtjch7UeFm'
-            # op_return_data=binascii.unhexlify('2890770995194662774cd192ee383b805e9a066e6a456be037727649228fb7f6')
-            # address_n=client.expand_path("44'/0'/0'/0/35"),
-            # address='3PUxV6Cc4udQZQsJhArVUzvvVoKC8ohkAj',
-        ),
-        # proto_types.TxOutputType(
-        #     amount=0,
-        #     script_type=proto_types.PAYTOOPRETURN,
-        #     op_return_data=binascii.unhexlify('2890770995194662774cd192ee383b805e9a066e6a456be037727649228fb7f6')
-        # ),
-        # proto_types.TxOutputType(
-        #     amount= 8120,
-        #     script_type=proto_types.PAYTOADDRESS,
-        #     address_n=client.expand_path("44'/1'/0'/1/0"),
-        #     address='1PtCkQgyN6xHmXWzLmFFrDNA5vYhYLeNFZ',
-        #     address='14KRxYgFc7Se8j7MDdrK5PTNv8meq4GivK',
-        # ),
-        # proto_types.TxOutputType(
-        # amount= 18684 - 2000,
-        # script_type=proto_types.PAYTOADDRESS,
-        # address_n=client.expand_path("44'/0'/0'/0/7"),
-        # # address='1PtCkQgyN6xHmXWzLmFFrDNA5vYhYLeNFZ',
-        # # address='1s9TSqr3PHZdXGrYws59Uaf5SPqavH43z',
-        # ),
-        # proto_types.TxOutputType(
-        # amount= 1000,
-        # script_type=proto_types.PAYTOADDRESS,
-        # # address_n=client.expand_path("44'/0'/0'/0/18"),
-        # # address='1PtCkQgyN6xHmXWzLmFFrDNA5vYhYLeNFZ',
-        # # address='1NcMqUvyWv1K3Zxwmx5sqfj7ZEmPCSdJFM',
-        # ),
-    ]
+    # outputs = [
+    #     proto_types.TxOutputType(
+    #         amount=0,
+    #         script_type=proto_types.PAYTOADDRESS,
+    #         address='p2xtZoXeX5X8BP8JfFhQK2nD3emtjch7UeFm'
+    #         # op_return_data=binascii.unhexlify('2890770995194662774cd192ee383b805e9a066e6a456be037727649228fb7f6')
+    #         # address_n=client.expand_path("44'/0'/0'/0/35"),
+    #         # address='3PUxV6Cc4udQZQsJhArVUzvvVoKC8ohkAj',
+    #     ),
+    #     proto_types.TxOutputType(
+    #         amount=0,
+    #         script_type=proto_types.PAYTOOPRETURN,
+    #         op_return_data=binascii.unhexlify('2890770995194662774cd192ee383b805e9a066e6a456be037727649228fb7f6')
+    #     ),
+    #     proto_types.TxOutputType(
+    #         amount= 8120,
+    #         script_type=proto_types.PAYTOADDRESS,
+    #         address_n=client.expand_path("44'/1'/0'/1/0"),
+    #         address='1PtCkQgyN6xHmXWzLmFFrDNA5vYhYLeNFZ',
+    #         address='14KRxYgFc7Se8j7MDdrK5PTNv8meq4GivK',
+    #     ),
+    #     proto_types.TxOutputType(
+    #     amount= 18684 - 2000,
+    #     script_type=proto_types.PAYTOADDRESS,
+    #     address_n=client.expand_path("44'/0'/0'/0/7"),
+    #     # address='1PtCkQgyN6xHmXWzLmFFrDNA5vYhYLeNFZ',
+    #     # address='1s9TSqr3PHZdXGrYws59Uaf5SPqavH43z',
+    #     ),
+    #     proto_types.TxOutputType(
+    #     amount= 1000,
+    #     script_type=proto_types.PAYTOADDRESS,
+    #     # address_n=client.expand_path("44'/0'/0'/0/18"),
+    #     # address='1PtCkQgyN6xHmXWzLmFFrDNA5vYhYLeNFZ',
+    #     # address='1NcMqUvyWv1K3Zxwmx5sqfj7ZEmPCSdJFM',
+    #     ),
+    # ]
 
 #    (signatures, serialized_tx) = client.sign_tx('Testnet', inputs, outputs)
     (signatures, serialized_tx) = client.sign_tx('Bitcoin', txstore.get_inputs(), txstore.get_outputs())

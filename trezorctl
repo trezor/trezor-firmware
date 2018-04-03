@@ -233,7 +233,7 @@ def set_homescreen(connect, filename):
     elif filename.endswith('.toif'):
         img = open(filename, 'rb').read()
         if img[:8] != b'TOIf\x90\x00\x90\x00':
-            raise CallException(types.Failure_DataError, 'File is not a TOIF file with size of 144x144')
+            raise CallException(proto.FailureType.DataError, 'File is not a TOIF file with size of 144x144')
     else:
         from PIL import Image
         im = Image.open(filename)

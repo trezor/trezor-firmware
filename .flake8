@@ -1,17 +1,13 @@
 [flake8]
 filename =
     *.py,
-    trezorctl
+    ./trezorctl
 exclude =
     .tox/,
     build/,
     dist/,
-    trezorlib/*_pb2.py
+    vendor/,
 ignore =
-    # F821 undefined name 'unicode'
-    F821,
-    # F841 local variable is assigned to but never used
-    F841,
     # F401: module imported but unused
     F401,
     # F403: used import *

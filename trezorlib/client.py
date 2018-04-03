@@ -42,11 +42,6 @@ from .protobuf import MessageType
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
 
-# try:
-#     from PIL import Image
-#     SCREENSHOT = True
-# except:
-#     SCREENSHOT = False
 
 SCREENSHOT = False
 
@@ -424,6 +419,7 @@ class DebugLinkMixin(object):
     def call_raw(self, msg):
 
         if SCREENSHOT and self.debug:
+            from PIL import Image
             layout = self.debug.read_layout()
             im = Image.new("RGB", (128, 64))
             pix = im.load()
@@ -804,7 +800,7 @@ class ProtocolMixin(object):
     @session
     def sign_tx(self, coin_name, inputs, outputs, version=None, lock_time=None, debug_processor=None):
 
-        start = time.time()
+        # start = time.time()
         txes = self._prepare_sign_tx(inputs, outputs)
 
         # Prepare and send initial message
