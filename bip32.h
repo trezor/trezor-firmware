@@ -34,7 +34,11 @@
 typedef struct {
 	const char *bip32_name;    // string for generating BIP32 xprv from seed
 	const ecdsa_curve *params; // ecdsa curve parameters, null for ed25519
-	HasherType hasher_type;    // hasher type for BIP32 and ECDSA
+
+	HasherType hasher_bip32;
+	HasherType hasher_base58;
+	HasherType hasher_sign;
+	HasherType hasher_pubkey;
 } curve_info;
 
 typedef struct {
@@ -60,7 +64,7 @@ int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent, co
 
 int hdnode_public_ckd(HDNode *inout, uint32_t i);
 
-void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, HasherType hasher_type, char *addr, int addrsize, int addrformat);
+void hdnode_public_ckd_address_optimized(const curve_point *pub, const uint8_t *chain_code, uint32_t i, uint32_t version, HasherType hasher_pubkey, HasherType hasher_base58, char *addr, int addrsize, int addrformat);
 
 #if USE_BIP32_CACHE
 int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count, uint32_t *fingerprint);
@@ -81,7 +85,7 @@ int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key, 
 int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key, uint8_t *iv, const uint8_t *salt, const uint8_t *payload, size_t size, uint8_t *buffer);
 #endif
 
-int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
+int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len, HasherType hasher_sign, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig, uint8_t *pby, int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 
 int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key, uint8_t *session_key, int *result_size);

@@ -27,9 +27,11 @@ void hasher_Init(Hasher *hasher, HasherType type) {
 
 	switch (hasher->type) {
 	case HASHER_SHA2:
+	case HASHER_SHA2D:
 		sha256_Init(&hasher->ctx.sha2);
 		break;
 	case HASHER_BLAKE:
+	case HASHER_BLAKED:
 		blake256_Init(&hasher->ctx.blake);
 		break;
 	}
@@ -42,9 +44,11 @@ void hasher_Reset(Hasher *hasher) {
 void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
 	switch (hasher->type) {
 	case HASHER_SHA2:
+	case HASHER_SHA2D:
 		sha256_Update(&hasher->ctx.sha2, data, length);
 		break;
 	case HASHER_BLAKE:
+	case HASHER_BLAKED:
 		blake256_Update(&hasher->ctx.blake, data, length);
 		break;
 	}
@@ -53,17 +57,27 @@ void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
 void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
 	switch (hasher->type) {
 	case HASHER_SHA2:
+	case HASHER_SHA2D:
 		sha256_Final(&hasher->ctx.sha2, hash);
 		break;
 	case HASHER_BLAKE:
+	case HASHER_BLAKED:
 		blake256_Final(&hasher->ctx.blake, hash);
 		break;
 	}
-}
 
-void hasher_Double(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
-	hasher_Final(hasher, hash);
-	hasher_Raw(hasher->type, hash, HASHER_DIGEST_LENGTH, hash);
+	switch (hasher->type) {
+	case HASHER_SHA2D:
+		hasher_Raw(HASHER_SHA2, hash, HASHER_DIGEST_LENGTH, hash);
+		break;
+
+	case HASHER_BLAKED:
+		hasher_Raw(HASHER_BLAKE, hash, HASHER_DIGEST_LENGTH, hash);
+		break;
+	
+	default:
+		break;
+	}
 }
 
 void hasher_Raw(HasherType type, const uint8_t *data, size_t length, uint8_t hash[HASHER_DIGEST_LENGTH]) {

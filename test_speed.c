@@ -165,7 +165,7 @@ void bench_ckd_normal(int iterations)
 		memcpy(&node, &root, sizeof(HDNode));
 		hdnode_public_ckd(&node, i);
 		hdnode_fill_public_key(&node);
-		ecdsa_get_address(node.public_key, HASHER_SHA2, 0, addr, sizeof(addr));
+		ecdsa_get_address(node.public_key, HASHER_SHA2, HASHER_SHA2D, 0, addr, sizeof(addr));
 	}
 }
 
@@ -175,7 +175,7 @@ void bench_ckd_optimized(int iterations)
 	curve_point pub;
 	ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
 	for (int i = 0; i < iterations; i++) {
-		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, HASHER_SHA2, addr, sizeof(addr), false);
+		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, HASHER_SHA2, HASHER_SHA2D, addr, sizeof(addr), false);
 	}
 }
 

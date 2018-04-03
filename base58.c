@@ -136,7 +136,6 @@ int b58check(const void *bin, size_t binsz, HasherType hasher_type, const char *
 	if (binsz < 4)
 		return -4;
 	hasher_Raw(hasher_type, bin, binsz - 4, buf);
-	hasher_Raw(hasher_type, buf, 32, buf);
 	if (memcmp(&binc[binsz - 4], buf, 4))
 		return -1;
 
@@ -202,7 +201,6 @@ int base58_encode_check(const uint8_t *data, int datalen, HasherType hasher_type
 	uint8_t *hash = buf + datalen;
 	memcpy(buf, data, datalen);
 	hasher_Raw(hasher_type, data, datalen, hash);
-	hasher_Raw(hasher_type, hash, 32, hash);
 	size_t res = strsize;
 	bool success = b58enc(str, &res, buf, datalen + 4);
 	memzero(buf, sizeof(buf));
