@@ -188,6 +188,8 @@ SelfTest				skip_message:true
 
 # used only in debug firmware
 
+DebugLinkDecision.input			max_size:33
+
 DebugLinkState.layout			max_size:1024
 DebugLinkState.pin			max_size:10
 DebugLinkState.matrix			max_size:10
