@@ -3,6 +3,7 @@ import protobuf
 from trezor import log
 from trezor import loop
 from trezor import messages
+from trezor import utils
 from trezor import workflow
 
 from . import codec_v1
@@ -119,12 +120,14 @@ async def session_handler(iface, sid):
             except KeyError:
                 handler, args = unexpected_msg, ()
 
+            m = utils.unimport_begin()
             w = handler(ctx, reader, *args)
             try:
                 workflow.onstart(w)
                 await w
             finally:
                 workflow.onclose(w)
+                utils.unimport_end(m)
 
         except UnexpectedMessageError as exc:
             # retry with opened reader from the exception
