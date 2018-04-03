@@ -1,5 +1,5 @@
 from trezor import config
-from trezor.utils import unimport, symbol, model
+from trezor.utils import symbol, model
 from trezor.wire import register, protobuf_workflow
 from trezor.messages import wire_types
 from trezor.messages.Features import Features
@@ -43,7 +43,6 @@ async def respond_ClearSession(ctx, msg):
     return Success(message='Session cleared')
 
 
-@unimport
 async def respond_Pong(ctx, msg):
 
     if msg.button_protection:
