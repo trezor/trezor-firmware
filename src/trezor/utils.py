@@ -4,18 +4,24 @@ import gc
 from trezorutils import halt, memcpy, set_mode_unprivileged, symbol, model  # noqa: F401
 
 
-def unimport(genfunc):
-    async def inner(*args, **kwargs):
-        mods = set(sys.modules)
-        try:
-            ret = await genfunc(*args, **kwargs)
-        finally:
-            for mod in sys.modules:
-                if mod not in mods:
-                    del sys.modules[mod]
-            gc.collect()
-        return ret
-    return inner
+def unimport_begin():
+    return set(sys.modules)
+
+
+def unimport_end(mods):
+    for mod in sys.modules:
+        if mod not in mods:
+            # remove reference from sys.modules
+            del sys.modules[mod]
+            # remove reference from the parent module
+            i = mod.rfind('.')
+            if i < 0:
+                continue
+            path = mod[:i]
+            name = mod[i + 1:]
+            delattr(sys.modules[path], name)
+    # collect removed modules
+    gc.collect()
 
 
 def ensure(cond, msg=None):
