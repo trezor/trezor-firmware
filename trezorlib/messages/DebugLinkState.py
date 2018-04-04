@@ -15,6 +15,5 @@ class DebugLinkState(p.MessageType):
         8: ('reset_entropy', p.BytesType, 0),
         9: ('recovery_fake_word', p.UnicodeType, 0),
         10: ('recovery_word_pos', p.UVarintType, 0),
-        11: ('reset_word_pos', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 102
