@@ -264,11 +264,8 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node, const NEM
 
 		random_buffer(encrypted, NEM_SALT_SIZE + AES_BLOCK_SIZE);
 
-		// hdnode_nem_encrypt mutates the IV
-		uint8_t iv[AES_BLOCK_SIZE];
-		memcpy(iv, &encrypted[NEM_SALT_SIZE], AES_BLOCK_SIZE);
-
 		const uint8_t *salt = encrypted;
+		const uint8_t *iv = &encrypted[NEM_SALT_SIZE];
 		uint8_t *buffer = &encrypted[NEM_SALT_SIZE + AES_BLOCK_SIZE];
 
 		bool ret = hdnode_nem_encrypt(node,
