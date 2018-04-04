@@ -3105,6 +3105,18 @@ groestl512_Final(void *cc, void *dst)
 	groestl_big_close((sph_groestl_big_context *)cc, 0, 0, dst, 64);
 }
 
+void
+groestl512_DoubleTrunc(void *cc, void *dst)
+{
+	char buf[64];
+
+	groestl512_Final(cc, buf);
+	groestl512_Init(cc);
+	groestl512_Update(cc, buf, sizeof(buf));
+	groestl512_Final(cc, buf);
+	memcpy(dst, buf, 32);
+}
+
 /* see sph_groestl.h */
 void
 sph_groestl512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)

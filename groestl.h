@@ -302,6 +302,9 @@ void groestl512_Update(void *cc, const void *data, size_t len);
  */
 void groestl512_Final(void *cc, void *dst);
 
+
+void groestl512_DoubleTrunc(void *cc, void *dst);
+
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
  * terminate it and output the result in the provided buffer, which must

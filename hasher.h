@@ -39,7 +39,7 @@ typedef enum {
     HASHER_SHA2D,
     HASHER_BLAKED,
 
-    HASHER_GROESTL,
+    HASHER_GROESTLD_TRUNC, /* Double Groestl512 hasher truncated to 256 bits */
 } HasherType;
 
 typedef struct {

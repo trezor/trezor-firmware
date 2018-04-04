@@ -34,7 +34,7 @@ void hasher_Init(Hasher *hasher, HasherType type) {
 	case HASHER_BLAKED:
 		blake256_Init(&hasher->ctx.blake);
 		break;
-	case HASHER_GROESTL:
+	case HASHER_GROESTLD_TRUNC:
 		groestl512_Init(&hasher->ctx.groestl);
 		break;
 	}
@@ -54,7 +54,7 @@ void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
 	case HASHER_BLAKED:
 		blake256_Update(&hasher->ctx.blake, data, length);
 		break;
-	case HASHER_GROESTL:
+	case HASHER_GROESTLD_TRUNC:
 		groestl512_Update(&hasher->ctx.groestl, data, length);
 		break;
 	}
@@ -70,20 +70,18 @@ void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
 	case HASHER_BLAKED:
 		blake256_Final(&hasher->ctx.blake, hash);
 		break;
-	case HASHER_GROESTL:
-		groestl512_Final(&hasher->ctx.groestl, hash);
-		break;
+	case HASHER_GROESTLD_TRUNC:
+		groestl512_DoubleTrunc(&hasher->ctx.groestl, hash);
+		return;
 	}
 
 	switch (hasher->type) {
 	case HASHER_SHA2D:
 		hasher_Raw(HASHER_SHA2, hash, HASHER_DIGEST_LENGTH, hash);
 		break;
-
 	case HASHER_BLAKED:
 		hasher_Raw(HASHER_BLAKE, hash, HASHER_DIGEST_LENGTH, hash);
 		break;
-	
 	default:
 		break;
 	}
