@@ -11,6 +11,7 @@ CFLAGS   += $(OPTFLAGS) \
             -Wredundant-decls \
             -Wstrict-prototypes \
             -Wundef \
+            -Wshadow \
             -Wpointer-arith \
             -Wformat \
             -Wreturn-type \
@@ -20,6 +21,7 @@ CFLAGS   += $(OPTFLAGS) \
             -Winit-self \
             -Wuninitialized \
             -Wformat-security \
+            -Werror
 
 CFLAGS += -I.
 CFLAGS += -DUSE_ETHEREUM=1

@@ -917,24 +917,24 @@ static const sph_u32 T3dn[] = {
 
 #define COMPRESS_BIG   do { \
 		sph_u32 g[32], m[32]; \
-		size_t u; \
-		for (u = 0; u < 32; u ++) { \
-			m[u] = dec32e_aligned(buf + (u << 2)); \
-			g[u] = m[u] ^ H[u]; \
+		size_t uu; \
+		for (uu = 0; uu < 32; uu ++) { \
+			m[uu] = dec32e_aligned(buf + (uu << 2)); \
+			g[uu] = m[uu] ^ H[uu]; \
 		} \
 		PERM_BIG_P(g); \
 		PERM_BIG_Q(m); \
-		for (u = 0; u < 32; u ++) \
-			H[u] ^= g[u] ^ m[u]; \
+		for (uu = 0; uu < 32; uu ++) \
+			H[uu] ^= g[uu] ^ m[uu]; \
 	} while (0)
 
 #define FINAL_BIG   do { \
 		sph_u32 x[32]; \
-		size_t u; \
+		size_t uu; \
 		memcpy(x, H, sizeof x); \
 		PERM_BIG_P(x); \
-		for (u = 0; u < 32; u ++) \
-			H[u] ^= x[u]; \
+		for (uu = 0; uu < 32; uu ++) \
+			H[uu] ^= x[uu]; \
 	} while (0)
 
 
@@ -993,7 +993,7 @@ groestl_big_close(sph_groestl_big_context *sc,
 	unsigned ub, unsigned n, void *dst, size_t out_len)
 {
 	unsigned char pad[136];
-	size_t ptr, pad_len, u;
+	size_t ptr, pad_len, u2;
 	sph_u64 count;
 	unsigned z;
 	DECL_STATE_BIG
@@ -1013,8 +1013,8 @@ groestl_big_close(sph_groestl_big_context *sc,
 	groestl_big_core(sc, pad, pad_len);
 	READ_STATE_BIG(sc);
 	FINAL_BIG;
-	for (u = 0; u < 16; u ++)
-		enc32e(pad + (u << 2), H[u + 16]);
+	for (u2 = 0; u2 < 16; u2 ++)
+		enc32e(pad + (u2 << 2), H[u2 + 16]);
 	memcpy(dst, pad + 64 - out_len, out_len);
 	groestl_big_init(sc, (unsigned)out_len << 3);
 }
