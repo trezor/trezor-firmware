@@ -173,7 +173,7 @@ bool storage_from_flash(void)
 		// added flags and needsBackup
 		old_storage_size = OLD_STORAGE_SIZE(flags);
 	} else if (version <= 9) {
-		// added u2froot and auto_lock_delay_ms
+		// added u2froot, unfinished_backup and auto_lock_delay_ms
 		old_storage_size = OLD_STORAGE_SIZE(auto_lock_delay_ms);
 	}
 
@@ -828,6 +828,18 @@ void storage_setNeedsBackup(bool needs_backup)
 {
 	storageUpdate.has_needs_backup = true;
 	storageUpdate.needs_backup = needs_backup;
+}
+
+bool storage_unfinishedBackup(void)
+{
+	return storageUpdate.has_unfinished_backup ? storageUpdate.unfinished_backup
+		: storageRom->has_unfinished_backup && storageRom->unfinished_backup;
+}
+
+void storage_setUnfinishedBackup(bool unfinished_backup)
+{
+	storageUpdate.has_unfinished_backup = true;
+	storageUpdate.unfinished_backup = unfinished_backup;
 }
 
 void storage_applyFlags(uint32_t flags)

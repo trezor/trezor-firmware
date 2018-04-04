@@ -72,6 +72,7 @@ typedef struct _Storage {
     STORAGE_BOOL   (needs_backup)
     STORAGE_UINT32 (flags)
     STORAGE_NODE   (u2froot)
+    STORAGE_BOOL   (unfinished_backup)
     STORAGE_UINT32 (auto_lock_delay_ms)
 } Storage;
 
@@ -138,6 +139,9 @@ void storage_setImported(bool imported);
 
 bool storage_needsBackup(void);
 void storage_setNeedsBackup(bool needs_backup);
+
+bool storage_unfinishedBackup(void);
+void storage_setUnfinishedBackup(bool unfinished_backup);
 
 void storage_applyFlags(uint32_t flags);
 uint32_t storage_getFlags(void);

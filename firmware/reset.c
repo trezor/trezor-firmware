@@ -113,6 +113,7 @@ void reset_backup(bool separated)
 		return;
 	}
 
+	storage_setUnfinishedBackup(true);
 	storage_setNeedsBackup(false);
 
 	if (separated) {
@@ -147,6 +148,8 @@ void reset_backup(bool separated)
 			word_pos++;
 		}
 	}
+
+	storage_setUnfinishedBackup(false);
 
 	if (separated) {
 		fsm_sendSuccess(_("Seed successfully backed up"));
