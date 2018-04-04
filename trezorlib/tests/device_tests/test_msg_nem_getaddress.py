@@ -18,7 +18,7 @@
 from .common import *
 
 
-@pytest.mark.skip_t2
+@pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMGetaddress(TrezorTest):
 
     def test_nem_getaddress(self):

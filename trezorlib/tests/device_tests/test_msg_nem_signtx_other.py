@@ -23,7 +23,7 @@ import time
 
 
 # assertion data from T1
-@pytest.mark.skip_t2
+@pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMSignTxOther(TrezorTest):
 
     def test_nem_signtx_aggregate_modification(self):

@@ -22,7 +22,7 @@ from trezorlib import nem
 
 
 # assertion data from T1
-@pytest.mark.skip_t2
+@pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMSignTx(TrezorTest):
 
     def test_nem_signtx_simple(self):
