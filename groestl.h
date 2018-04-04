@@ -89,23 +89,7 @@ void groestl512_Update(void *cc, const void *data, size_t len);
  */
 void groestl512_Final(void *cc, void *dst);
 
-
+/* Calculate double Groestl-512 hash and truncate it to 256-bits. */
 void groestl512_DoubleTrunc(void *cc, void *dst);
-
-/**
- * Add a few additional bits (0 to 7) to the current computation, then
- * terminate it and output the result in the provided buffer, which must
- * be wide enough to accomodate the result (64 bytes). If bit number i
- * in <code>ub</code> has value 2^i, then the extra bits are those
- * numbered 7 downto 8-n (this is the big-endian convention at the byte
- * level). The context is automatically reinitialized.
- *
- * @param cc    the Groestl-512 context
- * @param ub    the extra bits
- * @param n     the number of extra bits (0 to 7)
- * @param dst   the destination buffer
- */
-void sph_groestl512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
 
 #endif

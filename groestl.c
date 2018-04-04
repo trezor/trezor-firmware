@@ -1019,21 +1019,18 @@ groestl_big_close(sph_groestl_big_context *sc,
 	groestl_big_init(sc, (unsigned)out_len << 3);
 }
 
-/* see sph_groestl.h */
 void
 groestl512_Init(void *cc)
 {
 	groestl_big_init((sph_groestl_big_context *)cc, 512);
 }
 
-/* see sph_groestl.h */
 void
 groestl512_Update(void *cc, const void *data, size_t len)
 {
 	groestl_big_core((sph_groestl_big_context *)cc, data, len);
 }
 
-/* see sph_groestl.h */
 void
 groestl512_Final(void *cc, void *dst)
 {
@@ -1046,15 +1043,7 @@ groestl512_DoubleTrunc(void *cc, void *dst)
 	char buf[64];
 
 	groestl512_Final(cc, buf);
-	groestl512_Init(cc);
 	groestl512_Update(cc, buf, sizeof(buf));
 	groestl512_Final(cc, buf);
 	memcpy(dst, buf, 32);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	groestl_big_close((sph_groestl_big_context *)cc, ub, n, dst, 64);
 }
