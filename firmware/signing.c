@@ -1000,6 +1000,16 @@ void signing_txack(TransactionType *tx)
 			}
 			return;
 		case STAGE_REQUEST_2_PREV_META:
+			if (tx->outputs_cnt <= input.prev_index) {
+				fsm_sendFailure(FailureType_Failure_DataError, _("Not enough outputs in previous transaction."));
+				signing_abort();
+				return;
+			}
+			if (tx->inputs_cnt + tx->outputs_cnt < tx->inputs_cnt) {
+				fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+				signing_abort();
+				return;
+			}
 			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len, coin->curve->hasher_sign);
 			if (coin->decred) {
 				tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);

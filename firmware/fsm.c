@@ -534,6 +534,7 @@ void fsm_msgSignTx(SignTx *msg)
 
 	CHECK_PARAM(msg->inputs_count > 0, _("Transaction must have at least one input"));
 	CHECK_PARAM(msg->outputs_count > 0, _("Transaction must have at least one output"));
+	CHECK_PARAM(msg->inputs_count + msg->outputs_count >= msg->inputs_count, _("Value overflow"));
 
 	CHECK_PIN
 
