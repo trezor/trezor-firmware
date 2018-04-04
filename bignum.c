@@ -990,7 +990,19 @@ size_t bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, 
 	size_t prefixlen = prefix ? strlen(prefix) : 0;
 	size_t suffixlen = suffix ? strlen(suffix) : 0;
 
-	char *start = &out[prefixlen + suffixlen], *end = &out[outlen];
+	/* add prefix to beginning of out buffer */
+	if (prefixlen) {
+		memcpy(out, prefix, prefixlen);
+	}
+	/* add suffix to end of out buffer */
+	if (suffixlen) {
+		memcpy(&out[outlen - suffixlen - 1], suffix, suffixlen);
+	}
+	/* nul terminate (even if suffix = NULL) */
+	out[outlen - 1] = '\0';
+
+	/* fill number between prefix and suffix (between start and end) */
+	char *start = &out[prefixlen], *end = &out[outlen - suffixlen - 1];
 	char *str = end;
 
 #define BN_FORMAT_PUSH_CHECKED(c) \
@@ -1056,19 +1068,14 @@ size_t bn_format(const bignum256 *amnt, const char *prefix, const char *suffix, 
 		BN_FORMAT_PUSH(0);
 	}
 
-	size_t len = end - str;
+	/* finally move number to &out[prefixlen] to close the gap between
+	 * prefix and str.  len is length of number + suffix + traling 0
+	 */
+	size_t len = &out[outlen] - str;
 	memmove(&out[prefixlen], str, len);
 
-	if (prefixlen) {
-		memcpy(out, prefix, prefixlen);
-	}
-	if (suffixlen) {
-		memcpy(&out[prefixlen + len], suffix, suffixlen);
-	}
-
-	size_t length = prefixlen + len + suffixlen;
-	out[length] = '\0';
-	return length;
+	/* return length of number including prefix and suffix without trailing 0 */
+	return prefixlen + len - 1;
 }
 
 #if USE_BN_PRINT

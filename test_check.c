@@ -622,6 +622,17 @@ START_TEST(test_bignum_format) {
 	r = bn_format(&a, "quite a long prefix", "even longer suffix", 60, 0, false, buf, sizeof(buf));
 	ck_assert_int_eq(r, 116);
 	ck_assert_str_eq(buf, "quite a long prefix115792089237316195.423570985008687907853269984665640564039457584007913129639935even longer suffix");
+
+	bn_read_be(fromhex("0000000000000000000000000000000000000000000000000123456789abcdef"), &a);
+	memset(buf, 'a', sizeof(buf));
+	r = bn_format(&a, "prefix", "suffix", 10, 0, false, buf, 31);
+	ck_assert_str_eq(buf, "prefix8198552.9216486895suffix");
+	ck_assert_int_eq(r, 30);
+
+	memset(buf, 'a', sizeof(buf));
+	r = bn_format(&a, "prefix", "suffix", 10, 0, false, buf, 30);
+	ck_assert_int_eq(r, 0);
+	ck_assert_str_eq(buf, "prefix198552.9216486895suffix");
 }
 END_TEST
 
