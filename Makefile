@@ -10,6 +10,7 @@ CFLAGS   += $(OPTFLAGS) \
             -Wimplicit-function-declaration \
             -Wredundant-decls \
             -Wstrict-prototypes \
+            -Wundef \
             -Wpointer-arith \
             -Wformat \
             -Wreturn-type \
