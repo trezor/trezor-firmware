@@ -19,6 +19,11 @@ def validate(msg: NEMSignTx):
     _validate_single_tx(msg)
     _validate_common(msg.transaction)
 
+    if msg.multisig:
+        _validate_multisig(msg.multisig, msg.transaction.network)
+    if not msg.multisig and msg.cosigning:
+        raise ValueError('No multisig transaction to cosign')
+
     if msg.transfer:
         _validate_transfer(msg.transfer, msg.transaction.network)
     if msg.provision_namespace:
@@ -28,7 +33,7 @@ def validate(msg: NEMSignTx):
     if msg.supply_change:
         _validate_supply_change(msg.supply_change)
     if msg.aggregate_modification:
-        _validate_aggregate_modification(msg.aggregate_modification, msg.multisig is not None)
+        _validate_aggregate_modification(msg.aggregate_modification, msg.multisig is None)
     if msg.importance_transfer:
         _validate_importance_transfer(msg.importance_transfer)
 
@@ -98,6 +103,11 @@ def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
     if importance_transfer.mode is None:
         raise ValueError('No mode provided')
     _validate_public_key(importance_transfer.public_key, 'Invalid remote account public key provided')
+
+
+def _validate_multisig(multisig: NEMTransactionCommon, network: int):
+    if multisig.network != network:
+        raise ValueError('Inner transaction network is different')
 
 
 def _validate_aggregate_modification(aggregate_modification: NEMAggregateModification, creation: bool=False):
@@ -207,6 +217,12 @@ def _validate_transfer(transfer: NEMTransfer, network: int):
 
     if transfer.public_key is not None:
         _validate_public_key(transfer.public_key, 'Invalid recipient public key')
+
+    if transfer.payload:
+        if len(transfer.payload) > NEM_MAX_PLAIN_PAYLOAD_SIZE:
+            raise ValueError('Payload too large')
+        if transfer.public_key and len(transfer.payload) > NEM_MAX_ENCRYPTED_PAYLOAD_SIZE:
+            raise ValueError('Payload too large')
 
     if not nem.validate_address(transfer.recipient, network):
         raise ValueError('Invalid recipient address')
