@@ -138,3 +138,51 @@ class TestMsgNEMSignTx(TrezorTest):
 
             assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000010000001a0000000e000000030000006e656d0300000078656d40420f0000000000'
             assert tx.signature == signature
+
+    def test_nem_signtx_multiple_mosaics(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            "timeStamp": 76809215,
+            "amount": 1000000,
+            "fee": 1000000,
+            "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+            "type": nem.TYPE_TRANSACTION_TRANSFER,
+            "deadline": 76895615,
+            "version": (0x98 << 24),
+            "message": {
+            },
+            "mosaics": [
+                {
+                    "mosaicId": {
+                        "namespaceId": "nem",
+                        "name": "xem",
+                    },
+                    "quantity": 1000000,
+                },
+                {
+                    "mosaicId": {
+                        "namespaceId": "abc",
+                        "name": "mosaic",
+                    },
+                    "quantity": 200,
+                },
+                {
+                    "mosaicId": {
+                        "namespaceId": "nem",
+                        "name": "xem",
+                    },
+                    "quantity": 30000,
+                },
+                {
+                    "mosaicId": {
+                        "namespaceId": "abc",
+                        "name": "mosaic",
+                    },
+                    "quantity": 2000000,
+                },
+            ]
+        })
+
+        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000020000001d0000001100000003000000616263060000006d6f7361696348851e00000000001a0000000e000000030000006e656d0300000078656d70b70f0000000000'
+        assert hexlify(tx.signature) == b'c83dec432a791733a79647a30c4c1bb38b27379768f9164cf5c53473078368f3bd9547049882b41ebb90edd1d4eef618cc0293af85d8166f26f3768a3c0b9802'
