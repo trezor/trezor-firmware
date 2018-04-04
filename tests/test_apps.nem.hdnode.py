@@ -4,7 +4,7 @@ from trezor.crypto import bip32
 from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_CURVE
 
 
-class TestNemAddress(unittest.TestCase):
+class TestNemHDNode(unittest.TestCase):
 
     def test_addresses(self):
         # test vectors from https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/1.test-keys.dat

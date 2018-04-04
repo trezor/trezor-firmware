@@ -320,6 +320,12 @@ def validate_address(address: str, network: int) -> bool:
     Validate a NEM address
     '''
 
+# extmod/modtrezorcrypto/modtrezorcrypto-nem.h
+def compute_address(public_key: bytes, network: int) -> str:
+    '''
+    Compute a NEM address from a public key
+    '''
+
 # extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
 def generate_secret() -> bytes:
     '''

@@ -34,9 +34,28 @@ STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address, mp_obj_t
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj, mod_trezorcrypto_nem_validate_address);
 
+/// def compute_address(public_key: bytes, network: int) -> str:
+///     '''
+///     Compute a NEM address from a public key
+///     '''
+STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key, mp_obj_t network) {
+
+    mp_buffer_info_t p;
+    mp_get_buffer_raise(public_key, &p, MP_BUFFER_READ);
+    uint32_t n = mp_obj_get_int_truncated(network);
+
+    char address[NEM_ADDRESS_SIZE + 1];
+    if (!nem_get_address(p.buf, n, address)) {
+        mp_raise_ValueError("Failed to compute a NEM address from a provided public key");
+    }
+    return mp_obj_new_str(address, strlen(address), false);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj, mod_trezorcrypto_nem_compute_address);
+
 // objects definition
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_nem_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_validate_address), MP_ROM_PTR(&mod_trezorcrypto_nem_validate_address_obj) },
+    { MP_ROM_QSTR(MP_QSTR_compute_address), MP_ROM_PTR(&mod_trezorcrypto_nem_compute_address_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_nem_globals, mod_trezorcrypto_nem_globals_table);
 
