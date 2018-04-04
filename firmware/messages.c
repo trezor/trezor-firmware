@@ -48,12 +48,7 @@ const pb_field_t *MessageFields(char type, char dir, uint16_t msg_id)
 {
 	const struct MessagesMap_t *m = MessagesMap;
 	while (m->type) {
-#if EMULATOR
-		(void) type;
-		if (dir == m->dir && msg_id == m->msg_id) {
-#else
 		if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
-#endif
 			return m->fields;
 		}
 		m++;
@@ -65,12 +60,7 @@ void MessageProcessFunc(char type, char dir, uint16_t msg_id, void *ptr)
 {
 	const struct MessagesMap_t *m = MessagesMap;
 	while (m->type) {
-#if EMULATOR
-		(void) type;
-		if (dir == m->dir && msg_id == m->msg_id) {
-#else
 		if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
-#endif
 			m->process_func(ptr);
 			return;
 		}
