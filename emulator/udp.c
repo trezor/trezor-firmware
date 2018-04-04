@@ -26,33 +26,50 @@
 
 #define TREZOR_UDP_PORT 21324
 
-static int fd = -1;
-static struct sockaddr_in from;
-static socklen_t fromlen;
+struct usb_socket {
+	int fd;
+	struct sockaddr_in from;
+	socklen_t fromlen;
+};
 
-void emulatorSocketInit(void) {
-	fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+static struct usb_socket usb_main;
+static struct usb_socket usb_debug;
+
+static int socket_setup(int port) {
+	int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (fd < 0) {
 		perror("Failed to create socket");
 		exit(1);
 	}
 
-	fromlen = 0;
-
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(TREZOR_UDP_PORT);
+	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if (bind(fd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
 		perror("Failed to bind socket");
 		exit(1);
 	}
+
+	return fd;
 }
 
-size_t emulatorSocketRead(void *buffer, size_t size) {
-	fromlen = sizeof(from);
-	ssize_t n = recvfrom(fd, buffer, size, MSG_DONTWAIT, (struct sockaddr *) &from, &fromlen);
+static size_t socket_write(struct usb_socket *sock, const void *buffer, size_t size) {
+	if (sock->fromlen > 0) {
+		ssize_t n = sendto(sock->fd, buffer, size, MSG_DONTWAIT, (const struct sockaddr *) &sock->from, sock->fromlen);
+		if (n < 0 || ((size_t) n) != size) {
+			perror("Failed to write socket");
+			return 0;
+		}
+	}
+
+	return size;
+}
+
+static size_t socket_read(struct usb_socket *sock, void *buffer, size_t size) {
+	sock->fromlen = sizeof(sock->from);
+	ssize_t n = recvfrom(sock->fd, buffer, size, MSG_DONTWAIT, (struct sockaddr *) &sock->from, &sock->fromlen);
 
 	if (n < 0) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -65,21 +82,42 @@ size_t emulatorSocketRead(void *buffer, size_t size) {
 	static const char msg_pong[] = { 'P', 'O', 'N', 'G', 'P', 'O', 'N', 'G' };
 
 	if (n == sizeof(msg_ping) && memcmp(buffer, msg_ping, sizeof(msg_ping)) == 0) {
-		emulatorSocketWrite(msg_pong, sizeof(msg_pong));
+		socket_write(sock, msg_pong, sizeof(msg_pong));
 		return 0;
 	}
 
 	return n;
 }
 
-size_t emulatorSocketWrite(const void *buffer, size_t size) {
-	if (fromlen > 0) {
-		ssize_t n = sendto(fd, buffer, size, MSG_DONTWAIT, (const struct sockaddr *) &from, fromlen);
-		if (n < 0 || ((size_t) n) != size) {
-			perror("Failed to write socket");
-			return 0;
-		}
+void emulatorSocketInit(void) {
+	usb_main.fd = socket_setup(TREZOR_UDP_PORT);
+	usb_main.fromlen = 0;
+	usb_debug.fd = socket_setup(TREZOR_UDP_PORT + 1);
+	usb_debug.fromlen = 0;
+}
+
+size_t emulatorSocketRead(int *iface, void *buffer, size_t size) {
+	size_t n = socket_read(&usb_main, buffer, size);
+	if (n > 0) {
+		*iface = 0;
+		return n;
 	}
 
-	return size;
+	n = socket_read(&usb_debug, buffer, size);
+	if (n > 0) {
+		*iface = 1;
+		return n;
+	}
+
+	return 0;
+}
+
+size_t emulatorSocketWrite(int iface, const void *buffer, size_t size) {
+	if (iface == 0) {
+		return socket_write(&usb_main, buffer, size);
+	}
+	if (iface == 1) {
+		return socket_write(&usb_debug, buffer, size);
+	}
+	return 0;
 }
