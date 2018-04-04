@@ -90,6 +90,29 @@ static uint16_t word_pincode;
  */
 static uint8_t word_matrix[9];
 
+/* The words are stored in two tables.
+ *
+ * The low bits of the first table (TABLE1) store the index into the
+ * second table, for each of the 81 choices for the first two levels
+ * of the matrix.  The final entry points to the final entry of the
+ * second table.  The difference TABLE1(idx+1)-TABLE1(idx) gives the
+ * number of choices for the third level.  The value
+ * TABLE2(TABLE1(idx)) gives the index of the first word in the range
+ * and TABLE2(TABLE1(idx+1))-1 gives the index of the last word.
+ *
+ * The low bits of the second table (TABLE2) store the index into the
+ * word list for each of the choices for the first three levels.  The
+ * final entry stores the value 2048 (number of bip39 words).  table.
+ * The difference TABLE2(idx+1)-TABLE2(idx) gives the number of
+ * choices for the last level.  The value TABLE2(idx) gives the index
+ * of the first word in the range and TABLE2(idx)-1 gives the index of
+ * the last word.
+ *
+ * The high bits in each table is the "prefix length", i.e. the number
+ * of significant letters for the corresponding choice.  There is no
+ * prefix length or table for the very first level, as the prefix length
+ * is always one and there are always nine choices on the second level.
+ */
 #define MASK_IDX(x) ((x) & 0xfff)
 #define TABLE1(x) MASK_IDX(word_table1[x])
 #define TABLE2(x) MASK_IDX(word_table2[x])
@@ -199,7 +222,7 @@ static void recovery_done(void) {
  *  first[prefixlen-2] == last[prefixlen-2]  except for range WI-Z.
  */
 static void add_choice(char choice[12], int prefixlen, const char *first, const char *last) {
-	// assert prefixlen < 4
+	// assert 1 <= prefixlen <= 4
 	char *dest = choice;
 	for (int i = 0; i < prefixlen; i++) {
 		*dest++ = toupper((int) first[i]);
@@ -293,17 +316,28 @@ static void next_matrix(void) {
 	uint32_t idx, num;
 	bool last = (word_index % 4) == 3;
 
+	/* Build the matrix:
+	 * num: number of choices
+	 * word_choices[][]: the strings containing the choices
+	 */
 	switch (word_index % 4) {
 	case 3:
+		/* last level: show up to six words */
+		/* idx: index in table2 for the entered choice. */
+		/* first: the first word. */
+		/* num: the number of words to choose from. */
 		idx = TABLE1(word_pincode / 9) + word_pincode % 9;
-		const uint32_t first = word_table2[idx] & 0xfff;
-		num = (word_table2[idx + 1] & 0xfff) - first;
+		const uint32_t first = TABLE2(idx);
+		num = TABLE2(idx + 1) - first;
 		for (uint32_t i = 0; i < num; i++) {
 			strlcpy(word_choices[i], wl[first + i], sizeof(word_choices[i]));
 		}
 		break;
 
 	case 2:
+		/* third level: show up to nine ranges (using table2) */
+		/* idx: first index in table2 corresponding to pin code. */
+		/* num: the number of choices. */
 		idx = TABLE1(word_pincode);
 		num = TABLE1(word_pincode + 1) - idx;
 		for (uint32_t i = 0; i < num; i++) {
@@ -314,6 +348,9 @@ static void next_matrix(void) {
 		break;
 
 	case 1:
+		/* second level: exactly nine ranges (using table1) */
+		/* idx: first index in table1 corresponding to pin code. */
+		/* num: the number of choices. */
 		idx = word_pincode * 9;
 		num = 9;
 		for (uint32_t i = 0; i < num; i++) {
@@ -324,6 +361,8 @@ static void next_matrix(void) {
 		break;
 
 	case 0:
+		/* first level: exactly nine ranges */
+		/* num: the number of choices. */
 		num = 9;
 		for (uint32_t i = 0; i < num; i++) {
 			add_choice(word_choices[i], 1,
@@ -364,12 +403,15 @@ static void recovery_digit(const char digit) {
 	int choice = word_matrix[digit - '1'];
 	if ((word_index % 4) == 3) {
 		/* received final word */
+
+		/* Mark the chosen word for 250 ms */
 		int y = 54 - ((digit - '1')/3)*11;
 		int x = 64 * (((digit - '1') % 3) > 0);
 		oledInvert(x + 1, y, x + 62, y + 9);
 		oledRefresh();
 		usbSleep(250);
 
+		/* index of the chosen word */
 		int idx = TABLE2(TABLE1(word_pincode / 9) + (word_pincode % 9)) + choice;
 		uint32_t widx = word_index / 4;
 
@@ -430,6 +472,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
 		awaiting_word = 2;
 		word_index = 0;
+		word_pincode = 0;
 		next_matrix();
 	} else {
 		for (uint32_t i = 0; i < word_count; i++) {
