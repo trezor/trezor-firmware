@@ -17,9 +17,7 @@
 
 from .common import *
 
-from trezorlib import messages as proto
 from trezorlib import nem
-import time
 
 
 # assertion data from T1
@@ -43,11 +41,13 @@ class TestMsgNEMSignTxOther(TrezorTest):
                         "cosignatoryAccount": "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844"
                     },
                 ],
+                "minCosignatories": {
+                    "relativeChange": 3
+                },
                 "version": (0x98 << 24),
             })
-
-            assert hexlify(tx.data) == b'01100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f740401000000280000000100000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844'
-            assert hexlify(tx.signature) == b'ed074a4b877e575786785e6e499e428edea28498a06bdaed6557ccdfbfe69087acd6f4b63e9faa6a849e49d405374c12762df2f27d55e4b35c1901850f83650f'
+            assert hexlify(tx.data) == b'01100000020000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f740401000000280000000100000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f878440400000003000000'
+            assert hexlify(tx.signature) == b'1200e552d8732ce3eae96719731194abfc5a09d98f61bb35684f4eeaeff15b1bdf326ee7b1bbbe89d3f68c8e07ad3daf72e4c7f031094ad2236b97918ad98601'
 
     def test_nem_signtx_importance_transfer(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -61,7 +61,7 @@ class TestMsgNEMSignTxOther(TrezorTest):
                 "message": {
                 },
                 "importanceTransfer": {
-                    "mode": 1,
+                    "mode": 1,  # activate
                     "publicKey": "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844",
                 },
                 "version": (0x98 << 24),
@@ -74,28 +74,19 @@ class TestMsgNEMSignTxOther(TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        with self.client:
-            self.client.set_expected_responses([
-                # Confirm provision namespace
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                # Confirm fee
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.NEMSignedTx(),
-            ])
+        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            "timeStamp": 74649215,
+            "fee": 2000000,
+            "type": nem.TYPE_PROVISION_NAMESPACE,
+            "deadline": 74735615,
+            "message": {
+            },
+            "newPart": "ABCDE",
+            "rentalFeeSink": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+            "rentalFee": 1500,
+            "parent": None,
+            "version": (0x98 << 24),
+        })
 
-            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
-                "timeStamp": 74649215,
-                "fee": 2000000,
-                "type": nem.TYPE_PROVISION_NAMESPACE,
-                "deadline": 74735615,
-                "message": {
-                },
-                "newPart": "ABCDE",
-                "rentalFeeSink": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
-                "rentalFee": 1500,
-                "parent": None,
-                "version": (0x98 << 24),
-            })
-
-            assert hexlify(tx.data) == b'01200000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000050000004142434445ffffffff'
-            assert hexlify(tx.signature) == b'f047ae7987cd3a60c0d5ad123aba211185cb6266a7469dfb0491a0df6b5cd9c92b2e2b9f396cc2a3146ee185ba02df4f9e7fb238fe479917b3d274d97336640d'
+        assert hexlify(tx.data) == b'01200000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000050000004142434445ffffffff'
+        assert hexlify(tx.signature) == b'f047ae7987cd3a60c0d5ad123aba211185cb6266a7469dfb0491a0df6b5cd9c92b2e2b9f396cc2a3146ee185ba02df4f9e7fb238fe479917b3d274d97336640d'
