@@ -50,7 +50,7 @@ SRCS  += blake2b.c blake2s.c
 SRCS  += chacha20poly1305/chacha20poly1305.c chacha20poly1305/chacha_merged.c chacha20poly1305/poly1305-donna.c chacha20poly1305/rfc7539.c
 SRCS  += rc4.c
 SRCS  += nem.c
-SRCS  += segwit_addr.c
+SRCS  += segwit_addr.c cash_addr.c
 SRCS  += memzero.c
 
 OBJS   = $(SRCS:.c=.o)
@@ -62,6 +62,8 @@ all: test_check test_openssl test_speed aes/aestst tools libtrezor-crypto.so
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+test_check.o: test_segwit.c test_cashaddr.c
 
 aes/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
 	$(CC) $^ -o $@

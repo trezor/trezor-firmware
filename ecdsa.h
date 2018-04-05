@@ -50,11 +50,13 @@ typedef struct {
 } ecdsa_curve;
 
 // 4 byte prefix + 40 byte data (segwit)
-#define MAX_ADDR_RAW_SIZE (4 + 40)
-// bottle neck is segwit bech32:
-// 4 human readable prefix + 1 separator + 64 data + 6 checksum + 1 NUL
-// the standard says 83 characters in hrp, but currently all coins use max 4
-#define MAX_ADDR_SIZE (4 + 1 + 64 + 6 + 1)
+// 1 byte prefix + 64 byte data (cashaddr)
+#define MAX_ADDR_RAW_SIZE 65
+// bottle neck is cashaddr
+// segwit is at most 90 characters plus NUL separator
+// cashaddr: human readable prefix + 1 separator + 104 data + 8 checksum + 1 NUL
+// we choose 130 as maximum (including NUL character)
+#define MAX_ADDR_SIZE 130
 // 4 byte prefix + 32 byte privkey + 1 byte compressed marker
 #define MAX_WIF_RAW_SIZE (4 + 32 + 1)
 // (4 + 32 + 1 + 4 [checksum]) * 8 / log2(58) plus NUL.
