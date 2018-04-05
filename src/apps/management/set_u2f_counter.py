@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, FailureType
+from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 from apps.common import storage
@@ -8,7 +8,7 @@ from apps.common.confirm import require_confirm
 
 async def set_u2f_counter(ctx, msg):
     if msg.u2f_counter is None:
-        raise wire.FailureError(FailureType.ProcessError, 'No value provided provided')
+        raise wire.ProcessError('No value provided')
 
     await require_confirm(ctx, Text(
         'Set U2F counter', ui.ICON_CONFIG,

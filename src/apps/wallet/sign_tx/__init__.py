@@ -17,15 +17,15 @@ async def sign_tx(ctx, msg):
         try:
             req = signer.send(res)
         except signing.SigningError as e:
-            raise wire.FailureError(*e.args)
+            raise wire.Error(*e.args)
         except signing.MultisigError as e:
-            raise wire.FailureError(*e.args)
+            raise wire.Error(*e.args)
         except signing.AddressError as e:
-            raise wire.FailureError(*e.args)
+            raise wire.Error(*e.args)
         except signing.ScriptsError as e:
-            raise wire.FailureError(*e.args)
+            raise wire.Error(*e.args)
         except signing.Bip143Error as e:
-            raise wire.FailureError(*e.args)
+            raise wire.Error(*e.args)
         if req.__qualname__ == 'TxRequest':
             if req.request_type == TXFINISHED:
                 break

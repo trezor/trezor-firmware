@@ -1,12 +1,7 @@
 import protobuf
-
-from trezor import log
-from trezor import loop
-from trezor import messages
-from trezor import utils
-from trezor import workflow
-
-from . import codec_v1
+from trezor import log, loop, messages, utils, workflow
+from trezor.wire import codec_v1
+from trezor.wire.errors import *
 
 workflow_handlers = {}
 
@@ -101,13 +96,6 @@ class UnexpectedMessageError(Exception):
         self.reader = reader
 
 
-class FailureError(Exception):
-    def __init__(self, code, message):
-        super().__init__()
-        self.code = code
-        self.message = message
-
-
 async def session_handler(iface, sid):
     reader = None
     ctx = Context(iface, sid)
@@ -135,8 +123,8 @@ async def session_handler(iface, sid):
             # retry with opened reader from the exception
             reader = exc.reader
             continue
-        except FailureError as exc:
-            # we log FailureError as warning, not as exception
+        except Error as exc:
+            # we log wire.Error as warning, not as exception
             log.warning(__name__, 'failure: %s', exc.message)
         except Exception as exc:
             # sessions are never closed by raised exceptions
@@ -148,7 +136,6 @@ async def session_handler(iface, sid):
 
 async def protobuf_workflow(ctx, reader, handler, *args):
     from trezor.messages.Failure import Failure
-    from trezor.messages.FailureType import FirmwareError
 
     req = await protobuf.load_message(reader, messages.get_type(reader.type))
     try:
@@ -156,13 +143,13 @@ async def protobuf_workflow(ctx, reader, handler, *args):
     except UnexpectedMessageError:
         # session handler takes care of this one
         raise
-    except FailureError as exc:
+    except Error as exc:
         # respond with specific code and message
         await ctx.write(Failure(code=exc.code, message=exc.message))
         raise
     except Exception as exc:
         # respond with a generic code and message
-        await ctx.write(Failure(code=FirmwareError, message='Firmware error'))
+        await ctx.write(Failure(code=FailureType.FirmwareError, message='Firmware error'))
         raise
     if res:
         # respond with a specific response
@@ -171,7 +158,6 @@ async def protobuf_workflow(ctx, reader, handler, *args):
 
 async def unexpected_msg(ctx, reader):
     from trezor.messages.Failure import Failure
-    from trezor.messages.FailureType import UnexpectedMessage
 
     # receive the message and throw it away
     while reader.size > 0:
@@ -179,5 +165,4 @@ async def unexpected_msg(ctx, reader):
         await reader.areadinto(buf)
 
     # respond with an unknown message error
-    await ctx.write(
-        Failure(code=UnexpectedMessage, message='Unexpected message'))
+    await ctx.write(Failure(code=FailureType.UnexpectedMessage, message='Unexpected message'))

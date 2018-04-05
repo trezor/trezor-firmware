@@ -1,6 +1,5 @@
 from trezor import config, ui, wire
 from trezor.crypto import bip39
-from trezor.messages.FailureType import ProcessError, UnexpectedMessage
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
@@ -11,13 +10,13 @@ from apps.common.confirm import require_confirm
 async def load_device(ctx, msg):
 
     if storage.is_initialized():
-        raise wire.FailureError(UnexpectedMessage, 'Already initialized')
+        raise wire.UnexpectedMessage('Already initialized')
 
     if msg.node is not None:
-        raise wire.FailureError(ProcessError, 'LoadDevice.node is not supported')
+        raise wire.ProcessError('LoadDevice.node is not supported')
 
     if not msg.skip_checksum and not bip39.check(msg.mnemonic):
-        raise wire.FailureError(ProcessError, 'Mnemonic is not valid')
+        raise wire.ProcessError('Mnemonic is not valid')
 
     await require_confirm(ctx, Text(
         'Loading seed', ui.ICON_DEFAULT,

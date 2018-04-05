@@ -1,6 +1,5 @@
 from trezor import wire
 from trezor.crypto import bip32, bip39
-from trezor.messages.FailureType import ProcessError
 from apps.common import cache, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
@@ -24,7 +23,7 @@ async def _get_seed(ctx: wire.Context) -> bytes:
 
 async def _compute_seed(ctx: wire.Context) -> (bytes, str):
     if not storage.is_initialized():
-        raise wire.FailureError(ProcessError, 'Device is not initialized')
+        raise wire.ProcessError('Device is not initialized')
 
     passphrase = await protect_by_passphrase(ctx)
     return bip39.seed(storage.get_mnemonic(), passphrase), passphrase

@@ -1,7 +1,6 @@
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages.FailureType import ActionCancelled, ProcessError
 from trezor.messages import PassphraseSourceType
 from trezor.messages.PassphraseRequest import PassphraseRequest
 from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
@@ -24,7 +23,7 @@ async def request_passphrase_entry(ctx):
         wire_types.ButtonAck,
         wire_types.Cancel)
     if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
-        raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
+        raise wire.ActionCancelled('Passphrase cancelled')
 
     selector = EntrySelector(text)
     return await ctx.wait(selector)
@@ -41,18 +40,18 @@ async def request_passphrase_ack(ctx, on_device):
     req = PassphraseRequest(on_device=on_device)
     ack = await ctx.call(req, wire_types.PassphraseAck, wire_types.Cancel)
     if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
-        raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
+        raise wire.ActionCancelled('Passphrase cancelled')
 
     if on_device:
         if ack.passphrase is not None:
-            raise wire.FailureError(ProcessError, 'Passphrase provided when it should not be')
+            raise wire.ProcessError('Passphrase provided when it should not be')
         keyboard = PassphraseKeyboard('Enter passphrase')
         passphrase = await ctx.wait(keyboard)
         if passphrase == CANCELLED:
-            raise wire.FailureError(ActionCancelled, 'Passphrase cancelled')
+            raise wire.ActionCancelled('Passphrase cancelled')
     else:
         if ack.passphrase is None:
-            raise wire.FailureError(ProcessError, 'Passphrase not provided')
+            raise wire.ProcessError('Passphrase not provided')
         passphrase = ack.passphrase
 
     req = PassphraseStateRequest(state=get_state(state=ack.state, passphrase=passphrase))

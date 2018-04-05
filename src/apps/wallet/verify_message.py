@@ -1,7 +1,6 @@
 from trezor import ui, wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
-from trezor.messages.FailureType import ProcessError
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 from apps.common import coins
@@ -31,12 +30,12 @@ async def verify_message(ctx, msg):
         script_type = SPENDWITNESS  # native segwit
         signature = bytes([signature[0] - 8]) + signature[1:]
     else:
-        raise wire.FailureError(ProcessError, 'Invalid signature')
+        raise wire.ProcessError('Invalid signature')
 
     pubkey = secp256k1.verify_recover(signature, digest)
 
     if not pubkey:
-        raise wire.FailureError(ProcessError, 'Invalid signature')
+        raise wire.ProcessError('Invalid signature')
 
     if script_type == SPENDADDRESS:
         addr = address_pkh(pubkey, coin.address_type)
@@ -45,10 +44,10 @@ async def verify_message(ctx, msg):
     elif script_type == SPENDWITNESS:
         addr = address_p2wpkh(pubkey, coin.bech32_prefix)
     else:
-        raise wire.FailureError(ProcessError, 'Invalid signature')
+        raise wire.ProcessError('Invalid signature')
 
     if addr != address:
-        raise wire.FailureError(ProcessError, 'Invalid signature')
+        raise wire.ProcessError('Invalid signature')
 
     await require_confirm_verify_message(ctx, address, message)
 

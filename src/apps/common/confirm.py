@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, FailureType, wire_types
+from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog, HoldToConfirmDialog
 
@@ -29,10 +29,10 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
 async def require_confirm(*args, **kwargs):
     confirmed = await confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
+        raise wire.ActionCancelled('Cancelled')
 
 
 async def require_hold_to_confirm(*args, **kwargs):
     confirmed = await hold_to_confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
+        raise wire.ActionCancelled('Cancelled')

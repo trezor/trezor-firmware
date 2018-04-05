@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, FailureType, PassphraseSourceType
+from trezor.messages import ButtonRequestType, PassphraseSourceType
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 from apps.common import storage
@@ -8,11 +8,11 @@ from apps.common.confirm import require_confirm
 
 async def apply_settings(ctx, msg):
     if msg.homescreen is None and msg.label is None and msg.use_passphrase is None and msg.passphrase_source is None:
-        raise wire.FailureError(FailureType.ProcessError, 'No setting provided')
+        raise wire.ProcessError('No setting provided')
 
     if msg.homescreen is not None:
         if len(msg.homescreen) > storage.HOMESCREEN_MAXSIZE:
-            raise wire.FailureError(FailureType.DataError, 'Homescreen is too complex')
+            raise wire.DataError('Homescreen is too complex')
         await require_confirm(ctx, Text(
             'Change homescreen', ui.ICON_CONFIG,
             'Do you really want to', 'change homescreen?'),

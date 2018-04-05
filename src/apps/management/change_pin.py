@@ -1,8 +1,7 @@
 from trezor import config, loop, ui, wire
-from trezor.messages import FailureType, wire_types
+from trezor.messages import wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.ButtonRequestType import Other
-from trezor.messages.Failure import Failure
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int, show_pin_timeout
 from trezor.ui.text import Text
@@ -19,7 +18,7 @@ async def change_pin(ctx, msg):
     if config.has_pin():
         curpin = await request_pin_ack(ctx)
         if not config.check_pin(pin_to_int(curpin), show_pin_timeout):
-            return Failure(code=FailureType.PinInvalid, message='PIN invalid')
+            raise wire.PinInvalid('PIN invalid')
     else:
         curpin = ''
 
@@ -30,13 +29,13 @@ async def change_pin(ctx, msg):
         newpin = ''
 
     # write into storage
-    if config.change_pin(pin_to_int(curpin), pin_to_int(newpin), show_pin_timeout):
-        if newpin:
-            return Success(message='PIN changed')
-        else:
-            return Success(message='PIN removed')
+    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin), show_pin_timeout):
+        raise wire.PinInvalid('PIN invalid')
+
+    if newpin:
+        return Success(message='PIN changed')
     else:
-        return Failure(code=FailureType.PinInvalid, message='PIN invalid')
+        return Success(message='PIN removed')
 
 
 def require_confirm_change_pin(ctx, msg):
@@ -75,7 +74,7 @@ async def request_pin_ack(ctx, *args, **kwargs):
         await ctx.call(ButtonRequest(code=Other), wire_types.ButtonAck)
         return await ctx.wait(request_pin(*args, **kwargs))
     except PinCancelled:
-        raise wire.FailureError(FailureType.ActionCancelled, 'Cancelled')
+        raise wire.ActionCancelled('Cancelled')
 
 
 @ui.layout

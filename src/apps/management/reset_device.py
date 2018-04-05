@@ -1,7 +1,7 @@
 from micropython import const
 from trezor import config, ui, wire
 from trezor.crypto import bip39, hashlib, random
-from trezor.messages import ButtonRequestType, FailureType, wire_types
+from trezor.messages import ButtonRequestType, wire_types
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
@@ -24,13 +24,9 @@ if __debug__:
 async def reset_device(ctx, msg):
     # validate parameters and device state
     if msg.strength not in (128, 192, 256):
-        raise wire.FailureError(
-            FailureType.ProcessError,
-            'Invalid strength (has to be 128, 192 or 256 bits)')
+        raise wire.ProcessError('Invalid strength (has to be 128, 192 or 256 bits)')
     if storage.is_initialized():
-        raise wire.FailureError(
-            FailureType.UnexpectedMessage,
-            'Already initialized')
+        raise wire.UnexpectedMessage('Already initialized')
 
     # request new PIN
     if msg.pin_protection:
@@ -62,8 +58,7 @@ async def reset_device(ctx, msg):
 
     # write PIN into storage
     if not config.change_pin(pin_to_int(''), pin_to_int(newpin), None):
-        raise wire.FailureError(
-            FailureType.ProcessError, 'Could not change PIN')
+        raise wire.ProcessError('Could not change PIN')
 
     # write settings and mnemonic into storage
     storage.load_settings(

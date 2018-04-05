@@ -1,5 +1,4 @@
-from trezor import ui
-from trezor.wire import FailureError
+from trezor import ui, wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.FailureType import ProcessError
@@ -34,7 +33,7 @@ async def sign_message(ctx, msg):
     elif script_type == SPENDWITNESS:
         signature = bytes([signature[0] + 8]) + signature[1:]
     else:
-        raise FailureError(ProcessError, 'Unsupported script type')
+        raise wire.ProcessError('Unsupported script type')
 
     return MessageSignature(address=address, signature=signature)
 
