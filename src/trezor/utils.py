@@ -19,7 +19,8 @@ def unimport_end(mods):
                 continue
             path = mod[:i]
             name = mod[i + 1:]
-            delattr(sys.modules[path], name)
+            if path in sys.modules:
+                delattr(sys.modules[path], name)
     # collect removed modules
     gc.collect()
 
