@@ -86,7 +86,7 @@ def r(request):
 @pytest.fixture(params=list(sorted(curves)))
 def curve(request):
     name = request.param
-    curve_ptr = lib.get_curve_by_name(name).contents.params
+    curve_ptr = lib.get_curve_by_name(bytes(name, "ascii")).contents.params
     assert curve_ptr, 'curve {} not found'.format(name)
     curve_obj = curves[name]
     curve_obj.ptr = c.c_void_p(curve_ptr)
@@ -96,7 +96,7 @@ def curve(request):
 @pytest.fixture(params=points)
 def point(request):
     name = request.param.curve
-    curve_ptr = lib.get_curve_by_name(name).contents.params
+    curve_ptr = lib.get_curve_by_name(bytes(name, "ascii")).contents.params
     assert curve_ptr, 'curve {} not found'.format(name)
     curve_obj = curves[name]
     curve_obj.ptr = c.c_void_p(curve_ptr)
@@ -435,4 +435,4 @@ def test_curve25519_scalarmult_from_gpg(r):
     res = r.randbytes(32)
     lib.curve25519_scalarmult(res, sec[::-1], pub[::-1])
     expected = 'a93dbdb23e5c99da743e203bd391af79f2b83fb8d0fd6ec813371c71f08f2d4d'
-    assert binascii.hexlify(bytearray(res)) == expected
+    assert binascii.hexlify(bytearray(res)) == bytes(expected, "ascii")
