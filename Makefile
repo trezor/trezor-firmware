@@ -58,27 +58,29 @@ OBJS   = $(SRCS:.c=.o)
 TESTLIBS = $(shell pkg-config --libs check) -lpthread -lm
 TESTSSLLIBS = $(shell pkg-config --libs openssl)
 
-all: test_check test_openssl test_speed aes/aestst tools libtrezor-crypto.so
+all: tools tests
 
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-test_check.o: test_check_segwit.h test_check_cashaddr.h
+tests: tests/test_check tests/test_openssl tests/test_speed tests/libtrezor-crypto.so tests/aestst
 
-aes/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
+tests/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
 	$(CC) $^ -o $@
 
-test_check: test_check.o $(OBJS)
-	$(CC) test_check.o $(OBJS) $(TESTLIBS) -o test_check
+tests/test_check.o: tests/test_check_segwit.h tests/test_check_cashaddr.h
 
-test_speed: test_speed.o $(OBJS)
-	$(CC) test_speed.o $(OBJS) -o test_speed
+tests/test_check: tests/test_check.o $(OBJS)
+	$(CC) tests/test_check.o $(OBJS) $(TESTLIBS) -o tests/test_check
 
-test_openssl: test_openssl.o $(OBJS)
-	$(CC) test_openssl.o $(OBJS) $(TESTSSLLIBS) -o test_openssl
+tests/test_speed: tests/test_speed.o $(OBJS)
+	$(CC) tests/test_speed.o $(OBJS) -o tests/test_speed
 
-libtrezor-crypto.so: $(SRCS)
-	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o libtrezor-crypto.so
+tests/test_openssl: tests/test_openssl.o $(OBJS)
+	$(CC) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
+
+tests/libtrezor-crypto.so: $(SRCS)
+	$(CC) $(CFLAGS) -fPIC -shared $(SRCS) -o tests/libtrezor-crypto.so
 
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
@@ -93,5 +95,5 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 
 clean:
 	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o
-	rm -f test_check test_speed test_openssl libtrezor-crypto.so
+	rm -f tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
