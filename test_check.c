@@ -4403,8 +4403,9 @@ START_TEST(test_rc4_rfc6229)
 }
 END_TEST
 
-#include "test_segwit.c"
-#include "test_cashaddr.c"
+#include "test_check_segwit.h"
+
+#include "test_check_cashaddr.h"
 
 // define test suite and cases
 Suite *test_suite(void)

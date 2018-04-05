@@ -63,7 +63,7 @@ all: test_check test_openssl test_speed aes/aestst tools libtrezor-crypto.so
 %.o: %.c %.h options.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-test_check.o: test_segwit.c test_cashaddr.c
+test_check.o: test_check_segwit.h test_check_cashaddr.h
 
 aes/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
 	$(CC) $^ -o $@
