@@ -177,7 +177,7 @@ bool compute_address(const CoinInfo *coin,
 		}
 		ecdsa_get_address_segwit_p2sh(node->public_key, coin->address_type_p2sh, coin->curve->hasher_pubkey, coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
 	} else if (coin->cashaddr_prefix) {
-		ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160, coin->curve->hasher_type, raw);
+		ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160, coin->curve->hasher_pubkey, raw);
 		if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
 			return 0;
 		}
