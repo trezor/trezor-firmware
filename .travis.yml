@@ -10,14 +10,16 @@ addons:
   apt:
     packages:
     - check
-    - cmake
-    - cmake-data
     - libssl-dev
-    - python-pip
+    - python3-pip
     - valgrind
 
+env:
+  global:
+    - PYTHON=python3
+
 install:
-  - pip install --user pytest ecdsa curve25519-donna
+  - $PYTHON -m pip install --user pytest ecdsa curve25519-donna
 
 script:
   - make
@@ -25,7 +27,7 @@ script:
   - ./tests/test_check
   - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
   - ./tests/test_openssl 1000
-  - cd ./tests ; ITERS=10 pytest ; cd ..
+  - cd ./tests ; ITERS=10 $PYTHON -m pytest ; cd ..
 
 notifications:
   webhooks:
