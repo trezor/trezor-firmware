@@ -176,6 +176,68 @@ CosiSign.global_pubkey			max_size:32
 
 CosiSignature.signature			max_size:32
 
+
+# Stellar
+StellarGetPublicKey.address_n       max_count:10
+
+StellarPublicKey.public_key         max_size:32
+
+StellarSignMessage.address_n max_count:10
+StellarSignMessage.message   max_size:1024
+
+StellarMessageSignature.public_key max_size:32
+StellarMessageSignature.signature  max_size:64
+
+StellarVerifyMessage.public_key max_size:32
+StellarVerifyMessage.message    max_size:1024
+StellarVerifyMessage.signature  max_size:64
+
+StellarMessageVerification.public_key   max_size: 32
+
+StellarSignTx.address_n             max_count:10
+StellarSignTx.network_passphrase    max_size:1024
+StellarSignTx.source_account        max_size:32
+StellarSignTx.memo_text             max_size:29
+StellarSignTx.memo_hash             max_size:32
+
+StellarPaymentOp.source_account       max_size:32
+StellarPaymentOp.destination_account  max_size:32
+
+StellarCreateAccountOp.source_account max_size:32
+StellarCreateAccountOp.new_account    max_size:32
+
+StellarPathPaymentOp.source_account      max_size:32
+StellarPathPaymentOp.destination_account max_size:32
+StellarPathPaymentOp.paths               max_count:5
+
+StellarManageOfferOp.source_account max_size:32
+
+StellarCreatePassiveOfferOp.source_account max_size:32
+
+StellarSetOptionsOp.source_account                max_size:32
+StellarSetOptionsOp.inflation_destination_account max_size:32
+StellarSetOptionsOp.home_domain                   max_size:33
+StellarSetOptionsOp.signer_key                    max_size:32
+
+StellarChangeTrustOp.source_account max_size:32
+
+StellarAllowTrustOp.source_account  max_size:32
+StellarAllowTrustOp.trusted_account max_size:32
+StellarAllowTrustOp.asset_code max_size:13
+
+StellarAccountMergeOp.source_account      max_size:32
+StellarAccountMergeOp.destination_account max_size:32
+
+StellarManageDataOp.source_account      max_size:32
+StellarManageDataOp.key                 max_size:65
+StellarManageDataOp.value               max_size:65
+
+StellarBumpSequenceOp.source_account    max_size:32
+
+StellarSignedTx.public_key          max_size:32
+StellarSignedTx.signature           max_size:64 # ed25519 signatures are 64 bytes, this does not include the hint
+
+
 # deprecated
 SimpleSignTx				skip_message:true
 

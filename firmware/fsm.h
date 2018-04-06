@@ -80,6 +80,23 @@ void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg);
 void fsm_msgCosiCommit(CosiCommit *msg);
 void fsm_msgCosiSign(CosiSign *msg);
 
+// Stellar
+void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg);
+void fsm_msgStellarSignTx(StellarSignTx *msg);
+void fsm_msgStellarPaymentOp(StellarPaymentOp *msg);
+void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg);
+void fsm_msgStellarPathPaymentOp(StellarPathPaymentOp *msg);
+void fsm_msgStellarManageOfferOp(StellarManageOfferOp *msg);
+void fsm_msgStellarCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg);
+void fsm_msgStellarSetOptionsOp(StellarSetOptionsOp *msg);
+void fsm_msgStellarChangeTrustOp(StellarChangeTrustOp *msg);
+void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg);
+void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg);
+void fsm_msgStellarManageDataOp(StellarManageDataOp *msg);
+void fsm_msgStellarSignMessage(StellarSignMessage *msg);
+void fsm_msgStellarVerifyMessage(StellarVerifyMessage *msg);
+void fsm_msgStellarBumpSequenceOp(StellarBumpSequenceOp *msg);
+
 // debug message functions
 #if DEBUG_LINK
 //void fsm_msgDebugLinkDecision(DebugLinkDecision *msg);
