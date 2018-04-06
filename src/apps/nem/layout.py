@@ -55,7 +55,6 @@ async def require_confirm_payload(ctx, payload: bytes, encrypt=False):
 
     if len(payload) > 48:
         payload = payload[:48] + '..'
-    print(len(payload))
     if encrypt:
         content = Text('Confirm payload', ui.ICON_SEND,
                        ui.BOLD, 'Encrypted:',

@@ -1,11 +1,10 @@
 from common import *
-
 from apps.nem.mosaic import *
 
 
-class TestNemTransactionMosaicCanonicalization(unittest.TestCase):
+class TestNemMosaicCanonicalization(unittest.TestCase):
 
-    def test_nem_transaction_mosaic_canonicalization(self):
+    def test_mosaic_canonicalization(self):
         a = NEMMosaic()
         a.namespace = 'abc'
         a.quantity = 3
@@ -35,13 +34,13 @@ class TestNemTransactionMosaicCanonicalization(unittest.TestCase):
         g.quantity = 30
         g.mosaic = 'mosaic'
 
-        res = nem_canonicalize_mosaics([a, b, c, d, e, f, g])
+        res = canonicalize_mosaics([a, b, c, d, e, f, g])
         self.assertEqual(res, [e, f, b, a, c])
         self.assertEqual(res[2].quantity, b.quantity)
         self.assertEqual(res[3].quantity, 3 + 8)  # a + d
         self.assertEqual(res[4].quantity, 3 + 30)  # c + g
 
-    def test_nem_transaction_mosaic_merge(self):
+    def test_mosaic_merge(self):
         a = NEMMosaic()
         a.namespace = 'abc'
         a.quantity = 1
@@ -51,24 +50,24 @@ class TestNemTransactionMosaicCanonicalization(unittest.TestCase):
         b.quantity = 1
         b.mosaic = 'mosaic'
 
-        merged = nem_merge_mosaics([a, b])
+        merged = merge_mosaics([a, b])
         self.assertEqual(merged[0].quantity, 2)
         self.assertEqual(len(merged), 1)
 
         a.quantity = 1
         b.quantity = 10
-        merged = nem_merge_mosaics([a, b])
+        merged = merge_mosaics([a, b])
         self.assertEqual(merged[0].quantity, 11)
 
         a.namespace = 'abcdef'
-        merged = nem_merge_mosaics([a, b])
+        merged = merge_mosaics([a, b])
         self.assertEqual(len(merged), 2)
 
         c = NEMMosaic()
         c.namespace = 'abc'
         c.mosaic = 'xxx'
         c.quantity = 2
-        merged = nem_merge_mosaics([a, b, c])
+        merged = merge_mosaics([a, b, c])
         self.assertEqual(len(merged), 3)
 
         a.namespace = 'abcdef'
@@ -80,7 +79,7 @@ class TestNemTransactionMosaicCanonicalization(unittest.TestCase):
         c.namespace = 'abc'
         c.mosaic = 'mosaic'
         c.quantity = 3
-        merged = nem_merge_mosaics([a, b, c])
+        merged = merge_mosaics([a, b, c])
         self.assertEqual(merged[0].quantity, 1)
         self.assertEqual(merged[1].quantity, 5)
         self.assertEqual(len(merged), 2)
@@ -94,11 +93,11 @@ class TestNemTransactionMosaicCanonicalization(unittest.TestCase):
         c.namespace = 'abc'
         c.mosaic = 'mosaic'
         c.quantity = 3
-        merged = nem_merge_mosaics([a, b, c])
+        merged = merge_mosaics([a, b, c])
         self.assertEqual(merged[0].quantity, 6)
         self.assertEqual(len(merged), 1)
 
-    def test_nem_transaction_mosaic_sort(self):
+    def test_mosaic_sort(self):
         a = NEMMosaic()
         a.namespace = 'abcz'
         a.quantity = 1
@@ -107,39 +106,39 @@ class TestNemTransactionMosaicCanonicalization(unittest.TestCase):
         b.namespace = 'abca'
         b.quantity = 1
         b.mosaic = 'mosaic'
-        res = nem_sort_mosaics([a, b])
+        res = sort_mosaics([a, b])
         self.assertEqual(res, [b, a])
 
         a.namespace = ''
         b.namespace = 'a.b.c'
-        res = nem_sort_mosaics([a, b])
+        res = sort_mosaics([a, b])
         self.assertEqual(res, [a, b])
 
         a.namespace = 'z.z.z'
         b.namespace = 'a.b.c'
-        res = nem_sort_mosaics([a, b])
+        res = sort_mosaics([a, b])
         self.assertEqual(res, [b, a])
 
         a.namespace = 'a'
         b.namespace = 'a'
         a.mosaic = 'mosaic'
         b.mosaic = 'mosaic'
-        res = nem_sort_mosaics([a, b])
+        res = sort_mosaics([a, b])
         self.assertEqual(res, [a, b])
 
         a.mosaic = 'www'
         b.mosaic = 'aaa'
-        res = nem_sort_mosaics([a, b])
+        res = sort_mosaics([a, b])
         self.assertEqual(res, [b, a])
 
         c = NEMMosaic()
         c.namespace = 'a'
         c.mosaic = 'zzz'
-        res = nem_sort_mosaics([a, b, c])
+        res = sort_mosaics([a, b, c])
         self.assertEqual(res, [b, a, c])
 
         c.mosaic = 'bbb'
-        res = nem_sort_mosaics([a, b, c])
+        res = sort_mosaics([a, b, c])
         self.assertEqual(res, [b, c, a])
 
 

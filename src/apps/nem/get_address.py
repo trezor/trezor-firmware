@@ -8,7 +8,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks
 
 
-async def nem_get_address(ctx, msg):
+async def get_address(ctx, msg):
     network = validate_network(msg.network)
     node = await seed.derive_node(ctx, msg.address_n, NEM_CURVE)
     address = node.nem_address(network)
@@ -23,7 +23,6 @@ async def nem_get_address(ctx, msg):
 
 async def _show_address(ctx, address: str, network: int):
     lines = _split_address(address)
-    print(network)
     content = Text('Export NEM address', ui.ICON_RECEIVE,
                    ui.MONO, _get_network_str(network) + ' network',
                    ui.MONO, *lines,

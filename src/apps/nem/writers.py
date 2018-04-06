@@ -1,4 +1,7 @@
 
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+
+
 def write_uint32(w, n: int):
     w.append(n & 0xFF)
     w.append((n >> 8) & 0xFF)
@@ -26,21 +29,16 @@ def write_bytes_with_length(w, buf: bytearray):
     write_bytes(w, buf)
 
 
-def nem_transaction_write_common(tx_type: int, version: int, timestamp: int, signer: bytes, fee: int, deadline: int)\
-        -> bytearray:
+def write_common(common: NEMTransactionCommon, public_key: bytearray, transaction_type: int, version: int=None) -> bytearray:
     ret = bytearray()
-    write_uint32(ret, tx_type)
+    write_uint32(ret, transaction_type)
+    if version is None:
+        version = common.network << 24 | 1
     write_uint32(ret, version)
-    write_uint32(ret, timestamp)
+    write_uint32(ret, common.timestamp)
 
-    write_bytes_with_length(ret, bytearray(signer))
-    write_uint64(ret, fee)
-    write_uint32(ret, deadline)
+    write_bytes_with_length(ret, public_key)
+    write_uint64(ret, common.fee)
+    write_uint32(ret, common.deadline)
 
     return ret
-
-
-def nem_get_version(network, mosaics=None) -> int:
-    if mosaics:
-        return network << 24 | 2
-    return network << 24 | 1

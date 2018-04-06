@@ -76,12 +76,12 @@ def _validate_common(common: NEMTransactionCommon, inner: bool=False):
     if common.deadline is None:
         err = 'deadline'
 
-    is_signer = common.signer is not None
-    if inner != is_signer:
-        if not inner:
-            raise ValueError('Signer not allowed in outer transaction')
-        err = 'signer'
-
+    # is_signer = common.signer is not None  todo !!
+    # if inner != is_signer:
+    #     if not inner:
+    #         raise ValueError('Signer not allowed in outer transaction')
+    #     err = 'signer'
+    #
     if err:
         if inner:
             raise ValueError('No ' + err + ' provided in inner transaction')
@@ -106,6 +106,8 @@ def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
 
 
 def _validate_multisig(multisig: NEMTransactionCommon, network: int):
+    _validate_common(multisig)
+    _validate_public_key(multisig.signer, 'Invalid multisig signer public key provided')
     if multisig.network != network:
         raise ValueError('Inner transaction network is different')
 

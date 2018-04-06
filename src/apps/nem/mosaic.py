@@ -1,79 +1,84 @@
-
-from .helpers import *
 from .writers import *
 from trezor.messages.NEMMosaic import NEMMosaic
+from trezor.messages import NEMSupplyChangeType
+from apps.nem.layout import *
 
 
-def nem_transaction_create_mosaic_creation(network: int, timestamp: int, signer_public_key: bytes, fee:int,
-                                           deadline: int, namespace: str, mosaic: str, description: str,
-                                           divisibility: int, supply: int, mutable_supply: bool, transferable: bool,
-                                           levy_type: int, levy_fee: int, levy_address: str, levy_namespace: str,
-                                           levy_mosaic: str, creation_sink: str, creation_fee: int):
+async def ask_mosaic_creation(ctx, msg: NEMSignTx):
+    await require_confirm_action(ctx, 'Create mosaic "' + msg.mosaic_creation.definition.mosaic + '" under  namespace "'
+                                 + msg.mosaic_creation.definition.namespace + '"?')
+    await require_confirm_properties(ctx, msg.mosaic_creation.definition)
+    await require_confirm_fee(ctx, 'Confirm creation fee', msg.mosaic_creation.fee)
 
-    w = nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
-                                     nem_get_version(network),
-                                     timestamp,
-                                     signer_public_key,
-                                     fee,
-                                     deadline)
+    await require_confirm_final(ctx, msg.transaction.fee)
+
+
+async def ask_mosaic_supply_change(ctx, msg: NEMSignTx):
+    await require_confirm_action(ctx, 'Modify supply for "' + msg.supply_change.mosaic + '" under  namespace "'
+                                 + msg.supply_change.namespace + '"?')
+    if msg.supply_change.type == NEMSupplyChangeType.SupplyChange_Decrease:
+        ask_msg = 'Decrease supply by ' + str(msg.supply_change.delta) + ' whole units?'
+    elif msg.supply_change.type == NEMSupplyChangeType.SupplyChange_Increase:
+        ask_msg = 'Increase supply by ' + str(msg.supply_change.delta) + ' whole units?'
+    else:
+        raise ValueError('Invalid supply change type')
+    await require_confirm_action(ctx, ask_msg)
+
+    await require_confirm_final(ctx, msg.transaction.fee)
+
+
+def serialize_mosaic_creation(msg: NEMSignTx, public_key: bytes):
+    w = write_common(msg.transaction, bytearray(public_key), NEM_TRANSACTION_TYPE_MOSAIC_CREATION)
 
     mosaics_w = bytearray()
-    write_bytes_with_length(mosaics_w, bytearray(signer_public_key))
-    identifier_length = 4 + len(namespace) + 4 + len(mosaic)
+    write_bytes_with_length(mosaics_w, bytearray(public_key))
+    identifier_length = 4 + len(msg.mosaic_creation.definition.namespace) + 4 + len(msg.mosaic_creation.definition.mosaic)
     write_uint32(mosaics_w, identifier_length)
-    write_bytes_with_length(mosaics_w, bytearray(namespace))
-    write_bytes_with_length(mosaics_w, bytearray(mosaic))
-    write_bytes_with_length(mosaics_w, bytearray(description))
+    write_bytes_with_length(mosaics_w, bytearray(msg.mosaic_creation.definition.namespace))
+    write_bytes_with_length(mosaics_w, bytearray(msg.mosaic_creation.definition.mosaic))
+    write_bytes_with_length(mosaics_w, bytearray(msg.mosaic_creation.definition.description))
     write_uint32(mosaics_w, 4)  # number of properties
 
-    nem_write_mosaic(mosaics_w, "divisibility", divisibility)
-    nem_write_mosaic(mosaics_w, "initialSupply", supply)
-    nem_write_mosaic(mosaics_w, "supplyMutable", mutable_supply)
-    nem_write_mosaic(mosaics_w, "transferable", transferable)
+    _write_property(mosaics_w, "divisibility", msg.mosaic_creation.definition.divisibility)
+    _write_property(mosaics_w, "initialSupply", msg.mosaic_creation.definition.supply)
+    _write_property(mosaics_w, "supplyMutable", msg.mosaic_creation.definition.mutable_supply)
+    _write_property(mosaics_w, "transferable", msg.mosaic_creation.definition.transferable)
 
-    if levy_type:
-        levy_identifier_length = 4 + len(levy_namespace) + 4 + len(levy_mosaic)
-        write_uint32(mosaics_w, 4 + 4 + len(levy_address) + 4 + levy_identifier_length + 8)
-        write_uint32(mosaics_w, levy_type)
-        write_bytes_with_length(mosaics_w, bytearray(levy_address))
+    if msg.mosaic_creation.definition.levy:
+        levy_identifier_length = 4 + len(msg.mosaic_creation.definition.levy_namespace) + 4 + len(msg.mosaic_creation.definition.levy_mosaic)
+        write_uint32(mosaics_w, 4 + 4 + len(msg.mosaic_creation.definition.levy_address) + 4 + levy_identifier_length + 8)
+        write_uint32(mosaics_w, msg.mosaic_creation.definition.levy)
+        write_bytes_with_length(mosaics_w, bytearray(msg.mosaic_creation.definition.levy_address))
         write_uint32(mosaics_w, levy_identifier_length)
-        write_bytes_with_length(mosaics_w, bytearray(levy_namespace))
-        write_bytes_with_length(mosaics_w, bytearray(levy_mosaic))
-        write_uint64(mosaics_w, levy_fee)
+        write_bytes_with_length(mosaics_w, bytearray(msg.mosaic_creation.definition.levy_namespace))
+        write_bytes_with_length(mosaics_w, bytearray(msg.mosaic_creation.definition.levy_mosaic))
+        write_uint64(mosaics_w, msg.mosaic_creation.definition.fee)
     else:
         write_uint32(mosaics_w, 0)
 
     # write mosaic bytes with length
     write_bytes_with_length(w, mosaics_w)
 
-    write_bytes_with_length(w, bytearray(creation_sink))
-    write_uint64(w, creation_fee)
+    write_bytes_with_length(w, bytearray(msg.mosaic_creation.sink))
+    write_uint64(w, msg.mosaic_creation.fee)
 
     return w
 
 
-def nem_transaction_create_mosaic_supply_change(network: int, timestamp: int, signer_public_key: bytes,	fee: int,
-                                                deadline: int, namespace: str, mosaic: str, type: int, delta: int):
+def serialize_mosaic_supply_change(msg: NEMSignTx, public_key: bytes):
+    w = write_common(msg.transaction, bytearray(public_key), NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE)
 
-    w = nem_transaction_write_common(NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE,
-                                     nem_get_version(network),
-                                     timestamp,
-                                     signer_public_key,
-                                     fee,
-                                     deadline)
-
-    identifier_length = 4 + len(namespace) + 4 + len(mosaic)
+    identifier_length = 4 + len(msg.supply_change.namespace) + 4 + len(msg.supply_change.mosaic)
     write_uint32(w, identifier_length)
-    write_bytes_with_length(w, bytearray(namespace))
-    write_bytes_with_length(w, bytearray(mosaic))
+    write_bytes_with_length(w, bytearray(msg.supply_change.namespace))
+    write_bytes_with_length(w, bytearray(msg.supply_change.mosaic))
 
-    write_uint32(w, type)
-    write_uint64(w, delta)
-
+    write_uint32(w, msg.supply_change.type)
+    write_uint64(w, msg.supply_change.delta)
     return w
 
 
-def nem_write_mosaic(w: bytearray, name: str, value):
+def _write_property(w: bytearray, name: str, value):
     if value is None:
         if name in ['divisibility', 'initialSupply']:
             value = 0
@@ -93,7 +98,7 @@ def nem_write_mosaic(w: bytearray, name: str, value):
     write_bytes_with_length(w, bytearray(value))
 
 
-def nem_transaction_write_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
+def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
     identifier_length = 4 + len(namespace) + 4 + len(mosaic)
     # indentifier length (u32) + quantity (u64) + identifier size
     write_uint32(w, 4 + 8 + identifier_length)
@@ -103,11 +108,11 @@ def nem_transaction_write_mosaic(w: bytearray, namespace: str, mosaic: str, quan
     write_uint64(w, quantity)
 
 
-def nem_canonicalize_mosaics(mosaics: list):
+def canonicalize_mosaics(mosaics: list):
     if len(mosaics) <= 1:
         return mosaics
-    mosaics = nem_merge_mosaics(mosaics)
-    return nem_sort_mosaics(mosaics)
+    mosaics = merge_mosaics(mosaics)
+    return sort_mosaics(mosaics)
 
 
 def are_mosaics_equal(a: NEMMosaic, b: NEMMosaic) -> bool:
@@ -116,7 +121,7 @@ def are_mosaics_equal(a: NEMMosaic, b: NEMMosaic) -> bool:
     return False
 
 
-def nem_merge_mosaics(mosaics: list) -> list:
+def merge_mosaics(mosaics: list) -> list:
     if not len(mosaics):
         return list()
     ret = list()
@@ -131,5 +136,5 @@ def nem_merge_mosaics(mosaics: list) -> list:
     return ret
 
 
-def nem_sort_mosaics(mosaics: list) -> list:
+def sort_mosaics(mosaics: list) -> list:
     return sorted(mosaics, key=lambda m: (m.namespace, m.mosaic))

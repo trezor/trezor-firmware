@@ -3,13 +3,13 @@ from trezor.messages.wire_types import NEMGetAddress, NEMSignTx
 
 
 def dispatch_NemGetAddress(*args, **kwargs):
-    from .get_address import nem_get_address
-    return nem_get_address(*args, **kwargs)
+    from .get_address import get_address
+    return get_address(*args, **kwargs)
 
 
 def dispatch_NemSignTx(*args, **kwargs):
-    from .signing import nem_sign_tx
-    return nem_sign_tx(*args, **kwargs)
+    from .signing import sign_tx
+    return sign_tx(*args, **kwargs)
 
 
 def boot():
