@@ -444,3 +444,13 @@ enum NEMImportanceTransferMode {
 	ImportanceTransfer_Activate = 1;
 	ImportanceTransfer_Deactivate = 2;
 }
+
+/**
+ * Describes a Stellar asset
+ * @used_in StellarTxOpAck
+ */
+message StellarAssetType {
+	optional uint32 type = 1;	// 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
+	optional string code = 2;	// for non-native assets, string describing the code
+	optional bytes issuer = 3;	// 32-byte issuing address
+}
