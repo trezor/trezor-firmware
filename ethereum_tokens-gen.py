@@ -50,6 +50,7 @@ def generate_c(ipfs_hash):
 
 
 def generate_python(ipfs_hash):
+    print('ipfs_hash = "%s"' % ipfs_hash)
     print('tokens = [')
     for s, i in networks:
         print_tokens(ipfs_hash, s, i, python=True)
