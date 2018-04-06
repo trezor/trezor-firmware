@@ -63,7 +63,7 @@ def update_coins(details):
         print("Updating", coin['coin_label'], coin['coin_shortcut'])
         out = details['coins'].setdefault(coin['coin_shortcut'], {})
         out['shortcut'] = coin['coin_shortcut']
-        out['type'] = 'coin'
+        out['type'] = 'blockchain'
 
         set_default(out, 'name', coin['coin_label'])
         set_default(out, 't1_enabled', 'yes')
@@ -73,19 +73,61 @@ def update_coins(details):
         #pprint.pprint(coin)
 
 def update_erc20(details):
-    # FIXME Parse tokens using trezor-common/ethereum_tokens-gen.py
+    networks = [
+        ('eth', 1),
+        # ('exp', 2),
+        # ('rop', 3),
+        ('rin', 4),
+        ('ubq', 8),
+        # ('rsk', 30),
+        ('kov', 42),
+        ('etc', 61),
+    ]
+
+    # Fetch list of tokens already included in Trezor Core
     r = requests.get('https://raw.githubusercontent.com/trezor/trezor-core/master/src/apps/ethereum/tokens.py')
     d = {}
     exec(r.text, d)
+
+    # TODO 'Qmede...' can be removed after ipfs_hash is being generated into tokens.py
+    ipfs_hash = d.get('ipfs_hash') or 'QmedefcF1fecLVpRymJJmyJFRpJuCTiNfPYBhzUdHPUq3T'
+
+    infos = {}
+    for n in networks:
+        print("Updating info about erc20 tokens for", n[0])
+        url = 'https://gateway.ipfs.io/ipfs/%s/%s.json' % (ipfs_hash, n[0])
+        r = requests.get(url)
+        infos[n[0]] = r.json()
+
+    #print(infos)
+
     for t in d['tokens']:
         token = t[2]
         print('Updating', token)
 
+        try:
+            network = [ n[0] for n in networks if n[1] == t[0] ][0]
+        except:
+            raise Exception("Unknown network", t[0], "for erc20 token", token)
+
+        try:
+            info = [ i for i in infos[network] if i['symbol'] == token ][0]
+        except:
+            raise Exception("Unknown details for erc20 token", token)
+
         out = details['coins'].setdefault(token, {})
+        out['name'] = info['name']
         out['type'] = 'erc20'
-        out['chain_id'] = t[0]
+        out['network'] = network
+        out['address'] = info['address']
         set_default(out, 't1_enabled', 'yes')
         set_default(out, 't2_enabled', 'yes')
+        set_default(out, 'links', {})
+
+        if info['website']:
+            out['links']['Homepage'] = info['website']
+        if info.get('social', {}).get('github', None):
+            out['links']['Github'] = info['social']['github']
 
 def update_ethereum(details):
     print('Updating Ethereum ETH')
@@ -96,14 +138,19 @@ def update_ethereum(details):
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ethereum')
 
-def update_nem(details):
-    print('Updating NEM')
-    out = details['coins'].setdefault('NEM', {})
-    out['name'] = 'NEM'
-    out['type'] = 'coin'
-    set_default(out, 't1_enabled', 'yes')
-    set_default(out, 't2_enabled', 'yes')   
-    update_marketcap(out, 'nem')
+def update_mosaics(details):
+    r = requests.get('https://raw.githubusercontent.com/trezor/trezor-mcu/master/firmware/nem_mosaics.json')
+    for mosaic in r.json():
+        print('Updating', mosaic['name'], mosaic['ticker'])
+
+        out = details['coins'].setdefault(mosaic['ticker'].strip(), {})
+        out['name'] = mosaic['name']
+        out['type'] = 'mosaic'
+        set_default(out, 't1_enabled', 'yes')
+        set_default(out, 't2_enabled', 'yes')
+
+    # Update NEM marketcap
+    update_marketcap(details['coins']['XEM'], 'NEM')
 
 if __name__ == '__main__':
     try:
@@ -114,7 +161,7 @@ if __name__ == '__main__':
     update_coins(details)
     update_erc20(details)
     update_ethereum(details)
-    update_nem(details)
+    update_mosaics(details)
     update_info(details)
 
     print(json.dumps(details, sort_keys=True, indent=4))
