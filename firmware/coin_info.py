@@ -76,7 +76,7 @@ def prepend_varint(string):
 def coin_to_struct(coin):
     return collections.OrderedDict((
         ("coin_name",             format_string(coin["coin_name"])),
-        ("coin_shortcut",         format_string(coin["coin_shortcut"])),
+        ("coin_shortcut",         format_string(" " + coin["coin_shortcut"])),
         ("maxfee_kb",             format_number(coin["maxfee_kb"])),
         ("signed_message_header", prepend_varint(coin["signed_message_header"])),             # noqa: E501
         ("has_address_type",      format_bool(coin["address_type"] is not None)),             # noqa: E501
