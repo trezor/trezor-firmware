@@ -1,17 +1,17 @@
-# TREZOR Firmware
+# TREZOR One Bootloader and Firmware
 
 [![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 https://trezor.io/
 
-## How to build TREZOR firmware?
+## How to build the TREZOR bootloader and firmware?
 
 1. [Install Docker](https://docs.docker.com/engine/installation/)
 2. `git clone https://github.com/trezor/trezor-mcu.git`
 3. `cd trezor-mcu`
-4. `./build-firmware.sh TAG` (where TAG is v1.5.0 for example, if left blank the script builds latest commit in master branch)
+4. `./build.sh BOOTLOADER_TAG FIRMWARE_TAG` (where BOOTLOADER_TAG is bl1.5.0 and FIRMWARE_TAG is v1.7.0 for example, if left blank the script builds latest commit in master branch)
 
-This creates file `build/trezor-TAG.bin` and prints its fingerprint and size at the end of the build log.
+This creates the files `build/bootloader-BOOTLOADER_TAG.bin` and `build/trezor-FIRMWARE_TAG.bin` and prints their fingerprints and sizes at the end of the build log.
 
 ## How to build TREZOR emulator for Linux?
 
@@ -21,15 +21,6 @@ This creates file `build/trezor-TAG.bin` and prints its fingerprint and size at 
 4. `./build-emulator.sh TAG` (where TAG is v1.5.0 for example, if left blank the script builds latest commit in master branch)
 
 This creates binary file `build/trezor-emulator-TAG`, which can be run and works as a trezor emulator. (Use `TREZOR_OLED_SCALE` env. variable to make screen bigger.)
-
-## How to build TREZOR bootloader?
-
-1. [Install Docker](https://docs.docker.com/engine/installation/)
-2. `git clone https://github.com/trezor/trezor-mcu.git`
-3. `cd trezor-mcu`
-4. `./build-bootloader.sh TAG` (where TAG is bl1.3.2 for example, if left blank the script builds latest commit in master branch)
-
-This creates file `build/bootloader-TAG.bin` and prints its fingerprint and size at the end of the build log.
 
 ## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
