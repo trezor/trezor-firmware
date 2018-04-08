@@ -44,6 +44,7 @@ int known_bootloader(int r, const uint8_t *hash) {
 
 void check_bootloader(void)
 {
+#if MEMORY_PROTECT
 	uint8_t hash[32];
 	int r = memory_bootloader_hash(hash);
 
@@ -57,7 +58,6 @@ void check_bootloader(void)
 		return;
 	}
 
-#if 0
 	// ENABLE THIS AT YOUR OWN RISK
 	// ATTEMPTING TO OVERWRITE BOOTLOADER WITH UNSIGNED FIRMWARE MAY BRICK
 	// YOUR DEVICE.
