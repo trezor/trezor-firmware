@@ -163,6 +163,7 @@ void setupApp(void)
 // Never use in bootloader! Disables access to PPB (including MPU, NVIC, SCB)
 void mpu_config(void)
 {
+#if MEMORY_PROTECT
 	// Disable MPU
 	MPU_CTRL = 0;
 
@@ -206,4 +207,5 @@ void mpu_config(void)
 
 	// Switch to unprivileged software execution to prevent access to MPU
 	set_mode_unprivileged();
+#endif
 }
