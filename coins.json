@@ -542,6 +542,8 @@
 	"address_prefix": "bitcoin:",
 	"min_address_length": 35,
 	"max_address_length": 35,
-	"bitcore": []
+	"bitcore": [
+		"https://testnet.decred.org"
+	]
 }
 ]
