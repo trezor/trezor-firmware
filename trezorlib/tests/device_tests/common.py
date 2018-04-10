@@ -22,9 +22,10 @@ from binascii import hexlify, unhexlify
 import pytest
 import os
 
+from trezorlib import coins
+from trezorlib import tx_api
 from trezorlib.client import TrezorClient, TrezorClientDebugLink
 from trezorlib.transport import get_transport
-from trezorlib import tx_api
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 tx_api.cache_dir = os.path.join(tests_dir, '../txcache')
@@ -42,7 +43,7 @@ class TrezorTest:
         debuglink = wirelink.find_debug()
         self.client = TrezorClientDebugLink(wirelink)
         self.client.set_debuglink(debuglink)
-        self.client.set_tx_api(tx_api.TxApiBitcoin)
+        self.client.set_tx_api(coins.tx_api['Bitcoin'])
         # self.client.set_buttonwait(3)
 
         #                     1      2     3    4      5      6      7     8      9    10    11    12

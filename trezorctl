@@ -30,9 +30,9 @@ import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException, format_protobuf
 from trezorlib.transport import get_transport, enumerate_devices, TransportException
+from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib import protobuf
-from trezorlib.coins import coins_txapi
 from trezorlib.ckd_public import PRIME_DERIVATION_FLAG
 
 
@@ -470,11 +470,11 @@ def get_public_node(connect, coin, address, curve, show_display):
 @click.pass_obj
 def sign_tx(connect, coin):
     client = connect()
-    if coin in coins_txapi:
-        txapi = coins_txapi[coin]
+    if coin in coins.tx_api:
+        txapi = coins.tx_api[coin]
     else:
         click.echo('Coin "%s" is not recognized.' % coin, err=True)
-        click.echo('Supported coin types: %s' % ', '.join(coins_txapi.keys()), err=True)
+        click.echo('Supported coin types: %s' % ', '.join(coins.tx_api.keys()), err=True)
         sys.exit(1)
 
     client.set_tx_api(txapi)

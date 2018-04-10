@@ -16,10 +16,12 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from .common import *
+from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.tx_api import TxApiBcash
 from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
+
+TxApiBcash = coins.tx_api['Bcash']
 
 
 @pytest.mark.skip_t2

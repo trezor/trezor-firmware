@@ -18,8 +18,11 @@
 
 import os
 
+from trezorlib import coins
 from trezorlib import tx_api
-from trezorlib.tx_api import TxApiBitcoin, TxApiTestnet
+
+TxApiBitcoin = coins.tx_api['Bitcoin']
+TxApiTestnet = coins.tx_api['Testnet']
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 

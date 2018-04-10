@@ -148,15 +148,3 @@ class TxApiBlockCypher(TxApi):
             o.script_pubkey = binascii.unhexlify(vout['script'])
 
         return t
-
-
-TxApiBitcoin = TxApiInsight(network='insight_bitcoin', url='https://btc-bitcore1.trezor.io/api/')
-TxApiTestnet = TxApiInsight(network='insight_testnet', url='https://testnet-bitcore3.trezor.io/api/')
-TxApiLitecoin = TxApiInsight(network='insight_litecoin', url='https://ltc-bitcore1.trezor.io/api/')
-TxApiDash = TxApiInsight(network='insight_dash', url='https://dash-bitcore1.trezor.io/api/')
-TxApiZcash = TxApiInsight(network='insight_zcash', url='https://zec-bitcore1.trezor.io/api/', zcash=True)
-TxApiBcash = TxApiInsight(network='insight_bcash', url='https://bch-bitcore2.trezor.io/api/')
-TxApiBitcoinGold = TxApiInsight(network='insight_bitcoin_gold', url='https://btg-bitcore2.trezor.io/api/')
-TxApiDecredTestnet = TxApiInsight(network='insight_decred_testnet', url='https://testnet.decred.org/api/')
-TxApiDogecoin = TxApiBlockCypher(network='blockcypher_dogecoin', url='https://api.blockcypher.com/v1/doge/main/')
-TxApiMonacoin = TxApiInsight(network='insight_monacoin', url='https://mona.insight.monaco-ex.org/insight-api-monacoin/')

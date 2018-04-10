@@ -17,10 +17,12 @@
 
 from .common import *
 
+from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.tx_api import TxApiTestnet
 from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
+
+TxApiTestnet = coins.tx_api["Testnet"]
 
 
 class TestMsgSigntxSegwit(TrezorTest):

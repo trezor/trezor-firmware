@@ -34,7 +34,7 @@ from . import messages as proto
 from . import tools
 from . import mapping
 from . import nem
-from .coins import coins_slip44
+from .coins import slip44
 from .debuglink import DebugLink
 from .protobuf import MessageType
 
@@ -530,8 +530,8 @@ class ProtocolMixin(object):
             n = n[1:]
 
         # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
-        if n[0] in coins_slip44:
-            n = ["44'", "%d'" % coins_slip44[n[0]]] + n[1:]
+        if n[0] in slip44:
+            n = ["44'", "%d'" % slip44[n[0]]] + n[1:]
 
         path = []
         for x in n:

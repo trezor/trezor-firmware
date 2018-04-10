@@ -1,31 +1,41 @@
-from .tx_api import TxApiBitcoin, TxApiTestnet, TxApiLitecoin, TxApiZcash, TxApiDash, TxApiBcash, TxApiDecredTestnet, TxApiDogecoin, TxApiMonacoin, TxApiBitcoinGold
+import os.path
+import json
 
-coins_slip44 = {
-    'Bitcoin': 0,
-    'Testnet': 1,
-    'Decred Testnet': 1,
-    'Litecoin': 2,
-    'Dogecoin': 3,
-    'Dash': 5,
-    'Namecoin': 7,
-    'Monacoin': 22,
-    'Decred': 42,
-    'Ether': 60,
-    'EtherClassic': 61,
-    'Zcash': 133,
-    'Bcash': 145,
-    'Bitcoin Gold': 156,
-}
+from .tx_api import TxApiInsight, TxApiBlockCypher
 
-coins_txapi = {
-    'Bitcoin': TxApiBitcoin,
-    'Testnet': TxApiTestnet,
-    'Litecoin': TxApiLitecoin,
-    'Dash': TxApiDash,
-    'Zcash': TxApiZcash,
-    'Bcash': TxApiBcash,
-    'Decred Testnet': TxApiDecredTestnet,
-    'Dogecoin': TxApiDogecoin,
-    'Monacoin': TxApiMonacoin,
-    'Bitcoin Gold': TxApiBitcoinGold,
-}
+COINS_JSON = os.path.join(os.path.dirname(__file__), 'coins.json')
+
+
+def _load_coins_json():
+    # Load coins.json to local variables
+    # NOTE: coins.json comes from 'vendor/trezor-common/coins.json',
+    # which is a git submodule. If you're trying to run trezorlib directly
+    # from the checkout (or tarball), initialize the submodule with:
+    # $ git submodule update --init
+    # and install coins.json with:
+    # $ python setup.py prebuild
+    with open(COINS_JSON) as coins_json:
+        coins_list = json.load(coins_json)
+        return {coin['coin_name']: coin for coin in coins_list}
+
+
+def _insight_for_coin(coin):
+    if not coin['bitcore']:
+        return None
+    zcash = coin['coin_name'].lower().startswith('zcash')
+    network = 'insight_{}'.format(coin['coin_name'].lower().replace(' ', '_'))
+    url = coin['bitcore'][0] + 'api/'
+    return TxApiInsight(network=network, url=url, zcash=zcash)
+
+
+# exported variables
+__all__ = ['by_name', 'slip44', 'tx_api']
+
+by_name = _load_coins_json()
+slip44 = {name: coin['bip44'] for name, coin in by_name.items()}
+tx_api = {name: _insight_for_coin(coin)
+          for name, coin in by_name.items()
+          if coin["bitcore"]}
+
+# fixup for Dogecoin
+tx_api['Dogecoin'] = TxApiBlockCypher(network='blockcypher_dogecoin', url='https://api.blockcypher.com/v1/doge/main/')
