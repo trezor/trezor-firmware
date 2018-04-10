@@ -19,7 +19,7 @@ def create_transaction_common(transaction):
     msg.fee = transaction["fee"]
     msg.deadline = transaction["deadline"]
 
-    if "signed" in transaction:
+    if "signer" in transaction:
         msg.signer = binascii.unhexlify(transaction["signer"])
 
     return msg

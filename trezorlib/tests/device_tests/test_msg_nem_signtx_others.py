@@ -24,31 +24,6 @@ from trezorlib import nem
 @pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMSignTxOther(TrezorTest):
 
-    def test_nem_signtx_aggregate_modification(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        with self.client:
-            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
-                "timeStamp": 74649215,
-                "fee": 2000000,
-                "type": nem.TYPE_AGGREGATE_MODIFICATION,
-                "deadline": 74735615,
-                "message": {
-                },
-                "modifications": [
-                    {
-                        "modificationType": 1,  # Add
-                        "cosignatoryAccount": "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844"
-                    },
-                ],
-                "minCosignatories": {
-                    "relativeChange": 3
-                },
-                "version": (0x98 << 24),
-            })
-            assert hexlify(tx.data) == b'01100000020000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f740401000000280000000100000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f878440400000003000000'
-            assert hexlify(tx.signature) == b'1200e552d8732ce3eae96719731194abfc5a09d98f61bb35684f4eeaeff15b1bdf326ee7b1bbbe89d3f68c8e07ad3daf72e4c7f031094ad2236b97918ad98601'
-
     def test_nem_signtx_importance_transfer(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
