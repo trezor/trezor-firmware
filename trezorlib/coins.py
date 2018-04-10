@@ -31,7 +31,11 @@ def _insight_for_coin(coin):
 # exported variables
 __all__ = ['by_name', 'slip44', 'tx_api']
 
-by_name = _load_coins_json()
+try:
+    by_name = _load_coins_json()
+except Exception as e:
+    raise ImportError("Failed to load coins.json. Check your installation.") from e
+
 slip44 = {name: coin['bip44'] for name, coin in by_name.items()}
 tx_api = {name: _insight_for_coin(coin)
           for name, coin in by_name.items()
