@@ -18,6 +18,7 @@
 
 from .common import *
 
+import time
 from trezorlib import messages as proto
 
 
@@ -96,3 +97,60 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.Success(),
                                                 proto.Features()])
             self.client.apply_settings(homescreen=img)
+
+    @pytest.mark.skip_t2
+    def test_apply_auto_lock_delay(self):
+        self.setup_mnemonic_pin_passphrase()
+
+        with self.client:
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                                proto.ButtonRequest(),
+                                                proto.Success(),
+                                                proto.Features()])
+            self.client.apply_settings(auto_lock_delay_ms=int(10e3))  # 10 secs
+
+        time.sleep(0.1)  # sleep less than auto-lock delay
+        with self.client:
+            # No PIN protection is required.
+            self.client.set_expected_responses([proto.Success()])
+            self.client.ping(msg='', pin_protection=True)
+
+        time.sleep(10.1)  # sleep more than auto-lock delay
+        with self.client:
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                                proto.Success()])
+            self.client.ping(msg='', pin_protection=True)
+
+    @pytest.mark.skip_t2
+    def test_apply_minimal_auto_lock_delay(self):
+        """
+        Verify that the delay is not below the minimal auto-lock delay (10 secs)
+        otherwise the device may auto-lock before any user interaction.
+        """
+        self.setup_mnemonic_pin_passphrase()
+
+        with self.client:
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                                proto.ButtonRequest(),
+                                                proto.Success(),
+                                                proto.Features()])
+            # Note: the actual delay will be 10 secs (see above).
+            self.client.apply_settings(auto_lock_delay_ms=int(1e3))
+
+        time.sleep(0.1)  # sleep less than auto-lock delay
+        with self.client:
+            # No PIN protection is required.
+            self.client.set_expected_responses([proto.Success()])
+            self.client.ping(msg='', pin_protection=True)
+
+        time.sleep(2)  # sleep less than the minimal auto-lock delay
+        with self.client:
+            # No PIN protection is required.
+            self.client.set_expected_responses([proto.Success()])
+            self.client.ping(msg='', pin_protection=True)
+
+        time.sleep(10.1)  # sleep more than the minimal auto-lock delay
+        with self.client:
+            self.client.set_expected_responses([proto.PinMatrixRequest(),
+                                                proto.Success()])
+            self.client.ping(msg='', pin_protection=True)
