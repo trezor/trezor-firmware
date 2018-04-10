@@ -16,7 +16,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
                         22000000,
                         0,
                         2,
-                        False)
+                        0)
         t = serialize_aggregate_modification(m, unhexlify("462ee976890916e54fa825d26bdd0235f5eb5b6a143c199ab0ae5ee9328e08ce"))
 
         serialize_cosignatory_modification(t, 1, unhexlify(
@@ -33,7 +33,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
                         40000000,
                         0,
                         5,
-                        False)
+                        0)
         t = serialize_aggregate_modification(m, unhexlify("f41b99320549741c5cce42d9e4bb836d98c50ed5415d0c3c2912d1bb50e6a0e5"))
 
         serialize_cosignatory_modification(t, 1, unhexlify(
@@ -57,7 +57,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
                         40000000,
                         6545854,
                         4,
-                        True)
+                        2)
         t = serialize_aggregate_modification(m, unhexlify("6bf7849c1eec6a2002995cc457dc00c4e29bad5c88de63f51e42dfdcd7b2131d"))
 
         serialize_cosignatory_modification(t, 1, unhexlify(
@@ -75,7 +75,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
 
 
 def _create_msg(network: int, timestamp: int, fee: int, deadline: int,
-                modifications: int, relative_change: bool):
+                modifications: int, relative_change: int):
     m = NEMSignTx()
     m.transaction = NEMTransactionCommon()
     m.transaction.network = network
