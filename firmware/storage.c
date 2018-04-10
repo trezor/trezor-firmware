@@ -882,13 +882,15 @@ void storage_setU2FCounter(uint32_t u2fcounter)
 
 uint32_t storage_getAutoLockDelayMs()
 {
-	return storageRom->has_auto_lock_delay_ms ? storageRom->auto_lock_delay_ms : (10*60*1000U);
+	const uint32_t default_delay_ms = 10 * 60 * 1000U; // 10 minutes
+	return storageRom->has_auto_lock_delay_ms ? storageRom->auto_lock_delay_ms : default_delay_ms;
 }
 
 void storage_setAutoLockDelayMs(uint32_t auto_lock_delay_ms)
 {
+	const uint32_t min_delay_ms = 10 * 1000U; // 10 seconds
+	auto_lock_delay_ms = MAX(auto_lock_delay_ms, min_delay_ms);
 	storageUpdate.has_auto_lock_delay_ms = true;
-	auto_lock_delay_ms = MAX(auto_lock_delay_ms, 60*1000U);
 	storageUpdate.auto_lock_delay_ms = auto_lock_delay_ms;
 }
 
