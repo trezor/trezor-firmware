@@ -16,6 +16,7 @@ async def sign_tx(ctx, msg: NEMSignTx):
 
     if msg.multisig:
         public_key = msg.multisig.signer
+        await ask_multisig(ctx, msg)
     else:
         public_key = _get_public_key(node)
 
@@ -35,12 +36,26 @@ async def sign_tx(ctx, msg: NEMSignTx):
     else:
         raise ValueError('No transaction provided')
 
+    if msg.multisig:
+        # wrap transaction in multisig wrapper
+        tx = _multisig(node, msg, tx)
+
     signature = ed25519.sign(node.private_key(), tx, helpers.NEM_HASH_ALG)
 
     resp = NEMSignedTx()
     resp.data = tx
     resp.signature = signature
     return resp
+
+
+def _multisig(node, msg: NEMSignTx, inner_tx: bytes) -> bytes:
+    if msg.cosigning:
+        return serialize_multisig_signature(msg.multisig,
+                                            _get_public_key(node),
+                                            inner_tx,
+                                            msg.multisig.signer)
+    else:
+        return serialize_multisig(msg.multisig, _get_public_key(node), inner_tx)
 
 
 def _get_public_key(node) -> bytes:
@@ -75,10 +90,7 @@ async def _supply_change(ctx, public_key: bytes, msg: NEMSignTx):
 
 async def _aggregate_modification(ctx, public_key: bytes, msg: NEMSignTx):
     await ask_aggregate_modification(ctx, msg)
-    if not msg.multisig:
-        w = serialize_aggregate_modification(msg, public_key)
-    else:
-        w = bytearray()  # todo
+    w = serialize_aggregate_modification(msg, public_key)
 
     for m in msg.aggregate_modification.modifications:
         serialize_cosignatory_modification(w, m.type, m.public_key)

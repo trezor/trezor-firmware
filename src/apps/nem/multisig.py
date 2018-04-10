@@ -6,8 +6,12 @@ from trezor.crypto import nem
 
 
 async def ask_multisig(ctx, msg: NEMSignTx):
-    # todo
-    await require_confirm_action(ctx, 'Multisig?')
+    address = nem.compute_address(msg.multisig.signer, msg.transaction.network)
+    if msg.cosigning:
+        await require_confirm_address(ctx, 'Cosign transaction for', address)
+    else:
+        await require_confirm_address(ctx, 'Initiate transaction for', address)
+    await require_confirm_fee(ctx, 'Confirm multisig fee', msg.multisig.fee)
 
 
 async def ask_aggregate_modification(ctx, msg: NEMSignTx):
@@ -38,8 +42,10 @@ def serialize_multisig(msg: NEMTransactionCommon, public_key: bytes, inner: byte
     return w
 
 
-def serialize_multisig_signature(msg: NEMTransactionCommon, public_key: bytes, inner: bytes, address: str):
-    w = write_common(msg, bytearray(public_key), NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)
+def serialize_multisig_signature(common: NEMTransactionCommon, public_key: bytes,
+                                 inner: bytes, address_public_key: bytes):
+    address = nem.compute_address(address_public_key, common.network)
+    w = write_common(common, bytearray(public_key), NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)
     digest = hashlib.sha3_256(inner).digest(True)
 
     write_uint32(w, 4 + len(digest))

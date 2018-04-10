@@ -29,12 +29,12 @@ class TestNemMultisig(unittest.TestCase):
 
         self.assertEqual(multisig, unhexlify("0410000001000098df1a3c002000000059d89076964742ef2a2089d26a5aa1d2c7a7bb052a46c1de159891e91ad3d76e808d5b00000000003f6f3c006c0000000110000001000098df1a3c0020000000abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac0024f400000000003f6f3c0001000000280000000200000020000000e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3"))
 
-        address = "TCRXYUQIMFA7AOGL5LF3YWLC7VABLYUMJ5ACBUNL"
+        address_pubkey = unhexlify("abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac")
         m = _create_common_msg(NEM_NETWORK_TESTNET,
                                3939891,
                                6000000,
                                3961491)
-        multisig = serialize_multisig_signature(m, unhexlify("71cba4f2a28fd19f902ba40e9937994154d9eeaad0631d25d525ec37922567d4"), base_tx, address)
+        multisig = serialize_multisig_signature(m, unhexlify("71cba4f2a28fd19f902ba40e9937994154d9eeaad0631d25d525ec37922567d4"), base_tx, address_pubkey)
 
         self.assertEqual(multisig, unhexlify("0210000001000098331e3c002000000071cba4f2a28fd19f902ba40e9937994154d9eeaad0631d25d525ec37922567d4808d5b000000000093723c0024000000200000008ec165580bdabfd31ce6007a1748ce5bdf30eab7a214743097de3bc822ac7e002800000054435258595551494d464137414f474c354c463359574c43375641424c59554d4a35414342554e4c"))
 
@@ -62,16 +62,15 @@ class TestNemMultisig(unittest.TestCase):
                                59414342,
                                6000000,
                                59500742)
-        address = "NDDRG3UEB5LZZZMDWBE4RTKZK73JBHPAIWBHCFMV"
-        multisig = serialize_multisig_signature(m, unhexlify("1b49b80203007117d034e45234ffcdf402c044aeef6dbb06351f346ca892bce2"), base_tx, address)
+        address_pubkey = unhexlify("a1df5306355766bd2f9a64efdc089eb294be265987b3359093ae474c051d7d5a")
+        multisig = serialize_multisig_signature(m, unhexlify("1b49b80203007117d034e45234ffcdf402c044aeef6dbb06351f346ca892bce2"), base_tx, address_pubkey)
         self.assertEqual(multisig, unhexlify("021000000100006846978a03200000001b49b80203007117d034e45234ffcdf402c044aeef6dbb06351f346ca892bce2808d5b0000000000c6e88b032400000020000000bfa2088f7720f89dd4664d650e321dabd02fab61b7355bc88a391a848a49786a280000004e4444524733554542354c5a5a5a4d445742453452544b5a4b37334a424850414957424843464d56"))
 
         m = _create_common_msg(NEM_NETWORK_MAINNET,
                                59414381,
                                6000000,
                                59500781)
-        address = "NDDRG3UEB5LZZZMDWBE4RTKZK73JBHPAIWBHCFMV"
-        multisig = serialize_multisig_signature(m, unhexlify("7ba4b39209f1b9846b098fe43f74381e43cb2882ccde780f558a63355840aa87"), base_tx, address)
+        multisig = serialize_multisig_signature(m, unhexlify("7ba4b39209f1b9846b098fe43f74381e43cb2882ccde780f558a63355840aa87"), base_tx, address_pubkey)
         self.assertEqual(multisig, unhexlify("02100000010000686d978a03200000007ba4b39209f1b9846b098fe43f74381e43cb2882ccde780f558a63355840aa87808d5b0000000000ede88b032400000020000000bfa2088f7720f89dd4664d650e321dabd02fab61b7355bc88a391a848a49786a280000004e4444524733554542354c5a5a5a4d445742453452544b5a4b37334a424850414957424843464d56"))
 
 
