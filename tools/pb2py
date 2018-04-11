@@ -70,8 +70,8 @@ def process_message(descriptor, protobuf_module, msg_id, indexfile, is_upy):
             field.TYPE_UINT64:  'p.UVarintType',
             field.TYPE_UINT32:  'p.UVarintType',
             field.TYPE_ENUM:    'p.UVarintType',
-            field.TYPE_SINT32:  'p.Sint32Type',
-            field.TYPE_SINT64:  'p.Sint64Type',
+            field.TYPE_SINT32:  'p.SVarintType',
+            field.TYPE_SINT64:  'p.SVarintType',
             field.TYPE_STRING:  'p.UnicodeType',
             field.TYPE_BOOL:    'p.BoolType',
             field.TYPE_BYTES:   'p.BytesType'

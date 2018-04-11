@@ -59,6 +59,8 @@ def load_uvarint(reader):
 
 
 def dump_uvarint(writer, n):
+    if n < 0:
+        raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     buffer = _UVARINT_BUFFER
     shifted = True
     while shifted:
@@ -68,15 +70,47 @@ def dump_uvarint(writer, n):
         n = shifted
 
 
+# protobuf interleaved signed encoding:
+# https://developers.google.com/protocol-buffers/docs/encoding#structure
+# the idea is to save the sign in LSbit instead of twos-complement.
+# so counting up, you go: 0, -1, 1, -2, 2, ... (as the first bit changes, sign flips)
+#
+# To achieve this with a twos-complement number:
+# 1. shift left by 1, leaving LSbit free
+# 2. XOR with "all sign bits" - 0s for positive, 1s for negative
+#    This keeps positive number the same, and converts negative from twos-complement
+#    to the appropriate value, while setting the sign bit. Cute and efficient.
+#
+# The original algorithm makes use of the fact that arithmetic (signed) shift
+# keeps the sign bits, so for a n-bit number, (x >> n+1) gets us the "all sign bits".
+#
+# But this is harder in Python because we don't know the bit size of the number.
+# We could simply shift by 65, relying on the fact that the biggest type for other
+# languages is sint64. Or we could shift by 1000 to be extra sure.
+#
+# But instead, we'll do it less elegantly, with an if branch:
+# if the number is negative, do bitwise negation (which is the same as "xor all ones").
+
+def sint_to_uint(sint):
+    res = sint << 1
+    if sint < 0:
+        res = ~res
+    return res
+
+
+def uint_to_sint(uint):
+    sign = uint & 1
+    res = uint >> 1
+    if sign:
+        res = ~res
+    return res
+
+
 class UVarintType:
     WIRE_TYPE = 0
 
 
-class Sint32Type:
-    WIRE_TYPE = 0
-
-
-class Sint64Type:
+class SVarintType:
     WIRE_TYPE = 0
 
 
@@ -237,10 +271,8 @@ def load_message(reader, msg_type):
 
         if ftype is UVarintType:
             fvalue = ivalue
-        elif ftype is Sint32Type:
-            fvalue = (ivalue >> 1) ^ ((ivalue << 31) & 0xffffffff)
-        elif ftype is Sint64Type:
-            fvalue = (ivalue >> 1) ^ ((ivalue << 63) & 0xffffffffffffffff)
+        elif ftype is SVarintType:
+            fvalue = uint_to_sint(ivalue)
         elif ftype is BoolType:
             fvalue = bool(ivalue)
         elif ftype is BytesType:
@@ -289,11 +321,8 @@ def dump_message(writer, msg):
             if ftype is UVarintType:
                 dump_uvarint(writer, svalue)
 
-            elif ftype is Sint32Type:
-                dump_uvarint(writer, ((svalue << 1) & 0xffffffff) ^ (svalue >> 31))
-
-            elif ftype is Sint64Type:
-                dump_uvarint(writer, ((svalue << 1) & 0xffffffffffffffff) ^ (svalue >> 63))
+            elif ftype is SVarintType:
+                dump_uvarint(writer, sint_to_uint(svalue))
 
             elif ftype is BoolType:
                 dump_uvarint(writer, int(svalue))

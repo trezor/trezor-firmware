@@ -6,5 +6,5 @@ from .NEMCosignatoryModification import NEMCosignatoryModification
 class NEMAggregateModification(p.MessageType):
     FIELDS = {
         1: ('modifications', NEMCosignatoryModification, p.FLAG_REPEATED),
-        2: ('relative_change', p.Sint32Type, 0),
+        2: ('relative_change', p.SVarintType, 0),
     }
