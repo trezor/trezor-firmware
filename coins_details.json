@@ -1,5 +1,18 @@
 {
     "coins": {
+        "coin2:ETC": {
+            "links": {
+                "Homepage": "https://ethereumclassic.github.io",
+                "MyCrypto Wallet": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 0,
+            "name": "Ethereum Classic",
+            "shortcut": "ETC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
         "coin2:ETH": {
             "links": {
                 "Homepage": "https://www.ethereum.org",
@@ -9,6 +22,19 @@
             "marketcap_usd": 41657474634,
             "name": "Ethereum",
             "shortcut": "ETH",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
+        "coin2:UBQ": {
+            "links": {
+                "Homepage": "https://ubiqsmart.com",
+                "MyCrypto Wallet": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 0,
+            "name": "Ubiq",
+            "shortcut": "UBQ",
             "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "coin"
@@ -8086,10 +8112,10 @@
     },
     "info": {
         "marketcap_usd": 185205612765,
-        "t1_coins": 534,
-        "t2_coins": 534,
+        "t1_coins": 536,
+        "t2_coins": 536,
         "total_marketcap_usd": 270230834613,
-        "updated_at": 1523464863,
-        "updated_at_readable": "Wed Apr 11 18:41:03 2018"
+        "updated_at": 1523467778,
+        "updated_at_readable": "Wed Apr 11 19:29:38 2018"
     }
 }

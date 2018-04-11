@@ -149,7 +149,6 @@ def update_erc20(details):
     check_unsupported(details, 'erc20:', supported)
 
 def update_ethereum(details):
-    # print('Updating Ethereum ETH')
     out = details['coins'].setdefault('coin2:ETH', {})
     out['type'] = 'coin'
     set_default(out, 'shortcut', 'ETH')
@@ -157,6 +156,22 @@ def update_ethereum(details):
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ethereum')
+
+    out = details['coins'].setdefault('coin2:ETC', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'ETC')
+    set_default(out, 'name', 'Ethereum Classic')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'ethereum-classic')
+
+    out = details['coins'].setdefault('coin2:UBQ', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'UBQ')
+    set_default(out, 'name', 'Ubiq')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'ubiq')
 
 def update_mosaics(details):
     r = requests.get('https://raw.githubusercontent.com/trezor/trezor-mcu/master/firmware/nem_mosaics.json')
