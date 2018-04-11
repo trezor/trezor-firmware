@@ -714,6 +714,7 @@ def ethereum_get_address(connect, address, show_display):
 @cli.command(help='Sign (and optionally publish) Ethereum transaction. Use TO as destination address or set TO to "" for contract creation.')
 @click.option('-a', '--host', default='localhost:8545', help='RPC port of ethereum node for automatic gas/nonce estimation and publishing')
 @click.option('-c', '--chain-id', type=int, help='EIP-155 chain id (replay protection)')
+@click.option('-x', '--tx-type', type=int, help='Wanchain txtype field')
 @click.option('-n', '--address', required=True, help="BIP-32 path to source address, e.g., m/44'/60'/0'/0/0")
 @click.option('-v', '--value', default='0', help='Ether amount to transfer, e.g. "100 milliether"')
 @click.option('-g', '--gas-limit', type=int, help='Gas limit - Required for offline signing')
@@ -723,7 +724,7 @@ def ethereum_get_address(connect, address, show_display):
 @click.option('-p', '--publish', is_flag=True, help='Publish transaction via RPC')
 @click.argument('to')
 @click.pass_obj
-def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_price, nonce, data, publish, to):
+def ethereum_sign_tx(connect, host, chain_id, tx_type, address, value, gas_limit, gas_price, nonce, data, publish, to):
     from ethjsonrpc import EthJsonRpc
     import rlp
 
@@ -775,7 +776,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
     address_n = client.expand_path(address)
     address = '0x%s' % (binascii.hexlify(client.ethereum_get_address(address_n)).decode())
 
-    if gas_price is None or gas_limit is None or nonce is None:
+    if gas_price is None or gas_limit is None or nonce is None or publish:
         host, port = host.split(':')
         eth = EthJsonRpc(host, int(port))
 
@@ -798,6 +799,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
 
     sig = client.ethereum_sign_tx(
         n=address_n,
+        tx_type=tx_type,
         nonce=nonce,
         gas_price=gas_price,
         gas_limit=gas_limit,
@@ -806,8 +808,12 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
         data=data,
         chain_id=chain_id)
 
-    transaction = rlp.encode(
-        (nonce, gas_price, gas_limit, to_address, value, data) + sig)
+    if tx_type is None:
+        transaction = rlp.encode(
+            (nonce, gas_price, gas_limit, to_address, value, data) + sig)
+    else:
+        transaction = rlp.encode(
+            (tx_type, nonce, gas_price, gas_limit, to_address, value, data) + sig)
     tx_hex = '0x%s' % binascii.hexlify(transaction).decode()
 
     if publish:
