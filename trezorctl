@@ -714,7 +714,6 @@ def ethereum_get_address(connect, address, show_display):
 @cli.command(help='Sign (and optionally publish) Ethereum transaction. Use TO as destination address or set TO to "" for contract creation.')
 @click.option('-a', '--host', default='localhost:8545', help='RPC port of ethereum node for automatic gas/nonce estimation and publishing')
 @click.option('-c', '--chain-id', type=int, help='EIP-155 chain id (replay protection)')
-@click.option('-x', '--tx-type', type=int, help='Wanchain txtype field')
 @click.option('-n', '--address', required=True, help="BIP-32 path to source address, e.g., m/44'/60'/0'/0/0")
 @click.option('-v', '--value', default='0', help='Ether amount to transfer, e.g. "100 milliether"')
 @click.option('-g', '--gas-limit', type=int, help='Gas limit - Required for offline signing')
@@ -722,9 +721,10 @@ def ethereum_get_address(connect, address, show_display):
 @click.option('-i', '--nonce', type=int, help='Transaction counter - Required for offline signing')
 @click.option('-d', '--data', default='', help='Data as hex string, e.g. 0x12345678')
 @click.option('-p', '--publish', is_flag=True, help='Publish transaction via RPC')
+@click.option('-x', '--tx-type', type=int, help='TX type (used only for Wanchain)')
 @click.argument('to')
 @click.pass_obj
-def ethereum_sign_tx(connect, host, chain_id, tx_type, address, value, gas_limit, gas_price, nonce, data, publish, to):
+def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_price, nonce, data, publish, to, tx_type):
     from ethjsonrpc import EthJsonRpc
     import rlp
 
