@@ -33,8 +33,8 @@ reset_handler:
   // enter the application code
   bl main
 
-  // loop forever if the application code returns
-  b .
+  // shutdown if the application code returns
+  b shutdown
 
   .global shutdown
   .type shutdown, STT_FUNC
