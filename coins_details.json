@@ -26,6 +26,32 @@
             "t2_enabled": "yes",
             "type": "coin"
         },
+        "coin2:EXP": {
+            "links": {
+                "Homepage": "https://www.expanse.tech",
+                "MyCrypto Wallet": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 0,
+            "name": "Expanse",
+            "shortcut": "EXP",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
+        "coin2:RSK": {
+            "links": {
+                "Homepage": "https://www.rsk.co",
+                "MyCrypto Wallet": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 0,
+            "name": "Rootstock",
+            "shortcut": "RSK",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
         "coin2:UBQ": {
             "links": {
                 "Homepage": "https://ubiqsmart.com",
@@ -8112,10 +8138,10 @@
     },
     "info": {
         "marketcap_usd": 185205612765,
-        "t1_coins": 536,
-        "t2_coins": 536,
+        "t1_coins": 538,
+        "t2_coins": 538,
         "total_marketcap_usd": 270230834613,
-        "updated_at": 1523467778,
-        "updated_at_readable": "Wed Apr 11 19:29:38 2018"
+        "updated_at": 1523468285,
+        "updated_at_readable": "Wed Apr 11 19:38:05 2018"
     }
 }

@@ -165,6 +165,22 @@ def update_ethereum(details):
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ethereum-classic')
 
+    out = details['coins'].setdefault('coin2:RSK', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'RSK')
+    set_default(out, 'name', 'Rootstock')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'rootstock')
+
+    out = details['coins'].setdefault('coin2:EXP', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'EXP')
+    set_default(out, 'name', 'Expanse')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'expanse')
+
     out = details['coins'].setdefault('coin2:UBQ', {})
     out['type'] = 'coin'
     set_default(out, 'shortcut', 'UBQ')
