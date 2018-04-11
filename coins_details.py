@@ -5,7 +5,7 @@ import json
 import requests
 import pprint
 
-SKIP_COINMARKETCAP = False
+SKIP_COINMARKETCAP = True
 
 def coinmarketcap_info(shortcut):
     if SKIP_COINMARKETCAP:
@@ -13,12 +13,12 @@ def coinmarketcap_info(shortcut):
 
     shortcut = shortcut.replace(' ', '-')
     url = 'https://api.coinmarketcap.com/v1/ticker/%s/?convert=USD' % shortcut
-    ret = requests.get(url)
-    data = ret.json()
     try:
-        return data[0]
+        return requests.get(url).json()[0]
+    except KeyboardInterrupt:
+        raise
     except:
-        print("Cannot fetch info for %s" % shortcut)
+        print("Cannot fetch Coinmarketcap info for %s" % shortcut)
 
 def update_marketcap(obj, shortcut):
     try:
@@ -41,7 +41,8 @@ def set_default(obj, key, default_value):
 def update_info(details):
     details['info']['updated_at'] = int(time.time())
     details['info']['updated_at_readable'] = time.asctime()
-    details['info']['coins'] = len(details['coins'])
+    details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c['t1_enabled'] == 'yes'])
+    details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes'])
     
     try:
         details['info']['total_marketcap_usd'] = int(coinmarketcap_global()['total_market_cap_usd'])
@@ -49,28 +50,39 @@ def update_info(details):
         pass
 
     marketcap = 0
-    for c in details['coins']:
-        marketcap += details['coins'][c].setdefault('marketcap_usd', 0)
+    for k, c in details['coins'].items():
+        if c['t1_enabled'] == 'yes' or c['t2_enabled'] == 'yes':
+            marketcap += details['coins'][k].setdefault('marketcap_usd', 0)
     details['info']['marketcap_usd'] = marketcap
+
+def check_unsupported(details, prefix, supported):
+    for k in details['coins'].keys():
+        if not k.startswith(prefix):
+            continue
+        if k not in supported:
+            print("%s not supported by Trezor? (Possible manual entry)" % k)
 
 def update_coins(details):
     coins = json.load(open('coins.json', 'r'))
 
+    supported = []
     for coin in coins:
         if coin['firmware'] != 'stable':
             continue
 
-        print("Updating", coin['coin_label'], coin['coin_shortcut'])
-        out = details['coins'].setdefault(coin['coin_shortcut'], {})
-        out['shortcut'] = coin['coin_shortcut']
-        out['type'] = 'blockchain'
-
+        # print("Updating", coin['coin_label'], coin['coin_shortcut'])
+        key = "coin:%s" % coin['coin_shortcut']
+        supported.append(key)
+        out = details['coins'].setdefault(key, {})
+        out['type'] = 'coin'
+        set_default(out, 'shortcut', coin['coin_shortcut'])
         set_default(out, 'name', coin['coin_label'])
+        set_default(out, 'links', {})
         set_default(out, 't1_enabled', 'yes')
         set_default(out, 't2_enabled', 'yes')
-        update_marketcap(out, coin['coin_label'])
+        update_marketcap(out, coin.get('coinmarketcap_alias', coin['coin_label']))
 
-        #pprint.pprint(coin)
+    check_unsupported(details, 'coin:', supported)
 
 def update_erc20(details):
     networks = [
@@ -94,16 +106,15 @@ def update_erc20(details):
 
     infos = {}
     for n in networks:
-        print("Updating info about erc20 tokens for", n[0])
+        # print("Updating info about erc20 tokens for", n[0])
         url = 'https://gateway.ipfs.io/ipfs/%s/%s.json' % (ipfs_hash, n[0])
         r = requests.get(url)
         infos[n[0]] = r.json()
 
-    #print(infos)
-
+    supported = []
     for t in d['tokens']:
         token = t[2]
-        print('Updating', token)
+        # print('Updating', token)
 
         try:
             network = [ n[0] for n in networks if n[1] == t[0] ][0]
@@ -115,11 +126,15 @@ def update_erc20(details):
         except:
             raise Exception("Unknown details for erc20 token", token)
 
-        out = details['coins'].setdefault(token, {})
-        out['name'] = info['name']
+        key = "erc20:%s:%s" % (network, token)
+        supported.append(key)
+        out = details['coins'].setdefault(key, {})
         out['type'] = 'erc20'
         out['network'] = network
         out['address'] = info['address']
+
+        set_default(out, 'shortcut', token)
+        set_default(out, 'name', info['name'])
         set_default(out, 't1_enabled', 'yes')
         set_default(out, 't2_enabled', 'yes')
         set_default(out, 'links', {})
@@ -129,28 +144,54 @@ def update_erc20(details):
         if info.get('social', {}).get('github', None):
             out['links']['Github'] = info['social']['github']
 
+        update_marketcap(out, out.get('coinmarketcap_alias', token))
+
+    check_unsupported(details, 'erc20:', supported)
+
 def update_ethereum(details):
-    print('Updating Ethereum ETH')
-    out = details['coins'].setdefault('ETH', {})
-    out['name'] = 'Ethereum'
+    # print('Updating Ethereum ETH')
+    out = details['coins'].setdefault('coin2:ETH', {})
     out['type'] = 'coin'
+    set_default(out, 'shortcut', 'ETH')
+    set_default(out, 'name', 'Ethereum')
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ethereum')
 
 def update_mosaics(details):
     r = requests.get('https://raw.githubusercontent.com/trezor/trezor-mcu/master/firmware/nem_mosaics.json')
+    supported = []
     for mosaic in r.json():
-        print('Updating', mosaic['name'], mosaic['ticker'])
+        # print('Updating', mosaic['name'], mosaic['ticker'])
 
-        out = details['coins'].setdefault(mosaic['ticker'].strip(), {})
-        out['name'] = mosaic['name']
+        key = "mosaic:%s" % mosaic['ticker'].strip()
+        supported.append(key)
+        out = details['coins'].setdefault(key, {})
         out['type'] = 'mosaic'
+        set_default(out, 'shortcut', mosaic['ticker'].strip())
+        set_default(out, 'name', mosaic['name'])
         set_default(out, 't1_enabled', 'yes')
         set_default(out, 't2_enabled', 'yes')
 
-    # Update NEM marketcap
-    update_marketcap(details['coins']['XEM'], 'NEM')
+        update_marketcap(out, out.get('coinmarketcap_alias', out['name']))
+
+    check_unsupported(details, 'mosaic:', supported)
+
+def check_missing_details(details):
+    for k in details['coins'].keys():
+        coin = details['coins'][k]
+
+        if 'links' not in coin:
+            print("%s: Missing links" % k)
+            continue
+        if 'Homepage' not in coin['links']:
+            print("%s: Missing homepage" % k)
+        if coin['t1_enabled'] not in ('yes', 'no', 'planned', 'in progress'):
+            print("%s: Unknown t1_enabled" % k)
+        if coin['t2_enabled'] not in ('yes', 'no', 'planned', 'in progress'):
+            print("%s: Unknown t2_enabled" % k)
+        if 'TREZOR Wallet' in coin['links'] and coin['links']['TREZOR Wallet'] != 'https://wallet.trezor.io':
+            print("%s: Strange URL for TREZOR Wallet" % k)
 
 if __name__ == '__main__':
     try:
@@ -163,6 +204,7 @@ if __name__ == '__main__':
     update_ethereum(details)
     update_mosaics(details)
     update_info(details)
+    check_missing_details(details)
 
-    print(json.dumps(details, sort_keys=True, indent=4))
+    print(json.dumps(details['info'], sort_keys=True, indent=4))
     json.dump(details, open('coins_details.json', 'w'), sort_keys=True, indent=4)
