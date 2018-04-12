@@ -8,5 +8,5 @@ async def mosaic_creation(ctx, public_key: bytes, msg: NEMSignTx) -> bytearray:
 
 
 async def supply_change(ctx, public_key: bytes, msg: NEMSignTx):
-    await ask_mosaic_supply_change(ctx, msg)
+    await ask_supply_change(ctx, msg)
     return serialize_mosaic_supply_change(msg, public_key)
