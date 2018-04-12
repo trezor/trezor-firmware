@@ -1,29 +1,8 @@
-from .writers import *
-from apps.nem.layout import *
-from trezor.messages import NEMImportanceTransferMode
+from apps.nem.writers import *
+from apps.nem.helpers import *
+from trezor.messages.NEMMosaic import NEMMosaic
+from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.crypto import random
-
-
-async def ask_transfer(ctx, msg: NEMSignTx, payload, encrypted):
-    if payload:
-        await require_confirm_payload(ctx, msg.transfer.payload, encrypted)
-
-    for mosaic in msg.transfer.mosaics:
-        await require_confirm_action(ctx, 'Confirm transfer of ' + str(mosaic.quantity) +
-                                     ' raw units of ' + mosaic.namespace + '.' + mosaic.mosaic)
-
-    await require_confirm_transfer(ctx, msg.transfer.recipient, msg.transfer.amount)
-
-    await require_confirm_final(ctx, msg.transaction.fee)
-
-
-async def ask_importance_transfer(ctx, msg: NEMSignTx):
-    if msg.importance_transfer.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
-        m = 'Activate'
-    else:
-        m = 'Deactivate'
-    await require_confirm_action(ctx, m + ' remote harvesting?')
-    await require_confirm_final(ctx, msg.transaction.fee)
 
 
 def serialize_transfer(msg: NEMSignTx, public_key: bytes, payload: bytes=None, encrypted: bool=False) -> bytearray:
@@ -50,6 +29,16 @@ def serialize_transfer(msg: NEMSignTx, public_key: bytes, payload: bytes=None, e
         write_uint32(tx, len(msg.transfer.mosaics))
 
     return tx
+
+
+def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
+    identifier_length = 4 + len(namespace) + 4 + len(mosaic)
+    # indentifier length (u32) + quantity (u64) + identifier size
+    write_uint32(w, 4 + 8 + identifier_length)
+    write_uint32(w, identifier_length)
+    write_bytes_with_length(w, bytearray(namespace))
+    write_bytes_with_length(w, bytearray(mosaic))
+    write_uint64(w, quantity)
 
 
 def serialize_importance_transfer(msg: NEMSignTx, public_key: bytes) -> bytearray:
@@ -83,3 +72,35 @@ def _get_version(network, mosaics=None) -> int:
     if mosaics:
         return network << 24 | 2
     return network << 24 | 1
+
+
+def canonicalize_mosaics(mosaics: list):
+    if len(mosaics) <= 1:
+        return mosaics
+    mosaics = merge_mosaics(mosaics)
+    return sort_mosaics(mosaics)
+
+
+def are_mosaics_equal(a: NEMMosaic, b: NEMMosaic) -> bool:
+    if a.namespace == b.namespace and a.mosaic == b.mosaic:
+        return True
+    return False
+
+
+def merge_mosaics(mosaics: list) -> list:
+    if not len(mosaics):
+        return list()
+    ret = list()
+    for i in mosaics:
+        found = False
+        for k, y in enumerate(ret):
+            if are_mosaics_equal(i, y):
+                ret[k].quantity += i.quantity
+                found = True
+        if not found:
+            ret.append(i)
+    return ret
+
+
+def sort_mosaics(mosaics: list) -> list:
+    return sorted(mosaics, key=lambda m: (m.namespace, m.mosaic))

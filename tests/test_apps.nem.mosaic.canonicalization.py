@@ -1,5 +1,5 @@
 from common import *
-from apps.nem.mosaic import *
+from apps.nem.transfer import *
 
 
 class TestNemMosaicCanonicalization(unittest.TestCase):

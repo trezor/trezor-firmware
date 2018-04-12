@@ -1,7 +1,4 @@
-
 from micropython import const
-from trezor.messages.NEMSignTx import NEMSignTx
-
 
 NEM_NETWORK_MAINNET = const(0x68)
 NEM_NETWORK_TESTNET = const(0x98)
