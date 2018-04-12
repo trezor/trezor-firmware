@@ -476,8 +476,8 @@ enum LiskTransactionType {
 */
 message LiskTransactionCommon {
 	optional LiskTransactionType type = 1;
-	optional string amount = 2 [default='0'];
-	optional string fee = 3;
+	optional uint64 amount = 2 [default=0];
+	optional uint64 fee = 3;
 	optional string recipient_id = 4;
 	optional string sender_public_key = 5;
 	optional string requester_public_key = 6;
