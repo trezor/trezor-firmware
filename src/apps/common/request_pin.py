@@ -46,7 +46,7 @@ async def request_pin(label=None, cancellable: bool=True) -> str:
 
     while True:
         if __debug__:
-            result = await loop.wait(dialog, input_signal)
+            result = await loop.spawn(dialog, input_signal)
             if isinstance(result, str):
                 return result
         else:

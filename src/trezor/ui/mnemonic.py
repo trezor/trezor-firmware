@@ -149,15 +149,15 @@ class MnemonicKeyboard(ui.Widget):
 
     async def __iter__(self):
         if __debug__:
-            return await loop.wait(self.edit_loop(), input_signal)
+            return await loop.spawn(self.edit_loop(), input_signal)
         else:
             return await self.edit_loop()
 
     async def edit_loop(self):
         timeout = loop.sleep(1000 * 1000 * 1)
-        touch = loop.select(io.TOUCH)
-        wait_timeout = loop.wait(touch, timeout)
-        wait_touch = loop.wait(touch)
+        touch = loop.wait(io.TOUCH)
+        wait_timeout = loop.spawn(touch, timeout)
+        wait_touch = loop.spawn(touch)
         content = None
 
         self.back.taint()

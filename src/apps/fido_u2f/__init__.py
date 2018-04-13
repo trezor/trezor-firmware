@@ -231,7 +231,7 @@ class Cmd:
 async def read_cmd(iface: io.HID) -> Cmd:
     desc_init = frame_init()
     desc_cont = frame_cont()
-    read = loop.select(iface.iface_num() | io.POLL_READ)
+    read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     buf = await read
 
@@ -304,7 +304,7 @@ async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
     if offset < datalen:
         frm = overlay_struct(buf, cont_desc)
 
-    write = loop.select(iface.iface_num() | io.POLL_WRITE)
+    write = loop.wait(iface.iface_num() | io.POLL_WRITE)
     while offset < datalen:
         frm.seq = seq
         offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)

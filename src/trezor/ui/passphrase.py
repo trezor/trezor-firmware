@@ -170,7 +170,7 @@ class PassphraseKeyboard(ui.Widget):
         while True:
             change = self.change_page()
             enter = self.enter_text()
-            wait = loop.wait(change, enter)
+            wait = loop.spawn(change, enter)
             result = await wait
             if enter in wait.finished:
                 return result
@@ -178,9 +178,9 @@ class PassphraseKeyboard(ui.Widget):
     @ui.layout
     async def enter_text(self):
         timeout = loop.sleep(1000 * 1000 * 1)
-        touch = loop.select(io.TOUCH)
-        wait_timeout = loop.wait(touch, timeout)
-        wait_touch = loop.wait(touch)
+        touch = loop.wait(io.TOUCH)
+        wait_timeout = loop.spawn(touch, timeout)
+        wait_touch = loop.spawn(touch)
         content = None
         while content is None:
             self.render()

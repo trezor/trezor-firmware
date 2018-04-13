@@ -126,7 +126,7 @@ async def swipe_move():
 async def layout_game():
     while True:
         s.render()
-        await loop.wait(swipe_move())
+        await swipe_move()
 
 
 workflow.startdefault(layout_game)

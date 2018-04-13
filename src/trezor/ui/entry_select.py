@@ -26,4 +26,4 @@ class EntrySelector(Widget):
             return HOST
 
     async def __iter__(self):
-        return await loop.wait(super().__iter__(), self.content)
+        return await loop.spawn(super().__iter__(), self.content)

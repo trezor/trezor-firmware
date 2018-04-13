@@ -4,7 +4,7 @@ the form of python coroutines (either plain generators or `async` functions) are
 stepped through until completion, and can get asynchronously blocked by
 `yield`ing or `await`ing a syscall.
 
-See `schedule`, `run`, and syscalls `sleep`, `select`, `signal` and `wait`.
+See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `spawn`.
 '''
 
 import utime
@@ -145,7 +145,7 @@ class sleep(Syscall):
         schedule(task, deadline, deadline)
 
 
-class select(Syscall):
+class wait(Syscall):
     '''
     Pause current task, and resume only after a message on `msg_iface` is
     received.  Messages are received either from an USB interface, or the
@@ -153,8 +153,8 @@ class select(Syscall):
 
     Example:
 
-    >>> hid_report, = await loop.select(0xABCD)  # await USB HID report
-    >>> event, x, y = await loop.select(io.TOUCH)  # await touch event
+    >>> hid_report, = await loop.wait(0xABCD)  # await USB HID report
+    >>> event, x, y = await loop.wait(io.TOUCH)  # await touch event
     '''
 
     def __init__(self, msg_iface):
@@ -209,11 +209,11 @@ class signal(Syscall):
             raise
 
 
-class wait(Syscall):
+class spawn(Syscall):
     '''
     Execute one or more children tasks and wait until one or more of them exit.
-    Return value of `wait` is the return value of task that triggered the
-    completion.  By default, `wait` returns after the first child completes, and
+    Return value of `spawn` is the return value of task that triggered the
+    completion.  By default, `spawn` returns after the first child completes, and
     other running children are killed (by cancelling any pending schedules and
     calling `close()`).
 
@@ -223,15 +223,15 @@ class wait(Syscall):
     >>> # async def animate_logo(): ...
     >>> touch_task = wait_for_touch()
     >>> animation_task = animate_logo()
-    >>> waiter = loop.wait(touch_task, animation_task)
+    >>> waiter = loop.spawn(touch_task, animation_task)
     >>> result = await waiter
     >>> if animation_task in waiter.finished:
     >>>     print('animation task returned', result)
     >>> else:
     >>>     print('touch task returned', result)
 
-    Note: You should not directly `yield` a `wait` instance, see logic in
-    `wait.__iter__` for explanation.  Always use `await`.
+    Note: You should not directly `yield` a `spawn` instance, see logic in
+    `spawn.__iter__` for explanation.  Always use `await`.
     '''
 
     def __init__(self, *children, wait_for=1, exit_others=True):

@@ -85,7 +85,7 @@ async def alert(count: int=3):
 
 
 async def click() -> tuple:
-    touch = loop.select(io.TOUCH)
+    touch = loop.wait(io.TOUCH)
     while True:
         ev, *pos = yield touch
         if ev == io.TOUCH_START:
@@ -161,7 +161,7 @@ class Widget:
         pass
 
     def __iter__(self):
-        touch = loop.select(io.TOUCH)
+        touch = loop.wait(io.TOUCH)
         result = None
         while result is None:
             self.render()

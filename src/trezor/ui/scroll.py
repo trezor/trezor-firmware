@@ -16,7 +16,7 @@ async def change_page(page, page_count):
             d = SWIPE_VERTICAL
         swipe = Swipe(directions=d)
         if __debug__:
-            s = await loop.wait(swipe, swipe_signal)
+            s = await loop.spawn(swipe, swipe_signal)
         else:
             s = await swipe
         if s == SWIPE_UP:
@@ -29,7 +29,7 @@ async def paginate(render_page, page_count, page=0, *args):
     while True:
         changer = change_page(page, page_count)
         renderer = render_page(page, page_count, *args)
-        waiter = loop.wait(changer, renderer)
+        waiter = loop.spawn(changer, renderer)
         result = await waiter
         if changer in waiter.finished:
             page = result
@@ -82,4 +82,4 @@ class Scrollpage(ui.Widget):
         render_scrollbar(self.page, self.page_count)
 
     async def __iter__(self):
-        return await loop.wait(super().__iter__(), self.content)
+        return await loop.spawn(super().__iter__(), self.content)

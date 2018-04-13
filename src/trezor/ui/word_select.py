@@ -38,10 +38,10 @@ class WordSelector(Widget):
 
     async def __iter__(self):
         if __debug__:
-            result = await loop.wait(super().__iter__(), self.content, input_signal)
+            result = await loop.spawn(super().__iter__(), self.content, input_signal)
             if isinstance(result, str):
                 return int(result)
             else:
                 return result
         else:
-            return await loop.wait(super().__iter__(), self.content)
+            return await loop.spawn(super().__iter__(), self.content)

@@ -86,7 +86,7 @@ class Context:
         while servicing the wire context.  If a message comes until one of the
         tasks ends, `UnexpectedMessageError` is raised.
         '''
-        return loop.wait(self.read(()), *tasks)
+        return loop.spawn(self.read(()), *tasks)
 
     def getreader(self):
         return codec_v1.Reader(self.iface)

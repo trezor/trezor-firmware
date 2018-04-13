@@ -38,7 +38,7 @@ class Reader:
         on this session.  `self.type` and `self.size` are initialized and
         available after `aopen()` returns.
         '''
-        read = loop.select(self.iface.iface_num() | io.POLL_READ)
+        read = loop.wait(self.iface.iface_num() | io.POLL_READ)
         while True:
             # wait for initial report
             report = await read
@@ -64,7 +64,7 @@ class Reader:
         if self.size < len(buf):
             raise EOFError
 
-        read = loop.select(self.iface.iface_num() | io.POLL_READ)
+        read = loop.wait(self.iface.iface_num() | io.POLL_READ)
         nread = 0
         while nread < len(buf):
             if self.ofs == len(self.data):
@@ -123,7 +123,7 @@ class Writer:
         if self.size < len(buf):
             raise EOFError
 
-        write = loop.select(self.iface.iface_num() | io.POLL_WRITE)
+        write = loop.wait(self.iface.iface_num() | io.POLL_WRITE)
         nwritten = 0
         while nwritten < len(buf):
             # copy as much as possible to report buffer
@@ -152,7 +152,7 @@ class Writer:
                 self.data[self.ofs] = 0x00
                 self.ofs += 1
 
-            write = loop.select(self.iface.iface_num() | io.POLL_WRITE)
+            write = loop.wait(self.iface.iface_num() | io.POLL_WRITE)
             while True:
                 await write
                 n = self.iface.write(self.data)
