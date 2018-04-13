@@ -34,3 +34,9 @@ async def require_confirm_final(ctx, fee: int):
 
 def split_address(data):
     return chunks(data, 17)
+
+
+def trim(payload: str, length: int) -> str:
+    if len(payload) > length:
+        return payload[:length] + '..'
+    return payload

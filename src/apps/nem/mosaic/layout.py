@@ -63,7 +63,7 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
     if definition.description:
         t = Text('Confirm properties', ui.ICON_SEND,
                  ui.BOLD, 'Description:',
-                 ui.NORMAL, definition.description)
+                 ui.NORMAL, *split_words(trim(definition.description, 70), 22))
         properties.append(t)
     if definition.transferable:
         transferable = 'Yes'
@@ -91,6 +91,12 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
         t = Text('Confirm properties', ui.ICON_SEND,
                  ui.BOLD, 'Levy recipient:',
                  ui.MONO, *split_address(definition.levy_address))
+        properties.append(t)
+        t = Text('Confirm properties', ui.ICON_SEND,
+                 ui.BOLD, 'Levy fee:',
+                 ui.NORMAL, str(definition.fee),
+                 ui.BOLD, 'Levy divisibility:',
+                 ui.NORMAL, str(definition.divisibility))
         properties.append(t)
         t = Text('Confirm properties', ui.ICON_SEND,
                  ui.BOLD, 'Levy namespace:',
