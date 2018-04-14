@@ -1100,7 +1100,7 @@ message StellarPaymentOp {
 
 	optional bytes destination_account = 2;	// 32-byte destination account
 	optional StellarAssetType asset = 3;	// asset involved in the operation
-	optional int64 amount = 4;				// amount of the given asset to pay
+	optional sint64 amount = 4;				// amount of the given asset to pay
 }
 
 /**
@@ -1113,7 +1113,7 @@ message StellarCreateAccountOp {
 	optional bytes source_account = 1;		// (optional) 32-byte source account
 
 	optional bytes new_account = 2;			// 32-byte account ID to create
-	optional int64 starting_balance = 3;	// initial starting balance for the new account
+	optional sint64 starting_balance = 3;	// initial starting balance for the new account
 }
 
 /**
@@ -1126,10 +1126,10 @@ message StellarPathPaymentOp {
 	optional bytes source_account = 1;		// (optional) 32-byte source account
 
 	optional StellarAssetType send_asset = 2;
-	optional int64 send_max = 3;
+	optional sint64 send_max = 3;
 	optional bytes destination_account = 4;
 	optional StellarAssetType destination_asset = 5;
-	optional int64 destination_amount = 6;
+	optional sint64 destination_amount = 6;
 	repeated StellarAssetType paths = 7;
 }
 
@@ -1144,7 +1144,7 @@ message StellarManageOfferOp {
 
 	optional StellarAssetType selling_asset = 2;
 	optional StellarAssetType buying_asset = 3;
-	optional int64 amount = 4;
+	optional sint64 amount = 4;
 	optional uint32 price_n = 5;			// Price numerator
 	optional uint32 price_d = 6;			// Price denominator
 	optional uint64 offer_id = 7;			// Offer ID for updating an existing offer
@@ -1161,7 +1161,7 @@ message StellarCreatePassiveOfferOp {
 
 	optional StellarAssetType selling_asset = 2;
 	optional StellarAssetType buying_asset = 3;
-	optional int64 amount = 4;
+	optional sint64 amount = 4;
 	optional uint32 price_n = 5;			// Price numerator
 	optional uint32 price_d = 6;			// Price denominator
 }
