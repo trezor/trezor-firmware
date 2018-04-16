@@ -627,6 +627,16 @@ class ProtocolMixin(object):
             return True
         return False
 
+    #
+    # Lisk functions
+    #
+
+    @field('address')
+    @expect(proto.LiskAddress)
+    def lisk_get_address(self, n, show_display=False):
+        n = self._convert_prime(n)
+        return self.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
+
     @field('entropy')
     @expect(proto.Entropy)
     def get_entropy(self, size):

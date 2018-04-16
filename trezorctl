@@ -862,6 +862,21 @@ def nem_sign_tx(connect, address, file, broadcast):
 
 
 #
+# Lisk functions
+#
+
+
+@cli.command(help='Get Lisk address for specified path.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
+@click.option('-d', '--show-display', is_flag=True)
+@click.pass_obj
+def lisk_get_address(connect, address, show_display):
+    client = connect()
+    address_n = client.expand_path(address)
+    return client.lisk_get_address(address_n, show_display)
+
+
+#
 # CoSi functions
 #
 
