@@ -637,6 +637,12 @@ class ProtocolMixin(object):
         n = self._convert_prime(n)
         return self.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
 
+    @expect(proto.LiskMessageSignature)
+    def lisk_sign_message(self, n, message):
+        n = self._convert_prime(n)
+        message = normalize_nfc(message)
+        return self.call(proto.LiskSignMessage(address_n=n, message=message))
+
     @field('entropy')
     @expect(proto.Entropy)
     def get_entropy(self, size):
