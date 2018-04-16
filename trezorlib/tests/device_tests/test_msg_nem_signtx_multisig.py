@@ -52,17 +52,17 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
-            "timeStamp": 74649215,
-            "fee": 2000000,
+            "timeStamp": 1,
+            "fee": 10000,
             "type": nem.TYPE_MULTISIG,
             "deadline": 74735615,
             "otherTrans": {  # simple transaction transfer
-                "timeStamp": 74649215,
+                "timeStamp": 2,
                 "amount": 2000000,
-                "fee": 2000000,
+                "fee": 15000,
                 "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
                 "type": nem.TYPE_TRANSACTION_TRANSFER,
-                "deadline": 74735615,
+                "deadline": 67890,
                 "message": {
                     "payload": hexlify(b"test_nem_transaction_transfer"),
                     "type": 1,
@@ -73,19 +73,19 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
             "version": (0x98 << 24),
         })
 
-        assert hexlify(tx.data) == b'04100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74049900000001010000010000987f0e730420000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f8784480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572'
-        assert hexlify(tx.signature) == b'c42e828ec1686ef8f6ee6af0f28bd8468bd5861a61e440889b07b359ccdf61b369295a54102634c9ccab0a577e100183740395031e835c22855dcdeebd328008'
+        assert hexlify(tx.data) == b'04100000010000980100000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841027000000000000ff5f74049900000001010000010000980200000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844983a000000000000320901002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572'
+        assert hexlify(tx.signature) == b'0cab2fddf2f02b5d7201675b9a71869292fe25ed33a366c7d2cbea7676fed491faaa03310079b7e17884b6ba2e3ea21c4f728d1cca8f190b8288207f6514820a'
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 74649215,
-            "fee": 2000000,
+            "fee": 150,
             "type": nem.TYPE_MULTISIG,
-            "deadline": 74735615,
+            "deadline": 789,
             "otherTrans": {
-                "timeStamp": 74649215,
-                "fee": 2000000,
+                "timeStamp": 123456,
+                "fee": 2000,
                 "type": nem.TYPE_PROVISION_NAMESPACE,
-                "deadline": 74735615,
+                "deadline": 100,
                 "message": {
                 },
                 "newPart": "ABCDE",
@@ -98,24 +98,24 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
             "version": (0x98 << 24),
         })
 
-        assert hexlify(tx.data) == b'04100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74047d00000001200000010000987f0e730420000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f8784480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000050000004142434445ffffffff'
-        assert hexlify(tx.signature) == b'1b67c2c91240ab55bc2762a673d43745bd1e08206b64bd52501ef945d511c73a1b7cf4d6c1d7f97bd31e13a8a2eafce0707b6331d60d0808d5ac4d1e8dba970e'
+        assert hexlify(tx.data) == b'04100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620849600000000000000150300007d000000012000000100009840e2010020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844d007000000000000640000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000050000004142434445ffffffff'
+        assert hexlify(tx.signature) == b'c915ca3332380925f4050301cdc62269cf29437ac5955321b18da34e570c7fdbb1aec2940a2a553a2a5c90950a4db3c8d3ef899c1a108582e0657f66fbbb0b04'
 
     def test_nem_signtx_multisig_signer(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
-            "timeStamp": 74649215,
-            "fee": 2000000,
+            "timeStamp": 333,
+            "fee": 200,
             "type": nem.TYPE_MULTISIG_SIGNATURE,
-            "deadline": 74735615,
+            "deadline": 444,
             "otherTrans": {  # simple transaction transfer
-                "timeStamp": 74649215,
+                "timeStamp": 555,
                 "amount": 2000000,
                 "fee": 2000000,
                 "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
                 "type": nem.TYPE_TRANSACTION_TRANSFER,
-                "deadline": 74735615,
+                "deadline": 666,
                 "message": {
                     "payload": hexlify(b"test_nem_transaction_transfer"),
                     "type": 1,
@@ -126,19 +126,19 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
             "version": (0x98 << 24),
         })
 
-        assert hexlify(tx.data) == b'02100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042400000020000000e03479740771665bdd292df6fc29c9c63e72b0dbcba95ede615614acda979bf328000000544444324354364c514c49595135364b49584933454e544d36454b3344343450354b5a50464d4b32'
-        assert hexlify(tx.signature) == b'ff731324a2269fd27e103c88a23ef767667a6641e339de3ce84d8cfeed000dcc18f9af1c68b4a12798a312b2e588c7b7174b578c5fc7503e5a5ef15562abed03'
+        assert hexlify(tx.data) == b'02100000010000984d01000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b4062084c800000000000000bc010000240000002000000087923cd4805f3babe6b5af9cbb2b08be4458e39531618aed73c911f160c8e38528000000544444324354364c514c49595135364b49584933454e544d36454b3344343450354b5a50464d4b32'
+        assert hexlify(tx.signature) == b'286358a16ae545bff798feab93a713440c7c2f236d52ac0e995669d17a1915b0903667c97fa04418eccb42333cba95b19bccc8ac1faa8224dcfaeb41890ae807'
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
-            "timeStamp": 74649215,
-            "fee": 2000000,
+            "timeStamp": 900000,
+            "fee": 200000,
             "type": nem.TYPE_MULTISIG_SIGNATURE,
-            "deadline": 74735615,
+            "deadline": 100,
             "otherTrans": {  # simple transaction transfer
-                "timeStamp": 74649215,
-                "fee": 2000000,
+                "timeStamp": 101111,
+                "fee": 1000,
                 "type": nem.TYPE_MOSAIC_SUPPLY_CHANGE,
-                "deadline": 74735615,
+                "deadline": 13123,
                 "message": {
                 },
                 "mosaicId": {
@@ -155,5 +155,5 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
             "version": (0x98 << 24),
         })
 
-        assert hexlify(tx.data) == b'02100000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042400000020000000d4773c2daeb338a1f41e1595bcabf7a1d788517235c9796c6fd5e094f1aa474d28000000544444324354364c514c49595135364b49584933454e544d36454b3344343450354b5a50464d4b32'
-        assert hexlify(tx.signature) == b'9f72079ece8d3bf647da3c09d03e39e94cbc98c525128c5f9cef1d24666b57e1960d95db3199d56435ff9faaf098860248fc8b5d859ddd9049a6f7a5973f320f'
+        assert hexlify(tx.data) == b'0210000001000098a0bb0d0020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b4062084400d030000000000640000002400000020000000c51395626a89a71c1ed785fb5974307a049b3b9e2165d56ed0302fe6b4f02a0128000000544444324354364c514c49595135364b49584933454e544d36454b3344343450354b5a50464d4b32'
+        assert hexlify(tx.signature) == b'32b1fdf788c4a90c01eedf5972b7709745831d620c13e1e97b0de6481837e162ee551573f2409822754ae940731909ec4b79cf836487e898df476adb10467506'
