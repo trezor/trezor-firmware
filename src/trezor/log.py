@@ -17,7 +17,7 @@ _leveldict = {
     CRITICAL: ('CRITICAL', '1;31'),
 }
 
-level = NOTSET
+level = DEBUG
 color = True
 
 
