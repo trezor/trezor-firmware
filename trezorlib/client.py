@@ -643,6 +643,14 @@ class ProtocolMixin(object):
         message = normalize_nfc(message)
         return self.call(proto.LiskSignMessage(address_n=n, message=message))
 
+    def lisk_verify_message(self, pubkey, signature, message):
+        message = normalize_nfc(message)
+        try:
+            resp = self.call(proto.LiskVerifyMessage(signature=signature, public_key=pubkey, message=message))
+        except CallException as e:
+            resp = e
+        return  isinstance(resp, proto.Success)
+
     @field('entropy')
     @expect(proto.Entropy)
     def get_entropy(self, size):

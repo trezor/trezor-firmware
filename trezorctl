@@ -892,6 +892,17 @@ def lisk_sign_message(connect, address, message):
     return output
 
 
+@cli.command(help='Verify message signed with Lisk address.')
+@click.argument('pubkey')
+@click.argument('signature')
+@click.argument('message')
+@click.pass_obj
+def lisk_verify_message(connect, pubkey, signature, message):
+    signature = bytes.fromhex(signature)
+    pubkey = bytes.fromhex(pubkey)
+    return connect().lisk_verify_message(pubkey, signature, message)
+
+
 #
 # CoSi functions
 #
