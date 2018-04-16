@@ -637,6 +637,11 @@ class ProtocolMixin(object):
         n = self._convert_prime(n)
         return self.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
 
+    @expect(proto.LiskPublicKey)
+    def lisk_get_public_key(self, n, show_display=False):
+        n = self._convert_prime(n)
+        return self.call(proto.LiskGetPublicKey(address_n=n, show_display=show_display))
+
     @expect(proto.LiskMessageSignature)
     def lisk_sign_message(self, n, message):
         n = self._convert_prime(n)

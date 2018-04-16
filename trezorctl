@@ -876,6 +876,20 @@ def lisk_get_address(connect, address, show_display):
     return client.lisk_get_address(address_n, show_display)
 
 
+@cli.command(help='Get Lisk public key for specified path.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
+@click.option('-d', '--show-display', is_flag=True)
+@click.pass_obj
+def lisk_get_public_key(connect, address, show_display):
+    client = connect()
+    address_n = client.expand_path(address)
+    res = client.lisk_get_public_key(address_n, show_display)
+    output = {
+        "public_key": binascii.hexlify(res.public_key).decode()
+    }
+    return output
+
+
 @cli.command(help='Sign message with Lisk address.')
 @click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
 @click.argument('message')
