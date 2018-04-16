@@ -44,7 +44,7 @@ static void svhandler_flash_program(uint32_t psize) {
 }
 
 static void svhandler_flash_erase_sector(uint16_t sector) {
-	/* we  only allow erasing meta sectors 2 and 3. */
+	/* we only allow erasing meta sectors 2 and 3. */
 	if (sector < FLASH_META_SECTOR_FIRST ||
 		sector > FLASH_META_SECTOR_LAST) {
 		return;

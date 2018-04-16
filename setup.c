@@ -142,15 +142,16 @@ void setupApp(void)
 }
 
 #define MPU_RASR_SIZE_1KB   (0x09UL << MPU_RASR_SIZE_LSB)
-#define MPU_RASR_SIZE_4KB   (0x0bUL << MPU_RASR_SIZE_LSB)
-#define MPU_RASR_SIZE_8KB   (0x0cUL << MPU_RASR_SIZE_LSB)
-#define MPU_RASR_SIZE_16KB  (0x0dUL << MPU_RASR_SIZE_LSB)
-#define MPU_RASR_SIZE_32KB  (0x0eUL << MPU_RASR_SIZE_LSB)
-#define MPU_RASR_SIZE_64KB  (0x0fUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_4KB   (0x0BUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_8KB   (0x0CUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_16KB  (0x0DUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_32KB  (0x0EUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_64KB  (0x0FUL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_128KB (0x10UL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_256KB (0x11UL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_512KB (0x12UL << MPU_RASR_SIZE_LSB)
-#define MPU_RASR_SIZE_512MB (0x1cUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_1MB   (0x13UL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_512MB (0x1CUL << MPU_RASR_SIZE_LSB)
 
 // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
 #define MPU_RASR_ATTR_FLASH  (MPU_RASR_ATTR_C)
@@ -168,9 +169,9 @@ void mpu_config(void)
 	MPU_CTRL = 0;
 
 	// Note: later entries overwrite previous ones
-	// Flash (0x08000000 - 0x0807FFFF, 512 KiB, read-only, execute never)
+	// Flash (0x08000000 - 0x0807FFFF, 1 MiB, read-only)
 	MPU_RBAR = FLASH_BASE | MPU_RBAR_VALID | (0 << MPU_RBAR_REGION_LSB);
-	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_512KB | MPU_RASR_ATTR_AP_PRO_URO;
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_1MB | MPU_RASR_ATTR_AP_PRO_URO;
 
 	// Metadata in Flash is read-write when unlocked
 	// (0x08008000 - 0x0800FFFF, 32 KiB, read-write, execute never)

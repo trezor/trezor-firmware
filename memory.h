@@ -39,10 +39,10 @@
  Sector  6 | 0x08040000 - 0x0805FFFF | 128 KiB | application code
  Sector  7 | 0x08060000 - 0x0807FFFF | 128 KiB | application code
 ===========+=========================+============================
- Sector  8 | 0x08080000 - 0x0809FFFF | 128 KiB | N/A
- Sector  9 | 0x080A0000 - 0x080BFFFF | 128 KiB | N/A
- Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | N/A
- Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | N/A
+ Sector  8 | 0x08080000 - 0x0809FFFF | 128 KiB | application code
+ Sector  9 | 0x080A0000 - 0x080BFFFF | 128 KiB | application code
+ Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | application code
+ Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | application code
 
  metadata area:
 
@@ -73,7 +73,7 @@ extern uint8_t *emulator_flash_base;
 #define FLASH_PTR(x)		(const uint8_t*) (x)
 #endif
 
-#define FLASH_TOTAL_SIZE	(512 * 1024)
+#define FLASH_TOTAL_SIZE	(1024 * 1024)
 
 #define FLASH_BOOT_START	(FLASH_ORIGIN)
 #define FLASH_BOOT_LEN		(0x8000)
@@ -105,7 +105,7 @@ extern uint8_t *emulator_flash_base;
 #define FLASH_META_SECTOR_LAST	3
 
 #define FLASH_CODE_SECTOR_FIRST	4
-#define FLASH_CODE_SECTOR_LAST	7
+#define FLASH_CODE_SECTOR_LAST	11
 
 void memory_protect(void);
 void memory_write_unlock(void);
