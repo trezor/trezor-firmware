@@ -10,7 +10,7 @@ async def ask_multisig(ctx, msg: NEMSignTx):
         await _require_confirm_address(ctx, 'Cosign transaction for', address)
     else:
         await _require_confirm_address(ctx, 'Initiate transaction for', address)
-    await require_confirm_fee(ctx, 'Confirm multisig fee', msg.multisig.fee)
+    await require_confirm_fee(ctx, 'Confirm multisig fee', msg.transaction.fee)
 
 
 async def ask_aggregate_modification(ctx, msg: NEMSignTx):

@@ -20,6 +20,7 @@ def validate(msg: NEMSignTx):
     _validate_common(msg.transaction)
 
     if msg.multisig:
+        _validate_common(msg.multisig, True)
         _validate_multisig(msg.multisig, msg.transaction.network)
     if not msg.multisig and msg.cosigning:
         raise ValueError('No multisig transaction to cosign')
@@ -76,12 +77,12 @@ def _validate_common(common: NEMTransactionCommon, inner: bool=False):
     if common.deadline is None:
         err = 'deadline'
 
-    # is_signer = common.signer is not None  todo !!
-    # if inner != is_signer:
-    #     if not inner:
-    #         raise ValueError('Signer not allowed in outer transaction')
-    #     err = 'signer'
-    #
+    if not inner and common.signer:
+        raise ValueError('Signer not allowed in outer transaction')
+
+    if inner and common.signer is None:
+        err = 'signer'
+
     if err:
         if inner:
             raise ValueError('No ' + err + ' provided in inner transaction')
@@ -106,7 +107,6 @@ def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
 
 
 def _validate_multisig(multisig: NEMTransactionCommon, network: int):
-    _validate_common(multisig)
     _validate_public_key(multisig.signer, 'Invalid multisig signer public key provided')
     if multisig.network != network:
         raise ValueError('Inner transaction network is different')

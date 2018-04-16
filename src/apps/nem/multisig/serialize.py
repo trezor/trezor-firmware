@@ -5,8 +5,8 @@ from trezor.crypto import hashlib
 from trezor.crypto import nem
 
 
-def serialize_multisig(msg: NEMTransactionCommon, public_key: bytes, inner: bytes):
-    w = write_common(msg, bytearray(public_key), NEM_TRANSACTION_TYPE_MULTISIG)
+def serialize_multisig(common: NEMTransactionCommon, public_key: bytes, inner: bytes):
+    w = write_common(common, bytearray(public_key), NEM_TRANSACTION_TYPE_MULTISIG)
     write_bytes_with_length(w, bytearray(inner))
     return w
 
@@ -24,11 +24,14 @@ def serialize_multisig_signature(common: NEMTransactionCommon, public_key: bytes
 
 
 def serialize_aggregate_modification(msg: NEMSignTx, public_key: bytes):
-    version = msg.transaction.network << 24 | 1
+    common = msg.transaction
+    if msg.multisig:
+        common = msg.multisig
+    version = common.network << 24 | 1
     if msg.aggregate_modification.relative_change:
-        version = msg.transaction.network << 24 | 2
+        version = common.network << 24 | 2
 
-    w = write_common(msg.transaction,
+    w = write_common(common,
                      bytearray(public_key),
                      NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
                      version)

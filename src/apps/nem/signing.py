@@ -38,9 +38,9 @@ async def sign_tx(ctx, msg: NEMSignTx):
     if msg.multisig:
         # wrap transaction in multisig wrapper
         if msg.cosigning:
-            tx = multisig.cosign(_get_public_key(node), msg, tx)
+            tx = multisig.cosign(_get_public_key(node), msg.transaction, tx, msg.multisig.signer)
         else:
-            tx = multisig.initiate(_get_public_key(node), msg, tx)
+            tx = multisig.initiate(_get_public_key(node), msg.transaction, tx)
 
     signature = ed25519.sign(node.private_key(), tx, NEM_HASH_ALG)
 

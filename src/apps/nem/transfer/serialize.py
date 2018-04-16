@@ -6,10 +6,13 @@ from trezor.crypto import random
 
 
 def serialize_transfer(msg: NEMSignTx, public_key: bytes, payload: bytes=None, encrypted: bool=False) -> bytearray:
-    tx = write_common(msg.transaction,
+    common = msg.transaction
+    if msg.multisig:
+        common = msg.multisig
+    tx = write_common(common,
                       bytearray(public_key),
                       NEM_TRANSACTION_TYPE_TRANSFER,
-                      _get_version(msg.transaction.network, msg.transfer.mosaics))
+                      _get_version(common.network, msg.transfer.mosaics))
 
     write_bytes_with_length(tx, bytearray(msg.transfer.recipient))
     write_uint64(tx, msg.transfer.amount)
@@ -42,7 +45,10 @@ def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
 
 
 def serialize_importance_transfer(msg: NEMSignTx, public_key: bytes) -> bytearray:
-    w = write_common(msg.transaction, bytearray(public_key), NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER)
+    common = msg.transaction
+    if msg.multisig:
+        common = msg.multisig
+    w = write_common(common, bytearray(public_key), NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER)
 
     write_uint32(w, msg.importance_transfer.mode)
     write_bytes_with_length(w, bytearray(msg.importance_transfer.public_key))

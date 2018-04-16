@@ -4,7 +4,10 @@ from trezor.messages.NEMSignTx import NEMSignTx
 
 
 def serialize_mosaic_creation(msg: NEMSignTx, public_key: bytes):
-    w = write_common(msg.transaction, bytearray(public_key), NEM_TRANSACTION_TYPE_MOSAIC_CREATION)
+    common = msg.transaction
+    if msg.multisig:
+        common = msg.multisig
+    w = write_common(common, bytearray(public_key), NEM_TRANSACTION_TYPE_MOSAIC_CREATION)
 
     mosaics_w = bytearray()
     write_bytes_with_length(mosaics_w, bytearray(public_key))
@@ -42,7 +45,10 @@ def serialize_mosaic_creation(msg: NEMSignTx, public_key: bytes):
 
 
 def serialize_mosaic_supply_change(msg: NEMSignTx, public_key: bytes):
-    w = write_common(msg.transaction, bytearray(public_key), NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE)
+    common = msg.transaction
+    if msg.multisig:
+        common = msg.multisig
+    w = write_common(common, bytearray(public_key), NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE)
 
     identifier_length = 4 + len(msg.supply_change.namespace) + 4 + len(msg.supply_change.mosaic)
     write_uint32(w, identifier_length)

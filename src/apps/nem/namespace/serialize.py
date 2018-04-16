@@ -4,7 +4,10 @@ from trezor.messages.NEMSignTx import NEMSignTx
 
 
 def serialize_provision_namespace(msg: NEMSignTx, public_key: bytes) -> bytearray:
-    tx = write_common(msg.transaction,
+    common = msg.transaction
+    if msg.multisig:
+        common = msg.multisig
+    tx = write_common(common,
                       bytearray(public_key),
                       NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE)
 
