@@ -917,6 +917,23 @@ def lisk_verify_message(connect, pubkey, signature, message):
     return connect().lisk_verify_message(pubkey, signature, message)
 
 
+@cli.command(help='Sign Lisk transaction.')
+@click.option('-n', '--address', required=True, help="BIP-32 path to signing key, e.g. m/44'/134'/0'/0'")
+@click.option('-f', '--file', type=click.File('r'), default='-', help='Transaction in JSON format')
+# @click.option('-b', '--broadcast', help='Broadcast Lisk transaction')
+@click.pass_obj
+def lisk_sign_tx(connect, address, file):
+    client = connect()
+    address_n = client.expand_path(address)
+    transaction = client.lisk_sign_tx(address_n, json.load(file))
+
+    payload = {
+        "signature": binascii.hexlify(transaction.signature).decode()
+    }
+
+    return payload
+
+
 #
 # CoSi functions
 #
