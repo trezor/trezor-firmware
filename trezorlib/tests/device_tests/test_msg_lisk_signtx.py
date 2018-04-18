@@ -16,12 +16,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import unhexlify
+import pytest
+
+from .common import TrezorTest
 from trezorlib import messages as proto
 
 PUBLIC_KEY = unhexlify('eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294')
 
 
+@pytest.mark.xfail  # drop when trezor-core PR #90 is merged
 @pytest.mark.skip_t1
 class TestMsgLiskSignTx(TrezorTest):
 

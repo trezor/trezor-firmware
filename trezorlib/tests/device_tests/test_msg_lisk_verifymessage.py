@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import unhexlify
+import pytest
+
+from .common import TrezorTest
 from trezorlib import messages as proto
 
 
+@pytest.mark.xfail  # drop when trezor-core PR #90 is merged
 @pytest.mark.skip_t1
 class TestMsgLiskVerifymessage(TrezorTest):
 
