@@ -34,7 +34,6 @@ from . import messages as proto
 from . import tools
 from . import mapping
 from . import nem
-from .coins import slip44
 from . import stellar
 from .debuglink import DebugLink
 from .protobuf import MessageType
@@ -490,7 +489,6 @@ class DebugLinkMixin(object):
 
 
 class ProtocolMixin(object):
-    PRIME_DERIVATION_FLAG = 0x80000000
     VENDORS = ('bitcointrezor.com', 'trezor.io')
 
     def __init__(self, state=None, *args, **kwargs):
@@ -513,44 +511,15 @@ class ProtocolMixin(object):
     def _get_local_entropy(self):
         return os.urandom(32)
 
-    def _convert_prime(self, n):
+    @staticmethod
+    def _convert_prime(n: tools.Address) -> tools.Address:
         # Convert minus signs to uint32 with flag
-        return [int(abs(x) | self.PRIME_DERIVATION_FLAG) if x < 0 else x for x in n]
+        return [tools.H_(int(abs(x))) if x < 0 else x for x in n]
 
     @staticmethod
     def expand_path(n):
-        # Convert string of bip32 path to list of uint32 integers with prime flags
-        # 0/-1/1' -> [0, 0x80000001, 0x80000001]
-        if not n:
-            return []
-
-        n = n.split('/')
-
-        # m/a/b/c => a/b/c
-        if n[0] == 'm':
-            n = n[1:]
-
-        # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
-        if n[0] in slip44:
-            n = ["44'", "%d'" % slip44[n[0]]] + n[1:]
-
-        path = []
-        for x in n:
-            prime = False
-            if x.endswith("'"):
-                x = x.replace('\'', '')
-                prime = True
-            if x.startswith('-'):
-                prime = True
-
-            x = abs(int(x))
-
-            if prime:
-                x |= ProtocolMixin.PRIME_DERIVATION_FLAG
-
-            path.append(x)
-
-        return path
+        warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning)
+        return tools.parse_path(n)
 
     @expect(proto.PublicKey)
     def get_public_node(self, n, ecdsa_curve_name=None, show_display=False, coin_name=None):

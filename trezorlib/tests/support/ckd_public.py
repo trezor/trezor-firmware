@@ -30,8 +30,6 @@ from ecdsa.ellipticcurve import Point, INFINITY
 from trezorlib import tools
 from trezorlib import messages
 
-PRIME_DERIVATION_FLAG = 0x80000000
-
 
 def point_to_pubkey(point):
     order = SECP256k1.order
@@ -61,7 +59,7 @@ def sec_to_public_pair(pubkey):
 
 
 def is_prime(n):
-    return (bool)(n & PRIME_DERIVATION_FLAG)
+    return bool(n & tools.HARDENED_FLAG)
 
 
 def fingerprint(pubkey):
