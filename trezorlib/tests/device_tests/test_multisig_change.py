@@ -22,6 +22,7 @@ from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
 from trezorlib.coins import tx_api
+from trezorlib.tools import parse_path
 
 
 class TestMultisigChange(TrezorTest):
@@ -195,7 +196,7 @@ class TestMultisigChange(TrezorTest):
         )
 
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("45'/0/1/1"),
+            address_n=parse_path("45'/0/1/1"),
             amount=44000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS
         )
@@ -211,7 +212,7 @@ class TestMultisigChange(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("45'/0/1/0"),
+            address_n=parse_path("45'/0/1/0"),
             amount=40000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS
         )

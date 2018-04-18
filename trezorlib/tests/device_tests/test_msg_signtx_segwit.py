@@ -22,6 +22,7 @@ from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.client import CallException
+from trezorlib.tools import parse_path
 
 TxApiTestnet = coins.tx_api["Testnet"]
 
@@ -32,7 +33,7 @@ class TestMsgSigntxSegwit(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("49'/1'/0'/1/0"),
+            address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
             amount=123456789,
             prev_hash=unhexlify('20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337'),
@@ -71,7 +72,7 @@ class TestMsgSigntxSegwit(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("49'/1'/0'/1/0"),
+            address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
             amount=123456789,
             prev_hash=unhexlify('20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337'),
@@ -84,7 +85,7 @@ class TestMsgSigntxSegwit(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("49'/1'/0'/1/0"),
+            address_n=parse_path("49'/1'/0'/1/0"),
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             amount=123456789 - 11000 - 12300000,
         )
@@ -108,7 +109,7 @@ class TestMsgSigntxSegwit(TrezorTest):
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
-        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        nodes = map(lambda index: self.client.get_public_node(parse_path("999'/1'/%d'" % index)), range(1, 4))
         multisig = proto.MultisigRedeemScriptType(
             pubkeys=list(map(lambda n: proto.HDNodePathType(node=deserialize(n.xpub), address_n=[2, 0]), nodes)),
             signatures=[b'', b'', b''],
@@ -116,7 +117,7 @@ class TestMsgSigntxSegwit(TrezorTest):
         )
 
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("999'/1'/1'/2/0"),
+            address_n=parse_path("999'/1'/1'/2/0"),
             prev_hash=unhexlify('9c31922be756c06d02167656465c8dc83bb553bf386a3f478ae65b5c021002be'),
             prev_index=1,
             script_type=proto.InputScriptType.SPENDP2SHWITNESS,
@@ -165,7 +166,7 @@ class TestMsgSigntxSegwit(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("49'/1'/0'/1/0"),
+            address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
             amount=123456789,
             prev_hash=unhexlify('20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337'),
@@ -178,7 +179,7 @@ class TestMsgSigntxSegwit(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("49'/1'/12345'/1/0"),
+            address_n=parse_path("49'/1'/12345'/1/0"),
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             amount=123456789 - 11000 - 12300000,
         )
