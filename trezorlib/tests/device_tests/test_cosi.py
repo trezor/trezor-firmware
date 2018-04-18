@@ -16,10 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
-
+import pytest
 from hashlib import sha256
-from trezorlib import ed25519raw, ed25519cosi
+
+from .common import TrezorTest
+from ..support import ed25519cosi, ed25519raw
 
 
 @pytest.mark.skip_t2

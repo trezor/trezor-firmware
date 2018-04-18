@@ -16,9 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import hexlify, unhexlify
+
+from .common import TrezorTest
+from ..support import ckd_public as bip32
 from trezorlib import messages as proto
-import trezorlib.ckd_public as bip32
 from trezorlib.coins import tx_api
 
 

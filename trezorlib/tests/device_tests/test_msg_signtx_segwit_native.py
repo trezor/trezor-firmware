@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import hexlify, unhexlify
 
+from .common import TrezorTest
+from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.ckd_public import deserialize
+from trezorlib.client import CallException
 
 TxApiTestnet = coins.tx_api['Testnet']
 

@@ -16,10 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+import pytest
+from binascii import hexlify, unhexlify
+
+from .common import TrezorTest
+from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
 
 TxApiBitcoinGold = coins.tx_api["Bitcoin Gold"]
@@ -129,7 +132,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         attack_ctr = 0
 
         def attack_processor(req, msg):
-            import sys
             global attack_ctr
 
             if req.details.tx_hash is not None:
