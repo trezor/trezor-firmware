@@ -1,7 +1,6 @@
 # orignal version downloaded from https://ed25519.cr.yp.to/python/ed25519.py
 # modified for Python 3 by Jochen Hoenicke <hoenicke@gmail.com>
 
-import sys
 import hashlib
 
 b = 256

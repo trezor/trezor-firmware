@@ -70,7 +70,7 @@ def self_test(digest):
         R = commits[i]
         h = ed25519raw.H(seckey)
         b = ed25519raw.b
-        a = 2**(b - 2) + sum(2**i * ed25519raw.bit(h, i) for i in range(3, b - 2))
+        a = 2**(b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
         S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
         print('Local sig %d: %s' % (i + 1, to_hex(ed25519raw.encodeint(S))))
         sigs.append(ed25519raw.encodeint(S))
