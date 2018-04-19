@@ -34,10 +34,10 @@ from . import messages as proto
 from . import tools
 from . import mapping
 from . import nem
+from . import stellar
 from .coins import coins_slip44
 from .debuglink import DebugLink
 from .protobuf import MessageType
-from . import stellar as stellar
 
 
 if sys.version_info.major < 3:
@@ -1105,18 +1105,18 @@ class ProtocolMixin(object):
     def stellar_get_public_key(self, address_n):
         return self.call(proto.StellarGetPublicKey(address_n=address_n))
 
-    def stellar_sign_transaction(self, txEnvelope, address_n, networkPassphrase=None):
+    def stellar_sign_transaction(self, tx_envelope, address_n, network_passphrase=None):
         # default networkPassphrase to the public network
-        if networkPassphrase is None:
-            networkPassphrase = "Public Global Stellar Network ; September 2015"
+        if network_passphrase is None:
+            network_passphrase = "Public Global Stellar Network ; September 2015"
 
-        parsed = stellar.parse_transaction_bytes(txEnvelope)
+        parsed = stellar.parse_transaction_bytes(tx_envelope)
 
         # Will return a StellarTxOpRequest
         resp = self.call(proto.StellarSignTx(
             protocol_version=parsed["protocol_version"],
             address_n=address_n,
-            network_passphrase=networkPassphrase,
+            network_passphrase=network_passphrase,
             source_account=parsed["source_account"],
             fee=parsed["fee"],
             sequence_number=parsed["sequence_number"],
@@ -1128,11 +1128,11 @@ class ProtocolMixin(object):
             memo_hash=parsed["memo_hash"],
             num_operations=parsed["num_operations"]
         ))
-        if resp.__class__.__name__ != "StellarTxOpRequest":
+        if not isinstance(resp, proto.StellarTxOpRequest):
             raise CallException("Unexpected response to transaction")
 
-        for opIdx in range(0, parsed["num_operations"]):
-            op = parsed["operations"][opIdx]
+        for op_idx in range(0, parsed["num_operations"]):
+            op = parsed["operations"][op_idx]
             resp = None
 
             # Create account
@@ -1144,7 +1144,7 @@ class ProtocolMixin(object):
                 ))
             # Payment
             if op["type"] == 1:
-                asset = types.StellarAssetType(type=op["asset"]["type"], code=op["asset"]["code"],
+                asset = proto.StellarAssetType(type=op["asset"]["type"], code=op["asset"]["code"],
                                                issuer=op["asset"]["issuer"])
                 resp = self.call(proto.StellarPaymentOp(
                     source_account=op["source_account"],
@@ -1154,7 +1154,7 @@ class ProtocolMixin(object):
                 ))
             # Path Payment
             if op["type"] == 2:
-                destination_asset = types.StellarAssetType(type=op["destination_asset"]["type"],
+                destination_asset = proto.StellarAssetType(type=op["destination_asset"]["type"],
                                                            code=op["destination_asset"]["code"],
                                                            issuer=op["destination_asset"]["issuer"])
                 resp = self.call(proto.StellarPathPaymentOp(
@@ -1167,10 +1167,10 @@ class ProtocolMixin(object):
                 ))
             # Manage Offer
             if op["type"] == 3:
-                selling_asset = types.StellarAssetType(type=op["selling_asset"]["type"],
+                selling_asset = proto.StellarAssetType(type=op["selling_asset"]["type"],
                                                        code=op["selling_asset"]["code"],
                                                        issuer=op["selling_asset"]["issuer"])
-                buying_asset = types.StellarAssetType(type=op["buying_asset"]["type"], code=op["buying_asset"]["code"],
+                buying_asset = proto.StellarAssetType(type=op["buying_asset"]["type"], code=op["buying_asset"]["code"],
                                                       issuer=op["buying_asset"]["issuer"])
                 resp = self.call(proto.StellarManageOfferOp(
                     source_account=op["source_account"],
@@ -1183,10 +1183,10 @@ class ProtocolMixin(object):
                 ))
             # Passive Offer
             if op["type"] == 4:
-                selling_asset = types.StellarAssetType(type=op["selling_asset"]["type"],
+                selling_asset = proto.StellarAssetType(type=op["selling_asset"]["type"],
                                                        code=op["selling_asset"]["code"],
                                                        issuer=op["selling_asset"]["issuer"])
-                buying_asset = types.StellarAssetType(type=op["buying_asset"]["type"], code=op["buying_asset"]["code"],
+                buying_asset = proto.StellarAssetType(type=op["buying_asset"]["type"], code=op["buying_asset"]["code"],
                                                       issuer=op["buying_asset"]["issuer"])
                 resp = self.call(proto.StellarCreatePassiveOfferOp(
                     source_account=op["source_account"],
@@ -1214,7 +1214,7 @@ class ProtocolMixin(object):
                 ))
             # Change Trust
             if op["type"] == 6:
-                asset = types.StellarAssetType(type=op["asset"]["type"], code=op["asset"]["code"],
+                asset = proto.StellarAssetType(type=op["asset"]["type"], code=op["asset"]["code"],
                                                issuer=op["asset"]["issuer"])
                 resp = self.call(proto.StellarChangeTrustOp(
                     source_account=op["source_account"],
@@ -1251,7 +1251,7 @@ class ProtocolMixin(object):
                 ))
 
             # Exit if the response was a StellarSignedTx
-            if resp.__class__.__name__ == "StellarSignedTx":
+            if isinstance(resp, proto.StellarSignedTx):
                 return resp
 
         raise CallException("Reached end of operations without a signature")
@@ -1263,9 +1263,7 @@ class ProtocolMixin(object):
     def stellar_verify_message(self, pubkey_bytes, signature, message):
         resp = self.call(proto.StellarVerifyMessage(public_key=pubkey_bytes, message=message, signature=signature))
 
-        if isinstance(resp, proto.Success):
-            return True
-        return False
+        return isinstance(resp, proto.Success)
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
