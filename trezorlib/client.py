@@ -1112,149 +1112,25 @@ class ProtocolMixin(object):
 
         parsed = stellar.parse_transaction_bytes(tx_envelope)
 
+        tx = parsed["tx"]
+        tx.network_passphrase = network_passphrase
+        tx.address_n = address_n
+
         # Will return a StellarTxOpRequest
-        resp = self.call(proto.StellarSignTx(
-            protocol_version=parsed["protocol_version"],
-            address_n=address_n,
-            network_passphrase=network_passphrase,
-            source_account=parsed["source_account"],
-            fee=parsed["fee"],
-            sequence_number=parsed["sequence_number"],
-            timebounds_start=parsed["timebounds_start"],
-            timebounds_end=parsed["timebounds_end"],
-            memo_type=parsed["memo_type"],
-            memo_text=parsed["memo_text"],
-            memo_id=parsed["memo_id"],
-            memo_hash=parsed["memo_hash"],
-            num_operations=parsed["num_operations"]
-        ))
+        resp = self.call(parsed["tx"])
         if not isinstance(resp, proto.StellarTxOpRequest):
             raise CallException("Unexpected response to transaction")
 
-        for op_idx in range(0, parsed["num_operations"]):
-            op = parsed["operations"][op_idx]
-            resp = None
+        # Send each operation to the device.
+        # The response to the last message should be a StellarSignedTx
+        for op in parsed["operations"]:
+            resp = self.call(op)
 
-            # Create account
-            if op["type"] == 0:
-                resp = self.call(proto.StellarCreateAccountOp(
-                    source_account=op["source_account"],
-                    new_account=op["new_account"],
-                    starting_balance=op["starting_balance"]
-                ))
-            # Payment
-            if op["type"] == 1:
-                asset = proto.StellarAssetType(type=op["asset"]["type"], code=op["asset"]["code"],
-                                               issuer=op["asset"]["issuer"])
-                resp = self.call(proto.StellarPaymentOp(
-                    source_account=op["source_account"],
-                    destination_account=op["destination_account"],
-                    amount=op["amount"],
-                    asset=asset
-                ))
-            # Path Payment
-            if op["type"] == 2:
-                destination_asset = proto.StellarAssetType(type=op["destination_asset"]["type"],
-                                                           code=op["destination_asset"]["code"],
-                                                           issuer=op["destination_asset"]["issuer"])
-                resp = self.call(proto.StellarPathPaymentOp(
-                    source_account=op["source_account"],
-                    send_max=op["send_max"],
-                    destination_account=op["destination_account"],
-                    destination_asset=destination_asset,
-                    destination_amount=op["destination_amount"],
-                    paths=op["paths"]
-                ))
-            # Manage Offer
-            if op["type"] == 3:
-                selling_asset = proto.StellarAssetType(type=op["selling_asset"]["type"],
-                                                       code=op["selling_asset"]["code"],
-                                                       issuer=op["selling_asset"]["issuer"])
-                buying_asset = proto.StellarAssetType(type=op["buying_asset"]["type"], code=op["buying_asset"]["code"],
-                                                      issuer=op["buying_asset"]["issuer"])
-                resp = self.call(proto.StellarManageOfferOp(
-                    source_account=op["source_account"],
-                    selling_asset=selling_asset,
-                    buying_asset=buying_asset,
-                    amount=op["amount"],
-                    price_n=op["price_n"],
-                    price_d=op["price_d"],
-                    offer_id=op["offer_id"]
-                ))
-            # Passive Offer
-            if op["type"] == 4:
-                selling_asset = proto.StellarAssetType(type=op["selling_asset"]["type"],
-                                                       code=op["selling_asset"]["code"],
-                                                       issuer=op["selling_asset"]["issuer"])
-                buying_asset = proto.StellarAssetType(type=op["buying_asset"]["type"], code=op["buying_asset"]["code"],
-                                                      issuer=op["buying_asset"]["issuer"])
-                resp = self.call(proto.StellarCreatePassiveOfferOp(
-                    source_account=op["source_account"],
-                    selling_asset=selling_asset,
-                    buying_asset=buying_asset,
-                    amount=op["amount"],
-                    price_n=op["price_n"],
-                    price_d=op["price_d"]
-                ))
-            # Set Options
-            if op["type"] == 5:
-                resp = self.call(proto.StellarSetOptionsOp(
-                    source_account=op["source_account"],
-                    inflation_destination_account=op["inflation_destination"],
-                    clear_flags=op["clear_flags"],
-                    set_flags=op["set_flags"],
-                    master_weight=op["master_weight"],
-                    low_threshold=op["low_threshold"],
-                    medium_threshold=op["medium_threshold"],
-                    high_threshold=op["high_threshold"],
-                    home_domain=op["home_domain"],
-                    signer_type=op["signer_type"],
-                    signer_key=op["signer_key"],
-                    signer_weight=op["signer_weight"],
-                ))
-            # Change Trust
-            if op["type"] == 6:
-                asset = proto.StellarAssetType(type=op["asset"]["type"], code=op["asset"]["code"],
-                                               issuer=op["asset"]["issuer"])
-                resp = self.call(proto.StellarChangeTrustOp(
-                    source_account=op["source_account"],
-                    limit=op["limit"],
-                    asset=asset
-                ))
-            # Allow Trust
-            if op["type"] == 7:
-                resp = self.call(proto.StellarAllowTrustOp(
-                    source_account=op["source_account"],
-                    trusted_account=op["trusted_account"],
-                    asset_type=op["asset_type"],
-                    asset_code=op["asset_code"],
-                    is_authorized=op["is_authorized"]
-                ))
-            # Merge Account
-            if op["type"] == 8:
-                resp = self.call(proto.StellarAccountMergeOp(
-                    source_account=op["source_account"],
-                    destination_account=op["destination_account"]
-                ))
-            # Manage data
-            if op["type"] == 10:
-                resp = self.call(proto.StellarManageDataOp(
-                    source_account=op["source_account"],
-                    key=op["key"],
-                    value=op["value"]
-                ))
-            # Merge Account
-            if op["type"] == 11:
-                resp = self.call(proto.StellarBumpSequenceOp(
-                    source_account=op["source_account"],
-                    bump_to=op["bump_to"]
-                ))
+        # Verify expected response message StellarSignedTx and return it
+        if not isinstance(resp, proto.StellarSignedTx):
+            raise CallException("Stellar.UnexpectedEndOfOperations", "Reached end of operations without a signature")
 
-            # Exit if the response was a StellarSignedTx
-            if isinstance(resp, proto.StellarSignedTx):
-                return resp
-
-        raise CallException("Reached end of operations without a signature")
+        return resp
 
     @expect(proto.StellarMessageSignature)
     def stellar_sign_message(self, address_n, message):
