@@ -27,7 +27,6 @@ import functools
 import json
 import os
 import sys
-import trezorlib.stellar as stellar
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException, format_protobuf
 from trezorlib.transport import get_transport, enumerate_devices, TransportException
@@ -35,6 +34,7 @@ from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib.coins import coins_txapi
 from trezorlib.ckd_public import PRIME_DERIVATION_FLAG
+from trezorlib import stellar
 
 
 class ChoiceType(click.Choice):
