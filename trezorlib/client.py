@@ -1110,25 +1110,33 @@ class ProtocolMixin(object):
         if network_passphrase is None:
             network_passphrase = "Public Global Stellar Network ; September 2015"
 
-        parsed = stellar.parse_transaction_bytes(tx_envelope)
+        tx, operations = stellar.parse_transaction_bytes(tx_envelope)
 
-        tx = parsed["tx"]
         tx.network_passphrase = network_passphrase
         tx.address_n = address_n
 
-        # Will return a StellarTxOpRequest
-        resp = self.call(parsed["tx"])
-        if not isinstance(resp, proto.StellarTxOpRequest):
-            raise CallException("Unexpected response to transaction")
+        # Signing loop works as follows:
+        #
+        # 1. Start with tx (header information for the transaction) and operations (an array of operation protobuf messagess)
+        # 2. Send the tx header to the device
+        # 3. Receive a StellarTxOpRequest message
+        # 4. Send operations one by one until all operations have been sent. If there are more operations to sign, the device will send a StellarTxOpRequest message
+        # 5. The final message received will be StellarSignedTx which is returned from this method
+        resp = self.call(tx)
+        try:
+            while isinstance(resp, proto.StellarTxOpRequest):
+                resp = self.call(operations.pop(0))
+        except IndexError:
+            # pop from empty list
+            raise CallException("Stellar.UnexpectedEndOfOperations",
+                                "Reached end of operations without a signature.") from None
 
-        # Send each operation to the device.
-        # The response to the last message should be a StellarSignedTx
-        for op in parsed["operations"]:
-            resp = self.call(op)
-
-        # Verify expected response message StellarSignedTx and return it
         if not isinstance(resp, proto.StellarSignedTx):
-            raise CallException("Stellar.UnexpectedEndOfOperations", "Reached end of operations without a signature")
+            raise CallException(proto.FailureType.UnexpectedMessage, resp)
+
+        if operations:
+            raise CallException("Stellar.UnprocessedOperations",
+                                "Received a signature before processing all operations.")
 
         return resp
 
