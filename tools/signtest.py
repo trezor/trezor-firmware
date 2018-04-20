@@ -110,7 +110,7 @@ class MyTxApiBitcoin(object):
                     o.script_pubkey = b'\x76\xa9\x14' + pubkey + b'\x88\xac'
 
             txser = self.serialize_tx(t)
-            txhash = tools.Hash(txser)[::-1]
+            txhash = tools.btc_hash(txser)[::-1]
             self.inputs.append(
                 proto_types.TxInputType(
                     address_n=self.client.expand_path("44'/0'/0'/0/%d" % idx),

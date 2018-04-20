@@ -126,14 +126,14 @@ def serialize(node, version=0x0488B21E):
         s += b'\x00' + node.private_key
     else:
         s += node.public_key
-    s += tools.Hash(s)[:4]
+    s += tools.btc_hash(s)[:4]
     return tools.b58encode(s)
 
 
 def deserialize(xpub):
     data = tools.b58decode(xpub, None)
 
-    if tools.Hash(data[:-4])[:4] != data[-4:]:
+    if tools.btc_hash(data[:-4])[:4] != data[-4:]:
         raise ValueError("Checksum failed")
 
     node = messages.HDNodeType()

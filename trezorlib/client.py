@@ -1029,7 +1029,7 @@ class ProtocolMixin(object):
         if xprv[0:4] not in ('xprv', 'tprv'):
             raise ValueError("Unknown type of xprv")
 
-        if len(xprv) < 100 and len(xprv) > 112:
+        if not 100 < len(xprv) < 112:  # yes this is correct in Python
             raise ValueError("Invalid length of xprv")
 
         node = proto.HDNodeType()
@@ -1038,7 +1038,7 @@ class ProtocolMixin(object):
         if data[90:92] != b'00':
             raise ValueError("Contain invalid private key")
 
-        checksum = binascii.hexlify(hashlib.sha256(hashlib.sha256(binascii.unhexlify(data[:156])).digest()).digest()[:4])
+        checksum = binascii.hexlify(tools.btc_hash(binascii.unhexlify(data[:156]))[:4])
         if checksum != data[156:]:
             raise ValueError("Checksum doesn't match")
 

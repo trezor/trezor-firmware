@@ -35,7 +35,10 @@ def H_(x: int) -> int:
     return x | HARDENED_FLAG
 
 
-def Hash(data):
+def btc_hash(data):
+    """
+    Double-SHA256 hash as used in BTC
+    """
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
@@ -47,7 +50,7 @@ def hash_160(public_key):
 
 def hash_160_to_bc_address(h160, address_type):
     vh160 = struct.pack('<B', address_type) + h160
-    h = Hash(vh160)
+    h = btc_hash(vh160)
     addr = vh160 + h[0:4]
     return b58encode(addr)
 
