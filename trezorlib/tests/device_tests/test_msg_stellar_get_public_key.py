@@ -13,9 +13,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
-import trezorlib.stellar as stellar
+from .common import TrezorTest
+from trezorlib import stellar
 
+@pytest.mark.xfail # requires trezor-mcu PR #259
 class TestMsgStellarGetPublicKey(TrezorTest):
 
     def test_stellar_get_address(self):

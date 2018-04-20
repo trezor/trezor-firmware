@@ -17,9 +17,10 @@
 #   https://www.stellar.org/laboratory/#xdr-viewer
 #
 
-import base64
-from .common import *
+from base64 import b64decode, b64encode
+from .common import TrezorTest
 
+@pytest.mark.xfail # requires trezor-mcu PR #259
 class TestMsgStellarSignTransaction(TrezorTest):
 
     def get_network_passphrase(self):
@@ -33,16 +34,16 @@ class TestMsgStellarSignTransaction(TrezorTest):
     def test_sign_tx_bump_sequence_op(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        xdr = base64.b64decode("AAAAABXWSL/k028ZbPtXNf/YylTNS4Iz90PyJEnefPMBzbRpAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAt//////////wAAAAAAAAAA")
+        xdr = b64decode("AAAAABXWSL/k028ZbPtXNf/YylTNS4Iz90PyJEnefPMBzbRpAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAt//////////wAAAAAAAAAA")
 
         response = self.client.stellar_sign_transaction(xdr, self.get_address_n(), self.get_network_passphrase())
-        assert base64.b64encode(response.signature) == b'UAOL4ZPYIOzEgM66kBrhyNjLR66dNXtuNrmvd3m0/pc8qCSoLmYY4TybS0lHiMtb+LFZESTaxrpErMHz1sZ6DQ=='
+        assert b64encode(response.signature) == b'UAOL4ZPYIOzEgM66kBrhyNjLR66dNXtuNrmvd3m0/pc8qCSoLmYY4TybS0lHiMtb+LFZESTaxrpErMHz1sZ6DQ=='
 
 
     def test_sign_tx_account_merge_op(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        xdr = base64.b64decode("AAAAABXWSL/k028ZbPtXNf/YylTNS4Iz90PyJEnefPMBzbRpAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAgAAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAAAAAAAAQHNtGkAAABAgjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA==")
+        xdr = b64decode("AAAAABXWSL/k028ZbPtXNf/YylTNS4Iz90PyJEnefPMBzbRpAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAgAAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAAAAAAAAQHNtGkAAABAgjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA==")
 
         response = self.client.stellar_sign_transaction(xdr, self.get_address_n(), self.get_network_passphrase())
-        assert base64.b64encode(response.signature) == b'gjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA=='
+        assert b64encode(response.signature) == b'gjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA=='
