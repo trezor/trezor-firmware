@@ -63,7 +63,7 @@ def address_to_public_key(address_str):
     return decoded[1:-2]
 
 
-def parse_transaction_bytes(bytes):
+def parse_transaction_bytes(tx_bytes):
     """Parses base64data into a map with the following keys:
         tx - a StellarSignTx describing the transaction header
         operations - an array of protobuf message objects for each operation
@@ -72,7 +72,7 @@ def parse_transaction_bytes(bytes):
         protocol_version=1
     )
     operations = []
-    unpacker = xdrlib.Unpacker(bytes)
+    unpacker = xdrlib.Unpacker(tx_bytes)
 
     tx.source_account = _xdr_read_address(unpacker)
     tx.fee = unpacker.unpack_uint()
@@ -108,10 +108,7 @@ def parse_transaction_bytes(bytes):
     for i in range(tx.num_operations):
         operations.append(_parse_operation_bytes(unpacker))
 
-    return {
-        "tx": tx,
-        "operations": operations
-    }
+    return tx, operations
 
 def _parse_operation_bytes(unpacker):
     """Returns a protobuf message representing the next operation as read from
