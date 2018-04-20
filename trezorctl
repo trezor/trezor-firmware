@@ -27,7 +27,7 @@ import json
 import os
 import sys
 
-from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException, format_protobuf
+from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
 from trezorlib.transport import get_transport, enumerate_devices
 from trezorlib import coins
 from trezorlib import messages as proto
@@ -111,7 +111,7 @@ def print_result(res, path, verbose, is_json):
                 else:
                     click.echo('%s: %s' % (k, v))
         elif isinstance(res, protobuf.MessageType):
-            click.echo(format_protobuf(res))
+            click.echo(protobuf.format_message(res))
         else:
             click.echo(res)
 

@@ -39,7 +39,9 @@ required:
 >>>         """
 '''
 
+import binascii
 from io import BytesIO
+from typing import Any
 
 _UVARINT_BUFFER = bytearray(1)
 
@@ -344,3 +346,35 @@ def dump_message(writer, msg):
 
             else:
                 raise TypeError
+
+
+def format_message(pb: MessageType, indent: int=0, sep: str= ' ' * 4) -> str:
+    def pformat_value(value: Any, indent: int) -> str:
+        level = sep * indent
+        leadin = sep * (indent + 1)
+        if isinstance(value, MessageType):
+            return format_message(value, indent, sep)
+        if isinstance(value, list):
+            lines = []
+            lines.append('[')
+            lines += [leadin + pformat_value(x, indent + 1) + ',' for x in value]
+            lines.append(level + ']')
+            return '\n'.join(lines)
+        if isinstance(value, dict):
+            lines = []
+            lines.append('{')
+            for key, val in sorted(value.items()):
+                if val is None or val == []:
+                    continue
+                if key == 'address_n' and isinstance(val, list):
+                    lines.append(leadin + key + ': ' + repr(val) + ',')
+                else:
+                    lines.append(leadin + key + ': ' + pformat_value(val, indent + 1) + ',')
+            lines.append(level + '}')
+            return '\n'.join(lines)
+        if isinstance(value, bytearray):
+            return 'bytearray(0x{})'.format(binascii.hexlify(value).decode('ascii'))
+
+        return repr(value)
+
+    return pb.__class__.__name__ + ' ' + pformat_value(pb.__dict__, indent)
