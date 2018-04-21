@@ -81,7 +81,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.PublicKey),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.LiskSignedTx(
-                    signature=unhexlify('a3165c77c53d0407c4b0037e9aa40155c531e779049a2a40ee374877f4f9e72e69ae2cfc387c5ee6dd7770069b24e5a9914fb7c289491e10dd67931dee14b304')
+                    signature=unhexlify('f02bdc40a7599c21d29db4080ff1ff8934f76eedf5b0c4fa695c8a64af2f0b40a5c4f92db203863eebbbfad8f0611a23f451ed8bb711490234cdfb034728fd01')
                 )
             ])
 
@@ -105,7 +105,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.LiskSignedTx(
-                    signature=unhexlify('fb7403f4c582ed9c4a65699442e9b61f01718c4455ca3bd68d3840d057ef62d6c361b0242f4988fd53d155892a84a84b675208c80a8cbde49e7b1e2cc762cc08')
+                    signature=unhexlify('5ac02b2882b9d7d0f944e48baadc27de1296cc08c3533f7c8e380fbbb9fb4a6ac81b5dc57060d7d8c68912eea24eb6e39024801bccc0d55020e2052b0c2bb701')
                 )
             ])
 
@@ -154,7 +154,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.LiskSignedTx(
-                    signature=unhexlify('99d201637931cc546e240569d9d6d84add989d81d1b03b34b966625ad49e334986868368d5b1f04599c6330f6bd0223635e032014ecb405501a02842dd5c320f')
+                    signature=unhexlify('88923866c2d500a6927715699ab41a0f58ea4b52e552d90e923bc24ac9da240f2328c93f9ce043a1da4937d4b61c7f57c02fc931f9824d06b24731e7be23c506')
                 )
             ])
 
