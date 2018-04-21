@@ -22,9 +22,9 @@ async def lisk_sign_tx(ctx, msg):
     await require_confirm_fee(ctx, transaction.amount, transaction.fee)
 
     sha = HashWriter(sha256)
-    transactionBytes = _get_transaction_bytes(transaction)
+    transaction_bytes = _get_transaction_bytes(transaction)
 
-    for field in transactionBytes:
+    for field in transaction_bytes:
         sha.extend(field)
 
     digest = sha.get_digest()
@@ -44,6 +44,7 @@ async def require_confirm_by_type(ctx, transaction):
         return await require_confirm_public_key(ctx, transaction.asset.signature.public_key)
     if transaction.type is RegisterMultisignatureAccount:
         return await require_confirm_multisig(ctx, transaction.asset.multisignature)
+    raise ValueError(FailureType.DataError, 'Invalid transaction type')
 
 async def get_signature(seckey, digest):
     from trezor.crypto.curve import ed25519
@@ -60,47 +61,47 @@ def _get_transaction_bytes(msg):
     t_amount = pack('<Q', msg.amount)
     t_pubkey = msg.sender_public_key
 
-    if msg.requester_public_key is None:
-        t_requester_public_key = b''
-    else:
-        t_requester_public_key = msg.requester_public_key
+    t_requester_public_key = msg.requester_public_key or b''
 
-    if msg.recipient_id is None:
+    # Value can be empty string
+    if not msg.recipient_id:
         t_recipient_id = pack('>Q', 0)
     else:
+        # Lisk use big-endian for recipient_id
+        # string -> int -> bytes
         t_recipient_id = pack('>Q', int(msg.recipient_id[:-1]))
 
-    if msg.signature is None:
-        t_signature = b''
-    else:
-        t_signature = msg.signature
+    t_signature = msg.signature or b''
 
-    t_asset = _get_asset_data_byttes(msg)
+    t_asset = _get_asset_data_bytes(msg)
 
-    return [t_type, t_timestamp, t_pubkey, t_requester_public_key, t_recipient_id, t_amount, t_asset, t_signature]
+    return t_type, t_timestamp, t_pubkey, t_requester_public_key, t_recipient_id, t_amount, t_asset, t_signature
 
-def _get_asset_data_byttes(msg):
+def _get_asset_data_bytes(msg):
     from ustruct import pack
-    data = b''
 
-    if msg.type is Transfer and getattr(msg.asset, "data"):
-        data = bytes(msg.asset.data, "utf8")
+    if msg.type is Transfer:
+        # Transfer transaction have optional data field
+        if msg.asset.data is not None:
+            return bytes(msg.asset.data, "utf8")
+        else:
+            return b''
 
     if msg.type is RegisterDelegate:
-        data = bytes(msg.asset.delegate.username, "utf8")
+        return bytes(msg.asset.delegate.username, "utf8")
 
     if msg.type is CastVotes:
-        data = bytes("".join(msg.asset.votes), "utf8")
+        return bytes("".join(msg.asset.votes), "utf8")
 
     if msg.type is RegisterSecondPassphrase:
-        data = msg.asset.signature.public_key
+        return msg.asset.signature.public_key
 
     if msg.type is RegisterMultisignatureAccount:
+        data = b''
         data += pack('<b', msg.asset.multisignature.min)
         data += pack('<b', msg.asset.multisignature.life_time)
         data += bytes("".join(msg.asset.multisignature.keys_group), "utf8")
-
-    return data
+        return data
 
 async def _get_keys(ctx, msg):
     from trezor.crypto.curve import ed25519
@@ -120,7 +121,8 @@ def update_raw_tx(transaction, public_key):
 
     transaction.sender_public_key = public_key
 
-    if transaction.recipient_id is None:
+    # For this type of transactions, recipientId should be equal transaction creator address.
+    if transaction.type is CastVotes:
         transaction.recipient_id = get_address_from_public_key(public_key)
 
     return transaction
