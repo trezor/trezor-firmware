@@ -4,21 +4,18 @@ LISK_CURVE = 'ed25519'
 def get_address_from_public_key(public_key):
     from trezor.crypto.hashlib import sha256
 
-    # logic from lisk-js library
-    # https://github.com/LiskHQ/lisk-js/blob/115e0e771e8456dc6c1d4acaabba93d975655cfe/lib/transactions/crypto/convert.js#L30
-    publicKeyHash = list(sha256(public_key).digest())
-    addressData = []
-    for i in range(8):
-        addressData.append(publicKeyHash[7 - i])
-
-    address = int.from_bytes(bytes(addressData), 'big')
+    public_key_hash = sha256(public_key).digest()
+    address = int.from_bytes(public_key_hash[:8], 'little')
     return str(address) + "L"
 
 def get_votes_count(votes):
-    plus, minus = [], []
+    plus, minus = 0, 0
     for vote in votes:
-        plus.append(vote) if vote.startswith('+') else minus.append(vote)
-    return len(plus), len(minus)
+        if vote.startswith('+'):
+            plus += 1
+        else:
+            minus += 1
+    return plus, minus
 
 def get_vote_tx_text(votes):
     plus, minus = get_votes_count(votes)
