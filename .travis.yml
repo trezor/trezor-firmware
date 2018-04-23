@@ -27,7 +27,7 @@ python:
 install:
     # Optimisation: build requirements as wheels, which get cached by Travis
     - pip install "pip>=7.0" wheel
-    - pip install "setuptools>=19.0"
+    - pip install "setuptools>=38"
     - pip install tox-travis
     - pip install flake8
     # protobuf-related dependencies
