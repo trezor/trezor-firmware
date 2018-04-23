@@ -1,0 +1,34 @@
+{
+	"maintainer": "Chris Sulmone <csulmone@gmail.com>",
+	"coin_name": "Bprivate",
+	"coin_shortcut": "BTCP",
+	"coin_label": "Bitcoin Private",
+	"curve_name": "secp256k1",
+	"address_type": 4901,
+	"address_type_p2sh": 5039,
+	"maxfee_kb": 1000000,
+	"minfee_kb": 1000,
+	"signed_message_header": "BitcoinPrivate Signed Message:\n",
+	"hash_genesis_block": "0007104ccda289427919efc39dc9e4d499804b7bebc22df55f8b834301260602",
+	"xprv_magic": "0488ade4",
+	"xpub_magic": "0488b21e",
+	"xpub_magic_segwit_p2sh": null,
+	"bech32_prefix": null,
+	"cashaddr_prefix": null,
+	"bip44": 183,
+	"segwit": false,
+	"decred": false,
+	"forkid": 42,
+	"force_bip143": false,
+	"default_fee_b": {
+		"Normal": 10
+	},
+	"dust_limit": 546,
+	"blocktime_minutes": 2.5,
+	"address_prefix": "bitcoinprivate:",
+	"min_address_length": 35,
+	"max_address_length": 95,
+	"bitcore": [
+		"https://explorer.btcprivate.org/"
+	]
+}
