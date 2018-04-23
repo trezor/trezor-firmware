@@ -2,8 +2,8 @@
 	"coin_name": "Crown",
 	"coin_shortcut": "CRW",
 	"coin_label": "Crown",
-	"website": "",
-	"github": "",
+	"website": "https://crown.tech",
+	"github": "https://github.com/Crowndev/crowncoin",
 	"maintainer": "hypermist <hypermist@crown.tech>",
 	"curve_name": "secp256k1",
 	"address_type": 0,
@@ -31,7 +31,7 @@
 	"min_address_length": 27,
 	"max_address_length": 34,
 	"bitcore": [
-		"https://crw-bitcore.crown.tech/",
-		"https://crw2-bitcore.crown.tech/"
+		"https://crw-bitcore.crown.tech",
+		"https://crw2-bitcore.crown.tech"
 	]
 }

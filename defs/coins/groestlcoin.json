@@ -2,8 +2,8 @@
 	"coin_name": "Groestlcoin",
 	"coin_shortcut": "GRS",
 	"coin_label": "Groestlcoin",
-	"website": "",
-	"github": "",
+	"website": "https://www.groestlcoin.org",
+	"github": "https://github.com/Groestlcoin/groestlcoin",
 	"maintainer": "Yura Pakhuchiy <pakhuchiy@gmail.com>",
 	"curve_name": "secp256k1_groestl",
 	"address_type": 36,
@@ -31,6 +31,6 @@
 	"min_address_length": 27,
 	"max_address_length": 34,
 	"bitcore": [
-		"https://groestlsight.groestlcoin.org/"
+		"https://groestlsight.groestlcoin.org"
 	]
 }

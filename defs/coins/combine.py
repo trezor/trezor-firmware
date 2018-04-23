@@ -5,7 +5,7 @@ import glob
 import re
 
 
-def check_type(val, types, nullable=False, empty=False, regex=None):
+def check_type(val, types, nullable=False, empty=False, regex=None, choice=None):
     # check nullable
     if nullable and val is None:
         return True
@@ -22,6 +22,10 @@ def check_type(val, types, nullable=False, empty=False, regex=None):
         m = re.match(regex, val)
         if not m or m.string != val:
             return False
+    # check choice
+    if choice is not None:
+        if val not in choice:
+            return False
     # check type
     if isinstance(types, list):
         return True in [isinstance(val, t) for t in types]
@@ -33,20 +37,25 @@ def validate_coin(coin):
     assert check_type(coin['coin_name'], str)
     assert check_type(coin['coin_shortcut'], str)
     assert check_type(coin['coin_label'], str)
-    assert check_type(coin['website'], str, empty=True)
-    assert check_type(coin['github'], str, empty=True)
+    assert check_type(coin['website'], str)
+    assert check_type(coin['github'], str)
+    assert not coin['website'].endswith('/')
+    assert not coin['github'].endswith('/')
     assert check_type(coin['maintainer'], str)
-    assert check_type(coin['curve_name'], str)
+    assert check_type(coin['curve_name'], str, choice=['secp256k1', 'secp256k1_decred', 'secp256k1_groestl'])
     assert check_type(coin['address_type'], int)
     assert check_type(coin['address_type_p2sh'], int)
     assert coin['address_type'] != coin['address_type_p2sh']
     assert check_type(coin['maxfee_kb'], int)
     assert check_type(coin['minfee_kb'], int)
-    assert coin['maxfee_kb'] > coin['minfee_kb']
+    assert coin['maxfee_kb'] >= coin['minfee_kb']
     assert check_type(coin['hash_genesis_block'], str, regex=r'[0-9a-f]{64}')
     assert check_type(coin['xprv_magic'], str, regex=r'[0-9a-f]{8}')
     assert check_type(coin['xpub_magic'], str, regex=r'[0-9a-f]{8}')
     assert check_type(coin['xpub_magic_segwit_p2sh'], str, regex=r'[0-9a-f]{8}', nullable=True)
+    assert coin['xprv_magic'] != coin['xpub_magic']
+    assert coin['xprv_magic'] != coin['xpub_magic_segwit_p2sh']
+    assert coin['xpub_magic'] != coin['xpub_magic_segwit_p2sh']
     assert check_type(coin['slip44'], int)
     assert check_type(coin['segwit'], bool)
     assert check_type(coin['decred'], bool)
@@ -58,9 +67,12 @@ def validate_coin(coin):
     assert check_type(coin['signed_message_header'], str)
     assert check_type(coin['min_address_length'], int)
     assert check_type(coin['max_address_length'], int)
-    assert check_type(coin['bitcore'], list, empty=True)
+    assert coin['max_address_length'] >= coin['min_address_length']
     assert check_type(coin['bech32_prefix'], str, nullable=True)
     assert check_type(coin['cashaddr_prefix'], str, nullable=True)
+    assert check_type(coin['bitcore'], list, empty=True)
+    for bc in coin['bitcore']:
+        assert not bc.endswith('/')
 
 
 def process_json(fn):
