@@ -5,6 +5,7 @@ from trezor.crypto import hashlib
 from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.messages.NEMAggregateModification import NEMAggregateModification
 from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
 
 class TestNemMultisigAggregateModification(unittest.TestCase):
@@ -17,7 +18,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
                         0,
                         2,
                         0)
-        t = serialize_aggregate_modification(m, unhexlify("462ee976890916e54fa825d26bdd0235f5eb5b6a143c199ab0ae5ee9328e08ce"))
+        t = serialize_aggregate_modification(m.transaction, m.aggregate_modification, unhexlify("462ee976890916e54fa825d26bdd0235f5eb5b6a143c199ab0ae5ee9328e08ce"))
 
         serialize_cosignatory_modification(t, 1, unhexlify(
             "994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"))
@@ -34,7 +35,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
                         0,
                         5,
                         0)
-        t = serialize_aggregate_modification(m, unhexlify("f41b99320549741c5cce42d9e4bb836d98c50ed5415d0c3c2912d1bb50e6a0e5"))
+        t = serialize_aggregate_modification(m.transaction, m.aggregate_modification, unhexlify("f41b99320549741c5cce42d9e4bb836d98c50ed5415d0c3c2912d1bb50e6a0e5"))
 
         serialize_cosignatory_modification(t, 1, unhexlify(
             "1fbdbdde28daf828245e4533765726f0b7790e0b7146e2ce205df3e86366980b"))
@@ -58,7 +59,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
                         6545854,
                         4,
                         2)
-        t = serialize_aggregate_modification(m, unhexlify("6bf7849c1eec6a2002995cc457dc00c4e29bad5c88de63f51e42dfdcd7b2131d"))
+        t = serialize_aggregate_modification(m.transaction, m.aggregate_modification, unhexlify("6bf7849c1eec6a2002995cc457dc00c4e29bad5c88de63f51e42dfdcd7b2131d"))
 
         serialize_cosignatory_modification(t, 1, unhexlify(
             "5f53d076c8c3ec3110b98364bc423092c3ec2be2b1b3c40fd8ab68d54fa39295"))

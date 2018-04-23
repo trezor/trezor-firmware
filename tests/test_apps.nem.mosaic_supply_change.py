@@ -2,6 +2,7 @@ from common import *
 
 from apps.nem.mosaic import *
 from trezor.crypto import hashlib
+from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
 
 
@@ -18,7 +19,7 @@ class TestNemMosaicSupplyChange(unittest.TestCase):
                         "paddles",
                         1,
                         1234)
-        t = serialize_mosaic_supply_change(m, unhexlify("994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"))
+        t = serialize_mosaic_supply_change(m.transaction, m.supply_change, unhexlify("994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324"))
 
         self.assertEqual(hashlib.sha3_256(t).digest(True),
                          unhexlify('33a50fdd4a54913643a580b2af08b9a5b51b7cee922bde380e84c573a7969c50'))
@@ -32,7 +33,7 @@ class TestNemMosaicSupplyChange(unittest.TestCase):
                         "coupons",
                         2,
                         1)
-        t = serialize_mosaic_supply_change(m, unhexlify("84afa1bbc993b7f5536344914dde86141e61f8cbecaf8c9cefc07391f3287cf5"))
+        t = serialize_mosaic_supply_change(m.transaction, m.supply_change, unhexlify("84afa1bbc993b7f5536344914dde86141e61f8cbecaf8c9cefc07391f3287cf5"))
 
         self.assertEqual(hashlib.sha3_256(t).digest(True),
                          unhexlify('1ce8e8894d077a66ff22294b000825d090a60742ec407efd80eb8b19657704f2'))
@@ -46,7 +47,7 @@ class TestNemMosaicSupplyChange(unittest.TestCase):
                         "abv",
                         1,
                         9000000)
-        t = serialize_mosaic_supply_change(m, unhexlify("b7ccc27b21ba6cf5c699a8dc86ba6ba98950442597ff9fa30e0abe0f5f4dd05d"))
+        t = serialize_mosaic_supply_change(m.transaction, m.supply_change, unhexlify("b7ccc27b21ba6cf5c699a8dc86ba6ba98950442597ff9fa30e0abe0f5f4dd05d"))
 
         self.assertEqual(hashlib.sha3_256(t).digest(True),
                          unhexlify('694e493e9576d2bcf60d85747e302ac2e1cc27783187947180d4275a713ff1ff'))
@@ -60,7 +61,7 @@ class TestNemMosaicSupplyChange(unittest.TestCase):
                         "wasabi",
                         2,
                         20)
-        t = serialize_mosaic_supply_change(m, unhexlify("75f001a8641e2ce5c4386883dda561399ed346177411b492a677b73899502f13"))
+        t = serialize_mosaic_supply_change(m.transaction, m.supply_change, unhexlify("75f001a8641e2ce5c4386883dda561399ed346177411b492a677b73899502f13"))
 
         self.assertEqual(hashlib.sha3_256(t).digest(True),
                          unhexlify('09836334e123970e068d5b411e4d1df54a3ead10acf1ad5935a2cdd9f9680185'))

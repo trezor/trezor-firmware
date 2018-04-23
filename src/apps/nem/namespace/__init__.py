@@ -2,6 +2,6 @@ from .layout import *
 from .serialize import *
 
 
-async def namespace(ctx, public_key: bytes, msg: NEMSignTx) -> bytearray:
-    await ask_provision_namespace(ctx, msg)
-    return serialize_provision_namespace(msg, public_key)
+async def namespace(ctx, public_key: bytes, common: NEMTransactionCommon, namespace: NEMProvisionNamespace) -> bytearray:
+    await ask_provision_namespace(ctx, common, namespace)
+    return serialize_provision_namespace(common, namespace, public_key)

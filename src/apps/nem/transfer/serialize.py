@@ -1,21 +1,20 @@
 from apps.nem.writers import *
 from apps.nem.helpers import *
 from trezor.messages.NEMMosaic import NEMMosaic
-from trezor.messages.NEMSignTx import NEMSignTx
+from trezor.messages.NEMImportanceTransfer import NEMImportanceTransfer
+from trezor.messages.NEMTransfer import NEMTransfer
 from trezor.crypto import random
 
 
-def serialize_transfer(msg: NEMSignTx, public_key: bytes, payload: bytes=None, encrypted: bool=False) -> bytearray:
-    common = msg.transaction
-    if msg.multisig:
-        common = msg.multisig
+def serialize_transfer(common: NEMTransactionCommon, transfer: NEMTransfer,
+                       public_key: bytes, payload: bytes=None, encrypted: bool=False) -> bytearray:
     tx = write_common(common,
                       bytearray(public_key),
                       NEM_TRANSACTION_TYPE_TRANSFER,
-                      _get_version(common.network, msg.transfer.mosaics))
+                      _get_version(common.network, transfer.mosaics))
 
-    write_bytes_with_length(tx, bytearray(msg.transfer.recipient))
-    write_uint64(tx, msg.transfer.amount)
+    write_bytes_with_length(tx, bytearray(transfer.recipient))
+    write_uint64(tx, transfer.amount)
 
     if payload:
         # payload + payload size (u32) + encryption flag (u32)
@@ -28,8 +27,8 @@ def serialize_transfer(msg: NEMSignTx, public_key: bytes, payload: bytes=None, e
     else:
         write_uint32(tx, 0)
 
-    if msg.transfer.mosaics:
-        write_uint32(tx, len(msg.transfer.mosaics))
+    if transfer.mosaics:
+        write_uint32(tx, len(transfer.mosaics))
 
     return tx
 
@@ -44,24 +43,21 @@ def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
     write_uint64(w, quantity)
 
 
-def serialize_importance_transfer(msg: NEMSignTx, public_key: bytes) -> bytearray:
-    common = msg.transaction
-    if msg.multisig:
-        common = msg.multisig
+def serialize_importance_transfer(common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: bytes)-> bytearray:
     w = write_common(common, bytearray(public_key), NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER)
 
-    write_uint32(w, msg.importance_transfer.mode)
-    write_bytes_with_length(w, bytearray(msg.importance_transfer.public_key))
+    write_uint32(w, imp.mode)
+    write_bytes_with_length(w, bytearray(imp.public_key))
     return w
 
 
-def get_transfer_payload(msg: NEMSignTx, node) -> [bytes, bool]:
-    payload = msg.transfer.payload
+def get_transfer_payload(transfer: NEMTransfer, node) -> [bytes, bool]:
+    payload = transfer.payload
     encrypted = False
-    if msg.transfer.public_key is not None:
+    if transfer.public_key is not None:
         if payload is None:
             raise ValueError("Public key provided but no payload to encrypt")
-        payload = _encrypt(node, msg.transfer.public_key, msg.transfer.payload)
+        payload = _encrypt(node, transfer.public_key, transfer.payload)
         encrypted = True
 
     return payload, encrypted

@@ -27,7 +27,7 @@ async def require_confirm_final(ctx, fee: int):
     content = Text('Final confirm', ui.ICON_SEND,
                    ui.NORMAL, 'Sign this transaction',
                    ui.BOLD, 'and pay ' + format_amount(fee, NEM_MAX_DIVISIBILITY) + ' XEM',
-                   ui.NORMAL, 'for transaction fee?',
+                   ui.NORMAL, 'for network fee?',
                    icon_color=ui.GREEN)
     await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 

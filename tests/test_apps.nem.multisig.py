@@ -18,7 +18,7 @@ class TestNemMultisig(unittest.TestCase):
                         3960639,
                         1,
                         0)
-        base_tx = serialize_aggregate_modification(m, unhexlify("abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac"))
+        base_tx = serialize_aggregate_modification(m.transaction, m.aggregate_modification, unhexlify("abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac"))
 
         base_tx = serialize_cosignatory_modification(base_tx, 2, unhexlify("e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3"))
         m = _create_common_msg(NEM_NETWORK_TESTNET,
@@ -48,7 +48,7 @@ class TestNemMultisig(unittest.TestCase):
                                  "",
                                  "NAMESPACEWH4MKFMBCVFERDPOOP4FK7MTBXDPZZA",
                                  5000000000)
-        base_tx = serialize_provision_namespace(m, unhexlify("a1df5306355766bd2f9a64efdc089eb294be265987b3359093ae474c051d7d5a"))
+        base_tx = serialize_provision_namespace(m.transaction, m.provision_namespace, unhexlify("a1df5306355766bd2f9a64efdc089eb294be265987b3359093ae474c051d7d5a"))
 
         m = _create_common_msg(NEM_NETWORK_MAINNET,
                                59414272,

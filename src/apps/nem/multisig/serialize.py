@@ -3,6 +3,8 @@ from apps.nem.helpers import *
 from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.crypto import hashlib
 from trezor.crypto import nem
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages.NEMAggregateModification import NEMAggregateModification
 
 
 def serialize_multisig(common: NEMTransactionCommon, public_key: bytes, inner: bytes):
@@ -23,19 +25,16 @@ def serialize_multisig_signature(common: NEMTransactionCommon, public_key: bytes
     return w
 
 
-def serialize_aggregate_modification(msg: NEMSignTx, public_key: bytes):
-    common = msg.transaction
-    if msg.multisig:
-        common = msg.multisig
+def serialize_aggregate_modification(common: NEMTransactionCommon, mod: NEMAggregateModification, public_key: bytes):
     version = common.network << 24 | 1
-    if msg.aggregate_modification.relative_change:
+    if mod.relative_change:
         version = common.network << 24 | 2
 
     w = write_common(common,
                      bytearray(public_key),
                      NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
                      version)
-    write_uint32(w, len(msg.aggregate_modification.modifications))
+    write_uint32(w, len(mod.modifications))
     return w
 
 

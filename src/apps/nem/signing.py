@@ -17,21 +17,23 @@ async def sign_tx(ctx, msg: NEMSignTx):
     if msg.multisig:
         public_key = msg.multisig.signer
         await multisig.ask(ctx, msg)
+        common = msg.multisig
     else:
         public_key = _get_public_key(node)
+        common = msg.transaction
 
     if msg.transfer:
-        tx = await transfer.transfer(ctx, public_key, msg, node)
+        tx = await transfer.transfer(ctx, public_key, common, msg.transfer, node)
     elif msg.provision_namespace:
-        tx = await namespace.namespace(ctx, public_key, msg)
+        tx = await namespace.namespace(ctx, public_key, common, msg.provision_namespace)
     elif msg.mosaic_creation:
-        tx = await mosaic.mosaic_creation(ctx, public_key, msg)
+        tx = await mosaic.mosaic_creation(ctx, public_key, common, msg.mosaic_creation)
     elif msg.supply_change:
-        tx = await mosaic.supply_change(ctx, public_key, msg)
+        tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     elif msg.aggregate_modification:
-        tx = await multisig.aggregate_modification(ctx, public_key, msg)
+        tx = await multisig.aggregate_modification(ctx, public_key, common, msg.aggregate_modification, msg.multisig is not None)
     elif msg.importance_transfer:
-        tx = await transfer.importance_transfer(ctx, public_key, msg)
+        tx = await transfer.importance_transfer(ctx, public_key, common, msg.importance_transfer)
     else:
         raise ValueError('No transaction provided')
 

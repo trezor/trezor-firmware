@@ -1,30 +1,32 @@
 from apps.nem.layout import *
-from trezor.messages import NEMSignTx
+from trezor.messages import NEMTransactionCommon
 from trezor.messages import NEMSupplyChangeType
 from trezor.messages import NEMMosaicDefinition
+from trezor.messages import NEMMosaicCreation
+from trezor.messages import NEMMosaicSupplyChange
 from trezor.messages import NEMMosaicLevy
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 
 
-async def ask_mosaic_creation(ctx, msg: NEMSignTx):
-    await require_confirm_content(ctx, 'Create mosaic', _creation_message(msg.mosaic_creation))
-    await _require_confirm_properties(ctx, msg.mosaic_creation.definition)
-    await require_confirm_fee(ctx, 'Confirm creation fee', msg.mosaic_creation.fee)
+async def ask_mosaic_creation(ctx, common: NEMTransactionCommon, creation: NEMMosaicCreation):
+    await require_confirm_content(ctx, 'Create mosaic', _creation_message(creation))
+    await _require_confirm_properties(ctx, creation.definition)
+    await require_confirm_fee(ctx, 'Confirm creation fee', creation.fee)
 
-    await require_confirm_final(ctx, msg.transaction.fee)
+    await require_confirm_final(ctx, common.fee)
 
 
-async def ask_supply_change(ctx, msg: NEMSignTx):
-    await require_confirm_content(ctx, 'Supply change', _supply_message(msg.supply_change))
-    if msg.supply_change.type == NEMSupplyChangeType.SupplyChange_Decrease:
-        ask_msg = 'Decrease supply by ' + str(msg.supply_change.delta) + ' whole units?'
-    elif msg.supply_change.type == NEMSupplyChangeType.SupplyChange_Increase:
-        ask_msg = 'Increase supply by ' + str(msg.supply_change.delta) + ' whole units?'
+async def ask_supply_change(ctx, common: NEMTransactionCommon, change: NEMMosaicSupplyChange):
+    await require_confirm_content(ctx, 'Supply change', _supply_message(change))
+    if change.type == NEMSupplyChangeType.SupplyChange_Decrease:
+        msg = 'Decrease supply by ' + str(change.delta) + ' whole units?'
+    elif change.type == NEMSupplyChangeType.SupplyChange_Increase:
+        msg = 'Increase supply by ' + str(change.delta) + ' whole units?'
     else:
         raise ValueError('Invalid supply change type')
-    await require_confirm_text(ctx, ask_msg)
+    await require_confirm_text(ctx, msg)
 
-    await require_confirm_final(ctx, msg.transaction.fee)
+    await require_confirm_final(ctx, common.fee)
 
 
 def _creation_message(mosaic_creation):

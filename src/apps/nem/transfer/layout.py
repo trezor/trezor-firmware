@@ -1,27 +1,29 @@
 from apps.nem.layout import *
 from trezor.messages import NEMImportanceTransferMode
-from trezor.messages import NEMSignTx
+from trezor.messages import NEMTransfer
+from trezor.messages import NEMImportanceTransfer
+from trezor.messages import NEMTransactionCommon
 
 
-async def ask_transfer(ctx, msg: NEMSignTx, payload, encrypted):
+async def ask_transfer(ctx, common: NEMTransactionCommon, transfer: NEMTransfer, payload, encrypted):
     if payload:
-        await _require_confirm_payload(ctx, msg.transfer.payload, encrypted)
+        await _require_confirm_payload(ctx, transfer.payload, encrypted)
 
-    for mosaic in msg.transfer.mosaics:
+    for mosaic in transfer.mosaics:
         await require_confirm_content(ctx, 'Confirm mosaic', _mosaics_message(mosaic))
 
-    await _require_confirm_transfer(ctx, msg.transfer.recipient, msg.transfer.amount)
+    await _require_confirm_transfer(ctx, transfer.recipient, transfer.amount)
 
-    await require_confirm_final(ctx, msg.transaction.fee)
+    await require_confirm_final(ctx, common.fee)
 
 
-async def ask_importance_transfer(ctx, msg: NEMSignTx):
-    if msg.importance_transfer.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
+async def ask_importance_transfer(ctx, common: NEMTransactionCommon, imp: NEMImportanceTransfer):
+    if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
         m = 'Activate'
     else:
         m = 'Deactivate'
     await require_confirm_text(ctx, m + ' remote harvesting?')
-    await require_confirm_final(ctx, msg.transaction.fee)
+    await require_confirm_final(ctx, common.fee)
 
 
 async def _require_confirm_transfer(ctx, recipient, value):

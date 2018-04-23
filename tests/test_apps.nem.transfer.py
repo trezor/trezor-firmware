@@ -19,7 +19,7 @@ class TestNemTransfer(unittest.TestCase):
                         'TBGIMRE4SBFRUJXMH7DVF2IBY36L2EDWZ37GVSC4',
                         50000000000000)
 
-        t = serialize_transfer(m, unhexlify('e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f'))
+        t = serialize_transfer(m.transaction, m.transfer, unhexlify('e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f'))
         self.assertEqual(t, unhexlify('01010000010000980000000020000000e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f00000000000000000000000028000000544247494d52453453424652554a584d48374456463249425933364c324544575a3337475653433400203d88792d000000000000'))
         self.assertEqual(hashlib.sha3_256(t).digest(True), unhexlify('0acbf8df91e6a65dc56c56c43d65f31ff2a6a48d06fc66e78c7f3436faf3e74f'))
 
@@ -33,7 +33,7 @@ class TestNemTransfer(unittest.TestCase):
                         'NBT3WHA2YXG2IR4PWKFFMO772JWOITTD2V4PECSB',
                         5175000000000)
 
-        t = serialize_transfer(m,
+        t = serialize_transfer(m.transaction, m.transfer,
                                unhexlify('8d07f90fb4bbe7715fa327c926770166a11be2e494a970605f2e12557f66c9b9'),
                                bytearray('Good luck!'))
         self.assertEqual(hashlib.sha3_256(t).digest(True), unhexlify('e90e98614c7598fbfa4db5411db1b331d157c2f86b558fb7c943d013ed9f71cb'))
@@ -48,7 +48,7 @@ class TestNemTransfer(unittest.TestCase):
                         'NALICEPFLZQRZGPRIJTMJOCPWDNECXTNNG7QLSG3',
                         30000000)
 
-        t = serialize_transfer(m,
+        t = serialize_transfer(m.transaction, m.transfer,
                                unhexlify('f85ab43dad059b9d2331ddacc384ad925d3467f03207182e01296bacfb242d01'),
                                unhexlify('4d9dcf9186967d30be93d6d5404ded22812dbbae7c3f0de501bcd7228cba45bded13000eec7b4c6215fc4d3588168c9218167cec98e6977359153a4132e050f594548e61e0dc61c153f0f53c5e65c595239c9eb7c4e7d48e0f4bb8b1dd2f5ddc'),
                                True)
@@ -65,7 +65,7 @@ class TestNemTransfer(unittest.TestCase):
                         3000000,
                         2)
 
-        t = serialize_transfer(m,
+        t = serialize_transfer(m.transaction, m.transfer,
                                unhexlify('994793ba1c789fa9bdea918afc9b06e2d0309beb1081ac5b6952991e4defd324'),
                                bytearray('sending you 3 pairs of paddles\n'),
                                False)
@@ -86,7 +86,7 @@ class TestNemTransfer(unittest.TestCase):
                         1000000,
                         1)
 
-        t = serialize_transfer(m,
+        t = serialize_transfer(m.transaction, m.transfer,
                                unhexlify('f85ab43dad059b9d2331ddacc384ad925d3467f03207182e01296bacfb242d01'),
                                bytearray('enjoy! :)'),
                                False)
