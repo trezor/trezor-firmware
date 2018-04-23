@@ -377,4 +377,8 @@ def format_message(pb: MessageType, indent: int=0, sep: str= ' ' * 4) -> str:
 
         return repr(value)
 
-    return pb.__class__.__name__ + ' ' + pformat_value(pb.__dict__, indent)
+    return '{name} ({size} bytes) {content}'.format(
+        name=pb.__class__.__name__,
+        size=pb.ByteSize(),
+        content=pformat_value(pb.__dict__, indent)
+    )

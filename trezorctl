@@ -24,12 +24,14 @@ import base64
 import binascii
 import click
 import json
+import logging
 import os
 import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
 from trezorlib.transport import get_transport, enumerate_devices
 from trezorlib import coins
+from trezorlib import log
 from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib import stellar
@@ -64,32 +66,38 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
 })
 
 
+def enable_logging():
+    handler = logging.StreamHandler()
+    handler.setFormatter(log.PrettyProtobufFormatter())
+    logger = logging.getLogger('trezorlib')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    log.OMITTED_MESSAGES.add(proto.Features)
+
+
 @click.group(context_settings={'max_content_width': 400})
 @click.option('-p', '--path', help='Select device by specific path.', default=os.environ.get('TREZOR_PATH'))
 @click.option('-v', '--verbose', is_flag=True, help='Show communication messages.')
 @click.option('-j', '--json', 'is_json', is_flag=True, help='Print result as JSON object')
 @click.pass_context
 def cli(ctx, path, verbose, is_json):
-    if ctx.invoked_subcommand != 'list':
-        if verbose:
-            cls = TrezorClientVerbose
-        else:
-            cls = TrezorClient
+    if verbose:
+        enable_logging()
 
-        def get_device():
+    def get_device():
+        try:
+            device = get_transport(path, prefix_search=False)
+        except:
             try:
-                device = get_transport(path, prefix_search=False)
+                device = get_transport(path, prefix_search=True)
             except:
-                try:
-                    device = get_transport(path, prefix_search=True)
-                except:
-                    click.echo("Failed to find a TREZOR device.")
-                    if path is not None:
-                        click.echo("Using path: {}".format(path))
-                    sys.exit(1)
-            return cls(transport=device)
+                click.echo("Failed to find a TREZOR device.")
+                if path is not None:
+                    click.echo("Using path: {}".format(path))
+                sys.exit(1)
+        return TrezorClient(transport=device)
 
-        ctx.obj = get_device
+    ctx.obj = get_device
 
 
 @cli.resultcallback()
