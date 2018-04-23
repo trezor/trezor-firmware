@@ -129,6 +129,61 @@ class TestMsgNEMSignTx(TrezorTest):
         assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000010000001a0000000e000000030000006e656d0300000078656d40420f0000000000'
         assert tx.signature == signature
 
+    def test_nem_signtx_unknown_mosaic(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            "timeStamp": 76809215,
+            "amount": 1000000,
+            "fee": 1000000,
+            "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+            "type": nem.TYPE_TRANSACTION_TRANSFER,
+            "deadline": 76895615,
+            "version": (0x98 << 24),
+            "message": {
+            },
+            "mosaics": [
+                {
+                    "mosaicId": {
+                        "namespaceId": "xxx",
+                        "name": "aa",
+                    },
+                    "quantity": 1000000,
+                },
+            ],
+        })
+
+        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f00000000000000000001000000190000000d0000000300000078787802000000616140420f0000000000'
+        assert hexlify(tx.signature) == b'4394067992b44692fbba761ea7cc6646959df1122efef46e23ebaa0c061bf7a5221ca014a2a32889dc9f7fc56a2440595f11944900809452e81166a6e6784e01'
+
+    def test_nem_signtx_known_mosaic(self):
+
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            "timeStamp": 76809215,
+            "amount": 9876543,
+            "fee": 1000000,
+            "recipient": "NDMYSLXI4L3FYUQWO4MJOVL6BSTJJXKDSZRMT4LT",
+            "type": nem.TYPE_TRANSACTION_TRANSFER,
+            "deadline": 76895615,
+            "version": (0x68 << 24),
+            "message": {
+            },
+            "mosaics": [
+                {
+                    "mosaicId": {
+                        "namespaceId": "dim",
+                        "name": "token",
+                    },
+                    "quantity": 1230009,
+                },
+            ],
+        })
+
+        assert hexlify(tx.data) == b'0101000002000068ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f559504280000004e444d59534c5849344c3346595551574f344d4a4f564c364253544a4a584b44535a524d54344c543fb496000000000000000000010000001c000000100000000300000064696d05000000746f6b656eb9c4120000000000'
+        assert hexlify(tx.signature) == b'b8dea33a8d654f190fe4d8455537869da6a707b710a38b00882bf3e5d8b5001285c34a2e5eca9cfe80c6908c38a5f9e6b2be15d327bdc6215e7350c541e1600c'
+
     def test_nem_signtx_multiple_mosaics(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
