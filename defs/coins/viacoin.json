@@ -1,7 +1,7 @@
 {
-	"coin_name": "viacoin",
+	"coin_name": "Viacoin",
 	"coin_shortcut": "VIA",
-	"coin_label": "viacoin",
+	"coin_label": "Viacoin",
 	"website": "https://viacoin.org",
 	"github": "https://github.com/viacoin",
 	"maintainer": "romanornr <romanornr@gmail.com>",
@@ -29,7 +29,7 @@
 		"High": 20000
 	},
 	"dust_limit": 54600,
-	"blocktime_minutes": 0.4,
+	"blocktime_seconds": 24,
 	"address_prefix": "viacoin:",
 	"min_address_length": 27,
 	"max_address_length": 34,

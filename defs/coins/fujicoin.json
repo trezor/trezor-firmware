@@ -29,7 +29,7 @@
 		"High": 1000000
 	},
 	"dust_limit": 100000,
-	"blocktime_minutes": 1.0,
+	"blocktime_seconds": 60,
 	"address_prefix": "fujicoin:",
 	"min_address_length": 27,
 	"max_address_length": 34,

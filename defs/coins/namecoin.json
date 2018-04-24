@@ -26,7 +26,7 @@
 		"Normal": 10
 	},
 	"dust_limit": 2940,
-	"blocktime_minutes": 10,
+	"blocktime_seconds": 600,
 	"address_prefix": "namecoin:",
 	"min_address_length": 27,
 	"max_address_length": 34,
