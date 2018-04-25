@@ -98,16 +98,11 @@ class TestMsgNEMSignTx(TrezorTest):
             assert len(tx.signature) == 64
 
     def test_nem_signtx_xem_as_mosaic(self):
-        # tx hash: 9f8741194576a090bc71a3f43a03855950f94278fa121e99203e45967e19a7d0
-        signature = unhexlify(
-            "1bca7b1b9ffb16d2c2adffa665be072bd2d7a0eafe4a9911dc473500c272905edf3d626274deb52aa490137a276d1fca67ee487079ebf9c09f9faa414f8e7c02"
-        )
-
         self.setup_mnemonic_nopin_nopassphrase()
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
-            "amount": 1000000,
+            "amount": 5000000,
             "fee": 1000000,
             "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
             "type": nem.TYPE_TRANSACTION_TRANSFER,
@@ -121,20 +116,21 @@ class TestMsgNEMSignTx(TrezorTest):
                         "namespaceId": "nem",
                         "name": "xem",
                     },
-                    "quantity": 1000000,
+                    "quantity": 9000000,
                 },
             ],
         })
 
-        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000010000001a0000000e000000030000006e656d0300000078656d40420f0000000000'
-        assert tx.signature == signature
+        # trezor should display 45 XEM (multiplied by amount)
+        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a404b4c000000000000000000010000001a0000000e000000030000006e656d0300000078656d4054890000000000'
+        assert hexlify(tx.signature) == b'7b25a84b65adb489ea55739f1ca2d83a0ae069c3c58d0ea075fc30bfe8f649519199ad2324ca229c6c3214191469f95326e99712124592cae7cd3a092c93ac0c'
 
     def test_nem_signtx_unknown_mosaic(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
-            "amount": 1000000,
+            "amount": 2000000,
             "fee": 1000000,
             "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
             "type": nem.TYPE_TRANSACTION_TRANSFER,
@@ -148,13 +144,14 @@ class TestMsgNEMSignTx(TrezorTest):
                         "namespaceId": "xxx",
                         "name": "aa",
                     },
-                    "quantity": 1000000,
+                    "quantity": 3500000,
                 },
             ],
         })
 
-        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f00000000000000000001000000190000000d0000000300000078787802000000616140420f0000000000'
-        assert hexlify(tx.signature) == b'4394067992b44692fbba761ea7cc6646959df1122efef46e23ebaa0c061bf7a5221ca014a2a32889dc9f7fc56a2440595f11944900809452e81166a6e6784e01'
+        # trezor should display warning about unknown mosaic and then dialog for 7000000 raw units of xxx.aa and 0 XEM
+        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e00000000000000000001000000190000000d00000003000000787878020000006161e067350000000000'
+        assert hexlify(tx.signature) == b'2f0280420eceb41ef9e5d94fa44ddda9cdc70b8f423ae18af577f6d85df64bb4aaf40cf24fc6eef47c63b0963611f8682348cecdc49a9b64eafcbe7afcb49102'
 
     def test_nem_signtx_known_mosaic(self):
 
@@ -162,7 +159,7 @@ class TestMsgNEMSignTx(TrezorTest):
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
-            "amount": 9876543,
+            "amount": 3000000,
             "fee": 1000000,
             "recipient": "NDMYSLXI4L3FYUQWO4MJOVL6BSTJJXKDSZRMT4LT",
             "type": nem.TYPE_TRANSACTION_TRANSFER,
@@ -176,25 +173,26 @@ class TestMsgNEMSignTx(TrezorTest):
                         "namespaceId": "dim",
                         "name": "token",
                     },
-                    "quantity": 1230009,
+                    "quantity": 111000,
                 },
             ],
         })
 
-        assert hexlify(tx.data) == b'0101000002000068ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f559504280000004e444d59534c5849344c3346595551574f344d4a4f564c364253544a4a584b44535a524d54344c543fb496000000000000000000010000001c000000100000000300000064696d05000000746f6b656eb9c4120000000000'
-        assert hexlify(tx.signature) == b'b8dea33a8d654f190fe4d8455537869da6a707b710a38b00882bf3e5d8b5001285c34a2e5eca9cfe80c6908c38a5f9e6b2be15d327bdc6215e7350c541e1600c'
+        # trezor should display 0 XEM and 0.333 DIMTOK
+        assert hexlify(tx.data) == b'0101000002000068ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f559504280000004e444d59534c5849344c3346595551574f344d4a4f564c364253544a4a584b44535a524d54344c54c0c62d000000000000000000010000001c000000100000000300000064696d05000000746f6b656e98b1010000000000'
+        assert hexlify(tx.signature) == b'e7f14ef8c39727bfd257e109cd5acac31542f2e41f2e5deb258fc1db602b690eb1cabca41a627fe2adc51f3193db85c76b41c80bb60161eb8738ebf20b507104'
 
     def test_nem_signtx_multiple_mosaics(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
-            "amount": 1000000,
+            "amount": 2000000,
             "fee": 1000000,
-            "recipient": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
+            "recipient": "NDMYSLXI4L3FYUQWO4MJOVL6BSTJJXKDSZRMT4LT",
             "type": nem.TYPE_TRANSACTION_TRANSFER,
             "deadline": 76895615,
-            "version": (0x98 << 24),
+            "version": (0x68 << 24),
             "message": {
             },
             "mosaics": [
@@ -203,7 +201,7 @@ class TestMsgNEMSignTx(TrezorTest):
                         "namespaceId": "nem",
                         "name": "xem",
                     },
-                    "quantity": 1000000,
+                    "quantity": 3000000,
                 },
                 {
                     "mosaicId": {
@@ -226,8 +224,17 @@ class TestMsgNEMSignTx(TrezorTest):
                     },
                     "quantity": 2000000,
                 },
+                {
+                    "mosaicId": {
+                        "namespaceId": "breeze",
+                        "name": "breeze-token",
+                    },
+                    "quantity": 111000,
+                }
             ]
         })
 
-        assert hexlify(tx.data) == b'0101000002000098ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f5595042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a40420f000000000000000000020000001d0000001100000003000000616263060000006d6f7361696348851e00000000001a0000000e000000030000006e656d0300000078656d70b70f0000000000'
-        assert hexlify(tx.signature) == b'c83dec432a791733a79647a30c4c1bb38b27379768f9164cf5c53473078368f3bd9547049882b41ebb90edd1d4eef618cc0293af85d8166f26f3768a3c0b9802'
+        # trezor should display warning, 6.06 XEM, 4000400 raw units of abc.mosaic (mosaics are merged)
+        # and 222000 BREEZE
+        assert hexlify(tx.data) == b'0101000002000068ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f559504280000004e444d59534c5849344c3346595551574f344d4a4f564c364253544a4a584b44535a524d54344c5480841e000000000000000000030000001d0000001100000003000000616263060000006d6f7361696348851e0000000000260000001a00000006000000627265657a650c000000627265657a652d746f6b656e98b10100000000001a0000000e000000030000006e656d0300000078656df03b2e0000000000'
+        assert hexlify(tx.signature) == b'b2b9319fca87a05bee17108edd9a8f78aeffef74bf6b4badc6da5d46e8ff4fe82e24bf69d8e6c4097d072adf39d0c753e7580f8afb21e3288ebfb7c4d84e470d'
