@@ -15,6 +15,7 @@
 	"xprv_magic": "02fac398",
 	"xpub_magic": "02facafd",
 	"xpub_magic_segwit_p2sh": null,
+	"xpub_magic_segwit_native": null,
 	"bech32_prefix": null,
 	"cashaddr_prefix": null,
 	"slip44": 3,

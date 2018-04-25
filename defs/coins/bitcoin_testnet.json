@@ -15,6 +15,7 @@
 	"xprv_magic": "04358394",
 	"xpub_magic": "043587cf",
 	"xpub_magic_segwit_p2sh": "044a5262",
+	"xpub_magic_segwit_native": null,
 	"bech32_prefix": "tb",
 	"cashaddr_prefix": null,
 	"slip44": 1,

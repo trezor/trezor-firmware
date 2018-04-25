@@ -15,6 +15,7 @@
 	"xpub_magic": "0488b21e",
 	"xprv_magic": "0488ade4",
 	"xpub_magic_segwit_p2sh": "049d7cb2",
+	"xpub_magic_segwit_native": null,
 	"bech32_prefix": "mona",
 	"cashaddr_prefix": null,
 	"slip44": 22,

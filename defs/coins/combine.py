@@ -51,9 +51,13 @@ def validate_coin(coin):
     assert check_type(coin['xprv_magic'], str, regex=r'^[0-9a-f]{8}$')
     assert check_type(coin['xpub_magic'], str, regex=r'^[0-9a-f]{8}$')
     assert check_type(coin['xpub_magic_segwit_p2sh'], str, regex=r'^[0-9a-f]{8}$', nullable=True)
+    assert check_type(coin['xpub_magic_segwit_native'], str, regex=r'^[0-9a-f]{8}$', nullable=True)
     assert coin['xprv_magic'] != coin['xpub_magic']
     assert coin['xprv_magic'] != coin['xpub_magic_segwit_p2sh']
+    assert coin['xprv_magic'] != coin['xpub_magic_segwit_native']
     assert coin['xpub_magic'] != coin['xpub_magic_segwit_p2sh']
+    assert coin['xpub_magic'] != coin['xpub_magic_segwit_native']
+    assert coin['xpub_magic_segwit_p2sh'] is None or coin['xpub_magic_segwit_native'] is None or coin['xpub_magic_segwit_p2sh'] != coin['xpub_magic_segwit_native']
     assert check_type(coin['slip44'], int)
     assert check_type(coin['segwit'], bool)
     assert check_type(coin['decred'], bool)
