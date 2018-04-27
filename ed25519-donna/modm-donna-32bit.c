@@ -94,7 +94,7 @@ void barrett_reduce256_modm(bignum256modm r, const bignum256modm q1, const bignu
 	c += mul32x32_64(modm_mu[8], q1[8]);
 	f = (bignum256modm_element_t)c; q3[7] |= (f << 6) & 0x3fffffff; q3[8] = (bignum256modm_element_t)(c >> 24);
 
-	/* r1 = (x mod 256^(32+1)) = x mod (2^8)(31+1) = x & ((1 << 264) - 1)
+	/* r1 = (x mod 256^(32+1)) = x mod (2^8)(32+1) = x & ((1 << 264) - 1)
 	   r2 = (q3 * m) mod (256^(32+1)) = (q3 * m) & ((1 << 264) - 1) */
 	c = mul32x32_64(modm_m[0], q3[0]);
 	r2[0] = (bignum256modm_element_t)(c & 0x3fffffff); c >>= 30;
