@@ -149,6 +149,33 @@ void add256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) 
 	reduce256_modm(r);
 }
 
+/* -x modulo m */
+void neg256_modm(bignum256modm r, const bignum256modm x) {
+	bignum256modm_element_t b = 0, pb;
+
+	/* r = m - x */
+	pb = 0;
+	pb += x[0]; b = lt_modm(modm_m[0], pb); r[0] = (modm_m[0] - pb + (b << 30)); pb = b;
+	pb += x[1]; b = lt_modm(modm_m[1], pb); r[1] = (modm_m[1] - pb + (b << 30)); pb = b;
+	pb += x[2]; b = lt_modm(modm_m[2], pb); r[2] = (modm_m[2] - pb + (b << 30)); pb = b;
+	pb += x[3]; b = lt_modm(modm_m[3], pb); r[3] = (modm_m[3] - pb + (b << 30)); pb = b;
+	pb += x[4]; b = lt_modm(modm_m[4], pb); r[4] = (modm_m[4] - pb + (b << 30)); pb = b;
+	pb += x[5]; b = lt_modm(modm_m[5], pb); r[5] = (modm_m[5] - pb + (b << 30)); pb = b;
+	pb += x[6]; b = lt_modm(modm_m[6], pb); r[6] = (modm_m[6] - pb + (b << 30)); pb = b;
+	pb += x[7]; b = lt_modm(modm_m[7], pb); r[7] = (modm_m[7] - pb + (b << 30)); pb = b;
+	pb += x[8]; b = lt_modm(modm_m[8], pb); r[8] = (modm_m[8] - pb + (b << 16));
+
+	// if x==0, reduction is required
+	reduce256_modm(r);
+}
+
+/* subtraction x-y % m */
+void sub256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
+	bignum256modm negy;
+	neg256_modm(negy, y);
+	add256_modm(r, x, negy);
+}
+
 /* multiplication modulo m */
 void mul256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
 	bignum256modm r1, q1;
