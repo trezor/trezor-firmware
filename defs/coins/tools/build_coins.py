@@ -5,6 +5,10 @@ import glob
 import re
 from hashlib import sha256
 import ed25519
+from binascii import unhexlify
+
+from trezorlib.protobuf import dump_message
+from coindef import CoinDef
 
 
 def check_type(val, types, nullable=False, empty=False, regex=None, choice=None):
@@ -50,10 +54,10 @@ def validate_coin(coin):
     assert check_type(coin['minfee_kb'], int)
     assert coin['maxfee_kb'] >= coin['minfee_kb']
     assert check_type(coin['hash_genesis_block'], str, regex=r'^[0-9a-f]{64}$')
-    assert check_type(coin['xprv_magic'], str, regex=r'^[0-9a-f]{8}$')
-    assert check_type(coin['xpub_magic'], str, regex=r'^[0-9a-f]{8}$')
-    assert check_type(coin['xpub_magic_segwit_p2sh'], str, regex=r'^[0-9a-f]{8}$', nullable=True)
-    assert check_type(coin['xpub_magic_segwit_native'], str, regex=r'^[0-9a-f]{8}$', nullable=True)
+    assert check_type(coin['xprv_magic'], int)
+    assert check_type(coin['xpub_magic'], int)
+    assert check_type(coin['xpub_magic_segwit_p2sh'], int, nullable=True)
+    assert check_type(coin['xpub_magic_segwit_native'], int, nullable=True)
     assert coin['xprv_magic'] != coin['xpub_magic']
     assert coin['xprv_magic'] != coin['xpub_magic_segwit_p2sh']
     assert coin['xprv_magic'] != coin['xpub_magic_segwit_native']
@@ -80,9 +84,23 @@ def validate_coin(coin):
         assert not bc.endswith('/')
 
 
+class Writer:
+
+    def __init__(self):
+        self.buf = bytearray()
+
+    def write(self, buf):
+        self.buf.extend(buf)
+
+
 def serialize(coin):
-    # TODO: replace with protobuf serialization
-    return json.dumps(coin).encode()
+    c = dict(coin)
+    c['signed_message_header'] = c['signed_message_header'].encode()
+    c['hash_genesis_block'] = unhexlify(c['hash_genesis_block'])
+    msg = CoinDef(**c)
+    w = Writer()
+    dump_message(w, msg)
+    return bytes(w.buf)
 
 
 def sign(data):
@@ -104,12 +122,12 @@ def process_json(fn):
 
 coins = {}
 defs = {}
-for fn in glob.glob('*.json'):
+for fn in glob.glob('../*.json'):
     c, d = process_json(fn)
     n = c['coin_name']
     coins[n] = c
     defs[n] = d
 
 
-json.dump(coins, open('../coins.json', 'w'), indent=4, sort_keys=True)
-json.dump(defs, open('../coindefs.json', 'w'), indent=4, sort_keys=True)
+json.dump(coins, open('../../coins.json', 'w'), indent=4, sort_keys=True)
+json.dump(defs, open('../../coindefs.json', 'w'), indent=4, sort_keys=True)

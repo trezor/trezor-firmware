@@ -13,7 +13,7 @@ python:
 
 script:
     - python coins-check.py
-    - cd defs/coins && python combine.py
+    - cd defs/coins/tools && python build_coins.py
 
 notifications:
   webhooks:

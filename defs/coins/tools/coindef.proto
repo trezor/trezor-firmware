@@ -1,5 +1,6 @@
+syntax = "proto2";
+
 message CoinDef {
-{
 	optional string coin_name = 1;
 	optional string coin_shortcut = 2;
 	optional string coin_label = 3;
