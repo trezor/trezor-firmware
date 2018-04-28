@@ -267,6 +267,20 @@ power_off:
     sdcard_power_off();
 }
 
+static void test_wipe(void)
+{
+    // erase start of the firmware (metadata) -> invalidate FW
+    ensure(flash_unlock(), NULL);
+    for (int i = 0; i < 1024 / sizeof(uint32_t); i++) {
+        ensure(flash_write_word(FLASH_SECTOR_FIRMWARE_START, i * sizeof(uint32_t), 0x00000000), NULL);
+    }
+    ensure(flash_lock(), NULL);
+    display_clear();
+    display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10, "WIPED", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
+    display_refresh();
+    vcp_printf("OK");
+}
+
 static void test_sbu(const char *args)
 {
     secbool sbu1 = sectrue * (args[0] == '1');
@@ -365,6 +379,9 @@ int main(void)
 
         } else if (startswith(line, "OTP WRITE ")) {
             test_otp_write(line + 10);
+
+        } else if (startswith(line, "WIPE")) {
+            test_wipe();
 
         } else {
             vcp_printf("UNKNOWN");
