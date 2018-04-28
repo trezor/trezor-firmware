@@ -11,6 +11,9 @@ cache:
 python:
     - "3.5"
 
+install:
+    - pip install Pillow
+
 script:
     - python coins-check.py
     - cd defs/coins/tools && python build_coins.py

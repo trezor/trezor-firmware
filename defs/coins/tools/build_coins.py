@@ -4,8 +4,10 @@ import json
 import glob
 import re
 from hashlib import sha256
-import ed25519
 from binascii import unhexlify
+
+import ed25519
+from PIL import Image
 
 from trezorlib.protobuf import dump_message
 from coindef import CoinDef
@@ -84,6 +86,11 @@ def validate_coin(coin):
         assert not bc.endswith('/')
 
 
+def validate_icon(icon):
+    assert icon.size == (96, 96)
+    assert icon.mode == 'RGBA'
+
+
 class Writer:
 
     def __init__(self):
@@ -93,10 +100,11 @@ class Writer:
         self.buf.extend(buf)
 
 
-def serialize(coin):
+def serialize(coin, icon):
     c = dict(coin)
     c['signed_message_header'] = c['signed_message_header'].encode()
     c['hash_genesis_block'] = unhexlify(c['hash_genesis_block'])
+    c['icon'] = icon
     msg = CoinDef(**c)
     w = Writer()
     dump_message(w, msg)
@@ -109,11 +117,37 @@ def sign(data):
     return sign_key.sign(h)
 
 
+# conversion copied from trezor-core/tools/png2toi
+# TODO: extract into common module in python-trezor
+def convert_icon(icon):
+    import struct
+    import zlib
+    w, h = 32, 32
+    icon = icon.resize((w, h), Image.LANCZOS)
+    # remove alpha channel, replace with black
+    bg = Image.new('RGBA', icon.size, (0, 0, 0, 255))
+    icon = Image.alpha_composite(bg, icon)
+    # process pixels
+    pix = icon.load()
+    data = bytes()
+    for j in range(h):
+        for i in range(w):
+            r, g, b, _ = pix[i, j]
+            c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+            data += struct.pack('>H', c)
+    z = zlib.compressobj(level=9, wbits=10)
+    zdata = z.compress(data) + z.flush()
+    zdata = zdata[2:-4]  # strip header and checksum
+    return zdata
+
+
 def process_json(fn):
     print(fn, end=' ... ')
     j = json.load(open(fn))
+    i = Image.open(fn.replace('.json', '.png'))
     validate_coin(j)
-    ser = serialize(j)
+    validate_icon(i)
+    ser = serialize(j, convert_icon(i))
     sig = sign(ser)
     definition = (sig + ser).hex()
     print('OK')
