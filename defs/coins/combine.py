@@ -3,6 +3,8 @@
 import json
 import glob
 import re
+from hashlib import sha256
+import ed25519
 
 
 def check_type(val, types, nullable=False, empty=False, regex=None, choice=None):
@@ -78,18 +80,36 @@ def validate_coin(coin):
         assert not bc.endswith('/')
 
 
+def serialize(coin):
+    # TODO: replace with protobuf serialization
+    return json.dumps(coin).encode()
+
+
+def sign(data):
+    h = sha256(data).digest()
+    sign_key = ed25519.SigningKey(b'A' * 32)
+    return sign_key.sign(h)
+
+
 def process_json(fn):
     print(fn, end=' ... ')
     j = json.load(open(fn))
     validate_coin(j)
+    ser = serialize(j)
+    sig = sign(ser)
+    definition = (sig + ser).hex()
     print('OK')
-    return j
+    return j, definition
 
 
 coins = {}
+defs = {}
 for fn in glob.glob('*.json'):
-    c = process_json(fn)
+    c, d = process_json(fn)
     n = c['coin_name']
     coins[n] = c
+    defs[n] = d
+
 
 json.dump(coins, open('../coins.json', 'w'), indent=4, sort_keys=True)
+json.dump(defs, open('../coindefs.json', 'w'), indent=4, sort_keys=True)
