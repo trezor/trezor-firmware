@@ -169,11 +169,24 @@ void neg256_modm(bignum256modm r, const bignum256modm x) {
 	reduce256_modm(r);
 }
 
+/* consts for subtraction, > p */
+/* Emilia Kasper trick, https://www.imperialviolet.org/2010/12/04/ecc.html */
+static const uint32_t twoP[] = {
+		0x5cf5d3ed, 0x60498c68, 0x6f79cd64, 0x77be77a7, 0x40000013, 0x3fffffff, 0x3fffffff, 0x3fffffff, 0xfff};
+
 /* subtraction x-y % m */
 void sub256_modm(bignum256modm r, const bignum256modm x, const bignum256modm y) {
-	bignum256modm negy;
-	neg256_modm(negy, y);
-	add256_modm(r, x, negy);
+	bignum256modm_element_t c = 0;
+	c  = twoP[0] + x[0] - y[0]; r[0] = c & 0x3fffffff; c >>= 30;
+	c += twoP[1] + x[1] - y[1]; r[1] = c & 0x3fffffff; c >>= 30;
+	c += twoP[2] + x[2] - y[2]; r[2] = c & 0x3fffffff; c >>= 30;
+	c += twoP[3] + x[3] - y[3]; r[3] = c & 0x3fffffff; c >>= 30;
+	c += twoP[4] + x[4] - y[4]; r[4] = c & 0x3fffffff; c >>= 30;
+	c += twoP[5] + x[5] - y[5]; r[5] = c & 0x3fffffff; c >>= 30;
+	c += twoP[6] + x[6] - y[6]; r[6] = c & 0x3fffffff; c >>= 30;
+	c += twoP[7] + x[7] - y[7]; r[7] = c & 0x3fffffff; c >>= 30;
+	c += twoP[8] + x[8] - y[8]; r[8] = c;
+	reduce256_modm(r);
 }
 
 /* multiplication modulo m */
