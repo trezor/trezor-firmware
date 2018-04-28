@@ -71,7 +71,6 @@ def parse_transaction_bytes(tx_bytes):
     tx = proto.StellarSignTx(
         protocol_version=1
     )
-    operations = []
     unpacker = xdrlib.Unpacker(tx_bytes)
 
     tx.source_account = _xdr_read_address(unpacker)
@@ -79,8 +78,7 @@ def parse_transaction_bytes(tx_bytes):
     tx.sequence_number = unpacker.unpack_uhyper()
 
     # Timebounds is an optional field
-    has_timebounds = unpacker.unpack_bool()
-    if has_timebounds:
+    if unpacker.unpack_bool():
         max_timebound = 2**32-1 # max unsigned 32-bit int (trezor does not support the full 64-bit time value)
         tx.timebounds_start = unpacker.unpack_uhyper()
         tx.timebounds_end = unpacker.unpack_uhyper()
@@ -105,6 +103,7 @@ def parse_transaction_bytes(tx_bytes):
 
     tx.num_operations = unpacker.unpack_uint()
 
+    operations = []
     for i in range(tx.num_operations):
         operations.append(_parse_operation_bytes(unpacker))
 
@@ -117,8 +116,7 @@ def _parse_operation_bytes(unpacker):
 
     # Check for and parse optional source account field
     source_account = None
-    has_source_account = unpacker.unpack_bool()
-    if has_source_account:
+    if unpacker.unpack_bool():
         source_account = unpacker.unpack_fopaque(32)
 
     # Operation type (See OP_ constants)
@@ -313,7 +311,7 @@ def _crc16_checksum(bytes):
     polynomial = 0x1021
 
     for byte in bytes:
-        for i in range(0, 8):
+        for i in range(8):
             bit = ((byte >> (7 - i) & 1) == 1)
             c15 = ((crc >> 15 & 1) == 1)
             crc <<= 1
