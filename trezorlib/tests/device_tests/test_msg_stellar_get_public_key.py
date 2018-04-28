@@ -15,6 +15,7 @@
 
 from .common import TrezorTest
 from trezorlib import stellar
+import pytest
 
 
 @pytest.mark.xfail  # requires trezor-mcu PR #259

@@ -19,6 +19,7 @@
 
 from base64 import b64decode, b64encode
 from .common import TrezorTest
+import pytest
 
 
 @pytest.mark.xfail  # requires trezor-mcu PR #259
