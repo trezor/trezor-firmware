@@ -30,9 +30,9 @@ import sys
 
 from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException, format_protobuf
 from trezorlib.transport import get_transport, enumerate_devices, TransportException
+from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib import protobuf
-from trezorlib.coins import coins_txapi
 from trezorlib.ckd_public import PRIME_DERIVATION_FLAG
 from trezorlib import stellar
 
@@ -88,7 +88,7 @@ def cli(ctx, path, verbose, is_json):
                     if path is not None:
                         click.echo("Using path: {}".format(path))
                     sys.exit(1)
-            return cls(device)
+            return cls(transport=device)
 
         ctx.obj = get_device
 
@@ -211,6 +211,23 @@ def set_passphrase_source(connect, source):
     return connect().apply_settings(passphrase_source=source)
 
 
+@cli.command(help='Set auto-lock delay (in seconds).')
+@click.argument('delay', type=str)
+@click.pass_obj
+def set_auto_lock_delay(connect, delay):
+    value, unit = delay[:-1], delay[-1:]
+    units = {
+        's': 1,
+        'm': 60,
+        'h': 3600,
+    }
+    if unit in units:
+        seconds = float(value) * units[unit]
+    else:
+        seconds = float(delay)  # assume seconds if no unit is specified
+    return connect().apply_settings(auto_lock_delay_ms=int(seconds * 1000))
+
+
 @cli.command(help='Set device flags.')
 @click.argument('flags')
 @click.pass_obj
@@ -234,7 +251,7 @@ def set_homescreen(connect, filename):
     elif filename.endswith('.toif'):
         img = open(filename, 'rb').read()
         if img[:8] != b'TOIf\x90\x00\x90\x00':
-            raise CallException(types.Failure_DataError, 'File is not a TOIF file with size of 144x144')
+            raise CallException(proto.FailureType.DataError, 'File is not a TOIF file with size of 144x144')
     else:
         from PIL import Image
         im = Image.open(filename)
@@ -471,11 +488,11 @@ def get_public_node(connect, coin, address, curve, show_display):
 @click.pass_obj
 def sign_tx(connect, coin):
     client = connect()
-    if coin in coins_txapi:
-        txapi = coins_txapi[coin]
+    if coin in coins.tx_api:
+        txapi = coins.tx_api[coin]
     else:
         click.echo('Coin "%s" is not recognized.' % coin, err=True)
-        click.echo('Supported coin types: %s' % ', '.join(coins_txapi.keys()), err=True)
+        click.echo('Supported coin types: %s' % ', '.join(coins.tx_api.keys()), err=True)
         sys.exit(1)
 
     client.set_tx_api(txapi)
@@ -705,9 +722,10 @@ def ethereum_get_address(connect, address, show_display):
 @click.option('-i', '--nonce', type=int, help='Transaction counter - Required for offline signing')
 @click.option('-d', '--data', default='', help='Data as hex string, e.g. 0x12345678')
 @click.option('-p', '--publish', is_flag=True, help='Publish transaction via RPC')
+@click.option('-x', '--tx-type', type=int, help='TX type (used only for Wanchain)')
 @click.argument('to')
 @click.pass_obj
-def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_price, nonce, data, publish, to):
+def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_price, nonce, data, publish, to, tx_type):
     from ethjsonrpc import EthJsonRpc
     import rlp
 
@@ -759,7 +777,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
     address_n = client.expand_path(address)
     address = '0x%s' % (binascii.hexlify(client.ethereum_get_address(address_n)).decode())
 
-    if gas_price is None or gas_limit is None or nonce is None:
+    if gas_price is None or gas_limit is None or nonce is None or publish:
         host, port = host.split(':')
         eth = EthJsonRpc(host, int(port))
 
@@ -782,6 +800,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
 
     sig = client.ethereum_sign_tx(
         n=address_n,
+        tx_type=tx_type,
         nonce=nonce,
         gas_price=gas_price,
         gas_limit=gas_limit,
@@ -790,8 +809,12 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
         data=data,
         chain_id=chain_id)
 
-    transaction = rlp.encode(
-        (nonce, gas_price, gas_limit, to_address, value, data) + sig)
+    if tx_type is None:
+        transaction = rlp.encode(
+            (nonce, gas_price, gas_limit, to_address, value, data) + sig)
+    else:
+        transaction = rlp.encode(
+            (tx_type, nonce, gas_price, gas_limit, to_address, value, data) + sig)
     tx_hex = '0x%s' % binascii.hexlify(transaction).decode()
 
     if publish:
@@ -837,6 +860,79 @@ def nem_sign_tx(connect, address, file, broadcast):
         return requests.post("{}/transaction/announce".format(broadcast), json=payload).json()
     else:
         return payload
+
+
+#
+# Lisk functions
+#
+
+
+@cli.command(help='Get Lisk address for specified path.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
+@click.option('-d', '--show-display', is_flag=True)
+@click.pass_obj
+def lisk_get_address(connect, address, show_display):
+    client = connect()
+    address_n = client.expand_path(address)
+    return client.lisk_get_address(address_n, show_display)
+
+
+@cli.command(help='Get Lisk public key for specified path.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
+@click.option('-d', '--show-display', is_flag=True)
+@click.pass_obj
+def lisk_get_public_key(connect, address, show_display):
+    client = connect()
+    address_n = client.expand_path(address)
+    res = client.lisk_get_public_key(address_n, show_display)
+    output = {
+        "public_key": binascii.hexlify(res.public_key).decode()
+    }
+    return output
+
+
+@cli.command(help='Sign message with Lisk address.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
+@click.argument('message')
+@click.pass_obj
+def lisk_sign_message(connect, address, message):
+    client = connect()
+    address_n = client.expand_path(address)
+    res = client.lisk_sign_message(address_n, message)
+    output = {
+        'message': message,
+        'address': res.address,
+        'signature': binascii.hexlify(res.signature).decode()
+    }
+    return output
+
+
+@cli.command(help='Verify message signed with Lisk address.')
+@click.argument('pubkey')
+@click.argument('signature')
+@click.argument('message')
+@click.pass_obj
+def lisk_verify_message(connect, pubkey, signature, message):
+    signature = bytes.fromhex(signature)
+    pubkey = bytes.fromhex(pubkey)
+    return connect().lisk_verify_message(pubkey, signature, message)
+
+
+@cli.command(help='Sign Lisk transaction.')
+@click.option('-n', '--address', required=True, help="BIP-32 path to signing key, e.g. m/44'/134'/0'/0'")
+@click.option('-f', '--file', type=click.File('r'), default='-', help='Transaction in JSON format')
+# @click.option('-b', '--broadcast', help='Broadcast Lisk transaction')
+@click.pass_obj
+def lisk_sign_tx(connect, address, file):
+    client = connect()
+    address_n = client.expand_path(address)
+    transaction = client.lisk_sign_tx(address_n, json.load(file))
+
+    payload = {
+        "signature": binascii.hexlify(transaction.signature).decode()
+    }
+
+    return payload
 
 
 #

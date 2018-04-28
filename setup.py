@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-from setuptools import setup
+import os.path
+import shutil
+import subprocess
+
+from setuptools import setup, Command
+from setuptools.command.build_py import build_py
 
 install_requires = [
     'setuptools>=19.0',
@@ -24,6 +29,44 @@ else:
 
 from trezorlib import __version__ as VERSION
 
+
+class PrebuildCommand(Command):
+    description = 'update vendored files (coins.json, protobuf messages)'
+    user_options = []
+
+    TREZOR_COMMON = os.path.join('vendor', 'trezor-common')
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # check for existence of the submodule directory
+        coins_json = os.path.join(self.TREZOR_COMMON, 'coins.json')
+        if not os.path.exists(coins_json):
+            raise Exception('trezor-common submodule seems to be missing.\n' +
+                            'Use "git submodule update --init" to retrieve it.')
+
+        # copy coins.json to the tree
+        shutil.copy(coins_json, 'trezorlib')
+
+        # regenerate messages
+        try:
+            subprocess.check_call(os.path.join(os.getcwd(), 'tools', 'build_protobuf'))
+        except Exception as e:
+            print(e)
+            print("Generating protobuf failed. Maybe you don't have 'protoc', or maybe you are on Windows?")
+            print("Using pre-generated files.")
+
+
+class CustomBuild(build_py):
+    def run(self):
+        self.run_command('prebuild')
+        super().run()
+
+
 setup(
     name='trezor',
     version=VERSION,
@@ -39,6 +82,9 @@ setup(
         'trezorlib.tests.device_tests',
         'trezorlib.tests.unit_tests',
     ],
+    package_data={
+        'trezorlib': ['coins.json'],
+    },
     scripts=['trezorctl'],
     install_requires=install_requires,
     python_requires='>=3.3',
@@ -51,4 +97,8 @@ setup(
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python :: 3 :: Only',
     ],
+    cmdclass={
+        'prebuild': PrebuildCommand,
+        'build_py': CustomBuild,
+    },
 )

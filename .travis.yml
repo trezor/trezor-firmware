@@ -14,6 +14,10 @@ addons:
             - libudev-dev
             - libusb-1.0-0-dev
 
+env:
+    global:
+        PROTOBUF_VERSION=3.4.0
+
 python:
     - "3.3"
     - "3.4"
@@ -23,14 +27,20 @@ python:
 install:
     # Optimisation: build requirements as wheels, which get cached by Travis
     - pip install "pip>=7.0" wheel
-    - pip install "setuptools>=19.0"
+    - pip install "setuptools>=38"
     - pip install tox-travis
     - pip install flake8
+    # protobuf-related dependencies
+    - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+    - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
+    - export PATH="$(pwd)/protoc/bin:$PATH"
+    - pip install "protobuf == ${PROTOBUF_VERSION}"
 
 script:
+    # check that generated protobuf messages are identical to in-tree ones
+    - ./tools/build_protobuf messages.tmp && diff -ur messages.tmp trezorlib/messages && rm -r messages.tmp
     - python setup.py install
     - flake8
-    - flake8 trezorctl
     - tox
 
 notifications:

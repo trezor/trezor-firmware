@@ -34,8 +34,8 @@ from . import messages as proto
 from . import tools
 from . import mapping
 from . import nem
+from .coins import slip44
 from . import stellar
-from .coins import coins_slip44
 from .debuglink import DebugLink
 from .protobuf import MessageType
 
@@ -43,11 +43,6 @@ from .protobuf import MessageType
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
 
-# try:
-#     from PIL import Image
-#     SCREENSHOT = True
-# except:
-#     SCREENSHOT = False
 
 SCREENSHOT = False
 
@@ -425,6 +420,7 @@ class DebugLinkMixin(object):
     def call_raw(self, msg):
 
         if SCREENSHOT and self.debug:
+            from PIL import Image
             layout = self.debug.read_layout()
             im = Image.new("RGB", (128, 64))
             pix = im.load()
@@ -497,8 +493,9 @@ class ProtocolMixin(object):
     PRIME_DERIVATION_FLAG = 0x80000000
     VENDORS = ('bitcointrezor.com', 'trezor.io')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, state=None, *args, **kwargs):
         super(ProtocolMixin, self).__init__(*args, **kwargs)
+        self.state = state
         self.init_device()
         self.tx_api = None
 
@@ -506,7 +503,10 @@ class ProtocolMixin(object):
         self.tx_api = tx_api
 
     def init_device(self):
-        self.features = expect(proto.Features)(self.call)(proto.Initialize())
+        init_msg = proto.Initialize()
+        if self.state is not None:
+            init_msg.state = self.state
+        self.features = expect(proto.Features)(self.call)(init_msg)
         if str(self.features.vendor) not in self.VENDORS:
             raise RuntimeError("Unsupported device")
 
@@ -531,8 +531,8 @@ class ProtocolMixin(object):
             n = n[1:]
 
         # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
-        if n[0] in coins_slip44:
-            n = ["44'", "%d'" % coins_slip44[n[0]]] + n[1:]
+        if n[0] in slip44:
+            n = ["44'", "%d'" % slip44[n[0]]] + n[1:]
 
         path = []
         for x in n:
@@ -573,7 +573,7 @@ class ProtocolMixin(object):
         return self.call(proto.EthereumGetAddress(address_n=n, show_display=show_display))
 
     @session
-    def ethereum_sign_tx(self, n, nonce, gas_price, gas_limit, to, value, data=None, chain_id=None):
+    def ethereum_sign_tx(self, n, nonce, gas_price, gas_limit, to, value, data=None, chain_id=None, tx_type=None):
         def int_to_big_endian(value):
             import rlp.utils
             if value == 0:
@@ -600,6 +600,9 @@ class ProtocolMixin(object):
         if chain_id:
             msg.chain_id = chain_id
 
+        if tx_type is not None:
+            msg.tx_type = tx_type
+
         response = self.call(msg)
 
         while response.data_length is not None:
@@ -625,6 +628,78 @@ class ProtocolMixin(object):
             return True
         return False
 
+    #
+    # Lisk functions
+    #
+
+    @field('address')
+    @expect(proto.LiskAddress)
+    def lisk_get_address(self, n, show_display=False):
+        n = self._convert_prime(n)
+        return self.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
+
+    @expect(proto.LiskPublicKey)
+    def lisk_get_public_key(self, n, show_display=False):
+        n = self._convert_prime(n)
+        return self.call(proto.LiskGetPublicKey(address_n=n, show_display=show_display))
+
+    @expect(proto.LiskMessageSignature)
+    def lisk_sign_message(self, n, message):
+        n = self._convert_prime(n)
+        message = normalize_nfc(message)
+        return self.call(proto.LiskSignMessage(address_n=n, message=message))
+
+    def lisk_verify_message(self, pubkey, signature, message):
+        message = normalize_nfc(message)
+        try:
+            resp = self.call(proto.LiskVerifyMessage(signature=signature, public_key=pubkey, message=message))
+        except CallException as e:
+            resp = e
+        return isinstance(resp, proto.Success)
+
+    @expect(proto.LiskSignedTx)
+    def lisk_sign_tx(self, n, transaction):
+        n = self._convert_prime(n)
+
+        def asset_to_proto(asset):
+            msg = proto.LiskTransactionAsset()
+
+            if "votes" in asset:
+                msg.votes = asset["votes"]
+            if "data" in asset:
+                msg.data = asset["data"]
+            if "signature" in asset:
+                msg.signature = proto.LiskSignatureType()
+                msg.signature.public_key = binascii.unhexlify(asset["signature"]["publicKey"])
+            if "delegate" in asset:
+                msg.delegate = proto.LiskDelegateType()
+                msg.delegate.username = asset["delegate"]["username"]
+            if "multisignature" in asset:
+                msg.multisignature = proto.LiskMultisignatureType()
+                msg.multisignature.min = asset["multisignature"]["min"]
+                msg.multisignature.life_time = asset["multisignature"]["lifetime"]
+                msg.multisignature.keys_group = asset["multisignature"]["keysgroup"]
+            return msg
+
+        msg = proto.LiskTransactionCommon()
+
+        msg.type = transaction["type"]
+        msg.fee = int(transaction["fee"])  # Lisk use strings for big numbers (javascript issue)
+        msg.amount = int(transaction["amount"])  # And we convert it back to number
+        msg.timestamp = transaction["timestamp"]
+
+        if "recipientId" in transaction:
+            msg.recipient_id = transaction["recipientId"]
+        if "senderPublicKey" in transaction:
+            msg.sender_public_key = binascii.unhexlify(transaction["senderPublicKey"])
+        if "requesterPublicKey" in transaction:
+            msg.requester_public_key = binascii.unhexlify(transaction["requesterPublicKey"])
+        if "signature" in transaction:
+            msg.signature = binascii.unhexlify(transaction["signature"])
+
+        msg.asset = asset_to_proto(transaction["asset"])
+        return self.call(proto.LiskSignTx(address_n=n, transaction=msg))
+
     @field('entropy')
     @expect(proto.Entropy)
     def get_entropy(self, size):
@@ -644,7 +719,7 @@ class ProtocolMixin(object):
 
     @field('message')
     @expect(proto.Success)
-    def apply_settings(self, label=None, language=None, use_passphrase=None, homescreen=None, passphrase_source=None):
+    def apply_settings(self, label=None, language=None, use_passphrase=None, homescreen=None, passphrase_source=None, auto_lock_delay_ms=None):
         settings = proto.ApplySettings()
         if label is not None:
             settings.label = label
@@ -656,6 +731,8 @@ class ProtocolMixin(object):
             settings.homescreen = homescreen
         if passphrase_source is not None:
             settings.passphrase_source = passphrase_source
+        if auto_lock_delay_ms is not None:
+            settings.auto_lock_delay_ms = auto_lock_delay_ms
 
         out = self.call(settings)
         self.init_device()  # Reload Features
@@ -801,7 +878,7 @@ class ProtocolMixin(object):
     @session
     def sign_tx(self, coin_name, inputs, outputs, version=None, lock_time=None, debug_processor=None):
 
-        start = time.time()
+        # start = time.time()
         txes = self._prepare_sign_tx(inputs, outputs)
 
         # Prepare and send initial message
@@ -1151,12 +1228,15 @@ class ProtocolMixin(object):
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
-    pass
+    def __init__(self, transport, *args, **kwargs):
+        super().__init__(transport=transport, *args, **kwargs)
 
 
 class TrezorClientVerbose(ProtocolMixin, TextUIMixin, VerboseWireMixin, BaseClient):
-    pass
+    def __init__(self, transport, *args, **kwargs):
+        super().__init__(transport=transport, *args, **kwargs)
 
 
 class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, VerboseWireMixin, BaseClient):
-    pass
+    def __init__(self, transport, *args, **kwargs):
+        super().__init__(transport=transport, *args, **kwargs)

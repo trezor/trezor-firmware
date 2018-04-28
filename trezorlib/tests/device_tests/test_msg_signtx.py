@@ -18,9 +18,11 @@
 
 from .common import *
 
+from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.client import CallException
-from trezorlib.tx_api import TxApiTestnet
+
+TxApiTestnet = coins.tx_api['Testnet']
 
 
 TXHASH_157041 = unhexlify('1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6')

@@ -19,6 +19,7 @@
 import time
 import hid
 import os
+import sys
 
 from ..protocol_v1 import ProtocolV1
 from ..protocol_v2 import ProtocolV2
@@ -39,7 +40,12 @@ class HidHandle:
     def open(self):
         if self.count == 0:
             self.handle = hid.device()
-            self.handle.open_path(self.path)
+            try:
+                self.handle.open_path(self.path)
+            except (IOError, OSError) as e:
+                if sys.platform.startswith('linux'):
+                    e.args = e.args + ('Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules', )
+                raise e
             self.handle.set_nonblocking(True)
         self.count += 1
 

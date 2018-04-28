@@ -14,3 +14,6 @@ docs/_build
 docs/.docs-build-environment
 .tox/
 .cache/
+.pytest_cache/
+
+trezorlib/coins.json

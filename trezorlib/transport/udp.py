@@ -67,7 +67,6 @@ class UdpTransport(Transport):
 
     @classmethod
     def enumerate(cls):
-        devices = []
         default_path = '{}:{}'.format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
         try:
             return [cls._try_path(default_path)]

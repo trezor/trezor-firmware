@@ -102,9 +102,9 @@ def main():
 
         data = {'label': label,
                 'bip32_path': bip32_path,
-                'password_encrypted_hex': binascii.hexlify(passw_encrypted)}
+                'password_encrypted_hex': binascii.hexlify(passw_encrypted).decode('ascii')}
 
-        json.dump(data, open(passw_file, 'wb'))
+        json.dump(data, open(passw_file, 'w'))
 
     # Let's load password
     data = json.load(open(passw_file, 'r'))

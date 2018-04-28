@@ -19,14 +19,14 @@
 from .common import *
 from trezorlib import messages as proto
 import trezorlib.ckd_public as bip32
-from trezorlib import tx_api
+from trezorlib.coins import tx_api
 
 
 class TestMultisigChange(TrezorTest):
 
     def setup_method(self, method):
         super(TestMultisigChange, self).setup_method(method)
-        self.client.set_tx_api(tx_api.TxApiTestnet)
+        self.client.set_tx_api(tx_api['Testnet'])
 
     node_ext1 = bip32.deserialize('tpubDADHV9u9Y6gkggintTdMjJE3be58zKNLhpxBQyuEM6Pwx3sN9JVLmMCMN4DNVwL9AKec27z5TaWcWuHzMXiGAtcra5DjwWbvppGX4gaEGVN')
     # m/1 => 02c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e

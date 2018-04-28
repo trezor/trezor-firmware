@@ -77,3 +77,23 @@ Example: your PIN is **1234** and TREZOR is displaying the following:
 === === ===
 
 You have to enter: **3795**
+
+
+Contributing
+------------
+
+Python-trezor pulls coins info and protobuf messages from `trezor-common <https://github.com/trezor/trezor-common>`_ repository. If you are
+developing new features for Trezor, you will want to start there. Once your changes are accepted to ``trezor-common``, you can make a PR
+against this repository. Don't forget to update the submodule with:
+
+.. code::
+
+  git submodule update --init --remote
+
+Then, rebuild the protobuf messages and get ``coins.json`` by running:
+
+.. code::
+
+  python3 setup.py prebuild
+
+To get support for BTC-like coins, these steps are enough and no further changes to the library are necessary.

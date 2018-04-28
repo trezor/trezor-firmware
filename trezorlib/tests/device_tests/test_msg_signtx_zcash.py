@@ -18,8 +18,11 @@
 
 
 from .common import *
+
+from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.tx_api import TxApiZcash
+
+TxApiZcash = coins.tx_api["Zcash"]
 
 
 TXHASH_93373e = unhexlify('93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c')

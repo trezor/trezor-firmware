@@ -115,4 +115,4 @@ def get_transport(path=None, prefix_search=False):
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 
-    raise Exception("Unknown path prefix '%s'" % prefix)
+    raise Exception("Could not find device by path: {}".format(path))

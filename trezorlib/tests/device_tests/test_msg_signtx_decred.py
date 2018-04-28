@@ -17,8 +17,10 @@
 
 from .common import *
 
+from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.tx_api import TxApiDecredTestnet
+
+TxApiDecredTestnet = coins.tx_api['Decred Testnet']
 
 
 TXHASH_e16248 = unhexlify("e16248f0b39a0a0c0e53d6f2f84c2a944f0d50e017a82701e8e02e46e979d5ed")
