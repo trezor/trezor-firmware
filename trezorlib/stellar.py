@@ -5,29 +5,30 @@ import xdrlib
 from . import messages as proto
 
 # Memo types
-MEMO_TYPE_TEXT   = 0
-MEMO_TYPE_ID     = 1
-MEMO_TYPE_HASH   = 2
+MEMO_TYPE_TEXT = 0
+MEMO_TYPE_ID = 1
+MEMO_TYPE_HASH = 2
 MEMO_TYPE_RETURN = 4
 
 # Asset types
-ASSET_TYPE_NATIVE  = 0
-ASSET_TYPE_ALPHA4  = 1
+ASSET_TYPE_NATIVE = 0
+ASSET_TYPE_ALPHA4 = 1
 ASSET_TYPE_ALPHA12 = 2
 
 # Operations
-OP_CREATE_ACCOUNT   = 0
-OP_PAYMENT          = 1
-OP_PATH_PAYMENT     = 2
-OP_MANAGE_OFFER     = 3
+OP_CREATE_ACCOUNT = 0
+OP_PAYMENT = 1
+OP_PATH_PAYMENT = 2
+OP_MANAGE_OFFER = 3
 OP_CREATE_PASSIVE_OFFER = 4
-OP_SET_OPTIONS          = 5
-OP_CHANGE_TRUST         = 6
-OP_ALLOW_TRUST          = 7
-OP_ACCOUNT_MERGE        = 8
-OP_INFLATION            = 9 # Included for documentation purposes, not supported by Trezor
-OP_MANAGE_DATA          = 10
-OP_BUMP_SEQUENCE        = 11
+OP_SET_OPTIONS = 5
+OP_CHANGE_TRUST = 6
+OP_ALLOW_TRUST = 7
+OP_ACCOUNT_MERGE = 8
+OP_INFLATION = 9  # Included for documentation purposes, not supported by Trezor
+OP_MANAGE_DATA = 10
+OP_BUMP_SEQUENCE = 11
+
 
 def expand_path_or_default(client, address):
     """Uses client to parse address and returns an array of integers
@@ -52,6 +53,7 @@ def address_from_public_key(pk_bytes):
     final_bytes.extend(struct.pack("<H", _crc16_checksum(final_bytes)))
 
     return base64.b32encode(final_bytes)
+
 
 def address_to_public_key(address_str):
     """Returns the raw 32 bytes representing a public key by extracting
@@ -79,7 +81,7 @@ def parse_transaction_bytes(tx_bytes):
 
     # Timebounds is an optional field
     if unpacker.unpack_bool():
-        max_timebound = 2**32-1 # max unsigned 32-bit int (trezor does not support the full 64-bit time value)
+        max_timebound = 2**32 - 1  # max unsigned 32-bit int (trezor does not support the full 64-bit time value)
         tx.timebounds_start = unpacker.unpack_uhyper()
         tx.timebounds_end = unpacker.unpack_uhyper()
 
@@ -108,6 +110,7 @@ def parse_transaction_bytes(tx_bytes):
         operations.append(_parse_operation_bytes(unpacker))
 
     return tx, operations
+
 
 def _parse_operation_bytes(unpacker):
     """Returns a protobuf message representing the next operation as read from
@@ -272,6 +275,7 @@ def _parse_operation_bytes(unpacker):
 
     raise ValueError("Unknown operation type: " + type)
 
+
 def _xdr_read_asset(unpacker):
     """Reads a stellar Asset from unpacker"""
     asset = proto.StellarAssetType(
@@ -299,6 +303,7 @@ def _xdr_read_address(unpacker):
         raise ValueError("Unsupported address type")
 
     return unpacker.unpack_fopaque(32)
+
 
 def _crc16_checksum(bytes):
     """Returns the CRC-16 checksum of bytearray bytes

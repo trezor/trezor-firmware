@@ -20,7 +20,8 @@
 from base64 import b64decode, b64encode
 from .common import TrezorTest
 
-@pytest.mark.xfail # requires trezor-mcu PR #259
+
+@pytest.mark.xfail  # requires trezor-mcu PR #259
 class TestMsgStellarSignTransaction(TrezorTest):
 
     def get_network_passphrase(self):
@@ -38,7 +39,6 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         response = self.client.stellar_sign_transaction(xdr, self.get_address_n(), self.get_network_passphrase())
         assert b64encode(response.signature) == b'UAOL4ZPYIOzEgM66kBrhyNjLR66dNXtuNrmvd3m0/pc8qCSoLmYY4TybS0lHiMtb+LFZESTaxrpErMHz1sZ6DQ=='
-
 
     def test_sign_tx_account_merge_op(self):
         self.setup_mnemonic_nopin_nopassphrase()

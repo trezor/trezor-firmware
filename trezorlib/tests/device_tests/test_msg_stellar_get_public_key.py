@@ -16,7 +16,8 @@
 from .common import TrezorTest
 from trezorlib import stellar
 
-@pytest.mark.xfail # requires trezor-mcu PR #259
+
+@pytest.mark.xfail  # requires trezor-mcu PR #259
 class TestMsgStellarGetPublicKey(TrezorTest):
 
     def test_stellar_get_address(self):
