@@ -60,7 +60,7 @@ class CoinDef(p.MessageType):
         min_address_length: int = None,
         max_address_length: int = None,
         icon: bytes = None,
-        **kwargs,
+        **kwargs
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
