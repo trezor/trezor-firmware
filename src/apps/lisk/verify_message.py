@@ -7,9 +7,7 @@ async def lisk_verify_message(ctx, msg):
     from trezor.messages.FailureType import ProcessError
     from apps.wallet.verify_message import require_confirm_verify_message
 
-    # Lisk signature can be more than 64 bytes
-    sig = msg.signature[:64]
-    verify = ed25519.verify(msg.public_key, sig, msg.message)
+    verify = ed25519.verify(msg.public_key, msg.signature, msg.message)
 
     if not verify:
         raise wire.FailureError(ProcessError, 'Invalid signature')
