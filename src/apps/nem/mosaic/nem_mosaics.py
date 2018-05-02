@@ -1,19 +1,4 @@
-# todo move to common and generate via script
-
-
-def get_mosaic_definition(namespace_name: str, mosaic_name: str, network: int):
-    for m in mosaics:
-        if namespace_name == m["namespace"] and mosaic_name == m["mosaic"]:
-            if ("networks" not in m) or (network in m["networks"]):
-                return m
-    return None
-
-
-def is_nem_xem_mosaic(namespace_name: str, mosaic_name: str):
-    if namespace_name == "nem" and mosaic_name == "xem":
-        return True
-    return False
-
+# generated using gen_nem_mosaics.py from trezor-common nem_mosaics.json - do not edit directly!
 
 mosaics = [
     {
@@ -21,7 +6,7 @@ mosaics = [
         "ticker": " XEM",
         "namespace": "nem",
         "mosaic": "xem",
-        "divisibility": 6
+        "divisibility": 6,
     },
     {
         "name": "DIMCOIN",
@@ -33,7 +18,7 @@ mosaics = [
         "fee": 10,
         "levy_namespace": "dim",
         "levy_mosaic": "coin",
-        "networks": [ 104 ]
+        "networks": [104],
     },
     {
         "name": "DIM TOKEN",
@@ -41,7 +26,7 @@ mosaics = [
         "namespace": "dim",
         "mosaic": "token",
         "divisibility": 6,
-        "networks": [ 104 ]
+        "networks": [104],
     },
     {
         "name": "Breeze Token",
@@ -49,7 +34,7 @@ mosaics = [
         "namespace": "breeze",
         "mosaic": "breeze-token",
         "divisibility": 0,
-        "networks": [ 104 ]
+        "networks": [104],
     },
     {
         "name": "PacNEM Game Credits",
@@ -57,7 +42,7 @@ mosaics = [
         "namespace": "pacnem",
         "mosaic": "heart",
         "divisibility": 0,
-        "networks": [ 104 ]
+        "networks": [104],
     },
     {
         "name": "PacNEM Score Tokens",
@@ -69,6 +54,6 @@ mosaics = [
         "fee": 100,
         "levy_namespace": "nem",
         "levy_mosaic": "xem",
-        "networks": [ 104 ]
-    }
+        "networks": [104],
+    },
 ]

@@ -1,6 +1,6 @@
 from common import *
 from apps.nem.transfer import *
-from apps.nem.mosaic.definitions import get_mosaic_definition
+from apps.nem.mosaic.helpers import get_mosaic_definition
 
 
 class TestNemMosaic(unittest.TestCase):

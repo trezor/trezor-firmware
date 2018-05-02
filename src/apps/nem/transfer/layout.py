@@ -1,5 +1,5 @@
 from apps.nem.layout import *
-from apps.nem.mosaic.definitions import *
+from apps.nem.mosaic.helpers import *
 from trezor.messages import NEMImportanceTransferMode
 from trezor.messages import NEMTransfer
 from trezor.messages import NEMImportanceTransfer
