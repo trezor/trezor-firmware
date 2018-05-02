@@ -31,11 +31,11 @@ async def ethereum_sign_tx(ctx, msg):
         recipient = msg.data_initial_chunk[16:36]
         value = int.from_bytes(msg.data_initial_chunk[36:68], 'big')
 
-    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token)
+    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token, msg.tx_type)
     if token is None and msg.data_length > 0:
         await require_confirm_data(ctx, msg.data_initial_chunk, data_total)
 
-    await require_confirm_fee(ctx, value, int.from_bytes(msg.gas_price, 'big'), int.from_bytes(msg.gas_limit, 'big'), msg.chain_id, token)
+    await require_confirm_fee(ctx, value, int.from_bytes(msg.gas_price, 'big'), int.from_bytes(msg.gas_limit, 'big'), msg.chain_id, token, msg.tx_type)
 
     data = bytearray()
     data += msg.data_initial_chunk
@@ -45,6 +45,9 @@ async def ethereum_sign_tx(ctx, msg):
 
     sha = HashWriter(sha3_256)
     sha.extend(rlp.encode_length(total_length, True))  # total length
+
+    if not msg.tx_type is None:
+        sha.extend(rlp.encode(msg.tx_type))
 
     for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
         sha.extend(rlp.encode(field))
@@ -72,6 +75,9 @@ async def ethereum_sign_tx(ctx, msg):
 
 def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     length = 0
+    if not msg.tx_type is None:
+        length += rlp.field_length(1, [msg.tx_type])
+
     for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
         length += rlp.field_length(len(field), field[:1])
 
@@ -123,6 +129,9 @@ def node_derive(root, address_n: list):
 
 
 def check(msg: EthereumSignTx):
+    if msg.tx_type not in [1, 6, None]:
+        raise ValueError(FailureType.DataError, 'Txtype out of bounds')
+
     if msg.chain_id < 0 or msg.chain_id > MAX_CHAIN_ID:
         raise wire.DataError('Chain id out of bounds')
 

@@ -8,26 +8,26 @@ from . import networks
 from .get_address import _ethereum_address_hex
 
 
-async def require_confirm_tx(ctx, to, value, chain_id, token=None):
+async def require_confirm_tx(ctx, to, value, chain_id, token=None, tx_type=None):
     if to:
         str_to = _ethereum_address_hex(to)
     else:
         str_to = 'new contract?'
     content = Text('Confirm sending', ui.ICON_SEND,
-                   ui.BOLD, format_ethereum_amount(value, token, chain_id),
+                   ui.BOLD, format_ethereum_amount(value, token, chain_id, tx_type),
                    ui.NORMAL, 'to',
                    ui.MONO, *split_address(str_to),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
 
 
-async def require_confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None):
+async def require_confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None, tx_type=None):
     content = Text('Confirm transaction', ui.ICON_SEND,
-                   ui.BOLD, format_ethereum_amount(spending, token, chain_id),
+                   ui.BOLD, format_ethereum_amount(spending, token, chain_id, tx_type),
                    ui.NORMAL, 'Gas price:',
-                   ui.BOLD, format_ethereum_amount(gas_price, None, chain_id),
+                   ui.BOLD, format_ethereum_amount(gas_price, None, chain_id, tx_type),
                    ui.NORMAL, 'Maximum fee:',
-                   ui.BOLD, format_ethereum_amount(gas_price * gas_limit, None, chain_id),
+                   ui.BOLD, format_ethereum_amount(gas_price *gas_limit, None, chain_id, tx_type),
                    icon_color=ui.GREEN)
     await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
@@ -51,12 +51,13 @@ def split_address(address):
     return chunks(address, 17)
 
 
-def format_ethereum_amount(value, token, chain_id):
+def format_ethereum_amount(value, token, chain_id, tx_type=None):
+    value = int.from_bytes(value, 'big')
     if token:
         suffix = token[2]
         decimals = token[3]
     else:
-        suffix = networks.suffix_by_chain_id(chain_id)
+        suffix = networks.suffix_by_chain_id(chain_id, tx_type)
         decimals = 18
 
     if value <= 1e9:
