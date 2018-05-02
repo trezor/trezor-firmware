@@ -82,6 +82,13 @@ OBJS += ../vendor/nanopb/pb_encode.o
 OBJS += protob/messages.pb.o
 OBJS += protob/types.pb.o
 
+OPTFLAGS ?= -Os
+
+../vendor/trezor-crypto/%.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/aes/%.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/ed25519-donna/%.o: OPTFLAGS = -O3
+../vendor/nanopb/%.o: OPTFLAGS = -O3
+
 include ../Makefile.include
 
 DEBUG_LINK ?= 0

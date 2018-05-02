@@ -1717,7 +1717,8 @@ void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
 			memcpy(&word, msg->memory.bytes + i, 4);
 			flash_write32(msg->address + i, word);
 		}
-		svc_flash_lock();
+		uint32_t dummy = svc_flash_lock();
+		(void)dummy;
 	} else {
 #if !EMULATOR
 		memcpy((void *) msg->address, msg->memory.bytes, length);
@@ -1729,6 +1730,7 @@ void fsm_msgDebugLinkFlashErase(DebugLinkFlashErase *msg)
 {
 	svc_flash_unlock();
 	svc_flash_erase_sector(msg->sector);
-	svc_flash_lock();
+	uint32_t dummy = svc_flash_lock();
+	(void)dummy;
 }
 #endif
