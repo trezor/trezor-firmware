@@ -46,7 +46,7 @@ async def ethereum_sign_tx(ctx, msg):
     sha = HashWriter(sha3_256)
     sha.extend(rlp.encode_length(total_length, True))  # total length
 
-    if not msg.tx_type is None:
+    if msg.tx_type is not None:
         sha.extend(rlp.encode(msg.tx_type))
 
     for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
@@ -75,7 +75,7 @@ async def ethereum_sign_tx(ctx, msg):
 
 def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     length = 0
-    if not msg.tx_type is None:
+    if msg.tx_type is not None:
         length += rlp.field_length(1, [msg.tx_type])
 
     for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
@@ -130,10 +130,10 @@ def node_derive(root, address_n: list):
 
 def check(msg: EthereumSignTx):
     if msg.tx_type not in [1, 6, None]:
-        raise ValueError(FailureType.DataError, 'Txtype out of bounds')
+        raise wire.DataError('tx_type out of bounds')
 
     if msg.chain_id < 0 or msg.chain_id > MAX_CHAIN_ID:
-        raise wire.DataError('Chain id out of bounds')
+        raise wire.DataError('chain_id out of bounds')
 
     if msg.data_length > 0:
         if not msg.data_initial_chunk:

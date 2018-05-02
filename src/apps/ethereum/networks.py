@@ -13,7 +13,7 @@ suffixes = {
 
 
 def suffix_by_chain_id(chain_id, tx_type=None):
-    if (tx_type==1 or tx_type==6) and (chain_id==1 or chain_id==3):
-        return"WAN"
+    if tx_type in [1, 6] and chain_id in [1, 3]:
+        return 'WAN'
     else:
         return suffixes.get(chain_id, 'UNKN')

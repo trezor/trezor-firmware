@@ -1,7 +1,6 @@
 from trezor import ui, wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
-from trezor.messages.FailureType import ProcessError
 from trezor.messages.MessageSignature import MessageSignature
 from trezor.ui.text import Text
 from apps.common import coins, seed

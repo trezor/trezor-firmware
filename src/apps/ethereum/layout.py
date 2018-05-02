@@ -27,7 +27,7 @@ async def require_confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, tok
                    ui.NORMAL, 'Gas price:',
                    ui.BOLD, format_ethereum_amount(gas_price, None, chain_id, tx_type),
                    ui.NORMAL, 'Maximum fee:',
-                   ui.BOLD, format_ethereum_amount(gas_price *gas_limit, None, chain_id, tx_type),
+                   ui.BOLD, format_ethereum_amount(gas_price * gas_limit, None, chain_id, tx_type),
                    icon_color=ui.GREEN)
     await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
 
