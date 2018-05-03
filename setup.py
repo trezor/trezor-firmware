@@ -5,6 +5,7 @@ import subprocess
 
 from setuptools import setup, Command
 from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
 
 install_requires = [
     'setuptools>=19.0',
@@ -61,10 +62,19 @@ class PrebuildCommand(Command):
             print("Using pre-generated files.")
 
 
-class CustomBuild(build_py):
-    def run(self):
+def _patch_prebuild(cls):
+    """Patch a setuptools command to depend on `prebuild`"""
+    orig_run = cls.run
+
+    def new_run(self):
         self.run_command('prebuild')
-        super().run()
+        orig_run(self)
+
+    cls.run = new_run
+
+
+_patch_prebuild(build_py)
+_patch_prebuild(develop)
 
 
 setup(
@@ -99,6 +109,5 @@ setup(
     ],
     cmdclass={
         'prebuild': PrebuildCommand,
-        'build_py': CustomBuild,
     },
 )
