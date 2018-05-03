@@ -182,6 +182,35 @@ class TestMsgNEMSignTx(TrezorTest):
         assert hexlify(tx.data) == b'0101000002000068ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f559504280000004e444d59534c5849344c3346595551574f344d4a4f564c364253544a4a584b44535a524d54344c54c0c62d000000000000000000010000001c000000100000000300000064696d05000000746f6b656e98b1010000000000'
         assert hexlify(tx.signature) == b'e7f14ef8c39727bfd257e109cd5acac31542f2e41f2e5deb258fc1db602b690eb1cabca41a627fe2adc51f3193db85c76b41c80bb60161eb8738ebf20b507104'
 
+    def test_nem_signtx_known_mosaic_with_levy(self):
+
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            "timeStamp": 76809215,
+            "amount": 2000000,
+            "fee": 1000000,
+            "recipient": "NDMYSLXI4L3FYUQWO4MJOVL6BSTJJXKDSZRMT4LT",
+            "type": nem.TYPE_TRANSACTION_TRANSFER,
+            "deadline": 76895615,
+            "version": (0x68 << 24),
+            "message": {
+            },
+            "mosaics": [
+                {
+                    "mosaicId": {
+                        "namespaceId": "dim",
+                        "name": "coin",
+                    },
+                    "quantity": 222000,
+                },
+            ],
+        })
+
+        # trezor should display 0 XEM and 0.444 DIM and levy of 0.000444 DIM
+        assert hexlify(tx.data) == b'0101000002000068ff03940420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208440420f00000000007f559504280000004e444d59534c5849344c3346595551574f344d4a4f564c364253544a4a584b44535a524d54344c5480841e000000000000000000010000001b0000000f0000000300000064696d04000000636f696e3063030000000000'
+        assert hexlify(tx.signature) == b'd3222dd7b83d66bda0539827ac6f909d06e40350b5e5e893d6fa762f954e9bf7da61022ef04950e7b6dfa88a2278f2f8a1b21df2bc3af22b388cb3a90bf76f07'
+
     def test_nem_signtx_multiple_mosaics(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
