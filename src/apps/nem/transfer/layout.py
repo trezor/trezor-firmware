@@ -37,7 +37,7 @@ async def ask_transfer_mosaic(ctx, common: NEMTransactionCommon, transfer: NEMTr
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
         if "levy" in definition and "fee" in definition:
-            levy_msg = _get_levy_msg(definition, mosaic.quantity, common.network)
+            levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
             msg = Text('Confirm mosaic', ui.ICON_SEND,
                        ui.NORMAL, 'Confirm mosaic',
                        ui.NORMAL, 'levy fee of',
@@ -63,7 +63,7 @@ async def ask_transfer_mosaic(ctx, common: NEMTransactionCommon, transfer: NEMTr
 
 def _get_xem_amount(transfer: NEMTransfer):
     # mosaics are empty the transfer.amount denotes the xem amount
-    if not len(mosaics):
+    if not len(transfer.mosaics):
         return transfer.amount
     # otherwise xem amount is taken from the nem xem mosaic if present
     for mosaic in transfer.mosaics:
