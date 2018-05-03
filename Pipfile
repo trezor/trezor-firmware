@@ -1,0 +1,10 @@
+[[source]]
+url = "https://pypi.org/simple"
+name = "pypi"
+verify_ssl = true
+
+[packages]
+trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "master"}
+rlp = "==0.6.0"
+pytest = "*"
+mock = "*"
