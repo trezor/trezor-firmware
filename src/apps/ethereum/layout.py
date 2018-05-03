@@ -51,8 +51,7 @@ def split_address(address):
     return chunks(address, 17)
 
 
-def format_ethereum_amount(value, token, chain_id, tx_type=None):
-    value = int.from_bytes(value, 'big')
+def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
     if token:
         suffix = token[2]
         decimals = token[3]
