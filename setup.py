@@ -15,18 +15,8 @@ install_requires = [
     'click>=6.2',
     'pyblake2>=0.9.3',
     'rlp>=0.6.0',
+    'libusb1>=1.6.4',
 ]
-
-import sys
-if '--disable-hidapi' in sys.argv:
-    sys.argv.remove('--disable-hidapi')
-else:
-    install_requires.append('hidapi>=0.7.99.post20')
-
-if '--disable-libusb' in sys.argv:
-    sys.argv.remove('--disable-libusb')
-else:
-    install_requires.append('libusb1>=1.6.4')
 
 from trezorlib import __version__ as VERSION
 
@@ -97,6 +87,9 @@ setup(
     },
     scripts=['trezorctl'],
     install_requires=install_requires,
+    extras_require={
+        'hidapi': ['hidapi>=0.7.99.post20'],
+    },
     python_requires='>=3.3',
     include_package_data=True,
     zip_safe=False,
