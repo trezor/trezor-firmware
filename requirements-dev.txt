@@ -2,3 +2,4 @@
 -r requirements-optional.txt
 pytest>=3.5.0
 mock>=2.0.0
+flake8
