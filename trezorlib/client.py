@@ -574,10 +574,7 @@ class ProtocolMixin(object):
     @session
     def ethereum_sign_tx(self, n, nonce, gas_price, gas_limit, to, value, data=None, chain_id=None, tx_type=None):
         def int_to_big_endian(value):
-            import rlp.utils
-            if value == 0:
-                return b''
-            return rlp.utils.int_to_big_endian(value)
+            return value.to_bytes((value.bit_length() + 7) // 8, 'big')
 
         n = self._convert_prime(n)
 
