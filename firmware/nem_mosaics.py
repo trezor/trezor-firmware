@@ -109,7 +109,7 @@ if __name__ == "__main__":
     sys.path.insert(0, "protob")
     import types_pb2 as types
 
-    messages = json.load(open("../vendor/trezor-common/defs/nem/nem_mosaics.json"))
+    messages = json.load(open("nem_mosaics.json"))
 
     with open("nem_mosaics.h", "w+") as f:
         f.write(HEADER_TEMPLATE.format(
