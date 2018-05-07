@@ -35,6 +35,7 @@ from . import tools
 from . import mapping
 from . import nem
 from .coins import slip44
+from . import stellar
 from .debuglink import DebugLink
 from .protobuf import MessageType
 
@@ -1173,6 +1174,54 @@ class ProtocolMixin(object):
             raise RuntimeError("Device must be in bootloader mode")
 
         return self.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
+
+    @expect(proto.StellarPublicKey)
+    def stellar_get_public_key(self, address_n):
+        return self.call(proto.StellarGetPublicKey(address_n=address_n))
+
+    def stellar_sign_transaction(self, tx_envelope, address_n, network_passphrase=None):
+        # default networkPassphrase to the public network
+        if network_passphrase is None:
+            network_passphrase = "Public Global Stellar Network ; September 2015"
+
+        tx, operations = stellar.parse_transaction_bytes(tx_envelope)
+
+        tx.network_passphrase = network_passphrase
+        tx.address_n = address_n
+
+        # Signing loop works as follows:
+        #
+        # 1. Start with tx (header information for the transaction) and operations (an array of operation protobuf messagess)
+        # 2. Send the tx header to the device
+        # 3. Receive a StellarTxOpRequest message
+        # 4. Send operations one by one until all operations have been sent. If there are more operations to sign, the device will send a StellarTxOpRequest message
+        # 5. The final message received will be StellarSignedTx which is returned from this method
+        resp = self.call(tx)
+        try:
+            while isinstance(resp, proto.StellarTxOpRequest):
+                resp = self.call(operations.pop(0))
+        except IndexError:
+            # pop from empty list
+            raise CallException("Stellar.UnexpectedEndOfOperations",
+                                "Reached end of operations without a signature.") from None
+
+        if not isinstance(resp, proto.StellarSignedTx):
+            raise CallException(proto.FailureType.UnexpectedMessage, resp)
+
+        if operations:
+            raise CallException("Stellar.UnprocessedOperations",
+                                "Received a signature before processing all operations.")
+
+        return resp
+
+    @expect(proto.StellarMessageSignature)
+    def stellar_sign_message(self, address_n, message):
+        return self.call(proto.StellarSignMessage(address_n=address_n, message=message))
+
+    def stellar_verify_message(self, pubkey_bytes, signature, message):
+        resp = self.call(proto.StellarVerifyMessage(public_key=pubkey_bytes, message=message, signature=signature))
+
+        return isinstance(resp, proto.Success)
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):

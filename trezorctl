@@ -34,6 +34,7 @@ from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib.ckd_public import PRIME_DERIVATION_FLAG
+from trezorlib import stellar
 
 
 class ChoiceType(click.Choice):
@@ -960,6 +961,68 @@ def cosi_sign(connect, address, data, global_commitment, global_pubkey):
     address_n = client.expand_path(address)
     return client.cosi_sign(address_n, binascii.unhexlify(data), binascii.unhexlify(global_commitment), binascii.unhexlify(global_pubkey))
 
+
+#
+# Stellar functions
+#
+@cli.command(help='Get Stellar public address')
+@click.option('-n', '--address', required=False, help="BIP32 path. Default primary account is m/44'/148'/0'. Always use hardened paths and the m/44'/148'/ prefix")
+@click.pass_obj
+def stellar_get_address(connect, address):
+    client = connect()
+    address_n = stellar.expand_path_or_default(client, address)
+    # StellarPublicKey response
+    response = client.stellar_get_public_key(address_n)
+    return stellar.address_from_public_key(response.public_key)
+
+
+@cli.command(help='Sign a string with a Stellar key')
+@click.option('-n', '--address', required=False, help="BIP32 path. Default primary account is m/44'/148'/0'. Always use hardened paths and the m/44'/148'/ prefix")
+@click.argument('message')
+@click.pass_obj
+def stellar_sign_message(connect, address, message):
+    client = connect()
+    address_n = stellar.expand_path_or_default(client, address)
+    response = client.stellar_sign_message(address_n, message)
+    return base64.b64encode(response.signature)
+
+
+@cli.command(help='Verify that a signature is valid')
+@click.option('--message-is-b64/--no-message-is-b64', default=False, required=False, help="If set, the message argument will be interpreted as a base64-encoded string")
+@click.argument('address')
+@click.argument('signatureb64')
+@click.argument('message')
+@click.pass_obj
+def stellar_verify_message(connect, address, message_is_b64, signatureb64, message):
+    if message_is_b64:
+        message = base64.b64decode(message)
+    else:
+        message = message.encode('utf-8')
+
+    pubkey_bytes = stellar.address_to_public_key(address)
+
+    client = connect()
+    is_verified = client.stellar_verify_message(pubkey_bytes, base64.b64decode(signatureb64), message)
+
+    if is_verified:
+        return "Success: message verified"
+    else:
+        print("ERROR: invalid signature, verification failed")
+        sys.exit(1)
+
+
+@cli.command(help='Sign a base64-encoded transaction envelope')
+@click.option('-n', '--address', required=False, help="BIP32 path. Default primary account is m/44'/148'/0'. Always use hardened paths and the m/44'/148'/ prefix")
+@click.option('-n', '--network-passphrase', required=False, help="Network passphrase (blank for public network). Testnet is: 'Test SDF Network ; September 2015'")
+@click.argument('b64envelope')
+@click.pass_obj
+def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
+    client = connect()
+    address_n = stellar.expand_path_or_default(client, address)
+    # raw signature bytes
+    resp = client.stellar_sign_transaction(base64.b64decode(b64envelope), address_n, network_passphrase)
+
+    return base64.b64encode(resp.signature)
 
 #
 # Main
