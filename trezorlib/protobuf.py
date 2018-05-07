@@ -77,19 +77,17 @@ def dump_uvarint(writer, n):
 #
 # To achieve this with a twos-complement number:
 # 1. shift left by 1, leaving LSbit free
-# 2. XOR with "all sign bits" - 0s for positive, 1s for negative
+# 2. if the number is negative, do bitwise negation.
 #    This keeps positive number the same, and converts negative from twos-complement
-#    to the appropriate value, while setting the sign bit. Cute and efficient.
+#    to the appropriate value, while setting the sign bit.
 #
 # The original algorithm makes use of the fact that arithmetic (signed) shift
-# keeps the sign bits, so for a n-bit number, (x >> n+1) gets us the "all sign bits".
+# keeps the sign bits, so for a n-bit number, (x >> n) gets us "all sign bits".
+# Then you can take "number XOR all-sign-bits", which is XOR 0 (identity) for positive
+# and XOR 1 (bitwise negation) for negative. Cute and efficient.
 #
-# But this is harder in Python because we don't know the bit size of the number.
-# We could simply shift by 65, relying on the fact that the biggest type for other
-# languages is sint64. Or we could shift by 1000 to be extra sure.
-#
-# But instead, we'll do it less elegantly, with an if branch:
-# if the number is negative, do bitwise negation (which is the same as "xor all ones").
+# But this is harder in Python because we don't natively know the bit size of the number.
+# So we have to branch on whether the number is negative.
 
 def sint_to_uint(sint):
     res = sint << 1
