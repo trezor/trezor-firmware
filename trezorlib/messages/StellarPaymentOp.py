@@ -8,6 +8,6 @@ class StellarPaymentOp(p.MessageType):
         1: ('source_account', p.BytesType, 0),
         2: ('destination_account', p.BytesType, 0),
         3: ('asset', StellarAssetType, 0),
-        4: ('amount', p.Sint64Type, 0),
+        4: ('amount', p.SVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 211

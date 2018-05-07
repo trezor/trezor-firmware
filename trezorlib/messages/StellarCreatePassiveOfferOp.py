@@ -8,7 +8,7 @@ class StellarCreatePassiveOfferOp(p.MessageType):
         1: ('source_account', p.BytesType, 0),
         2: ('selling_asset', StellarAssetType, 0),
         3: ('buying_asset', StellarAssetType, 0),
-        4: ('amount', p.Sint64Type, 0),
+        4: ('amount', p.SVarintType, 0),
         5: ('price_n', p.UVarintType, 0),
         6: ('price_d', p.UVarintType, 0),
     }
