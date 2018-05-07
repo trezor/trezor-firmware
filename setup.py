@@ -14,7 +14,6 @@ install_requires = [
     'requests>=2.4.0',
     'click>=6.2',
     'pyblake2>=0.9.3',
-    'rlp>=0.6.0',
     'libusb1>=1.6.4',
 ]
 
@@ -89,6 +88,10 @@ setup(
     install_requires=install_requires,
     extras_require={
         'hidapi': ['hidapi>=0.7.99.post20'],
+        'ethereum': [
+            'rlp>=0.4.4',
+            'ethjsonrpc>=0.3.0',
+        ],
     },
     python_requires='>=3.3',
     include_package_data=True,
