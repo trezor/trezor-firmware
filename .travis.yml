@@ -36,6 +36,9 @@ install:
     - export PATH="$(pwd)/protoc/bin:$PATH"
     - pip install "protobuf == ${PROTOBUF_VERSION}"
 
+before_script:
+    - ./trigger-travis.sh
+
 script:
     # check that generated protobuf messages are identical to in-tree ones
     - ./tools/build_protobuf messages.tmp && diff -ur messages.tmp trezorlib/messages && rm -r messages.tmp
