@@ -100,24 +100,25 @@ def process_message(descriptor, protobuf_module, msg_id, is_upy):
 
     if is_upy:
         yield "import protobuf as p"
+    else:
+        yield "from .. import protobuf as p"
+
+    fields = list(parse_field(number, field)
+                  for number, field
+                  in descriptor.fields_by_number.items())
+
+    if any(field.repeated for field in fields):
         yield "if __debug__:"
         yield "    try:"
         yield "        from typing import List"
         yield "    except ImportError:"
         yield "        List = None"
-    else:
-        yield "from .. import protobuf as p"
-        yield "from typing import List"
 
     yield from process_message_imports(descriptor)
 
     yield ""
     yield ""
     yield "class %s(p.MessageType):" % descriptor.name
-
-    fields = list(parse_field(number, field)
-                  for number, field
-                  in descriptor.fields_by_number.items())
 
     if fields:
         yield "    FIELDS = {"
