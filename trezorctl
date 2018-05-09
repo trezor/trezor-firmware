@@ -28,7 +28,7 @@ import logging
 import os
 import sys
 
-from trezorlib.client import TrezorClient, TrezorClientVerbose, CallException
+from trezorlib.client import TrezorClient, CallException
 from trezorlib.transport import get_transport, enumerate_devices
 from trezorlib import coins
 from trezorlib import log
@@ -67,11 +67,7 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType({
 
 
 def enable_logging():
-    handler = logging.StreamHandler()
-    handler.setFormatter(log.PrettyProtobufFormatter())
-    logger = logging.getLogger('trezorlib')
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
+    log.enable_debug_output()
     log.OMITTED_MESSAGES.add(proto.Features)
 
 
