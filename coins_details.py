@@ -188,6 +188,14 @@ def update_ethereum(details):
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ubiq')
+    
+    out = details['coins'].setdefault('coin2:EGEM', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'EGEM')
+    set_default(out, 'name', 'EtherGem')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'egem')
 
 def update_mosaics(details):
     r = requests.get('https://raw.githubusercontent.com/trezor/trezor-mcu/master/firmware/nem_mosaics.json')
