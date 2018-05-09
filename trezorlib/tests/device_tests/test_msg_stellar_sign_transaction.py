@@ -19,10 +19,11 @@
 
 from base64 import b64decode, b64encode
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 import pytest
 
 
-@pytest.mark.xfail  # requires trezor-mcu PR #259
+@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarSignTransaction(TrezorTest):
 
     def get_network_passphrase(self):

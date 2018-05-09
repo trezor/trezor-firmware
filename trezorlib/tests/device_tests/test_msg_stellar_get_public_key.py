@@ -14,11 +14,12 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 from trezorlib import stellar
 import pytest
 
 
-@pytest.mark.xfail  # requires trezor-mcu PR #259
+@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarGetPublicKey(TrezorTest):
 
     def test_stellar_get_address(self):
