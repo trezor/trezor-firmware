@@ -55,13 +55,6 @@ def create_message_import(name):
     return "from .%s import %s" % (name, name)
 
 
-def create_const(name, value, is_upy):
-    if is_upy:
-        return "%s = const(%s)" % (name, value)
-    else:
-        return "%s = %s" % (name, value)
-
-
 def remove_from_start(s, prefix):
     if s.startswith(prefix):
         return s[len(prefix):]
@@ -153,10 +146,6 @@ def process_message(descriptor, protobuf_module, msg_id, is_upy):
 def process_enum(descriptor, is_upy):
     logging.debug("Processing enum %s", descriptor.name)
 
-    if is_upy:
-        yield "from micropython import const"
-        yield ""
-
     for name, value in descriptor.values_by_name.items():
         # Remove type name from the beginning of the constant
         # For example "PinMatrixRequestType_Current" -> "Current"
@@ -169,7 +158,7 @@ def process_enum(descriptor, is_upy):
             enum_prefix, _ = enum_prefix.rsplit("Type", 1)
             name = remove_from_start(name, "%s_" % enum_prefix)
 
-        yield create_const(name, value.number, is_upy)
+        yield "%s = %s" % (name, value.number)
 
 
 def process_file(descriptor, protobuf_module, genpath, modlist, is_upy):
