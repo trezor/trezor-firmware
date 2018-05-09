@@ -210,14 +210,6 @@ class BaseClient(object):
         mapping.register_message(msg)
 
 
-class VerboseWireMixin(object):
-    def call_raw(self, msg):
-        log("SENDING " + pprint(msg))
-        resp = super(VerboseWireMixin, self).call_raw(msg)
-        log("RECEIVED " + pprint(resp))
-        return resp
-
-
 class TextUIMixin(object):
     # This class demonstrates easy test-based UI
     # integration between the device and wallet.
@@ -362,7 +354,7 @@ class DebugLinkMixin(object):
         # Evaluate missed responses in 'with' statement
         if self.expected_responses is not None and len(self.expected_responses):
             raise RuntimeError("Some of expected responses didn't come from device: %s" %
-                               [pprint(x) for x in self.expected_responses])
+                               [repr(x) for x in self.expected_responses])
 
         # Cleanup
         self.expected_responses = None
@@ -408,18 +400,18 @@ class DebugLinkMixin(object):
                 expected = self.expected_responses.pop(0)
             except IndexError:
                 raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                         "Got %s, but no message has been expected" % pprint(msg))
+                                         "Got %s, but no message has been expected" % repr(msg))
 
             if msg.__class__ != expected.__class__:
                 raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                         "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                                         "Expected %s, got %s" % (repr(expected), repr(msg)))
 
             for field, value in expected.__dict__.items():
                 if value is None or value == []:
                     continue
                 if getattr(msg, field) != value:
                     raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                                             "Expected %s, got %s" % (repr(expected), repr(msg)))
 
     def callback_ButtonRequest(self, msg):
         log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
@@ -1165,11 +1157,6 @@ class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
         super().__init__(transport=transport, *args, **kwargs)
 
 
-class TrezorClientVerbose(ProtocolMixin, TextUIMixin, VerboseWireMixin, BaseClient):
-    def __init__(self, transport, *args, **kwargs):
-        super().__init__(transport=transport, *args, **kwargs)
-
-
-class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, VerboseWireMixin, BaseClient):
+class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, BaseClient):
     def __init__(self, transport, *args, **kwargs):
         super().__init__(transport=transport, *args, **kwargs)
