@@ -21,7 +21,7 @@ cd "$(dirname "$0")"
 # set up paths
 INDEX="__init__.py"
 GENPATH="${OUTDIR:-../src/trezor/messages}"
-PROTO_PATH="../../trezor-common/protob"
+PROTO_PATH="../vendor/trezor-common/protob"
 PROTO_FILES="types messages"
 
 # set up temporary directory & cleanup
