@@ -84,7 +84,7 @@ def create_init_method(fields):
     yield         "    def __init__("
     yield         "        self,"
     for field in fields:
-        yield     "        %s: Optional[%s] = None," % (field.name, field.py_type)
+        yield     "        %s: %s = None," % (field.name, field.py_type)
     yield         "        **kwargs"
     yield         "    ) -> None:"
     for field in fields:
@@ -100,9 +100,14 @@ def process_message(descriptor, protobuf_module, msg_id, is_upy):
 
     if is_upy:
         yield "import protobuf as p"
+        yield "if __debug__:"
+        yield "    try:"
+        yield "        from typing import List"
+        yield "    except ImportError:"
+        yield "        List = None"
     else:
         yield "from .. import protobuf as p"
-        yield "from typing import List, Optional"
+        yield "from typing import List"
 
     yield from process_message_imports(descriptor)
 
