@@ -38,9 +38,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
                             script_type=None,
                             sequence=None)
         pout1 = TxOutputBinType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
-                                amount=390000,
-                                multisig=None,
-                                address_n=[])
+                                amount=390000)
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
@@ -104,9 +102,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
                             script_type=None,
                             sequence=None)
         pout1 = TxOutputBinType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
-                                amount=390000,
-                                multisig=None,
-                                address_n=[])
+                                amount=390000)
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
