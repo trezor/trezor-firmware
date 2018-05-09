@@ -87,6 +87,7 @@ setup(
     scripts=['trezorctl'],
     install_requires=install_requires,
     extras_require={
+        ':python_version < "3.5"': ['typing>=3.0.0'],
         'hidapi': ['hidapi>=0.7.99.post20'],
         'ethereum': [
             'rlp>=0.4.4',
