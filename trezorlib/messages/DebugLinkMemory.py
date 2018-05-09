@@ -3,7 +3,13 @@ from .. import protobuf as p
 
 
 class DebugLinkMemory(p.MessageType):
+    MESSAGE_WIRE_TYPE = 111
     FIELDS = {
         1: ('memory', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 111
+
+    def __init__(
+        self,
+        memory: bytes = None
+    ) -> None:
+        self.memory = memory

@@ -3,9 +3,19 @@ from .. import protobuf as p
 
 
 class EncryptedMessage(p.MessageType):
+    MESSAGE_WIRE_TYPE = 50
     FIELDS = {
         1: ('nonce', p.BytesType, 0),
         2: ('message', p.BytesType, 0),
         3: ('hmac', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 50
+
+    def __init__(
+        self,
+        nonce: bytes = None,
+        message: bytes = None,
+        hmac: bytes = None
+    ) -> None:
+        self.nonce = nonce
+        self.message = message
+        self.hmac = hmac

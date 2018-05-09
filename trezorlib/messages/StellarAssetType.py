@@ -8,3 +8,13 @@ class StellarAssetType(p.MessageType):
         2: ('code', p.UnicodeType, 0),
         3: ('issuer', p.BytesType, 0),
     }
+
+    def __init__(
+        self,
+        type: int = None,
+        code: str = None,
+        issuer: bytes = None
+    ) -> None:
+        self.type = type
+        self.code = code
+        self.issuer = issuer

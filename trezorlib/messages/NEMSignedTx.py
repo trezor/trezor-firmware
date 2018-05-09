@@ -3,8 +3,16 @@ from .. import protobuf as p
 
 
 class NEMSignedTx(p.MessageType):
+    MESSAGE_WIRE_TYPE = 70
     FIELDS = {
         1: ('data', p.BytesType, 0),
         2: ('signature', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 70
+
+    def __init__(
+        self,
+        data: bytes = None,
+        signature: bytes = None
+    ) -> None:
+        self.data = data
+        self.signature = signature

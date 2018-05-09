@@ -3,8 +3,16 @@ from .. import protobuf as p
 
 
 class FirmwareUpload(p.MessageType):
+    MESSAGE_WIRE_TYPE = 7
     FIELDS = {
         1: ('payload', p.BytesType, 0),  # required
         2: ('hash', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 7
+
+    def __init__(
+        self,
+        payload: bytes = None,
+        hash: bytes = None
+    ) -> None:
+        self.payload = payload
+        self.hash = hash

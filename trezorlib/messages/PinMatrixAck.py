@@ -3,7 +3,13 @@ from .. import protobuf as p
 
 
 class PinMatrixAck(p.MessageType):
+    MESSAGE_WIRE_TYPE = 19
     FIELDS = {
         1: ('pin', p.UnicodeType, 0),  # required
     }
-    MESSAGE_WIRE_TYPE = 19
+
+    def __init__(
+        self,
+        pin: str = None
+    ) -> None:
+        self.pin = pin

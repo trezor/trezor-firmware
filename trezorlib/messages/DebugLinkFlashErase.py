@@ -3,7 +3,13 @@ from .. import protobuf as p
 
 
 class DebugLinkFlashErase(p.MessageType):
+    MESSAGE_WIRE_TYPE = 113
     FIELDS = {
         1: ('sector', p.UVarintType, 0),
     }
-    MESSAGE_WIRE_TYPE = 113
+
+    def __init__(
+        self,
+        sector: int = None
+    ) -> None:
+        self.sector = sector

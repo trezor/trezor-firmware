@@ -8,3 +8,13 @@ class TxRequestSerializedType(p.MessageType):
         2: ('signature', p.BytesType, 0),
         3: ('serialized_tx', p.BytesType, 0),
     }
+
+    def __init__(
+        self,
+        signature_index: int = None,
+        signature: bytes = None,
+        serialized_tx: bytes = None
+    ) -> None:
+        self.signature_index = signature_index
+        self.signature = signature
+        self.serialized_tx = serialized_tx

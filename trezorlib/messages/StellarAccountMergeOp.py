@@ -3,8 +3,16 @@ from .. import protobuf as p
 
 
 class StellarAccountMergeOp(p.MessageType):
+    MESSAGE_WIRE_TYPE = 218
     FIELDS = {
         1: ('source_account', p.BytesType, 0),
         2: ('destination_account', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 218
+
+    def __init__(
+        self,
+        source_account: bytes = None,
+        destination_account: bytes = None
+    ) -> None:
+        self.source_account = source_account
+        self.destination_account = destination_account

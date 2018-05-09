@@ -8,3 +8,13 @@ class NEMMosaic(p.MessageType):
         2: ('mosaic', p.UnicodeType, 0),
         3: ('quantity', p.UVarintType, 0),
     }
+
+    def __init__(
+        self,
+        namespace: str = None,
+        mosaic: str = None,
+        quantity: int = None
+    ) -> None:
+        self.namespace = namespace
+        self.mosaic = mosaic
+        self.quantity = quantity

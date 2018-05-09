@@ -15,3 +15,25 @@ class LiskTransactionCommon(p.MessageType):
         8: ('timestamp', p.UVarintType, 0),
         9: ('asset', LiskTransactionAsset, 0),
     }
+
+    def __init__(
+        self,
+        type: int = None,
+        amount: int = None,
+        fee: int = None,
+        recipient_id: str = None,
+        sender_public_key: bytes = None,
+        requester_public_key: bytes = None,
+        signature: bytes = None,
+        timestamp: int = None,
+        asset: LiskTransactionAsset = None
+    ) -> None:
+        self.type = type
+        self.amount = amount
+        self.fee = fee
+        self.recipient_id = recipient_id
+        self.sender_public_key = sender_public_key
+        self.requester_public_key = requester_public_key
+        self.signature = signature
+        self.timestamp = timestamp
+        self.asset = asset

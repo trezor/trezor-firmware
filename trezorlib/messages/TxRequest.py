@@ -5,9 +5,19 @@ from .TxRequestSerializedType import TxRequestSerializedType
 
 
 class TxRequest(p.MessageType):
+    MESSAGE_WIRE_TYPE = 21
     FIELDS = {
         1: ('request_type', p.UVarintType, 0),
         2: ('details', TxRequestDetailsType, 0),
         3: ('serialized', TxRequestSerializedType, 0),
     }
-    MESSAGE_WIRE_TYPE = 21
+
+    def __init__(
+        self,
+        request_type: int = None,
+        details: TxRequestDetailsType = None,
+        serialized: TxRequestSerializedType = None
+    ) -> None:
+        self.request_type = request_type
+        self.details = details
+        self.serialized = serialized

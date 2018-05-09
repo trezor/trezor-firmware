@@ -10,6 +10,7 @@ from .NEMTransfer import NEMTransfer
 
 
 class NEMSignTx(p.MessageType):
+    MESSAGE_WIRE_TYPE = 69
     FIELDS = {
         1: ('transaction', NEMTransactionCommon, 0),
         2: ('multisig', NEMTransactionCommon, 0),
@@ -21,4 +22,25 @@ class NEMSignTx(p.MessageType):
         8: ('aggregate_modification', NEMAggregateModification, 0),
         9: ('importance_transfer', NEMImportanceTransfer, 0),
     }
-    MESSAGE_WIRE_TYPE = 69
+
+    def __init__(
+        self,
+        transaction: NEMTransactionCommon = None,
+        multisig: NEMTransactionCommon = None,
+        transfer: NEMTransfer = None,
+        cosigning: bool = None,
+        provision_namespace: NEMProvisionNamespace = None,
+        mosaic_creation: NEMMosaicCreation = None,
+        supply_change: NEMMosaicSupplyChange = None,
+        aggregate_modification: NEMAggregateModification = None,
+        importance_transfer: NEMImportanceTransfer = None
+    ) -> None:
+        self.transaction = transaction
+        self.multisig = multisig
+        self.transfer = transfer
+        self.cosigning = cosigning
+        self.provision_namespace = provision_namespace
+        self.mosaic_creation = mosaic_creation
+        self.supply_change = supply_change
+        self.aggregate_modification = aggregate_modification
+        self.importance_transfer = importance_transfer

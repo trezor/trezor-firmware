@@ -3,8 +3,16 @@ from .. import protobuf as p
 
 
 class DecryptedMessage(p.MessageType):
+    MESSAGE_WIRE_TYPE = 52
     FIELDS = {
         1: ('message', p.BytesType, 0),
         2: ('address', p.UnicodeType, 0),
     }
-    MESSAGE_WIRE_TYPE = 52
+
+    def __init__(
+        self,
+        message: bytes = None,
+        address: str = None
+    ) -> None:
+        self.message = message
+        self.address = address

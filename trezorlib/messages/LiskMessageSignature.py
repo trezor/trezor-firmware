@@ -3,8 +3,16 @@ from .. import protobuf as p
 
 
 class LiskMessageSignature(p.MessageType):
+    MESSAGE_WIRE_TYPE = 119
     FIELDS = {
         1: ('address', p.UnicodeType, 0),
         2: ('signature', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 119
+
+    def __init__(
+        self,
+        address: str = None,
+        signature: bytes = None
+    ) -> None:
+        self.address = address
+        self.signature = signature

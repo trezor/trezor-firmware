@@ -3,7 +3,13 @@ from .. import protobuf as p
 
 
 class Entropy(p.MessageType):
+    MESSAGE_WIRE_TYPE = 10
     FIELDS = {
         1: ('entropy', p.BytesType, 0),  # required
     }
-    MESSAGE_WIRE_TYPE = 10
+
+    def __init__(
+        self,
+        entropy: bytes = None
+    ) -> None:
+        self.entropy = entropy

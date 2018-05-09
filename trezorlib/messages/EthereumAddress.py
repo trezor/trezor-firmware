@@ -3,7 +3,13 @@ from .. import protobuf as p
 
 
 class EthereumAddress(p.MessageType):
+    MESSAGE_WIRE_TYPE = 57
     FIELDS = {
         1: ('address', p.BytesType, 0),  # required
     }
-    MESSAGE_WIRE_TYPE = 57
+
+    def __init__(
+        self,
+        address: bytes = None
+    ) -> None:
+        self.address = address

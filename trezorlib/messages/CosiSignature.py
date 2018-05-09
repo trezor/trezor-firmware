@@ -3,7 +3,13 @@ from .. import protobuf as p
 
 
 class CosiSignature(p.MessageType):
+    MESSAGE_WIRE_TYPE = 74
     FIELDS = {
         1: ('signature', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 74
+
+    def __init__(
+        self,
+        signature: bytes = None
+    ) -> None:
+        self.signature = signature

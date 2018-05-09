@@ -3,6 +3,7 @@ from .. import protobuf as p
 
 
 class StellarSetOptionsOp(p.MessageType):
+    MESSAGE_WIRE_TYPE = 215
     FIELDS = {
         1: ('source_account', p.BytesType, 0),
         2: ('inflation_destination_account', p.BytesType, 0),
@@ -17,4 +18,31 @@ class StellarSetOptionsOp(p.MessageType):
         11: ('signer_key', p.BytesType, 0),
         12: ('signer_weight', p.UVarintType, 0),
     }
-    MESSAGE_WIRE_TYPE = 215
+
+    def __init__(
+        self,
+        source_account: bytes = None,
+        inflation_destination_account: bytes = None,
+        clear_flags: int = None,
+        set_flags: int = None,
+        master_weight: int = None,
+        low_threshold: int = None,
+        medium_threshold: int = None,
+        high_threshold: int = None,
+        home_domain: str = None,
+        signer_type: int = None,
+        signer_key: bytes = None,
+        signer_weight: int = None
+    ) -> None:
+        self.source_account = source_account
+        self.inflation_destination_account = inflation_destination_account
+        self.clear_flags = clear_flags
+        self.set_flags = set_flags
+        self.master_weight = master_weight
+        self.low_threshold = low_threshold
+        self.medium_threshold = medium_threshold
+        self.high_threshold = high_threshold
+        self.home_domain = home_domain
+        self.signer_type = signer_type
+        self.signer_key = signer_key
+        self.signer_weight = signer_weight
