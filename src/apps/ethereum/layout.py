@@ -1,4 +1,5 @@
 from apps.common.confirm import *
+from apps.ethereum import tokens
 from trezor import ui
 from trezor.utils import chunks, format_amount
 from trezor.messages import ButtonRequestType
@@ -53,6 +54,8 @@ def split_address(address):
 
 def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
     if token:
+        if token is tokens.UNKNOWN_TOKEN:
+            return 'Unknown token value'
         suffix = token[2]
         decimals = token[3]
     else:
