@@ -120,5 +120,5 @@ clean::
 endef
 
 $(eval $(call GENERATE_CODE,coin_info,coins.json,coin_info.c))
-$(eval $(call GENERATE_CODE,nem_mosaics,../vendor/trezor-common/defs/nem/nem_mosaics.json,nem_mosaics.c))
+$(eval $(call GENERATE_CODE,nem_mosaics,nem_mosaics.json,nem_mosaics.c))
 $(eval $(call GENERATE_CODE,bl_data,../bootloader/bootloader.bin))
