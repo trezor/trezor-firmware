@@ -5,7 +5,7 @@ def token_by_chain_address(chain_id, address):
     return UNKNOWN_TOKEN
 
 
-UNKNOWN_TOKEN = True
+UNKNOWN_TOKEN = (None, None, None, None)
 
 # rest of the file is generated using trezor-common/ethereum_tokens-gen.py
 # DO NOT EDIT MANUALLY!
