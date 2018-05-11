@@ -30,12 +30,10 @@ matrix:
         - EMULATOR=1 HEADLESS=1
         - DEBUG_LINK=1
       before_script:
-        - $PYTHON -m pip install --user pytest
-        - $PYTHON -m pip install --user ecdsa mnemonic
-        - $PYTHON -m pip install --user rlp
-        - $PYTHON -m pip install --user --no-deps git+https://github.com/trezor/python-trezor@master
+        - $PYTHON -m pip install --user pipenv
+        - pipenv install
       script:
-        - script/cibuild && script/test -k 'not skip_t1'
+        - script/cibuild && pipenv run script/test
 
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
