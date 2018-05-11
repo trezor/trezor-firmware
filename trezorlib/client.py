@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function, absolute_import
-
+import functools
+import logging
 import os
 import sys
 import time
@@ -43,7 +43,7 @@ if sys.version_info.major < 3:
 
 
 SCREENSHOT = False
-
+LOG = logging.getLogger(__name__)
 
 # make a getch function
 try:
@@ -80,22 +80,6 @@ except ImportError:
 def get_buttonrequest_value(code):
     # Converts integer code to its string representation of ButtonRequestType
     return [k for k in dir(proto.ButtonRequestType) if getattr(proto.ButtonRequestType, k) == code][0]
-
-
-def pprint(msg):
-    msg_class = msg.__class__.__name__
-    msg_size = msg.ByteSize()
-    if isinstance(msg, proto.FirmwareUpload) or isinstance(msg, proto.SelfTest) \
-            or isinstance(msg, proto.Features):
-        return "<%s> (%d bytes)" % (msg_class, msg_size)
-    else:
-        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, protobuf.format_message(msg))
-
-
-def log(msg):
-    sys.stderr.write(msg)
-    sys.stderr.write('\n')
-    sys.stderr.flush()
 
 
 class CallException(Exception):
@@ -220,6 +204,10 @@ class TextUIMixin(object):
     def __init__(self, *args, **kwargs):
         super(TextUIMixin, self).__init__(*args, **kwargs)
 
+    @staticmethod
+    def print(text):
+        print(text, file=sys.stderr)
+
     def callback_ButtonRequest(self, msg):
         # log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
         return proto.ButtonAck()
@@ -227,11 +215,11 @@ class TextUIMixin(object):
     def callback_RecoveryMatrix(self, msg):
         if self.recovery_matrix_first_pass:
             self.recovery_matrix_first_pass = False
-            log("Use the numeric keypad to describe positions.  For the word list use only left and right keys.")
-            log("Use backspace to correct an entry.  The keypad layout is:")
-            log("    7 8 9     7 | 9")
-            log("    4 5 6     4 | 6")
-            log("    1 2 3     1 | 3")
+            self.print("Use the numeric keypad to describe positions.  For the word list use only left and right keys.")
+            self.print("Use backspace to correct an entry.  The keypad layout is:")
+            self.print("    7 8 9     7 | 9")
+            self.print("    4 5 6     4 | 6")
+            self.print("    1 2 3     1 | 3")
         while True:
             character = getch()
             if character in ('\x03', '\x04'):
@@ -257,11 +245,11 @@ class TextUIMixin(object):
         else:
             desc = 'PIN'
 
-        log("Use the numeric keypad to describe number positions. The layout is:")
-        log("    7 8 9")
-        log("    4 5 6")
-        log("    1 2 3")
-        log("Please enter %s: " % desc)
+        self.print("Use the numeric keypad to describe number positions. The layout is:")
+        self.print("    7 8 9")
+        self.print("    4 5 6")
+        self.print("    1 2 3")
+        self.print("Please enter %s: " % desc)
         pin = getpass.getpass('')
         if not pin.isdigit():
             raise ValueError('Non-numerical PIN provided')
@@ -272,18 +260,18 @@ class TextUIMixin(object):
             return proto.PassphraseAck()
 
         if os.getenv("PASSPHRASE") is not None:
-            log("Passphrase required. Using PASSPHRASE environment variable.")
+            self.print("Passphrase required. Using PASSPHRASE environment variable.")
             passphrase = Mnemonic.normalize_string(os.getenv("PASSPHRASE"))
             return proto.PassphraseAck(passphrase=passphrase)
 
-        log("Passphrase required: ")
+        self.print("Passphrase required: ")
         passphrase = getpass.getpass('')
-        log("Confirm your Passphrase: ")
+        self.print("Confirm your Passphrase: ")
         if passphrase == getpass.getpass(''):
             passphrase = Mnemonic.normalize_string(passphrase)
             return proto.PassphraseAck(passphrase=passphrase)
         else:
-            log("Passphrase did not match! ")
+            self.print("Passphrase did not match! ")
             exit()
 
     def callback_PassphraseStateRequest(self, msg):
@@ -293,7 +281,7 @@ class TextUIMixin(object):
         if msg.type in (proto.WordRequestType.Matrix9,
                         proto.WordRequestType.Matrix6):
             return self.callback_RecoveryMatrix(msg)
-        log("Enter one word of mnemonic: ")
+        self.print("Enter one word of mnemonic: ")
         word = input()
         if self.expand:
             word = self.mnemonic_wordlist.expand_word(word)
@@ -310,6 +298,7 @@ class DebugLinkMixin(object):
     # of unit testing, because it will fail to work
     # without special DebugLink interface provided
     # by the device.
+    DEBUG = LOG.getChild('debug_link').debug
 
     def __init__(self, *args, **kwargs):
         super(DebugLinkMixin, self).__init__(*args, **kwargs)
@@ -414,11 +403,11 @@ class DebugLinkMixin(object):
                                              "Expected %s, got %s" % (repr(expected), repr(msg)))
 
     def callback_ButtonRequest(self, msg):
-        log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
+        self.DEBUG("ButtonRequest code: " + get_buttonrequest_value(msg.code))
 
-        log("Pressing button " + str(self.button))
+        self.DEBUG("Pressing button " + str(self.button))
         if self.button_wait:
-            log("Waiting %d seconds " % self.button_wait)
+            self.DEBUG("Waiting %d seconds " % self.button_wait)
             time.sleep(self.button_wait)
         self.debug.press_button(self.button)
         return proto.ButtonAck()
@@ -431,7 +420,7 @@ class DebugLinkMixin(object):
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
-        log("Provided passphrase: '%s'" % self.passphrase)
+        self.DEBUG("Provided passphrase: '%s'" % self.passphrase)
         return proto.PassphraseAck(passphrase=self.passphrase)
 
     def callback_PassphraseStateRequest(self, msg):
@@ -973,7 +962,7 @@ class ProtocolMixin(object):
             raise RuntimeError("Invalid response, expected EntropyRequest")
 
         external_entropy = self._get_local_entropy()
-        log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode())
+        LOG.debug("Computer generated entropy: " + binascii.hexlify(external_entropy).decode())
         ret = self.call(proto.EntropyAck(entropy=external_entropy))
         self.init_device()
         return ret
@@ -1070,7 +1059,7 @@ class ProtocolMixin(object):
         # TREZORv1 method
         if isinstance(resp, proto.Success):
             fingerprint = hashlib.sha256(data[256:]).hexdigest()
-            log("Firmware fingerprint: " + fingerprint)
+            LOG.debug("Firmware fingerprint: " + fingerprint)
             resp = self.call(proto.FirmwareUpload(payload=data))
             if isinstance(resp, proto.Success):
                 return True
