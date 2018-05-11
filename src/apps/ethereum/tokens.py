@@ -1,11 +1,11 @@
 def token_by_chain_address(chain_id, address):
-    if not address:
-        return None
     for token in tokens:
         if chain_id == token[0] and address == token[1]:
             return token
-    return None
+    return UNKNOWN_TOKEN
 
+
+UNKNOWN_TOKEN = (None, None, None, None)
 
 # rest of the file is generated using trezor-common/ethereum_tokens-gen.py
 # DO NOT EDIT MANUALLY!

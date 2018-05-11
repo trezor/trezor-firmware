@@ -22,7 +22,7 @@ class TestEthereumTokens(unittest.TestCase):
 
         # invalid adress, invalid chain
         token = tokens.token_by_chain_address(999, b'\x00\xFF')
-        self.assertEqual(token, None)
+        self.assertIs(token, tokens.UNKNOWN_TOKEN)
 
 
 if __name__ == '__main__':
