@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 import pytest
 
 from .common import TrezorTest

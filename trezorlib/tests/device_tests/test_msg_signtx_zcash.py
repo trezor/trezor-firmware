@@ -15,12 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
+from binascii import unhexlify, hexlify
+import pytest
 
-
-from .common import *
+from .common import TrezorTest
 
 from trezorlib import coins
 from trezorlib import messages as proto
+from trezorlib.tools import parse_path
 
 TxApiZcash = coins.tx_api["Zcash"]
 
@@ -28,8 +30,7 @@ TxApiZcash = coins.tx_api["Zcash"]
 TXHASH_93373e = unhexlify('93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c')
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip(reason="Broken until we have support for Zcash v3 transactions.")
 class TestMsgSigntxZcash(TrezorTest):
 
     def test_one_one_fee(self):
@@ -39,7 +40,7 @@ class TestMsgSigntxZcash(TrezorTest):
         # input 0: 1.234567 TAZ
 
         inp1 = proto.TxInputType(
-            address_n=[2147483692, 2147483649, 2147483648, 0, 0],  # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
+            address_n=parse_path("m/Zcash Testnet/0h/0/0"),  # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
             # amount=123456700,
             prev_hash=TXHASH_93373e,
             prev_index=0,
