@@ -71,68 +71,6 @@ static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t row
 	return ret;
 }
 
-void stellar_confirmSignString(StellarSignMessage *msg, StellarMessageSignature *resp)
-{
-    // Max protobuf length is 1024, so string is 1023 + null
-    int message_len = strnlen(msg->message, 1023);
-
-    // Verify that message only includes printable ascii characters
-    bool is_valid = true;
-    for (int i=0; i < message_len; i++) {
-        if (msg->message[i] < 32) {
-            is_valid = false;
-            break;
-        }
-        if (msg->message[i] >126) {
-            is_valid = false;
-            break;
-        }
-    }
-    if (!is_valid) {
-        stellar_layoutSigningDialog(
-            _("Cannot sign message"),
-            NULL,
-            _("Message contains"),
-            _("non-printable ascii"),
-            _("characters."),
-            msg->address_n,
-            msg->address_n_count,
-            NULL,
-            false
-        );
-        protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false);
-        layoutHome();
-        return;
-    }
-
-    // Message can be signed, display as much of it as possible to the user
-    const char **str_message_lines = split_message((const uint8_t*)(msg->message), message_len, 24);
-
-    stellar_layoutSigningDialog(
-        _("Sign message?"),
-        str_message_lines[0],
-        str_message_lines[1],
-        str_message_lines[2],
-        str_message_lines[3],
-        msg->address_n,
-        msg->address_n_count,
-        NULL,
-        true
-    );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-        return;
-    }
-
-    // Populate response message
-    stellar_signString((const unsigned char*)(msg->message), msg->address_n, msg->address_n_count, resp->signature.bytes);
-    resp->has_signature = true;
-    resp->signature.size = 64;
-
-    stellar_getPubkeyAtAddress(msg->address_n, msg->address_n_count, resp->public_key.bytes, sizeof(resp->public_key.bytes));
-    resp->has_public_key = true;
-    resp->public_key.size = 32;
-}
-
 /*
  * Starts the signing process and parses the transaction header
  */
@@ -1192,18 +1130,13 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature)
     memcpy(out_signature, signature, sizeof(signature));
 }
 
-void stellar_signString(const uint8_t *str_to_sign, uint32_t *address_n, size_t address_n_count, uint8_t *out_signature)
+void stellar_signMessage(const uint8_t *message, uint32_t message_len, uint32_t *address_n, size_t address_n_count, uint8_t *out_signature)
 {
     HDNode *node = stellar_deriveNode(address_n, address_n_count);
-
-    uint8_t signature[64];
-    // Maximum field size in protobuf message is 1024, so strlen of 1023 + null
-    ed25519_sign(str_to_sign, strnlen((const char *)str_to_sign, 1023), node->private_key, node->public_key + 1, signature);
-
-    memcpy(out_signature, signature, sizeof(signature));
+    ed25519_sign(message, message_len, node->private_key, node->public_key + 1, out_signature);
 }
 
-bool stellar_verifySignature(StellarVerifyMessage *msg)
+bool stellar_verifyMessage(StellarVerifyMessage *msg)
 {
     // returns 0 if signature is valid
     return ed25519_sign_open(

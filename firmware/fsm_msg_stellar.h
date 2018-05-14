@@ -21,13 +21,27 @@ void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg)
 
 void fsm_msgStellarSignMessage(StellarSignMessage *msg)
 {
-    CHECK_INITIALIZED
-    CHECK_PIN
-
     RESP_INIT(StellarMessageSignature);
 
-    // Will exit if the user does not confirm
-    stellar_confirmSignString(msg, resp);
+    CHECK_INITIALIZED
+
+	layoutSignMessage(msg->message.bytes, msg->message.size);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
+    CHECK_PIN
+
+    // Populate response message
+    stellar_signMessage(msg->message.bytes, msg->message.size, msg->address_n, msg->address_n_count, resp->signature.bytes);
+    resp->has_signature = true;
+    resp->signature.size = 64;
+
+    stellar_getPubkeyAtAddress(msg->address_n, msg->address_n_count, resp->public_key.bytes, sizeof(resp->public_key.bytes));
+    resp->has_public_key = true;
+    resp->public_key.size = 32;
 
     msg_write(MessageType_MessageType_StellarMessageSignature, resp);
 
@@ -36,7 +50,7 @@ void fsm_msgStellarSignMessage(StellarSignMessage *msg)
 
 void fsm_msgStellarVerifyMessage(StellarVerifyMessage *msg)
 {
-    if (!stellar_verifySignature(msg)) {
+    if (!stellar_verifyMessage(msg)) {
         fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
         return;
     }
