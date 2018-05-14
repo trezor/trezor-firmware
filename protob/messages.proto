@@ -1028,7 +1028,7 @@ message StellarPublicKey {
 message StellarSignMessage {
 	repeated uint32 address_n = 1;	// BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
 
-	optional string message = 2;	// Message to sign
+	optional bytes message = 2;	// Message to sign
 }
 
 /**
