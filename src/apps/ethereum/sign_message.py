@@ -1,3 +1,5 @@
+# TODO: not currently enabled, waits for https://github.com/ethereum/EIPs/pull/712
+
 
 def message_digest(message):
     from apps.wallet.sign_tx.signing import write_varint

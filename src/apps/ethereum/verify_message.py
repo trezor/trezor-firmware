@@ -1,3 +1,5 @@
+# TODO: not currently enabled, waits for https://github.com/ethereum/EIPs/pull/712
+
 
 async def ethereum_verify_message(ctx, msg):
     from .sign_message import message_digest
