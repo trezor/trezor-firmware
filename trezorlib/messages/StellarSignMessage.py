@@ -11,13 +11,13 @@ class StellarSignMessage(p.MessageType):
     MESSAGE_WIRE_TYPE = 204
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('message', p.UnicodeType, 0),
+        2: ('message', p.BytesType, 0),
     }
 
     def __init__(
         self,
         address_n: List[int] = None,
-        message: str = None
+        message: bytes = None
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
