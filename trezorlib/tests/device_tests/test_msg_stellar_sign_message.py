@@ -29,3 +29,8 @@ class TestMsgStellarSignMessage(TrezorTest):
         response = self.client.stellar_sign_message(self.client.expand_path("m/44'/148'/0'"), msg)
         assert hexlify(response.public_key) == b'15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469'
         assert hexlify(response.signature) == b'3565f5885786fba6cc40c5656fe5444faec882d5e006de509c7fd6420e500179891ada79933024909cd2b57705254cd53cada422f4a7de7790e31c8c1d0c5004'
+
+        msg = 'LongMessage ' * 80  # but shorter than 1024
+        response = self.client.stellar_sign_message(self.client.expand_path("m/44'/148'/0'"), msg)
+        assert hexlify(response.public_key) == b'15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469'
+        assert hexlify(response.signature) == b'c1e5c477b0451a1cf4b0d8328176470ad3e5aa493c65d64125af57599dfbe5ca2c5c82887aae7e3fa519bbfc3752f1f1188f48efbe4105aa91351319fcd51507'
