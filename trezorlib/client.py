@@ -1216,9 +1216,11 @@ class ProtocolMixin(object):
 
     @expect(proto.StellarMessageSignature)
     def stellar_sign_message(self, address_n, message):
+        message = normalize_nfc(message)
         return self.call(proto.StellarSignMessage(address_n=address_n, message=message))
 
     def stellar_verify_message(self, pubkey_bytes, signature, message):
+        message = normalize_nfc(message)
         resp = self.call(proto.StellarVerifyMessage(public_key=pubkey_bytes, message=message, signature=signature))
 
         return isinstance(resp, proto.Success)
