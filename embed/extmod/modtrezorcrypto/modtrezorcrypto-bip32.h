@@ -19,6 +19,8 @@
 
 #include "py/objstr.h"
 
+#include "embed/extmod/trezorobj.h"
+
 #include "bip32.h"
 #include "curves.h"
 #include "memzero.h"
@@ -66,9 +68,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size
     mp_buffer_info_t private_key;
     mp_buffer_info_t public_key;
     mp_buffer_info_t curve_name;
-    const uint32_t depth       = mp_obj_get_int_truncated(vals[0].u_obj);
-    const uint32_t fingerprint = mp_obj_get_int_truncated(vals[1].u_obj);
-    const uint32_t child_num   = mp_obj_get_int_truncated(vals[2].u_obj);
+    const uint32_t depth       = trezor_obj_get_uint(vals[0].u_obj);
+    const uint32_t fingerprint = trezor_obj_get_uint(vals[1].u_obj);
+    const uint32_t child_num   = trezor_obj_get_uint(vals[2].u_obj);
     mp_get_buffer_raise(vals[3].u_obj, &chain_code, MP_BUFFER_READ);
     mp_get_buffer_raise(vals[4].u_obj, &private_key, MP_BUFFER_READ);
     mp_get_buffer_raise(vals[5].u_obj, &public_key, MP_BUFFER_READ);
@@ -129,7 +131,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_HDNode_derive(size_t n_args, const mp_obj_t *args) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(args[0]);
-    uint32_t i = mp_obj_get_int_truncated(args[1]);
+    uint32_t i = trezor_obj_get_uint(args[1]);
     uint32_t fp = hdnode_fingerprint(&o->hdnode);
     bool public = n_args > 2 && args[2] == mp_const_true;
 
@@ -172,7 +174,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self, mp_obj_t path
     uint32_t pi;
     uint32_t pints[plen];
     for (pi = 0; pi < plen; pi++) {
-        pints[pi] = mp_obj_get_int_truncated(pitems[pi]);
+        pints[pi] = trezor_obj_get_uint(pitems[pi]);
     }
 
     if (!hdnode_private_ckd_cached(&o->hdnode, pints, plen, &o->fingerprint)) {
@@ -207,7 +209,7 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public, uint32_
 ///     Serialize the public info from HD node to base58 string.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self, mp_obj_t version) {
-    uint32_t ver = mp_obj_get_int_truncated(version);
+    uint32_t ver = trezor_obj_get_uint(version);
     return serialize_public_private(self, true, ver);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_public_obj, mod_trezorcrypto_HDNode_serialize_public);
@@ -217,7 +219,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_public_obj, m
 ///     Serialize the private info HD node to base58 string.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_private(mp_obj_t self, mp_obj_t version) {
-    uint32_t ver = mp_obj_get_int_truncated(version);
+    uint32_t ver = trezor_obj_get_uint(version);
     return serialize_public_private(self, false, ver);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_private_obj, mod_trezorcrypto_HDNode_serialize_private);
@@ -304,7 +306,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_public_key_obj, mod_tre
 STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self, mp_obj_t version) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
-    uint32_t v = mp_obj_get_int_truncated(version);
+    uint32_t v = trezor_obj_get_uint(version);
     char address[ADDRESS_MAXLEN];
     hdnode_get_address(&o->hdnode, v, address, ADDRESS_MAXLEN);
     return mp_obj_new_str(address, strlen(address), false);
@@ -359,8 +361,8 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_deserialize(mp_obj_t value, mp_obj_t vers
     if (valueb.len == 0) {
         mp_raise_ValueError("Invalid value");
     }
-    uint32_t vpub = mp_obj_get_int_truncated(version_public);
-    uint32_t vpriv = mp_obj_get_int_truncated(version_private);
+    uint32_t vpub = trezor_obj_get_uint(version_public);
+    uint32_t vpriv = trezor_obj_get_uint(version_private);
     HDNode hdnode;
     uint32_t fingerprint;
     if (hdnode_deserialize(valueb.buf, vpub, vpriv, SECP256K1_NAME, &hdnode, &fingerprint) < 0) {
