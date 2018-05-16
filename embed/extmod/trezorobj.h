@@ -69,4 +69,12 @@ static inline mp_uint_t trezor_obj_get_uint(mp_obj_t obj) {
     }
 }
 
+static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
+    mp_uint_t u = trezor_obj_get_uint(obj);
+    if (u > 0xFF) {
+        mp_raise_msg(&mp_type_OverflowError, "value does not fit into byte type");
+    }
+    return u;
+}
+
 #endif
