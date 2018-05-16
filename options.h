@@ -76,6 +76,11 @@
 #define USE_NEM 0
 #endif
 
+// support MONERO operations
+#ifndef USE_MONERO
+#define USE_MONERO 0
+#endif
+
 // support Keccak hashing
 #ifndef USE_KECCAK
 #define USE_KECCAK 1

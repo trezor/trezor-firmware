@@ -285,6 +285,53 @@ void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bign
 	}
 }
 
+/* computes [s1]p1 + [s2]p2 */
+#if USE_MONERO
+void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const ge25519 *p2, const bignum256modm s2) {
+	signed char slide1[256], slide2[256];
+	ge25519_pniels pre1[S1_TABLE_SIZE];
+	ge25519_pniels pre2[S1_TABLE_SIZE];
+	ge25519 dp;
+	ge25519_p1p1 t;
+	int32_t i;
+
+	contract256_slidingwindow_modm(slide1, s1, S1_SWINDOWSIZE);
+	contract256_slidingwindow_modm(slide2, s2, S1_SWINDOWSIZE);
+
+	ge25519_double(&dp, p1);
+	ge25519_full_to_pniels(pre1, p1);
+	for (i = 0; i < S1_TABLE_SIZE - 1; i++)
+		ge25519_pnielsadd(&pre1[i+1], &dp, &pre1[i]);
+
+	ge25519_double(&dp, p2);
+	ge25519_full_to_pniels(pre2, p2);
+	for (i = 0; i < S1_TABLE_SIZE - 1; i++)
+		ge25519_pnielsadd(&pre2[i+1], &dp, &pre2[i]);
+	
+	ge25519_set_neutral(r);
+
+	i = 255;
+	while ((i >= 0) && !(slide1[i] | slide2[i]))
+		i--;
+
+	for (; i >= 0; i--) {
+		ge25519_double_p1p1(&t, r);
+
+		if (slide1[i]) {
+			ge25519_p1p1_to_full(r, &t);
+			ge25519_pnielsadd_p1p1(&t, r, &pre1[abs(slide1[i]) / 2], (unsigned char)slide1[i] >> 7);
+		}
+
+		if (slide2[i]) {
+			ge25519_p1p1_to_full(r, &t);
+			ge25519_pnielsadd_p1p1(&t, r, &pre2[abs(slide2[i]) / 2], (unsigned char)slide2[i] >> 7);
+		}
+
+		ge25519_p1p1_to_partial(r, &t);
+	}
+}
+#endif
+
 /*
  * The following conditional move stuff uses conditional moves.
  * I will check on which compilers this works, and provide suitable
