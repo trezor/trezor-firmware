@@ -99,7 +99,7 @@ void stellar_signingInit(StellarSignTx *msg)
     stellar_hashupdate_bytes(network_hash, sizeof(network_hash));
     stellar_hashupdate_bytes(tx_type_bytes, sizeof(tx_type_bytes));
 
-    // Public key comes from deriving the specified account path (we ignore the one sent by the client)
+    // Public key comes from deriving the specified account path
     uint8_t bytes_pubkey[32];
     stellar_getPubkeyAtAddress(msg->address_n, msg->address_n_count, bytes_pubkey, sizeof(bytes_pubkey));
     memcpy(&(stellar_activeTx.signing_pubkey), bytes_pubkey, sizeof(stellar_activeTx.signing_pubkey));
