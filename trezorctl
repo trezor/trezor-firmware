@@ -1013,14 +1013,15 @@ def stellar_verify_message(connect, address, message_is_b64, signatureb64, messa
 
 @cli.command(help='Sign a base64-encoded transaction envelope')
 @click.option('-n', '--address', required=False, help="BIP32 path. Default primary account is m/44'/148'/0'. Always use hardened paths and the m/44'/148'/ prefix")
-@click.option('-n', '--network-passphrase', required=False, help="Network passphrase (blank for public network). Testnet is: 'Test SDF Network ; September 2015'")
+@click.option('-n', '--network-passphrase', default='Public Global Stellar Network ; September 2015', required=False, help="Network passphrase (blank for public network). Testnet is: 'Test SDF Network ; September 2015'")
 @click.argument('b64envelope')
 @click.pass_obj
 def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
     client = connect()
+
     address_n = stellar.expand_path_or_default(client, address)
-    # raw signature bytes
-    resp = client.stellar_sign_transaction(base64.b64decode(b64envelope), address_n, network_passphrase)
+    tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64envelope))
+    resp = client.stellar_sign_transaction(tx, operations, address_n, network_passphrase)
 
     return base64.b64encode(resp.signature)
 

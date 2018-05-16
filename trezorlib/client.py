@@ -1179,16 +1179,14 @@ class ProtocolMixin(object):
     def stellar_get_public_key(self, address_n):
         return self.call(proto.StellarGetPublicKey(address_n=address_n))
 
-    def stellar_sign_transaction(self, tx_envelope, address_n, network_passphrase=None):
+    def stellar_sign_transaction(self, tx, operations, address_n, network_passphrase=None):
         # default networkPassphrase to the public network
         if network_passphrase is None:
             network_passphrase = "Public Global Stellar Network ; September 2015"
 
-        tx, operations = stellar.parse_transaction_bytes(tx_envelope)
-
         tx.network_passphrase = network_passphrase
         tx.address_n = address_n
-
+        tx.num_operations = len(operations)
         # Signing loop works as follows:
         #
         # 1. Start with tx (header information for the transaction) and operations (an array of operation protobuf messagess)

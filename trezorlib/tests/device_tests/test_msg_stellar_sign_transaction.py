@@ -17,9 +17,11 @@
 #   https://www.stellar.org/laboratory/#xdr-viewer
 #
 
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
+from binascii import hexlify, unhexlify
+from trezorlib import messages as proto
 import pytest
 
 
@@ -37,15 +39,29 @@ class TestMsgStellarSignTransaction(TrezorTest):
     def test_sign_tx_bump_sequence_op(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        xdr = b64decode("AAAAABXWSL/k028ZbPtXNf/YylTNS4Iz90PyJEnefPMBzbRpAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAt//////////wAAAAAAAAAA")
+        op = proto.StellarBumpSequenceOp()
+        op.bump_to = 0x7fffffffffffffff
+        tx = self._create_msg()
 
-        response = self.client.stellar_sign_transaction(xdr, self.get_address_n(), self.get_network_passphrase())
+        response = self.client.stellar_sign_transaction(tx, [op], self.get_address_n(), self.get_network_passphrase())
         assert b64encode(response.signature) == b'UAOL4ZPYIOzEgM66kBrhyNjLR66dNXtuNrmvd3m0/pc8qCSoLmYY4TybS0lHiMtb+LFZESTaxrpErMHz1sZ6DQ=='
 
     def test_sign_tx_account_merge_op(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        xdr = b64decode("AAAAABXWSL/k028ZbPtXNf/YylTNS4Iz90PyJEnefPMBzbRpAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAgAAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAAAAAAAAQHNtGkAAABAgjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA==")
+        op = proto.StellarAccountMergeOp()
+        op.destination_account = unhexlify('5d55642466b185b843152e9e219151dbc5892027ec40101a517bed5ca030c2e0')
 
-        response = self.client.stellar_sign_transaction(xdr, self.get_address_n(), self.get_network_passphrase())
+        tx = self._create_msg()
+
+        response = self.client.stellar_sign_transaction(tx, [op], self.get_address_n(), self.get_network_passphrase())
         assert b64encode(response.signature) == b'gjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA=='
+
+    def _create_msg(self) -> proto.StellarSignTx:
+        tx = proto.StellarSignTx()
+        tx.protocol_version = 1
+        tx.source_account = unhexlify('15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469')
+        tx.fee = 100
+        tx.sequence_number = 0x100000000
+        tx.memo_type = 0
+        return tx
