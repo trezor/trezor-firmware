@@ -78,6 +78,19 @@
             "t2_enabled": "yes",
             "type": "coin"
         },
+        "coin2:ETSC": {
+            "links": {
+                "Homepage": "https://ethereumsocial.kr",
+                "MyCrypto Wallet": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 0,
+            "name": "EthereumSocial",
+            "shortcut": "ETSC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
         "coin2:XLM": {
             "links": {
                 "Homepage": "https://www.stellar.org"

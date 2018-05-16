@@ -43,7 +43,7 @@ def update_info(details):
     details['info']['updated_at_readable'] = time.asctime()
     details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c['t1_enabled'] == 'yes'])
     details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes'])
-    
+
     try:
         details['info']['total_marketcap_usd'] = int(coinmarketcap_global()['total_market_cap_usd'])
     except:
@@ -188,7 +188,7 @@ def update_ethereum(details):
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ubiq')
-    
+
     out = details['coins'].setdefault('coin2:EGEM', {})
     out['type'] = 'coin'
     set_default(out, 'shortcut', 'EGEM')
@@ -196,6 +196,14 @@ def update_ethereum(details):
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'egem')
+
+    out = details['coins'].setdefault('coin2:ETSC', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'ETSC')
+    set_default(out, 'name', 'EthereumSocial')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'etsc')
 
 def update_mosaics(details):
     r = requests.get('https://raw.githubusercontent.com/trezor/trezor-mcu/master/firmware/nem_mosaics.json')
