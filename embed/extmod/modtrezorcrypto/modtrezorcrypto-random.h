@@ -41,7 +41,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj, mod_trezor
 ///     Generate random bytes sequence of length len.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_random_bytes(mp_obj_t len) {
-    uint32_t l = mp_obj_get_int(len);
+    uint32_t l = trezor_obj_get_uint(len);
     if (l > 1024) {
         mp_raise_ValueError("Maximum requested size is 1024");
     }

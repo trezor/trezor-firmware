@@ -19,6 +19,8 @@
 
 #include "py/objstr.h"
 
+#include "embed/extmod/trezorobj.h"
+
 #include "blake2s.h"
 #include "memzero.h"
 
@@ -44,12 +46,12 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type, siz
     int res = 0;
     // constructor called with key argument set
     if (n_args == 3) {
-        size_t outlen = mp_obj_get_int(args[1]);
+        size_t outlen = trezor_obj_get_uint(args[1]);
         mp_buffer_info_t key;
         mp_get_buffer_raise(args[2], &key, MP_BUFFER_READ);
         res = blake2s_InitKey(&(o->ctx), outlen, key.buf, key.len);
     } else if (n_args == 2) {
-        size_t outlen = mp_obj_get_int(args[1]);
+        size_t outlen = trezor_obj_get_uint(args[1]);
         res = blake2s_Init(&(o->ctx), outlen);
     } else {
         res = blake2s_Init(&(o->ctx), BLAKE2S_DIGEST_LENGTH);

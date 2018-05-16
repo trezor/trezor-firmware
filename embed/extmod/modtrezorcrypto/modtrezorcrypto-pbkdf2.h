@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t iterations) {
     mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
-    uint32_t iter = mp_obj_get_int(iterations);
+    uint32_t iter = trezor_obj_get_uint(iterations);
     if (o->prf == 256) {
         pbkdf2_hmac_sha256_Update(&(o->ctx256), iter);
     }

@@ -51,7 +51,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref, mp_obj_t t
         mp_raise_TypeError("invalid list_ref");
     }
 
-    const mp_uint_t timeout = mp_obj_get_int(timeout_us);
+    const mp_uint_t timeout = trezor_obj_get_uint(timeout_us);
     const mp_uint_t deadline = mp_hal_ticks_us() + timeout;
     mp_obj_iter_buf_t iterbuf;
 
