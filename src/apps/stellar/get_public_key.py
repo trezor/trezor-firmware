@@ -49,7 +49,6 @@ def _address_from_public_key(pubkey: bytes):
     address.extend(pubkey)
     address.extend(ustruct.pack("<H", _crc16_checksum(address)))  # checksum
 
-    print(base32.encode(address))
     return base32.encode(address)
 
 
