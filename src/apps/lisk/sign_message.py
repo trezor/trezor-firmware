@@ -11,11 +11,12 @@ async def lisk_sign_message(ctx, msg):
     await require_confirm_sign_message(ctx, message)
 
     address_n = msg.address_n or ()
-    node = await seed.derive_node(ctx, address_n, LISK_CURVE)
 
+    node = await seed.derive_node(ctx, address_n, LISK_CURVE)
     seckey = node.private_key()
-    public_key = ed25519.publickey(seckey)
-    address = get_address_from_public_key(public_key)
+    pubkey = node.public_key()
+    pubkey = pubkey[1:]  # skip ed25519 pubkey marker
+    address = get_address_from_public_key(pubkey)
 
     signature = ed25519.sign(seckey, message)
 

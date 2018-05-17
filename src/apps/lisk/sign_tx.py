@@ -104,7 +104,6 @@ def _get_asset_data_bytes(msg):
         return data
 
 async def _get_keys(ctx, msg):
-    from trezor.crypto.curve import ed25519
     from ..common import seed
     from .helpers import LISK_CURVE
 
@@ -112,9 +111,10 @@ async def _get_keys(ctx, msg):
     node = await seed.derive_node(ctx, address_n, LISK_CURVE)
 
     seckey = node.private_key()
-    public_key = ed25519.publickey(seckey)
+    pubkey = node.public_key()
+    pubkey = pubkey[1:]  # skip ed25519 pubkey marker
 
-    return public_key, seckey
+    return pubkey, seckey
 
 def update_raw_tx(transaction, public_key):
     from .helpers import get_address_from_public_key
