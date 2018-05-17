@@ -161,7 +161,9 @@ void fsm_msgGetAddress(GetAddress *msg)
 	hdnode_fill_public_key(node);
 
 	char address[MAX_ADDR_SIZE];
-	layoutProgress(_("Computing address"), 0);
+	if (msg->has_multisig) {  // use progress bar only for multisig
+		layoutProgress(_("Computing address"), 0);
+	}
 	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, address)) {
 		fsm_sendFailure(FailureType_Failure_DataError, _("Can't encode address"));
 		layoutHome();
