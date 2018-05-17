@@ -30,6 +30,12 @@
     "url": "https://ubiqsmart.com"
   },
   {
+    "chain_id": 28,
+    "shortcut": "ETSC",
+    "name": "Ethereum Social",
+    "url": "https://ethereumsocial.kr"
+  },
+  {
     "chain_id": 30,
     "shortcut": "RSK",
     "name": "Rootstock",
@@ -58,12 +64,6 @@
     "shortcut": "tETC",
     "name": "Ethereum Classic Testnet",
     "url": "https://ethereumclassic.github.io"
-  },
-  {
-    "chain_id": 1128,
-    "shortcut": "ETSC",
-    "name": "Ethereum Social",
-    "url": "https://ethereumsocial.kr"
   },
   {
     "chain_id": 1987,
