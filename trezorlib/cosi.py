@@ -2,7 +2,7 @@ import sys
 from functools import reduce
 import binascii
 
-from . import ed25519raw
+from trezorlib import ed25519raw
 
 
 def combine_keys(pks):
@@ -26,13 +26,24 @@ def get_nonce(sk, data, ctr):
     return r, ed25519raw.encodepoint(R)
 
 
+def verify(signature, digest, pub_key):
+    ed25519raw.checkvalid(signature, digest, pub_key)
+
+
+def sign_with_privkey(digest, privkey, global_pubkey, nonce, global_commit):
+    h = ed25519raw.H(privkey)
+    b = ed25519raw.b
+    a = 2 ** (b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
+    S = (nonce + ed25519raw.Hint(global_commit + global_pubkey + digest) * a) % ed25519raw.l
+    return ed25519raw.encodeint(S)
+
+
 def self_test(digest):
 
     def to_hex(by):
         return binascii.hexlify(by).decode()
 
     N = 3
-    keyset = [0, 2]
 
     digest = binascii.unhexlify(digest)
     print('Digest: %s' % to_hex(digest))
@@ -56,29 +67,21 @@ def self_test(digest):
         nonces.append(r)
         commits.append(R)
 
-    global_pk = combine_keys([pks[i] for i in keyset])
-    global_R = combine_keys([commits[i] for i in keyset])
+    global_pk = combine_keys(pks)
+    global_R = combine_keys(commits)
     print('-----------------')
     print('Global pubkey: %s' % to_hex(global_pk))
     print('Global commit: %s' % to_hex(global_R))
     print('-----------------')
 
-    for i in range(0, N):
-        seckey = sks[i]
-        pubkey = pks[i]
-        r = nonces[i]
-        R = commits[i]
-        h = ed25519raw.H(seckey)
-        b = ed25519raw.b
-        a = 2**(b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
-        S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
-        print('Local sig %d: %s' % (i + 1, to_hex(ed25519raw.encodeint(S))))
-        sigs.append(ed25519raw.encodeint(S))
+    sigs = [sign_with_privkey(digest, sks[i], global_pk, nonces[i], global_R) for i in range(N)]
+    for sig in sigs:
+        print('Local signature: %s' % to_hex(sig))
 
     print('-----------------')
-    sig = combine_sig(global_R, [sigs[i] for i in keyset])
+    sig = combine_sig(global_R, sigs)
     print('Global sig: %s' % to_hex(sig))
-    ed25519raw.checkvalid(sig, digest, global_pk)
+    verify(sig, digest, global_pk)
     print('Valid Signature!')
 
 

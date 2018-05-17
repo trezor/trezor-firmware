@@ -20,7 +20,7 @@ import pytest
 from hashlib import sha256
 
 from .common import TrezorTest
-from ..support import ed25519cosi, ed25519raw
+from trezorlib import cosi
 
 from trezorlib.tools import parse_path
 
@@ -68,13 +68,13 @@ class TestCosi(TrezorTest):
         c1 = self.client.cosi_commit(parse_path("10018'/1'"), digest)
         c2 = self.client.cosi_commit(parse_path("10018'/2'"), digest)
 
-        global_pk = ed25519cosi.combine_keys([c0.pubkey, c1.pubkey, c2.pubkey])
-        global_R = ed25519cosi.combine_keys([c0.commitment, c1.commitment, c2.commitment])
+        global_pk = cosi.combine_keys([c0.pubkey, c1.pubkey, c2.pubkey])
+        global_R = cosi.combine_keys([c0.commitment, c1.commitment, c2.commitment])
 
         sig0 = self.client.cosi_sign(parse_path("10018'/0'"), digest, global_R, global_pk)
         sig1 = self.client.cosi_sign(parse_path("10018'/1'"), digest, global_R, global_pk)
         sig2 = self.client.cosi_sign(parse_path("10018'/2'"), digest, global_R, global_pk)
 
-        sig = ed25519cosi.combine_sig(global_R, [sig0.signature, sig1.signature, sig2.signature])
+        sig = cosi.combine_sig(global_R, [sig0.signature, sig1.signature, sig2.signature])
 
-        ed25519raw.checkvalid(sig, digest, global_pk)
+        cosi.verify(sig, digest, global_pk)
