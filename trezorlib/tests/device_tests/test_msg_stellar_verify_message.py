@@ -21,6 +21,7 @@ from trezorlib.client import CallException
 import pytest
 
 
+@pytest.mark.stellar
 @pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarVerifyMessage(TrezorTest):
 

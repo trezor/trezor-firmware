@@ -15,11 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
+import pytest
 
 from .common import *
 from trezorlib import messages as proto
 
 
+@pytest.mark.ethereum
 class TestMsgEthereumSigntx(TrezorTest):
 
     def test_ethereum_signtx_known_erc20_token(self):
