@@ -1,11 +1,11 @@
+from apps.common import seed
 from apps.wallet.get_public_key import _show_pubkey
+from trezor.messages.LiskPublicKey import LiskPublicKey
+
 from .helpers import LISK_CURVE
 
 
 async def lisk_get_public_key(ctx, msg):
-    from trezor.messages.LiskPublicKey import LiskPublicKey
-    from ..common import seed
-
     address_n = msg.address_n or ()
 
     node = await seed.derive_node(ctx, address_n, LISK_CURVE)

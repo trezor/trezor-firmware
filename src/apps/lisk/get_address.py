@@ -1,11 +1,11 @@
+from apps.common import seed
 from apps.wallet.get_address import _show_address, _show_qr
+from trezor.messages.LiskAddress import LiskAddress
+
 from .helpers import LISK_CURVE, get_address_from_public_key
 
 
 async def layout_lisk_get_address(ctx, msg):
-    from trezor.messages.LiskAddress import LiskAddress
-    from ..common import seed
-
     address_n = msg.address_n or ()
 
     node = await seed.derive_node(ctx, address_n, LISK_CURVE)
