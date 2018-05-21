@@ -23,6 +23,7 @@ import time
 
 
 # assertion data from T1
+@pytest.mark.nem
 @pytest.mark.skip_t1
 @pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMSignTxMosaics(TrezorTest):

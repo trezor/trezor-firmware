@@ -20,6 +20,7 @@ from trezorlib import nem
 
 
 # assertion data from T1
+@pytest.mark.nem
 @pytest.mark.skip_t2
 class TestMsgNEMSignTxMosaics(TrezorTest):
 

@@ -18,6 +18,7 @@
 from .common import *
 
 
+@pytest.mark.nem
 @pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMGetaddress(TrezorTest):
 

@@ -22,6 +22,7 @@ from .common import TrezorTest
 from trezorlib import messages as proto
 
 
+@pytest.mark.lisk
 @pytest.mark.xfail  # drop when trezor-core PR #90 is merged
 @pytest.mark.skip_t1
 class TestMsgLiskVerifymessage(TrezorTest):

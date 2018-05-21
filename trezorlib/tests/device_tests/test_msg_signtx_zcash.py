@@ -28,8 +28,11 @@ TxApiZcash = coins.tx_api["Zcash"]
 TXHASH_93373e = unhexlify('93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c')
 
 
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+# Zcash reset their testnet, which broke our test because it was not properly cached.
+# Then when we tried to revive it, Overwinter happened and now Trezor is incapable of
+# processing v3 transactions. So it's difficult to fix the test until we support v3.
+@pytest.mark.zcash
+@pytest.mark.xfail(reason="Zcash support is botched due to Overwinter")
 class TestMsgSigntxZcash(TrezorTest):
 
     def test_one_one_fee(self):
