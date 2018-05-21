@@ -30,6 +30,7 @@ for coin in json.load(open('coins.json')):
     assert isinstance(coin['decred'], bool)
     assert coin['forkid'] is None or isinstance(coin['forkid'], int)
     assert isinstance(coin['force_bip143'], bool)
+    assert coin['version_group_id'] is None or is_hex(coin['version_group_id'])
     assert isinstance(coin['default_fee_b'], dict)
     assert isinstance(coin['dust_limit'], int)
     assert isinstance(coin['blocktime_minutes'], int) or isinstance(coin['blocktime_minutes'], float)

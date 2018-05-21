@@ -27,4 +27,9 @@ message CoinDef {
 	optional uint32 min_address_length = 24;
 	optional uint32 max_address_length = 25;
 	optional bytes icon = 26;
+	optional uint32 version_group_id = 27;
+	optional string website = 28;
+	optional string github = 29;
+	optional string maintainer = 30;
+	optional uint32 blocktime_seconds = 31;
 }
