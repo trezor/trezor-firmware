@@ -10,8 +10,8 @@ from ubinascii import unhexlify, hexlify
 async def lisk_sign_tx(ctx, msg):
     from trezor.crypto.hashlib import sha256
 
-    public_key, seckey = await _get_keys(ctx, msg)
-    transaction = update_raw_tx(msg.transaction, public_key)
+    pubkey, seckey = await _get_keys(ctx, msg)
+    transaction = update_raw_tx(msg.transaction, pubkey)
 
     # throw ValueError if transaction has not valid structure
     try:
@@ -34,15 +34,15 @@ async def lisk_sign_tx(ctx, msg):
     return LiskSignedTx(signature=signature)
 
 async def require_confirm_by_type(ctx, transaction):
-    if transaction.type is Transfer:
+    if transaction.type == Transfer:
         return await require_confirm_tx(ctx, transaction.recipient_id, transaction.amount)
-    if transaction.type is RegisterDelegate:
+    if transaction.type == RegisterDelegate:
         return await require_confirm_delegate_registration(ctx, transaction.asset.delegate.username)
-    if transaction.type is CastVotes:
+    if transaction.type == CastVotes:
         return await require_confirm_vote_tx(ctx, transaction.asset.votes)
-    if transaction.type is RegisterSecondPassphrase:
+    if transaction.type == RegisterSecondPassphrase:
         return await require_confirm_public_key(ctx, transaction.asset.signature.public_key)
-    if transaction.type is RegisterMultisignatureAccount:
+    if transaction.type == RegisterMultisignatureAccount:
         return await require_confirm_multisig(ctx, transaction.asset.multisignature)
     raise ValueError(FailureType.DataError, 'Invalid transaction type')
 
@@ -80,23 +80,23 @@ def _get_transaction_bytes(msg):
 def _get_asset_data_bytes(msg):
     from ustruct import pack
 
-    if msg.type is Transfer:
+    if msg.type == Transfer:
         # Transfer transaction have optional data field
         if msg.asset.data is not None:
             return bytes(msg.asset.data, "utf8")
         else:
             return b''
 
-    if msg.type is RegisterDelegate:
+    if msg.type == RegisterDelegate:
         return bytes(msg.asset.delegate.username, "utf8")
 
-    if msg.type is CastVotes:
+    if msg.type == CastVotes:
         return bytes("".join(msg.asset.votes), "utf8")
 
-    if msg.type is RegisterSecondPassphrase:
+    if msg.type == RegisterSecondPassphrase:
         return msg.asset.signature.public_key
 
-    if msg.type is RegisterMultisignatureAccount:
+    if msg.type == RegisterMultisignatureAccount:
         data = b''
         data += pack('<b', msg.asset.multisignature.min)
         data += pack('<b', msg.asset.multisignature.life_time)
@@ -116,13 +116,13 @@ async def _get_keys(ctx, msg):
 
     return pubkey, seckey
 
-def update_raw_tx(transaction, public_key):
+def update_raw_tx(transaction, pubkey):
     from .helpers import get_address_from_public_key
 
-    transaction.sender_public_key = public_key
+    transaction.sender_public_key = pubkey
 
     # For this type of transactions, recipientId should be equal transaction creator address.
-    if transaction.type is CastVotes:
-        transaction.recipient_id = get_address_from_public_key(public_key)
+    if transaction.type == CastVotes:
+        transaction.recipient_id = get_address_from_public_key(pubkey)
 
     return transaction
