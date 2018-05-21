@@ -73,5 +73,13 @@ NEMCosignatoryModification.public_key	max_size:32
 
 NEMImportanceTransfer.public_key	max_size:32
 
-StellarAssetType.code               max_size:13
-StellarAssetType.issuer             max_size:32
+StellarAssetType.code			max_size:13
+StellarAssetType.issuer			max_size:32
+
+# Lisk will be supported later
+
+LiskTransactionCommon			skip_message:true
+LiskTransactionAsset			skip_message:true
+LiskSignatureType			skip_message:true
+LiskDelegateType			skip_message:true
+LiskMultisignatureType			skip_message:true
