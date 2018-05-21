@@ -21,9 +21,7 @@ from .common import TrezorTest
 from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.client import CallException
-from trezorlib.tools import parse_path
-
+from trezorlib.tools import parse_path, CallException
 
 TxApiBcash = coins.tx_api['Bcash']
 

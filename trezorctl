@@ -30,7 +30,7 @@ import logging
 import os
 import sys
 
-from trezorlib.client import TrezorClient, CallException
+from trezorlib.client import TrezorClient
 from trezorlib.transport import get_transport, enumerate_devices
 from trezorlib import coins
 from trezorlib import log
@@ -250,12 +250,12 @@ def set_homescreen(connect, filename):
     elif filename.endswith('.toif'):
         img = open(filename, 'rb').read()
         if img[:8] != b'TOIf\x90\x00\x90\x00':
-            raise CallException(proto.FailureType.DataError, 'File is not a TOIF file with size of 144x144')
+            raise tools.CallException(proto.FailureType.DataError, 'File is not a TOIF file with size of 144x144')
     else:
         from PIL import Image
         im = Image.open(filename)
         if im.size != (128, 64):
-            raise CallException(proto.FailureType.DataError, 'Wrong size of the image')
+            raise tools.CallException(proto.FailureType.DataError, 'Wrong size of the image')
         im = im.convert('1')
         pix = im.load()
         img = bytearray(1024)
@@ -297,7 +297,7 @@ def wipe_device(connect, bootloader):
 
     try:
         return connect().wipe_device()
-    except CallException as e:
+    except tools.CallException as e:
         click.echo('Action failed: {} {}'.format(*e.args))
         sys.exit(3)
 
@@ -314,7 +314,7 @@ def wipe_device(connect, bootloader):
 @click.pass_obj
 def load_device(connect, mnemonic, expand, xprv, pin, passphrase_protection, label, ignore_checksum, slip0014):
     if not mnemonic and not xprv and not slip0014:
-        raise CallException(proto.FailureType.DataError, 'Please provide mnemonic or xprv')
+        raise tools.CallException(proto.FailureType.DataError, 'Please provide mnemonic or xprv')
 
     client = connect()
     if mnemonic:
@@ -474,7 +474,7 @@ def firmware_update(connect, filename, url, version, skip_check, fingerprint):
 
     try:
         return client.firmware_update(fp=io.BytesIO(fp))
-    except CallException as e:
+    except tools.CallException as e:
         if e.args[0] in (proto.FailureType.FirmwareError, proto.FailureType.ActionCancelled):
             click.echo("Update aborted on device.")
         else:
@@ -806,7 +806,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
     if ' ' in value:
         value, unit = value.split(' ', 1)
         if unit.lower() not in ether_units:
-            raise CallException(proto.Failure.DataError, 'Unrecognized ether unit %r' % unit)
+            raise tools.CallException(proto.Failure.DataError, 'Unrecognized ether unit %r' % unit)
         value = int(value) * ether_units[unit.lower()]
     else:
         value = int(value)
@@ -815,7 +815,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
         if ' ' in gas_price:
             gas_price, unit = gas_price.split(' ', 1)
             if unit.lower() not in ether_units:
-                raise CallException(proto.Failure.DataError, 'Unrecognized gas price unit %r' % unit)
+                raise tools.CallException(proto.Failure.DataError, 'Unrecognized gas price unit %r' % unit)
             gas_price = int(gas_price) * ether_units[unit.lower()]
         else:
             gas_price = int(gas_price)

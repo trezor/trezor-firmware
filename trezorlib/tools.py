@@ -16,6 +16,7 @@
 
 import hashlib
 import struct
+import unicodedata
 from typing import NewType, List
 
 from .coins import slip44
@@ -159,3 +160,65 @@ def parse_path(nstr: str) -> Address:
         return list(str_to_harden(x) for x in n)
     except Exception:
         raise ValueError('Invalid BIP32 path', nstr)
+
+
+
+def normalize_nfc(txt):
+    '''
+    Normalize message to NFC and return bytes suitable for protobuf.
+    This seems to be bitcoin-qt standard of doing things.
+    '''
+    if isinstance(txt, bytes):
+        txt = txt.decode('utf-8')
+    return unicodedata.normalize('NFC', txt).encode('utf-8')
+
+
+class CallException(Exception):
+    pass
+
+
+class field:
+    # Decorator extracts single value from
+    # protobuf object. If the field is not
+    # present, raises an exception.
+    def __init__(self, field):
+        self.field = field
+
+    def __call__(self, f):
+        @functools.wraps(f)
+        def wrapped_f(*args, **kwargs):
+            ret = f(*args, **kwargs)
+            return getattr(ret, self.field)
+        return wrapped_f
+
+
+class expect:
+    # Decorator checks if the method
+    # returned one of expected protobuf messages
+    # or raises an exception
+    def __init__(self, *expected):
+        self.expected = expected
+
+    def __call__(self, f):
+        @functools.wraps(f)
+        def wrapped_f(*args, **kwargs):
+            ret = f(*args, **kwargs)
+            if not isinstance(ret, self.expected):
+                raise RuntimeError("Got %s, expected %s" % (ret.__class__, self.expected))
+            return ret
+        return wrapped_f
+
+
+def session(f):
+    # Decorator wraps a BaseClient method
+    # with session activation / deactivation
+    @functools.wraps(f)
+    def wrapped_f(*args, **kwargs):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
+        client = args[0]
+        client.transport.session_begin()
+        try:
+            return f(*args, **kwargs)
+        finally:
+            client.transport.session_end()
+    return wrapped_f

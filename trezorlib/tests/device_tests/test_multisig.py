@@ -20,7 +20,7 @@ import pytest
 from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
-from trezorlib.client import CallException
+from trezorlib.tools import CallException
 
 TXHASH_c6091a = unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52')
 

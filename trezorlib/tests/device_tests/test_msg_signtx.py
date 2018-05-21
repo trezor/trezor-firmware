@@ -21,9 +21,8 @@ from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 
 from trezorlib import messages as proto
-from trezorlib.client import CallException
-from trezorlib.tools import parse_path
 from trezorlib.tx_api import TxApiInsight
+from trezorlib.tools import parse_path, CallException
 
 TxApiTestnet = TxApiInsight("insight_testnet")
 

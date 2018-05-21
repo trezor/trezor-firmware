@@ -19,7 +19,9 @@ import pytest
 
 from .common import TrezorTest
 from trezorlib import messages as proto
-from trezorlib.client import PinException, CallException
+from trezorlib.client import PinException
+from trezorlib.tools import CallException
+
 
 # FIXME TODO Add passphrase tests
 

@@ -31,8 +31,8 @@ from . import messages as proto
 from . import tools
 from . import mapping
 from . import nem
-from . import protobuf
 from . import stellar
+from .tools import CallException, field, expect
 from .debuglink import DebugLink
 
 if sys.version_info.major < 3:
@@ -79,69 +79,26 @@ def get_buttonrequest_value(code):
     return [k for k in dir(proto.ButtonRequestType) if getattr(proto.ButtonRequestType, k) == code][0]
 
 
-class CallException(Exception):
+class PinException(tools.CallException):
     pass
 
 
-class PinException(CallException):
-    pass
+class MovedTo:
+    """Deprecation redirector for methods that were formerly part of TrezorClient"""
+    def __init__(self, where):
+        self.where = where
+        self.name = where.__module__ + '.' + where.__name__
 
+    def _deprecated_redirect(self, client, *args, **kwargs):
+        """Redirector for a deprecated method on TrezorClient"""
+        warnings.warn("Function has been moved to %s" % self.name, DeprecationWarning, stacklevel=2)
+        return self.where(client, *args, **kwargs)
 
-class field:
-    # Decorator extracts single value from
-    # protobuf object. If the field is not
-    # present, raises an exception.
-    def __init__(self, field):
-        self.field = field
-
-    def __call__(self, f):
-        @functools.wraps(f)
-        def wrapped_f(*args, **kwargs):
-            ret = f(*args, **kwargs)
-            return getattr(ret, self.field)
-        return wrapped_f
-
-
-class expect:
-    # Decorator checks if the method
-    # returned one of expected protobuf messages
-    # or raises an exception
-    def __init__(self, *expected):
-        self.expected = expected
-
-    def __call__(self, f):
-        @functools.wraps(f)
-        def wrapped_f(*args, **kwargs):
-            ret = f(*args, **kwargs)
-            if not isinstance(ret, self.expected):
-                raise RuntimeError("Got %s, expected %s" % (ret.__class__, self.expected))
-            return ret
-        return wrapped_f
-
-
-def session(f):
-    # Decorator wraps a BaseClient method
-    # with session activation / deactivation
-    @functools.wraps(f)
-    def wrapped_f(*args, **kwargs):
-        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
-        client = args[0]
-        client.transport.session_begin()
-        try:
-            return f(*args, **kwargs)
-        finally:
-            client.transport.session_end()
-    return wrapped_f
-
-
-def normalize_nfc(txt):
-    '''
-    Normalize message to NFC and return bytes suitable for protobuf.
-    This seems to be bitcoin-qt standard of doing things.
-    '''
-    if isinstance(txt, bytes):
-        txt = txt.decode('utf-8')
-    return unicodedata.normalize('NFC', txt).encode('utf-8')
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self._deprecated_redirect
+        else:
+            return functools.partial(self._deprecated_redirect, instance)
 
 
 class BaseClient(object):
@@ -158,13 +115,13 @@ class BaseClient(object):
     def cancel(self):
         self.transport.write(proto.Cancel())
 
-    @session
+    @tools.session
     def call_raw(self, msg):
         __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
         self.transport.write(msg)
         return self.transport.read()
 
-    @session
+    @tools.session
     def call(self, msg):
         resp = self.call_raw(msg)
         handler_name = "callback_%s" % resp.__class__.__name__
@@ -183,7 +140,7 @@ class BaseClient(object):
                         proto.FailureType.PinCancelled, proto.FailureType.PinExpected):
             raise PinException(msg.code, msg.message)
 
-        raise CallException(msg.code, msg.message)
+        raise tools.CallException(msg.code, msg.message)
 
     def register_message(self, msg):
         '''Allow application to register custom protobuf message type'''
@@ -451,7 +408,7 @@ class ProtocolMixin(object):
         init_msg = proto.Initialize()
         if self.state is not None:
             init_msg.state = self.state
-        self.features = expect(proto.Features)(self.call)(init_msg)
+        self.features = tools.expect(proto.Features)(self.call)(init_msg)
         if str(self.features.vendor) not in self.VENDORS:
             raise RuntimeError("Unsupported device")
 
@@ -465,7 +422,7 @@ class ProtocolMixin(object):
 
     @staticmethod
     def expand_path(n):
-        warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning)
+        warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning, stacklevel=2)
         return tools.parse_path(n)
 
     @expect(proto.PublicKey)

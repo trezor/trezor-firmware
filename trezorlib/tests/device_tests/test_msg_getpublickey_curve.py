@@ -18,7 +18,7 @@ from binascii import hexlify
 import pytest
 
 from .common import TrezorTest
-from trezorlib.client import CallException
+from trezorlib.tools import CallException
 
 
 class TestMsgGetpublickeyCurve(TrezorTest):
