@@ -234,7 +234,7 @@ message TxOutputBinType {
 
 /**
  * Structure representing transaction
- * @used_in SimpleSignTx
+ * @used_in TxAck
  */
 message TransactionType {
 	optional uint32 version = 1;
@@ -246,7 +246,8 @@ message TransactionType {
 	optional uint32 outputs_cnt = 7;
 	optional bytes extra_data = 8;
 	optional uint32 extra_data_len = 9;
-	optional uint32 decred_expiry = 10;
+	optional uint32 decred_expiry = 10;		// only for Decred
+	optional bool overwintered = 11;		// only for Zcash
 }
 
 /**
