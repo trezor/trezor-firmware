@@ -1130,23 +1130,6 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature)
     memcpy(out_signature, signature, sizeof(signature));
 }
 
-void stellar_signMessage(const uint8_t *message, uint32_t message_len, uint32_t *address_n, size_t address_n_count, uint8_t *out_signature)
-{
-    HDNode *node = stellar_deriveNode(address_n, address_n_count);
-    ed25519_sign(message, message_len, node->private_key, node->public_key + 1, out_signature);
-}
-
-bool stellar_verifyMessage(StellarVerifyMessage *msg)
-{
-    // returns 0 if signature is valid
-    return ed25519_sign_open(
-        msg->message.bytes,
-        msg->message.size,
-        msg->public_key.bytes,
-        msg->signature.bytes
-        ) == 0;
-}
-
 /*
  * Returns number (representing stroops) formatted as XLM
  * For example, if number has value 1000000000 then it will be returned as "100.0"

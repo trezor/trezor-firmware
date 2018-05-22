@@ -57,9 +57,6 @@ void stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg);
 void stellar_confirmManageDataOp(StellarManageDataOp *msg);
 void stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg);
 
-void stellar_signMessage(const uint8_t *message, uint32_t message_len, uint32_t *address_n, size_t address_n_count, uint8_t *out_signature);
-bool stellar_verifyMessage(StellarVerifyMessage *msg);
-
 // Layout
 void stellar_layoutGetPublicKey(uint32_t *address_n, size_t address_n_count);
 void stellar_layoutTransactionDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5);
