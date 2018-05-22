@@ -5,7 +5,7 @@ from trezor.messages import wire_types
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
 
-from apps.common import storage, coins, cache
+from apps.common import storage, cache
 
 
 async def respond_Features(ctx, msg):
@@ -24,7 +24,6 @@ async def respond_Features(ctx, msg):
     f.passphrase_protection = storage.has_passphrase()
     f.language = 'english'
     f.label = storage.get_label()
-    f.coins = coins.COINS
     f.initialized = storage.is_initialized()
     f.revision = symbol('GITREV')
     f.pin_cached = config.has_pin()
