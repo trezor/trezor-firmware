@@ -33,21 +33,29 @@ typedef struct _mp_obj_Blake2b_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None, key: bytes = None) -> None:
+/// def __init__(self, data: bytes = None, outlen: int = Blake2b.digest_size, key: bytes = None) -> None:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 0, 2, false);
+    mp_arg_check_num(n_args, n_kw, 0, 3, false);
     mp_obj_Blake2b_t *o = m_new_obj(mp_obj_Blake2b_t);
     o->base.type = type;
+    int res = 0;
     // constructor called with key argument set
-    if (n_args == 2) {
+    if (n_args == 3) {
+        size_t outlen = mp_obj_get_int(args[1]);
         mp_buffer_info_t key;
-        mp_get_buffer_raise(args[1], &key, MP_BUFFER_READ);
-        blake2b_InitKey(&(o->ctx), BLAKE2B_DIGEST_LENGTH, key.buf, key.len);
+        mp_get_buffer_raise(args[2], &key, MP_BUFFER_READ);
+        res = blake2b_InitKey(&(o->ctx), outlen, key.buf, key.len);
+    } else if (n_args == 2) {
+        size_t outlen = mp_obj_get_int(args[1]);
+        res = blake2b_Init(&(o->ctx), outlen);
     } else {
-        blake2b_Init(&(o->ctx), BLAKE2B_DIGEST_LENGTH);
+        res = blake2b_Init(&(o->ctx), BLAKE2B_DIGEST_LENGTH);
+    }
+    if (res < 0) {
+        mp_raise_ValueError("Invalid Blake2b parameters");
     }
     // constructor called with data argument set
     if (n_args >= 1) {
@@ -80,9 +88,9 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_digest(mp_obj_t self) {
     uint8_t out[BLAKE2B_DIGEST_LENGTH];
     BLAKE2B_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(BLAKE2B_CTX));
-    blake2b_Final(&ctx, out, BLAKE2B_DIGEST_LENGTH);
+    blake2b_Final(&ctx, out, ctx.outlen);
     memset(&ctx, 0, sizeof(BLAKE2B_CTX));
-    return mp_obj_new_bytes(out, sizeof(out));
+    return mp_obj_new_bytes(out, o->ctx.outlen);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake2b_digest_obj, mod_trezorcrypto_Blake2b_digest);
 
