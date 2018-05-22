@@ -129,7 +129,10 @@ class TestProtectionLevels(TrezorTest):
     def test_recovery_device(self):
         with self.client:
             self.client.set_mnemonic(self.mnemonic12)
-            self.client.set_expected_responses([proto.WordRequest()] * 24 + [proto.Success(), proto.Features()])
+            self.client.set_expected_responses(
+                [proto.ButtonRequest()] +
+                [proto.WordRequest()] * 24 +
+                [proto.Success(), proto.Features()])
             self.client.recovery_device(12, False, False, 'label', 'english')
 
         # This must fail, because device is already initialized
@@ -150,7 +153,7 @@ class TestProtectionLevels(TrezorTest):
     def test_verify_message(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
+            self.client.set_expected_responses([proto.ButtonRequest(), proto.ButtonRequest(), proto.Success()])
             self.client.verify_message(
                 'Bitcoin',
                 '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
