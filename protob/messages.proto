@@ -144,6 +144,7 @@ enum MessageType {
  */
 message Initialize {
 	optional bytes state = 1;			// assumed device state, clear session if set and different
+	optional bool skip_passphrase = 2;		// this session should always assume empty passphrase
 }
 
 /**
