@@ -62,13 +62,13 @@ int cash_encode(char *output, const char *hrp, const uint8_t *data, size_t data_
         if (ch < 33 || ch > 126) {
             return 0;
         }
-		*(output++) = ch;
+        *(output++) = ch;
         chk = cashaddr_polymod_step(chk) ^ (ch & 0x1f);
         ++i;
     }
-	if (i + 1 + data_len + CHECKSUM_SIZE > MAX_CASHADDR_SIZE) {
-		return 0;
-	}
+    if (i + 1 + data_len + CHECKSUM_SIZE > MAX_CASHADDR_SIZE) {
+        return 0;
+    }
     chk = cashaddr_polymod_step(chk);
     *(output++) = ':';
     for (i = 0; i < data_len; ++i) {
@@ -102,10 +102,10 @@ int cash_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input) {
     }
     hrp_len = input_len - (1 + *data_len);
     if (hrp_len < 1 || hrp_len > MAX_HRP_SIZE ||
-	    *data_len < CHECKSUM_SIZE || *data_len > CHECKSUM_SIZE + MAX_BASE32_SIZE) {
+        *data_len < CHECKSUM_SIZE || *data_len > CHECKSUM_SIZE + MAX_BASE32_SIZE) {
         return 0;
     }
-	// subtract checksum
+    // subtract checksum
     *(data_len) -= CHECKSUM_SIZE;
     for (i = 0; i < hrp_len; ++i) {
         int ch = input[i];
