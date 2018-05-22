@@ -15,8 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
+from binascii import unhexlify, hexlify
+import pytest
 
-from .common import *
+from .common import TrezorTest
 
 from trezorlib import messages as proto
 from trezorlib.client import CallException
@@ -105,10 +107,8 @@ class TestOpReturn(TrezorTest):
                 proto.Failure()
             ])
 
-            try:
+            with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Bitcoin', [inp1], [out1])
-            except CallException as exc:
-                assert exc.args[0] == proto.FailureType.DataError
-                assert exc.args[1] == 'OP_RETURN output with non-zero amount'
-            else:
-                assert False  # exception expected
+
+            assert exc.value.args[0] == proto.FailureType.DataError
+            assert exc.value.args[1] == 'OP_RETURN output with non-zero amount'

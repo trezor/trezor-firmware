@@ -13,12 +13,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+from binascii import unhexlify
+import pytest
+
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
-from binascii import unhexlify, hexlify
 from trezorlib import messages as proto
 from trezorlib.client import CallException
-import pytest
 
 
 @pytest.mark.stellar
@@ -44,28 +45,19 @@ class TestMsgStellarVerifyMessage(TrezorTest):
         msg = 'abc'
         pubkey = unhexlify('15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469')
         signature = unhexlify('0000000000000000')  # invalid length
-        try:
+        with pytest.raises(CallException) as exc:
             self.client.stellar_verify_message(pubkey, signature, msg)
-        except CallException as exc:
-            assert exc.args[0] == proto.FailureType.DataError
-        else:
-            assert False
+        assert exc.value.args[0] == proto.FailureType.DataError
 
         # invalid signature
         signature = unhexlify('00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
-        try:
+        with pytest.raises(CallException) as exc:
             self.client.stellar_verify_message(pubkey, signature, msg)
-        except CallException as exc:
-            assert exc.args[0] == proto.FailureType.DataError
-        else:
-            assert False
+        assert exc.value.args[0] == proto.FailureType.DataError
 
         # invalid pubkey
         pubkey = unhexlify('00')
         signature = unhexlify('00')
-        try:
+        with pytest.raises(CallException) as exc:
             self.client.stellar_verify_message(pubkey, signature, msg)
-        except CallException as exc:
-            assert exc.args[0] == proto.FailureType.DataError
-        else:
-            assert False
+        assert exc.value.args[0] == proto.FailureType.DataError

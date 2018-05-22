@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import hexlify, unhexlify
+import pytest
 
+from .common import TrezorTest
 from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.ckd_public import deserialize
@@ -235,10 +237,7 @@ class TestMsgSigntxSegwit(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.Failure(code=proto.FailureType.ProcessError),
             ])
-            try:
+            with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
-            except CallException as exc:
-                assert exc.args[0] == proto.FailureType.ProcessError
-                assert exc.args[1] == 'Transaction has changed during signing'
-            else:
-                assert False  # exception expected
+            assert exc.value.args[0] == proto.FailureType.ProcessError
+            assert exc.value.args[1] == 'Transaction has changed during signing'
