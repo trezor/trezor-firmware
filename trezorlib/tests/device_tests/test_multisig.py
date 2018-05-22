@@ -254,4 +254,4 @@ class TestMultisig(TrezorTest):
             self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
 
         assert exc.value.args[0] == proto.FailureType.DataError
-        assert exc.value.args[1] == 'Pubkey not found in multisig script'
+        assert 'Pubkey not found in multisig script' in exc.value.args[1]
