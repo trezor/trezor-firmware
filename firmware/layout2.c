@@ -75,7 +75,7 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 			bool native_segwit = (address_n[0] == (0x80000000 + 84));
 			bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
 			bool legacy = false;
-			const CoinInfo *coin = coinByCoinType(address_n[1]);
+			const CoinInfo *coin = coinBySlip44(address_n[1]);
 			const char *abbr = 0;
 			if (native_segwit) {
 				if (coin && coin->has_segwit && coin->bech32_prefix) {

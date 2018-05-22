@@ -44,7 +44,7 @@ const CoinInfo *coinByAddressType(uint32_t address_type)
 	return 0;
 }
 
-const CoinInfo *coinByCoinType(uint32_t coin_type)
+const CoinInfo *coinBySlip44(uint32_t coin_type)
 {
 	for (int i = 0; i < COINS_COUNT; i++) {
 		if (coin_type == coins[i].coin_type) {

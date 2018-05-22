@@ -42,36 +42,7 @@ void fsm_msgGetFeatures(GetFeatures *msg)
 		resp->has_label = true;
 		strlcpy(resp->label, storage_getLabel(), sizeof(resp->label));
 	}
-	
-	_Static_assert(pb_arraysize(Features, coins) >= COINS_COUNT, "Features.coins max_count not large enough");
 
-	resp->coins_count = COINS_COUNT;
-	for (int i = 0; i < COINS_COUNT; i++) {
-		if (coins[i].coin_name) {
-			resp->coins[i].has_coin_name = true;
-			strlcpy(resp->coins[i].coin_name, coins[i].coin_name, sizeof(resp->coins[i].coin_name));
-		}
-		if (coins[i].coin_shortcut) {
-			resp->coins[i].has_coin_shortcut = true;
-			strlcpy(resp->coins[i].coin_shortcut, coins[i].coin_shortcut + 1, sizeof(resp->coins[i].coin_shortcut));
-		}
-		resp->coins[i].has_address_type = coins[i].has_address_type;
-		resp->coins[i].address_type = coins[i].address_type;
-		resp->coins[i].has_maxfee_kb = true;
-		resp->coins[i].maxfee_kb = coins[i].maxfee_kb;
-		resp->coins[i].has_address_type_p2sh = coins[i].has_address_type_p2sh;
-		resp->coins[i].address_type_p2sh = coins[i].address_type_p2sh;
-		resp->coins[i].has_xpub_magic = coins[i].xpub_magic != 0;
-		resp->coins[i].xpub_magic = coins[i].xpub_magic;
-		resp->coins[i].has_xprv_magic = coins[i].xprv_magic != 0;
-		resp->coins[i].xprv_magic = coins[i].xprv_magic;
-		resp->coins[i].has_segwit = true;
-		resp->coins[i].segwit = coins[i].has_segwit;
-		resp->coins[i].has_forkid = coins[i].has_forkid;
-		resp->coins[i].forkid = coins[i].forkid;
-		resp->coins[i].has_force_bip143 = true;
-		resp->coins[i].force_bip143 = coins[i].force_bip143;
-	}
 	resp->has_initialized = true; resp->initialized = storage_isInitialized();
 	resp->has_imported = true; resp->imported = storage_isImported();
 	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
