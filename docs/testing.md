@@ -39,7 +39,7 @@ python setup.py develop
 
 If you want to test against the emulator, run it in a separate terminal from the `trezor-core` checkout directory:
 ```sh
-OPTLEVEL=0 ./emu.sh
+PYOPT=0 ./emu.sh
 ```
 
 Find the device address and export it as an environment variable. For the emulator, this is:

@@ -3,12 +3,12 @@
 source emu.config 2>/dev/null
 
 EXE=build/unix/micropython
-OPTLEVEL="${OPTLEVEL:-1}"
+PYOPT="${PYOPT:-1}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"
 HEAPSIZE="${HEAPSIZE:-800K}"
 
-ARGS="-O${OPTLEVEL} -X heapsize=${HEAPSIZE}"
+ARGS="-O${PYOPT} -X heapsize=${HEAPSIZE}"
 
 cd `dirname $0`/src
 
