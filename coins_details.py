@@ -5,32 +5,58 @@ import json
 import requests
 import pprint
 
-SKIP_COINMARKETCAP = True
+COINS = {}
+
+def coinmarketcap_init():
+    global COINS
+
+    try:
+        COINS = json.load(open('coinmarketcap.json', 'r'))
+    except FileNotFoundError:
+        pass
+    else:
+        if COINS["1"]["last_updated"] > time.time() - 3600:
+            print("Using local cache of coinmarketcap")
+            return
+
+    print("Updating coins from coinmarketcap")
+    total = None
+    COINS = {}
+
+    while total is None or len(COINS) < total:
+        url = 'https://api.coinmarketcap.com/v2/ticker/?start=%d&convert=USD&limit=100' % (len(COINS)+1)
+        data = requests.get(url).json()
+        COINS.update(data['data'])
+        if total is None:
+            total = data['metadata']['num_cryptocurrencies']
+
+        print("Fetched %d of %d coins" % (len(COINS), total))
+        time.sleep(1)
+
+    # pprint.pprint(COINS)
+    json.dump(COINS, open('coinmarketcap.json', 'w'), sort_keys=True, indent=4)
+
 
 def coinmarketcap_info(shortcut):
-    if SKIP_COINMARKETCAP:
-        raise Exception("Skipping coinmarketcap call")
+    global COINS
+    shortcut = shortcut.replace(' ', '-').lower()
 
-    shortcut = shortcut.replace(' ', '-')
-    url = 'https://api.coinmarketcap.com/v1/ticker/%s/?convert=USD' % shortcut
-    try:
-        return requests.get(url).json()[0]
-    except KeyboardInterrupt:
-        raise
-    except:
-        print("Cannot fetch Coinmarketcap info for %s" % shortcut)
+    for _id in COINS:
+        coin = COINS[_id]
+        #print(shortcut, coin['website_slug'])
+        if shortcut == coin['website_slug']:
+            #print(coin)
+            return coin
 
 def update_marketcap(obj, shortcut):
     try:
-        obj['marketcap_usd'] = int(float(coinmarketcap_info(shortcut)['market_cap_usd']))
+        obj['marketcap_usd'] = int(float(coinmarketcap_info(shortcut)['quotes']['USD']['market_cap']))
     except:
-        pass
+        del obj['marketcap_usd']
+        print("Marketcap info not found for", shortcut)
 
 def coinmarketcap_global():
-    if SKIP_COINMARKETCAP:
-        raise Exception("Skipping coinmarketcap call")
-
-    url = 'https://api.coinmarketcap.com/v1/global'
+    url = 'https://api.coinmarketcap.com/v2/global'
     ret = requests.get(url)
     data = ret.json()
     return data
@@ -45,7 +71,7 @@ def update_info(details):
     details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes'])
 
     try:
-        details['info']['total_marketcap_usd'] = int(coinmarketcap_global()['total_market_cap_usd'])
+        details['info']['total_marketcap_usd'] = int(coinmarketcap_global()['data']['quotes']['USD']['total_market_cap'])
     except:
         pass
 
@@ -206,9 +232,9 @@ def update_ethereum(details):
     update_marketcap(out, 'etsc')
 
 def update_mosaics(details):
-    r = requests.get('https://raw.githubusercontent.com/trezor/trezor-mcu/master/firmware/nem_mosaics.json')
+    d = json.load(open('defs/nem/nem_mosaics.json'))
     supported = []
-    for mosaic in r.json():
+    for mosaic in d:
         # print('Updating', mosaic['name'], mosaic['ticker'])
 
         key = "mosaic:%s" % mosaic['ticker'].strip()
@@ -246,8 +272,9 @@ if __name__ == '__main__':
     except FileNotFoundError:
         details = {'coins': {}, 'info': {}}
 
+    coinmarketcap_init()
     update_coins(details)
-    update_erc20(details)
+    #update_erc20(details)
     update_ethereum(details)
     update_mosaics(details)
     update_info(details)
