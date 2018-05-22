@@ -105,9 +105,6 @@ enum MessageType {
 	MessageType_LiskAddress = 115 [(wire_out) = true];
 	MessageType_LiskSignTx = 116 [(wire_in) = true];
 	MessageType_LiskSignedTx = 117 [(wire_out) = true];
-	MessageType_LiskSignMessage = 118 [(wire_in) = true];
-	MessageType_LiskMessageSignature = 119 [(wire_out) = true];
-	MessageType_LiskVerifyMessage = 120 [(wire_in) = true];
 	MessageType_LiskGetPublicKey = 121 [(wire_in) = true];
 	MessageType_LiskPublicKey = 122 [(wire_out) = true];
 
@@ -116,9 +113,6 @@ enum MessageType {
 	MessageType_StellarPublicKey = 201 [(wire_out) = true];
 	MessageType_StellarSignTx = 202 [(wire_in) = true];
 	MessageType_StellarTxOpRequest = 203 [(wire_out) = true];
-	MessageType_StellarSignMessage = 204 [(wire_in) = true];
-	MessageType_StellarMessageSignature = 205 [(wire_out) = true];
-	MessageType_StellarVerifyMessage = 206 [(wire_in) = true];
 	MessageType_StellarCreateAccountOp = 210 [(wire_in) = true];
 	MessageType_StellarPaymentOp = 211 [(wire_in) = true];
 	MessageType_StellarPathPaymentOp = 212 [(wire_in) = true];
@@ -1023,36 +1017,6 @@ message StellarPublicKey {
 }
 
 /**
- * Request: ask device to sign the given string
- * @next StellarMessageSignature
- */
-message StellarSignMessage {
-	repeated uint32 address_n = 1;	// BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
-
-	optional bytes message = 2;	// Message to sign
-}
-
-/**
- * Response: device has signed data
- * @prev StellarSignMessage
- */
-message StellarMessageSignature {
-	optional bytes public_key = 1;	// Raw bytes of the public key (no version or checksum)
-	optional bytes signature = 2;   // ed25519 signature bytes
-}
-
-/**
- * Request: ask device to verify that signature is valid (public_key has signed message)
- * @next Success
- * @next Failure
- */
-message StellarVerifyMessage {
-	optional bytes public_key = 1;	// Public key corresponding to the private key that signed the message
-	optional bytes message = 2;		// Binary data that was signed
-	optional bytes signature = 3;	// Signature to verify
-}
-
-/**
  * Request: ask device to sign Stellar transaction
  * @next StellarTxOpRequest
  */
@@ -1329,36 +1293,6 @@ message LiskPublicKey {
 */
 message LiskSignedTx {
 	optional bytes signature = 1;
-}
-
-/**
-* Request: Ask device to sign message
-* @next LiskMessageSignature
-* @next Failure
-*/
-message LiskSignMessage {
-	repeated uint32 address_n = 1;
-	optional bytes message = 2;
-}
-
-/**
- * Response: Signed message
- * @prev LiskSignMessage
- */
-message LiskMessageSignature {
-	optional string address = 1;
-	optional bytes signature = 2;
-}
-
-/**
- * Request: Ask device to verify message
- * @next Success
- * @next Failure
- */
-message LiskVerifyMessage {
-	optional bytes signature = 1;
-	optional bytes public_key = 2;
-	optional bytes message = 3;
 }
 
 /////////////////////////////////////////////////////////////
