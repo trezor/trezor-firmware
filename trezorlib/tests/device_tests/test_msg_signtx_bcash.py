@@ -219,13 +219,14 @@ class TestMsgSigntxBch(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
-                proto.Failure(code=proto.FailureType.ProcessError),
+                proto.Failure(),
             ])
 
             with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Bcash', [inp1, inp2], [out1], debug_processor=attack_processor)
-            assert exc.value.args[0] == proto.FailureType.ProcessError
-            assert exc.value.args[1] == 'Transaction has changed during signing'
+
+            assert exc.value.args[0] == proto.FailureType.DataError
+            assert exc.value.args[1].endswith('Transaction has changed during signing')
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()

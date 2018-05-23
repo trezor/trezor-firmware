@@ -20,6 +20,7 @@ from binascii import hexlify, unhexlify
 import pytest
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 from trezorlib import coins
 from trezorlib import messages as proto
@@ -625,8 +626,8 @@ class TestMsgSigntx(TrezorTest):
         # Now run the attack, must trigger the exception
         with pytest.raises(CallException) as exc:
             self.client.sign_tx('Bitcoin', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
-        assert exc.value.args[0] == proto.FailureType.ProcessError
-        assert exc.value.args[1] == 'Transaction has changed during signing'
+        assert exc.value.args[0] in (proto.FailureType.ProcessError, proto.FailureType.DataError)
+        assert exc.value.args[1].endswith('Transaction has changed during signing')
 
     def test_attack_change_input_address(self):
         # This unit test attempts to modify input address after the Trezor checked
@@ -700,8 +701,12 @@ class TestMsgSigntx(TrezorTest):
             # Now run the attack, must trigger the exception
             with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
+
             assert exc.value.args[0] == proto.FailureType.ProcessError
-            assert exc.value.args[1] == 'Transaction has changed during signing'
+            if TREZOR_VERSION == 1:
+                assert exc.value.args[1].endswith('Failed to compile input')
+            else:
+                assert exc.value.args[1].endswith('Transaction has changed during signing')
 
     def test_spend_coinbase(self):
         # 25 TEST generated to m/1 (mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV)

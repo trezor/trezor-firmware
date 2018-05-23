@@ -19,6 +19,7 @@ from binascii import unhexlify, hexlify
 import pytest
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 from trezorlib import messages as proto
 from trezorlib.client import CallException
@@ -110,5 +111,9 @@ class TestOpReturn(TrezorTest):
             with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Bitcoin', [inp1], [out1])
 
-            assert exc.value.args[0] == proto.FailureType.DataError
-            assert exc.value.args[1] == 'OP_RETURN output with non-zero amount'
+            if TREZOR_VERSION == 1:
+                assert exc.value.args[0] == proto.FailureType.ProcessError
+                assert exc.value.args[1].endswith("Failed to compile output")
+            else:
+                assert exc.value.args[0] == proto.FailureType.DataError
+                assert exc.value.args[1].endswith('OP_RETURN output with non-zero amount')

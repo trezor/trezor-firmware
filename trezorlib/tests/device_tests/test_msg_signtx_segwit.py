@@ -18,6 +18,7 @@
 from binascii import hexlify, unhexlify
 import pytest
 
+from .conftest import TREZOR_VERSION
 from .common import TrezorTest
 from trezorlib import coins
 from trezorlib import messages as proto
@@ -240,4 +241,7 @@ class TestMsgSigntxSegwit(TrezorTest):
             with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
             assert exc.value.args[0] == proto.FailureType.ProcessError
-            assert exc.value.args[1] == 'Transaction has changed during signing'
+            if TREZOR_VERSION == 1:
+                assert exc.value.args[1].endswith("Failed to compile input")
+            else:
+                assert exc.value.args[1].endswith('Transaction has changed during signing')
