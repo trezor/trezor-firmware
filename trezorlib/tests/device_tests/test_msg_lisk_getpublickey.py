@@ -22,7 +22,6 @@ from .common import TrezorTest
 
 
 @pytest.mark.lisk
-@pytest.mark.xfail  # drop when trezor-core PR #90 is merged
 @pytest.mark.skip_t1
 class TestMsgLiskGetPublicKey(TrezorTest):
 
