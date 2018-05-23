@@ -4,6 +4,7 @@ import time
 import json
 import requests
 import pprint
+import ethereum_tokens_gen
 
 COINS = {}
 
@@ -52,7 +53,6 @@ def update_marketcap(obj, shortcut):
     try:
         obj['marketcap_usd'] = int(float(coinmarketcap_info(shortcut)['quotes']['USD']['market_cap']))
     except:
-        del obj['marketcap_usd']
         print("Marketcap info not found for", shortcut)
 
 def coinmarketcap_global():
@@ -111,66 +111,44 @@ def update_coins(details):
     check_unsupported(details, 'coin:', supported)
 
 def update_erc20(details):
-    networks = [
-        ('eth', 1),
-        # ('exp', 2),
-        # ('rop', 3),
-        ('rin', 4),
-        ('ubq', 8),
-        # ('rsk', 30),
-        ('kov', 42),
-        ('etc', 61),
+    networks = ['eth',
+        'exp',
+        # 'rop',
+        # 'rin',
+        'ubq',
+        # 'rsk',
+        # 'kov',
+        'etc',
     ]
 
-    # Fetch list of tokens already included in Trezor Core
-    r = requests.get('https://raw.githubusercontent.com/trezor/trezor-core/master/src/apps/ethereum/tokens.py')
-    d = {}
-    exec(r.text, d)
-
-    # TODO 'Qmede...' can be removed after ipfs_hash is being generated into tokens.py
-    ipfs_hash = d.get('ipfs_hash') or 'QmedefcF1fecLVpRymJJmyJFRpJuCTiNfPYBhzUdHPUq3T'
-
-    infos = {}
-    for n in networks:
-        # print("Updating info about erc20 tokens for", n[0])
-        url = 'https://gateway.ipfs.io/ipfs/%s/%s.json' % (ipfs_hash, n[0])
-        r = requests.get(url)
-        infos[n[0]] = r.json()
-
+    tokens = ethereum_tokens_gen.get_tokens()
     supported = []
-    for t in d['tokens']:
-        token = t[2]
-        # print('Updating', token)
+    for t in tokens:
+        print('Updating', t['symbol'])
 
-        try:
-            network = [ n[0] for n in networks if n[1] == t[0] ][0]
-        except:
-            raise Exception("Unknown network", t[0], "for erc20 token", token)
+        if t['chain'] not in networks:
+            print('Skipping, %s is disabled' % t['chain'])
+            continue
 
-        try:
-            info = [ i for i in infos[network] if i['symbol'] == token ][0]
-        except:
-            raise Exception("Unknown details for erc20 token", token)
-
-        key = "erc20:%s:%s" % (network, token)
+        key = "erc20:%s:%s" % (t['chain'], t['symbol'])
         supported.append(key)
         out = details['coins'].setdefault(key, {})
         out['type'] = 'erc20'
-        out['network'] = network
-        out['address'] = info['address']
+        out['network'] = t['chain']
+        out['address'] = t['address']
 
-        set_default(out, 'shortcut', token)
-        set_default(out, 'name', info['name'])
+        set_default(out, 'shortcut', t['symbol'])
+        set_default(out, 'name', t['name'])
         set_default(out, 't1_enabled', 'yes')
         set_default(out, 't2_enabled', 'yes')
         set_default(out, 'links', {})
 
-        if info['website']:
-            out['links']['Homepage'] = info['website']
-        if info.get('social', {}).get('github', None):
-            out['links']['Github'] = info['social']['github']
+        if t['website']:
+            out['links']['Homepage'] = t['website']
+        if t.get('social', {}).get('github', None):
+            out['links']['Github'] = t['social']['github']
 
-        update_marketcap(out, out.get('coinmarketcap_alias', token))
+        update_marketcap(out, out.get('coinmarketcap_alias', t['symbol']))
 
     check_unsupported(details, 'erc20:', supported)
 
@@ -274,7 +252,7 @@ if __name__ == '__main__':
 
     coinmarketcap_init()
     update_coins(details)
-    #update_erc20(details)
+    update_erc20(details)
     update_ethereum(details)
     update_mosaics(details)
     update_info(details)
