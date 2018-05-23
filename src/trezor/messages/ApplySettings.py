@@ -9,6 +9,7 @@ class ApplySettings(p.MessageType):
         3: ('use_passphrase', p.BoolType, 0),
         4: ('homescreen', p.BytesType, 0),
         5: ('passphrase_source', p.UVarintType, 0),
+        6: ('auto_lock_delay_ms', p.UVarintType, 0),
     }
     MESSAGE_WIRE_TYPE = 25
 
@@ -19,6 +20,7 @@ class ApplySettings(p.MessageType):
         use_passphrase: bool = None,
         homescreen: bytes = None,
         passphrase_source: int = None,
+        auto_lock_delay_ms: int = None,
         **kwargs,
     ):
         self.language = language
@@ -26,4 +28,5 @@ class ApplySettings(p.MessageType):
         self.use_passphrase = use_passphrase
         self.homescreen = homescreen
         self.passphrase_source = passphrase_source
+        self.auto_lock_delay_ms = auto_lock_delay_ms
         p.MessageType.__init__(self, **kwargs)
