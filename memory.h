@@ -111,10 +111,10 @@ void memory_protect(void);
 void memory_write_unlock(void);
 int memory_bootloader_hash(uint8_t *hash);
 
-inline void flash_write32(uint32_t addr, uint32_t word) {
+static inline void flash_write32(uint32_t addr, uint32_t word) {
 	*(volatile uint32_t *) FLASH_PTR(addr) = word;
 }
-inline void flash_write8(uint32_t addr, uint8_t byte) {
+static inline void flash_write8(uint32_t addr, uint8_t byte) {
 	*(volatile uint8_t *) FLASH_PTR(addr) = byte;
 }
 
