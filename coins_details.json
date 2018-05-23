@@ -95,18 +95,18 @@
             "links": {
                 "Homepage": "https://www.stellar.org"
             },
-            "marketcap_usd": 0,
+            "marketcap_usd": 5331912521,
             "name": "Stellar",
             "notes": "In development",
             "shortcut": "XLM",
-            "t1_enabled": "no",
+            "t1_enabled": "in progress",
             "t2_enabled": "in progress"
         },
         "coin2:XMR": {
             "links": {
                 "Homepage": "https://getmonero.org"
             },
-            "marketcap_usd": 0,
+            "marketcap_usd": 2831629582,
             "name": "Monero",
             "notes": "In development",
             "shortcut": "XMR",
@@ -118,10 +118,22 @@
             "links": {
                 "Homepage": "https://ripple.com"
             },
-            "marketcap_usd": 0,
+            "marketcap_usd": 24313181966,
             "name": "Ripple",
             "notes": "In development",
             "shortcut": "XRP",
+            "t1_enabled": "no",
+            "t2_enabled": "in progress",
+            "type": "coin"
+        },
+        "coin2:LSK": {
+            "links": {
+                "Homepage": "https://lisk.io/"
+            },
+            "marketcap_usd": 997454377,
+            "name": "Lisk",
+            "notes": "In development",
+            "shortcut": "LSK",
             "t1_enabled": "no",
             "t2_enabled": "in progress",
             "type": "coin"
