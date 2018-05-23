@@ -640,20 +640,6 @@ class ProtocolMixin(object):
         n = self._convert_prime(n)
         return self.call(proto.LiskGetPublicKey(address_n=n, show_display=show_display))
 
-    @expect(proto.LiskMessageSignature)
-    def lisk_sign_message(self, n, message):
-        n = self._convert_prime(n)
-        message = normalize_nfc(message)
-        return self.call(proto.LiskSignMessage(address_n=n, message=message))
-
-    def lisk_verify_message(self, pubkey, signature, message):
-        message = normalize_nfc(message)
-        try:
-            resp = self.call(proto.LiskVerifyMessage(signature=signature, public_key=pubkey, message=message))
-        except CallException as e:
-            resp = e
-        return isinstance(resp, proto.Success)
-
     @expect(proto.LiskSignedTx)
     def lisk_sign_tx(self, n, transaction):
         n = self._convert_prime(n)
@@ -1211,17 +1197,6 @@ class ProtocolMixin(object):
                                 "Received a signature before processing all operations.")
 
         return resp
-
-    @expect(proto.StellarMessageSignature)
-    def stellar_sign_message(self, address_n, message):
-        message = normalize_nfc(message)
-        return self.call(proto.StellarSignMessage(address_n=address_n, message=message))
-
-    def stellar_verify_message(self, pubkey_bytes, signature, message):
-        message = normalize_nfc(message)
-        resp = self.call(proto.StellarVerifyMessage(public_key=pubkey_bytes, message=message, signature=signature))
-
-        return isinstance(resp, proto.Success)
 
 
 class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):

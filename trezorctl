@@ -891,33 +891,6 @@ def lisk_get_public_key(connect, address, show_display):
     return output
 
 
-@cli.command(help='Sign message with Lisk address.')
-@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
-@click.argument('message')
-@click.pass_obj
-def lisk_sign_message(connect, address, message):
-    client = connect()
-    address_n = client.expand_path(address)
-    res = client.lisk_sign_message(address_n, message)
-    output = {
-        'message': message,
-        'address': res.address,
-        'signature': binascii.hexlify(res.signature).decode()
-    }
-    return output
-
-
-@cli.command(help='Verify message signed with Lisk address.')
-@click.argument('pubkey')
-@click.argument('signature')
-@click.argument('message')
-@click.pass_obj
-def lisk_verify_message(connect, pubkey, signature, message):
-    signature = bytes.fromhex(signature)
-    pubkey = bytes.fromhex(pubkey)
-    return connect().lisk_verify_message(pubkey, signature, message)
-
-
 @cli.command(help='Sign Lisk transaction.')
 @click.option('-n', '--address', required=True, help="BIP-32 path to signing key, e.g. m/44'/134'/0'/0'")
 @click.option('-f', '--file', type=click.File('r'), default='-', help='Transaction in JSON format')
@@ -985,30 +958,6 @@ def stellar_sign_message(connect, address, message):
     address_n = stellar.expand_path_or_default(client, address)
     response = client.stellar_sign_message(address_n, message)
     return base64.b64encode(response.signature)
-
-
-@cli.command(help='Verify that a signature is valid')
-@click.option('--message-is-b64/--no-message-is-b64', default=False, required=False, help="If set, the message argument will be interpreted as a base64-encoded string")
-@click.argument('address')
-@click.argument('signatureb64')
-@click.argument('message')
-@click.pass_obj
-def stellar_verify_message(connect, address, message_is_b64, signatureb64, message):
-    if message_is_b64:
-        message = base64.b64decode(message)
-    else:
-        message = message.encode('utf-8')
-
-    pubkey_bytes = stellar.address_to_public_key(address)
-
-    client = connect()
-    is_verified = client.stellar_verify_message(pubkey_bytes, base64.b64decode(signatureb64), message)
-
-    if is_verified:
-        return "Success: message verified"
-    else:
-        print("ERROR: invalid signature, verification failed")
-        sys.exit(1)
 
 
 @cli.command(help='Sign a base64-encoded transaction envelope')
