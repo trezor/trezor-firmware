@@ -47,14 +47,12 @@ class TestMsgGetaddress(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         assert self.client.get_address('Testnet', [111, 42]) == 'moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa'
 
-    @pytest.mark.skip_t2
     def test_bch(self):
         self.setup_mnemonic_allallall()
         assert self.client.get_address('Bcash', parse_path("44'/145'/0'/0/0")) == 'bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv'
         assert self.client.get_address('Bcash', parse_path("44'/145'/0'/0/1")) == 'bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4'
         assert self.client.get_address('Bcash', parse_path("44'/145'/0'/1/0")) == 'bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw'
 
-    @pytest.mark.skip_t2
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []

@@ -21,6 +21,7 @@ from .common import TrezorTest
 from trezorlib.tools import parse_path
 
 
+@pytest.mark.nem
 @pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMGetaddress(TrezorTest):
 

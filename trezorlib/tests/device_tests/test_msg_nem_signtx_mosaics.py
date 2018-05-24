@@ -24,6 +24,7 @@ from trezorlib.tools import parse_path
 
 
 # assertion data from T1
+@pytest.mark.nem
 @pytest.mark.skip_t2
 class TestMsgNEMSignTxMosaics(TrezorTest):
 

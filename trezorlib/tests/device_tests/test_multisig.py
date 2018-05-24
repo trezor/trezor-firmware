@@ -17,6 +17,7 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from binascii import hexlify, unhexlify
+import pytest
 
 from .common import TrezorTest
 from ..support import ckd_public as bip32
@@ -248,10 +249,8 @@ class TestMultisig(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        try:
+        with pytest.raises(CallException) as exc:
             self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
-        except CallException as exc:
-            assert exc.args[0] == proto.FailureType.DataError
-            assert exc.args[1] == 'Pubkey not found in multisig script'
-        else:
-            assert False  # exception expected
+
+        assert exc.value.args[0] == proto.FailureType.DataError
+        assert exc.value.args[1].endswith('Pubkey not found in multisig script')

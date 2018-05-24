@@ -19,6 +19,7 @@ from trezorlib import stellar
 import pytest
 
 
+@pytest.mark.stellar
 @pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarGetPublicKey(TrezorTest):
 

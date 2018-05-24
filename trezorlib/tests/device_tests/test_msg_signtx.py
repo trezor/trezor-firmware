@@ -17,8 +17,10 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from binascii import hexlify, unhexlify
+import pytest
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 from trezorlib import coins
 from trezorlib import messages as proto
@@ -517,12 +519,9 @@ class TestMsgSigntx(TrezorTest):
                 proto.Failure(code=proto.FailureType.NotEnoughFunds)
             ])
 
-            try:
+            with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
-            except CallException as e:
-                assert e.args[0] == proto.FailureType.NotEnoughFunds
-            else:
-                assert False  # types.FailureType.NotEnoughFunds expected
+            assert exc.value.args[0] == proto.FailureType.NotEnoughFunds
 
     def test_p2sh(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -626,13 +625,10 @@ class TestMsgSigntx(TrezorTest):
         assert hexlify(serialized_tx) == b'01000000021c032e5715d1da8115a2fe4f57699e15742fe113b0d2d1ca3b594649d322bec6010000006b483045022100f773c403b2f85a5c1d6c9c4ad69c43de66930fff4b1bc818eb257af98305546a0220443bde4be439f276a6ce793664b463580e210ec6c9255d68354449ac0443c76501210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6ffffffff6ea42cd8d9c8e5441c4c5f85bfe50311078730d2881494f11f4d2257777a4958010000006b48304502210090cff1c1911e771605358a8cddd5ae94c7b60cc96e50275908d9bf9d6367c79f02202bfa72e10260a146abd59d0526e1335bacfbb2b4401780e9e3a7441b0480c8da0121038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3ffffffff02a0860100000000001976a9142f4490d5263906e4887ca2996b9e207af3e7824088aca0860100000000001976a914812c13d97f9159e54e326b481b8f88a73df8507a88ac00000000'
 
         # Now run the attack, must trigger the exception
-        try:
+        with pytest.raises(CallException) as exc:
             self.client.sign_tx('Bitcoin', [inp1, inp2], [out1, out2], debug_processor=attack_processor)
-        except CallException as exc:
-            assert exc.args[0] == proto.FailureType.ProcessError
-            assert exc.args[1] == 'Transaction has changed during signing'
-        else:
-            assert False  # exception expected
+        assert exc.value.args[0] in (proto.FailureType.ProcessError, proto.FailureType.DataError)
+        assert exc.value.args[1].endswith('Transaction has changed during signing')
 
     def test_attack_change_input_address(self):
         # This unit test attempts to modify input address after the Trezor checked
@@ -704,13 +700,14 @@ class TestMsgSigntx(TrezorTest):
                 proto.Failure(code=proto.FailureType.ProcessError),
             ])
             # Now run the attack, must trigger the exception
-            try:
+            with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
-            except CallException as exc:
-                assert exc.args[0] == proto.FailureType.ProcessError
-                assert exc.args[1] == 'Transaction has changed during signing'
+
+            assert exc.value.args[0] == proto.FailureType.ProcessError
+            if TREZOR_VERSION == 1:
+                assert exc.value.args[1].endswith('Failed to compile input')
             else:
-                assert False  # exception expected
+                assert exc.value.args[1].endswith('Transaction has changed during signing')
 
     def test_spend_coinbase(self):
         # 25 TEST generated to m/1 (mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV)

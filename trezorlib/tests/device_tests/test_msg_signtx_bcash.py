@@ -29,7 +29,6 @@ from trezorlib.tools import parse_path
 TxApiBcash = coins.tx_api['Bcash']
 
 
-@pytest.mark.skip_t2
 class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_change(self):
@@ -224,16 +223,14 @@ class TestMsgSigntxBch(TrezorTest):
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1)),
-                proto.Failure(code=proto.FailureType.ProcessError),
+                proto.Failure(),
             ])
 
-            try:
+            with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Bcash', [inp1, inp2], [out1], debug_processor=attack_processor)
-            except CallException as exc:
-                assert exc.args[0] == proto.FailureType.ProcessError
-                assert exc.args[1] == 'Transaction has changed during signing'
-            else:
-                assert False  # exception expected
+
+            assert exc.value.args[0] in (proto.FailureType.ProcessError, proto.FailureType.DataError)
+            assert exc.value.args[1].endswith('Transaction has changed during signing')
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()

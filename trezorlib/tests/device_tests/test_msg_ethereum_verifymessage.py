@@ -21,6 +21,7 @@ import pytest
 from .common import TrezorTest
 
 
+@pytest.mark.ethereum
 @pytest.mark.skip_t2
 class TestMsgEthereumVerifymessage(TrezorTest):
 

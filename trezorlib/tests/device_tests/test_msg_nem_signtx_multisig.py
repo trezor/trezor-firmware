@@ -25,6 +25,7 @@ from trezorlib import nem
 
 
 # assertion data from T1
+@pytest.mark.nem
 @pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMSignTxMultisig(TrezorTest):
 

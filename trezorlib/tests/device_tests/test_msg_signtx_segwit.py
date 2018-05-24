@@ -16,9 +16,12 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from binascii import hexlify, unhexlify
+import pytest
 
-from .common import TrezorTest
 from ..support.ckd_public import deserialize
+from .conftest import TREZOR_VERSION
+from .common import TrezorTest
+
 from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.client import CallException
@@ -236,10 +239,10 @@ class TestMsgSigntxSegwit(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.Failure(code=proto.FailureType.ProcessError),
             ])
-            try:
+            with pytest.raises(CallException) as exc:
                 self.client.sign_tx('Testnet', [inp1], [out1, out2], debug_processor=attack_processor)
-            except CallException as exc:
-                assert exc.args[0] == proto.FailureType.ProcessError
-                assert exc.args[1] == 'Transaction has changed during signing'
+            assert exc.value.args[0] == proto.FailureType.ProcessError
+            if TREZOR_VERSION == 1:
+                assert exc.value.args[1].endswith("Failed to compile input")
             else:
-                assert False  # exception expected
+                assert exc.value.args[1].endswith('Transaction has changed during signing')

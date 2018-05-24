@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
-
 import pytest
 
 from .common import TrezorTest
@@ -33,6 +32,11 @@ class TestMsgRecoverydevice(TrezorTest):
                                    label='label',
                                    language='english',
                                    enforce_wordlist=True))
+
+        # click through confirmation
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.PinMatrixRequest)
 
@@ -92,6 +96,11 @@ class TestMsgRecoverydevice(TrezorTest):
                                    language='english',
                                    enforce_wordlist=True))
 
+        # click through confirmation
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         fakes = 0
         for _ in range(int(12 * 2)):
             assert isinstance(ret, proto.WordRequest)
@@ -136,6 +145,11 @@ class TestMsgRecoverydevice(TrezorTest):
                                    language='english',
                                    enforce_wordlist=True))
 
+        # click through confirmation
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         assert isinstance(ret, proto.WordRequest)
         for _ in range(int(12 * 2)):
             (word, pos) = self.client.debug.read_recovery_word()
@@ -153,6 +167,11 @@ class TestMsgRecoverydevice(TrezorTest):
                                    label='label',
                                    language='english',
                                    enforce_wordlist=True))
+
+        # click through confirmation
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.PinMatrixRequest)
 
