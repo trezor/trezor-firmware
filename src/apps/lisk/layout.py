@@ -10,10 +10,10 @@ from .helpers import get_vote_tx_text
 
 async def require_confirm_tx(ctx, to, value):
     content = Text('Confirm sending', ui.ICON_SEND,
-                    ui.BOLD, format_amount(value),
-                    ui.NORMAL, 'to',
-                    ui.MONO, *split_address(to),
-                    icon_color=ui.GREEN)
+                   ui.BOLD, format_amount(value),
+                   ui.NORMAL, 'to',
+                   ui.MONO, *split_address(to),
+                   icon_color=ui.GREEN)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
@@ -21,15 +21,15 @@ async def require_confirm_delegate_registration(ctx, delegate_name):
     content = Text('Confirm transaction', ui.ICON_SEND,
                    'Do you really want to',
                    'register a delegate?',
-                    ui.BOLD, *chunks(delegate_name, 20),
-                    icon_color=ui.GREEN)
+                   ui.BOLD, *chunks(delegate_name, 20),
+                   icon_color=ui.GREEN)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_vote_tx(ctx, votes):
     content = Text('Confirm transaction', ui.ICON_SEND,
-                    *get_vote_tx_text(votes),
-                    icon_color=ui.GREEN)
+                   *get_vote_tx_text(votes),
+                   icon_color=ui.GREEN)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
@@ -39,10 +39,10 @@ async def require_confirm_public_key(ctx, public_key):
 
 async def require_confirm_multisig(ctx, multisignature):
     content = Text('Confirm transaction', ui.ICON_SEND,
-                    ('Keys group length: %s' % len(multisignature.keys_group)),
-                    ('Life time: %s' % multisignature.life_time),
-                    ('Min: %s' % multisignature.min),
-                    icon_color=ui.GREEN)
+                   ('Keys group length: %s' % len(multisignature.keys_group)),
+                   ('Life time: %s' % multisignature.life_time),
+                   ('Min: %s' % multisignature.min),
+                   icon_color=ui.GREEN)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
