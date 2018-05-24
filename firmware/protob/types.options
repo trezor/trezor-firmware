@@ -4,10 +4,6 @@ HDNodeType.public_key			max_size:33
 
 HDNodePathType.address_n		max_count:8
 
-CoinType.coin_name			max_size:0
-CoinType.coin_shortcut			max_size:0
-CoinType.signed_message_header		max_size:0
-
 TxInputType.address_n			max_count:8
 TxInputType.prev_hash			max_size:32
 TxInputType.script_sig			max_size:1650
