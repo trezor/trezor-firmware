@@ -1,10 +1,10 @@
-from trezor.messages.StellarAccountMergeOp import StellarAccountMergeOp
+from apps.common import seed
+from apps.stellar.writers import *
+from apps.stellar.operations import serialize_op
+from apps.stellar.consts import op_wire_types
 from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.messages.StellarSignedTx import StellarSignedTx
-from trezor.messages import wire_types
-from .writers import *
-from ..common import seed
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
 
@@ -18,15 +18,18 @@ async def sign_tx_loop(ctx, msg: StellarSignTx):
     while True:
         req = signer.send(res)
         if isinstance(req, StellarTxOpRequest):
-            res = await ctx.call(req, wire_types.StellarAccountMergeOp)
+            res = await ctx.call(req, *op_wire_types)
         elif isinstance(req, StellarSignedTx):
             break
         else:
-            raise TypeError('Invalid Stellar signing instruction')
+            raise TypeError('Stellar: Invalid signing instruction')
     return req
 
 
 async def sign_tx(ctx, msg):
+    if msg.num_operations == 0:
+        raise ValueError('Stellar: At least one operation is required')
+
     network_passphrase_hash = sha256(msg.network_passphrase).digest()
 
     # Stellar transactions consist of sha256 of:
@@ -57,7 +60,9 @@ async def sign_tx(ctx, msg):
     write_uint32(w, msg.memo_type)
     if msg.memo_type == 1:  # nothing is needed for memo_type = 0
         # Text: 4 bytes (size) + up to 28 bytes
-        write_bytes(w, bytearray(msg.memo_text))  # todo trim to 28 bytes? yes max 28 bytes!
+        if len(msg.memo_text) > 28:
+            raise ValueError('Stellar: max length of a memo text is 28 bytes')
+        write_string(w, msg.memo_text)
     elif msg.memo_type == 2:
         # ID: 64 bit unsigned integer
         write_uint64(w, msg.memo_id)
@@ -68,10 +73,7 @@ async def sign_tx(ctx, msg):
     write_uint32(w, msg.num_operations)
     for i in range(msg.num_operations):
         op = yield StellarTxOpRequest()
-        # todo ask
-        # todo serialize OP
-        if isinstance(op, StellarAccountMergeOp):
-            serialize_account_merge_op(w, op)
+        serialize_op(w, op)
 
     # # Determine what type of network this transaction is for  - todo used for layout
     # if msg.network_passphrase == "Public Global Stellar Network ; September 2015":
@@ -96,14 +98,6 @@ async def sign_tx(ctx, msg):
     resp.signature = signature
 
     yield resp
-
-
-def serialize_account_merge_op(w, msg: StellarAccountMergeOp):
-    if not msg.source_account:
-        write_bool(w, False)  # todo move this to stellar_confirmSourceAccount
-    #else: todo ask and hash the address
-    write_uint32(w, 8)  # merge op todo
-    write_pubkey(w, msg.destination_account)
 
 
 def node_derive(root, address_n: list):

@@ -9,6 +9,15 @@ def write_uint64(w, n: int):
     write_bytes(w, ustruct.pack('>Q', n))
 
 
+def write_string(w, s: str):
+    write_uint32(w, len(s))
+    write_bytes(w, bytearray(s))
+    # if len isn't a multiple of 4, add padding bytes
+    reminder = len(s) % 4
+    if reminder:
+        write_bytes(w, bytearray([0] * (4 - reminder)))
+
+
 def write_bytes(w, buf: bytearray):
     w.extend(buf)
 
