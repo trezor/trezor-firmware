@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import requests
 import binascii
 from io import BytesIO
@@ -26,6 +27,8 @@ from .. import mapping
 from .. import messages
 from .. import protobuf
 from . import Transport, TransportException
+
+LOG = logging.getLogger(__name__)
 
 TREZORD_HOST = 'http://127.0.0.1:21325'
 
@@ -78,6 +81,8 @@ class BridgeTransport(Transport):
         self.session = None
 
     def write(self, msg):
+        LOG.debug("sending message: {}".format(msg.__class__.__name__),
+                  extra={'protobuf': msg})
         data = BytesIO()
         protobuf.dump_message(data, msg)
         ser = data.getvalue()
@@ -97,5 +102,7 @@ class BridgeTransport(Transport):
         (msg_type, datalen) = struct.unpack('>HL', data[:headerlen])
         data = BytesIO(data[headerlen:headerlen + datalen])
         msg = protobuf.load_message(data, mapping.get_class(msg_type))
+        LOG.debug("received message: {}".format(msg.__class__.__name__),
+                  extra={'protobuf': msg})
         self.response = None
         return msg
