@@ -67,8 +67,8 @@ def set_default(obj, key, default_value):
 def update_info(details):
     details['info']['updated_at'] = int(time.time())
     details['info']['updated_at_readable'] = time.asctime()
-    details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c['t1_enabled'] == 'yes'])
-    details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes'])
+    details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c['t1_enabled'] == 'yes' and not c.get('hidden', False)])
+    details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes' and not c.get('hidden', False)])
 
     try:
         details['info']['total_marketcap_usd'] = int(coinmarketcap_global()['data']['quotes']['USD']['total_market_cap'])
@@ -121,7 +121,13 @@ def update_erc20(details):
         'etc',
     ]
 
+    LATEST_T1 = 'https://raw.githubusercontent.com/trezor/trezor-mcu/v1.6.1/firmware/ethereum_tokens.c'
+    LATEST_T2 = 'https://raw.githubusercontent.com/trezor/trezor-core/v2.0.6/src/apps/ethereum/tokens.py'
+
     tokens = ethereum_tokens_gen.get_tokens()
+    tokens_t1 = requests.get(LATEST_T1).text
+    tokens_t2 = requests.get(LATEST_T2).text
+
     supported = []
     for t in tokens:
         print('Updating', t['symbol'])
@@ -139,9 +145,22 @@ def update_erc20(details):
 
         set_default(out, 'shortcut', t['symbol'])
         set_default(out, 'name', t['name'])
-        set_default(out, 't1_enabled', 'yes')
-        set_default(out, 't2_enabled', 'yes')
+        #set_default(out, 't1_enabled', 'yes')
+        #set_default(out, 't2_enabled', 'yes')
         set_default(out, 'links', {})
+
+        if t['symbol'] in tokens_t1:
+            out['t1_enabled'] = 'yes'
+        else:
+            out['t1_enabled'] = 'soon'
+
+        if t['symbol'] in tokens_t2:
+            out['t1_enabled'] = 'yes'
+        else:
+            out['t1_enabled'] = 'soon'
+
+        out['links']['MyCrypto Wallet'] = 'https://mycrypto.com'
+        out['links']['MyEtherWallet'] = 'https://www.myetherwallet.com'
 
         if t['website']:
             out['links']['Homepage'] = t['website']
@@ -232,17 +251,27 @@ def check_missing_details(details):
     for k in details['coins'].keys():
         coin = details['coins'][k]
 
+        if coin.get('hidden'):
+            continue
+
         if 'links' not in coin:
             print("%s: Missing links" % k)
             continue
         if 'Homepage' not in coin['links']:
             print("%s: Missing homepage" % k)
-        if coin['t1_enabled'] not in ('yes', 'no', 'planned', 'in progress'):
+        if coin['t1_enabled'] not in ('yes', 'no', 'planned', 'soon'):
             print("%s: Unknown t1_enabled" % k)
-        if coin['t2_enabled'] not in ('yes', 'no', 'planned', 'in progress'):
+        if coin['t2_enabled'] not in ('yes', 'no', 'planned', 'soon'):
             print("%s: Unknown t2_enabled" % k)
         if 'TREZOR Wallet' in coin['links'] and coin['links']['TREZOR Wallet'] != 'https://wallet.trezor.io':
             print("%s: Strange URL for TREZOR Wallet" % k)
+
+        for w in [ x.lower() for x in coin['links'].keys() ]:
+            if 'wallet' in w:
+                break
+        else:
+            if coin['t1_enabled'] == 'yes' or coin['t2_enabled'] == 'yes':
+                print("%s: Missing wallet" % k)
 
 if __name__ == '__main__':
     try:
