@@ -13,10 +13,8 @@ class TxOutputBinType(p.MessageType):
         self,
         amount: int = None,
         script_pubkey: bytes = None,
-        decred_script_version: int = None,
-        **kwargs,
-    ):
+        decred_script_version: int = None
+    ) -> None:
         self.amount = amount
         self.script_pubkey = script_pubkey
         self.decred_script_version = decred_script_version
-        p.MessageType.__init__(self, **kwargs)

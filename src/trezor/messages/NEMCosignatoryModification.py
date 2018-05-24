@@ -11,9 +11,7 @@ class NEMCosignatoryModification(p.MessageType):
     def __init__(
         self,
         type: int = None,
-        public_key: bytes = None,
-        **kwargs,
-    ):
+        public_key: bytes = None
+    ) -> None:
         self.type = type
         self.public_key = public_key
-        p.MessageType.__init__(self, **kwargs)

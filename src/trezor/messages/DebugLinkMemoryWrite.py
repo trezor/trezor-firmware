@@ -3,21 +3,19 @@ import protobuf as p
 
 
 class DebugLinkMemoryWrite(p.MessageType):
+    MESSAGE_WIRE_TYPE = 112
     FIELDS = {
         1: ('address', p.UVarintType, 0),
         2: ('memory', p.BytesType, 0),
         3: ('flash', p.BoolType, 0),
     }
-    MESSAGE_WIRE_TYPE = 112
 
     def __init__(
         self,
         address: int = None,
         memory: bytes = None,
-        flash: bool = None,
-        **kwargs,
-    ):
+        flash: bool = None
+    ) -> None:
         self.address = address
         self.memory = memory
         self.flash = flash
-        p.MessageType.__init__(self, **kwargs)

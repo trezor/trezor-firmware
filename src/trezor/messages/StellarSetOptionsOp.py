@@ -3,6 +3,7 @@ import protobuf as p
 
 
 class StellarSetOptionsOp(p.MessageType):
+    MESSAGE_WIRE_TYPE = 215
     FIELDS = {
         1: ('source_account', p.BytesType, 0),
         2: ('inflation_destination_account', p.BytesType, 0),
@@ -17,7 +18,6 @@ class StellarSetOptionsOp(p.MessageType):
         11: ('signer_key', p.BytesType, 0),
         12: ('signer_weight', p.UVarintType, 0),
     }
-    MESSAGE_WIRE_TYPE = 215
 
     def __init__(
         self,
@@ -32,9 +32,8 @@ class StellarSetOptionsOp(p.MessageType):
         home_domain: str = None,
         signer_type: int = None,
         signer_key: bytes = None,
-        signer_weight: int = None,
-        **kwargs,
-    ):
+        signer_weight: int = None
+    ) -> None:
         self.source_account = source_account
         self.inflation_destination_account = inflation_destination_account
         self.clear_flags = clear_flags
@@ -47,4 +46,3 @@ class StellarSetOptionsOp(p.MessageType):
         self.signer_type = signer_type
         self.signer_key = signer_key
         self.signer_weight = signer_weight
-        p.MessageType.__init__(self, **kwargs)

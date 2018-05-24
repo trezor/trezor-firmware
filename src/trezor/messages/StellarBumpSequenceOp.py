@@ -3,18 +3,16 @@ import protobuf as p
 
 
 class StellarBumpSequenceOp(p.MessageType):
+    MESSAGE_WIRE_TYPE = 221
     FIELDS = {
         1: ('source_account', p.BytesType, 0),
         2: ('bump_to', p.UVarintType, 0),
     }
-    MESSAGE_WIRE_TYPE = 221
 
     def __init__(
         self,
         source_account: bytes = None,
-        bump_to: int = None,
-        **kwargs,
-    ):
+        bump_to: int = None
+    ) -> None:
         self.source_account = source_account
         self.bump_to = bump_to
-        p.MessageType.__init__(self, **kwargs)

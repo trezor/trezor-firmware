@@ -9,8 +9,6 @@ class LiskDelegateType(p.MessageType):
 
     def __init__(
         self,
-        username: str = None,
-        **kwargs,
-    ):
+        username: str = None
+    ) -> None:
         self.username = username
-        p.MessageType.__init__(self, **kwargs)

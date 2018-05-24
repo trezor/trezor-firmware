@@ -4,18 +4,16 @@ from .HDNodeType import HDNodeType
 
 
 class PublicKey(p.MessageType):
+    MESSAGE_WIRE_TYPE = 12
     FIELDS = {
         1: ('node', HDNodeType, 0),  # required
         2: ('xpub', p.UnicodeType, 0),
     }
-    MESSAGE_WIRE_TYPE = 12
 
     def __init__(
         self,
         node: HDNodeType = None,
-        xpub: str = None,
-        **kwargs,
-    ):
+        xpub: str = None
+    ) -> None:
         self.node = node
         self.xpub = xpub
-        p.MessageType.__init__(self, **kwargs)

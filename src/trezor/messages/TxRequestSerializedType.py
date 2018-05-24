@@ -13,10 +13,8 @@ class TxRequestSerializedType(p.MessageType):
         self,
         signature_index: int = None,
         signature: bytes = None,
-        serialized_tx: bytes = None,
-        **kwargs,
-    ):
+        serialized_tx: bytes = None
+    ) -> None:
         self.signature_index = signature_index
         self.signature = signature
         self.serialized_tx = serialized_tx
-        p.MessageType.__init__(self, **kwargs)

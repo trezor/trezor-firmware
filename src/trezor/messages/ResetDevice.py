@@ -3,6 +3,7 @@ import protobuf as p
 
 
 class ResetDevice(p.MessageType):
+    MESSAGE_WIRE_TYPE = 14
     FIELDS = {
         1: ('display_random', p.BoolType, 0),
         2: ('strength', p.UVarintType, 0),  # default=256
@@ -13,7 +14,6 @@ class ResetDevice(p.MessageType):
         7: ('u2f_counter', p.UVarintType, 0),
         8: ('skip_backup', p.BoolType, 0),
     }
-    MESSAGE_WIRE_TYPE = 14
 
     def __init__(
         self,
@@ -24,9 +24,8 @@ class ResetDevice(p.MessageType):
         language: str = None,
         label: str = None,
         u2f_counter: int = None,
-        skip_backup: bool = None,
-        **kwargs,
-    ):
+        skip_backup: bool = None
+    ) -> None:
         self.display_random = display_random
         self.strength = strength
         self.passphrase_protection = passphrase_protection
@@ -35,4 +34,3 @@ class ResetDevice(p.MessageType):
         self.label = label
         self.u2f_counter = u2f_counter
         self.skip_backup = skip_backup
-        p.MessageType.__init__(self, **kwargs)

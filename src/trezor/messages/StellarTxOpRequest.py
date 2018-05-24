@@ -4,9 +4,3 @@ import protobuf as p
 
 class StellarTxOpRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 203
-
-    def __init__(
-        self,
-        **kwargs,
-    ):
-        p.MessageType.__init__(self, **kwargs)

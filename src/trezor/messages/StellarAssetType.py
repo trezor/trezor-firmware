@@ -13,10 +13,8 @@ class StellarAssetType(p.MessageType):
         self,
         type: int = None,
         code: str = None,
-        issuer: bytes = None,
-        **kwargs,
-    ):
+        issuer: bytes = None
+    ) -> None:
         self.type = type
         self.code = code
         self.issuer = issuer
-        p.MessageType.__init__(self, **kwargs)

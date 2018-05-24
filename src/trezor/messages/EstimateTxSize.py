@@ -3,21 +3,19 @@ import protobuf as p
 
 
 class EstimateTxSize(p.MessageType):
+    MESSAGE_WIRE_TYPE = 43
     FIELDS = {
         1: ('outputs_count', p.UVarintType, 0),  # required
         2: ('inputs_count', p.UVarintType, 0),  # required
         3: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
     }
-    MESSAGE_WIRE_TYPE = 43
 
     def __init__(
         self,
         outputs_count: int = None,
         inputs_count: int = None,
-        coin_name: str = None,
-        **kwargs,
-    ):
+        coin_name: str = None
+    ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
         self.coin_name = coin_name
-        p.MessageType.__init__(self, **kwargs)

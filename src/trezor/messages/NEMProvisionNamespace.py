@@ -15,11 +15,9 @@ class NEMProvisionNamespace(p.MessageType):
         namespace: str = None,
         parent: str = None,
         sink: str = None,
-        fee: int = None,
-        **kwargs,
-    ):
+        fee: int = None
+    ) -> None:
         self.namespace = namespace
         self.parent = parent
         self.sink = sink
         self.fee = fee
-        p.MessageType.__init__(self, **kwargs)

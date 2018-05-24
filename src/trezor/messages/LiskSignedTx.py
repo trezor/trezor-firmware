@@ -3,15 +3,13 @@ import protobuf as p
 
 
 class LiskSignedTx(p.MessageType):
+    MESSAGE_WIRE_TYPE = 117
     FIELDS = {
         1: ('signature', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 117
 
     def __init__(
         self,
-        signature: bytes = None,
-        **kwargs,
-    ):
+        signature: bytes = None
+    ) -> None:
         self.signature = signature
-        p.MessageType.__init__(self, **kwargs)

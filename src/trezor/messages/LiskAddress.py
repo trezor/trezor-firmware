@@ -3,15 +3,13 @@ import protobuf as p
 
 
 class LiskAddress(p.MessageType):
+    MESSAGE_WIRE_TYPE = 115
     FIELDS = {
         1: ('address', p.UnicodeType, 0),
     }
-    MESSAGE_WIRE_TYPE = 115
 
     def __init__(
         self,
-        address: str = None,
-        **kwargs,
-    ):
+        address: str = None
+    ) -> None:
         self.address = address
-        p.MessageType.__init__(self, **kwargs)

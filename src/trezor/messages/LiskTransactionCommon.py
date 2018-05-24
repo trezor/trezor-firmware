@@ -26,9 +26,8 @@ class LiskTransactionCommon(p.MessageType):
         requester_public_key: bytes = None,
         signature: bytes = None,
         timestamp: int = None,
-        asset: LiskTransactionAsset = None,
-        **kwargs,
-    ):
+        asset: LiskTransactionAsset = None
+    ) -> None:
         self.type = type
         self.amount = amount
         self.fee = fee
@@ -38,4 +37,3 @@ class LiskTransactionCommon(p.MessageType):
         self.signature = signature
         self.timestamp = timestamp
         self.asset = asset
-        p.MessageType.__init__(self, **kwargs)

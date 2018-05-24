@@ -14,10 +14,8 @@ class NEMMosaicCreation(p.MessageType):
         self,
         definition: NEMMosaicDefinition = None,
         sink: str = None,
-        fee: int = None,
-        **kwargs,
-    ):
+        fee: int = None
+    ) -> None:
         self.definition = definition
         self.sink = sink
         self.fee = fee
-        p.MessageType.__init__(self, **kwargs)

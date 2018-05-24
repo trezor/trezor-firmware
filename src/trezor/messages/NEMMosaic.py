@@ -13,10 +13,8 @@ class NEMMosaic(p.MessageType):
         self,
         namespace: str = None,
         mosaic: str = None,
-        quantity: int = None,
-        **kwargs,
-    ):
+        quantity: int = None
+    ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
         self.quantity = quantity
-        p.MessageType.__init__(self, **kwargs)

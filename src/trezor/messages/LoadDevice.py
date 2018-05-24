@@ -4,6 +4,7 @@ from .HDNodeType import HDNodeType
 
 
 class LoadDevice(p.MessageType):
+    MESSAGE_WIRE_TYPE = 13
     FIELDS = {
         1: ('mnemonic', p.UnicodeType, 0),
         2: ('node', HDNodeType, 0),
@@ -14,7 +15,6 @@ class LoadDevice(p.MessageType):
         7: ('skip_checksum', p.BoolType, 0),
         8: ('u2f_counter', p.UVarintType, 0),
     }
-    MESSAGE_WIRE_TYPE = 13
 
     def __init__(
         self,
@@ -25,9 +25,8 @@ class LoadDevice(p.MessageType):
         language: str = None,
         label: str = None,
         skip_checksum: bool = None,
-        u2f_counter: int = None,
-        **kwargs,
-    ):
+        u2f_counter: int = None
+    ) -> None:
         self.mnemonic = mnemonic
         self.node = node
         self.pin = pin
@@ -36,4 +35,3 @@ class LoadDevice(p.MessageType):
         self.label = label
         self.skip_checksum = skip_checksum
         self.u2f_counter = u2f_counter
-        p.MessageType.__init__(self, **kwargs)

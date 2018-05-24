@@ -3,15 +3,13 @@ import protobuf as p
 
 
 class SelfTest(p.MessageType):
+    MESSAGE_WIRE_TYPE = 32
     FIELDS = {
         1: ('payload', p.BytesType, 0),
     }
-    MESSAGE_WIRE_TYPE = 32
 
     def __init__(
         self,
-        payload: bytes = None,
-        **kwargs,
-    ):
+        payload: bytes = None
+    ) -> None:
         self.payload = payload
-        p.MessageType.__init__(self, **kwargs)

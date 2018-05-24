@@ -3,15 +3,13 @@ import protobuf as p
 
 
 class Address(p.MessageType):
+    MESSAGE_WIRE_TYPE = 30
     FIELDS = {
         1: ('address', p.UnicodeType, 0),  # required
     }
-    MESSAGE_WIRE_TYPE = 30
 
     def __init__(
         self,
-        address: str = None,
-        **kwargs,
-    ):
+        address: str = None
+    ) -> None:
         self.address = address
-        p.MessageType.__init__(self, **kwargs)
