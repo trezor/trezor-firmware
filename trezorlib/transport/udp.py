@@ -124,3 +124,6 @@ class UdpTransport(Transport):
         if len(chunk) != 64:
             raise TransportException('Unexpected chunk size: %d' % len(chunk))
         return bytearray(chunk)
+
+
+TRANSPORT = UdpTransport

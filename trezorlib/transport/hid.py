@@ -180,3 +180,6 @@ def is_wirelink(dev):
 
 def is_debuglink(dev):
     return (dev['usage_page'] == 0xFF01 or dev['interface_number'] == 1)
+
+
+TRANSPORT = HidTransport

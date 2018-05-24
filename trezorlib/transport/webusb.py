@@ -188,3 +188,6 @@ def is_vendor_class(dev):
 
 def dev_to_str(dev):
     return ':'.join(str(x) for x in ['%03i' % (dev.getBusNumber(), )] + dev.getPortNumberList())
+
+
+TRANSPORT = WebUsbTransport

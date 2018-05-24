@@ -150,6 +150,7 @@ class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
     def __init__(self, transport, **kwargs):
+        LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         super(BaseClient, self).__init__()  # *args, **kwargs)
 

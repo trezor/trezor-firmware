@@ -106,3 +106,6 @@ class BridgeTransport(Transport):
                   extra={'protobuf': msg})
         self.response = None
         return msg
+
+
+TRANSPORT = BridgeTransport
