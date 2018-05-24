@@ -19,6 +19,8 @@
 
 #include "flash.h"
 
+#include "embed/extmod/trezorobj.h"
+
 /// class FlashOTP:
 ///     '''
 ///     '''
@@ -41,8 +43,8 @@ STATIC mp_obj_t mod_trezorio_FlashOTP_make_new(const mp_obj_type_t *type, size_t
 ///     Writes data to OTP flash
 ///     '''
 STATIC mp_obj_t mod_trezorio_FlashOTP_write(size_t n_args, const mp_obj_t *args) {
-    uint8_t block = mp_obj_get_int(args[1]);
-    uint8_t offset = mp_obj_get_int(args[2]);
+    uint8_t block = trezor_obj_get_uint8(args[1]);
+    uint8_t offset = trezor_obj_get_uint8(args[2]);
     mp_buffer_info_t data;
     mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
     if (sectrue != flash_otp_write(block, offset, data.buf, data.len)) {
@@ -57,8 +59,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FlashOTP_write_obj, 4, 4
 ///     Reads data from OTP flash
 ///     '''
 STATIC mp_obj_t mod_trezorio_FlashOTP_read(size_t n_args, const mp_obj_t *args) {
-    uint8_t block = mp_obj_get_int(args[1]);
-    uint8_t offset = mp_obj_get_int(args[2]);
+    uint8_t block = trezor_obj_get_uint8(args[1]);
+    uint8_t offset = trezor_obj_get_uint8(args[2]);
     mp_buffer_info_t data;
     mp_get_buffer_raise(args[3], &data, MP_BUFFER_WRITE);
     if (sectrue != flash_otp_read(block, offset, data.buf, data.len)) {
@@ -73,7 +75,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FlashOTP_read_obj, 4, 4,
 ///     Lock OTP flash block
 ///     '''
 STATIC mp_obj_t mod_trezorio_FlashOTP_lock(mp_obj_t self, mp_obj_t block) {
-    uint8_t b = mp_obj_get_int(block);
+    uint8_t b = trezor_obj_get_uint8(block);
     if (sectrue != flash_otp_lock(b)) {
         mp_raise_ValueError("lock failed");
     }
@@ -86,7 +88,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FlashOTP_lock_obj, mod_trezorio_Fl
 ///     Is OTP flash block locked?
 ///     '''
 STATIC mp_obj_t mod_trezorio_FlashOTP_is_locked(mp_obj_t self, mp_obj_t block) {
-    uint8_t b = mp_obj_get_int(block);
+    uint8_t b = trezor_obj_get_uint8(block);
     return flash_otp_is_locked(b) ? mp_const_true : mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FlashOTP_is_locked_obj, mod_trezorio_FlashOTP_is_locked);

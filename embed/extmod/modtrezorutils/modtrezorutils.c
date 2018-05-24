@@ -23,6 +23,8 @@
 
 #if MICROPY_PY_TREZORUTILS
 
+#include "embed/extmod/trezorobj.h"
+
 #include <string.h>
 #include "common.h"
 
@@ -67,22 +69,14 @@ STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
 
     mp_buffer_info_t dst;
     mp_get_buffer_raise(args[0], &dst, MP_BUFFER_WRITE);
-    int dst_ofs = mp_obj_get_int(args[1]);
-    if (dst_ofs < 0) {
-        mp_raise_ValueError("Invalid dst offset (has to be >= 0)");
-    }
+    uint32_t dst_ofs = trezor_obj_get_uint(args[1]);
 
     mp_buffer_info_t src;
     mp_get_buffer_raise(args[2], &src, MP_BUFFER_READ);
-    int src_ofs = mp_obj_get_int(args[3]);
-    if (src_ofs < 0) {
-        mp_raise_ValueError("Invalid src offset (has to be >= 0)");
-    }
+    uint32_t src_ofs = trezor_obj_get_uint(args[3]);
 
-    int n = mp_obj_get_int(args[4]);
-    if (n < 0) {
-        mp_raise_ValueError("Invalid byte count (has to be >= 0)");
-    }
+    uint32_t n = trezor_obj_get_uint(args[4]);
+
     size_t dst_rem = (dst_ofs < dst.len) ? dst.len - dst_ofs : 0;
     size_t src_rem = (src_ofs < src.len) ? src.len - src_ofs : 0;
     size_t ncpy = MIN(n, MIN(src_rem, dst_rem));

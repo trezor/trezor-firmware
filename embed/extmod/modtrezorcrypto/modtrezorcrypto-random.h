@@ -19,6 +19,8 @@
 
 #include "py/objstr.h"
 
+#include "embed/extmod/trezorobj.h"
+
 #include "rand.h"
 
 /// def uniform(n: int) -> int:
@@ -26,7 +28,7 @@
 ///     Compute uniform random number from interval 0 ... n - 1.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_random_uniform(mp_obj_t n) {
-    uint32_t nn = mp_obj_get_int_truncated(n);
+    uint32_t nn = trezor_obj_get_uint(n);
     if (nn == 0) {
         mp_raise_ValueError("Maximum can't be zero");
     }
@@ -39,7 +41,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj, mod_trezor
 ///     Generate random bytes sequence of length len.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_random_bytes(mp_obj_t len) {
-    uint32_t l = mp_obj_get_int(len);
+    uint32_t l = trezor_obj_get_uint(len);
     if (l > 1024) {
         mp_raise_ValueError("Maximum requested size is 1024");
     }

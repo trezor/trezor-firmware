@@ -19,6 +19,8 @@
 
 #include "sdcard.h"
 
+#include "embed/extmod/trezorobj.h"
+
 /// class SDCard:
 ///     '''
 ///     '''
@@ -79,9 +81,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_SDCard_capacity_obj, mod_trezorio_
 ///     Returns True if in case of success, False otherwise.
 ///     '''
 STATIC mp_obj_t mod_trezorio_SDCard_read(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
+    uint32_t block = trezor_obj_get_uint(block_num);
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
-    return mp_obj_new_bool(sdcard_read_blocks(bufinfo.buf, mp_obj_get_int(block_num), bufinfo.len / SDCARD_BLOCK_SIZE));
+    return mp_obj_new_bool(sdcard_read_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_read_obj, mod_trezorio_SDCard_read);
 
@@ -92,9 +95,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_read_obj, mod_trezorio_SDCa
 ///     Returns True if in case of success, False otherwise.
 ///     '''
 STATIC mp_obj_t mod_trezorio_SDCard_write(mp_obj_t self, mp_obj_t block_num, mp_obj_t buf) {
+    uint32_t block = trezor_obj_get_uint(block_num);
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
-    return mp_obj_new_bool(sdcard_write_blocks(bufinfo.buf, mp_obj_get_int(block_num), bufinfo.len / SDCARD_BLOCK_SIZE));
+    return mp_obj_new_bool(sdcard_write_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_write_obj, mod_trezorio_SDCard_write);
 
