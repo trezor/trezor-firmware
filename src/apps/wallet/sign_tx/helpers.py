@@ -1,4 +1,3 @@
-from trezor.messages.CoinType import CoinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxInputType import TxInputType
@@ -8,20 +7,22 @@ from trezor.messages.TransactionType import TransactionType
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXEXTRADATA, TXFINISHED
 from trezor.messages import InputScriptType
 
+from apps.common.coins import CoinInfo
+
 # Machine instructions
 # ===
 
 
 class UiConfirmOutput:
 
-    def __init__(self, output: TxOutputType, coin: CoinType):
+    def __init__(self, output: TxOutputType, coin: CoinInfo):
         self.output = output
         self.coin = coin
 
 
 class UiConfirmTotal:
 
-    def __init__(self, spending: int, fee: int, coin: CoinType):
+    def __init__(self, spending: int, fee: int, coin: CoinInfo):
         self.spending = spending
         self.fee = fee
         self.coin = coin
@@ -29,20 +30,20 @@ class UiConfirmTotal:
 
 class UiConfirmFeeOverThreshold:
 
-    def __init__(self, fee: int, coin: CoinType):
+    def __init__(self, fee: int, coin: CoinInfo):
         self.fee = fee
         self.coin = coin
 
 
-def confirm_output(output: TxOutputType, coin: CoinType):
+def confirm_output(output: TxOutputType, coin: CoinInfo):
     return (yield UiConfirmOutput(output, coin))
 
 
-def confirm_total(spending: int, fee: int, coin: CoinType):
+def confirm_total(spending: int, fee: int, coin: CoinInfo):
     return (yield UiConfirmTotal(spending, fee, coin))
 
 
-def confirm_feeoverthreshold(fee: int, coin: CoinType):
+def confirm_feeoverthreshold(fee: int, coin: CoinInfo):
     return (yield UiConfirmFeeOverThreshold(fee, coin))
 
 

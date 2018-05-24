@@ -17,6 +17,7 @@ class TransactionType(p.MessageType):
         8: ('extra_data', p.BytesType, 0),
         9: ('extra_data_len', p.UVarintType, 0),
         10: ('decred_expiry', p.UVarintType, 0),
+        11: ('overwintered', p.BoolType, 0),
     }
 
     def __init__(
@@ -31,6 +32,7 @@ class TransactionType(p.MessageType):
         extra_data: bytes = None,
         extra_data_len: int = None,
         decred_expiry: int = None,
+        overwintered: bool = None,
         **kwargs,
     ):
         self.version = version
@@ -43,4 +45,5 @@ class TransactionType(p.MessageType):
         self.extra_data = extra_data
         self.extra_data_len = extra_data_len
         self.decred_expiry = decred_expiry
+        self.overwintered = overwintered
         p.MessageType.__init__(self, **kwargs)

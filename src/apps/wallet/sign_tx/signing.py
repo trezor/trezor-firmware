@@ -10,6 +10,7 @@ from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
 from apps.common import address_type, coins
+from apps.common.coins import CoinInfo
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
 from apps.wallet.sign_tx.scripts import *
@@ -418,7 +419,7 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
 # ===
 
 
-def get_hash_type(coin: CoinType) -> int:
+def get_hash_type(coin: CoinInfo) -> int:
     SIGHASH_FORKID = const(0x40)
     SIGHASH_ALL = const(0x01)
     hashtype = SIGHASH_ALL
@@ -441,7 +442,7 @@ def get_tx_header(tx: SignTx, segwit: bool = False):
 # ===
 
 
-def output_derive_script(o: TxOutputType, coin: CoinType, root: bip32.HDNode) -> bytes:
+def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) -> bytes:
 
     if o.script_type == OutputScriptType.PAYTOOPRETURN:
         # op_return output
@@ -479,7 +480,7 @@ def output_derive_script(o: TxOutputType, coin: CoinType, root: bip32.HDNode) ->
     raise SigningError(FailureType.DataError, 'Invalid address type')
 
 
-def get_address_for_change(o: TxOutputType, coin: CoinType, root: bip32.HDNode):
+def get_address_for_change(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode):
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         input_script_type = InputScriptType.SPENDADDRESS
     elif o.script_type == OutputScriptType.PAYTOMULTISIG:
@@ -511,7 +512,7 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
 # ===
 
 
-def input_derive_script(coin: CoinType, i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
+def input_derive_script(coin: CoinInfo, i: TxInputType, pubkey: bytes, signature: bytes=None) -> bytes:
     if i.script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
         return input_script_p2pkh_or_p2sh(

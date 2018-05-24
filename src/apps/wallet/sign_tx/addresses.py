@@ -4,10 +4,10 @@ from trezor.crypto.hashlib import sha256, ripemd160
 from trezor.crypto import base58, bech32
 from trezor.utils import ensure
 
-from trezor.messages.CoinType import CoinType
 from trezor.messages import FailureType
 from trezor.messages import InputScriptType
 
+from apps.common.coins import CoinInfo
 from apps.common.address_type import addrtype_bytes
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.multisig import *
@@ -20,7 +20,7 @@ class AddressError(Exception):
     pass
 
 
-def get_address(script_type: InputScriptType, coin: CoinType, node, multisig=None) -> str:
+def get_address(script_type: InputScriptType, coin: CoinInfo, node, multisig=None) -> str:
 
     if script_type == InputScriptType.SPENDADDRESS or script_type == InputScriptType.SPENDMULTISIG:
         if multisig:  # p2sh multisig
