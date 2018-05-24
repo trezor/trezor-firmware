@@ -277,4 +277,4 @@ def by_address_type(address_type):
     for c in COINS:
         if c.address_type == address_type:
             return c
-    raise ValueError('Unknown coin address type %d' % version)
+    raise ValueError('Unknown coin address type %d' % address_type)
