@@ -227,7 +227,6 @@ class TestMsgSigntxBch(TrezorTest):
             assert exc.value.args[0] in (proto.FailureType.ProcessError, proto.FailureType.DataError)
             assert exc.value.args[1].endswith('Transaction has changed during signing')
 
-
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
