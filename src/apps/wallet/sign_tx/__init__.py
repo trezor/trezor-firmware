@@ -1,7 +1,7 @@
 from trezor import ui, wire
-from trezor.messages.RequestType import TXFINISHED
 from trezor.messages.wire_types import TxAck
 from apps.common import seed
+from apps.wallet.sign_tx.helpers import *
 
 
 @ui.layout
@@ -26,17 +26,17 @@ async def sign_tx(ctx, msg):
             raise wire.Error(*e.args)
         except signing.Bip143Error as e:
             raise wire.Error(*e.args)
-        if req.__qualname__ == 'TxRequest':
+        if isinstance(req, TxRequest):
             if req.request_type == TXFINISHED:
                 break
             res = await ctx.call(req, TxAck)
-        elif req.__qualname__ == 'UiConfirmOutput':
+        elif isinstance(req, UiConfirmOutput):
             res = await layout.confirm_output(ctx, req.output, req.coin)
             progress.report_init()
-        elif req.__qualname__ == 'UiConfirmTotal':
+        elif isinstance(req, UiConfirmTotal):
             res = await layout.confirm_total(ctx, req.spending, req.fee, req.coin)
             progress.report_init()
-        elif req.__qualname__ == 'UiConfirmFeeOverThreshold':
+        elif isinstance(req, UiConfirmFeeOverThreshold):
             res = await layout.confirm_feeoverthreshold(ctx, req.fee, req.coin)
             progress.report_init()
         else:

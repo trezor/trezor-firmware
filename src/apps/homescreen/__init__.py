@@ -3,6 +3,7 @@ from trezor.utils import symbol, model
 from trezor.wire import register, protobuf_workflow
 from trezor.messages import wire_types
 from trezor.messages.Features import Features
+from trezor.messages.Initialize import Initialize
 from trezor.messages.Success import Success
 
 from apps.common import storage, cache
@@ -10,7 +11,7 @@ from apps.common import storage, cache
 
 async def respond_Features(ctx, msg):
 
-    if msg.__qualname__ == 'Initialize':
+    if isinstance(msg, Initialize):
         if msg.state is None or bytes(msg.state) != cache.get_state(state=bytes(msg.state)):
             cache.clear()
 
