@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor.crypto.hashlib import sha256, ripemd160
-from trezor.crypto import base58, bech32
+from trezor.crypto import base58, bech32, cashaddr
 from trezor.utils import ensure
 
 from trezor.messages import FailureType
@@ -34,13 +34,19 @@ def get_address(script_type: InputScriptType, coin: CoinInfo, node, multisig=Non
                                    'Multisig not enabled on this coin')
 
             pubkeys = multisig_get_pubkeys(multisig)
-            return address_multisig_p2sh(pubkeys, multisig.m, coin.address_type_p2sh)
+            address = address_multisig_p2sh(pubkeys, multisig.m, coin.address_type_p2sh)
+            if coin.cashaddr_prefix is not None:
+                address = address_to_cashaddr(address, coin)
+            return address
         if script_type == InputScriptType.SPENDMULTISIG:
             raise AddressError(FailureType.ProcessError,
                                'Multisig details required')
 
         # p2pkh
-        return node.address(coin.address_type)
+        address = node.address(coin.address_type)
+        if coin.cashaddr_prefix is not None:
+            address = address_to_cashaddr(address, coin)
+        return address
 
     elif script_type == InputScriptType.SPENDWITNESS:  # native p2wpkh or native p2wsh
         if not coin.segwit or not coin.bech32_prefix:
@@ -144,6 +150,18 @@ def decode_bech32_address(prefix: str, address: str) -> bytes:
         raise AddressError(FailureType.ProcessError,
                            'Invalid address witness program')
     return bytes(raw)
+
+
+def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
+    raw = base58.decode_check(address)
+    version, data = raw[0], raw[1:]
+    if version == coin.address_type:
+        version = cashaddr.ADDRESS_TYPE_P2KH
+    elif version == coin.address_type_p2sh:
+        version = cashaddr.ADDRESS_TYPE_P2SH
+    else:
+        raise ValueError('Unknown cashaddr address type')
+    return cashaddr.encode(coin.cashaddr_prefix, version, data)
 
 
 def ecdsa_hash_pubkey(pubkey: bytes) -> bytes:

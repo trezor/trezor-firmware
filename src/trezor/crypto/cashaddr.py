@@ -21,6 +21,8 @@
 # THE SOFTWARE.
 
 CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l'
+ADDRESS_TYPE_P2KH = 0
+ADDRESS_TYPE_P2SH = 8
 
 
 def cashaddr_polymod(values):

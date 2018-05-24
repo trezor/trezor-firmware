@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor.crypto import base58, bip32, der
+from trezor.crypto import base58, bip32, der, cashaddr
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
@@ -465,7 +465,18 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
         witprog = decode_bech32_address(coin.bech32_prefix, o.address)
         return output_script_native_p2wpkh_or_p2wsh(witprog)
 
-    raw_address = base58.decode_check(o.address)
+    if coin.cashaddr_prefix is not None and o.address.startswith(coin.cashaddr_prefix + ':'):
+        prefix, addr = o.address.split(':')
+        version, data = cashaddr.decode(prefix, addr)
+        if version == cashaddr.ADDRESS_TYPE_P2KH:
+            version = coin.address_type
+        elif version == cashaddr.ADDRESS_TYPE_P2SH:
+            version = coin.address_type_p2sh
+        else:
+            raise ValueError('Unknown cashaddr address type')
+        raw_address = bytes([version]) + data
+    else:
+        raw_address = base58.decode_check(o.address)
 
     if address_type.check(coin.address_type, raw_address):
         # p2pkh
