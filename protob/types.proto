@@ -162,24 +162,6 @@ message HDNodePathType {
 }
 
 /**
- * Structure representing Coin
- * @used_in Features
- */
-message CoinType {
-	optional string coin_name = 1;
-	optional string coin_shortcut = 2;
-	optional uint32 address_type = 3 [default=0];
-	optional uint64 maxfee_kb = 4;
-	optional uint32 address_type_p2sh = 5 [default=5];
-	optional string signed_message_header = 8;
-	optional uint32 xpub_magic = 9 [default=76067358];	// default=0x0488b21e
-	optional uint32 xprv_magic = 10 [default=76066276];	// default=0x0488ade4
-	optional bool segwit = 11;
-	optional uint32 forkid = 12;
-	optional bool force_bip143 = 13;
-}
-
-/**
  * Type of redeem script used in input
  * @used_in TxInputType
  */
