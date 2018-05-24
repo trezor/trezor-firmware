@@ -24,7 +24,6 @@ from trezorlib.client import CallException
 TxApiBcash = coins.tx_api['Bcash']
 
 
-@pytest.mark.skip_t2
 class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_change(self):
