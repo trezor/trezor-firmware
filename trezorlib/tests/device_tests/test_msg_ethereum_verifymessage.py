@@ -19,23 +19,20 @@ from .common import *
 
 
 @pytest.mark.ethereum
-@pytest.mark.skip_t2
 class TestMsgEthereumVerifymessage(TrezorTest):
+
+    ADDRESS = b'cb3864960e8db1a751212c580af27ee8867d688f'
+    VECTORS = [
+        ('This is an example of a signed message.', b'b7837058907192dbc9427bf57d93a0acca3816c92927a08be573b785f2d72dab65dad9c92fbe03a358acdb455eab2107b869945d11f4e353d9cc6ea957d08a871b'),
+        ('VeryLongMessage!' * 64, b'da2b73b0170479c2bfba3dd4839bf0d67732a44df8c873f3f3a2aca8a57d7bdc0b5d534f54c649e2d44135717001998b176d3cd1212366464db51f5838430fb31c'),
+    ]
 
     def test_verify(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        res = self.client.ethereum_verify_message(
-            unhexlify('cb3864960e8db1a751212c580af27ee8867d688f'),
-            unhexlify('95b64a7b3aa492f0cc1668a24097004562cc2b4f0e755e3c0d60dd791b9f9e285f95b618258ff97036b8419d0a0dd1af3751c625b4d248ee6deff84eba21b8ee1c'),
-            'This is an example of a signed message.'
-        )
-        assert res is True
-
-    def test_verify_long(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-        ret = self.client.ethereum_verify_message(
-            unhexlify('cb3864960e8db1a751212c580af27ee8867d688f'),
-            unhexlify('70d03c8447b64489e80ae44ce4f1a543e8eb5dd9e9a19c4743ce95fbd9b8234b2d2a16db87cee857f5b474107ad2c0c0c86118f8a33d5df3d98b766be92d71331b'),
-            'VeryLongMessage!' * 64
-        )
-        assert ret is True
+        for msg, sig in self.VECTORS:
+            res = self.client.ethereum_verify_message(
+                unhexlify(self.ADDRESS),
+                unhexlify(sig),
+                msg
+            )
+            assert res is True
