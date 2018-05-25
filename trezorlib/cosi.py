@@ -30,6 +30,10 @@ def verify(signature, digest, pub_key):
     _ed25519.checkvalid(signature, digest, pub_key)
 
 
+def pubkey_from_privkey(privkey):
+    return _ed25519.publickey(privkey)
+
+
 def sign_with_privkey(digest, privkey, global_pubkey, nonce, global_commit):
     h = _ed25519.H(privkey)
     b = _ed25519.b
