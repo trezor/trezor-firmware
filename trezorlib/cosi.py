@@ -2,40 +2,40 @@ import sys
 from functools import reduce
 import binascii
 
-from trezorlib import ed25519raw
+from trezorlib import _ed25519
 
 
 def combine_keys(pks):
-    P = [ed25519raw.decodepoint(pk) for pk in pks]
-    combine = reduce(ed25519raw.edwards, P)
-    return ed25519raw.encodepoint(combine)
+    P = [_ed25519.decodepoint(pk) for pk in pks]
+    combine = reduce(_ed25519.edwards, P)
+    return _ed25519.encodepoint(combine)
 
 
 def combine_sig(R, sigs):
-    S = [ed25519raw.decodeint(si) for si in sigs]
-    s = sum(S) % ed25519raw.l
-    sig = R + ed25519raw.encodeint(s)
+    S = [_ed25519.decodeint(si) for si in sigs]
+    s = sum(S) % _ed25519.l
+    sig = R + _ed25519.encodeint(s)
     return sig
 
 
 def get_nonce(sk, data, ctr):
-    h = ed25519raw.H(sk)
-    b = ed25519raw.b
-    r = ed25519raw.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
-    R = ed25519raw.scalarmult(ed25519raw.B, r)
-    return r, ed25519raw.encodepoint(R)
+    h = _ed25519.H(sk)
+    b = _ed25519.b
+    r = _ed25519.Hint(bytes([h[i] for i in range(b >> 3, b >> 2)]) + data + binascii.unhexlify('%08x' % ctr))
+    R = _ed25519.scalarmult(_ed25519.B, r)
+    return r, _ed25519.encodepoint(R)
 
 
 def verify(signature, digest, pub_key):
-    ed25519raw.checkvalid(signature, digest, pub_key)
+    _ed25519.checkvalid(signature, digest, pub_key)
 
 
 def sign_with_privkey(digest, privkey, global_pubkey, nonce, global_commit):
-    h = ed25519raw.H(privkey)
-    b = ed25519raw.b
-    a = 2 ** (b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
-    S = (nonce + ed25519raw.Hint(global_commit + global_pubkey + digest) * a) % ed25519raw.l
-    return ed25519raw.encodeint(S)
+    h = _ed25519.H(privkey)
+    b = _ed25519.b
+    a = 2 ** (b - 2) + sum(2 ** i * _ed25519.bit(h, i) for i in range(3, b - 2))
+    S = (nonce + _ed25519.Hint(global_commit + global_pubkey + digest) * a) % _ed25519.l
+    return _ed25519.encodeint(S)
 
 
 def self_test(digest):
@@ -55,14 +55,14 @@ def self_test(digest):
     for i in range(0, N):
         print('----- Key %d ------' % (i + 1))
         seckey = (chr(0x41 + i) * 32).encode()
-        pubkey = ed25519raw.publickey(seckey)
+        pubkey = _ed25519.publickey(seckey)
         print('Secret Key: %s' % to_hex(seckey))
         print('Public Key: %s' % to_hex(pubkey))
         sks.append(seckey)
         pks.append(pubkey)
         ctr = 0
         r, R = get_nonce(seckey, digest, ctr)
-        print('Local nonce:  %s' % to_hex(ed25519raw.encodeint(r)))
+        print('Local nonce:  %s' % to_hex(_ed25519.encodeint(r)))
         print('Local commit: %s' % to_hex(R))
         nonces.append(r)
         commits.append(R)
