@@ -19,7 +19,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 1564732714,
+            "marketcap_usd": 1559080683,
             "name": "Ethereum Classic",
             "shortcut": "ETC",
             "t1_enabled": "yes",
@@ -32,7 +32,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 58426427451,
+            "marketcap_usd": 59529131244,
             "name": "Ethereum",
             "shortcut": "ETH",
             "t1_enabled": "yes",
@@ -58,7 +58,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 12239260,
+            "marketcap_usd": 12006970,
             "name": "Expanse",
             "shortcut": "EXP",
             "t1_enabled": "yes",
@@ -96,7 +96,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 68228380,
+            "marketcap_usd": 65739013,
             "name": "Ubiq",
             "shortcut": "UBQ",
             "t1_enabled": "yes",
@@ -144,7 +144,7 @@
                 "Homepage": "https://www.bitcoincash.org/",
                 "TREZOR Wallet": "https://wallet.trezor.io"
             },
-            "marketcap_usd": 17423612642,
+            "marketcap_usd": 17678633222,
             "name": "Bitcoin Cash",
             "shortcut": "BCH",
             "t1_enabled": "yes",
@@ -158,7 +158,7 @@
                 "Homepage": "https://bitcoin.org",
                 "TREZOR Wallet": "https://wallet.trezor.io"
             },
-            "marketcap_usd": 128658649837,
+            "marketcap_usd": 127422469449,
             "name": "Bitcoin",
             "shortcut": "BTC",
             "t1_enabled": "yes",
@@ -170,7 +170,7 @@
                 "Homepage": "https://bitcoingold.org",
                 "TREZOR Wallet": "https://wallet.trezor.io"
             },
-            "marketcap_usd": 786560294,
+            "marketcap_usd": 783345559,
             "name": "Bitcoin Gold",
             "shortcut": "BTG",
             "t1_enabled": "yes",
@@ -182,7 +182,7 @@
                 "Homepage": "https://www.dash.org",
                 "TREZOR Wallet": "https://wallet.trezor.io"
             },
-            "marketcap_usd": 2732645384,
+            "marketcap_usd": 2690224346,
             "name": "Dash",
             "shortcut": "DASH",
             "t1_enabled": "yes",
@@ -190,21 +190,22 @@
             "type": "coin"
         },
         "coin:DGB": {
+            "hidden": 1,
             "links": {
                 "Homepage": "https://www.digibyte.co"
             },
-            "marketcap_usd": 360007696,
+            "marketcap_usd": 360349528,
             "name": "DigiByte",
             "shortcut": "DGB",
-            "t1_enabled": "soon",
-            "t2_enabled": "soon",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
             "type": "coin"
         },
         "coin:DOGE": {
             "links": {
                 "Homepage": "https://dogecoin.com"
             },
-            "marketcap_usd": 389584072,
+            "marketcap_usd": 397785287,
             "name": "Dogecoin",
             "shortcut": "DOGE",
             "t1_enabled": "soon",
@@ -216,11 +217,11 @@
                 "Electrum-FJC": "http://www.fujicoin.org/downloads.php",
                 "Homepage": "https://www.fujicoin.org"
             },
-            "marketcap_usd": 723541,
+            "marketcap_usd": 683096,
             "name": "Fujicoin",
             "shortcut": "FJC",
-            "t1_enabled": "soon",
-            "t2_enabled": "soon",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
             "type": "coin"
         },
         "coin:LTC": {
@@ -229,7 +230,7 @@
                 "Homepage": "https://litecoin.org",
                 "TREZOR Wallet": "https://wallet.trezor.io"
             },
-            "marketcap_usd": 6881853713,
+            "marketcap_usd": 6807028767,
             "name": "Litecoin",
             "shortcut": "LTC",
             "t1_enabled": "yes",
@@ -241,18 +242,18 @@
                 "Electrum-MONA": "https://electrum-mona.org",
                 "Homepage": "https://monacoin.org"
             },
-            "marketcap_usd": 198881587,
+            "marketcap_usd": 198457711,
             "name": "Monacoin",
             "shortcut": "MONA",
-            "t1_enabled": "soon",
-            "t2_enabled": "soon",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
             "type": "coin"
         },
         "coin:NMC": {
             "links": {
                 "Homepage": "https://namecoin.org"
             },
-            "marketcap_usd": 26948013,
+            "marketcap_usd": 26167573,
             "name": "Namecoin",
             "shortcut": "NMC",
             "t1_enabled": "soon",
@@ -275,7 +276,7 @@
             "links": {
                 "Homepage": "https://vertcoin.org"
             },
-            "marketcap_usd": 81187041,
+            "marketcap_usd": 82075977,
             "name": "Vertcoin",
             "shortcut": "VTC",
             "t1_enabled": "soon",
@@ -287,7 +288,7 @@
                 "Homepage": "z.cash",
                 "TREZOR Wallet": "https://wallet.trezor.io"
             },
-            "marketcap_usd": 1163096165,
+            "marketcap_usd": 1142522957,
             "name": "Zcash",
             "shortcut": "ZEC",
             "t1_enabled": "yes",
@@ -296,6 +297,7 @@
         },
         "erc20:etc:BEC": {
             "address": "0x085fb4f24031EAedbC2B611AA528f22343eB52Db",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -319,7 +321,7 @@
             "name": "Smart Billions",
             "network": "etc",
             "shortcut": "PLAY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -334,7 +336,7 @@
             "name": "$TEAK",
             "network": "eth",
             "shortcut": "$TEAK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -364,12 +366,13 @@
             "name": "1WO",
             "network": "eth",
             "shortcut": "1WO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:2DC": {
             "address": "0x9fC0583220eB44fAeE9e2dc1E63F39204DDD9090",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -379,7 +382,7 @@
             "network": "eth",
             "shortcut": "2DC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:300": {
@@ -409,7 +412,7 @@
             "network": "eth",
             "shortcut": "A18",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ABT": {
@@ -423,7 +426,7 @@
             "name": "ArcBlock Token",
             "network": "eth",
             "shortcut": "ABT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -440,7 +443,7 @@
             "network": "eth",
             "shortcut": "ABYSS",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ACC": {
@@ -454,7 +457,7 @@
             "name": "Accelerator Network",
             "network": "eth",
             "shortcut": "ACC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -470,7 +473,7 @@
             "network": "eth",
             "shortcut": "ADH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ADI": {
@@ -485,7 +488,7 @@
             "name": "Aditus",
             "network": "eth",
             "shortcut": "ADI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -548,7 +551,7 @@
             "name": "aeternity",
             "network": "eth",
             "shortcut": "AE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -564,7 +567,7 @@
             "name": "SingularityNET",
             "network": "eth",
             "shortcut": "AGI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -576,11 +579,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 319084722,
+            "marketcap_usd": 332396950,
             "name": "Aion",
             "network": "eth",
             "shortcut": "AION",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -595,7 +598,7 @@
             "name": "AirToken",
             "network": "eth",
             "shortcut": "AIR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -611,7 +614,7 @@
             "name": "Aigang",
             "network": "eth",
             "shortcut": "AIX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -626,7 +629,7 @@
             "name": "ALCO",
             "network": "eth",
             "shortcut": "ALCO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -638,11 +641,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 7296874,
+            "marketcap_usd": 6907307,
             "name": "ALIS Token",
             "network": "eth",
             "shortcut": "ALIS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -657,7 +660,7 @@
             "name": "ALTS Token",
             "network": "eth",
             "shortcut": "ALTS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -673,7 +676,7 @@
             "name": "Amber Token",
             "network": "eth",
             "shortcut": "AMB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -689,7 +692,7 @@
             "name": "AMIS",
             "network": "eth",
             "shortcut": "AMIS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -706,7 +709,7 @@
             "network": "eth",
             "shortcut": "AMN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:AMO": {
@@ -722,7 +725,7 @@
             "network": "eth",
             "shortcut": "AMO",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:AMTC": {
@@ -737,12 +740,13 @@
             "network": "eth",
             "shortcut": "AMTC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ANT": {
             "address": "0x960b236A07cf122663c4303350609A66A7B288C0",
             "links": {
+                "Homepage": "https://aragon.one/network/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -767,7 +771,7 @@
             "network": "eth",
             "shortcut": "APIS",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:APPC": {
@@ -782,7 +786,7 @@
             "name": "AppCoins",
             "network": "eth",
             "shortcut": "APPC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -803,6 +807,7 @@
         },
         "erc20:eth:ARC": {
             "address": "0xAc709FcB44a43c35F0DA4e3163b117A17F3770f5",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -826,7 +831,7 @@
             "name": "ArbitrageCT",
             "network": "eth",
             "shortcut": "ARCT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -842,7 +847,7 @@
             "name": "Accord",
             "network": "eth",
             "shortcut": "ARD",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -857,7 +862,7 @@
             "name": "Aeron Token",
             "network": "eth",
             "shortcut": "ARN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -872,7 +877,7 @@
             "name": "ART",
             "network": "eth",
             "shortcut": "ART",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -888,7 +893,7 @@
             "name": "ARX",
             "network": "eth",
             "shortcut": "ARX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -905,7 +910,7 @@
             "network": "eth",
             "shortcut": "ARXT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:AST": {
@@ -919,7 +924,7 @@
             "name": "Airswap",
             "network": "eth",
             "shortcut": "AST",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -949,7 +954,7 @@
             "name": "ATL",
             "network": "eth",
             "shortcut": "ATL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -965,7 +970,7 @@
             "name": "Atmatrix Token",
             "network": "eth",
             "shortcut": "ATT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -980,7 +985,7 @@
             "name": "Attention Token",
             "network": "eth",
             "shortcut": "ATTN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1011,7 +1016,7 @@
             "name": "AVT",
             "network": "eth",
             "shortcut": "AVT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1028,7 +1033,7 @@
             "network": "eth",
             "shortcut": "AX1",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:AXP": {
@@ -1042,7 +1047,7 @@
             "name": "AXP",
             "network": "eth",
             "shortcut": "AXP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1057,13 +1062,14 @@
             "name": "BANX",
             "network": "eth",
             "shortcut": "BANX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:BAT": {
             "address": "0x0D8775F648430679A709E98d2b0Cb6250d2887EF",
             "links": {
+                "Homepage": "https://basicattentiontoken.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1087,13 +1093,15 @@
             "name": "Beercoin",
             "network": "eth",
             "shortcut": "BCBC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:BCDN": {
             "address": "0x1e797Ce986C3CFF4472F7D38d5C4aba55DfEFE40",
             "links": {
+                "Github": "https://github.com/Blockcdnteam",
+                "Homepage": "https://www.blockcdn.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1117,7 +1125,7 @@
             "name": "Blockchain Certified Data Token",
             "network": "eth",
             "shortcut": "BCDT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1132,7 +1140,7 @@
             "name": "BCL",
             "network": "eth",
             "shortcut": "BCL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1148,7 +1156,7 @@
             "name": "BCPT",
             "network": "eth",
             "shortcut": "BCPT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1165,7 +1173,7 @@
             "network": "eth",
             "shortcut": "BCV",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BDG": {
@@ -1180,7 +1188,7 @@
             "name": "BitDegree Token",
             "network": "eth",
             "shortcut": "BDG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1196,7 +1204,7 @@
             "name": "Bee Token",
             "network": "eth",
             "shortcut": "BEE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1213,12 +1221,14 @@
             "network": "eth",
             "shortcut": "BERRY",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BET": {
             "address": "0x8aA33A7899FCC8eA5fBe6A608A109c3893A1B8b2",
             "links": {
+                "Github": "https://github.com/daocasino",
+                "Homepage": "https://dao.casino/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1243,7 +1253,7 @@
             "network": "eth",
             "shortcut": "BETR",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BKB": {
@@ -1257,7 +1267,7 @@
             "name": "BetKing Bankroll Token",
             "network": "eth",
             "shortcut": "BKB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1273,7 +1283,7 @@
             "network": "eth",
             "shortcut": "BKRx",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BKX": {
@@ -1289,7 +1299,7 @@
             "network": "eth",
             "shortcut": "BKX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BLT": {
@@ -1304,7 +1314,7 @@
             "name": "Bloom",
             "network": "eth",
             "shortcut": "BLT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1320,13 +1330,14 @@
             "name": "Bullion Crypto",
             "network": "eth",
             "shortcut": "BLX (Bullion)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:BLX (Iconomi)": {
             "address": "0xE5a7c12972f3bbFe70ed29521C8949b8Af6a0970",
             "links": {
+                "Homepage": "https://www.iconomi.net/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1334,7 +1345,7 @@
             "name": "Iconomi",
             "network": "eth",
             "shortcut": "BLX (Iconomi)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1350,7 +1361,7 @@
             "name": "Blackmoon Crypto BMC Token",
             "network": "eth",
             "shortcut": "BMC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1366,7 +1377,7 @@
             "name": "BMT",
             "network": "eth",
             "shortcut": "BMT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1381,7 +1392,7 @@
             "name": "BitMartToken",
             "network": "eth",
             "shortcut": "BMX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1396,13 +1407,14 @@
             "name": "BNB",
             "network": "eth",
             "shortcut": "BNB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:BNC": {
             "address": "0xdD6Bf56CA2ada24c683FAC50E37783e55B57AF9F",
             "links": {
+                "Homepage": "https://bravenewcoin.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1416,6 +1428,7 @@
         },
         "erc20:eth:BNFT": {
             "address": "0xdA2C424Fc98c741c2d4ef2f42897CEfed897CA75",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -1425,12 +1438,14 @@
             "network": "eth",
             "shortcut": "BNFT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BNT": {
             "address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
             "links": {
+                "Github": "https://github.com/bancorprotocol/",
+                "Homepage": "https://www.bancor.network/discover",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1453,7 +1468,7 @@
             "name": "Bounty0x Token",
             "network": "eth",
             "shortcut": "BNTY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1469,7 +1484,7 @@
             "network": "eth",
             "shortcut": "BOB",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BON": {
@@ -1483,7 +1498,7 @@
             "name": "Bonpay",
             "network": "eth",
             "shortcut": "BON",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1498,7 +1513,7 @@
             "name": "BlockOptiopns Token",
             "network": "eth",
             "shortcut": "BOP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1513,7 +1528,7 @@
             "name": "Boule Coin",
             "network": "eth",
             "shortcut": "BOU",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1529,7 +1544,7 @@
             "name": "Blockport Token",
             "network": "eth",
             "shortcut": "BPT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1551,20 +1566,23 @@
         "erc20:eth:BRAT": {
             "address": "0x9E77D5a1251b6F7D456722A6eaC6D2d5980bd891",
             "links": {
+                "Homepage": "http://bro-consortium.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 108378,
+            "marketcap_usd": 71832,
             "name": "BRAT",
             "network": "eth",
             "shortcut": "BRAT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:BRD": {
             "address": "0x558EC3152e2eb2174905cd19AeA4e34A23DE9aD6",
             "links": {
+                "Github": "https://github.com/breadwallet",
+                "Homepage": "https://token.breadapp.com/en/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1573,7 +1591,7 @@
             "network": "eth",
             "shortcut": "BRD",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BSDC": {
@@ -1588,7 +1606,7 @@
             "name": "BSDC",
             "network": "eth",
             "shortcut": "BSDC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1603,7 +1621,7 @@
             "name": "BlocksquareToken",
             "network": "eth",
             "shortcut": "BST",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1618,7 +1636,7 @@
             "name": "EthereumBitcoin",
             "network": "eth",
             "shortcut": "BTCE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1634,7 +1652,7 @@
             "name": "BTE",
             "network": "eth",
             "shortcut": "BTE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1649,7 +1667,7 @@
             "name": "Bytether",
             "network": "eth",
             "shortcut": "BTH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1666,12 +1684,14 @@
             "network": "eth",
             "shortcut": "BTHR",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BTK": {
             "address": "0xdb8646F5b487B5Dd979FAC618350e85018F557d4",
             "links": {
+                "Github": "https://github.com/bitcoin-token",
+                "Homepage": "https://btk.community/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -1680,7 +1700,7 @@
             "network": "eth",
             "shortcut": "BTK",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BTL (Battle)": {
@@ -1695,7 +1715,7 @@
             "name": "BTL (Battle)",
             "network": "eth",
             "shortcut": "BTL (Battle)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1710,7 +1730,7 @@
             "name": "Bitlle Token",
             "network": "eth",
             "shortcut": "BTL (Bitlle)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1726,7 +1746,7 @@
             "name": "Bytom",
             "network": "eth",
             "shortcut": "BTM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1741,7 +1761,7 @@
             "name": "Bitcoin Boutique",
             "network": "eth",
             "shortcut": "BTQ",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1757,7 +1777,7 @@
             "name": "Bitether",
             "network": "eth",
             "shortcut": "BTT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1773,11 +1793,12 @@
             "network": "eth",
             "shortcut": "BUC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:BeerCoin": {
             "address": "0x74C1E4b8caE59269ec1D85D3D4F324396048F4ac",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -1786,7 +1807,7 @@
             "name": "BeerCoin",
             "network": "eth",
             "shortcut": "BeerCoin",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1798,11 +1819,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 53380562,
+            "marketcap_usd": 55807655,
             "name": "Crypto20's Token",
             "network": "eth",
             "shortcut": "C20",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1817,7 +1838,7 @@
             "name": "Change Bank",
             "network": "eth",
             "shortcut": "CAG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1832,7 +1853,7 @@
             "name": "CAN",
             "network": "eth",
             "shortcut": "CAN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1847,7 +1868,7 @@
             "name": "Car Sharing Community",
             "network": "eth",
             "shortcut": "CAR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1863,7 +1884,7 @@
             "network": "eth",
             "shortcut": "CARB",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:CARCO": {
@@ -1877,7 +1898,7 @@
             "name": "CARCO",
             "network": "eth",
             "shortcut": "CARCO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1892,7 +1913,7 @@
             "name": "Cashaa",
             "network": "eth",
             "shortcut": "CAS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1907,7 +1928,7 @@
             "name": "CAT (BitClave)",
             "network": "eth",
             "shortcut": "CAT (BitClave)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1922,7 +1943,7 @@
             "name": "CAT (Blockcat)",
             "network": "eth",
             "shortcut": "CAT (Blockcat)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1937,7 +1958,7 @@
             "name": "CATs (BitClave)_Old",
             "network": "eth",
             "shortcut": "CATs (BitClave)_Old",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1952,7 +1973,7 @@
             "name": "Coal Coin",
             "network": "eth",
             "shortcut": "CC3",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1967,7 +1988,7 @@
             "name": "CryptoCrashCourse",
             "network": "eth",
             "shortcut": "CCC (CryptoCrashCourse)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1982,7 +2003,7 @@
             "name": "CCC (ICONOMI)",
             "network": "eth",
             "shortcut": "CCC (ICONOMI)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -1998,7 +2019,7 @@
             "name": "Christ Coin",
             "network": "eth",
             "shortcut": "CCLC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2014,7 +2035,7 @@
             "name": "CacaoShares",
             "network": "eth",
             "shortcut": "CCS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2030,7 +2051,7 @@
             "name": "Confideal",
             "network": "eth",
             "shortcut": "CDL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2045,7 +2066,7 @@
             "name": "CoinDash",
             "network": "eth",
             "shortcut": "CDT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2060,7 +2081,7 @@
             "name": "CDX",
             "network": "eth",
             "shortcut": "CDX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2091,7 +2112,7 @@
             "network": "eth",
             "shortcut": "CHSB",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:CK": {
@@ -2105,7 +2126,7 @@
             "name": "CK",
             "network": "eth",
             "shortcut": "CK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2122,7 +2143,7 @@
             "network": "eth",
             "shortcut": "CLL",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:CLN": {
@@ -2137,7 +2158,7 @@
             "name": "ColuLocalNetwork",
             "network": "eth",
             "shortcut": "CLN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2152,7 +2173,7 @@
             "name": "CryptoLending",
             "network": "eth",
             "shortcut": "CLP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2167,7 +2188,7 @@
             "name": "CMBToken",
             "network": "eth",
             "shortcut": "CMBT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2182,7 +2203,7 @@
             "name": "CryptoMart",
             "network": "eth",
             "shortcut": "CMC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2198,7 +2219,7 @@
             "name": "CyberMiles Token",
             "network": "eth",
             "shortcut": "CMT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2214,7 +2235,7 @@
             "network": "eth",
             "shortcut": "CNB",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:CND": {
@@ -2228,7 +2249,7 @@
             "name": "Cindicator",
             "network": "eth",
             "shortcut": "CND",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2244,7 +2265,7 @@
             "name": "Climatecoin",
             "network": "eth",
             "shortcut": "CO2",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2260,7 +2281,7 @@
             "name": "Cobinhood Token",
             "network": "eth",
             "shortcut": "COB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2276,7 +2297,7 @@
             "name": "CoinFi Token",
             "network": "eth",
             "shortcut": "COFI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2293,7 +2314,7 @@
             "network": "eth",
             "shortcut": "COIL",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:COSS": {
@@ -2303,11 +2324,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 21540128,
+            "marketcap_usd": 21645513,
             "name": "Coss Token",
             "network": "eth",
             "shortcut": "COSS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2323,7 +2344,7 @@
             "network": "eth",
             "shortcut": "COV",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:CPY": {
@@ -2338,7 +2359,7 @@
             "name": "COPYTRACK",
             "network": "eth",
             "shortcut": "CPY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2354,13 +2375,14 @@
             "name": "CR7Coin",
             "network": "eth",
             "shortcut": "CR7",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:CRB": {
             "address": "0xAef38fBFBF932D1AeF3B808Bc8fBd8Cd8E1f8BC5",
             "links": {
+                "Homepage": "https://www.creditbit.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -2384,7 +2406,7 @@
             "name": "CRED",
             "network": "eth",
             "shortcut": "CRED",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2395,7 +2417,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 10841500,
+            "marketcap_usd": 12732962,
             "name": "Credo / Bitbounce",
             "network": "eth",
             "shortcut": "CREDO",
@@ -2414,7 +2436,7 @@
             "name": "CrypteriumToken",
             "network": "eth",
             "shortcut": "CRPT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2429,7 +2451,7 @@
             "name": "CreamtoeCoin",
             "network": "eth",
             "shortcut": "CRT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2445,7 +2467,7 @@
             "name": "CryptoTask",
             "network": "eth",
             "shortcut": "CTF",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2462,11 +2484,12 @@
             "network": "eth",
             "shortcut": "CTG",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:CTL": {
             "address": "0xBf4cFD7d1eDeeEA5f6600827411B41A21eB08abd",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -2490,7 +2513,7 @@
             "name": "ChainTrade Token",
             "network": "eth",
             "shortcut": "CTT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2505,13 +2528,14 @@
             "name": "CarTaxi",
             "network": "eth",
             "shortcut": "CTX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:CVC": {
             "address": "0x41e5560054824eA6B0732E656E3Ad64E20e94E45",
             "links": {
+                "Homepage": "https://www.civic.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -2535,7 +2559,7 @@
             "name": "CoxxxCoin",
             "network": "eth",
             "shortcut": "CXC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2551,21 +2575,22 @@
             "name": "CargoX",
             "network": "eth",
             "shortcut": "CXO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:CryptoCarbon": {
             "address": "0xE4c94d45f7Aef7018a5D66f44aF780ec6023378e",
             "links": {
+                "Homepage": "https://ccrb.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 467370,
+            "marketcap_usd": 455872,
             "name": "CryptoCarbon",
             "network": "eth",
             "shortcut": "CryptoCarbon",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2580,7 +2605,7 @@
             "name": "DAB",
             "network": "eth",
             "shortcut": "DAB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2591,11 +2616,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 14724361,
+            "marketcap_usd": 14758475,
             "name": "DADI",
             "network": "eth",
             "shortcut": "DADI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2607,11 +2632,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 36311467,
+            "marketcap_usd": 36443734,
             "name": "Dai Stablecoin v1.0",
             "network": "eth",
             "shortcut": "DAI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2626,7 +2651,7 @@
             "name": "DaleCoin",
             "network": "eth",
             "shortcut": "DALC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2642,13 +2667,14 @@
             "name": "DaneelToken",
             "network": "eth",
             "shortcut": "DAN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:DAO": {
             "address": "0xBB9bc244D798123fDe783fCc1C72d3Bb8C189413",
             "links": {
+                "Homepage": "https://blog.daohub.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -2671,7 +2697,7 @@
             "name": "Datum Token",
             "network": "eth",
             "shortcut": "DAT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2687,7 +2713,7 @@
             "name": "DataBrokerDAO Token",
             "network": "eth",
             "shortcut": "DATABroker",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2699,11 +2725,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 168147,
+            "marketcap_usd": 166353,
             "name": "DATACoin",
             "network": "eth",
             "shortcut": "DATACoin",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2719,7 +2745,7 @@
             "network": "eth",
             "shortcut": "DAXT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DAY": {
@@ -2735,7 +2761,7 @@
             "network": "eth",
             "shortcut": "DAY",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DCA": {
@@ -2750,7 +2776,7 @@
             "name": "DoBetAcceptBet",
             "network": "eth",
             "shortcut": "DCA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2765,7 +2791,7 @@
             "name": "DCL",
             "network": "eth",
             "shortcut": "DCL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2781,13 +2807,15 @@
             "name": "Dentacoin",
             "network": "eth",
             "shortcut": "DCN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:DDF": {
             "address": "0xcC4eF9EEAF656aC1a2Ab886743E98e97E090ed38",
             "links": {
+                "Github": "https://github.com/digitaldevelopersfund/ddf",
+                "Homepage": "https://www.digitaldevelopersfund.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -2810,7 +2838,7 @@
             "name": "DEBITUM",
             "network": "eth",
             "shortcut": "DEB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2827,16 +2855,17 @@
             "network": "eth",
             "shortcut": "DEEZ",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DENT": {
             "address": "0x3597bfD533a99c9aa083587B074434E61Eb0A258",
             "links": {
+                "Homepage": "https://www.dentwireless.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 83518956,
+            "marketcap_usd": 78782331,
             "name": "DENT",
             "network": "eth",
             "shortcut": "DENT",
@@ -2856,7 +2885,7 @@
             "network": "eth",
             "shortcut": "DEPO",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DGD": {
@@ -2886,7 +2915,7 @@
             "name": "DigiPulse",
             "network": "eth",
             "shortcut": "DGPT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2901,7 +2930,7 @@
             "name": "DGX",
             "network": "eth",
             "shortcut": "DGX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2931,12 +2960,13 @@
             "name": "DIVX",
             "network": "eth",
             "shortcut": "DIVX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:DKP": {
             "address": "0xBA187B09fFA8DDdc80d2571eD3cbC4Be0Af69E0c",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -2945,7 +2975,7 @@
             "name": "Draggin Karma Points",
             "network": "eth",
             "shortcut": "DKP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2960,7 +2990,7 @@
             "name": "Agrello",
             "network": "eth",
             "shortcut": "DLT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -2976,7 +3006,7 @@
             "name": "DMarket Token",
             "network": "eth",
             "shortcut": "DMT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3008,7 +3038,7 @@
             "name": "DenCity",
             "network": "eth",
             "shortcut": "DNX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3023,7 +3053,7 @@
             "name": "DOW",
             "network": "eth",
             "shortcut": "DOW",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3038,7 +3068,7 @@
             "name": "Digital Assets Power Play",
             "network": "eth",
             "shortcut": "DPP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3054,7 +3084,7 @@
             "name": "Dragon",
             "network": "eth",
             "shortcut": "DRGN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3084,7 +3114,7 @@
             "name": "Dropil",
             "network": "eth",
             "shortcut": "DROP (dropil)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3114,7 +3144,7 @@
             "name": "Digital Safe Coin",
             "network": "eth",
             "shortcut": "DSC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3131,7 +3161,7 @@
             "network": "eth",
             "shortcut": "DTH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DTR": {
@@ -3145,7 +3175,7 @@
             "name": "DTR",
             "network": "eth",
             "shortcut": "DTR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3162,7 +3192,7 @@
             "network": "eth",
             "shortcut": "DTT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DTX": {
@@ -3178,12 +3208,13 @@
             "network": "eth",
             "shortcut": "DTX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DTx": {
             "address": "0x82fdedfB7635441aA5A92791D001fA7388da8025",
             "links": {
+                "Homepage": "https://www.digitalticks.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -3192,7 +3223,7 @@
             "network": "eth",
             "shortcut": "DTx",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:DUBI": {
@@ -3207,7 +3238,7 @@
             "name": "Decentralized Universal Basic Income",
             "network": "eth",
             "shortcut": "DUBI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3222,7 +3253,7 @@
             "name": "Devcon2 Token",
             "network": "eth",
             "shortcut": "Devcon2 Token",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3238,7 +3269,7 @@
             "name": "EagleCoin",
             "network": "eth",
             "shortcut": "EAGLE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3268,7 +3299,7 @@
             "name": "EtherCO2",
             "network": "eth",
             "shortcut": "ECO2",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3284,7 +3315,7 @@
             "network": "eth",
             "shortcut": "EDC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:EDG": {
@@ -3313,7 +3344,7 @@
             "name": "Eidoo",
             "network": "eth",
             "shortcut": "EDO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3329,13 +3360,15 @@
             "name": "EDU",
             "network": "eth",
             "shortcut": "EDU",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:EHT": {
             "address": "0xf9F0FC7167c311Dd2F1e21E9204F87EBA9012fB2",
             "links": {
+                "Github": "https://github.com/team-easyhomes",
+                "Homepage": "https://easyhomes.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -3343,7 +3376,7 @@
             "name": "EasyHomes",
             "network": "eth",
             "shortcut": "EHT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3359,7 +3392,7 @@
             "name": "ELF Token",
             "network": "eth",
             "shortcut": "ELF",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3374,7 +3407,7 @@
             "name": "Elixir Token",
             "network": "eth",
             "shortcut": "ELIX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3386,11 +3419,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 799760,
+            "marketcap_usd": 803223,
             "name": "ELTCOIN",
             "network": "eth",
             "shortcut": "ELTCOIN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3406,7 +3439,7 @@
             "name": "Etheremon",
             "network": "eth",
             "shortcut": "EMON",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3421,7 +3454,7 @@
             "name": "Etheremon Token",
             "network": "eth",
             "shortcut": "EMONT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3438,7 +3471,7 @@
             "network": "eth",
             "shortcut": "EMT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:EMV": {
@@ -3469,7 +3502,7 @@
             "network": "eth",
             "shortcut": "ENG",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ENJ": {
@@ -3484,7 +3517,7 @@
             "name": "ENJIN",
             "network": "eth",
             "shortcut": "ENJ",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3500,17 +3533,19 @@
             "name": "Hut34 Entropy Token",
             "network": "eth",
             "shortcut": "ENTRP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:EOS": {
             "address": "0x86Fa049857E0209aa7D9e616F7eb3b3B78ECfdb0",
             "links": {
+                "Github": "https://github.com/eosio",
+                "Homepage": "https://eos.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 10155343130,
+            "marketcap_usd": 10757511883,
             "name": "EOS",
             "network": "eth",
             "shortcut": "EOS",
@@ -3531,7 +3566,7 @@
             "network": "eth",
             "shortcut": "EPX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ESZ": {
@@ -3546,7 +3581,7 @@
             "name": "ESZCoin",
             "network": "eth",
             "shortcut": "ESZ",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3561,7 +3596,7 @@
             "name": "Ethbits",
             "network": "eth",
             "shortcut": "ETBS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3577,7 +3612,7 @@
             "network": "eth",
             "shortcut": "ETCH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ETHB": {
@@ -3591,13 +3626,15 @@
             "name": "EtherBTC",
             "network": "eth",
             "shortcut": "ETHB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:ETR": {
             "address": "0x6927C69fb4daf2043fbB1Cb7b86c5661416bea29",
             "links": {
+                "Github": "https://github.com/pironmind/EthereumRisen",
+                "Homepage": "http://ethereumrisen.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -3605,8 +3642,8 @@
             "name": "Etheruem Risen",
             "network": "eth",
             "shortcut": "ETR",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:EURT": {
@@ -3620,7 +3657,7 @@
             "name": "EUR Tether (erc20)",
             "network": "eth",
             "shortcut": "EURT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3636,7 +3673,7 @@
             "name": "EVE",
             "network": "eth",
             "shortcut": "EVE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3652,7 +3689,7 @@
             "name": "Envion AG",
             "network": "eth",
             "shortcut": "EVN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3667,7 +3704,7 @@
             "name": "EVX Token",
             "network": "eth",
             "shortcut": "EVX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3683,7 +3720,7 @@
             "name": "eXMRcoin",
             "network": "eth",
             "shortcut": "EXMR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3699,13 +3736,15 @@
             "name": "eRupee",
             "network": "eth",
             "shortcut": "E\u20b9",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:FAM": {
             "address": "0x190e569bE071F40c704e15825F285481CB74B6cC",
             "links": {
+                "Github": "https://github.com/BattleDrome",
+                "Homepage": "http://www.battledrome.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -3729,7 +3768,7 @@
             "network": "eth",
             "shortcut": "FANX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:FKX": {
@@ -3744,7 +3783,7 @@
             "name": "Knoxstertoken",
             "network": "eth",
             "shortcut": "FKX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3759,7 +3798,7 @@
             "name": "FLIXX",
             "network": "eth",
             "shortcut": "FLIXX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3775,7 +3814,7 @@
             "network": "eth",
             "shortcut": "FLMC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:FLP": {
@@ -3790,7 +3829,7 @@
             "name": "FLIP Token",
             "network": "eth",
             "shortcut": "FLP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3806,7 +3845,7 @@
             "network": "eth",
             "shortcut": "FLR",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:FLUZ": {
@@ -3820,7 +3859,7 @@
             "name": "Fluz Fluz Global",
             "network": "eth",
             "shortcut": "FLUZ",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3835,7 +3874,7 @@
             "name": "BitFlux",
             "network": "eth",
             "shortcut": "FLX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3851,7 +3890,7 @@
             "name": "FundRequest",
             "network": "eth",
             "shortcut": "FND",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3866,13 +3905,14 @@
             "name": "FARAD Cryptoken",
             "network": "eth",
             "shortcut": "FRD",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:FTC": {
             "address": "0xe6f74dcfa0E20883008d8C16b6d9a329189D0C30",
             "links": {
+                "Homepage": "https://ftccoins.org/en",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -3880,7 +3920,7 @@
             "name": "FTC",
             "network": "eth",
             "shortcut": "FTC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3895,7 +3935,7 @@
             "name": "Futourist Token",
             "network": "eth",
             "shortcut": "FTR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3912,7 +3952,7 @@
             "network": "eth",
             "shortcut": "FTT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:FUCK": {
@@ -3926,7 +3966,7 @@
             "name": "Finally Usable Crypto Karma",
             "network": "eth",
             "shortcut": "FUCK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3942,7 +3982,7 @@
             "name": "Etherparty FUEL",
             "network": "eth",
             "shortcut": "FUEL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -3988,7 +4028,7 @@
             "name": "Gambit",
             "network": "eth",
             "shortcut": "GAM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4005,7 +4045,7 @@
             "network": "eth",
             "shortcut": "GANA",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GAVEL": {
@@ -4019,13 +4059,15 @@
             "name": "GAVEL",
             "network": "eth",
             "shortcut": "GAVEL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:GBT": {
             "address": "0x7585F835ae2d522722d2684323a0ba83401f32f5",
             "links": {
+                "Github": "https://github.com/myHelloGold/Foundation",
+                "Homepage": "https://www.hellogold.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4033,7 +4075,7 @@
             "name": "GBT",
             "network": "eth",
             "shortcut": "GBT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4049,7 +4091,7 @@
             "network": "eth",
             "shortcut": "GBX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GCP": {
@@ -4065,7 +4107,7 @@
             "network": "eth",
             "shortcut": "GCP",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GEE": {
@@ -4080,7 +4122,7 @@
             "name": "Geens NPO",
             "network": "eth",
             "shortcut": "GEE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4112,7 +4154,7 @@
             "network": "eth",
             "shortcut": "GEN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GET": {
@@ -4128,7 +4170,7 @@
             "network": "eth",
             "shortcut": "GET",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GIF": {
@@ -4143,7 +4185,7 @@
             "network": "eth",
             "shortcut": "GIF",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GIM": {
@@ -4158,7 +4200,7 @@
             "name": "Gimli",
             "network": "eth",
             "shortcut": "GIM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4173,7 +4215,7 @@
             "name": "GMT",
             "network": "eth",
             "shortcut": "GMT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4200,7 +4242,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 390462453,
+            "marketcap_usd": 398524715,
             "name": "Golem",
             "network": "eth",
             "shortcut": "GNT",
@@ -4220,7 +4262,7 @@
             "name": "GOLDX",
             "network": "eth",
             "shortcut": "GOLDX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4231,11 +4273,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 15392475,
+            "marketcap_usd": 15659833,
             "name": "GRID",
             "network": "eth",
             "shortcut": "GRID",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4252,7 +4294,7 @@
             "network": "eth",
             "shortcut": "GROW",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GTC": {
@@ -4267,13 +4309,15 @@
             "name": "GTC Token",
             "network": "eth",
             "shortcut": "GTC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:GTKT": {
             "address": "0x025abAD9e518516fdaAFBDcdB9701b37fb7eF0FA",
             "links": {
+                "Github": "https://github.com/sprux/BackToEarth",
+                "Homepage": "https://backto.earth/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4298,12 +4342,14 @@
             "network": "eth",
             "shortcut": "GTO",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:GUP": {
             "address": "0xf7B098298f7C69Fc14610bf71d5e02c60792894C",
             "links": {
+                "Github": "https://github.com/Matchpool/",
+                "Homepage": "https://github.com/Matchpool/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4327,7 +4373,7 @@
             "name": "Genesis Vision",
             "network": "eth",
             "shortcut": "GVT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4342,13 +4388,15 @@
             "name": "GXC",
             "network": "eth",
             "shortcut": "GXC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:GXVC": {
             "address": "0x22F0AF8D78851b72EE799e05F54A77001586B18A",
             "links": {
+                "Github": "https://github.com/GxC17Genevieve/GXVC",
+                "Homepage": "https://genevieveco.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4356,7 +4404,7 @@
             "name": "Genevieve VC",
             "network": "eth",
             "shortcut": "GXVC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4371,7 +4419,7 @@
             "name": "GazeCoin",
             "network": "eth",
             "shortcut": "GZE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4386,7 +4434,7 @@
             "name": "Hawala Today",
             "network": "eth",
             "shortcut": "HAT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4403,7 +4451,7 @@
             "network": "eth",
             "shortcut": "HAV",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:HDG": {
@@ -4417,13 +4465,15 @@
             "name": "Hedge Crypto",
             "network": "eth",
             "shortcut": "HDG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:HGT": {
             "address": "0xba2184520A1cC49a6159c57e61E1844E085615B6",
             "links": {
+                "Github": "https://github.com/myHelloGold/Foundation",
+                "Homepage": "https://www.hellogold.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4431,7 +4481,7 @@
             "name": "HGT",
             "network": "eth",
             "shortcut": "HGT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4447,7 +4497,7 @@
             "name": "ethereumhigh ",
             "network": "eth",
             "shortcut": "HIG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4479,7 +4529,7 @@
             "network": "eth",
             "shortcut": "HKY",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:HMQ": {
@@ -4508,7 +4558,7 @@
             "name": "HODLCoin",
             "network": "eth",
             "shortcut": "HODL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4525,7 +4575,7 @@
             "network": "eth",
             "shortcut": "HORSE",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:HOT": {
@@ -4541,7 +4591,7 @@
             "network": "eth",
             "shortcut": "HOT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:HST": {
@@ -4555,7 +4605,7 @@
             "name": "HST",
             "network": "eth",
             "shortcut": "HST",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4571,7 +4621,7 @@
             "name": "Hive Project",
             "network": "eth",
             "shortcut": "HVN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4587,7 +4637,7 @@
             "name": "HEdpAY",
             "network": "eth",
             "shortcut": "Hdp",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4603,13 +4653,14 @@
             "name": "HEdpAY",
             "network": "eth",
             "shortcut": "Hdp.\u0444",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:ICE": {
             "address": "0x5a84969bb663fb64F6d015DcF9F622Aedc796750",
             "links": {
+                "Homepage": "https://idice.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4623,6 +4674,7 @@
         },
         "erc20:eth:ICN": {
             "address": "0x888666CA69E0f178DED6D75b5726Cee99A87D698",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -4646,21 +4698,22 @@
             "name": "ICO",
             "network": "eth",
             "shortcut": "ICO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:ICOS": {
             "address": "0x014B50466590340D41307Cc54DCee990c8D58aa8",
             "links": {
+                "Homepage": "https://icos.icobox.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 9983778,
+            "marketcap_usd": 10012832,
             "name": "ICOS",
             "network": "eth",
             "shortcut": "ICOS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4675,7 +4728,7 @@
             "name": "ICON",
             "network": "eth",
             "shortcut": "ICX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4690,7 +4743,7 @@
             "name": "IDEA Token",
             "network": "eth",
             "shortcut": "IDEA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4705,7 +4758,7 @@
             "name": "InvestFeed",
             "network": "eth",
             "shortcut": "IFT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4720,13 +4773,15 @@
             "name": "IIC",
             "network": "eth",
             "shortcut": "IIC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:IKB": {
             "address": "0x88AE96845e157558ef59e9Ff90E766E22E480390",
             "links": {
+                "Github": "https://github.com/mitchellfchan/IKB",
+                "Homepage": "http://www.mitchellfchan.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -4734,7 +4789,7 @@
             "name": "IKB",
             "network": "eth",
             "shortcut": "IKB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4749,12 +4804,13 @@
             "name": "Immune Coin",
             "network": "eth",
             "shortcut": "IMC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:IMT": {
             "address": "0x22E5F62D0FA19974749faa194e3d3eF6d89c08d7",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -4778,12 +4834,13 @@
             "name": "Indorse",
             "network": "eth",
             "shortcut": "IND",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:INRM": {
             "address": "0x48e5413b73add2434e47504E2a22d14940dBFe78",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -4793,7 +4850,7 @@
             "network": "eth",
             "shortcut": "INRM",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:INS": {
@@ -4807,7 +4864,7 @@
             "name": "INS",
             "network": "eth",
             "shortcut": "INS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4823,7 +4880,7 @@
             "network": "eth",
             "shortcut": "INSTAR",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:INXT": {
@@ -4837,7 +4894,7 @@
             "name": "Internxt",
             "network": "eth",
             "shortcut": "INXT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4853,7 +4910,7 @@
             "network": "eth",
             "shortcut": "IOST",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:IPL": {
@@ -4868,7 +4925,7 @@
             "name": "InsurePal token",
             "network": "eth",
             "shortcut": "IPL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4884,7 +4941,7 @@
             "network": "eth",
             "shortcut": "IPSX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ITC": {
@@ -4899,7 +4956,7 @@
             "name": "IoT Chain",
             "network": "eth",
             "shortcut": "ITC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4915,7 +4972,7 @@
             "name": "ITT Token",
             "network": "eth",
             "shortcut": "ITT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4930,7 +4987,7 @@
             "name": "InsureX",
             "network": "eth",
             "shortcut": "IXT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4945,7 +5002,7 @@
             "name": "IoT\u30b3\u30a4\u30f3",
             "network": "eth",
             "shortcut": "IoT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4961,7 +5018,7 @@
             "name": "J8T Token",
             "network": "eth",
             "shortcut": "J8T",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -4976,13 +5033,14 @@
             "name": "JBX",
             "network": "eth",
             "shortcut": "JBX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:JET": {
             "address": "0x8727c112C712c4a03371AC87a74dD6aB104Af768",
             "links": {
+                "Homepage": "https://jetcoin.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5006,7 +5064,7 @@
             "name": "JNT",
             "network": "eth",
             "shortcut": "JNT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5022,12 +5080,13 @@
             "network": "eth",
             "shortcut": "JOY",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:JetCoins": {
             "address": "0x773450335eD4ec3DB45aF74f34F2c85348645D39",
             "links": {
+                "Homepage": "http://www.jetcoins.trade/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5035,7 +5094,7 @@
             "name": "JetCoins",
             "network": "eth",
             "shortcut": "JetCoins",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5051,11 +5110,12 @@
             "network": "eth",
             "shortcut": "KC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:KEE": {
             "address": "0x72D32ac1c5E66BfC5b08806271f8eEF915545164",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -5064,7 +5124,7 @@
             "name": "CryptoKEE",
             "network": "eth",
             "shortcut": "KEE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5080,7 +5140,7 @@
             "name": "SelfKey",
             "network": "eth",
             "shortcut": "KEY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5088,6 +5148,7 @@
             "address": "0x27695E09149AdC738A978e9A678F99E4c39e9eb9",
             "links": {
                 "Github": "https://github.com/kickico",
+                "Homepage": "https://www.kickico.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5095,7 +5156,7 @@
             "name": "KICK",
             "network": "eth",
             "shortcut": "KICK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5107,11 +5168,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 143043073,
+            "marketcap_usd": 156336780,
             "name": "Kin Foundation",
             "network": "eth",
             "shortcut": "KIN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5127,7 +5188,7 @@
             "name": "Kyber Network",
             "network": "eth",
             "shortcut": "KNC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5144,7 +5205,7 @@
             "network": "eth",
             "shortcut": "KPR",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:KRL": {
@@ -5160,7 +5221,7 @@
             "network": "eth",
             "shortcut": "KRL",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:KZN": {
@@ -5174,7 +5235,7 @@
             "name": "KaizenCoin",
             "network": "eth",
             "shortcut": "KZN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5190,7 +5251,7 @@
             "name": "LATOKEN",
             "network": "eth",
             "shortcut": "LA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5205,7 +5266,7 @@
             "name": "LALA World Token",
             "network": "eth",
             "shortcut": "LALA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5221,7 +5282,7 @@
             "network": "eth",
             "shortcut": "LDC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LEMO": {
@@ -5235,7 +5296,7 @@
             "name": "Lemo",
             "network": "eth",
             "shortcut": "LEMO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5250,7 +5311,7 @@
             "name": "LifeRun Coin",
             "network": "eth",
             "shortcut": "LFR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5266,7 +5327,7 @@
             "network": "eth",
             "shortcut": "LGO",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LGR": {
@@ -5280,7 +5341,7 @@
             "name": "Logarithm",
             "network": "eth",
             "shortcut": "LGR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5296,7 +5357,7 @@
             "name": "LIF",
             "network": "eth",
             "shortcut": "LIF",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5307,11 +5368,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 5844747,
+            "marketcap_usd": 6625789,
             "name": "LIFE",
             "network": "eth",
             "shortcut": "LIFE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5326,7 +5387,7 @@
             "name": "LINK Chainlink",
             "network": "eth",
             "shortcut": "LINK (Chainlink)",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5342,7 +5403,7 @@
             "name": "Link Platform",
             "network": "eth",
             "shortcut": "LINK Platform",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5357,7 +5418,7 @@
             "name": "LIVE Token",
             "network": "eth",
             "shortcut": "LIVE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5373,7 +5434,7 @@
             "name": "Lancer Token",
             "network": "eth",
             "shortcut": "LNC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5389,7 +5450,7 @@
             "name": "Linker Coin",
             "network": "eth",
             "shortcut": "LNC-Linker Coin",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5406,7 +5467,7 @@
             "network": "eth",
             "shortcut": "LND",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LOC": {
@@ -5420,7 +5481,7 @@
             "name": "LockChain",
             "network": "eth",
             "shortcut": "LOC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5436,7 +5497,7 @@
             "name": "LOCIcoin",
             "network": "eth",
             "shortcut": "LOCI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5452,7 +5513,7 @@
             "network": "eth",
             "shortcut": "LOCUS",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LOK": {
@@ -5483,7 +5544,7 @@
             "network": "eth",
             "shortcut": "LOOM",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LPT": {
@@ -5499,7 +5560,7 @@
             "network": "eth",
             "shortcut": "LPT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LRC": {
@@ -5513,7 +5574,7 @@
             "name": "LRC",
             "network": "eth",
             "shortcut": "LRC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5529,8 +5590,8 @@
             "name": "LUCToken",
             "network": "eth",
             "shortcut": "LUC",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:LUCK": {
@@ -5559,13 +5620,15 @@
             "name": "Lumino Coin",
             "network": "eth",
             "shortcut": "LUM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:LUN": {
             "address": "0xfa05A73FfE78ef8f1a739473e462c54bae6567D9",
             "links": {
+                "Github": "https://github.com/lunyr",
+                "Homepage": "https://lunyr.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5590,7 +5653,7 @@
             "network": "eth",
             "shortcut": "LYS",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:M-ETH": {
@@ -5604,13 +5667,14 @@
             "name": "M-ETH",
             "network": "eth",
             "shortcut": "M-ETH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:MAD": {
             "address": "0x5B09A0371C1DA44A8E24D36Bf5DEb1141a84d875",
             "links": {
+                "Homepage": "https://madnetwork.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5619,12 +5683,14 @@
             "network": "eth",
             "shortcut": "MAD",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MAN": {
             "address": "0xe25bCec5D3801cE3a794079BF94adF1B8cCD802D",
             "links": {
+                "Github": "https://github.com/MatrixAINetwork",
+                "Homepage": "https://www.matrix.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5632,8 +5698,8 @@
             "name": "MAN",
             "network": "eth",
             "shortcut": "MAN",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MANA": {
@@ -5648,7 +5714,7 @@
             "name": "Decentraland MANA",
             "network": "eth",
             "shortcut": "MANA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5663,8 +5729,8 @@
             "name": "Martcoin",
             "network": "eth",
             "shortcut": "MART",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MBRS": {
@@ -5679,17 +5745,18 @@
             "name": "Embers",
             "network": "eth",
             "shortcut": "MBRS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:MCAP": {
             "address": "0x93E682107d1E9defB0b5ee701C71707a4B2E46Bc",
             "links": {
+                "Homepage": "https://www.mcaplabs.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 713532,
+            "marketcap_usd": 701901,
             "name": "MCAP",
             "network": "eth",
             "shortcut": "MCAP",
@@ -5709,13 +5776,14 @@
             "name": "Musiconomi",
             "network": "eth",
             "shortcut": "MCI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:MCO": {
             "address": "0xB63B606Ac810a52cCa15e44bB630fd42D8d1d83d",
             "links": {
+                "Homepage": "https://mona.co/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5730,6 +5798,7 @@
         "erc20:eth:MDA": {
             "address": "0x51DB5Ad35C671a87207d88fC11d593AC0C8415bd",
             "links": {
+                "Homepage": "https://moeda.in",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5754,7 +5823,7 @@
             "network": "eth",
             "shortcut": "MESH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MEST": {
@@ -5769,7 +5838,7 @@
             "name": "Monaco Estate",
             "network": "eth",
             "shortcut": "MEST",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5786,12 +5855,13 @@
             "network": "eth",
             "shortcut": "MFG",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MGO": {
             "address": "0x40395044Ac3c0C57051906dA938B54BD6557F212",
             "links": {
+                "Homepage": "https://gamecredits.com/mobilego/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5805,6 +5875,7 @@
         },
         "erc20:eth:MIT": {
             "address": "0xe23cd160761f63FC3a1cF78Aa034b6cdF97d3E0C",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -5829,7 +5900,7 @@
             "network": "eth",
             "shortcut": "MIT (Mychatcoin)",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MKR": {
@@ -5866,6 +5937,7 @@
         "erc20:eth:MNE": {
             "address": "0x1a95B271B0535D15fa49932Daba31BA612b52946",
             "links": {
+                "Homepage": "https://minereum.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -5889,7 +5961,7 @@
             "name": "Media Network Token",
             "network": "eth",
             "shortcut": "MNT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5905,7 +5977,7 @@
             "name": "Goldmint MNT Prelaunch Token",
             "network": "eth",
             "shortcut": "MNTP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5921,7 +5993,7 @@
             "name": "Modum",
             "network": "eth",
             "shortcut": "MOD",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5938,7 +6010,7 @@
             "network": "eth",
             "shortcut": "MRL",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MRP": {
@@ -5952,7 +6024,7 @@
             "name": "MoneyRebel Token",
             "network": "eth",
             "shortcut": "MRP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -5997,7 +6069,7 @@
             "name": "Monetha",
             "network": "eth",
             "shortcut": "MTH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6027,7 +6099,7 @@
             "name": "MedToken",
             "network": "eth",
             "shortcut": "MTN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6042,7 +6114,7 @@
             "name": "Mitrav",
             "network": "eth",
             "shortcut": "MTR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6057,7 +6129,7 @@
             "name": "MTRCToken",
             "network": "eth",
             "shortcut": "MTRc",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6072,7 +6144,7 @@
             "name": "MTX",
             "network": "eth",
             "shortcut": "MTX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6088,7 +6160,7 @@
             "network": "eth",
             "shortcut": "MUXE",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MVP": {
@@ -6104,7 +6176,7 @@
             "network": "eth",
             "shortcut": "MVP",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:MWAT": {
@@ -6118,12 +6190,13 @@
             "name": "RED MWAT",
             "network": "eth",
             "shortcut": "MWAT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:MYD": {
             "address": "0xf7e983781609012307f2514f63D526D83D24F466",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -6163,7 +6236,7 @@
             "network": "eth",
             "shortcut": "NAC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:NAVI": {
@@ -6179,7 +6252,7 @@
             "network": "eth",
             "shortcut": "NAVI",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:NBAI": {
@@ -6195,7 +6268,7 @@
             "network": "eth",
             "shortcut": "NBAI",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:NCT": {
@@ -6210,7 +6283,7 @@
             "name": "Nectar",
             "network": "eth",
             "shortcut": "NCT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6225,7 +6298,7 @@
             "name": "Neverdie",
             "network": "eth",
             "shortcut": "NDC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6242,7 +6315,7 @@
             "network": "eth",
             "shortcut": "NEC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:NET": {
@@ -6264,6 +6337,7 @@
             "address": "0xA823E6722006afe99E91c30FF5295052fe6b8E32",
             "links": {
                 "Github": "https://github.com/neufund",
+                "Homepage": "https://neufund.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -6271,7 +6345,7 @@
             "name": "NEU Fund",
             "network": "eth",
             "shortcut": "NEU",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6286,7 +6360,7 @@
             "name": "NAGA Coin",
             "network": "eth",
             "shortcut": "NGC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6302,13 +6376,15 @@
             "name": "Ninfa Money",
             "network": "eth",
             "shortcut": "NIMFA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:NMR": {
             "address": "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671",
             "links": {
+                "Github": "https://github.com/numerai",
+                "Homepage": "https://numer.ai/homepage",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -6332,7 +6408,7 @@
             "name": "NOX",
             "network": "eth",
             "shortcut": "NOX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6344,12 +6420,12 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 12076174,
+            "marketcap_usd": 12349660,
             "name": "NPER",
             "network": "eth",
             "shortcut": "NPER",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:NPXS": {
@@ -6365,7 +6441,7 @@
             "network": "eth",
             "shortcut": "NPXS",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:NULS": {
@@ -6375,11 +6451,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 140896400,
+            "marketcap_usd": 142359200,
             "name": "NULS",
             "network": "eth",
             "shortcut": "NULS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6409,7 +6485,7 @@
             "name": "NXX OLD",
             "network": "eth",
             "shortcut": "NXX OLD",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6435,7 +6511,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 13106397,
+            "marketcap_usd": 13818836,
             "name": "OAX",
             "network": "eth",
             "shortcut": "OAX",
@@ -6455,7 +6531,7 @@
             "name": "Original Crypto Coin",
             "network": "eth",
             "shortcut": "OCC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6487,13 +6563,15 @@
             "name": "MakerDAO",
             "network": "eth",
             "shortcut": "OLD_MKR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:OMG": {
             "address": "0xd26114cd6EE289AccF82350c8d8487fedB8A0C07",
             "links": {
+                "Github": "https://github.com/omisego",
+                "Homepage": "https://omisego.network/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -6516,7 +6594,7 @@
             "name": "One K Token",
             "network": "eth",
             "shortcut": "ONEK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6533,7 +6611,7 @@
             "network": "eth",
             "shortcut": "OPEN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:OPT": {
@@ -6547,7 +6625,7 @@
             "name": "Opus Foundation",
             "network": "eth",
             "shortcut": "OPT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6559,11 +6637,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 45473798,
+            "marketcap_usd": 48943780,
             "name": "Simple Token 'OST'",
             "network": "eth",
             "shortcut": "OST",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6579,7 +6657,7 @@
             "name": "Ox Fina",
             "network": "eth",
             "shortcut": "Ox Fina",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6596,7 +6674,7 @@
             "network": "eth",
             "shortcut": "PAL",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:PARETO": {
@@ -6611,7 +6689,7 @@
             "name": "PARETO",
             "network": "eth",
             "shortcut": "PARETO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6626,7 +6704,7 @@
             "name": "PATENTS",
             "network": "eth",
             "shortcut": "PATENTS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6643,12 +6721,13 @@
             "network": "eth",
             "shortcut": "PATH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:PAY": {
             "address": "0xB97048628DB6B661D4C2aA833e95Dbe1A905B280",
             "links": {
+                "Homepage": "http://www.tenx.tech/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -6671,7 +6750,7 @@
             "name": "PBL",
             "network": "eth",
             "shortcut": "PBL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6687,7 +6766,7 @@
             "network": "eth",
             "shortcut": "PBT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:PCH": {
@@ -6701,7 +6780,7 @@
             "name": "PITCH",
             "network": "eth",
             "shortcut": "PCH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6717,7 +6796,7 @@
             "name": "Peculium",
             "network": "eth",
             "shortcut": "PCL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6733,7 +6812,7 @@
             "name": "PeculiumOLD",
             "network": "eth",
             "shortcut": "PCLOLD",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6749,12 +6828,13 @@
             "name": "PETHEREUM",
             "network": "eth",
             "shortcut": "PET",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:PETRO": {
             "address": "0xeC18f898B4076A3E18f1089D33376CC380BDe61D",
+            "hidden": 1,
             "links": {
                 "Github": "https://github.com/getpetro",
                 "MyCrypto Wallet": "https://mycrypto.com",
@@ -6764,7 +6844,7 @@
             "name": "PETRO",
             "network": "eth",
             "shortcut": "PETRO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6779,7 +6859,7 @@
             "name": "PEX-Token",
             "network": "eth",
             "shortcut": "PEXT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6794,7 +6874,7 @@
             "name": "PIPL Coin",
             "network": "eth",
             "shortcut": "PIPL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6809,13 +6889,14 @@
             "name": "PIX",
             "network": "eth",
             "shortcut": "PIX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:PLASMA": {
             "address": "0x59416A25628A76b4730eC51486114c32E0B582A1",
             "links": {
+                "Homepage": "https://plasma.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -6823,7 +6904,7 @@
             "name": "PLASMA",
             "network": "eth",
             "shortcut": "PLASMA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6838,7 +6919,7 @@
             "name": "HeroCoin",
             "network": "eth",
             "shortcut": "PLAY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6899,7 +6980,7 @@
             "name": "Po.et Tokens",
             "network": "eth",
             "shortcut": "POE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6914,7 +6995,7 @@
             "name": "Potatoin",
             "network": "eth",
             "shortcut": "POIN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6929,7 +7010,7 @@
             "name": "Polymath Network",
             "network": "eth",
             "shortcut": "POLY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6944,7 +7025,7 @@
             "name": "Stake Pool",
             "network": "eth",
             "shortcut": "POOL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6960,7 +7041,7 @@
             "name": "PoSToken",
             "network": "eth",
             "shortcut": "POS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6975,7 +7056,7 @@
             "name": "PowerLedger",
             "network": "eth",
             "shortcut": "POWR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -6990,7 +7071,7 @@
             "name": "PayPie",
             "network": "eth",
             "shortcut": "PPP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7020,7 +7101,7 @@
             "name": "Presearch",
             "network": "eth",
             "shortcut": "PRE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7036,7 +7117,7 @@
             "name": "PRG",
             "network": "eth",
             "shortcut": "PRG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7052,7 +7133,7 @@
             "name": "Oyster Pearl",
             "network": "eth",
             "shortcut": "PRL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7083,7 +7164,7 @@
             "network": "eth",
             "shortcut": "PRON",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:PRPS": {
@@ -7098,7 +7179,7 @@
             "name": "Purpose",
             "network": "eth",
             "shortcut": "PRPS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7129,7 +7210,7 @@
             "name": "PRSP",
             "network": "eth",
             "shortcut": "PRSP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7145,7 +7226,7 @@
             "name": "PornToken",
             "network": "eth",
             "shortcut": "PT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7162,12 +7243,13 @@
             "network": "eth",
             "shortcut": "PTC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:PTOY": {
             "address": "0x8Ae4BF2C33a8e667de34B54938B0ccD03Eb8CC06",
             "links": {
+                "Homepage": "https://patientory.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7191,7 +7273,7 @@
             "name": "PornTokenV2",
             "network": "eth",
             "shortcut": "PTWO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7207,7 +7289,7 @@
             "name": "Pour Coin",
             "network": "eth",
             "shortcut": "PUC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7222,7 +7304,7 @@
             "name": "Populous XBRL Token (PXT)",
             "network": "eth",
             "shortcut": "PXT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7233,12 +7315,12 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 172346650,
+            "marketcap_usd": 177431800,
             "name": "QASH",
             "network": "eth",
             "shortcut": "QASH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:QAU": {
@@ -7269,12 +7351,14 @@
             "network": "eth",
             "shortcut": "QBX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:QRL": {
             "address": "0x697beac28B09E122C4332D163985e8a73121b97F",
             "links": {
+                "Github": "https://github.com/theQRL",
+                "Homepage": "https://theqrl.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7298,7 +7382,7 @@
             "name": "Quantstamp Token",
             "network": "eth",
             "shortcut": "QSP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7314,7 +7398,7 @@
             "name": "TiiQu's Q Token",
             "network": "eth",
             "shortcut": "QTQ",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7326,11 +7410,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 1202286810,
+            "marketcap_usd": 1182427083,
             "name": "Qtum",
             "network": "eth",
             "shortcut": "QTUM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7347,12 +7431,14 @@
             "network": "eth",
             "shortcut": "RBLX",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:RCN": {
             "address": "0xF970b8E36e23F7fC3FD752EeA86f8Be8D83375A6",
             "links": {
+                "Github": "https://github.com/ripio/rcn-token",
+                "Homepage": "https://ripiocredit.network/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7360,8 +7446,8 @@
             "name": "Ripio Credit Network",
             "network": "eth",
             "shortcut": "RCN",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:RCT": {
@@ -7375,7 +7461,7 @@
             "name": "RCT",
             "network": "eth",
             "shortcut": "RCT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7391,7 +7477,7 @@
             "name": "Raiden Network",
             "network": "eth",
             "shortcut": "RDN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7406,7 +7492,7 @@
             "name": "Realisto",
             "network": "eth",
             "shortcut": "REA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7417,11 +7503,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 12237520,
+            "marketcap_usd": 12294162,
             "name": "Rebellious",
             "network": "eth",
             "shortcut": "REBL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7437,7 +7523,7 @@
             "name": "Republic Token",
             "network": "eth",
             "shortcut": "REN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7467,13 +7553,15 @@
             "name": "Request Network",
             "network": "eth",
             "shortcut": "REQ",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:REX": {
             "address": "0xf05a9382A4C3F29E2784502754293D88b835109C",
             "links": {
+                "Github": "https://github.com/rexmls/RexToken",
+                "Homepage": "https://imbrex.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7497,7 +7585,7 @@
             "network": "eth",
             "shortcut": "RFR",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:RIPT": {
@@ -7512,7 +7600,7 @@
             "name": "RiptideCoin",
             "network": "eth",
             "shortcut": "RIPT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7523,7 +7611,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 133381127,
+            "marketcap_usd": 138313488,
             "name": "IEx.ec",
             "network": "eth",
             "shortcut": "RLC",
@@ -7534,6 +7622,8 @@
         "erc20:eth:RLT": {
             "address": "0xcCeD5B8288086BE8c38E23567e684C3740be4D48",
             "links": {
+                "Github": "https://github.com/Smartroulette",
+                "Homepage": "https://smartplay.tech/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7556,7 +7646,7 @@
             "name": "SMARTRealty",
             "network": "eth",
             "shortcut": "RLTY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7571,7 +7661,7 @@
             "name": "Relex",
             "network": "eth",
             "shortcut": "RLX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7586,7 +7676,7 @@
             "name": "Render Token",
             "network": "eth",
             "shortcut": "RNDR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7598,12 +7688,12 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 43552219,
+            "marketcap_usd": 45148263,
             "name": "Rocket Token",
             "network": "eth",
             "shortcut": "ROCK",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ROK": {
@@ -7617,13 +7707,14 @@
             "name": "Rocketchain",
             "network": "eth",
             "shortcut": "ROK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:ROUND": {
             "address": "0x4993CB95c7443bdC06155c5f5688Be9D8f6999a5",
             "links": {
+                "Homepage": "http://roundcoin.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7646,7 +7737,7 @@
             "name": "Rocket Pool",
             "network": "eth",
             "shortcut": "RPL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7662,7 +7753,7 @@
             "name": "RiderToken",
             "network": "eth",
             "shortcut": "RTN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7677,7 +7768,7 @@
             "name": "RVL",
             "network": "eth",
             "shortcut": "RVL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7692,7 +7783,7 @@
             "name": "Rivetz",
             "network": "eth",
             "shortcut": "RVT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7707,7 +7798,7 @@
             "name": "S-A-PAT",
             "network": "eth",
             "shortcut": "S-A-PAT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7722,7 +7813,7 @@
             "name": "S-ETH",
             "network": "eth",
             "shortcut": "S-ETH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7733,11 +7824,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 124346229,
+            "marketcap_usd": 127335801,
             "name": "Salt Lending Token",
             "network": "eth",
             "shortcut": "SALT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7767,7 +7858,7 @@
             "name": "Scandiweb Coin",
             "network": "eth",
             "shortcut": "SCANDI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7793,11 +7884,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 2361249,
+            "marketcap_usd": 2468047,
             "name": "Sensay",
             "network": "eth",
             "shortcut": "SENSE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7813,7 +7904,7 @@
             "name": "SET",
             "network": "eth",
             "shortcut": "SET",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7828,7 +7919,7 @@
             "name": "Sexy Token",
             "network": "eth",
             "shortcut": "SEXY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7865,6 +7956,7 @@
         "erc20:eth:SHIT": {
             "address": "0xEF2E9966eb61BB494E5375d5Df8d67B7dB8A780D",
             "links": {
+                "Homepage": "https://www.shitcoin.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7887,7 +7979,7 @@
             "name": "SIFT",
             "network": "eth",
             "shortcut": "SIFT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7904,12 +7996,14 @@
             "network": "eth",
             "shortcut": "SIG",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:SKIN": {
             "address": "0x2bDC0D42996017fCe214b21607a515DA41A9E0C5",
             "links": {
+                "Github": "https://github.com/Steamtradenet/smart-contract",
+                "Homepage": "https://skincoin.org/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -7947,7 +8041,7 @@
             "name": "SKR Token",
             "network": "eth",
             "shortcut": "SKR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7963,7 +8057,7 @@
             "name": "Skraps",
             "network": "eth",
             "shortcut": "SKRP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7978,7 +8072,7 @@
             "name": "Smartlands",
             "network": "eth",
             "shortcut": "SLT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -7994,7 +8088,7 @@
             "name": "Smart Billions",
             "network": "eth",
             "shortcut": "SMART",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8010,7 +8104,7 @@
             "name": "SmartMesh",
             "network": "eth",
             "shortcut": "SMT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8040,7 +8134,7 @@
             "name": "Sandcoin",
             "network": "eth",
             "shortcut": "SND",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8056,7 +8150,7 @@
             "name": "SINERGIA",
             "network": "eth",
             "shortcut": "SNG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8086,13 +8180,15 @@
             "name": "SNIP",
             "network": "eth",
             "shortcut": "SNIP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:SNM": {
             "address": "0x983F6d60db79ea8cA4eB9968C6aFf8cfA04B3c63",
             "links": {
+                "Github": "https://github.com/sonm-io",
+                "Homepage": "https://sonm.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -8115,7 +8211,7 @@
             "name": "SNOV",
             "network": "eth",
             "shortcut": "SNOV",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8145,7 +8241,7 @@
             "name": "Sola Token",
             "network": "eth",
             "shortcut": "SOL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8160,7 +8256,7 @@
             "name": "SpankChain",
             "network": "eth",
             "shortcut": "SPANK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8190,7 +8286,7 @@
             "name": "SPARTA",
             "network": "eth",
             "shortcut": "SPARTA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8205,7 +8301,7 @@
             "name": "Sportify",
             "network": "eth",
             "shortcut": "SPF",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8221,7 +8317,7 @@
             "network": "eth",
             "shortcut": "SPN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:SRN": {
@@ -8236,7 +8332,7 @@
             "name": "Sirin Labs",
             "network": "eth",
             "shortcut": "SRN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8252,13 +8348,14 @@
             "name": "Sharder",
             "network": "eth",
             "shortcut": "SS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:SSH": {
             "address": "0x6e2050CBFB3eD8A4d39b64cC9f47E711a03a5a89",
             "links": {
+                "Homepage": "https://www.stream.space/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -8267,7 +8364,7 @@
             "network": "eth",
             "shortcut": "SSH",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:STAC": {
@@ -8281,7 +8378,7 @@
             "name": "Starter Coin",
             "network": "eth",
             "shortcut": "STAC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8296,7 +8393,7 @@
             "name": "Star Token",
             "network": "eth",
             "shortcut": "STAR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8312,7 +8409,7 @@
             "name": "StrikeCoin Token",
             "network": "eth",
             "shortcut": "STC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8323,11 +8420,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 19248500,
+            "marketcap_usd": 19818646,
             "name": "STK Token",
             "network": "eth",
             "shortcut": "STK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8342,17 +8439,19 @@
             "name": "Saturn Network",
             "network": "eth",
             "shortcut": "STN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:STORJ": {
             "address": "0xB64ef51C888972c908CFacf59B47C1AfBC0Ab8aC",
             "links": {
+                "Github": "https://github.com/Storj/",
+                "Homepage": "https://storj.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 101352634,
+            "marketcap_usd": 101564055,
             "name": "STORJ",
             "network": "eth",
             "shortcut": "STORJ",
@@ -8367,11 +8466,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 143008708,
+            "marketcap_usd": 143010374,
             "name": "Storm Token",
             "network": "eth",
             "shortcut": "STORM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8387,13 +8486,15 @@
             "name": "StashPay",
             "network": "eth",
             "shortcut": "STP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:STRC": {
             "address": "0x46492473755e8dF960F8034877F61732D718CE96",
             "links": {
+                "Github": "https://github.com/sprux/BackToEarth",
+                "Homepage": "https://backto.earth/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -8432,7 +8533,7 @@
             "name": "Substratum",
             "network": "eth",
             "shortcut": "SUB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8448,7 +8549,7 @@
             "name": "Swarm Fund Token",
             "network": "eth",
             "shortcut": "SWM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8478,7 +8579,7 @@
             "name": "Spectre.ai D-Token",
             "network": "eth",
             "shortcut": "SXDT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8493,7 +8594,7 @@
             "name": "Spectre.ai U-Token",
             "network": "eth",
             "shortcut": "SXUT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8508,7 +8609,7 @@
             "name": "Synapse",
             "network": "eth",
             "shortcut": "SYN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8523,7 +8624,7 @@
             "name": "SenSatorI Token",
             "network": "eth",
             "shortcut": "SenSatorI",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8539,7 +8640,7 @@
             "name": "Lamden Tau",
             "network": "eth",
             "shortcut": "TAU",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8555,7 +8656,7 @@
             "name": "TBC2",
             "network": "eth",
             "shortcut": "TBC2",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8571,7 +8672,7 @@
             "name": "TBitBot",
             "network": "eth",
             "shortcut": "TBT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8587,7 +8688,7 @@
             "name": "Telcoin",
             "network": "eth",
             "shortcut": "TEL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8619,12 +8720,14 @@
             "network": "eth",
             "shortcut": "THETA",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:THUG": {
             "address": "0xfe7B915A0bAA0E79f85c5553266513F7C1c03Ed0",
             "links": {
+                "Github": "https://github.com/THUGCOIN/THUGCoin",
+                "Homepage": "https://thugcoin.cash/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -8633,7 +8736,7 @@
             "network": "eth",
             "shortcut": "THUG",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:TIME": {
@@ -8662,7 +8765,7 @@
             "name": "TIO",
             "network": "eth",
             "shortcut": "TIO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8708,12 +8811,13 @@
             "name": "Tierion Network Token",
             "network": "eth",
             "shortcut": "TNT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:TRC": {
             "address": "0xcB3F902bf97626391bF8bA87264bbC3DC13469be",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -8722,7 +8826,7 @@
             "name": "The Real Coin",
             "network": "eth",
             "shortcut": "TRC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8737,7 +8841,7 @@
             "name": "The Real Coin",
             "network": "eth",
             "shortcut": "TRCN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8768,7 +8872,7 @@
             "name": "Tron Lab Token",
             "network": "eth",
             "shortcut": "TRX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8783,7 +8887,7 @@
             "name": "The World News",
             "network": "eth",
             "shortcut": "TWN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8798,7 +8902,7 @@
             "name": "Twinkle",
             "network": "eth",
             "shortcut": "TWNKL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8809,7 +8913,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 27764014,
+            "marketcap_usd": 28509211,
             "name": "Token-as-a-Service",
             "network": "eth",
             "shortcut": "TaaS",
@@ -8829,7 +8933,7 @@
             "name": "UnikoinGold",
             "network": "eth",
             "shortcut": "UKG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8846,7 +8950,7 @@
             "network": "eth",
             "shortcut": "UMKA",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:UQC": {
@@ -8860,12 +8964,13 @@
             "name": "Uquid Coin",
             "network": "eth",
             "shortcut": "UQC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:USDM": {
             "address": "0xD760ADdFb24D9C01Fe4Bfea7475C5e3636684058",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -8875,7 +8980,7 @@
             "network": "eth",
             "shortcut": "USDM",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:USDT": {
@@ -8889,7 +8994,7 @@
             "name": "USD Tether (erc20)",
             "network": "eth",
             "shortcut": "USDT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8904,7 +9009,7 @@
             "name": "UTK",
             "network": "eth",
             "shortcut": "UTK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8920,12 +9025,13 @@
             "name": "Universa",
             "network": "eth",
             "shortcut": "UTN-P",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:Unicorn": {
             "address": "0x89205A3A3b2A69De6Dbf7f01ED13B2108B2c43e7",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -8934,7 +9040,7 @@
             "name": "Unicorn",
             "network": "eth",
             "shortcut": "Unicorn",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8951,7 +9057,7 @@
             "network": "eth",
             "shortcut": "VDOC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:VEE": {
@@ -8966,7 +9072,7 @@
             "name": "BLOCKv",
             "network": "eth",
             "shortcut": "VEE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -8981,7 +9087,7 @@
             "name": "VENUS",
             "network": "eth",
             "shortcut": "VENUS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9012,7 +9118,7 @@
             "name": "Vechain",
             "network": "eth",
             "shortcut": "VET",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9027,7 +9133,7 @@
             "name": "VIB",
             "network": "eth",
             "shortcut": "VIB",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9043,7 +9149,7 @@
             "name": "VIBEX",
             "network": "eth",
             "shortcut": "VIBEX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9059,7 +9165,7 @@
             "network": "eth",
             "shortcut": "VIEW",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:VIT": {
@@ -9075,7 +9181,7 @@
             "network": "eth",
             "shortcut": "VIT",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:VIU": {
@@ -9090,7 +9196,7 @@
             "name": "VIU",
             "network": "eth",
             "shortcut": "VIU",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9107,7 +9213,7 @@
             "network": "eth",
             "shortcut": "VLD",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:VOC": {
@@ -9123,7 +9229,7 @@
             "network": "eth",
             "shortcut": "VOC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:VOISE": {
@@ -9137,7 +9243,7 @@
             "name": "Voise",
             "network": "eth",
             "shortcut": "VOISE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9179,11 +9285,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 116718928,
+            "marketcap_usd": 120818483,
             "name": "WAX",
             "network": "eth",
             "shortcut": "WAX",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9198,7 +9304,7 @@
             "name": "WeBetCrypto",
             "network": "eth",
             "shortcut": "WBA",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9215,7 +9321,7 @@
             "network": "eth",
             "shortcut": "WCN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:WCT": {
@@ -9244,7 +9350,7 @@
             "name": "WETH",
             "network": "eth",
             "shortcut": "WETH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9261,7 +9367,7 @@
             "network": "eth",
             "shortcut": "WHEN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:WHO": {
@@ -9276,7 +9382,7 @@
             "name": "WhoHas",
             "network": "eth",
             "shortcut": "WHO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9292,7 +9398,7 @@
             "name": "WickNote",
             "network": "eth",
             "shortcut": "WIC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9308,7 +9414,7 @@
             "name": "WILD Token",
             "network": "eth",
             "shortcut": "WILD",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9319,7 +9425,7 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 34315590,
+            "marketcap_usd": 34689405,
             "name": "WINGS",
             "network": "eth",
             "shortcut": "WINGS",
@@ -9338,7 +9444,7 @@
             "name": "Wolk Token",
             "network": "eth",
             "shortcut": "WOLK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9353,7 +9459,7 @@
             "name": "WorldPeaceCoin",
             "network": "eth",
             "shortcut": "WPC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9368,7 +9474,7 @@
             "name": "WePower Token",
             "network": "eth",
             "shortcut": "WPR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9384,7 +9490,7 @@
             "name": "WorkCoin",
             "network": "eth",
             "shortcut": "WRK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9400,7 +9506,7 @@
             "name": "WyvernToken",
             "network": "eth",
             "shortcut": "WYV",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9411,11 +9517,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 32886813,
+            "marketcap_usd": 33254634,
             "name": "WaBi",
             "network": "eth",
             "shortcut": "WaBi",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9430,7 +9536,7 @@
             "name": "Wi Coin",
             "network": "eth",
             "shortcut": "WiC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9445,7 +9551,7 @@
             "name": "X8X",
             "network": "eth",
             "shortcut": "X8X",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9477,7 +9583,7 @@
             "network": "eth",
             "shortcut": "XBP",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:XCC": {
@@ -9492,7 +9598,7 @@
             "name": "CoinCrowd",
             "network": "eth",
             "shortcut": "XCC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9509,7 +9615,7 @@
             "network": "eth",
             "shortcut": "XGG",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:XGM": {
@@ -9523,7 +9629,7 @@
             "name": "XGM",
             "network": "eth",
             "shortcut": "XGM",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9539,13 +9645,14 @@
             "name": "XGT",
             "network": "eth",
             "shortcut": "XGT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:XID": {
             "address": "0xB110eC7B1dcb8FAB8dEDbf28f53Bc63eA5BEdd84",
             "links": {
+                "Homepage": "https://sphereidentity.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -9570,7 +9677,7 @@
             "network": "eth",
             "shortcut": "XNK",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:XNN": {
@@ -9584,7 +9691,7 @@
             "name": "XENON",
             "network": "eth",
             "shortcut": "XNN",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9599,13 +9706,14 @@
             "name": "XNT",
             "network": "eth",
             "shortcut": "XNT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:eth:XRL": {
             "address": "0xB24754bE79281553dc1adC160ddF5Cd9b74361a4",
             "links": {
+                "Homepage": "https://rialto.ai/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -9628,7 +9736,7 @@
             "name": "XSC",
             "network": "eth",
             "shortcut": "XSC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9644,12 +9752,14 @@
             "network": "eth",
             "shortcut": "YEED",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:YUPIE": {
             "address": "0x0F33bb20a282A7649C7B3AFf644F084a9348e933",
             "links": {
+                "Github": "https://github.com/crowdholdingico/YupieSmartContract",
+                "Homepage": "https://www.crowdholding.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -9657,7 +9767,7 @@
             "name": "YUPIE",
             "network": "eth",
             "shortcut": "YUPIE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9669,11 +9779,11 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 11210245,
+            "marketcap_usd": 10945554,
             "name": "ZAP",
             "network": "eth",
             "shortcut": "ZAP",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9689,7 +9799,7 @@
             "network": "eth",
             "shortcut": "ZCS",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ZIL": {
@@ -9704,7 +9814,7 @@
             "name": "Zilliqa",
             "network": "eth",
             "shortcut": "ZIL",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9720,12 +9830,14 @@
             "network": "eth",
             "shortcut": "ZMN",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:ZRX": {
             "address": "0xE41d2489571d322189246DaFA5ebDe1F4699F498",
             "links": {
+                "Github": "https://github.com/0xProject",
+                "Homepage": "https://0xproject.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -9748,7 +9860,7 @@
             "name": "Zeus Exchange",
             "network": "eth",
             "shortcut": "ZST",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9764,7 +9876,7 @@
             "name": "carVertical",
             "network": "eth",
             "shortcut": "cV",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9779,7 +9891,7 @@
             "name": "eBCH",
             "network": "eth",
             "shortcut": "eBCH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9795,7 +9907,7 @@
             "name": "eBTC",
             "network": "eth",
             "shortcut": "eBTC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9810,7 +9922,7 @@
             "name": "ETH GAS",
             "network": "eth",
             "shortcut": "eGAS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9827,7 +9939,7 @@
             "network": "eth",
             "shortcut": "eUSD",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:eosDAC": {
@@ -9838,12 +9950,12 @@
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 114584198,
+            "marketcap_usd": 113134501,
             "name": "eosDAC",
             "network": "eth",
             "shortcut": "eosDAC",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
+            "t2_enabled": "soon",
             "type": "erc20"
         },
         "erc20:eth:onG": {
@@ -9858,12 +9970,13 @@
             "name": "onG",
             "network": "eth",
             "shortcut": "onG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:ubq:BEER": {
             "address": "0xFF3bF057ADF3b0E015b6465331a6236e55688274",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -9879,6 +9992,7 @@
         "erc20:ubq:CEFS": {
             "address": "0x08533D6A06CE365298b12Ef92eb407cBA8Aa8273",
             "links": {
+                "Homepage": "https://www.cryptopiashares.com/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -9886,12 +10000,13 @@
             "name": "CEFS",
             "network": "ubq",
             "shortcut": "CEFS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:ubq:DOT": {
             "address": "0x94aD7e41c1D44022C4F47cb1Ba019Fd1a022c536",
+            "hidden": 1,
             "links": {
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
@@ -9900,27 +10015,29 @@
             "name": "DOT",
             "network": "ubq",
             "shortcut": "DOT",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:ubq:QWARK": {
             "address": "0x4b4899a10F3E507DB207b0ee2426029eFa168a67",
             "links": {
+                "Homepage": "https://www.qwark.io/",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
-            "marketcap_usd": 4216460,
+            "marketcap_usd": 4081182,
             "name": "QWARK",
             "network": "ubq",
             "shortcut": "QWARK",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
         "erc20:ubq:RICKS": {
             "address": "0x5e1715bB79805Bd672729760B3f7F34D6f485098",
             "links": {
+                "Homepage": "https://picklericks.wixsite.com/picklewix",
                 "MyCrypto Wallet": "https://mycrypto.com",
                 "MyEtherWallet": "https://www.myetherwallet.com"
             },
@@ -9928,7 +10045,7 @@
             "name": "RICKS",
             "network": "ubq",
             "shortcut": "RICKS",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "yes",
             "type": "erc20"
         },
@@ -9949,7 +10066,7 @@
                 "Homepage": "https://www.dimcoin.io",
                 "Nano Wallet": "https://nem.io/downloads/"
             },
-            "marketcap_usd": 14998650,
+            "marketcap_usd": 15282234,
             "name": "DIMCOIN",
             "shortcut": "DIM",
             "t1_enabled": "yes",
@@ -9962,7 +10079,7 @@
                 "Homepage": "https://www.dimcoin.io",
                 "Nano Wallet": "https://nem.io/downloads/"
             },
-            "marketcap_usd": 14998650,
+            "marketcap_usd": 15282234,
             "name": "DIM TOKEN",
             "shortcut": "DIMTOK",
             "t1_enabled": "yes",
@@ -9998,7 +10115,7 @@
                 "Homepage": "https://nem.io",
                 "Nano Wallet": "https://nem.io/downloads/"
             },
-            "marketcap_usd": 2377260000,
+            "marketcap_usd": 2390067000,
             "name": "NEM",
             "shortcut": "XEM",
             "t1_enabled": "yes",
@@ -10007,11 +10124,11 @@
         }
     },
     "info": {
-        "marketcap_usd": 233901699216,
-        "t1_coins": 533,
-        "t2_coins": 651,
-        "total_marketcap_usd": 329998812276,
-        "updated_at": 1527171333,
-        "updated_at_readable": "Thu May 24 16:15:33 2018"
+        "marketcap_usd": 234741301894,
+        "t1_coins": 131,
+        "t2_coins": 515,
+        "total_marketcap_usd": 333046926165,
+        "updated_at": 1527240389,
+        "updated_at_readable": "Fri May 25 11:26:29 2018"
     }
 }
