@@ -15,7 +15,7 @@ def get_tokens():
             if not f.path.endswith('.json'):
                 continue
 
-            print('Processing', f.path)
+            # print('Processing', f.path)
             data = json.load(open(f.path, 'r'))
             data['chain'] = s
             data['chain_id'] = i

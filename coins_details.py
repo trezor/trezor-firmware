@@ -34,7 +34,6 @@ def coinmarketcap_init():
         print("Fetched %d of %d coins" % (len(COINS), total))
         time.sleep(1)
 
-    # pprint.pprint(COINS)
     json.dump(COINS, open('coinmarketcap.json', 'w'), sort_keys=True, indent=4)
 
 
@@ -53,7 +52,8 @@ def update_marketcap(obj, shortcut):
     try:
         obj['marketcap_usd'] = int(float(coinmarketcap_info(shortcut)['quotes']['USD']['market_cap']))
     except:
-        print("Marketcap info not found for", shortcut)
+        pass
+        # print("Marketcap info not found for", shortcut)
 
 def coinmarketcap_global():
     url = 'https://api.coinmarketcap.com/v2/global'
@@ -67,6 +67,7 @@ def set_default(obj, key, default_value):
 def update_info(details):
     details['info']['updated_at'] = int(time.time())
     details['info']['updated_at_readable'] = time.asctime()
+
     details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c['t1_enabled'] == 'yes' and not c.get('hidden', False)])
     details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes' and not c.get('hidden', False)])
 
@@ -130,7 +131,7 @@ def update_erc20(details):
 
     supported = []
     for t in tokens:
-        print('Updating', t['symbol'])
+        # print('Updating', t['symbol'])
 
         if t['chain'] not in networks:
             print('Skipping, %s is disabled' % t['chain'])
@@ -145,19 +146,17 @@ def update_erc20(details):
 
         set_default(out, 'shortcut', t['symbol'])
         set_default(out, 'name', t['name'])
-        #set_default(out, 't1_enabled', 'yes')
-        #set_default(out, 't2_enabled', 'yes')
         set_default(out, 'links', {})
 
-        if t['symbol'] in tokens_t1:
+        if "\" %s\"" % t['symbol'] in tokens_t1:
             out['t1_enabled'] = 'yes'
         else:
             out['t1_enabled'] = 'soon'
 
-        if t['symbol'] in tokens_t2:
-            out['t1_enabled'] = 'yes'
+        if "'%s'" % t['symbol'] in tokens_t2:
+            out['t2_enabled'] = 'yes'
         else:
-            out['t1_enabled'] = 'soon'
+            out['t2_enabled'] = 'soon'
 
         out['links']['MyCrypto Wallet'] = 'https://mycrypto.com'
         out['links']['MyEtherWallet'] = 'https://www.myetherwallet.com'
@@ -250,28 +249,44 @@ def update_mosaics(details):
 def check_missing_details(details):
     for k in details['coins'].keys():
         coin = details['coins'][k]
-
-        if coin.get('hidden'):
-            continue
+        hide = False
 
         if 'links' not in coin:
             print("%s: Missing links" % k)
-            continue
+            hide = True
         if 'Homepage' not in coin['links']:
             print("%s: Missing homepage" % k)
+            hide = True
         if coin['t1_enabled'] not in ('yes', 'no', 'planned', 'soon'):
             print("%s: Unknown t1_enabled" % k)
+            hide = True
         if coin['t2_enabled'] not in ('yes', 'no', 'planned', 'soon'):
             print("%s: Unknown t2_enabled" % k)
+            hide = True
         if 'TREZOR Wallet' in coin['links'] and coin['links']['TREZOR Wallet'] != 'https://wallet.trezor.io':
             print("%s: Strange URL for TREZOR Wallet" % k)
+            hide = True
 
         for w in [ x.lower() for x in coin['links'].keys() ]:
-            if 'wallet' in w:
+            if 'wallet' in w or 'electrum' in w:
                 break
         else:
             if coin['t1_enabled'] == 'yes' or coin['t2_enabled'] == 'yes':
                 print("%s: Missing wallet" % k)
+                hide = True
+            else:
+                print("%s: Missing wallet, but not hiding" % k)
+
+        if hide:
+            # If any of important detail is missing, hide coin from list
+            coin['hidden'] = 1
+
+        if not hide and coin.get('hidden'):
+            print("%s: Details are OK, but coin is still hidden" % k)
+
+    for k in details['coins'].keys():
+        if details['coins'][k].get('hidden') == 1:
+            print("%s: Coin is hidden" % k)
 
 if __name__ == '__main__':
     try:
