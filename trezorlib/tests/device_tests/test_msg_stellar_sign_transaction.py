@@ -51,11 +51,14 @@ class TestMsgStellarSignTransaction(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarAccountMergeOp()
+        # GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V
         op.destination_account = unhexlify('5d55642466b185b843152e9e219151dbc5892027ec40101a517bed5ca030c2e0')
 
         tx = self._create_msg()
 
         response = self.client.stellar_sign_transaction(tx, [op], self.get_address_n(), self.get_network_passphrase())
+
+        assert hexlify(response.public_key) == b'15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469'
         assert b64encode(response.signature) == b'gjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA=='
 
     def _create_msg(self) -> proto.StellarSignTx:
