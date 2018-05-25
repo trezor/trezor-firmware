@@ -759,7 +759,7 @@ void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, u
 }
 
 void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted) {
-	if (payload[0] == 0xFE) {
+	if (length >= 1 && payload[0] == 0xFE) {
 		char encoded[(length - 1) * 2 + 1];
 		data2hex(&payload[1], length - 1, encoded);
 
