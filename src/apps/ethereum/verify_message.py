@@ -1,12 +1,16 @@
-# TODO: not currently enabled, waits for https://github.com/ethereum/EIPs/pull/712
+from ubinascii import hexlify
+from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha3_256
+from trezor import ui
+from trezor.ui.text import Text
+from trezor.messages.Success import Success
+from apps.common.confirm import require_confirm
+from apps.common.signverify import split_message
+from apps.ethereum.sign_message import message_digest
+from apps.wallet.get_address import _split_address
 
 
 async def ethereum_verify_message(ctx, msg):
-    from .sign_message import message_digest
-    from trezor.crypto.curve import secp256k1
-    from trezor.crypto.hashlib import sha3_256
-    from trezor import ui
-    from trezor.messages.Success import Success
 
     digest = message_digest(msg.message)
     sig = bytearray([msg.signature[64]]) + msg.signature[:64]
@@ -20,10 +24,18 @@ async def ethereum_verify_message(ctx, msg):
     if msg.address != pkh:
         raise ValueError('Invalid signature')
 
-    ui.display.clear()
-    ui.display.text(10, 30, 'Verifying message',
-                    ui.BOLD, ui.LIGHT_GREEN, ui.BG)
-    ui.display.text(10, 60, msg.message, ui.MONO, ui.FG, ui.BG)
-    ui.display.text(10, 80, msg.address, ui.MONO, ui.FG, ui.BG)
+    address = '0x' + hexlify(msg.address).decode()
+
+    await require_confirm_verify_message(ctx, address, msg.message)
 
     return Success(message='Message verified')
+
+
+async def require_confirm_verify_message(ctx, address, message):
+    lines = _split_address(address)
+    content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
+    await require_confirm(ctx, content)
+
+    message = split_message(message)
+    content = Text('Verify message', ui.ICON_DEFAULT, max_lines=5, *message)
+    await require_confirm(ctx, content)

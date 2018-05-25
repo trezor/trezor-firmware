@@ -1,6 +1,6 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import EthereumGetAddress, EthereumSignTx
-# from trezor.messages.wire_types import EthereumSignMessage, EthereumVerifyMessage
+from trezor.messages.wire_types import EthereumSignMessage, EthereumVerifyMessage
 
 
 def dispatch_EthereumGetAddress(*args, **kwargs):
@@ -26,6 +26,5 @@ def dispatch_EthereumVerifyMessage(*args, **kwargs):
 def boot():
     register(EthereumGetAddress, protobuf_workflow, dispatch_EthereumGetAddress)
     register(EthereumSignTx, protobuf_workflow, dispatch_EthereumSignTx)
-    # TODO: re-enable once https://github.com/ethereum/EIPs/pull/712 is accepted/implemented
-    # register(EthereumSignMessage, protobuf_workflow, dispatch_EthereumSignMessage)
-    # register(EthereumVerifyMessage, protobuf_workflow, dispatch_EthereumVerifyMessage)
+    register(EthereumSignMessage, protobuf_workflow, dispatch_EthereumSignMessage)
+    register(EthereumVerifyMessage, protobuf_workflow, dispatch_EthereumVerifyMessage)

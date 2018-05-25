@@ -1,25 +1,28 @@
-# TODO: not currently enabled, waits for https://github.com/ethereum/EIPs/pull/712
+from trezor import ui
+from trezor.crypto.hashlib import sha3_256
+from trezor.utils import HashWriter
+from trezor.messages.EthereumMessageSignature import EthereumMessageSignature
+from trezor.ui.text import Text
+from trezor.crypto.curve import secp256k1
+from apps.common import seed
+from apps.common.confirm import require_confirm
+from apps.common.signverify import split_message
 
 
 def message_digest(message):
-    from apps.wallet.sign_tx.signing import write_varint
-    from trezor.crypto.hashlib import sha3_256
-    from trezor.utils import HashWriter
 
     h = HashWriter(sha3_256)
-    signed_message_header = 'Ethereum Signed Message:\n'
-    write_varint(h, len(signed_message_header))
+    signed_message_header = '\x19Ethereum Signed Message:\n'
     h.extend(signed_message_header)
-    write_varint(h, len(message))
+    h.extend(str(len(message)))
     h.extend(message)
 
     return h.get_digest(True)
 
 
 async def ethereum_sign_message(ctx, msg):
-    from trezor.messages.EthereumMessageSignature import EthereumMessageSignature
-    from trezor.crypto.curve import secp256k1
-    from ..common import seed
+
+    await require_confirm_sign_message(ctx, msg.message)
 
     address_n = msg.address_n or ()
     node = await seed.derive_node(ctx, address_n)
@@ -30,3 +33,9 @@ async def ethereum_sign_message(ctx, msg):
     sig.address = node.ethereum_pubkeyhash()
     sig.signature = signature[1:] + bytearray([signature[0]])
     return sig
+
+
+async def require_confirm_sign_message(ctx, message):
+    message = split_message(message)
+    content = Text('Sign ETH message', ui.ICON_DEFAULT, max_lines=5, *message)
+    await require_confirm(ctx, content)
