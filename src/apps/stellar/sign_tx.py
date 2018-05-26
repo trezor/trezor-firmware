@@ -44,6 +44,8 @@ async def sign_tx(ctx, msg):
     node = await seed.derive_node(ctx, msg.address_n, STELLAR_CURVE)
     pubkey = seed.remove_ed25519_public_key_prefix(node.public_key())
     write_pubkey(w, pubkey)
+    if msg.source_account != pubkey:
+        raise ValueError('Stellar: source account does not match address_n')
 
     write_uint32(w, msg.fee)
     write_uint64(w, msg.sequence_number)
