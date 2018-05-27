@@ -211,6 +211,14 @@ def update_ethereum(details):
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'ubiq')
 
+    out = details['coins'].setdefault('coin2:ELLA', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'ELLA')
+    set_default(out, 'name', 'Ellaism')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'ellaism')
+
     out = details['coins'].setdefault('coin2:EGEM', {})
     out['type'] = 'coin'
     set_default(out, 'shortcut', 'EGEM')

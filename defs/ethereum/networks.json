@@ -66,6 +66,12 @@
     "url": "https://ethereumclassic.github.io"
   },
   {
+    "chain_id": 64,
+    "shortcut": "ELLA",
+    "name": "Ellaism",
+    "url": "https://ellaism.org"
+  },
+  {
     "chain_id": 1987,
     "shortcut": "EGEM",
     "name": "EtherGem",
