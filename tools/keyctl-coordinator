@@ -5,7 +5,7 @@ import click
 import pyblake2
 import Pyro4
 import serpent
-from trezorlib import ed25519raw, ed25519cosi
+from trezorlib import cosi
 
 PORT = 5001
 indexmap = {
@@ -58,8 +58,8 @@ def sign(index, filename, participants):
         pks.append(pk)
         Rs.append(R)
     # compute global commit
-    global_pk = ed25519cosi.combine_keys(pks)
-    global_R = ed25519cosi.combine_keys(Rs)
+    global_pk = cosi.combine_keys(pks)
+    global_R = cosi.combine_keys(Rs)
     # collect signatures
     sigs = []
     for p in proxy:
@@ -67,8 +67,8 @@ def sign(index, filename, participants):
         sig = serpent.tobytes(sig)
         sigs.append(sig)
     # compute global signature
-    sig = ed25519cosi.combine_sig(global_R, sigs)
-    ed25519raw.checkvalid(sig, digest, global_pk)
+    sig = cosi.combine_sig(global_R, sigs)
+    cosi.verify(sig, digest, global_pk)
     print(binascii.hexlify(sig).decode())
 
 

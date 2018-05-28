@@ -8,7 +8,7 @@ import binascii
 
 import pyblake2
 
-from trezorlib import ed25519raw, ed25519cosi
+from trezorlib import cosi
 
 
 def format_sigmask(sigmask):
@@ -285,11 +285,11 @@ def binopen(filename):
             # check signatures against signing keys in the vendor header
             if firmware.sigmask > 0:
                 pk = [vheader.vpub[i] for i in range(8) if firmware.sigmask & (1 << i)]
-                global_pk = ed25519cosi.combine_keys(pk)
+                global_pk = cosi.combine_keys(pk)
                 hdr = subdata[:IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE] + IMAGE_SIG_SIZE * b'\x00'
                 digest = pyblake2.blake2s(hdr).digest()
                 try:
-                    ed25519raw.checkvalid(firmware.sig, digest, global_pk)
+                    cosi.verify(firmware.sig, digest, global_pk)
                     print('Firmware signature OK')
                 except:
                     print('Firmware signature INCORRECT')

@@ -3,7 +3,7 @@ import binascii
 import struct
 import click
 import pyblake2
-from trezorlib import ed25519raw, ed25519cosi
+from trezorlib import cosi
 
 indexmap = {
     'bootloader': 0,
@@ -40,30 +40,26 @@ def sign(index, filename, seckeys):
     # compute header digest
     digest = header_digest(index, filename)
     # collect commits
-    pks, Rs = [], []
+    pks, nonces, Rs = [], [], []
     for ctr, seckey in enumerate(seckeys):
         sk = binascii.unhexlify(seckey)
-        pk = ed25519raw.publickey(sk)
-        _, R = ed25519cosi.get_nonce(sk, digest, ctr)
+        pk = cosi.pubkey_from_privkey(sk)
+        r, R = cosi.get_nonce(sk, digest, ctr)
         pks.append(pk)
+        nonces.append(r)
         Rs.append(R)
     # compute global commit
-    global_pk = ed25519cosi.combine_keys(pks)
-    global_R = ed25519cosi.combine_keys(Rs)
+    global_pk = cosi.combine_keys(pks)
+    global_R = cosi.combine_keys(Rs)
     # collect signatures
     sigs = []
-    for ctr, seckey in enumerate(seckeys):
+    for seckey, nonce in zip(seckeys, nonces):
         sk = binascii.unhexlify(seckey)
-        r, _ = ed25519cosi.get_nonce(sk, digest, ctr)
-        h = ed25519raw.H(sk)
-        b = ed25519raw.b
-        a = 2 ** (b - 2) + sum(2 ** i * ed25519raw.bit(h, i) for i in range(3, b - 2))
-        S = (r + ed25519raw.Hint(global_R + global_pk + digest) * a) % ed25519raw.l
-        sig = ed25519raw.encodeint(S)
+        sig = cosi.sign_with_privkey(digest, sk, global_pk, nonce, global_R)
         sigs.append(sig)
     # compute global signature
-    sig = ed25519cosi.combine_sig(global_R, sigs)
-    ed25519raw.checkvalid(sig, digest, global_pk)
+    sig = cosi.combine_sig(global_R, sigs)
+    cosi.verify(sig, digest, global_pk)
     print(binascii.hexlify(sig).decode())
 
 
