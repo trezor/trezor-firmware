@@ -1,0 +1,51 @@
+{
+	"trezor1": {
+		"Bitcoin": "1.5.2",
+		"Testnet": "1.5.2",
+		"Bcash": "1.5.2",
+		"Namecoin": "1.5.2",
+		"Litecoin": "1.5.2",
+		"Dogecoin": "1.5.2",
+		"Dash": "1.5.2",
+		"Zcash": "1.5.2",
+		"Bgold": "1.6.0",
+		"DigiByte": "1.6.0",
+		"Monacoin": "1.6.0",
+		"Fujicoin": "1.6.1",
+		"Vertcoin": "1.6.1",
+		"Bcash Testnet": "1.5.2",
+		"Zcash Testnet": "1.5.2",
+		"Decred Testnet": "1.6.1"
+	},
+	"trezor2": {
+		"Bitcoin": "2.0.5",
+		"Testnet": "2.0.5",
+		"Bcash": "2.0.5",
+		"Bcash Testnet": "2.0.5",
+		"Namecoin": "2.0.5",
+		"Litecoin": "2.0.5",
+		"Dogecoin": "2.0.5",
+		"Dash": "2.0.5",
+		"Zcash": "2.0.5",
+		"Zcash Testnet": "2.0.5",
+		"Bgold": "2.0.5",
+		"DigiByte": "2.0.5",
+		"Monacoin": "2.0.5",
+		"Fujicoin": "2.0.5",
+		"Vertcoin": "2.0.5"
+	},
+	"webwallet": {
+		"Bitcoin": true,
+		"Bcash": true,
+		"Bgold": true,
+		"Dash": true,
+		"Litecoin": true,
+		"Zcash": true
+	},
+	"electrum": {
+		"Bitcoin": "https://electrum.org/",
+		"Litecoin": "https://electrum-ltc.org",
+		"Bcash": "https://electroncash.org",
+		"Dash": "https://electrum.dash.org"
+	}
+}
