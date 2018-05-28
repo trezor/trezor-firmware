@@ -127,6 +127,7 @@ def session(f):
     # with session activation / deactivation
     @functools.wraps(f)
     def wrapped_f(*args, **kwargs):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
         client = args[0]
         client.transport.session_begin()
         try:
@@ -162,6 +163,7 @@ class BaseClient(object):
 
     @session
     def call_raw(self, msg):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
         self.transport.write(msg)
         return self.transport.read()
 
@@ -362,6 +364,7 @@ class DebugLinkMixin(object):
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(' ')
 
     def call_raw(self, msg):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
 
         if SCREENSHOT and self.debug:
             from PIL import Image
@@ -381,6 +384,8 @@ class DebugLinkMixin(object):
         return resp
 
     def _check_request(self, msg):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
+
         if self.expected_responses is not None:
             try:
                 expected = self.expected_responses.pop(0)
