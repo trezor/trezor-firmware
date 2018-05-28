@@ -103,6 +103,19 @@
             "t2_enabled": "yes",
             "type": "coin"
         },
+        "coin2:ELLA": {
+            "links": {
+              "Homepage": "https://ellaism.org",
+              "MyCrypto Wallet": "https://mycrypto.com",
+              "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 1274724,
+            "name": "Ellaism",
+            "shortcut": "ELLA",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
         "coin2:XLM": {
             "links": {
                 "Homepage": "https://www.stellar.org"
