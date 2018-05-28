@@ -50,7 +50,6 @@ class TestBip32Speed(TrezorTest):
             print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
             assert delay <= expected
 
-    @pytest.mark.skip_t2
     def test_cache(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -67,5 +66,5 @@ class TestBip32Speed(TrezorTest):
         print("NOCACHE TIME", nocache_time)
         print("CACHED TIME", cache_time)
 
-        # Cached time expected to be at least 2x faster
-        assert cache_time <= nocache_time / 2.
+        # Cached time expected to be at least 1.2x faster
+        assert cache_time <= nocache_time / 1.2
