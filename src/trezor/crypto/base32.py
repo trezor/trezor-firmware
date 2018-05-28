@@ -25,17 +25,17 @@ def encode(s: bytes) -> str:
         # leftover bit of c1 and tack it onto c2.  Then we take the 2 leftover
         # bits of c2 and tack them onto c3.  The shifts and masks are intended
         # to give us values of exactly 5 bits in width.
-        c1, c2, c3 = unpack('!HHB', s[i*5:(i+1)*5])
-        c2 += (c1 & 1) << 16 # 17 bits wide
-        c3 += (c2 & 3) << 8  # 10 bits wide
-        encoded += bytes([_b32tab[c1 >> 11],         # bits 1 - 5
-                          _b32tab[(c1 >> 6) & 0x1f], # bits 6 - 10
-                          _b32tab[(c1 >> 1) & 0x1f], # bits 11 - 15
-                          _b32tab[c2 >> 12],         # bits 16 - 20 (1 - 5)
-                          _b32tab[(c2 >> 7) & 0x1f], # bits 21 - 25 (6 - 10)
-                          _b32tab[(c2 >> 2) & 0x1f], # bits 26 - 30 (11 - 15)
-                          _b32tab[c3 >> 5],          # bits 31 - 35 (1 - 5)
-                          _b32tab[c3 & 0x1f],        # bits 36 - 40 (1 - 5)
+        c1, c2, c3 = unpack('!HHB', s[i * 5:(i + 1) * 5])
+        c2 += (c1 & 1) << 16  # 17 bits wide
+        c3 += (c2 & 3) << 8   # 10 bits wide
+        encoded += bytes([_b32tab[c1 >> 11],          # bits 1 - 5
+                          _b32tab[(c1 >> 6) & 0x1f],  # bits 6 - 10
+                          _b32tab[(c1 >> 1) & 0x1f],  # bits 11 - 15
+                          _b32tab[c2 >> 12],          # bits 16 - 20 (1 - 5)
+                          _b32tab[(c2 >> 7) & 0x1f],  # bits 21 - 25 (6 - 10)
+                          _b32tab[(c2 >> 2) & 0x1f],  # bits 26 - 30 (11 - 15)
+                          _b32tab[c3 >> 5],           # bits 31 - 35 (1 - 5)
+                          _b32tab[c3 & 0x1f],         # bits 36 - 40 (1 - 5)
                           ])
     # Adjust for any leftover partial quanta
     if leftover == 1:
