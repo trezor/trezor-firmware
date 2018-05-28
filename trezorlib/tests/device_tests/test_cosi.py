@@ -78,3 +78,22 @@ class TestCosi(TrezorTest):
         sig = cosi.combine_sig(global_R, [sig0.signature, sig1.signature, sig2.signature])
 
         cosi.verify(sig, digest, global_pk)
+
+    def test_cosi_compat(self):
+        self.setup_mnemonic_pin_passphrase()
+
+        digest = sha256(b'this is not a pipe').digest()
+        remote_commit = self.client.cosi_commit(parse_path("10018'/0'"), digest)
+
+        local_privkey = sha256(b'private key').digest()[:32]
+        local_pubkey = cosi.pubkey_from_privkey(local_privkey)
+        local_nonce, local_commitment = cosi.get_nonce(local_privkey, digest, 42)
+
+        global_pk = cosi.combine_keys([remote_commit.pubkey, local_pubkey])
+        global_R = cosi.combine_keys([remote_commit.commitment, local_commitment])
+
+        remote_sig = self.client.cosi_sign(parse_path("10018'/0'"), digest, global_R, global_pk)
+        local_sig = cosi.sign_with_privkey(digest, local_privkey, global_pk, local_nonce, global_R)
+        sig = cosi.combine_sig(global_R, [remote_sig.signature, local_sig])
+
+        cosi.verify(sig, digest, global_pk)
