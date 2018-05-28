@@ -27,4 +27,4 @@ for c in coins:
         else:
             print('        %s=%s,' % (n, repr(c[n])))
     print('    ),')
-print(']\n')
+print(']')
