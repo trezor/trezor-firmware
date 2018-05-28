@@ -1,66 +1,77 @@
 [
   {
     "chain_id": 1,
+    "slip44": 60,
     "shortcut": "ETH",
     "name": "Ethereum",
     "url": "https://www.ethereum.org"
   },
   {
     "chain_id": 2,
+    "slip44": 40,
     "shortcut": "EXP",
     "name": "Expanse",
     "url": "https://expanse.tech"
   },
   {
     "chain_id": 3,
+    "slip44": 1,
     "shortcut": "tETH",
     "name": "Ethereum Testnet/Ropsten",
     "url": "https://www.ethereum.org"
   },
   {
     "chain_id": 4,
+    "slip44": 1,
     "shortcut": "tETH",
     "name": "Ethereum Testnet/Rinkeby",
     "url": "https://www.ethereum.org"
   },
   {
     "chain_id": 8,
+    "slip44": 108,
     "shortcut": "UBQ",
     "name": "UBIQ",
     "url": "https://ubiqsmart.com"
   },
   {
     "chain_id": 28,
+    "slip44": 1128,
     "shortcut": "ETSC",
     "name": "Ethereum Social",
     "url": "https://ethereumsocial.kr"
   },
   {
     "chain_id": 30,
+    "slip44": 137,
     "shortcut": "RSK",
     "name": "Rootstock",
     "url": "https://www.rsk.co"
   },
   {
     "chain_id": 31,
+    "slip44": 1,
     "shortcut": "tRSK",
     "name": "Rootstock Testnet",
     "url": "https://www.rsk.co"
   },
   {
     "chain_id": 42,
+    "slip44": 1,
     "shortcut": "tETH",
     "name": "Ethereum Testnet/Kovan",
     "url": "https://www.ethereum.org"
   },
   {
     "chain_id": 61,
+    "slip44": 61,
     "shortcut": "ETC",
     "name": "Ethereum Classic",
     "url": "https://ethereumclassic.github.io"
   },
   {
     "chain_id": 62,
+    "slip44": 1,
     "shortcut": "tETC",
     "name": "Ethereum Classic Testnet",
     "url": "https://ethereumclassic.github.io"
@@ -73,6 +84,7 @@
   },
   {
     "chain_id": 1987,
+    "slip44": 1987,
     "shortcut": "EGEM",
     "name": "EtherGem",
     "url": "https://egem.io"
