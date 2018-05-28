@@ -6,27 +6,29 @@ from apps.common.request_passphrase import protect_by_passphrase
 _DEFAULT_CURVE = 'secp256k1'
 
 
-async def derive_node(ctx: wire.Context, path=(), curve_name=_DEFAULT_CURVE):
-    seed = await _get_seed(ctx)
+async def derive_node(ctx: wire.Context, path: list, curve_name=_DEFAULT_CURVE):
+    seed = await _get_cached_seed(ctx)
     node = bip32.from_seed(seed, curve_name)
     if path:
         node.derive_path(path)
     return node
 
 
-async def _get_seed(ctx: wire.Context) -> bytes:
+async def _get_cached_seed(ctx: wire.Context) -> bytes:
+    if not storage.is_initialized():
+        raise wire.ProcessError('Device is not initialized')
     if cache.get_seed() is None:
-        seed, passphrase = await _compute_seed(ctx)
-        cache.set_seed(seed, passphrase)
+        passphrase = await _get_cached_passphrase(ctx)
+        seed = bip39.seed(storage.get_mnemonic(), passphrase)
+        cache.set_seed(seed)
     return cache.get_seed()
 
 
-async def _compute_seed(ctx: wire.Context) -> (bytes, str):
-    if not storage.is_initialized():
-        raise wire.ProcessError('Device is not initialized')
-
-    passphrase = await protect_by_passphrase(ctx)
-    return bip39.seed(storage.get_mnemonic(), passphrase), passphrase
+async def _get_cached_passphrase(ctx: wire.Context) -> str:
+    if cache.get_passphrase() is None:
+        passphrase = await protect_by_passphrase(ctx)
+        cache.set_passphrase(passphrase)
+    return cache.get_passphrase()
 
 
 def derive_node_without_passphrase(path, curve_name=_DEFAULT_CURVE):
