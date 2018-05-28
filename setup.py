@@ -44,7 +44,7 @@ class PrebuildCommand(Command):
 
         # regenerate messages
         try:
-            subprocess.check_call(os.path.join(os.getcwd(), 'tools', 'build_protobuf'))
+            subprocess.check_call([os.path.join(os.getcwd(), 'tools', 'build_protobuf'), '--no-core'])
         except Exception as e:
             print(e)
             print("Generating protobuf failed. Maybe you don't have 'protoc', or maybe you are on Windows?")
