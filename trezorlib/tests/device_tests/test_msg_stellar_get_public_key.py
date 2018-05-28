@@ -12,11 +12,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
+import pytest
 
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from trezorlib import stellar
-import pytest
+from trezorlib.tools import parse_path
 
 
 @pytest.mark.stellar
@@ -27,5 +28,5 @@ class TestMsgStellarGetPublicKey(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
-        response = self.client.stellar_get_public_key(self.client.expand_path("m/44'/148'/0'"))
+        response = self.client.stellar_get_public_key(parse_path(stellar.DEFAULT_BIP32_PATH))
         assert stellar.address_from_public_key(response.public_key) == b'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'

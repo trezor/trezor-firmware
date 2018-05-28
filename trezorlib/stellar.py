@@ -30,14 +30,7 @@ OP_MANAGE_DATA = 10
 OP_BUMP_SEQUENCE = 11
 
 
-def expand_path_or_default(client, address):
-    """Uses client to parse address and returns an array of integers
-    If no address is specified, the default of m/44'/148'/0' is used
-    """
-    if address:
-        return client.expand_path(address)
-    else:
-        return client.expand_path("m/44'/148'/0'")
+DEFAULT_BIP32_PATH = "m/44h/148h/0h"
 
 
 def address_from_public_key(pk_bytes):

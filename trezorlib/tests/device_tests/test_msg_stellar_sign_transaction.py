@@ -20,8 +20,10 @@
 from base64 import b64encode
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 from trezorlib import messages as proto
+from trezorlib import stellar
+from trezorlib.tools import parse_path
 import pytest
 
 
@@ -29,13 +31,11 @@ import pytest
 @pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarSignTransaction(TrezorTest):
 
+    ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
+
     def get_network_passphrase(self):
         """Use the same passphrase as the network that generated the test XDR/signatures"""
         return "Integration Test Network ; zulucrypto"
-
-    def get_address_n(self):
-        """BIP32 path of the default account"""
-        return self.client.expand_path("m/44'/148'/0'")
 
     def test_sign_tx_bump_sequence_op(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -44,7 +44,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         op.bump_to = 0x7fffffffffffffff
         tx = self._create_msg()
 
-        response = self.client.stellar_sign_transaction(tx, [op], self.get_address_n(), self.get_network_passphrase())
+        response = self.client.stellar_sign_transaction(tx, [op], self.ADDRESS_N, self.get_network_passphrase())
         assert b64encode(response.signature) == b'UAOL4ZPYIOzEgM66kBrhyNjLR66dNXtuNrmvd3m0/pc8qCSoLmYY4TybS0lHiMtb+LFZESTaxrpErMHz1sZ6DQ=='
 
     def test_sign_tx_account_merge_op(self):
@@ -55,7 +55,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         tx = self._create_msg()
 
-        response = self.client.stellar_sign_transaction(tx, [op], self.get_address_n(), self.get_network_passphrase())
+        response = self.client.stellar_sign_transaction(tx, [op], self.ADDRESS_N, self.get_network_passphrase())
         assert b64encode(response.signature) == b'gjoPRj4sW5o7NAXzYOqPK0uxfPbeKb4Qw48LJiCH/XUZ6YVCiZogePC0Z5ISUlozMh6YO6HoYtuLPbm7jq+eCA=='
 
     def _create_msg(self) -> proto.StellarSignTx:
