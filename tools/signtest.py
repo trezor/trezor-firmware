@@ -14,6 +14,13 @@ from trezorlib.tx_api import TxApiBitcoin
 from trezorlib.transport import get_transport
 
 
+# This script has survived unmodified through several significant changes
+# of the trezorlib library. While we want to have something like this,
+# we're waiting on a couple more changes in order to implement this a little more cleanly.
+# Wait for trezorlib v1.0.
+raise Exception("This code is too old to run. Sorry.")
+
+
 def hash160(x):
     h = hashlib.new("ripemd160")
     h.update(hashlib.sha256(x).digest())

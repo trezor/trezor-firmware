@@ -10,16 +10,16 @@ from urllib.parse import urlparse
 
 from trezorlib.client import TrezorClient
 from trezorlib.transport import get_transport
+from trezorlib.tools import parse_path
 
 
 # Return path by BIP-32
-def getPath(client):
-    return client.expand_path("10016'/0")
+BIP32_PATH = parse_path("10016h/0")
 
 
 # Deriving master key
 def getMasterKey(client):
-    bip32_path = getPath(client)
+    bip32_path = BIP32_PATH
     ENC_KEY = 'Activate TREZOR Password Manager?'
     ENC_VALUE = unhexlify('2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee')
     key = hexlify(client.encrypt_keyvalue(
@@ -99,7 +99,7 @@ def getDecryptedNonce(client, entry):
     ENC_KEY = 'Unlock %s for user %s?' % (item, entry['username'])
     ENC_VALUE = entry['nonce']
     decrypted_nonce = hexlify(client.decrypt_keyvalue(
-        getPath(client),
+        BIP32_PATH,
         ENC_KEY,
         unhexlify(ENC_VALUE),
         False,

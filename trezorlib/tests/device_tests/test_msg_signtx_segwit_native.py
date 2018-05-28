@@ -207,7 +207,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            # address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            # address_n=parse_path("44'/1'/0'/0/0"),
             # script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             address='2N6UeBoqYEEnybg4cReFYDammpsyDw8R2Mc',
             script_type=proto.OutputScriptType.PAYTOADDRESS,

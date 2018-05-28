@@ -162,7 +162,7 @@ class TestMsgNEMSignTx(TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
             "amount": 3000000,
             "fee": 1000000,
@@ -191,7 +191,7 @@ class TestMsgNEMSignTx(TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
             "amount": 2000000,
             "fee": 1000000,
@@ -219,7 +219,7 @@ class TestMsgNEMSignTx(TrezorTest):
     def test_nem_signtx_multiple_mosaics(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 76809215,
             "amount": 2000000,
             "fee": 1000000,
