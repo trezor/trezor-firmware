@@ -352,8 +352,7 @@ def format_message(pb: MessageType,
                    indent: int = 0,
                    sep: str = ' ' * 4,
                    truncate_after: Optional[int] = 256,
-                   truncate_to: Optional[int] = 64,
-                   collapse_cointypes: bool = False) -> str:
+                   truncate_to: Optional[int] = 64) -> str:
 
     def mostly_printable(bytes):
         if not bytes:
@@ -397,14 +396,8 @@ def format_message(pb: MessageType,
 
         return repr(value)
 
-    from .messages import Features
-    pb_dict = pb.__dict__.copy()
-    if collapse_cointypes and isinstance(pb, Features):
-        del pb_dict['coins']
-        pb_dict['coins (shortened)'] = ' '.join(coin.coin_shortcut for coin in pb.coins)
-
     return '{name} ({size} bytes) {content}'.format(
         name=pb.__class__.__name__,
         size=pb.ByteSize(),
-        content=pformat_value(pb_dict, indent)
+        content=pformat_value(pb.__dict__, indent)
     )

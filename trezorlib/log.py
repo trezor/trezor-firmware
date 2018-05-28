@@ -18,7 +18,7 @@ class PrettyProtobufFormatter(logging.Formatter):
             if type(record.protobuf) in OMITTED_MESSAGES:
                 message += " ({} bytes)".format(record.protobuf.ByteSize())
             else:
-                message += "\n" + protobuf.format_message(record.protobuf, collapse_cointypes=True)
+                message += "\n" + protobuf.format_message(record.protobuf)
         return message
 
 
