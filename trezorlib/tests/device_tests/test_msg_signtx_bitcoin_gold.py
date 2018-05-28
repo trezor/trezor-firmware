@@ -16,11 +16,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+import pytest
+from binascii import hexlify, unhexlify
+
+from .common import TrezorTest
+from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
+from trezorlib.tools import parse_path
 
 TxApiBitcoinGold = coins.tx_api["Bitcoin Gold"]
 
@@ -32,14 +36,14 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/156'/0'/0/0"),
+            address_n=parse_path("44'/156'/0'/0/0"),
             amount=1995344,
             prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
             prev_index=0,
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/156'/0'/1/0"),
+            address_n=parse_path("44'/156'/0'/1/0"),
             amount=1896050,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -68,14 +72,14 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/156'/0'/1/0"),
+            address_n=parse_path("44'/156'/0'/1/0"),
             amount=1896050,
             prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
             prev_index=0,
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         inp2 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/156'/0'/0/1"),
+            address_n=parse_path("44'/156'/0'/0/1"),
             # 1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3
             amount=73452,
             prev_hash=unhexlify('db77c2461b840e6edbe7f9280043184a98e020d9795c1b65cb7cef2551a8fb18'),
@@ -107,7 +111,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/156'/1000'/0/0"),
+            address_n=parse_path("44'/156'/1000'/0/0"),
             # 1MH9KKcvdCTY44xVDC2k3fjBbX5Cz29N1q
             amount=1995344,
             prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
@@ -115,7 +119,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/156'/1000'/1/0"),
+            address_n=parse_path("44'/156'/1000'/1/0"),
             amount=1896050,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -129,7 +133,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         attack_ctr = 0
 
         def attack_processor(req, msg):
-            import sys
             global attack_ctr
 
             if req.details.tx_hash is not None:
@@ -162,7 +165,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         xpubs = []
-        for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/156'/" + str(index) + "'")), range(1, 4)):
+        for n in map(lambda index: self.client.get_public_node(parse_path("44'/156'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
 
         def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
@@ -172,7 +175,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                 m=2,
             )
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/156'/3'/0/0"),
+            address_n=parse_path("44'/156'/3'/0/0"),
             multisig=getmultisig(0, 0),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=48490,
@@ -186,7 +189,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/156'/3'/1/0"),
+            address_n=parse_path("44'/156'/3'/1/0"),
             multisig=getmultisig(1, 0),
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
             amount=24000
@@ -208,7 +211,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         assert hexlify(signatures1[0]) == b'3045022100b1594f3b186d0dedbf61e53a1c407b1e0747098b7375941df85af045040f578e022013ba1893eb9e2fd854dd07073a83b261cf4beba76f66b07742e462b4088a7e4a'
 
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/156'/1'/0/0"),
+            address_n=parse_path("44'/156'/1'/0/0"),
             multisig=getmultisig(0, 0, [b'', b'', signatures1[0]]),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=48490,
@@ -239,7 +242,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("49'/156'/0'/1/0"),
+            address_n=parse_path("49'/156'/0'/1/0"),
             amount=123456789,
             prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
             prev_index=0,
@@ -277,7 +280,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("49'/156'/0'/1/0"),
+            address_n=parse_path("49'/156'/0'/1/0"),
             amount=123456789,
             prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
             prev_index=0,
@@ -289,7 +292,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("49'/156'/0'/1/0"),
+            address_n=parse_path("49'/156'/0'/1/0"),
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             amount=123456789 - 11000 - 12300000,
         )
@@ -315,7 +318,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
-        nodes = map(lambda index: self.client.get_public_node(self.client.expand_path("999'/1'/%d'" % index)), range(1, 4))
+        nodes = map(lambda index: self.client.get_public_node(parse_path("999'/1'/%d'" % index)), range(1, 4))
         multisig = proto.MultisigRedeemScriptType(
             pubkeys=list(map(lambda n: proto.HDNodePathType(node=deserialize(n.xpub), address_n=[2, 0]), nodes)),
             signatures=[b'', b'', b''],
@@ -323,7 +326,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
         )
 
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("999'/1'/1'/2/0"),
+            address_n=parse_path("999'/1'/1'/2/0"),
             prev_hash=unhexlify('25526bf06c76ad3082bba930cf627cdd5f1b3cd0b9907dd7ff1a07e14addc985'),
             prev_index=1,
             script_type=proto.InputScriptType.SPENDP2SHWITNESS,

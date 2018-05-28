@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+import pytest
+from binascii import hexlify, unhexlify
+
+from .common import TrezorTest
+from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.ckd_public import deserialize
 from trezorlib.client import CallException
+from trezorlib.tools import parse_path
+
 
 TxApiBcash = coins.tx_api['Bcash']
 
@@ -30,7 +35,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/0/0"),
+            address_n=parse_path("44'/145'/0'/0/0"),
             # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
             amount=1995344,
             prev_hash=unhexlify('bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78'),
@@ -38,7 +43,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/145'/0'/1/0"),
+            address_n=parse_path("44'/145'/0'/1/0"),
             amount=1896050,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -67,7 +72,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/1/0"),
+            address_n=parse_path("44'/145'/0'/1/0"),
             # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
             amount=1896050,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
@@ -75,7 +80,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         inp2 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/0/1"),
+            address_n=parse_path("44'/145'/0'/0/1"),
             # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
             amount=73452,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
@@ -107,7 +112,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/1/0"),
+            address_n=parse_path("44'/145'/0'/1/0"),
             # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
             amount=1896050,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
@@ -115,7 +120,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         inp2 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/0/1"),
+            address_n=parse_path("44'/145'/0'/0/1"),
             # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
             amount=73452,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
@@ -147,7 +152,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/1/0"),
+            address_n=parse_path("44'/145'/0'/1/0"),
             # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
             amount=300,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
@@ -155,7 +160,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         inp2 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/0'/0/1"),
+            address_n=parse_path("44'/145'/0'/0/1"),
             # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
             amount=70,
             prev_hash=unhexlify('502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c'),
@@ -231,7 +236,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/1000'/0/0"),
+            address_n=parse_path("44'/145'/1000'/0/0"),
             # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
             amount=1995344,
             prev_hash=unhexlify('bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78'),
@@ -239,7 +244,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/145'/1000'/1/0"),
+            address_n=parse_path("44'/145'/1000'/1/0"),
             amount=1896050,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -253,7 +258,6 @@ class TestMsgSigntxBch(TrezorTest):
         attack_ctr = 0
 
         def attack_processor(req, msg):
-            import sys
             global attack_ctr
 
             if req.details.tx_hash is not None:
@@ -286,7 +290,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         xpubs = []
-        for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
+        for n in map(lambda index: self.client.get_public_node(parse_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
 
         def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
@@ -301,7 +305,7 @@ class TestMsgSigntxBch(TrezorTest):
             public_key=unhexlify('0378d430274f8c5ec1321338151e9f27f4c676a008bdf8638d07c0b6be9ab35c71'))
         sig = unhexlify(b'304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae')
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/1'/1/0"),
+            address_n=parse_path("44'/145'/1'/1/0"),
             multisig=getmultisig(1, 0, [b'', sig, b'']),
             # bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a
             amount=24000,
@@ -310,7 +314,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDMULTISIG,
         )
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/145'/1'/1/1"),
+            address_n=parse_path("44'/145'/1'/1/1"),
             multisig=proto.MultisigRedeemScriptType(
                 pubkeys=[proto.HDNodePathType(node=deserialize(xpubs[0]), address_n=[1, 1]),
                          proto.HDNodePathType(node=correcthorse, address_n=[]),
@@ -339,7 +343,7 @@ class TestMsgSigntxBch(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBcash)
         xpubs = []
-        for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
+        for n in map(lambda index: self.client.get_public_node(parse_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
 
         def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
@@ -349,7 +353,7 @@ class TestMsgSigntxBch(TrezorTest):
                 m=2,
             )
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/3'/0/0"),
+            address_n=parse_path("44'/145'/3'/0/0"),
             multisig=getmultisig(0, 0),
             # bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw
             amount=48490,
@@ -363,7 +367,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/145'/3'/1/0"),
+            address_n=parse_path("44'/145'/3'/1/0"),
             multisig=getmultisig(1, 0),
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
             amount=24000
@@ -385,7 +389,7 @@ class TestMsgSigntxBch(TrezorTest):
         assert hexlify(signatures1[0]) == b'3045022100bcb1a7134a13025a06052546ee1c6ac3640a0abd2d130190ed13ed7fcb43e9cd02207c381478e2ee123c850425bfbf6d3c691230eb37e333832cb32a1ed3f2cd9e85'
 
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/145'/1'/0/0"),
+            address_n=parse_path("44'/145'/1'/0/0"),
             multisig=getmultisig(0, 0, [b'', b'', signatures1[0]]),
             # bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw
             amount=48490,

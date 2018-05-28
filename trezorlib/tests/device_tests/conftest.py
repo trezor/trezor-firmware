@@ -2,6 +2,7 @@ import pytest
 
 from . import common
 from trezorlib.client import TrezorClient
+from trezorlib import log
 
 
 def device_version():
@@ -20,6 +21,11 @@ try:
 except:
     raise
     TREZOR_VERSION = None
+
+
+def pytest_configure(config):
+    if config.getoption('verbose'):
+        log.enable_debug_output()
 
 
 def pytest_addoption(parser):

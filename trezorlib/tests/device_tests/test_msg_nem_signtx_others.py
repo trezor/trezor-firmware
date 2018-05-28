@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import hexlify
+import pytest
+
+from .common import TrezorTest
 
 from trezorlib import nem
+from trezorlib.tools import parse_path
 
 
 # assertion data from T1
@@ -29,7 +33,7 @@ class TestMsgNEMSignTxOther(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         with self.client:
-            tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+            tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
                 "timeStamp": 12349215,
                 "fee": 9900,
                 "type": nem.TYPE_IMPORTANCE_TRANSFER,
@@ -50,7 +54,7 @@ class TestMsgNEMSignTxOther(TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(self.client.expand_path("m/44'/1'/0'/0'/0'"), {
+        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 74649215,
             "fee": 2000000,
             "type": nem.TYPE_PROVISION_NAMESPACE,

@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+from binascii import unhexlify
+import pytest
+
+from .common import TrezorTest
 
 from trezorlib import coins
 from trezorlib import messages as proto
+from trezorlib.tools import parse_path
 
 TxApiDecredTestnet = coins.tx_api['Decred Testnet']
 
@@ -41,7 +45,7 @@ class TestMsgSigntxDecred(TrezorTest):
 
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
-            address_n=self.client.expand_path("m/44'/1'/0'/0/0"),
+            address_n=parse_path("m/44'/1'/0'/0/0"),
             prev_hash=TXHASH_e16248,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDADDRESS,
@@ -80,7 +84,7 @@ class TestMsgSigntxDecred(TrezorTest):
 
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
-            address_n=self.client.expand_path("m/44'/1'/0'/0/0"),
+            address_n=parse_path("m/44'/1'/0'/0/0"),
             prev_hash=TXHASH_5e6e35,
             prev_index=0,
             script_type=proto.InputScriptType.SPENDADDRESS,
@@ -89,7 +93,7 @@ class TestMsgSigntxDecred(TrezorTest):
 
         inp2 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
-            address_n=self.client.expand_path("m/44'/1'/0'/0/0"),
+            address_n=parse_path("m/44'/1'/0'/0/0"),
             prev_hash=TXHASH_ccf95b,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDADDRESS,
@@ -98,7 +102,7 @@ class TestMsgSigntxDecred(TrezorTest):
 
         inp3 = proto.TxInputType(
             # Tskt39YEvzoJ5KBDH4f1auNzG3jViVjZ2RV
-            address_n=self.client.expand_path("m/44'/1'/0'/0/1"),
+            address_n=parse_path("m/44'/1'/0'/0/1"),
             prev_hash=TXHASH_f395ef,
             prev_index=0,
             script_type=proto.InputScriptType.SPENDADDRESS,
@@ -114,7 +118,7 @@ class TestMsgSigntxDecred(TrezorTest):
 
         out2 = proto.TxOutputType(
             # TsaSFRwfN9muW5F6ZX36iSksc9hruiC5F97
-            address_n=self.client.expand_path("m/44'/1'/0'/1/0"),
+            address_n=parse_path("m/44'/1'/0'/1/0"),
             amount=100000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
             decred_script_version=0,
@@ -154,7 +158,7 @@ class TestMsgSigntxDecred(TrezorTest):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiDecredTestnet)
 
-        paths = [self.client.expand_path("m/48'/1'/%d'" % index) for index in range(3)]
+        paths = [parse_path("m/48'/1'/%d'" % index) for index in range(3)]
         nodes = [self.client.get_public_node(address_n, coin_name="Decred Testnet").node for address_n in paths]
 
         signatures = [
@@ -163,7 +167,7 @@ class TestMsgSigntxDecred(TrezorTest):
         ]
 
         def create_multisig(index, address, signatures=None):
-            address_n = self.client.expand_path(address)
+            address_n = parse_path(address)
             multisig = proto.MultisigRedeemScriptType(
                 pubkeys=[proto.HDNodePathType(node=node, address_n=address_n) for node in nodes],
                 signatures=signatures,

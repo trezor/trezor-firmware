@@ -25,6 +25,7 @@ from .conftest import TREZOR_VERSION
 from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.client import CallException
+from trezorlib.tools import parse_path
 
 TxApiTestnet = coins.tx_api['Testnet']
 
@@ -92,7 +93,7 @@ class TestMsgSigntx(TrezorTest):
         # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
         # input 0: 0.31 BTC
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            address_n=parse_path("44'/1'/0'/0/0"),
             # amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
@@ -105,7 +106,7 @@ class TestMsgSigntx(TrezorTest):
         )
 
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/1'/0'/1/0"),
+            address_n=parse_path("44'/1'/0'/1/0"),
             amount=900000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -189,14 +190,14 @@ class TestMsgSigntx(TrezorTest):
         # tx: c275c333fd1b36bef4af316226c66a8b3693fbfcc081a5e16a2ae5fcb09e92bf
 
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("m/44'/0'/0'/0/5"),  # 1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ
+            address_n=parse_path("m/44'/0'/0'/0/5"),  # 1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ
             # amount=50000,
             prev_hash=TXHASH_50f6f1,
             prev_index=1,
         )
 
         out1 = proto.TxOutputType(
-            address_n=self.client.expand_path("m/44'/0'/0'/1/3"),  # 1EcL6AyfQTyWKGvXwNSfsWoYnD3whzVFdu
+            address_n=parse_path("m/44'/0'/0'/1/3"),  # 1EcL6AyfQTyWKGvXwNSfsWoYnD3whzVFdu
             amount=30000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -637,7 +638,7 @@ class TestMsgSigntx(TrezorTest):
         self.client.set_tx_api(TxApiTestnet)
 
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/1'/4'/0/0"),
+            address_n=parse_path("44'/1'/4'/0/0"),
             # moUJnmge8SRXuediK7bW6t4YfrPqbE6hD7
             prev_hash=TXHASH_d2dcda,
             prev_index=1,
@@ -651,7 +652,7 @@ class TestMsgSigntx(TrezorTest):
         )
 
         out2 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/1'/12345'/1/0"),
+            address_n=parse_path("44'/1'/12345'/1/0"),
             amount=123400000 - 5000 - 100000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -755,7 +756,7 @@ class TestMsgSigntx(TrezorTest):
         # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
         # input 0: 0.31 BTC
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            address_n=parse_path("44'/1'/0'/0/0"),
             # amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
@@ -768,13 +769,13 @@ class TestMsgSigntx(TrezorTest):
         )
 
         out_change1 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/1'/0'/1/0"),
+            address_n=parse_path("44'/1'/0'/1/0"),
             amount=900000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         out_change2 = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/1'/0'/1/1"),
+            address_n=parse_path("44'/1'/0'/1/1"),
             amount=10000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -814,7 +815,7 @@ class TestMsgSigntx(TrezorTest):
         # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
         # input 0: 0.31 BTC
         inp1 = proto.TxInputType(
-            address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            address_n=parse_path("44'/1'/0'/0/0"),
             # amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
@@ -828,7 +829,7 @@ class TestMsgSigntx(TrezorTest):
 
         # change on main chain is allowed => treated as a change
         out_change = proto.TxOutputType(
-            address_n=self.client.expand_path("44'/1'/0'/0/0"),
+            address_n=parse_path("44'/1'/0'/0/0"),
             amount=900000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )

@@ -10,18 +10,12 @@ exclude =
 ignore =
     # F401: module imported but unused
     F401,
-    # F403: used import *
-    F403,
-    # F405 'foo' may be undefined, or defined from star imports
-    F405,
     # E241: multiple spaces after ':'
     E241,
     # E402: module level import not at top of file
     E402,
     # E501: line too long
     E501,
-    # E721: do not compare types, use 'isinstance()'
-    E721,
     # E722: do not use bare except
     E722,
     # E741: ambiguous variable name

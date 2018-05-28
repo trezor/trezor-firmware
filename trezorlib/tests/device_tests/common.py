@@ -18,13 +18,11 @@
 
 from __future__ import print_function
 
-from binascii import hexlify, unhexlify
-import pytest
 import os
 
 from trezorlib import coins
 from trezorlib import tx_api
-from trezorlib.client import TrezorClient, TrezorClientDebugLink
+from trezorlib.client import TrezorClientDebugLink
 from trezorlib.transport import get_transport
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))

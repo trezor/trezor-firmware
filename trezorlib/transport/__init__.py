@@ -17,6 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
+import importlib
+import logging
+
+from typing import Iterable, Type, List, Set
+
+LOG = logging.getLogger(__name__)
+
 
 class TransportException(Exception):
     pass
@@ -63,54 +70,52 @@ class Transport(object):
         raise TransportException('{} device not found: {}'.format(cls.PATH_PREFIX, path))
 
 
-def all_transports():
-    transports = []
-    try:
-        from .bridge import BridgeTransport
-        transports.append(BridgeTransport)
-    except:
-        pass
-
-    try:
-        from .hid import HidTransport
-        transports.append(HidTransport)
-    except:
-        pass
-
-    try:
-        from .udp import UdpTransport
-        transports.append(UdpTransport)
-    except:
-        pass
-
-    try:
-        from .webusb import WebUsbTransport
-        transports.append(WebUsbTransport)
-    except:
-        pass
+def all_transports() -> Iterable[Type[Transport]]:
+    transports = set()  # type: Set[Type[Transport]]
+    for modname in ("bridge", "hid", "udp", "webusb"):
+        try:
+            # Import the module and find the Transport class.
+            # To avoid iterating over every item, the module should assign its Transport class
+            # to a constant named TRANSPORT.
+            module = importlib.import_module("." + modname, __name__)
+            try:
+                transports.add(getattr(module, "TRANSPORT"))
+            except AttributeError:
+                LOG.warning("Skipping broken module {}".format(modname))
+        except ImportError as e:
+            LOG.info("Failed to import module {}: {}".format(modname, e))
 
     return transports
 
 
-def enumerate_devices():
-    return [device
-            for transport in all_transports()
-            for device in transport.enumerate()]
+def enumerate_devices() -> Iterable[Transport]:
+    devices = []  # type: List[Transport]
+    for transport in all_transports():
+        try:
+            found = transport.enumerate()
+            LOG.info("Enumerating {}: found {} devices".format(transport.__name__, len(found)))
+            devices.extend(found)
+        except NotImplementedError:
+            LOG.error("{} does not implement device enumeration".format(transport.__name__))
+        except Exception as e:
+            LOG.error("Failed to enumerate {}. {}: {}".format(transport.__name__, e.__class__.__name__, e))
+    return devices
 
 
-def get_transport(path=None, prefix_search=False):
+def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
     if path is None:
         try:
-            return enumerate_devices()[0]
+            return next(iter(enumerate_devices()))
         except IndexError:
             raise Exception("No TREZOR device found") from None
 
     # Find whether B is prefix of A (transport name is part of the path)
     # or A is prefix of B (path is a prefix, or a name, of transport).
     # This naively expects that no two transports have a common prefix.
-    def match_prefix(a, b):
+    def match_prefix(a: str, b: str) -> bool:
         return a.startswith(b) or b.startswith(a)
 
+    LOG.info("looking for device by {}: {}".format("prefix" if prefix_search else "full path", path))
     transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)

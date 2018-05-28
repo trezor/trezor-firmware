@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function, absolute_import
-
+import functools
+import logging
 import os
 import sys
 import time
@@ -34,18 +34,16 @@ from . import messages as proto
 from . import tools
 from . import mapping
 from . import nem
-from .coins import slip44
+from . import protobuf
 from . import stellar
 from .debuglink import DebugLink
-from .protobuf import MessageType
-
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
 
 
 SCREENSHOT = False
-
+LOG = logging.getLogger(__name__)
 
 # make a getch function
 try:
@@ -84,70 +82,15 @@ def get_buttonrequest_value(code):
     return [k for k in dir(proto.ButtonRequestType) if getattr(proto.ButtonRequestType, k) == code][0]
 
 
-def format_protobuf(pb, indent=0, sep=' ' * 4):
-    def pformat_value(value, indent):
-        level = sep * indent
-        leadin = sep * (indent + 1)
-        if isinstance(value, MessageType):
-            return format_protobuf(value, indent, sep)
-        if isinstance(value, list):
-            lines = []
-            lines.append('[')
-            lines += [leadin + pformat_value(x, indent + 1) + ',' for x in value]
-            lines.append(level + ']')
-            return '\n'.join(lines)
-        if isinstance(value, dict):
-            lines = []
-            lines.append('{')
-            for key, val in sorted(value.items()):
-                if val is None or val == []:
-                    continue
-                if key == 'address_n' and isinstance(val, list):
-                    lines.append(leadin + key + ': ' + repr(val) + ',')
-                else:
-                    lines.append(leadin + key + ': ' + pformat_value(val, indent + 1) + ',')
-            lines.append(level + '}')
-            return '\n'.join(lines)
-        if isinstance(value, bytearray):
-            return 'bytearray(0x{})'.format(binascii.hexlify(value).decode('ascii'))
-
-        return repr(value)
-
-    return pb.__class__.__name__ + ' ' + pformat_value(pb.__dict__, indent)
-
-
-def pprint(msg):
-    msg_class = msg.__class__.__name__
-    msg_size = msg.ByteSize()
-    if isinstance(msg, proto.FirmwareUpload) or isinstance(msg, proto.SelfTest) \
-            or isinstance(msg, proto.Features):
-        return "<%s> (%d bytes)" % (msg_class, msg_size)
-    else:
-        return "<%s> (%d bytes):\n%s" % (msg_class, msg_size, format_protobuf(msg))
-
-
-def log(msg):
-    sys.stderr.write(msg)
-    sys.stderr.write('\n')
-    sys.stderr.flush()
-
-
 class CallException(Exception):
-    def __init__(self, code, message):
-        super(CallException, self).__init__()
-        self.args = [code, message]
-
-
-class AssertionException(Exception):
-    def __init__(self, code, message):
-        self.args = [code, message]
+    pass
 
 
 class PinException(CallException):
     pass
 
 
-class field(object):
+class field:
     # Decorator extracts single value from
     # protobuf object. If the field is not
     # present, raises an exception.
@@ -155,13 +98,14 @@ class field(object):
         self.field = field
 
     def __call__(self, f):
+        @functools.wraps(f)
         def wrapped_f(*args, **kwargs):
             ret = f(*args, **kwargs)
             return getattr(ret, self.field)
         return wrapped_f
 
 
-class expect(object):
+class expect:
     # Decorator checks if the method
     # returned one of expected protobuf messages
     # or raises an exception
@@ -169,6 +113,7 @@ class expect(object):
         self.expected = expected
 
     def __call__(self, f):
+        @functools.wraps(f)
         def wrapped_f(*args, **kwargs):
             ret = f(*args, **kwargs)
             if not isinstance(ret, self.expected):
@@ -180,7 +125,9 @@ class expect(object):
 def session(f):
     # Decorator wraps a BaseClient method
     # with session activation / deactivation
+    @functools.wraps(f)
     def wrapped_f(*args, **kwargs):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
         client = args[0]
         client.transport.session_begin()
         try:
@@ -204,6 +151,7 @@ class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
     def __init__(self, transport, **kwargs):
+        LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         super(BaseClient, self).__init__()  # *args, **kwargs)
 
@@ -215,6 +163,7 @@ class BaseClient(object):
 
     @session
     def call_raw(self, msg):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
         self.transport.write(msg)
         return self.transport.read()
 
@@ -244,14 +193,6 @@ class BaseClient(object):
         mapping.register_message(msg)
 
 
-class VerboseWireMixin(object):
-    def call_raw(self, msg):
-        log("SENDING " + pprint(msg))
-        resp = super(VerboseWireMixin, self).call_raw(msg)
-        log("RECEIVED " + pprint(resp))
-        return resp
-
-
 class TextUIMixin(object):
     # This class demonstrates easy test-based UI
     # integration between the device and wallet.
@@ -262,6 +203,10 @@ class TextUIMixin(object):
     def __init__(self, *args, **kwargs):
         super(TextUIMixin, self).__init__(*args, **kwargs)
 
+    @staticmethod
+    def print(text):
+        print(text, file=sys.stderr)
+
     def callback_ButtonRequest(self, msg):
         # log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
         return proto.ButtonAck()
@@ -269,11 +214,11 @@ class TextUIMixin(object):
     def callback_RecoveryMatrix(self, msg):
         if self.recovery_matrix_first_pass:
             self.recovery_matrix_first_pass = False
-            log("Use the numeric keypad to describe positions.  For the word list use only left and right keys.")
-            log("Use backspace to correct an entry.  The keypad layout is:")
-            log("    7 8 9     7 | 9")
-            log("    4 5 6     4 | 6")
-            log("    1 2 3     1 | 3")
+            self.print("Use the numeric keypad to describe positions.  For the word list use only left and right keys.")
+            self.print("Use backspace to correct an entry.  The keypad layout is:")
+            self.print("    7 8 9     7 | 9")
+            self.print("    4 5 6     4 | 6")
+            self.print("    1 2 3     1 | 3")
         while True:
             character = getch()
             if character in ('\x03', '\x04'):
@@ -299,11 +244,11 @@ class TextUIMixin(object):
         else:
             desc = 'PIN'
 
-        log("Use the numeric keypad to describe number positions. The layout is:")
-        log("    7 8 9")
-        log("    4 5 6")
-        log("    1 2 3")
-        log("Please enter %s: " % desc)
+        self.print("Use the numeric keypad to describe number positions. The layout is:")
+        self.print("    7 8 9")
+        self.print("    4 5 6")
+        self.print("    1 2 3")
+        self.print("Please enter %s: " % desc)
         pin = getpass.getpass('')
         if not pin.isdigit():
             raise ValueError('Non-numerical PIN provided')
@@ -314,18 +259,18 @@ class TextUIMixin(object):
             return proto.PassphraseAck()
 
         if os.getenv("PASSPHRASE") is not None:
-            log("Passphrase required. Using PASSPHRASE environment variable.")
+            self.print("Passphrase required. Using PASSPHRASE environment variable.")
             passphrase = Mnemonic.normalize_string(os.getenv("PASSPHRASE"))
             return proto.PassphraseAck(passphrase=passphrase)
 
-        log("Passphrase required: ")
+        self.print("Passphrase required: ")
         passphrase = getpass.getpass('')
-        log("Confirm your Passphrase: ")
+        self.print("Confirm your Passphrase: ")
         if passphrase == getpass.getpass(''):
             passphrase = Mnemonic.normalize_string(passphrase)
             return proto.PassphraseAck(passphrase=passphrase)
         else:
-            log("Passphrase did not match! ")
+            self.print("Passphrase did not match! ")
             exit()
 
     def callback_PassphraseStateRequest(self, msg):
@@ -335,7 +280,7 @@ class TextUIMixin(object):
         if msg.type in (proto.WordRequestType.Matrix9,
                         proto.WordRequestType.Matrix6):
             return self.callback_RecoveryMatrix(msg)
-        log("Enter one word of mnemonic: ")
+        self.print("Enter one word of mnemonic: ")
         word = input()
         if self.expand:
             word = self.mnemonic_wordlist.expand_word(word)
@@ -352,6 +297,7 @@ class DebugLinkMixin(object):
     # of unit testing, because it will fail to work
     # without special DebugLink interface provided
     # by the device.
+    DEBUG = LOG.getChild('debug_link').debug
 
     def __init__(self, *args, **kwargs):
         super(DebugLinkMixin, self).__init__(*args, **kwargs)
@@ -396,7 +342,7 @@ class DebugLinkMixin(object):
         # Evaluate missed responses in 'with' statement
         if self.expected_responses is not None and len(self.expected_responses):
             raise RuntimeError("Some of expected responses didn't come from device: %s" %
-                               [pprint(x) for x in self.expected_responses])
+                               [repr(x) for x in self.expected_responses])
 
         # Cleanup
         self.expected_responses = None
@@ -418,6 +364,7 @@ class DebugLinkMixin(object):
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(' ')
 
     def call_raw(self, msg):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
 
         if SCREENSHOT and self.debug:
             from PIL import Image
@@ -437,30 +384,32 @@ class DebugLinkMixin(object):
         return resp
 
     def _check_request(self, msg):
+        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
+
         if self.expected_responses is not None:
             try:
                 expected = self.expected_responses.pop(0)
             except IndexError:
-                raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                         "Got %s, but no message has been expected" % pprint(msg))
+                raise AssertionError(proto.FailureType.UnexpectedMessage,
+                                     "Got %s, but no message has been expected" % repr(msg))
 
             if msg.__class__ != expected.__class__:
-                raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                         "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                raise AssertionError(proto.FailureType.UnexpectedMessage,
+                                     "Expected %s, got %s" % (repr(expected), repr(msg)))
 
             for field, value in expected.__dict__.items():
                 if value is None or value == []:
                     continue
                 if getattr(msg, field) != value:
-                    raise AssertionException(proto.FailureType.UnexpectedMessage,
-                                             "Expected %s, got %s" % (pprint(expected), pprint(msg)))
+                    raise AssertionError(proto.FailureType.UnexpectedMessage,
+                                         "Expected %s, got %s" % (repr(expected), repr(msg)))
 
     def callback_ButtonRequest(self, msg):
-        log("ButtonRequest code: " + get_buttonrequest_value(msg.code))
+        self.DEBUG("ButtonRequest code: " + get_buttonrequest_value(msg.code))
 
-        log("Pressing button " + str(self.button))
+        self.DEBUG("Pressing button " + str(self.button))
         if self.button_wait:
-            log("Waiting %d seconds " % self.button_wait)
+            self.DEBUG("Waiting %d seconds " % self.button_wait)
             time.sleep(self.button_wait)
         self.debug.press_button(self.button)
         return proto.ButtonAck()
@@ -473,7 +422,7 @@ class DebugLinkMixin(object):
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
-        log("Provided passphrase: '%s'" % self.passphrase)
+        self.DEBUG("Provided passphrase: '%s'" % self.passphrase)
         return proto.PassphraseAck(passphrase=self.passphrase)
 
     def callback_PassphraseStateRequest(self, msg):
@@ -490,7 +439,6 @@ class DebugLinkMixin(object):
 
 
 class ProtocolMixin(object):
-    PRIME_DERIVATION_FLAG = 0x80000000
     VENDORS = ('bitcointrezor.com', 'trezor.io')
 
     def __init__(self, state=None, *args, **kwargs):
@@ -513,44 +461,15 @@ class ProtocolMixin(object):
     def _get_local_entropy(self):
         return os.urandom(32)
 
-    def _convert_prime(self, n):
+    @staticmethod
+    def _convert_prime(n: tools.Address) -> tools.Address:
         # Convert minus signs to uint32 with flag
-        return [int(abs(x) | self.PRIME_DERIVATION_FLAG) if x < 0 else x for x in n]
+        return [tools.H_(int(abs(x))) if x < 0 else x for x in n]
 
     @staticmethod
     def expand_path(n):
-        # Convert string of bip32 path to list of uint32 integers with prime flags
-        # 0/-1/1' -> [0, 0x80000001, 0x80000001]
-        if not n:
-            return []
-
-        n = n.split('/')
-
-        # m/a/b/c => a/b/c
-        if n[0] == 'm':
-            n = n[1:]
-
-        # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
-        if n[0] in slip44:
-            n = ["44'", "%d'" % slip44[n[0]]] + n[1:]
-
-        path = []
-        for x in n:
-            prime = False
-            if x.endswith("'"):
-                x = x.replace('\'', '')
-                prime = True
-            if x.startswith('-'):
-                prime = True
-
-            x = abs(int(x))
-
-            if prime:
-                x |= ProtocolMixin.PRIME_DERIVATION_FLAG
-
-            path.append(x)
-
-        return path
+        warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning)
+        return tools.parse_path(n)
 
     @expect(proto.PublicKey)
     def get_public_node(self, n, ecdsa_curve_name=None, show_display=False, coin_name=None):
@@ -1031,7 +950,7 @@ class ProtocolMixin(object):
             raise RuntimeError("Invalid response, expected EntropyRequest")
 
         external_entropy = self._get_local_entropy()
-        log("Computer generated entropy: " + binascii.hexlify(external_entropy).decode())
+        LOG.debug("Computer generated entropy: " + binascii.hexlify(external_entropy).decode())
         ret = self.call(proto.EntropyAck(entropy=external_entropy))
         self.init_device()
         return ret
@@ -1079,7 +998,7 @@ class ProtocolMixin(object):
         if xprv[0:4] not in ('xprv', 'tprv'):
             raise ValueError("Unknown type of xprv")
 
-        if len(xprv) < 100 and len(xprv) > 112:
+        if not 100 < len(xprv) < 112:  # yes this is correct in Python
             raise ValueError("Invalid length of xprv")
 
         node = proto.HDNodeType()
@@ -1088,7 +1007,7 @@ class ProtocolMixin(object):
         if data[90:92] != b'00':
             raise ValueError("Contain invalid private key")
 
-        checksum = binascii.hexlify(hashlib.sha256(hashlib.sha256(binascii.unhexlify(data[:156])).digest()).digest()[:4])
+        checksum = binascii.hexlify(tools.btc_hash(binascii.unhexlify(data[:156]))[:4])
         if checksum != data[156:]:
             raise ValueError("Checksum doesn't match")
 
@@ -1128,7 +1047,7 @@ class ProtocolMixin(object):
         # TREZORv1 method
         if isinstance(resp, proto.Success):
             fingerprint = hashlib.sha256(data[256:]).hexdigest()
-            log("Firmware fingerprint: " + fingerprint)
+            LOG.debug("Firmware fingerprint: " + fingerprint)
             resp = self.call(proto.FirmwareUpload(payload=data))
             if isinstance(resp, proto.Success):
                 return True
@@ -1204,11 +1123,6 @@ class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
         super().__init__(transport=transport, *args, **kwargs)
 
 
-class TrezorClientVerbose(ProtocolMixin, TextUIMixin, VerboseWireMixin, BaseClient):
-    def __init__(self, transport, *args, **kwargs):
-        super().__init__(transport=transport, *args, **kwargs)
-
-
-class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, VerboseWireMixin, BaseClient):
+class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, BaseClient):
     def __init__(self, transport, *args, **kwargs):
         super().__init__(transport=transport, *args, **kwargs)

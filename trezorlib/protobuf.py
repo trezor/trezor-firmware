@@ -39,7 +39,9 @@ required:
 >>>         """
 '''
 
+import binascii
 from io import BytesIO
+from typing import Any, Optional
 
 _UVARINT_BUFFER = bytearray(1)
 
@@ -344,3 +346,58 @@ def dump_message(writer, msg):
 
             else:
                 raise TypeError
+
+
+def format_message(pb: MessageType,
+                   indent: int = 0,
+                   sep: str = ' ' * 4,
+                   truncate_after: Optional[int] = 256,
+                   truncate_to: Optional[int] = 64) -> str:
+
+    def mostly_printable(bytes):
+        if not bytes:
+            return True
+        printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7e)
+        return printable / len(bytes) > 0.8
+
+    def pformat_value(value: Any, indent: int) -> str:
+        level = sep * indent
+        leadin = sep * (indent + 1)
+        if isinstance(value, MessageType):
+            return format_message(value, indent, sep)
+        if isinstance(value, list):
+            # short list of simple values
+            if not value or not isinstance(value[0], MessageType):
+                return repr(value)
+
+            # long list, one line per entry
+            lines = ['[', level + ']']
+            lines[1:1] = [leadin + pformat_value(x, indent + 1) + ',' for x in value]
+            return '\n'.join(lines)
+        if isinstance(value, dict):
+            lines = ['{']
+            for key, val in sorted(value.items()):
+                if val is None or val == []:
+                    continue
+                lines.append(leadin + key + ': ' + pformat_value(val, indent + 1) + ',')
+            lines.append(level + '}')
+            return '\n'.join(lines)
+        if isinstance(value, (bytes, bytearray)):
+            length = len(value)
+            suffix = ''
+            if truncate_after and length > truncate_after:
+                suffix = '...'
+                value = value[:truncate_to or 0]
+            if mostly_printable(value):
+                output = repr(value)
+            else:
+                output = '0x' + binascii.hexlify(value).decode('ascii')
+            return '{} bytes {}{}'.format(length, output, suffix)
+
+        return repr(value)
+
+    return '{name} ({size} bytes) {content}'.format(
+        name=pb.__class__.__name__,
+        size=pb.ByteSize(),
+        content=pformat_value(pb.__dict__, indent)
+    )

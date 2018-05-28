@@ -15,12 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
+from binascii import unhexlify
 
-from __future__ import print_function
-
-import sys
-from .common import *
-
+from .common import TrezorTest
 from trezorlib import messages as proto
 
 

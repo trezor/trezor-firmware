@@ -16,9 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from .common import *
+import pytest
+
+from .common import TrezorTest
+from ..support import ckd_public as bip32
 from trezorlib import messages as proto
-import trezorlib.ckd_public as bip32
+
+from trezorlib.tools import parse_path
 
 
 class TestMsgGetaddress(TrezorTest):
@@ -45,14 +49,14 @@ class TestMsgGetaddress(TrezorTest):
 
     def test_bch(self):
         self.setup_mnemonic_allallall()
-        assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/0")) == 'bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv'
-        assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/0/1")) == 'bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4'
-        assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/0'/1/0")) == 'bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw'
+        assert self.client.get_address('Bcash', parse_path("44'/145'/0'/0/0")) == 'bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv'
+        assert self.client.get_address('Bcash', parse_path("44'/145'/0'/0/1")) == 'bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4'
+        assert self.client.get_address('Bcash', parse_path("44'/145'/0'/1/0")) == 'bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw'
 
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []
-        for n in map(lambda index: self.client.get_public_node(self.client.expand_path("44'/145'/" + str(index) + "'")), range(1, 4)):
+        for n in map(lambda index: self.client.get_public_node(parse_path("44'/145'/" + str(index) + "'")), range(1, 4)):
             xpubs.append(n.xpub)
 
         def getmultisig(chain, nr, signatures=[b'', b'', b''], xpubs=xpubs):
@@ -62,8 +66,8 @@ class TestMsgGetaddress(TrezorTest):
                 m=2,
             )
         for nr in range(1, 4):
-            assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/" + str(nr) + "'/0/0"), show_display=(nr == 1), multisig=getmultisig(0, 0)) == 'bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw'
-            assert self.client.get_address('Bcash', self.client.expand_path("44'/145'/" + str(nr) + "'/1/0"), show_display=(nr == 1), multisig=getmultisig(1, 0)) == 'bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a'
+            assert self.client.get_address('Bcash', parse_path("44'/145'/" + str(nr) + "'/0/0"), show_display=(nr == 1), multisig=getmultisig(0, 0)) == 'bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw'
+            assert self.client.get_address('Bcash', parse_path("44'/145'/" + str(nr) + "'/1/0"), show_display=(nr == 1), multisig=getmultisig(1, 0)) == 'bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a'
 
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()

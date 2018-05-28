@@ -29,10 +29,6 @@ def button_press(yes_no):
     print("User pressed", '"y"' if yes_no else '"n"')
 
 
-def pprint(msg):
-    return "<%s> (%d bytes):\n%s" % (msg.__class__.__name__, msg.ByteSize(), msg)
-
-
 class DebugLink(object):
     def __init__(self, transport, pin_func=pin_info, button_func=button_press):
         self.transport = transport
@@ -45,12 +41,10 @@ class DebugLink(object):
         self.transport.session_end()
 
     def _call(self, msg, nowait=False):
-        print("DEBUGLINK SEND", pprint(msg))
         self.transport.write(msg)
         if nowait:
-            return
+            return None
         ret = self.transport.read()
-        print("DEBUGLINK RECV", pprint(ret))
         return ret
 
     def read_pin(self):

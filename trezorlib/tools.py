@@ -18,12 +18,27 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import hashlib
-import binascii
 import struct
-import sys
+from typing import NewType, List
+
+from .coins import slip44
+
+HARDENED_FLAG = 1 << 31
+
+Address = NewType('Address', List[int])
 
 
-def Hash(data):
+def H_(x: int) -> int:
+    """
+    Shortcut function that "hardens" a number in a BIP44 path.
+    """
+    return x | HARDENED_FLAG
+
+
+def btc_hash(data):
+    """
+    Double-SHA256 hash as used in BTC
+    """
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
@@ -35,7 +50,7 @@ def hash_160(public_key):
 
 def hash_160_to_bc_address(h160, address_type):
     vh160 = struct.pack('<B', address_type) + h160
-    h = Hash(vh160)
+    h = btc_hash(vh160)
     addr = vh160 + h[0:4]
     return b58encode(addr)
 
@@ -109,3 +124,41 @@ def b58decode(v, length):
         return None
 
     return result
+
+
+def parse_path(nstr: str) -> Address:
+    """
+    Convert BIP32 path string to list of uint32 integers with hardened flags.
+    Several conventions are supported to set the hardened flag: -1, 1', 1h
+
+    e.g.: "0/1h/1" -> [0, 0x80000001, 1]
+
+    :param nstr: path string
+    :return: list of integers
+    """
+    if not nstr:
+        return []
+
+    n = nstr.split('/')
+
+    # m/a/b/c => a/b/c
+    if n[0] == 'm':
+        n = n[1:]
+
+    # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
+    if n[0] in slip44:
+        coin_id = slip44[n[0]]
+        n[0:1] = ['44h', '{}h'.format(coin_id)]
+
+    def str_to_harden(x: str) -> int:
+        if x.startswith('-'):
+            return H_(abs(int(x)))
+        elif x.endswith(('h', "'")):
+            return H_(int(x[:-1]))
+        else:
+            return int(x)
+
+    try:
+        return list(str_to_harden(x) for x in n)
+    except Exception:
+        raise ValueError('Invalid BIP32 path', nstr)

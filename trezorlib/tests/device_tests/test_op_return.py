@@ -20,7 +20,6 @@ import pytest
 
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
-
 from trezorlib import messages as proto
 from trezorlib.client import CallException
 

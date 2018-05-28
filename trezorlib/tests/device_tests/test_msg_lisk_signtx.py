@@ -21,6 +21,7 @@ import pytest
 
 from .common import TrezorTest
 from trezorlib import messages as proto
+from trezorlib.tools import parse_path
 
 PUBLIC_KEY = unhexlify('eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294')
 
@@ -41,7 +42,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 )
             ])
 
-            self.client.lisk_sign_tx(self.client.expand_path("m/44'/134'/0'/0'"), {
+            self.client.lisk_sign_tx(parse_path("m/44'/134'/0'/0'"), {
                 "amount": "10000000",
                 "recipientId": "9971262264659915921L",
                 "timestamp": 57525937,
@@ -62,7 +63,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 )
             ])
 
-            self.client.lisk_sign_tx(self.client.expand_path("m/44'/134'/0'/0'"), {
+            self.client.lisk_sign_tx(parse_path("m/44'/134'/0'/0'"), {
                 "amount": "10000000",
                 "recipientId": "9971262264659915921L",
                 "timestamp": 57525937,
@@ -85,7 +86,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 )
             ])
 
-            self.client.lisk_sign_tx(self.client.expand_path("m/44'/134'/0'/0'"), {
+            self.client.lisk_sign_tx(parse_path("m/44'/134'/0'/0'"), {
                 "amount": "0",
                 "timestamp": 57525937,
                 "type": 1,
@@ -109,7 +110,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 )
             ])
 
-            self.client.lisk_sign_tx(self.client.expand_path("m/44'/134'/0'/0'"), {
+            self.client.lisk_sign_tx(parse_path("m/44'/134'/0'/0'"), {
                 "amount": "0",
                 "timestamp": 57525937,
                 "type": 2,
@@ -133,7 +134,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 )
             ])
 
-            self.client.lisk_sign_tx(self.client.expand_path("m/44'/134'/0'/0'"), {
+            self.client.lisk_sign_tx(parse_path("m/44'/134'/0'/0'"), {
                 "amount": "0",
                 "timestamp": 57525937,
                 "type": 3,
@@ -158,7 +159,7 @@ class TestMsgLiskSignTx(TrezorTest):
                 )
             ])
 
-            self.client.lisk_sign_tx(self.client.expand_path("m/44'/134'/0'/0'"), {
+            self.client.lisk_sign_tx(parse_path("m/44'/134'/0'/0'"), {
                 "amount": "0",
                 "timestamp": 57525937,
                 "type": 4,

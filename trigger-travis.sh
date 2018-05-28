@@ -9,6 +9,11 @@ if [ "$TRAVIS_REPO_SLUG" != "$SOURCE" ]; then
     exit 0;
 fi
 
+if [ "$TRAVIS_BRANCH" != "master" ]; then
+    echo "not triggering from non-master branch"
+    exit 0;
+fi
+
 if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     echo "not triggering from pull requests"
     exit 0;
