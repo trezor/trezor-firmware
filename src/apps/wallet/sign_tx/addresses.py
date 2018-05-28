@@ -7,7 +7,7 @@ from trezor.utils import ensure
 from trezor.messages import FailureType
 from trezor.messages import InputScriptType
 
-from apps.common.coins import CoinInfo
+from apps.common.coininfo import CoinInfo
 from apps.common.address_type import addrtype_bytes
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.multisig import *

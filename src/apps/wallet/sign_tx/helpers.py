@@ -7,7 +7,7 @@ from trezor.messages.TransactionType import TransactionType
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXEXTRADATA, TXFINISHED
 from trezor.messages import InputScriptType
 
-from apps.common.coins import CoinInfo
+from apps.common.coininfo import CoinInfo
 
 # Machine instructions
 # ===
