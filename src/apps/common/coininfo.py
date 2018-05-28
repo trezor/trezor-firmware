@@ -12,7 +12,7 @@ class CoinInfo:
         bech32_prefix: str,
         cashaddr_prefix: str,
         segwit: bool,
-        forkid: int,
+        fork_id: int,
         force_bip143: bool
     ):
         self.coin_name = coin_name
@@ -25,7 +25,7 @@ class CoinInfo:
         self.bech32_prefix = bech32_prefix
         self.cashaddr_prefix = cashaddr_prefix
         self.segwit = segwit
-        self.forkid = forkid
+        self.fork_id = fork_id
         self.force_bip143 = force_bip143
 
 
@@ -43,7 +43,7 @@ COINS = [
         bech32_prefix='bc',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -57,7 +57,7 @@ COINS = [
         bech32_prefix='tb',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -71,7 +71,7 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix='bitcoincash',
         segwit=False,
-        forkid=0,
+        fork_id=0,
         force_bip143=True,
     ),
     CoinInfo(
@@ -85,7 +85,7 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix='bchtest',
         segwit=False,
-        forkid=0,
+        fork_id=0,
         force_bip143=True,
     ),
     CoinInfo(
@@ -99,7 +99,7 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix=None,
         segwit=False,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -113,7 +113,7 @@ COINS = [
         bech32_prefix='ltc',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -127,7 +127,7 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix=None,
         segwit=False,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -141,7 +141,7 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix=None,
         segwit=False,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -155,7 +155,7 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix=None,
         segwit=False,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -169,11 +169,11 @@ COINS = [
         bech32_prefix=None,
         cashaddr_prefix=None,
         segwit=False,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
-        coin_name='Bitcoin Gold',
+        coin_name='Bgold',
         coin_shortcut='BTG',
         address_type=38,
         address_type_p2sh=23,
@@ -183,7 +183,7 @@ COINS = [
         bech32_prefix='btg',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=79,
+        fork_id=79,
         force_bip143=True,
     ),
     CoinInfo(
@@ -197,7 +197,7 @@ COINS = [
         bech32_prefix='dgb',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -211,7 +211,7 @@ COINS = [
         bech32_prefix='mona',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -225,7 +225,7 @@ COINS = [
         bech32_prefix='fc',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
     CoinInfo(
@@ -239,21 +239,7 @@ COINS = [
         bech32_prefix='vtc',
         cashaddr_prefix=None,
         segwit=True,
-        forkid=None,
-        force_bip143=False,
-    ),
-    CoinInfo(
-        coin_name='Decred Testnet',
-        coin_shortcut='TDCR',
-        address_type=3873,
-        address_type_p2sh=3836,
-        maxfee_kb=10000000,
-        signed_message_header='Decred Signed Message:\n',
-        xpub_magic=0x043587d1,
-        bech32_prefix=None,
-        cashaddr_prefix=None,
-        segwit=False,
-        forkid=None,
+        fork_id=None,
         force_bip143=False,
     ),
 ]
