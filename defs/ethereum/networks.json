@@ -78,9 +78,17 @@
   },
   {
     "chain_id": 64,
+    "slip44": 163,
     "shortcut": "ELLA",
     "name": "Ellaism",
     "url": "https://ellaism.org"
+  },
+  {
+    "chain_id": 820,
+    "slip44": 820,
+    "shortcut": "CLO",
+    "name": "Callisto",
+    "url": "https://callisto.network"
   },
   {
     "chain_id": 1987,
