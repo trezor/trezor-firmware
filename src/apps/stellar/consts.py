@@ -33,6 +33,14 @@ op_wire_types = [
 ASSET_TYPE_CREDIT_ALPHANUM4 = const(1)
 ASSET_TYPE_CREDIT_ALPHANUM12 = const(2)
 
+# https://www.stellar.org/developers/guides/concepts/accounts.html#balance
+# https://github.com/stellar/go/blob/master/amount/main.go
+AMOUNT_DIVISIBILITY = const(7)
+
+# https://github.com/stellar/go/blob/master/network/main.go
+NETWORK_PASSPHRASE_PUBLIC = 'Public Global Stellar Network ; September 2015'
+NETWORK_PASSPHRASE_TESTNET = 'Test SDF Network ; September 2015'
+
 
 def get_op_code(msg) -> int:
     if msg.__qualname__ not in op_codes:

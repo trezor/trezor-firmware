@@ -2,6 +2,8 @@ from apps.common import seed
 from apps.stellar.writers import *
 from apps.stellar.operations import serialize_op
 from apps.stellar.consts import op_wire_types
+from apps.stellar.layout import require_confirm_init, require_confirm_final
+from apps.stellar import helpers
 from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.messages.StellarSignedTx import StellarSignedTx
@@ -21,6 +23,10 @@ async def sign_tx_loop(ctx, msg: StellarSignTx):
             res = await ctx.call(req, *op_wire_types)
         elif isinstance(req, StellarSignedTx):
             break
+        elif isinstance(req, helpers.UiConfirmInit):
+            res = await require_confirm_init(ctx, req.pubkey, req.network)
+        elif isinstance(req, helpers.UiConfirmFinal):
+            res = await require_confirm_final(ctx, req.fee, req.num_operations)
         else:
             raise TypeError('Stellar: Invalid signing instruction')
     return req
@@ -77,17 +83,12 @@ async def sign_tx(ctx, msg):
         op = yield StellarTxOpRequest()
         serialize_op(w, op)
 
-    # # Determine what type of network this transaction is for  - todo used for layout
-    # if msg.network_passphrase == "Public Global Stellar Network ; September 2015":
-    #     network_type = 1
-    # elif msg.network_passphrase == "Test SDF Network ; September 2015":
-    #     network_type = 2
-    # else:
-    #     network_type = 3
-    # # todo use network_type in layout
-
     # 4 null bytes representing a (currently unused) empty union
     write_uint32(w, 0)
+
+    # confirms
+    await helpers.confirm_init(pubkey, msg.network_passphrase)
+    await helpers.confirm_final(msg.fee, msg.num_operations)
 
     # sign
     # (note that the signature does not include the 4-byte hint since it can be calculated from the public key)
