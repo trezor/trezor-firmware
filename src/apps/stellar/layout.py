@@ -1,7 +1,5 @@
 from apps.common.confirm import *
-from apps.stellar.consts import AMOUNT_DIVISIBILITY
-from apps.stellar.consts import NETWORK_PASSPHRASE_PUBLIC
-from apps.stellar.consts import NETWORK_PASSPHRASE_TESTNET
+from apps.stellar import consts
 from apps.stellar import helpers
 from trezor import ui
 from trezor.messages import ButtonRequestType
@@ -24,6 +22,26 @@ async def require_confirm_init(ctx, pubkey: bytes, network_passphrase: str):
         await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
+async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
+    if memo_type == consts.MEMO_TYPE_TEXT:
+        title = 'Memo (TEXT)'
+    elif memo_type == consts.MEMO_TYPE_ID:
+        title = 'Memo (ID)'
+    elif memo_type == consts.MEMO_TYPE_HASH:
+        title = 'Memo (HASH)'
+    elif memo_type == consts.MEMO_TYPE_RETURN:
+        title = 'Memo (RETURN)'
+    else:  # MEMO_TYPE_NONE
+        title = 'No memo set!'
+        # todo ugly
+        memo_text = 'Important: Many exchanges require a memo when depositing'
+    content = Text('Confirm memo', ui.ICON_CONFIRM,
+                   ui.BOLD, title,
+                   ui.MONO, *split(memo_text),
+                   icon_color=ui.GREEN)
+    await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+
+
 async def require_confirm_final(ctx, fee: int, num_operations: int):
     op_str = str(num_operations) + ' operation'
     if num_operations > 1:
@@ -31,7 +49,7 @@ async def require_confirm_final(ctx, fee: int, num_operations: int):
     content = Text('Final confirm', ui.ICON_SEND,
                    ui.NORMAL, 'Sign this transaction',
                    ui.NORMAL, 'made up of ' + op_str,
-                   ui.BOLD, 'and pay ' + format_amount(fee, AMOUNT_DIVISIBILITY) + ' XLM',
+                   ui.BOLD, 'and pay ' + format_amount(fee, consts.AMOUNT_DIVISIBILITY) + ' XLM',
                    ui.NORMAL, 'for fee?',
                    icon_color=ui.GREEN)
     # we use SignTx, not ConfirmOutput, for compatibility with T1
@@ -40,16 +58,16 @@ async def require_confirm_final(ctx, fee: int, num_operations: int):
 
 def format_address(pubkey: bytes) -> str:
     address = helpers.address_from_public_key(pubkey)
-    return split_address(address)
+    return split(address)
 
 
-def split_address(address):
-    return chunks(address, 17)
+def split(text):
+    return chunks(text, 17)
 
 
 def get_network_warning(network_passphrase: str):
-    if network_passphrase == NETWORK_PASSPHRASE_PUBLIC:
+    if network_passphrase == consts.NETWORK_PASSPHRASE_PUBLIC:
         return None
-    if network_passphrase == NETWORK_PASSPHRASE_TESTNET:
+    if network_passphrase == consts.NETWORK_PASSPHRASE_TESTNET:
         return 'testnet network'
     return 'private network'

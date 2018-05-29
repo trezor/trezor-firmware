@@ -1,14 +1,15 @@
 from apps.common import seed
 from apps.stellar.writers import *
 from apps.stellar.operations import serialize_op
-from apps.stellar.consts import op_wire_types
-from apps.stellar.layout import require_confirm_init, require_confirm_final
+from apps.stellar import layout
+from apps.stellar import consts
 from apps.stellar import helpers
 from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.messages.StellarSignedTx import StellarSignedTx
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
+from ubinascii import hexlify
 
 STELLAR_CURVE = 'ed25519'
 TX_TYPE = bytearray('\x00\x00\x00\x02')
@@ -20,13 +21,15 @@ async def sign_tx_loop(ctx, msg: StellarSignTx):
     while True:
         req = signer.send(res)
         if isinstance(req, StellarTxOpRequest):
-            res = await ctx.call(req, *op_wire_types)
+            res = await ctx.call(req, *consts.op_wire_types)
         elif isinstance(req, StellarSignedTx):
             break
         elif isinstance(req, helpers.UiConfirmInit):
-            res = await require_confirm_init(ctx, req.pubkey, req.network)
+            res = await layout.require_confirm_init(ctx, req.pubkey, req.network)
+        elif isinstance(req, helpers.UiConfirmMemo):
+            res = await layout.require_confirm_memo(ctx, req.memo_type, req.memo_text)
         elif isinstance(req, helpers.UiConfirmFinal):
-            res = await require_confirm_final(ctx, req.fee, req.num_operations)
+            res = await layout.require_confirm_final(ctx, req.fee, req.num_operations)
         else:
             raise TypeError('Stellar: Invalid signing instruction')
     return req
@@ -53,6 +56,9 @@ async def sign_tx(ctx, msg):
     if msg.source_account != pubkey:
         raise ValueError('Stellar: source account does not match address_n')
 
+    # confirm init
+    await helpers.confirm_init(pubkey, msg.network_passphrase)
+
     write_uint32(w, msg.fee)
     write_uint64(w, msg.sequence_number)
 
@@ -66,17 +72,26 @@ async def sign_tx(ctx, msg):
         write_bool(w, False)
 
     write_uint32(w, msg.memo_type)
-    if msg.memo_type == 1:  # nothing is needed for memo_type = 0
+    if msg.memo_type == consts.MEMO_TYPE_NONE:
+        # nothing is serialized
+        memo_confirm_text = ''
+    elif msg.memo_type == consts.MEMO_TYPE_TEXT:
         # Text: 4 bytes (size) + up to 28 bytes
         if len(msg.memo_text) > 28:
             raise ValueError('Stellar: max length of a memo text is 28 bytes')
         write_string(w, msg.memo_text)
-    elif msg.memo_type == 2:
+        memo_confirm_text = msg.memo_text
+    elif msg.memo_type == consts.MEMO_TYPE_ID:
         # ID: 64 bit unsigned integer
         write_uint64(w, msg.memo_id)
-    elif msg.memo_type in [3, 4]:
+        memo_confirm_text = str(msg.memo_id)
+    elif msg.memo_type in [consts.MEMO_TYPE_HASH, consts.MEMO_TYPE_RETURN]:
         # Hash/Return: 32 byte hash
         write_bytes(w, bytearray(msg.memo_hash))
+        memo_confirm_text = hexlify(msg.memo_hash).decode()
+    else:
+        raise ValueError('Stellar invalid memo type')
+    await helpers.confirm_memo(msg.memo_type, memo_confirm_text)
 
     write_uint32(w, msg.num_operations)
     for i in range(msg.num_operations):
@@ -87,7 +102,6 @@ async def sign_tx(ctx, msg):
     write_uint32(w, 0)
 
     # confirms
-    await helpers.confirm_init(pubkey, msg.network_passphrase)
     await helpers.confirm_final(msg.fee, msg.num_operations)
 
     # sign

@@ -41,6 +41,12 @@ AMOUNT_DIVISIBILITY = const(7)
 NETWORK_PASSPHRASE_PUBLIC = 'Public Global Stellar Network ; September 2015'
 NETWORK_PASSPHRASE_TESTNET = 'Test SDF Network ; September 2015'
 
+MEMO_TYPE_NONE = 0
+MEMO_TYPE_TEXT = 1
+MEMO_TYPE_ID = 2
+MEMO_TYPE_HASH = 3
+MEMO_TYPE_RETURN = 4
+
 
 def get_op_code(msg) -> int:
     if msg.__qualname__ not in op_codes:
