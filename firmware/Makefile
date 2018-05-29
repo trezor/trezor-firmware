@@ -119,6 +119,6 @@ clean::
 	rm -f $(1).h $(3)
 endef
 
-$(eval $(call GENERATE_CODE,coin_info,coins.json,coin_info.c))
-$(eval $(call GENERATE_CODE,nem_mosaics,nem_mosaics.json,nem_mosaics.c))
+$(eval $(call GENERATE_CODE,coin_info,defs,coin_info.c))
+$(eval $(call GENERATE_CODE,nem_mosaics,defs/nem/nem_mosaics.json,nem_mosaics.c))
 $(eval $(call GENERATE_CODE,bl_data,../bootloader/bootloader.bin))

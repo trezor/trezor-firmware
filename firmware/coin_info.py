@@ -63,7 +63,7 @@ def format_string(value):
 def format_hex(value):
     if value is None:
         value = "0"
-    return "0x{:08x}".format(int(value, 16))
+    return "0x{:08x}".format(value)
 
 
 def prepend_varint(string):
@@ -78,22 +78,22 @@ def coin_to_struct(coin):
         ("coin_name",             format_string(coin["coin_name"])),
         ("coin_shortcut",         format_string(" " + coin["coin_shortcut"])),
         ("maxfee_kb",             format_number(coin["maxfee_kb"])),
-        ("signed_message_header", prepend_varint(coin["signed_message_header"])),             # noqa: E501
-        ("has_address_type",      format_bool(coin["address_type"] is not None)),             # noqa: E501
-        ("has_address_type_p2sh", format_bool(coin["address_type_p2sh"] is not None)),        # noqa: E501
+        ("signed_message_header", prepend_varint(coin["signed_message_header"])),              # noqa: E501
+        ("has_address_type",      format_bool(coin["address_type"] is not None)),              # noqa: E501
+        ("has_address_type_p2sh", format_bool(coin["address_type_p2sh"] is not None)),         # noqa: E501
         ("has_segwit",            format_bool(coin["segwit"])),
-        ("has_forkid",            format_bool(coin["forkid"] is not None)),
+        ("has_fork_id",           format_bool(coin["fork_id"] is not None)),
         ("force_bip143",          format_bool(coin["force_bip143"])),
         ("decred",                format_bool(coin["decred"])),
         ("address_type",          format_number(coin["address_type"])),
         ("address_type_p2sh",     format_number(coin["address_type_p2sh"])),
         ("xpub_magic",            format_hex(coin["xpub_magic"])),
         ("xprv_magic",            format_hex(coin["xprv_magic"])),
-        ("forkid",                format_number(coin["forkid"])),
+        ("fork_id",               format_number(coin["fork_id"])),
         ("bech32_prefix",         format_string(coin["bech32_prefix"])),
         ("cashaddr_prefix",       format_string(coin["cashaddr_prefix"])),
-        ("coin_type",             "({} | 0x80000000)".format(format_number(coin["bip44"]))),  # noqa: E501
-        ("curve_name",            "{}_NAME".format(coin["curve_name"].upper())),              # noqa: E501
+        ("coin_type",             "({} | 0x80000000)".format(format_number(coin["slip44"]))),  # noqa: E501
+        ("curve_name",            "{}_NAME".format(coin["curve_name"].upper())),               # noqa: E501
         ("curve",                 "&{}_info".format(coin["curve_name"])),
     ))
 
@@ -118,9 +118,16 @@ if __name__ == "__main__":
 
     coins = collections.defaultdict(list)
 
-    for coin in json.load(open("coins.json")):
-        firmware = coin["firmware"]
-        coins[firmware].append(coin)
+    support = json.load(open('defs/support.json', 'r'), object_pairs_hook=collections.OrderedDict)
+    defs = support['trezor1'].keys()
+
+    for c in defs:
+        name = c.replace(' ', '_').lower()
+        firmware = 'debug' if name.endswith('_testnet') else 'stable'
+        if name == 'testnet':
+            name = 'bitcoin_testnet'
+        data = json.load(open('defs/coins/%s.json' % name, 'r'))
+        coins[firmware].append(data)
 
     with open("coin_info.h", "w+") as f:
         f.write(HEADER_TEMPLATE.format(**{
