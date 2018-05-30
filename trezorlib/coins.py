@@ -24,7 +24,7 @@ def _insight_for_coin(coin):
         return None
     zcash = coin['coin_name'].lower().startswith('zcash')
     network = 'insight_{}'.format(coin['coin_name'].lower().replace(' ', '_'))
-    url = coin['bitcore'][0] + 'api/'
+    url = coin['bitcore'][0] + '/api/'
     return TxApiInsight(network=network, url=url, zcash=zcash)
 
 
