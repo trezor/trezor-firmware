@@ -2,6 +2,7 @@
 import os.path
 import shutil
 import subprocess
+import tempfile
 
 from setuptools import setup, Command
 from setuptools.command.build_py import build_py
@@ -19,12 +20,13 @@ install_requires = [
 
 from trezorlib import __version__ as VERSION
 
+CWD = os.path.dirname(os.path.realpath(__file__))
+TREZOR_COMMON = os.path.join(CWD, 'vendor', 'trezor-common')
+
 
 class PrebuildCommand(Command):
     description = 'update vendored files (coins.json, protobuf messages)'
     user_options = []
-
-    TREZOR_COMMON = os.path.join('vendor', 'trezor-common')
 
     def initialize_options(self):
         pass
@@ -34,19 +36,20 @@ class PrebuildCommand(Command):
 
     def run(self):
         # check for existence of the submodule directory
-        common_defs = os.path.join(self.TREZOR_COMMON, 'defs')
+        common_defs = os.path.join(TREZOR_COMMON, 'defs')
         if not os.path.exists(common_defs):
             raise Exception('trezor-common submodule seems to be missing.\n' +
                             'Use "git submodule update --init" to retrieve it.')
 
         # generate and copy coins.json to the tree
-        build_coins = os.path.join(self.TREZOR_COMMON, 'defs', 'coins', 'tools', 'build_coins.py')
-        subprocess.check_call([build_coins])
-        shutil.move('coins.json', 'trezorlib')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            build_coins = os.path.join(TREZOR_COMMON, 'defs', 'coins', 'tools', 'build_coins.py')
+            subprocess.check_call([build_coins], cwd=tmpdir)
+            shutil.copy(os.path.join(tmpdir, 'coins.json'), os.path.join(CWD, 'trezorlib', 'coins.json'))
 
         # regenerate messages
         try:
-            subprocess.check_call([os.path.join(os.getcwd(), 'tools', 'build_protobuf'), '--no-core'])
+            subprocess.check_call([os.path.join(CWD, 'tools', 'build_protobuf'), '--no-core'])
         except Exception as e:
             print(e)
             print("Generating protobuf failed. Maybe you don't have 'protoc', or maybe you are on Windows?")
