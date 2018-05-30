@@ -15,8 +15,7 @@ def _load_coins_json():
     # and install coins.json with:
     # $ python setup.py prebuild
     with open(COINS_JSON) as coins_json:
-        coins_list = json.load(coins_json)
-        return {coin['coin_name']: coin for coin in coins_list}
+        return json.load(coins_json)
 
 
 def _insight_for_coin(coin):
@@ -36,7 +35,7 @@ try:
 except Exception as e:
     raise ImportError("Failed to load coins.json. Check your installation.") from e
 
-slip44 = {name: coin['bip44'] for name, coin in by_name.items()}
+slip44 = {name: coin['slip44'] for name, coin in by_name.items()}
 tx_api = {name: _insight_for_coin(coin)
           for name, coin in by_name.items()
           if coin["bitcore"]}

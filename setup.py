@@ -34,13 +34,16 @@ class PrebuildCommand(Command):
 
     def run(self):
         # check for existence of the submodule directory
-        coins_json = os.path.join(self.TREZOR_COMMON, 'coins.json')
-        if not os.path.exists(coins_json):
+        common_defs = os.path.join(self.TREZOR_COMMON, 'defs')
+        if not os.path.exists(common_defs):
             raise Exception('trezor-common submodule seems to be missing.\n' +
                             'Use "git submodule update --init" to retrieve it.')
 
-        # copy coins.json to the tree
-        shutil.copy(coins_json, 'trezorlib')
+
+        # generate and copy coins.json to the tree
+        coin_defs = os.path.join('vendor', 'trezor-common', 'defs', 'coins')
+        subprocess.check_call([os.path.join(coin_defs, 'tools', 'build_coins.py')])
+        shutil.move('coins.json', 'trezorlib')
 
         # regenerate messages
         try:
