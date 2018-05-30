@@ -3,6 +3,7 @@
 import json
 import glob
 import re
+import os
 from hashlib import sha256
 from binascii import unhexlify
 
@@ -157,7 +158,8 @@ def process_json(fn):
 
 coins = {}
 defs = {}
-for fn in glob.glob('../*.json'):
+scriptdir = os.path.dirname(os.path.realpath(__file__))
+for fn in glob.glob(scriptdir + '/../*.json'):
     c, d = process_json(fn)
     n = c['coin_name']
     coins[n] = c
@@ -165,4 +167,4 @@ for fn in glob.glob('../*.json'):
 
 
 json.dump(coins, open('coins.json', 'w'), indent=4, sort_keys=True)
-json.dump(defs, open('coindefs.json', 'w'), indent=4, sort_keys=True)
+# json.dump(defs, open('coindefs.json', 'w'), indent=4, sort_keys=True)
