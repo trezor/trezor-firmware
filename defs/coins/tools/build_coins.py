@@ -148,7 +148,7 @@ def convert_icon(icon):
 
 
 def process_json(fn):
-    print(fn, end=' ... ')
+    print(os.path.basename(fn), end=' ... ')
     j = json.load(open(fn))
     if BUILD_DEFS:
         i = Image.open(fn.replace('.json', '.png'))
@@ -164,14 +164,24 @@ def process_json(fn):
         return j, None
 
 
+scriptdir = os.path.dirname(os.path.realpath(__file__))
+
+
+if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
+    support_json = json.load(open(scriptdir + '/../../support.json'))
+    support_list = support_json[sys.argv[1]].keys()
+else:
+    support_list = None
+
+
 coins = {}
 defs = {}
-scriptdir = os.path.dirname(os.path.realpath(__file__))
 for fn in glob.glob(scriptdir + '/../*.json'):
     c, d = process_json(fn)
     n = c['coin_name']
-    coins[n] = c
-    defs[n] = d
+    if support_list is None or n in support_list:
+        coins[n] = c
+        defs[n] = d
 
 
 json.dump(coins, open('coins.json', 'w'), indent=4, sort_keys=True)
