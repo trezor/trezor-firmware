@@ -4,17 +4,21 @@ import json
 import glob
 import re
 import os
-from hashlib import sha256
-from binascii import unhexlify
+import sys
 
-import ed25519
-from PIL import Image
+if '--defs' in sys.argv:
+    from binascii import unhexlify
+    from hashlib import sha256
+    import ed25519
+    from PIL import Image
+    from trezorlib.protobuf import dump_message
+    from coindef import CoinDef
+    BUILD_DEFS = True
+else:
+    BUILD_DEFS = False
 
-from trezorlib.protobuf import dump_message
-from coindef import CoinDef
 
-
-def check_type(val, types, nullable=False, empty=False, regex=None, choice=None):
+def check_type(val, types, nullable=False, empty=False, regex=None, choice=None):  # noqa:E501
     # check nullable
     if nullable and val is None:
         return True
@@ -47,9 +51,9 @@ def validate_coin(coin):
     assert check_type(coin['coin_shortcut'], str, regex=r'^[A-Zt][A-Z][A-Z]+$')
     assert check_type(coin['coin_label'], str, regex=r'^[A-Z]')
     assert check_type(coin['website'], str, regex=r'^http.*[^/]$')
-    assert check_type(coin['github'], str, regex=r'^https://github.com/.*[^/]$')
+    assert check_type(coin['github'], str, regex=r'^https://github.com/.*[^/]$')  # noqa:E501
     assert check_type(coin['maintainer'], str)
-    assert check_type(coin['curve_name'], str, choice=['secp256k1', 'secp256k1_decred', 'secp256k1_groestl'])
+    assert check_type(coin['curve_name'], str, choice=['secp256k1', 'secp256k1_decred', 'secp256k1_groestl'])  # noqa:E501
     assert check_type(coin['address_type'], int)
     assert check_type(coin['address_type_p2sh'], int)
     assert coin['address_type'] != coin['address_type_p2sh']
@@ -66,7 +70,7 @@ def validate_coin(coin):
     assert coin['xprv_magic'] != coin['xpub_magic_segwit_native']
     assert coin['xpub_magic'] != coin['xpub_magic_segwit_p2sh']
     assert coin['xpub_magic'] != coin['xpub_magic_segwit_native']
-    assert coin['xpub_magic_segwit_p2sh'] is None or coin['xpub_magic_segwit_native'] is None or coin['xpub_magic_segwit_p2sh'] != coin['xpub_magic_segwit_native']
+    assert coin['xpub_magic_segwit_p2sh'] is None or coin['xpub_magic_segwit_native'] is None or coin['xpub_magic_segwit_p2sh'] != coin['xpub_magic_segwit_native']  # noqa:E501
     assert check_type(coin['slip44'], int)
     assert check_type(coin['segwit'], bool)
     assert check_type(coin['decred'], bool)
@@ -146,14 +150,18 @@ def convert_icon(icon):
 def process_json(fn):
     print(fn, end=' ... ')
     j = json.load(open(fn))
-    i = Image.open(fn.replace('.json', '.png'))
-    validate_coin(j)
-    validate_icon(i)
-    ser = serialize(j, convert_icon(i))
-    sig = sign(ser)
-    definition = (sig + ser).hex()
-    print('OK')
-    return j, definition
+    if BUILD_DEFS:
+        i = Image.open(fn.replace('.json', '.png'))
+        validate_coin(j)
+        validate_icon(i)
+        ser = serialize(j, convert_icon(i))
+        sig = sign(ser)
+        definition = (sig + ser).hex()
+        print('OK')
+        return j, definition
+    else:
+        print('OK')
+        return j, None
 
 
 coins = {}
@@ -167,4 +175,5 @@ for fn in glob.glob(scriptdir + '/../*.json'):
 
 
 json.dump(coins, open('coins.json', 'w'), indent=4, sort_keys=True)
-# json.dump(defs, open('coindefs.json', 'w'), indent=4, sort_keys=True)
+if BUILD_DEFS:
+    json.dump(defs, open('coindefs.json', 'w'), indent=4, sort_keys=True)
