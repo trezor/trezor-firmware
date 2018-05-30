@@ -79,6 +79,10 @@ pipenv install
 pipenv run make vendor build_boardloader build_bootloader build_firmware
 ```
 
+### Uploading
+
+Use `make upload` to upload the firmware to a production device (with a bootloader).
+
 ### Flashing
 
 For flashing firmware to blank device (without bootloader) use `make flash`,
