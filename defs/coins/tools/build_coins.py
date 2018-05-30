@@ -164,5 +164,5 @@ for fn in glob.glob('../*.json'):
     defs[n] = d
 
 
-json.dump(coins, open('../../coins.json', 'w'), indent=4, sort_keys=True)
-json.dump(defs, open('../../coindefs.json', 'w'), indent=4, sort_keys=True)
+json.dump(coins, open('coins.json', 'w'), indent=4, sort_keys=True)
+json.dump(defs, open('coindefs.json', 'w'), indent=4, sort_keys=True)

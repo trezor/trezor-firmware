@@ -34,6 +34,14 @@
 		"Fujicoin": "2.0.5",
 		"Vertcoin": "2.0.5"
 	},
+	"connect": {
+		"Bitcoin": true,
+		"Bcash": true,
+		"Bgold": true,
+		"Dash": true,
+		"Litecoin": true,
+		"Zcash": true
+	},
 	"webwallet": {
 		"Bitcoin": true,
 		"Bcash": true,
