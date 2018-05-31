@@ -15,6 +15,7 @@ It runs both inside of the device and also in the TREZOR Emulator.
 
 * [API](docs/api.md)
 * [Build instructions](docs/build.md)
+* [Emulator](docs/emulator.md)
 * [Testing](docs/testing.md)
 * [Bootloader](docs/bootloader.md)
 * [Hardware](docs/hardware.md)
