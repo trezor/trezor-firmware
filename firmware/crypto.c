@@ -32,6 +32,7 @@
 #include "coins.h"
 #include "base58.h"
 #include "segwit_addr.h"
+#include "cash_addr.h"
 
 uint32_t ser_length(uint32_t len, uint8_t *out)
 {
@@ -177,7 +178,14 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message, size_t mes
 
 	// p2pkh
 	if (signature[0] >= 27 && signature[0] <= 34) {
-		size_t len = base58_decode_check(address, coin->curve->hasher_base58, addr_raw, MAX_ADDR_RAW_SIZE);
+		size_t len;
+		if (coin->cashaddr_prefix) {
+			if (!cash_addr_decode(addr_raw, &len, coin->cashaddr_prefix, address)) {
+				return 2;
+			}
+		} else {
+			len = base58_decode_check(address, coin->curve->hasher_base58, addr_raw, MAX_ADDR_RAW_SIZE);
+		}
 		ecdsa_get_address_raw(pubkey, coin->address_type, coin->curve->hasher_pubkey, recovered_raw);
 		if (memcmp(recovered_raw, addr_raw, len) != 0
 			|| len != address_prefix_bytes_len(coin->address_type) + 20) {
