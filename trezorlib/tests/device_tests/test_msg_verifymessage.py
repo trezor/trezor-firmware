@@ -124,6 +124,16 @@ class TestMsgVerifymessage(TrezorTest):
         )
         assert res is False
 
+    def test_message_verify_bcash(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+        res = self.client.verify_message(
+            'Bcash',
+            'bitcoincash:qqj22md58nm09vpwsw82fyletkxkq36zxyxh322pru',
+            unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
+            'This is an example of a signed message.'
+        )
+        assert res is True
+
     def test_verify_bitcoind(self):
         self.setup_mnemonic_nopin_nopassphrase()
 

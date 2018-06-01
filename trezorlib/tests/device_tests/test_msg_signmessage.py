@@ -34,6 +34,12 @@ class TestMsgSignmessage(TrezorTest):
         assert sig.address == 'mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL'
         assert hexlify(sig.signature) == b'209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'
 
+    def test_sign_bch(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+        sig = self.client.sign_message('Bcash', [0], "This is an example of a signed message.")
+        assert sig.address == 'bitcoincash:qqj22md58nm09vpwsw82fyletkxkq36zxyxh322pru'
+        assert hexlify(sig.signature) == b'209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'
+
     def test_sign_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
         sig = self.client.sign_message('Bitcoin', [0], "VeryLongMessage!" * 64)
