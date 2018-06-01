@@ -6,7 +6,7 @@ from trezor.ui.text import Text
 from apps.common import coins
 from apps.common.confirm import require_confirm
 from apps.common.signverify import message_digest, split_message
-from apps.wallet.sign_tx.addresses import address_pkh, address_p2wpkh_in_p2sh, address_p2wpkh
+from apps.wallet.sign_tx.addresses import address_pkh, address_p2wpkh_in_p2sh, address_p2wpkh, address_to_cashaddr
 from apps.wallet.get_address import _split_address
 
 
@@ -39,6 +39,8 @@ async def verify_message(ctx, msg):
 
     if script_type == SPENDADDRESS:
         addr = address_pkh(pubkey, coin.address_type)
+        if coin.cashaddr_prefix is not None:
+            addr = address_to_cashaddr(addr, coin)
     elif script_type == SPENDP2SHWITNESS:
         addr = address_p2wpkh_in_p2sh(pubkey, coin.address_type_p2sh)
     elif script_type == SPENDWITNESS:
