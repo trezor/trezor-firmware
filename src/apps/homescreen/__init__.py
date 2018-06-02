@@ -2,7 +2,6 @@ from trezor import config, utils
 from trezor.wire import register, protobuf_workflow
 from trezor.messages import wire_types
 from trezor.messages.Features import Features
-from trezor.messages.Initialize import Initialize
 from trezor.messages.Success import Success
 
 from apps.common import storage, cache
@@ -33,7 +32,7 @@ def get_features():
 
 
 async def handle_Initialize(ctx, msg):
-    if msg.state is None or msg.state != cache.get_state(bytes(msg.state)):
+    if msg.state is None or msg.state != cache.get_state(prev_state=bytes(msg.state)):
         cache.clear(msg.skip_passphrase)
     return get_features()
 

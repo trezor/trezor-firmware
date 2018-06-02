@@ -54,7 +54,7 @@ async def request_passphrase_ack(ctx, on_device):
             raise wire.ProcessError('Passphrase not provided')
         passphrase = ack.passphrase
 
-    req = PassphraseStateRequest(state=get_state(state=ack.state, passphrase=passphrase))
+    req = PassphraseStateRequest(state=get_state(prev_state=ack.state, passphrase=passphrase))
     ack = await ctx.call(req, wire_types.PassphraseStateAck, wire_types.Cancel)
 
     return passphrase
