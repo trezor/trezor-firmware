@@ -61,7 +61,7 @@ You will also need Python dependencies for signing.
 #### Debian/Ubuntu
 
 ```sh
-sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
+sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi
 ```
 
 #### OS X
