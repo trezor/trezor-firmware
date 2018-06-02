@@ -35,8 +35,8 @@ TXHASH_3f7c39 = unhexlify("3f7c395521d38387e7617565fe17628723ef6635a08537ad9c46c
 TXHASH_16da18 = unhexlify("16da185052740d85a630e79c140558215b64e26c500212b90e16b55d13ca06a8")
 
 
+@pytest.mark.skip_t2
 @pytest.mark.decred
-@pytest.mark.xfail(reason="Decred broken for 👻M👻Y👻S👻T👻E👻R👻I👻O👻U👻S reasons... 😱")
 class TestMsgSigntxDecred(TrezorTest):
 
     def test_send_decred(self):
