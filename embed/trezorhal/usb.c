@@ -61,6 +61,7 @@ static const USBD_DescriptorsTypeDef usb_descriptors;
 static const USBD_ClassTypeDef usb_class;
 
 static secbool usb21_enabled = secfalse;
+static secbool usb21_landing = secfalse;
 
 static secbool __wur check_desc_str(const char *s) {
     if (NULL == s) return secfalse;
@@ -72,6 +73,7 @@ void usb_init(const usb_dev_info_t *dev_info) {
 
     // enable/disable USB 2.1 features
     usb21_enabled = dev_info->usb21_enabled;
+    usb21_landing = dev_info->usb21_landing;
 
     // Device descriptor
     usb_dev_desc.bLength            = sizeof(usb_device_descriptor_t);
@@ -226,7 +228,7 @@ static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed, uint16
 
 static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
     if (sectrue == usb21_enabled) {
-        static const uint8_t bos[] = {
+        static uint8_t bos[] = {
             // usb_bos_descriptor {
             0x05,               // uint8_t  bLength
             USB_DESC_TYPE_BOS,  // uint8_t  bDescriptorType
@@ -244,6 +246,7 @@ static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed, uint16_t *length
             USB_WEBUSB_LANDING_PAGE,          // uint8_t  iLandingPage
             // }
         };
+        bos[28] = (sectrue == usb21_landing) ? USB_WEBUSB_LANDING_PAGE : 0;
         *length = sizeof(bos);
         return UNCONST(bos);
     } else {

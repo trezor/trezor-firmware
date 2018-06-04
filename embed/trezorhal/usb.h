@@ -116,6 +116,7 @@ typedef struct {
     const char *serial_number;
     const char *interface;
     secbool usb21_enabled;
+    secbool usb21_landing;
 } usb_dev_info_t;
 
 typedef enum {

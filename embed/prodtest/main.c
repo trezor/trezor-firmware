@@ -109,6 +109,7 @@ static void usb_init_all(void)
         .serial_number   = "000000000000",
         .interface       = "TREZOR Interface",
         .usb21_enabled   = secfalse,
+        .usb21_landing   = secfalse,
     };
 
     static uint8_t tx_packet[VCP_PACKET_LEN];
