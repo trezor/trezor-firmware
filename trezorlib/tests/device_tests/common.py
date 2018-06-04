@@ -16,28 +16,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-
 import os
+
+from . import conftest
 
 from trezorlib import coins
 from trezorlib import tx_api
 from trezorlib.client import TrezorClientDebugLink
-from trezorlib.transport import get_transport
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 tx_api.cache_dir = os.path.join(tests_dir, '../txcache')
 
 
-def get_device():
-    path = os.environ.get('TREZOR_PATH')
-    return get_transport(path)
-
-
 class TrezorTest:
 
     def setup_method(self, method):
-        wirelink = get_device()
+        wirelink = conftest.get_device()
         debuglink = wirelink.find_debug()
         self.client = TrezorClientDebugLink(wirelink)
         self.client.set_debuglink(debuglink)

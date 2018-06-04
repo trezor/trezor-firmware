@@ -1,12 +1,19 @@
+import functools
+import os
 import pytest
 
-from . import common
-from trezorlib.client import TrezorClient
-from trezorlib import log
+from trezorlib.transport import get_transport
+from trezorlib.client import TrezorClient, TrezorClientDebugLink
+from trezorlib import log, coins
+
+
+def get_device():
+    path = os.environ.get('TREZOR_PATH')
+    return get_transport(path)
 
 
 def device_version():
-    device = common.get_device()
+    device = get_device()
     if not device:
         raise RuntimeError()
     client = TrezorClient(device)
@@ -16,11 +23,38 @@ def device_version():
         return 1
 
 
-try:
-    TREZOR_VERSION = device_version()
-except:
-    raise
-    TREZOR_VERSION = None
+TREZOR_VERSION = device_version()
+
+
+@pytest.fixture(scope="function")
+def client():
+    wirelink = get_device()
+    debuglink = wirelink.find_debug()
+    client = TrezorClientDebugLink(wirelink)
+    client.set_debuglink(debuglink)
+    client.set_tx_api(coins.tx_api['Bitcoin'])
+    client.wipe_device()
+    client.transport.session_begin()
+
+    yield client
+
+    client.transport.session_end()
+
+
+def setup_client(mnemonic=None, pin='', passphrase=False):
+    if mnemonic is None:
+        mnemonic = ' '.join(['all'] * 12)
+    if pin is True:
+        pin = '1234'
+
+    def client_decorator(function):
+        @functools.wraps(function)
+        def wrapper(client, *args, **kwargs):
+            client.load_device_by_mnemonic(mnemonic=mnemonic, pin=pin, passphrase_protection=passphrase, label='test', language='english')
+            return function(client, *args, **kwargs)
+        return wrapper
+
+    return client_decorator
 
 
 def pytest_configure(config):
