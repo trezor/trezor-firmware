@@ -1224,7 +1224,7 @@ const char **stellar_lineBreakAddress(uint8_t *addrbytes)
  *
  * Examples:
  *  XLM (Native Asset)
- *  MOBI (G1234)
+ *  MOBI (G123456789000)
  *  ALPHA12EXAMP (G0987)
  */
 void stellar_format_asset(StellarAssetType *asset, char *str_formatted, size_t len)
