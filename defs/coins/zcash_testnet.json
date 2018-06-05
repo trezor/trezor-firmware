@@ -32,6 +32,8 @@
   "address_prefix": "zcash:",
   "min_address_length": 35,
   "max_address_length": 95,
-  "bitcore": [],
+  "bitcore": [
+    "https://explorer.testnet.z.cash"
+  ],
   "blockbook": []
 }
