@@ -14,7 +14,7 @@ import trezorlib.messages as m
         show_display=True
     ),
 ])
-def test_cancel_ping(client, message):
+def test_cancel_message(client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
 
