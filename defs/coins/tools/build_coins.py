@@ -167,18 +167,20 @@ def process_json(fn):
 scriptdir = os.path.dirname(os.path.realpath(__file__))
 
 
+support_json = json.load(open(scriptdir + '/../../support.json'))
 if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
-    support_json = json.load(open(scriptdir + '/../../support.json'))
     support_list = support_json[sys.argv[1]].keys()
 else:
     support_list = None
-
 
 coins = {}
 defs = {}
 for fn in glob.glob(scriptdir + '/../*.json'):
     c, d = process_json(fn)
     n = c['coin_name']
+    c['support'] = {}
+    for s in support_json.keys():
+        c['support'][s] = support_json[s][n] if n in support_json[s] else None
     if support_list is None or n in support_list:
         coins[n] = c
         defs[n] = d
