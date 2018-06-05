@@ -778,7 +778,7 @@ class ProtocolMixin(object):
         return txes
 
     @session
-    def sign_tx(self, coin_name, inputs, outputs, version=None, lock_time=None, debug_processor=None):
+    def sign_tx(self, coin_name, inputs, outputs, version=None, lock_time=None, expiry=None, overwintered=None, debug_processor=None):
 
         # start = time.time()
         txes = self._prepare_sign_tx(inputs, outputs)
@@ -792,6 +792,10 @@ class ProtocolMixin(object):
             tx.version = version
         if lock_time is not None:
             tx.lock_time = lock_time
+        if expiry is not None:
+            tx.expiry = expiry
+        if overwintered is not None:
+            tx.overwintered = overwintered
         res = self.call(tx)
 
         # Prepare structure for signatures

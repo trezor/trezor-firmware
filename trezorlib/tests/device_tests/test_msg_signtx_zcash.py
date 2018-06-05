@@ -24,58 +24,46 @@ from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.tools import parse_path
 
-TxApiZcash = coins.tx_api["Zcash"]
+TxApiZcashTestnet = coins.tx_api['Zcash Testnet']
+
+TXHASH_aaf51e = unhexlify('aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc')
 
 
-TXHASH_93373e = unhexlify('93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c')
-
-
-# Zcash reset their testnet, which broke our test because it was not properly cached.
-# Then when we tried to revive it, Overwinter happened and now Trezor is incapable of
-# processing v3 transactions. So it's difficult to fix the test until we support v3.
 @pytest.mark.zcash
-@pytest.mark.xfail(reason="Zcash support is botched due to Overwinter")
 class TestMsgSigntxZcash(TrezorTest):
 
     def test_one_one_fee(self):
         self.setup_mnemonic_allallall()
 
-        # tx: 93373e63cc626c4a7d049ad775d6511bb5eba985f142db660c9b9f955c722f5c
-        # input 0: 1.234567 TAZ
+        # tx: aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc
+        # input 1: 3.0 TAZ
 
         inp1 = proto.TxInputType(
             address_n=parse_path("m/Zcash Testnet/0h/0/0"),  # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
-            # amount=123456700,
-            prev_hash=TXHASH_93373e,
-            prev_index=0,
+            amount=300000000,
+            prev_hash=TXHASH_aaf51e,
+            prev_index=1,
         )
 
         out1 = proto.TxOutputType(
             address='tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z',
-            amount=123456700 - 1940,
+            amount=300000000 - 1940,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         with self.client:
-            self.client.set_tx_api(TxApiZcash)
+            self.client.set_tx_api(TxApiZcashTestnet)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e)),
-                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_93373e)),
-                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=0, extra_data_len=1024)),
-                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=1024, extra_data_len=1024)),
-                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=2048, extra_data_len=1024)),
-                proto.TxRequest(request_type=proto.RequestType.TXEXTRADATA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_93373e, extra_data_offset=3072, extra_data_len=629)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
 
-            (signatures, serialized_tx) = self.client.sign_tx('Zcash', [inp1, ], [out1, ])
+            (signatures, serialized_tx) = self.client.sign_tx('Zcash Testnet', [inp1, ], [out1, ], version=3, overwintered=True)
 
-        # Accepted by network: tx dcc2a10894e0e8a785c2afd4de2d958207329b9acc2b987fd768a09c5efc4547
-        assert hexlify(serialized_tx) == b'01000000015c2f725c959f9b0c66db42f185a9ebb51b51d675d79a047d4a6c62cc633e3793000000006a4730440220670b2b63d749a7038f9aea6ddf0302fe63bdcad93dafa4a89a1f0e7300ae2484022002c50af43fd867490cea0c527273c5828ff1b9a5115678f155a1830737cf29390121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff0128c55b07000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac00000000'
+        # Accepted by network: tx TODO
+        assert hexlify(serialized_tx) == b'030000807082c40301dc754d63eff4698ee321476872519c53f14cfe58c9425c7ee464c206461ef5aa010000006a473044022039e3814541d8b9fcd09a43e9320514a327c79ce9473f679857afaee12ec7ba3d02207b00fad860dba848f280674129b347c7ffebeede8c85cf742ed854b0347af3600121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff016c9be111000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac0000000000000000'

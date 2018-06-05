@@ -99,7 +99,9 @@ class TxApiInsight(TxApi):
             o.script_pubkey = binascii.unhexlify(vout['scriptPubKey']['hex'])
 
         if self.zcash:
-            if t.version == 2:
+            t.overwintered = data.get('fOverwintered', False)
+            t.expiry = data.get('nExpiryHeight', False)
+            if t.version >= 2:
                 joinsplit_cnt = len(data['vjoinsplit'])
                 if joinsplit_cnt == 0:
                     t.extra_data = b'\x00'
