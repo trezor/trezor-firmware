@@ -15,5 +15,9 @@ docs/.docs-build-environment
 .tox/
 .cache/
 .pytest_cache/
+.mypy_cache/
+
+.idea/
+.vscode/
 
 trezorlib/coins.json
