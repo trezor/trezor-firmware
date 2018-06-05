@@ -18,6 +18,9 @@
  */
 
 #include "py/objstr.h"
+
+#include "embed/extmod/trezorobj.h"
+
 #include "nem.h"
 
 /// def validate_address(address: str, network: int) -> bool:
@@ -29,7 +32,7 @@ STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address, mp_obj_t
     mp_buffer_info_t addr;
     mp_get_buffer_raise(address, &addr, MP_BUFFER_READ);
 
-    uint32_t n = mp_obj_get_int_truncated(network);
+    uint32_t n = trezor_obj_get_uint(network);
     return mp_obj_new_bool(nem_validate_address(addr.buf, n));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj, mod_trezorcrypto_nem_validate_address);
@@ -39,16 +42,16 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj, mod_
 ///     Compute a NEM address from a public key
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key, mp_obj_t network) {
-
     mp_buffer_info_t p;
     mp_get_buffer_raise(public_key, &p, MP_BUFFER_READ);
-    uint32_t n = mp_obj_get_int_truncated(network);
 
-    char address[NEM_ADDRESS_SIZE + 1];
+    uint32_t n = trezor_obj_get_uint(network);
+
+    char address[NEM_ADDRESS_SIZE + 1]; // + 1 for the 0 byte
     if (!nem_get_address(p.buf, n, address)) {
-        mp_raise_ValueError("Failed to compute a NEM address from a provided public key");
+        mp_raise_ValueError("Failed to compute a NEM address from provided public key");
     }
-    return mp_obj_new_str(address, strlen(address), false);
+    return mp_obj_new_str_of_type(&mp_type_str, (const uint8_t *)address, strlen(address));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj, mod_trezorcrypto_nem_compute_address);
 
